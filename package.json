@@ -18,6 +18,7 @@
     "@types/react-dom": "18.2.4",
     "@vercel/blob": "^0.8.3",
     "autoprefixer": "10.4.14",
+    "date-fns": "^2.30.0",
     "eslint": "8.41.0",
     "eslint-config-next": "13.4.4",
     "next": "13.4.4",
@@ -26,6 +27,7 @@
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "react-hot-toast": "^2.4.1",
+    "react-pdf": "^7.0.1",
     "tailwindcss": "3.3.2",
     "typescript": "5.0.4"
   },

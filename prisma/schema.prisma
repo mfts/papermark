@@ -65,6 +65,7 @@ model Document {
   ownerId   String   // This field holds the foreign key.
   createdAt DateTime @default(now())
   links     Link[]
+  views     View[]
 }
 
 model Link {
@@ -75,4 +76,15 @@ model Link {
   expiresAt     DateTime?   // Optional expiration date
   password      String?     // Optional password for link protection
   allowedEmails String[]    // Array of emails allowed to view the document
+  views         View[]
+}
+
+model View {
+  id          String      @id @default(cuid())
+  link        Link        @relation(fields: [linkId], references: [id])
+  linkId      String
+  document    Document    @relation(fields: [documentId], references: [id])
+  documentId  String
+  viewerEmail String?     // Email of the viewer if known
+  viewedAt    DateTime    @default(now())
 }
