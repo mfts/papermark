@@ -2,11 +2,11 @@ import { GetServerSideProps } from "next";
 import React, { useState } from "react";
 import prisma from "@/lib/prisma";
 import EmailForm from "@/components/EmailForm";
-import { Document, Page, pdfjs } from "react-pdf";
+// import { Document, Page, pdfjs } from "react-pdf";
 // import "react-pdf/dist/esm/Page/AnnotationLayer.css";
 import Link from "next/link";
 
-pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+// pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
 const DocumentView = ({
   document,
@@ -45,21 +45,21 @@ const DocumentView = ({
     return <EmailForm onSubmitHandler={handleSubmit} setEmail={setEmail} />;
   }
 
-  if (document.file.includes(".pdf")) {
-    return (
-      <div>
-        <Document file={document.file} onLoadSuccess={onDocumentLoadSuccess}>
-          {Array.from(new Array(numPages), (el, index) => (
-            <Page
-              key={`page_${index + 1}`}
-              pageNumber={index + 1}
-              renderTextLayer={false}
-            />
-          ))}
-        </Document>
-      </div>
-    );
-  }
+  // if (document.file.includes(".pdf")) {
+  //   return (
+  //     <div>
+  //       <Document file={document.file} onLoadSuccess={onDocumentLoadSuccess}>
+  //         {Array.from(new Array(numPages), (el, index) => (
+  //           <Page
+  //             key={`page_${index + 1}`}
+  //             pageNumber={index + 1}
+  //             renderTextLayer={false}
+  //           />
+  //         ))}
+  //       </Document>
+  //     </div>
+  //   );
+  // }
   if (
     document.file.includes(".docx") ||
     document.file.includes(".pptx") ||
