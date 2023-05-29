@@ -44,6 +44,7 @@ model User {
   image         String?
   accounts      Account[]
   sessions      Session[]
+  documents     Document[]
 }
 
 model VerificationToken {
@@ -52,4 +53,26 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model Document {
+  id        String   @id @default(cuid())
+  name      String
+  description String?
+  file      String   // This should be a reference to where the file is stored (S3, Google Cloud Storage, etc.)
+  type      String?   // This should be a reference to the file type (pdf, docx, etc.)
+  owner     User     @relation(fields: [ownerId], references: [id])
+  ownerId   String   // This field holds the foreign key.
+  createdAt DateTime @default(now())
+  links     Link[]
+}
+
+model Link {
+  id            String      @id @default(cuid())
+  document      Document    @relation(fields: [documentId], references: [id])
+  documentId    String
+  url           String?      @unique
+  expiresAt     DateTime?   // Optional expiration date
+  password      String?     // Optional password for link protection
+  allowedEmails String[]    // Array of emails allowed to view the document
 }
