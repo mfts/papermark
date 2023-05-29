@@ -67,6 +67,10 @@ export default function Form() {
       toast.custom((t) => (
         <Notification t={t} closeToast={() => toast.dismiss(t.id)} />
       ));
+
+      setTimeout(() => {
+        router.push("/documents/" + document.id);
+      }, 4000);
     } catch (error) {
       console.error("An error occurred while uploading the file: ", error);
     } finally {
