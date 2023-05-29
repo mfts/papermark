@@ -1,38 +1,51 @@
+<div align="center">
+    <h1 align="center">Papermark</h1>
+    <h5>Open-source alternative to DocSend</h5>
+</div>
+
+<div align="center">
+  <a href="https://papermark.io">papermark.io</a>
+</div>
+<br/>
+
+Papermark is an open-source document sharing alternative to Docsend with built-in analytics. Built with [Vercel Storage](http://vercel.com/storage) and [Vercel Edge Functions](http://vercel.com/edge).
+
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
-## Getting Started
+## Features
 
-First, run the development server:
+- **Shareable Links:** Share your document securely by sending a link
+- **Analytics:** Get analytics via link view tracking and soon page-by-page analytics
+- **Self-hosted, open-source:** Host it yourself and hack on it
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-```
+<br/>
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+![](public/papermark.png)
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
+## Tech Stack
 
-[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
+- [Next.js](https://nextjs.org/) – framework
+- [Typescript](https://www.typescriptlang.org/) – language
+- [Tailwind](https://tailwindcss.com/) – styling
+- [Prisma](https://prisma.io) - orm
+- [Vercel Blob](https://vercel.com/storage/blob) - blob storage
+- [Vercel Postgres](https://vercel.com/storage/postgres) - database
+- [NextAuth.js](https://next-auth.js.org/) – auth
+- [Vercel](https://vercel.com/) – hosting
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
+## Deploy your own
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+All you need is a Vercel account and access to Vercel Storage (_Blob_ and _Postgres_). Click the
+button below to clone and deploy:
 
-## Learn More
+[![Deploy with Vercel](https://vercel.com/button)](#)
 
-To learn more about Next.js, take a look at the following resources:
+## Contributing
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Papermark is an open-source project and we welcome contributions from the community.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+## Inspiration
 
-## Deploy on Vercel
+...and friends
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+- [Dub](https://github.com/steven-tey/dub) - An open-source link shortener SaaS with built-in analytics + free custom domains
