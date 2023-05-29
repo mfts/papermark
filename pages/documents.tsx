@@ -90,7 +90,7 @@ export default function Documents({
     );
 
     toast.custom((t) => (
-      <Notification t={t} closeToast={() => toast.dismiss(t.id)} />
+      <Notification t={t} closeToast={() => toast.dismiss(t.id)} message={``} />
     ));
   };
 
@@ -126,12 +126,12 @@ export default function Documents({
                               <span className="whitespace-nowrap text-gray-500">
                                 {getExtension(document.file)}
                               </span>
-                              {/* <span className="absolute inset-0" /> */}
+                              <span className="absolute inset-0" />
                             </Link>
                           </h2>
                           <div className="flex ml-2">
                             <button
-                              className="text-gray-500 hover:text-gray-700"
+                              className="text-gray-500 hover:text-gray-700 z-10"
                               onClick={() =>
                                 handleCopyToClipboard(document.links[0].id)
                               }

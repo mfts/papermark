@@ -12,6 +12,8 @@ import { DocumentDuplicateIcon } from "@heroicons/react/24/outline";
 import { parseISO, format, formatDistance } from "date-fns";
 import { useState } from "react";
 import Skeleton from "@/components/Skeleton";
+import toast from "react-hot-toast";
+import Notification from "@/components/Notification";
 
 interface LinkWithView extends DocumentLink {
   views: { viewedAt: string }[];
@@ -54,6 +56,16 @@ const DocumentPage = ({
     },
     { name: "TBD", value: "98.5%", active: false },
   ];
+
+  const handleCopyToClipboard = (id: string) => {
+    navigator.clipboard.writeText(
+      `${process.env.NEXT_PUBLIC_BASE_URL}/view/${id}`
+    );
+
+    toast.custom((t) => (
+      <Notification t={t} closeToast={() => toast.dismiss(t.id)} message={``} />
+    ));
+  };
 
   async function addNewLink() {
     setIsLoading(true);
@@ -207,11 +219,7 @@ const DocumentPage = ({
                           </div>
                           <button
                             className="text-gray-500 hover:text-gray-700"
-                            onClick={() =>
-                              navigator.clipboard.writeText(
-                                `${process.env.NEXT_PUBLIC_BASE_URL}/view/${link.id}`
-                              )
-                            }
+                            onClick={() => handleCopyToClipboard(link.id)}
                             title="Copy to clipboard"
                           >
                             <DocumentDuplicateIcon

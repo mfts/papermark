@@ -6,9 +6,11 @@ import { Fragment } from "react";
 export default function Notification({
   t,
   closeToast,
+  message = "Document uploaded and link copied to clipboard.",
 }: {
   t: any;
   closeToast: () => void;
+  message?: string;
 }) {
   return (
     <div className="flex w-full flex-col items-center space-y-4 sm:items-end">
@@ -36,9 +38,7 @@ export default function Notification({
                 <p className="text-sm font-medium text-gray-300">
                   Link copied to clipboard!
                 </p>
-                <p className="mt-1 text-sm text-gray-500">
-                  Document uploaded and link copied to clipboard.
-                </p>
+                <p className="mt-1 text-sm text-gray-500">{message}</p>
               </div>
               <div className="ml-4 flex flex-shrink-0">
                 <button
