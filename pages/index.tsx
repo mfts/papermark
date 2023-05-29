@@ -33,8 +33,8 @@ export default function Example() {
             Papermark
           </h1>
           <p className="mt-6 text-lg leading-8 text-gray-300">
-            The dynamic open-source alternative to DocSend. We're on a mission
-            to revolutionize content sharing and collaboration.
+            The dynamic open-source alternative to DocSend. We&apos;re on a
+            mission to revolutionize content sharing and collaboration.
           </p>
           <div className="mt-10 flex items-center gap-x-6">
             <Link

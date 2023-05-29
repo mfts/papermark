@@ -289,6 +289,15 @@ const DocumentPage = ({
 };
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
+  if (
+    !context.params ||
+    !context.params.id ||
+    Array.isArray(context.params.id)
+  ) {
+    return {
+      notFound: true,
+    };
+  }
   const { id } = context.params;
 
   const session = await getServerSession(context.req, context.res, authOptions);

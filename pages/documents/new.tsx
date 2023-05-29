@@ -1,6 +1,7 @@
 import Sidebar from "@/components/Sidebar";
 import { useState, useMemo } from "react";
 import { useRouter } from "next/router";
+// @ts-ignore
 import type { PutBlobResult } from "@vercel/blob";
 import toast from "react-hot-toast";
 import Notification from "@/components/Notification";
