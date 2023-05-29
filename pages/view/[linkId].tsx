@@ -3,9 +3,8 @@ import React, { useState } from "react";
 import prisma from "@/lib/prisma";
 import EmailForm from "@/components/EmailForm";
 import { Document, Page, pdfjs } from "react-pdf";
-import "react-pdf/dist/esm/Page/AnnotationLayer.css";
+// import "react-pdf/dist/esm/Page/AnnotationLayer.css";
 import Link from "next/link";
-import { useRouter } from "next/router";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
@@ -16,11 +15,9 @@ const DocumentView = ({
   document: { id: string; file: string; name: string };
   linkId: string;
 }) => {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [numPages, setNumPages] = useState<Number>(0);
-  const [pageNumber, setPageNumber] = useState(1);
 
   function onDocumentLoadSuccess({ numPages }: { numPages: number }) {
     setNumPages(numPages);
