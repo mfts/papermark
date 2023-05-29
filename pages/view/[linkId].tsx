@@ -4,6 +4,8 @@ import prisma from "@/lib/prisma";
 import EmailForm from "@/components/EmailForm";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/esm/Page/AnnotationLayer.css";
+import Link from "next/link";
+import { useRouter } from "next/router";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
@@ -14,6 +16,7 @@ const DocumentView = ({
   document: { id: string; file: string; name: string };
   linkId: string;
 }) => {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [numPages, setNumPages] = useState<Number>(0);
@@ -75,9 +78,33 @@ const DocumentView = ({
       </div>
     );
   }
+  if (
+    document.file.includes(".png") ||
+    document.file.includes(".jpeg") ||
+    document.file.includes(".gif") ||
+    document.file.includes(".jpg")
+  ) {
+    return (
+      <div className="h-screen bg-gray-900">
+        <img className="w-full h-full" src={document.file} />
+      </div>
+    );
+  }
+
   return (
-    <div className="h-screen bg-gray-900">
-      <img className="w-full h-full" src={document.file} />
+    <div className="h-screen bg-black flex flex-col items-center space-y-4">
+      <div className="text-center">
+        <div className="text-white text-2xl mt-10">{document.name}</div>
+        <p className="text-gray-400">
+          This file cannot be viewed in the browser.
+        </p>
+      </div>
+      <Link
+        href={document.file}
+        className="rounded px-4 py-2 bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white"
+      >
+        Download file
+      </Link>
     </div>
   );
 };
