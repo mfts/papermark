@@ -1,10 +1,10 @@
-import { PhotoIcon, UserCircleIcon } from "@heroicons/react/20/solid";
 import Sidebar from "@/components/Sidebar";
 import { useState, useMemo } from "react";
 import { useRouter } from "next/router";
 import type { PutBlobResult } from "@vercel/blob";
 import toast from "react-hot-toast";
 import Notification from "@/components/Notification";
+import { ArrowUpTrayIcon } from "@heroicons/react/24/outline";
 
 export default function Form() {
   const router = useRouter();
@@ -16,7 +16,7 @@ export default function Form() {
     [currentFile]
   );
 
-  const handleSubmit = async (event) => {
+  const handleSubmit = async (event: any) => {
     event.preventDefault();
 
     const data = new FormData(event.target);
@@ -91,81 +91,74 @@ export default function Form() {
                     Share a document
                   </h2>
                   <p className="mt-1 text-sm leading-6 text-gray-400">
-                    This information will be displayed publicly so be careful
-                    what you share.
+                    After you upload the document, a shareable link will be
+                    generated and copied to your clipboard.
                   </p>
 
                   <div className="mt-10 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
                     <div className="col-span-full">
-                      <label
-                        htmlFor="cover-photo"
-                        className="block text-sm font-medium leading-6 text-white"
-                      >
+                      <label className="block text-sm font-medium leading-6 text-white">
                         Upload a document
                       </label>
-                      <div className="mt-2 flex justify-center rounded-lg border border-dashed border-white/25 px-6 py-10">
-                        <div className="text-center">
-                          {currentFile && (
-                            <div>
-                              <img
-                                className="h-12 w-12 mx-auto"
-                                src={imageBlobUrl}
-                                alt="File preview"
-                              />
-                            </div>
-                          )}
-                          <PhotoIcon
-                            className="mx-auto h-12 w-12 text-gray-500"
-                            aria-hidden="true"
-                          />
-                          <div className="mt-4 flex text-sm leading-6 text-gray-400">
-                            <label
-                              htmlFor="file-upload"
-                              className="relative cursor-pointer rounded-md bg-gray-900 font-semibold text-white focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 focus-within:ring-offset-gray-900 hover:text-indigo-500"
-                            >
-                              <span>Upload a file</span>
-                              <input
-                                id="file-upload"
-                                name="file"
-                                type="file"
-                                className="sr-only"
-                                onChange={(e) =>
-                                  setCurrentFile(e.target.files?.[0] || null)
-                                }
-                              />
-                            </label>
-                            {/* <p className="pl-1">or drag and drop</p> */}
-                          </div>
-                          <p className="text-xs leading-5 text-gray-400">
-                            PDF, DOCX, PPTX and more up to 4MB
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* <div className="sm:col-span-4">
                       <label
-                        htmlFor="linkname"
-                        className="block text-sm font-medium leading-6 text-white"
+                        htmlFor="file-upload"
+                        className="relative cursor-pointer font-semibold text-white hover:text-gray-400 hover:bg-gray-900 block group"
                       >
-                        Pick a Link
-                      </label>
-                      <div className="mt-2">
-                        <div className="flex rounded-md bg-white/5 ring-1 ring-inset ring-white/10 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-500">
-                          <span className="flex select-none items-center pl-3 text-gray-500 sm:text-sm">
-                            papermark.io/view/
-                          </span>
-                          <input
-                            type="text"
-                            name="name"
-                            id="linkname"
-                            autoComplete="linkname"
-                            className="flex-1 border-0 bg-transparent py-1.5 pl-1 text-white focus:ring-0 sm:text-sm sm:leading-6"
-                            placeholder="acme-presentation"
-                          />
+                        <div className="mt-2 flex justify-center rounded-lg border border-dashed border-white/25 px-6 py-10">
+                          {currentFile ? (
+                            <div
+                              className="absolute inset-0 opacity-10 pointer-events-none group-hover:opacity-5 transition-opacity"
+                              style={{
+                                backgroundImage: `url(${imageBlobUrl})`,
+                                backgroundPosition: "center",
+                                backgroundSize: "cover",
+                              }}
+                            />
+                          ) : null}
+                          <div className="text-center">
+                            {currentFile ? (
+                              <div>
+                                <img
+                                  className="h-12 w-12 mx-auto"
+                                  src={imageBlobUrl}
+                                  alt={currentFile.name}
+                                />
+                              </div>
+                            ) : (
+                              <ArrowUpTrayIcon
+                                className="mx-auto h-12 w-12 text-gray-500"
+                                aria-hidden="true"
+                              />
+                            )}
+
+                            <div className="mt-4 flex text-sm leading-6 text-gray-400">
+                              <span>
+                                {currentFile
+                                  ? currentFile.name
+                                  : "Choose file to upload"}
+                              </span>
+
+                              {/* <p className="pl-1">or drag and drop</p> */}
+                            </div>
+                            <p className="text-xs leading-5 text-gray-400">
+                              {currentFile
+                                ? "Replace file?"
+                                : ".png, .jpg, .jpeg, .svg, .gif"}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    </div> */}
+                      </label>
+                      <input
+                        id="file-upload"
+                        name="file"
+                        type="file"
+                        className="sr-only"
+                        required
+                        onChange={(e) =>
+                          setCurrentFile(e.target.files?.[0] || null)
+                        }
+                      />
+                    </div>
 
                     <div className="col-span-full">
                       <label
