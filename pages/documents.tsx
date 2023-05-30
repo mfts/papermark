@@ -160,22 +160,25 @@ export default function Documents({
                 );
               })}
             </ul>
-            <div className="flex justify-between mx-10">
-              <Link
-                href={currentPage > 1 ? `?page=${currentPage - 1}` : "#"}
-                passHref
-              >
-                <button disabled={currentPage === 1}>Previous</button>
-              </Link>
-              <Link
-                href={
-                  currentPage < totalPages ? `?page=${currentPage + 1}` : "#"
-                }
-                passHref
-              >
-                <button disabled={currentPage === totalPages}>Next</button>
-              </Link>
-            </div>
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex justify-between mx-10">
+                <Link
+                  href={currentPage > 1 ? `?page=${currentPage - 1}` : "#"}
+                  passHref
+                >
+                  <button disabled={currentPage === 1}>Previous</button>
+                </Link>
+                <Link
+                  href={
+                    currentPage < totalPages ? `?page=${currentPage + 1}` : "#"
+                  }
+                  passHref
+                >
+                  <button disabled={currentPage === totalPages}>Next</button>
+                </Link>
+              </div>
+            )}
           </main>
         </Sidebar>
       </div>
