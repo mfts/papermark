@@ -66,7 +66,13 @@ export default function Form() {
       );
 
       toast.custom((t) => (
-        <Notification t={t} closeToast={() => toast.dismiss(t.id)} />
+        <Notification
+          t={t}
+          closeToast={() => toast.dismiss(t.id)}
+          message={
+            "Document uploaded and link copied to clipboard. Redirecting to document page..."
+          }
+        />
       ));
 
       setTimeout(() => {
