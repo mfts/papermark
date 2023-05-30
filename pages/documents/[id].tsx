@@ -356,8 +356,6 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     _count: { id: true },
   });
 
-  console.log("links", links);
-
   const serializedDocument = {
     ...document,
     createdAt: document.createdAt.toISOString(),

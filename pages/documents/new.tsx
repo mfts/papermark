@@ -38,8 +38,6 @@ export default function Form() {
       // get the blob url from the response
       const blob = (await blobResponse.json()) as PutBlobResult;
 
-      console.log("Blob uploaded successfully!", blob);
-
       // create a document in the database with the blob url
       const response = await fetch("/api/documents", {
         method: "POST",
@@ -58,8 +56,6 @@ export default function Form() {
       }
 
       const { document, linkId } = await response.json();
-
-      console.log("Document created successfully!", document);
 
       navigator.clipboard.writeText(
         `${process.env.NEXT_PUBLIC_BASE_URL}/view/${linkId}`

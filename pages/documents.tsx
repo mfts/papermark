@@ -55,8 +55,6 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
   const totalPages = Math.ceil(totalDocuments / pageSize);
 
-  console.log("documents: ", documents);
-
   const serializedDocuments = documents.map((document) => ({
     ...document,
     createdAt: document.createdAt.toISOString(),

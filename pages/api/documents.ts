@@ -23,9 +23,6 @@ export default async function handle(
   // Assuming data is an object with `name` and `description` properties
   const { name, url, description } = req.body;
 
-  console.log("name", name);
-  console.log("url", url);
-
   // You could perform some validation here
 
   try {
@@ -45,8 +42,6 @@ export default async function handle(
         // url: nanoid(),
       },
     });
-
-    console.log("link", link);
 
     res.status(201).json({ document, linkId: link.id });
   } catch (error) {
