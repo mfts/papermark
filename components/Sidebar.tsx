@@ -228,7 +228,7 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
                         </p>
                       </Menu.Item>
                     )}
-                    {session && (
+                    {session ? (
                       <Menu.Item>
                         <Link
                           onClick={() =>
@@ -242,8 +242,7 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
                           Sign Out
                         </Link>
                       </Menu.Item>
-                    )}
-                    {!session && (
+                    ) : (
                       <Menu.Item>
                         <a
                           onClick={() => signIn()}
