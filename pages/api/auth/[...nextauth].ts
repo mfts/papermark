@@ -23,7 +23,7 @@ export const authOptions: NextAuthOptions = {
         sameSite: "lax",
         path: "/",
         // When working on localhost, the cookie domain must be omitted entirely (https://stackoverflow.com/a/1188145)
-        domain: VERCEL_DEPLOYMENT ? "everything.to" : undefined,
+        domain: VERCEL_DEPLOYMENT ? "www.papermark.io" : undefined,
         secure: VERCEL_DEPLOYMENT,
       },
     },
