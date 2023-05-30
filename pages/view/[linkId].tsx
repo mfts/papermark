@@ -58,6 +58,19 @@ const DocumentView = ({
       </div>
     );
   }
+
+  if (
+    document.file.includes(".png") ||
+    document.file.includes(".jpeg") ||
+    document.file.includes(".gif") ||
+    document.file.includes(".jpg")
+  ) {
+    return (
+      <div className="h-screen bg-gray-900">
+        <img className="w-full h-full" src={document.file} />
+      </div>
+    );
+  }
   return (
     <div className="h-screen bg-gray-900">
       <iframe
