@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth/next";
 import prisma from "@/lib/prisma";
 import { authOptions } from "./auth/[...nextauth]";
 import { CustomUser } from "@/lib/types";
+import { getExtension } from "@/lib/utils";
 
 export default async function handle(
   req: NextApiRequest,
@@ -23,6 +24,9 @@ export default async function handle(
   // Assuming data is an object with `name` and `description` properties
   const { name, url, description } = req.body;
 
+  // Get the file extension and save it as the type
+  const type = getExtension(name);
+
   // You could perform some validation here
 
   try {
@@ -32,6 +36,7 @@ export default async function handle(
         name: name,
         description: description,
         file: url,
+        type: type,
         ownerId: (session.user as CustomUser).id,
       },
     });

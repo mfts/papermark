@@ -2,7 +2,7 @@ import { GetServerSideProps } from "next";
 import React, { useState } from "react";
 import prisma from "@/lib/prisma";
 import EmailForm from "@/components/EmailForm";
-import Link from "next/link";
+import { getExtension } from "@/lib/utils";
 
 const DocumentView = ({
   document,
@@ -13,11 +13,9 @@ const DocumentView = ({
 }) => {
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
-  const [numPages, setNumPages] = useState<Number>(0);
 
-  function onDocumentLoadSuccess({ numPages }: { numPages: number }) {
-    setNumPages(numPages);
-  }
+  // get the file extension
+  const extension = getExtension(document.file);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -42,12 +40,12 @@ const DocumentView = ({
   }
 
   if (
-    document.file.includes(".docx") ||
-    document.file.includes(".pptx") ||
-    document.file.includes(".xlsx") ||
-    document.file.includes(".xls") ||
-    document.file.includes(".doc") ||
-    document.file.includes(".ppt")
+    extension.includes(".docx") ||
+    extension.includes(".pptx") ||
+    extension.includes(".xlsx") ||
+    extension.includes(".xls") ||
+    extension.includes(".doc") ||
+    extension.includes(".ppt")
   ) {
     return (
       <div className="h-screen bg-gray-900">
@@ -60,10 +58,10 @@ const DocumentView = ({
   }
 
   if (
-    document.file.includes(".png") ||
-    document.file.includes(".jpeg") ||
-    document.file.includes(".gif") ||
-    document.file.includes(".jpg")
+    extension.includes(".png") ||
+    extension.includes(".jpeg") ||
+    extension.includes(".gif") ||
+    extension.includes(".jpg")
   ) {
     return (
       <div className="h-screen bg-gray-900">
