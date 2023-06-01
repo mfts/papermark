@@ -1,5 +1,6 @@
 export function classNames(...classes: string[]) {
-  return classes.filter(Boolean).join(" ");
+  const uniqueClasses = Array.from(new Set(classes.join(" ").split(" ")));
+  return uniqueClasses.join(" ");
 }
 
 export function getExtension(url: string) {
