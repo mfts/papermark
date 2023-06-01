@@ -181,8 +181,7 @@ export default function Form() {
                         />
                       </div>
                       <p className="mt-3 text-sm leading-6 text-gray-400">
-                        This is description will help you find your document
-                        later.
+                        This description will help you find your document later.
                       </p>
                     </div>
                   </div>
