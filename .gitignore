@@ -8,6 +8,11 @@
 # testing
 /coverage
 
+
+# nvm
+.npmrc
+.nvmrc
+
 # next.js
 /.next/
 /out/
