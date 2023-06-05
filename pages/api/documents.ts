@@ -9,50 +9,84 @@ export default async function handle(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  // We only allow POST requests
-  if (req.method !== "POST") {
-    res.status(405).json({ message: "Method Not Allowed" });
-    return;
-  }
+  if (req.method === "GET") {
+    // GET /api/documents
+    const session = await getServerSession(req, res, authOptions);
+    if (!session) {
+      return res.status(401).end({ error: "Unauthorized" });
+    }
 
-  const session = await getServerSession(req, res, authOptions);
-  if (!session) {
-    res.status(401).json({ error: "Unauthorized" });
-    return;
-  }
+    try {
+      const documents = await prisma.document.findMany({
+        where: {
+          ownerId: (session.user as CustomUser).id,
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+        include: {
+          _count: {
+            select: { links: true },
+          },
+          links: {
+            take: 1,
+            select: { id: true },
+          },
+        },
+      });
 
-  // Assuming data is an object with `name` and `description` properties
-  const { name, url, description } = req.body;
+      res.status(200).json(documents);
+    } catch (error) {
+      return res.status(500).end({
+        message: "Internal Server Error",
+        error: (error as Error).message,
+      });
+    }
+  } else if (req.method === "POST") {
+    // POST /api/documents
+    const session = await getServerSession(req, res, authOptions);
+    if (!session) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
 
-  // Get the file extension and save it as the type
-  const type = getExtension(name);
+    // Assuming data is an object with `name` and `description` properties
+    const { name, url, description } = req.body;
 
-  // You could perform some validation here
+    // Get the file extension and save it as the type
+    const type = getExtension(name);
 
-  try {
-    // Save data to the database
-    const document = await prisma.document.create({
-      data: {
-        name: name,
-        description: description,
-        file: url,
-        type: type,
-        ownerId: (session.user as CustomUser).id,
-      },
-    });
+    // You could perform some validation here
 
-    const link = await prisma.link.create({
-      data: {
-        documentId: document.id,
-        // url: nanoid(),
-      },
-    });
+    try {
+      // Save data to the database
+      const document = await prisma.document.create({
+        data: {
+          name: name,
+          description: description,
+          file: url,
+          type: type,
+          ownerId: (session.user as CustomUser).id,
+        },
+      });
 
-    res.status(201).json({ document, linkId: link.id });
-  } catch (error) {
-    res.status(500).json({
-      message: "Internal Server Error",
-      error: (error as Error).message,
-    });
+      const link = await prisma.link.create({
+        data: {
+          documentId: document.id,
+          // url: nanoid(),
+        },
+      });
+
+      res.status(201).json({ document, linkId: link.id });
+    } catch (error) {
+      res.status(500).json({
+        message: "Internal Server Error",
+        error: (error as Error).message,
+      });
+    }
+  } else {
+    // We only allow GET and POST requests
+    res.setHeader("Allow", ["GET", "POST"]);
+    return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 }
