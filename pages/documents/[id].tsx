@@ -63,7 +63,11 @@ const DocumentPage = ({
     );
 
     toast.custom((t) => (
-      <Notification t={t} closeToast={() => toast.dismiss(t.id)} message={``} />
+      <Notification
+        visible={t.visible}
+        closeToast={() => toast.dismiss(t.id)}
+        message={``}
+      />
     ));
   };
 

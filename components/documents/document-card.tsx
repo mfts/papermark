@@ -3,6 +3,7 @@ import { ChevronRightIcon } from "@heroicons/react/20/solid";
 import { DocumentDuplicateIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
 import { DocumentWithLinksAndLinkCount } from "@/lib/types";
+import toast from "react-hot-toast";
 import Notification from "@/components/Notification";
 
 export default function DocumentsCard({
@@ -15,6 +16,13 @@ export default function DocumentsCard({
       `${process.env.NEXT_PUBLIC_BASE_URL}/view/${id}`
     );
 
+    toast.custom((t) => (
+      <Notification
+        visible={t.visible}
+        closeToast={() => toast.dismiss(t.id)}
+        message={``}
+      />
+    ));
   }
 
   return (
