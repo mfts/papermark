@@ -2,13 +2,14 @@ import { CheckCircleIcon } from "@heroicons/react/24/outline";
 import { XMarkIcon } from "@heroicons/react/20/solid";
 import { Transition } from "@headlessui/react";
 import { Fragment } from "react";
+import { Toast } from "react-hot-toast";
 
 export default function Notification({
-  t,
+  visible,
   closeToast,
   message = "Document uploaded and link copied to clipboard.",
 }: {
-  t: any;
+  visible: boolean;
   closeToast: () => void;
   message?: string;
 }) {
@@ -16,7 +17,7 @@ export default function Notification({
     <div className="flex w-full flex-col items-center space-y-4 sm:items-end">
       {/* Notification panel, dynamically insert this into the live region when it needs to be displayed */}
       <Transition
-        show={t.visible}
+        show={visible}
         as={Fragment}
         enter="transform ease-out duration-300 transition"
         enterFrom="translate-y-2 opacity-0 sm:translate-y-0 sm:translate-x-2"
