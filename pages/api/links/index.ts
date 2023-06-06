@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "./auth/[...nextauth]";
+import { authOptions } from "../auth/[...nextauth]";
 
 export default async function handler(
   req: NextApiRequest,
@@ -10,7 +10,7 @@ export default async function handler(
   if (req.method === "POST") {
     const session = await getServerSession(req, res, authOptions);
     if (!session) {
-      return res.status(401).end("Unauthorized");
+      return res.status(401).end({ error: "Unauthorized" });
     }
 
     const { documentId } = req.body;

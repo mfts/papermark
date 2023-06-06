@@ -64,6 +64,7 @@ model Document {
   owner     User     @relation(fields: [ownerId], references: [id])
   ownerId   String   // This field holds the foreign key.
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
   links     Link[]
   views     View[]
 }
@@ -77,6 +78,8 @@ model Link {
   password      String?     // Optional password for link protection
   allowedEmails String[]    // Array of emails allowed to view the document
   views         View[]
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
 }
 
 model View {
