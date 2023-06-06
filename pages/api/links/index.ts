@@ -10,7 +10,7 @@ export default async function handler(
   if (req.method === "POST") {
     const session = await getServerSession(req, res, authOptions);
     if (!session) {
-      return res.status(401).end({ error: "Unauthorized" });
+      return res.status(401).end("Unauthorized");
     }
 
     const { documentId } = req.body;
