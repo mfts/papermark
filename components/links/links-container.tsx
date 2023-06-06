@@ -4,9 +4,17 @@ import Notification from "../Notification";
 import toast from "react-hot-toast";
 import { useDocumentLinks } from "@/lib/swr/use-document";
 import { formatDistance, parseISO } from "date-fns";
+import { useRouter } from "next/router";
+import { useState } from "react";
+import { mutate } from "swr";
 
 export default function LinksContainer() {
   const { links } = useDocumentLinks();
+
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  const documentId = router.query.id as string;
 
   const handleCopyToClipboard = (id: string) => {
     navigator.clipboard.writeText(
@@ -21,6 +29,34 @@ export default function LinksContainer() {
       />
     ));
   };
+
+  async function addNewLink() {
+    setIsLoading(true);
+    const response = await fetch("/api/links", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        documentId: documentId,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const newLink = await response.json();
+
+    // Update local data with the new link
+    mutate(
+      `/api/documents/${encodeURIComponent(documentId)}/links`,
+      [...(links || []), newLink],
+      false
+    );
+
+    setIsLoading(false);
+  }
 
   return (
     <div className="border-t border-white/10 pt-11">
@@ -113,7 +149,9 @@ export default function LinksContainer() {
                         { addSuffix: true }
                       )}
                     </time>
-                  ) : null}
+                  ) : (
+                    "-"
+                  )}
                 </td>
               </tr>
             ))
@@ -131,17 +169,17 @@ export default function LinksContainer() {
               </tr>
             </>
           )}
-          {/* {isLoading && (
+          {isLoading && (
             <tr>
               <td className="py-4 pl-4 pr-8 sm:pl-6 lg:pl-8">
                 <Skeleton className="h-5 w-full" />
               </td>
             </tr>
-          )} */}
+          )}
           <tr>
             <td className="py-4 pl-4 pr-8 sm:pl-6 lg:pl-8">
               <button
-                // onClick={() => addNewLink()}
+                onClick={() => addNewLink()}
                 className="text-gray-400 hover:text-gray-50"
               >
                 Add another link
