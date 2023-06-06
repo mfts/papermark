@@ -26,7 +26,10 @@ export default function Documents() {
                     );
                   })
                 : Array.from({ length: 3 }).map((_, i) => (
-                    <li className="flex flex-col space-y-4 px-4 py-4 sm:px-6 lg:px-8">
+                    <li
+                      key={i}
+                      className="flex flex-col space-y-4 px-4 py-4 sm:px-6 lg:px-8"
+                    >
                       <Skeleton key={i} className="h-5 w-20" />
                       <Skeleton key={i} className="mt-3 h-3 w-10" />
                     </li>
