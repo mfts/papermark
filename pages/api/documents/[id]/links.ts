@@ -21,6 +21,9 @@ export default async function handle(
         where: {
           documentId: id,
         },
+        orderBy: {
+          createdAt: "asc",
+        },
         include: {
           views: true,
           _count: {
