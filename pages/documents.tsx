@@ -1,6 +1,7 @@
 import Sidebar from "@/components/Sidebar";
 import useDocuments from "@/lib/swr/use-documents";
 import DocumentCard from "@/components/documents/document-card";
+import Skeleton from "@/components/Skeleton";
 
 export default function Documents() {
   const { documents } = useDocuments();
@@ -18,15 +19,18 @@ export default function Documents() {
 
             {/* Documents list */}
             <ul role="list" className="divide-y divide-white/5">
-              {documents ? (
-                documents.map((document) => {
-                  return <DocumentCard key={document.id} document={document} />;
-                })
-              ) : (
-                <div className="flex justify-center items-center h-96">
-                  <p className="text-gray-400">Loading documents</p>
-                </div>
-              )}
+              {documents
+                ? documents.map((document) => {
+                    return (
+                      <DocumentCard key={document.id} document={document} />
+                    );
+                  })
+                : Array.from({ length: 3 }).map((_, i) => (
+                    <li className="flex flex-col space-y-4 px-4 py-4 sm:px-6 lg:px-8">
+                      <Skeleton key={i} className="h-5 w-20" />
+                      <Skeleton key={i} className="mt-3 h-3 w-10" />
+                    </li>
+                  ))}
             </ul>
           </main>
         </Sidebar>
