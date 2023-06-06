@@ -18,3 +18,7 @@ export interface LinkWithViews extends Link {
   };
   views: View[];
 }
+
+export interface LinkWithDocument extends Link {
+  document: Document;
+}

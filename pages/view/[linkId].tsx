@@ -1,28 +1,29 @@
-import { GetServerSideProps } from "next";
 import React, { useState } from "react";
-import prisma from "@/lib/prisma";
 import EmailForm from "@/components/EmailForm";
 import { getExtension } from "@/lib/utils";
+import { useLink } from "@/lib/swr/use-link";
+import ErrorPage from "next/error";
 
-const DocumentView = ({
-  document,
-  linkId,
-}: {
-  document: { id: string; file: string; name: string };
-  linkId: string;
-}) => {
+export default function DocumentView() {
+  const { link, error } = useLink();
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
 
-  // get the file extension
-  const extension = getExtension(document.file);
+  if (error && error.status === 404) {
+    return <ErrorPage statusCode={404} />;
+  }
+
+  if (!link) {
+    return <div>Loading...</div>;
+  }
+  const { document } = link;
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
     const response = await fetch("/api/views", {
       method: "POST",
-      body: JSON.stringify({ linkId, email, documentId: document.id }),
+      body: JSON.stringify({ linkId: link.id, email, documentId: document.id }),
       headers: {
         "Content-Type": "application/json",
       },
@@ -38,6 +39,9 @@ const DocumentView = ({
   if (!submitted) {
     return <EmailForm onSubmitHandler={handleSubmit} setEmail={setEmail} />;
   }
+
+  // get the file extension
+  const extension = getExtension(document.file);
 
   if (
     extension.includes(".docx") ||
@@ -77,34 +81,4 @@ const DocumentView = ({
       ></iframe>
     </div>
   );
-};
-
-export const getServerSideProps: GetServerSideProps = async ({ params }) => {
-  const linkId = params?.linkId as string;
-
-  const link = await prisma.link.findUnique({
-    where: { id: linkId },
-    include: { document: true },
-  });
-
-  if (!link || !link.document) {
-    return {
-      notFound: true,
-    };
-  }
-
-  const document = link.document;
-
-  return {
-    props: {
-      document: {
-        id: document.id,
-        file: document.file,
-        name: document.name,
-      },
-      linkId,
-    },
-  };
-};
-
-export default DocumentView;
+}
