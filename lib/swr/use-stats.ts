@@ -1,8 +1,7 @@
 import { useRouter } from "next/router";
 import useSWR from "swr";
 import { fetcher } from "@/lib/utils";
-import { LinkWithViews } from "@/lib/types";
-import { Document, View } from "@prisma/client";
+import { View } from "@prisma/client";
 
 interface GroupedView {
   viewerEmail: string;
