@@ -101,15 +101,19 @@ export default function LinksContainer() {
                   </div>
                 </td>
                 <td className="hidden py-4 pl-0 pr-4 text-right text-sm leading-6 text-gray-400 sm:table-cell sm:pr-6 lg:pr-8">
-                  {link.views[0] && (
-                    <time dateTime={link.views[0].viewedAt}>
+                  {link.views[0] ? (
+                    <time
+                      dateTime={new Date(link.views[0].viewedAt).toISOString()}
+                    >
                       {formatDistance(
-                        parseISO(link.views[0].viewedAt),
+                        parseISO(
+                          new Date(link.views[0].viewedAt).toISOString()
+                        ),
                         new Date(),
                         { addSuffix: true }
                       )}
                     </time>
-                  )}
+                  ) : null}
                 </td>
               </tr>
             ))

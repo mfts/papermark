@@ -34,7 +34,7 @@ export default function StatsCard() {
     <div className="grid grid-cols-1 bg-gray-700/10 sm:grid-cols-2 lg:grid-cols-4">
       {stats
         ? statistics.map((stat, statIdx) => (
-            <StatsElement stat={stat} statIdx={statIdx} />
+            <StatsElement key={statIdx} stat={stat} statIdx={statIdx} />
           ))
         : Array.from({ length: 4 }).map((_, i) => (
             <StatsElementPlaceholder key={i} />
