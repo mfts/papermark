@@ -22,6 +22,7 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
       href: "/documents",
       icon: FolderIcon,
       current: router.pathname.includes("documents"),
+      disabled: router.pathname === "/documents/new",
     },
   ];
 
@@ -91,23 +92,22 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
                       <li>
                         <ul role="list" className="-mx-2 space-y-1">
                           {navigation.map((item) => (
-                            <li key={item.name}>
-                              <a
-                                href={item.href}
-                                className={classNames(
-                                  item.current
-                                    ? "bg-gray-800 text-white"
-                                    : "text-gray-400 hover:text-white hover:bg-gray-800",
-                                  "group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold"
-                                )}
-                              >
-                                <item.icon
-                                  className="h-6 w-6 shrink-0"
-                                  aria-hidden="true"
-                                />
-                                {item.name}
-                              </a>
-                            </li>
+                            <button
+                              onClick={() => router.push(item.href)}
+                              className={classNames(
+                                item.current
+                                  ? "bg-gray-800 text-white"
+                                  : "text-gray-400 hover:text-white hover:bg-gray-800",
+                                "group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold w-full"
+                              )}
+                              disabled={item.disabled}
+                            >
+                              <item.icon
+                                className="h-6 w-6 shrink-0"
+                                aria-hidden="true"
+                              />
+                              {item.name}
+                            </button>
                           ))}
                         </ul>
                       </li>
@@ -135,21 +135,22 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
                 <ul role="list" className="-mx-2 space-y-1">
                   {navigation.map((item) => (
                     <li key={item.name}>
-                      <a
-                        href={item.href}
+                      <button
+                        onClick={() => router.push(item.href)}
                         className={classNames(
                           item.current
                             ? "bg-gray-800 text-white"
                             : "text-gray-400 hover:text-white hover:bg-gray-800",
-                          "group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold"
+                          "group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold w-full"
                         )}
+                        disabled={item.disabled}
                       >
                         <item.icon
                           className="h-6 w-6 shrink-0"
                           aria-hidden="true"
                         />
                         {item.name}
-                      </a>
+                      </button>
                     </li>
                   ))}
                 </ul>
@@ -179,14 +180,16 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
 
           <div className="flex flex-1 gap-x-4 self-stretch items-center lg:gap-x-6 justify-end">
             <div className="flex-shrink-0">
-              <Link
-                href="/documents/new"
-                type="button"
-                className="relative inline-flex items-center gap-x-1.5 rounded-md bg-indigo-500 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
-              >
-                <PlusIcon className="-ml-0.5 h-5 w-5" aria-hidden="true" />
-                New Link
-              </Link>
+              {router.pathname !== "/documents/new" ? (
+                <Link
+                  href="/documents/new"
+                  type="button"
+                  className="relative inline-flex items-center gap-x-1.5 rounded-md bg-indigo-500 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
+                >
+                  <PlusIcon className="-ml-0.5 h-5 w-5" aria-hidden="true" />
+                  New Link
+                </Link>
+              ) : null}
             </div>
             <div className="flex items-center gap-x-4 lg:gap-x-6">
               {/* Profile dropdown */}
