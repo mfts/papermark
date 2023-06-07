@@ -67,17 +67,16 @@ export default async function handle(
           file: url,
           type: type,
           ownerId: (session.user as CustomUser).id,
+          links : {
+            create: {}
+          }
+        },
+        include: {
+          links: true,
         },
       });
 
-      const link = await prisma.link.create({
-        data: {
-          documentId: document.id,
-          // url: nanoid(),
-        },
-      });
-
-      res.status(201).json({ document, linkId: link.id });
+      res.status(201).json(document);
     } catch (error) {
       res.status(500).json({
         message: "Internal Server Error",

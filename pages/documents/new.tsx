@@ -55,10 +55,10 @@ export default function Form() {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const { document, linkId } = await response.json();
+      const document = await response.json();
 
       navigator.clipboard.writeText(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/view/${linkId}`
+        `${process.env.NEXT_PUBLIC_BASE_URL}/view/${document.links[0].id}`
       );
 
       toast.custom((t) => (
