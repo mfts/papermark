@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth/next";
 import prisma from "@/lib/prisma";
 import { authOptions } from "../../auth/[...nextauth]";
+import { log } from "@/lib/utils";
 
 export default async function handle(
   req: NextApiRequest,
@@ -36,6 +37,7 @@ export default async function handle(
 
       res.status(200).json(links);
     } catch (error) {
+      log(`Failed to get links for document ${id}. Error: \n\n ${error}`)
       return res.status(500).json({
         message: "Internal Server Error",
         error: (error as Error).message,

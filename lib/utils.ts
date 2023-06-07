@@ -27,3 +27,31 @@ export async function fetcher<JSON = any>(
 
   return res.json();
 }
+
+
+export const log = async (
+  message: string,
+) => {
+  /* Log a message to the console */
+  try {
+    return await fetch(`${process.env.PPMK_SLACK_WEBHOOK_URL}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        blocks: [
+          {
+            type: "section",
+            text: {
+              type: "mrkdwn",
+              text: `${message}`,
+            },
+          },
+        ],
+      }),
+    });
+  } catch (e) {
+    console.log(`Failed to log to Dub Slack. Error: ${e}`);
+  }
+};
