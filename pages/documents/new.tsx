@@ -135,7 +135,7 @@ export default function Form() {
                             )}
 
                             <div className="mt-4 flex text-sm leading-6 text-gray-400">
-                              <span>
+                              <span className="mx-auto">
                                 {currentFile
                                   ? currentFile.name
                                   : "Choose file to upload"}
