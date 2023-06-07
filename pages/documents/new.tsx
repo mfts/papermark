@@ -146,7 +146,7 @@ export default function Form() {
                             <p className="text-xs leading-5 text-gray-400">
                               {currentFile
                                 ? "Replace file?"
-                                : ".png, .jpg, .jpeg, .svg, .gif"}
+                                : ".pdf, .docx, .pptx, image files and more"}
                             </p>
                           </div>
                         </div>
