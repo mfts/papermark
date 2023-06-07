@@ -11,7 +11,13 @@ import Link from "next/link";
 import { classNames } from "@/lib/utils";
 import { useRouter } from "next/router";
 
-export default function Sidebar({ children }: { children: React.ReactNode }) {
+export default function Sidebar({
+  children,
+  emptyDocument,
+}: {
+  children: React.ReactNode;
+  emptyDocument?: boolean;
+}) {
   const { data: session } = useSession();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const router = useRouter();
@@ -197,7 +203,7 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
           />
 
           <div className="flex flex-1 gap-x-4 self-stretch items-center lg:gap-x-6 justify-end">
-            {!isDocumentsRoute ? (
+            {!isDocumentsRoute && emptyDocument ? (
               <div className="flex-shrink-0">
                 <Link
                   href="/documents/new"
