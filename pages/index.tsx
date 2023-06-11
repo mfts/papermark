@@ -6,10 +6,10 @@ export default function Example() {
 
   function signInOrRedirect() {
     if (session) {
-      window.location.href = "/documents/new";
+      window.location.href = "/documents";
     } else {
       signIn("google", {
-        callbackUrl: `${window.location.origin}/documents/new`,
+        callbackUrl: `${window.location.origin}/welcome`,
       });
     }
   }
