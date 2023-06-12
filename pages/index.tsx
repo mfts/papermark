@@ -1,18 +1,7 @@
-import { signIn, useSession } from "next-auth/react";
 import Link from "next/link";
 
 export default function Example() {
-  const { data: session } = useSession();
 
-  function signInOrRedirect() {
-    if (session) {
-      window.location.href = "/documents";
-    } else {
-      signIn("google", {
-        callbackUrl: `${window.location.origin}/welcome`,
-      });
-    }
-  }
   return (
     <div className="max-h-screen relative isolate overflow-hidden bg-black">
       <div
@@ -38,9 +27,8 @@ export default function Example() {
           </p>
           <div className="mt-10 flex items-center gap-x-6">
             <Link
-              onClick={() => signInOrRedirect()}
               className="rounded-md bg-indigo-500 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400"
-              href={""}
+              href={"/login"}
             >
               Get started
             </Link>
