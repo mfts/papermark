@@ -31,7 +31,6 @@ export default function Next() {
         variants={STAGGER_CHILD_VARIANTS}
         className="flex flex-col items-center space-y-10 text-center"
       >
-        {/* <Logo className="h-11 w-11" /> */}
         <p className="text-2xl font-bold tracking-tighter text-white">
           Papermark
         </p>
