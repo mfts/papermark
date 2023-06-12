@@ -16,7 +16,7 @@ export default function Document() {
         />
         <meta
           property="og:image"
-          content="https://www.papermark.io/meta-image.png"
+          content="https://www.papermark.io/_static/meta-image.png"
         />
         <meta property="og:url" content="https://www.papermark.io" />
         <meta name="twitter:card" content="summary_large_image" />
@@ -29,7 +29,7 @@ export default function Document() {
         />
         <meta
           name="twitter:image"
-          content="https://www.papermark.io/meta-image.png"
+          content="https://www.papermark.io/_static/meta-image.png"
         />
         <link rel="icon" href="/favicon.ico" />
       </Head>

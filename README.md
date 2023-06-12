@@ -20,7 +20,7 @@ This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next
 
 <br/>
 
-![](public/papermark.png)
+![](public/_static/papermark.png)
 
 ## Tech Stack
 
