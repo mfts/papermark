@@ -3,6 +3,7 @@ import { Document, Link, View } from "@prisma/client";
 
 export interface CustomUser extends NextAuthUser {
   id: string;
+  createdAt: Date;
 }
 
 export interface DocumentWithLinksAndLinkCount extends Document {

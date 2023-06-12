@@ -1,18 +1,7 @@
-import { signIn, useSession } from "next-auth/react";
 import Link from "next/link";
 
 export default function Example() {
-  const { data: session } = useSession();
 
-  function signInOrRedirect() {
-    if (session) {
-      window.location.href = "/documents/new";
-    } else {
-      signIn("google", {
-        callbackUrl: `${window.location.origin}/documents/new`,
-      });
-    }
-  }
   return (
     <div className="max-h-screen relative isolate overflow-hidden bg-black">
       <div
@@ -38,9 +27,8 @@ export default function Example() {
           </p>
           <div className="mt-10 flex items-center gap-x-6">
             <Link
-              onClick={() => signInOrRedirect()}
               className="rounded-md bg-indigo-500 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400"
-              href={""}
+              href={"/login"}
             >
               Get started
             </Link>
@@ -55,7 +43,7 @@ export default function Example() {
         <div className="mx-auto mt-16 flex max-w-2xl sm:mt-24 lg:ml-10 lg:mr-0 lg:mt-0 lg:max-w-none lg:flex-none xl:ml-32">
           <div className="max-w-3xl flex-none sm:max-w-5xl lg:max-w-none">
             <img
-              src={`${process.env.NEXT_PUBLIC_BASE_URL}/papermark.png`}
+              src={`${process.env.NEXT_PUBLIC_BASE_URL}/_static/papermark.png`}
               alt="App screenshot"
               width={2432}
               height={1442}

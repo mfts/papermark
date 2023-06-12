@@ -29,6 +29,15 @@ export const authOptions: NextAuthOptions = {
     },
   },
   callbacks: {
+    jwt: async ({ token, user }) => {
+      if (!token.email) {
+        return {};
+      }
+      if (user) {
+        token.user = user;
+      }
+      return token;
+    },
     session: async ({ session, token }) => {
       (session.user as CustomUser) = {
         // @ts-ignore

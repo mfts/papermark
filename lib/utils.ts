@@ -28,10 +28,7 @@ export async function fetcher<JSON = any>(
   return res.json();
 }
 
-
-export const log = async (
-  message: string,
-) => {
+export const log = async (message: string) => {
   /* Log a message to the console */
   try {
     return await fetch(`${process.env.PPMK_SLACK_WEBHOOK_URL}`, {
@@ -55,3 +52,15 @@ export const log = async (
     console.log(`Failed to log to Dub Slack. Error: ${e}`);
   }
 };
+
+export function bytesToSize(bytes: number) {
+  const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
+  if (bytes === 0) return "n/a";
+  const i = Math.floor(Math.log(bytes) / Math.log(1000));
+  if (i === 0) return `${bytes} ${sizes[i]}`;
+  const sizeInCurrentUnit = bytes / Math.pow(1000, i);
+  if (sizeInCurrentUnit >= 1000 && i < sizes.length - 1) {
+    return `1 ${sizes[i + 1]}`;
+  }
+  return `${Math.round(sizeInCurrentUnit)} ${sizes[i]}`;
+}

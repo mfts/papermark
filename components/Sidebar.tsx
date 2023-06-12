@@ -1,12 +1,12 @@
 import { Fragment, useState } from "react";
 import { Menu, Dialog, Transition } from "@headlessui/react";
-import { signIn, signOut, useSession } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import {
   Bars3Icon,
   ChevronDownIcon,
   PlusIcon,
 } from "@heroicons/react/20/solid";
-import { FolderIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { FolderIcon, HomeIcon, XMarkIcon, ChartBarIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
 import { classNames } from "@/lib/utils";
 import { useRouter } from "next/router";
@@ -18,11 +18,25 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
 
   const navigation = [
     {
+      name: "Overview",
+      href: "/overview",
+      icon: HomeIcon,
+      current: router.pathname.includes("overview"),
+      disabled: true,
+    },
+    {
       name: "Documents",
       href: "/documents",
       icon: FolderIcon,
       current: router.pathname.includes("documents"),
-      disabled: router.pathname === "/documents/new",
+      disabled: false,
+    },
+    {
+      name: "Analytics",
+      href: "/analytics",
+      icon: ChartBarIcon,
+      current: router.pathname.includes("analytics"),
+      disabled: true,
     },
   ];
 
@@ -99,7 +113,7 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
                                   item.current
                                     ? "bg-gray-800 text-white"
                                     : "text-gray-400 hover:text-white hover:bg-gray-800",
-                                  "group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold w-full"
+                                  "group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold w-full disabled:hover:bg-inherit disabled:text-gray-400 disabled:cursor-default"
                                 )}
                                 disabled={item.disabled}
                               >
@@ -143,7 +157,7 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
                           item.current
                             ? "bg-gray-800 text-white"
                             : "text-gray-400 hover:text-white hover:bg-gray-800",
-                          "group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold w-full"
+                          "group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold w-full disabled:hover:bg-inherit disabled:text-gray-400 disabled:cursor-default"
                         )}
                         disabled={item.disabled}
                       >
@@ -247,16 +261,7 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
                           Sign Out
                         </Link>
                       </Menu.Item>
-                    ) : (
-                      <Menu.Item>
-                        <a
-                          onClick={() => signIn()}
-                          className="block px-3 py-1 text-sm leading-6 text-gray-900 bg-gray-50"
-                        >
-                          Sign In
-                        </a>
-                      </Menu.Item>
-                    )}
+                    ) : null}
                   </Menu.Items>
                 </Transition>
               </Menu>
