@@ -27,7 +27,7 @@ export default async function AppMiddleware(req: NextRequest) {
     // if the user was created in the last 10 seconds, redirect to "/welcome"
     if (
       token?.user?.createdAt &&
-      new Date(token?.user?.createdAt).getTime() > Date.now() - 1000000 &&
+      new Date(token?.user?.createdAt).getTime() > Date.now() - 10000 &&
       path !== "/welcome"
     ) {
       return NextResponse.redirect(new URL("/welcome", req.url));
