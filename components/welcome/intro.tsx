@@ -38,8 +38,7 @@ export default function Intro() {
           className="max-w-md text-gray-200 transition-colors sm:text-lg"
           variants={STAGGER_CHILD_VARIANTS}
         >
-          Papermark makes you look cool when fundraising and helps you keep
-          track of your investors.
+          Papermark gives you the power to securely share your stories with an impression that lasts.
         </motion.p>
         <motion.button
           variants={STAGGER_CHILD_VARIANTS}
