@@ -137,7 +137,11 @@ export default function Upload() {
           </motion.div>
           <motion.div variants={STAGGER_CHILD_VARIANTS}>
             <main className="mt-8">
-              <form encType="multipart/form-data" onSubmit={handleSubmit} className="flex flex-col">
+              <form
+                encType="multipart/form-data"
+                onSubmit={handleSubmit}
+                className="flex flex-col"
+              >
                 <div className="space-y-12">
                   <div className="pb-6">
                     <div className="mt-10 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
@@ -208,15 +212,12 @@ export default function Upload() {
                 <div className="flex flex-col justify-center">
                   <div className="relative">
                     <div className="flex py-8 rounded-md shadow-sm">
-                      <div className="flex w-full focus-within:z-10">
-                        <input
-                          type="text"
-                          name="link"
-                          id="link"
-                          disabled={true}
-                          className="block w-full md:min-w-[500px] rounded-none rounded-l-md border-0 py-1.5 text-gray-200 bg-gray-900 ring-1 ring-inset ring-gray-900 focus:ring-2 focus:ring-inset focus:ring-indigo-600 leading-6"
-                          value={`${process.env.NEXT_PUBLIC_BASE_URL}/view/${currentLinkId}`}
-                        />
+                      <div className="flex w-full max-w-xs sm:max-w-lg focus-within:z-10">
+                        <p
+                          className="block w-full md:min-w-[500px] rounded-none rounded-l-md px-4 text-left border-0 py-1.5 text-gray-200 bg-gray-900 leading-6 overflow-y-scroll"
+                        >
+                          {`${process.env.NEXT_PUBLIC_BASE_URL}/view/${currentLinkId}`}
+                        </p>
                       </div>
                       <button
                         type="button"
