@@ -133,24 +133,25 @@ export default function Home() {
   return (
     <div>
       <Head>
-        <title>Papermark: The Open-Source Alternative to DocSend</title>
+        <title>Papermark – The Open-Source Alternative to DocSend</title>
         <meta
           name="description"
-          content="Papermark is an open-source, AI-powered platform revolutionizing document sharing and collaboration. Manage secure document sharing with real-time analytics."
+          content="Papermark is an open-source document infrastructure for sharing and collaboration. Manage secure document sharing with real-time analytics."
         />
         <meta
           property="og:title"
-          content="Papermark: The Open-Source Alternative to DocSend"
+          content="Papermark – The Open-Source Alternative to DocSend"
         />
         <meta
           property="og:description"
-          content="Papermark is an open-source, AI-powered platform revolutionizing document sharing and collaboration. Manage secure document sharing with real-time analytics."
+          content="Papermark is an open-source document infrastructure for sharing and collaboration. Manage secure document sharing with real-time analytics."
         />
         <meta
           property="og:image"
-          content="https://www.papermark.io/meta-image.png"
+          content="https://www.papermark.io/_static/meta-image.png"
         />
         <meta property="og:url" content="https://www.papermark.io" />
+        <meta name="twitter:card" content="summary_large_image" />
       </Head>
 
       <main>

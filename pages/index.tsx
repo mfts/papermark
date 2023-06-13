@@ -2,27 +2,27 @@ import Link from "next/link";
 import Footer from "@/components/Footer";
 import Head from "next/head";
 
-export default function Example() {
+export default function Home() {
 
   return (
-    <div>
+    <>
       <Head>
-        <title>Papermark: The Open-Source Alternative to DocSend</title>
+        <title>Papermark – The Open-Source Alternative to DocSend</title>
         <meta
           name="description"
-          content="Papermark is an open-source, AI-powered platform revolutionizing document sharing and collaboration. Manage secure document sharing with real-time analytics."
+          content="Papermark is an open-source document infrastructure for sharing and collaboration. Manage secure document sharing with real-time analytics."
         />
         <meta
           property="og:title"
-          content="Papermark: The Open-Source Alternative to DocSend"
+          content="Papermark – The Open-Source Alternative to DocSend"
         />
         <meta
           property="og:description"
-          content="Papermark is an open-source, AI-powered platform revolutionizing document sharing and collaboration. Manage secure document sharing with real-time analytics."
+          content="Papermark is an open-source document infrastructure for sharing and collaboration. Manage secure document sharing with real-time analytics."
         />
         <meta
           property="og:image"
-          content="https://www.papermark.io/meta-image.png"
+          content="https://www.papermark.io/_static/meta-image.png"
         />
         <meta property="og:url" content="https://www.papermark.io" />
         <meta name="twitter:card" content="summary_large_image" />
@@ -53,16 +53,16 @@ export default function Example() {
               </p>
               <div className="mt-10 flex items-center gap-x-6">
                 <Link
-                      className="rounded-md bg-indigo-500 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400"
+                  className="rounded-md bg-indigo-500 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400"
                   href={"/login"}
                 >
                   Get started
                 </Link>
                 <Link
-                  href="https://github.com/mfts"
+                  href="https://github.com/mfts/papermark"
                   className="text-sm font-semibold leading-6 text-white"
                 >
-                  View on GitHub
+                  Star on GitHub
                 </Link>
               </div>
             </div>
@@ -81,6 +81,6 @@ export default function Example() {
         </div>
         <Footer />
       </div>
-    </div>
+    </>
   );
 }
