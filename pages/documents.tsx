@@ -45,7 +45,10 @@ export default function Documents() {
             )}
 
             {/* Documents list */}
-            <ul role="list" className="divide-y divide-white/5">
+            <ul
+              role="list"
+              className="divide-y divide-white/5 overflow-y-hidden"
+            >
               {documents
                 ? documents.map((document) => {
                     return (
