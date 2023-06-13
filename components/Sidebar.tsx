@@ -136,7 +136,7 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
       </Transition.Root>
 
       {/* Static sidebar for desktop */}
-      <div className="hidden xl:fixed xl:inset-y-0 xl:z-50 xl:flex xl:w-72 xl:flex-col">
+      <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col">
         {/* Sidebar component, swap this element with another sidebar if you like */}
         <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-black/10 px-6 ring-1 ring-white/5">
           <div className="flex h-16 shrink-0 items-center">
@@ -175,7 +175,7 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
         </div>
       </div>
 
-      <div className="xl:pl-72">
+      <div className="lg:pl-72">
         {/* Navbar */}
         <div className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-black/10 bg-black/10 px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8">
           <button
