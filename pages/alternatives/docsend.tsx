@@ -1,17 +1,12 @@
-import { FaCheck, FaTimes } from "react-icons/fa";
 import Head from "next/head";
-import { useState } from "react";
-import Footer from "components/Footer";
-import { Dialog, Disclosure } from "@headlessui/react";
+import Footer from "@/components/Footer";
+import { Disclosure } from "@headlessui/react";
 import {
-  Bars3Icon,
   MinusSmallIcon,
   PlusSmallIcon,
-  XMarkIcon,
 } from "@heroicons/react/24/outline";
 import {
   ArrowPathIcon,
-  CheckIcon,
   CloudArrowUpIcon,
   Cog6ToothIcon,
   FingerPrintIcon,
@@ -19,14 +14,8 @@ import {
   ServerIcon,
 } from "@heroicons/react/20/solid";
 import Link from "next/link";
-import { signInOrRedirect } from "next-auth/react";
+import { classNames } from "@/lib/utils";
 
-const navigation = [
-  { name: "Product", href: "#" },
-  { name: "Features", href: "#" },
-  { name: "Marketplace", href: "#" },
-  { name: "Company", href: "#" },
-];
 const features = [
   {
     name: "Open Source",
@@ -70,7 +59,7 @@ const tiers = [
     // name: "Hobby",
     id: "tier-hobby",
     href: "#",
-    priceMonthly: "Docsend",
+    priceMonthly: "DocSend",
     description: "Free version is not available",
     features: [
       "❌ Link Sharing ",
@@ -134,41 +123,11 @@ const faqs = [
   {
     question: "Can I contribute to the Papermark project?",
     answer:
-      "Yes, contributions are welcome! Please visit our GitHub repository to learn about how you can contribute. Whether it's by improving the code, adding new features, or even reporting bugs, all contributions are appreciated. https://github.com/mfts/papermark",
+      "Yes, contributions are welcome! Please visit our GitHub repository to learn about how you can contribute. Whether it&apos;s by improving the code, adding new features, or even reporting bugs, all contributions are appreciated. https://github.com/mfts/papermark",
   },
 
   // More questions...
 ];
-const footerNavigation = {
-  solutions: [
-    { name: "Marketing", href: "#" },
-    { name: "Analytics", href: "#" },
-    { name: "Commerce", href: "#" },
-    { name: "Insights", href: "#" },
-  ],
-  support: [
-    { name: "Pricing", href: "#" },
-    { name: "Documentation", href: "#" },
-    { name: "Guides", href: "#" },
-    { name: "API Status", href: "#" },
-  ],
-  company: [
-    { name: "About", href: "#" },
-    { name: "Blog", href: "#" },
-    { name: "Jobs", href: "#" },
-    { name: "Press", href: "#" },
-    { name: "Partners", href: "#" },
-  ],
-  legal: [
-    { name: "Claim", href: "#" },
-    { name: "Privacy", href: "#" },
-    { name: "Terms", href: "#" },
-  ],
-};
-
-function classNames(...classes) {
-  return classes.filter(Boolean).join(" ");
-}
 
 export default function Home() {
   return (
@@ -197,11 +156,6 @@ export default function Home() {
       <main>
         {/* Hero section */}
         <div className="relative isolate overflow-hidden bg-black-900 pb-16 pt-14 sm:pb-20">
-          {/* <img
-          src="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2830&q=80&blend=111827&sat=-100&exp=15&blend-mode=multiply"
-          alt=""
-          className="absolute inset-0 -z-10 h-full w-full object-cover"
-        /> */}
           <div
             className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80"
             aria-hidden="true"
@@ -218,40 +172,23 @@ export default function Home() {
             <div className="mx-auto max-w-2xl py-32 sm:py-48 lg:py-56">
               <div className="hidden sm:mb-8 sm:flex sm:justify-center">
                 <div className="relative rounded-full px-3 py-1 text-sm leading-6 text-gray-400 ring-1 ring-white/10 hover:ring-white/20">
-                  Free Docsend alternative{" "}
-                  {/* <a href="#" className="font-semibold text-white">
-                  <span className="absolute inset-0" aria-hidden="true" />
-                  Read more <span aria-hidden="true">&rarr;</span>
-                </a> */}
+                  Free DocSend alternative
                 </div>
               </div>
               <div className="text-center">
                 <h1 className="text-4xl font-bold tracking-tight text-white sm:text-6xl">
-                  Open Source Docsend alternative
+                  Open Source DocSend alternative
                 </h1>
                 <p className="mt-6 text-lg leading-8 text-gray-300">
                   Powerful software to send PitchDeck
                 </p>
                 <div className="mt-10 flex items-center justify-center gap-x-6">
                   <Link
-                    onClick={() => signInOrRedirect()}
                     className="rounded-md bg-indigo-500 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400"
-                    href={""}
+                    href="/login"
                   >
                     Upload your deck
                   </Link>
-                  {/* <a
-                  href="#"
-                  className="rounded-md bg-indigo-500 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400"
-                >
-                  Upload your Deck
-                </a> */}
-                  {/* <a
-                  href="#"
-                  className="text-sm font-semibold leading-6 text-white"
-                >
-                  Upload the file <span aria-hidden="true">→</span>
-                </a> */}
                 </div>
               </div>
             </div>
@@ -275,7 +212,7 @@ export default function Home() {
                   Feature comparison
                 </h2>
                 <p className="mt-2 text-4xl font-bold tracking-tight text-white sm:text-5xl">
-                  Select Free Docsend alternative
+                  Select Free DocSend alternative
                 </p>
               </div>
               <p className="mx-auto mt-6 max-w-2xl text-center text-lg leading-8 text-gray-600">
@@ -299,15 +236,6 @@ export default function Home() {
                       "rounded-3xl p-8 ring-1 ring-gray-900/10 sm:p-10"
                     )}
                   >
-                    <h3
-                      id={tier.id}
-                      className={classNames(
-                        tier.featured ? "text-white" : "text-white",
-                        "text-base font-semibold leading-7"
-                      )}
-                    >
-                      {tier.name}
-                    </h3>
                     <p className="mt-4 flex items-baseline gap-x-2">
                       <span
                         className={classNames(
@@ -341,22 +269,12 @@ export default function Home() {
                     >
                       {tier.features.map((feature) => (
                         <li key={feature} className="flex gap-x-3">
-                          {/* <CheckIcon
-                          className={classNames(
-                            tier.featured
-                              ? "text-indigo-400"
-                              : "text-indigo-600",
-                            "h-6 w-5 flex-none"
-                          )}
-                          aria-hidden="true"
-                        /> */}
                           {feature}
                         </li>
                       ))}
                     </ul>
                     <Link
-                      onClick={() => signInOrRedirect()}
-                      href="/" // replace "/path-to-page" with the actual path you want to navigate to
+                      href="/login"
                       aria-describedby={tier.id.toString()}
                       className={classNames(
                         tier.featured
@@ -383,7 +301,7 @@ export default function Home() {
                     Share your Deck in 1 click
                   </p>
                   <p className="mt-6 text-lg leading-8 text-gray-600">
-                    Free and open source Docsend alternative. Advanced analytics
+                    Free and open source DocSend alternative. Advanced analytics
                     and recommendations for VC funds to share your deck.
                   </p>
                 </div>
@@ -391,7 +309,7 @@ export default function Home() {
               <div className="relative overflow-hidden pt-16">
                 <div className="mx-auto max-w-7xl px-6 lg:px-8">
                   <img
-                    src="https://www.papermark.io/papermark.png"
+                    src="https://www.papermark.io/_static/papermark.png"
                     alt="App screenshot"
                     className="mb-[-12%] rounded-xl shadow-2xl ring-1 ring-gray-900/10"
                     width={2432}
@@ -440,7 +358,6 @@ export default function Home() {
                 <div className="-mt-8 w-full max-w-2xl xl:-mb-8 xl:w-96 xl:flex-none flex items-center justify-center">
                   <div className="relative w-64 h-64">
                     {" "}
-                    {/* adjust size as needed */}
                     <img
                       className="absolute inset-0 object-cover rounded-2xl bg-gray-800  shadow-2xl"
                       src="https://pbs.twimg.com/profile_images/1506792347840888834/dS-r50Je_400x400.jpg"
@@ -468,13 +385,14 @@ export default function Home() {
                     <blockquote className="text-xl font-semibold leading-8 text-white sm:text-2xl sm:leading-9">
                       <p>
                         This looks awesome!! Incredible work – love how the link
-                        was automatically copied to clipboard when it's created.
+                        was automatically copied to clipboard when it&apos;s
+                        created.
                       </p>
                     </blockquote>
                     <figcaption className="mt-8 text-base">
                       <div className="font-semibold text-white">Steven Tey</div>
                       <div className="mt-1 text-gray-400">
-                        Developer Relations at Vercel
+                        Senior Developer Advocate at Vercel
                       </div>
                     </figcaption>
                   </figure>
@@ -514,7 +432,7 @@ export default function Home() {
                             </Disclosure.Button>
                           </dt>
                           <Disclosure.Panel as="dd" className="mt-2 pr-12">
-                            <p className="text-base leading-7 text-gray-600">
+                            <p className="text-base leading-7 text-gray-400">
                               {faq.answer}
                             </p>
                           </Disclosure.Panel>
