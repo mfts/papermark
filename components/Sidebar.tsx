@@ -3,9 +3,9 @@ import { Menu, Dialog, Transition } from "@headlessui/react";
 import { signOut, useSession } from "next-auth/react";
 import {
   Bars3Icon,
-  ChevronDownIcon,
+  ChevronUpIcon,
 } from "@heroicons/react/20/solid";
-import { FolderIcon, HomeIcon, XMarkIcon, ChartBarIcon } from "@heroicons/react/24/outline";
+import { FolderIcon, HomeIcon, XMarkIcon, ChartBarIcon  } from "@heroicons/react/24/outline";
 import Link from "next/link";
 import { classNames } from "@/lib/utils";
 import { useRouter } from "next/router";
@@ -170,6 +170,59 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
                   ))}
                 </ul>
               </li>
+              <li className="-mx-2 mt-auto mb-4">
+                <Menu as="div" className="relative">
+                  <Menu.Button className="flex items-center group rounded-md gap-x-3 p-2 w-full text-sm font-semibold leading-6 text-white hover:bg-gray-800">
+                    <img
+                      className="h-8 w-8 rounded-full bg-gray-800"
+                      src={session?.user?.image || ""}
+                      alt={`Profile picture of ${session?.user?.name}`}
+                    />
+                    <span className="flex items-center w-full justify-between">
+                      <span className="sr-only">Your profile</span>
+                      <span aria-hidden="true">{session?.user?.name}</span>
+                      <ChevronUpIcon
+                        className="ml-2 h-5 w-5 text-gray-400"
+                        aria-hidden="true"
+                      />
+                    </span>
+                  </Menu.Button>
+                  <Transition
+                    as={Fragment}
+                    enter="transition ease-out duration-100"
+                    enterFrom="transform opacity-0 scale-95"
+                    enterTo="transform opacity-100 scale-100"
+                    leave="transition ease-in duration-75"
+                    leaveFrom="transform opacity-100 scale-100"
+                    leaveTo="transform opacity-0 scale-95"
+                  >
+                    <Menu.Items className="absolute left-0 z-10 bottom-0 mb-14 w-full origin-bottom-left rounded-md bg-gray-900 py-2 shadow-lg ring-1 ring-gray-900/5 focus:outline-none">
+                      {session && (
+                        <Menu.Item>
+                          <p className="block px-3 py-1 text-sm leading-6 text-gray-400">
+                            {session?.user?.email}
+                          </p>
+                        </Menu.Item>
+                      )}
+                      {session ? (
+                        <Menu.Item>
+                          <Link
+                            onClick={() =>
+                              signOut({
+                                callbackUrl: `${window.location.origin}`,
+                              })
+                            }
+                            className="block px-3 py-1 text-sm leading-6 text-white hover:bg-gray-700"
+                            href={""}
+                          >
+                            Sign Out
+                          </Link>
+                        </Menu.Item>
+                      ) : null}
+                    </Menu.Items>
+                  </Transition>
+                </Menu>
+              </li>
             </ul>
           </nav>
         </div>
@@ -177,7 +230,7 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
 
       <div className="lg:pl-72">
         {/* Navbar */}
-        <div className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-black/10 bg-black/10 px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8">
+        <div className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-black/10 bg-black/95 px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8 lg:hidden">
           <button
             type="button"
             className="-m-2.5 p-2.5 text-gray-700 lg:hidden"
@@ -202,20 +255,15 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
                   <img
                     className="h-8 w-8 rounded-full bg-gray-50"
                     src={session?.user?.image || ""}
-                    alt=""
+                    alt={`Profile picture of ${session?.user?.name}`}
                   />
-                  <span className="flex items-center">
-                    <span
-                      className="ml-4 text-sm font-semibold leading-6 text-white"
-                      aria-hidden="true"
-                    >
-                      {session?.user?.name}
-                    </span>
+                  {/* <span className="flex items-center">
+                    
                     <ChevronDownIcon
                       className="ml-2 h-5 w-5 text-gray-400"
                       aria-hidden="true"
                     />
-                  </span>
+                  </span> */}
                 </Menu.Button>
                 <Transition
                   as={Fragment}
@@ -226,10 +274,10 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
                   leaveFrom="transform opacity-100 scale-100"
                   leaveTo="transform opacity-0 scale-95"
                 >
-                  <Menu.Items className="absolute right-0 z-10 mt-2.5 w-fit origin-top-right rounded-md bg-white py-2 shadow-lg ring-1 ring-gray-900/5 focus:outline-none">
+                  <Menu.Items className="absolute right-0 z-10 mt-2.5 w-fit origin-top-right rounded-md bg-gray-900 py-2 shadow-lg ring-1 ring-gray-900/5 focus:outline-none">
                     {session && (
                       <Menu.Item>
-                        <p className="block px-3 py-1 text-sm leading-6 text-gray-500 bg-gray-50">
+                        <p className="block px-3 py-1 text-sm leading-6 text-gray-400">
                           {session?.user?.email}
                         </p>
                       </Menu.Item>
@@ -242,7 +290,7 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
                               callbackUrl: `${window.location.origin}`,
                             })
                           }
-                          className="block px-3 py-1 text-sm leading-6 text-gray-900 bg-gray-50"
+                          className="block px-3 py-1 text-sm leading-6 text-white hover:bg-gray-700"
                           href={""}
                         >
                           Sign Out
