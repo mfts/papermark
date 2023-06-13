@@ -4,7 +4,6 @@ import { signOut, useSession } from "next-auth/react";
 import {
   Bars3Icon,
   ChevronDownIcon,
-  PlusIcon,
 } from "@heroicons/react/20/solid";
 import { FolderIcon, HomeIcon, XMarkIcon, ChartBarIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
@@ -195,18 +194,6 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
           />
 
           <div className="flex flex-1 gap-x-4 self-stretch items-center lg:gap-x-6 justify-end">
-            <div className="flex-shrink-0">
-              {router.pathname !== "/documents/new" ? (
-                <Link
-                  href="/documents/new"
-                  type="button"
-                  className="relative inline-flex items-center gap-x-1.5 rounded-md bg-indigo-500 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
-                >
-                  <PlusIcon className="-ml-0.5 h-5 w-5" aria-hidden="true" />
-                  New Link
-                </Link>
-              ) : null}
-            </div>
             <div className="flex items-center gap-x-4 lg:gap-x-6">
               {/* Profile dropdown */}
               <Menu as="div" className="relative">
