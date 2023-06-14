@@ -37,7 +37,7 @@ export default function StatsCard() {
             <StatsElement key={statIdx} stat={stat} statIdx={statIdx} />
           ))
         : Array.from({ length: 4 }).map((_, i) => (
-            <StatsElementPlaceholder key={i} />
+            <StatsElementPlaceholder key={i} statIdx={i} />
           ))}
     </div>
   );
