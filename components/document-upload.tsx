@@ -44,7 +44,6 @@ export default function DocumentUpload({
     multiple: false,
     onDrop: (acceptedFiles) => {
       setCurrentFile(acceptedFiles[0]);
-      console.log(acceptedFiles[0]);
     },
   });
 
@@ -60,7 +59,7 @@ export default function DocumentUpload({
         className="relative cursor-pointer font-semibold text-white hover:text-gray-400 hover:bg-gray-900 block group"
       >
         <input {...getInputProps()} name="file" className="sr-only" />
-        <div className="flex justify-center rounded-lg border border-dashed border-white/25 px-6 py-10 min-h-[200px] md:min-w-[500px] items-center">
+        <div className="flex justify-center rounded-lg border border-dashed border-white/25 px-6 py-10 min-h-[200px] md:min-w-full items-center">
           {currentFile ? (
             <div
               className="absolute inset-0 opacity-10 pointer-events-none group-hover:opacity-5 transition-opacity"
