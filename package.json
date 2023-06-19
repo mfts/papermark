@@ -11,6 +11,7 @@
     "start": "next start",
     "lint": "next lint",
     "postinstall": "prisma generate",
+    "email": "email dev --dir ./components/emails --port 3001"
   },
   "dependencies": {
     "@headlessui/react": "^1.7.14",
