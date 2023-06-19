@@ -6,6 +6,13 @@ export interface CustomUser extends NextAuthUser {
   createdAt: Date;
 }
 
+export interface CreateUserEmailProps {
+  user: {
+    name: string | null | undefined;
+    email: string | null | undefined;
+  };
+}
+
 export interface DocumentWithLinksAndLinkCount extends Document {
   _count: {
     links: number;
