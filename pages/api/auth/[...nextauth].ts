@@ -2,7 +2,8 @@ import NextAuth, { type NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
+import { CreateUserEmailProps, CustomUser } from "@/lib/types";
+import { sendWelcomeEmail } from "@/lib/emails/send-welcome";
 
 const VERCEL_DEPLOYMENT = !!process.env.VERCEL_URL;
 
@@ -46,6 +47,17 @@ export const authOptions: NextAuthOptions = {
       };
       return session;
     },
+  },
+  events: {
+    async createUser(message) {
+      const params: CreateUserEmailProps = {
+        user: {
+          name: message.user.name,
+          email: message.user.email,
+        },
+      };
+      await sendWelcomeEmail(params);
+    }
   },
 };
 
