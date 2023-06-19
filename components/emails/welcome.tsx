@@ -38,8 +38,8 @@ const WelcomeEmail = ({ name }: WelcomeEmailProps) => {
               Thanks for signing up{name && `, ${name}`}!
             </Text>
             <Text className="text-sm">
-              My name is Marc, and I'm the creator of Papermark – the
-              open-source DocSend alternative! I'm excited to have you on board!
+              My name is Marc, and I&apos;m the creator of Papermark – the
+              open-source DocSend alternative! I&apos;m excited to have you on board!
             </Text>
             <Text className="text-sm">
               Here are a few things you can do to get started:
@@ -87,7 +87,7 @@ const WelcomeEmail = ({ name }: WelcomeEmailProps) => {
             </Section>
             <Section className="mt-4">
               <Text className="text-sm">
-                Let me know if you have any questions or feedback. I'm always
+                Let me know if you have any questions or feedback. I&apos;m always
                 happy to help!
               </Text>
               <Text className="text-sm text-gray-400">Marc from Papermark</Text>
@@ -99,7 +99,7 @@ const WelcomeEmail = ({ name }: WelcomeEmailProps) => {
               </Text>
               <Text className="text-xs">
                 If you have any feedback or questions about this email, simply
-                reply to it. I'd love to hear from you!
+                reply to it. I&apos;d love to hear from you!
               </Text>
             </Section>
           </Container>
