@@ -3,6 +3,7 @@ import EmailForm from "@/components/EmailForm";
 import { getExtension } from "@/lib/utils";
 import { useLink } from "@/lib/swr/use-link";
 import ErrorPage from "next/error";
+import PDFViewer from "@/components/PDFViewer";
 
 export default function DocumentView() {
   const { link, error } = useLink();
@@ -74,11 +75,8 @@ export default function DocumentView() {
     );
   }
   return (
-    <div className="h-screen bg-gray-900">
-      <iframe
-        className="w-full h-full"
-        src={`https://docs.google.com/viewer?url=${document.file}&embedded=true`}
-      ></iframe>
+    <div className="bg-gray-950">
+      <PDFViewer file={document.file} />
     </div>
   );
 }
