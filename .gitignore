@@ -42,3 +42,6 @@ next-env.d.ts
 
 # react-email
 .react-email
+
+# Tinybird config for the cli is stored in this file
+.tinyb
