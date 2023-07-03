@@ -1,5 +1,5 @@
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/20/solid";
-import { Fragment, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
@@ -8,12 +8,54 @@ export default function PDFViewer(props: any) {
   const [numPages, setNumPages] = useState<number>(0);
   const [pageNumber, setPageNumber] = useState<number>(1); // start on first page
   const [loading, setLoading] = useState(true);
-  const [pageHeight, setPageHeight] = useState(0);
   const [pageWidth, setPageWidth] = useState(0);
 
+  const startTimeRef = useRef(Date.now());
+  const pageNumberRef = useRef<number>(pageNumber);
+  const isInitialPageLoad = useRef(true);
 
-  function onDocumentLoadSuccess({ numPages: nextNumPages }: { numPages: number}) {
+  // Update the previous page number after the effect hook has run
+  useEffect(() => {
+    pageNumberRef.current = pageNumber;
+  }, [pageNumber]);
+  
+  useEffect(() => {
+    startTimeRef.current = Date.now(); // update the start time for the new page
+
+    // when component unmounts, calculate duration and track page view
+    return () => {
+      const endTime = Date.now();
+      const duration = Math.round(endTime - startTimeRef.current);
+      trackPageView(duration);
+    };
+  }, [pageNumber]); // monitor pageNumber for changes
+
+  function onDocumentLoadSuccess({
+    numPages: nextNumPages,
+  }: {
+    numPages: number;
+  }) {
     setNumPages(nextNumPages);
+  }
+
+  // Send the last page view when the user leaves the page
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      const endTime = Date.now();
+      const duration = Math.round(endTime - startTimeRef.current);
+      trackPageView(duration);
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, []);
+
+  function onPageLoadSuccess() {
+    setPageWidth(window.innerWidth);
+    setLoading(false);
   }
 
   const options = {
@@ -31,20 +73,27 @@ export default function PDFViewer(props: any) {
     setPageNumber((prevPageNumber) => prevPageNumber - 1);
   }
 
-  async function trackPageView() {
-    const response = await fetch("/api/views", {
+  async function trackPageView(duration: number = 0) {
+    // If this is the initial page load, don't send the request
+    if (isInitialPageLoad.current) {
+      isInitialPageLoad.current = false;
+      return;
+    }
+
+    await fetch("/api/record_view", {
       method: "POST",
       body: JSON.stringify({
         linkId: props.linkId,
-        email: props.email,
         documentId: props.documentId,
+        viewId: props.viewId,
+        duration: duration,
+        pageNumber: pageNumberRef.current,
       }),
       headers: {
         "Content-Type": "application/json",
       },
     });
   }
-  
 
   return (
     <>
@@ -89,11 +138,7 @@ export default function PDFViewer(props: any) {
               pageNumber={pageNumber}
               renderAnnotationLayer={false}
               renderTextLayer={false}
-              onLoadSuccess={(e) => {
-                if (e.height) setPageHeight(e.height);
-                setPageWidth(window.innerWidth);
-                setLoading(false);
-              }}
+              onLoadSuccess={onPageLoadSuccess}
               onRenderError={() => setLoading(false)}
               width={Math.max(pageWidth * 0.8, 390)}
             />
