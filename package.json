@@ -50,10 +50,12 @@
     "tailwindcss": "3.3.2",
     "tailwindcss-animate": "^1.0.6",
     "typescript": "5.0.4",
+    "ua-parser-js": "^1.0.35",
     "zod": "^3.21.4"
   },
   "devDependencies": {
     "@tailwindcss/forms": "^0.5.3",
+    "@types/ua-parser-js": "^0.7.36",
     "prisma": "^4.15.0"
   }
 }
