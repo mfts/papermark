@@ -23,9 +23,9 @@ export default function StatsCard() {
     },
     {
       name: "Average view duration",
-      value: "3.65",
-      unit: "mins",
-      active: false,
+      value: Math.round(stats?.total_duration / 1000),
+      unit: "seconds",
+      active: true,
     },
     { name: "TBD", value: "98.5%", active: false },
   ];
