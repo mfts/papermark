@@ -1,14 +1,16 @@
 import React, { useState } from "react";
 import EmailForm from "@/components/EmailForm";
-import { getExtension } from "@/lib/utils";
+import { classNames, getExtension } from "@/lib/utils";
 import { useLink } from "@/lib/swr/use-link";
 import ErrorPage from "next/error";
 import PDFViewer from "@/components/PDFViewer";
+import { set } from "date-fns";
 
 export default function DocumentView() {
   const { link, error } = useLink();
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [viewId, setViewId] = useState<string>("");
 
   if (error && error.status === 404) {
     return <ErrorPage statusCode={404} />;
@@ -31,6 +33,8 @@ export default function DocumentView() {
     });
 
     if (response.ok) {
+      const { viewId } = await response.json();
+      setViewId(viewId);
       setSubmitted(true);
     } else {
       // Handle error
@@ -76,7 +80,7 @@ export default function DocumentView() {
   }
   return (
     <div className="bg-gray-950">
-      <PDFViewer file={document.file} />
+      <PDFViewer file={document.file} viewId={viewId} linkId={link.id} documentId={document.id} />
     </div>
   );
 }

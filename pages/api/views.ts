@@ -15,7 +15,7 @@ export default async function handle(
   const { linkId, email, documentId } = req.body;
 
   try {
-    await prisma.view.create({
+    const newView = await prisma.view.create({
       data: {
         linkId: linkId,
         viewerEmail: email,
@@ -23,7 +23,7 @@ export default async function handle(
       },
     });
 
-    res.status(200).json({ message: "View recorded" });
+    res.status(200).json({ message: "View recorded", viewId: newView.id });
   } catch (error) {
     log(`Failed to record view for ${linkId}. Error: \n\n ${error}`)
     res.status(500).json({ message: (error as Error).message });
