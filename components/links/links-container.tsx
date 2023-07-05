@@ -17,9 +17,11 @@ export default function LinksContainer() {
   const documentId = router.query.id as string;
 
   const handleCopyToClipboard = (id: string) => {
-    navigator.clipboard.writeText(
-      `${process.env.NEXT_PUBLIC_BASE_URL}/view/${id}`
-    );
+    navigator.clipboard
+      .writeText(`${process.env.NEXT_PUBLIC_BASE_URL}/view/${id}`)
+      .catch((error) => {
+        console.log("Failed to copy text to clipboard", error);
+      });
 
     toast.custom((t) => (
       <Notification

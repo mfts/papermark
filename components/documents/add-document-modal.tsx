@@ -67,9 +67,13 @@ export function AddDocumentModal({children}: {children: React.ReactNode}) {
       if (response) {
         const document = await response.json();
 
-        navigator.clipboard.writeText(
-          `${process.env.NEXT_PUBLIC_BASE_URL}/view/${document.links[0].id}`
-        );
+        navigator.clipboard
+          .writeText(
+            `${process.env.NEXT_PUBLIC_BASE_URL}/view/${document.links[0].id}`
+          )
+          .catch((error) => {
+            console.log("Failed to copy text to clipboard", error);
+          });
 
         toast.custom((t) => (
           <Notification
