@@ -11,6 +11,10 @@ interface GroupedView {
 interface StatsData {
   views: View[];
   groupedViews: GroupedView[];
+  duration: {
+    data: { pageNumber: string; avg_duration: number }[];
+  };
+  total_duration: number;
 }
 
 export function useStats() {

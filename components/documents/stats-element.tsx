@@ -14,7 +14,7 @@ interface StatsElementProps {
 export default function StatsElement({ stat, statIdx }: StatsElementProps) {
   return (
     <div
-      key={stat.name}
+      key={statIdx}
       className={classNames(
         statIdx % 2 === 1 ? "sm:border-l" : statIdx === 2 ? "lg:border-l" : "",
         "border-t border-white/5 py-6 px-4 sm:px-6 lg:px-8"
