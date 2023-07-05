@@ -14,18 +14,21 @@
     "email": "email dev --dir ./components/emails --port 3001"
   },
   "dependencies": {
+    "@chronark/zod-bird": "^0.1.1",
     "@headlessui/react": "^1.7.14",
     "@heroicons/react": "^2.0.18",
     "@next-auth/prisma-adapter": "^1.0.6",
     "@prisma/client": "^4.15.0",
     "@radix-ui/react-dialog": "^1.0.4",
     "@react-email/components": "^0.0.6",
+    "@tremor/react": "^3.4.1",
     "@types/node": "20.2.5",
     "@types/react": "18.2.7",
     "@types/react-dom": "18.2.4",
     "@vercel/analytics": "^1.0.1",
     "@vercel/blob": "^0.8.3",
     "autoprefixer": "10.4.14",
+    "base-x": "^4.0.0",
     "class-variance-authority": "^0.6.0",
     "clsx": "^1.2.1",
     "date-fns": "^2.30.0",
@@ -42,15 +45,19 @@
     "react-email": "^1.9.4",
     "react-hot-toast": "^2.4.1",
     "react-icons": "^4.9.0",
+    "react-pdf": "^7.1.2",
     "resend": "^0.15.1",
     "swr": "^2.1.5",
     "tailwind-merge": "^1.13.1",
     "tailwindcss": "3.3.2",
     "tailwindcss-animate": "^1.0.6",
-    "typescript": "5.0.4"
+    "typescript": "5.0.4",
+    "ua-parser-js": "^1.0.35",
+    "zod": "^3.21.4"
   },
   "devDependencies": {
     "@tailwindcss/forms": "^0.5.3",
+    "@types/ua-parser-js": "^0.7.36",
     "prisma": "^4.15.0"
   }
 }

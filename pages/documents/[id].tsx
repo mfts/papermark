@@ -5,6 +5,8 @@ import { useDocument } from "@/lib/swr/use-document";
 import ErrorPage from "next/error";
 import LinksContainer from "@/components/links/links-container";
 import StatsCard from "@/components/documents/stats-card";
+import BarChartComponent from "@/components/charts/bar-chart";
+import StatsChart from "@/components/documents/stats-chart";
 
 export default function DocumentPage() {
   const { document, error } = useDocument();
@@ -48,6 +50,12 @@ export default function DocumentPage() {
                   </div>
 
                   {/* Stats */}
+                  {document.numPages !== null && (
+                    <StatsChart
+                      documentId={document.id}
+                      totalPages={document.numPages}
+                    />
+                  )}
                   <StatsCard />
                 </header>
 

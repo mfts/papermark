@@ -22,21 +22,29 @@ export default function StatsCard() {
       active: true,
     },
     {
-      name: "Average view duration",
-      value: "3.65",
-      unit: "mins",
-      active: false,
+      name: "Total view duration",
+      value:
+        stats?.total_duration == null
+          ? "46"
+          : stats?.total_duration < 60000
+          ? `${Math.round(stats?.total_duration / 1000)}`
+          : `${Math.floor(stats?.total_duration / 60000)}:${
+              Math.round((stats?.total_duration % 60000) / 1000) < 10
+                ? `0${Math.round((stats?.total_duration % 60000) / 1000)}`
+                : Math.round((stats?.total_duration % 60000) / 1000)
+            }`,
+      unit: stats?.total_duration! < 60000 ? "seconds" : "minutes",
+      active: stats?.total_duration ? true : false,
     },
-    { name: "TBD", value: "98.5%", active: false },
   ];
 
   return (
-    <div className="grid grid-cols-1 bg-gray-700/10 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid grid-cols-1 bg-gray-700/10 sm:grid-cols-3 lg:grid-cols-3">
       {stats
         ? statistics.map((stat, statIdx) => (
             <StatsElement key={statIdx} stat={stat} statIdx={statIdx} />
           ))
-        : Array.from({ length: 4 }).map((_, i) => (
+        : Array.from({ length: 3 }).map((_, i) => (
             <StatsElementPlaceholder key={i} statIdx={i} />
           ))}
     </div>

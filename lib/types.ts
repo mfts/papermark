@@ -30,3 +30,11 @@ export interface LinkWithViews extends Link {
 export interface LinkWithDocument extends Link {
   document: Document;
 }
+
+export interface Geo {
+  city?: string | undefined;
+  country?: string | undefined;
+  region?: string | undefined;
+  latitude?: string | undefined;
+  longitude?: string | undefined;
+}

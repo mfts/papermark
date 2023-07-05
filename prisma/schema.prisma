@@ -62,6 +62,7 @@ model Document {
   description String?
   file      String   // This should be a reference to where the file is stored (S3, Google Cloud Storage, etc.)
   type      String?   // This should be a reference to the file type (pdf, docx, etc.)
+  numPages  Int?     // This should be a reference to the number of pages in the document
   owner     User     @relation(fields: [ownerId], references: [id])
   ownerId   String   // This field holds the foreign key.
   createdAt DateTime @default(now())
