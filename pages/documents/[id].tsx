@@ -5,6 +5,9 @@ import { useDocument } from "@/lib/swr/use-document";
 import ErrorPage from "next/error";
 import LinksContainer from "@/components/links/links-container";
 import StatsCard from "@/components/documents/stats-card";
+import { Chart } from "@/components/charts/bar-chart";
+import ParentSize from "@visx/responsive/lib/components/ParentSize";
+import StatsChart from "@/components/documents/stats-chart";
 
 export default function DocumentPage() {
   const { document, error } = useDocument();
@@ -46,8 +49,15 @@ export default function DocumentPage() {
                       View Document
                     </Link>
                   </div>
-
                   {/* Stats */}
+                  {
+                    (document.numPages !== null) && (
+                      <StatsChart
+                        documentId={document.id}
+                        totalPages={document.numPages}
+                      />
+                    )
+                  }
                   <StatsCard />
                 </header>
 
