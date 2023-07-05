@@ -51,7 +51,7 @@ export default async function handle(
     }
 
     // Assuming data is an object with `name` and `description` properties
-    const { name, url, description } = req.body;
+    const { name, url, numPages } = req.body;
 
     // Get the file extension and save it as the type
     const type = getExtension(name);
@@ -63,7 +63,7 @@ export default async function handle(
       const document = await prisma.document.create({
         data: {
           name: name,
-          description: description,
+          numPages: numPages,
           file: url,
           type: type,
           ownerId: (session.user as CustomUser).id,

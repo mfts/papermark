@@ -13,7 +13,12 @@ import type { PutBlobResult } from "@vercel/blob";
 import toast from "react-hot-toast";
 import Notification from "@/components/Notification";
 import DocumentUpload from "@/components/document-upload";
+import { pdfjs } from "react-pdf";
+import { getExtension } from "@/lib/utils";
+import { get } from "http";
+import { set } from "date-fns";
 
+pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
 
 export function AddDocumentModal({children}: {children: React.ReactNode}) {
   const router = useRouter();
@@ -48,46 +53,71 @@ export function AddDocumentModal({children}: {children: React.ReactNode}) {
       // get the blob url from the response
       const blob = (await blobResponse.json()) as PutBlobResult;
 
-      // create a document in the database with the blob url
-      const response = await fetch("/api/documents", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: blob.pathname,
-          url: blob.url,
-        }),
-      });
+      let response: Response | undefined;
+      let numPages: number | undefined;
+      // create a document in the database if the document is a pdf
+      if (getExtension(blob.pathname).includes("pdf")) {
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        numPages = await getTotalPages(blob.url);
+        response = await saveDocumentToDatabase(blob, numPages);
+      } else {
+        response = await saveDocumentToDatabase(blob);
       }
 
-      const document = await response.json();
+      if (response) {
+        const document = await response.json();
 
-      navigator.clipboard.writeText(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/view/${document.links[0].id}`
-      );
+        navigator.clipboard.writeText(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/view/${document.links[0].id}`
+        );
 
-      toast.custom((t) => (
-        <Notification
-          visible={t.visible}
-          closeToast={() => toast.dismiss(t.id)}
-          message={
-            "Document uploaded and link copied to clipboard. Redirecting to document page..."
-          }
-        />
-      ));
+        toast.custom((t) => (
+          <Notification
+            visible={t.visible}
+            closeToast={() => toast.dismiss(t.id)}
+            message={
+              "Document uploaded and link copied to clipboard. Redirecting to document page..."
+            }
+          />
+        ));
 
-      setTimeout(() => {
-        router.push("/documents/" + document.id);
-      }, 4000);
+        setTimeout(() => {
+          router.push("/documents/" + document.id);
+        }, 4000);
+      }
+      
     } catch (error) {
       console.error("An error occurred while uploading the file: ", error);
     } finally {
       setUploading(false);
     }
+  };
+
+  async function saveDocumentToDatabase(blob: PutBlobResult, numPages?: number) {
+    // create a document in the database with the blob url
+    const response = await fetch("/api/documents", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        name: blob.pathname,
+        url: blob.url,
+        numPages: numPages,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return response;
+  }
+
+  // get the number of pages in the pdf
+  async function getTotalPages(url: string): Promise<number> {
+    const pdf = await pdfjs.getDocument(url).promise;
+    return pdf.numPages;
   };
 
   return (

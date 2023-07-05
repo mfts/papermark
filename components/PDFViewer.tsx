@@ -18,7 +18,7 @@ export default function PDFViewer(props: any) {
   useEffect(() => {
     pageNumberRef.current = pageNumber;
   }, [pageNumber]);
-  
+
   useEffect(() => {
     startTimeRef.current = Date.now(); // update the start time for the new page
 
@@ -29,6 +29,13 @@ export default function PDFViewer(props: any) {
       trackPageView(duration);
     };
   }, [pageNumber]); // monitor pageNumber for changes
+
+  useEffect(() => {
+    if (numPages > 0) {
+      updateNumPages(numPages);
+    }
+  }, [numPages]); // monitor numPages for changes
+
 
   function onDocumentLoadSuccess({
     numPages: nextNumPages,
@@ -88,6 +95,19 @@ export default function PDFViewer(props: any) {
         viewId: props.viewId,
         duration: duration,
         pageNumber: pageNumberRef.current,
+      }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+  }
+
+  async function updateNumPages(numPages: number) {
+    await fetch(`/api/documents/update`, {
+      method: "POST",
+      body: JSON.stringify({
+        documentId: props.documentId,
+        numPages: numPages,
       }),
       headers: {
         "Content-Type": "application/json",
