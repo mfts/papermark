@@ -11,64 +11,58 @@ export default function Documents() {
 
   return (
     <>
-      <div>
-        <Sidebar>
-          <main className="h-fit">
-            <div className="border-b border-white/5 px-4 py-5 sm:px-6 lg:px-8">
-              <div className="-ml-4 -mt-2 flex flex-wrap items-center justify-between sm:flex-nowrap">
-                <div className="ml-4 mt-2">
-                  <h3 className="text-base font-semibold leading-6 text-white">
-                    My Documents
-                  </h3>
-                </div>
-                {documents && documents.length !== 0 && (
-                  <div className="ml-4 mt-2 flex-shrink-0">
-                    <AddDocumentModal>
-                      <button
-                        type="button"
-                        className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                      >
-                        <PlusIcon
-                          className="-ml-1 mr-2 h-5 w-5"
-                          aria-hidden="true"
-                        />
-                        New Document
-                      </button>
-                    </AddDocumentModal>
-                  </div>
-                )}
+      <div className="flex flex-col lg:flex-row min-h-screen bg-gradient-to-tl from-black to-gray-950">
+        <Sidebar></Sidebar>
+        <main className="lg:m-2 grow w-full bg-gray-900 shadow rounded-xl">
+          <div className="border-b border-white/5 px-4 py-5 sm:px-6 lg:px-8">
+            <div className="-ml-4 -mt-2 flex flex-wrap items-center justify-between sm:flex-nowrap">
+              <div className="ml-4 mt-2">
+                <h3 className="text-base font-semibold leading-6 text-white">
+                  My Documents
+                </h3>
               </div>
-            </div>
-
-            {documents && documents.length === 0 && (
-              <div className="flex items-center justify-center h-96">
-                <EmptyDocuments />
-              </div>
-            )}
-
-            {/* Documents list */}
-            <ul
-              role="list"
-              className="divide-y divide-white/5 overflow-y-hidden"
-            >
-              {documents
-                ? documents.map((document) => {
-                    return (
-                      <DocumentCard key={document.id} document={document} />
-                    );
-                  })
-                : Array.from({ length: 3 }).map((_, i) => (
-                    <li
-                      key={i}
-                      className="flex flex-col space-y-4 px-4 py-4 sm:px-6 lg:px-8"
+              {documents && documents.length !== 0 && (
+                <div className="ml-4 mt-2 flex-shrink-0">
+                  <AddDocumentModal>
+                    <button
+                      type="button"
+                      className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                     >
-                      <Skeleton key={i} className="h-5 w-20" />
-                      <Skeleton key={i} className="mt-3 h-3 w-10" />
-                    </li>
-                  ))}
-            </ul>
-          </main>
-        </Sidebar>
+                      <PlusIcon
+                        className="-ml-1 mr-2 h-5 w-5"
+                        aria-hidden="true"
+                      />
+                      New Document
+                    </button>
+                  </AddDocumentModal>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {documents && documents.length === 0 && (
+            <div className="flex items-center justify-center h-96">
+              <EmptyDocuments />
+            </div>
+          )}
+
+          {/* Documents list */}
+          <ul role="list" className="divide-y divide-white/5 overflow-y-hidden">
+            {documents
+              ? documents.map((document) => {
+                  return <DocumentCard key={document.id} document={document} />;
+                })
+              : Array.from({ length: 3 }).map((_, i) => (
+                  <li
+                    key={i}
+                    className="flex flex-col space-y-4 px-4 py-4 sm:px-6 lg:px-8"
+                  >
+                    <Skeleton key={i} className="h-5 w-20" />
+                    <Skeleton key={i} className="mt-3 h-3 w-10" />
+                  </li>
+                ))}
+          </ul>
+        </main>
       </div>
     </>
   );

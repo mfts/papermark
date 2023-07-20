@@ -5,7 +5,6 @@ import { useDocument } from "@/lib/swr/use-document";
 import ErrorPage from "next/error";
 import LinksContainer from "@/components/links/links-container";
 import StatsCard from "@/components/documents/stats-card";
-import BarChartComponent from "@/components/charts/bar-chart";
 import StatsChart from "@/components/documents/stats-chart";
 
 export default function DocumentPage() {
@@ -17,9 +16,10 @@ export default function DocumentPage() {
 
   return (
     <>
-      <div>
-        <Sidebar>
-          <main>
+      <div className="flex flex-col lg:flex-row min-h-screen bg-gradient-to-tl from-black to-gray-950">
+        <Sidebar></Sidebar>
+        <main className="lg:m-2 grow w-full bg-gray-900 shadow rounded-xl">
+          <div className="">
             {document ? (
               <>
                 <header>
@@ -64,8 +64,8 @@ export default function DocumentPage() {
             ) : (
               <div>Loading...</div>
             )}
-          </main>
-        </Sidebar>
+          </div>
+        </main>
       </div>
     </>
   );

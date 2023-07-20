@@ -138,7 +138,7 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
       {/* Static sidebar for desktop */}
       <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col">
         {/* Sidebar component, swap this element with another sidebar if you like */}
-        <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-black/10 px-6 ring-1 ring-white/5">
+        <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-black/10 px-6">
           <div className="flex h-16 shrink-0 items-center">
             <p className="text-2xl font-bold tracking-tighter text-white">
               Papermark
