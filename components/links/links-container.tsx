@@ -7,6 +7,7 @@ import { formatDistance, parseISO } from "date-fns";
 import { useRouter } from "next/router";
 import { useState } from "react";
 import { mutate } from "swr";
+import { timeAgo } from "@/lib/utils";
 
 export default function LinksContainer() {
   const { links } = useDocumentLinks();
@@ -143,13 +144,7 @@ export default function LinksContainer() {
                     <time
                       dateTime={new Date(link.views[0].viewedAt).toISOString()}
                     >
-                      {formatDistance(
-                        parseISO(
-                          new Date(link.views[0].viewedAt).toISOString()
-                        ),
-                        new Date(),
-                        { addSuffix: true }
-                      )}
+                      {timeAgo(link.views[0].viewedAt)}
                     </time>
                   ) : (
                     "-"
