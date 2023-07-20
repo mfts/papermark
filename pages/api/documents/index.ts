@@ -26,7 +26,7 @@ export default async function handle(
         },
         include: {
           _count: {
-            select: { links: true },
+            select: { links: true, views: true },
           },
           links: {
             take: 1,
