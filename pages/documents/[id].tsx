@@ -24,7 +24,7 @@ export default function DocumentPage() {
               <>
                 <header>
                   {/* Heading */}
-                  <div className="flex flex-col items-start justify-between gap-x-8 gap-y-4 bg-gray-700/10 px-4 py-4 sm:flex-row sm:items-center sm:px-6 lg:px-8">
+                  <div className="flex flex-col items-start justify-between gap-x-8 gap-y-4 px-4 py-4 sm:flex-row sm:items-center sm:px-6 lg:px-8">
                     <div>
                       <div className="flex items-center gap-x-3">
                         <h1 className="flex gap-x-3 text-base leading-7">

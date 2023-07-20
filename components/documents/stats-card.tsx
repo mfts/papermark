@@ -39,7 +39,7 @@ export default function StatsCard() {
   ];
 
   return (
-    <div className="grid grid-cols-1 bg-gray-700/10 sm:grid-cols-3 lg:grid-cols-3">
+    <div className="grid grid-cols-1 bg-gray-900 sm:grid-cols-3 lg:grid-cols-3">
       {stats
         ? statistics.map((stat, statIdx) => (
             <StatsElement key={statIdx} stat={stat} statIdx={statIdx} />
