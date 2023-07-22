@@ -81,7 +81,7 @@ cp .env.example .env
 | Variable | Value |
 |---|---|
 | NEXTAUTH_SECRET | a random string |
-| NEXTAUTH_URL | < Your base doamin or localhost:3000 > |
+| NEXTAUTH_URL | < Your base domain or localhost:3000 > |
 | POSTGRES_PRISMA_URL  | < Vercel Postgres Pooling URL > |
 | POSTGRES_URL_NON_POOLING | < Vercel Postgres Non-Pooling URL > |
 | BLOB_READ_WRITE_TOKEN | < Vercel Blob Token > |
