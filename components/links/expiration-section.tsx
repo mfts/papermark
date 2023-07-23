@@ -26,7 +26,7 @@ export default function ExpirationSection({data, setData}: {data: DEFAULT_LINK_T
         </div>
         <Switch
           checked={enabled}
-          onCheckedChange={(checked) => setEnabled(!enabled)}
+          onCheckedChange={() => setEnabled(!enabled)}
         />
       </div>
       {enabled && (

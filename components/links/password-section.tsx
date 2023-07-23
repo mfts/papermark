@@ -23,7 +23,7 @@ export default function PasswordSection({data, setData}: {data: DEFAULT_LINK_TYP
         </div>
         <Switch
           checked={enabled}
-          onCheckedChange={(checked) => setEnabled(!enabled)}
+          onCheckedChange={() => setEnabled(!enabled)}
         />
       </div>
       {enabled && (
