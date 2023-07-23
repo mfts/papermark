@@ -1,13 +1,11 @@
 import { Dispatch, SetStateAction, useState } from "react";
 import { Switch } from "@/components/ui/switch";
-import { motion } from "framer-motion";
-import { Link } from "@prisma/client";
-import { FADE_IN_ANIMATION_SETTINGS } from "@/lib/contants";
-import { cn, getDateTimeLocal } from "@/lib/utils";
+import { cn } from "@/lib/utils";
+import { DEFAULT_LINK_TYPE } from "./link-sheet";
 
 
 
-export default function EmailProtectionSection({data, setData}: {data: Link, setData: Dispatch<SetStateAction<Link>>}) {
+export default function EmailProtectionSection({data, setData}: {data: DEFAULT_LINK_TYPE, setData: Dispatch<SetStateAction<DEFAULT_LINK_TYPE>>}) {
   const [enabled, setEnabled] = useState(true);
 
   function handleCheckedChange() {
@@ -29,7 +27,7 @@ export default function EmailProtectionSection({data, setData}: {data: Link, set
         </div>
         <Switch
           checked={enabled}
-          onCheckedChange={(e) => handleCheckedChange()}
+          onCheckedChange={() => handleCheckedChange()}
         />
       </div>
     </div>

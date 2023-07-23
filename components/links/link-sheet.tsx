@@ -18,11 +18,24 @@ import { useRouter } from "next/router";
 import { useDocumentLinks } from "@/lib/swr/use-document";
 import { mutate } from "swr";
 
+const DEFAULT_LINK_PROPS = {
+  name: null,
+  expiresAt: null,
+  password: null,
+  emailProtected: true,
+};
+
+export type DEFAULT_LINK_TYPE = {
+  name: string | null;
+  expiresAt: Date | null;
+  password: string | null;
+  emailProtected: boolean | true;
+};
 
 
 export default function LinkSheet({ children }: { children: React.ReactNode }) {
   const { links } = useDocumentLinks();
-  const [data, setData] = useState<Link>({});
+  const [data, setData] = useState<DEFAULT_LINK_TYPE>(DEFAULT_LINK_PROPS);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const router = useRouter();
@@ -90,7 +103,7 @@ export default function LinkSheet({ children }: { children: React.ReactNode }) {
                         name="link-name"
                         id="link-name"
                         placeholder="Recipient's Organization"
-                        value={data.name ? data.name : null}
+                        value={data.name || ''}
                         className="block w-full rounded-md border-0 py-1.5 text-white bg-black shadow-sm ring-1 ring-inset ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-gray-300 sm:text-sm sm:leading-6"
                         onChange={(e) =>
                           setData({ ...data, name: e.target.value })

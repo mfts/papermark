@@ -1,14 +1,14 @@
 import { Dispatch, SetStateAction, useState } from "react";
 import { Switch } from "@/components/ui/switch";
 import { motion } from "framer-motion";
-import { Link } from "@prisma/client";
 import { FADE_IN_ANIMATION_SETTINGS } from "@/lib/contants";
 import Eye from "@/components/shared/icons/eye"
 import { cn } from "@/lib/utils";
+import { DEFAULT_LINK_TYPE } from "./link-sheet";
 
 
 
-export default function PasswordSection({data, setData}: {data: Link, setData: Dispatch<SetStateAction<Link>>}) {
+export default function PasswordSection({data, setData}: {data: DEFAULT_LINK_TYPE, setData: Dispatch<SetStateAction<DEFAULT_LINK_TYPE>>}) {
   const { password } = data;
   const [enabled, setEnabled] = useState(!!password);
   const [showPassword, setShowPassword] = useState(false);
