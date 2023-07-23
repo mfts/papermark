@@ -10,7 +10,7 @@ import Link from "next/link";
 import { classNames } from "@/lib/utils";
 import { useRouter } from "next/router";
 
-export default function Sidebar({ children }: { children: React.ReactNode }) {
+export default function Sidebar() {
   const { data: session } = useSession();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const router = useRouter();
@@ -154,14 +154,14 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
                         onClick={() => router.push(item.href)}
                         className={classNames(
                           item.current
-                            ? "bg-gray-800 text-white"
+                            ? "bg-gray-800 text-white font-semibold"
                             : "text-gray-400 hover:text-white hover:bg-gray-800",
-                          "group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold w-full disabled:hover:bg-inherit disabled:text-gray-400 disabled:cursor-default"
+                          "group flex gap-x-3 items-center rounded-md p-2 text-sm leading-6 w-full disabled:hover:bg-inherit disabled:text-gray-400 disabled:cursor-default"
                         )}
                         disabled={item.disabled}
                       >
                         <item.icon
-                          className="h-6 w-6 shrink-0"
+                          className="h-5 w-5 shrink-0"
                           aria-hidden="true"
                         />
                         {item.name}
@@ -303,7 +303,6 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
             </div>
           </div>
         </div>
-        {children}
       </div>
     </>
   );
