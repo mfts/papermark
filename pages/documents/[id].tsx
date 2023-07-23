@@ -7,7 +7,6 @@ import StatsChart from "@/components/documents/stats-chart";
 import AppLayout from "@/components/layouts/app";
 import LinkSheet from "@/components/links/link-sheet";
 import Image from "next/image"
-import LinksTable from "@/components/links/links-table";
 
 export default function DocumentPage() {
   const { document, error } = useDocument();
@@ -58,7 +57,6 @@ export default function DocumentPage() {
             <StatsCard />
             {/* Links */}
             <LinksContainer />
-            <LinksTable />
           </>
         ) : (
           <div>Loading...</div>
