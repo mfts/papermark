@@ -69,13 +69,10 @@ export default function LinkSheet({ children }: { children: React.ReactNode }) {
         <SheetHeader>
           <SheetTitle className="text-white">Create a new link</SheetTitle>
           <SheetDescription className="text-white">
-            Make changes to your profile here. Click save when you're done.
+            Make changes to your profile here. Click save when you&apos;re done.
           </SheetDescription>
         </SheetHeader>
-        <form
-          className="flex flex-col grow"
-          onSubmit={handleSubmit}
-        >
+        <form className="flex flex-col grow" onSubmit={handleSubmit}>
           <div className="h-0 flex-1">
             <div className="flex flex-1 flex-col justify-between">
               <div className="divide-y divide-gray-200">
