@@ -20,6 +20,7 @@
     "@next-auth/prisma-adapter": "^1.0.6",
     "@prisma/client": "^4.15.0",
     "@radix-ui/react-dialog": "^1.0.4",
+    "@radix-ui/react-separator": "^1.0.3",
     "@react-email/components": "^0.0.6",
     "@tremor/react": "^3.4.1",
     "@types/node": "20.2.5",
