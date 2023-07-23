@@ -31,6 +31,7 @@
     "autoprefixer": "10.4.14",
     "base-x": "^4.0.0",
     "class-variance-authority": "^0.6.0",
+    "bcryptjs": "^2.4.3",
     "clsx": "^1.2.1",
     "date-fns": "^2.30.0",
     "eslint": "8.41.0",
@@ -59,6 +60,7 @@
   },
   "devDependencies": {
     "@tailwindcss/forms": "^0.5.3",
+    "@types/bcryptjs": "^2.4.2",
     "@types/ms": "^0.7.31",
     "@types/ua-parser-js": "^0.7.36",
     "prisma": "^4.15.0"

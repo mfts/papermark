@@ -1,6 +1,7 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import ms from "ms"
+import bcrypt from "bcryptjs";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -143,4 +144,29 @@ export function nFormatter(num?: number, digits?: number) {
   return item
     ? (num / item.value).toFixed(digits || 1).replace(rx, "$1") + item.symbol
     : "0";
+}
+
+export const getDateTimeLocal = (timestamp?: Date): string => {
+  const d = timestamp ? new Date(timestamp) : new Date();
+  if (d.toString() === "Invalid Date") return "";
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+    .toISOString()
+    .split(":")
+    .slice(0, 2)
+    .join(":");
+};
+
+
+export async function hashPassword(password: string): Promise<string> {
+  const saltRounds = 10;
+  const hashedPassword = await bcrypt.hash(password, saltRounds);
+  return hashedPassword;
+}
+
+export async function checkPassword(
+  password: string,
+  hashedPassword: string
+): Promise<boolean> {
+  const match = await bcrypt.compare(password, hashedPassword);
+  return match;
 }

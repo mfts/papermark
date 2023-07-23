@@ -5,7 +5,9 @@ import LinksContainer from "@/components/links/links-container";
 import StatsCard from "@/components/documents/stats-card";
 import StatsChart from "@/components/documents/stats-chart";
 import AppLayout from "@/components/layouts/app";
+import LinkSheet from "@/components/links/link-sheet";
 import Image from "next/image"
+import LinksTable from "@/components/links/links-table";
 
 export default function DocumentPage() {
   const { document, error } = useDocument();
@@ -37,6 +39,14 @@ export default function DocumentPage() {
                   </h2>
                 </div>
               </div>
+                <LinkSheet>
+                  <button
+                    type="button"
+                    className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-gray-950 bg-gray-300 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                  >
+                    Create Link
+                  </button>
+                </LinkSheet>
             </div>
             {/* Stats */}
             {document.numPages !== null && (
@@ -48,6 +58,7 @@ export default function DocumentPage() {
             <StatsCard />
             {/* Links */}
             <LinksContainer />
+            <LinksTable />
           </>
         ) : (
           <div>Loading...</div>

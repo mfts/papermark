@@ -75,10 +75,12 @@ model Link {
   id            String      @id @default(cuid())
   document      Document    @relation(fields: [documentId], references: [id])
   documentId    String
-  url           String?      @unique
+  url           String?     @unique
+  name          String?     // Link name
   expiresAt     DateTime?   // Optional expiration date
   password      String?     // Optional password for link protection
   allowedEmails String[]    // Array of emails allowed to view the document
+  emailProtected Boolean?   @default(true) // Optional email protection
   views         View[]
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
