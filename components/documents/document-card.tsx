@@ -7,6 +7,7 @@ import toast from "react-hot-toast";
 import Notification from "@/components/Notification";
 import Copy from "@/components/shared/icons/copy";
 import BarChart from "@/components/shared/icons/bar-chart";
+import Image from "next/image";
 
 export default function DocumentsCard({
   document,
@@ -29,13 +30,13 @@ export default function DocumentsCard({
     ));
   }
 
+  
+
   return (
     <li className="relative rounded-lg bg-gray-800 p-3 border-0 ring-1 ring-gray-700 transition-all hover:ring-gray-500 sm:p-4 flex justify-between items-center">
       <div className="min-w-0 flex shrink items-center space-x-4">
-        <div className="rounded-full p-2 bg-gray-700 w-10 text-center flex justify-center items-center">
-          <span className="text-white whitespace-nowrap">
-            {getExtension(document.file)}
-          </span>
+        <div className="w-8 mx-1 text-center flex justify-center items-center">
+          <Image src={`/_icons/${getExtension(document.file)}.svg`} alt="File icon" width={50} height={50} className="" />
         </div>
         <div className="flex-col">
           <div className="flex items-center">
