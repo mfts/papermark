@@ -360,11 +360,11 @@
         },
         "tinybird-cli": {
             "hashes": [
-                "sha256:078de0e3a0ee206c601b0d57a02317113f6fce6d7e02b2d7ba9c6c63adf98f66",
-                "sha256:c52aa9e504a8730000584df2ad3d59274f1ba2fdc06e5eaf1675d6b717721da9"
+                "sha256:317399cc456d790fd6de620ab4d14adeb12f20fb5741826efce8d906fc647cc9",
+                "sha256:54ad0f6501ce7c95cb61f63d2ced75a5db383b3f00c0c38953d216cd08434a46"
             ],
             "index": "pypi",
-            "version": "==1.0.0b357"
+            "version": "==1.0.0b361"
         },
         "toposort": {
             "hashes": [
