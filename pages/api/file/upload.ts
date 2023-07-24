@@ -1,4 +1,4 @@
-import * as vercelBlob from "@vercel/blob";
+import { put } from "@vercel/blob";
 import { NextResponse, NextRequest } from "next/server";
 
 export const config = {
@@ -16,7 +16,11 @@ export default async function upload(request: NextRequest) {
     );
   }
 
-  const blob = await vercelBlob.put(file.name, file, { access: "public" });
+  console.log(file)
+
+  const blob = await put(file.name, file, { access: "public" });
+
+  console.log(blob)
 
   return NextResponse.json(blob);
 }

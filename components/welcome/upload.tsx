@@ -8,11 +8,7 @@ import { ArrowRightIcon, DocumentDuplicateIcon } from "@heroicons/react/24/outli
 import toast from "react-hot-toast";
 import Notification from "../Notification";
 import Skeleton from "../Skeleton";
-
-const STAGGER_CHILD_VARIANTS = {
-  hidden: { opacity: 0, y: 20 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.4, type: "spring" } },
-};
+import { STAGGER_CHILD_VARIANTS } from "@/lib/contants";
 
 export default function Upload() {
   const router = useRouter();

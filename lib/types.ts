@@ -13,9 +13,10 @@ export interface CreateUserEmailProps {
   };
 }
 
-export interface DocumentWithLinksAndLinkCount extends Document {
+export interface DocumentWithLinksAndLinkCountAndViewCount extends Document {
   _count: {
     links: number;
+    views: number;
   };
   links: Link[];
 }

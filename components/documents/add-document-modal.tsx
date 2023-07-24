@@ -127,7 +127,7 @@ export function AddDocumentModal({children}: {children: React.ReactNode}) {
   return (
     <Dialog>
       <DialogTrigger>{children}</DialogTrigger>
-      <DialogContent className="text-white bg-black">
+      <DialogContent className="text-white bg-black ring-1 ring-white/10">
         <DialogHeader>
           <DialogTitle>Share a document</DialogTitle>
           <DialogDescription>

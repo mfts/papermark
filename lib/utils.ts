@@ -1,5 +1,7 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import ms from "ms"
+import bcrypt from "bcryptjs";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -100,3 +102,71 @@ export function capitalize(str: string) {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
+
+export const timeAgo = (timestamp?: Date): string => {
+  if (!timestamp) return "Just now";
+  const diff = Date.now() - new Date(timestamp).getTime();
+  if (diff < 60000) {
+    // less than 1 second
+    return "Just now";
+  } else if (diff > 82800000) {
+    // more than 23 hours – similar to how Twitter displays timestamps
+    return new Date(timestamp).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year:
+        new Date(timestamp).getFullYear() !== new Date().getFullYear()
+          ? "numeric"
+          : undefined,
+    });
+  }
+  return `${ms(diff)} ago`;
+};
+
+export function nFormatter(num?: number, digits?: number) {
+  if (!num) return "0";
+  const lookup = [
+    { value: 1, symbol: "" },
+    { value: 1e3, symbol: "K" },
+    { value: 1e6, symbol: "M" },
+    { value: 1e9, symbol: "G" },
+    { value: 1e12, symbol: "T" },
+    { value: 1e15, symbol: "P" },
+    { value: 1e18, symbol: "E" },
+  ];
+  const rx = /\.0+$|(\.[0-9]*[1-9])0+$/;
+  var item = lookup
+    .slice()
+    .reverse()
+    .find(function (item) {
+      return num >= item.value;
+    });
+  return item
+    ? (num / item.value).toFixed(digits || 1).replace(rx, "$1") + item.symbol
+    : "0";
+}
+
+export const getDateTimeLocal = (timestamp?: Date): string => {
+  const d = timestamp ? new Date(timestamp) : new Date();
+  if (d.toString() === "Invalid Date") return "";
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+    .toISOString()
+    .split(":")
+    .slice(0, 2)
+    .join(":");
+};
+
+
+export async function hashPassword(password: string): Promise<string> {
+  const saltRounds = 10;
+  const hashedPassword = await bcrypt.hash(password, saltRounds);
+  return hashedPassword;
+}
+
+export async function checkPassword(
+  password: string,
+  hashedPassword: string
+): Promise<boolean> {
+  const match = await bcrypt.compare(password, hashedPassword);
+  return match;
+}

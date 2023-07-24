@@ -1,23 +1,4 @@
-import { Card, Title, BarChart, Subtitle, BarList } from "@tremor/react";
-
-const chartdata = [
-  {
-    name: "Amphibians",
-    "Time spent per page": 2488,
-  },
-  {
-    name: "Birds",
-    "Time spent per page": 1445,
-  },
-  {
-    name: "Crustaceans",
-    "Time spent per page": 743,
-  },
-];
-
-const dataFormatter = (number: number) => {
-  return "$ " + Intl.NumberFormat("us").format(number).toString();
-};
+import { BarChart } from "@tremor/react";
 
 const timeFormatter = (number: number) => {
   const totalSeconds = Math.floor(number / 1000);
@@ -54,4 +35,5 @@ export default function BarChartComponent({data}: {data: any}) {
       yAxisWidth={50}
       showGridLines={false}
     />
-  );}
+  );
+}

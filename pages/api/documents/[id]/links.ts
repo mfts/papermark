@@ -26,7 +26,11 @@ export default async function handle(
           createdAt: "asc",
         },
         include: {
-          views: true,
+          views: {
+            orderBy: {
+              viewedAt: "desc",
+            }
+          },
           _count: {
             select: { views: true },
           },
