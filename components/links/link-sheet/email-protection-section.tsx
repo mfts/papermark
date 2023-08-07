@@ -1,7 +1,7 @@
 import { Dispatch, SetStateAction, useState } from "react";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
-import { DEFAULT_LINK_TYPE } from "./link-sheet";
+import { DEFAULT_LINK_TYPE } from ".";
 
 
 

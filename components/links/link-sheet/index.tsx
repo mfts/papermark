@@ -104,7 +104,7 @@ export default function LinkSheet({ children }: { children: React.ReactNode }) {
                         id="link-name"
                         placeholder="Recipient's Organization"
                         value={data.name || ''}
-                        className="block w-full rounded-md border-0 px-2 py-1.5 text-white bg-black shadow-sm ring-1 ring-inset ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-gray-300 sm:text-sm sm:leading-6"
+                        className="flex w-full rounded-md border-0 py-1.5 text-white bg-black shadow-sm ring-1 ring-inset ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-gray-300 sm:text-sm sm:leading-6"
                         onChange={(e) =>
                           setData({ ...data, name: e.target.value })
                         }

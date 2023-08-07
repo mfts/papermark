@@ -104,11 +104,11 @@ export default function LinksContainer() {
         <tbody className="divide-y divide-white/5">
           {links ? (
             links.map((link) => (
-              <tr key={link.id}>
+              <tr key={link.id} className="hover:bg-gray-800">
                 <td className="py-4 pl-4 pr-8 sm:pl-6 lg:pl-8">
                   <div className="flex items-center gap-x-4">
                     <div className="truncate text-sm font-medium leading-6 text-white">
-                      {link.id}
+                      {`https://localhost:3000/view/${link.id}`}
                     </div>
                     <button
                       className="text-gray-500 hover:text-gray-700"

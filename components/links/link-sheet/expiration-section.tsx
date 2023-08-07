@@ -3,7 +3,7 @@ import { Switch } from "@/components/ui/switch";
 import { motion } from "framer-motion";
 import { FADE_IN_ANIMATION_SETTINGS } from "@/lib/contants";
 import { cn, getDateTimeLocal } from "@/lib/utils";
-import { DEFAULT_LINK_TYPE } from "./link-sheet";
+import { DEFAULT_LINK_TYPE } from ".";
 
 
 
