@@ -21,7 +21,7 @@ export default function DocumentPage() {
         {document ? (
           <>
             {/* Heading */}
-            <div className="flex flex-col items-start justify-between gap-x-8 gap-y-4 p-4 sm:flex-row sm:items-center sm:p-4 sm:m-4">
+            <div className="flex flex-col items-start justify-between gap-x-8 gap-y-4 p-4 sm:flex-row sm:items-center sm:m-4">
               <div className="space-y-2">
                 <div className="flex space-x-4 items-center">
                   <div className="w-8">
