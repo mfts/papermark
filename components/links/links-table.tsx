@@ -29,6 +29,8 @@ import BarChart from "../shared/icons/bar-chart";
 import { nFormatter, timeAgo } from "@/lib/utils";
 import MoreHorizontal from "../shared/icons/more-horizontal";
 import { Skeleton } from "../ui/skeleton";
+import LinksVisitors from "./links-visitors";
+import ChevronDown from "../shared/icons/chevron-down";
 
 
 export default function LinksTable() {
@@ -59,7 +61,7 @@ export default function LinksTable() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="font-medium">Name</TableHead>
+              <TableHead className="font-medium hidden sm:table-cell">Name</TableHead>
               <TableHead className="font-medium w-[250px]">Link</TableHead>
               <TableHead className="font-medium">Views</TableHead>
               <TableHead className="font-medium">Last Viewed</TableHead>
@@ -72,7 +74,7 @@ export default function LinksTable() {
                 <Collapsible asChild>
                   <>
                     <TableRow key={link.id} className="group/row">
-                      <TableCell>{link.name || "No link name"}</TableCell>
+                      <TableCell className="hidden sm:table-cell">{link.name || "No link name"}</TableCell>
                       <TableCell className="min-w-[260px] sm:min-w-[450px]">
                         <div className="group/cell flex items-center gap-x-4 rounded-md bg-gray-700 px-3 py-1 group-hover/row:ring-1 group-hover/row:ring-gray-100 hover:bg-gray-200 transition-all">
                           <div className="whitespace-nowrap hidden sm:flex text-sm text-gray-300 group-hover/cell:hidden">{`https://papermark.io/view/${link.id}`}</div>
@@ -88,7 +90,7 @@ export default function LinksTable() {
                       </TableCell>
                       <TableCell>
                         <CollapsibleTrigger asChild>
-                          <div className="flex items-center space-x-1">
+                          <div className="flex items-center space-x-1 [&[data-state=open]>svg.chevron]:rotate-180">
                             <BarChart className="h-4 w-4 text-gray-400" />
                             <p className="whitespace-nowrap text-sm text-gray-400">
                               {nFormatter(link._count.views)}
@@ -96,6 +98,7 @@ export default function LinksTable() {
                                 views
                               </span>
                             </p>
+                            <ChevronDown className="h-4 w-4 text-gray-400 shrink-0 transition-transform duration-200 chevron" />
                           </div>
                         </CollapsibleTrigger>
                       </TableCell>
@@ -133,12 +136,14 @@ export default function LinksTable() {
                       </TableCell>
                     </TableRow>
                     <CollapsibleContent asChild>
-                      <TableRow className="bg-gray-700 hover:bg-gray-700">
-                        <TableCell colSpan={5}>
-                          Yes. Free to use for personal and commercial projects.
-                          No attribution required.
-                        </TableCell>
-                      </TableRow>
+                      {/* <div className="hover:bg-transparent">
+                        <div className="w-full p-0"> */}
+                          <LinksVisitors
+                            linkName={link.name || "No link name"}
+                            linkId={link.id}
+                          />
+                        {/* </div>
+                      </div> */}
                     </CollapsibleContent>
                   </>
                 </Collapsible>
