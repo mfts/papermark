@@ -108,6 +108,7 @@ export default function LinksVisitors({linkId, linkName}: {linkId: string, linkN
                   </time>
                 </div>
               </TableCell>
+              <TableCell className="hidden sm:table-cell"></TableCell>
             </TableRow>
           ))
         : null}
