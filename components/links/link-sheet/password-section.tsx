@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { FADE_IN_ANIMATION_SETTINGS } from "@/lib/contants";
 import Eye from "@/components/shared/icons/eye"
 import { cn } from "@/lib/utils";
-import { DEFAULT_LINK_TYPE } from "./link-sheet";
+import { DEFAULT_LINK_TYPE } from ".";
 
 
 

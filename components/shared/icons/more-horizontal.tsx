@@ -1,4 +1,4 @@
-export default function Eye({ className }: { className?: string }) {
+export default function MoreHorizontal({ className }: { className?: string }) {
   return (
     <svg
       width="14"
@@ -12,8 +12,9 @@ export default function Eye({ className }: { className?: string }) {
       shapeRendering="geometricPrecision"
       className={className}
     >
-      <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
-      <circle cx="12" cy="12" r="3" />
+      <circle cx="12" cy="12" r="1" />
+      <circle cx="19" cy="12" r="1" />
+      <circle cx="5" cy="12" r="1" />
     </svg>
   );
 }

@@ -1,4 +1,4 @@
-export default function Eye({ className }: { className?: string }) {
+export default function Check({ className }: { className?: string }) {
   return (
     <svg
       width="14"
@@ -9,11 +9,10 @@ export default function Eye({ className }: { className?: string }) {
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
-      shapeRendering="geometricPrecision"
       className={className}
+      shapeRendering="geometricPrecision"
     >
-      <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
-      <circle cx="12" cy="12" r="3" />
+      <polyline points="20 6 9 17 4 12" />
     </svg>
   );
 }

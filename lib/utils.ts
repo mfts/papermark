@@ -123,6 +123,18 @@ export const timeAgo = (timestamp?: Date): string => {
   return `${ms(diff)} ago`;
 };
 
+export const durationFormat = (durationInMilliseconds?: number): string => {
+  if (!durationInMilliseconds) return "0 secs";
+
+  if (durationInMilliseconds < 60000) {
+    return `${Math.round(durationInMilliseconds / 1000)} secs`;
+  } else {
+    const minutes = Math.floor(durationInMilliseconds / 60000);
+    const seconds = Math.round((durationInMilliseconds % 60000) / 1000);
+    return `${minutes}:${seconds.toString().padStart(2, "0")} mins`;
+  }
+};
+
 export function nFormatter(num?: number, digits?: number) {
   if (!num) return "0";
   const lookup = [

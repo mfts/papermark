@@ -23,7 +23,7 @@ export async function sendEmail(
       subject,
       react,
       ...otherOptions,
-    });
+    } as CreateEmailOptions);
     return response;
   } catch (error) {
     // Log any errors and re-throw the error

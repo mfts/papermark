@@ -6,6 +6,8 @@ import { SessionProvider } from "next-auth/react";
 import { Toaster } from "react-hot-toast";
 import Head from "next/head";
 import { Analytics } from "@vercel/analytics/react";
+import { ThemeProvider } from "@/components/theme-provider";
+
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -19,10 +21,12 @@ export default function App({
         <title>Papermark</title>
       </Head>
       <SessionProvider session={session}>
-        <main className={inter.className}>
-          <Toaster position="top-right" reverseOrder={false} />
-          <Component {...pageProps} />
-        </main>
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+          <main className={inter.className}>
+            <Toaster position="top-right" reverseOrder={false} />
+            <Component {...pageProps} />
+          </main>
+        </ThemeProvider>
         <Analytics />
       </SessionProvider>
     </>

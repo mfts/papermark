@@ -16,11 +16,11 @@ export default async function upload(request: NextRequest) {
     );
   }
 
-  console.log(file)
+  // console.log(file)
 
   const blob = await put(file.name, file, { access: "public" });
 
-  console.log(blob)
+  // console.log(blob)
 
   return NextResponse.json(blob);
 }
