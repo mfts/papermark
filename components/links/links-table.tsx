@@ -61,11 +61,13 @@ export default function LinksTable() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="font-medium hidden sm:table-cell">Name</TableHead>
-              <TableHead className="font-medium w-[250px]">Link</TableHead>
+              <TableHead className="font-medium hidden sm:table-cell">
+                Name
+              </TableHead>
+              <TableHead className="font-medium sm:w-[250px]">Link</TableHead>
               <TableHead className="font-medium">Views</TableHead>
               <TableHead className="font-medium">Last Viewed</TableHead>
-              <TableHead className="font-medium text-right"></TableHead>
+              <TableHead className="font-medium text-center sm:text-right"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -74,17 +76,22 @@ export default function LinksTable() {
                 <Collapsible key={link.id} asChild>
                   <>
                     <TableRow key={link.id} className="group/row">
-                      <TableCell className="hidden sm:table-cell">{link.name || "No link name"}</TableCell>
-                      <TableCell className="min-w-[260px] sm:min-w-[450px]">
+                      <TableCell className="hidden sm:table-cell truncate w-[220px]">
+                        {link.name || "No link name"}
+                      </TableCell>
+                      <TableCell className="max-w-[150px] sm:min-w-[450px]">
                         <div className="group/cell flex items-center gap-x-4 rounded-md bg-gray-700 px-3 py-1 group-hover/row:ring-1 group-hover/row:ring-gray-100 hover:bg-gray-200 transition-all">
                           <div className="whitespace-nowrap hidden sm:flex text-sm text-gray-300 group-hover/cell:hidden">{`https://papermark.io/view/${link.id}`}</div>
-                          <div className="flex sm:hidden whitespace-nowrap text-sm text-gray-300 group-hover/cell:hidden">{`${link.id}`}</div>
+                          <div className="flex sm:hidden whitespace-nowrap text-sm text-gray-300 group-hover/cell:hidden truncate">{`${link.id}`}</div>
                           <button
                             className="whitespace-nowrap text-sm text-center text-black hidden group-hover/cell:block w-full"
                             onClick={() => handleCopyToClipboard(link.id)}
                             title="Copy to clipboard"
                           >
-                            Copy to Clipboard
+                            Copy{" "}
+                            <span className="hidden sm:inline-flex">
+                              to Clipboard
+                            </span>
                           </button>
                         </div>
                       </TableCell>
@@ -115,7 +122,7 @@ export default function LinksTable() {
                           "-"
                         )}
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-center sm:text-right">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" className="h-8 w-8 p-0">
@@ -136,14 +143,10 @@ export default function LinksTable() {
                       </TableCell>
                     </TableRow>
                     <CollapsibleContent asChild>
-                      {/* <div className="hover:bg-transparent">
-                        <div className="w-full p-0"> */}
-                          <LinksVisitors
-                            linkName={link.name || "No link name"}
-                            linkId={link.id}
-                          />
-                        {/* </div>
-                      </div> */}
+                      <LinksVisitors
+                        linkName={link.name || "No link name"}
+                        linkId={link.id}
+                      />
                     </CollapsibleContent>
                   </>
                 </Collapsible>
