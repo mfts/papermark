@@ -71,7 +71,7 @@ export default function LinksTable() {
           <TableBody>
             {links ? (
               links.map((link) => (
-                <Collapsible asChild>
+                <Collapsible key={link.id} asChild>
                   <>
                     <TableRow key={link.id} className="group/row">
                       <TableCell className="hidden sm:table-cell">{link.name || "No link name"}</TableCell>
