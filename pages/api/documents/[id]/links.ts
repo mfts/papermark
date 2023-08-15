@@ -48,8 +48,8 @@ export default async function handle(
       });
     }
   } else {
-    // We only allow GET and POST requests
-    res.setHeader("Allow", ["GET", "POST"]);
+    // We only allow GET requests
+    res.setHeader("Allow", ["GET"]);
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 }
