@@ -1,6 +1,7 @@
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/20/solid";
 import { useEffect, useRef, useState } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
+import Feedback from "@/components/Feedback";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
 
@@ -35,7 +36,6 @@ export default function PDFViewer(props: any) {
       updateNumPages(numPages);
     }
   }, [numPages]); // monitor numPages for changes
-
 
   function onDocumentLoadSuccess({
     numPages: nextNumPages,
@@ -117,60 +117,71 @@ export default function PDFViewer(props: any) {
 
   return (
     <>
-      <Nav pageNumber={pageNumber} numPages={numPages} />
-      <div
-        hidden={loading}
-        style={{ height: "calc(100vh - 64px)" }}
-        className="flex items-center"
-      >
+      <div className="relative">
+        <Nav pageNumber={pageNumber} numPages={numPages} />
         <div
-          className={`flex items-center justify-between w-full absolute z-10 px-2`}
+          hidden={loading}
+          style={{ height: "calc(100vh - 64px)" }}
+          className="flex items-center"
         >
-          <button
-            onClick={goToPreviousPage}
-            disabled={pageNumber <= 1}
-            className="relative h-[calc(100vh - 64px)] px-2 py-24 text-gray-400 hover:text-gray-50 focus:z-20"
+          <div
+            className={`flex items-center justify-between w-full absolute z-10 px-2`}
           >
-            <span className="sr-only">Previous</span>
-            <ChevronLeftIcon className="h-10 w-10" aria-hidden="true" />
-          </button>
-          <button
-            onClick={goToNextPage}
-            disabled={pageNumber >= numPages!}
-            className="relative h-[calc(100vh - 64px)] px-2 py-24 text-gray-400 hover:text-gray-50 focus:z-20"
-          >
-            <span className="sr-only">Next</span>
-            <ChevronRightIcon className="h-10 w-10" aria-hidden="true" />
-          </button>
-        </div>
+            <button
+              onClick={goToPreviousPage}
+              disabled={pageNumber <= 1}
+              className="relative h-[calc(100vh - 64px)] px-2 py-24 text-gray-400 hover:text-gray-50 focus:z-20"
+            >
+              <span className="sr-only">Previous</span>
+              <ChevronLeftIcon className="h-10 w-10" aria-hidden="true" />
+            </button>
+            <button
+              onClick={goToNextPage}
+              disabled={pageNumber >= numPages!}
+              className="relative h-[calc(100vh - 64px)] px-2 py-24 text-gray-400 hover:text-gray-50 focus:z-20"
+            >
+              <span className="sr-only">Next</span>
+              <ChevronRightIcon className="h-10 w-10" aria-hidden="true" />
+            </button>
+          </div>
 
-        <div className="h-full flex justify-center mx-auto">
-          <Document
-            file={props.file}
-            onLoadSuccess={onDocumentLoadSuccess}
-            options={options}
-            renderMode="canvas"
-            className=""
-          >
-            <Page
+          <div className="h-full flex justify-center mx-auto">
+            <Document
+              file={props.file}
+              onLoadSuccess={onDocumentLoadSuccess}
+              options={options}
+              renderMode="canvas"
               className=""
-              key={pageNumber}
-              pageNumber={pageNumber}
-              renderAnnotationLayer={false}
-              renderTextLayer={false}
-              onLoadSuccess={onPageLoadSuccess}
-              onRenderError={() => setLoading(false)}
-              width={Math.max(pageWidth * 0.8, 390)}
-            />
-          </Document>
+            >
+              <Page
+                className=""
+                key={pageNumber}
+                pageNumber={pageNumber}
+                renderAnnotationLayer={false}
+                renderTextLayer={false}
+                onLoadSuccess={onPageLoadSuccess}
+                onRenderError={() => setLoading(false)}
+                width={Math.max(pageWidth * 0.8, 390)}
+              />
+            </Document>
+          </div>
         </div>
+        <Feedback
+          onUpvote={() => console.log("Upvoted!")}
+          onDownvote={() => console.log("Downvoted!")}
+        />
       </div>
     </>
   );
 }
 
-
-function Nav({pageNumber, numPages}: {pageNumber: number, numPages: number}) {
+function Nav({
+  pageNumber,
+  numPages,
+}: {
+  pageNumber: number;
+  numPages: number;
+}) {
   return (
     <nav className="bg-black">
       <div className="mx-auto px-2 sm:px-6 lg:px-8">

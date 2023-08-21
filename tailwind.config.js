@@ -159,10 +159,27 @@ module.exports = {
           from: { "stroke-dashoffset": "332", opacity: "0" },
           to: { opacity: "1" },
         },
+        flyEmoji: {
+          // <-- Add this keyframe
+          "0%": {
+            transform: "translateY(0)",
+            opacity: "0.7",
+          },
+          "100%": {
+            transform: "translateY(-50px)",
+            opacity: "0",
+          },
+        },
+        blink: {
+          "0%, 100%": { opacity: "1" }, // Fully visible at 0% and 100%
+          "50%": { opacity: "0" }, // Fully transparent at 50%
+        },
       },
       animation: {
         gauge_fadeIn: "gauge_fadeIn 1s ease forwards",
         gauge_fill: "gauge_fill 1s ease forwards",
+        flyEmoji: "flyEmoji 1s forwards",
+        blink: "blink 1s infinite",
       },
     },
   },
