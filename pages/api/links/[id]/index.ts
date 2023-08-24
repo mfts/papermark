@@ -1,5 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/lib/prisma";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "../../auth/[...nextauth]";
 
 export default async function handle(
   req: NextApiRequest,
@@ -7,6 +9,11 @@ export default async function handle(
 ) {
   if (req.method === "GET") {
     // GET /api/links/:id
+    const session = await getServerSession(req, res, authOptions);
+    if (!session) {
+      return res.status(401).end("Unauthorized");
+    }
+    
     const { id } = req.query as { id: string };
 
     try {
