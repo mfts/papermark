@@ -9,18 +9,15 @@ export default async function handle(
 ) {
   if (req.method === "GET") {
     // GET /api/links/domains/:domain/:slug
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      return res.status(401).end("Unauthorized");
-    }
-
     const { domain, slug } = req.query as { domain: string, slug: string };
 
     try {
-      const link = await prisma.link.findFirst({
+      const link = await prisma.link.findUnique({
         where: {
-          slug: slug,
-          domainSlug: domain,
+          domainSlug_slug: {
+            slug: slug,
+            domainSlug: domain,
+          }
         },
         select: {
           id: true,

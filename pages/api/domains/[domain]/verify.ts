@@ -7,9 +7,9 @@ import {
 import { DomainVerificationStatusProps } from "@/lib/types";
 
 export default async function handle(req: NextApiRequest, res: NextApiResponse) {
-  // GET /api/domains/[slug]/verify - get domain verification status
+  // GET /api/domains/[domain]/verify - get domain verification status
   if (req.method === "GET") {
-    const { slug: domain } = req.query as { slug: string; };
+    const { domain } = req.query as { domain: string; };
     let status: DomainVerificationStatusProps = "Valid Configuration";
 
     const [domainJson, configJson] = await Promise.all([
