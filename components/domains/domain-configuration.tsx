@@ -26,11 +26,10 @@ export const InlineSnippet = ({
 export default function DomainConfiguration({ domain }: { domain: string }) {
   const { status, domainJson } = useDomainStatus({ domain });
 
+  const subdomain = domainJson ? getSubdomain(domainJson.name, domainJson.apexName): null; 
+  const [recordType, setRecordType] = useState<"CNAME" | "A">(!!subdomain ? "CNAME" : "A");
+
   if (!status || status === "Valid Configuration" || !domainJson) return null;
-
-  const subdomain = getSubdomain(domainJson.name, domainJson.apexName);
-
-  const [recordType, setRecordType] = useState<"A" | "CNAME">(subdomain ? "CNAME" : "A");
 
   const txtVerification =
     (status === "Pending Verification" &&
