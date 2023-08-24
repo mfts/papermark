@@ -1,7 +1,7 @@
 import { AddDomainModal } from "@/components/domains/add-domain-modal";
 import DomainCard from "@/components/domains/domain-card";
 import AppLayout from "@/components/layouts/app";
-import useDomains from "@/lib/swr/use-domains";
+import { useDomains } from "@/lib/swr/use-domains";
 import { mutate } from "swr";
 
 export default function Domains() {

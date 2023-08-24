@@ -2,7 +2,7 @@ import useSWR from "swr";
 import { fetcher } from "@/lib/utils";
 import { Domain } from "@prisma/client";
 
-export default function useDomains() {
+export function useDomains() {
 
   const { data: domains, error } = useSWR<Domain[]>(
     `/api/domains`,

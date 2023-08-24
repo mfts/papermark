@@ -16,6 +16,7 @@ import ExpirationSection from "./expiration-section";
 import EmailProtectionSection from "./email-protection-section";
 import { useRouter } from "next/router";
 import { useDocumentLinks } from "@/lib/swr/use-document";
+import { useDomains } from "@/lib/swr/use-domains";
 import { mutate } from "swr";
 
 const DEFAULT_LINK_PROPS = {
