@@ -18,6 +18,18 @@ export const config = {
 
 export default async function middleware(req: NextRequest, ev: NextFetchEvent) {
   const path = req.nextUrl.pathname;
+  const host = req.headers.get('host');
+  const url = req.nextUrl.clone();
+
+  if (
+    process.env.NODE_ENV !== "development" && 
+    !(host?.includes("papermark.io") || host?.endsWith(".vercel.app"))
+  ) {
+    // Subdomain available, rewriting
+    console.log(`>>> Rewriting: ${path} to /view/domains/${host}${path}`);
+    url.pathname = `/view/domains/${host}${path}`;
+    return NextResponse.rewrite(url);
+  }
 
   if (path !== "/" && path !== "/alternatives/docsend") {
     return AppMiddleware(req);
