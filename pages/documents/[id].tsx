@@ -57,7 +57,7 @@ export default function DocumentPage() {
             )}
             <StatsCard />
             {/* Visitors */}
-            <VisitorsTable />
+            <VisitorsTable numPages={document.numPages!} />
             {/* Links */}
             <LinksTable />
           </>

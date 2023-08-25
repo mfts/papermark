@@ -18,8 +18,9 @@ import { useDocumentVisits } from "@/lib/swr/use-document";
 import { durationFormat, nFormatter, timeAgo } from "@/lib/utils";
 import { Skeleton } from "../ui/skeleton";
 import ChevronDown from "../shared/icons/chevron-down";
+import VisitorChart from "./visitor-chart";
 
-export default function VisitorsTable() {
+export default function VisitorsTable({numPages}: {numPages: number}) {
   const { views } = useDocumentVisits();
 
   return (
@@ -106,6 +107,11 @@ export default function VisitorsTable() {
                         <TableRow className="hover:bg-transparent">
                           <TableCell colSpan={5}>
                             <div>
+                              <VisitorChart 
+                                documentId={view.documentId}
+                                viewId={view.id}
+                                totalPages={numPages}
+                              />
                             </div>
                           </TableCell>
                         </TableRow>
