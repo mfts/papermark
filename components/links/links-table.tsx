@@ -53,7 +53,7 @@ export default function LinksTable() {
       <div className="rounded-md sm:border">
         <Table>
           <TableHeader>
-            <TableRow>
+            <TableRow className="hover:bg-transparent">
               <TableHead className="font-medium hidden sm:table-cell">
                 Name
               </TableHead>
@@ -90,7 +90,7 @@ export default function LinksTable() {
                       </TableCell>
                       <TableCell>
                         <CollapsibleTrigger asChild>
-                          <div className="flex items-center space-x-1 [&[data-state=open]>svg.chevron]:rotate-180">
+                          <div className="flex items-center space-x-1 [&[data-state=open]>svg.chevron]:rotate-180 cursor-pointer">
                             <BarChart className="h-4 w-4 text-gray-400" />
                             <p className="whitespace-nowrap text-sm text-gray-400">
                               {nFormatter(link._count.views)}
