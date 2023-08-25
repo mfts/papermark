@@ -1,6 +1,4 @@
 import { getExtension, nFormatter, timeAgo } from "@/lib/utils";
-import { ChevronRightIcon } from "@heroicons/react/20/solid";
-import { DocumentDuplicateIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
 import { DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
 import { toast } from "sonner";
