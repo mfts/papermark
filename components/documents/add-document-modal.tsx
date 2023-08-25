@@ -8,14 +8,11 @@ import {
 } from "@/components/ui/dialog";
 import { useState } from "react";
 import { useRouter } from "next/router";
-// @ts-ignore
-import type { PutBlobResult } from "@vercel/blob";
+import { put, type PutBlobResult } from "@vercel/blob";
 import { toast } from "sonner";
 import DocumentUpload from "@/components/document-upload";
 import { pdfjs } from "react-pdf";
 import { getExtension } from "@/lib/utils";
-import { get } from "http";
-import { set } from "date-fns";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
 
@@ -24,7 +21,7 @@ export function AddDocumentModal({children}: {children: React.ReactNode}) {
   const [uploading, setUploading] = useState<boolean>(false);
   const [currentFile, setCurrentFile] = useState<File | null>(null);
 
-  const handleSubmit = async (event: any) => {
+  const handleBrowserUpload = async (event: any) => {
     event.preventDefault();
 
     // Check if the file is chosen
@@ -33,34 +30,22 @@ export function AddDocumentModal({children}: {children: React.ReactNode}) {
       return; // prevent form from submitting
     }
 
-    const data = new FormData();
-    if (currentFile) data.append("file", currentFile);
-
     try {
       setUploading(true);
 
-      // upload the file to the blob storage
-      const blobResponse = await fetch("/api/file/upload", {
-        method: "POST",
-        body: data,
+      const newBlob = await put(currentFile.name, currentFile, {
+        access: "public",
+        handleBlobUploadUrl: "/api/file/browser-upload",
       });
-
-      if (!blobResponse.ok) {
-        throw new Error(`HTTP error! status: ${blobResponse.status}`);
-      }
-
-      // get the blob url from the response
-      const blob = (await blobResponse.json()) as PutBlobResult;
 
       let response: Response | undefined;
       let numPages: number | undefined;
       // create a document in the database if the document is a pdf
-      if (getExtension(blob.pathname).includes("pdf")) {
-
-        numPages = await getTotalPages(blob.url);
-        response = await saveDocumentToDatabase(blob, numPages);
+      if (getExtension(newBlob.pathname).includes("pdf")) {
+        numPages = await getTotalPages(newBlob.url);
+        response = await saveDocumentToDatabase(newBlob, numPages);
       } else {
-        response = await saveDocumentToDatabase(blob);
+        response = await saveDocumentToDatabase(newBlob);
       }
 
       if (response) {
@@ -78,15 +63,13 @@ export function AddDocumentModal({children}: {children: React.ReactNode}) {
 
         setTimeout(() => {
           router.push("/documents/" + document.id);
-        }, 4000);
+          setUploading(false);
+        }, 2000);
       }
-      
     } catch (error) {
       console.error("An error occurred while uploading the file: ", error);
-    } finally {
-      setUploading(false);
     }
-  };
+  }
 
   async function saveDocumentToDatabase(blob: PutBlobResult, numPages?: number) {
     // create a document in the database with the blob url
@@ -130,7 +113,7 @@ export function AddDocumentModal({children}: {children: React.ReactNode}) {
             </div>
             <form
               encType="multipart/form-data"
-              onSubmit={handleSubmit}
+              onSubmit={handleBrowserUpload}
               className="flex flex-col"
             >
               <div className="space-y-12">
