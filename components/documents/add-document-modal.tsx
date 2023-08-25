@@ -10,8 +10,7 @@ import { useState } from "react";
 import { useRouter } from "next/router";
 // @ts-ignore
 import type { PutBlobResult } from "@vercel/blob";
-import toast from "react-hot-toast";
-import Notification from "@/components/Notification";
+import { toast } from "sonner";
 import DocumentUpload from "@/components/document-upload";
 import { pdfjs } from "react-pdf";
 import { getExtension } from "@/lib/utils";
@@ -75,15 +74,7 @@ export function AddDocumentModal({children}: {children: React.ReactNode}) {
             console.log("Failed to copy text to clipboard", error);
           });
 
-        toast.custom((t) => (
-          <Notification
-            visible={t.visible}
-            closeToast={() => toast.dismiss(t.id)}
-            message={
-              "Document uploaded and link copied to clipboard. Redirecting to document page..."
-            }
-          />
-        ));
+        toast.success("Document uploaded and link copied to clipboard. Redirecting to document page...")
 
         setTimeout(() => {
           router.push("/documents/" + document.id);

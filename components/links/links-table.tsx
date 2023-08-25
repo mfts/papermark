@@ -23,8 +23,7 @@ import {
 import { Button } from "@/components/ui/button";
 
 import { useDocumentLinks } from "@/lib/swr/use-document";
-import toast from "react-hot-toast";
-import Notification from "../Notification";
+import { toast } from "sonner";
 import BarChart from "../shared/icons/bar-chart";
 import { nFormatter, timeAgo } from "@/lib/utils";
 import MoreHorizontal from "../shared/icons/more-horizontal";
@@ -43,13 +42,7 @@ export default function LinksTable() {
         console.log("Failed to copy text to clipboard", error);
       });
 
-    toast.custom((t) => (
-      <Notification
-        visible={t.visible}
-        closeToast={() => toast.dismiss(t.id)}
-        message={``}
-      />
-    ));
+    toast.success("Link copied to clipboard.");
   };
   
   return (
