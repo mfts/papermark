@@ -2,7 +2,7 @@ import { useRouter } from "next/router";
 import useSWR from "swr";
 import { fetcher } from "@/lib/utils";
 import { LinkWithViews } from "@/lib/types";
-import { Document } from "@prisma/client";
+import { Document, View } from "@prisma/client";
 
 export function useDocument() {
   const router = useRouter();
@@ -44,6 +44,36 @@ export function useDocumentLinks() {
   return {
     links,
     loading: !error && !links,
+    error,
+  };
+}
+
+interface ViewWithDuration extends View {
+  duration: {
+    data: { pageNumber: string; sum_duration: number }[];
+  };
+  totalDuration: number;
+  completionRate: number;
+}
+
+export function useDocumentVisits() {
+  const router = useRouter();
+
+  const { id } = router.query as {
+    id: string;
+  };
+
+  const { data: views, error } = useSWR<ViewWithDuration[]>(
+    id && `/api/documents/${encodeURIComponent(id)}/views`,
+    fetcher,
+    {
+      dedupingInterval: 10000,
+    }
+  );
+
+  return {
+    views,
+    loading: !error && !views,
     error,
   };
 }

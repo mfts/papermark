@@ -7,6 +7,7 @@ import AppLayout from "@/components/layouts/app";
 import LinkSheet from "@/components/links/link-sheet";
 import Image from "next/image"
 import LinksTable from "@/components/links/links-table";
+import VisitorsTable from "@/components/visitors/visitors-table";
 
 export default function DocumentPage() {
   const { document, error } = useDocument();
@@ -55,6 +56,8 @@ export default function DocumentPage() {
               />
             )}
             <StatsCard />
+            {/* Visitors */}
+            <VisitorsTable />
             {/* Links */}
             <LinksTable />
           </>
