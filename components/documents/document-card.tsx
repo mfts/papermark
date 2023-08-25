@@ -1,10 +1,7 @@
 import { getExtension, nFormatter, timeAgo } from "@/lib/utils";
-import { ChevronRightIcon } from "@heroicons/react/20/solid";
-import { DocumentDuplicateIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
 import { DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
-import toast from "react-hot-toast";
-import Notification from "@/components/Notification";
+import { toast } from "sonner";
 import Copy from "@/components/shared/icons/copy";
 import BarChart from "@/components/shared/icons/bar-chart";
 import Image from "next/image";
@@ -21,13 +18,7 @@ export default function DocumentsCard({
         console.log("Failed to copy text to clipboard", error);
       });
 
-    toast.custom((t) => (
-      <Notification
-        visible={t.visible}
-        closeToast={() => toast.dismiss(t.id)}
-        message={``}
-      />
-    ));
+    toast.success("Link copied to clipboard.");
   }
 
   

@@ -1,14 +1,16 @@
 import { useRouter } from "next/router";
 import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
-// @ts-ignore
-import type { PutBlobResult } from "@vercel/blob";
-import DocumentUpload from "../document-upload";
+import { useState } from "react";
+import { put, type PutBlobResult } from "@vercel/blob";
+import DocumentUpload from "@/components/document-upload";
 import { ArrowRightIcon, DocumentDuplicateIcon } from "@heroicons/react/24/outline";
-import toast from "react-hot-toast";
-import Notification from "../Notification";
+import { toast } from "sonner";
 import Skeleton from "../Skeleton";
 import { STAGGER_CHILD_VARIANTS } from "@/lib/contants";
+import { pdfjs } from "react-pdf";
+import { getExtension } from "@/lib/utils";
+
+pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
 
 export default function Upload() {
   const router = useRouter();
@@ -19,7 +21,7 @@ export default function Upload() {
   const [currentDocId, setCurrentDocId] = useState<string | null>(null);
   const [copiedLink, setCopiedLink] = useState<boolean>(false);
 
-  const handleSubmit = async (event: any) => {
+  const handleBrowserUpload = async (event: any) => {
     event.preventDefault();
 
     // Check if the file is chosen
@@ -28,41 +30,49 @@ export default function Upload() {
       return; // prevent form from submitting
     }
 
-    const data = new FormData();
-    if (currentFile) data.append("file", currentFile);
-
     try {
       setUploading(true);
 
-      // upload the file to the blob storage
-      const blobResponse = await fetch("/api/file/upload", {
-        method: "POST",
-        body: data,
+      const newBlob = await put(currentFile.name, currentFile, {
+        access: "public",
+        handleBlobUploadUrl: "/api/file/browser-upload",
       });
-
-      if (!blobResponse.ok) {
-        throw new Error(`HTTP error! status: ${blobResponse.status}`);
-      }
-
-      // get the blob url from the response
-      const blob = (await blobResponse.json()) as PutBlobResult;
 
       setCurrentFile(null);
       setCurrentBlob(true);
 
-      setTimeout(async () => {
-        await createLink(blob.pathname, blob.url);
-      }, 2000);
+      let response: Response | undefined;
+      let numPages: number | undefined;
+      // create a document in the database if the document is a pdf
+      if (getExtension(newBlob.pathname).includes("pdf")) {
+        numPages = await getTotalPages(newBlob.url);
+        response = await saveDocumentToDatabase(newBlob, numPages);
+      } else {
+        response = await saveDocumentToDatabase(newBlob);
+      }
 
-      setUploading(false);
+      
+      if (response) {
+        const document = await response.json();
+        const linkId = document.links[0].id;
+
+        setTimeout(() => {
+          setCurrentDocId(document.id);
+          setCurrentLinkId(linkId);
+          setUploading(false);
+        }, 2000);
+      }
     } catch (error) {
-      console.error(error);
+      console.error("An error occurred while uploading the file: ", error);
       setCurrentFile(null);
       setUploading(false);
     }
   };
 
-  const createLink = async (name: string, url: string) => {
+  const saveDocumentToDatabase = async (
+    blob: PutBlobResult,
+    numPages?: number
+  ) => {
     // create a document in the database with the blob url
     const response = await fetch("/api/documents", {
       method: "POST",
@@ -70,8 +80,9 @@ export default function Upload() {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        name: name,
-        url: url,
+        name: blob.pathname,
+        url: blob.url,
+        numPages: numPages,
       }),
     });
 
@@ -79,13 +90,14 @@ export default function Upload() {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const document = await response.json();
-    const linkId = document.links[0].id;
-    setCurrentDocId(document.id);
-    setCurrentLinkId(linkId);
-    return true;
+    return response;
   };
 
+  // get the number of pages in the pdf
+  async function getTotalPages(url: string): Promise<number> {
+    const pdf = await pdfjs.getDocument(url).promise;
+    return pdf.numPages;
+  }
 
   const handleCopyToClipboard = (id: string) => {
     navigator.clipboard
@@ -96,13 +108,7 @@ export default function Upload() {
 
     setCopiedLink(true);
 
-    toast.custom((t) => (
-      <Notification
-        visible={t.visible}
-        closeToast={() => toast.dismiss(t.id)}
-        message={``}
-      />
-    ));
+    toast.success("Document uploaded and link copied to clipboard.");
   };
 
   return (
@@ -137,7 +143,7 @@ export default function Upload() {
             <main className="mt-8">
               <form
                 encType="multipart/form-data"
-                onSubmit={handleSubmit}
+                onSubmit={handleBrowserUpload}
                 className="flex flex-col"
               >
                 <div className="space-y-12">
@@ -211,9 +217,7 @@ export default function Upload() {
                   <div className="relative">
                     <div className="flex py-8 rounded-md shadow-sm">
                       <div className="flex w-full max-w-xs sm:max-w-lg focus-within:z-10">
-                        <p
-                          className="block w-full md:min-w-[500px] rounded-none rounded-l-md px-4 text-left border-0 py-1.5 text-gray-200 bg-gray-900 leading-6 overflow-y-scroll"
-                        >
+                        <p className="block w-full md:min-w-[500px] rounded-none rounded-l-md px-4 text-left border-0 py-1.5 text-gray-200 bg-gray-900 leading-6 overflow-y-scroll">
                           {`${process.env.NEXT_PUBLIC_BASE_URL}/view/${currentLinkId}`}
                         </p>
                       </div>

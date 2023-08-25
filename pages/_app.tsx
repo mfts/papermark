@@ -3,7 +3,7 @@ import type { AppProps } from "next/app";
 import { Inter } from "next/font/google";
 import type { Session } from "next-auth";
 import { SessionProvider } from "next-auth/react";
-import { Toaster } from "react-hot-toast";
+import { Toaster } from "sonner";
 import Head from "next/head";
 import { Analytics } from "@vercel/analytics/react";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -23,7 +23,7 @@ export default function App({
       <SessionProvider session={session}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
           <main className={inter.className}>
-            <Toaster position="top-right" reverseOrder={false} />
+            <Toaster closeButton richColors theme={"dark"} />
             <Component {...pageProps} />
           </main>
         </ThemeProvider>
