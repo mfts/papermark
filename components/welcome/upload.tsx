@@ -5,8 +5,7 @@ import { useEffect, useState } from "react";
 import type { PutBlobResult } from "@vercel/blob";
 import DocumentUpload from "../document-upload";
 import { ArrowRightIcon, DocumentDuplicateIcon } from "@heroicons/react/24/outline";
-import toast from "react-hot-toast";
-import Notification from "../Notification";
+import { toast } from "sonner";
 import Skeleton from "../Skeleton";
 import { STAGGER_CHILD_VARIANTS } from "@/lib/contants";
 
@@ -96,13 +95,7 @@ export default function Upload() {
 
     setCopiedLink(true);
 
-    toast.custom((t) => (
-      <Notification
-        visible={t.visible}
-        closeToast={() => toast.dismiss(t.id)}
-        message={``}
-      />
-    ));
+    toast.success("Document uploaded and link copied to clipboard.");
   };
 
   return (
