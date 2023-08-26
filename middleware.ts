@@ -19,7 +19,7 @@ export const config = {
 export default async function middleware(req: NextRequest, ev: NextFetchEvent) {
   const path = req.nextUrl.pathname;
 
-  if (path !== "/" && path !== "/alternatives/docsend") {
+  if (path !== "/" && path !== "/alternatives/docsend" && !path.startsWith("/view/")) {
     return AppMiddleware(req);
   }
 
