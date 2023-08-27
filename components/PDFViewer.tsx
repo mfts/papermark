@@ -1,6 +1,12 @@
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/20/solid";
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/router";
 import { Document, Page, pdfjs } from "react-pdf";
+import Download from "@/components/shared/icons/download";
+import { Button } from "./ui/button";
+import { useSession } from "next-auth/react";
+import { toast } from "sonner";
+
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
 
@@ -117,7 +123,7 @@ export default function PDFViewer(props: any) {
 
   return (
     <>
-      <Nav pageNumber={pageNumber} numPages={numPages} />
+      <Nav pageNumber={pageNumber} numPages={numPages} linkId={props.linkId} />
       <div
         hidden={loading}
         style={{ height: "calc(100vh - 64px)" }}
@@ -170,22 +176,67 @@ export default function PDFViewer(props: any) {
 }
 
 
-function Nav({pageNumber, numPages}: {pageNumber: number, numPages: number}) {
+function Nav({pageNumber, numPages, linkId}: {pageNumber: number, numPages: number, linkId: string}) {
+  const { data: session } = useSession();
+  const router = useRouter();
+  const path = router.asPath;
+
+  const saveToInbox = async () => {
+    if (!session) {
+      router.push(`/login?next=${encodeURIComponent(path)}`);
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/links/save", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ linkId }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to save the link.");
+      }
+
+      toast.success("Document saved to inbox")
+
+      // Handle success, maybe show a success message or update local state
+    } catch (error) {
+      // Handle error, maybe show an error message to the user
+      console.error(error);
+    }
+  }
+
   return (
     <nav className="bg-black">
-      <div className="mx-auto px-2 sm:px-6 lg:px-8">
+      <div className="mx-auto px-4 sm:px-6 lg:px-8">
         <div className="relative flex h-16 items-center justify-between">
-          <div className="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start">
+          <div className="flex flex-1 items-stretch sm:justify-start">
             <div className="flex flex-shrink-0 items-center">
               <p className="text-2xl font-bold tracking-tighter text-white">
                 Papermark
               </p>
             </div>
           </div>
-          <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
-            <div className="bg-gray-900 text-white rounded-md px-3 py-2 text-sm font-medium">
-              <span>{pageNumber}</span>
-              <span className="text-gray-400"> / {numPages}</span>
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center">
+              <Button
+                onClick={saveToInbox}
+                variant="secondary"
+                className="px-3 py-2 h-full"
+              >
+                <Download className="h-5 w-5" />
+              </Button>
+            </div>
+            <div className="flex items-center">
+              <div className="bg-gray-900 text-white rounded-md px-3 py-2 text-sm font-medium">
+                <span>{pageNumber}</span>
+                <span className="text-gray-400"> / {numPages}</span>
+              </div>
             </div>
           </div>
         </div>

@@ -46,6 +46,7 @@ model User {
   accounts      Account[]
   sessions      Session[]
   documents     Document[]
+  savedLinks    SavedLink[]
 }
 
 model VerificationToken {
@@ -82,6 +83,7 @@ model Link {
   allowedEmails String[]    // Array of emails allowed to view the document
   emailProtected Boolean?   @default(true) // Optional email protection
   views         View[]
+  savedBy       SavedLink[]
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
 }
@@ -94,4 +96,15 @@ model View {
   documentId  String
   viewerEmail String?     // Email of the viewer if known
   viewedAt    DateTime    @default(now())
+}
+
+model SavedLink {
+  id        String @id @default(cuid())
+  userId    String
+  user      User   @relation(fields: [userId], references: [id])
+  linkId    String
+  link      Link   @relation(fields: [linkId], references: [id])
+  createdAt DateTime @default(now())
+  
+  @@unique([userId, linkId]) // Ensure that a user can save a link only once
 }
