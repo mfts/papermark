@@ -7,9 +7,12 @@ import AppLayout from "@/components/layouts/app";
 import LinkSheet from "@/components/links/link-sheet";
 import Image from "next/image"
 import LinksTable from "@/components/links/links-table";
+import { useState } from "react";
 
 export default function DocumentPage() {
   const { document, error } = useDocument();
+
+  const [isLinkSheetOpen, setIsLinkSheetOpen] = useState<boolean>(false);
 
   if (error && error.status === 404) {
     return <ErrorPage statusCode={404} />;
@@ -38,14 +41,13 @@ export default function DocumentPage() {
                   </h2>
                 </div>
               </div>
-              <LinkSheet>
-                <button
-                  type="button"
-                  className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-gray-950 bg-gray-300 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
-                >
-                  Create Link
-                </button>
-              </LinkSheet>
+              <button
+                type="button"
+                className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-gray-950 bg-gray-300 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                onClick={() => setIsLinkSheetOpen(true)}
+              >
+                Create Link
+              </button>
             </div>
             {/* Stats */}
             {document.numPages !== null && (
@@ -57,6 +59,7 @@ export default function DocumentPage() {
             <StatsCard />
             {/* Links */}
             <LinksTable />
+            <LinkSheet isOpen={isLinkSheetOpen} setIsOpen={setIsLinkSheetOpen} />
           </>
         ) : (
           <div>Loading...</div>
