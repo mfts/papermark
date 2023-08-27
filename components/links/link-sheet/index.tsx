@@ -16,7 +16,8 @@ import { useRouter } from "next/router";
 import { useDocumentLinks } from "@/lib/swr/use-document";
 import { mutate } from "swr";
 
-const DEFAULT_LINK_PROPS = {
+export const DEFAULT_LINK_PROPS = {
+  id: null,
   name: null,
   expiresAt: null,
   password: null,
@@ -24,6 +25,7 @@ const DEFAULT_LINK_PROPS = {
 };
 
 export type DEFAULT_LINK_TYPE = {
+  id: string | null;
   name: string | null;
   expiresAt: Date | null;
   password: string | null;
@@ -47,8 +49,18 @@ export default function LinkSheet({ isOpen, setIsOpen, currentLink }: { isOpen: 
     event.preventDefault();
 
     setIsLoading(true);
-    const response = await fetch("/api/links", {
-      method: "POST",
+
+    let endpoint = "/api/links";
+    let method = "POST";
+
+    if (currentLink) {
+      // Assuming that your endpoint to update links appends the link's ID to the URL
+      endpoint = `/api/links/${currentLink.id}`;
+      method = "PUT";
+    }
+
+    const response = await fetch(endpoint, {
+      method: method,
       headers: {
         "Content-Type": "application/json",
       },
@@ -62,17 +74,26 @@ export default function LinkSheet({ isOpen, setIsOpen, currentLink }: { isOpen: 
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const newLink = await response.json();
+    const returnedLink = await response.json();
 
-    // Update local data with the new link
-    mutate(
-      `/api/documents/${encodeURIComponent(documentId)}/links`,
-      [...(links || []), newLink],
-      false
-    );
+    if (currentLink) {
+      // Update the link in the list of links
+      mutate(
+        `/api/documents/${encodeURIComponent(documentId)}/links`,
+        (links || []).map(link => link.id === currentLink.id ? returnedLink : link),
+        false
+      );
+    } else {
+      // Add the new link to the list of links
+      mutate(
+        `/api/documents/${encodeURIComponent(documentId)}/links`,
+        [...(links || []), returnedLink],
+        false
+      );
+    }
 
+    setData(DEFAULT_LINK_PROPS);
     setIsLoading(false);
-
   }
 
   

@@ -29,13 +29,31 @@ import MoreHorizontal from "../shared/icons/more-horizontal";
 import { Skeleton } from "../ui/skeleton";
 import LinksVisitors from "./links-visitors";
 import ChevronDown from "../shared/icons/chevron-down";
+import LinkSheet, { DEFAULT_LINK_PROPS, type DEFAULT_LINK_TYPE } from "./link-sheet";
+import { useState } from "react";
+import { LinkWithViews } from "@/lib/types";
+
 
 
 export default function LinksTable() {
   const { links } = useDocumentLinks();
 
+  const [isLinkSheetVisible, setIsLinkSheetVisible] = useState<boolean>(false);
+  const [selectedLink, setSelectedLink] = useState<DEFAULT_LINK_TYPE>(DEFAULT_LINK_PROPS);
+
   const handleCopyToClipboard = (id: string) => {
     copyToClipboard(`${process.env.NEXT_PUBLIC_BASE_URL}/view/${id}`, "Link copied to clipboard.");
+  };
+
+  const handleEditLink = (link: LinkWithViews) => {
+    setSelectedLink({
+      id: link.id,
+      name: link.name,
+      expiresAt: link.expiresAt,
+      password: link.password,
+      emailProtected: link.emailProtected || true,
+    });
+    setIsLinkSheetVisible(true);
   };
   
   return (
@@ -118,7 +136,11 @@ export default function LinksTable() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem>Edit Link</DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => handleEditLink(link)}
+                            >
+                              Edit Link
+                            </DropdownMenuItem>
                             <DropdownMenuItem>Make copy</DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem className="text-red-500 focus:text-red-200 focus:bg-red-900">
@@ -156,6 +178,11 @@ export default function LinksTable() {
           </TableBody>
         </Table>
       </div>
+      <LinkSheet
+        isOpen={isLinkSheetVisible}
+        setIsOpen={setIsLinkSheetVisible}
+        currentLink={selectedLink}
+      />
     </div>
   );
 }
