@@ -3,6 +3,7 @@ import { Switch } from "@/components/ui/switch";
 import { motion } from "framer-motion";
 import { FADE_IN_ANIMATION_SETTINGS } from "@/lib/contants";
 import Eye from "@/components/shared/icons/eye"
+import EyeOff from "@/components/shared/icons/eye-off"
 import { cn } from "@/lib/utils";
 import { DEFAULT_LINK_TYPE } from ".";
 
@@ -63,7 +64,7 @@ export default function PasswordSection({data, setData}: {data: DEFAULT_LINK_TYP
             {showPassword ? (
               <Eye className="h-4 w-4 text-gray-400" aria-hidden="true" />
             ) : (
-              <Eye className="h-4 w-4 text-gray-400" aria-hidden="true" />
+              <EyeOff className="h-4 w-4 text-gray-400" aria-hidden="true" />
             )}
           </button>
         </motion.div>
