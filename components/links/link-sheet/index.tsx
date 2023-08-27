@@ -6,11 +6,9 @@ import {
   SheetFooter,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
 } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
-import { useState } from "react";
-import { Link } from "@prisma/client"
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import PasswordSection from "./password-section"
 import ExpirationSection from "./expiration-section";
 import EmailProtectionSection from "./email-protection-section";
@@ -33,13 +31,17 @@ export type DEFAULT_LINK_TYPE = {
 };
 
 
-export default function LinkSheet({ children }: { children: React.ReactNode }) {
+export default function LinkSheet({ isOpen, setIsOpen, currentLink }: { isOpen: boolean, setIsOpen: Dispatch<SetStateAction<boolean>>, currentLink?: DEFAULT_LINK_TYPE }) {
   const { links } = useDocumentLinks();
   const [data, setData] = useState<DEFAULT_LINK_TYPE>(DEFAULT_LINK_PROPS);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const router = useRouter();
   const documentId = router.query.id as string;
+
+  useEffect(() => {
+    setData(currentLink || DEFAULT_LINK_PROPS);
+  }, [currentLink]);
 
   const handleSubmit = async (event: any) => {
     event.preventDefault();
@@ -76,8 +78,8 @@ export default function LinkSheet({ children }: { children: React.ReactNode }) {
   
 
   return (
-    <Sheet>
-      <SheetTrigger>{children}</SheetTrigger>
+    <Sheet open={isOpen} onOpenChange={(open: boolean) => setIsOpen(open)}>
+      {/* <SheetTrigger>{children}</SheetTrigger> */}
       <SheetContent className="bg-black text-white flex flex-col justify-between">
         <SheetHeader>
           <SheetTitle className="text-white">Create a new link</SheetTitle>
@@ -148,9 +150,9 @@ export default function LinkSheet({ children }: { children: React.ReactNode }) {
               <SheetClose asChild>
                 <button
                   type="submit"
-                  className="ml-4 inline-flex justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-950 shadow-sm hover:bg-gray-200 w-24"
+                  className="ml-4 inline-flex justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-950 shadow-sm hover:bg-gray-200"
                 >
-                  Save
+                  {currentLink ? "Update Link" : "Save Link"}
                 </button>
               </SheetClose>
             </div>
