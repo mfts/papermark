@@ -1,11 +1,13 @@
 import { Fragment, useState } from "react";
 import { Menu, Dialog, Transition } from "@headlessui/react";
 import { signOut, useSession } from "next-auth/react";
-import {
-  Bars3Icon,
-  ChevronUpIcon,
-} from "@heroicons/react/20/solid";
-import { FolderIcon, HomeIcon, XMarkIcon, ChartBarIcon  } from "@heroicons/react/24/outline";
+import X from "@/components/shared/icons/x";
+import Home from "@/components/shared/icons/home";
+import Files from "@/components/shared/icons/files";
+import Inbox from "@/components/shared/icons/inbox";
+import BarChart2 from "@/components/shared/icons/bar-chart-2";
+import MenuIcon from "@/components/shared/icons/menu";
+import ChevronUp from "@/components/shared/icons/chevron-up";
 import Link from "next/link";
 import { classNames } from "@/lib/utils";
 import { useRouter } from "next/router";
@@ -19,21 +21,28 @@ export default function Sidebar() {
     {
       name: "Overview",
       href: "/overview",
-      icon: HomeIcon,
+      icon: Home,
       current: router.pathname.includes("overview"),
       disabled: true,
     },
     {
       name: "Documents",
       href: "/documents",
-      icon: FolderIcon,
+      icon: Files,
       current: router.pathname.includes("documents"),
+      disabled: false,
+    },
+    {
+      name: "Inbox",
+      href: "/inbox",
+      icon: Inbox,
+      current: router.pathname.includes("inbox"),
       disabled: false,
     },
     {
       name: "Analytics",
       href: "/analytics",
-      icon: ChartBarIcon,
+      icon: BarChart2,
       current: router.pathname.includes("analytics"),
       disabled: true,
     },
@@ -86,8 +95,8 @@ export default function Sidebar() {
                       onClick={() => setSidebarOpen(false)}
                     >
                       <span className="sr-only">Close sidebar</span>
-                      <XMarkIcon
-                        className="h-6 w-6 text-white"
+                      <X
+                        className="h-6 w-6"
                         aria-hidden="true"
                       />
                     </button>
@@ -181,10 +190,7 @@ export default function Sidebar() {
                     <span className="flex items-center w-full justify-between">
                       <span className="sr-only">Your profile</span>
                       <span aria-hidden="true">{session?.user?.name}</span>
-                      <ChevronUpIcon
-                        className="ml-2 h-5 w-5 text-gray-400"
-                        aria-hidden="true"
-                      />
+                      <ChevronUp />
                     </span>
                   </Menu.Button>
                   <Transition
@@ -237,7 +243,7 @@ export default function Sidebar() {
             onClick={() => setSidebarOpen(true)}
           >
             <span className="sr-only">Open sidebar</span>
-            <Bars3Icon className="h-6 w-6" aria-hidden="true" />
+            <MenuIcon className="h-6 w-6" aria-hidden="true" />
           </button>
 
           {/* Separator */}
