@@ -23,9 +23,8 @@ import {
 import { Button } from "@/components/ui/button";
 
 import { useDocumentLinks } from "@/lib/swr/use-document";
-import { toast } from "sonner";
 import BarChart from "../shared/icons/bar-chart";
-import { nFormatter, timeAgo } from "@/lib/utils";
+import { copyToClipboard, nFormatter, timeAgo } from "@/lib/utils";
 import MoreHorizontal from "../shared/icons/more-horizontal";
 import { Skeleton } from "../ui/skeleton";
 import LinksVisitors from "./links-visitors";
@@ -36,13 +35,7 @@ export default function LinksTable() {
   const { links } = useDocumentLinks();
 
   const handleCopyToClipboard = (id: string) => {
-    navigator.clipboard
-      .writeText(`${process.env.NEXT_PUBLIC_BASE_URL}/view/${id}`)
-      .catch((error) => {
-        console.log("Failed to copy text to clipboard", error);
-      });
-
-    toast.success("Link copied to clipboard.");
+    copyToClipboard(`${process.env.NEXT_PUBLIC_BASE_URL}/view/${id}`, "Link copied to clipboard.");
   };
   
   return (
