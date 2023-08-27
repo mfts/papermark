@@ -1,7 +1,6 @@
-import { getExtension, nFormatter, timeAgo } from "@/lib/utils";
+import { copyToClipboard, getExtension, nFormatter, timeAgo } from "@/lib/utils";
 import Link from "next/link";
 import { DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
-import { toast } from "sonner";
 import Copy from "@/components/shared/icons/copy";
 import BarChart from "@/components/shared/icons/bar-chart";
 import Image from "next/image";
@@ -11,14 +10,9 @@ export default function DocumentsCard({
 }: {
   document: DocumentWithLinksAndLinkCountAndViewCount;
 }) {
-  function handleCopyToClipboard(id: string) {
-    navigator.clipboard
-      .writeText(`${process.env.NEXT_PUBLIC_BASE_URL}/view/${id}`)
-      .catch((error) => {
-        console.log("Failed to copy text to clipboard", error);
-      });
 
-    toast.success("Link copied to clipboard.");
+  function handleCopyToClipboard(id: string) {
+    copyToClipboard(`${process.env.NEXT_PUBLIC_BASE_URL}/view/${id}`, "Link copied to clipboard.");
   }
 
   

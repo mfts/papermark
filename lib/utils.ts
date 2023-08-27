@@ -2,6 +2,7 @@ import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import ms from "ms"
 import bcrypt from "bcryptjs";
+import { toast } from "sonner";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -181,4 +182,15 @@ export async function checkPassword(
 ): Promise<boolean> {
   const match = await bcrypt.compare(password, hashedPassword);
   return match;
+}
+
+export function copyToClipboard(text: string, message: string): void {
+  navigator.clipboard
+    .writeText(text)
+    .then(() => {
+      toast.success(message);
+    })
+    .catch((error) => {
+      toast.error("Failed to copy. Please try again.")
+    });
 }
