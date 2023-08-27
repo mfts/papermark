@@ -11,11 +11,11 @@ export default async function handle(
 ) {
   if (req.method === "POST") {
     // POST /api/documents/update
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      res.status(401).end("Unauthorized");
-      return;
-    }
+    // const session = await getServerSession(req, res, authOptions);
+    // if (!session) {
+    //   res.status(401).end("Unauthorized");
+    //   return;
+    // }
 
     // Assuming data is an object with `name` and `description` properties
     const { documentId, numPages } = req.body;
