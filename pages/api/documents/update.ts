@@ -22,10 +22,17 @@ export default async function handle(
 
     try {
       // Save data to the database
-      await prisma.document.update({
+      const existingDocument = await prisma.document.findUnique({
         where: { id: documentId },
-        data: { numPages: numPages },
+        select: { numPages: true }
       });
+
+      if (existingDocument?.numPages === null) {
+        await prisma.document.update({
+          where: { id: documentId },
+          data: { numPages: numPages }
+        });
+      }
 
       res.status(201).json({message: "Document updated successfully"});
     } catch (error) {
