@@ -101,6 +101,7 @@ export default function Upload() {
 
   const handleCopyToClipboard = (id: string) => {
     copyToClipboard(`${process.env.NEXT_PUBLIC_BASE_URL}/view/${id}`, "Document uploaded and link copied to clipboard.");
+    setCopiedLink(true);
   };
 
   return (
