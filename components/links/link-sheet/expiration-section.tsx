@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction, useState } from "react";
+import { Dispatch, SetStateAction, useState, useEffect } from "react";
 import { Switch } from "@/components/ui/switch";
 import { motion } from "framer-motion";
 import { FADE_IN_ANIMATION_SETTINGS } from "@/lib/contants";
@@ -9,7 +9,19 @@ import { DEFAULT_LINK_TYPE } from ".";
 
 export default function ExpirationSection({data, setData}: {data: DEFAULT_LINK_TYPE, setData: Dispatch<SetStateAction<DEFAULT_LINK_TYPE>>}) {
   const { expiresAt } = data;
-  const [enabled, setEnabled] = useState(!!expiresAt);
+  const [enabled, setEnabled] = useState<boolean>(false);
+
+  useEffect(() => {
+    setEnabled(!!expiresAt);
+  }, [expiresAt]);
+
+  const handleEnableExpiration = () => {
+    if (enabled) {
+      // if expiration is currently set and we're toggling it off
+      setData({ ...data, expiresAt: null });
+    }
+    setEnabled(!enabled);
+  };
 
   return (
     <div className="pb-5">
@@ -26,7 +38,7 @@ export default function ExpirationSection({data, setData}: {data: DEFAULT_LINK_T
         </div>
         <Switch
           checked={enabled}
-          onCheckedChange={() => setEnabled(!enabled)}
+          onCheckedChange={handleEnableExpiration}
         />
       </div>
       {enabled && (
