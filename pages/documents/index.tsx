@@ -1,9 +1,7 @@
-import Sidebar from "@/components/Sidebar";
 import useDocuments from "@/lib/swr/use-documents";
 import DocumentCard from "@/components/documents/document-card";
 import Skeleton from "@/components/Skeleton";
 import { PlusIcon } from "@heroicons/react/24/solid";
-import Link from "next/link";
 import { AddDocumentModal } from "@/components/documents/add-document-modal";
 import { Separator } from "@/components/ui/separator";
 import AppLayout from "@/components/layouts/app"
