@@ -44,7 +44,7 @@ export default function Inbox() {
         <ul role="list" className="space-y-4">
           {savedLinks
             ? savedLinks.map((savedLink) => (
-                <li className="group relative rounded-lg bg-gray-800 p-3  sm:p-4 flex justify-between items-center">
+                <li key={savedLink.id} className="group relative rounded-lg bg-gray-800 p-3  sm:p-4 flex justify-between items-center">
                   <div className="min-w-0 flex shrink items-center space-x-4">
                     <div className="flex-col">
                       <div className="flex items-center">
