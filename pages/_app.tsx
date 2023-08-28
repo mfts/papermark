@@ -8,7 +8,6 @@ import Head from "next/head";
 import { Analytics } from "@vercel/analytics/react";
 import { ThemeProvider } from "@/components/theme-provider";
 
-
 const inter = Inter({ subsets: ["latin"] });
 
 export default function App({
@@ -21,7 +20,7 @@ export default function App({
         <title>Papermark</title>
       </Head>
       <SessionProvider session={session}>
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+        <ThemeProvider attribute="class" enableSystem>
           <main className={inter.className}>
             <Toaster closeButton richColors theme={"dark"} />
             <Component {...pageProps} />
