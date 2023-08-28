@@ -26,7 +26,7 @@ export default async function handle(
         },
       });
 
-      res.status(200).json(link);
+      return res.status(200).json(link);
     } catch (error) {
       return res.status(500).json({
         message: "Internal Server Error",
