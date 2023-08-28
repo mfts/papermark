@@ -29,7 +29,7 @@ export type DEFAULT_LINK_TYPE = {
   name: string | null;
   expiresAt: Date | null;
   password: string | null;
-  emailProtected: boolean | true;
+  emailProtected: boolean;
 };
 
 

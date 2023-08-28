@@ -53,7 +53,7 @@ export default function LinksTable() {
       name: link.name,
       expiresAt: link.expiresAt,
       password: link.password,
-      emailProtected: link.emailProtected || true,
+      emailProtected: link.emailProtected,
     });
     setIsLinkSheetVisible(true);
   };
