@@ -57,13 +57,13 @@ const tiers = [
     // name: "Hobby",
     id: "tier-hobby",
     href: "#",
-    priceMonthly: "DocSend",
+    priceMonthly: "Google-Drive",
     description: "Free version is not available",
     features: [
       "❌ Custom domain",
       "❌ Pitchdeck feedback",
-      "❌ Hosting",
-      "❌ AI-recommendations",
+      "❌ Secure link sharing",
+      "❌ Analytics on each page",
       "❌ Team access",
       "❌ Hosting",
     ],
@@ -131,18 +131,20 @@ export default function Home() {
   return (
     <div>
       <Head>
-        <title>Papermark: Best Free & Open-Source Alternative to DocSend</title>
+        <title>
+          Papermark: Premier Open-Source Alternative to Google Drive
+        </title>
         <meta
           name="description"
-          content="Looking for DocSend alternatives? Papermark is the leading open-source alternative to DocSend. Enjoy secure document sharing, real-time analytics, and collaboration tools for free."
+          content="Seeking a Google Drive alternative that prioritizes secure sending? Turn to Papermark, the ultimate open-source Google Drive substitute. Send and store your files securely while retaining full control."
         />
         <meta
           property="og:title"
-          content="Papermark: Best Free & Open-Source Alternative to DocSend"
+          content="Papermark: Premier Open-Source Alternative to Google Drive"
         />
         <meta
           property="og:description"
-          content="Looking for DocSend alternatives? Papermark is the leading open-source alternative to DocSend. Experience the advantages of secure document sharing, real-time analytics, and more."
+          content="Discover Papermark: Your trusted open-source alternative to Google Drive. Prioritize secure sending and enjoy fortified document sharing, storage, and real-time analytics."
         />
         <meta
           property="og:image"
@@ -171,22 +173,23 @@ export default function Home() {
             <div className="mx-auto max-w-2xl py-12 sm:py-12 lg:py-32 ">
               <div className="hidden sm:mb-8 sm:flex sm:justify-center">
                 <div className="relative rounded-full px-3 py-1 text-sm leading-6 text-black dark:text-white ring-1 ring-black/10 dark:ring-white/10 hover:ring-white/20">
-                  Free DocSend alternative
+                  Open Source Google Drive alternative
                 </div>
               </div>
               <div className="text-center">
                 <h1 className="text-4xl font-bold tracking-tight text-black dark:text-white sm:text-6xl">
-                  Open Source DocSend alternative
+                  Secure Google Drive alternative
                 </h1>
                 <p className="mt-6 text-lg leading-8 text-gray-500">
-                  Powerful software to send PitchDeck with custom domain
+                  To send documents and Pitchdeck with custom domain and
+                  analytics
                 </p>
                 <div className="mt-10 flex items-center justify-center gap-x-6">
                   <Link
                     className="rounded-md bg-black dark:bg-white px-3.5 py-2.5 text-sm font-semibold text-white dark:text-black shadow-sm hover:bg-gray-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400"
                     href="/login"
                   >
-                    Send your deck
+                    Send your doc
                   </Link>
                 </div>
               </div>
@@ -211,7 +214,7 @@ export default function Home() {
                   Feature comparison
                 </h2>
                 <p className="mt-2 text-4xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-5xl">
-                  Select Free DocSend alternative
+                  Select Open Source and Secure Google Drive alternative
                 </p>
               </div>
               <p className="mx-auto mt-6 max-w-2xl text-center text-lg leading-8 text-gray-500 dark:text-gray-400">
@@ -308,8 +311,8 @@ export default function Home() {
                     Share your Deck on custom domain
                   </p>
                   <p className="mt-6 text-lg leading-8 text-gray-500">
-                    Free and open source DocSend alternative. Advanced analytics
-                    and recommendations for VC funds to share your deck.
+                    Free and open source Google Drive alternative. Advanced
+                    analytics, secure sharing document.
                   </p>
                 </div>
               </div>
