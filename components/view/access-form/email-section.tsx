@@ -33,6 +33,7 @@ export default function EmailSection({
           }}
           aria-invalid="true"
         />
+        <p className="text-sm text-gray-600">This data will be shared with the sender.</p>
       </div>
     </div>
   );

@@ -5,6 +5,7 @@ import { useLink } from "@/lib/swr/use-link";
 import ErrorPage from "next/error";
 import PDFViewer from "@/components/PDFViewer";
 import AccessForm from "@/components/view/access-form";
+import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 
 export const DEFAULT_ACCESS_FORM_DATA = {
@@ -19,6 +20,8 @@ export type DEFAULT_ACCESS_FORM_TYPE = {
 
 export default function DocumentView() {
   const { link, error } = useLink();
+  const { data: session } = useSession(); 
+  
   const [submitted, setSubmitted] = useState<boolean>(false);
   const [viewId, setViewId] = useState<string>("");
   const hasInitiatedSubmit = useRef(false);
@@ -30,6 +33,16 @@ export default function DocumentView() {
   if (error && error.status === 404) {
     return <ErrorPage statusCode={404} />;
   }
+
+  useEffect(() => {
+    const userEmail = session?.user?.email;
+    if (userEmail) {
+      setData((prevData) => ({
+        ...prevData,
+        email: userEmail || prevData.email,
+      }));
+    }
+  }, [session]);
 
   if (!link) {
     return <div>Loading...</div>;
