@@ -19,6 +19,9 @@ export default async function handle(
         },
         select: {
           id: true,
+          expiresAt: true,
+          emailProtected: true,
+          password: true,
           document: { select: { id: true, name: true, file: true } },
         },
       });
