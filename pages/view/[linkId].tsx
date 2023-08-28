@@ -1,11 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
-import EmailForm from "@/components/EmailForm";
 import { getExtension } from "@/lib/utils";
 import { useLink } from "@/lib/swr/use-link";
 import ErrorPage from "next/error";
 import PDFViewer from "@/components/PDFViewer";
 import AccessForm from "@/components/view/access-form";
 import { useSession } from "next-auth/react";
+
 import { toast } from "sonner";
 
 export const DEFAULT_ACCESS_FORM_DATA = {
@@ -18,13 +18,19 @@ export type DEFAULT_ACCESS_FORM_TYPE = {
   password: string | null;
 };
 
+type DEFAULT_DOCUMENT_VIEW_TYPE = {
+  viewId: string;
+  file: string;
+}
+
 export default function DocumentView() {
   const { link, error } = useLink();
   const { data: session } = useSession(); 
   
   const [submitted, setSubmitted] = useState<boolean>(false);
-  const [viewId, setViewId] = useState<string>("");
+  // const [viewId, setViewId] = useState<string>("");
   const hasInitiatedSubmit = useRef(false);
+  const [viewData, setViewData] = useState<DEFAULT_DOCUMENT_VIEW_TYPE>({viewId: "", file: ""})
 
   const [data, setData] = useState<DEFAULT_ACCESS_FORM_TYPE>(
     DEFAULT_ACCESS_FORM_DATA
@@ -48,6 +54,7 @@ export default function DocumentView() {
     return <div>Loading...</div>;
   }
 
+
   const { document, expiresAt, emailProtected, password: linkPassword } = link;
 
   // Check if link is expired
@@ -70,8 +77,8 @@ export default function DocumentView() {
     });
 
     if (response.ok) {
-      const { viewId } = await response.json();
-      setViewId(viewId);
+      const { viewId, file } = await response.json() as { viewId: string, file: string};
+      setViewData({ viewId, file });
       setSubmitted(true);
     } else {
       const { message } = await response.json();
@@ -85,7 +92,6 @@ export default function DocumentView() {
   };
 
   if ((!submitted && emailProtected) || (!submitted && linkPassword)) {
-    // return <EmailForm onSubmitHandler={handleSubmit} data={data} setData={setData} />;
     return (
       <AccessForm
         onSubmitHandler={handleSubmit}
@@ -108,7 +114,7 @@ export default function DocumentView() {
   }
 
   // get the file extension
-  const extension = getExtension(document.file);
+  const extension = getExtension(viewData.file);
 
   if (
     extension.includes(".docx") ||
@@ -122,7 +128,7 @@ export default function DocumentView() {
       <div className="h-screen bg-gray-900">
         <iframe
           className="w-full h-full"
-          src={`https://view.officeapps.live.com/op/embed.aspx?src=${document.file}`}
+          src={`https://view.officeapps.live.com/op/embed.aspx?src=${viewData.file}`}
         ></iframe>
       </div>
     );
@@ -136,15 +142,15 @@ export default function DocumentView() {
   ) {
     return (
       <div className="h-screen bg-gray-900">
-        <img className="w-full h-full" src={document.file} />
+        <img className="w-full h-full" src={viewData.file} />
       </div>
     );
   }
   return (
     <div className="bg-gray-950">
       <PDFViewer
-        file={document.file}
-        viewId={viewId}
+        file={viewData.file}
+        viewId={viewData.viewId}
         linkId={link.id}
         documentId={document.id}
       />

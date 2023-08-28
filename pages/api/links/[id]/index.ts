@@ -22,7 +22,7 @@ export default async function handle(
           expiresAt: true,
           emailProtected: true,
           password: true,
-          document: { select: { id: true, name: true, file: true } },
+          document: { select: { id: true } },
         },
       });
 
