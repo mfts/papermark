@@ -81,7 +81,7 @@ model Link {
   expiresAt     DateTime?   // Optional expiration date
   password      String?     // Optional password for link protection
   allowedEmails String[]    // Array of emails allowed to view the document
-  emailProtected Boolean?   @default(true) // Optional email protection
+  emailProtected Boolean    @default(true) // Optional email protection
   isArchived    Boolean     @default(false) // Indicates if the link is archived
   views         View[]
   createdAt     DateTime    @default(now())

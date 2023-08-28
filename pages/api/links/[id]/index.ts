@@ -53,7 +53,7 @@ export default async function handle(
         documentId: documentId,
         password: hashedPassword,
         name: linkData.name || null,
-        emailProtected: linkData.emailProtected || false,
+        emailProtected: linkData.emailProtected,
         expiresAt: exat,
       },
       include: {
