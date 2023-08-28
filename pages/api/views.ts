@@ -63,9 +63,16 @@ export default async function handle(
         viewerEmail: email,
         documentId: documentId,
       },
+      include: {
+        document: {
+          select: {
+            file: true
+          }
+        }
+      }
     });
 
-    res.status(200).json({ message: "View recorded", viewId: newView.id });
+    res.status(200).json({ message: "View recorded", viewId: newView.id, file: newView.document.file });
   } catch (error) {
     log(`Failed to record view for ${linkId}. Error: \n\n ${error}`);
     res.status(500).json({ message: (error as Error).message });
