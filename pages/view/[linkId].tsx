@@ -36,10 +36,6 @@ export default function DocumentView() {
     DEFAULT_ACCESS_FORM_DATA
   );
 
-  if (error && error.status === 404) {
-    return <ErrorPage statusCode={404} />;
-  }
-
   useEffect(() => {
     const userEmail = session?.user?.email;
     if (userEmail) {
@@ -49,6 +45,10 @@ export default function DocumentView() {
       }));
     }
   }, [session]);
+
+  if (error && error.status === 404) {
+    return <ErrorPage statusCode={404} />;
+  }
 
   if (!link) {
     return <div>Loading...</div>;
