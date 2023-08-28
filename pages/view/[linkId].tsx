@@ -1,16 +1,31 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import EmailForm from "@/components/EmailForm";
-import { classNames, getExtension } from "@/lib/utils";
+import { getExtension } from "@/lib/utils";
 import { useLink } from "@/lib/swr/use-link";
 import ErrorPage from "next/error";
 import PDFViewer from "@/components/PDFViewer";
-import { set } from "date-fns";
+import AccessForm from "@/components/view/access-form";
+import { toast } from "sonner";
+
+export const DEFAULT_ACCESS_FORM_DATA = {
+  email: null,
+  password: null,
+};
+
+export type DEFAULT_ACCESS_FORM_TYPE = {
+  email: string | null;
+  password: string | null;
+};
 
 export default function DocumentView() {
   const { link, error } = useLink();
-  const [email, setEmail] = useState("");
-  const [submitted, setSubmitted] = useState(false);
+  const [submitted, setSubmitted] = useState<boolean>(false);
   const [viewId, setViewId] = useState<string>("");
+  const hasInitiatedSubmit = useRef(false);
+
+  const [data, setData] = useState<DEFAULT_ACCESS_FORM_TYPE>(
+    DEFAULT_ACCESS_FORM_DATA
+  );
 
   if (error && error.status === 404) {
     return <ErrorPage statusCode={404} />;
@@ -19,17 +34,26 @@ export default function DocumentView() {
   if (!link) {
     return <div>Loading...</div>;
   }
-  const { document } = link;
 
-  const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
+  const { document, expiresAt, emailProtected, password: linkPassword } = link;
 
+  // Check if link is expired
+  const isExpired = expiresAt && new Date(expiresAt) < new Date();
+  if (isExpired) {
+    return <div>Link is expired</div>;
+  }
+
+  const handleSubmission = async () => {
     const response = await fetch("/api/views", {
       method: "POST",
-      body: JSON.stringify({ linkId: link.id, email, documentId: document.id }),
       headers: {
         "Content-Type": "application/json",
       },
+      body: JSON.stringify({
+        ...data,
+        linkId: link.id,
+        documentId: document.id,
+      }),
     });
 
     if (response.ok) {
@@ -37,12 +61,37 @@ export default function DocumentView() {
       setViewId(viewId);
       setSubmitted(true);
     } else {
-      // Handle error
+      const { message } = await response.json();
+      toast.error(message);
     }
+  }
+
+  const handleSubmit: React.FormEventHandler<HTMLFormElement> = async (event: React.FormEvent) => {
+    event.preventDefault()
+    await handleSubmission();
   };
 
-  if (!submitted) {
-    return <EmailForm onSubmitHandler={handleSubmit} setEmail={setEmail} />;
+  if ((!submitted && emailProtected) || (!submitted && linkPassword)) {
+    // return <EmailForm onSubmitHandler={handleSubmit} data={data} setData={setData} />;
+    return (
+      <AccessForm
+        onSubmitHandler={handleSubmit}
+        data={data}
+        setData={setData}
+        requireEmail={emailProtected}
+        requirePassword={!!linkPassword}
+      />
+    );
+  }
+
+  if (
+    !emailProtected &&
+    !linkPassword &&
+    !submitted &&
+    !hasInitiatedSubmit.current
+  ) {
+    hasInitiatedSubmit.current = true;
+    handleSubmission();
   }
 
   // get the file extension
@@ -80,7 +129,12 @@ export default function DocumentView() {
   }
   return (
     <div className="bg-gray-950">
-      <PDFViewer file={document.file} viewId={viewId} linkId={link.id} documentId={document.id} />
+      <PDFViewer
+        file={document.file}
+        viewId={viewId}
+        linkId={link.id}
+        documentId={document.id}
+      />
     </div>
   );
 }
