@@ -32,7 +32,7 @@ export default function Section2() {
           {/* Image added below */}
           <div className="mt-10 mx-auto w-full max-w-md">
             <img
-              src="/_static/image2.png"
+              src="https://www.papermark.io/_static/image2.png"
               alt="Description of Image"
               className="mx-auto w-full h-auto object-cover rounded-md "
             />

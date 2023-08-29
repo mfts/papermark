@@ -7,7 +7,7 @@ export default function Section() {
             <div className="relative overflow-hidden rounded-3xl bg-gray-900 px-6 pb-9 pt-64 shadow-2xl sm:px-12 lg:max-w-lg lg:px-8 lg:pb-8 xl:px-10 xl:pb-10">
               <img
                 className="absolute inset-0 h-full w-full object-cover  "
-                src="/_static/section.webp"
+                src="https://www.papermark.io/_static/michael.webp"
                 alt=""
               />
 

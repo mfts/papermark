@@ -34,7 +34,7 @@ export default function Header() {
           <div className="relative md:col-span-5 lg:-mr-8 xl:absolute xl:inset-0 xl:left-1/2 xl:mr-0 mt-6   ">
             <img
               className="aspect-[3/2] w-full  object-contain lg:absolute lg:inset-0 lg:aspect-auto lg:h-full lg:w-3/4"
-              src="/_static/image3.png"
+              src="https://www.papermark.io/_static/image3.png"
               alt=""
             />
           </div>
