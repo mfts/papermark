@@ -6,7 +6,7 @@ export default function Decks() {
           2500+ Pitchdecks
         </h2>
         <p className="mt-6 text-lg leading-8 text-gray-600">
-          Investor receive per year. How they will remember yours?
+          that investors receive per year. How they will remember yours?
         </p>
       </div>
     </div>

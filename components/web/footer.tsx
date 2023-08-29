@@ -59,7 +59,7 @@ const navigation = {
   ],
   tools: [
     { name: "VC-generator", href: "https://vc.papermark.io" },
-    { name: "Pitchdeck Summariser", href: "#" },
+    // { name: "Pitchdeck Summariser", href: "#" },
   ],
   alternatives: [
     { name: "Docsend", href: "/alternatives/docsend" },

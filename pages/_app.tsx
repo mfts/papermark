@@ -17,10 +17,10 @@ export default function App({
   return (
     <>
       <Head>
-        <title>Papermark</title>
+        <title>Papermark | The Open Source DocSend Alternative</title>
       </Head>
       <SessionProvider session={session}>
-        <ThemeProvider attribute="class" enableSystem>
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
           <main className={inter.className}>
             <Toaster closeButton richColors theme={"dark"} />
             <Component {...pageProps} />

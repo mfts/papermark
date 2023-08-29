@@ -13,14 +13,13 @@ export default function Home() {
   return (
     <>
       <Head>
-        <title>Papermark – The Open-Source Alternative to DocSend</title>
         <meta
           name="description"
           content="Papermark is an open-source document infrastructure for sharing and collaboration. Free alternative to Docsend with custom domain. Manage secure document sharing with real-time analytics."
         />
         <meta
           property="og:title"
-          content="Papermark – The Open-Source Alternative to DocSend"
+          content="Papermark | The Open Source DocSend Alternative"
         />
         <meta
           property="og:description"

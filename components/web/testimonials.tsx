@@ -1,3 +1,5 @@
+import Twitter from "../shared/icons/twitter";
+
 const testimonials = [
   {
     body: "best thing is that all the save DocSend to PDF plugins that VCs use probably won't work 😁",
@@ -30,13 +32,13 @@ const testimonials = [
     },
   },
   {
-    body: "Hi, I wanted to use this but it doesn't seem to allow uploading of PDF, DOCX, PPTX? Only images?",
+    body: "Currently getting a lot of use out of .@mfts0's \"papermark\" project! I'm looking to see how he implemented Resend/React Email into his NextAuth stack.",
     author: {
-      name: "Ștefan Negrițoiu",
-      handle: "stefann42",
+      name: "Lukas Lunzmann",
+      handle: "lucaslunzmann",
       imageUrl:
-        "https://pbs.twimg.com/profile_images/538323196022239232/N54gpJqL_400x400.jpeg",
-      link: "https://twitter.com/stefann42/status/1666154469489508353",
+        "https://pbs.twimg.com/profile_images/1589657534264213504/d0tljS03_400x400.jpg",
+      link: "https://twitter.com/lucaslunzmann/status/1673052992541523968",
     },
   },
   {
@@ -84,14 +86,9 @@ export default function Testimonials() {
                       href={testimonial.author.link} // Using the link from the testimonial
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="absolute top-4 right-4 hover:opacity-60 transition-opacity duration-150 z-10"
+                      className="absolute top-4 right-4 z-10"
                     >
-                      <img
-                        src="/_icons/twitter.ico"
-                        alt="Twitter"
-                        width="15"
-                        height="15"
-                      />
+                      <Twitter className="w-5 h-5 text-gray-800" />
                     </a>
                   )}
                   <blockquote className="text-gray-900">

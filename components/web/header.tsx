@@ -12,7 +12,7 @@ export default function Header() {
               Papermark will make your deck stand out
             </h1>
             <p className="mt-2 text-lg leading-8 text-gray-600">
-              Open Source Docsend alternative
+              The Open-Source Docsend Alternative
             </p>
             <div className="mt-10 flex items-center gap-x-6">
               <Link
@@ -31,7 +31,7 @@ export default function Header() {
               </Link>
             </div>
           </div>
-          <div className="relative lg:col-span-5 lg:-mr-8 xl:absolute xl:inset-0 xl:left-1/2 xl:mr-0 mt-6   ">
+          <div className="relative md:col-span-5 lg:-mr-8 xl:absolute xl:inset-0 xl:left-1/2 xl:mr-0 mt-6   ">
             <img
               className="aspect-[3/2] w-full  object-contain lg:absolute lg:inset-0 lg:aspect-auto lg:h-full lg:w-3/4"
               src="/_static/image3.png"
