@@ -57,7 +57,7 @@ const tiers = [
     // name: "Hobby",
     id: "tier-hobby",
     href: "#",
-    priceMonthly: "DocSend",
+    priceMonthly: "PandaDocs",
     description: "Free version is not available",
     features: [
       "❌ Custom domain",
@@ -65,7 +65,7 @@ const tiers = [
       "❌ Hosting",
       "❌ AI-recommendations",
       "❌ Team access",
-      "❌ Hosting",
+      "❌ Advanced analytics",
     ],
     featured: false,
   },
@@ -131,18 +131,18 @@ export default function Home() {
   return (
     <div>
       <Head>
-        <title>Papermark: Best Free & Open-Source Alternative to DocSend</title>
+        <title>Papermark: First Open-Source Alternative to PandaDoc</title>
         <meta
           name="description"
-          content="Looking for DocSend alternatives? Papermark is the leading open-source alternative to DocSend. Enjoy secure document sharing, real-time analytics, and collaboration tools for free."
+          content="Searching for PandaDoc alternatives? Discover Papermark, the top open-source PandaDoc alternative. Send your Pitchdeck, get secure document sharing, real-time analytics, and collaboration tools without the cost."
         />
         <meta
           property="og:title"
-          content="Papermark: Best Free & Open-Source Alternative to DocSend"
+          content="Papermark: Premier Open-Source Alternative to PandaDoc"
         />
         <meta
           property="og:description"
-          content="Looking for DocSend alternatives? Papermark is the leading open-source alternative to DocSend. Experience the advantages of secure document sharing, real-time analytics, and more."
+          content="Seeking PandaDoc alternatives? Papermark is the leading open-source alternative to PandaDoc. Experience the benefits of secure document sharing, real-time insights, and more."
         />
         <meta
           property="og:image"
@@ -171,15 +171,16 @@ export default function Home() {
             <div className="mx-auto max-w-2xl py-12 sm:py-12 lg:py-32 ">
               <div className="hidden sm:mb-8 sm:flex sm:justify-center">
                 <div className="relative rounded-full px-3 py-1 text-sm leading-6 text-black dark:text-white ring-1 ring-black/10 dark:ring-white/10 hover:ring-white/20">
-                  Free DocSend alternative
+                  Advanced PandaDoc alternative
                 </div>
               </div>
               <div className="text-center">
                 <h1 className="text-4xl font-bold tracking-tight text-black dark:text-white sm:text-6xl">
-                  Open Source DocSend alternative
+                  Open Source PandaDoc alternative
                 </h1>
-                <p className="mt-6 text-lg leading-8 text-gray-500">
-                  Powerful software to send PitchDeck with custom domain
+                <p className="mt-6 text-lg leading-8 text-gray-400">
+                  Powerful software to send documents and pitchdeck with custom
+                  domain
                 </p>
                 <div className="mt-10 flex items-center justify-center gap-x-6">
                   <Link
@@ -211,13 +212,13 @@ export default function Home() {
                   Feature comparison
                 </h2>
                 <p className="mt-2 text-4xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-5xl">
-                  Select Free DocSend alternative
+                  Select PandaDoc alternative
                 </p>
               </div>
               <p className="mx-auto mt-6 max-w-2xl text-center text-lg leading-8 text-gray-500 dark:text-gray-400">
                 AI-powered platform revolutionizing document sharing and
-                collaboration. It enables secure document sharing, tracking, and
-                storage, providing users with real-time analytics.
+                collaboration. It enables secure document sharing, davanced
+                tracking, and storage, providing users with real-time analytics.
               </p>
               <div className="mx-auto mt-16 grid max-w-lg grid-cols-1 gap-x-6 items-center gap-y-6 sm:mt-20 sm:gap-y-0 lg:max-w-4xl lg:grid-cols-2">
                 {tiers.map((tier, tierIdx) => (
@@ -308,8 +309,9 @@ export default function Home() {
                     Share your Deck on custom domain
                   </p>
                   <p className="mt-6 text-lg leading-8 text-gray-500">
-                    Free and open source DocSend alternative. Advanced analytics
-                    and recommendations for VC funds to share your deck.
+                    Free and open source PandaDoc alternative. Advanced
+                    analytics and recommendations for VC funds to share your
+                    deck.
                   </p>
                 </div>
               </div>
