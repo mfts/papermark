@@ -9,10 +9,9 @@ import {
 import { useState } from "react";
 import { useRouter } from "next/router";
 import { put, type PutBlobResult } from "@vercel/blob";
-import { toast } from "sonner";
 import DocumentUpload from "@/components/document-upload";
 import { pdfjs } from "react-pdf";
-import { getExtension } from "@/lib/utils";
+import { copyToClipboard, getExtension } from "@/lib/utils";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
 
@@ -51,15 +50,7 @@ export function AddDocumentModal({children}: {children: React.ReactNode}) {
       if (response) {
         const document = await response.json();
 
-        navigator.clipboard
-          .writeText(
-            `${process.env.NEXT_PUBLIC_BASE_URL}/view/${document.links[0].id}`
-          )
-          .catch((error) => {
-            console.log("Failed to copy text to clipboard", error);
-          });
-
-        toast.success("Document uploaded and link copied to clipboard. Redirecting to document page...")
+        copyToClipboard(`${process.env.NEXT_PUBLIC_BASE_URL}/view/${document.links[0].id}`, "Document uploaded and link copied to clipboard. Redirecting to document page...")
 
         setTimeout(() => {
           router.push("/documents/" + document.id);

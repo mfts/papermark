@@ -1,8 +1,9 @@
-import { Dispatch, SetStateAction, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { Switch } from "@/components/ui/switch";
 import { motion } from "framer-motion";
 import { FADE_IN_ANIMATION_SETTINGS } from "@/lib/contants";
 import Eye from "@/components/shared/icons/eye"
+import EyeOff from "@/components/shared/icons/eye-off"
 import { cn } from "@/lib/utils";
 import { DEFAULT_LINK_TYPE } from ".";
 
@@ -10,8 +11,20 @@ import { DEFAULT_LINK_TYPE } from ".";
 
 export default function PasswordSection({data, setData}: {data: DEFAULT_LINK_TYPE, setData: Dispatch<SetStateAction<DEFAULT_LINK_TYPE>>}) {
   const { password } = data;
-  const [enabled, setEnabled] = useState(!!password);
-  const [showPassword, setShowPassword] = useState(false);
+  const [enabled, setEnabled] = useState<boolean>(false);
+  const [showPassword, setShowPassword] = useState<boolean>(false);
+
+  useEffect(() => {
+    setEnabled(!!password);
+  }, [password]);
+
+  const handleEnablePassword = () => {
+    if (enabled) {
+      // if password protection is currently enabled and we're toggling it off
+      setData({ ...data, password: null });
+    }
+    setEnabled(!enabled);
+  };
 
   return (
     <div className="pb-5">
@@ -23,7 +36,7 @@ export default function PasswordSection({data, setData}: {data: DEFAULT_LINK_TYP
         </div>
         <Switch
           checked={enabled}
-          onCheckedChange={() => setEnabled(!enabled)}
+          onCheckedChange={handleEnablePassword}
         />
       </div>
       {enabled && (
@@ -51,7 +64,7 @@ export default function PasswordSection({data, setData}: {data: DEFAULT_LINK_TYP
             {showPassword ? (
               <Eye className="h-4 w-4 text-gray-400" aria-hidden="true" />
             ) : (
-              <Eye className="h-4 w-4 text-gray-400" aria-hidden="true" />
+              <EyeOff className="h-4 w-4 text-gray-400" aria-hidden="true" />
             )}
           </button>
         </motion.div>

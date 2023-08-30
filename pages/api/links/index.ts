@@ -25,7 +25,7 @@ export default async function handler(
         documentId: documentId,
         password: hashedPassword,
         name: linkData.name || null,
-        emailProtected: linkData.emailProtected || false,
+        emailProtected: linkData.emailProtected,
         expiresAt: exat
       },
     });
