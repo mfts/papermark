@@ -11,21 +11,28 @@ export default async function handle(
 ) {
   if (req.method === "POST") {
     // POST /api/documents/update
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      res.status(401).end("Unauthorized");
-      return;
-    }
+    // const session = await getServerSession(req, res, authOptions);
+    // if (!session) {
+    //   res.status(401).end("Unauthorized");
+    //   return;
+    // }
 
     // Assuming data is an object with `name` and `description` properties
     const { documentId, numPages } = req.body;
 
     try {
       // Save data to the database
-      await prisma.document.update({
+      const existingDocument = await prisma.document.findUnique({
         where: { id: documentId },
-        data: { numPages: numPages },
+        select: { numPages: true }
       });
+
+      if (existingDocument?.numPages === null) {
+        await prisma.document.update({
+          where: { id: documentId },
+          data: { numPages: numPages }
+        });
+      }
 
       res.status(201).json({message: "Document updated successfully"});
     } catch (error) {
