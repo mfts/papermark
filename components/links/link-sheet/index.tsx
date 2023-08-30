@@ -6,11 +6,9 @@ import {
   SheetFooter,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
 } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
-import { useState } from "react";
-import { Link } from "@prisma/client"
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import PasswordSection from "./password-section"
 import ExpirationSection from "./expiration-section";
 import EmailProtectionSection from "./email-protection-section";
@@ -18,7 +16,8 @@ import { useRouter } from "next/router";
 import { useDocumentLinks } from "@/lib/swr/use-document";
 import { mutate } from "swr";
 
-const DEFAULT_LINK_PROPS = {
+export const DEFAULT_LINK_PROPS = {
+  id: null,
   name: null,
   expiresAt: null,
   password: null,
@@ -26,14 +25,15 @@ const DEFAULT_LINK_PROPS = {
 };
 
 export type DEFAULT_LINK_TYPE = {
+  id: string | null;
   name: string | null;
   expiresAt: Date | null;
   password: string | null;
-  emailProtected: boolean | true;
+  emailProtected: boolean;
 };
 
 
-export default function LinkSheet({ children }: { children: React.ReactNode }) {
+export default function LinkSheet({ isOpen, setIsOpen, currentLink }: { isOpen: boolean, setIsOpen: Dispatch<SetStateAction<boolean>>, currentLink?: DEFAULT_LINK_TYPE }) {
   const { links } = useDocumentLinks();
   const [data, setData] = useState<DEFAULT_LINK_TYPE>(DEFAULT_LINK_PROPS);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -41,12 +41,26 @@ export default function LinkSheet({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const documentId = router.query.id as string;
 
+  useEffect(() => {
+    setData(currentLink || DEFAULT_LINK_PROPS);
+  }, [currentLink]);
+
   const handleSubmit = async (event: any) => {
     event.preventDefault();
 
     setIsLoading(true);
-    const response = await fetch("/api/links", {
-      method: "POST",
+
+    let endpoint = "/api/links";
+    let method = "POST";
+
+    if (currentLink) {
+      // Assuming that your endpoint to update links appends the link's ID to the URL
+      endpoint = `/api/links/${currentLink.id}`;
+      method = "PUT";
+    }
+
+    const response = await fetch(endpoint, {
+      method: method,
       headers: {
         "Content-Type": "application/json",
       },
@@ -60,24 +74,33 @@ export default function LinkSheet({ children }: { children: React.ReactNode }) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const newLink = await response.json();
+    const returnedLink = await response.json();
 
-    // Update local data with the new link
-    mutate(
-      `/api/documents/${encodeURIComponent(documentId)}/links`,
-      [...(links || []), newLink],
-      false
-    );
+    if (currentLink) {
+      // Update the link in the list of links
+      mutate(
+        `/api/documents/${encodeURIComponent(documentId)}/links`,
+        (links || []).map(link => link.id === currentLink.id ? returnedLink : link),
+        false
+      );
+    } else {
+      // Add the new link to the list of links
+      mutate(
+        `/api/documents/${encodeURIComponent(documentId)}/links`,
+        [...(links || []), returnedLink],
+        false
+      );
+    }
 
+    setData(DEFAULT_LINK_PROPS);
     setIsLoading(false);
-
   }
 
   
 
   return (
-    <Sheet>
-      <SheetTrigger>{children}</SheetTrigger>
+    <Sheet open={isOpen} onOpenChange={(open: boolean) => setIsOpen(open)}>
+      {/* <SheetTrigger>{children}</SheetTrigger> */}
       <SheetContent className="bg-black text-white flex flex-col justify-between">
         <SheetHeader>
           <SheetTitle className="text-white">Create a new link</SheetTitle>
@@ -148,9 +171,9 @@ export default function LinkSheet({ children }: { children: React.ReactNode }) {
               <SheetClose asChild>
                 <button
                   type="submit"
-                  className="ml-4 inline-flex justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-950 shadow-sm hover:bg-gray-200 w-24"
+                  className="ml-4 inline-flex justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-950 shadow-sm hover:bg-gray-200"
                 >
-                  Save
+                  {currentLink ? "Update Link" : "Save Link"}
                 </button>
               </SheetClose>
             </div>

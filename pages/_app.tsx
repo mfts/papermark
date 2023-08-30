@@ -8,7 +8,6 @@ import Head from "next/head";
 import { Analytics } from "@vercel/analytics/react";
 import { ThemeProvider } from "@/components/theme-provider";
 
-
 const inter = Inter({ subsets: ["latin"] });
 
 export default function App({
@@ -18,7 +17,7 @@ export default function App({
   return (
     <>
       <Head>
-        <title>Papermark</title>
+        <title>Papermark | The Open Source DocSend Alternative</title>
       </Head>
       <SessionProvider session={session}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>

@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import Skeleton from "../Skeleton";
 import { STAGGER_CHILD_VARIANTS } from "@/lib/contants";
 import { pdfjs } from "react-pdf";
-import { getExtension } from "@/lib/utils";
+import { copyToClipboard, getExtension } from "@/lib/utils";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
 
@@ -100,15 +100,8 @@ export default function Upload() {
   }
 
   const handleCopyToClipboard = (id: string) => {
-    navigator.clipboard
-      .writeText(`${process.env.NEXT_PUBLIC_BASE_URL}/view/${id}`)
-      .catch((error) => {
-        console.log("Failed to copy text to clipboard", error);
-      });
-
+    copyToClipboard(`${process.env.NEXT_PUBLIC_BASE_URL}/view/${id}`, "Document uploaded and link copied to clipboard.");
     setCopiedLink(true);
-
-    toast.success("Document uploaded and link copied to clipboard.");
   };
 
   return (

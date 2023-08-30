@@ -57,13 +57,13 @@ const tiers = [
     // name: "Hobby",
     id: "tier-hobby",
     href: "#",
-    priceMonthly: "DocSend",
+    priceMonthly: "Pitch",
     description: "Free version is not available",
     features: [
       "❌ Custom domain",
       "❌ Pitchdeck feedback",
-      "❌ Hosting",
-      "❌ AI-recommendations",
+      "❌ Secure sending",
+      "❌ Advanced analytics",
       "❌ Team access",
       "❌ Hosting",
     ],
@@ -131,18 +131,18 @@ export default function Home() {
   return (
     <div>
       <Head>
-        <title>Papermark: Best Free & Open-Source Alternative to DocSend</title>
+        <title>Papermark: Your Open-Source Pitch Alternative</title>
         <meta
           name="description"
-          content="Looking for DocSend alternatives? Papermark is the leading open-source alternative to DocSend. Enjoy secure document sharing, real-time analytics, and collaboration tools for free."
+          content="Looking for a superior alternative to the Pitch for sending deck? Explore Papermark, the open-source platform revolutionizing pitch presentation sharing with enhanced security and custom domains."
         />
         <meta
           property="og:title"
-          content="Papermark: Best Free & Open-Source Alternative to DocSend"
+          content="Papermark: Your Open-Source Pitch Sending Deck Alternative"
         />
         <meta
           property="og:description"
-          content="Looking for DocSend alternatives? Papermark is the leading open-source alternative to DocSend. Experience the advantages of secure document sharing, real-time analytics, and more."
+          content="Discover Papermark: A game-changer in the world of pitch presentation sharing. As an open-source Pitch alternative for sending decks, it offers unrivaled security and the ability to use custom domains."
         />
         <meta
           property="og:image"
@@ -171,12 +171,12 @@ export default function Home() {
             <div className="mx-auto max-w-2xl py-12 sm:py-12 lg:py-32 ">
               <div className="hidden sm:mb-8 sm:flex sm:justify-center">
                 <div className="relative rounded-full px-3 py-1 text-sm leading-6 text-black dark:text-white ring-1 ring-black/10 dark:ring-white/10 hover:ring-white/20">
-                  Free DocSend alternative
+                  Free Pitch alternative
                 </div>
               </div>
               <div className="text-center">
                 <h1 className="text-4xl font-bold tracking-tight text-black dark:text-white sm:text-6xl">
-                  Open Source DocSend alternative
+                  Open Source Pitch alternative
                 </h1>
                 <p className="mt-6 text-lg leading-8 text-gray-500">
                   Powerful software to send PitchDeck with custom domain
@@ -211,7 +211,7 @@ export default function Home() {
                   Feature comparison
                 </h2>
                 <p className="mt-2 text-4xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-5xl">
-                  Select Free DocSend alternative
+                  Select Free Pitch alternative
                 </p>
               </div>
               <p className="mx-auto mt-6 max-w-2xl text-center text-lg leading-8 text-gray-500 dark:text-gray-400">
@@ -308,7 +308,7 @@ export default function Home() {
                     Share your Deck on custom domain
                   </p>
                   <p className="mt-6 text-lg leading-8 text-gray-500">
-                    Free and open source DocSend alternative. Advanced analytics
+                    Free and open source Pitch alternative. Advanced analytics
                     and recommendations for VC funds to share your deck.
                   </p>
                 </div>
