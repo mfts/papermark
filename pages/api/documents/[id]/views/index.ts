@@ -38,6 +38,13 @@ export default async function handle(
         orderBy: {
           viewedAt: "desc",
         },
+        include: {
+          link: {
+            select: { 
+              name: true,
+            }
+          }
+        }
       });
 
       const durationsPromises = views.map((view) => {

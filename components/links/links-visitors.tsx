@@ -27,11 +27,11 @@ export default function LinksVisitors({linkId, linkName}: {linkId: string, linkN
                       <div className="min-w-0 flex-1">
                         <div className="focus:outline-none">
                           <p className="text-sm font-medium text-gray-200 overflow-visible">
-                            {view.viewerEmail}
+                            {view.viewerEmail ? view.viewerEmail : "Anonymous"}
                           </p>
-                          <p className="text-sm text-gray-500">
+                          {/* <p className="text-sm text-gray-500">
                             <span>{linkName}</span>
-                          </p>
+                          </p> */}
                         </div>
                       </div>
                     </div>

@@ -32,9 +32,7 @@ export default function VisitorsTable({numPages}: {numPages: number}) {
         <Table>
           <TableHeader>
             <TableRow className="hover:bg-transparent">
-              <TableHead className="font-medium">
-                Name
-              </TableHead>
+              <TableHead className="font-medium">Name</TableHead>
               <TableHead className="font-medium">Visit Duration</TableHead>
               <TableHead className="font-medium">Visit Completion</TableHead>
               <TableHead className="font-medium">Last Viewed</TableHead>
@@ -58,10 +56,10 @@ export default function VisitorsTable({numPages}: {numPages: number}) {
                           <div className="min-w-0 flex-1">
                             <div className="focus:outline-none">
                               <p className="text-sm font-medium text-gray-200 overflow-visible">
-                                {view.viewerEmail}
+                                {view.viewerEmail? view.viewerEmail : "Anonymous"}
                               </p>
                               <p className="text-sm text-gray-500">
-                                <span>Link Name</span>
+                                {view.link.name ? view.link.name : view.linkId}
                               </p>
                             </div>
                           </div>

@@ -54,6 +54,9 @@ interface ViewWithDuration extends View {
   };
   totalDuration: number;
   completionRate: number;
+  link: {
+    name: string | null;
+  }
 }
 
 export function useDocumentVisits() {
