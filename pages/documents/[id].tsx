@@ -7,6 +7,7 @@ import AppLayout from "@/components/layouts/app";
 import LinkSheet from "@/components/links/link-sheet";
 import Image from "next/image"
 import LinksTable from "@/components/links/links-table";
+import VisitorsTable from "@/components/visitors/visitors-table";
 import { useState } from "react";
 
 export default function DocumentPage() {
@@ -57,6 +58,8 @@ export default function DocumentPage() {
               />
             )}
             <StatsCard />
+            {/* Visitors */}
+            <VisitorsTable numPages={document.numPages!} />
             {/* Links */}
             <LinksTable />
             <LinkSheet isOpen={isLinkSheetOpen} setIsOpen={setIsLinkSheetOpen} />

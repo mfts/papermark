@@ -101,7 +101,7 @@ export default function LinksTable() {
         <div className="rounded-md sm:border">
           <Table>
             <TableHeader>
-              <TableRow>
+              <TableRow className="hover:bg-transparent">
                 <TableHead className="font-medium hidden sm:table-cell">
                   Name
                 </TableHead>
@@ -234,14 +234,14 @@ export default function LinksTable() {
           <Collapsible asChild>
             <>
               <CollapsibleTrigger asChild>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    className="text-gray-400 mx-auto flex items-center gap-x-1 h-8 justify-center mt-4 [&[data-state=open]>svg.chevron]:rotate-180"
-                  >
-                    {archivedLinksCount} Archived Links
-                    <ChevronDown className="h-4 w-4 text-gray-400 transition-transform duration-200 chevron" />
-                  </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="text-gray-400 mx-auto flex items-center gap-x-1 h-8 justify-center mt-4 [&[data-state=open]>svg.chevron]:rotate-180"
+                >
+                  {archivedLinksCount} Archived Links
+                  <ChevronDown className="h-4 w-4 text-gray-400 transition-transform duration-200 chevron" />
+                </Button>
               </CollapsibleTrigger>
               <CollapsibleContent>
                 <div>
@@ -250,7 +250,7 @@ export default function LinksTable() {
                 <div className="rounded-md sm:border">
                   <Table>
                     <TableHeader>
-                      <TableRow>
+                      <TableRow className="hover:bg-transparent">
                         <TableHead className="font-medium hidden sm:table-cell">
                           Name
                         </TableHead>

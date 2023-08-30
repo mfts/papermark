@@ -21,8 +21,18 @@ const renameAvgDurationKey = (data: any[]) => {
   });
 };
 
-export default function BarChartComponent({data}: {data: any}) {
-  const renamedData = renameAvgDurationKey(data);
+const renameSumDurationKey = (data: any[]) => {
+  return data.map((item) => {
+    return {
+      ...item,
+      "Time spent per page": item.sum_duration,
+      sum_duration: undefined,
+    };
+  });
+};
+
+export default function BarChartComponent({data, isSum = false}: {data: any, isSum?: boolean}) {
+  const renamedData = isSum ? renameSumDurationKey(data) : renameAvgDurationKey(data);
   
   return (
     <BarChart

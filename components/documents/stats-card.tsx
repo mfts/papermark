@@ -12,17 +12,17 @@ export default function StatsCard() {
 
   const statistics = [
     {
-      name: "Number of views",
+      name: "Number of visits",
       value: stats?.views.length.toString() ?? "0",
       active: true,
     },
     {
-      name: "Number of unique viewers",
+      name: "Number of unique visitors",
       value: stats?.groupedViews.length.toString() ?? "0",
       active: true,
     },
     {
-      name: "Total view duration",
+      name: "Total avgerage view duration",
       value:
         stats?.total_duration == null
           ? "46"
