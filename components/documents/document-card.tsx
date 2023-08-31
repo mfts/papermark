@@ -18,14 +18,14 @@ export default function DocumentsCard({
   
 
   return (
-    <li className="relative rounded-lg bg-gray-800 p-3 border-0 ring-1 ring-gray-700 transition-all hover:ring-gray-500 sm:p-4 flex justify-between items-center">
+    <li className="relative rounded-lg bg-gray-200 dark:bg-gray-800 p-3 border-0 ring-1 ring-gray-300 dark:ring-gray-700 transition-all hover:ring-gray-500 sm:p-4 flex justify-between items-center">
       <div className="min-w-0 flex shrink items-center space-x-4">
         <div className="w-8 mx-1 text-center flex justify-center items-center">
           <Image src={`/_icons/${getExtension(document.file)}.svg`} alt="File icon" width={50} height={50} className="" />
         </div>
         <div className="flex-col">
           <div className="flex items-center">
-            <h2 className="min-w-0 text-sm font-semibold leading-6 text-white truncate max-w-[240px] sm:max-w-md">
+            <h2 className="min-w-0 text-sm font-semibold leading-6 text-foreground truncate max-w-[240px] sm:max-w-md">
               <Link href={`/documents/${document.id}`}>
                 <span className="">{document.name}</span>
                 <span className="absolute inset-0" />
@@ -33,7 +33,7 @@ export default function DocumentsCard({
             </h2>
             <div className="flex ml-2">
               <button
-                className="group rounded-full bg-gray-700 z-10 p-1.5 transition-all duration-75 hover:scale-105 hover:bg-blue-50 active:scale-95"
+                className="group rounded-full bg-gray-300 dark:bg-gray-700 z-10 p-1.5 transition-all duration-75 hover:scale-105 hover:bg-blue-50 active:scale-95"
                 onClick={() => handleCopyToClipboard(document.links[0].id)}
                 title="Copy to clipboard"
               >
@@ -44,7 +44,7 @@ export default function DocumentsCard({
               </button>
             </div>
           </div>
-          <div className="mt-1 flex items-center space-x-1 text-xs leading-5 text-gray-400">
+          <div className="mt-1 flex items-center space-x-1 text-xs leading-5 text-muted-foreground">
             <p className="truncate">{timeAgo(document.createdAt)}</p>
             <p>•</p>
             <p className="truncate">{`${document._count.links} ${
@@ -59,10 +59,10 @@ export default function DocumentsCard({
           e.stopPropagation();
         }}
         href={`/documents/${document.id}`}
-        className="flex items-center z-10 space-x-1 rounded-md bg-gray-700 px-2 py-0.5 transition-all duration-75 hover:scale-105 active:scale-100"
+        className="flex items-center z-10 space-x-1 rounded-md bg-gray-300 dark:bg-gray-700 px-2 py-0.5 transition-all duration-75 hover:scale-105 active:scale-100"
       >
-        <BarChart className="h-4 w-4 text-gray-400" />
-        <p className="whitespace-nowrap text-sm text-gray-400">
+        <BarChart className="h-4 w-4 text-muted-foreground" />
+        <p className="whitespace-nowrap text-sm text-muted-foreground">
           {nFormatter(document._count.views)}
           <span className="ml-1 hidden sm:inline-block">views</span>
         </p>
