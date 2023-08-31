@@ -20,9 +20,9 @@ export default function App({
         <title>Papermark | The Open Source DocSend Alternative</title>
       </Head>
       <SessionProvider session={session}>
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <main className={inter.className}>
-            <Toaster closeButton richColors theme={"dark"} />
+            <Toaster closeButton richColors theme={"system"} />
             <Component {...pageProps} />
           </main>
         </ThemeProvider>
