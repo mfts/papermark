@@ -6,6 +6,7 @@ import { SessionProvider } from "next-auth/react";
 import { Toaster } from "sonner";
 import Head from "next/head";
 import { Analytics } from "@vercel/analytics/react";
+import PlausibleProvider from "next-plausible";
 import { ThemeProvider } from "@/components/theme-provider";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -21,10 +22,15 @@ export default function App({
       </Head>
       <SessionProvider session={session}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-          <main className={inter.className}>
-            <Toaster closeButton richColors theme={"dark"} />
-            <Component {...pageProps} />
-          </main>
+          <PlausibleProvider
+            domain="papermark.io"
+            enabled={process.env.VERCEL_ENV == "production"}
+          >
+            <main className={inter.className}>
+              <Toaster closeButton richColors theme={"dark"} />
+              <Component {...pageProps} />
+            </main>
+          </PlausibleProvider>
         </ThemeProvider>
         <Analytics />
       </SessionProvider>
