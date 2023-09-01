@@ -119,15 +119,15 @@ export default function LinksTable() {
                     <Collapsible key={link.id} asChild>
                       <>
                         <TableRow key={link.id} className="group/row">
-                          <TableCell className="hidden sm:table-cell truncate w-[220px]">
+                          <TableCell className="hidden sm:table-cell font-medium truncate w-[220px]">
                             {link.name || "No link name"}
                           </TableCell>
                           <TableCell className="max-w-[150px] sm:min-w-[450px]">
-                            <div className="group/cell flex items-center gap-x-4 rounded-md bg-gray-700 px-3 py-1 group-hover/row:ring-1 group-hover/row:ring-gray-100 hover:bg-gray-200 transition-all">
-                              <div className="whitespace-nowrap hidden sm:flex text-sm text-gray-300 group-hover/cell:hidden">{`https://papermark.io/view/${link.id}`}</div>
-                              <div className="flex sm:hidden whitespace-nowrap text-sm text-gray-300 group-hover/cell:hidden truncate">{`${link.id}`}</div>
+                            <div className="group/cell flex items-center gap-x-4 rounded-md text-secondary-foreground bg-secondary px-3 py-1 group-hover/row:ring-1 group-hover/row:ring-gray-400 hover:bg-emerald-700 hover:dark:bg-emerald-200 group-hover/row:dark:ring-gray-100 transition-all">
+                              <div className="whitespace-nowrap hidden sm:flex text-sm group-hover/cell:hidden">{`https://papermark.io/view/${link.id}`}</div>
+                              <div className="flex sm:hidden whitespace-nowrap text-sm group-hover/cell:hidden truncate">{`${link.id}`}</div>
                               <button
-                                className="whitespace-nowrap text-sm text-center text-black hidden group-hover/cell:block w-full"
+                                className="whitespace-nowrap text-sm text-center group-hover/cell:text-primary-foreground hidden group-hover/cell:block w-full"
                                 onClick={() => handleCopyToClipboard(link.id)}
                                 title="Copy to clipboard"
                               >
@@ -141,18 +141,18 @@ export default function LinksTable() {
                           <TableCell>
                             <CollapsibleTrigger asChild>
                               <div className="flex items-center space-x-1 [&[data-state=open]>svg.chevron]:rotate-180">
-                                <BarChart className="h-4 w-4 text-gray-400" />
-                                <p className="whitespace-nowrap text-sm text-gray-400">
+                                <BarChart className="h-4 w-4 text-muted-foreground" />
+                                <p className="whitespace-nowrap text-sm text-muted-foreground">
                                   {nFormatter(link._count.views)}
                                   <span className="ml-1 hidden sm:inline-block">
                                     views
                                   </span>
                                 </p>
-                                <ChevronDown className="h-4 w-4 text-gray-400 shrink-0 transition-transform duration-200 chevron" />
+                                <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0 transition-transform duration-200 chevron" />
                               </div>
                             </CollapsibleTrigger>
                           </TableCell>
-                          <TableCell className="text-sm text-gray-400">
+                          <TableCell className="text-sm text-muted-foreground">
                             {link.views[0] ? (
                               <time
                                 dateTime={new Date(
@@ -182,7 +182,7 @@ export default function LinksTable() {
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem
-                                  className="text-red-500 focus:text-red-200 focus:bg-red-900"
+                                  className="text-destructive focus:bg-destructive focus:text-destructive-foreground"
                                   onClick={() =>
                                     handleArchiveLink(
                                       link.id,
@@ -270,14 +270,14 @@ export default function LinksTable() {
                             .filter((link) => link.isArchived)
                             .map((link) => (
                               <>
-                                <TableRow key={link.id}>
+                                <TableRow key={link.id} className="group/row">
                                   <TableCell className="hidden sm:table-cell truncate w-[220px]">
                                     {link.name || "No link name"}
                                   </TableCell>
                                   <TableCell className="max-w-[150px] sm:min-w-[450px]">
-                                    <div className="flex items-center gap-x-4 rounded-md bg-gray-700 px-3 py-1   transition-all">
-                                      <div className="whitespace-nowrap hidden sm:flex text-sm text-gray-300">{`https://papermark.io/view/${link.id}`}</div>
-                                      <div className="flex sm:hidden whitespace-nowrap text-sm text-gray-300 truncate">{`${link.id}`}</div>
+                                    <div className="flex items-center gap-x-4 rounded-md text-secondary-foreground bg-secondary group-hover/row:ring-1 group-hover/row:ring-gray-400 group-hover/row:dark:ring-gray-100 px-3 py-1">
+                                      <div className="whitespace-nowrap hidden sm:flex text-sm">{`https://papermark.io/view/${link.id}`}</div>
+                                      <div className="flex sm:hidden whitespace-nowrap text-sm truncate">{`${link.id}`}</div>
                                     </div>
                                   </TableCell>
                                   <TableCell>
@@ -324,7 +324,7 @@ export default function LinksTable() {
 
                                         <DropdownMenuSeparator />
                                         <DropdownMenuItem
-                                          className="text-red-500 focus:text-red-200 focus:bg-red-900"
+                                          className="text-destructive focus:bg-destructive focus:text-destructive-foreground"
                                           onClick={() =>
                                             handleArchiveLink(
                                               link.id,

@@ -55,10 +55,10 @@ export default function VisitorsTable({numPages}: {numPages: number}) {
                           </Avatar>
                           <div className="min-w-0 flex-1">
                             <div className="focus:outline-none">
-                              <p className="text-sm font-medium text-gray-200 overflow-visible">
+                              <p className="text-sm font-medium text-gray-800 dark:text-gray-200 overflow-visible">
                                 {view.viewerEmail? view.viewerEmail : "Anonymous"}
                               </p>
-                              <p className="text-sm text-gray-500">
+                              <p className="text-sm text-muted-foreground/60">
                                 {view.link.name ? view.link.name : view.linkId}
                               </p>
                             </div>
@@ -67,13 +67,13 @@ export default function VisitorsTable({numPages}: {numPages: number}) {
                       </TableCell>
                       {/* Duration */}
                       <TableCell className="">
-                        <div className="text-sm text-gray-400">
+                        <div className="text-sm text-muted-foreground">
                           {durationFormat(view.totalDuration)}
                         </div>
                       </TableCell>
                       {/* Completion */}
                       <TableCell className="flex justify-start">
-                        <div className="text-sm text-gray-400">
+                        <div className="text-sm text-muted-foreground">
                           <Gauge
                             value={view.completionRate}
                             size={"small"}
@@ -82,7 +82,7 @@ export default function VisitorsTable({numPages}: {numPages: number}) {
                         </div>
                       </TableCell>
                       {/* Last Viewed */}
-                      <TableCell className="text-sm text-gray-400">
+                      <TableCell className="text-sm text-muted-foreground">
                         <time
                           dateTime={new Date(
                             view.viewedAt
@@ -95,7 +95,7 @@ export default function VisitorsTable({numPages}: {numPages: number}) {
                       <TableCell className="text-center sm:text-right">
                         <CollapsibleTrigger asChild>
                           <div className="flex justify-end px-2 space-x-1 [&[data-state=open]>svg.chevron]:rotate-180">
-                            <ChevronDown className="h-4 w-4  shrink-0 transition-transform duration-200 chevron" />
+                            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 chevron" />
                           </div>
                         </CollapsibleTrigger>
                       </TableCell>
