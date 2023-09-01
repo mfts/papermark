@@ -12,11 +12,13 @@ import { put, type PutBlobResult } from "@vercel/blob";
 import DocumentUpload from "@/components/document-upload";
 import { pdfjs } from "react-pdf";
 import { copyToClipboard, getExtension } from "@/lib/utils";
+import { usePlausible } from "next-plausible";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
 
 export function AddDocumentModal({children}: {children: React.ReactNode}) {
   const router = useRouter();
+  const plausible = usePlausible();
   const [uploading, setUploading] = useState<boolean>(false);
   const [currentFile, setCurrentFile] = useState<File | null>(null);
 
@@ -50,7 +52,11 @@ export function AddDocumentModal({children}: {children: React.ReactNode}) {
       if (response) {
         const document = await response.json();
 
+        // copy the link to the clipboard
         copyToClipboard(`${process.env.NEXT_PUBLIC_BASE_URL}/view/${document.links[0].id}`, "Document uploaded and link copied to clipboard. Redirecting to document page...")
+
+        // track the event
+        plausible("documentUploaded");
 
         setTimeout(() => {
           router.push("/documents/" + document.id);
