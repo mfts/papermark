@@ -9,6 +9,7 @@ import { FolderIcon, HomeIcon, XMarkIcon, ChartBarIcon  } from "@heroicons/react
 import Link from "next/link";
 import { classNames, cn } from "@/lib/utils";
 import { useRouter } from "next/router";
+import { ModeToggle } from "./theme-toggle";
 
 export default function Sidebar() {
   const { data: session } = useSession();
@@ -21,7 +22,7 @@ export default function Sidebar() {
       href: "/overview",
       icon: HomeIcon,
       current: router.pathname.includes("overview"),
-      disabled: false,
+      disabled: true,
     },
     {
       name: "Documents",
@@ -112,7 +113,7 @@ export default function Sidebar() {
                                   item.current
                                     ? "bg-gray-200 dark:bg-secondary text-secondary-foreground font-semibold"
                                     : "text-muted-foreground hover:text-foreground hover:bg-gray-200 hover:dark:bg-muted",
-                                  "group flex gap-x-3 items-center rounded-md p-2 text-sm leading-6 w-full disabled:hover:bg-inherit disabled:text-muted-foreground disabled:cursor-default"
+                                  "group flex gap-x-3 items-center rounded-md p-2 text-sm leading-6 w-full disabled:hover:bg-transparent disabled:text-muted-foreground disabled:cursor-default"
                                 )}
                                 disabled={item.disabled}
                               >
@@ -156,7 +157,7 @@ export default function Sidebar() {
                           item.current
                             ? "bg-gray-200 dark:bg-secondary text-secondary-foreground font-semibold"
                             : "text-muted-foreground hover:text-foreground hover:bg-gray-200 hover:dark:bg-muted",
-                          "group flex gap-x-3 items-center rounded-md p-2 text-sm leading-6 w-full disabled:hover:bg-inherit disabled:text-muted-foreground disabled:cursor-default"
+                          "group flex gap-x-3 items-center rounded-md p-2 text-sm leading-6 w-full disabled:hover:bg-transparent disabled:text-muted-foreground disabled:cursor-default"
                         )}
                         disabled={item.disabled}
                       >
@@ -171,57 +172,60 @@ export default function Sidebar() {
                 </ul>
               </li>
               <li className="-mx-2 mt-auto mb-4">
-                <Menu as="div" className="relative">
-                  <Menu.Button className="flex items-center group rounded-md gap-x-3 p-2 w-full text-sm font-semibold leading-6 text-foreground hover:bg-gray-200 hover:dark:bg-secondary">
-                    <img
-                      className="h-8 w-8 rounded-full bg-secondary"
-                      src={session?.user?.image || ""}
-                      alt={`Profile picture of ${session?.user?.name}`}
-                    />
-                    <span className="flex items-center w-full justify-between">
-                      <span className="sr-only">Your profile</span>
-                      <span aria-hidden="true">{session?.user?.name}</span>
-                      <ChevronUpIcon
-                        className="ml-2 h-5 w-5 text-muted-foreground"
-                        aria-hidden="true"
+                <div className="flex justify-between items-center space-x-2">
+                  <Menu as="div" className="relative grow">
+                    <Menu.Button className="flex items-center group rounded-md gap-x-3 p-2 w-full text-sm font-semibold leading-6 text-foreground hover:bg-gray-200 hover:dark:bg-secondary">
+                      <img
+                        className="h-8 w-8 rounded-full bg-secondary"
+                        src={session?.user?.image || ""}
+                        alt={`Profile picture of ${session?.user?.name}`}
                       />
-                    </span>
-                  </Menu.Button>
-                  <Transition
-                    as={Fragment}
-                    enter="transition ease-out duration-100"
-                    enterFrom="transform opacity-0 scale-95"
-                    enterTo="transform opacity-100 scale-100"
-                    leave="transition ease-in duration-75"
-                    leaveFrom="transform opacity-100 scale-100"
-                    leaveTo="transform opacity-0 scale-95"
-                  >
-                    <Menu.Items className="absolute left-0 z-10 bottom-0 mb-14 w-full origin-bottom-left rounded-md bg-gray-100 dark:bg-primary-foreground py-2 focus:outline-none">
-                      {session ? (
-                        <>
-                          <Menu.Item>
-                            <p className="block px-3 py-1 text-sm leading-6 text-muted-foreground">
-                              {session?.user?.email}
-                            </p>
-                          </Menu.Item>
-                          <Menu.Item>
-                            <Link
-                              onClick={() =>
-                                signOut({
-                                  callbackUrl: `${window.location.origin}`,
-                                })
-                              }
-                              className="block px-3 py-1 text-sm leading-6 text-foreground hover:bg-gray-200 hover:dark:bg-muted"
-                              href={""}
-                            >
-                              Sign Out
-                            </Link>
-                          </Menu.Item>
-                        </>
-                      ) : null}
-                    </Menu.Items>
-                  </Transition>
-                </Menu>
+                      <span className="flex items-center w-full justify-between">
+                        <span className="sr-only">Your profile</span>
+                        <span aria-hidden="true">{session?.user?.name}</span>
+                        <ChevronUpIcon
+                          className="ml-2 h-5 w-5 text-muted-foreground"
+                          aria-hidden="true"
+                        />
+                      </span>
+                    </Menu.Button>
+                    <Transition
+                      as={Fragment}
+                      enter="transition ease-out duration-100"
+                      enterFrom="transform opacity-0 scale-95"
+                      enterTo="transform opacity-100 scale-100"
+                      leave="transition ease-in duration-75"
+                      leaveFrom="transform opacity-100 scale-100"
+                      leaveTo="transform opacity-0 scale-95"
+                    >
+                      <Menu.Items className="absolute left-0 z-10 bottom-0 mb-14 w-full origin-bottom-left rounded-md bg-gray-100 dark:bg-primary-foreground py-2 focus:outline-none">
+                        {session ? (
+                          <>
+                            <Menu.Item>
+                              <p className="block px-3 py-1 text-sm leading-6 text-muted-foreground">
+                                {session?.user?.email}
+                              </p>
+                            </Menu.Item>
+                            <Menu.Item>
+                              <Link
+                                onClick={() =>
+                                  signOut({
+                                    callbackUrl: `${window.location.origin}`,
+                                  })
+                                }
+                                className="block px-3 py-1 text-sm leading-6 text-foreground hover:bg-gray-200 hover:dark:bg-muted"
+                                href={""}
+                              >
+                                Sign Out
+                              </Link>
+                            </Menu.Item>
+                          </>
+                        ) : null}
+                      </Menu.Items>
+                    </Transition>
+                  </Menu>
+                  <ModeToggle />
+                </div>
               </li>
             </ul>
           </nav>
@@ -287,6 +291,7 @@ export default function Sidebar() {
                   </Menu.Items>
                 </Transition>
               </Menu>
+              <ModeToggle />
             </div>
           </div>
         </div>

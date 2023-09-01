@@ -21,7 +21,13 @@ export default function DocumentsCard({
     <li className="relative rounded-lg p-3 border-0 dark:bg-secondary ring-1 ring-gray-200 dark:ring-gray-700 transition-all hover:ring-gray-400 hover:dark:ring-gray-500 hover:bg-secondary sm:p-4 flex justify-between items-center">
       <div className="min-w-0 flex shrink items-center space-x-4">
         <div className="w-8 mx-1 text-center flex justify-center items-center">
-          <Image src={`/_icons/${getExtension(document.file)}.svg`} alt="File icon" width={50} height={50} className="" />
+          <Image
+            src={`/_icons/${getExtension(document.file)}.svg`}
+            alt="File icon"
+            width={50}
+            height={50}
+            className=""
+          />
         </div>
         <div className="flex-col">
           <div className="flex items-center">
@@ -33,12 +39,12 @@ export default function DocumentsCard({
             </h2>
             <div className="flex ml-2">
               <button
-                className="group rounded-full bg-gray-200 dark:bg-gray-700 z-10 p-1.5 transition-all duration-75 hover:scale-105 hover:bg-blue-50 active:scale-95"
+                className="group rounded-full bg-gray-200 dark:bg-gray-700 z-10 p-1.5 transition-all duration-75 hover:scale-105 hover:bg-emerald-100 hover:dark:bg-emerald-200 active:scale-95"
                 onClick={() => handleCopyToClipboard(document.links[0].id)}
                 title="Copy to clipboard"
               >
                 <Copy
-                  className="text-gray-400 group-hover:text-blue-800"
+                  className="text-gray-400 group-hover:text-emerald-700"
                   aria-hidden="true"
                 />
               </button>

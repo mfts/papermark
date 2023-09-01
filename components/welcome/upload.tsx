@@ -100,9 +100,15 @@ export default function Upload() {
     return pdf.numPages;
   }
 
-  const handleCopyToClipboard = (id: string) => {
-    copyToClipboard(`${process.env.NEXT_PUBLIC_BASE_URL}/view/${id}`, "Document uploaded and link copied to clipboard.");
-    setCopiedLink(true);
+  const handleContinue = (id: string) => {
+    copyToClipboard(
+      `${process.env.NEXT_PUBLIC_BASE_URL}/view/${id}`,
+      "Link copied to clipboard. Redirecting to document page..."
+    );
+    setTimeout(() => {
+      router.push(`/documents/${currentDocId}`);
+      setUploading(false);
+    }, 2000);
   };
 
   return (
@@ -211,11 +217,11 @@ export default function Upload() {
                   <div className="relative">
                     <div className="flex py-8">
                       <div className="flex w-full max-w-xs sm:max-w-lg focus-within:z-10">
-                        <p className="block w-full md:min-w-[500px] rounded-none rounded-l-md px-4 text-left border-0 py-1.5 text-secondary-foreground bg-secondary leading-6 overflow-y-scroll">
+                        <p className="block w-full md:min-w-[500px] rounded-md px-4 text-left border-0 py-1.5 text-secondary-foreground bg-secondary leading-6 overflow-y-scroll">
                           {`${process.env.NEXT_PUBLIC_BASE_URL}/view/${currentLinkId}`}
                         </p>
                       </div>
-                      <button
+                      {/* <button
                         type="button"
                         className="relative -ml-px inline-flex items-center rounded-r-md px-3 py-2 text-sm font-semibold bg-accent ring-1 ring-inset ring-accent hover:ring-gray-400 animate-pulse"
                         title="Copy link"
@@ -225,17 +231,17 @@ export default function Upload() {
                           className="h-5 w-5 text-accent-foreground"
                           aria-hidden="true"
                         />
-                      </button>
+                      </button> */}
                     </div>
                   </div>
                   <div className="flex items-center justify-center mb-4">
                     <Button
-                      onClick={() => router.push(`/documents/${currentDocId}`)}
+                      onClick={() => handleContinue(currentLinkId)}
                       type="submit"
-                      disabled={!copiedLink}
+                      // disabled={!copiedLink}
                     >
-                      {"To analytics"}
-                      <ArrowRightIcon className="h-4 w-4 ml-2" />
+                      {"Share Document"}
+                      {/* <ArrowRightIcon className="h-4 w-4 ml-2" /> */}
                     </Button>
                   </div>
                 </div>

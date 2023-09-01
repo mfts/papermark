@@ -15,6 +15,8 @@ import EmailProtectionSection from "./email-protection-section";
 import { useRouter } from "next/router";
 import { useDocumentLinks } from "@/lib/swr/use-document";
 import { mutate } from "swr";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 export const DEFAULT_LINK_PROPS = {
   id: null,
@@ -83,6 +85,7 @@ export default function LinkSheet({ isOpen, setIsOpen, currentLink }: { isOpen: 
         (links || []).map(link => link.id === currentLink.id ? returnedLink : link),
         false
       );
+      toast.success("Link updated successfully");
     } else {
       // Add the new link to the list of links
       mutate(
@@ -90,7 +93,10 @@ export default function LinkSheet({ isOpen, setIsOpen, currentLink }: { isOpen: 
         [...(links || []), returnedLink],
         false
       );
+      toast.success("Link created successfully");
     }
+
+    
 
     setData(DEFAULT_LINK_PROPS);
     setIsLoading(false);
@@ -100,12 +106,12 @@ export default function LinkSheet({ isOpen, setIsOpen, currentLink }: { isOpen: 
 
   return (
     <Sheet open={isOpen} onOpenChange={(open: boolean) => setIsOpen(open)}>
-      {/* <SheetTrigger>{children}</SheetTrigger> */}
-      <SheetContent className="bg-black text-white flex flex-col justify-between">
+      <SheetContent className="bg-background text-foreground flex flex-col justify-between">
         <SheetHeader>
-          <SheetTitle className="text-white">Create a new link</SheetTitle>
-          <SheetDescription className="text-white">
-            Customize a document link for sharing. Click save when you&apos;re done.
+          <SheetTitle>Create a new link</SheetTitle>
+          <SheetDescription>
+            Customize a document link for sharing. Click save when you&apos;re
+            done.
           </SheetDescription>
         </SheetHeader>
         <form className="flex flex-col grow" onSubmit={handleSubmit}>
@@ -116,9 +122,9 @@ export default function LinkSheet({ isOpen, setIsOpen, currentLink }: { isOpen: 
                   <div>
                     <label
                       htmlFor="project-name"
-                      className="block text-sm font-medium leading-6 text-white"
+                      className="block text-sm font-medium leading-6 text-foreground"
                     >
-                      Link name
+                      Link Name
                     </label>
                     <div className="mt-2">
                       <input
@@ -126,8 +132,8 @@ export default function LinkSheet({ isOpen, setIsOpen, currentLink }: { isOpen: 
                         name="link-name"
                         id="link-name"
                         placeholder="Recipient's Organization"
-                        value={data.name || ''}
-                        className="flex w-full rounded-md border-0 py-1.5 text-white bg-black shadow-sm ring-1 ring-inset ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-gray-300 sm:text-sm sm:leading-6"
+                        value={data.name || ""}
+                        className="flex w-full rounded-md border-0 py-1.5 text-foreground bg-background shadow-sm ring-1 ring-inset ring-input placeholder:text-muted-foreground focus:ring-2 focus:ring-inset focus:ring-gray-400 sm:text-sm sm:leading-6"
                         onChange={(e) =>
                           setData({ ...data, name: e.target.value })
                         }
@@ -136,9 +142,9 @@ export default function LinkSheet({ isOpen, setIsOpen, currentLink }: { isOpen: 
                   </div>
 
                   <div className="flex items-center relative">
-                    <Separator className="bg-gray-500 absolute" />
+                    <Separator className="bg-muted-foreground absolute" />
                     <div className="relative mx-auto">
-                      <span className="px-2 bg-black text-gray-500 text-sm">
+                      <span className="px-2 bg-background text-muted-foreground text-sm">
                         Optional
                       </span>
                     </div>
@@ -156,25 +162,10 @@ export default function LinkSheet({ isOpen, setIsOpen, currentLink }: { isOpen: 
 
           <SheetFooter>
             <div className="flex items-center">
-              {/* <div className="flex text-sm">
-              <a
-                href="#"
-                className="group inline-flex items-center text-gray-500 hover:text-gray-400"
-              >
-                <QuestionMarkCircleIcon
-                  className="h-5 w-5 text-gray-400 group-hover:text-gray-300"
-                  aria-hidden="true"
-                />
-                <span className="ml-2">Learn more about sharing</span>
-              </a>
-            </div> */}
               <SheetClose asChild>
-                <button
-                  type="submit"
-                  className="ml-4 inline-flex justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-950 shadow-sm hover:bg-gray-200"
-                >
+                <Button type="submit">
                   {currentLink ? "Update Link" : "Save Link"}
-                </button>
+                </Button>
               </SheetClose>
             </div>
           </SheetFooter>
