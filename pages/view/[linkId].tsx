@@ -19,7 +19,7 @@ export type DEFAULT_ACCESS_FORM_TYPE = {
   password: string | null;
 };
 
-type DEFAULT_DOCUMENT_VIEW_TYPE = {
+export type DEFAULT_DOCUMENT_VIEW_TYPE = {
   viewId: string;
   file: string;
 }

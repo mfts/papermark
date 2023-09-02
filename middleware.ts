@@ -1,5 +1,6 @@
 import { NextFetchEvent, NextRequest, NextResponse } from "next/server";
 import AppMiddleware from "@/lib/middleware/app";
+import DomainMiddleware from "@/lib/middleware/domain";
 
 export const config = {
   matcher: [
@@ -19,19 +20,18 @@ export const config = {
 export default async function middleware(req: NextRequest, ev: NextFetchEvent) {
   const path = req.nextUrl.pathname;
   const host = req.headers.get('host');
-  const url = req.nextUrl.clone();
+
+  console.log(`>>> ENV: ${process.env.NODE_ENV}`)
+  console.log(`>>> Middleware: ${path} ${host}`);
 
   if (
     process.env.NODE_ENV !== "development" && 
     !(host?.includes("papermark.io") || host?.endsWith(".vercel.app"))
   ) {
-    // Subdomain available, rewriting
-    console.log(`>>> Rewriting: ${path} to /view/domains/${host}${path}`);
-    url.pathname = `/view/domains/${host}${path}`;
-    return NextResponse.rewrite(url);
+    return DomainMiddleware(req);
   }
 
-  if (path !== "/" && path !== "/alternatives/docsend" && !path.startsWith("/view/")) {
+  if (path !== "/" && !path.startsWith("/alternatives/") && !path.startsWith("/view/")) {
     return AppMiddleware(req);
   }
 
