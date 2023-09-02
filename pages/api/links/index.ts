@@ -40,7 +40,7 @@ export default async function handler(
         return res.status(400).json({ error: "Domain not found." });
       }
 
-      console.log(domainObj);
+      // console.log(domainObj);
 
       const existingLink = await prisma.link.findUnique({
         where: {

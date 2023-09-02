@@ -18,9 +18,10 @@ export default async function handle(
     }
 
     // Assuming the domain slug is sent in the request body.
-    const { slug: domain } = req.query as { slug: string };
+    const { domain } = req.query as { domain: string };
 
-    console.log("Deleting domain:", domain);
+
+    // console.log("Deleting domain:", domain);
 
     if (!domain) {
       return res.status(400).json("Domain is required for deletion");

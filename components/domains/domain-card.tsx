@@ -21,7 +21,7 @@ export default function DomainCard({
   const [deleting, setDeleting] = useState<boolean>(false)
 
   const handleDelete = async () => {
-    console.log("Deleting domain...", domain);
+    // console.log("Deleting domain...", domain);
 
     setDeleting(true)
     const response = await fetch(`/api/domains/${domain}`, {

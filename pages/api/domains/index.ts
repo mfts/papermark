@@ -47,7 +47,7 @@ export default async function handle(
         return res.status(422).json("Invalid domain");
       }
 
-      console.log("Valid domain", domain);
+      // console.log("Valid domain", domain);
       
       const response = await prisma.domain.create({
         data: {
