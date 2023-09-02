@@ -21,9 +21,6 @@ export default async function middleware(req: NextRequest, ev: NextFetchEvent) {
   const path = req.nextUrl.pathname;
   const host = req.headers.get('host');
 
-  console.log(`>>> ENV: ${process.env.NODE_ENV}`)
-  console.log(`>>> Middleware: ${path} ${host}`);
-
   if (
     process.env.NODE_ENV !== "development" && 
     !(host?.includes("papermark.io") || host?.endsWith(".vercel.app"))
