@@ -31,7 +31,7 @@ export default async function middleware(req: NextRequest, ev: NextFetchEvent) {
     return NextResponse.rewrite(url);
   }
 
-  if (path !== "/" && path !== "/alternatives/docsend") {
+  if (path !== "/" && path !== "/alternatives/docsend" && !path.startsWith("/view/")) {
     return AppMiddleware(req);
   }
 

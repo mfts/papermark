@@ -43,7 +43,7 @@ export const Gauge = ({
         className="transform -rotate-90"
       >
         <circle
-          className="text-[#333]"
+          className="text-gray-200 dark:text-gray-800"
           strokeWidth="12"
           stroke="currentColor"
           fill="transparent"
@@ -53,7 +53,7 @@ export const Gauge = ({
           cy="60"
         />
         <circle
-          className="text-[hsla(131,41%,46%,1)] animate-gauge_fill"
+          className="text-emerald-500 animate-gauge_fill"
           strokeWidth="12"
           strokeDasharray={strokeDasharray}
           strokeDashoffset={initialOffset}
@@ -72,7 +72,7 @@ export const Gauge = ({
       </svg>
       {showValue ? (
         <div className="absolute flex opacity-0 animate-gauge_fadeIn">
-          <p className={`text-gray-100 ${sizes[size].textSize}`}>{value}</p>
+          <p className={`text-foreground ${sizes[size].textSize}`}>{value}</p>
         </div>
       ) : null}
     </div>

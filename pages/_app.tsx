@@ -3,11 +3,11 @@ import type { AppProps } from "next/app";
 import { Inter } from "next/font/google";
 import type { Session } from "next-auth";
 import { SessionProvider } from "next-auth/react";
-import { Toaster } from "react-hot-toast";
+import { Toaster } from "sonner";
 import Head from "next/head";
 import { Analytics } from "@vercel/analytics/react";
+import PlausibleProvider from "next-plausible";
 import { ThemeProvider } from "@/components/theme-provider";
-
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -18,14 +18,19 @@ export default function App({
   return (
     <>
       <Head>
-        <title>Papermark</title>
+        <title>Papermark | The Open Source DocSend Alternative</title>
       </Head>
       <SessionProvider session={session}>
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-          <main className={inter.className}>
-            <Toaster position="top-right" reverseOrder={false} />
-            <Component {...pageProps} />
-          </main>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <PlausibleProvider
+            domain="papermark.io"
+            enabled={process.env.VERCEL_ENV == "production"}
+          >
+            <main className={inter.className}>
+              <Toaster closeButton richColors theme={"system"} />
+              <Component {...pageProps} />
+            </main>
+          </PlausibleProvider>
         </ThemeProvider>
         <Analytics />
       </SessionProvider>

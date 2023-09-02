@@ -1,10 +1,8 @@
 import Head from "next/head";
-import Footer from "@/components/Footer";
+import Footer from "@/components/web/footer";
+import Logos from "@/components/web/logos";
 import { Disclosure } from "@headlessui/react";
-import {
-  MinusSmallIcon,
-  PlusSmallIcon,
-} from "@heroicons/react/24/outline";
+import { MinusSmallIcon, PlusSmallIcon } from "@heroicons/react/24/outline";
 import {
   ArrowPathIcon,
   CloudArrowUpIcon,
@@ -32,7 +30,7 @@ const features = [
   {
     name: "Real-Time Analytics",
     description:
-      "Ac tincidunt sapien vehicula erat auctor pellentesque rhoncus.",
+      "Track all activity on each slide and get textual feedback on your deck",
     icon: ArrowPathIcon,
   },
   {
@@ -49,7 +47,7 @@ const features = [
   {
     name: "Community Support",
     description:
-      "Being an open-source project, Papermark is backed by a community of developers who continuously work to improve its features ",
+      "Being an open-source project, Papermark is backed by a community of developers  ",
     icon: ServerIcon,
   },
 ];
@@ -62,11 +60,11 @@ const tiers = [
     priceMonthly: "DocSend",
     description: "Free version is not available",
     features: [
-      "❌ Link Sharing ",
-      "❌ Advanced Analytics",
-      "❌ Team access",
+      "❌ Custom domain",
+      "❌ Pitchdeck feedback",
+      "❌ Hosting",
       "❌ AI-recommendations",
-      "❌ Custom Links",
+      "❌ Team access",
       "❌ Hosting",
     ],
     featured: false,
@@ -79,11 +77,11 @@ const tiers = [
     description: "Free plan ",
     features: [
       "✅ Open Source",
-      "✅  Link Sharing",
+      "✅ Custom domain",
       "✅ Advanced tracking system",
-      "✅  Work as a team",
-      "✅  Host by yourself",
-      "✅  Pitchdeck analytics",
+      "✅ Work as a team",
+      "✅ Host by yourself",
+      "✅ Pitchdeck analytics",
     ],
     featured: true,
   },
@@ -93,7 +91,7 @@ const faqs = [
   {
     question: "What is Papermark?",
     answer:
-      "Papermark is a dynamic, open-source alternative to DocSend. It enables secure document sharing, tracking, and storage, providing users with real-time analytics.",
+      "Papermark is a dynamic, open-source alternative to DocSend. It enables secure document sharing, tracking, and storage, providing users with real-time analytics. Like your Pitchdeck.",
   },
   {
     question: "How can I use Papermark?",
@@ -106,9 +104,9 @@ const faqs = [
       "Yes, Papermark is completely open-source. This means you are free to use, modify, and distribute it as you see fit according to the terms of our license.",
   },
   {
-    question: "Does Papermark support real-time analytics?",
+    question: "Can I add my custom domain to look professional?",
     answer:
-      "Yes, with Papermark you can track your Pitchdeck and documents activity in real time.",
+      "Yes, with Papermark you can connect your custom domain and send your Pitchdeck or document via it. While continue tracking the analytics",
   },
   {
     question: "How I can reach more investors with Papermark?",
@@ -133,18 +131,18 @@ export default function Home() {
   return (
     <div>
       <Head>
-        <title>Papermark – The Open-Source Alternative to DocSend</title>
+        <title>Papermark: Best Free & Open-Source Alternative to DocSend</title>
         <meta
           name="description"
-          content="Papermark is an open-source document infrastructure for sharing and collaboration. Manage secure document sharing with real-time analytics."
+          content="Looking for DocSend alternatives? Papermark is the leading open-source alternative to DocSend. Enjoy secure document sharing, real-time analytics, and collaboration tools for free."
         />
         <meta
           property="og:title"
-          content="Papermark – The Open-Source Alternative to DocSend"
+          content="Papermark: Best Free & Open-Source Alternative to DocSend"
         />
         <meta
           property="og:description"
-          content="Papermark is an open-source document infrastructure for sharing and collaboration. Manage secure document sharing with real-time analytics."
+          content="Looking for DocSend alternatives? Papermark is the leading open-source alternative to DocSend. Experience the advantages of secure document sharing, real-time analytics, and more."
         />
         <meta
           property="og:image"
@@ -156,7 +154,7 @@ export default function Home() {
 
       <main>
         {/* Hero section */}
-        <div className="relative isolate overflow-hidden bg-black-900 pb-16 pt-14 sm:pb-20">
+        <div className="relative isolate overflow-hidden bg-white dark:bg-black pb-16 pt-14 sm:pb-20">
           <div
             className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80"
             aria-hidden="true"
@@ -170,32 +168,32 @@ export default function Home() {
             />
           </div>
           <div className="mx-auto max-w-7xl px-6 lg:px-8">
-            <div className="mx-auto max-w-2xl py-32 sm:py-48 lg:py-56">
+            <div className="mx-auto max-w-2xl py-12 sm:py-12 lg:py-32 ">
               <div className="hidden sm:mb-8 sm:flex sm:justify-center">
-                <div className="relative rounded-full px-3 py-1 text-sm leading-6 text-gray-400 ring-1 ring-white/10 hover:ring-white/20">
+                <div className="relative rounded-full px-3 py-1 text-sm leading-6 text-black dark:text-white ring-1 ring-black/10 dark:ring-white/10 hover:ring-white/20">
                   Free DocSend alternative
                 </div>
               </div>
               <div className="text-center">
-                <h1 className="text-4xl font-bold tracking-tight text-white sm:text-6xl">
+                <h1 className="text-4xl font-bold tracking-tight text-black dark:text-white sm:text-6xl">
                   Open Source DocSend alternative
                 </h1>
-                <p className="mt-6 text-lg leading-8 text-gray-300">
-                  Powerful software to send PitchDeck
+                <p className="mt-6 text-lg leading-8 text-gray-500">
+                  Powerful software to send PitchDeck with custom domain
                 </p>
                 <div className="mt-10 flex items-center justify-center gap-x-6">
                   <Link
-                    className="rounded-md bg-indigo-500 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400"
+                    className="rounded-md bg-black dark:bg-white px-3.5 py-2.5 text-sm font-semibold text-white dark:text-black shadow-sm hover:bg-gray-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400"
                     href="/login"
                   >
-                    Upload your deck
+                    Send your deck
                   </Link>
                 </div>
               </div>
             </div>
 
             {/* Pricing section */}
-            <div className="relative isolate mt-32  px-6 sm:mt-56 lg:px-8">
+            <div className="relative isolate mt-32  px-6 sm:mt-36 lg:px-8">
               <div
                 className="absolute inset-x-0 -top-3 -z-10 transform-gpu overflow-hidden px-36 blur-3xl"
                 aria-hidden="true"
@@ -209,38 +207,40 @@ export default function Home() {
                 />
               </div>
               <div className="mx-auto max-w-2xl text-center lg:max-w-4xl">
-                <h2 className="text-base font-semibold leading-7 text-indigo-600">
+                <h2 className="text-base font-semibold leading-7 text-black dark:text-white">
                   Feature comparison
                 </h2>
-                <p className="mt-2 text-4xl font-bold tracking-tight text-white sm:text-5xl">
+                <p className="mt-2 text-4xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-5xl">
                   Select Free DocSend alternative
                 </p>
               </div>
-              <p className="mx-auto mt-6 max-w-2xl text-center text-lg leading-8 text-gray-600">
+              <p className="mx-auto mt-6 max-w-2xl text-center text-lg leading-8 text-gray-500 dark:text-gray-400">
                 AI-powered platform revolutionizing document sharing and
                 collaboration. It enables secure document sharing, tracking, and
                 storage, providing users with real-time analytics.
               </p>
-              <div className="mx-auto mt-16 grid max-w-lg grid-cols-1 items-center gap-y-6 sm:mt-20 sm:gap-y-0 lg:max-w-4xl lg:grid-cols-2">
+              <div className="mx-auto mt-16 grid max-w-lg grid-cols-1 gap-x-6 items-center gap-y-6 sm:mt-20 sm:gap-y-0 lg:max-w-4xl lg:grid-cols-2">
                 {tiers.map((tier, tierIdx) => (
                   <div
                     key={tier.id}
                     className={classNames(
                       tier.featured
-                        ? " text-white relative bg-gray-900 shadow-2xl"
-                        : " text-white sm:mx-8 lg:mx-0",
+                        ? " text-gray-800 dark:text-white relative shadow-2xl"
+                        : " bg-white dark:bg-transparent sm:mx-8 lg:mx-0",
                       tier.featured
                         ? ""
                         : tierIdx === 0
-                        ? " text-white rounded-t-3xl sm:rounded-b-none lg:rounded-tr-none lg:rounded-bl-3xl"
-                        : "bg-white sm:rounded-t-none lg:rounded-tr-3xl lg:rounded-bl-none",
-                      "rounded-3xl p-8 ring-1 ring-gray-900/10 sm:p-10"
+                        ? "text-gray-800 dark:text-white rounded-t-3xl lg:rounded-bl-3xl"
+                        : "bg-black dark:bg-transparent sm:rounded-t-none lg:rounded-tr-3xl lg:rounded-bl-none",
+                      "rounded-3xl p-8 ring-1 ring-gray-900/10 dark:ring-gray-200/10 sm:p-10"
                     )}
                   >
                     <p className="mt-4 flex items-baseline gap-x-2">
                       <span
                         className={classNames(
-                          tier.featured ? "text-white" : "text-white",
+                          tier.featured
+                            ? "text-gray-800 dark:text-white"
+                            : "text-gray-800 dark:text-gray-400",
                           "text-5xl font-bold tracking-tight"
                         )}
                       >
@@ -248,14 +248,18 @@ export default function Home() {
                       </span>
                       <span
                         className={classNames(
-                          tier.featured ? "text-gray-400" : "text-gray-500",
+                          tier.featured
+                            ? "text-gray-600 dark:text-white"
+                            : "text-gray-400 dark:text-gray-100",
                           "text-base"
                         )}
                       ></span>
                     </p>
                     <p
                       className={classNames(
-                        tier.featured ? "text-gray-300" : "text-gray-600",
+                        tier.featured
+                          ? "text-gray-600 dark:text-gray-300"
+                          : "text-gray-600 dark:text-gray-400",
                         "mt-6 text-base leading-7"
                       )}
                     >
@@ -264,7 +268,9 @@ export default function Home() {
                     <ul
                       role="list"
                       className={classNames(
-                        tier.featured ? "text-gray-300" : "text-gray-600",
+                        tier.featured
+                          ? "text-gray-600 dark:text-gray-300"
+                          : "text-gray-600 dark:text-gray-400",
                         "mt-8 space-y-3 text-sm leading-6 sm:mt-10"
                       )}
                     >
@@ -279,7 +285,7 @@ export default function Home() {
                       aria-describedby={tier.id.toString()}
                       className={classNames(
                         tier.featured
-                          ? "bg-indigo-500 text-white shadow-sm hover:bg-indigo-400 focus:ring-2 focus:ring-indigo-500"
+                          ? "bg-black dark:bg-white text-white dark:text-black shadow-sm hover:bg-gray-500 focus:ring-2 focus:ring-indigo-500"
                           : "text-transparent ring-1 ring-inset ring-transparent focus:ring-2 focus:ring-indigo-600",
                         "mt-8 block rounded-md py-2.5 px-3.5 text-center text-sm font-semibold"
                       )}
@@ -295,13 +301,13 @@ export default function Home() {
             <div className="mt-32 sm:mt-56">
               <div className="mx-auto max-w-7xl px-6 lg:px-8">
                 <div className="mx-auto max-w-2xl sm:text-center">
-                  <h2 className="text-base font-semibold leading-7 text-indigo-600">
+                  <h2 className="text-base font-semibold leading-7 text-black dark:texxt-white">
                     Share docs with ease
                   </h2>
-                  <p className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">
-                    Share your Deck in 1 click
+                  <p className="mt-2 text-3xl font-bold tracking-tight text-black dark:text-white sm:text-4xl">
+                    Share your Deck on custom domain
                   </p>
-                  <p className="mt-6 text-lg leading-8 text-gray-600">
+                  <p className="mt-6 text-lg leading-8 text-gray-500">
                     Free and open source DocSend alternative. Advanced analytics
                     and recommendations for VC funds to share your deck.
                   </p>
@@ -322,12 +328,12 @@ export default function Home() {
                 </div>
               </div>
               <div className="mx-auto mt-16 max-w-7xl px-6 sm:mt-20 md:mt-24 lg:px-8">
-                <dl className="mx-auto grid max-w-2xl grid-cols-1 gap-x-6 gap-y-10 text-base leading-7 text-gray-600 sm:grid-cols-2 lg:mx-0 lg:max-w-none lg:grid-cols-3 lg:gap-x-8 lg:gap-y-16">
+                <dl className="mx-auto grid max-w-2xl grid-cols-1 gap-x-6 gap-y-10 text-base leading-7 text-gray-500 sm:grid-cols-2 lg:mx-0 lg:max-w-none lg:grid-cols-3 lg:gap-x-8 lg:gap-y-16">
                   {features.map((feature) => (
                     <div key={feature.name} className="relative pl-9">
-                      <dt className="inline font-semibold text-white">
+                      <dt className="inline font-semibold text-gray-600 dark:text-gray-200">
                         <feature.icon
-                          className="absolute left-1 top-1 h-5 w-5 text-indigo-600"
+                          className="absolute left-1 top-1 h-5 w-5 text-black dark:text-white"
                           aria-hidden="true"
                         />
                         {feature.name}
@@ -340,7 +346,7 @@ export default function Home() {
             </div>
 
             {/* Testimonial section */}
-            <div className="relative z-10 mt-32 bg-gray-900 pb-20 sm:mt-56 sm:pb-24 xl:pb-0">
+            <div className="relative z-10 mt-32 bg-white dark:bg-gray-900 pb-20 sm:mt-56 sm:pb-24 xl:pb-0">
               <div
                 className="absolute inset-0 overflow-hidden"
                 aria-hidden="true"
@@ -383,7 +389,7 @@ export default function Home() {
                         x={86}
                       />
                     </svg>
-                    <blockquote className="text-xl font-semibold leading-8 text-white sm:text-2xl sm:leading-9">
+                    <blockquote className="text-xl font-semibold leading-8 text-gray-800 dark:text-white sm:text-2xl sm:leading-9">
                       <p>
                         This looks awesome!! Incredible work – love how the link
                         was automatically copied to clipboard when it&apos;s
@@ -391,8 +397,10 @@ export default function Home() {
                       </p>
                     </blockquote>
                     <figcaption className="mt-8 text-base">
-                      <div className="font-semibold text-white">Steven Tey</div>
-                      <div className="mt-1 text-gray-400">
+                      <div className="font-semibold text-black dark:text-white">
+                        Steven Tey
+                      </div>
+                      <div className="mt-1 text-gray-500">
                         Senior Developer Advocate at Vercel
                       </div>
                     </figcaption>
@@ -402,18 +410,18 @@ export default function Home() {
             </div>
 
             {/* FAQ section */}
-            <div className="mx-auto mt-32 max-w-7xl px-6 sm:mt-56 lg:px-8">
+            <div className="mx-auto mt-24 max-w-7xl px-6 sm:mt-32 lg:px-8">
               <div className="mx-auto max-w-4xl divide-y divide-gray-900/10">
                 <h2 className="text-2xl font-bold leading-10 tracking-tight text-white">
                   Frequently asked questions
                 </h2>
-                <dl className="mt-10 space-y-6 divide-y divide-gray-900/10">
+                <dl className="mt-10 space-y-6 divide-y divide-gray-900/10 dark:divide-gray-200/10">
                   {faqs.map((faq) => (
                     <Disclosure as="div" key={faq.question} className="pt-6">
                       {({ open }) => (
                         <>
                           <dt>
-                            <Disclosure.Button className="flex w-full items-start justify-between text-left text-white">
+                            <Disclosure.Button className="flex w-full items-start justify-between text-left text-gray-900 dark:text-gray-200">
                               <span className="text-base font-semibold leading-7">
                                 {faq.question}
                               </span>
@@ -433,7 +441,7 @@ export default function Home() {
                             </Disclosure.Button>
                           </dt>
                           <Disclosure.Panel as="dd" className="mt-2 pr-12">
-                            <p className="text-base leading-7 text-gray-400">
+                            <p className="text-base leading-7 text-gray-500">
                               {faq.answer}
                             </p>
                           </Disclosure.Panel>

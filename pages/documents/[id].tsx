@@ -7,9 +7,14 @@ import AppLayout from "@/components/layouts/app";
 import LinkSheet from "@/components/links/link-sheet";
 import Image from "next/image"
 import LinksTable from "@/components/links/links-table";
+import VisitorsTable from "@/components/visitors/visitors-table";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
 
 export default function DocumentPage() {
   const { document, error } = useDocument();
+
+  const [isLinkSheetOpen, setIsLinkSheetOpen] = useState<boolean>(false);
 
   if (error && error.status === 404) {
     return <ErrorPage statusCode={404} />;
@@ -33,19 +38,12 @@ export default function DocumentPage() {
                       className=""
                     />
                   </div>
-                  <h2 className="leading-7 text-2xl text-white font-semibold tracking-tight">
+                  <h2 className="leading-7 text-2xl text-foreground font-semibold tracking-tight">
                     {document.name}
                   </h2>
                 </div>
               </div>
-              <LinkSheet>
-                <button
-                  type="button"
-                  className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-gray-950 bg-gray-300 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
-                >
-                  Create Link
-                </button>
-              </LinkSheet>
+              <Button onClick={() => setIsLinkSheetOpen(true)}>Create Link</Button>
             </div>
             {/* Stats */}
             {document.numPages !== null && (
@@ -55,8 +53,14 @@ export default function DocumentPage() {
               />
             )}
             <StatsCard />
+            {/* Visitors */}
+            <VisitorsTable numPages={document.numPages!} />
             {/* Links */}
             <LinksTable />
+            <LinkSheet
+              isOpen={isLinkSheetOpen}
+              setIsOpen={setIsLinkSheetOpen}
+            />
           </>
         ) : (
           <div>Loading...</div>

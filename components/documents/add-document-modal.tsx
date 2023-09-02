@@ -8,24 +8,22 @@ import {
 } from "@/components/ui/dialog";
 import { useState } from "react";
 import { useRouter } from "next/router";
-// @ts-ignore
-import type { PutBlobResult } from "@vercel/blob";
-import toast from "react-hot-toast";
-import Notification from "@/components/Notification";
+import { put, type PutBlobResult } from "@vercel/blob";
 import DocumentUpload from "@/components/document-upload";
 import { pdfjs } from "react-pdf";
-import { getExtension } from "@/lib/utils";
-import { get } from "http";
-import { set } from "date-fns";
+import { copyToClipboard, getExtension } from "@/lib/utils";
+import { Button } from "../ui/button";
+import { usePlausible } from "next-plausible";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
 
 export function AddDocumentModal({children}: {children: React.ReactNode}) {
   const router = useRouter();
+  const plausible = usePlausible();
   const [uploading, setUploading] = useState<boolean>(false);
   const [currentFile, setCurrentFile] = useState<File | null>(null);
 
-  const handleSubmit = async (event: any) => {
+  const handleBrowserUpload = async (event: any) => {
     event.preventDefault();
 
     // Check if the file is chosen
@@ -34,68 +32,42 @@ export function AddDocumentModal({children}: {children: React.ReactNode}) {
       return; // prevent form from submitting
     }
 
-    const data = new FormData();
-    if (currentFile) data.append("file", currentFile);
-
     try {
       setUploading(true);
 
-      // upload the file to the blob storage
-      const blobResponse = await fetch("/api/file/upload", {
-        method: "POST",
-        body: data,
+      const newBlob = await put(currentFile.name, currentFile, {
+        access: "public",
+        handleBlobUploadUrl: "/api/file/browser-upload",
       });
-
-      if (!blobResponse.ok) {
-        throw new Error(`HTTP error! status: ${blobResponse.status}`);
-      }
-
-      // get the blob url from the response
-      const blob = (await blobResponse.json()) as PutBlobResult;
 
       let response: Response | undefined;
       let numPages: number | undefined;
       // create a document in the database if the document is a pdf
-      if (getExtension(blob.pathname).includes("pdf")) {
-
-        numPages = await getTotalPages(blob.url);
-        response = await saveDocumentToDatabase(blob, numPages);
+      if (getExtension(newBlob.pathname).includes("pdf")) {
+        numPages = await getTotalPages(newBlob.url);
+        response = await saveDocumentToDatabase(newBlob, numPages);
       } else {
-        response = await saveDocumentToDatabase(blob);
+        response = await saveDocumentToDatabase(newBlob);
       }
 
       if (response) {
         const document = await response.json();
 
-        navigator.clipboard
-          .writeText(
-            `${process.env.NEXT_PUBLIC_BASE_URL}/view/${document.links[0].id}`
-          )
-          .catch((error) => {
-            console.log("Failed to copy text to clipboard", error);
-          });
+        // copy the link to the clipboard
+        copyToClipboard(`${process.env.NEXT_PUBLIC_BASE_URL}/view/${document.links[0].id}`, "Document uploaded and link copied to clipboard. Redirecting to document page...")
 
-        toast.custom((t) => (
-          <Notification
-            visible={t.visible}
-            closeToast={() => toast.dismiss(t.id)}
-            message={
-              "Document uploaded and link copied to clipboard. Redirecting to document page..."
-            }
-          />
-        ));
+        // track the event
+        plausible("documentUploaded");
 
         setTimeout(() => {
           router.push("/documents/" + document.id);
-        }, 4000);
+          setUploading(false);
+        }, 2000);
       }
-      
     } catch (error) {
       console.error("An error occurred while uploading the file: ", error);
-    } finally {
-      setUploading(false);
     }
-  };
+  }
 
   async function saveDocumentToDatabase(blob: PutBlobResult, numPages?: number) {
     // create a document in the database with the blob url
@@ -127,19 +99,19 @@ export function AddDocumentModal({children}: {children: React.ReactNode}) {
   return (
     <Dialog>
       <DialogTrigger>{children}</DialogTrigger>
-      <DialogContent className="text-white bg-black ring-1 ring-white/10">
+      <DialogContent className="text-foreground bg-background">
         <DialogHeader>
           <DialogTitle>Share a document</DialogTitle>
           <DialogDescription>
-            <div className="border-b border-gray-800 py-2">
-              <p className="mt-1 text-sm text-gray-400">
+            <div className="border-b border-border py-2">
+              <p className="mb-1 text-sm text-muted-foreground">
                 After you upload the document, a shareable link will be
                 generated and copied to your clipboard.
               </p>
             </div>
             <form
               encType="multipart/form-data"
-              onSubmit={handleSubmit}
+              onSubmit={handleBrowserUpload}
               className="flex flex-col"
             >
               <div className="space-y-12">
@@ -154,13 +126,13 @@ export function AddDocumentModal({children}: {children: React.ReactNode}) {
               </div>
 
               <div className="flex justify-center">
-                <button
+                <Button
                   type="submit"
-                  className="rounded-md bg-gray-100 px-3 py-2 w-full lg:w-1/2 text-sm font-semibold text-gray-900 shadow-sm transition-colors hover:text-gray-100 hover:bg-gray-500 disabled:text-gray-400 disabled:bg-gray-800 disabled:cursor-not-allowed"
+                  className="w-full lg:w-1/2"
                   disabled={uploading || !currentFile}
                 >
                   {uploading ? "Uploading..." : "Upload Document"}
-                </button>
+                </Button>
               </div>
             </form>
           </DialogDescription>

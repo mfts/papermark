@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction, useState } from "react";
+import { Dispatch, SetStateAction, useState, useEffect } from "react";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { DEFAULT_LINK_TYPE } from ".";
@@ -6,12 +6,19 @@ import { DEFAULT_LINK_TYPE } from ".";
 
 
 export default function EmailProtectionSection({data, setData}: {data: DEFAULT_LINK_TYPE, setData: Dispatch<SetStateAction<DEFAULT_LINK_TYPE>>}) {
-  const [enabled, setEnabled] = useState(true);
+  const { emailProtected } = data;
+  const [enabled, setEnabled] = useState<boolean>(true);
 
-  function handleCheckedChange() {
-    setData({ ...data, emailProtected: enabled });
-    setEnabled(!enabled);
-  }
+  useEffect(() => {
+    setEnabled(emailProtected);
+  }, [emailProtected]);
+
+  const handleEnableProtection = () => {
+    const updatedEmailProtection = !enabled;
+    setData({ ...data, emailProtected: updatedEmailProtection });
+    setEnabled(updatedEmailProtection);
+  };
+
   return (
     <div className="pb-5">
       <div className="flex items-center justify-between">
@@ -19,7 +26,7 @@ export default function EmailProtectionSection({data, setData}: {data: DEFAULT_L
           <h2
             className={cn(
               "text-sm font-medium leading-6",
-              enabled ? "text-white" : "text-gray-400"
+              enabled ? "text-foreground" : "text-muted-foreground"
             )}
           >
             Email Protection
@@ -27,7 +34,7 @@ export default function EmailProtectionSection({data, setData}: {data: DEFAULT_L
         </div>
         <Switch
           checked={enabled}
-          onCheckedChange={() => handleCheckedChange()}
+          onCheckedChange={handleEnableProtection}
         />
       </div>
     </div>

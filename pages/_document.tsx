@@ -2,14 +2,14 @@ import { Html, Head, Main, NextScript } from "next/document";
 
 export default function Document() {
   return (
-    <Html lang="en" className="h-full bg-black" suppressHydrationWarning>
+    <Html lang="en" className="h-full bg-background" suppressHydrationWarning>
       <Head>
         <meta name="theme-color" content="#000000" />
         <meta
           name="description"
           content="Papermark is an open-source document sharing alternative to DocSend with built-in analytics."
         />
-        <meta property="og:title" content="Papermark" />
+        <meta property="og:title" content="Papermark | The Open Source DocSend Alternative" />
         <meta
           property="og:description"
           content="Papermark is an open-source document sharing alternative to DocSend with built-in analytics."

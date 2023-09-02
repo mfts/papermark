@@ -26,21 +26,21 @@ export default function LinksVisitors({linkId, linkName}: {linkId: string, linkN
                       </Avatar>
                       <div className="min-w-0 flex-1">
                         <div className="focus:outline-none">
-                          <p className="text-sm font-medium text-gray-200 overflow-visible">
-                            {view.viewerEmail}
+                          <p className="text-sm text-gray-800 dark:text-gray-200 overflow-visible">
+                            {view.viewerEmail ? view.viewerEmail : "Anonymous"}
                           </p>
-                          <p className="text-sm text-gray-500">
+                          {/* <p className="text-sm text-gray-500">
                             <span>{linkName}</span>
-                          </p>
+                          </p> */}
                         </div>
                       </div>
                     </div>
                     <div className="flex space-x-4 items-center">
-                      <div className="text-sm text-gray-400">
+                      <div className="text-sm text-muted-foreground">
                         {durationFormat(view.totalDuration)}
                       </div>
 
-                      <div className="text-sm text-gray-400">
+                      <div className="text-sm">
                         <Gauge
                           value={view.completionRate}
                           size={"small"}
@@ -63,15 +63,15 @@ export default function LinksVisitors({linkId, linkName}: {linkId: string, linkN
                       </Avatar>
                       <div className="min-w-0 flex-1">
                         <div className="focus:outline-none">
-                          <p className="text-sm font-medium text-gray-200 overflow-visible">
+                          <p className="text-sm font-medium text-muted-foreground overflow-visible">
                             {view.viewerEmail}
                           </p>
-                          <p className="text-sm text-gray-500">
+                          <p className="text-sm text-muted-foreground">
                             <span>{linkName}</span>
                             <span className="inline-flex">
                               &nbsp;•&nbsp;
                               <time
-                                className="truncate text-sm text-gray-500"
+                                className="truncate text-sm text-muted-foreground"
                                 dateTime={new Date(view.viewedAt).toISOString()}
                               >
                                 {timeAgo(view.viewedAt)}
@@ -82,11 +82,11 @@ export default function LinksVisitors({linkId, linkName}: {linkId: string, linkN
                       </div>
                     </div>
                     <div className="flex space-x-4 items-center">
-                      <div className="text-sm text-gray-400">
+                      <div className="text-sm text-muted-foreground">
                         {durationFormat(view.totalDuration)}
                       </div>
 
-                      <div className="text-sm text-gray-400">
+                      <div className="text-sm">
                         <Gauge
                           value={view.completionRate}
                           size={"small"}
@@ -101,7 +101,7 @@ export default function LinksVisitors({linkId, linkName}: {linkId: string, linkN
               <TableCell className="hidden sm:table-cell">
                 <div>
                   <time
-                    className="truncate text-sm text-gray-400"
+                    className="truncate text-sm text-muted-foreground"
                     dateTime={new Date(view.viewedAt).toISOString()}
                   >
                     {timeAgo(view.viewedAt)}

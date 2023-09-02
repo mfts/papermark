@@ -3,6 +3,7 @@ import { useDropzone } from "react-dropzone";
 import { ArrowUpTrayIcon, DocumentIcon, PhotoIcon } from "@heroicons/react/24/outline";
 import { DocumentTextIcon, PresentationChartBarIcon } from "@heroicons/react/20/solid";
 import { bytesToSize } from "@/lib/utils";
+import { toast } from "sonner" 
 
 function fileIcon(fileType: string) {
   switch (fileType) {
@@ -32,18 +33,24 @@ export default function DocumentUpload({
 }) {
   const { getRootProps, getInputProps } = useDropzone({
     accept: {
-      "image/*": [".png", ".gif", ".jpeg", ".jpg"],
       "application/pdf": [], // ".pdf"
-      "application/msword": [], // ".doc"
-      "application/vnd.ms-powerpoint": [], // ".ppt"
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-        [], // ".docx"
-      "application/vnd.openxmlformats-officedocument.presentationml.presentation":
-        [], // ".pptx"
     },
     multiple: false,
-    onDrop: (acceptedFiles) => {
+    maxSize: 30 * 1024 * 1024, // 30 MB
+    onDropAccepted: (acceptedFiles) => {
       setCurrentFile(acceptedFiles[0]);
+    },
+    onDropRejected: (fileRejections) => {
+      const { errors } = fileRejections[0];
+      let message;
+      if (errors[0].code === "file-too-large") {
+        message = "File size too big (max. 30 MB)"
+      } else if (errors[0].code === "file-invalid-type") {
+        message = "File type not supported (.pdf only)"
+      } else {
+        message = errors[0].message
+      }
+      toast.error(message);
     },
   });
 
@@ -56,10 +63,10 @@ export default function DocumentUpload({
     <div className="col-span-full">
       <div
         {...getRootProps()}
-        className="relative cursor-pointer font-semibold text-white hover:text-gray-400 hover:bg-gray-900 block group"
+        className="relative cursor-pointer font-semibold text-foreground hover:text-gray-900 hover:bg-gray-100 hover:dark:text-gray-500 hover:dark:bg-gray-900 block group"
       >
         <input {...getInputProps()} name="file" className="sr-only" />
-        <div className="flex justify-center rounded-lg border border-dashed border-white/25 px-6 py-10 min-h-[200px] md:min-w-full items-center">
+        <div className="flex justify-center rounded-lg border border-dashed border-black/25 dark:border-white/25 px-6 py-10 min-h-[200px] md:min-w-full items-center">
           {currentFile ? (
             <div
               className="absolute inset-0 opacity-10 pointer-events-none group-hover:opacity-5 transition-opacity"
@@ -72,7 +79,7 @@ export default function DocumentUpload({
           ) : null}
           <div className="text-center">
             {currentFile ? (
-              <div className="flex flex-col sm:flex-row items-center space-y-1 sm:space-x-2 text-white">
+              <div className="flex flex-col sm:flex-row items-center space-y-1 sm:space-x-2 text-foreground">
                 <div>{fileIcon(currentFile.type)}</div>
                 <p>{currentFile.name}</p>
                 <p className="text-gray-500">{bytesToSize(currentFile.size)}</p>
@@ -84,15 +91,15 @@ export default function DocumentUpload({
               />
             )}
 
-            <div className="mt-4 flex text-sm leading-6 text-gray-400">
+            <div className="mt-4 flex text-sm leading-6 text-gray-500">
               <span className="mx-auto">
                 {currentFile ? "" : "Choose file to upload or drag and drop"}
               </span>
             </div>
-            <p className="text-xs leading-5 text-gray-400">
+            <p className="text-xs leading-5 text-gray-500">
               {currentFile
                 ? "Replace file?"
-                : ".pdf, .docx, .pptx, image files and more"}
+                : "Only *.pdf & 30 MB limit"}
             </p>
           </div>
         </div>

@@ -27,16 +27,16 @@ export default function Next() {
         variants={STAGGER_CHILD_VARIANTS}
         className="flex flex-col items-center space-y-10 text-center"
       >
-        <p className="text-2xl font-bold tracking-tighter text-white">
+        <p className="text-2xl font-bold tracking-tighter text-foreground">
           Papermark
         </p>
-        <h1 className="font-display max-w-md text-3xl font-semibold text-gray-100 transition-colors sm:text-4xl">
+        <h1 className="font-display max-w-md text-3xl font-semibold transition-colors sm:text-4xl">
           Which document do you want to share today?
         </h1>
       </motion.div>
       <motion.div
         variants={STAGGER_CHILD_VARIANTS}
-        className="grid w-full grid-cols-1 divide-y divide-gray-900 text-white rounded-md border border-gray-800 md:grid-cols-2 md:divide-x"
+        className="grid w-full grid-cols-1 divide-y divide-border text-foreground rounded-md border border-border md:grid-cols-2 md:divide-x"
       >
         <button
           onClick={() =>
@@ -47,7 +47,7 @@ export default function Next() {
               },
             })
           }
-          className="flex flex-col items-center justify-center overflow-hidden p-5 space-y-5 transition-colors hover:bg-gray-800 md:p-10 min-h-[200px]"
+          className="flex flex-col items-center justify-center overflow-hidden p-5 space-y-5 transition-colors hover:bg-gray-200 hover:dark:bg-gray-800 md:p-10 min-h-[200px]"
         >
           <PresentationChartBarIcon className="h-auto  pointer-events-none w-12 sm:w-12" />
           <p>Pitchdeck</p>
@@ -61,7 +61,7 @@ export default function Next() {
               },
             })
           }
-          className="flex flex-col items-center justify-center overflow-hidden p-5 space-y-5 transition-colors hover:bg-gray-800 md:p-10 min-h-[200px]"
+          className="flex flex-col items-center justify-center overflow-hidden p-5 space-y-5 transition-colors hover:bg-gray-200 hover:dark:bg-gray-800 md:p-10 min-h-[200px]"
         >
           <DocumentIcon className="h-auto  pointer-events-none w-12 sm:w-12" />
           <p>Another document</p>

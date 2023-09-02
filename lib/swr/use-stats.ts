@@ -18,6 +18,7 @@ interface StatsData {
 }
 
 export function useStats() {
+  // this gets the data for a document's graph of all views
   const router = useRouter();
 
   const { id } = router.query as {
@@ -26,6 +27,40 @@ export function useStats() {
 
   const { data: stats, error } = useSWR<StatsData>(
     id && `/api/documents/${encodeURIComponent(id)}/stats`,
+    fetcher,
+    {
+      dedupingInterval: 10000,
+    }
+  );
+
+  return {
+    stats,
+    loading: !error && !stats,
+    error,
+  };
+}
+
+interface StatsViewData {
+  views: View[];
+  duration: {
+    data: { pageNumber: string; sum_duration: number }[];
+  };
+}
+
+export function useVisitorStats(viewId: string) {
+  // this gets the data for a single visitor's graph
+  const router = useRouter();
+
+  const { id: documentId } = router.query as {
+    id: string;
+  };
+
+  const { data: stats, error } = useSWR<StatsViewData>(
+    documentId &&
+      viewId &&
+      `/api/documents/${encodeURIComponent(documentId)}/views/${encodeURIComponent(
+        viewId
+      )}/stats`,
     fetcher,
     {
       dedupingInterval: 10000,
