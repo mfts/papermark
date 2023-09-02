@@ -30,14 +30,16 @@ export default function PasswordSection({data, setData}: {data: DEFAULT_LINK_TYP
     <div className="pb-5">
       <div className="flex items-center justify-between">
         <div className="flex items-center justify-between space-x-2">
-          <h2 className={cn("text-sm font-medium leading-6", enabled ? "text-white" : "text-gray-400")}>
+          <h2
+            className={cn(
+              "text-sm font-medium leading-6",
+              enabled ? "text-foreground" : "text-muted-foreground"
+            )}
+          >
             Password Protection
           </h2>
         </div>
-        <Switch
-          checked={enabled}
-          onCheckedChange={handleEnablePassword}
-        />
+        <Switch checked={enabled} onCheckedChange={handleEnablePassword} />
       </div>
       {enabled && (
         <motion.div
@@ -48,7 +50,7 @@ export default function PasswordSection({data, setData}: {data: DEFAULT_LINK_TYP
             name="password"
             id="password"
             type={showPassword ? "text" : "password"}
-            className="flex w-full rounded-md border-0 py-1.5 text-white bg-black shadow-sm ring-1 ring-inset ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-gray-300 sm:text-sm sm:leading-6"
+            className="flex w-full rounded-md border-0 py-1.5 text-foreground bg-background shadow-sm ring-1 ring-inset ring-input placeholder:text-muted-foreground focus:ring-2 focus:ring-inset focus:ring-gray-400 sm:text-sm sm:leading-6"
             value={password || ""}
             placeholder="Enter password"
             onChange={(e) => {
@@ -62,9 +64,9 @@ export default function PasswordSection({data, setData}: {data: DEFAULT_LINK_TYP
             className="absolute inset-y-0 right-0 flex items-center pr-3"
           >
             {showPassword ? (
-              <Eye className="h-4 w-4 text-gray-400" aria-hidden="true" />
+              <Eye className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
             ) : (
-              <EyeOff className="h-4 w-4 text-gray-400" aria-hidden="true" />
+              <EyeOff className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
             )}
           </button>
         </motion.div>

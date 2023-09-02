@@ -12,6 +12,7 @@ import { put, type PutBlobResult } from "@vercel/blob";
 import DocumentUpload from "@/components/document-upload";
 import { pdfjs } from "react-pdf";
 import { copyToClipboard, getExtension } from "@/lib/utils";
+import { Button } from "../ui/button";
 import { usePlausible } from "next-plausible";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
@@ -98,12 +99,12 @@ export function AddDocumentModal({children}: {children: React.ReactNode}) {
   return (
     <Dialog>
       <DialogTrigger>{children}</DialogTrigger>
-      <DialogContent className="text-white bg-black ring-1 ring-white/10">
+      <DialogContent className="text-foreground bg-background">
         <DialogHeader>
           <DialogTitle>Share a document</DialogTitle>
           <DialogDescription>
-            <div className="border-b border-gray-800 py-2">
-              <p className="mt-1 text-sm text-gray-400">
+            <div className="border-b border-border py-2">
+              <p className="mb-1 text-sm text-muted-foreground">
                 After you upload the document, a shareable link will be
                 generated and copied to your clipboard.
               </p>
@@ -125,13 +126,13 @@ export function AddDocumentModal({children}: {children: React.ReactNode}) {
               </div>
 
               <div className="flex justify-center">
-                <button
+                <Button
                   type="submit"
-                  className="rounded-md bg-gray-100 px-3 py-2 w-full lg:w-1/2 text-sm font-semibold text-gray-900 shadow-sm transition-colors hover:text-gray-100 hover:bg-gray-500 disabled:text-gray-400 disabled:bg-gray-800 disabled:cursor-not-allowed"
+                  className="w-full lg:w-1/2"
                   disabled={uploading || !currentFile}
                 >
                   {uploading ? "Uploading..." : "Upload Document"}
-                </button>
+                </Button>
               </div>
             </form>
           </DialogDescription>

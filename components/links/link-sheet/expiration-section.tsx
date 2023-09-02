@@ -30,16 +30,13 @@ export default function ExpirationSection({data, setData}: {data: DEFAULT_LINK_T
           <h2
             className={cn(
               "text-sm font-medium leading-6",
-              enabled ? "text-white" : "text-gray-400"
+              enabled ? "text-foreground" : "text-muted-foreground"
             )}
           >
             Expiration Date
           </h2>
         </div>
-        <Switch
-          checked={enabled}
-          onCheckedChange={handleEnableExpiration}
-        />
+        <Switch checked={enabled} onCheckedChange={handleEnableExpiration} />
       </div>
       {enabled && (
         <motion.div className="mt-3" {...FADE_IN_ANIMATION_SETTINGS}>
@@ -53,7 +50,7 @@ export default function ExpirationSection({data, setData}: {data: DEFAULT_LINK_T
             onChange={(e) => {
               setData({ ...data, expiresAt: new Date(e.target.value) });
             }}
-            className="flex w-full rounded-md border-0 py-1.5 text-white bg-black shadow-sm ring-1 ring-inset ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-gray-300 sm:text-sm sm:leading-6 dark:[color-scheme:dark]"
+            className="flex w-full rounded-md border-0 py-1.5 text-foreground bg-background shadow-sm ring-1 ring-inset ring-input placeholder:text-muted-foreground focus:ring-2 focus:ring-inset focus:ring-gray-400 sm:text-sm sm:leading-6"
           />
         </motion.div>
       )}

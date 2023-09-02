@@ -9,6 +9,7 @@ import Skeleton from "../Skeleton";
 import { STAGGER_CHILD_VARIANTS } from "@/lib/contants";
 import { pdfjs } from "react-pdf";
 import { copyToClipboard, getExtension } from "@/lib/utils";
+import { Button } from "../ui/button";
 import { usePlausible } from "next-plausible";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
@@ -29,7 +30,7 @@ export default function Upload() {
 
     // Check if the file is chosen
     if (!currentFile) {
-      alert("Please select a file to upload.");
+      toast.error("Please select a file to upload.");
       return; // prevent form from submitting
     }
 
@@ -105,9 +106,15 @@ export default function Upload() {
     return pdf.numPages;
   }
 
-  const handleCopyToClipboard = (id: string) => {
-    copyToClipboard(`${process.env.NEXT_PUBLIC_BASE_URL}/view/${id}`, "Document uploaded and link copied to clipboard.");
-    setCopiedLink(true);
+  const handleContinue = (id: string) => {
+    copyToClipboard(
+      `${process.env.NEXT_PUBLIC_BASE_URL}/view/${id}`,
+      "Link copied to clipboard. Redirecting to document page..."
+    );
+    setTimeout(() => {
+      router.push(`/documents/${currentDocId}`);
+      setUploading(false);
+    }, 2000);
   };
 
   return (
@@ -134,7 +141,7 @@ export default function Upload() {
             variants={STAGGER_CHILD_VARIANTS}
             className="flex flex-col items-center space-y-10 text-center"
           >
-            <h1 className="font-display text-3xl font-semibold text-gray-100 transition-colors sm:text-4xl">
+            <h1 className="font-display text-3xl font-semibold text-foreground transition-colors sm:text-4xl">
               {`Upload your ${router.query.type}`}
             </h1>
           </motion.div>
@@ -157,13 +164,13 @@ export default function Upload() {
                 </div>
 
                 <div className="flex justify-center">
-                  <button
+                  <Button
                     type="submit"
-                    className="rounded-md bg-gray-100 px-3 py-2 w-full text-sm font-semibold text-gray-900 shadow-sm transition-colors hover:text-gray-100 hover:bg-gray-500 disabled:text-gray-400 disabled:bg-gray-800 disabled:cursor-not-allowed"
+                    className="w-full"
                     disabled={uploading || !currentFile}
                   >
                     {uploading ? "Uploading..." : "Upload Document"}
-                  </button>
+                  </Button>
                 </div>
               </form>
             </main>
@@ -193,7 +200,7 @@ export default function Upload() {
             variants={STAGGER_CHILD_VARIANTS}
             className="flex flex-col items-center space-y-10 text-center"
           >
-            <h1 className="font-display text-3xl font-semibold text-gray-100 transition-colors sm:text-4xl">
+            <h1 className="font-display text-3xl font-semibold text-foreground transition-colors sm:text-4xl">
               Share your unique link
             </h1>
           </motion.div>
@@ -202,7 +209,7 @@ export default function Upload() {
             {!currentLinkId && (
               <main className="min-h-[300px]">
                 <div className="flex flex-col justify-center">
-                  <div className="flex py-8 rounded-md shadow-sm">
+                  <div className="flex py-8">
                     <div className="flex w-full focus-within:z-10">
                       <Skeleton className="h-6 w-full" />
                     </div>
@@ -214,35 +221,34 @@ export default function Upload() {
               <main className="min-h-[300px]">
                 <div className="flex flex-col justify-center">
                   <div className="relative">
-                    <div className="flex py-8 rounded-md shadow-sm">
+                    <div className="flex py-8">
                       <div className="flex w-full max-w-xs sm:max-w-lg focus-within:z-10">
-                        <p className="block w-full md:min-w-[500px] rounded-none rounded-l-md px-4 text-left border-0 py-1.5 text-gray-200 bg-gray-900 leading-6 overflow-y-scroll">
+                        <p className="block w-full md:min-w-[500px] rounded-md px-4 text-left border-0 py-1.5 text-secondary-foreground bg-secondary leading-6 overflow-y-scroll">
                           {`${process.env.NEXT_PUBLIC_BASE_URL}/view/${currentLinkId}`}
                         </p>
                       </div>
-                      <button
+                      {/* <button
                         type="button"
-                        className="relative -ml-px inline-flex items-center rounded-r-md px-3 py-2 text-sm font-semibold bg-gray-700 ring-1 ring-inset ring-gray-800 hover:ring-gray-400 animate-pulse"
+                        className="relative -ml-px inline-flex items-center rounded-r-md px-3 py-2 text-sm font-semibold bg-accent ring-1 ring-inset ring-accent hover:ring-gray-400 animate-pulse"
                         title="Copy link"
                         onClick={() => handleCopyToClipboard(currentLinkId)}
                       >
                         <DocumentDuplicateIcon
-                          className="h-5 w-5 text-white"
+                          className="h-5 w-5 text-accent-foreground"
                           aria-hidden="true"
                         />
-                      </button>
+                      </button> */}
                     </div>
                   </div>
                   <div className="flex items-center justify-center mb-4">
-                    <button
-                      onClick={() => router.push(`/documents/${currentDocId}`)}
+                    <Button
+                      onClick={() => handleContinue(currentLinkId)}
                       type="submit"
-                      className="flex items-center rounded-md px-5 py-2 w-fit text-sm font-semibold  shadow-sm transition-colors text-gray-900 bg-gray-100 hover:text-gray-100 hover:bg-gray-500 disabled:hover:text-gray-900 disabled:bg-gray-700 disabled:cursor-not-allowed"
-                      disabled={!copiedLink}
+                      // disabled={!copiedLink}
                     >
-                      {"To analytics"}
-                      <ArrowRightIcon className="h-4 w-4 ml-2" />
-                    </button>
+                      {"Share Document"}
+                      {/* <ArrowRightIcon className="h-4 w-4 ml-2" /> */}
+                    </Button>
                   </div>
                 </div>
               </main>

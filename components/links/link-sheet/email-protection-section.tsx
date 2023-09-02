@@ -26,7 +26,7 @@ export default function EmailProtectionSection({data, setData}: {data: DEFAULT_L
           <h2
             className={cn(
               "text-sm font-medium leading-6",
-              enabled ? "text-white" : "text-gray-400"
+              enabled ? "text-foreground" : "text-muted-foreground"
             )}
           >
             Email Protection
