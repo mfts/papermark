@@ -1,10 +1,10 @@
 import DocumentView from "@/components/view/document-view";
-import { useLink } from "@/lib/swr/use-link";
+import { useDomainLink } from "@/lib/swr/use-link";
 
 export default function ViewPage() {
-  const { link, error } = useLink();
+  const { link, error } = useDomainLink();
 
-  if (!link){
+  if (!link) {
     return <div>Loading...</div>;
   }
 

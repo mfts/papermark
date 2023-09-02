@@ -47,6 +47,7 @@ model User {
   accounts      Account[]
   sessions      Session[]
   documents     Document[]
+  domains       Domain[]
 }
 
 model VerificationToken {
@@ -64,7 +65,7 @@ model Document {
   file      String   // This should be a reference to where the file is stored (S3, Google Cloud Storage, etc.)
   type      String?   // This should be a reference to the file type (pdf, docx, etc.)
   numPages  Int?     // This should be a reference to the number of pages in the document
-  owner     User     @relation(fields: [ownerId], references: [id])
+  owner     User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   ownerId   String   // This field holds the foreign key.
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -74,25 +75,44 @@ model Document {
 
 model Link {
   id            String      @id @default(cuid())
-  document      Document    @relation(fields: [documentId], references: [id])
+  document      Document    @relation(fields: [documentId], references: [id], onDelete: Cascade)
   documentId    String
   url           String?     @unique
   name          String?     // Link name
+  slug          String?     // Link slug for pretty URLs
   expiresAt     DateTime?   // Optional expiration date
   password      String?     // Optional password for link protection
   allowedEmails String[]    // Array of emails allowed to view the document
   emailProtected Boolean    @default(true) // Optional email protection
   isArchived    Boolean     @default(false) // Indicates if the link is archived
   views         View[]
+  domain        Domain?     @relation(fields: [domainId], references: [id], onDelete: SetNull)
+  domainId      String?     // This can be nullable, representing links without custom domains
+  domainSlug    String?     // This will store the domain's slug even if the domain is deleted
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
+
+  @@unique([domainSlug, slug])
 }
+
+model Domain {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String
+  verified    Boolean  @default(false) // Whether the domain has been verified
+  lastChecked DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  links       Link[]   // links associated with this domain
+}
+
 
 model View {
   id          String      @id @default(cuid())
   link        Link        @relation(fields: [linkId], references: [id])
   linkId      String
-  document    Document    @relation(fields: [documentId], references: [id])
+  document    Document    @relation(fields: [documentId], references: [id], onDelete: Cascade)
   documentId  String
   viewerEmail String?     // Email of the viewer if known
   viewedAt    DateTime    @default(now())

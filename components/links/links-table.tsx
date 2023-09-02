@@ -43,14 +43,16 @@ export default function LinksTable() {
   const [isLinkSheetVisible, setIsLinkSheetVisible] = useState<boolean>(false);
   const [selectedLink, setSelectedLink] = useState<DEFAULT_LINK_TYPE>(DEFAULT_LINK_PROPS);
 
-  const handleCopyToClipboard = (id: string) => {
-    copyToClipboard(`${process.env.NEXT_PUBLIC_BASE_URL}/view/${id}`, "Link copied to clipboard.");
+  const handleCopyToClipboard = (linkString: string) => {
+    copyToClipboard(`${linkString}`, "Link copied to clipboard.");
   };
 
   const handleEditLink = (link: LinkWithViews) => {
     setSelectedLink({
       id: link.id,
       name: link.name,
+      domain: link.domainSlug,
+      slug: link.slug,
       expiresAt: link.expiresAt,
       password: link.password,
       emailProtected: link.emailProtected,
@@ -124,11 +126,25 @@ export default function LinksTable() {
                           </TableCell>
                           <TableCell className="max-w-[150px] sm:min-w-[450px]">
                             <div className="group/cell flex items-center gap-x-4 rounded-md text-secondary-foreground bg-secondary px-3 py-1 group-hover/row:ring-1 group-hover/row:ring-gray-400 hover:bg-emerald-700 hover:dark:bg-emerald-200 group-hover/row:dark:ring-gray-100 transition-all">
-                              <div className="whitespace-nowrap hidden sm:flex text-sm group-hover/cell:hidden">{`https://papermark.io/view/${link.id}`}</div>
+                              <div className="whitespace-nowrap hidden sm:flex text-sm group-hover/cell:hidden">
+                                {link.domainId
+                                  ? `https://${link.domainSlug}/${link.slug}`
+                                  : `https://${process.env.NEXT_PUBLIC_ROOT_DOMAIN}/view/${link.id}`}
+                              </div>
                               <div className="flex sm:hidden whitespace-nowrap text-sm group-hover/cell:hidden truncate">{`${link.id}`}</div>
                               <button
                                 className="whitespace-nowrap text-sm text-center group-hover/cell:text-primary-foreground hidden group-hover/cell:block w-full"
-                                onClick={() => handleCopyToClipboard(link.id)}
+                                onClick={
+                                  link.domainId
+                                    ? () =>
+                                        handleCopyToClipboard(
+                                          `https://${link.domainSlug}/${link.slug}`
+                                        )
+                                    : () =>
+                                        handleCopyToClipboard(
+                                          `https://${process.env.NEXT_PUBLIC_ROOT_DOMAIN}/view/${link.id}`
+                                        )
+                                }
                                 title="Copy to clipboard"
                               >
                                 Copy{" "}
@@ -276,7 +292,11 @@ export default function LinksTable() {
                                   </TableCell>
                                   <TableCell className="max-w-[150px] sm:min-w-[450px]">
                                     <div className="flex items-center gap-x-4 rounded-md text-secondary-foreground bg-secondary group-hover/row:ring-1 group-hover/row:ring-gray-400 group-hover/row:dark:ring-gray-100 px-3 py-1">
-                                      <div className="whitespace-nowrap hidden sm:flex text-sm">{`https://papermark.io/view/${link.id}`}</div>
+                                      <div className="whitespace-nowrap hidden sm:flex text-sm">
+                                        {link.domainId
+                                          ? `https://${link.domainSlug}/${link.slug}`
+                                          : `https://${process.env.NEXT_PUBLIC_ROOT_DOMAIN}/view/${link.id}`}
+                                      </div>
                                       <div className="flex sm:hidden whitespace-nowrap text-sm truncate">{`${link.id}`}</div>
                                     </div>
                                   </TableCell>

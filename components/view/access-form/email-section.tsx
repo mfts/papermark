@@ -1,5 +1,5 @@
-import { DEFAULT_ACCESS_FORM_TYPE } from "@/pages/view/[linkId]";
 import { Dispatch, SetStateAction } from "react";
+import { DEFAULT_ACCESS_FORM_TYPE } from "../document-view";
 
 
 export default function EmailSection({

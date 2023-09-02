@@ -1,8 +1,8 @@
 import { Dispatch, SetStateAction } from "react";
 import PasswordSection from "./password-section";
 import EmailSection from "./email-section";
-import { DEFAULT_ACCESS_FORM_TYPE } from "@/pages/view/[linkId]";
 import { Button } from "@/components/ui/button";
+import { DEFAULT_ACCESS_FORM_TYPE } from "../document-view";
 
 
 export default function AccessForm({

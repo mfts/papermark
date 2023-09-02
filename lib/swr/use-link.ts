@@ -26,6 +26,29 @@ export function useLink() {
   };
 }
 
+export function useDomainLink() {
+  const router = useRouter();
+
+  const { domain, slug } = router.query as {
+    domain: string;
+    slug: string;
+  };
+
+  const { data: link, error } = useSWR<LinkWithDocument>(
+    domain && slug && `/api/links/domains/${encodeURIComponent(domain)}/${encodeURIComponent(slug)}`,
+    fetcher,
+    {
+      dedupingInterval: 10000,
+    }
+  );
+
+  return {
+    link,
+    loading: !error && !link,
+    error,
+  };
+}
+
 interface ViewWithDuration extends View {
   duration: {
     data: { pageNumber: string; sum_duration: number }[];

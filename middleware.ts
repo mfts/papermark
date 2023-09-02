@@ -1,5 +1,6 @@
 import { NextFetchEvent, NextRequest, NextResponse } from "next/server";
 import AppMiddleware from "@/lib/middleware/app";
+import DomainMiddleware from "@/lib/middleware/domain";
 
 export const config = {
   matcher: [
@@ -18,8 +19,16 @@ export const config = {
 
 export default async function middleware(req: NextRequest, ev: NextFetchEvent) {
   const path = req.nextUrl.pathname;
+  const host = req.headers.get('host');
 
-  if (path !== "/" && path !== "/alternatives/docsend" && !path.startsWith("/view/")) {
+  if (
+    process.env.NODE_ENV !== "development" && 
+    !(host?.includes("papermark.io") || host?.endsWith(".vercel.app"))
+  ) {
+    return DomainMiddleware(req);
+  }
+
+  if (path !== "/" && !path.startsWith("/alternatives/") && !path.startsWith("/view/")) {
     return AppMiddleware(req);
   }
 
