@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { getExtension } from "@/lib/utils";
-import { useLink } from "@/lib/swr/use-link";
+import { useDomainLink } from "@/lib/swr/use-link";
 import ErrorPage from "next/error";
 import PDFViewer from "@/components/PDFViewer";
 import AccessForm from "@/components/view/access-form";
@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import { DEFAULT_ACCESS_FORM_DATA, DEFAULT_ACCESS_FORM_TYPE, DEFAULT_DOCUMENT_VIEW_TYPE } from "@/pages/view/[linkId]";
 
 export default function DocumentView() {
-  const { link, error } = useLink();
+  const { link, error } = useDomainLink();
   const { data: session } = useSession();
   const plausible = usePlausible();
 
