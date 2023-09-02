@@ -34,21 +34,29 @@ export default async function handle(req: NextApiRequest, res: NextApiResponse) 
       // domain was just verified
       if (verificationJson && verificationJson.verified) {
         status = "Valid Configuration";
-
-        // update the verified status in the database
-        await prisma.domain.update({
-          where: {
-            slug: domain,
-          },
-          data: {
-            verified: true,
-          },
-        })
       }
     } else if (configJson.misconfigured) {
       status = "Invalid Configuration";
+      await prisma.domain.update({
+        where: {
+          slug: domain,
+        },
+        data: {
+          verified: false,
+          lastChecked: new Date(),
+        },
+      });
     } else {
       status = "Valid Configuration";
+      await prisma.domain.update({
+        where: {
+          slug: domain,
+        },
+        data: {
+          verified: true,
+          lastChecked: new Date(),
+        },
+      });
     }
 
     return res.status(200).json({

@@ -20,15 +20,17 @@ export default async function handle(
     const domains = await prisma.domain.findMany({
       where: {
         userId: (session.user as CustomUser).id,
-        verified: true,
       },
       select: {
         slug: true,
         verified: true,
       },
+      orderBy: {
+        createdAt: "asc",
+      },
     });
 
-    console.log("Domains", domains)
+    // console.log("Domains from GET", domains)
     return res.status(200).json(domains);
 
   } else if (req.method === "POST") {
