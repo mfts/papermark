@@ -1,7 +1,8 @@
 import { Dispatch, SetStateAction, useState } from "react";
 import Eye from "@/components/shared/icons/eye";
 import EyeOff from "@/components/shared/icons/eye-off";
-import { DEFAULT_ACCESS_FORM_TYPE } from "@/pages/view/[linkId]";
+import { DEFAULT_ACCESS_FORM_TYPE } from "../document-view";
+
 export default function PasswordSection({
   data,
   setData,

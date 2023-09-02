@@ -10,11 +10,6 @@ export default async function handle(
 ) {
   if (req.method === "GET") {
     // GET /api/links/:id
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      return res.status(401).end("Unauthorized");
-    }
-    
     const { id } = req.query as { id: string };
 
     try {

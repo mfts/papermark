@@ -1,7 +1,5 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/lib/prisma";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
 
 export default async function handle(
   req: NextApiRequest,
@@ -17,11 +15,14 @@ export default async function handle(
           domainSlug_slug: {
             slug: slug,
             domainSlug: domain,
-          }
+          },
         },
         select: {
           id: true,
-          document: { select: { id: true, name: true, file: true } },
+          expiresAt: true,
+          emailProtected: true,
+          password: true,
+          document: { select: { id: true } },
         },
       });
 
