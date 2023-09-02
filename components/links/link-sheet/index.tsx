@@ -162,7 +162,7 @@ export default function LinkSheet({ isOpen, setIsOpen, currentLink }: { isOpen: 
                             setData({ ...data, domain: e.target.value });
                           }}
                           className={cn(
-                            "w-48 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 px-5 text-sm text-gray-500 focus:border-gray-300 focus:outline-none focus:ring-0",
+                            "w-48 rounded-l-md border border-r-0 border-border bg-secondary px-5 text-sm text-secondary-foreground focus:border-border focus:outline-none focus:ring-0",
                             data.domain && data.domain !== "papermark.io"
                               ? ""
                               : "rounded-r-md border-r-1"
@@ -171,11 +171,12 @@ export default function LinkSheet({ isOpen, setIsOpen, currentLink }: { isOpen: 
                           <option key="papermark.io" value="papermark.io">
                             papermark.io
                           </option>
-                          {domains?.map(({ slug }) => (
-                            <option key={slug} value={slug}>
-                              {slug}
-                            </option>
-                          ))}
+                          {domains?.filter((domain) => domain.verified)
+                            .map(({ slug }) => (
+                              <option key={slug} value={slug}>
+                                {slug}
+                              </option>
+                            ))}
                         </select>
                         {data.domain && data.domain !== "papermark.io" ? (
                           <input
@@ -229,9 +230,9 @@ export default function LinkSheet({ isOpen, setIsOpen, currentLink }: { isOpen: 
 
           <SheetFooter>
             <div className="flex items-center">
-                <Button type="submit" disabled={isLoading}>
-                  {currentLink ? "Update Link" : "Save Link"}
-                </Button>
+              <Button type="submit" disabled={isLoading}>
+                {currentLink ? "Update Link" : "Save Link"}
+              </Button>
             </div>
           </SheetFooter>
         </form>
