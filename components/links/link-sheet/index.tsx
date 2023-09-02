@@ -18,10 +18,15 @@ import { useDomains } from "@/lib/swr/use-domains";
 import { mutate } from "swr";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
+import { set } from "date-fns";
 
 export const DEFAULT_LINK_PROPS = {
   id: null,
   name: null,
+  domain: null,
+  slug: null,
   expiresAt: null,
   password: null,
   emailProtected: true,
@@ -30,6 +35,8 @@ export const DEFAULT_LINK_PROPS = {
 export type DEFAULT_LINK_TYPE = {
   id: string | null;
   name: string | null;
+  domain: string | null;
+  slug: string | null;
   expiresAt: Date | null;
   password: string | null;
   emailProtected: boolean;
@@ -38,6 +45,7 @@ export type DEFAULT_LINK_TYPE = {
 
 export default function LinkSheet({ isOpen, setIsOpen, currentLink }: { isOpen: boolean, setIsOpen: Dispatch<SetStateAction<boolean>>, currentLink?: DEFAULT_LINK_TYPE }) {
   const { links } = useDocumentLinks();
+  const { domains } = useDomains();
   const [data, setData] = useState<DEFAULT_LINK_TYPE>(DEFAULT_LINK_PROPS);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
@@ -74,12 +82,17 @@ export default function LinkSheet({ isOpen, setIsOpen, currentLink }: { isOpen: 
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      // handle error with toast message
+      const { error } = await response.json();
+      toast.error(error)
+      setIsLoading(false);
+      return;
     }
 
     const returnedLink = await response.json();
 
     if (currentLink) {
+      setIsOpen(false);
       // Update the link in the list of links
       mutate(
         `/api/documents/${encodeURIComponent(documentId)}/links`,
@@ -88,6 +101,7 @@ export default function LinkSheet({ isOpen, setIsOpen, currentLink }: { isOpen: 
       );
       toast.success("Link updated successfully");
     } else {
+      setIsOpen(false);
       // Add the new link to the list of links
       mutate(
         `/api/documents/${encodeURIComponent(documentId)}/links`,
@@ -103,6 +117,7 @@ export default function LinkSheet({ isOpen, setIsOpen, currentLink }: { isOpen: 
     setIsLoading(false);
   }
 
+  console.log("current Data", data)
   
 
   return (
@@ -120,13 +135,8 @@ export default function LinkSheet({ isOpen, setIsOpen, currentLink }: { isOpen: 
             <div className="flex flex-1 flex-col justify-between">
               <div className="divide-y divide-gray-200">
                 <div className="space-y-6 pb-5 pt-6">
-                  <div>
-                    <label
-                      htmlFor="project-name"
-                      className="block text-sm font-medium leading-6 text-foreground"
-                    >
-                      Link Name
-                    </label>
+                  <div className="space-y-2">
+                    <Label htmlFor="link-name">Link Name</Label>
                     <div className="mt-2">
                       <input
                         type="text"
@@ -141,6 +151,62 @@ export default function LinkSheet({ isOpen, setIsOpen, currentLink }: { isOpen: 
                       />
                     </div>
                   </div>
+
+                  {domains ? (
+                    <div className="space-y-2">
+                      <Label htmlFor="link-domain">Domain</Label>
+                      <div className="flex">
+                        <select
+                          value={data.domain || "papermark.io"}
+                          onChange={(e) => {
+                            setData({ ...data, domain: e.target.value });
+                          }}
+                          className={cn(
+                            "w-48 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 px-5 text-sm text-gray-500 focus:border-gray-300 focus:outline-none focus:ring-0",
+                            data.domain && data.domain !== "papermark.io"
+                              ? ""
+                              : "rounded-r-md border-r-1"
+                          )}
+                        >
+                          <option key="papermark.io" value="papermark.io">
+                            papermark.io
+                          </option>
+                          {domains?.map(({ slug }) => (
+                            <option key={slug} value={slug}>
+                              {slug}
+                            </option>
+                          ))}
+                        </select>
+                        {data.domain && data.domain !== "papermark.io" ? (
+                          <input
+                            type="text"
+                            name="key"
+                            required
+                            value={data.slug || ""}
+                            pattern="[\p{L}\p{N}\p{Pd}\/]+"
+                            onInvalid={(e) => {
+                              e.currentTarget.setCustomValidity(
+                                "Only letters, numbers, '-', and '/' are allowed."
+                              );
+                            }}
+                            autoComplete="off"
+                            className={cn(
+                              "hidden w-full rounded-r-md border-0 py-1.5 text-foreground bg-background shadow-sm ring-1 ring-inset ring-input placeholder:text-muted-foreground focus:ring-2 focus:ring-inset focus:ring-gray-400 sm:text-sm sm:leading-6",
+                              data.domain && data.domain !== "papermark.io"
+                                ? "flex"
+                                : ""
+                            )}
+                            placeholder="deck"
+                            onChange={(e) => {
+                              e.currentTarget.setCustomValidity("");
+                              setData({ ...data, slug: e.target.value });
+                            }}
+                            aria-invalid="true"
+                          />
+                        ) : null}
+                      </div>
+                    </div>
+                  ) : null}
 
                   <div className="flex items-center relative">
                     <Separator className="bg-muted-foreground absolute" />
@@ -163,11 +229,9 @@ export default function LinkSheet({ isOpen, setIsOpen, currentLink }: { isOpen: 
 
           <SheetFooter>
             <div className="flex items-center">
-              <SheetClose asChild>
-                <Button type="submit">
+                <Button type="submit" disabled={isLoading}>
                   {currentLink ? "Update Link" : "Save Link"}
                 </Button>
-              </SheetClose>
             </div>
           </SheetFooter>
         </form>

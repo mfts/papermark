@@ -39,7 +39,7 @@ export default function DomainCard({
 
   return (
     <>
-      <div className="flex flex-col space-y-3 rounded-lg border border-gray-700 bg-gray-800 px-5 py-8 sm:px-10">
+      <div className="flex flex-col space-y-3 rounded-lg ring-1 ring-gray-200 dark:ring-gray-700 bg-white dark:bg-secondary hover:ring-gray-400 hover:dark:ring-gray-500 px-5 py-8 sm:px-10">
         <div className="flex flex-col justify-between space-y-4 sm:flex-row sm:space-x-4">
           <div className="flex items-center space-x-2">
             <a
@@ -57,7 +57,7 @@ export default function DomainCard({
           <div className="flex space-x-3">
             <Button
               variant="secondary"
-              className="bg-gray-700 hover:bg-gray-700/80"
+              className="bg-gray-300 hover:bg-gray-300/80 dark:bg-gray-700 hover:dark:bg-gray-700/80"
               loading={loading}
               onClick={() => {
                 mutate(`/api/domains/${domain}/verify`);
@@ -78,7 +78,7 @@ export default function DomainCard({
           <div className="flex items-center space-x-2">
             {status ? (
               status === "Valid Configuration" ? (
-                <CheckCircle2 className="h-6 w-6 text-blue-500" />
+                <CheckCircle2 className="h-6 w-6 text-emerald-500" />
               ) : status === "Pending Verification" ? (
                 <AlertCircle className="h-6 w-6 text-yellow-500" />
               ) : (
@@ -87,7 +87,7 @@ export default function DomainCard({
             ) : (
               <LoadingSpinner className="mr-1 h-5 w-5" />
             )}
-            <p className="text-sm text-gray-400">
+            <p className="text-sm text-muted-foreground">
               {status ? status : "Checking Domain Status"}
             </p>
           </div>

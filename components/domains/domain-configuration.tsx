@@ -37,7 +37,7 @@ export default function DomainConfiguration({ domain }: { domain: string }) {
     null;
 
   return (
-    <div className="border-t border-stone-200 pb-5 pt-7 dark:border-stone-700">
+    <div className="border-t border-gray-200 pb-5 pt-7 dark:border-gray-700">
       {txtVerification ? (
         <>
           <p className="text-sm dark:text-white">
@@ -45,7 +45,7 @@ export default function DomainConfiguration({ domain }: { domain: string }) {
             <InlineSnippet>{domainJson.apexName}</InlineSnippet> to prove
             ownership of <InlineSnippet>{domainJson.name}</InlineSnippet>:
           </p>
-          <div className="my-5 flex items-start justify-start space-x-10 rounded-md bg-stone-50 p-2 dark:bg-stone-800 dark:text-white">
+          <div className="my-5 flex items-start justify-start space-x-10 rounded-md bg-gray-50 p-2 dark:bg-gray-800 dark:text-white">
             <div>
               <p className="text-sm font-bold">Type</p>
               <p className="mt-2 font-mono text-sm">{txtVerification.type}</p>
@@ -66,7 +66,7 @@ export default function DomainConfiguration({ domain }: { domain: string }) {
               </p>
             </div>
           </div>
-          <p className="text-sm dark:text-stone-400">
+          <p className="text-sm dark:text-muted-foreground">
             Warning: if you are using this domain for another site, setting this
             TXT record will transfer domain ownership away from that site and
             break it. Please exercise caution when setting this record.
@@ -112,7 +112,7 @@ export default function DomainConfiguration({ domain }: { domain: string }) {
               ), set the following {recordType} record on your DNS provider to
               continue:
             </p>
-            <div className="flex items-center justify-start space-x-10 rounded-md bg-stone-50 p-2 dark:bg-stone-800 dark:text-white">
+            <div className="flex items-center justify-start space-x-10 rounded-md bg-gray-50 p-2 dark:bg-gray-800 dark:text-white">
               <div>
                 <p className="text-sm font-bold">Type</p>
                 <p className="mt-2 font-mono text-sm">{recordType}</p>

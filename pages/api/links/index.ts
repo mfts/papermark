@@ -14,10 +14,51 @@ export default async function handler(
       return res.status(401).end("Unauthorized");
     }
 
-    const { documentId, password, expiresAt, ...linkData } = req.body;
+    const { documentId, password, expiresAt, ...linkDomainData } = req.body;
 
     const hashedPassword = password && password.length > 0 ? await hashPassword(password) : null
     const exat = expiresAt ? new Date(expiresAt) : null
+
+    let { domain, slug, ...linkData } = linkDomainData;
+
+    // set domain and slug to null if the domain is papermark.io
+    if (domain && domain === "papermark.io") {
+      domain = null;
+      slug = null;
+    }
+
+    let domainObj;
+
+    if (domain && slug) {
+      domainObj = await prisma.domain.findUnique({
+        where: {
+          slug: domain
+        }
+      }) 
+
+      if (!domainObj) {
+        return res.status(400).json({ error: "Domain not found." });
+      }
+
+      console.log(domainObj);
+
+      const existingLink = await prisma.link.findUnique({
+        where: {
+          domainSlug_slug: {
+            slug: slug,
+            domainSlug: domain,
+          }
+        },
+      });
+
+      if (existingLink) {
+        return res
+          .status(400)
+          .json({
+            error: "The link already exists.",
+          });
+      }
+    }
 
     // Fetch the link and its related document from the database
     const link = await prisma.link.create({
@@ -26,7 +67,10 @@ export default async function handler(
         password: hashedPassword,
         name: linkData.name || null,
         emailProtected: linkData.emailProtected,
-        expiresAt: exat
+        expiresAt: exat,
+        domainId: domainObj?.id || null,
+        domainSlug: domain || null,
+        slug: slug || null,
       },
     });
 
