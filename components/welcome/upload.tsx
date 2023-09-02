@@ -9,17 +9,20 @@ import Skeleton from "../Skeleton";
 import { STAGGER_CHILD_VARIANTS } from "@/lib/contants";
 import { pdfjs } from "react-pdf";
 import { copyToClipboard, getExtension } from "@/lib/utils";
+import { usePlausible } from "next-plausible";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
 
 export default function Upload() {
   const router = useRouter();
+  const plausible = usePlausible();
   const [uploading, setUploading] = useState<boolean>(false);
   const [currentFile, setCurrentFile] = useState<File | null>(null);
   const [currentBlob, setCurrentBlob] = useState<boolean>(false);
   const [currentLinkId, setCurrentLinkId] = useState<string | null>(null);
   const [currentDocId, setCurrentDocId] = useState<string | null>(null);
   const [copiedLink, setCopiedLink] = useState<boolean>(false);
+  
 
   const handleBrowserUpload = async (event: any) => {
     event.preventDefault();
@@ -55,6 +58,9 @@ export default function Upload() {
       if (response) {
         const document = await response.json();
         const linkId = document.links[0].id;
+
+        // track the event
+        plausible("documentUploaded");
 
         setTimeout(() => {
           setCurrentDocId(document.id);

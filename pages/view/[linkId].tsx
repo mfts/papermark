@@ -5,6 +5,7 @@ import ErrorPage from "next/error";
 import PDFViewer from "@/components/PDFViewer";
 import AccessForm from "@/components/view/access-form";
 import { useSession } from "next-auth/react";
+import { usePlausible } from "next-plausible";
 
 import { toast } from "sonner";
 
@@ -26,6 +27,7 @@ type DEFAULT_DOCUMENT_VIEW_TYPE = {
 export default function DocumentView() {
   const { link, error } = useLink();
   const { data: session } = useSession(); 
+  const plausible = usePlausible();
   
   const [submitted, setSubmitted] = useState<boolean>(false);
   // const [viewId, setViewId] = useState<string>("");
@@ -78,6 +80,7 @@ export default function DocumentView() {
 
     if (response.ok) {
       const { viewId, file } = await response.json() as { viewId: string, file: string};
+      plausible("documentViewed"); // track the event
       setViewData({ viewId, file });
       setSubmitted(true);
     } else {
