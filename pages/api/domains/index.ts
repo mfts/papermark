@@ -11,6 +11,7 @@ export default async function handle(
   res: NextApiResponse
 ) {
   if (req.method === "GET") {
+    // GET /api/domains
     const session = await getServerSession(req, res, authOptions);
     if (!session) {
       return res.status(401).end("Unauthorized");
@@ -19,12 +20,15 @@ export default async function handle(
     const domains = await prisma.domain.findMany({
       where: {
         userId: (session.user as CustomUser).id,
+        verified: true,
       },
       select: {
         slug: true,
         verified: true,
       },
     });
+
+    console.log("Domains", domains)
     return res.status(200).json(domains);
 
   } else if (req.method === "POST") {

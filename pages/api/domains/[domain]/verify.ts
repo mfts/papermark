@@ -5,6 +5,7 @@ import {
   verifyDomain,
 } from "@/lib/domains";
 import { DomainVerificationStatusProps } from "@/lib/types";
+import prisma from "@/lib/prisma";
 
 export default async function handle(req: NextApiRequest, res: NextApiResponse) {
   // GET /api/domains/[domain]/verify - get domain verification status
@@ -33,6 +34,16 @@ export default async function handle(req: NextApiRequest, res: NextApiResponse) 
       // domain was just verified
       if (verificationJson && verificationJson.verified) {
         status = "Valid Configuration";
+
+        // update the verified status in the database
+        await prisma.domain.update({
+          where: {
+            slug: domain,
+          },
+          data: {
+            verified: true,
+          },
+        })
       }
     } else if (configJson.misconfigured) {
       status = "Invalid Configuration";

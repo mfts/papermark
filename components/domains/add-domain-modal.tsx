@@ -10,9 +10,8 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useDomains } from "@/lib/swr/use-domains";
 import { useState } from "react";
-import { mutate } from "swr";
+import { toast } from "sonner";
 
 export function AddDomainModal({
   onAddition,
@@ -21,7 +20,6 @@ export function AddDomainModal({
   onAddition: (newDomain: string) => void;
   children: React.ReactNode;
 }) {
-  const { domains } = useDomains();
   const [domain, setDomain] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const [open, setOpen] = useState<boolean>(false);
@@ -43,12 +41,15 @@ export function AddDomainModal({
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      const error = await response.json();
+      setLoading(false);
+      setOpen(false);
+      toast.error(error);
     }
 
     const newDomain = await response.json();
 
-    console.log(newDomain);
+    // console.log(newDomain);
 
     // Update local data with the new link
     onAddition(newDomain);
