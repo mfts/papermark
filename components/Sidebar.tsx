@@ -1,4 +1,4 @@
-import { Fragment, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { Menu, Dialog, Transition } from "@headlessui/react";
 import { signOut, useSession } from "next-auth/react";
 import {
@@ -7,14 +7,25 @@ import {
 } from "@heroicons/react/20/solid";
 import { FolderIcon, HomeIcon, XMarkIcon, ChartBarIcon  } from "@heroicons/react/24/outline";
 import Link from "next/link";
-import { classNames, cn } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { useRouter } from "next/router";
 import { ModeToggle } from "./theme-toggle";
+import ProBanner from "./billing/pro-banner";
+import Cookies from "js-cookie";
 
 export default function Sidebar() {
   const { data: session } = useSession();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
+  const [showProBanner, setShowProBanner] = useState<boolean | null>(null);
   const router = useRouter();
+
+  useEffect(() => {
+    if (Cookies.get("hideProBanner") !== "producthunt-banner") {
+      setShowProBanner(true);
+    } else {
+      setShowProBanner(false);
+    }
+  }, []);
 
   const navigation = [
     {
@@ -296,6 +307,12 @@ export default function Sidebar() {
           </div>
         </div>
       </div>
+      {showProBanner ? (
+        <ProBanner
+          setShowProBanner={setShowProBanner}
+        />
+      ) : null}
+      
     </>
   );
 }
