@@ -1,6 +1,6 @@
 import { useRouter } from "next/router";
 import { motion } from "framer-motion";
-import { STAGGER_CHILD_VARIANTS } from "@/lib/contants"
+import { STAGGER_CHILD_VARIANTS } from "@/lib/constants"
 import { Button } from "../ui/button";
 
 export default function Intro() {

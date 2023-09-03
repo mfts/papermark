@@ -1,7 +1,7 @@
 import { useRouter } from "next/router";
 import { motion } from "framer-motion";
 import { DocumentIcon, PresentationChartBarIcon } from "@heroicons/react/24/outline";
-import { STAGGER_CHILD_VARIANTS } from "@/lib/contants";
+import { STAGGER_CHILD_VARIANTS } from "@/lib/constants";
 
 export default function Next() {
   const router = useRouter();
