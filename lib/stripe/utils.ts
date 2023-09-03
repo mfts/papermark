@@ -48,14 +48,14 @@ export const PLANS = [
         amount: 29,
         priceIds: {
           test: "price_1NmHGzFJyGSZ96lhp946ODFI",
-          production: "",
+          production: "price_1NmMZ7FJyGSZ96lhyad2LW90",
         },
       },
       yearly: {
         amount: 290,
         priceIds: {
           test: "price_1NmHHaFJyGSZ96lhXxg2fTr7",
-          production: "",
+          production: "price_1NmMZ7FJyGSZ96lhqZEkh50e",
         },
       },
     },
