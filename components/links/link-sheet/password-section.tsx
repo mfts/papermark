@@ -1,7 +1,7 @@
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { Switch } from "@/components/ui/switch";
 import { motion } from "framer-motion";
-import { FADE_IN_ANIMATION_SETTINGS } from "@/lib/contants";
+import { FADE_IN_ANIMATION_SETTINGS } from "@/lib/constants";
 import Eye from "@/components/shared/icons/eye"
 import EyeOff from "@/components/shared/icons/eye-off"
 import { cn } from "@/lib/utils";

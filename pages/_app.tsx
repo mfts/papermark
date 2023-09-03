@@ -24,7 +24,7 @@ export default function App({
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <PlausibleProvider
             domain="papermark.io"
-            enabled={process.env.VERCEL_ENV == "production"}
+            enabled={process.env.NEXT_PUBLIC_VERCEL_ENV === "production"}
           >
             <main className={inter.className}>
               <Toaster closeButton richColors theme={"system"} />

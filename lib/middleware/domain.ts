@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
-import { PAPERMARK_HEADERS } from "../contants";
+import { PAPERMARK_HEADERS } from "../constants";
 
 export default async function DomainMiddleware(req: NextRequest) {
   const path = req.nextUrl.pathname;

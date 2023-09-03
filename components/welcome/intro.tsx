@@ -1,6 +1,6 @@
 import { useRouter } from "next/router";
 import { motion } from "framer-motion";
-import { STAGGER_CHILD_VARIANTS } from "@/lib/contants"
+import { STAGGER_CHILD_VARIANTS } from "@/lib/constants"
 import { Button } from "../ui/button";
 
 export default function Intro() {
@@ -35,7 +35,7 @@ export default function Intro() {
           className="max-w-md text-accent-foreground/80 transition-colors sm:text-lg"
           variants={STAGGER_CHILD_VARIANTS}
         >
-          Papermark gives you the power to securely share your stories with an
+          Papermark gives you the power to securely share your document with an
           impression that lasts.
         </motion.p>
         <motion.div

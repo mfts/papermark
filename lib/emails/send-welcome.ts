@@ -10,6 +10,5 @@ export const sendWelcomeEmail = async (params: CreateUserEmailProps) => {
     to: email as string,
     subject: "Welcome to Papermark.io!",
     react: emailTemplate,
-    reply_to: "marc@mfts.io"
   });
 };
