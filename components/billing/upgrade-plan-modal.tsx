@@ -40,7 +40,7 @@ export function UpgradePlanModal({ children }: { children: React.ReactNode }) {
 
   return (
     <Dialog>
-      <DialogTrigger>{children}</DialogTrigger>
+      <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="text-foreground bg-background">
         <motion.div
           variants={{
