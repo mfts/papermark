@@ -1,6 +1,7 @@
 import React from "react";
 import {
   Body,
+  Button,
   Container,
   Head,
   Heading,
@@ -38,7 +39,8 @@ const UpgradePlanEmail = ({ name }: UpgradePlanEmailProps) => {
             </Text>
             <Text className="text-sm">
               My name is Marc, and I&apos;m the creator of Papermark. I wanted
-              to personally reach out to thank you for upgrading to Papermark Pro!
+              to personally reach out to thank you for upgrading to Papermark
+              Pro!
             </Text>
             <Text className="text-sm leading-6 text-black">
               As you might already know, we are a bootstrapped and{" "}
@@ -67,7 +69,17 @@ const UpgradePlanEmail = ({ name }: UpgradePlanEmailProps) => {
             <Text className="ml-1 text-sm leading-4 text-black">
               ◆ Unlimited team members (coming soon)
             </Text>
-            <Section className="mt-4">
+            <Section className="text-center mt-[32px] mb-[32px]">
+              <Button
+                pX={20}
+                pY={12}
+                className="bg-black rounded text-white text-xs font-semibold no-underline text-center"
+                href={`${process.env.NEXT_PUBLIC_BASE_URL}/settings/domains`}
+              >
+                Set up your custom domain
+              </Button>
+            </Section>
+            <Section>
               <Text className="text-sm">
                 Let me know if you have any questions or feedback. I&apos;m
                 always happy to help!
