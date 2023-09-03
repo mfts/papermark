@@ -1,5 +1,6 @@
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import AppLayout from "@/components/layouts/app";
+import Navbar from "@/components/settings/navbar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useBilling } from "@/lib/swr/use-billing";
@@ -28,12 +29,13 @@ export default function Billing() {
   
   return (
     <AppLayout>
+      <Navbar current="Billing" />
       <div className="p-4 sm:p-4 sm:m-4">
         <div className="flex items-center justify-between mb-4 md:mb-8 lg:mb-12">
           <div className="space-y-1">
-            <h2 className="text-2xl text-foreground font-semibold tracking-tight">
+            <h3 className="text-2xl text-foreground font-semibold tracking-tight">
               Billing
-            </h2>
+            </h3>
             <p className="text-sm text-muted-foreground">
               Manage your subscription
             </p>
