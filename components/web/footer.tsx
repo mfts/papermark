@@ -52,11 +52,11 @@
 // }
 
 const navigation = {
-  product: [{ name: "Github", href: "https://github.com/mfts/papermark" }],
-  legal: [
-    { name: "Terms", href: "#" },
-    { name: "Security", href: "" },
+  product: [
+    { name: "Github", href: "https://github.com/mfts/papermark" },
+    { name: "Twitter", href: "https://twitter.com/papermarkio" },
   ],
+  legal: [{ name: "Privacy", href: "/privacy" }],
   tools: [
     { name: "VC-generator", href: "https://vc.papermark.io" },
     // { name: "Pitchdeck Summariser", href: "#" },
@@ -170,7 +170,7 @@ export default function Footer() {
           </div>
           <div className="mt-4 ">
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              © 2023 Papermark
+              © 2023 Papermark. All rights reserved.
             </p>
           </div>
         </div>
