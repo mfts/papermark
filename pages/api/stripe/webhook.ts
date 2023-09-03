@@ -119,7 +119,6 @@ export default async function webhookHandler(
             select: {
               id: true,
               name: true,
-              domains: true,
             },
           });
 
