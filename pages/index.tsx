@@ -1,4 +1,3 @@
-import Link from "next/link";
 import Footer from "@/components/web/footer";
 import Navbar from "@/components/web/navbar";
 import Decks from "@/components/web/decks";
@@ -8,6 +7,7 @@ import Section2 from "@/components/web/section2";
 import Testimonials from "@/components/web/testimonials";
 import Logos from "@/components/web/logos";
 import Head from "next/head";
+import Section3 from "@/components/web/section3";
 
 export default function Home() {
   return (
@@ -53,6 +53,7 @@ export default function Home() {
           <Logos />
           <Decks />
           <Section />
+          <Section3 />
           <Testimonials />
           <Section2 />
         </div>

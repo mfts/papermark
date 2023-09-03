@@ -1,9 +1,5 @@
-import { Fragment } from "react";
 import Link from "next/link";
 import GitHubIcon from "@/components/shared/icons/github";
-import { Disclosure, Menu, Transition } from "@headlessui/react";
-import { Bars3Icon, BellIcon, XMarkIcon } from "@heroicons/react/24/outline";
-import { JSX, SVGProps } from "react";
 
 function classNames(...classes: any[]) {
   return classes.filter(Boolean).join(" ");
@@ -16,15 +12,13 @@ export default function Navbar() {
         <div className="relative flex h-16 justify-between">
           <div className="absolute inset-y-0 left-0 flex items-center sm:hidden">
             {/* Mobile menu button */}
-            
           </div>
           <div className="flex flex-1 items-stretch justify-start">
             <div className="flex flex-shrink-0 items-center">
-              <Link
-                href="/"
-                className="text-1xl font-bold text-black hover:text-gray-600"
-              >
-                Papermark
+              <Link href="/">
+                <span className="text-xl font-bold tracking-tighter text-black">
+                  Papermark
+                </span>
               </Link>
             </div>
           </div>
