@@ -28,7 +28,7 @@ export default function ProBanner({
             Cookies.set("hideProBanner", "producthunt-banner", { expires: 7 });
           }}
         >
-          Don't show again
+          Don&apos;t show again
         </Button>
         <UpgradePlanModal>
           <Button
