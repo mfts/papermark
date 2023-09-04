@@ -1,5 +1,6 @@
 <div align="center">
   <h1 align="center">Papermark</h1>
+  <a href="https://www.producthunt.com/posts/papermark-3?utm_source=badge-featured&utm_medium=badge&utm_souce=badge-papermark&#0045;3" target="_blank"><img src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=411605&theme=light" alt="Papermark - Open&#0032;Source&#0032;DocSend&#0032;Alternative&#0032;for&#0032;Secure&#0032;Document&#0032;Sharing | Product Hunt" style="width: 250px; height: 40px;" width="250" height="40" /></a>
   <h3>The open-source DocSend alternative.</h3>
 </div>
 
