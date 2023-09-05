@@ -59,6 +59,30 @@ export default function Home() {
         </div>
       </div>
       <Footer />
+
+      <div className="fixed bottom-5 z-20 mx-5 flex flex-col space-y-4 rounded-lg border border-gray-400 bg-white p-5 shadow-lg sm:right-5 sm:mx-auto sm:max-w-sm">
+        <h3 className="text-lg font-semibold text-black">
+          Thank you, Papermark Community ✨
+        </h3>
+        <p className="text-sm text-gray-500">
+          With the support of the open-source community, we launched on Product
+          Hunt to <span className="font-bold">#1 of the day</span>.
+        </p>
+        <div className="flex justify-center">
+          <div className="">
+            <a
+              target="_blank"
+              href="https://www.producthunt.com/posts/papermark-3?utm_source=badge-top-post-badge&amp;utm_medium=badge&amp;utm_souce=badge-papermark"
+            >
+              <img
+                src="https://api.producthunt.com/widgets/embed-image/v1/top-post-badge.svg?post_id=411605&amp;theme=light&amp;period=daily"
+                alt="Papermark - The open-source DocSend alternative | Product Hunt"
+                className="w-[250px] h-[54px]"
+              />
+            </a>
+          </div>
+        </div>
+      </div>
     </>
   );
 }
