@@ -21,7 +21,6 @@
 
 Papermark is an open-source document sharing alternative to DocSend with built-in analytics. Built with [Vercel Storage](http://vercel.com/storage) and [Vercel Edge Functions](http://vercel.com/edge).
 
-
 ## Features
 
 - **Shareable Links:** Share your document securely by sending a custom link
