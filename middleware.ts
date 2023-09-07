@@ -32,6 +32,7 @@ export default async function middleware(req: NextRequest, ev: NextFetchEvent) {
     path !== "/" &&
     path !== "/privacy" &&
     !path.startsWith("/alternatives/") &&
+    !path.startsWith("/blog/") &&
     !path.startsWith("/view/")
   ) {
     return AppMiddleware(req);
