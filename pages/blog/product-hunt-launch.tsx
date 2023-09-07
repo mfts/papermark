@@ -179,7 +179,7 @@ function BlogPost() {
             you plan to launch.
           </p>
           <p>
-            Works especially well for new products which don't have any
+            Works especially well for new products which don&apos;t have any
             feedback.
           </p>
           <p>
@@ -213,8 +213,8 @@ function BlogPost() {
             height="300"
           />
           <p>
-            Even if you don't have a community and a big following on Twitter, I
-            would aim to make the tweet interesting and focus on it.
+            Even if you don&apos;t have a community and a big following on
+            Twitter, I would aim to make the tweet interesting and focus on it.
           </p>
           <h3 className="text-xl font-semibold mb-2">
             2. Post on other social platforms: LinkedIn, Devto
@@ -239,8 +239,8 @@ function BlogPost() {
             alt="Bots"
           />
           <p>
-            I don't know how currently PH count it, I think they are looking
-            only at upvotes but I still find that important.
+            I don&apos;t know how currently PH count it, I think they are
+            looking only at upvotes but I still find that important.
           </p>
           <h3 className="text-xl font-semibold mb-2">
             4. Send email to your users
@@ -272,7 +272,7 @@ function BlogPost() {
             something in Open Source and planning to launch, you know other
             popular projects, communities in the space, and people.
           </p>
-          <p>But let's say not, where could you start?</p>
+          <p>But let&apos;s say not, where could you start?</p>
           <p>There are some Open Source places where you can get support.</p>
           <p>
             <strong>Open Source channels:</strong>
@@ -498,7 +498,7 @@ function BlogPost() {
           </p>
           <ol>
             <li>It can be easily tracked</li>
-            <li>PH can "punish" you for that</li>
+            <li>PH can &quot;punish&quot; you for that</li>
             <li>You will damage your company brand if people find out</li>
             <li>You will not see your real supporters and community around</li>
             <li>Fewer people will hear about your brand</li>
@@ -508,8 +508,8 @@ function BlogPost() {
           </h3>
           <p>
             I think this is the main helper. Building in public, writing about
-            your project no matter if it's open-source or not is a long-term
-            game.
+            your project no matter if it&apos;s open-source or not is a
+            long-term game.
           </p>
           <h3 className="text-xl font-semibold mb-2">Can my launch fail?</h3>
           <p>
@@ -528,7 +528,7 @@ function BlogPost() {
               href="https://dev.to/papermark/from-tweet-to-launch-my-open-source-journey-199l"
               className="text-blue-600 underline"
             >
-              "Papermark journey from tweet to launch"
+              &quot;Papermark journey from tweet to launch&quot;
             </a>
           </p>
           <p className="mb-4">
