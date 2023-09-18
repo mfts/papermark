@@ -14,12 +14,12 @@ export default function Section2() {
             By sending presentations via Papermark
           </p>
           <div className="mt-10 flex items-center justify-center gap-x-6">
-            <a
+            <Link
               href="/login"
               className="rounded-md bg-black px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-gray-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
             >
               Start now
-            </a>
+            </Link>
             <Link
               target="_blank"
               rel="noopener noreferrer"
