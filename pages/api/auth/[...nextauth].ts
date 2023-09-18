@@ -1,9 +1,10 @@
-import NextAuth, { type NextAuthOptions } from "next-auth";
-import GoogleProvider from "next-auth/providers/google";
-import { PrismaAdapter } from "@next-auth/prisma-adapter";
-import prisma from "@/lib/prisma";
-import { CreateUserEmailProps, CustomUser } from "@/lib/types";
-import { sendWelcomeEmail } from "@/lib/emails/send-welcome";
+import NextAuth, { type NextAuthOptions } from 'next-auth';
+import GoogleProvider from 'next-auth/providers/google';
+import { PrismaAdapter } from '@next-auth/prisma-adapter';
+import prisma from '@/lib/prisma';
+import { CreateUserEmailProps, CustomUser } from '@/lib/types';
+import { sendWelcomeEmail } from '@/lib/emails/send-welcome';
+import Passage from 'next-auth/providers/passage';
 
 const VERCEL_DEPLOYMENT = !!process.env.VERCEL_URL;
 
@@ -13,18 +14,23 @@ export const authOptions: NextAuthOptions = {
       clientId: process.env.GOOGLE_CLIENT_ID as string,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
     }),
+    Passage({
+      clientId: process.env.PASSAGE_ID as string,
+      clientSecret: process.env.PASSAGE_SECRET as string,
+      issuer: process.env.PASSAGE_ISSUER,
+    }),
   ],
   adapter: PrismaAdapter(prisma),
-  session: { strategy: "jwt" },
+  session: { strategy: 'jwt' },
   cookies: {
     sessionToken: {
-      name: `${VERCEL_DEPLOYMENT ? "__Secure-" : ""}next-auth.session-token`,
+      name: `${VERCEL_DEPLOYMENT ? '__Secure-' : ''}next-auth.session-token`,
       options: {
         httpOnly: true,
-        sameSite: "lax",
-        path: "/",
+        sameSite: 'lax',
+        path: '/',
         // When working on localhost, the cookie domain must be omitted entirely (https://stackoverflow.com/a/1188145)
-        domain: VERCEL_DEPLOYMENT ? ".papermark.io" : undefined,
+        domain: VERCEL_DEPLOYMENT ? '.papermark.io' : undefined,
         secure: VERCEL_DEPLOYMENT,
       },
     },
@@ -57,7 +63,7 @@ export const authOptions: NextAuthOptions = {
         },
       };
       await sendWelcomeEmail(params);
-    }
+    },
   },
 };
 

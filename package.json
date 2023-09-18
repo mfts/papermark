@@ -15,6 +15,7 @@
     "email": "email dev --dir ./components/emails --port 3001"
   },
   "dependencies": {
+    "@auth/core": "^0.15.0",
     "@chronark/zod-bird": "^0.1.1",
     "@headlessui/react": "^1.7.17",
     "@heroicons/react": "^2.0.18",
