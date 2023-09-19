@@ -1,2 +1,2 @@
 -- AlterTable
-ALTER TABLE "Account" ADD COLUMN     "state" TEXT;
+ALTER TABLE "Account" ADD COLUMN  "state" TEXT;
