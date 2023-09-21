@@ -7,15 +7,17 @@ import { pdfjs } from "react-pdf";
 import { usePlausible } from "next-plausible";
 import { useRouter } from "next/router";
 import { toast } from "sonner";
+import Image from "next/image";
 
-export default function GoogleDrivePicker() {
+export default function ImportFromGoogleDrive() {
   const [openPicker, authResponse] = useDrivePicker();
   const plausible = usePlausible();
   const router = useRouter();
 
   const { access_token } = authResponse || {};
 
-  const [uploading, setUploading] = useState<boolean>(false);
+  console.log(access_token);
+
   const [currentLinkId, setCurrentLinkId] = useState<string | null>(null);
   const [currentDocId, setCurrentDocId] = useState<string | null>(null);
 
@@ -28,7 +30,10 @@ export default function GoogleDrivePicker() {
 
   const downloadDriveFile = async (fileId: string, fileName: string) => {
     try {
-      setUploading(true);
+      if (!access_token) {
+        toast.error("Please sign in to Google Drive to continue.");
+        return;
+      }
       const url = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`;
       const res = await fetch(url, {
         headers: {
@@ -36,7 +41,9 @@ export default function GoogleDrivePicker() {
         },
       });
 
+      console.log(access_token);
       const blob = await res.blob();
+      console.log(blob);
 
       //convert blob to file
       const importedFile = new File([blob], fileName, { type: blob.type });
@@ -112,7 +119,6 @@ export default function GoogleDrivePicker() {
         setTimeout(() => {
           setCurrentDocId(document.id);
           setCurrentLinkId(linkId);
-          setUploading(false);
         }, 2000);
       }
     } catch (err: any) {
@@ -157,8 +163,24 @@ export default function GoogleDrivePicker() {
     );
     setTimeout(() => {
       router.push(`/documents/${currentDocId}`);
-      setUploading(false);
     }, 2000);
   };
-  return <button onClick={() => handleOpenPicker()}>Open Picker</button>;
+  return (
+    <>
+      {
+        <button
+          className={`w-full block px-3 py-1 text-sm leading-6 text-foreground hover:bg-gray-200 hover:dark:bg-muted flex gap-2 items-center cursor-pointer`}
+          onClick={handleOpenPicker}
+        >
+          <Image
+            alt="google-drive"
+            src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHg9IjBweCIgeT0iMHB4IiB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCI+CjxwYXRoIGZpbGw9IiNGRkMxMDciIGQ9Ik0xNyA2TDMxIDYgNDUgMzAgMzEgMzB6Ij48L3BhdGg+PHBhdGggZmlsbD0iIzE5NzZEMiIgZD0iTTkuODc1IDQyTDE2LjkzOCAzMCA0NSAzMCAzOCA0MnoiPjwvcGF0aD48cGF0aCBmaWxsPSIjNENBRjUwIiBkPSJNMyAzMC4xMjVMOS44NzUgNDIgMjQgMTggMTcgNnoiPjwvcGF0aD4KPC9zdmc+"
+            height={16}
+            width={16}
+          />
+          Google Drive
+        </button>
+      }
+    </>
+  );
 }

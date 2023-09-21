@@ -8,7 +8,7 @@ import { AddDocumentModal } from "@/components/documents/add-document-modal";
 import { Separator } from "@/components/ui/separator";
 import AppLayout from "@/components/layouts/app";
 import { Button } from "@/components/ui/button";
-import GoogleDrivePicker from "@/components/documents/google-drive-picker";
+import IntegrationDropdown from "@/components/integrations/integration-dropdown";
 
 export default function Documents() {
   const { documents } = useDocuments();
@@ -26,7 +26,7 @@ export default function Documents() {
             </p>
           </div>
           <ul className="flex items-center justify-between gap-4">
-            <GoogleDrivePicker />
+            <IntegrationDropdown />
             <AddDocumentModal>
               <Button>Add New Document</Button>
             </AddDocumentModal>
