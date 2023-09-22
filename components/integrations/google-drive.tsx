@@ -1,7 +1,7 @@
 "use client";
 import { copyToClipboard, getExtension } from "@/lib/utils";
 import { put, PutBlobResult } from "@vercel/blob";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef } from "react";
 import useDrivePicker from "react-google-drive-picker";
 import { pdfjs } from "react-pdf";
 import { usePlausible } from "next-plausible";
@@ -9,54 +9,26 @@ import { useRouter } from "next/router";
 import { toast } from "sonner";
 import Image from "next/image";
 
-export default function ImportFromGoogleDrive() {
+export default function ImportFromGoogleDrive({
+  uploading,
+  setUploading,
+}: {
+  uploading: boolean;
+  setUploading: React.Dispatch<React.SetStateAction<boolean>>;
+}) {
   const [openPicker, authResponse] = useDrivePicker();
   const plausible = usePlausible();
   const router = useRouter();
 
   const { access_token } = authResponse || {};
 
-  console.log(access_token);
-
-  const [currentLinkId, setCurrentLinkId] = useState<string | null>(null);
-  const [currentDocId, setCurrentDocId] = useState<string | null>(null);
+  let token = useRef<string | undefined>(undefined);
 
   useEffect(() => {
-    if (currentLinkId) {
-      handleContinue(currentLinkId);
+    if (access_token !== undefined) {
+      token.current = access_token;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentLinkId]);
-
-  const downloadDriveFile = async (fileId: string, fileName: string) => {
-    try {
-      if (!access_token) {
-        toast.error("Please sign in to Google Drive to continue.");
-        return;
-      }
-      const url = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`;
-      const res = await fetch(url, {
-        headers: {
-          Authorization: `Bearer ${access_token}`,
-        },
-      });
-
-      console.log(access_token);
-      const blob = await res.blob();
-      console.log(blob);
-
-      //convert blob to file
-      const importedFile = new File([blob], fileName, { type: blob.type });
-
-      uploadToVercelBlob({
-        fileName: fileName,
-        file: importedFile,
-      });
-    } catch (err) {
-      console.log(err);
-    }
-  };
-
+  }, [access_token]);
   const handleOpenPicker = () => {
     try {
       openPicker({
@@ -77,12 +49,46 @@ export default function ImportFromGoogleDrive() {
           if (data?.docs?.[0]) {
             const fileId = data.docs[0].id;
             const fileName = data.docs[0].name;
-            downloadDriveFile(fileId, fileName);
+            downloadDriveFile(fileId, fileName, token.current ?? "");
           }
         },
       });
     } catch (err) {
       console.log(err);
+      setUploading(false);
+    }
+  };
+
+  const downloadDriveFile = async (
+    fileId: string,
+    fileName: string,
+    token: string
+  ) => {
+    try {
+      if (!token) {
+        toast.error("Please sign in to Google Drive to continue.");
+        return;
+      }
+      setUploading(true);
+      const url = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`;
+      const res = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const blob = await res.blob();
+
+      //convert blob to file
+      const importedFile = new File([blob], fileName, { type: blob.type });
+
+      uploadToVercelBlob({
+        fileName: fileName,
+        file: importedFile,
+      });
+    } catch (err) {
+      console.log(err);
+      setUploading(false);
     }
   };
 
@@ -117,13 +123,14 @@ export default function ImportFromGoogleDrive() {
         plausible("documentUploaded");
 
         setTimeout(() => {
-          setCurrentDocId(document.id);
-          setCurrentLinkId(linkId);
+          handleContinue(linkId, document.id);
         }, 2000);
       }
     } catch (err: any) {
       console.log(err);
       toast.error(err?.message ?? "Something went wrong. Please try again.");
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -156,7 +163,7 @@ export default function ImportFromGoogleDrive() {
     return response;
   };
 
-  const handleContinue = (id: string) => {
+  const handleContinue = (id: string, currentDocId: string) => {
     copyToClipboard(
       `${process.env.NEXT_PUBLIC_BASE_URL}/view/${id}`,
       "Link copied to clipboard. Redirecting to document page..."
