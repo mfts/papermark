@@ -24,7 +24,7 @@ export default function Section3() {
             loop
           >
             <source
-              src="https://darr6llpvnyot.cloudfront.net/short-video.mp4"
+              src="https://dknlay9ljaq1f.cloudfront.net/short-video.mp4"
               type="video/mp4"
             />
           </video>
