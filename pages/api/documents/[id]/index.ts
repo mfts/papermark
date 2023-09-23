@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth/next";
 import prisma from "@/lib/prisma";
 import { authOptions } from "../../auth/[...nextauth]";
 import { CustomUser } from "@/lib/types";
+import { del } from "@vercel/blob";
 
 export default async function handle(
   req: NextApiRequest,
@@ -66,7 +67,10 @@ export default async function handle(
         return res.status(401).end("Unauthorized to access the document");
       }
   
-      // delete the document 
+      // delete the document from vercel blob 
+      await del(document.file);
+
+      // delete the document from database
       await prisma.document.delete({
         where: {
           id: id,
