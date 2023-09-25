@@ -33,9 +33,7 @@ export default async function handle(
         error: (error as Error).message,
       });
     }
-  } 
-  
-  if (req.method === "PUT") {
+  } else if (req.method === "PUT") {
     // PUT /api/links/:id
     const session = await getServerSession(req, res, authOptions);
     if (!session) {
@@ -128,6 +126,38 @@ export default async function handle(
     }
 
     return res.status(200).json(updatedLink);
+  } else if (req.method == "DELETE") {
+    const session = await getServerSession(req, res, authOptions);
+    if (!session) {
+      return res.status(401).end("Unauthorized");
+    }
+
+    const { id } = req.query as { id: string };
+
+    try{
+      const linkToBeDeleted = await prisma.link.findUnique({
+        where: {
+          id: id,
+        }
+      });
+  
+      if (!linkToBeDeleted) {
+        return res.status(404).json({ error: "Link not found" });
+      }
+  
+      await prisma.link.delete({
+        where: {
+          id: id,
+        }
+      });
+  
+      res.status(204).end(); // 204 No Content response for successful deletes
+    } catch (error) {
+      return res.status(500).json({
+        message: "Internal Server Error",
+        error: (error as Error).message,
+      });
+    }
   }
 
   // We only allow GET and PUT requests
