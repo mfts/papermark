@@ -77,8 +77,7 @@ export default async function handle(
         }
       })
       
-      // successfully deleted
-      return res.status(200).json("Document deleted successfully");
+      res.status(204).end();  // 204 No Content response for successful deletes
     } catch (error) {
       return res.status(500).json({
         message: "Internal Server Error",
