@@ -8,7 +8,8 @@ import {
 } from "@/components/ui/dialog";
 import { useState } from "react";
 import { useRouter } from "next/router";
-import { put, type PutBlobResult } from "@vercel/blob";
+import { type PutBlobResult } from "@vercel/blob";
+import { upload } from '@vercel/blob/client';
 import DocumentUpload from "@/components/document-upload";
 import { pdfjs } from "react-pdf";
 import { copyToClipboard, getExtension } from "@/lib/utils";
@@ -35,9 +36,9 @@ export function AddDocumentModal({children}: {children: React.ReactNode}) {
     try {
       setUploading(true);
 
-      const newBlob = await put(currentFile.name, currentFile, {
+      const newBlob = await upload(currentFile.name, currentFile, {
         access: "public",
-        handleBlobUploadUrl: "/api/file/browser-upload",
+        handleUploadUrl: "/api/file/browser-upload",
       });
 
       let response: Response | undefined;

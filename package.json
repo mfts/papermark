@@ -38,7 +38,7 @@
     "@types/react": "^18.2.23",
     "@types/react-dom": "^18.2.8",
     "@vercel/analytics": "^1.0.2",
-    "@vercel/blob": "^0.10.0",
+    "@vercel/blob": "^0.12.5",
     "autoprefixer": "^10.4.16",
     "base-x": "^4.0.0",
     "bcryptjs": "^2.4.3",
