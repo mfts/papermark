@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth/next";
 import { hashPassword } from "@/lib/utils";
+import { CustomUser } from "@/lib/types";
 import { authOptions } from "../../auth/[...nextauth]";
 
 export default async function handle(
@@ -127,6 +128,7 @@ export default async function handle(
 
     return res.status(200).json(updatedLink);
   } else if (req.method == "DELETE") {
+    // DELETE /api/links/:id
     const session = await getServerSession(req, res, authOptions);
     if (!session) {
       return res.status(401).end("Unauthorized");
@@ -138,11 +140,22 @@ export default async function handle(
       const linkToBeDeleted = await prisma.link.findUnique({
         where: {
           id: id,
+        },
+        include: {
+          document: {
+            select: {
+              ownerId: true,
+            }
+          }
         }
       });
   
       if (!linkToBeDeleted) {
         return res.status(404).json({ error: "Link not found" });
+      }
+
+      if (linkToBeDeleted.document.ownerId !== (session.user as CustomUser).id){
+        return res.status(401).end("Unauthorized to access the link");
       }
   
       await prisma.link.delete({
