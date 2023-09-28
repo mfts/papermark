@@ -67,15 +67,17 @@ export default async function handle(
         return res.status(401).end("Unauthorized to access the document");
       }
   
-      // delete the document from vercel blob 
-      await del(document.file);
+      await Promise.all([
+        // delete the document from vercel blob 
+        await del(document.file),
 
-      // delete the document from database
-      await prisma.document.delete({
-        where: {
-          id: id,
-        }
-      })
+        // delete the document from database
+        await prisma.document.delete({
+          where: {
+            id: id,
+          }
+        }),
+      ]);
       
       res.status(204).end();  // 204 No Content response for successful deletes
     } catch (error) {
@@ -86,7 +88,7 @@ export default async function handle(
     }
 
   } else {
-    // We only allow GET, DELETE and POST requests
+    // We only allow GET and DELETE requests
     res.setHeader("Allow", ["GET", "DELETE"]);
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
