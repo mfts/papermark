@@ -6,6 +6,8 @@ const nextConfig = {
       "dknlay9ljaq1f.cloudfront.net",
       "lh3.googleusercontent.com",
       "dev-to-uploads.s3.amazonaws.com",
+      "pbs.twimg.com", // twitter img
+      "d18zd1fdi56ai5.cloudfront.net", // twitter cdn
     ],
   },
 };
