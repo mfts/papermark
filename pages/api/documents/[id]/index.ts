@@ -57,29 +57,26 @@ export default async function handle(
           id: id,
         },
       });
-      
+
       if (!document) {
         return res.status(404).end("Document not found");
       }
-      
+
       // check that the user is owner of the document, otherwise return 401
       if (document.ownerId !== (session.user as CustomUser).id) {
         return res.status(401).end("Unauthorized to access the document");
       }
-  
-      await Promise.all([
-        // delete the document from vercel blob 
-        await del(document.file),
 
-        // delete the document from database
-        await prisma.document.delete({
-          where: {
-            id: id,
-          }
-        }),
-      ]);
-      
-      res.status(204).end();  // 204 No Content response for successful deletes
+      // delete the document from vercel blob
+      await del(document.file)
+      // delete the document from database
+      await prisma.document.delete({
+        where: {
+          id: id,
+        },
+      })
+
+      res.status(204).end(); // 204 No Content response for successful deletes
     } catch (error) {
       return res.status(500).json({
         message: "Internal Server Error",
