@@ -59,6 +59,8 @@ const navigation = {
   legal: [{ name: "Privacy", href: "/privacy" }],
   tools: [
     { name: "VC-generator", href: "https://vc.papermark.io" },
+    { name: "Open Source Friends", href: "/oss-friends" },
+    { name: "Open Source Investors", href: "/open-source-investors" },
     // { name: "Pitchdeck Summariser", href: "#" },
   ],
   alternatives: [
