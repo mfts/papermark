@@ -5,10 +5,10 @@ export const revalidate = 86400; // revalidate the data at most every 24 hours
 
 const getInvestors = cache(async () => {
   const response = await fetch(
-    "https://api.airtable.com/v0/appAxYMTCbZ1hGTmg/Investors?maxRecords=5&view=Grid%20view",
+    "https://api.airtable.com/v0/appAxYMTCbZ1hGTmg/tblvBs5aqTt8qkb6h?fields%5B%5D=name&fields%5B%5D=title&fields%5B%5D=company&fields%5B%5D=checkSize&fields%5B%5D=openSourceInvestments&fields%5B%5D=twitterUrl&fields%5B%5D=websiteUrl&fields%5B%5D=twitterImageUrl&filterByFormula=AND(%7Bpublished%7D%3D1%2C%7Btype%7D%3D%22Angel%22)",
     {
       headers: {
-        Authorization: `Bearer patfKSONnnpe6dVxx.ab8a76305c3c67e5fb93b816c74340b157794403d8c059756d54f874c596664b`,
+        Authorization: `Bearer ${process.env.AIRTABLE_API_KEY}`,
       },
     }
   );
@@ -21,8 +21,6 @@ const getInvestors = cache(async () => {
 
 export default async function HomePage() {
   const data = await getInvestors();
-
-  console.log("data", data)
 
   return <Dashboard data={data} />;
 }

@@ -48,6 +48,7 @@
     "eslint": "^8.50.0",
     "eslint-config-next": "^13.5.3",
     "framer-motion": "^10.16.4",
+    "fuse.js": "^6.6.2",
     "js-cookie": "^3.0.5",
     "lucide-react": "^0.279.0",
     "ms": "^2.1.3",
