@@ -1,7 +1,8 @@
 import { useRouter } from "next/router";
 import { motion } from "framer-motion";
 import { useState } from "react";
-import { put, type PutBlobResult } from "@vercel/blob";
+import { type PutBlobResult } from "@vercel/blob";
+import { upload } from "@vercel/blob/client";
 import DocumentUpload from "@/components/document-upload";
 import { ArrowRightIcon, DocumentDuplicateIcon } from "@heroicons/react/24/outline";
 import { toast } from "sonner";
@@ -37,9 +38,9 @@ export default function Upload() {
     try {
       setUploading(true);
 
-      const newBlob = await put(currentFile.name, currentFile, {
+      const newBlob = await upload(currentFile.name, currentFile, {
         access: "public",
-        handleBlobUploadUrl: "/api/file/browser-upload",
+        handleUploadUrl: "/api/file/browser-upload",
       });
 
       setCurrentFile(null);
