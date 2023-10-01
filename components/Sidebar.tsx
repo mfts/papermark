@@ -1,15 +1,18 @@
 import { Fragment, useState } from "react";
 import { Menu, Dialog, Transition } from "@headlessui/react";
 import { signOut, useSession } from "next-auth/react";
-import {
-  Bars3Icon,
-  ChevronUpIcon,
-} from "@heroicons/react/20/solid";
-import { FolderIcon, HomeIcon, XMarkIcon, ChartBarIcon  } from "@heroicons/react/24/outline";
+import HomeIcon from "@/components/shared/icons/home";
+import FolderIcon from "@/components/shared/icons/folder";
+import PieChartIcon from "@/components/shared/icons/pie-chart";
+import SettingsIcon from "@/components/shared/icons/settings";
+import MenuIcon from "@/components/shared/icons/menu";
+import ChevronUp from "@/components/shared/icons/chevron-up";
+import X from "@/components/shared/icons/x";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/router";
 import { ModeToggle } from "./theme-toggle";
+import { Button } from "./ui/button";
 
 export default function Sidebar() {
   const { data: session } = useSession();
@@ -17,13 +20,13 @@ export default function Sidebar() {
   const router = useRouter();
 
   const navigation = [
-    {
-      name: "Overview",
-      href: "/overview",
-      icon: HomeIcon,
-      current: router.pathname.includes("overview"),
-      disabled: true,
-    },
+    // {
+    //   name: "Overview",
+    //   href: "/overview",
+    //   icon: HomeIcon,
+    //   current: router.pathname.includes("overview"),
+    //   disabled: true,
+    // },
     {
       name: "Documents",
       href: "/documents",
@@ -34,9 +37,16 @@ export default function Sidebar() {
     {
       name: "Analytics",
       href: "/analytics",
-      icon: ChartBarIcon,
+      icon: PieChartIcon,
       current: router.pathname.includes("analytics"),
       disabled: true,
+    },
+    {
+      name: "Settings",
+      href: "/settings/domains",
+      icon: SettingsIcon,
+      current: router.pathname.includes("settings"),
+      disabled: false,
     },
   ];
 
@@ -87,7 +97,7 @@ export default function Sidebar() {
                       onClick={() => setSidebarOpen(false)}
                     >
                       <span className="sr-only">Close sidebar</span>
-                      <XMarkIcon
+                      <X
                         className="h-6 w-6 text-foreground"
                         aria-hidden="true"
                       />
@@ -172,6 +182,19 @@ export default function Sidebar() {
                 </ul>
               </li>
               <li className="-mx-2 mt-auto mb-4">
+                <aside className="flex flex-col justify-center w-full bg-gray-900 text-gray-50 p-4 mb-2 rounded-lg border border-gray-700">
+                  <div className="flex space-x-2">
+                    <span className="font-bold text-sm">✨ Pro Trial ✨</span>
+                  </div>
+                  <p className="my-4 text-sm">
+                    You are on the Pro trial for the next 30 days.
+                  </p>
+                  <Button>
+                    <Link href="/settings/domains" target="_blank">
+                      Connect custom domain
+                    </Link>
+                  </Button>
+                </aside>
                 <div className="flex justify-between items-center space-x-2">
                   <Menu as="div" className="relative grow">
                     <Menu.Button className="flex items-center group rounded-md gap-x-3 p-2 w-full text-sm font-semibold leading-6 text-foreground hover:bg-gray-200 hover:dark:bg-secondary">
@@ -183,7 +206,7 @@ export default function Sidebar() {
                       <span className="flex items-center w-full justify-between">
                         <span className="sr-only">Your profile</span>
                         <span aria-hidden="true">{session?.user?.name}</span>
-                        <ChevronUpIcon
+                        <ChevronUp
                           className="ml-2 h-5 w-5 text-muted-foreground"
                           aria-hidden="true"
                         />
@@ -241,7 +264,7 @@ export default function Sidebar() {
             onClick={() => setSidebarOpen(true)}
           >
             <span className="sr-only">Open sidebar</span>
-            <Bars3Icon className="h-6 w-6" aria-hidden="true" />
+            <MenuIcon className="h-6 w-6" aria-hidden="true" />
           </button>
 
           <div className="flex flex-1 gap-x-4 self-stretch items-center lg:gap-x-6 justify-end">

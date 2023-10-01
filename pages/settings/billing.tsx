@@ -49,7 +49,7 @@ export default function Billing() {
               <p className="text-sm text-secondary-foreground">
                 You are currently on the{" "}
                 {plan ? (
-                  <Badge>{plan}</Badge>
+                  <Badge>Pro</Badge>
                 ) : (
                   <span className="rounded-full bg-border px-2 py-0.5 text-xs text-foreground">
                     load

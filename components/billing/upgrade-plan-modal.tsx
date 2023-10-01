@@ -19,7 +19,7 @@ import { Badge } from "../ui/badge";
 
 export function UpgradePlanModal({ children }: { children: React.ReactNode }) {
   const [plan, setPlan] = useState<"Pro">("Pro");
-  const [period, setPeriod] = useState<"monthly" | "yearly">("yearly");
+  const [period, setPeriod] = useState<"monthly" | "yearly">("monthly");
   const [clicked, setClicked] = useState<boolean>(false);
   const features = useMemo(() => {
     return [
