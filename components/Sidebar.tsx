@@ -1,11 +1,13 @@
 import { Fragment, useState } from "react";
 import { Menu, Dialog, Transition } from "@headlessui/react";
 import { signOut, useSession } from "next-auth/react";
-import {
-  Bars3Icon,
-  ChevronUpIcon,
-} from "@heroicons/react/20/solid";
-import { FolderIcon, HomeIcon, XMarkIcon, ChartBarIcon  } from "@heroicons/react/24/outline";
+import HomeIcon from "@/components/shared/icons/home";
+import FolderIcon from "@/components/shared/icons/folder";
+import PieChartIcon from "@/components/shared/icons/pie-chart";
+import SettingsIcon from "@/components/shared/icons/settings";
+import MenuIcon from "@/components/shared/icons/menu";
+import ChevronUp from "@/components/shared/icons/chevron-up";
+import X from "@/components/shared/icons/x";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/router";
@@ -17,13 +19,13 @@ export default function Sidebar() {
   const router = useRouter();
 
   const navigation = [
-    {
-      name: "Overview",
-      href: "/overview",
-      icon: HomeIcon,
-      current: router.pathname.includes("overview"),
-      disabled: true,
-    },
+    // {
+    //   name: "Overview",
+    //   href: "/overview",
+    //   icon: HomeIcon,
+    //   current: router.pathname.includes("overview"),
+    //   disabled: true,
+    // },
     {
       name: "Documents",
       href: "/documents",
@@ -34,9 +36,16 @@ export default function Sidebar() {
     {
       name: "Analytics",
       href: "/analytics",
-      icon: ChartBarIcon,
+      icon: PieChartIcon,
       current: router.pathname.includes("analytics"),
       disabled: true,
+    },
+    {
+      name: "Settings",
+      href: "/settings/domains",
+      icon: SettingsIcon,
+      current: router.pathname.includes("settings"),
+      disabled: false,
     },
   ];
 
@@ -87,7 +96,7 @@ export default function Sidebar() {
                       onClick={() => setSidebarOpen(false)}
                     >
                       <span className="sr-only">Close sidebar</span>
-                      <XMarkIcon
+                      <X
                         className="h-6 w-6 text-foreground"
                         aria-hidden="true"
                       />
@@ -183,7 +192,7 @@ export default function Sidebar() {
                       <span className="flex items-center w-full justify-between">
                         <span className="sr-only">Your profile</span>
                         <span aria-hidden="true">{session?.user?.name}</span>
-                        <ChevronUpIcon
+                        <ChevronUp
                           className="ml-2 h-5 w-5 text-muted-foreground"
                           aria-hidden="true"
                         />
@@ -241,7 +250,7 @@ export default function Sidebar() {
             onClick={() => setSidebarOpen(true)}
           >
             <span className="sr-only">Open sidebar</span>
-            <Bars3Icon className="h-6 w-6" aria-hidden="true" />
+            <MenuIcon className="h-6 w-6" aria-hidden="true" />
           </button>
 
           <div className="flex flex-1 gap-x-4 self-stretch items-center lg:gap-x-6 justify-end">
