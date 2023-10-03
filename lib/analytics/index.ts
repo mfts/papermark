@@ -37,9 +37,6 @@ const fetchUserWithCounts = async (userId: string) => {
 };
 
 const getUserProperties = (user: any) => {
-  console.log("user", user)
-  console.log("user.documents", user.documents)
-
   let linkCount = user.documents.reduce(
     (acc: any, document: { _count: { links: number; views: number } }) =>
       acc + document._count.links,
@@ -60,8 +57,6 @@ const getUserProperties = (user: any) => {
     linkCount: linkCount,
     viewCount: viewCount,
   };
-
-  console.log("userData", userData)
 
   return userData;
 };
