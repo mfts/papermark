@@ -4,8 +4,9 @@ import {
   getDomainResponse,
   verifyDomain,
 } from "@/lib/domains";
-import { DomainVerificationStatusProps } from "@/lib/types";
+import { CustomUser, DomainVerificationStatusProps } from "@/lib/types";
 import prisma from "@/lib/prisma";
+import { analytics, identifyUser, trackAnalytics } from '@/lib/analytics';
 
 export default async function handle(req: NextApiRequest, res: NextApiResponse) {
   // GET /api/domains/[domain]/verify - get domain verification status
@@ -56,6 +57,14 @@ export default async function handle(req: NextApiRequest, res: NextApiResponse) 
           verified: true,
           lastChecked: new Date(),
         },
+      });
+
+      // TODO: cannot identify user here because we don't have the session
+      // await identifyUser((session.user as CustomUser).id);
+      await analytics.identify();
+      await trackAnalytics({
+        event: "Domain Verified",
+        slug: domain,
       });
     }
 

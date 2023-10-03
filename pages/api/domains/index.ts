@@ -5,6 +5,7 @@ import { authOptions } from "../auth/[...nextauth]";
 import { CustomUser } from "@/lib/types";
 import { log } from "@/lib/utils";
 import { addDomainToVercel, validDomainRegex } from "@/lib/domains";
+import { identifyUser, trackAnalytics } from "@/lib/analytics";
 
 export default async function handle(
   req: NextApiRequest,
@@ -54,14 +55,20 @@ export default async function handle(
       }
 
       // console.log("Valid domain", domain);
-      
+
       const response = await prisma.domain.create({
         data: {
           slug: domain,
           userId: (session.user as CustomUser).id,
         },
       });
-      await addDomainToVercel(domain)
+      await addDomainToVercel(domain);
+
+      await identifyUser((session.user as CustomUser).id);
+      await trackAnalytics({
+        event: "Domain Added",
+        slug: domain,
+      });
 
       res.status(201).json(response);
     } catch (error) {
