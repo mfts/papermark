@@ -182,7 +182,7 @@ export default function Sidebar() {
                 </ul>
               </li>
               <li className="-mx-2 mt-auto mb-4">
-                <aside className="flex flex-col justify-center w-full bg-gray-900 text-gray-50 p-4 mb-2 rounded-lg border border-gray-700">
+                <aside className="flex flex-col justify-center w-full bg-background text-foreground p-4 mb-2 rounded-lg border border-gray-700">
                   <div className="flex space-x-2">
                     <span className="font-bold text-sm">✨ Pro Trial ✨</span>
                   </div>
