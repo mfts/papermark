@@ -5,7 +5,7 @@ import {
   Bars3Icon,
   ChevronUpIcon,
 } from "@heroicons/react/20/solid";
-import { FolderIcon, HomeIcon, XMarkIcon, ChartBarIcon  } from "@heroicons/react/24/outline";
+import { FolderIcon, HomeIcon, XMarkIcon, ChartBarIcon, UserGroupIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/router";
@@ -38,6 +38,13 @@ export default function Sidebar() {
       current: router.pathname.includes("analytics"),
       disabled: true,
     },
+    {
+      name: "Teams",
+      href: "/teams",
+      icon: UserGroupIcon,
+      current: router.pathname.includes("teams"),
+      disable: false,
+    }
   ];
 
   return (
