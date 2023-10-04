@@ -14,18 +14,22 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 export function AddDomainModal({
+  open,
+  setOpen,
   onAddition,
   children,
 }: {
-  onAddition: (newDomain: string) => void;
-  children: React.ReactNode;
+  open: boolean;
+  setOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  onAddition?: (newDomain: string) => void;
+  children?: React.ReactNode;
 }) {
   const [domain, setDomain] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
-  const [open, setOpen] = useState<boolean>(false);
 
   const handleSubmit = async (event: any) => {
     event.preventDefault();
+    event.stopPropagation();
 
     if (domain == "") return;
 
@@ -45,18 +49,23 @@ export function AddDomainModal({
       setLoading(false);
       setOpen(false);
       toast.error(error);
+      return;
     }
 
     const newDomain = await response.json();
 
+    toast.success("Domain added successfully! 🎉")
+
     // console.log(newDomain);
 
     // Update local data with the new link
-    onAddition(newDomain);
+    onAddition && onAddition(newDomain);
 
     setOpen(false);
 
     setLoading(false);
+
+    !onAddition && window.open("/settings/domains", "_blank")
   };
 
   return (

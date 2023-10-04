@@ -1,6 +1,8 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/lib/prisma";
 import { checkPassword, log } from "@/lib/utils";
+import { analytics, identifyUser, trackAnalytics } from "@/lib/analytics";
+import { CustomUser } from "@/lib/types";
 
 export default async function handle(
   req: NextApiRequest,
@@ -70,6 +72,17 @@ export default async function handle(
           }
         }
       }
+    });
+
+    // TODO: cannot identify user because session is not available
+    // await identifyUser((session.user as CustomUser).id);
+    // await analytics.identify();
+    await trackAnalytics({
+      event: "Link Viewed",
+      linkId: linkId,
+      documentId: documentId,
+      viewerId: newView.id,
+      viewerEmail: email,
     });
 
     res.status(200).json({ message: "View recorded", viewId: newView.id, file: newView.document.file });

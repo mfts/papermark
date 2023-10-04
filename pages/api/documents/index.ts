@@ -4,6 +4,7 @@ import prisma from "@/lib/prisma";
 import { authOptions } from "../auth/[...nextauth]";
 import { CustomUser } from "@/lib/types";
 import { getExtension, log } from "@/lib/utils";
+import { identifyUser, trackAnalytics } from "@/lib/analytics";
 
 export default async function handle(
   req: NextApiRequest,
@@ -74,6 +75,15 @@ export default async function handle(
         include: {
           links: true,
         },
+      });
+
+      await identifyUser((session.user as CustomUser).id);
+      await trackAnalytics({
+        event: "Document Added",
+        documentId: document.id,
+        name: document.name,
+        fileSize: null,
+        path: req.body.path,
       });
 
       res.status(201).json(document);
