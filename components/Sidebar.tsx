@@ -7,6 +7,7 @@ import PieChartIcon from "@/components/shared/icons/pie-chart";
 import SettingsIcon from "@/components/shared/icons/settings";
 import MenuIcon from "@/components/shared/icons/menu";
 import ChevronUp from "@/components/shared/icons/chevron-up";
+import TeamsIcon from "@/components/shared/icons/teams";
 import X from "@/components/shared/icons/x";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
@@ -42,19 +43,19 @@ export default function Sidebar() {
       disabled: true,
     },
     {
+      name: "Teams",
+      href: "/teams",
+      icon: TeamsIcon,
+      current: router.pathname.includes("teams"),
+      disable: false,
+    },
+    {
       name: "Settings",
       href: "/settings/domains",
       icon: SettingsIcon,
       current: router.pathname.includes("settings"),
       disabled: false,
     },
-    {
-      name: "Teams",
-      href: "/teams",
-      icon: UserGroupIcon,
-      current: router.pathname.includes("teams"),
-      disable: false,
-    }
   ];
 
   return (
