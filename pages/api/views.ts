@@ -76,7 +76,7 @@ export default async function handle(
 
     // TODO: cannot identify user because session is not available
     // await identifyUser((session.user as CustomUser).id);
-    await analytics.identify();
+    // await analytics.identify();
     await trackAnalytics({
       event: "Link Viewed",
       linkId: linkId,
