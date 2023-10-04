@@ -13,6 +13,19 @@ export interface CreateUserEmailProps {
   };
 }
 
+export interface ITeam {
+  id: string;
+  name: string;
+  documents: string[];
+  users: {
+    id: string;
+    role: string;
+  }[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+
 export interface DocumentWithLinksAndLinkCountAndViewCount extends Document {
   _count: {
     links: number;

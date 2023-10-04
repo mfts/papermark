@@ -65,13 +65,12 @@ model VerificationToken {
 }
 
 model Team {
-  id         String     @id @default(cuid())
-  name       String
-  documentId String?
-  users      UserTeam[]
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
-  documents  Document[]
+  id        String     @id @default(cuid())
+  name      String
+  users     UserTeam[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  documents Document[]
 }
 
 enum Role {

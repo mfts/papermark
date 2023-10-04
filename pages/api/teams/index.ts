@@ -17,14 +17,30 @@ export default async function handle(
     }
 
     try {
-      const teams = await prisma.userTeam.findMany({
+      const userTeams = await prisma.userTeam.findMany({
         where: {
           userId: (session.user as CustomUser).id,
         },
         include: {
-          team: true,
-        }
+          team: {
+            include: {
+              users: {
+                select: {
+                  id: true,
+                  role: true,
+                }
+              },
+              documents: {
+                select: {
+                  id: true,
+                }
+              }
+            }
+          }
+        },
       });
+
+      const teams = userTeams.map((userTeam) => userTeam.team);
       return res.status(200).json(teams);
     } catch (error) {
       log(`Failed to add domain. Error: \n\n ${error}`);
@@ -42,6 +58,7 @@ export default async function handle(
     }
 
     const { team } = req.body;
+    
      try {
       const newTeam = await prisma.team.create({
         data: {

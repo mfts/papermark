@@ -87,7 +87,7 @@ export function AddTeamModal({children}: {children: React.ReactNode}) {
                   loading={loading}
                   // disabled={uploading || !currentFile}
                 >
-                  Create
+                  {loading ? "Creating..." : "Create"}
                   {/* {uploading ? "Uploading..." : "Upload Document"} */}
                 </Button>
               </div>

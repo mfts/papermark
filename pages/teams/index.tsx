@@ -1,14 +1,15 @@
+import { useTeams } from '@/lib/swr/use-teams';
 import Skeleton from '@/components/Skeleton';
 import AppLayout from '@/components/layouts/app'
 import { AddTeamModal } from '@/components/teams/add-team-modal';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { PlusIcon, RectangleGroupIcon } from '@heroicons/react/24/solid';
-import { useState } from 'react';
+import TeamCard from '@/components/teams/team-card';
 
 export default function Teams() {
 
-  const [teams, setTeams] = useState(["aashish", "upadhyay"]);
+  const { teams } = useTeams();
 
   return (
     <AppLayout>
@@ -38,18 +39,19 @@ export default function Teams() {
         )}
 
         {/* teams list  */}
-        <ul role="list" className="space-y-4">
+        <ul role="list" className="grid lg:grid-cols-4 md:grid-cols-3 sm:grid-cols-2 gap-6">
           {teams
             ? teams.map((team) => {
-                return <h2>team</h2>;
+                return <TeamCard key={team.id} team={team} />;
               })
-            : Array.from({ length: 3 }).map((_, i) => (
+            : Array.from({ length: 4 }).map((_, i) => (
                 <li
                   key={i}
                   className="flex flex-col space-y-4 px-4 py-4 sm:px-6 lg:px-8"
                 >
-                  <Skeleton key={i} className="h-5 w-20" />
-                  <Skeleton key={i} className="mt-3 h-3 w-10" />
+                  <Skeleton key={i} className="h-5 w-25" />
+                  <Skeleton key={i} className="mt-3 h-3 w-12" />
+                  <Skeleton key={i} className="mt-3 h-3 w-12" />
                 </li>
               ))
           }
