@@ -12,6 +12,8 @@ import {
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
+import { toast } from "sonner";
+import Teams from "@/pages/teams";
 
 
 export function AddTeamModal({children}: {children: React.ReactNode}) {
@@ -23,7 +25,32 @@ export function AddTeamModal({children}: {children: React.ReactNode}) {
   const handleCreateTeam = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    // TODO: handle team creation
+    if (!teamName) {
+      return;
+    }
+
+    setLoading(true);
+    const response = await fetch("/api/teams", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        team: teamName,
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      setLoading(false);
+      toast.error(error);
+      return;
+    }
+
+    const team = await response.json();
+    toast.success("Team created successfully!")
+    router.push(`/teams/${team?.id}`);
+    setLoading(false);
   }
 
   return (
