@@ -1,12 +1,59 @@
+import Skeleton from '@/components/Skeleton';
 import AppLayout from '@/components/layouts/app'
 import { AddTeamModal } from '@/components/teams/add-team-modal';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
 import { PlusIcon, RectangleGroupIcon } from '@heroicons/react/24/solid';
+import { useState } from 'react';
 
 export default function Teams() {
+
+  const [teams, setTeams] = useState(["aashish", "upadhyay"]);
+
   return (
     <AppLayout>
-      <div className="flex items-center justify-center h-96">
-        <EmptyTeams />
+      <div className="p-4 sm:p-4 sm:m-4">
+        <div className="flex items-center justify-between mb-4 md:mb-8 lg:mb-12">
+          <div className='space-y-1'>
+            <h2 className="text-2xl text-foreground font-semibold tracking-tight">
+              Teams
+            </h2>
+            <p className="text-sm text-muted-foreground">Manage your teams</p>
+          </div>
+          <ul className="flex items-center justify-between gap-4">
+            <AddTeamModal>
+            <Button>
+              <PlusIcon className="-ml-1 mr-2 h-5 w-5" aria-hidden="true" />
+              New Team
+            </Button>
+            </AddTeamModal>
+          </ul>
+        </div>
+        <Separator className="my-6" />
+
+        {teams && teams.length === 0 && (
+          <div className="flex items-center justify-center h-96">
+            <EmptyTeams />
+          </div>
+        )}
+
+        {/* teams list  */}
+        <ul role="list" className="space-y-4">
+          {teams
+            ? teams.map((team) => {
+                return <h2>team</h2>;
+              })
+            : Array.from({ length: 3 }).map((_, i) => (
+                <li
+                  key={i}
+                  className="flex flex-col space-y-4 px-4 py-4 sm:px-6 lg:px-8"
+                >
+                  <Skeleton key={i} className="h-5 w-20" />
+                  <Skeleton key={i} className="mt-3 h-3 w-10" />
+                </li>
+              ))
+          }
+        </ul>
       </div>
     </AppLayout>
   )
