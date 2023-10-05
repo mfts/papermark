@@ -83,7 +83,7 @@ export default async function handle(
         documentId: document.id,
         name: document.name,
         fileSize: null,
-        path: req.body.path,
+        path: req.url,
       });
 
       res.status(201).json(document);
