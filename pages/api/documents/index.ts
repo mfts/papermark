@@ -51,6 +51,13 @@ export default async function handle(
       return;
     }
 
+    const referer = req.headers.referer;
+    let pathWithQuery = null;
+    if (referer) {
+      const url = new URL(referer);
+      pathWithQuery = url.pathname + url.search;
+    }
+
     // Assuming data is an object with `name` and `description` properties
     const { name, url, numPages } = req.body;
 
@@ -83,7 +90,13 @@ export default async function handle(
         documentId: document.id,
         name: document.name,
         fileSize: null,
-        path: req.url,
+        path: pathWithQuery,
+      });
+      await trackAnalytics({
+        event: "Link Added",
+        linkId: document.links[0].id,
+        documentId: document.id,
+        customDomain: null,
       });
 
       res.status(201).json(document);

@@ -112,7 +112,7 @@ export type AnalyticsEvents =
       documentId: string;
       name: string;
       fileSize: string | null | undefined;
-      path: string | undefined;
+      path: string | null | undefined;
     }
   | {
       event: "Link Added";
