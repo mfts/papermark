@@ -1,7 +1,42 @@
+import { Metadata } from "next";
 import Dashboard from "./ClientPage";
 import { cache } from "react";
 
 export const revalidate = 86400; // revalidate the data at most every 24 hours
+
+const data = {
+  description:
+    "Find your next open-source investor. Share pitchdecks with your investors using Papermark, an open-source document infrastructure.",
+  title: "Open Source Investors | Papermark",
+  url: "https://www.papermark.io",
+};
+
+export const metadata: Metadata = {
+  title: data.title,
+  description: data.description,
+  openGraph: {
+    title: data.title,
+    description: data.description,
+    url: data.url,
+    siteName: "Papermark",
+    images: [
+      {
+        url: "https://www.papermark.io/_static/meta-image.png",
+        width: 800,
+        height: 600,
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: data.title,
+    description: data.description,
+    creator: "@papermarkio",
+    images: ["https://www.papermark.io/_static/meta-image.png"],
+  },
+};
 
 const getInvestors = cache(async () => {
   const response = await fetch(
