@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useRouter } from "next/router";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -24,6 +25,7 @@ export function AddTeamMembers({
 }) {
   const [email, setEmail] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
+  const router = useRouter();
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -31,7 +33,28 @@ export function AddTeamMembers({
 
     if (!email) return;
 
+    const { id } = router.query as { id: string };
+
     setLoading(true);
+    const response = await fetch(`/api/teams/${id}/invite`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email: email,
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      setLoading(false);
+      setOpen(false);
+      toast.error(error);
+      return;
+    }
+
+    toast.success("An invitation email has been sent!");
 
     setOpen(false);
 
