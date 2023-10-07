@@ -13,6 +13,18 @@ export interface CreateUserEmailProps {
   };
 }
 
+export interface DocumentData {
+  name: string;
+  numPages: number;
+  file: string;
+  type: string;
+  ownerId: string;
+  links: {
+    create: {};
+  };
+  teamId?: string;
+}
+
 export interface ITeam {
   id: string;
   name: string;
@@ -25,6 +37,32 @@ export interface ITeam {
   updatedAt: string;
 }
 
+export interface ITeamDetail {
+  id: string;
+  name: string;
+  users: {
+    userId: string;
+    role: string;
+    user: {
+      name: string;
+      email: string;
+    };
+  }[];
+  documents: {
+    id: string;
+    name: string;
+    file: string;
+    type: string;
+    numPages: number;
+    ownerId: string;
+    owner: {
+      name: string;
+    };
+    views: {
+      id: string;
+    }[];
+  }[];
+}
 
 export interface DocumentWithLinksAndLinkCountAndViewCount extends Document {
   _count: {
@@ -61,7 +99,7 @@ export type DomainVerificationStatusProps =
   | "Pending Verification"
   | "Domain Not Found"
   | "Unknown Error";
-  
+
 // From https://vercel.com/docs/rest-api/endpoints#get-a-project-domain
 export interface DomainResponse {
   name: string;
@@ -133,7 +171,7 @@ export type AnalyticsEvents =
       documentId: string;
       customDomain: string | null | undefined;
     }
-  | { event: "User Upgraded"; email: string | null | undefined; }
+  | { event: "User Upgraded"; email: string | null | undefined }
   | {
       event: "User Signed In";
       email: string | null | undefined;

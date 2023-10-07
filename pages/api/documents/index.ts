@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth/next";
 import prisma from "@/lib/prisma";
 import { authOptions } from "../auth/[...nextauth]";
-import { CustomUser } from "@/lib/types";
+import { CustomUser, DocumentData } from "@/lib/types";
 import { getExtension, log } from "@/lib/utils";
 import { identifyUser, trackAnalytics } from "@/lib/analytics";
 
@@ -21,6 +21,7 @@ export default async function handle(
       const documents = await prisma.document.findMany({
         where: {
           ownerId: (session.user as CustomUser).id,
+          teamId: null,
         },
         orderBy: {
           createdAt: "desc",
@@ -59,7 +60,7 @@ export default async function handle(
     }
 
     // Assuming data is an object with `name` and `description` properties
-    const { name, url, numPages } = req.body;
+    const { name, url, numPages, teamId } = req.body;
 
     // Get the file extension and save it as the type
     const type = getExtension(name);
@@ -67,22 +68,43 @@ export default async function handle(
     // You could perform some validation here
 
     try {
+      const documentData: DocumentData = {
+        name: name,
+        numPages: numPages,
+        file: url,
+        type: type,
+        ownerId: (session.user as CustomUser).id,
+        links: {
+          create: {},
+        },
+      };
+
+      if (teamId) {
+        documentData.teamId = teamId.trim();
+      }
+
       // Save data to the database
       const document = await prisma.document.create({
-        data: {
-          name: name,
-          numPages: numPages,
-          file: url,
-          type: type,
-          ownerId: (session.user as CustomUser).id,
-          links : {
-            create: {}
-          }
-        },
+        data: documentData,
         include: {
           links: true,
         },
       });
+
+      if (teamId) {
+        await prisma.team.update({
+          where: {
+            id: teamId.trim(),
+          },
+          data: {
+            documents: {
+              connect: {
+                id: document.id,
+              },
+            },
+          },
+        });
+      }
 
       await identifyUser((session.user as CustomUser).id);
       await trackAnalytics({
@@ -101,7 +123,7 @@ export default async function handle(
 
       res.status(201).json(document);
     } catch (error) {
-      log(`Failed to create document. Error: \n\n ${error}`)
+      log(`Failed to create document. Error: \n\n ${error}`);
       res.status(500).json({
         message: "Internal Server Error",
         error: (error as Error).message,

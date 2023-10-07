@@ -9,7 +9,7 @@ import {
 import { useState } from "react";
 import { useRouter } from "next/router";
 import { type PutBlobResult } from "@vercel/blob";
-import { upload } from '@vercel/blob/client';
+import { upload } from "@vercel/blob/client";
 import DocumentUpload from "@/components/document-upload";
 import { pdfjs } from "react-pdf";
 import { copyToClipboard, getExtension } from "@/lib/utils";
@@ -18,7 +18,7 @@ import { usePlausible } from "next-plausible";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
 
-export function AddDocumentModal({children}: {children: React.ReactNode}) {
+export function AddDocumentModal({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const plausible = usePlausible();
   const [uploading, setUploading] = useState<boolean>(false);
@@ -55,7 +55,10 @@ export function AddDocumentModal({children}: {children: React.ReactNode}) {
         const document = await response.json();
 
         // copy the link to the clipboard
-        copyToClipboard(`${process.env.NEXT_PUBLIC_BASE_URL}/view/${document.links[0].id}`, "Document uploaded and link copied to clipboard. Redirecting to document page...")
+        copyToClipboard(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/view/${document.links[0].id}`,
+          "Document uploaded and link copied to clipboard. Redirecting to document page..."
+        );
 
         // track the event
         plausible("documentUploaded");
@@ -68,9 +71,14 @@ export function AddDocumentModal({children}: {children: React.ReactNode}) {
     } catch (error) {
       console.error("An error occurred while uploading the file: ", error);
     }
-  }
+  };
 
-  async function saveDocumentToDatabase(blob: PutBlobResult, numPages?: number) {
+  async function saveDocumentToDatabase(
+    blob: PutBlobResult,
+    numPages?: number
+  ) {
+    const teamId = router.query.id || "";
+
     // create a document in the database with the blob url
     const response = await fetch("/api/documents", {
       method: "POST",
@@ -81,6 +89,7 @@ export function AddDocumentModal({children}: {children: React.ReactNode}) {
         name: blob.pathname,
         url: blob.url,
         numPages: numPages,
+        teamId: teamId,
       }),
     });
 
@@ -95,7 +104,7 @@ export function AddDocumentModal({children}: {children: React.ReactNode}) {
   async function getTotalPages(url: string): Promise<number> {
     const pdf = await pdfjs.getDocument(url).promise;
     return pdf.numPages;
-  };
+  }
 
   return (
     <Dialog>
@@ -113,8 +122,7 @@ export function AddDocumentModal({children}: {children: React.ReactNode}) {
             <form
               encType="multipart/form-data"
               onSubmit={handleBrowserUpload}
-              className="flex flex-col"
-            >
+              className="flex flex-col">
               <div className="space-y-12">
                 <div className="pb-6">
                   <div className="mt-10 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
@@ -130,8 +138,7 @@ export function AddDocumentModal({children}: {children: React.ReactNode}) {
                 <Button
                   type="submit"
                   className="w-full lg:w-1/2"
-                  disabled={uploading || !currentFile}
-                >
+                  disabled={uploading || !currentFile}>
                   {uploading ? "Uploading..." : "Upload Document"}
                 </Button>
               </div>
