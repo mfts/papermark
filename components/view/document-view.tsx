@@ -23,7 +23,13 @@ export type DEFAULT_DOCUMENT_VIEW_TYPE = {
   file: string;
 };
 
-export default function DocumentView({ link, error }: { link: LinkWithDocument; error: any }) {
+export default function DocumentView({
+  link,
+  error,
+}: {
+  link: LinkWithDocument;
+  error: any;
+}) {
   const { data: session } = useSession();
   const plausible = usePlausible();
 
@@ -161,6 +167,7 @@ export default function DocumentView({ link, error }: { link: LinkWithDocument; 
         viewId={viewData.viewId}
         linkId={link.id}
         documentId={document.id}
+        name={document.name}
       />
     </div>
   );
