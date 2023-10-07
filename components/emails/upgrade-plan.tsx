@@ -31,7 +31,7 @@ const UpgradePlanEmail = ({ name }: UpgradePlanEmailProps) => {
             <Heading className="text-2xl font-normal text-center p-0 mt-4 mb-8 mx-0">
               <span className="font-bold tracking-tighter">Papermark</span>
             </Heading>
-            <Heading className="text-2xl font-normal text-center p-0 mt-4 mb-8 mx-0">
+            <Heading className="text-xl font-seminbold text-center p-0 mt-4 mb-8 mx-0">
               Thanks for for upgrading to Papermark Pro!
             </Heading>
             <Text className="text-sm leading-6 text-black">
