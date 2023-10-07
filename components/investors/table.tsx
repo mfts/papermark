@@ -20,12 +20,10 @@ interface Fields {
   openSourceInvestments: string;
   checkSize:
     | "Unknown"
-    | "$2-5k"
-    | "$5-15k"
-    | "$15-25k"
-    | "$25-50k"
-    | "$50-100k"
-    | "$100k+";
+    | "$5k - $50k"
+    | "$50k+"
+    | "$100k+"
+    | "$250k+"
 }
 
 export default function Table({ investors }: { investors: Investor[]; }) {
@@ -124,14 +122,14 @@ export default function Table({ investors }: { investors: Investor[]; }) {
                 <span
                   className={cn(
                     person.fields.checkSize === "Unknown"
+                      ? "bg-gray-100 text-gray-800"
+                      : person.fields.checkSize === "$5k - $50k"
                       ? "bg-green-100 text-green-800"
-                      : person.fields.checkSize === "$2-5k"
+                      : person.fields.checkSize === "$50k+"
                       ? "bg-blue-100 text-blue-800"
-                      : person.fields.checkSize === "$5-15k"
-                      ? "bg-red-100 text-red-800"
-                      : person.fields.checkSize === "$15-25k"
-                      ? "bg-cyan-100 text-cyan-800"
-                      : person.fields.checkSize === "$25-50k"
+                      : person.fields.checkSize === "$100k+"
+                      ? "bg-purple-100 text-purple-800"
+                      : person.fields.checkSize === "$250k+"
                       ? "bg-yellow-100 text-yellow-800"
                       : "bg-orange-100 text-orange-800",
                     "inline-flex rounded-full px-[9px] py-[2px] text-xs font-semibold leading-5"
