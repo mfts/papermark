@@ -9,5 +9,6 @@ export const sendUpgradePlanEmail = async (params: CreateUserEmailProps) => {
     to: email as string,
     subject: "Thank you for upgrading to Papermark Pro!",
     react: emailTemplate,
+    test: process.env.NODE_ENV === "development",
   });
 };

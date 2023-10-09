@@ -1,33 +1,39 @@
+import { nanoid } from "@/lib/utils";
+import { ReactElement, JSXElementConstructor } from "react";
 import { Resend } from "resend";
-import { CreateEmailOptions, CreateEmailResponse } from "resend/build/src/emails/interfaces";
-import { log } from "./utils";
 
-const resend = new Resend(process.env.RESEND_API_KEY!);
+export const resend = process.env.RESEND_API_KEY
+  ? new Resend(process.env.RESEND_API_KEY)
+  : null;
 
-// Define a new interface called SendEmailProps that extends the CreateEmailOptions interface and makes the 'from' property optional
-interface SendEmailProps extends Omit<CreateEmailOptions, "from"> {
-  from?: string;
-}
-
-// Define a new function called sendEmail that sends an email using the Resend API
-export async function sendEmail(
-  options: SendEmailProps
-): Promise<CreateEmailResponse> {
-  // Destructure the options object and provide a default value for the 'from' property
-  const { from = "Marc from Papermark <marc@papermark.io>", to, subject, react, ...otherOptions } = options;
-  try {
-    // Send the email using the Resend API and return the response
-    const response = await resend.emails.send({
-      from,
-      to,
-      subject,
-      react,
-      ...otherOptions,
-    } as CreateEmailOptions);
-    return response;
-  } catch (error) {
-    // Log any errors and re-throw the error
-    log(`Failed to send email. Error: \n\n ${error}`);
-    throw error;
+export const sendEmail = async ({
+  to,
+  subject,
+  react,
+  marketing,
+  test,
+}: {
+  to: string;
+  subject: string;
+  react: ReactElement<any, string | JSXElementConstructor<any>>;
+  marketing?: boolean;
+  test?: boolean;
+}) => {
+  if (!resend) {
+    console.log(
+      "Resend is not configured. You need to add a RESEND_API_KEY in your .env file for emails to work."
+    );
+    return Promise.resolve();
   }
-}
+  return resend.emails.send({
+    from: marketing
+      ? "Marc from Papermark <marc@ship.papermark.io>"
+      : "Marc from Papermark <marc@papermark.io>",
+    to: test ? "delivered@resend.dev" : to,
+    subject,
+    react,
+    headers: {
+      "X-Entity-Ref-ID": nanoid(),
+    },
+  });
+};

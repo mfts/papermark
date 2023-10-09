@@ -4,7 +4,7 @@ import {
   DomainVerificationResponse,
 } from "@/lib/types";
 
-import prisma from "@/lib/prisma"
+
 
 export const addDomainToVercel = async (domain: string) => {
   return await fetch(
