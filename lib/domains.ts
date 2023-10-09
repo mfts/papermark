@@ -4,7 +4,7 @@ import {
   DomainVerificationResponse,
 } from "@/lib/types";
 
-import prisma from "@/lib/prisma"
+
 
 export const addDomainToVercel = async (domain: string) => {
   return await fetch(
@@ -129,48 +129,3 @@ export const getApexDomain = (url: string) => {
 export const validDomainRegex = new RegExp(
   /^([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/
 );
-
-// calculate the domainCount
-export async function getDomainCount(domain: string) {
-  const apexDomain = getApexDomain(`https://${domain}`);
-  const response = await prisma.domain.count({
-    where: {
-      OR: [
-        {
-          slug: apexDomain,
-        },
-        {
-          slug: {
-            endsWith: `.${apexDomain}`,
-          },
-        },
-      ],
-    },
-  });
-  
-  return response;
-}
-      
-
-/* Delete a domain */
-export async function deleteDomain(
-  domain: string,
-  {
-    // Note: in certain cases, we don't need to remove the domain from the Prisma
-    skipPrismaDelete = false,
-  } = {},
-) {
-  const domainCount = await getDomainCount(domain);
-
-  return await Promise.allSettled([
-    // remove the domain from Vercel
-    removeDomainFromVercel(domain, domainCount),
-    // delete domain
-    !skipPrismaDelete &&
-      prisma.domain.delete({
-        where: {
-          slug: domain,
-        },
-      }),
-  ]);
-}
