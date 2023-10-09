@@ -1,5 +1,5 @@
 import { log } from "@/lib/utils";
-import { deleteDomain } from "@/lib/domains";
+import { deleteDomain } from "@/lib/api/domains";
 import prisma from "@/lib/prisma";
 import { limiter } from "@/lib/cron";
 import { sendDeletedDomainEmail } from "@/lib/emails/send-deleted-domain";
@@ -29,7 +29,7 @@ export const handleDomainUpdates = async ({
   );
 
   // do nothing if domain is invalid for less than 14 days
-  if (invalidDays < 14) return;
+  if (invalidDays != 1 && invalidDays < 14) return;
 
   const user = await prisma.user.findFirst({
     where: {
@@ -46,7 +46,10 @@ export const handleDomainUpdates = async ({
     },
   });
   if (!user) {
-    await log(`Domain *${domain}* is invalid but not associated with any user, skipping.`, true);
+    await log(
+      `Domain *${domain}* is invalid but not associated with any user, skipping.`,
+      true
+    );
     return;
   }
 
@@ -75,18 +78,20 @@ export const handleDomainUpdates = async ({
       );
 
       if (totalLinksViews > 0) {
-        return await log(`Domain *${domain}* has been invalid for > 30 days and has links with clicks, skipping.`);
+        return await log(
+          `Domain *${domain}* has been invalid for > 30 days and has links with clicks, skipping.`
+        );
       }
     }
     // else, delete the domain and send email
     return await Promise.allSettled([
       deleteDomain(domain),
-      log(`Domain *${domain}* has been invalid for > 30 days and ${
+      log(
+        `Domain *${domain}* has been invalid for > 30 days and ${
           linksCount > 0 ? "has links but no link clicks" : "has no links"
-        }, deleting.`),
-      limiter.schedule(() =>
-        sendDeletedDomainEmail(user.email!, domain)
-      )
+        }, deleting.`
+      ),
+      limiter.schedule(() => sendDeletedDomainEmail(user.email!, domain)),
     ]);
   }
 
@@ -94,7 +99,9 @@ export const handleDomainUpdates = async ({
   if (invalidDays >= 28) {
     return await Promise.allSettled([
       log(`Domain *${domain}* is invalid for ${invalidDays} days, email sent.`),
-      limiter.schedule(() => sendInvalidDomainEmail(user.email!, domain, invalidDays)),
+      limiter.schedule(() =>
+        sendInvalidDomainEmail(user.email!, domain, invalidDays)
+      ),
     ]);
   }
 
@@ -107,5 +114,16 @@ export const handleDomainUpdates = async ({
       ),
     ]);
   }
+
+  // if domain is invalid after the first day, send email
+  if (invalidDays == 1) {
+    return await Promise.allSettled([
+      log(`Domain *${domain}* is invalid for ${invalidDays} days, email sent.`),
+      limiter.schedule(() =>
+        sendInvalidDomainEmail(user.email!, domain, invalidDays)
+      ),
+    ]);
+  }
+
   return;
 };

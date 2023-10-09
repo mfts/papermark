@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { receiver } from "@/lib/cron";
-import { handleDomainUpdates } from "@/lib/cron/domain";
+import { handleDomainUpdates } from "./utils";
 import {
   getConfigResponse,
   getDomainResponse,
