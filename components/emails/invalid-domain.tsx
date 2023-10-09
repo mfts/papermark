@@ -24,7 +24,7 @@ export default function InvalidDomain({
   return (
     <Html>
       <Head />
-      <Preview>Domain Deleted</Preview>
+      <Preview>Invalid Domain Configuration</Preview>
       <Tailwind>
         <Body className="bg-white my-auto mx-auto font-sans">
           <Container className="my-10 mx-auto p-5 w-[465px]">
@@ -32,11 +32,18 @@ export default function InvalidDomain({
               <span className="font-bold tracking-tighter">Papermark</span>
             </Heading>
             <Heading className="mx-0 my-7 p-0 text-center text-xl font-semibold text-black">
-              Invalid Domain Configuration
+              {invalidDays >= 14 ? 
+                `Invalid Domain Configuration` : 
+                `Finish configuring your domain`
+              }
             </Heading>
             <Text className="text-sm leading-6 text-black">
               Your domain <code className="text-purple-600">{domain}</code> for
-              your Papermark account has been invalid for {invalidDays} days.
+              your Papermark account{" "}
+              {invalidDays >= 14 ? 
+                `has been invalid for ${invalidDays} days.` :
+                `is still unconfigured.`
+              }
             </Text>
             <Text className="text-sm leading-6 text-black">
               If your domain remains unconfigured for 30 days, it will be
@@ -48,7 +55,7 @@ export default function InvalidDomain({
                 pX={20}
                 pY={12}
                 className="bg-black rounded text-white text-xs font-semibold no-underline text-center"
-                href={`${process.env.NEXT_PUBLIC_BASE_URL}/settings/domains`}
+                href={`https://www.papermark.io/settings/domains`}
               >
                 Configure domain
               </Button>
@@ -61,12 +68,15 @@ export default function InvalidDomain({
               >
                 delete it
               </Link>{" "}
-              or simply ignore this email. To respect your inbox,{" "}
-              {invalidDays < 28
-                ? `we will only send you one more email about this in ${
-                    28 - invalidDays
-                  } days.`
-                : "this will be the last time we will email you about this."}
+              or simply ignore this email.{" "} 
+              {invalidDays >= 14 ? 
+                `To respect your inbox,${" "} 
+                  ${invalidDays < 28 ? 
+                    `we will only send you one more email about this in ${28 - invalidDays} days.` : 
+                    `this will be the last time we will email you about this.`}` 
+                : ""
+              }
+
             </Text>
             <Hr />
             <Section className="mt-8 text-gray-400">

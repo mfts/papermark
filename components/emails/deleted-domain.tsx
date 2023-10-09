@@ -46,7 +46,7 @@ export default function DomainDeleted({
                 pX={20}
                 pY={12}
                 className="bg-black rounded text-white text-xs font-semibold no-underline text-center"
-                href={`${process.env.NEXT_PUBLIC_BASE_URL}/settings/domains`}
+                href={`https://www.papermark.io/settings/domains`}
               >
                 Set up your custom domain
               </Button>
