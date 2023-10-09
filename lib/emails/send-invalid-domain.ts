@@ -5,7 +5,8 @@ export const sendInvalidDomainEmail = async (email: string, domain: string, inva
   const emailTemplate = InvalidDomainEmail({ domain, invalidDays });
   await sendEmail({
     to: email,
-    subject: `Your domain ${domain} needs to be configured`,
+    subject: `Updated Link – Your domain ${domain} needs to be configured`,
     react: emailTemplate,
+    test: process.env.NODE_ENV === "development",
   });
 };
