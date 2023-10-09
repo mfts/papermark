@@ -45,3 +45,6 @@ next-env.d.ts
 
 # Tinybird config for the cli is stored in this file
 .tinyb
+
+# Internal scripts
+pages/api/scripts
