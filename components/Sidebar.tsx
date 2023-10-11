@@ -9,13 +9,15 @@ import MenuIcon from "@/components/shared/icons/menu";
 import ChevronUp from "@/components/shared/icons/chevron-up";
 import X from "@/components/shared/icons/x";
 import Link from "next/link";
-import { cn } from "@/lib/utils";
+import { cn, daysLeft } from "@/lib/utils";
 import { useRouter } from "next/router";
 import { ModeToggle } from "./theme-toggle";
 import { Button } from "./ui/button";
+import { CustomUser } from "@/lib/types";
+import LoadingSpinner from "./ui/loading-spinner";
 
 export default function Sidebar() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
   const router = useRouter();
 
@@ -49,6 +51,27 @@ export default function Sidebar() {
       disabled: false,
     },
   ];
+
+  const cutoffDate = new Date('2023-10-12T00:00:00.000Z');
+  
+  const calculateDaysLeft = (accountCreationDate: Date): number => {
+    let maxDays;
+    if (accountCreationDate < cutoffDate) {
+      // If the user signed up before the 12th of October 2023
+      maxDays = 30;
+      // Override account creation date to 1st of October for correct calculation
+      accountCreationDate = new Date('2023-10-01T00:00:00.000Z');
+    } else {
+      // If the user signed up on or after the 12th of October 2023
+      maxDays = 14;
+    }
+    return daysLeft(accountCreationDate, maxDays);
+  }
+
+  if (status === "loading") return <LoadingSpinner className="mr-1 h-5 w-5" />;;
+
+  const userDaysLeft = calculateDaysLeft(new Date((session?.user as CustomUser).createdAt || 0));
+
 
   return (
     <>
@@ -187,7 +210,7 @@ export default function Sidebar() {
                     <span className="font-bold text-sm">✨ Pro Trial ✨</span>
                   </div>
                   <p className="my-4 text-sm">
-                    You are on the Pro trial for the next 30 days.
+                    {`You are on the Pro trial for the next ${userDaysLeft} days.`}
                   </p>
                   <Button>
                     <Link href="/settings/domains" target="_blank">
