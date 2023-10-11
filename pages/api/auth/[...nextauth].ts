@@ -42,9 +42,9 @@ export const authOptions: NextAuthOptions = {
     },
     session: async ({ session, token }) => {
       (session.user as CustomUser) = {
-        // @ts-ignore
         id: token.sub,
-        ...session.user,
+        // @ts-ignore
+        ...(token || session).user,
       };
       return session;
     },
