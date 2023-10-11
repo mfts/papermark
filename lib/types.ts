@@ -1,10 +1,7 @@
 import { User as NextAuthUser } from "next-auth";
-import { Document, Link, View } from "@prisma/client";
+import { Document, Link, View, User as PrismaUser } from "@prisma/client";
 
-export interface CustomUser extends NextAuthUser {
-  id: string;
-  createdAt: Date;
-}
+export type CustomUser = NextAuthUser & PrismaUser;
 
 export interface CreateUserEmailProps {
   user: {

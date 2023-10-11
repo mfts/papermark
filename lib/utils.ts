@@ -230,3 +230,15 @@ export const nanoid = customAlphabet(
   "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
   7,
 ); // 7-character random string
+
+
+export const daysLeft = (accountCreationDate: Date, maxDays: number): number => {
+  const now = new Date();
+  const endPeriodDate = new Date(accountCreationDate);
+  endPeriodDate.setDate(accountCreationDate.getDate() + maxDays);
+
+  const diffInMilliseconds = endPeriodDate.getTime() - now.getTime();
+
+  // Convert milliseconds to days and return
+  return Math.ceil(diffInMilliseconds / (1000 * 60 * 60 * 24));
+}
