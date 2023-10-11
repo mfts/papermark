@@ -7,6 +7,7 @@ import { useSession } from "next-auth/react";
 import { usePlausible } from "next-plausible";
 import { toast } from "sonner";
 import { LinkWithDocument } from "@/lib/types";
+import LoadingSpinner from "../ui/loading-spinner";
 
 export const DEFAULT_ACCESS_FORM_DATA = {
   email: null,
@@ -23,7 +24,13 @@ export type DEFAULT_DOCUMENT_VIEW_TYPE = {
   file: string;
 };
 
-export default function DocumentView({ link, error }: { link: LinkWithDocument; error: any }) {
+export default function DocumentView({
+  link,
+  error,
+}: {
+  link: LinkWithDocument;
+  error: any;
+}) {
   const { data: session } = useSession();
   const plausible = usePlausible();
 
@@ -54,7 +61,7 @@ export default function DocumentView({ link, error }: { link: LinkWithDocument; 
   }
 
   if (!link) {
-    return <div>Loading...</div>;
+    return <LoadingSpinner className="mr-1 h-5 w-5" />;
   }
 
   const { document, expiresAt, emailProtected, password: linkPassword } = link;
