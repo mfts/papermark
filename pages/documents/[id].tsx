@@ -5,11 +5,12 @@ import StatsCard from "@/components/documents/stats-card";
 import StatsChart from "@/components/documents/stats-chart";
 import AppLayout from "@/components/layouts/app";
 import LinkSheet from "@/components/links/link-sheet";
-import Image from "next/image"
+import Image from "next/image";
 import LinksTable from "@/components/links/links-table";
 import VisitorsTable from "@/components/visitors/visitors-table";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import LoadingSpinner from "@/components/ui/loading-spinner";
 
 export default function DocumentPage() {
   const { document, error } = useDocument();
@@ -43,7 +44,9 @@ export default function DocumentPage() {
                   </h2>
                 </div>
               </div>
-              <Button onClick={() => setIsLinkSheetOpen(true)}>Create Link</Button>
+              <Button onClick={() => setIsLinkSheetOpen(true)}>
+                Create Link
+              </Button>
             </div>
             {/* Stats */}
             {document.numPages !== null && (
@@ -63,7 +66,9 @@ export default function DocumentPage() {
             />
           </>
         ) : (
-          <div>Loading...</div>
+          <div className="h-screen flex items-center justify-center">
+            <LoadingSpinner className="mr-1 h-20 w-20" />
+          </div>
         )}
       </div>
     </AppLayout>
