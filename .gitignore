@@ -48,3 +48,6 @@ next-env.d.ts
 
 # Internal scripts
 pages/api/scripts
+
+# Turborepo
+.turbo
