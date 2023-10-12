@@ -7,7 +7,8 @@
   "scripts": {
     "lint": "eslint .",
     "ts": "tsc  --noEmit",
-    "db:generate": "prisma generate",
+    "postinstall": "prisma generate",
+    "vercel-build": "prisma migrate deploy && next build",
     "db:push": "dotenv -e ../../.env.local prisma db push --skip-generate",
     "db:migrate:dev": "dotenv -e ../../.env.local prisma migrate dev",
     "db:migrate:reset": "dotenv -e ../../.env.local prisma migrate reset",
@@ -15,13 +16,13 @@
     "db:studio": "dotenv -e ../../.env.local prisma studio"
   },
   "dependencies": {
-    "@prisma/client": "^5.3.1"
+    "@prisma/client": "^4.16.2"
   },
   "devDependencies": {
     "@types/node": "^20.8.0",
     "dotenv-cli": "^7.3.0",
     "eslint-config-custom": "workspace:*",
-    "prisma": "^5.3.1",
+    "prisma": "^4.16.2",
     "tsconfig": "workspace:*",
     "typescript": "5.1.6"
   }

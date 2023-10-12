@@ -1,0 +1,709 @@
+
+> web@1.0.0 lint /Users/jakubhavej/Code/papermark/apps/web
+> next lint
+
+
+./app/(static)/open-source-investors/ClientPage.tsx
+20:21  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+20:29  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+37:45  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+42:20  Error: Forbidden non-null assertion.  @typescript-eslint/no-non-null-assertion
+61:25  Error: Unsafe call of an `any` typed value.  @typescript-eslint/no-unsafe-call
+61:25  Error: Unsafe call of an `any` typed value.  @typescript-eslint/no-unsafe-call
+64:22  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+76:5  Error: Unsafe return of an `any` typed value.  @typescript-eslint/no-unsafe-return
+77:6  Warning: React Hook useMemo has a missing dependency: 'fuse'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+80:5  Warning: Fragments should contain more than one child - otherwise, there’s no need for a Fragment at all.  react/jsx-no-useless-fragment
+
+./app/(static)/open-source-investors/page.tsx
+3:10  Error: cache not found in 'react'  import/named
+51:21  Warning: Unexpected string concatenation.  prefer-template
+54:3  Error: Unsafe return of an `any` typed value.  @typescript-eslint/no-unsafe-return
+
+./app/(static)/oss-friends/page.tsx
+185:7  Error: The element ul has an implicit role of list. Defining this explicitly is redundant and should be avoided.  jsx-a11y/no-redundant-roles
+
+./app/api/cron/domains/utils.ts
+32:19  Error: Expected '!==' and instead saw '!='.  eqeqeq
+81:16  Error: Redundant use of `await` on a return value.  no-return-await
+87:12  Error: Redundant use of `await` on a return value.  no-return-await
+94:53  Error: Forbidden non-null assertion.  @typescript-eslint/no-non-null-assertion
+100:12  Error: Redundant use of `await` on a return value.  no-return-await
+103:32  Error: Forbidden non-null assertion.  @typescript-eslint/no-non-null-assertion
+110:12  Error: Redundant use of `await` on a return value.  no-return-await
+113:32  Error: Forbidden non-null assertion.  @typescript-eslint/no-non-null-assertion
+119:19  Error: Expected '===' and instead saw '=='.  eqeqeq
+120:12  Error: Redundant use of `await` on a return value.  no-return-await
+123:32  Error: Forbidden non-null assertion.  @typescript-eslint/no-non-null-assertion
+128:3  Warning: Unnecessary return statement.  no-useless-return
+
+./app/layout.tsx
+1:8  Error: Unable to resolve path to module '@/styles/globals.css'.  import/no-unresolved
+
+./pages/404.tsx
+5:5  Warning: Fragments should contain more than one child - otherwise, there’s no need for a Fragment at all.  react/jsx-no-useless-fragment
+
+./pages/_app.tsx
+1:8  Error: Unable to resolve path to module '@/styles/globals.css'.  import/no-unresolved
+30:53  Warning: Curly braces are unnecessary here.  react/jsx-curly-brace-presence
+
+./pages/alternatives/brieflink.tsx
+230:23  Error: Do not nest ternary expressions.  no-nested-ternary
+249:23  Warning: Empty components are self-closing  react/self-closing-comp
+268:21  Error: The element ul has an implicit role of list. Defining this explicitly is redundant and should be avoided.  jsx-a11y/no-redundant-roles
+319:19  Warning: Do not use `<img>` element. Use `<Image />` from `next/image` instead. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+369:21  Warning: Do not use `<img>` element. Use `<Image />` from `next/image` instead. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./pages/alternatives/docsend.tsx
+230:23  Error: Do not nest ternary expressions.  no-nested-ternary
+249:23  Warning: Empty components are self-closing  react/self-closing-comp
+268:21  Error: The element ul has an implicit role of list. Defining this explicitly is redundant and should be avoided.  jsx-a11y/no-redundant-roles
+318:19  Warning: Do not use `<img>` element. Use `<Image />` from `next/image` instead. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+368:21  Warning: Do not use `<img>` element. Use `<Image />` from `next/image` instead. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./pages/alternatives/google-drive.tsx
+233:23  Error: Do not nest ternary expressions.  no-nested-ternary
+252:23  Warning: Empty components are self-closing  react/self-closing-comp
+271:21  Error: The element ul has an implicit role of list. Defining this explicitly is redundant and should be avoided.  jsx-a11y/no-redundant-roles
+321:19  Warning: Do not use `<img>` element. Use `<Image />` from `next/image` instead. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+371:21  Warning: Do not use `<img>` element. Use `<Image />` from `next/image` instead. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./pages/alternatives/pandadoc.tsx
+231:23  Error: Do not nest ternary expressions.  no-nested-ternary
+250:23  Warning: Empty components are self-closing  react/self-closing-comp
+269:21  Error: The element ul has an implicit role of list. Defining this explicitly is redundant and should be avoided.  jsx-a11y/no-redundant-roles
+320:19  Warning: Do not use `<img>` element. Use `<Image />` from `next/image` instead. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+370:21  Warning: Do not use `<img>` element. Use `<Image />` from `next/image` instead. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./pages/alternatives/pitch.tsx
+230:23  Error: Do not nest ternary expressions.  no-nested-ternary
+249:23  Warning: Empty components are self-closing  react/self-closing-comp
+268:21  Error: The element ul has an implicit role of list. Defining this explicitly is redundant and should be avoided.  jsx-a11y/no-redundant-roles
+318:19  Warning: Do not use `<img>` element. Use `<Image />` from `next/image` instead. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+368:21  Warning: Do not use `<img>` element. Use `<Image />` from `next/image` instead. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./pages/api/auth/[...nextauth].ts
+14:17  Error: Use a ! assertion to more succinctly remove null and undefined from the type.  @typescript-eslint/non-nullable-type-assertion-style
+15:21  Error: Use a ! assertion to more succinctly remove null and undefined from the type.  @typescript-eslint/non-nullable-type-assertion-style
+34:34  Error: Async method 'jwt' has no 'await' expression.  @typescript-eslint/require-await
+43:41  Error: Async method 'session' has no 'await' expression.  @typescript-eslint/require-await
+46:9  Error: Do not use "@ts-ignore" because it alters compilation errors.  @typescript-eslint/ban-ts-comment
+46:9  Error: Use "@ts-expect-error" to ensure an error is actually being suppressed.  @typescript-eslint/prefer-ts-expect-error
+60:13  Error: Unsafe call of an `any` typed value.  @typescript-eslint/no-unsafe-call
+
+./pages/api/billing/index.ts
+34:14  Error: Returning a void expression from a function is forbidden. Please move it before the `return` statement.  @typescript-eslint/no-confusing-void-expression
+39:12  Error: Returning a void expression from a function is forbidden. Please move it before the `return` statement.  @typescript-eslint/no-confusing-void-expression
+40:10  Warning: Unnecessary 'else' after 'return'.  no-else-return
+
+./pages/api/billing/manage.ts
+26:14  Error: Returning a void expression from a function is forbidden. Please move it before the `return` statement.  @typescript-eslint/no-confusing-void-expression
+29:14  Error: Returning a void expression from a function is forbidden. Please move it before the `return` statement.  @typescript-eslint/no-confusing-void-expression
+36:12  Error: Returning a void expression from a function is forbidden. Please move it before the `return` statement.  @typescript-eslint/no-confusing-void-expression
+37:10  Warning: Unnecessary 'else' after 'return'.  no-else-return
+
+./pages/api/billing/upgrade.ts
+37:12  Error: Returning a void expression from a function is forbidden. Please move it before the `return` statement.  @typescript-eslint/no-confusing-void-expression
+38:10  Warning: Unnecessary 'else' after 'return'.  no-else-return
+
+./pages/api/documents/[id]/index.ts
+24:11  Warning: Expected property shorthand.  object-shorthand
+37:14  Error: Returning a void expression from a function is forbidden. Please move it before the `return` statement.  @typescript-eslint/no-confusing-void-expression
+39:14  Error: Returning a void expression from a function is forbidden. Please move it before the `return` statement.  @typescript-eslint/no-confusing-void-expression
+57:11  Warning: Expected property shorthand.  object-shorthand
+75:11  Warning: Expected property shorthand.  object-shorthand
+81:14  Error: Returning a void expression from a function is forbidden. Please move it before the `return` statement.  @typescript-eslint/no-confusing-void-expression
+
+./pages/api/documents/[id]/links.ts
+44:7  Error: Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator.  @typescript-eslint/no-floating-promises
+44:66  Error: Invalid type "unknown" of template literal expression.  @typescript-eslint/restrict-template-expressions
+45:14  Error: Returning a void expression from a function is forbidden. Please move it before the `return` statement.  @typescript-eslint/no-confusing-void-expression
+
+./pages/api/documents/[id]/stats.ts
+36:13  Error: Identifier 'total_duration' is not in camel case.  camelcase
+41:54  Error: Identifier 'total_duration' is not in camel case.  camelcase
+47:14  Error: Returning a void expression from a function is forbidden. Please move it before the `return` statement.  @typescript-eslint/no-confusing-void-expression
+
+./pages/api/documents/[id]/views/[viewId]/stats.ts
+23:9  Warning: Expected property shorthand.  object-shorthand
+27:13  Error: Identifier 'total_duration' is not in camel case.  camelcase
+32:33  Error: Identifier 'total_duration' is not in camel case.  camelcase
+38:14  Error: Returning a void expression from a function is forbidden. Please move it before the `return` statement.  @typescript-eslint/no-confusing-void-expression
+
+./pages/api/documents/[id]/views/index.ts
+26:11  Warning: Expected property shorthand.  object-shorthand
+89:7  Error: Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator.  @typescript-eslint/no-floating-promises
+89:62  Error: Invalid type "unknown" of template literal expression.  @typescript-eslint/restrict-template-expressions
+90:14  Error: Returning a void expression from a function is forbidden. Please move it before the `return` statement.  @typescript-eslint/no-confusing-void-expression
+
+./pages/api/documents/index.ts
+41:14  Error: Returning a void expression from a function is forbidden. Please move it before the `return` statement.  @typescript-eslint/no-confusing-void-expression
+73:11  Warning: Expected property shorthand.  object-shorthand
+74:11  Warning: Expected property shorthand.  object-shorthand
+76:11  Warning: Expected property shorthand.  object-shorthand
+104:7  Error: Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator.  @typescript-eslint/no-floating-promises
+104:53  Error: Invalid type "unknown" of template literal expression.  @typescript-eslint/restrict-template-expressions
+
+./pages/api/documents/update.ts
+27:17  Warning: Expected property shorthand.  object-shorthand
+32:7  Error: Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator.  @typescript-eslint/no-floating-promises
+32:53  Error: Invalid type "unknown" of template literal expression.  @typescript-eslint/restrict-template-expressions
+
+./pages/api/domains/[domain]/index.ts
+27:14  Error: Returning a void expression from a function is forbidden. Please move it before the `return` statement.  @typescript-eslint/no-confusing-void-expression
+59:16  Error: Returning a void expression from a function is forbidden. Please move it before the `return` statement.  @typescript-eslint/no-confusing-void-expression
+73:7  Error: Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator.  @typescript-eslint/no-floating-promises
+73:62  Error: Invalid type "unknown" of template literal expression.  @typescript-eslint/restrict-template-expressions
+
+./pages/api/domains/[domain]/verify.ts
+75:12  Error: Forbidden non-null assertion.  @typescript-eslint/no-non-null-assertion
+77:15  Error: Unsafe call of an `any` typed value.  @typescript-eslint/no-unsafe-call
+81:11  Error: Unexpected console statement.  no-console
+86:12  Error: Returning a void expression from a function is forbidden. Please move it before the `return` statement.  @typescript-eslint/no-confusing-void-expression
+90:10  Warning: Unnecessary 'else' after 'return'.  no-else-return
+
+./pages/api/domains/index.ts
+35:12  Error: Returning a void expression from a function is forbidden. Please move it before the `return` statement.  @typescript-eslint/no-confusing-void-expression
+53:11  Error: This expression unnecessarily compares a boolean value to a boolean instead of negating it.  @typescript-eslint/no-unnecessary-boolean-literal-compare
+54:16  Error: Returning a void expression from a function is forbidden. Please move it before the `return` statement.  @typescript-eslint/no-confusing-void-expression
+75:7  Error: Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator.  @typescript-eslint/no-floating-promises
+75:48  Error: Invalid type "unknown" of template literal expression.  @typescript-eslint/restrict-template-expressions
+
+./pages/api/file/browser-upload.ts
+35:57  Error: Async method 'onUploadCompleted' has no 'await' expression.  @typescript-eslint/require-await
+40:9  Error: Unexpected console statement.  no-console
+52:12  Error: Returning a void expression from a function is forbidden. Please move it before the `return` statement.  @typescript-eslint/no-confusing-void-expression
+55:12  Error: Returning a void expression from a function is forbidden. Please move it before the `return` statement.  @typescript-eslint/no-confusing-void-expression
+
+./pages/api/links/[id]/archive.ts
+25:16  Warning: Expected property shorthand.  object-shorthand
+27:9  Warning: Expected property shorthand.  object-shorthand
+42:14  Error: Returning a void expression from a function is forbidden. Please move it before the `return` statement.  @typescript-eslint/no-confusing-void-expression
+45:12  Error: Returning a void expression from a function is forbidden. Please move it before the `return` statement.  @typescript-eslint/no-confusing-void-expression
+
+./pages/api/links/[id]/index.ts
+19:11  Warning: Expected property shorthand.  object-shorthand
+30:14  Error: Returning a void expression from a function is forbidden. Please move it before the `return` statement.  @typescript-eslint/no-confusing-void-expression
+32:14  Error: Returning a void expression from a function is forbidden. Please move it before the `return` statement.  @typescript-eslint/no-confusing-void-expression
+51:28  Warning: 'linkData' is never reassigned. Use 'const' instead.  prefer-const
+69:16  Error: Returning a void expression from a function is forbidden. Please move it before the `return` statement.  @typescript-eslint/no-confusing-void-expression
+73:18  Warning: Expected property shorthand.  object-shorthand
+86:15  Warning: Expected property shorthand.  object-shorthand
+93:18  Error: Returning a void expression from a function is forbidden. Please move it before the `return` statement.  @typescript-eslint/no-confusing-void-expression
+102:16  Warning: Expected property shorthand.  object-shorthand
+104:9  Warning: Expected property shorthand.  object-shorthand
+126:14  Error: Returning a void expression from a function is forbidden. Please move it before the `return` statement.  @typescript-eslint/no-confusing-void-expression
+129:12  Error: Returning a void expression from a function is forbidden. Please move it before the `return` statement.  @typescript-eslint/no-confusing-void-expression
+130:25  Error: Expected '===' and instead saw '=='.  eqeqeq
+142:11  Warning: Expected property shorthand.  object-shorthand
+154:16  Error: Returning a void expression from a function is forbidden. Please move it before the `return` statement.  @typescript-eslint/no-confusing-void-expression
+163:11  Warning: Expected property shorthand.  object-shorthand
+169:14  Error: Returning a void expression from a function is forbidden. Please move it before the `return` statement.  @typescript-eslint/no-confusing-void-expression
+
+./pages/api/links/[id]/visits.ts
+26:11  Warning: Expected property shorthand.  object-shorthand
+84:7  Error: Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator.  @typescript-eslint/no-floating-promises
+84:62  Error: Invalid type "unknown" of template literal expression.  @typescript-eslint/restrict-template-expressions
+85:14  Error: Returning a void expression from a function is forbidden. Please move it before the `return` statement.  @typescript-eslint/no-confusing-void-expression
+
+./pages/api/links/domains/[domain]/[slug]/index.ts
+16:13  Warning: Expected property shorthand.  object-shorthand
+31:14  Error: Returning a void expression from a function is forbidden. Please move it before the `return` statement.  @typescript-eslint/no-confusing-void-expression
+
+./pages/api/links/index.ts
+24:28  Warning: 'linkData' is never reassigned. Use 'const' instead.  prefer-const
+42:16  Error: Returning a void expression from a function is forbidden. Please move it before the `return` statement.  @typescript-eslint/no-confusing-void-expression
+50:13  Warning: Expected property shorthand.  object-shorthand
+57:16  Error: Returning a void expression from a function is forbidden. Please move it before the `return` statement.  @typescript-eslint/no-confusing-void-expression
+68:9  Warning: Expected property shorthand.  object-shorthand
+86:14  Error: Returning a void expression from a function is forbidden. Please move it before the `return` statement.  @typescript-eslint/no-confusing-void-expression
+97:12  Error: Returning a void expression from a function is forbidden. Please move it before the `return` statement.  @typescript-eslint/no-confusing-void-expression
+100:10  Error: Returning a void expression from a function is forbidden. Please remove the `return` statement.  @typescript-eslint/no-confusing-void-expression
+
+./pages/api/record_view.ts
+72:17  Error: Unsafe call of an `any` typed value.  @typescript-eslint/no-unsafe-call
+96:12  Error: Returning a void expression from a function is forbidden. Please move it before the `return` statement.  @typescript-eslint/no-confusing-void-expression
+106:5  Error: Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator.  @typescript-eslint/no-floating-promises
+106:61  Error: Invalid type "unknown" of template literal expression.  @typescript-eslint/restrict-template-expressions
+
+./pages/api/stripe/webhook.ts
+36:32  Error: Irregular whitespace not allowed.  no-irregular-whitespace
+45:19  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+46:7  Error: Unexpected console statement.  no-console
+47:14  Error: Returning a void expression from a function is forbidden. Please move it before the `return` statement.  @typescript-eslint/no-confusing-void-expression
+70:25  Error: 'checkoutSession.customer' may evaluate to '[object Object]' when stringified.  @typescript-eslint/no-base-to-string
+81:28  Error: 'subscriptionUpdated.customer' may evaluate to '[object Object]' when stringified.  @typescript-eslint/no-base-to-string
+112:30  Error: Use a ! assertion to more succinctly remove null and undefined from the type.  @typescript-eslint/non-nullable-type-assertion-style
+112:58  Error: Use a ! assertion to more succinctly remove null and undefined from the type.  @typescript-eslint/non-nullable-type-assertion-style
+126:28  Error: 'subscriptionDeleted.customer' may evaluate to '[object Object]' when stringified.  @typescript-eslint/no-base-to-string
+157:17  Warning: Unexpected string concatenation.  prefer-template
+164:16  Error: Returning a void expression from a function is forbidden. Please move it before the `return` statement.  @typescript-eslint/no-confusing-void-expression
+169:14  Error: Returning a void expression from a function is forbidden. Please move it before the `return` statement.  @typescript-eslint/no-confusing-void-expression
+
+./pages/api/views.ts
+64:9  Warning: Expected property shorthand.  object-shorthand
+66:9  Warning: Expected property shorthand.  object-shorthand
+82:7  Warning: Expected property shorthand.  object-shorthand
+83:7  Warning: Expected property shorthand.  object-shorthand
+90:5  Error: Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator.  @typescript-eslint/no-floating-promises
+90:61  Error: Invalid type "unknown" of template literal expression.  @typescript-eslint/restrict-template-expressions
+
+./pages/blog/product-hunt-launch.tsx
+56:11  Warning: Do not use `<img>` element. Use `<Image />` from `next/image` instead. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+89:11  Warning: Do not use `<img>` element. Use `<Image />` from `next/image` instead. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+100:11  Warning: Do not use `<img>` element. Use `<Image />` from `next/image` instead. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+164:11  Warning: Do not use `<img>` element. Use `<Image />` from `next/image` instead. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+169:11  Warning: Do not use `<img>` element. Use `<Image />` from `next/image` instead. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+196:11  Warning: Do not use `<img>` element. Use `<Image />` from `next/image` instead. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+209:11  Warning: Do not use `<img>` element. Use `<Image />` from `next/image` instead. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+237:11  Warning: Do not use `<img>` element. Use `<Image />` from `next/image` instead. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+249:11  Warning: Do not use `<img>` element. Use `<Image />` from `next/image` instead. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+298:11  Warning: Do not use `<img>` element. Use `<Image />` from `next/image` instead. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+442:11  Warning: Do not use `<img>` element. Use `<Image />` from `next/image` instead. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+446:11  Warning: Do not use `<img>` element. Use `<Image />` from `next/image` instead. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+459:11  Warning: Do not use `<img>` element. Use `<Image />` from `next/image` instead. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./pages/documents/[id].tsx
+47:38  Error: Returning a void expression from an arrow function shorthand is forbidden. Please add braces to the arrow function.  @typescript-eslint/no-confusing-void-expression
+60:38  Error: Forbidden non-null assertion.  @typescript-eslint/no-non-null-assertion
+
+./pages/documents/index.tsx
+35:10  Warning: Potential leaked value that might cause unintentionally rendered values or rendering crashes  react/jsx-no-leaked-render
+42:9  Error: The element ul has an implicit role of list. Defining this explicitly is redundant and should be avoided.  jsx-a11y/no-redundant-roles
+49:24  Warning: Do not use Array index in keys  react/no-array-index-key
+52:34  Warning: Do not use Array index in keys  react/no-array-index-key
+53:34  Warning: Do not use Array index in keys  react/no-array-index-key
+
+./pages/login.tsx
+38:15  Error: Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator.  @typescript-eslint/no-floating-promises
+
+./pages/settings/billing.tsx
+59:18  Warning: Potential leaked value that might cause unintentionally rendered values or rendering crashes  react/jsx-no-leaked-render
+156:18  Error: Do not nest ternary expressions.  no-nested-ternary
+170:29  Error: Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator.  @typescript-eslint/no-floating-promises
+173:29  Error: Unexpected alert.  no-alert
+
+./pages/settings/domains.tsx
+15:5  Error: Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator.  @typescript-eslint/no-floating-promises
+23:5  Error: Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator.  @typescript-eslint/no-floating-promises
+47:26  Warning: Do not use Array index in keys  react/no-array-index-key
+
+./pages/welcome.tsx
+28:11  Warning: Missing an explicit type attribute for button  react/button-has-type
+30:28  Error: Returning a void expression from an arrow function shorthand is forbidden. Please add braces to the arrow function.  @typescript-eslint/no-confusing-void-expression
+
+./components/EmailForm.tsx
+1:66  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+3:5  Warning: Fragments should contain more than one child - otherwise, there’s no need for a Fragment at all.  react/jsx-no-useless-fragment
+26:36  Error: Unsafe return of an `any` typed value.  @typescript-eslint/no-unsafe-return
+26:36  Error: Unsafe call of an `any` typed value.  @typescript-eslint/no-unsafe-call
+
+./components/PDFViewer.tsx
+7:42  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+29:7  Error: Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator.  @typescript-eslint/no-floating-promises
+31:6  Warning: React Hook useEffect has a missing dependency: 'trackPageView'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+35:7  Error: Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator.  @typescript-eslint/no-floating-promises
+37:6  Warning: React Hook useEffect has a missing dependency: 'updateNumPages'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+53:7  Error: Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator.  @typescript-eslint/no-floating-promises
+61:6  Warning: React Hook useEffect has a missing dependency: 'trackPageView'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+83:32  Error: Type number trivially inferred from a number literal, remove type annotation.  @typescript-eslint/no-inferrable-types
+96:9  Warning: Expected property shorthand.  object-shorthand
+110:9  Warning: Expected property shorthand.  object-shorthand
+127:21  Warning: Curly braces are unnecessary here.  react/jsx-curly-brace-presence
+129:11  Warning: Missing an explicit type attribute for button  react/button-has-type
+137:11  Warning: Missing an explicit type attribute for button  react/button-has-type
+139:37  Error: Forbidden non-null assertion.  @typescript-eslint/no-non-null-assertion
+139:37  Error: This assertion is unnecessary since it does not change the type of the expression.  @typescript-eslint/no-unnecessary-type-assertion
+162:36  Error: Returning a void expression from an arrow function shorthand is forbidden. Please add braces to the arrow function.  @typescript-eslint/no-confusing-void-expression
+
+./components/Sidebar.tsx
+63:7  Error: Assignment to function parameter 'accountCreationDate'.  no-param-reassign
+120:38  Error: Returning a void expression from an arrow function shorthand is forbidden. Please add braces to the arrow function.  @typescript-eslint/no-confusing-void-expression
+138:21  Error: The element ul has an implicit role of list. Defining this explicitly is redundant and should be avoided.  jsx-a11y/no-redundant-roles
+140:25  Error: The element ul has an implicit role of list. Defining this explicitly is redundant and should be avoided.  jsx-a11y/no-redundant-roles
+143:31  Warning: Missing an explicit type attribute for button  react/button-has-type
+144:41  Error: Promise-returning function provided to attribute where a void return was expected.  @typescript-eslint/no-misused-promises
+182:13  Error: The element ul has an implicit role of list. Defining this explicitly is redundant and should be avoided.  jsx-a11y/no-redundant-roles
+184:17  Error: The element ul has an implicit role of list. Defining this explicitly is redundant and should be avoided.  jsx-a11y/no-redundant-roles
+187:23  Warning: Missing an explicit type attribute for button  react/button-has-type
+188:33  Error: Promise-returning function provided to attribute where a void return was expected.  @typescript-eslint/no-misused-promises
+224:23  Warning: Do not use `<img>` element. Use `<Image />` from `next/image` instead. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+224:23  Error: Redundant alt attribute. Screen-readers already announce `img` tags as an image. You don’t need to use the words `image`, `photo,` or `picture` (or any specified custom words) in the alt prop.  jsx-a11y/img-redundant-alt
+257:41  Error: Promise-returning function provided to attribute where a void return was expected.  @typescript-eslint/no-misused-promises
+263:38  Warning: Curly braces are unnecessary here.  react/jsx-curly-brace-presence
+287:28  Error: Returning a void expression from an arrow function shorthand is forbidden. Please add braces to the arrow function.  @typescript-eslint/no-confusing-void-expression
+299:19  Warning: Do not use `<img>` element. Use `<Image />` from `next/image` instead. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+299:19  Error: Redundant alt attribute. Screen-readers already announce `img` tags as an image. You don’t need to use the words `image`, `photo,` or `picture` (or any specified custom words) in the alt prop.  jsx-a11y/img-redundant-alt
+324:37  Error: Promise-returning function provided to attribute where a void return was expected.  @typescript-eslint/no-misused-promises
+330:34  Warning: Curly braces are unnecessary here.  react/jsx-curly-brace-presence
+
+./components/Skeleton.tsx
+9:66  Error: Forbidden non-null assertion.  @typescript-eslint/no-non-null-assertion
+
+./components/billing/upgrade-plan-modal.tsx
+31:6  Warning: React Hook useMemo has an unnecessary dependency: 'plan'. Either exclude it or remove the dependency array.  react-hooks/exhaustive-deps
+84:21  Error: Forbidden non-null assertion.  @typescript-eslint/no-non-null-assertion
+87:17  Warning: Missing an explicit type attribute for button  react/button-has-type
+112:26  Warning: Do not use Array index in keys  react/no-array-index-key
+128:21  Error: Forbidden non-null assertion.  @typescript-eslint/no-non-null-assertion
+142:21  Error: Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator.  @typescript-eslint/no-floating-promises
+145:21  Error: Unexpected alert.  no-alert
+
+./components/charts/bar-chart.tsx
+14:37  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+15:3  Error: Unsafe return of an `any[]` typed value.  @typescript-eslint/no-unsafe-return
+16:5  Error: Unsafe return of an `any` typed value.  @typescript-eslint/no-unsafe-return
+24:37  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+25:3  Error: Unsafe return of an `any[]` typed value.  @typescript-eslint/no-unsafe-return
+26:5  Error: Unsafe return of an `any` typed value.  @typescript-eslint/no-unsafe-return
+34:73  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./components/documents/add-document-modal.tsx
+27:45  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+28:5  Error: Unsafe call of an `any` typed value.  @typescript-eslint/no-unsafe-call
+32:7  Error: Unexpected alert.  no-alert
+64:11  Error: Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator.  @typescript-eslint/no-floating-promises
+64:23  Warning: Unexpected string concatenation.  prefer-template
+69:7  Error: Unexpected console statement.  no-console
+83:9  Warning: Expected property shorthand.  object-shorthand
+115:24  Error: Promise-returning function provided to attribute where a void return was expected.  @typescript-eslint/no-misused-promises
+
+./components/documents/document-card.tsx
+41:15  Warning: Missing an explicit type attribute for button  react/button-has-type
+43:32  Error: Returning a void expression from an arrow function shorthand is forbidden. Please add braces to the arrow function.  @typescript-eslint/no-confusing-void-expression
+
+./components/documents/stats-card.tsx
+27:9  Error: Do not nest ternary expressions.  no-nested-ternary
+27:31  Error: Expected '===' and instead saw '=='.  eqeqeq
+36:13  Error: Forbidden non-null assertion.  @typescript-eslint/no-non-null-assertion
+36:13  Error: Optional chain expressions can return undefined by design - using a non-null assertion is unsafe and wrong.  @typescript-eslint/no-non-null-asserted-optional-chain
+37:15  Error: Unnecessary use of boolean literals in conditional expression.  no-unneeded-ternary
+45:32  Warning: Do not use Array index in keys  react/no-array-index-key
+48:43  Warning: Do not use Array index in keys  react/no-array-index-key
+
+./components/documents/stats-chart.tsx
+23:7  Warning: 'durationData' is never reassigned. Use 'const' instead.  prefer-const
+
+./components/documents/stats-element-placeholder.tsx
+7:9  Error: Do not nest ternary expressions.  no-nested-ternary
+
+./components/documents/stats-element.tsx
+19:9  Error: Do not nest ternary expressions.  no-nested-ternary
+
+./components/domains/add-domain-modal.tsx
+30:38  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+31:5  Error: Unsafe call of an `any` typed value.  @typescript-eslint/no-unsafe-call
+32:5  Error: Unsafe call of an `any` typed value.  @typescript-eslint/no-unsafe-call
+34:16  Error: Expected '===' and instead saw '=='.  eqeqeq
+43:9  Warning: Expected property shorthand.  object-shorthand
+81:24  Error: Promise-returning function provided to attribute where a void return was expected.  @typescript-eslint/no-misused-promises
+91:34  Error: Returning a void expression from an arrow function shorthand is forbidden. Please add braces to the arrow function.  @typescript-eslint/no-confusing-void-expression
+
+./components/domains/domain-card.tsx
+41:5  Warning: Fragments should contain more than one child - otherwise, there’s no need for a Fragment at all.  react/jsx-no-useless-fragment
+63:17  Error: Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator.  @typescript-eslint/no-floating-promises
+70:23  Error: Promise-returning function provided to attribute where a void return was expected.  @typescript-eslint/no-misused-promises
+79:14  Error: Do not nest ternary expressions.  no-nested-ternary
+80:15  Error: Do not nest ternary expressions.  no-nested-ternary
+95:10  Warning: Potential leaked value that might cause unintentionally rendered values or rendering crashes  react/jsx-no-leaked-render
+
+./components/domains/domain-configuration.tsx
+30:63  Error: Redundant double negation.  no-extra-boolean-cast
+36:40  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+41:8  Error: Do not nest ternary expressions.  no-nested-ternary
+84:30  Error: Returning a void expression from an arrow function shorthand is forbidden. Please add braces to the arrow function.  @typescript-eslint/no-confusing-void-expression
+86:28  Error: Expected '===' and instead saw '=='.  eqeqeq
+95:30  Error: Returning a void expression from an arrow function shorthand is forbidden. Please add braces to the arrow function.  @typescript-eslint/no-confusing-void-expression
+97:28  Error: Expected '===' and instead saw '=='.  eqeqeq
+102:28  Warning: Potential leaked value that might cause unintentionally rendered values or rendering crashes  react/jsx-no-leaked-render
+
+./components/emails/deleted-domain.tsx
+49:22  Warning: Curly braces are unnecessary here.  react/jsx-curly-brace-presence
+62:17  Error: Using target="_blank" without rel="noreferrer" or rel="noopener" (the former implies the latter and is preferred due to wider support) is a security risk: see https://mathiasbynens.github.io/rel-noopener/#recommendations  react/jsx-no-target-blank
+
+./components/emails/invalid-domain.tsx
+58:22  Warning: Curly braces are unnecessary here.  react/jsx-curly-brace-presence
+66:22  Warning: Curly braces are unnecessary here.  react/jsx-curly-brace-presence
+85:17  Error: Using target="_blank" without rel="noreferrer" or rel="noopener" (the former implies the latter and is preferred due to wider support) is a security risk: see https://mathiasbynens.github.io/rel-noopener/#recommendations  react/jsx-no-target-blank
+
+./components/emails/upgrade-plan.tsx
+38:19  Warning: Potential leaked value that might cause unintentionally rendered values or rendering crashes  react/jsx-no-leaked-render
+93:17  Error: Using target="_blank" without rel="noreferrer" or rel="noopener" (the former implies the latter and is preferred due to wider support) is a security risk: see https://mathiasbynens.github.io/rel-noopener/#recommendations  react/jsx-no-target-blank
+
+./components/emails/welcome.tsx
+38:37  Warning: Potential leaked value that might cause unintentionally rendered values or rendering crashes  react/jsx-no-leaked-render
+98:50  Error: Using target="_blank" without rel="noreferrer" or rel="noopener" (the former implies the latter and is preferred due to wider support) is a security risk: see https://mathiasbynens.github.io/rel-noopener/#recommendations  react/jsx-no-target-blank
+
+./components/investors/search.tsx
+22:26  Error: Returning a void expression from an arrow function shorthand is forbidden. Please add braces to the arrow function.  @typescript-eslint/no-confusing-void-expression
+
+./components/investors/stats.tsx
+1:65  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./components/investors/table.tsx
+89:24  Warning: Potential leaked value that might cause unintentionally rendered values or rendering crashes  react/jsx-no-leaked-render
+100:24  Warning: Potential leaked value that might cause unintentionally rendered values or rendering crashes  react/jsx-no-leaked-render
+124:21  Error: Do not nest ternary expressions.  no-nested-ternary
+126:25  Error: Do not nest ternary expressions.  no-nested-ternary
+128:25  Error: Do not nest ternary expressions.  no-nested-ternary
+130:25  Error: Do not nest ternary expressions.  no-nested-ternary
+
+./components/links/link-sheet/domain-section.tsx
+3:1  Error: Dependency cycle detected.  import/no-cycle
+20:9  Warning: useState call is not destructured into value + setter pair  react/hook-use-state
+36:5  Error: Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator.  @typescript-eslint/no-floating-promises
+
+./components/links/link-sheet/email-protection-section.tsx
+4:1  Error: Dependency cycle detected.  import/no-cycle
+
+./components/links/link-sheet/expiration-section.tsx
+6:1  Error: Dependency cycle detected.  import/no-cycle
+41:8  Warning: Potential leaked value that might cause unintentionally rendered values or rendering crashes  react/jsx-no-leaked-render
+
+./components/links/link-sheet/index.tsx
+11:1  Error: Dependency cycle detected.  import/no-cycle
+12:1  Error: Dependency cycle detected.  import/no-cycle
+13:1  Error: Dependency cycle detected.  import/no-cycle
+24:1  Error: Dependency cycle detected.  import/no-cycle
+60:38  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+61:5  Error: Unsafe call of an `any` typed value.  @typescript-eslint/no-unsafe-call
+75:7  Warning: Expected property shorthand.  object-shorthand
+81:9  Warning: Expected property shorthand.  object-shorthand
+98:7  Error: Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator.  @typescript-eslint/no-floating-promises
+100:35  Error: Unsafe return of an `any` typed value.  @typescript-eslint/no-unsafe-return
+107:7  Error: Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator.  @typescript-eslint/no-floating-promises
+126:59  Error: Returning a void expression from an arrow function shorthand is forbidden. Please add braces to the arrow function.  @typescript-eslint/no-confusing-void-expression
+135:55  Error: Promise-returning function provided to attribute where a void return was expected.  @typescript-eslint/no-misused-promises
+151:27  Error: Returning a void expression from an arrow function shorthand is forbidden. Please add braces to the arrow function.  @typescript-eslint/no-confusing-void-expression
+
+./components/links/link-sheet/password-section.tsx
+8:1  Error: Dependency cycle detected.  import/no-cycle
+44:8  Warning: Potential leaked value that might cause unintentionally rendered values or rendering crashes  react/jsx-no-leaked-render
+63:28  Error: Returning a void expression from an arrow function shorthand is forbidden. Please add braces to the arrow function.  @typescript-eslint/no-confusing-void-expression
+
+./components/links/links-table.tsx
+83:5  Error: Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator.  @typescript-eslint/no-floating-promises
+85:33  Error: Unsafe return of an `any` typed value.  @typescript-eslint/no-unsafe-return
+98:5  Warning: Fragments should contain more than one child - otherwise, there’s no need for a Fragment at all.  react/jsx-no-useless-fragment
+113:17  Warning: Empty components are self-closing  react/self-closing-comp
+135:31  Warning: Missing an explicit type attribute for button  react/button-has-type
+140:41  Error: Returning a void expression from an arrow function shorthand is forbidden. Please add braces to the arrow function.  @typescript-eslint/no-confusing-void-expression
+144:41  Error: Returning a void expression from an arrow function shorthand is forbidden. Please add braces to the arrow function.  @typescript-eslint/no-confusing-void-expression
+195:50  Error: Returning a void expression from an arrow function shorthand is forbidden. Please add braces to the arrow function.  @typescript-eslint/no-confusing-void-expression
+202:43  Error: Promise-returning function provided to attribute where a void return was expected.  @typescript-eslint/no-misused-promises
+280:25  Warning: Empty components are self-closing  react/self-closing-comp
+288:31  Warning: Fragments should contain more than one child - otherwise, there’s no need for a Fragment at all.  react/jsx-no-useless-fragment
+348:51  Error: Promise-returning function provided to attribute where a void return was expected.  @typescript-eslint/no-misused-promises
+
+./components/links/links-visitors.tsx
+46:32  Warning: Curly braces are unnecessary here.  react/jsx-curly-brace-presence
+47:27  Warning: Value must be omitted for boolean attributes  react/jsx-boolean-value
+92:32  Warning: Curly braces are unnecessary here.  react/jsx-curly-brace-presence
+93:27  Warning: Value must be omitted for boolean attributes  react/jsx-boolean-value
+111:15  Warning: Empty components are self-closing  react/self-closing-comp
+
+./components/theme-toggle.tsx
+29:42  Error: Returning a void expression from an arrow function shorthand is forbidden. Please add braces to the arrow function.  @typescript-eslint/no-confusing-void-expression
+32:42  Error: Returning a void expression from an arrow function shorthand is forbidden. Please add braces to the arrow function.  @typescript-eslint/no-confusing-void-expression
+35:42  Error: Returning a void expression from an arrow function shorthand is forbidden. Please add braces to the arrow function.  @typescript-eslint/no-confusing-void-expression
+
+./components/ui/gauge.tsx
+68:13  Warning: Expected property shorthand.  object-shorthand
+
+./components/ui/loading-spinner.tsx
+9:21  Warning: Do not use Array index in keys  react/no-array-index-key
+
+./components/view/access-form/email-section.tsx
+2:1  Error: Dependency cycle via @/components/view/access-form:5  import/no-cycle
+
+./components/view/access-form/index.tsx
+2:1  Error: Dependency cycle via ../document-view:4  import/no-cycle
+23:5  Warning: Fragments should contain more than one child - otherwise, there’s no need for a Fragment at all.  react/jsx-no-useless-fragment
+
+./components/view/access-form/password-section.tsx
+4:1  Error: Dependency cycle via @/components/view/access-form:5  import/no-cycle
+40:28  Error: Returning a void expression from an arrow function shorthand is forbidden. Please add braces to the arrow function.  @typescript-eslint/no-confusing-void-expression
+
+./components/view/document-view.tsx
+5:1  Error: Dependency cycle detected.  import/no-cycle
+32:10  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+102:65  Error: Promise-returning function provided to variable where a void return was expected.  @typescript-eslint/no-misused-promises
+128:5  Error: Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator.  @typescript-eslint/no-floating-promises
+144:9  Warning: Empty components are self-closing  react/self-closing-comp
+144:9  Error: <iframe> elements must have a unique title property.  jsx-a11y/iframe-has-title
+160:9  Warning: Do not use `<img>` element. Use `<Image />` from `next/image` instead. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+160:9  Error: img elements must have an alt prop, either with meaningful text, or an empty string for decorative images.  jsx-a11y/alt-text
+
+./components/visitors/visitor-chart.tsx
+24:7  Warning: 'durationData' is never reassigned. Use 'const' instead.  prefer-const
+42:51  Warning: Value must be omitted for boolean attributes  react/jsx-boolean-value
+
+./components/visitors/visitors-table.tsx
+39:15  Warning: Empty components are self-closing  react/self-closing-comp
+79:34  Warning: Curly braces are unnecessary here.  react/jsx-curly-brace-presence
+80:29  Warning: Value must be omitted for boolean attributes  react/jsx-boolean-value
+104:23  Warning: Fragments should contain more than one child - otherwise, there’s no need for a Fragment at all.  react/jsx-no-useless-fragment
+
+./components/web/footer.tsx
+97:17  Error: The element ul has an implicit role of list. Defining this explicitly is redundant and should be avoided.  jsx-a11y/no-redundant-roles
+116:17  Error: The element ul has an implicit role of list. Defining this explicitly is redundant and should be avoided.  jsx-a11y/no-redundant-roles
+137:17  Error: The element ul has an implicit role of list. Defining this explicitly is redundant and should be avoided.  jsx-a11y/no-redundant-roles
+156:17  Error: The element ul has an implicit role of list. Defining this explicitly is redundant and should be avoided.  jsx-a11y/no-redundant-roles
+
+./components/web/header.tsx
+10:13  Warning: Empty components are self-closing  react/self-closing-comp
+12:15  Error: Using target="_blank" without rel="noreferrer" or rel="noopener" (the former implies the latter and is preferred due to wider support) is a security risk: see https://mathiasbynens.github.io/rel-noopener/#recommendations  react/jsx-no-target-blank
+16:17  Warning: Do not use `<img>` element. Use `<Image />` from `next/image` instead. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+33:22  Warning: Curly braces are unnecessary here.  react/jsx-curly-brace-presence
+48:13  Warning: Do not use `<img>` element. Use `<Image />` from `next/image` instead. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./components/web/logos.tsx
+16:13  Warning: Do not use `<img>` element. Use `<Image />` from `next/image` instead. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+17:20  Warning: Do not use Array index in keys  react/no-array-index-key
+
+./components/web/navbar.tsx
+4:33  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+10:5  Warning: Fragments should contain more than one child - otherwise, there’s no need for a Fragment at all.  react/jsx-no-useless-fragment
+
+./components/web/section.tsx
+8:15  Warning: Do not use `<img>` element. Use `<Image />` from `next/image` instead. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+14:15  Warning: Empty components are self-closing  react/self-closing-comp
+46:15  Error: The element ul has an implicit role of list. Defining this explicitly is redundant and should be avoided.  jsx-a11y/no-redundant-roles
+
+./components/web/section2.tsx
+34:13  Warning: Do not use `<img>` element. Use `<Image />` from `next/image` instead. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+34:13  Error: Redundant alt attribute. Screen-readers already announce `img` tags as an image. You don’t need to use the words `image`, `photo,` or `picture` (or any specified custom words) in the alt prop.  jsx-a11y/img-redundant-alt
+
+./components/web/testimonials.tsx
+84:20  Warning: Potential leaked value that might cause unintentionally rendered values or rendering crashes  react/jsx-no-leaked-render
+98:21  Warning: Do not use `<img>` element. Use `<Image />` from `next/image` instead. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./components/welcome/intro.tsx
+46:21  Error: Promise-returning function provided to attribute where a void return was expected.  @typescript-eslint/no-misused-promises
+
+./components/welcome/next.tsx
+41:9  Warning: Missing an explicit type attribute for button  react/button-has-type
+42:19  Error: Promise-returning function provided to attribute where a void return was expected.  @typescript-eslint/no-misused-promises
+55:9  Warning: Missing an explicit type attribute for button  react/button-has-type
+56:19  Error: Promise-returning function provided to attribute where a void return was expected.  @typescript-eslint/no-misused-promises
+
+./components/welcome/upload.tsx
+29:45  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+30:5  Error: Unsafe call of an `any` typed value.  @typescript-eslint/no-unsafe-call
+74:7  Error: Unexpected console statement.  no-console
+93:9  Warning: Expected property shorthand.  object-shorthand
+116:7  Error: Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator.  @typescript-eslint/no-floating-promises
+146:31  Error: Invalid type "string | string[] | undefined" of template literal expression.  @typescript-eslint/restrict-template-expressions
+153:26  Error: Promise-returning function provided to attribute where a void return was expected.  @typescript-eslint/no-misused-promises
+182:8  Warning: Potential leaked value that might cause unintentionally rendered values or rendering crashes  react/jsx-no-leaked-render
+221:14  Warning: Potential leaked value that might cause unintentionally rendered values or rendering crashes  react/jsx-no-leaked-render
+246:38  Error: Returning a void expression from an arrow function shorthand is forbidden. Please add braces to the arrow function.  @typescript-eslint/no-confusing-void-expression
+250:23  Warning: Curly braces are unnecessary here.  react/jsx-curly-brace-presence
+
+./lib/analytics/index.ts
+6:3  Error: JITSU_HOST is not listed as a dependency in turbo.json  turbo/no-undeclared-env-vars
+8:15  Error: JITSU_HOST is not listed as a dependency in turbo.json  turbo/no-undeclared-env-vars
+14:10  Error: Redundant use of `await` on a return value.  no-return-await
+39:34  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+40:7  Warning: 'linkCount' is never reassigned. Use 'const' instead.  prefer-const
+40:19  Error: Unsafe call of an `any` typed value.  @typescript-eslint/no-unsafe-call
+41:11  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+42:7  Error: Unsafe return of an `any` typed value.  @typescript-eslint/no-unsafe-return
+46:7  Warning: 'viewCount' is never reassigned. Use 'const' instead.  prefer-const
+46:19  Error: Unsafe call of an `any` typed value.  @typescript-eslint/no-unsafe-call
+47:11  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+48:7  Error: Unsafe return of an `any` typed value.  @typescript-eslint/no-unsafe-return
+57:5  Warning: Expected property shorthand.  object-shorthand
+58:5  Warning: Expected property shorthand.  object-shorthand
+67:3  Error: Unsafe call of an `any` typed value.  @typescript-eslint/no-unsafe-call
+70:58  Error: Unsafe return of an `any` typed value.  @typescript-eslint/no-unsafe-return
+70:58  Error: Unsafe call of an `any` typed value.  @typescript-eslint/no-unsafe-call
+
+./lib/api/domains.ts
+35:10  Error: Redundant use of `await` on a return value.  no-return-await
+
+./lib/cron/index.ts
+2:26  Warning: '/Users/jakubhavej/Code/papermark/node_modules/.pnpm/@upstash+qstash@2.1.8/node_modules/@upstash/qstash/dist/index.d.ts' imported multiple times.  import/no-duplicates
+3:24  Warning: '/Users/jakubhavej/Code/papermark/node_modules/.pnpm/@upstash+qstash@2.1.8/node_modules/@upstash/qstash/dist/index.d.ts' imported multiple times.  import/no-duplicates
+
+./lib/domains.ts
+10:3  Error: Unsafe return of an `any` typed value.  @typescript-eslint/no-unsafe-return
+10:10  Error: Redundant use of `await` on a return value.  no-return-await
+24:3  Error: Unsafe return of an `any` typed value.  @typescript-eslint/no-unsafe-return
+24:10  Error: Redundant use of `await` on a return value.  no-return-await
+36:3  Error: Unsafe return of an `any` typed value.  @typescript-eslint/no-unsafe-return
+36:10  Error: Redundant use of `await` on a return value.  no-return-await
+47:83  Error: Async arrow function 'removeDomainFromVercel' has no 'await' expression.  @typescript-eslint/require-await
+51:5  Error: Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator.  @typescript-eslint/no-floating-promises
+55:5  Error: Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator.  @typescript-eslint/no-floating-promises
+56:5  Error: Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator.  @typescript-eslint/no-floating-promises
+63:3  Error: Unsafe return of an `any` typed value.  @typescript-eslint/no-unsafe-return
+63:10  Error: Redundant use of `await` on a return value.  no-return-await
+80:3  Error: Unsafe return of an `any` typed value.  @typescript-eslint/no-unsafe-return
+80:10  Error: Redundant use of `await` on a return value.  no-return-await
+95:3  Error: Unsafe return of an `any` typed value.  @typescript-eslint/no-unsafe-return
+95:10  Error: Redundant use of `await` on a return value.  no-return-await
+129:33  Error: Capture group '([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)' should be converted to a named or non-capturing group.  prefer-named-capture-group
+129:33  Error: Capture group '([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])' should be converted to a named or non-capturing group.  prefer-named-capture-group
+130:3  Error: Capture group '([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)' should be converted to a named or non-capturing group.  prefer-named-capture-group
+130:3  Error: Capture group '([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])' should be converted to a named or non-capturing group.  prefer-named-capture-group
+
+./lib/emails/send-upgrade-plan.ts
+9:9  Error: Use a ! assertion to more succinctly remove null and undefined from the type.  @typescript-eslint/non-nullable-type-assertion-style
+
+./lib/emails/send-welcome.ts
+10:9  Error: Use a ! assertion to more succinctly remove null and undefined from the type.  @typescript-eslint/non-nullable-type-assertion-style
+
+./lib/middleware/domain.ts
+5:16  Error: Async function 'DomainMiddleware' has no 'await' expression.  @typescript-eslint/require-await
+16:5  Error: Unexpected console statement.  no-console
+19:10  Warning: Unnecessary 'else' after 'return'.  no-else-return
+
+./lib/resend.ts
+18:23  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+18:28  Error: This is the default value for this type parameter, so it can be omitted.  @typescript-eslint/no-unnecessary-type-arguments
+18:59  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+23:5  Error: Unexpected console statement.  no-console
+
+./lib/stripe/client.ts
+7:8  Error: Expected non-Promise value in a boolean conditional.  @typescript-eslint/no-misused-promises
+
+./lib/stripe/index.ts
+32:5  Error: Unexpected console statement.  no-console
+33:5  Warning: Unnecessary return statement.  no-useless-return
+
+./lib/stripe/utils.ts
+6:10  Error: Forbidden non-null assertion.  @typescript-eslint/no-non-null-assertion
+37:5  Error: Unexpected console statement.  no-console
+
+./lib/swr/use-documents.ts
+18:14  Error: Unnecessary use of boolean literals in conditional expression.  no-unneeded-ternary
+
+./lib/tinybird/pipes.ts
+5:34  Error: Forbidden non-null assertion.  @typescript-eslint/no-non-null-assertion
+
+./lib/tinybird/publish.ts
+5:34  Error: Forbidden non-null assertion.  @typescript-eslint/no-non-null-assertion
+
+./lib/utils/geo.ts
+3:37  Error: A record is preferred over an index signature.  @typescript-eslint/consistent-indexed-object-style
+
+./lib/utils/user-agent.ts
+1:10  Error: UAParser not found in 'ua-parser-js'  import/named
+
+./lib/utils.ts
+18:3  Error: Do not use "@ts-ignore" because it alters compilation errors.  @typescript-eslint/ban-ts-comment
+18:3  Error: Use "@ts-expect-error" to ensure an error is actually being suppressed.  @typescript-eslint/prefer-ts-expect-error
+26:38  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+39:3  Error: Unsafe return of type `Promise<any>` from function with return type `Promise<JSON>`.  @typescript-eslint/no-unsafe-return
+82:5  Error: Do not use 'new' for side effects.  no-new
+133:10  Warning: Unnecessary 'else' after 'return'.  no-else-return
+151:14  Error: Capture group '(\.[0-9]*[1-9])' should be converted to a named or non-capturing group.  prefer-named-capture-group
+152:3  Error: Unexpected var, use let or const instead.  no-var
+155:11  Error: Unexpected unnamed function.  func-names
+176:32  Warning: Caution: `bcrypt` also has a named export `hash`. Check if you meant to write `import {hash} from 'bcryptjs'` instead.  import/no-named-as-default-member
+184:23  Warning: Caution: `bcrypt` also has a named export `compare`. Check if you meant to write `import {compare} from 'bcryptjs'` instead.  import/no-named-as-default-member
+210:10  Warning: Unnecessary 'else' after 'return'.  no-else-return
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/basic-features/eslint#disabling-rules
+ ELIFECYCLE  Command failed with exit code 1.
