@@ -1,0 +1,14 @@
+{
+  "name": "eslint-config-custom",
+  "version": "0.0.0",
+  "license": "MIT",
+  "private": true,
+  "dependencies": {
+    "@vercel/style-guide": "^5.0.0",
+    "eslint-config-turbo": "^1.10.12"
+  },
+  "peerDependencies": {
+    "@next/eslint-plugin-next": "^12.3.0",
+    "typescript": "^4.8.0"
+  }
+}
