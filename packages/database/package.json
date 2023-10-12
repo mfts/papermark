@@ -9,6 +9,7 @@
     "ts": "tsc  --noEmit",
     "postinstall": "prisma generate",
     "vercel-build": "prisma migrate deploy && next build",
+    "db:generate": "prisma generate",
     "db:push": "dotenv -e ../../.env.local prisma db push --skip-generate",
     "db:migrate:dev": "dotenv -e ../../.env.local prisma migrate dev",
     "db:migrate:reset": "dotenv -e ../../.env.local prisma migrate reset",
