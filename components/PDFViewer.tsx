@@ -1,6 +1,7 @@
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/20/solid";
 import { useEffect, useRef, useState } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
+import { Download } from "lucide-react";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
 
@@ -218,8 +219,10 @@ function Nav({
               <span>{pageNumber}</span>
               <span className="text-gray-400"> / {numPages}</span>
             </div>
-            <div className="bg-gray-900 text-white rounded-md px-3 py-2 text-sm font-medium m-1">
-              <button onClick={downloadFile}>Download</button>
+            <div className="bg-gray-900 text-white rounded-md px-2 py-1 text-sm  m-1">
+              <button onClick={downloadFile}>
+                <Download className="w-8 h-6" />
+              </button>
             </div>
           </div>
         </div>
