@@ -76,6 +76,22 @@ model Document {
   updatedAt DateTime @updatedAt
   links     Link[]
   views     View[]
+  versions  DocumentVersion[]
+}
+
+model DocumentVersion {
+  id          String      @id @default(cuid())
+  versionNumber Int       // e.g., 1, 2, 3 for version control
+  document    Document    @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  documentId  String
+  file        String      // This should be a reference to where the file is stored (S3, Google Cloud Storage, etc.)
+  type        String?     // This should be a reference to the file type (pdf, docx, etc.)
+  numPages    Int?        // This should be a reference to the number of pages in the document
+  isPrimary   Boolean     @default(false) // Indicates if this is the primary version
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@unique([versionNumber, documentId])
 }
 
 model Link {

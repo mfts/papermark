@@ -27,9 +27,15 @@ export default async function handle(
         },
         select: {
           numPages: true,
+          versions: {
+            where: { isPrimary: true },
+            orderBy: { createdAt: "desc" },
+            take: 1,
+            select: { numPages: true },
+          },
         },
       });
-      const numPages = result?.numPages;
+      const numPages = result?.versions[0]?.numPages || result?.numPages || 0;
 
       const views = await prisma.view.findMany({
         where: {

@@ -1,5 +1,5 @@
 import { User as NextAuthUser } from "next-auth";
-import { Document, Link, View, User as PrismaUser } from "@prisma/client";
+import { Document, Link, View, User as PrismaUser, DocumentVersion } from "@prisma/client";
 
 export type CustomUser = NextAuthUser & PrismaUser;
 
@@ -14,8 +14,13 @@ export interface DocumentWithLinksAndLinkCountAndViewCount extends Document {
   _count: {
     links: number;
     views: number;
+    versions: number;
   };
   links: Link[];
+}
+
+export interface DocumentWithVersion extends Document {
+  versions: DocumentVersion[];
 }
 
 export interface LinkWithViews extends Link {

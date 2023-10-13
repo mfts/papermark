@@ -68,10 +68,15 @@ export default async function handle(
       include: {
         document: {
           select: {
-            file: true
-          }
-        }
-      }
+            versions: {
+              where: { isPrimary: true },
+              orderBy: { createdAt: "desc" },
+              take: 1,
+              select: { file: true },
+            },
+          },
+        },
+      },
     });
 
     // TODO: cannot identify user because session is not available
@@ -85,7 +90,7 @@ export default async function handle(
       viewerEmail: email,
     });
 
-    res.status(200).json({ message: "View recorded", viewId: newView.id, file: newView.document.file });
+    res.status(200).json({ message: "View recorded", viewId: newView.id, file: newView.document.versions[0].file });
   } catch (error) {
     log(`Failed to record view for ${linkId}. Error: \n\n ${error}`);
     res.status(500).json({ message: (error as Error).message });

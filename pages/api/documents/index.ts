@@ -27,7 +27,7 @@ export default async function handle(
         },
         include: {
           _count: {
-            select: { links: true, views: true },
+            select: { links: true, views: true, versions: true },
           },
           links: {
             take: 1,
@@ -75,12 +75,22 @@ export default async function handle(
           file: url,
           type: type,
           ownerId: (session.user as CustomUser).id,
-          links : {
+          links: {
             create: {}
-          }
+          },
+          versions: {
+            create: {
+              file: url,
+              type: type,
+              numPages: numPages,
+              isPrimary: true,
+              versionNumber: 1,
+            },
+          },
         },
         include: {
           links: true,
+          versions: true,
         },
       });
 
