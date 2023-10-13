@@ -28,20 +28,22 @@ import MoreHorizontal from "../shared/icons/more-horizontal";
 import { Skeleton } from "../ui/skeleton";
 import LinksVisitors from "./links-visitors";
 import ChevronDown from "../shared/icons/chevron-down";
-import LinkSheet, { DEFAULT_LINK_PROPS, type DEFAULT_LINK_TYPE } from "./link-sheet";
+import LinkSheet, {
+  DEFAULT_LINK_PROPS,
+  type DEFAULT_LINK_TYPE,
+} from "./link-sheet";
 import { useState } from "react";
 import { LinkWithViews } from "@/lib/types";
 import { mutate } from "swr";
 import { toast } from "sonner";
-
-
 
 export default function LinksTable() {
   const { links } = useDocumentLinks();
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isLinkSheetVisible, setIsLinkSheetVisible] = useState<boolean>(false);
-  const [selectedLink, setSelectedLink] = useState<DEFAULT_LINK_TYPE>(DEFAULT_LINK_PROPS);
+  const [selectedLink, setSelectedLink] =
+    useState<DEFAULT_LINK_TYPE>(DEFAULT_LINK_PROPS);
 
   const handleCopyToClipboard = (linkString: string) => {
     copyToClipboard(`${linkString}`, "Link copied to clipboard.");
@@ -56,11 +58,16 @@ export default function LinksTable() {
       expiresAt: link.expiresAt,
       password: link.password,
       emailProtected: link.emailProtected,
+      allowDownload: link.allowDownload ? link.allowDownload : false,
     });
     setIsLinkSheetVisible(true);
   };
 
-  const handleArchiveLink = async (linkId: string, documentId: string, isArchived: boolean) => {
+  const handleArchiveLink = async (
+    linkId: string,
+    documentId: string,
+    isArchived: boolean
+  ) => {
     setIsLoading(true);
 
     const response = await fetch(`/api/links/${linkId}/archive`, {
@@ -82,18 +89,22 @@ export default function LinksTable() {
     // Update the archived link in the list of links
     mutate(
       `/api/documents/${encodeURIComponent(documentId)}/links`,
-      (links || []).map(link => link.id === linkId ? archivedLink : link),
+      (links || []).map((link) => (link.id === linkId ? archivedLink : link)),
       false
     );
 
-    toast.success(!isArchived ? "Link successfully archived" : "Link successfully reactivated");
+    toast.success(
+      !isArchived
+        ? "Link successfully archived"
+        : "Link successfully reactivated"
+    );
     setIsLoading(false);
-  }
+  };
 
   const archivedLinksCount = links
     ? links.filter((link) => link.isArchived).length
     : 0;
-  
+
   return (
     <>
       <div className="w-full sm:p-4">

@@ -168,6 +168,7 @@ export default function DocumentView({
         linkId={link.id}
         documentId={document.id}
         name={document.name}
+        allowDownload={link.allowDownload}
       />
     </div>
   );

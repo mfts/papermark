@@ -142,6 +142,7 @@ export default function PDFViewer(props: any) {
         pageNumber={pageNumber}
         numPages={numPages}
         downloadFile={downloadfile}
+        allowDownload={props.allowDownload}
       />
       <div
         hidden={loading}
@@ -197,10 +198,12 @@ export default function PDFViewer(props: any) {
 function Nav({
   pageNumber,
   numPages,
+  allowDownload,
   downloadFile,
 }: {
   pageNumber: number;
   numPages: number;
+  allowDownload: boolean;
   downloadFile: (e: React.MouseEvent<HTMLButtonElement>) => void;
 }) {
   return (
@@ -219,11 +222,15 @@ function Nav({
               <span>{pageNumber}</span>
               <span className="text-gray-400"> / {numPages}</span>
             </div>
-            <div className="bg-gray-900 text-white rounded-md px-2 py-1 text-sm  m-1">
-              <button onClick={downloadFile}>
-                <Download className="w-8 h-6" />
-              </button>
-            </div>
+            {allowDownload ? (
+              <div className="bg-gray-900 text-white rounded-md px-2 py-1 text-sm  m-1">
+                <button onClick={downloadFile}>
+                  <Download className="w-8 h-6" />
+                </button>
+              </div>
+            ) : (
+              ""
+            )}
           </div>
         </div>
       </div>
