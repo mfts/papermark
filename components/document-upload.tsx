@@ -1,28 +1,28 @@
 import { useMemo } from "react";
 import { useDropzone } from "react-dropzone";
-import { ArrowUpTrayIcon, DocumentIcon, PhotoIcon } from "@heroicons/react/24/outline";
-import { DocumentTextIcon, PresentationChartBarIcon } from "@heroicons/react/20/solid";
+// import { ArrowUpTray, Document, Photo } from "@heros/react/24/outline";
+// import { DocumentText, PresentationChartBar } from "@heros/react/20/solid";
 import { bytesToSize } from "@/lib/utils";
 import { toast } from "sonner" 
 
-function fileIcon(fileType: string) {
-  switch (fileType) {
-    case "application/pdf":
-      return <DocumentTextIcon className="h-6 w-6 mx-auto" />;
-    case "image/png":
-    case "image/jpeg":
-    case "image/gif":
-    case "image/jpg":
-      return <PhotoIcon className="h-6 w-6 mx-auto" />;
-    case "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-    case "application/vnd.openxmlformats-officedocument.presentationml.presentation":
-    case "application/vnd.ms-powerpoint":
-    case "application/msword":
-      return <PresentationChartBarIcon className="h-6 w-6 mx-auto" />;
-    default:
-      return <DocumentIcon className="h-6 w-6 mx-auto" />;
-  }
-}
+// function file(fileType: string) {
+//   switch (fileType) {
+//     case "application/pdf":
+//       return <DocumentText className="h-6 w-6 mx-auto" />;
+//     case "image/png":
+//     case "image/jpeg":
+//     case "image/gif":
+//     case "image/jpg":
+//       return <Photo className="h-6 w-6 mx-auto" />;
+//     case "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+//     case "application/vnd.openxmlformats-officedocument.presentationml.presentation":
+//     case "application/vnd.ms-powerpoint":
+//     case "application/msword":
+//       return <PresentationChartBar className="h-6 w-6 mx-auto" />;
+//     default:
+//       return <Document className="h-6 w-6 mx-auto" />;
+//   }
+// }
 
 export default function DocumentUpload({
   currentFile,
@@ -80,12 +80,12 @@ export default function DocumentUpload({
           <div className="text-center">
             {currentFile ? (
               <div className="flex flex-col sm:flex-row items-center space-y-1 sm:space-x-2 text-foreground">
-                <div>{fileIcon(currentFile.type)}</div>
+                <div>{file(currentFile.type)}</div>
                 <p>{currentFile.name}</p>
                 <p className="text-gray-500">{bytesToSize(currentFile.size)}</p>
               </div>
             ) : (
-              <ArrowUpTrayIcon
+              <ArrowUpTray
                 className="mx-auto h-12 w-12 text-gray-500"
                 aria-hidden="true"
               />

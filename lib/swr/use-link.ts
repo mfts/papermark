@@ -5,8 +5,8 @@ import { LinkWithDocument } from "../types";
 import { View } from "@prisma/client";
 
 export function useLink() {
-  const router = useRouter();
 
+  const router = useRouter();
   const { linkId } = router.query as {
     linkId: string;
   };
@@ -35,7 +35,9 @@ export function useDomainLink() {
   };
 
   const { data: link, error } = useSWR<LinkWithDocument>(
-    domain && slug && `/api/links/domains/${encodeURIComponent(domain)}/${encodeURIComponent(slug)}`,
+    domain
+    && slug
+    && `/api/links/domains/${encodeURIComponent(domain)}/${encodeURIComponent(slug)}`,
     fetcher,
     {
       dedupingInterval: 10000,
@@ -61,7 +63,8 @@ interface ViewWithDuration extends View {
 export function useLinkVisits(linkId: string) {
 
   const { data: views, error } = useSWR<ViewWithDuration[]>(
-    linkId && `/api/links/${encodeURIComponent(linkId)}/visits`,
+    linkId
+    && `/api/links/${encodeURIComponent(linkId)}/visits`,
     fetcher,
     {
       dedupingInterval: 10000,
@@ -74,3 +77,5 @@ export function useLinkVisits(linkId: string) {
     error,
   };
 }
+
+

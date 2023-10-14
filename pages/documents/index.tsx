@@ -39,7 +39,7 @@ export default function Documents() {
         )}
 
         {/* Documents list */}
-        <ul role="list" className="space-y-4">
+        {/* <ul role="list" className="space-y-4">
           {documents
             ? documents.map((document) => {
                 return <DocumentCard key={document.id} document={document} />;
@@ -53,7 +53,7 @@ export default function Documents() {
                   <Skeleton key={i} className="mt-3 h-3 w-10" />
                 </li>
               ))}
-        </ul>
+        </ul> */}
       </div>
     </AppLayout>
   );

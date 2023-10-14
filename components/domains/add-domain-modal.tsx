@@ -71,8 +71,8 @@ export function AddDomainModal({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
+      <DialogContent className="bg-gray-800 sm:max-w-[425px]">
+        {/* <DialogHeader>
           <DialogTitle>Add Domain</DialogTitle>
           <DialogDescription>
             You can easily add a custom domain.
@@ -95,7 +95,7 @@ export function AddDomainModal({
           <DialogFooter>
             <Button type="submit">Add domain</Button>
           </DialogFooter>
-        </form>
+        </form> */}
       </DialogContent>
     </Dialog>
   );

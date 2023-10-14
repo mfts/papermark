@@ -1,10 +1,11 @@
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/20/solid";
 import { useEffect, useRef, useState } from "react";
-import { Document, Page, pdfjs } from "react-pdf";
+import { Document, Page, js } from "react-";
 
-pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
+js.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/.js/${js.version}/.worker.js`;
 
-export default function PDFViewer(props: any) {
+export default function Viewer(props: any) {
+
   const [numPages, setNumPages] = useState<number>(0);
   const [pageNumber, setPageNumber] = useState<number>(1); // start on first page
   const [loading, setLoading] = useState(true);
@@ -134,6 +135,7 @@ export default function PDFViewer(props: any) {
             <span className="sr-only">Previous</span>
             <ChevronLeftIcon className="h-10 w-10" aria-hidden="true" />
           </button>
+          
           <button
             onClick={goToNextPage}
             disabled={pageNumber >= numPages!}
@@ -164,13 +166,15 @@ export default function PDFViewer(props: any) {
             />
           </Document>
         </div>
+
+
       </div>
     </>
   );
 }
 
 
-function Nav({pageNumber, numPages}: {pageNumber: number, numPages: number}) {
+function Nav({ pageNumber, numPages }: { pageNumber: number, numPages: number }) {
   return (
     <nav className="bg-black">
       <div className="mx-auto px-2 sm:px-6 lg:px-8">
