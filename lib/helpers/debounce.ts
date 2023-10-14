@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-
+// For performant ui change
 export function useDebounce<T extends (...args: any[]) => void>(
     func: T,
     delay: number
@@ -19,9 +19,7 @@ export function useDebounce<T extends (...args: any[]) => void>(
         if (timeoutId) {
             clearTimeout(timeoutId);
         }
-
         const context = this;
-
         const newTimeoutId = setTimeout(() => {
             func.apply(context, args);
         }, delay);
