@@ -1,0 +1,5 @@
+dependencies: |
+  pipenv.pypa.io@2023.9.1
+  python@3.11
+  node@20
+  npm@10
