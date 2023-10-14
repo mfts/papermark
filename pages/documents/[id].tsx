@@ -11,6 +11,8 @@ import VisitorsTable from "@/components/visitors/visitors-table";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import LoadingSpinner from "@/components/ui/loading-spinner";
+import { AddDocumentModal } from "@/components/documents/add-document-modal";
+import FileUp from "@/components/shared/icons/file-up";
 
 export default function DocumentPage() {
   const { document, primaryVersion, error } = useDocument();
@@ -44,9 +46,16 @@ export default function DocumentPage() {
                   </h2>
                 </div>
               </div>
-              <Button onClick={() => setIsLinkSheetOpen(true)}>
-                Create Link
-              </Button>
+              <div className="flex items-center space-x-4">
+                <AddDocumentModal newVersion>
+                  <button title="Upload a new version">
+                    <FileUp className="w-6 h-6" />
+                  </button>
+                </AddDocumentModal>
+                <Button onClick={() => setIsLinkSheetOpen(true)}>
+                  Create Link
+                </Button>
+              </div>
             </div>
             {/* Stats */}
             {document.numPages !== null && (
