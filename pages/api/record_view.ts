@@ -14,6 +14,7 @@ const bodyValidation = z.object({
   linkId: z.string(),
   documentId: z.string(),
   viewId: z.string(),
+  versionNumber: z.number().int().optional(),
   time: z.number().int(),
   duration: z.number().int(),
   pageNumber: z.string(),
@@ -55,18 +56,18 @@ export default async function handle(
   const referer = req.headers.referer;
   const ua = userAgentFromString(req.headers["user-agent"]);
 
-  const { linkId, documentId, viewId, duration, pageNumber } = req.body;
+  const { linkId, documentId, viewId, duration, pageNumber, versionNumber } = req.body;
 
   const time = Date.now(); // in milliseconds
 
   const pageViewId = newId("view");
-
 
   const pageViewObject = {
     id: pageViewId,
     linkId,
     documentId,
     viewId,
+    versionNumber: versionNumber || 1,
     time,
     duration,
     pageNumber: pageNumber.toString(),

@@ -31,7 +31,9 @@ export interface LinkWithViews extends Link {
 }
 
 export interface LinkWithDocument extends Link {
-  document: Document;
+  document: Document & {
+    versions: { versionNumber: number }[];
+  };
 }
 
 export interface Geo {

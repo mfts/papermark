@@ -46,6 +46,7 @@ export default function PDFViewer(props: any) {
   }
 
   // Send the last page view when the user leaves the page
+  // duration is measured in milliseconds
   useEffect(() => {
     const handleBeforeUnload = () => {
       const endTime = Date.now();
@@ -95,6 +96,7 @@ export default function PDFViewer(props: any) {
         viewId: props.viewId,
         duration: duration,
         pageNumber: pageNumberRef.current,
+        versionNumber: props.versionNumber,
       }),
       headers: {
         "Content-Type": "application/json",
