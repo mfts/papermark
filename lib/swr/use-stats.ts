@@ -12,7 +12,7 @@ interface StatsData {
   views: View[];
   groupedViews: GroupedView[];
   duration: {
-    data: { pageNumber: string; avg_duration: number }[];
+    data: { versionNumber: number, pageNumber: string; avg_duration: number }[];
   };
   total_duration: number;
 }

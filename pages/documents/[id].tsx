@@ -61,7 +61,7 @@ export default function DocumentPage() {
             {document.numPages !== null && (
               <StatsChart
                 documentId={document.id}
-                totalPages={primaryVersion.numPages!}
+                totalPagesMax={primaryVersion.numPages!}
               />
             )}
             <StatsCard />
