@@ -3,6 +3,7 @@ import { Document, Page, pdfjs } from "react-pdf";
 import LoadingSpinner from "../ui/loading-spinner";
 import { ChevronLeftIcon, ChevronRightIcon, ZoomIn, ZoomOut } from "lucide-react";
 import { useDebounce } from "@/lib/helpers/debounce";
+import { useRouter } from "next/router";
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
 
 interface PreviewDocumentModalProps {
@@ -19,11 +20,29 @@ export function PreviewDocumentModal(
     }: PreviewDocumentModalProps
 ) {
 
+    const router = useRouter()
     const [scale, setScale] = useState(correctScalePerDevice())
     const [loading, setLoading] = useState(true)
     const [pageWidth, setPageWidth] = useState(getWindowWidth());
     const [pageHeight, setPageHeight] = useState(getWindowHeight());
-    const [pageNumber, setPageNumber] = useState<number>(numPages || 1); // start on first page
+    const [pageNumber, setPageNumber] = useState<number>(1); // start on first page
+
+    const options = {
+        cMapUrl: "cmaps/",
+        cMapPacked: true,
+        standardFontDataUrl: "standard_fonts/",
+    };
+
+    // zoom scaling constants
+    let scaleFactor = 0.2;
+    let lowerLimit = correctScalePerDevice() === 0.8 ? 0.4 : 0.8 //Feel free to play with this
+    let upperLimit = 1.8
+    let RESIZE_SCALE = 1
+    let ZOOM_TYPE =
+    {
+        ZOOM_IN: 'zoomIn',
+        ZOOM_OUT: 'zoomOut'
+    }
 
 
     function getWindowWidth() {
@@ -39,7 +58,7 @@ export function PreviewDocumentModal(
         if (Number(getWindowWidth()) < 675) {
             return 0.8
         }
-        else return 1
+        else return 1.2
     }
 
     const debouncedGoToNextPage =
@@ -53,71 +72,64 @@ export function PreviewDocumentModal(
         }, 1000);
 
     const debouncedForChangeScale =
-        useDebounce((type: string) => {
-
-            if (
-                scale <= upperLimit
-                &&
-                scale >= lowerLimit) {
-
-                setScale(prev => {
-                    return (
-                        type === ZOOM_TYPE.ZOOM_OUT ?
-                            prev - scaleFactor
-                            :
-                            prev + scaleFactor
-                    )
-                })
+        useDebounce((type: string, value?: number) => {
+            if (value) {
+                setScale(1)
+                setPageHeight(window.innerHeight);
+                setPageWidth(window.innerWidth)
+                return;
             }
-            else if (
+            else {
 
-                scale > upperLimit
-                &&
-                type === ZOOM_TYPE.ZOOM_OUT) {
+                if (
+                    scale <= upperLimit
+                    &&
+                    scale >= lowerLimit) {
 
-                setScale(prev => {
-                    return (
-                        type === ZOOM_TYPE.ZOOM_OUT ?
-                            prev - scaleFactor
-                            :
-                            prev + scaleFactor
-                    )
-                })
+                    setScale(prev => {
+                        return (
+                            type === ZOOM_TYPE.ZOOM_OUT ?
+                                prev - scaleFactor
+                                :
+                                prev + scaleFactor
+                        )
+                    })
+                }
+                else if (
+
+                    scale > upperLimit
+                    &&
+                    type === ZOOM_TYPE.ZOOM_OUT) {
+
+                    setScale(prev => {
+                        return (
+                            type === ZOOM_TYPE.ZOOM_OUT ?
+                                prev - scaleFactor
+                                :
+                                prev + scaleFactor
+                        )
+                    })
+                }
+                else if (
+                    scale < lowerLimit
+                    &&
+                    type === ZOOM_TYPE.ZOOM_IN) {
+
+                    setScale(prev => {
+                        return (
+                            type === ZOOM_TYPE.ZOOM_IN ?
+                                prev + scaleFactor
+                                :
+                                prev - scaleFactor
+                        )
+                    })
+                }
+                else return
             }
-            else if (
-                scale < 0.8
-                &&
-                type === ZOOM_TYPE.ZOOM_IN) {
 
-                setScale(prev => {
-                    return (
-                        type === ZOOM_TYPE.ZOOM_IN ?
-                            prev + scaleFactor
-                            :
-                            prev - scaleFactor
-                    )
-                })
-            }
-            else return
 
         }, 1000);
 
-
-    const options = {
-        cMapUrl: "cmaps/",
-        cMapPacked: true,
-        standardFontDataUrl: "standard_fonts/",
-    };
-
-    // zoom scaling constants
-    let scaleFactor = 0.2;
-    let lowerLimit = correctScalePerDevice() === 0.8 ? 0.4 : 0.8 //Feel free to play with this
-    let upperLimit = 1.8
-    let ZOOM_TYPE =
-    {
-        ZOOM_IN: 'zoomIn',
-        ZOOM_OUT: 'zoomOut'
-    }
 
     // handlers for document preview
     const handleClose = () => {
@@ -140,17 +152,17 @@ export function PreviewDocumentModal(
         setLoading(false);
     }
 
-    // Listener for minimizing and maximizing window size
     useEffect(() => {
         function handleResize() {
-            // setPageHeight(window.innerHeight);
-            // setPageWidth(window.innerWidth)
-            // During resizing zoomout for mobile devices
-            // Zoomin for maximizing for larger devices
+
+            //------------VALID__DURING__RESIZING__ONLY------------
+            // Using 2 paramter (ZOOM_TYPE.ZOOM_OUT, RESIZE_SCALE) 
+            // directly set the scale to (RESIZE_SCALE=1 GIVEN ABOVE)
+            // And also handle pagewidth and pageHeight (Look function above)
             correctScalePerDevice() === 0.8 ?
-                debouncedForChangeScale(ZOOM_TYPE.ZOOM_OUT)
+                debouncedForChangeScale(ZOOM_TYPE.ZOOM_OUT, RESIZE_SCALE)
                 :
-                debouncedForChangeScale(ZOOM_TYPE.ZOOM_IN)
+                debouncedForChangeScale(ZOOM_TYPE.ZOOM_IN, RESIZE_SCALE)
 
         }
 
@@ -163,9 +175,10 @@ export function PreviewDocumentModal(
 
     return (
         <div className="relative z-50 " aria-labelledby="modal-title" role="dialog" aria-modal="true">
-            <div className="fixed  inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+            <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
             <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
-                <div className="
+                <div
+                    className="
                  flex  items-center min-h-full w-full 
                  justify-center p-4 text-center sm:items-center sm:p-0">
 
@@ -173,8 +186,10 @@ export function PreviewDocumentModal(
                         <div
                             onClick={handleClose}
                             className="
-                             bg-slate-100 hover:cursor-pointer hover:text-slate-500 h-16 w-16
-                               flex justify-center items-center rounded-full p-2 text-gray-900">
+                             bg-slate-100 hover:cursor-pointer
+                              hover:text-slate-500 h-16 w-16
+                               flex justify-center items-center
+                                rounded-full p-2 text-gray-900">
                             <span className="text-2xl">X</span>
                         </div>
                     </div>
