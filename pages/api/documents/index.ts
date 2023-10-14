@@ -51,13 +51,6 @@ export default async function handle(
       return;
     }
 
-    const referer = req.headers.referer;
-    let pathWithQuery = null;
-    if (referer) {
-      const url = new URL(referer);
-      pathWithQuery = url.pathname + url.search;
-    }
-
     // Assuming data is an object with `name` and `description` properties
     const { name, url, numPages } = req.body;
 
@@ -93,6 +86,14 @@ export default async function handle(
           versions: true,
         },
       });
+
+      // calculate the path of the page where the document was added
+      const referer = req.headers.referer;
+      let pathWithQuery = null;
+      if (referer) {
+        const url = new URL(referer);
+        pathWithQuery = url.pathname + url.search;
+      }
 
       await identifyUser((session.user as CustomUser).id);
       await trackAnalytics({

@@ -10,13 +10,13 @@ export default async function handle(
   res: NextApiResponse
 ) {
   if (req.method === "GET") {
-    // GET /api/documents/:id/visits
+    // GET /api/documents/:id/views
     const session = await getServerSession(req, res, authOptions);
     if (!session) {
       return res.status(401).end("Unauthorized");
     }
 
-    // get link id from query params
+    // get document id from query params
     const { id } = req.query as { id: string };
 
     try {
