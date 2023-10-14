@@ -17,7 +17,6 @@ import AppLayout from "@/components/layouts/app";
 
 export default function DocumentPage() {
   const { document, error } = useDocument();
-
   const [isLinkSheetOpen, setIsLinkSheetOpen] = useState<boolean>(false);
   const [isModalOpen, setModalOpen] = useState(false);
 
@@ -59,7 +58,7 @@ export default function DocumentPage() {
 
                 <div className="w-fit space-x-10 flex items-center justify-between">
 
-                {/* Feel free to make it a small component */}
+                  {/* Feel free to make it a small component */}
                   <Tooltip.Provider>
                     <Tooltip.Root delayDuration={0}>
 
@@ -92,12 +91,12 @@ export default function DocumentPage() {
               </div>
               {/* Stats */}
               {document.numPages !== null && (
-              <StatsChart
-                documentId={document.id}
-                totalPages={document.numPages}
-              />
-            )}
-            <StatsCard />
+                <StatsChart
+                  documentId={document.id}
+                  totalPages={document.numPages}
+                />
+              )}
+              <StatsCard />
               {/* Visitors */}
               <VisitorsTable numPages={document.numPages!} />
               {/* Links */}

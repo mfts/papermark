@@ -47,6 +47,7 @@ export default function DocumentView({
   );
 
   useEffect(() => {
+
     const userEmail = session?.user?.email;
     if (userEmail) {
       setData((prevData) => ({
@@ -107,6 +108,7 @@ export default function DocumentView({
   };
 
   if ((!submitted && emailProtected) || (!submitted && linkPassword)) {
+
     return (
       <AccessForm
         onSubmitHandler={handleSubmit}
@@ -161,6 +163,7 @@ export default function DocumentView({
       </div>
     );
   }
+  
   return (
     <div className="bg-gray-950">
       <PDFViewer

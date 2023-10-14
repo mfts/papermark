@@ -1,8 +1,8 @@
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/20/solid";
 import { useEffect, useRef, useState } from "react";
-import { Document, Page, js } from "react-";
+import { Document, Page, pdfjs } from "react-pdf";
 
-js.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/.js/${js.version}/.worker.js`;
+pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/.js/${pdfjs.version}/.worker.js`;
 
 export default function Viewer(props: any) {
 
@@ -61,16 +61,16 @@ export default function Viewer(props: any) {
     };
   }, []);
 
-  function onPageLoadSuccess() {
-    setPageWidth(window.innerWidth);
-    setLoading(false);
-  }
-
   const options = {
     cMapUrl: "cmaps/",
     cMapPacked: true,
     standardFontDataUrl: "standard_fonts/",
   };
+  
+  function onPageLoadSuccess() {
+    setPageWidth(window.innerWidth);
+    setLoading(false);
+  }
 
   // Go to next page
   function goToNextPage() {
@@ -135,7 +135,7 @@ export default function Viewer(props: any) {
             <span className="sr-only">Previous</span>
             <ChevronLeftIcon className="h-10 w-10" aria-hidden="true" />
           </button>
-          
+
           <button
             onClick={goToNextPage}
             disabled={pageNumber >= numPages!}
@@ -172,7 +172,6 @@ export default function Viewer(props: any) {
     </>
   );
 }
-
 
 function Nav({ pageNumber, numPages }: { pageNumber: number, numPages: number }) {
   return (

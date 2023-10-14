@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useDropzone } from "react-dropzone";
-// import { ArrowUpTray, Document, Photo } from "@heros/react/24/outline";
-// import { DocumentText, PresentationChartBar } from "@heros/react/20/solid";
+import { ArrowUpTray, Document, Photo } from "@heros/react/24/outline";
+import { DocumentText, PresentationChartBar } from "@heros/react/20/solid";
 import { bytesToSize } from "@/lib/utils";
 import { toast } from "sonner" 
 

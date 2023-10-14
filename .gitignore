@@ -50,3 +50,4 @@ next-env.d.ts
 pages/api/scripts
 
 /docker-compose.yml
+/public/example.pdf
