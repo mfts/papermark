@@ -4,7 +4,6 @@ import prisma from "@/lib/prisma";
 import { authOptions } from "../../../auth/[...nextauth]";
 import { CustomUser } from "@/lib/types";
 import { getExtension, log } from "@/lib/utils";
-import { teamExists, teamHasDocument, teamHasUser } from "@/lib/api/teams";
 
 export default async function handle(
   req: NextApiRequest,
@@ -26,18 +25,40 @@ export default async function handle(
     const userId = (session.user as CustomUser).id;
 
     try {
+      const team = await prisma.team.findUnique({
+        where: {
+          id: teamId,
+        },
+        include: {
+          users: {
+            select: {
+              userId: true,
+            },
+          },
+          documents: {
+            select: {
+              id: true,
+            },
+          },
+        },
+      });
+
       // check if the team exists
-      if (!(await teamExists(teamId))) {
+      if (!team) {
         res.status(400).end("Team doesn't exists");
       }
 
       // check if the user is part the team
-      if (!(await teamHasUser(teamId, userId))) {
+      const teamHasUser = team?.users.some((user) => user.userId === userId);
+      if (!teamHasUser) {
         res.status(401).end("You are not a member of the team");
       }
 
       // check if the document exists in the team
-      if (!(await teamHasDocument(teamId, documentId))) {
+      const teamHasDocument = team?.documents.some(
+        (doc) => doc.id === documentId
+      );
+      if (!teamHasDocument) {
         return res.status(400).end("Document doesn't exists in the team");
       }
 

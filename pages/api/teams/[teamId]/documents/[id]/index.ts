@@ -10,37 +10,61 @@ export default async function handle(
   res: NextApiResponse
 ) {
   if (req.method === "GET") {
-    // GET /api/documents/:id
+    // GET /api/teams/:teamId/documents/:id
     const session = await getServerSession(req, res, authOptions);
     if (!session) {
       return res.status(401).end("Unauthorized");
     }
 
-    const { id } = req.query as { id: string };
+    const { teamId, id: docId } = req.query as { teamId: string; id: string };
+
+    const userId = (session.user as CustomUser).id;
 
     try {
-      const document = await prisma.document.findUnique({
+      const team = await prisma.team.findUnique({
         where: {
-          id: id,
+          id: teamId,
         },
         include: {
-          // Get the latest primary version of the document
-          versions: {
-            where: { isPrimary: true },
-            orderBy: { createdAt: "desc" },
-            take: 1,
+          users: {
+            select: {
+              userId: true,
+            },
+          },
+          documents: {
+            include: {
+              // Get the latest primary version of the document
+              versions: {
+                where: { isPrimary: true },
+                orderBy: { createdAt: "desc" },
+                take: 1,
+              },
+            },
           },
         },
       });
 
+      // check if the team exists
+      if (!team) {
+        res.status(400).end("Team doesn't exists");
+      }
+
+      // check if the user is part the team
+      const teamHasUser = team?.users.some((user) => user.userId === userId);
+      if (!teamHasUser) {
+        res.status(401).end("You are not a member of the team");
+      }
+
+      // check if the document exists in the team
+      const document = team?.documents.find((doc) => doc.id === docId);
       if (!document) {
-        return res.status(404).end("Document not found");
+        return res.status(400).end("Document doesn't exists in the team");
       }
 
       // Check that the user is owner of the document, otherwise return 401
-      if (document.ownerId !== (session.user as CustomUser).id) {
-        return res.status(401).end("Unauthorized to access this document");
-      }
+      // if (document.ownerId !== (session.user as CustomUser).id) {
+      //   return res.status(401).end("Unauthorized to access this document");
+      // }
 
       return res.status(200).json(document);
     } catch (error) {
@@ -50,28 +74,57 @@ export default async function handle(
       });
     }
   } else if (req.method === "DELETE") {
-    // DELETE /api/document/:id
+    // DELETE /api/teams/:teamId/document/:id
     const session = await getServerSession(req, res, authOptions);
     if (!session) {
       res.status(401).end("Unauthorized");
       return;
     }
 
-    const { id } = req.query as { id: string };
+    const { teamId, id: docId } = req.query as { teamId: string; id: string };
+
+    const userId = (session.user as CustomUser).id;
 
     try {
-      const document = await prisma.document.findUnique({
+      const team = await prisma.team.findUnique({
         where: {
-          id: id,
+          id: teamId,
+        },
+        include: {
+          users: {
+            select: {
+              userId: true,
+            },
+          },
+          documents: {
+            select: {
+              id: true,
+              ownerId: true,
+              file: true,
+            },
+          },
         },
       });
 
+      // check if the team exists
+      if (!team) {
+        res.status(400).end("Team doesn't exists");
+      }
+
+      // check if the user is part the team
+      const teamHasUser = team?.users.some((user) => user.userId === userId);
+      if (!teamHasUser) {
+        res.status(401).end("You are not a member of the team");
+      }
+
+      // check if the document exists in the team
+      const document = team?.documents.find((doc) => doc.id === docId);
       if (!document) {
-        return res.status(404).end("Document not found");
+        return res.status(400).end("Document doesn't exists in the team");
       }
 
       // check that the user is owner of the document, otherwise return 401
-      if (document.ownerId !== (session.user as CustomUser).id) {
+      if (document.ownerId !== userId) {
         return res.status(401).end("Unauthorized to access the document");
       }
 
@@ -80,7 +133,7 @@ export default async function handle(
       // delete the document from database
       await prisma.document.delete({
         where: {
-          id: id,
+          id: docId,
         },
       });
 
