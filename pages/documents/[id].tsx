@@ -5,14 +5,15 @@ import StatsCard from "@/components/documents/stats-card";
 import StatsChart from "@/components/documents/stats-chart";
 import AppLayout from "@/components/layouts/app";
 import LinkSheet from "@/components/links/link-sheet";
-import Image from "next/image"
+import Image from "next/image";
 import LinksTable from "@/components/links/links-table";
 import VisitorsTable from "@/components/visitors/visitors-table";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import LoadingSpinner from "@/components/ui/loading-spinner";
 
 export default function DocumentPage() {
-  const { document, error } = useDocument();
+  const { document, primaryVersion, error } = useDocument();
 
   const [isLinkSheetOpen, setIsLinkSheetOpen] = useState<boolean>(false);
 
@@ -23,7 +24,7 @@ export default function DocumentPage() {
   return (
     <AppLayout>
       <div>
-        {document ? (
+        {document && primaryVersion ? (
           <>
             {/* Heading */}
             <div className="flex flex-col items-start justify-between gap-x-8 gap-y-4 p-4 sm:flex-row sm:items-center sm:m-4">
@@ -31,7 +32,7 @@ export default function DocumentPage() {
                 <div className="flex space-x-4 items-center">
                   <div className="w-8">
                     <Image
-                      src={`/_icons/${getExtension(document.file)}.svg`}
+                      src={`/_icons/${getExtension(primaryVersion.file)}.svg`}
                       alt="File icon"
                       width={50}
                       height={50}
@@ -43,18 +44,20 @@ export default function DocumentPage() {
                   </h2>
                 </div>
               </div>
-              <Button onClick={() => setIsLinkSheetOpen(true)}>Create Link</Button>
+              <Button onClick={() => setIsLinkSheetOpen(true)}>
+                Create Link
+              </Button>
             </div>
             {/* Stats */}
             {document.numPages !== null && (
               <StatsChart
                 documentId={document.id}
-                totalPages={document.numPages}
+                totalPages={primaryVersion.numPages!}
               />
             )}
             <StatsCard />
             {/* Visitors */}
-            <VisitorsTable numPages={document.numPages!} />
+            <VisitorsTable numPages={primaryVersion.numPages!} />
             {/* Links */}
             <LinksTable />
             <LinkSheet
@@ -63,7 +66,9 @@ export default function DocumentPage() {
             />
           </>
         ) : (
-          <div>Loading...</div>
+          <div className="h-screen flex items-center justify-center">
+            <LoadingSpinner className="mr-1 h-20 w-20" />
+          </div>
         )}
       </div>
     </AppLayout>

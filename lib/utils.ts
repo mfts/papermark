@@ -3,6 +3,7 @@ import { twMerge } from "tailwind-merge";
 import ms from "ms"
 import bcrypt from "bcryptjs";
 import { toast } from "sonner";
+import { customAlphabet } from "nanoid";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -38,7 +39,7 @@ export async function fetcher<JSON = any>(
   return res.json();
 }
 
-export const log = async (message: string) => {
+export const log = async (message: string, mention?: boolean) => {
   /* Log a message to the console */
   try {
     return await fetch(`${process.env.PPMK_SLACK_WEBHOOK_URL}`, {
@@ -52,7 +53,7 @@ export const log = async (message: string) => {
             type: "section",
             text: {
               type: "mrkdwn",
-              text: `${message}`,
+              text: `${mention ? "<@U05BTDUKPLZ> " : ""}${message}`,
             },
           },
         ],
@@ -223,4 +224,21 @@ export const formattedDate = (date: Date) => {
     day: "2-digit",
     year: "numeric",
   });
+}
+
+export const nanoid = customAlphabet(
+  "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
+  7,
+); // 7-character random string
+
+
+export const daysLeft = (accountCreationDate: Date, maxDays: number): number => {
+  const now = new Date();
+  const endPeriodDate = new Date(accountCreationDate);
+  endPeriodDate.setDate(accountCreationDate.getDate() + maxDays);
+
+  const diffInMilliseconds = endPeriodDate.getTime() - now.getTime();
+
+  // Convert milliseconds to days and return
+  return Math.ceil(diffInMilliseconds / (1000 * 60 * 60 * 24));
 }

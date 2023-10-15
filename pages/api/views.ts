@@ -68,10 +68,15 @@ export default async function handle(
       include: {
         document: {
           select: {
-            file: true
-          }
-        }
-      }
+            versions: {
+              where: { isPrimary: true },
+              orderBy: { createdAt: "desc" },
+              take: 1,
+              select: { file: true, id: true, hasPages: true },
+            },
+          },
+        },
+      },
     });
 
     // TODO: cannot identify user because session is not available
@@ -85,9 +90,36 @@ export default async function handle(
       viewerEmail: email,
     });
 
-    res.status(200).json({ message: "View recorded", viewId: newView.id, file: newView.document.file });
+    // check if document version has multiple pages, if so, return the pages
+    if (newView.document.versions[0].hasPages) {
+      const pages = await prisma.documentPage.findMany({
+        where: {
+          versionId: newView.document.versions[0].id,
+        },
+        orderBy: {
+          pageNumber: "asc",
+        },
+        select: {
+          file: true,
+          pageNumber: true,
+        },
+      });
+
+      return res
+        .status(200)
+        .json({ message: "View recorded", viewId: newView.id, file: null, pages: pages });
+    }
+
+    return res
+      .status(200)
+      .json({
+        message: "View recorded",
+        viewId: newView.id,
+        file: newView.document.versions[0].file,
+        pages: null,
+      });
   } catch (error) {
     log(`Failed to record view for ${linkId}. Error: \n\n ${error}`);
-    res.status(500).json({ message: (error as Error).message });
+    return res.status(500).json({ message: (error as Error).message });
   }
 }

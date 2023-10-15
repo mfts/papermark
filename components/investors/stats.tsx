@@ -33,7 +33,7 @@ export default function Stats({ angelsLength }: { angelsLength: any; }) {
               Open Source Projects
             </dt>
             <dd className="order-1 text-5xl font-bold tracking-tight text-black">
-              18
+              25
             </dd>
           </div>
         </dl>

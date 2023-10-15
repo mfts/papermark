@@ -1,10 +1,7 @@
 import { User as NextAuthUser } from "next-auth";
-import { Document, Link, View } from "@prisma/client";
+import { Document, Link, View, User as PrismaUser, DocumentVersion } from "@prisma/client";
 
-export interface CustomUser extends NextAuthUser {
-  id: string;
-  createdAt: Date;
-}
+export type CustomUser = NextAuthUser & PrismaUser;
 
 export interface CreateUserEmailProps {
   user: {
@@ -17,8 +14,13 @@ export interface DocumentWithLinksAndLinkCountAndViewCount extends Document {
   _count: {
     links: number;
     views: number;
+    versions: number;
   };
   links: Link[];
+}
+
+export interface DocumentWithVersion extends Document {
+  versions: DocumentVersion[];
 }
 
 export interface LinkWithViews extends Link {
@@ -112,7 +114,7 @@ export type AnalyticsEvents =
       documentId: string;
       name: string;
       fileSize: string | null | undefined;
-      path: string;
+      path: string | null | undefined;
     }
   | {
       event: "Link Added";

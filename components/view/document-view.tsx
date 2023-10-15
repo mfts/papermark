@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from "react";
-import { getExtension } from "@/lib/utils";
 import ErrorPage from "next/error";
 import PDFViewer from "@/components/PDFViewer";
 import AccessForm from "@/components/view/access-form";
@@ -7,6 +6,8 @@ import { useSession } from "next-auth/react";
 import { usePlausible } from "next-plausible";
 import { toast } from "sonner";
 import { LinkWithDocument } from "@/lib/types";
+import LoadingSpinner from "../ui/loading-spinner";
+import PagesViewer from "@/components/PagesViewer";
 
 export const DEFAULT_ACCESS_FORM_DATA = {
   email: null,
@@ -20,7 +21,8 @@ export type DEFAULT_ACCESS_FORM_TYPE = {
 
 export type DEFAULT_DOCUMENT_VIEW_TYPE = {
   viewId: string;
-  file: string;
+  file: string | null;
+  pages: { file: string; pageNumber: string }[] | null;
 };
 
 export default function DocumentView({
@@ -38,7 +40,8 @@ export default function DocumentView({
   const hasInitiatedSubmit = useRef(false);
   const [viewData, setViewData] = useState<DEFAULT_DOCUMENT_VIEW_TYPE>({
     viewId: "",
-    file: "",
+    file: null,
+    pages: null,
   });
 
   const [data, setData] = useState<DEFAULT_ACCESS_FORM_TYPE>(
@@ -60,7 +63,7 @@ export default function DocumentView({
   }
 
   if (!link) {
-    return <div>Loading...</div>;
+    return <LoadingSpinner className="mr-1 h-5 w-5" />;
   }
 
   const { document, expiresAt, emailProtected, password: linkPassword } = link;
@@ -85,12 +88,10 @@ export default function DocumentView({
     });
 
     if (response.ok) {
-      const { viewId, file } = (await response.json()) as {
-        viewId: string;
-        file: string;
-      };
+      const { viewId, file, pages } =
+        (await response.json()) as DEFAULT_DOCUMENT_VIEW_TYPE;
       plausible("documentViewed"); // track the event
-      setViewData({ viewId, file });
+      setViewData({ viewId, file, pages });
       setSubmitted(true);
     } else {
       const { message } = await response.json();
@@ -127,49 +128,25 @@ export default function DocumentView({
     handleSubmission();
   }
 
-  // get the file extension
-  const extension = getExtension(viewData.file);
-
-  if (
-    extension.includes(".docx") ||
-    extension.includes(".pptx") ||
-    extension.includes(".xlsx") ||
-    extension.includes(".xls") ||
-    extension.includes(".doc") ||
-    extension.includes(".ppt")
-  ) {
-    return (
-      <div className="h-screen bg-gray-900">
-        <iframe
-          className="w-full h-full"
-          src={`https://view.officeapps.live.com/op/embed.aspx?src=${viewData.file}`}
-        ></iframe>
-      </div>
-    );
-  }
-
-  if (
-    extension.includes(".png") ||
-    extension.includes(".jpeg") ||
-    extension.includes(".gif") ||
-    extension.includes(".jpg")
-  ) {
-    return (
-      <div className="h-screen bg-gray-900">
-        <img className="w-full h-full" src={viewData.file} />
-      </div>
-    );
-  }
   return (
     <div className="bg-gray-950">
-      <PDFViewer
-        file={viewData.file}
-        viewId={viewData.viewId}
-        linkId={link.id}
-        documentId={document.id}
-        name={document.name}
-        allowDownload={link.allowDownload}
-      />
+      {viewData.pages ? (
+        <PagesViewer
+          pages={viewData.pages}
+          viewId={viewData.viewId}
+          linkId={link.id}
+          documentId={document.id}
+        />
+      ) : (
+        <PDFViewer
+          file={viewData.file}
+          viewId={viewData.viewId}
+          linkId={link.id}
+          documentId={document.id}
+          name={document.name}
+          allowDownload={link.allowDownload}
+        />
+      )}
     </div>
   );
 }
