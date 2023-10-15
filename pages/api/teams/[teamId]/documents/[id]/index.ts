@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth/next";
 import prisma from "@/lib/prisma";
-import { authOptions } from "../../auth/[...nextauth]";
+import { authOptions } from "../../../../auth/[...nextauth]";
 import { CustomUser } from "@/lib/types";
 import { del } from "@vercel/blob";
 
@@ -30,7 +30,7 @@ export default async function handle(
             orderBy: { createdAt: "desc" },
             take: 1,
           },
-        }
+        },
       });
 
       if (!document) {
@@ -52,14 +52,14 @@ export default async function handle(
   } else if (req.method === "DELETE") {
     // DELETE /api/document/:id
     const session = await getServerSession(req, res, authOptions);
-    if (!session) { 
+    if (!session) {
       res.status(401).end("Unauthorized");
       return;
     }
 
     const { id } = req.query as { id: string };
 
-    try{
+    try {
       const document = await prisma.document.findUnique({
         where: {
           id: id,
@@ -76,13 +76,13 @@ export default async function handle(
       }
 
       // delete the document from vercel blob
-      await del(document.file)
+      await del(document.file);
       // delete the document from database
       await prisma.document.delete({
         where: {
           id: id,
         },
-      })
+      });
 
       res.status(204).end(); // 204 No Content response for successful deletes
     } catch (error) {
@@ -91,7 +91,6 @@ export default async function handle(
         error: (error as Error).message,
       });
     }
-
   } else {
     // We only allow GET and DELETE requests
     res.setHeader("Allow", ["GET", "DELETE"]);

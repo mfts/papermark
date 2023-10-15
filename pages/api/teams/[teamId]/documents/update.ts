@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth/next";
 import prisma from "@/lib/prisma";
-import { authOptions } from "../auth/[...nextauth]";
+import { authOptions } from "../../../auth/[...nextauth]";
 import { CustomUser } from "@/lib/types";
 import { getExtension, log } from "@/lib/utils";
 
@@ -10,7 +10,7 @@ export default async function handle(
   res: NextApiResponse
 ) {
   if (req.method === "POST") {
-    // POST /api/documents/update
+    // POST /api/teams/:teamId/documents/update
     const session = await getServerSession(req, res, authOptions);
     if (!session) {
       res.status(401).end("Unauthorized");
@@ -20,11 +20,35 @@ export default async function handle(
     // Assuming data is an object with `name` and `description` properties
     const { documentId, numPages } = req.body;
 
+    const { teamId } = req.query as { teamId: string };
+
     try {
+      // check if the document exists in the team or not
+      const team = await prisma.team.findUnique({
+        where: {
+          id: teamId,
+        },
+        include: {
+          documents: {
+            select: {
+              id: true,
+            },
+          },
+        },
+      });
+
+      const documentExists = team?.documents.some(
+        (document) => document.id === documentId
+      );
+
+      if (!documentExists) {
+        return res.status(400).end("Document doesn't exists in the team");
+      }
+
       // Save data to the database
       await prisma.document.update({
         where: { id: documentId },
-        data: { 
+        data: {
           numPages: numPages,
           // versions: {
           //   update: {
@@ -35,7 +59,7 @@ export default async function handle(
         },
       });
 
-      res.status(201).json({message: "Document updated successfully"});
+      res.status(201).json({ message: "Document updated successfully" });
     } catch (error) {
       log(`Failed to create document. Error: \n\n ${error}`);
       res.status(500).json({
@@ -44,8 +68,8 @@ export default async function handle(
       });
     }
   } else {
-    // We only allow GET and POST requests
-    res.setHeader("Allow", ["GET", "POST"]);
+    // We only allow POST requests
+    res.setHeader("Allow", ["POST"]);
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 }

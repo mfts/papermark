@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth/next";
 import prisma from "@/lib/prisma";
-import { authOptions } from "../auth/[...nextauth]";
+import { authOptions } from "../../../auth/[...nextauth]";
 import { CustomUser } from "@/lib/types";
 import { getExtension, log } from "@/lib/utils";
 import { identifyUser, trackAnalytics } from "@/lib/analytics";
@@ -69,7 +69,7 @@ export default async function handle(
           type: type,
           ownerId: (session.user as CustomUser).id,
           links: {
-            create: {}
+            create: {},
           },
           versions: {
             create: {
@@ -112,7 +112,7 @@ export default async function handle(
 
       res.status(201).json(document);
     } catch (error) {
-      log(`Failed to create document. Error: \n\n ${error}`)
+      log(`Failed to create document. Error: \n\n ${error}`);
       res.status(500).json({
         message: "Internal Server Error",
         error: (error as Error).message,
