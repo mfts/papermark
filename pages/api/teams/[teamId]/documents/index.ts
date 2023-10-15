@@ -11,16 +11,19 @@ export default async function handle(
   res: NextApiResponse
 ) {
   if (req.method === "GET") {
-    // GET /api/documents
+    // GET /api/teams/:teamId/documents
     const session = await getServerSession(req, res, authOptions);
     if (!session) {
       return res.status(401).end("Unauthorized");
     }
 
+    const { teamId } = req.query as { teamId: string };
+
     try {
       const documents = await prisma.document.findMany({
         where: {
-          ownerId: (session.user as CustomUser).id,
+          // ownerId: (session.user as CustomUser).id,
+          teamId: teamId,
         },
         orderBy: {
           createdAt: "desc",
@@ -44,7 +47,7 @@ export default async function handle(
       });
     }
   } else if (req.method === "POST") {
-    // POST /api/documents
+    // POST /api/teams/:teamId/documents
     const session = await getServerSession(req, res, authOptions);
     if (!session) {
       res.status(401).end("Unauthorized");
@@ -59,7 +62,35 @@ export default async function handle(
 
     // You could perform some validation here
 
+    const { teamId } = req.query as { teamId: string };
+
     try {
+      const team = await prisma.team.findUnique({
+        where: {
+          id: teamId,
+        },
+        include: {
+          users: {
+            select: {
+              userId: true,
+            },
+          },
+        },
+      });
+
+      // check if team exists
+      if (!team) {
+        return res.status(400).end("Team doesn't exists");
+      }
+
+      // check if user is part of the team
+      const isTeamHasUser = team.users.some(
+        (user) => user.userId === (session.user as CustomUser).id
+      );
+      if (!isTeamHasUser) {
+        return res.status(401).end("You are not a member of this team");
+      }
+
       // Save data to the database
       const document = await prisma.document.create({
         data: {
@@ -68,6 +99,7 @@ export default async function handle(
           file: url,
           type: type,
           ownerId: (session.user as CustomUser).id,
+          teamId: teamId,
           links: {
             create: {},
           },
