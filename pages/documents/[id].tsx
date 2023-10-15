@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 
 export default function DocumentPage() {
-  const { document, error } = useDocument();
+  const { document, primaryVersion, error } = useDocument();
 
   const [isLinkSheetOpen, setIsLinkSheetOpen] = useState<boolean>(false);
 
@@ -24,7 +24,7 @@ export default function DocumentPage() {
   return (
     <AppLayout>
       <div>
-        {document ? (
+        {document && primaryVersion ? (
           <>
             {/* Heading */}
             <div className="flex flex-col items-start justify-between gap-x-8 gap-y-4 p-4 sm:flex-row sm:items-center sm:m-4">
@@ -32,7 +32,7 @@ export default function DocumentPage() {
                 <div className="flex space-x-4 items-center">
                   <div className="w-8">
                     <Image
-                      src={`/_icons/${getExtension(document.file)}.svg`}
+                      src={`/_icons/${getExtension(primaryVersion.file)}.svg`}
                       alt="File icon"
                       width={50}
                       height={50}
@@ -52,12 +52,12 @@ export default function DocumentPage() {
             {document.numPages !== null && (
               <StatsChart
                 documentId={document.id}
-                totalPages={document.numPages}
+                totalPages={primaryVersion.numPages!}
               />
             )}
             <StatsCard />
             {/* Visitors */}
-            <VisitorsTable numPages={document.numPages!} />
+            <VisitorsTable numPages={primaryVersion.numPages!} />
             {/* Links */}
             <LinksTable />
             <LinkSheet

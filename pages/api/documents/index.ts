@@ -27,7 +27,7 @@ export default async function handle(
         },
         include: {
           _count: {
-            select: { links: true, views: true },
+            select: { links: true, views: true, versions: true },
           },
           links: {
             take: 1,
@@ -51,13 +51,6 @@ export default async function handle(
       return;
     }
 
-    const referer = req.headers.referer;
-    let pathWithQuery = null;
-    if (referer) {
-      const url = new URL(referer);
-      pathWithQuery = url.pathname + url.search;
-    }
-
     // Assuming data is an object with `name` and `description` properties
     const { name, url, numPages } = req.body;
 
@@ -75,14 +68,32 @@ export default async function handle(
           file: url,
           type: type,
           ownerId: (session.user as CustomUser).id,
-          links : {
+          links: {
             create: {}
-          }
+          },
+          versions: {
+            create: {
+              file: url,
+              type: type,
+              numPages: numPages,
+              isPrimary: true,
+              versionNumber: 1,
+            },
+          },
         },
         include: {
           links: true,
+          versions: true,
         },
       });
+
+      // calculate the path of the page where the document was added
+      const referer = req.headers.referer;
+      let pathWithQuery = null;
+      if (referer) {
+        const url = new URL(referer);
+        pathWithQuery = url.pathname + url.search;
+      }
 
       await identifyUser((session.user as CustomUser).id);
       await trackAnalytics({
