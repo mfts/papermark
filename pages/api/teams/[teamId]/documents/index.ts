@@ -5,6 +5,7 @@ import { authOptions } from "../../../auth/[...nextauth]";
 import { CustomUser } from "@/lib/types";
 import { getExtension, log } from "@/lib/utils";
 import { identifyUser, trackAnalytics } from "@/lib/analytics";
+import { teamExists, teamHasUser } from "@/lib/api/teams";
 
 export default async function handle(
   req: NextApiRequest,
@@ -19,7 +20,19 @@ export default async function handle(
 
     const { teamId } = req.query as { teamId: string };
 
+    const userId = (session.user as CustomUser).id;
+
     try {
+      // check if the team exists
+      if (!(await teamExists(teamId))) {
+        res.status(400).end("Team doesn't exists");
+      }
+
+      // check if the user is part the team
+      if (!(await teamHasUser(teamId, userId))) {
+        res.status(401).end("You are not a member of the team");
+      }
+
       const documents = await prisma.document.findMany({
         where: {
           // ownerId: (session.user as CustomUser).id,
@@ -54,42 +67,28 @@ export default async function handle(
       return;
     }
 
-    // Assuming data is an object with `name` and `description` properties
-    const { name, url, numPages } = req.body;
-
-    // Get the file extension and save it as the type
-    const type = getExtension(name);
-
-    // You could perform some validation here
-
     const { teamId } = req.query as { teamId: string };
 
+    const userId = (session.user as CustomUser).id;
+
     try {
-      const team = await prisma.team.findUnique({
-        where: {
-          id: teamId,
-        },
-        include: {
-          users: {
-            select: {
-              userId: true,
-            },
-          },
-        },
-      });
-
-      // check if team exists
-      if (!team) {
-        return res.status(400).end("Team doesn't exists");
+      // check if the team exists
+      if (!(await teamExists(teamId))) {
+        res.status(400).end("Team doesn't exists");
       }
 
-      // check if user is part of the team
-      const isTeamHasUser = team.users.some(
-        (user) => user.userId === (session.user as CustomUser).id
-      );
-      if (!isTeamHasUser) {
-        return res.status(401).end("You are not a member of this team");
+      // check if the user is part the team
+      if (!(await teamHasUser(teamId, userId))) {
+        res.status(401).end("You are not a member of the team");
       }
+
+      // Assuming data is an object with `name` and `description` properties
+      const { name, url, numPages } = req.body;
+
+      // Get the file extension and save it as the type
+      const type = getExtension(name);
+
+      // You could perform some validation here
 
       // Save data to the database
       const document = await prisma.document.create({
