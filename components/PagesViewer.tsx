@@ -1,6 +1,6 @@
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/20/solid";
 import { useEffect, useRef, useState } from "react";
-import Image from "next/image";
+import { BlurImage } from "@/components/shared/blur-image";
 
 export default function PagesViewer({pages, linkId, documentId, viewId}: {pages: { file: string, pageNumber: string }[], linkId: string, documentId: string, viewId: string}) {
   const [pageNumber, setPageNumber] = useState<number>(1); // start on first page
@@ -111,7 +111,7 @@ export default function PagesViewer({pages, linkId, documentId, viewId}: {pages:
         </div>
 
         <div className="flex justify-center mx-auto">
-          <Image
+          <BlurImage
             className="object-contain mx-auto"
             src={pages[pageNumber - 1].file}
             alt={`Page ${pageNumber}`}
