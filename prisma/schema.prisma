@@ -88,10 +88,24 @@ model DocumentVersion {
   type        String?     // This should be a reference to the file type (pdf, docx, etc.)
   numPages    Int?        // This should be a reference to the number of pages in the document
   isPrimary   Boolean     @default(false) // Indicates if this is the primary version
+  pages       DocumentPage[]
+  hasPages    Boolean     @default(false) // Indicates if the document has pages
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 
   @@unique([versionNumber, documentId])
+}
+
+model DocumentPage {
+  id          String      @id @default(cuid())
+  version     DocumentVersion    @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  versionId   String
+  pageNumber  Int         // e.g., 1, 2, 3 for 
+  file        String      // This should be a reference to where the file / page is stored (S3, Google Cloud Storage, etc.)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@unique([pageNumber, versionId])
 }
 
 model Link {
