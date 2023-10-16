@@ -27,6 +27,10 @@ export default async function handle(
         },
       });
 
+      if (!link) {
+        return res.status(404).json({ error: "Link not found" });
+      }
+
       return res.status(200).json(link);
     } catch (error) {
       return res.status(500).json({
