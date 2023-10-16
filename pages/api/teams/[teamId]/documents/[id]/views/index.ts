@@ -4,58 +4,96 @@ import prisma from "@/lib/prisma";
 import { log } from "@/lib/utils";
 import { getViewPageDuration } from "@/lib/tinybird";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
+import { CustomUser } from "@/lib/types";
 
 export default async function handle(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
   if (req.method === "GET") {
-    // GET /api/documents/:id/views
+    // GET /api/teams/:teamId/documents/:id/views
     const session = await getServerSession(req, res, authOptions);
     if (!session) {
       return res.status(401).end("Unauthorized");
     }
 
-    // get document id from query params
-    const { id } = req.query as { id: string };
+    // get document id and teamId from query params
+
+    const { teamId, id: docId } = req.query as { teamId: string; id: string };
+
+    const userId = (session.user as CustomUser).id;
 
     try {
-      // get the numPages from document
-      const result = await prisma.document.findUnique({
+      const team = await prisma.team.findUnique({
         where: {
-          id: id,
+          id: teamId,
         },
-        select: {
-          numPages: true,
-          versions: {
-            where: { isPrimary: true },
-            orderBy: { createdAt: "desc" },
-            take: 1,
-            select: { numPages: true },
+        include: {
+          users: {
+            select: {
+              userId: true,
+            },
+          },
+          documents: {
+            select: {
+              id: true,
+              ownerId: true,
+              numPages: true,
+              versions: {
+                where: { isPrimary: true },
+                orderBy: { createdAt: "desc" },
+                take: 1,
+                select: { numPages: true },
+              },
+              views: {
+                orderBy: {
+                  viewedAt: "desc",
+                },
+                include: {
+                  link: {
+                    select: {
+                      name: true,
+                    },
+                  },
+                },
+              },
+            },
           },
         },
       });
-      const numPages = result?.versions[0]?.numPages || result?.numPages || 0;
 
-      const views = await prisma.view.findMany({
-        where: {
-          documentId: id,
-        },
-        orderBy: {
-          viewedAt: "desc",
-        },
-        include: {
-          link: {
-            select: { 
-              name: true,
-            }
-          }
-        }
-      });
+      // check if the team exists
+      if (!team) {
+        res.status(400).end("Team doesn't exists");
+      }
+
+      // check if the user is part the team
+      const teamHasUser = team?.users.some((user) => user.userId === userId);
+      if (!teamHasUser) {
+        res.status(401).end("You are not a member of the team");
+      }
+
+      // check if the document exists in the team
+      const document = team?.documents.find((doc) => doc.id === docId);
+      if (!document) {
+        return res.status(400).end("Document doesn't exists in the team");
+      }
+
+      // Check that the user is owner of the document, otherwise return 401
+      const isUserOwnerOfDocument = document.ownerId === userId;
+      if (!isUserOwnerOfDocument) {
+        return res.status(401).end("Unauthorized access to the document");
+      }
+
+      // get the numPages from document
+      const numPages =
+        document?.versions[0]?.numPages || document?.numPages || 0;
+
+      const views = document.views;
 
       const durationsPromises = views.map((view) => {
         return getViewPageDuration({
-          documentId: id,
+          documentId: docId,
           viewId: view.id,
           since: 0,
         });
@@ -86,13 +124,11 @@ export default async function handle(
         };
       });
 
-      // TODO: Check that the user is owner of the links, otherwise return 401
-
       // console.log("viewsWithDuration:", viewsWithDuration)
 
       res.status(200).json(viewsWithDuration);
     } catch (error) {
-      log(`Failed to get views for link ${id}. Error: \n\n ${error}`);
+      log(`Failed to get views for link ${docId}. Error: \n\n ${error}`);
       return res.status(500).json({
         message: "Internal Server Error",
         error: (error as Error).message,

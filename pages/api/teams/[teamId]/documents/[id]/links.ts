@@ -72,7 +72,7 @@ export default async function handle(
         return res.status(400).end("Document doesn't exists in the team");
       }
 
-      // TODO: Check that the user is owner of the document, otherwise return 401
+      // Check that the user is owner of the document, otherwise return 401
       const isUserOwnerOfDocument = document.ownerId === userId;
       if (!isUserOwnerOfDocument) {
         return res.status(401).end("Unauthorized access to the document");
