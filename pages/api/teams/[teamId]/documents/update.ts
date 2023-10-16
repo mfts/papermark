@@ -45,13 +45,13 @@ export default async function handle(
 
       // check if the team exists
       if (!team) {
-        res.status(400).end("Team doesn't exists");
+        return res.status(400).end("Team doesn't exists");
       }
 
       // check if the user is part the team
       const teamHasUser = team?.users.some((user) => user.userId === userId);
       if (!teamHasUser) {
-        res.status(401).end("You are not a member of the team");
+        return res.status(401).end("You are not a member of the team");
       }
 
       // check if the document exists in the team
@@ -76,7 +76,7 @@ export default async function handle(
         },
       });
 
-      res.status(201).json({ message: "Document updated successfully" });
+      return res.status(201).json({ message: "Document updated successfully" });
     } catch (error) {
       log(`Failed to create document. Error: \n\n ${error}`);
       res.status(500).json({

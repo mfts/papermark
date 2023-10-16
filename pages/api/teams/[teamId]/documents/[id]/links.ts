@@ -57,13 +57,13 @@ export default async function handle(
 
       // check if the team exists
       if (!team) {
-        res.status(400).end("Team doesn't exists");
+        return res.status(400).end("Team doesn't exists");
       }
 
       // check if the user is part the team
       const teamHasUser = team?.users.some((user) => user.userId === userId);
       if (!teamHasUser) {
-        res.status(401).end("You are not a member of the team");
+        return res.status(401).end("You are not a member of the team");
       }
 
       // check if the document exists in the team
@@ -79,7 +79,7 @@ export default async function handle(
       }
 
       const links = document.links;
-      res.status(200).json(links);
+      return res.status(200).json(links);
     } catch (error) {
       log(`Failed to get links for document ${docId}. Error: \n\n ${error}`);
       return res.status(500).json({

@@ -46,13 +46,13 @@ export default async function handle(
 
       // check if the team exists
       if (!team) {
-        res.status(400).end("Team doesn't exists");
+        return res.status(400).end("Team doesn't exists");
       }
 
       // check if the user is part the team
       const teamHasUser = team?.users.some((user) => user.userId === userId);
       if (!teamHasUser) {
-        res.status(401).end("You are not a member of the team");
+        return res.status(401).end("You are not a member of the team");
       }
 
       // check if the document exists in the team
@@ -108,13 +108,13 @@ export default async function handle(
 
       // check if the team exists
       if (!team) {
-        res.status(400).end("Team doesn't exists");
+        return res.status(400).end("Team doesn't exists");
       }
 
       // check if the user is part the team
       const teamHasUser = team?.users.some((user) => user.userId === userId);
       if (!teamHasUser) {
-        res.status(401).end("You are not a member of the team");
+        return res.status(401).end("You are not a member of the team");
       }
 
       // check if the document exists in the team
@@ -137,7 +137,7 @@ export default async function handle(
         },
       });
 
-      res.status(204).end(); // 204 No Content response for successful deletes
+      return res.status(204).end(); // 204 No Content response for successful deletes
     } catch (error) {
       return res.status(500).json({
         message: "Internal Server Error",

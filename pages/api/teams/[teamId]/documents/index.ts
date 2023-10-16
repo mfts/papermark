@@ -42,13 +42,13 @@ export default async function handle(
 
       // check if the team exists
       if (!team) {
-        res.status(400).end("Team doesn't exists");
+        return res.status(400).end("Team doesn't exists");
       }
 
       // check if the user is part the team
       const teamHasUser = team?.users.some((user) => user.userId === userId);
       if (!teamHasUser) {
-        res.status(401).end("You are not a member of the team");
+        return res.status(401).end("You are not a member of the team");
       }
 
       const documents = await prisma.document.findMany({
@@ -70,7 +70,7 @@ export default async function handle(
         },
       });
 
-      res.status(200).json(documents);
+      return res.status(200).json(documents);
     } catch (error) {
       return res.status(500).json({
         message: "Internal Server Error",
@@ -110,13 +110,13 @@ export default async function handle(
 
       // check if the team exists
       if (!team) {
-        res.status(400).end("Team doesn't exists");
+        return res.status(400).end("Team doesn't exists");
       }
 
       // check if the user is part the team
       const teamHasUser = team?.users.some((user) => user.userId === userId);
       if (!teamHasUser) {
-        res.status(401).end("You are not a member of the team");
+        return res.status(401).end("You are not a member of the team");
       }
 
       // Assuming data is an object with `name` and `description` properties
@@ -178,7 +178,7 @@ export default async function handle(
         customDomain: null,
       });
 
-      res.status(201).json(document);
+      return res.status(201).json(document);
     } catch (error) {
       log(`Failed to create document. Error: \n\n ${error}`);
       res.status(500).json({
