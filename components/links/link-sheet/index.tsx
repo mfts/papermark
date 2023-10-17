@@ -132,7 +132,7 @@ export default function LinkSheet({
       <SheetContent className="bg-background text-foreground flex flex-col justify-between">
         <SheetHeader>
           <SheetTitle>
-            {currentLink ? "Edit link" : "Create a new link"}{" "}
+            {currentLink ? "Edit link" : "Create a new link"}
           </SheetTitle>
           <SheetDescription>
             Customize a document link for sharing. Click save when you&apos;re
