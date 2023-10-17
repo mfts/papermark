@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
-import PasswordSection from "./password-section"
+import PasswordSection from "./password-section";
 import ExpirationSection from "./expiration-section";
 import EmailProtectionSection from "./email-protection-section";
 import { useRouter } from "next/router";
@@ -43,8 +43,15 @@ export type DEFAULT_LINK_TYPE = {
   emailProtected: boolean;
 };
 
-
-export default function LinkSheet({ isOpen, setIsOpen, currentLink }: { isOpen: boolean, setIsOpen: Dispatch<SetStateAction<boolean>>, currentLink?: DEFAULT_LINK_TYPE }) {
+export default function LinkSheet({
+  isOpen,
+  setIsOpen,
+  currentLink,
+}: {
+  isOpen: boolean;
+  setIsOpen: Dispatch<SetStateAction<boolean>>;
+  currentLink?: DEFAULT_LINK_TYPE;
+}) {
   const { links } = useDocumentLinks();
   const { domains } = useDomains();
   const [data, setData] = useState<DEFAULT_LINK_TYPE>(DEFAULT_LINK_PROPS);
@@ -85,7 +92,7 @@ export default function LinkSheet({ isOpen, setIsOpen, currentLink }: { isOpen: 
     if (!response.ok) {
       // handle error with toast message
       const { error } = await response.json();
-      toast.error(error)
+      toast.error(error);
       setIsLoading(false);
       return;
     }
@@ -97,7 +104,9 @@ export default function LinkSheet({ isOpen, setIsOpen, currentLink }: { isOpen: 
       // Update the link in the list of links
       mutate(
         `/api/documents/${encodeURIComponent(documentId)}/links`,
-        (links || []).map(link => link.id === currentLink.id ? returnedLink : link),
+        (links || []).map((link) =>
+          link.id === currentLink.id ? returnedLink : link
+        ),
         false
       );
       toast.success("Link updated successfully");
@@ -112,21 +121,19 @@ export default function LinkSheet({ isOpen, setIsOpen, currentLink }: { isOpen: 
       toast.success("Link created successfully");
     }
 
-    
-
     setData(DEFAULT_LINK_PROPS);
     setIsLoading(false);
-  }
-
+  };
 
   // console.log("current Data", data)
-  
 
   return (
     <Sheet open={isOpen} onOpenChange={(open: boolean) => setIsOpen(open)}>
       <SheetContent className="bg-background text-foreground flex flex-col justify-between">
         <SheetHeader>
-          <SheetTitle>Create a new link</SheetTitle>
+          <SheetTitle>
+            {currentLink ? "Edit link" : "Create a new link"}{" "}
+          </SheetTitle>
           <SheetDescription>
             Customize a document link for sharing. Click save when you&apos;re
             done.
