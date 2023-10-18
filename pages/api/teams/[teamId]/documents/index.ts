@@ -5,6 +5,8 @@ import { authOptions } from "../../../auth/[...nextauth]";
 import { CustomUser } from "@/lib/types";
 import { getExtension, log } from "@/lib/utils";
 import { identifyUser, trackAnalytics } from "@/lib/analytics";
+import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
+import { errorHanlder } from "@/lib/errorHandler";
 
 export default async function handle(
   req: NextApiRequest,
@@ -22,60 +24,30 @@ export default async function handle(
     const userId = (session.user as CustomUser).id;
 
     try {
-      const team = await prisma.team.findUnique({
-        where: {
-          id: teamId,
-        },
-        include: {
-          users: {
-            select: {
-              userId: true,
-            },
+      const { team } = await getTeamWithUsersAndDocument({
+        teamId,
+        userId,
+        options: {
+          orderBy: {
+            createdAt: "desc",
           },
-          documents: {
-            select: {
-              id: true,
+          include: {
+            _count: {
+              select: { links: true, views: true, versions: true },
+            },
+            links: {
+              take: 1,
+              select: { id: true },
             },
           },
         },
       });
 
-      // check if the team exists
-      if (!team) {
-        return res.status(400).end("Team doesn't exists");
-      }
-
-      // check if the user is part the team
-      const teamHasUser = team?.users.some((user) => user.userId === userId);
-      if (!teamHasUser) {
-        return res.status(401).end("You are not a member of the team");
-      }
-
-      const documents = await prisma.document.findMany({
-        where: {
-          // ownerId: (session.user as CustomUser).id,
-          teamId: teamId,
-        },
-        orderBy: {
-          createdAt: "desc",
-        },
-        include: {
-          _count: {
-            select: { links: true, views: true, versions: true },
-          },
-          links: {
-            take: 1,
-            select: { id: true },
-          },
-        },
-      });
+      const documents = team.documents;
 
       return res.status(200).json(documents);
     } catch (error) {
-      return res.status(500).json({
-        message: "Internal Server Error",
-        error: (error as Error).message,
-      });
+      errorHanlder(error, res);
     }
   } else if (req.method === "POST") {
     // POST /api/teams/:teamId/documents
@@ -90,34 +62,10 @@ export default async function handle(
     const userId = (session.user as CustomUser).id;
 
     try {
-      const team = await prisma.team.findUnique({
-        where: {
-          id: teamId,
-        },
-        include: {
-          users: {
-            select: {
-              userId: true,
-            },
-          },
-          documents: {
-            select: {
-              id: true,
-            },
-          },
-        },
+      await getTeamWithUsersAndDocument({
+        teamId,
+        userId,
       });
-
-      // check if the team exists
-      if (!team) {
-        return res.status(400).end("Team doesn't exists");
-      }
-
-      // check if the user is part the team
-      const teamHasUser = team?.users.some((user) => user.userId === userId);
-      if (!teamHasUser) {
-        return res.status(401).end("You are not a member of the team");
-      }
 
       // Assuming data is an object with `name` and `description` properties
       const { name, url, numPages } = req.body;
@@ -181,10 +129,7 @@ export default async function handle(
       return res.status(201).json(document);
     } catch (error) {
       log(`Failed to create document. Error: \n\n ${error}`);
-      res.status(500).json({
-        message: "Internal Server Error",
-        error: (error as Error).message,
-      });
+      errorHanlder(error, res);
     }
   } else {
     // We only allow GET and POST requests
