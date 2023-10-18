@@ -1,6 +1,7 @@
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/20/solid";
 import { useEffect, useRef, useState } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
+import { Download } from "lucide-react";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
 
@@ -35,7 +36,6 @@ export default function PDFViewer(props: any) {
       updateNumPages(numPages);
     }
   }, [numPages]); // monitor numPages for changes
-
 
   function onDocumentLoadSuccess({
     numPages: nextNumPages,
@@ -80,6 +80,27 @@ export default function PDFViewer(props: any) {
     setPageNumber((prevPageNumber) => prevPageNumber - 1);
   }
 
+  async function downloadfile(e: React.MouseEvent<HTMLButtonElement>) {
+    try {
+      //get file data
+      const response = await fetch(props.file);
+      const fileData = await response.blob();
+
+      //create <a/> to download the file
+      const a = document.createElement("a");
+      a.href = window.URL.createObjectURL(fileData);
+      a.download = props.name;
+      document.body.appendChild(a);
+      a.click();
+
+      //clean up used resources
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(a.href);
+    } catch (error) {
+      console.error("Error downloading file:", error);
+    }
+  }
+
   async function trackPageView(duration: number = 0) {
     // If this is the initial page load, don't send the request
     if (isInitialPageLoad.current) {
@@ -117,7 +138,12 @@ export default function PDFViewer(props: any) {
 
   return (
     <>
-      <Nav pageNumber={pageNumber} numPages={numPages} />
+      <Nav
+        pageNumber={pageNumber}
+        numPages={numPages}
+        downloadFile={downloadfile}
+        allowDownload={props.allowDownload}
+      />
       <div
         hidden={loading}
         style={{ height: "calc(100vh - 64px)" }}
@@ -169,8 +195,17 @@ export default function PDFViewer(props: any) {
   );
 }
 
-
-function Nav({pageNumber, numPages}: {pageNumber: number, numPages: number}) {
+function Nav({
+  pageNumber,
+  numPages,
+  allowDownload,
+  downloadFile,
+}: {
+  pageNumber: number;
+  numPages: number;
+  allowDownload: boolean;
+  downloadFile: (e: React.MouseEvent<HTMLButtonElement>) => void;
+}) {
   return (
     <nav className="bg-black">
       <div className="mx-auto px-2 sm:px-6 lg:px-8">
@@ -183,10 +218,19 @@ function Nav({pageNumber, numPages}: {pageNumber: number, numPages: number}) {
             </div>
           </div>
           <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
-            <div className="bg-gray-900 text-white rounded-md px-3 py-2 text-sm font-medium">
+            <div className="bg-gray-900 text-white rounded-md px-3 py-2 text-sm font-medium m-1">
               <span>{pageNumber}</span>
               <span className="text-gray-400"> / {numPages}</span>
             </div>
+            {allowDownload ? (
+              <div className="bg-gray-900 text-white rounded-md px-2 py-1 text-sm  m-1">
+                <button onClick={downloadFile}>
+                  <Download className="w-8 h-6" />
+                </button>
+              </div>
+            ) : (
+              ""
+            )}
           </div>
         </div>
       </div>

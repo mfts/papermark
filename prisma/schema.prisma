@@ -152,6 +152,7 @@ model Link {
   password       String? // Optional password for link protection
   allowedEmails  String[] // Array of emails allowed to view the document
   emailProtected Boolean   @default(true) // Optional email protection
+  allowDownload  Boolean?  @default(false) // Optional give user a option to allow to download the document
   isArchived     Boolean   @default(false) // Indicates if the link is archived
   views          View[]
   domain         Domain?   @relation(fields: [domainId], references: [id], onDelete: SetNull)

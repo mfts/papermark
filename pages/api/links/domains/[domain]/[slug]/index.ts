@@ -7,7 +7,7 @@ export default async function handle(
 ) {
   if (req.method === "GET") {
     // GET /api/links/domains/:domain/:slug
-    const { domain, slug } = req.query as { domain: string, slug: string };
+    const { domain, slug } = req.query as { domain: string; slug: string };
 
     try {
       const link = await prisma.link.findUnique({
@@ -21,10 +21,15 @@ export default async function handle(
           id: true,
           expiresAt: true,
           emailProtected: true,
+          allowDownload: true,
           password: true,
           document: { select: { id: true } },
         },
       });
+
+      if (!link) {
+        return res.status(404).json({ error: "Link not found" });
+      }
 
       res.status(200).json(link);
     } catch (error) {
