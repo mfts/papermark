@@ -134,7 +134,9 @@ export default function LinkSheet({
     <Sheet open={isOpen} onOpenChange={(open: boolean) => setIsOpen(open)}>
       <SheetContent className="bg-background text-foreground flex flex-col justify-between">
         <SheetHeader>
-          <SheetTitle>Create a new link</SheetTitle>
+          <SheetTitle>
+            {currentLink ? "Edit link" : "Create a new link"}
+          </SheetTitle>
           <SheetDescription>
             Customize a document link for sharing. Click save when you&apos;re
             done.
