@@ -15,6 +15,7 @@ import { ModeToggle } from "./theme-toggle";
 import { Button } from "./ui/button";
 import { CustomUser } from "@/lib/types";
 import LoadingSpinner from "./ui/loading-spinner";
+import Banner from "./banner";
 
 export default function Sidebar() {
   const { data: session, status } = useSession();
@@ -51,27 +52,7 @@ export default function Sidebar() {
       disabled: false,
     },
   ];
-
-  const cutoffDate = new Date('2023-10-12T00:00:00.000Z');
-  
-  const calculateDaysLeft = (accountCreationDate: Date): number => {
-    let maxDays;
-    if (accountCreationDate < cutoffDate) {
-      // If the user signed up before the 12th of October 2023
-      maxDays = 30;
-      // Override account creation date to 1st of October for correct calculation
-      accountCreationDate = new Date('2023-10-01T00:00:00.000Z');
-    } else {
-      // If the user signed up on or after the 12th of October 2023
-      maxDays = 14;
-    }
-    return daysLeft(accountCreationDate, maxDays);
-  }
-
   if (status === "loading") return <LoadingSpinner className="mr-1 h-5 w-5" />;;
-
-  const userDaysLeft = calculateDaysLeft(new Date((session?.user as CustomUser).createdAt || 0));
-
 
   return (
     <>
@@ -205,19 +186,7 @@ export default function Sidebar() {
                 </ul>
               </li>
               <li className="-mx-2 mt-auto mb-4">
-                <aside className="flex flex-col justify-center w-full bg-background text-foreground p-4 mb-2 rounded-lg border border-gray-700">
-                  <div className="flex space-x-2">
-                    <span className="font-bold text-sm">✨ Pro Trial ✨</span>
-                  </div>
-                  <p className="my-4 text-sm">
-                    {`You are on the Pro trial for the next ${userDaysLeft} days.`}
-                  </p>
-                  <Button>
-                    <Link href="/settings/domains" target="_blank">
-                      Connect custom domain
-                    </Link>
-                  </Button>
-                </aside>
+                <Banner session={session} />
                 <div className="flex justify-between items-center space-x-2">
                   <Menu as="div" className="relative grow">
                     <Menu.Button className="flex items-center group rounded-md gap-x-3 p-2 w-full text-sm font-semibold leading-6 text-foreground hover:bg-gray-200 hover:dark:bg-secondary">
