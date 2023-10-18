@@ -18,8 +18,9 @@ export default async function handler(
 
     const { documentId, password, expiresAt, ...linkDomainData } = req.body;
 
-    const hashedPassword = password && password.length > 0 ? await hashPassword(password) : null
-    const exat = expiresAt ? new Date(expiresAt) : null
+    const hashedPassword =
+      password && password.length > 0 ? await hashPassword(password) : null;
+    const exat = expiresAt ? new Date(expiresAt) : null;
 
     let { domain, slug, ...linkData } = linkDomainData;
 
@@ -34,9 +35,9 @@ export default async function handler(
     if (domain && slug) {
       domainObj = await prisma.domain.findUnique({
         where: {
-          slug: domain
-        }
-      }) 
+          slug: domain,
+        },
+      });
 
       if (!domainObj) {
         return res.status(400).json({ error: "Domain not found." });
@@ -49,16 +50,14 @@ export default async function handler(
           domainSlug_slug: {
             slug: slug,
             domainSlug: domain,
-          }
+          },
         },
       });
 
       if (existingLink) {
-        return res
-          .status(400)
-          .json({
-            error: "The link already exists.",
-          });
+        return res.status(400).json({
+          error: "The link already exists.",
+        });
       }
     }
 
@@ -70,6 +69,7 @@ export default async function handler(
         name: linkData.name || null,
         emailProtected: linkData.emailProtected,
         expiresAt: exat,
+        allowDownload: linkData.allowDownload,
         domainId: domainObj?.id || null,
         domainSlug: domain || null,
         slug: slug || null,

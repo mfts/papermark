@@ -22,7 +22,7 @@ export type DEFAULT_ACCESS_FORM_TYPE = {
 export type DEFAULT_DOCUMENT_VIEW_TYPE = {
   viewId: string;
   file: string | null;
-  pages: {file: string, pageNumber: string}[] | null;
+  pages: { file: string; pageNumber: string }[] | null;
 };
 
 export default function DocumentView({
@@ -143,6 +143,8 @@ export default function DocumentView({
           viewId={viewData.viewId}
           linkId={link.id}
           documentId={document.id}
+          name={document.name}
+          allowDownload={link.allowDownload}
         />
       )}
     </div>

@@ -22,8 +22,9 @@ export default async function handle(
           id: true,
           expiresAt: true,
           emailProtected: true,
+          allowDownload: true,
           password: true,
-          document: { select: { id: true } },
+          document: { select: { id: true, name: true } },
         },
       });
 
@@ -65,9 +66,9 @@ export default async function handle(
     if (domain && slug) {
       domainObj = await prisma.domain.findUnique({
         where: {
-          slug: domain
-        }
-      }) 
+          slug: domain,
+        },
+      });
 
       if (!domainObj) {
         return res.status(400).json({ error: "Domain not found." });
@@ -109,6 +110,7 @@ export default async function handle(
         password: hashedPassword,
         name: linkData.name || null,
         emailProtected: linkData.emailProtected,
+        allowDownload: linkData.allowDownload,
         expiresAt: exat,
         domainId: domainObj?.id || null,
         domainSlug: domain || null,
@@ -140,7 +142,7 @@ export default async function handle(
 
     const { id } = req.query as { id: string };
 
-    try{
+    try {
       const linkToBeDeleted = await prisma.link.findUnique({
         where: {
           id: id,
@@ -149,25 +151,27 @@ export default async function handle(
           document: {
             select: {
               ownerId: true,
-            }
-          }
-        }
+            },
+          },
+        },
       });
-  
+
       if (!linkToBeDeleted) {
         return res.status(404).json({ error: "Link not found" });
       }
 
-      if (linkToBeDeleted.document.ownerId !== (session.user as CustomUser).id){
+      if (
+        linkToBeDeleted.document.ownerId !== (session.user as CustomUser).id
+      ) {
         return res.status(401).end("Unauthorized to access the link");
       }
-  
+
       await prisma.link.delete({
         where: {
           id: id,
-        }
+        },
       });
-  
+
       res.status(204).end(); // 204 No Content response for successful deletes
     } catch (error) {
       return res.status(500).json({

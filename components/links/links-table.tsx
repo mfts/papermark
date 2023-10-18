@@ -58,6 +58,7 @@ export default function LinksTable() {
       expiresAt: link.expiresAt,
       password: link.password,
       emailProtected: link.emailProtected,
+      allowDownload: link.allowDownload ? link.allowDownload : false,
     });
     //wait for dropdown to close before opening the link sheet
     setTimeout(() => {
