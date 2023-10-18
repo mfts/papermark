@@ -33,7 +33,7 @@ export default function AllowDownloadSection({
               enabled ? "text-foreground" : "text-muted-foreground"
             )}
           >
-            Download
+            Allow downloading
           </h2>
         </div>
         <Switch checked={enabled} onCheckedChange={handleAllowDownload} />

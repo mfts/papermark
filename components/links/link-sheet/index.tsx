@@ -176,10 +176,10 @@ export default function LinkSheet({
                   </div>
 
                   <div>
-                    <PasswordSection {...{ data, setData }} />
-                    <ExpirationSection {...{ data, setData }} />
                     <EmailProtectionSection {...{ data, setData }} />
                     <AllowDownloadSection {...{ data, setData }} />
+                    <PasswordSection {...{ data, setData }} />
+                    <ExpirationSection {...{ data, setData }} />
                   </div>
                 </div>
               </div>
