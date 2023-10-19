@@ -69,8 +69,12 @@ export default async function handle(
       include: {
         document: {
           select: {
-            ownerId: true,
             name: true,
+            owner: {
+              select: {
+                email: true,
+              },
+            },
             versions: {
               where: { isPrimary: true },
               orderBy: { createdAt: "desc" },
@@ -93,25 +97,13 @@ export default async function handle(
       viewerEmail: email,
     });
 
-    // get document owner email
-    const userEmail = await prisma.user.findUnique({
-      where: {
-        id: newView.document.ownerId,
-      },
-      select: {
-        email: true,
-      },
-    });
-
-    if (userEmail) {
-      // send email to document owner that document has been viewed
-      await sendViewedDocumentEmail(
-        userEmail.email as string,
-        documentId,
-        newView.document.name,
-        email
-      );
-    }
+    // send email to document owner that document has been viewed
+    await sendViewedDocumentEmail(
+      newView.document.owner.email as string,
+      documentId,
+      newView.document.name,
+      email
+    );
 
     // check if document version has multiple pages, if so, return the pages
     if (newView.document.versions[0].hasPages) {
