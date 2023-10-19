@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { checkPassword, log } from "@/lib/utils";
 import { analytics, identifyUser, trackAnalytics } from "@/lib/analytics";
 import { CustomUser } from "@/lib/types";
+import { sendViewedDocumentEmail } from "@/lib/emails/send-viewed-document";
 
 export default async function handle(
   req: NextApiRequest,
@@ -68,6 +69,8 @@ export default async function handle(
       include: {
         document: {
           select: {
+            ownerId: true,
+            name: true,
             versions: {
               where: { isPrimary: true },
               orderBy: { createdAt: "desc" },
@@ -89,6 +92,26 @@ export default async function handle(
       viewerId: newView.id,
       viewerEmail: email,
     });
+
+    // get document owner email
+    const userEmail = await prisma.user.findUnique({
+      where: {
+        id: newView.document.ownerId,
+      },
+      select: {
+        email: true,
+      },
+    });
+
+    if (userEmail) {
+      // send email to document owner that document has been viewed
+      await sendViewedDocumentEmail(
+        userEmail.email as string,
+        documentId,
+        newView.document.name,
+        email
+      );
+    }
 
     // check if document version has multiple pages, if so, return the pages
     if (newView.document.versions[0].hasPages) {
