@@ -1,4 +1,4 @@
-import { NextApiRequest, NextApiResponse } from 'next';
+import { NextApiRequest, NextApiResponse } from "next";
 import {
   getConfigResponse,
   getDomainResponse,
@@ -6,12 +6,15 @@ import {
 } from "@/lib/domains";
 import { DomainVerificationStatusProps } from "@/lib/types";
 import prisma from "@/lib/prisma";
-import { analytics, identifyUser, trackAnalytics } from '@/lib/analytics';
+import { analytics, identifyUser, trackAnalytics } from "@/lib/analytics";
 
-export default async function handle(req: NextApiRequest, res: NextApiResponse) {
-  // GET /api/domains/[domain]/verify - get domain verification status
+export default async function handle(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
+  // GET /api/teams/:teamId/domains/[domain]/verify - get domain verification status
   if (req.method === "GET") {
-    const { domain } = req.query as { domain: string; };
+    const { domain } = req.query as { domain: string };
     let status: DomainVerificationStatusProps = "Valid Configuration";
 
     const [domainJson, configJson] = await Promise.all([
@@ -55,7 +58,7 @@ export default async function handle(req: NextApiRequest, res: NextApiResponse) 
         },
         select: {
           verified: true,
-        }
+        },
       });
 
       const updatedDomain = await prisma.domain.update({
@@ -69,7 +72,7 @@ export default async function handle(req: NextApiRequest, res: NextApiResponse) 
         select: {
           userId: true,
           verified: true,
-        }
+        },
       });
 
       if (!currentDomain!.verified && updatedDomain.verified) {

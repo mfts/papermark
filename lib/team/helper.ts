@@ -1,5 +1,6 @@
 import prisma from "@/lib/prisma";
 import { TeamError } from "../errorHandler";
+import { Document, DocumentVersion, Domain, View } from "@prisma/client";
 
 interface ITeamUserAndDocument {
   teamId: string;
@@ -12,6 +13,7 @@ interface ITeamUserAndDocument {
 interface ITeamWithDomain {
   teamId: string;
   userId: string;
+  domain?: string;
   options?: {};
 }
 
@@ -50,7 +52,9 @@ export async function getTeamWithUsersAndDocument({
   }
 
   // check if the document exists in the team
-  let document: any;
+  let document:
+    | (Document & { views?: View[]; versions?: DocumentVersion[] })
+    | undefined;
   if (docId) {
     document = team?.documents.find((doc) => doc.id === docId);
     if (!document) {
@@ -60,7 +64,7 @@ export async function getTeamWithUsersAndDocument({
 
   // Check that the user is owner of the document, otherwise return 401
   if (checkOwner) {
-    const isUserOwnerOfDocument = document.ownerId === userId;
+    const isUserOwnerOfDocument = document?.ownerId === userId;
     if (!isUserOwnerOfDocument) {
       throw new TeamError("Unauthorized access to the document");
     }
@@ -72,6 +76,7 @@ export async function getTeamWithUsersAndDocument({
 export async function getTeamWithDomain({
   teamId,
   userId,
+  domain: domainSlug,
   options,
 }: ITeamWithDomain) {
   const team = await prisma.team.findUnique({
@@ -101,5 +106,14 @@ export async function getTeamWithDomain({
     throw new TeamError("You are not a member of the team");
   }
 
-  return { team };
+  // check if the domain exists in the team
+  let domain: Domain | undefined;
+  if (domainSlug) {
+    domain = team.domains.find((_domain) => _domain.slug === domainSlug);
+    if (!domain) {
+      throw new TeamError("Domain doesn't exists in the team");
+    }
+  }
+
+  return { team, domain };
 }

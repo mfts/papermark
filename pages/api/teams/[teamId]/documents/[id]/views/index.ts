@@ -60,11 +60,11 @@ export default async function handle(
 
       // get the numPages from document
       const numPages =
-        document?.versions[0]?.numPages || document?.numPages || 0;
+        document?.versions?.[0]?.numPages || document?.numPages || 0;
 
-      const views = document.views;
+      const views = document?.views || [];
 
-      const durationsPromises = views.map((view: { id: string }) => {
+      const durationsPromises = views?.map((view: { id: string }) => {
         return getViewPageDuration({
           documentId: docId,
           viewId: view.id,
@@ -84,7 +84,7 @@ export default async function handle(
       });
 
       // Construct the response combining views and their respective durations
-      const viewsWithDuration = views.map((view: any, index: number) => {
+      const viewsWithDuration = views?.map((view: any, index: number) => {
         // calculate the completion rate
         const completionRate = numPages
           ? (durations[index].data.length / numPages) * 100
