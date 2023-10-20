@@ -131,6 +131,7 @@ export function AddDocumentModal({children}: {children: React.ReactNode}) {
                   type="submit"
                   className="w-full lg:w-1/2"
                   disabled={uploading || !currentFile}
+                  loading={uploading}
                 >
                   {uploading ? "Uploading..." : "Upload Document"}
                 </Button>
