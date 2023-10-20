@@ -125,8 +125,7 @@ export default function DocumentView({
     !emailProtected &&
     !linkPassword &&
     !submitted &&
-    !hasInitiatedSubmit.current &&
-    viewData.viewId == ""
+    !hasInitiatedSubmit.current
   ) {
     hasInitiatedSubmit.current = true;
     handleSubmission();
