@@ -98,6 +98,7 @@ export default function DocumentView({
     } else {
       const { message } = await response.json();
       toast.error(message);
+      setIsLoading(false);
     }
   };
 

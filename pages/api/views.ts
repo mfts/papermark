@@ -97,6 +97,8 @@ export default async function handle(
       viewerEmail: email,
     });
 
+
+    // TODO: this can be offloaded to a background job in the future to save some time
     // send email to document owner that document has been viewed
     await sendViewedDocumentEmail(
       newView.document.owner.email as string,

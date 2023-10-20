@@ -25,7 +25,7 @@ export default function ViewedDocument({
   return (
     <Html>
       <Head />
-      <Preview>Invalid Domain Configuration</Preview>
+      <Preview>See who visited your document</Preview>
       <Tailwind>
         <Body className="bg-white my-auto mx-auto font-sans">
           <Container className="my-10 mx-auto p-5 w-[465px]">
