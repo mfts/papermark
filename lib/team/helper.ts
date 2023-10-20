@@ -9,6 +9,12 @@ interface ITeamUserAndDocument {
   options?: {};
 }
 
+interface ITeamWithDomain {
+  teamId: string;
+  userId: string;
+  options?: {};
+}
+
 export async function getTeamWithUsersAndDocument({
   teamId,
   userId,
@@ -61,4 +67,39 @@ export async function getTeamWithUsersAndDocument({
   }
 
   return { team, document };
+}
+
+export async function getTeamWithDomain({
+  teamId,
+  userId,
+  options,
+}: ITeamWithDomain) {
+  const team = await prisma.team.findUnique({
+    where: {
+      id: teamId,
+    },
+    include: {
+      users: {
+        select: {
+          userId: true,
+        },
+      },
+      domains: {
+        ...options,
+      },
+    },
+  });
+
+  // check if the team exists
+  if (!team) {
+    throw new TeamError("Team doesn't exists");
+  }
+
+  // check if the user is part the team
+  const teamHasUser = team?.users.some((user) => user.userId === userId);
+  if (!teamHasUser) {
+    throw new TeamError("You are not a member of the team");
+  }
+
+  return { team };
 }
