@@ -61,12 +61,12 @@ export function PreviewDocumentModal(
     const debouncedGoToNextPage =
         useDebounce(() => {
             setPageNumber((prevPageNumber) => prevPageNumber + 1)
-        }, 1000);
+        }, 100);
 
     const debouncedGoToPreviousPage =
         useDebounce(() => {
             setPageNumber((prevPageNumber) => prevPageNumber - 1)
-        }, 1000);
+        }, 100);
 
     const debouncedForChangeScale =
         useDebounce((type: string, value?: number) => {
@@ -124,7 +124,7 @@ export function PreviewDocumentModal(
                 else return
             }
 
-        }, 1000);
+        }, 100);
 
 
     // handlers for document preview
@@ -249,7 +249,7 @@ export function PreviewDocumentModal(
                         </div>
                     </div>
 
-                    <div className="w-full h-full flex justify-center items-center">
+                    <div className="w-full h-full  flex justify-center items-center">
                         {
                             loading
                             &&
@@ -262,7 +262,7 @@ export function PreviewDocumentModal(
                             renderMode="canvas"
                             options={options}
                             onError={(error) => console.log(error)}
-                            className=""
+                            className="transition-all duration-150 ease-out"
 
                         >
                             <Page

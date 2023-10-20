@@ -1,6 +1,5 @@
 import React, { MouseEventHandler, ReactNode } from 'react'
 import * as Tooltip from "@radix-ui/react-tooltip";
-import Eye from '../shared/icons/eye';
 
 interface TooltipProps {
     title: string;
