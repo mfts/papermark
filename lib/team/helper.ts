@@ -5,7 +5,7 @@ interface ITeamUserAndDocument {
   teamId: string;
   userId: string;
   docId?: string;
-  ownerId?: string;
+  checkOwner?: boolean; // will be deprecated in the future
   options?: {};
 }
 
@@ -13,7 +13,7 @@ export async function getTeamWithUsersAndDocument({
   teamId,
   userId,
   docId,
-  ownerId,
+  checkOwner,
   options,
 }: ITeamUserAndDocument) {
   const team = await prisma.team.findUnique({
@@ -53,7 +53,7 @@ export async function getTeamWithUsersAndDocument({
   }
 
   // Check that the user is owner of the document, otherwise return 401
-  if (ownerId) {
+  if (checkOwner) {
     const isUserOwnerOfDocument = document.ownerId === userId;
     if (!isUserOwnerOfDocument) {
       throw new TeamError("Unauthorized access to the document");
