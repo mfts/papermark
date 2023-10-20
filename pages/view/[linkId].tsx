@@ -11,7 +11,6 @@ export default function ViewPage() {
   }
 
   if (!link) {
-    console.log("loading on [linkId]");
     return (
       <div className="h-screen flex items-center justify-center">
         <LoadingSpinner className="mr-1 h-20 w-20" />

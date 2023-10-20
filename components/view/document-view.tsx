@@ -36,7 +36,7 @@ export default function DocumentView({
   const plausible = usePlausible();
 
   const [submitted, setSubmitted] = useState<boolean>(false);
-  // const [viewId, setViewId] = useState<string>("");
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const hasInitiatedSubmit = useRef(false);
   const [viewData, setViewData] = useState<DEFAULT_DOCUMENT_VIEW_TYPE>({
     viewId: "",
@@ -75,6 +75,7 @@ export default function DocumentView({
   }
 
   const handleSubmission = async () => {
+    setIsLoading(true);
     const response = await fetch("/api/views", {
       method: "POST",
       headers: {
@@ -93,9 +94,11 @@ export default function DocumentView({
       plausible("documentViewed"); // track the event
       setViewData({ viewId, file, pages });
       setSubmitted(true);
+      setIsLoading(false);
     } else {
       const { message } = await response.json();
       toast.error(message);
+      setIsLoading(false);
     }
   };
 
@@ -114,6 +117,7 @@ export default function DocumentView({
         setData={setData}
         requireEmail={emailProtected}
         requirePassword={!!linkPassword}
+        isLoading={isLoading}
       />
     );
   }
