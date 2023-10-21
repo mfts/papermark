@@ -7,8 +7,15 @@ export class TeamError extends Error {
   }
 }
 
+export class DocumentError extends Error {
+  statusCode = 400;
+  constructor(public message: string) {
+    super(message);
+  }
+}
+
 export function errorHanlder(err: unknown, res: NextApiResponse) {
-  if (err instanceof TeamError) {
+  if (err instanceof TeamError || err instanceof DocumentError) {
     return res.status(err.statusCode).end(err.message);
   } else {
     return res.status(500).json({

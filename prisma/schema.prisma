@@ -103,7 +103,7 @@ model Document {
   numPages    Int? // This should be a reference to the number of pages in the document
   owner       User              @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   teamId      String?
-  Team        Team?             @relation(fields: [teamId], references: [id])
+  team        Team?             @relation(fields: [teamId], references: [id])
   ownerId     String // This field holds the foreign key.
   createdAt   DateTime          @default(now())
   updatedAt   DateTime          @updatedAt

@@ -1,12 +1,12 @@
 import prisma from "@/lib/prisma";
-import { TeamError } from "../errorHandler";
+import { DocumentError, TeamError } from "../errorHandler";
 import { Document, DocumentVersion, Domain, View } from "@prisma/client";
 
 interface ITeamUserAndDocument {
   teamId: string;
   userId: string;
   docId?: string;
-  checkOwner?: boolean; // will be deprecated in the future
+  checkOwner?: boolean;
   options?: {};
 }
 
@@ -14,6 +14,12 @@ interface ITeamWithDomain {
   teamId: string;
   userId: string;
   domain?: string;
+  options?: {};
+}
+
+interface IDocumentWithLink {
+  docId: string;
+  userId: string;
   options?: {};
 }
 
@@ -116,4 +122,32 @@ export async function getTeamWithDomain({
   }
 
   return { team, domain };
+}
+
+export async function getDocumentWithTeamAndUser({
+  docId,
+  userId,
+  options,
+}: IDocumentWithLink) {
+  const document = (await prisma.document.findUnique({
+    where: {
+      id: docId,
+    },
+    include: {
+      ...options,
+    },
+  })) as Document & { team: { users: { userId: string }[] } };
+
+  if (!document) {
+    throw new DocumentError("Document doesn't exists");
+  }
+
+  const teamHasUser = document.team?.users.some(
+    (user) => user.userId === userId
+  );
+  if (!teamHasUser) {
+    throw new TeamError("You are not a member of the team");
+  }
+
+  return { document };
 }
