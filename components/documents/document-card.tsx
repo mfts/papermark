@@ -22,7 +22,7 @@ export default function DocumentsCard({
       <div className="min-w-0 flex shrink items-center space-x-4">
         <div className="w-8 mx-1 text-center flex justify-center items-center">
           <Image
-            src={`/_icons/${getExtension(document.file)}.svg`}
+            src={`/_icons/${document.type}.svg`}
             alt="File icon"
             width={50}
             height={50}
@@ -56,6 +56,12 @@ export default function DocumentsCard({
             <p className="truncate">{`${document._count.links} ${
               document._count.links === 1 ? "Link" : "Links"
             }`}</p>
+            { document._count.versions > 1 ? (
+              <>
+                <p>•</p>
+                <p className="truncate">{`${document._count.versions} Versions`}</p>
+              </>
+            ) : null}
           </div>
         </div>
       </div>

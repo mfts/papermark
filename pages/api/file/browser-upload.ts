@@ -1,4 +1,4 @@
-import { handleBlobUpload, type HandleBlobUploadBody } from "@vercel/blob";
+import { handleUpload, type HandleUploadBody } from "@vercel/blob/client";
 import type { NextApiResponse, NextApiRequest } from "next";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]";
@@ -8,10 +8,10 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  const body = JSON.parse(req.body) as HandleBlobUploadBody;
+  const body = JSON.parse(req.body) as HandleUploadBody;
 
   try {
-    const jsonResponse = await handleBlobUpload({
+    const jsonResponse = await handleUpload({
       body,
       request: req,
       onBeforeGenerateToken: async (pathname: string) => {
@@ -32,16 +32,16 @@ export default async function handler(
           }),
         };
       },
-      onUploadCompleted: async ({ blob, metadata }) => {
+      onUploadCompleted: async ({ blob, tokenPayload }) => {
         // Get notified of browser upload completion
         // ⚠️ This will not work on `localhost` websites,
         // Use ngrok or similar to get the full upload flow
 
-        console.log("blob upload completed", blob, metadata);
+        console.log("blob upload completed", blob, tokenPayload);
 
         try {
           // Run any logic after the file upload completed
-          // const { userId } = JSON.parse(metadata);
+          // const { userId } = JSON.parse(tokenPayload);
           // await db.update({ avatar: blob.url, userId });
         } catch (error) {
           // throw new Error("Could not update user");

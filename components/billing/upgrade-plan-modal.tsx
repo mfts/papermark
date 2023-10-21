@@ -1,21 +1,13 @@
 import {
-  Dispatch,
-  SetStateAction,
-  useCallback,
   useMemo,
   useState,
 } from "react";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/router";
-import Link from "next/link";
 import { motion } from "framer-motion";
 import { STAGGER_CHILD_VARIANTS } from "@/lib/constants";
 import CheckCircle2 from "@/components/shared/icons/check-cirlce-2";
@@ -27,7 +19,7 @@ import { Badge } from "../ui/badge";
 
 export function UpgradePlanModal({ children }: { children: React.ReactNode }) {
   const [plan, setPlan] = useState<"Pro">("Pro");
-  const [period, setPeriod] = useState<"monthly" | "yearly">("yearly");
+  const [period, setPeriod] = useState<"monthly" | "yearly">("monthly");
   const [clicked, setClicked] = useState<boolean>(false);
   const features = useMemo(() => {
     return [

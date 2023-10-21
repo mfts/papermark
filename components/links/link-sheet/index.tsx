@@ -1,6 +1,5 @@
 import {
   Sheet,
-  SheetClose,
   SheetContent,
   SheetDescription,
   SheetFooter,
@@ -9,7 +8,7 @@ import {
 } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
-import PasswordSection from "./password-section"
+import PasswordSection from "./password-section";
 import ExpirationSection from "./expiration-section";
 import EmailProtectionSection from "./email-protection-section";
 import { useRouter } from "next/router";
@@ -20,8 +19,10 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
-import { set } from "date-fns";
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
+import Link from "next/link";
+import DomainSection from "./domain-section";
+import AllowDownloadSection from "./allow-download-section";
 
 export const DEFAULT_LINK_PROPS = {
   id: null,
@@ -31,6 +32,7 @@ export const DEFAULT_LINK_PROPS = {
   expiresAt: null,
   password: null,
   emailProtected: true,
+  allowDownload: false,
 };
 
 export type DEFAULT_LINK_TYPE = {
@@ -41,10 +43,18 @@ export type DEFAULT_LINK_TYPE = {
   expiresAt: Date | null;
   password: string | null;
   emailProtected: boolean;
+  allowDownload: boolean;
 };
 
-
-export default function LinkSheet({ isOpen, setIsOpen, currentLink }: { isOpen: boolean, setIsOpen: Dispatch<SetStateAction<boolean>>, currentLink?: DEFAULT_LINK_TYPE }) {
+export default function LinkSheet({
+  isOpen,
+  setIsOpen,
+  currentLink,
+}: {
+  isOpen: boolean;
+  setIsOpen: Dispatch<SetStateAction<boolean>>;
+  currentLink?: DEFAULT_LINK_TYPE;
+}) {
   const { links } = useDocumentLinks();
   const { domains } = useDomains();
   const [data, setData] = useState<DEFAULT_LINK_TYPE>(DEFAULT_LINK_PROPS);
@@ -85,7 +95,7 @@ export default function LinkSheet({ isOpen, setIsOpen, currentLink }: { isOpen: 
     if (!response.ok) {
       // handle error with toast message
       const { error } = await response.json();
-      toast.error(error)
+      toast.error(error);
       setIsLoading(false);
       return;
     }
@@ -97,7 +107,9 @@ export default function LinkSheet({ isOpen, setIsOpen, currentLink }: { isOpen: 
       // Update the link in the list of links
       mutate(
         `/api/documents/${encodeURIComponent(documentId)}/links`,
-        (links || []).map(link => link.id === currentLink.id ? returnedLink : link),
+        (links || []).map((link) =>
+          link.id === currentLink.id ? returnedLink : link
+        ),
         false
       );
       toast.success("Link updated successfully");
@@ -112,20 +124,19 @@ export default function LinkSheet({ isOpen, setIsOpen, currentLink }: { isOpen: 
       toast.success("Link created successfully");
     }
 
-    
-
     setData(DEFAULT_LINK_PROPS);
     setIsLoading(false);
-  }
+  };
 
   // console.log("current Data", data)
-  
 
   return (
     <Sheet open={isOpen} onOpenChange={(open: boolean) => setIsOpen(open)}>
       <SheetContent className="bg-background text-foreground flex flex-col justify-between">
         <SheetHeader>
-          <SheetTitle>Create a new link</SheetTitle>
+          <SheetTitle>
+            {currentLink ? "Edit link" : "Create a new link"}
+          </SheetTitle>
           <SheetDescription>
             Customize a document link for sharing. Click save when you&apos;re
             done.
@@ -154,68 +165,7 @@ export default function LinkSheet({ isOpen, setIsOpen, currentLink }: { isOpen: 
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="link-domain">Domain</Label>
-                    <div className="flex">
-                      <select
-                        value={data.domain || "papermark.io"}
-                        onChange={(e) => {
-                          setData({ ...data, domain: e.target.value });
-                        }}
-                        className={cn(
-                          "w-48 rounded-l-md border border-r-0 border-border bg-secondary px-5 text-sm text-secondary-foreground focus:border-border focus:outline-none focus:ring-0",
-                          data.domain && data.domain !== "papermark.io"
-                            ? ""
-                            : "rounded-r-md border-r-1"
-                        )}
-                      >
-                        <option key="papermark.io" value="papermark.io">
-                          papermark.io
-                        </option>
-                        {domains
-                          ?.filter((domain) => domain.verified)
-                          .map(({ slug }) => (
-                            <option key={slug} value={slug}>
-                              {slug}
-                            </option>
-                          ))}
-                      </select>
-
-                      {!data.domain || data.domain === "papermark.io" ? (
-                        <UpgradePlanModal>
-                          <Button type="button" variant="ghost" className="h-8">
-                            ✨ Get a custom domain ✨
-                          </Button>
-                        </UpgradePlanModal>
-                      ) : null}
-
-                      {data.domain && data.domain !== "papermark.io" ? (
-                        <input
-                          type="text"
-                          name="key"
-                          required
-                          value={data.slug || ""}
-                          pattern="[\p{L}\p{N}\p{Pd}\/]+"
-                          onInvalid={(e) => {
-                            e.currentTarget.setCustomValidity(
-                              "Only letters, numbers, '-', and '/' are allowed."
-                            );
-                          }}
-                          autoComplete="off"
-                          className={cn(
-                            "hidden w-full rounded-r-md border-0 py-1.5 text-foreground bg-background shadow-sm ring-1 ring-inset ring-input placeholder:text-muted-foreground focus:ring-2 focus:ring-inset focus:ring-gray-400 sm:text-sm sm:leading-6",
-                            data.domain && data.domain !== "papermark.io"
-                              ? "flex"
-                              : ""
-                          )}
-                          placeholder="deck"
-                          onChange={(e) => {
-                            e.currentTarget.setCustomValidity("");
-                            setData({ ...data, slug: e.target.value });
-                          }}
-                          aria-invalid="true"
-                        />
-                      ) : null}
-                    </div>
+                    <DomainSection {...{ data, setData, domains }} />
                   </div>
 
                   <div className="flex items-center relative">
@@ -228,9 +178,10 @@ export default function LinkSheet({ isOpen, setIsOpen, currentLink }: { isOpen: 
                   </div>
 
                   <div>
+                    <EmailProtectionSection {...{ data, setData }} />
+                    <AllowDownloadSection {...{ data, setData }} />
                     <PasswordSection {...{ data, setData }} />
                     <ExpirationSection {...{ data, setData }} />
-                    <EmailProtectionSection {...{ data, setData }} />
                   </div>
                 </div>
               </div>

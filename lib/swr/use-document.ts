@@ -1,7 +1,7 @@
 import { useRouter } from "next/router";
 import useSWR from "swr";
 import { fetcher } from "@/lib/utils";
-import { LinkWithViews } from "@/lib/types";
+import { DocumentWithVersion, LinkWithViews } from "@/lib/types";
 import { Document, View } from "@prisma/client";
 
 export function useDocument() {
@@ -11,7 +11,7 @@ export function useDocument() {
     id: string;
   };
 
-  const { data: document, error } = useSWR<Document>(
+  const { data: document, error } = useSWR<DocumentWithVersion>(
     id && `/api/documents/${encodeURIComponent(id)}`,
     fetcher,
     {
@@ -21,6 +21,7 @@ export function useDocument() {
 
   return {
     document,
+    primaryVersion: document?.versions[0],
     loading: !error && !document,
     error,
   };

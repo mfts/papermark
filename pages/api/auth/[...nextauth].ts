@@ -4,6 +4,7 @@ import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import prisma from "@/lib/prisma";
 import { CreateUserEmailProps, CustomUser } from "@/lib/types";
 import { sendWelcomeEmail } from "@/lib/emails/send-welcome";
+import { analytics, identifyUser, trackAnalytics } from "@/lib/analytics";
 
 const VERCEL_DEPLOYMENT = !!process.env.VERCEL_URL;
 
@@ -41,9 +42,9 @@ export const authOptions: NextAuthOptions = {
     },
     session: async ({ session, token }) => {
       (session.user as CustomUser) = {
-        // @ts-ignore
         id: token.sub,
-        ...session.user,
+        // @ts-ignore
+        ...(token || session).user,
       };
       return session;
     },
@@ -56,7 +57,23 @@ export const authOptions: NextAuthOptions = {
           email: message.user.email,
         },
       };
+      await analytics.identify(message.user.id, {
+        userId: message.user.id,
+        email: message.user.email,
+      });
+      await trackAnalytics({
+        event: "User Signed Up",
+        email: message.user.email,
+        userId: message.user.id,
+      });
       await sendWelcomeEmail(params);
+    },
+    async signIn(message) {
+      await identifyUser(message.user.id);
+      await trackAnalytics({
+        event: "User Signed In",
+        email: message.user.email,
+      });
     }
   },
 };

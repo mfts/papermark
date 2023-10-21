@@ -6,6 +6,7 @@ import {
 } from "@/lib/domains";
 import { DomainVerificationStatusProps } from "@/lib/types";
 import prisma from "@/lib/prisma";
+import { analytics, identifyUser, trackAnalytics } from '@/lib/analytics';
 
 export default async function handle(req: NextApiRequest, res: NextApiResponse) {
   // GET /api/domains/[domain]/verify - get domain verification status
@@ -48,7 +49,16 @@ export default async function handle(req: NextApiRequest, res: NextApiResponse) 
       });
     } else {
       status = "Valid Configuration";
-      await prisma.domain.update({
+      const currentDomain = await prisma.domain.findUnique({
+        where: {
+          slug: domain,
+        },
+        select: {
+          verified: true,
+        }
+      });
+
+      const updatedDomain = await prisma.domain.update({
         where: {
           slug: domain,
         },
@@ -56,7 +66,21 @@ export default async function handle(req: NextApiRequest, res: NextApiResponse) 
           verified: true,
           lastChecked: new Date(),
         },
+        select: {
+          userId: true,
+          verified: true,
+        }
       });
+
+      if (!currentDomain!.verified && updatedDomain.verified) {
+        await identifyUser(updatedDomain.userId);
+        await trackAnalytics({
+          event: "Domain Verified",
+          slug: domain,
+        }).then(() => {
+          console.log("Success: Domain Verified event tracked");
+        });
+      }
     }
 
     return res.status(200).json({

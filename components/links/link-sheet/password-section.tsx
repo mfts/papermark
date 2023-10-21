@@ -36,7 +36,7 @@ export default function PasswordSection({data, setData}: {data: DEFAULT_LINK_TYP
               enabled ? "text-foreground" : "text-muted-foreground"
             )}
           >
-            Password Protection
+            Require password to view
           </h2>
         </div>
         <Switch checked={enabled} onCheckedChange={handleEnablePassword} />

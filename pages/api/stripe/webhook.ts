@@ -6,6 +6,7 @@ import { stripe } from "@/lib/stripe";
 import { getPlanFromPriceId, isNewCustomer } from "@/lib/stripe/utils";
 import { log } from "@/lib/utils";
 import { sendUpgradePlanEmail } from "@/lib/emails/send-upgrade-plan";
+import { identifyUser, trackAnalytics } from "@/lib/analytics";
 
 // Stripe requires the raw body to construct the event.
 export const config = {
@@ -79,8 +80,12 @@ export default async function webhookHandler(
           const plan = getPlanFromPriceId(priceId);
           const stripeId = subscriptionUpdated.customer.toString();
           const subscriptionId = subscriptionUpdated.id;
-          const startsAt = new Date(subscriptionUpdated.current_period_start * 1000);
-          const endsAt = new Date(subscriptionUpdated.current_period_end * 1000);
+          const startsAt = new Date(
+            subscriptionUpdated.current_period_start * 1000
+          );
+          const endsAt = new Date(
+            subscriptionUpdated.current_period_end * 1000
+          );
 
           // If a project upgrades/downgrades their subscription, update their usage limit in the database.
           const user = await prisma.user.update({
@@ -95,14 +100,24 @@ export default async function webhookHandler(
             },
           });
           if (!user) {
-            await log("User not found in Stripe webhook `customer.subscription.created` callback");
+            await log(
+              "User not found in Stripe webhook `customer.subscription.created` callback"
+            );
             return;
           }
 
           // Send thank you email to project owner if they are a new customer
           if (newCustomer) {
-            await sendUpgradePlanEmail({user: {email: user.email as string, name: user.name as string}});
+            await sendUpgradePlanEmail({
+              user: { email: user.email as string, name: user.name as string },
+            });
           }
+
+          await identifyUser(user.id);
+          await trackAnalytics({
+            event: "User Upgraded",
+            email: user.email,
+          });
 
           // If project cancels their subscription
         } else if (event.type === "customer.subscription.deleted") {

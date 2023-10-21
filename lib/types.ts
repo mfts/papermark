@@ -1,10 +1,7 @@
 import { User as NextAuthUser } from "next-auth";
-import { Document, Link, View } from "@prisma/client";
+import { Document, Link, View, User as PrismaUser, DocumentVersion } from "@prisma/client";
 
-export interface CustomUser extends NextAuthUser {
-  id: string;
-  createdAt: Date;
-}
+export type CustomUser = NextAuthUser & PrismaUser;
 
 export interface CreateUserEmailProps {
   user: {
@@ -17,8 +14,13 @@ export interface DocumentWithLinksAndLinkCountAndViewCount extends Document {
   _count: {
     links: number;
     views: number;
+    versions: number;
   };
   links: Link[];
+}
+
+export interface DocumentWithVersion extends Document {
+  versions: DocumentVersion[];
 }
 
 export interface LinkWithViews extends Link {
@@ -100,3 +102,43 @@ export interface DomainVerificationResponse {
     reason: string;
   }[];
 }
+
+export type AnalyticsEvents =
+  | {
+      event: "User Signed Up";
+      userId: string;
+      email: string | null | undefined;
+    }
+  | {
+      event: "Document Added";
+      documentId: string;
+      name: string;
+      fileSize: string | null | undefined;
+      path: string | null | undefined;
+    }
+  | {
+      event: "Link Added";
+      linkId: string;
+      documentId: string;
+      customDomain: string | null | undefined;
+    }
+  | { event: "User Upgraded"; email: string | null | undefined; }
+  | {
+      event: "User Signed In";
+      email: string | null | undefined;
+    }
+  | {
+      event: "Link Viewed";
+      documentId: string;
+      linkId: string;
+      viewerId: string;
+      viewerEmail: string | null | undefined;
+    }
+  | {
+      event: "Domain Added";
+      slug: string;
+    }
+  | {
+      event: "Domain Verified";
+      slug: string;
+    };
