@@ -1,0 +1,8 @@
+{
+  "build": {
+    "env": {
+      "NODE_OPTIONS": "--experimental-modules"
+    }
+  },
+  "includeFiles": ["node_modules/mupdf/**/*"]
+}

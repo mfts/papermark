@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from "next";
-// @ts-ignore
+//@ts-ignore
 import mupdf from "mupdf";
 
 export default async (req: NextApiRequest, res: NextApiResponse) => {
