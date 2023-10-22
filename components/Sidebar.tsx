@@ -16,14 +16,7 @@ import { Button } from "./ui/button";
 import { CustomUser } from "@/lib/types";
 import LoadingSpinner from "./ui/loading-spinner";
 import Banner from "./banner";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { PlusIcon } from "lucide-react";
+import SelectTeam from "./teams/select-team";
 
 export default function Sidebar() {
   const { data: session, status } = useSession();
@@ -162,25 +155,7 @@ export default function Sidebar() {
             </p>
           </div>
           <nav className="flex flex-1 flex-col">
-            <Select defaultValue="aashish">
-              <SelectTrigger className="w-full mb-6">
-                <SelectValue placeholder="Select project" />
-              </SelectTrigger>
-              <SelectContent>
-                <div className="max-h-48 overflow-y-scroll ">
-                  <SelectItem value="demo">Demo project</SelectItem>
-                  <SelectItem value="aashish">Aashish's Team</SelectItem>
-                  <SelectItem value="papermark">
-                    College Engineering Group
-                  </SelectItem>
-                </div>
-                <div className="flex gap-2 items-center border-t p-2 text-sm hover:bg-gray-800 duration-100 hover:cursor-pointer">
-                  <PlusIcon className="h-5 w-5" />
-                  Create Team
-                </div>
-              </SelectContent>
-            </Select>
-
+            <SelectTeam />
             <ul role="list" className="flex flex-1 flex-col gap-y-7">
               <li>
                 <ul role="list" className="-mx-2 space-y-1">

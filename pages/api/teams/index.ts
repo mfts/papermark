@@ -24,18 +24,9 @@ export default async function handle(
         },
         include: {
           team: {
-            include: {
-              users: {
-                select: {
-                  userId: true,
-                  role: true,
-                },
-              },
-              documents: {
-                select: {
-                  id: true,
-                },
-              },
+            select: {
+              id: true,
+              name: true,
             },
           },
         },
