@@ -17,10 +17,12 @@ export default async function handle(
       return res.status(401).end("Unauthorized");
     }
 
+    const user = session.user as CustomUser;
+
     try {
       const userTeams = await prisma.userTeam.findMany({
         where: {
-          userId: (session.user as CustomUser).id,
+          userId: user.id,
         },
         include: {
           team: {
@@ -33,6 +35,28 @@ export default async function handle(
       });
 
       const teams = userTeams.map((userTeam) => userTeam.team);
+
+      // if no teams then create a default one
+      if (teams.length === 0) {
+        const defaultTeamName = `${user.name}'s Team`;
+        const defaultTeam = await prisma.team.create({
+          data: {
+            name: defaultTeamName,
+            users: {
+              create: {
+                userId: user.id,
+                role: "ADMIN",
+              },
+            },
+          },
+          select: {
+            id: true,
+            name: true,
+          },
+        });
+        teams.push(defaultTeam);
+      }
+
       return res.status(200).json(teams);
     } catch (error) {
       log(`Failed to add domain. Error: \n\n ${error}`);

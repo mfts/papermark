@@ -84,6 +84,8 @@ model UserTeam {
   team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
 
   @@id([userId, teamId])
+  @@index([userId])
+  @@index([teamId])
 }
 
 model VerificationToken {
