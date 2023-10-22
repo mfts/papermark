@@ -37,7 +37,7 @@ client.defineJob({
     // send file to api/convert endpoint in a task and get back number of pages
     const muDocument = await io.runTask("get-number-of-pages", async () => {
       const response = await fetch(
-        "https://fdcb4a73ebf4.ngrok.app/api/mupdf/get-pages",
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/mupdf/get-pages`,
         {
           method: "POST",
           body: JSON.stringify({ url: documentUrl.file }),
@@ -66,7 +66,7 @@ client.defineJob({
         async () => {
         // send page number to api/convert-page endpoint in a task and get back page img url
         const response = await fetch(
-          "https://fdcb4a73ebf4.ngrok.app/api/mupdf/convert-page",
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/mupdf/convert-page`,
           {
             method: "POST",
             body: JSON.stringify({
