@@ -21,8 +21,6 @@ const initialState = {
 const TeamContext = createContext<TeamContextType | null>(initialState);
 
 export const TeamProvider = ({ children }: TeamContextProps): JSX.Element => {
-  //TODO: check if there is team, if not, create a new default one with User's name
-
   const { teams, loading } = useTeams();
 
   const currentTeamId = localStorage.getItem("currentTeamId");

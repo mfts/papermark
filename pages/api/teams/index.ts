@@ -32,6 +32,11 @@ export default async function handle(
             },
           },
         },
+        orderBy: {
+          team: {
+            createdAt: "asc",
+          },
+        },
       });
 
       const teams = userTeams.map((userTeam) => userTeam.team);
