@@ -10,7 +10,6 @@ client.defineJob({
   trigger: eventTrigger({
     name: "document.uploaded",
     schema: z.object({
-      documentId: z.string(),
       documentVersionId: z.string(),
     }),
   }),
