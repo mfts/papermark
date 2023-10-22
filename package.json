@@ -35,6 +35,9 @@
     "@stripe/stripe-js": "^2.1.7",
     "@tailwindcss/typography": "^0.5.10",
     "@tremor/react": "^3.8.2",
+    "@trigger.dev/nextjs": "^2.2.0",
+    "@trigger.dev/react": "^2.2.0",
+    "@trigger.dev/sdk": "^2.2.0",
     "@types/node": "^20.8.4",
     "@types/react": "^18.2.27",
     "@types/react-dom": "^18.2.12",
@@ -84,5 +87,8 @@
     "@types/ms": "^0.7.32",
     "@types/ua-parser-js": "^0.7.37",
     "prisma": "^4.16.2"
+  },
+  "trigger.dev": {
+    "endpointId": "papermark-dev-Ojwu"
   }
 }
