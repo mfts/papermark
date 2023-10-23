@@ -3,16 +3,21 @@ import useSWR from "swr";
 import { fetcher } from "@/lib/utils";
 import { DocumentWithVersion, LinkWithViews } from "@/lib/types";
 import { Document, View } from "@prisma/client";
+import { useTeam } from "@/context/team-context";
 
 export function useDocument() {
   const router = useRouter();
+  const teamInfo = useTeam();
 
   const { id } = router.query as {
     id: string;
   };
 
   const { data: document, error } = useSWR<DocumentWithVersion>(
-    id && `/api/documents/${encodeURIComponent(id)}`,
+    id &&
+      `/api/teams/${teamInfo?.currentTeam?.id}/documents/${encodeURIComponent(
+        id
+      )}`,
     fetcher,
     {
       dedupingInterval: 10000,
@@ -29,13 +34,17 @@ export function useDocument() {
 
 export function useDocumentLinks() {
   const router = useRouter();
+  const teamInfo = useTeam();
 
   const { id } = router.query as {
     id: string;
   };
 
   const { data: links, error } = useSWR<LinkWithViews[]>(
-    id && `/api/documents/${encodeURIComponent(id)}/links`,
+    id &&
+      `/api/teams/${teamInfo?.currentTeam?.id}/documents/${encodeURIComponent(
+        id
+      )}/links`,
     fetcher,
     {
       dedupingInterval: 10000,
@@ -57,18 +66,22 @@ interface ViewWithDuration extends View {
   completionRate: number;
   link: {
     name: string | null;
-  }
+  };
 }
 
 export function useDocumentVisits() {
   const router = useRouter();
+  const teamInfo = useTeam();
 
   const { id } = router.query as {
     id: string;
   };
 
   const { data: views, error } = useSWR<ViewWithDuration[]>(
-    id && `/api/documents/${encodeURIComponent(id)}/views`,
+    id &&
+      `/api/teams/${teamInfo?.currentTeam?.id}/documents/${encodeURIComponent(
+        id
+      )}/views`,
     fetcher,
     {
       dedupingInterval: 10000,

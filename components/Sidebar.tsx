@@ -164,6 +164,7 @@ export default function Sidebar() {
               currentTeam={currentTeam}
               teams={teams}
               isLoading={isLoading}
+              setCurrentTeam={() => {}}
             />
             <ul role="list" className="flex flex-1 flex-col gap-y-7">
               <li>

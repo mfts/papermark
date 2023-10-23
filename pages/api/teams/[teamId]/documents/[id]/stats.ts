@@ -35,7 +35,7 @@ export default async function handle(
         },
       });
 
-      const views = document.views;
+      const views = document?.views;
 
       const groupedViews = await prisma.view.groupBy({
         by: ["viewerEmail"],

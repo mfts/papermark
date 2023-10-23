@@ -16,6 +16,8 @@ import { toast } from "sonner";
 export default function DocumentPage() {
   const { document, primaryVersion, error } = useDocument();
 
+  console.log(document, primaryVersion, error);
+
   const [isLinkSheetOpen, setIsLinkSheetOpen] = useState<boolean>(false);
   const [isEditingName, setIsEditingName] = useState<boolean>(false);
 
@@ -69,7 +71,7 @@ export default function DocumentPage() {
       }
     }
   };
-  
+
   if (error && error.status === 404) {
     return <ErrorPage statusCode={404} />;
   }

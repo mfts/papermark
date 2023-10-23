@@ -2,6 +2,7 @@ import { useRouter } from "next/router";
 import useSWR from "swr";
 import { fetcher } from "@/lib/utils";
 import { useMemo } from "react";
+import { useTeam } from "@/context/team-context";
 
 interface BillingProps {
   id: string;
@@ -15,14 +16,15 @@ interface BillingProps {
 }
 
 export function useBilling() {
+  const teamInfo = useTeam();
+
   const { data, error } = useSWR<BillingProps>(
-    `/api/billing`,
+    `/api/teams/${teamInfo?.currentTeam?.id}/billing`,
     fetcher,
     {
       dedupingInterval: 30000,
     }
   );
-
 
   return {
     ...data,

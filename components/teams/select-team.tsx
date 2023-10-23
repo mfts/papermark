@@ -4,10 +4,12 @@ import { TeamContextType, useTeam } from "@/context/team-context";
 import { AddTeamModal } from "./add-team-modal";
 import { ChevronUpDownIcon } from "@heroicons/react/20/solid";
 import { Team } from "@/lib/types";
+import { useRouter } from "next/router";
 
 const SelectTeam = ({ teams, currentTeam, isLoading }: TeamContextType) => {
   const [selectTeamOpen, setSelectTeamOpen] = useState<boolean>(false);
   const ref = useRef<HTMLDivElement>(null);
+  const router = useRouter();
   const userTeam = useTeam();
 
   useEffect(() => {
@@ -28,6 +30,7 @@ const SelectTeam = ({ teams, currentTeam, isLoading }: TeamContextType) => {
     setSelectTeamOpen(false);
     localStorage.setItem("currentTeamId", team.id);
     userTeam?.setCurrentTeam(team);
+    router.push("/documents");
   };
 
   return (
@@ -38,6 +41,7 @@ const SelectTeam = ({ teams, currentTeam, isLoading }: TeamContextType) => {
         </h2>
       ) : (
         <>
+          <h4 className="text-sm font-semibold my-2 mx-3">Your teams</h4>
           <div
             className="relative h-10 mb-6 w-full rounded-md border border-input bg-background text-sm ring-offset-background select-none"
             ref={ref}>
@@ -51,7 +55,7 @@ const SelectTeam = ({ teams, currentTeam, isLoading }: TeamContextType) => {
             {selectTeamOpen && (
               <div className="z-50 bg-popover text-popover-foreground shadow-md absolute top-12 left-0 max-h-72 w-full space-y-0.5 border overflow-auto rounded-md text-base sm:w-60 sm:text-sm sm:shadow-lg">
                 <div className="py-2 px-4 text-sm text-gray-400">
-                  Custom Projects
+                  Custom Teams
                 </div>
                 {teams.map((team) => (
                   <div
