@@ -14,7 +14,7 @@ const nextConfig = {
   },
   experimental: {
     outputFileTracingIncludes: {
-      "/api/**/*": ["./node_modules/**/*.wasm"],
+      "/api/mupdf/*": ["./node_modules/mupdf/lib/*.wasm"],
     },
   },
 };
