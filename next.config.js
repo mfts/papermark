@@ -12,6 +12,11 @@ const nextConfig = {
       "localhost", // local img
     ],
   },
+  experimental: {
+    outputFileTracingIncludes: {
+      "/api/**/*": ["./node_modules/**/*.wasm"],
+    },
+  },
 };
 
 module.exports = nextConfig
