@@ -1,6 +1,8 @@
 import { NextApiRequest, NextApiResponse } from "next";
-//@ts-ignore
-import mupdf from "mupdf";
+
+const mupdf = require("mupdf");
+// setWasmPath("/public/mupdf-wasm.wasm");
+
 
 export default async (req: NextApiRequest, res: NextApiResponse) => {
   // check if post method 
