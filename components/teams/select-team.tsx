@@ -1,20 +1,14 @@
-import React, { Fragment, useEffect, useRef, useState } from "react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Check, CheckIcon, Loader, PlusIcon } from "lucide-react";
-import { TeamContextType } from "@/context/team-context";
+import React, { useEffect, useRef, useState } from "react";
+import { Check, Loader, PlusIcon } from "lucide-react";
+import { TeamContextType, useTeam } from "@/context/team-context";
 import { AddTeamModal } from "./add-team-modal";
-import { Listbox, Transition } from "@headlessui/react";
 import { ChevronUpDownIcon } from "@heroicons/react/20/solid";
+import { Team } from "@/lib/types";
 
 const SelectTeam = ({ teams, currentTeam, isLoading }: TeamContextType) => {
   const [selectTeamOpen, setSelectTeamOpen] = useState<boolean>(false);
   const ref = useRef<HTMLDivElement>(null);
+  const userTeam = useTeam();
 
   useEffect(() => {
     function handleDocumentClick(event: MouseEvent) {
@@ -30,6 +24,12 @@ const SelectTeam = ({ teams, currentTeam, isLoading }: TeamContextType) => {
     };
   }, []);
 
+  const switchTeam = (team: Team) => {
+    setSelectTeamOpen(false);
+    localStorage.setItem("currentTeamId", team.id);
+    userTeam?.setCurrentTeam(team);
+  };
+
   return (
     <>
       {isLoading ? (
@@ -39,10 +39,10 @@ const SelectTeam = ({ teams, currentTeam, isLoading }: TeamContextType) => {
       ) : (
         <>
           <div
-            className="relative h-10 mb-6 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background select-none"
+            className="relative h-10 mb-6 w-full rounded-md border border-input bg-background text-sm ring-offset-background select-none"
             ref={ref}>
             <div
-              className="flex items-center justify-between cursor-pointer"
+              className="flex items-center justify-between cursor-pointer px-3 py-2"
               onClick={() => setSelectTeamOpen(!selectTeamOpen)}>
               {currentTeam?.name}
               <ChevronUpDownIcon className="h-4 w-4" />
@@ -59,7 +59,7 @@ const SelectTeam = ({ teams, currentTeam, isLoading }: TeamContextType) => {
                     className={`relative flex w-full items-center space-x-2 rounded-md px-4 py-2 hover:bg-gray-800 duration-100 cursor-pointer ${
                       team.id === currentTeam?.id ? "font-medium" : ""
                     } transition-all duration-75`}
-                    onClick={() => setSelectTeamOpen(false)}>
+                    onClick={() => switchTeam(team)}>
                     <span
                       className={`block truncate text-sm ${
                         team.id === currentTeam?.id
@@ -88,34 +88,6 @@ const SelectTeam = ({ teams, currentTeam, isLoading }: TeamContextType) => {
             )}
           </div>
         </>
-        // <>
-        //   <Select
-        //     defaultValue={currentTeam?.name}
-        //     onOpenChange={() => setVisible(!visible)}>
-        //     <SelectTrigger className="w-full mb-6">
-        //       <SelectValue placeholder="Select project" />
-        //     </SelectTrigger>
-        //     <SelectContent>
-        //       <div className="max-h-48 overflow-y-scroll">
-        //         {teams.map((team) => (
-        //           <SelectItem key={team.id} value={team.name}>
-        //             {team.name}
-        //           </SelectItem>
-        //         ))}
-        //       </div>
-        //     </SelectContent>
-        //     {visible && (
-        //       <div className="absolute">
-        // <AddTeamModal>
-        //   <div className="flex gap-2 items-center border-t p-2 text-sm hover:bg-gray-800 duration-100 hover:cursor-pointer">
-        //     <PlusIcon className="h-5 w-5" />
-        //     Create Team
-        //   </div>
-        // </AddTeamModal>
-        //       </div>
-        //     )}
-        //   </Select>
-        // </>
       )}
     </>
   );
