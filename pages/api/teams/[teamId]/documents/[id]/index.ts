@@ -76,7 +76,7 @@ export default async function handle(
       });
 
       // delete the document from vercel blob
-      await del(document.file);
+      await del(document!.file);
       // delete the document from database
       await prisma.document.delete({
         where: {

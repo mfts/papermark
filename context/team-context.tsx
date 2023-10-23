@@ -6,13 +6,13 @@ interface TeamContextProps {
   children: React.ReactNode;
 }
 
-type TeamContextType = {
+export type TeamContextType = {
   teams: Team[];
   currentTeam: Team | null;
   isLoading: boolean;
 };
 
-const initialState = {
+export const initialState = {
   teams: [],
   currentTeam: null,
   isLoading: false,
@@ -23,7 +23,10 @@ const TeamContext = createContext<TeamContextType | null>(initialState);
 export const TeamProvider = ({ children }: TeamContextProps): JSX.Element => {
   const { teams, loading } = useTeams();
 
-  const currentTeamId = localStorage.getItem("currentTeamId");
+  const currentTeamId =
+    typeof localStorage !== "undefined"
+      ? localStorage.getItem("currentTeamId")
+      : null;
 
   const value = useMemo(
     () => ({

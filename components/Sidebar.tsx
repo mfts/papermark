@@ -17,11 +17,16 @@ import { CustomUser } from "@/lib/types";
 import LoadingSpinner from "./ui/loading-spinner";
 import Banner from "./banner";
 import SelectTeam from "./teams/select-team";
+import { TeamContextType, initialState, useTeam } from "@/context/team-context";
+import { AddTeamModal } from "./teams/add-team-modal";
 
 export default function Sidebar() {
   const { data: session, status } = useSession();
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
   const router = useRouter();
+
+  const { currentTeam, teams, isLoading }: TeamContextType =
+    useTeam() || initialState;
 
   const navigation = [
     // {
@@ -155,7 +160,11 @@ export default function Sidebar() {
             </p>
           </div>
           <nav className="flex flex-1 flex-col">
-            <SelectTeam />
+            <SelectTeam
+              currentTeam={currentTeam}
+              teams={teams}
+              isLoading={isLoading}
+            />
             <ul role="list" className="flex flex-1 flex-col gap-y-7">
               <li>
                 <ul role="list" className="-mx-2 space-y-1">
