@@ -10,6 +10,7 @@ const nextConfig = {
       "pbs.twimg.com", // twitter img
       "media.licdn.com", // linkedin img
       "localhost", // local img
+      "36so9a8uzykxknsu.public.blob.vercel-storage.com",
     ],
   },
   experimental: {
