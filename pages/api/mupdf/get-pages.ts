@@ -1,27 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
-// import fs from "fs";
-// import path from "path";
-
-// // 1. Synchronously load the wasm binary
-// const wasmFilePath = path.join(process.cwd(), "public", "mupdf/mupdf-wasm.wasm");
-// const wasmBinary = fs.readFileSync(wasmFilePath);
-
-// // 2. Ensure the wasm module uses this binary for its initialization.
-// globalThis.Module = {
-//   wasmBinary: wasmBinary,
-//   locateFile: (filename: string) => {
-//     if (filename.endsWith(".wasm")) {
-//       return wasmFilePath;
-//     }
-//     return filename;
-//   },
-// };
-
-// Load mupdf from the local directory.
 // @ts-ignore
-// import mupdf from "mupdf";
-
-const mupdf = require("mupdf");
+import mupdf from "mupdf";
 
 
 export default async (req: NextApiRequest, res: NextApiResponse) => {
