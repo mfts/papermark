@@ -21,20 +21,6 @@ const nextConfig = {
       "/api/mupdf/*": ["./node_modules/mupdf/lib/*.wasm"],
     },
   },
-  async headers() {
-    return [
-      {
-        // Matching all image types from the Next.js image optimizer
-        source: "/_next/image(.*)",
-        headers: [
-          {
-            key: "Cache-Control",
-            value: "max-age=0, s-maxage=86400",
-          },
-        ],
-      },
-    ];
-  },
 };
 
 module.exports = nextConfig

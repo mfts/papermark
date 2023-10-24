@@ -116,7 +116,8 @@ export default function PagesViewer({pages, linkId, documentId, viewId}: {pages:
             src={pages[pageNumber - 1].file}
             alt={`Page ${pageNumber}`}
             fill
-            priority={pageNumber == 1}
+            priority={true}
+            quality={100}
           />
         </div>
       </div>
