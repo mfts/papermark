@@ -132,6 +132,10 @@ export default function DocumentView({
     handleSubmission();
   }
 
+  if (viewData.viewId === "") {
+    return <LoadingSpinner className="mr-1 h-5 w-5" />;
+  }
+
   return (
     <div className="bg-gray-950">
       {viewData.pages ? (

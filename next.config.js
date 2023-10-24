@@ -13,12 +13,27 @@ const nextConfig = {
       "localhost", // local img
       "36so9a8uzykxknsu.public.blob.vercel-storage.com", // staging img
       "yoywvlh29jppecbh.public.blob.vercel-storage.com", // production img
+      "36so9a8uzykxknsu.public.blob.vercel-storage.com", // staging img
     ],
   },
   experimental: {
     outputFileTracingIncludes: {
       "/api/mupdf/*": ["./node_modules/mupdf/lib/*.wasm"],
     },
+  },
+  async headers() {
+    return [
+      {
+        // Matching all image types from the Next.js image optimizer
+        source: "/_next/image(.*)",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "max-age=0, s-maxage=86400",
+          },
+        ],
+      },
+    ];
   },
 };
 
