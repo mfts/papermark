@@ -5,6 +5,7 @@ import prisma from "@/lib/prisma";
 import { CreateUserEmailProps, CustomUser } from "@/lib/types";
 import { sendWelcomeEmail } from "@/lib/emails/send-welcome";
 import { analytics, identifyUser, trackAnalytics } from "@/lib/analytics";
+import EmailProvider from "next-auth/providers/email";
 
 const VERCEL_DEPLOYMENT = !!process.env.VERCEL_URL;
 
@@ -13,6 +14,17 @@ export const authOptions: NextAuthOptions = {
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID as string,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+    }),
+    EmailProvider({
+      server: {
+        host: process.env.SMTP_HOST,
+        port: process.env.SMTP_PORT,
+        auth: {
+          user: process.env.SMTP_USER,
+          pass: process.env.SMTP_PASSWORD,
+        },
+      },
+      from: process.env.EMAIL_FROM,
     }),
   ],
   adapter: PrismaAdapter(prisma),
@@ -53,7 +65,9 @@ export const authOptions: NextAuthOptions = {
     async createUser(message) {
       const params: CreateUserEmailProps = {
         user: {
-          name: message.user.name,
+          name: message?.user?.name
+            ? message.user.name
+            : message.user.email?.split("@")[0],
           email: message.user.email,
         },
       };
@@ -74,7 +88,7 @@ export const authOptions: NextAuthOptions = {
         event: "User Signed In",
         email: message.user.email,
       });
-    }
+    },
   },
 };
 

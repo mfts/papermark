@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/router";
+import { Input } from "@/components/ui/input";
 
 export default function Login() {
   const router = useRouter();
@@ -32,7 +33,21 @@ export default function Login() {
             Start sharing documents
           </h3>
         </div>
-        <div className="flex flex-col px-4 py-8 sm:px-16">
+        <form
+          className="flex flex-col p-4 pt-8 sm:px-16 gap-4"
+          onSubmit={(e) => {
+            e.preventDefault();
+            const form = e.target as HTMLFormElement;
+            signIn("email", {
+              email: (form.elements[0] as HTMLInputElement).value,
+            });
+          }}
+        >
+          <Input className=" border-4" placeholder="John.deo@mail.com" />
+          <Button type="submit">Continue with email</Button>
+        </form>
+        <p className="text-center">or</p>
+        <div className="flex flex-col p-4 sm:px-16">
           <Button
             onClick={() => {
               signIn("google", {

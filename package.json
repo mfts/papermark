@@ -83,6 +83,7 @@
     "@types/js-cookie": "^3.0.4",
     "@types/ms": "^0.7.32",
     "@types/ua-parser-js": "^0.7.37",
+    "nodemailer": "^6.9.7",
     "prisma": "^4.16.2"
   }
 }
