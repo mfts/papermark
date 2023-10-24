@@ -2,6 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   images: {
+    minimumCacheTTL: 2592000, // 30 days
     domains: [
       "dknlay9ljaq1f.cloudfront.net", // static images and videos
       "d36r2enbzam0iu.cloudfront.net", // special document pages
