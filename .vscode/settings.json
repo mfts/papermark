@@ -1,0 +1,10 @@
+{
+  "typescript.tsdk": "packages/tsconfig/node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+  "npm.packageManager": "pnpm",
+  "eslint.workingDirectories": [
+    {
+      "mode": "auto"
+    }
+  ]
+}

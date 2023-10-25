@@ -1,0 +1,4 @@
+
+> web@1.0.0 ts /Users/jakubhavej/Code/papermark/apps/web
+> tsc --noEmit
+
