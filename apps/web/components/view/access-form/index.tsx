@@ -10,13 +10,15 @@ export default function AccessForm({
   data,
   setData,
   requireEmail,
-  requirePassword
+  requirePassword,
+  isLoading,
 }: {
   onSubmitHandler: React.FormEventHandler<HTMLFormElement>;
   data: DEFAULT_ACCESS_FORM_TYPE;
   setData: Dispatch<SetStateAction<DEFAULT_ACCESS_FORM_TYPE>>;
   requireEmail: boolean;
   requirePassword: boolean;
+  isLoading: boolean;
 }) {
 
   return (
@@ -31,10 +33,12 @@ export default function AccessForm({
         <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-md">
           <form className="space-y-4" onSubmit={onSubmitHandler}>
             {requireEmail ? <EmailSection {...{ data, setData }} /> : null}
-            {requirePassword ? <PasswordSection {...{ data, setData }} /> : null}
+            {requirePassword ? (
+              <PasswordSection {...{ data, setData }} />
+            ) : null}
 
             <div className="flex justify-center">
-              <Button type="submit" className="w-1/3">
+              <Button type="submit" className="w-1/3" loading={isLoading}>
                 Continue
               </Button>
             </div>

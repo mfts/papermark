@@ -3,20 +3,24 @@ import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { DEFAULT_LINK_TYPE } from ".";
 
-
-
-export default function EmailProtectionSection({data, setData}: {data: DEFAULT_LINK_TYPE, setData: Dispatch<SetStateAction<DEFAULT_LINK_TYPE>>}) {
-  const { emailProtected } = data;
-  const [enabled, setEnabled] = useState<boolean>(true);
+export default function AllowDownloadSection({
+  data,
+  setData,
+}: {
+  data: DEFAULT_LINK_TYPE;
+  setData: Dispatch<SetStateAction<DEFAULT_LINK_TYPE>>;
+}) {
+  const { allowDownload } = data;
+  const [enabled, setEnabled] = useState<boolean>(false);
 
   useEffect(() => {
-    setEnabled(emailProtected);
-  }, [emailProtected]);
+    setEnabled(allowDownload);
+  }, [allowDownload]);
 
-  const handleEnableProtection = () => {
-    const updatedEmailProtection = !enabled;
-    setData({ ...data, emailProtected: updatedEmailProtection });
-    setEnabled(updatedEmailProtection);
+  const handleAllowDownload = () => {
+    const updatedAllowDownload = !enabled;
+    setData({ ...data, allowDownload: updatedAllowDownload });
+    setEnabled(updatedAllowDownload);
   };
 
   return (
@@ -29,13 +33,10 @@ export default function EmailProtectionSection({data, setData}: {data: DEFAULT_L
               enabled ? "text-foreground" : "text-muted-foreground"
             )}
           >
-            Require email to view
+            Allow downloading
           </h2>
         </div>
-        <Switch
-          checked={enabled}
-          onCheckedChange={handleEnableProtection}
-        />
+        <Switch checked={enabled} onCheckedChange={handleAllowDownload} />
       </div>
     </div>
   );

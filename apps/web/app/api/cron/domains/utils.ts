@@ -96,7 +96,7 @@ export const handleDomainUpdates = async ({
   }
 
   // if domain is invalid for more than 28 days, send email
-  if (invalidDays >= 28) {
+  if (invalidDays == 28) {
     return await Promise.allSettled([
       log(`Domain *${domain}* is invalid for ${invalidDays} days, email sent.`),
       limiter.schedule(() =>
@@ -106,7 +106,7 @@ export const handleDomainUpdates = async ({
   }
 
   // if domain is invalid for more than 14 days, send email
-  if (invalidDays >= 14) {
+  if (invalidDays == 14) {
     return await Promise.allSettled([
       log(`Domain *${domain}* is invalid for ${invalidDays} days, email sent.`),
       limiter.schedule(() =>

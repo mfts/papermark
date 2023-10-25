@@ -23,6 +23,14 @@ export default async function handle(
         where: {
           id: id,
         },
+        include: {
+          // Get the latest primary version of the document
+          versions: {
+            where: { isPrimary: true },
+            orderBy: { createdAt: "desc" },
+            take: 1,
+          },
+        }
       });
 
       if (!document) {

@@ -24,7 +24,15 @@ export default async function handle(
       // Save data to the database
       await prisma.document.update({
         where: { id: documentId },
-        data: { numPages: numPages },
+        data: { 
+          numPages: numPages,
+          // versions: {
+          //   update: {
+          //     where: { id: documentId },
+          //     data: { numPages: numPages },
+          //   },
+          // },
+        },
       });
 
       res.status(201).json({message: "Document updated successfully"});

@@ -1,10 +1,15 @@
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import DocumentView from "@/components/view/document-view";
 import { useDomainLink } from "@/lib/swr/use-link";
+import NotFound from "@/pages/404";
 
 export default function ViewPage() {
   const { link, error } = useDomainLink();
 
+  if (error && error.status === 404) {
+    return <NotFound />;
+  }
+  
   if (!link) {
     return (
       <div className="h-screen flex items-center justify-center">

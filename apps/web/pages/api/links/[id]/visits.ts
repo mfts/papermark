@@ -29,11 +29,17 @@ export default async function handle(
           document: {
             select: {
               numPages: true,
+              versions: {
+                where: { isPrimary: true },
+                orderBy: { createdAt: "desc" },
+                take: 1,
+                select: { numPages: true },
+              },
             },
           },
         },
       });
-      const numPages = result?.document?.numPages;
+      const numPages = result?.document?.versions[0]?.numPages || result?.document?.numPages || 0;
 
       const views = await prisma.view.findMany({
         where: {
