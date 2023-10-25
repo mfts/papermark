@@ -28,9 +28,9 @@ export default function Banner({ session }: { session: Session | null }) {
     new Date((session?.user as CustomUser).createdAt || 0)
   );
 
-  const someNotVerified = domains && domains.some((domain) => !domain.verified);
-
-  const allVerified = domains && domains.every((domain) => domain.verified);
+  const noDomains = domains && domains.length === 0;
+  const someNotVerified = domains && !noDomains && domains.some((domain) => !domain.verified);
+  const allVerified = domains && !noDomains && domains.every((domain) => domain.verified);
 
   return (
     <aside className="flex flex-col justify-center w-full bg-background text-foreground p-4 mb-2 rounded-lg border border-gray-700">

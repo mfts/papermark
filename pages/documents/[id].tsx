@@ -8,21 +8,28 @@ import LinkSheet from "@/components/links/link-sheet";
 import Image from "next/image";
 import LinksTable from "@/components/links/links-table";
 import VisitorsTable from "@/components/visitors/visitors-table";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import { toast } from "sonner";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { useRouter } from "next/router";
+import MoreVertical from "@/components/shared/icons/more-vertical";
 
 export default function DocumentPage() {
-  const { document, primaryVersion, error } = useDocument();
+  const { document: prismaDocument, primaryVersion, error } = useDocument();
+  const router = useRouter();
 
   console.log(document, primaryVersion, error);
 
   const [isLinkSheetOpen, setIsLinkSheetOpen] = useState<boolean>(false);
   const [isEditingName, setIsEditingName] = useState<boolean>(false);
+  const [isFirstClick, setIsFirstClick] = useState<boolean>(false);
+  const [menuOpen, setMenuOpen] = useState<boolean>(false);
 
   const nameRef = useRef<HTMLHeadingElement>(null);
   const enterPressedRef = useRef<boolean>(false);
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
 
   const handleNameSubmit = async () => {
     if (enterPressedRef.current) {
@@ -32,9 +39,9 @@ export default function DocumentPage() {
     if (nameRef.current && isEditingName) {
       const newName = nameRef.current.innerText;
 
-      if (newName !== document!.name) {
+      if (newName !== prismaDocument!.name) {
         const response = await fetch(
-          `/api/documents/${document!.id}/update-name`,
+          `/api/documents/${prismaDocument!.id}/update-name`,
           {
             method: "POST",
             headers: {
@@ -55,6 +62,71 @@ export default function DocumentPage() {
         }
       }
       setIsEditingName(false);
+    }
+  };
+
+
+  useEffect(() => {
+    function handleClickOutside(event: { target: any; }) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setMenuOpen(false);
+        setIsFirstClick(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const handleDeleteDocument = async (documentId: string) => {
+    // Prevent the first click from deleting the document
+    if (!isFirstClick) {
+      setIsFirstClick(true);
+      return;
+    }
+
+    const response = await fetch(`/api/documents/${documentId}`, {
+      method: "DELETE",
+    });
+
+    if (response.ok) {
+      setIsFirstClick(false);
+      setMenuOpen(false);
+      router.push("/documents")
+      toast.success("Document deleted successfully.");
+    } else {
+      const { message } = await response.json();
+      toast.error(message);
+    }
+  }
+
+  const handleMenuStateChange = (open: boolean ) => {
+    if (isFirstClick) {
+      setMenuOpen(true); // Keep the dropdown open on the first click
+      return;
+    }
+
+    // If the menu is closed, reset the isFirstClick state
+    if (!open) {
+      setIsFirstClick(false);
+      setMenuOpen(false); // Ensure the dropdown is closed
+    } else {
+      setMenuOpen(true); // Open the dropdown
+    }
+  };
+
+  const handleButtonClick = (event: any, documentId: string) => {
+    event.stopPropagation();
+    event.preventDefault();
+
+    if (isFirstClick) {
+      handleDeleteDocument(documentId);
+      setIsFirstClick(false);
+      setMenuOpen(false); // Close the dropdown after deleting
+    } else {
+      setIsFirstClick(true);
     }
   };
 
@@ -79,7 +151,7 @@ export default function DocumentPage() {
   return (
     <AppLayout>
       <div>
-        {document && primaryVersion ? (
+        {prismaDocument && primaryVersion ? (
           <>
             {/* Heading */}
             <div className="flex flex-col items-start justify-between gap-x-8 gap-y-4 p-4 sm:flex-row sm:items-center sm:m-4">
@@ -103,7 +175,7 @@ export default function DocumentPage() {
                       onBlur={handleNameSubmit}
                       onKeyDown={preventEnterAndSubmit}
                       title="Click to edit"
-                      dangerouslySetInnerHTML={{ __html: document.name }}
+                      dangerouslySetInnerHTML={{ __html: prismaDocument.name }}
                     />
                     {isEditingName && (
                       <p className="text-sm text-muted-foreground mt-1">
@@ -113,14 +185,38 @@ export default function DocumentPage() {
                   </div>
                 </div>
               </div>
-              <Button onClick={() => setIsLinkSheetOpen(true)}>
-                Create Link
-              </Button>
+              <div className="flex items-center gap-x-4">
+                <DropdownMenu
+                  open={menuOpen}
+                  onOpenChange={handleMenuStateChange}
+                >
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="h-8 w-8 p-0">
+                      <span className="sr-only">Open menu</span>
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" ref={dropdownRef}>
+                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                    <DropdownMenuItem
+                      className="text-destructive focus:bg-destructive focus:text-destructive-foreground"
+                      onClick={(event) =>
+                        handleButtonClick(event, prismaDocument.id)
+                      }
+                    >
+                      {isFirstClick ? "Really delete?" : "Delete document"}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <Button onClick={() => setIsLinkSheetOpen(true)}>
+                  Create Link
+                </Button>
+              </div>
             </div>
             {/* Stats */}
-            {document.numPages !== null && (
+            {prismaDocument.numPages !== null && (
               <StatsChart
-                documentId={document.id}
+                documentId={prismaDocument.id}
                 totalPages={primaryVersion.numPages!}
               />
             )}

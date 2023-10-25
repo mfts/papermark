@@ -48,3 +48,7 @@ next-env.d.ts
 
 # Internal scripts
 pages/api/scripts
+
+# marketing
+components/emails/marketing
+lib/emails/marketing
