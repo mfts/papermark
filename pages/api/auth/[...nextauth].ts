@@ -6,6 +6,8 @@ import { CreateUserEmailProps, CustomUser } from "@/lib/types";
 import { sendWelcomeEmail } from "@/lib/emails/send-welcome";
 import { analytics, identifyUser, trackAnalytics } from "@/lib/analytics";
 import EmailProvider from "next-auth/providers/email";
+import { sendEmail } from "@/lib/resend";
+import LoginLink from "@/components/emails/login-link";
 
 const VERCEL_DEPLOYMENT = !!process.env.VERCEL_URL;
 
@@ -16,15 +18,13 @@ export const authOptions: NextAuthOptions = {
       clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
     }),
     EmailProvider({
-      server: {
-        host: process.env.SMTP_HOST,
-        port: process.env.SMTP_PORT,
-        auth: {
-          user: process.env.SMTP_USER,
-          pass: process.env.SMTP_PASSWORD,
-        },
+      sendVerificationRequest({ identifier, url }) {
+        sendEmail({
+          to: identifier,
+          subject: "Your Papermark Login Link",
+          react: LoginLink({ url, email: identifier }),
+        });
       },
-      from: process.env.EMAIL_FROM,
     }),
   ],
   adapter: PrismaAdapter(prisma),

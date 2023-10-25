@@ -44,7 +44,7 @@ export default function Login() {
           }}
         >
           <Input className=" border-4" placeholder="John.deo@mail.com" />
-          <Button type="submit">Continue with email</Button>
+          <Button type="submit">Continue with Email</Button>
         </form>
         <p className="text-center">or</p>
         <div className="flex flex-col p-4 sm:px-16">
