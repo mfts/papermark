@@ -51,3 +51,7 @@ pages/api/scripts
 
 # Turborepo
 .turbo
+
+# marketing
+components/emails/marketing
+lib/emails/marketing
