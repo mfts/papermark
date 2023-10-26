@@ -213,13 +213,15 @@ export default function Sidebar() {
                       leaveFrom="transform opacity-100 scale-100"
                       leaveTo="transform opacity-0 scale-95"
                     >
-                      <Menu.Items className="absolute left-0 z-10 bottom-0 mb-14 w-full origin-bottom-left rounded-md bg-gray-100 dark:bg-primary-foreground py-2 focus:outline-none">
+                      <Menu.Items className="absolute left-0 z-10 bottom-0 mb-14 w-[max-container] origin-bottom-left rounded-md bg-gray-100 dark:bg-primary-foreground py-2 focus:outline-none">
                         {session ? (
                           <>
                             <Menu.Item>
+                              <div className="w-full">
                               <p className="block px-3 py-1 text-sm leading-6 text-muted-foreground">
                                 {session?.user?.email}
                               </p>
+                              </div>
                             </Menu.Item>
                             <Menu.Item>
                               <p className="block px-3 py-1 text-sm leading-6 text-muted-foreground">
