@@ -52,7 +52,7 @@ export default function Sidebar() {
     },
     {
       name: "Settings",
-      href: "/settings/domains",
+      href: "/settings/people",
       icon: SettingsIcon,
       current: router.pathname.includes("settings"),
       disabled: false,
@@ -227,7 +227,12 @@ export default function Sidebar() {
                             </Menu.Item>
                             <Menu.Item>
                               <p className="block px-3 py-1 text-sm leading-6 text-muted-foreground">
-                                Help? <a href="mailto:support@papermark.io" className="underline hover:text-muted-foreground/80">support@papermark.io</a>
+                                Help?{" "}
+                                <a
+                                  href="mailto:support@papermark.io"
+                                  className="underline hover:text-muted-foreground/80">
+                                  support@papermark.io
+                                </a>
                               </p>
                             </Menu.Item>
                             <Menu.Item>

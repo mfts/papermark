@@ -153,3 +153,23 @@ export interface Team {
   id: string;
   name: string;
 }
+
+export interface TeamDetail {
+  id: string;
+  name: string;
+  documents: {
+    owner: {
+      id: string;
+      name: string;
+    };
+  }[];
+  users: {
+    role: "Admin" | "Member";
+    teamId: string;
+    user: {
+      email: string;
+      name: string;
+    };
+    userId: string;
+  }[];
+}

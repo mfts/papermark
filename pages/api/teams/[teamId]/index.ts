@@ -23,21 +23,27 @@ export default async function handle(
         where: {
           id: teamId,
         },
-        include: {
+        select: {
+          id: true,
+          name: true,
           users: {
-            include: {
-              user: true,
-            },
-          },
-          documents: {
-            include: {
-              owner: {
+            select: {
+              role: true,
+              teamId: true,
+              userId: true,
+              user: {
                 select: {
+                  email: true,
                   name: true,
                 },
               },
-              views: {
+            },
+          },
+          documents: {
+            select: {
+              owner: {
                 select: {
+                  name: true,
                   id: true,
                 },
               },
@@ -49,7 +55,7 @@ export default async function handle(
       // check that the user is member of the team, otherwise return 403
       const teamUsers = team?.users;
       const isUserPartOfTeam = teamUsers?.some(
-        (team) => team.userId === (session.user as CustomUser).id
+        (user) => user.userId === (session.user as CustomUser).id
       );
       if (!isUserPartOfTeam) {
         return res.status(403).end("Unauthorized to access this team");
