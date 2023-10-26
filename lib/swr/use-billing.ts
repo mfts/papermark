@@ -30,3 +30,23 @@ export function useBilling() {
     loading: !data && !error,
   };
 }
+
+interface PlanResponse {
+  plan: string;
+}
+
+export function usePlan() {
+  const { data: plan, error } = useSWR<PlanResponse>(
+    `/api/billing/plan`,
+    fetcher,
+    {
+      dedupingInterval: 60000,
+    }
+  );
+
+  return {
+    plan,
+    loading: !plan && !error,
+    error,
+  };
+}
