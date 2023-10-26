@@ -53,6 +53,7 @@
 
 const navigation = {
   product: [
+    { name: "Pricing", href: "/pricing" },
     { name: "Github", href: "https://github.com/mfts/papermark" },
     { name: "Twitter", href: "https://twitter.com/papermarkio" },
   ],
