@@ -60,7 +60,7 @@ const SelectTeam = ({ teams, currentTeam, isLoading }: TeamContextType) => {
                 {teams.map((team) => (
                   <div
                     key={team.id}
-                    className={`relative flex w-full items-center space-x-2 rounded-md px-4 py-2 hover:bg-gray-800 duration-100 cursor-pointer ${
+                    className={`relative flex w-full items-center space-x-2 rounded-md px-4 py-2 hover:bg-gray-200 hover:dark:bg-gray-800 duration-100 cursor-pointer ${
                       team.id === currentTeam?.id ? "font-medium" : ""
                     } transition-all duration-75`}
                     onClick={() => switchTeam(team)}>
@@ -75,7 +75,7 @@ const SelectTeam = ({ teams, currentTeam, isLoading }: TeamContextType) => {
                     {team.id === currentTeam?.id ? (
                       <span className="absolute inset-y-0 right-0 flex items-center pr-3 text-black">
                         <Check
-                          className="h-5 w-5 text-white"
+                          className="h-5 w-5 dark:text-white"
                           aria-hidden="true"
                         />
                       </span>
@@ -83,7 +83,7 @@ const SelectTeam = ({ teams, currentTeam, isLoading }: TeamContextType) => {
                   </div>
                 ))}
                 <AddTeamModal>
-                  <div className="flex mt-1 gap-2 items-center border-t p-3 text-sm hover:bg-gray-800 duration-100 hover:cursor-pointer">
+                  <div className="flex mt-1 gap-2 items-center border-t p-3 text-sm hover:bg-gray-200 hover:dark:bg-gray-800 duration-100 hover:cursor-pointer">
                     <PlusIcon className="h-5 w-5" />
                     Create Team
                   </div>
