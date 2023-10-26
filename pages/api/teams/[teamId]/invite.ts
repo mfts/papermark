@@ -23,7 +23,7 @@ export default async function handle(
     const { email } = req.body;
 
     if (!email) {
-      return res.status(400).end("Email is missing in request body");
+      return res.status(400).json("Email is missing in request body");
     }
 
     try {
@@ -49,7 +49,7 @@ export default async function handle(
           user.userId === (session.user as CustomUser).id
       );
       if (!isUserAdmin) {
-        return res.status(403).end("Unauthorized to access this team");
+        return res.status(403).json("Only admins can send the invitation!");
       }
 
       // send invite email
@@ -72,6 +72,7 @@ export default async function handle(
     const session = await getServerSession(req, res, authOptions);
 
     const { teamId } = req.query as { teamId: string };
+    console.log(teamId, "teamId found");
 
     if (!session) {
       res.redirect(`/login?next=/api/teams/${teamId}/invite`);
@@ -86,7 +87,8 @@ export default async function handle(
       });
 
       if (userTeam) {
-        return res.status(400).end("User is already in the team");
+        // User is already in the team
+        return res.redirect(`/documents`);
       }
 
       const team = await prisma.team.update({
@@ -103,6 +105,7 @@ export default async function handle(
       });
       return res.redirect("/documents");
     } catch (error) {
+      console.log(error);
       errorHanlder(error, res);
     }
   }

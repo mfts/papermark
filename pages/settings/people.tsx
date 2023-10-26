@@ -5,8 +5,13 @@ import MoreVertical from "@/components/shared/icons/more-vertical";
 import Folder from "@/components/shared/icons/folder";
 import { useGetTeam } from "@/lib/swr/use-team";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AddTeamMembers } from "@/components/teams/add-team-member-modal";
+import { useState } from "react";
 
 export default function Billing() {
+  const [isTeamMemberInviteModalOpen, setTeamMemberInviteModalOpen] =
+    useState<boolean>(false);
+
   const { team, loading } = useGetTeam();
 
   const getUserDocumentCount = (userId: string) => {
@@ -38,7 +43,11 @@ export default function Billing() {
                 Teammates that have access to this project.
               </p>
             </div>
-            <Button>Invite</Button>
+            <AddTeamMembers
+              open={isTeamMemberInviteModalOpen}
+              setOpen={setTeamMemberInviteModalOpen}>
+              <Button>Invite</Button>
+            </AddTeamMembers>
           </div>
         </div>
 
