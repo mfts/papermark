@@ -4,9 +4,10 @@ import { Button } from "@/components/ui/button";
 import MoreVertical from "@/components/shared/icons/more-vertical";
 import Folder from "@/components/shared/icons/folder";
 import { useGetTeam } from "@/lib/swr/use-team";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Billing() {
-  const { team } = useGetTeam();
+  const { team, loading } = useGetTeam();
 
   const getUserDocumentCount = (userId: string) => {
     const documents = team?.documents.filter(
@@ -42,6 +43,21 @@ export default function Billing() {
         </div>
 
         <ul className="mt-6 border rounded-lg divide-y">
+          {loading && (
+            <div className="flex justify-between items-center py-4 px-10">
+              <div className="flex items-center gap-12">
+                <div className="space-y-2">
+                  <Skeleton className="h-6 w-36" />
+                  <Skeleton className="h-4 w-36" />
+                </div>
+                <Skeleton className="h-4 w-20" />
+              </div>
+              <div className="flex gap-12">
+                <Skeleton className="h-6 w-14" />
+                <Skeleton className="h-6 w-4" />
+              </div>
+            </div>
+          )}
           {team?.users.map((member) => (
             <li className="flex py-4 px-10 justify-between items-center">
               <div className="flex items-center gap-12">
@@ -55,7 +71,10 @@ export default function Billing() {
                   <div className="flex items-center gap-2">
                     <Folder />
                     <span className="text-xs text-foreground">
-                      {getUserDocumentCount(member.userId)} documents
+                      {getUserDocumentCount(member.userId)}{" "}
+                      {getUserDocumentCount(member.userId) === 1
+                        ? "document"
+                        : "documents"}
                     </span>
                   </div>
                 </div>
