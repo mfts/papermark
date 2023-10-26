@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Button } from "./ui/button";
-import { daysLeft } from "@/lib/utils";
+import { calculateDaysLeft } from "@/lib/utils";
 import { CustomUser } from "@/lib/types";
 import { Session } from "next-auth";
 import { useDomains } from "@/lib/swr/use-domains";
@@ -9,20 +9,6 @@ const cutoffDate = new Date("2023-10-12T00:00:00.000Z");
 
 export default function Banner({ session }: { session: Session | null }) {
   const { domains } = useDomains();
-
-  const calculateDaysLeft = (accountCreationDate: Date): number => {
-    let maxDays;
-    if (accountCreationDate < cutoffDate) {
-      // If the user signed up before the 12th of October 2023
-      maxDays = 30;
-      // Override account creation date to 1st of October for correct calculation
-      accountCreationDate = new Date("2023-10-01T00:00:00.000Z");
-    } else {
-      // If the user signed up on or after the 12th of October 2023
-      maxDays = 14;
-    }
-    return daysLeft(accountCreationDate, maxDays);
-  };
   
   const userDaysLeft = calculateDaysLeft(
     new Date((session?.user as CustomUser).createdAt || 0)

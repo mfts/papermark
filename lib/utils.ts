@@ -242,3 +242,16 @@ export const daysLeft = (accountCreationDate: Date, maxDays: number): number => 
   // Convert milliseconds to days and return
   return Math.ceil(diffInMilliseconds / (1000 * 60 * 60 * 24));
 }
+
+const cutoffDate = new Date("2023-10-12T00:00:00.000Z");
+
+export const calculateDaysLeft = (accountCreationDate: Date): number => {
+  let maxDays;
+  if (accountCreationDate < cutoffDate) {
+    maxDays = 30;
+    accountCreationDate = new Date("2023-10-01T00:00:00.000Z");
+  } else {
+    maxDays = 14;
+  }
+  return daysLeft(accountCreationDate, maxDays);
+};
