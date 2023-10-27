@@ -4,33 +4,18 @@ import { BlurImage } from "@/components/shared/blur-image";
 
 export default function PagesViewer({pages, linkId, documentId, viewId}: {pages: { file: string, pageNumber: string }[], linkId: string, documentId: string, viewId: string}) {
   const [pageNumber, setPageNumber] = useState<number>(1); // start on first page
-  const [isMounted, setIsMounted] = useState(false);
-
 
   const startTimeRef = useRef(Date.now());
   const pageNumberRef = useRef<number>(pageNumber);
-  const isInitialPageLoad = useRef(true);
-  // const initialPageLoadDone = useRef(false);
-
 
   const numPages = pages.length;
 
-  useEffect(() => {
-    setIsMounted(true);
-
-    // Clean up function
-    return () => {
-      setIsMounted(false);
-    };
-  }, []);
   // Update the previous page number after the effect hook has run
   useEffect(() => {
     pageNumberRef.current = pageNumber;
   }, [pageNumber]);
 
   useEffect(() => {
-    console.log("Page number changed to", pageNumber)
-    console.log("isinitialpageload", isInitialPageLoad.current);
     startTimeRef.current = Date.now(); // update the start time for the new page
 
     // when component unmounts, calculate duration and track page view
@@ -67,15 +52,6 @@ export default function PagesViewer({pages, linkId, documentId, viewId}: {pages:
   }
 
   async function trackPageView(duration: number = 0) {
-    // If this is the initial page load, don't send the request
-    // if (isInitialPageLoad.current) {
-    //   console.log("Initial page load detected, not tracking.");
-    //   isInitialPageLoad.current = false;
-    //   return;
-    // }
-
-    console.log("Tracking page view.");
-
     await fetch("/api/record_view", {
       method: "POST",
       body: JSON.stringify({
