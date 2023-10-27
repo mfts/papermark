@@ -27,7 +27,8 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
 
     var page = doc.loadPage(pageNumber-1); // 0-based page index
     var pixmap = page.toPixmap(
-      mupdf.Matrix.identity,
+      // mupdf.Matrix.identity,
+      [3,0,0,3,0,0], // scale 3x
       mupdf.ColorSpace.DeviceRGB
     );
     var pngBuffer = pixmap.asPNG();

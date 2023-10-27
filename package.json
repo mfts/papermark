@@ -12,7 +12,8 @@
     "lint": "next lint",
     "postinstall": "prisma generate",
     "vercel-build": "prisma migrate deploy && next build",
-    "email": "email dev --dir ./components/emails --port 3001"
+    "email": "email dev --dir ./components/emails --port 3001",
+    "trigger:dev": "npx @trigger.dev/cli@latest dev"
   },
   "dependencies": {
     "@chronark/zod-bird": "^0.2.2",
@@ -35,9 +36,9 @@
     "@stripe/stripe-js": "^2.1.7",
     "@tailwindcss/typography": "^0.5.10",
     "@tremor/react": "^3.8.2",
-    "@trigger.dev/nextjs": "^2.2.0",
-    "@trigger.dev/react": "^2.2.0",
-    "@trigger.dev/sdk": "^2.2.0",
+    "@trigger.dev/nextjs": "^2.2.3",
+    "@trigger.dev/react": "^2.2.3",
+    "@trigger.dev/sdk": "^2.2.3",
     "@types/node": "^20.8.4",
     "@types/react": "^18.2.27",
     "@types/react-dom": "^18.2.12",
