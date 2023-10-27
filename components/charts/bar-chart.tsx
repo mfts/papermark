@@ -31,9 +31,17 @@ const renameSumDurationKey = (data: any[]) => {
   });
 };
 
-export default function BarChartComponent({data, isSum = false}: {data: any, isSum?: boolean}) {
-  const renamedData = isSum ? renameSumDurationKey(data) : renameAvgDurationKey(data);
-  
+export default function BarChartComponent({
+  data,
+  isSum = false,
+}: {
+  data: any;
+  isSum?: boolean;
+}) {
+  const renamedData = isSum
+    ? renameSumDurationKey(data)
+    : renameAvgDurationKey(data);
+
   return (
     <BarChart
       className="mt-6 rounded-tremor-small"
