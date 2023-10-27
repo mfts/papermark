@@ -84,7 +84,7 @@ export default function Footer() {
       <div className="mx-auto max-w-7xl px-6 py-16 sm:py-20 lg:px-8 lg:py-12">
         <div className="xl:grid xl:grid-cols-3 xl:gap-8">
           {/* Text-based Logo */}
-          <h1 className="text-2xl font-bold  text-black dark:text-white">
+          <h1 className="text-2xl font-bold tracking-tighter text-black dark:text-white">
             Papermark
           </h1>
 

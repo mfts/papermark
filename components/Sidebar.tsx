@@ -221,9 +221,11 @@ export default function Sidebar() {
                         {session ? (
                           <>
                             <Menu.Item>
-                              <p className="block px-3 py-1 text-sm leading-6 text-muted-foreground">
-                                {session?.user?.email}
-                              </p>
+                              <div className="w-full">
+                                <p className="block px-3 py-1 text-sm leading-6 text-muted-foreground">
+                                  {session?.user?.email}
+                                </p>
+                              </div>
                             </Menu.Item>
                             <Menu.Item>
                               <p className="block px-3 py-1 text-sm leading-6 text-muted-foreground">

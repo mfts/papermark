@@ -12,7 +12,8 @@
     "lint": "next lint",
     "postinstall": "prisma generate",
     "vercel-build": "prisma migrate deploy && next build",
-    "email": "email dev --dir ./components/emails --port 3001"
+    "email": "email dev --dir ./components/emails --port 3001",
+    "trigger:dev": "npx @trigger.dev/cli@latest dev"
   },
   "dependencies": {
     "@chronark/zod-bird": "^0.2.2",
@@ -35,6 +36,9 @@
     "@stripe/stripe-js": "^2.1.7",
     "@tailwindcss/typography": "^0.5.10",
     "@tremor/react": "^3.8.2",
+    "@trigger.dev/nextjs": "^2.2.3",
+    "@trigger.dev/react": "^2.2.3",
+    "@trigger.dev/sdk": "^2.2.3",
     "@types/node": "^20.8.4",
     "@types/react": "^18.2.27",
     "@types/react-dom": "^18.2.12",
@@ -55,6 +59,7 @@
     "js-cookie": "^3.0.5",
     "lucide-react": "^0.284.0",
     "ms": "^2.1.3",
+    "mupdf": "^0.1.1",
     "nanoid": "^5.0.1",
     "next": "^13.5.4",
     "next-auth": "^4.23.2",
@@ -84,5 +89,8 @@
     "@types/ms": "^0.7.32",
     "@types/ua-parser-js": "^0.7.37",
     "prisma": "^4.16.2"
+  },
+  "trigger.dev": {
+    "endpointId": "papermark-dev-Ojwu"
   }
 }
