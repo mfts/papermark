@@ -31,10 +31,19 @@ export default function Billing() {
     return documents?.length;
   };
 
-  const isUserAdmin = (userId: string) => {
-    if ((session?.user as CustomUser).id === userId) {
+  const isCurrentUser = (userId: string) => {
+    if ((session?.user as CustomUser)?.id === userId) {
       return true;
     }
+    return false;
+  };
+
+  const isCurrentUserAdmin = () => {
+    return team?.users.some(
+      (user) =>
+        user.role === "ADMIN" &&
+        user.userId === (session?.user as CustomUser)?.id
+    );
   };
 
   return (
@@ -117,9 +126,22 @@ export default function Billing() {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                    <DropdownMenuItem className="text-red-500 focus:bg-destructive focus:text-destructive-foreground">
-                      Remove teammate
-                    </DropdownMenuItem>
+                    {isCurrentUser(member.userId) && (
+                      <DropdownMenuItem className="text-red-500 focus:bg-destructive focus:text-destructive-foreground">
+                        Leave team
+                      </DropdownMenuItem>
+                    )}
+                    {isCurrentUserAdmin() && !isCurrentUser(member.userId) ? (
+                      <DropdownMenuItem className="text-red-500 focus:bg-destructive focus:text-destructive-foreground">
+                        Remove teammate
+                      </DropdownMenuItem>
+                    ) : (
+                      <DropdownMenuItem
+                        disabled
+                        className="text-red-500 focus:bg-destructive focus:text-destructive-foreground">
+                        Remove teammate
+                      </DropdownMenuItem>
+                    )}
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>

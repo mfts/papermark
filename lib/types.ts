@@ -164,7 +164,7 @@ export interface TeamDetail {
     };
   }[];
   users: {
-    role: "Admin" | "Member";
+    role: "ADMIN" | "MEMBER";
     teamId: string;
     user: {
       email: string;
