@@ -13,7 +13,6 @@ export default function PDFViewer(props: any) {
 
   const startTimeRef = useRef(Date.now());
   const pageNumberRef = useRef<number>(pageNumber);
-  const isInitialPageLoad = useRef(true);
 
   // Update the previous page number after the effect hook has run
   useEffect(() => {
@@ -102,12 +101,6 @@ export default function PDFViewer(props: any) {
   }
 
   async function trackPageView(duration: number = 0) {
-    // If this is the initial page load, don't send the request
-    if (isInitialPageLoad.current) {
-      isInitialPageLoad.current = false;
-      return;
-    }
-
     await fetch("/api/record_view", {
       method: "POST",
       body: JSON.stringify({
