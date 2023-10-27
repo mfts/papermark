@@ -40,7 +40,6 @@ export default function DocumentView({
 
 
   const handleSubmission = async (): Promise<void> => {
-    console.log("handle submission to get views");
     setIsLoading(true);
     const response = await fetch("/api/views", {
       method: "POST",
@@ -73,16 +72,13 @@ export default function DocumentView({
     event: React.FormEvent
   ): Promise<void> => {
     event.preventDefault();
-    console.log("handle submit");
     await handleSubmission();
   };
-
-  console.log("Render with", { submitted, isProtected });
+  
   // If link is not submitted and does not have email / password protection, show the access form
   useEffect(() => {
     if (!didMount.current) {
       if (!submitted && !isProtected) {
-        console.log("submitting directly");
         handleSubmission();
       }
       didMount.current = true;

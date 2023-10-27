@@ -17,6 +17,8 @@ export default function PagesViewer({pages, linkId, documentId, viewId}: {pages:
   }, [pageNumber]);
 
   useEffect(() => {
+    console.log("Page number changed to", pageNumber)
+    console.log("isinitialpageload", isInitialPageLoad.current);
     startTimeRef.current = Date.now(); // update the start time for the new page
 
     // when component unmounts, calculate duration and track page view
@@ -55,9 +57,12 @@ export default function PagesViewer({pages, linkId, documentId, viewId}: {pages:
   async function trackPageView(duration: number = 0) {
     // If this is the initial page load, don't send the request
     if (isInitialPageLoad.current) {
+      console.log("Initial page load detected, not tracking.");
       isInitialPageLoad.current = false;
       return;
     }
+    
+    console.log("Tracking page view.");
 
     await fetch("/api/record_view", {
       method: "POST",
