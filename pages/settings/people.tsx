@@ -1,3 +1,4 @@
+import { useState } from "react";
 import AppLayout from "@/components/layouts/app";
 import Navbar from "@/components/settings/navbar";
 import { Button } from "@/components/ui/button";
@@ -6,12 +7,21 @@ import Folder from "@/components/shared/icons/folder";
 import { useGetTeam } from "@/lib/swr/use-team";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AddTeamMembers } from "@/components/teams/add-team-member-modal";
-import { useState } from "react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useSession } from "next-auth/react";
+import { CustomUser } from "@/lib/types";
 
 export default function Billing() {
   const [isTeamMemberInviteModalOpen, setTeamMemberInviteModalOpen] =
     useState<boolean>(false);
 
+  const { data: session } = useSession();
   const { team, loading } = useGetTeam();
 
   const getUserDocumentCount = (userId: string) => {
@@ -19,6 +29,12 @@ export default function Billing() {
       (document) => document.owner.id === userId
     );
     return documents?.length;
+  };
+
+  const isUserAdmin = (userId: string) => {
+    if ((session?.user as CustomUser).id === userId) {
+      return true;
+    }
   };
 
   return (
@@ -92,7 +108,20 @@ export default function Billing() {
                 <span className="text-sm text-foreground capitalize">
                   {member.role.toLowerCase()}
                 </span>
-                <MoreVertical className="w-4 h-4" />
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="h-8 w-8 p-0">
+                      <span className="sr-only">Open menu</span>
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                    <DropdownMenuItem className="text-red-500 focus:bg-destructive focus:text-destructive-foreground">
+                      Remove teammate
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </li>
           ))}

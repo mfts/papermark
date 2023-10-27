@@ -3,6 +3,7 @@ import AppLayout from "@/components/layouts/app";
 import Navbar from "@/components/settings/navbar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useTeam } from "@/context/team-context";
 import { useBilling } from "@/lib/swr/use-billing";
 import { formattedDate, getFirstAndLastDay } from "@/lib/utils";
 import { useRouter } from "next/router";
@@ -11,8 +12,10 @@ import { toast } from "sonner";
 
 export default function Billing() {
   const router = useRouter();
-  const { plan, startsAt, endsAt } = useBilling()
+  const { plan, startsAt, endsAt } = useBilling();
   const [clicked, setClicked] = useState<boolean>(false);
+
+  const teamInfo = useTeam();
 
   useEffect(() => {
     if (router.query.success) {
@@ -26,7 +29,7 @@ export default function Billing() {
       // }, 1000);
     }
   }, [router.query.success]);
-  
+
   return (
     <AppLayout>
       <Navbar current="Billing" />
@@ -162,9 +165,12 @@ export default function Billing() {
                     <Button
                       onClick={() => {
                         setClicked(true);
-                        fetch(`/api/billing/manage`, {
-                          method: "POST",
-                        })
+                        fetch(
+                          `/api/teams/${teamInfo?.currentTeam?.id}/billing/manage`,
+                          {
+                            method: "POST",
+                          }
+                        )
                           .then(async (res) => {
                             const url = await res.json();
                             router.push(url);
@@ -174,8 +180,7 @@ export default function Billing() {
                             setClicked(false);
                           });
                       }}
-                      loading={clicked}
-                    >
+                      loading={clicked}>
                       Manage Subscription
                     </Button>
                   )

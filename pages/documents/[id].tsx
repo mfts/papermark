@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useRouter } from "next/router";
 import MoreVertical from "@/components/shared/icons/more-vertical";
+import { useTeam } from "@/context/team-context";
 
 export default function DocumentPage() {
   const { document: prismaDocument, primaryVersion, error } = useDocument();
@@ -35,6 +36,8 @@ export default function DocumentPage() {
   const enterPressedRef = useRef<boolean>(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
+  const teamInfo = useTeam();
+
   const handleNameSubmit = async () => {
     if (enterPressedRef.current) {
       enterPressedRef.current = false;
@@ -45,7 +48,9 @@ export default function DocumentPage() {
 
       if (newName !== prismaDocument!.name) {
         const response = await fetch(
-          `/api/documents/${prismaDocument!.id}/update-name`,
+          `/api/teams/${teamInfo?.currentTeam?.id}/documents/${
+            prismaDocument!.id
+          }/update-name`,
           {
             method: "POST",
             headers: {

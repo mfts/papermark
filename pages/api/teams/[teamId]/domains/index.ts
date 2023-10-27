@@ -79,6 +79,7 @@ export default async function handle(
         data: {
           slug: domain,
           userId,
+          teamId,
         },
       });
       await addDomainToVercel(domain);
