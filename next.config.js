@@ -13,7 +13,6 @@ const nextConfig = {
       "localhost", // local img
       "36so9a8uzykxknsu.public.blob.vercel-storage.com", // staging img
       "yoywvlh29jppecbh.public.blob.vercel-storage.com", // production img
-      "36so9a8uzykxknsu.public.blob.vercel-storage.com", // staging img
     ],
   },
   experimental: {
