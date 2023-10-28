@@ -16,6 +16,7 @@ import { Button } from "./ui/button";
 import { CustomUser } from "@/lib/types";
 import LoadingSpinner from "./ui/loading-spinner";
 import Banner from "./banner";
+import Link from 'next/link'
 
 export default function Sidebar() {
   const { data: session, status } = useSession();
@@ -111,9 +112,12 @@ export default function Sidebar() {
                 {/* Sidebar for mobile component, swap this element with another sidebar if you like */}
                 <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-gray-50 dark:bg-black px-6 ring-1 ring-foreground/10">
                   <div className="flex h-16 shrink-0 items-center">
+                    <Link href='/'>
                     <p className="text-2xl font-bold tracking-tighter text-black dark:text-white">
                       Papermark
                     </p>
+                    </Link>
+                   
                   </div>
                   <nav className="flex flex-1 flex-col">
                     <ul role="list" className="flex flex-1 flex-col gap-y-7">
