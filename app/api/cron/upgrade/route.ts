@@ -40,7 +40,7 @@ export async function POST(req: Request) {
         createdAt: true,
       },
     });
-
+    
 
     const results = await Promise.allSettled(
       users.map(async (user) => {
@@ -52,8 +52,6 @@ export async function POST(req: Request) {
         };
 
         let userDaysLeft = calculateDaysLeft(new Date(createdAt));
-
-        if (userDaysLeft == 5) {
 
         if (userDaysLeft == 3) {
           return await Promise.allSettled([
