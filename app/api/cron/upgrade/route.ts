@@ -44,18 +44,23 @@ export async function POST(req: Request) {
 
     const results = await Promise.allSettled(
       users.map(async (user) => {
-        const { id, email, name, createdAt } = user as {id: string; email: string; name: string | null; createdAt: Date};
+        const { id, email, name, createdAt } = user as {
+          id: string;
+          email: string;
+          name: string | null;
+          createdAt: Date;
+        };
 
-        const userDaysLeft = calculateDaysLeft(new Date(createdAt));
+        let userDaysLeft = calculateDaysLeft(new Date(createdAt));
 
         if (userDaysLeft == 5) {
+
+        if (userDaysLeft == 3) {
           return await Promise.allSettled([
             log(
-              `Trial for user: *${id}* is expiring in ${userDaysLeft} days, email sent.`
+              `Trial End Reminder for user: *${id}* is expiring in ${userDaysLeft} days, email sent.`
             ),
-            limiter.schedule(() =>
-              sendTrialEndReminderEmail(email, name)
-            ),
+            limiter.schedule(() => sendTrialEndReminderEmail(email, name)),
           ]);
         }
 
@@ -63,15 +68,22 @@ export async function POST(req: Request) {
         if (userDaysLeft == 1) {
           return await Promise.allSettled([
             log(
-              `Trial for user: *${id}* is expiring in ${userDaysLeft} days, email sent.`
+              `Final Trial End Reminder for user: *${id}* is expiring in ${userDaysLeft} days, email sent.`
+            ),
+            limiter.schedule(() => sendTrialEndFinalReminderEmail(email, name)),
+          ]);
+        }
+
+        // downgrade the user to free if user has 0 day left on trial
+        if (userDaysLeft == 0) {
+          return await Promise.allSettled([
+            log(
+              `Downgrade to free for user: *${id}* is expiring in ${userDaysLeft} days, email sent.`
             ),
             prisma.user.update({
-              where: { id, },
-              data: { plan: "free", },
+              where: { id },
+              data: { plan: "free" },
             }),
-            limiter.schedule(() =>
-              sendTrialEndFinalReminderEmail(email, name)
-            ),
           ]);
         }
       })

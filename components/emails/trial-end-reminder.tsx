@@ -19,7 +19,7 @@ interface TrialEndReminderEmail {
 }
 
 const TrialEndReminderEmail = ({ name }: TrialEndReminderEmail) => {
-  const previewText = `The document sharing infrastructure for the modern web`;
+  const previewText = `Upgrade to Papermark Pro`;
 
   return (
     <Html>
@@ -61,7 +61,7 @@ const TrialEndReminderEmail = ({ name }: TrialEndReminderEmail) => {
                 pX={20}
                 pY={12}
                 className="bg-black rounded text-white text-xs font-semibold no-underline text-center"
-                href={`${process.env.NEXT_PUBLIC_BASE_URL}/settings/billing`}
+                href={`https://www.papermark.io/settings/billing`}
               >
                 Upgrade your plan
               </Button>
