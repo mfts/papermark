@@ -48,7 +48,7 @@ model User {
   sessions       Session[]
   documents      Document[]
   domains        Domain[]
-  plan           String     @default("free")
+  plan           String     @default("trial")
   stripeId       String?    @unique // Stripe subscription / customer ID
   subscriptionId String?    @unique // Stripe subscription ID
   startsAt       DateTime? // Stripe subscription start date

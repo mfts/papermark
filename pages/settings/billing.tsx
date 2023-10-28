@@ -49,7 +49,7 @@ export default function Billing() {
               <p className="text-sm text-secondary-foreground">
                 You are currently on the{" "}
                 {plan ? (
-                  <Badge>Pro</Badge>
+                  <Badge>{plan}</Badge>
                 ) : (
                   <span className="rounded-full bg-border px-2 py-0.5 text-xs text-foreground">
                     load
@@ -154,7 +154,7 @@ export default function Billing() {
               )}
               <div>
                 {plan ? (
-                  plan === "free" ? (
+                  plan !== "pro" ? (
                     <UpgradePlanModal>
                       <Button type="button">Upgrade</Button>
                     </UpgradePlanModal>
