@@ -1,7 +1,6 @@
 datasource db {
   provider          = "postgresql"
   url               = env("POSTGRES_PRISMA_URL") // uses connection pooling
-  // url = env("POSTGRES_PRISMA_URL_NON_POOLING") // uses a direct connection
   directUrl         = env("POSTGRES_PRISMA_URL_NON_POOLING") // uses a direct connection
   shadowDatabaseUrl = env("POSTGRES_PRISMA_SHADOW_URL") // used for migrations
 }

@@ -1,4 +1,3 @@
-// pages/pricing.js
 import Footer from "@/components/web/footer";
 import Navbar from "@/components/web/navbar";
 import Link from "next/link";
@@ -74,22 +73,19 @@ export default function Pricing() {
       </Head>
       <Navbar />
 
-      <div className="min-h-screen bg-white dark:bg-gray-900 text-black dark:text-white py-20">
+      <div className="min-h-screen bg-white text-black py-20">
         <Head>
           <title>Pricing Page</title>
         </Head>
 
         <div className="container mx-auto px-4">
           <div className="mx-auto max-w-2xl text-center lg:max-w-4xl">
-            {/* <h2 className="text-base font-semibold leading-7 text-black dark:text-white">
-              Feature comparison
-            </h2> */}
-            <p className="mt-16 text-4xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-5xl">
-              Pricing Page
+            <p className="mt-16 text-4xl font-bold tracking-tight text-gray-900  sm:text-5xl">
+              Pricing
             </p>
           </div>
 
-          <p className="mx-auto mt-6 max-w-2xl text-center text-lg leading-8 text-gray-500 dark:text-gray-400">
+          <p className="mx-auto mt-6 max-w-2xl text-center text-lg leading-8 text-gray-500 ">
             Share your Pitch Deck, Sales Deck and oher documents and monitor
             results on any suitable for you plan. You always can start open
             source
@@ -99,13 +95,13 @@ export default function Pricing() {
             {tiers.map((tier) => (
               <div
                 key={tier.id}
-                className="rounded-3xl p-8 ring-1 ring-gray-900/10 dark:ring-gray-200/10 sm:p-10"
+                className="rounded-3xl p-8 ring-1 ring-gray-900/10  sm:p-10"
               >
                 <h2 className="text-xl font-bold mb-4">{tier.title}</h2>
                 <div className="text-3xl font-bold mb-4">
                   {tier.priceMonthly}
                 </div>
-                <div className="text-gray-900 dark:text-gray-400 mb-6">
+                <div className="text-gray-900  mb-6">
                   {tier.description}
                 </div>
                 {tier.features.map((feature) => (
@@ -130,7 +126,7 @@ export default function Pricing() {
                 <div className="mt-6 flex items-center justify-center gap-x-6">
                   {tier.id === 1 && (
                     <Link
-                      href="/login"
+                      href="/login?next=/settings/billing"
                       className="rounded-md bg-white px-3.5 py-2.5 text-sm font-semibold text-black shadow-sm border-2 border-gray-700 hover:bg-gray-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
                     >
                       Start for free

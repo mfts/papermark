@@ -4,11 +4,22 @@ import Navbar from "@/components/settings/navbar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useBilling } from "@/lib/swr/use-billing";
-import { formattedDate, getFirstAndLastDay } from "@/lib/utils";
+import { cn, formattedDate, getFirstAndLastDay } from "@/lib/utils";
 import { useRouter } from "next/router";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import Pricing from "@/components/settings/pricing";
+
+
+interface Tier {
+  id: number;
+  title: string;
+  priceMonthly: string;
+  currentPlan: boolean;
+  isTrial?: boolean;
+  description: string;
+  features: string[];
+}
+
 
 export default function Billing() {
   const router = useRouter();
@@ -28,6 +39,52 @@ export default function Billing() {
     }
   }, [router.query.success]);
 
+  const tiers: Tier[] = [
+    {
+      id: 1,
+      title: "Free",
+      priceMonthly: "$0/mo",
+      description: "Enjoy free access",
+      currentPlan: plan && plan == "free" ? true : false,
+      features: [
+        "PDF up to 30 mb",
+        "Unlimited links",
+        "Analytics for each page",
+        "Feedback on each page",
+        "Email Notifications on views",
+      ],
+    },
+    {
+      id: 2,
+      title: "Pro",
+      priceMonthly: "$29/mo",
+      description: "Use all freemium features+ ",
+      currentPlan: plan && plan == "pro" ? true : false,
+      isTrial: plan && plan == "trial" ? true : false,
+      features: [
+        "Team members",
+        "Custom domains",
+        "Unlimited documents",
+        "Large file uploads",
+        "Full customization",
+      ],
+    },
+    {
+      id: 3,
+      title: "Contact us",
+      priceMonthly: "Custom",
+      description: "Get more perfect plan for you",
+      currentPlan: false,
+      features: [
+        "Priority Support",
+        "Full customization",
+        "Separate Hosting",
+        "Custom features request",
+        "Personal Onboarding",
+      ],
+    },
+  ];
+
   return (
     <AppLayout>
       <Navbar current="Billing" />
@@ -43,9 +100,125 @@ export default function Billing() {
             </p>
           </div>
         </div>
-        <Pricing />
 
         <div>
+          <div className="grid grid-cols-1 gap-6 items-center sm:grid-cols-3 sm:gap-4">
+            {tiers.map((tier) => (
+              <div
+                key={tier.id}
+                className={cn(
+                  `rounded-3xl p-8 sm:p-10 bg-white dark:bg-gray-800`,
+                  tier.currentPlan || tier.isTrial
+                    ? "ring-2 ring-primary"
+                    : "ring-1 ring-gray-900/10 dark:ring-gray-200/10"
+                )}
+              >
+                <h2 className="text-xl font-bold mb-4 inline-flex items-center gap-x-2">
+                  {tier.title}{" "}
+                  {tier.currentPlan ? (
+                    <Badge className="rounded-none">Current Plan</Badge>
+                  ) : null}
+                  {tier.isTrial ? (
+                    <Badge className="rounded-none">Trial</Badge>
+                  ) : null}
+                </h2>
+                <div className="text-3xl font-bold mb-4">
+                  {tier.priceMonthly}
+                </div>
+                <div className="text-gray-900 dark:text-gray-400 mb-6">
+                  {tier.description}
+                </div>
+                {tier.features.map((feature) => (
+                  <div key={feature} className="flex items-center mb-2">
+                    <svg
+                      className="h-5 w-5 text-green-500 dark:text-green-300 mr-2"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M5 13l4 4L19 7"
+                      ></path>
+                    </svg>
+                    {feature}
+                  </div>
+                ))}
+                <div className="mt-6 flex items-center justify-center gap-x-6">
+                  {tier.id === 1 &&
+                    (plan ? (
+                      tier.currentPlan ? (
+                        <UpgradePlanModal>
+                          <Button type="button">
+                            Upgrade to Pro
+                          </Button>
+                        </UpgradePlanModal>
+                      ) : (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          className="border border-gray-700"
+                          disabled
+                        >
+                          Change plan
+                        </Button>
+                      )
+                    ) : (
+                      <div className="h-10 w-24 animate-pulse rounded-md bg-border" />
+                    ))}
+                  {tier.id === 2 &&
+                    (plan ? (
+                      tier.currentPlan ? (
+                        <Button
+                          onClick={() => {
+                            setClicked(true);
+                            fetch(`/api/billing/manage`, {
+                              method: "POST",
+                            })
+                              .then(async (res) => {
+                                const url = await res.json();
+                                router.push(url);
+                              })
+                              .catch((err) => {
+                                alert(err);
+                                setClicked(false);
+                              });
+                          }}
+                          loading={clicked}
+                        >
+                          Manage Subscription
+                        </Button>
+                      ) : (
+                        <UpgradePlanModal>
+                          <Button type="button">
+                            {tier.isTrial
+                              ? "Upgrade to remain on Pro"
+                              : "Upgrade to Pro"}
+                          </Button>
+                        </UpgradePlanModal>
+                      )
+                    ) : (
+                      <div className="h-10 w-24 animate-pulse rounded-md bg-border" />
+                    ))}
+                  {tier.id === 3 && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      className="border border-gray-700"
+                    >
+                      Contact us
+                    </Button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* <div>
           <div className="rounded-lg border border-border bg-secondary">
             <div className="flex flex-col space-y-3 p-10">
               <h2 className="text-xl font-medium">Plan &amp; Usage</h2>
@@ -73,7 +246,7 @@ export default function Billing() {
             </div>
             <div className="border-b border-gray-200 dark:border-gray-700" />
             <div className="grid grid-cols-1 divide-y divide-gray-200 dark:divide-gray-700 sm:grid-cols-2 sm:divide-x sm:divide-y-0">
-              {/* <div className="p-10">
+              <div className="p-10">
                 <div className="flex items-center space-x-2">
                   <h3 className="font-medium">Total Documents</h3>
                 </div>
@@ -123,8 +296,8 @@ export default function Billing() {
                     </div>
                   </div>
                 )}
-              </div> */}
-              {/* <div className="p-10">
+              </div>
+              <div className="p-10">
                 <div className="flex items-center space-x-2">
                   <h3 className="font-medium">Number of Links</h3>
                   <InfoTooltip content="Number of short links in your project." />
@@ -142,7 +315,7 @@ export default function Billing() {
                   <Divider className="h-8 w-8 text-gray-500" />
                   <Infinity className="h-8 w-8 text-gray-500" />
                 </div>
-              </div> */}
+              </div>
             </div>
 
             <div className="border-b border-gray-200 dark:border-gray-700" />
@@ -189,7 +362,7 @@ export default function Billing() {
               </div>
             </div>
           </div>
-        </div>
+        </div> */}
       </div>
     </AppLayout>
   );
