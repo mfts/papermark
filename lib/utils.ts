@@ -243,7 +243,7 @@ export const daysLeft = (accountCreationDate: Date, maxDays: number): number => 
   return Math.ceil(diffInMilliseconds / (1000 * 60 * 60 * 24));
 }
 
-const cutoffDate = new Date("2023-10-12T00:00:00.000Z");
+const cutoffDate = new Date("2023-10-17T00:00:00.000Z");
 
 export const calculateDaysLeft = (accountCreationDate: Date): number => {
   let maxDays;
