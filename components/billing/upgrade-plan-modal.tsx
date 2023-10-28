@@ -26,7 +26,7 @@ export function UpgradePlanModal({ children }: { children: React.ReactNode }) {
       "Custom domain",
       "Unlimited link views",
       "Unlimited documents",
-      "Unlimited team members (ETA Oct 2023)",
+      "Unlimited team members (ETA Nov 2023)",
     ];
   }, [plan]);
 
