@@ -5,6 +5,7 @@ import { authOptions } from "../auth/[...nextauth]";
 import { CustomUser } from "@/lib/types";
 import { getExtension, log } from "@/lib/utils";
 import { identifyUser, trackAnalytics } from "@/lib/analytics";
+import { client } from "@/trigger";
 
 export default async function handle(
   req: NextApiRequest,
@@ -108,6 +109,12 @@ export default async function handle(
         linkId: document.links[0].id,
         documentId: document.id,
         customDomain: null,
+      });
+
+      // trigger document uploaded event to trigger convert-pdf-to-image job
+      await client.sendEvent({
+        name: "document.uploaded",
+        payload: { documentVersionId: document.versions[0].id },
       });
 
       res.status(201).json(document);
