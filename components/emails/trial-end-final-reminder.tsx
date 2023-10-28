@@ -69,6 +69,11 @@ const TrialEndFinalReminderEmail = ({ name }: TrialEndFinalReminderEmail) => {
                 Upgrade now
               </Button>
             </Section>
+            <Text className="text-sm font-semibold">
+              <span className="text-red-500">⚠️</span> Links with custom domains
+              will be <span className="underline">disabled</span> after your
+              trial.
+            </Text>
             <Hr />
             <Section className="mt-8 text-gray-400">
               <Text className="text-xs">
