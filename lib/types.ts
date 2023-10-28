@@ -122,7 +122,7 @@ export type AnalyticsEvents =
       documentId: string;
       customDomain: string | null | undefined;
     }
-  | { event: "User Upgraded"; email: string | null | undefined; }
+  | { event: "User Upgraded"; email: string | null | undefined }
   | {
       event: "User Signed In";
       email: string | null | undefined;
@@ -140,5 +140,9 @@ export type AnalyticsEvents =
     }
   | {
       event: "Domain Verified";
+      slug: string;
+    }
+  | {
+      event: "Domain Deleted";
       slug: string;
     };
