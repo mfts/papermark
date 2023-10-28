@@ -8,10 +8,11 @@ import { formattedDate, getFirstAndLastDay } from "@/lib/utils";
 import { useRouter } from "next/router";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import Pricing from "@/components/settings/pricing";
 
 export default function Billing() {
   const router = useRouter();
-  const { plan, startsAt, endsAt } = useBilling()
+  const { plan, startsAt, endsAt } = useBilling();
   const [clicked, setClicked] = useState<boolean>(false);
 
   useEffect(() => {
@@ -26,10 +27,11 @@ export default function Billing() {
       // }, 1000);
     }
   }, [router.query.success]);
-  
+
   return (
     <AppLayout>
       <Navbar current="Billing" />
+
       <div className="p-4 sm:p-4 sm:m-4">
         <div className="flex items-center justify-between mb-4 md:mb-8 lg:mb-12">
           <div className="space-y-1">
@@ -41,6 +43,7 @@ export default function Billing() {
             </p>
           </div>
         </div>
+        <Pricing />
 
         <div>
           <div className="rounded-lg border border-border bg-secondary">
@@ -141,6 +144,7 @@ export default function Billing() {
                 </div>
               </div> */}
             </div>
+
             <div className="border-b border-gray-200 dark:border-gray-700" />
             <div className="flex flex-col items-center justify-between space-y-3 px-10 py-4 text-center sm:flex-row sm:space-y-0 sm:text-left">
               {plan ? (
