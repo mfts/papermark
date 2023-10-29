@@ -147,6 +147,10 @@ export type AnalyticsEvents =
   | {
       event: "Domain Verified";
       slug: string;
+    }
+  | {
+      event: "Domain Deleted";
+      slug: string;
     };
 
 export interface Team {

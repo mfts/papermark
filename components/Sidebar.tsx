@@ -1,4 +1,4 @@
-import { Fragment, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { Menu, Dialog, Transition } from "@headlessui/react";
 import { signOut, useSession } from "next-auth/react";
 import HomeIcon from "@/components/shared/icons/home";
@@ -10,16 +10,23 @@ import ChevronUp from "@/components/shared/icons/chevron-up";
 import X from "@/components/shared/icons/x";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { useRouter } from "next/router";
 import { ModeToggle } from "./theme-toggle";
 import LoadingSpinner from "./ui/loading-spinner";
 import Banner from "./banner";
+import ProBanner from "./billing/pro-banner";
+import Cookies from "js-cookie";
+import { usePlan } from "@/lib/swr/use-billing";
+import Image from "next/image";
 import SelectTeam from "./teams/select-team";
 import { TeamContextType, initialState, useTeam } from "@/context/team-context";
 
 export default function Sidebar() {
   const { data: session, status } = useSession();
+  const { plan, loading } = usePlan();
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
+  const [showProBanner, setShowProBanner] = useState<boolean | null>(null);
   const router = useRouter();
 
   const { currentTeam, teams, isLoading }: TeamContextType =
@@ -55,7 +62,19 @@ export default function Sidebar() {
       disabled: false,
     },
   ];
-  if (status === "loading") return <LoadingSpinner className="mr-1 h-5 w-5" />;
+
+  useEffect(() => {
+    if (Cookies.get("hideProBanner") !== "pro-banner") {
+      setShowProBanner(true);
+    } else {
+      setShowProBanner(false);
+    }
+  }, []);
+
+  if (status === "loading" && loading)
+    return <LoadingSpinner className="mr-1 h-5 w-5" />;
+
+  const userPlan = plan && plan.plan;
 
   return (
     <>
@@ -109,8 +128,13 @@ export default function Sidebar() {
                 {/* Sidebar for mobile component, swap this element with another sidebar if you like */}
                 <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-gray-50 dark:bg-black px-6 ring-1 ring-foreground/10">
                   <div className="flex h-16 shrink-0 items-center">
-                    <p className="text-2xl font-bold tracking-tighter text-black dark:text-white">
-                      Papermark
+                    <p className="text-2xl font-bold tracking-tighter text-black dark:text-white flex items-center">
+                      Papermark{" "}
+                      {userPlan == "pro" ? (
+                        <span className="bg-background text-foreground ring-1 ring-gray-800 rounded-full px-2.5 py-1 text-xs ml-4">
+                          Pro
+                        </span>
+                      ) : null}
                     </p>
                   </div>
                   <nav className="flex flex-1 flex-col">
@@ -152,8 +176,13 @@ export default function Sidebar() {
         {/* Sidebar component, swap this element with another sidebar if you like */}
         <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-gray-50 dark:bg-black px-6">
           <div className="flex h-16 shrink-0 items-center">
-            <p className="text-2xl font-bold tracking-tighter text-black dark:text-white">
-              Papermark
+            <p className="text-2xl font-bold tracking-tighter text-black dark:text-white flex items-center">
+              Papermark{" "}
+              {userPlan == "pro" ? (
+                <span className="bg-background text-foreground ring-1 ring-gray-800 rounded-full px-2.5 py-1 text-xs ml-4">
+                  Pro
+                </span>
+              ) : null}
             </p>
           </div>
           <nav className="flex flex-1 flex-col">
@@ -188,13 +217,25 @@ export default function Sidebar() {
                 </ul>
               </li>
               <li className="-mx-2 mt-auto mb-4">
-                <Banner session={session} />
+                {/* if user is on trial show banner,
+                 * if user is pro show nothing,
+                 * if user is free and showProBanner is true show pro banner
+                 */}
+                {userPlan === "trial" && session ? (
+                  <Banner session={session} />
+                ) : null}
+                {userPlan === "pro" && null}
+                {userPlan === "free" && showProBanner ? (
+                  <ProBanner setShowProBanner={setShowProBanner} />
+                ) : null}
                 <div className="flex justify-between items-center space-x-2">
                   <Menu as="div" className="relative grow">
                     <Menu.Button className="flex items-center group rounded-md gap-x-3 p-2 w-full text-sm font-semibold leading-6 text-foreground hover:bg-gray-200 hover:dark:bg-secondary">
-                      <img
+                      <Image
                         className="h-8 w-8 rounded-full bg-secondary"
                         src={session?.user?.image || ""}
+                        width={32}
+                        height={32}
                         alt={`Profile picture of ${session?.user?.name}`}
                       />
                       <span className="flex items-center w-full justify-between">
@@ -276,9 +317,11 @@ export default function Sidebar() {
               <Menu as="div" className="relative">
                 <Menu.Button className="-m-1.5 flex items-center p-1.5">
                   <span className="sr-only">Open user menu</span>
-                  <img
+                  <Image
                     className="h-8 w-8 rounded-full bg-secondary"
                     src={session?.user?.image || ""}
+                    width={32}
+                    height={32}
                     alt={`Profile picture of ${session?.user?.name}`}
                   />
                 </Menu.Button>
