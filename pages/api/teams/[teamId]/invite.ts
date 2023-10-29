@@ -1,11 +1,11 @@
-import { sendEmail } from "@/lib/resend";
+import { randomUUID } from "crypto";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../../auth/[...nextauth]";
 import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 import { errorHanlder } from "@/lib/errorHandler";
-import TeamInvitation from "@/components/emails/team-invitation";
+import { sendTeammateInviteEmail } from "@/lib/emails/send-teammate-invite";
 
 export default async function handle(
   req: NextApiRequest,
@@ -52,19 +52,38 @@ export default async function handle(
         return res.status(403).json("Only admins can send the invitation!");
       }
 
+      const token = randomUUID().toString();
+      console.log("token", token);
+
+      const expiresAt = new Date();
+      expiresAt.setHours(expiresAt.getHours() + 24); // invitation expires in 24 hour
+      const invitation = await prisma.invitation.create({
+        data: {
+          email,
+          token,
+          expires: expiresAt,
+          teamId,
+        },
+      });
+
+      console.log(invitation);
+
       // send invite email
       const sender = session.user as CustomUser;
 
-      sendTeamInviteEmail({
+      sendTeammateInviteEmail({
         to: email,
         senderName: sender.name || "",
         senderEmail: sender.email || "",
         teamName: team?.name || "",
         teamId: team?.id || "",
+        token,
       });
 
       return res.status(200).json("Invitation send!");
     } catch (error) {
+      console.log(error);
+
       errorHanlder(error, res);
     }
   } else if (req.method === "GET") {
@@ -73,8 +92,10 @@ export default async function handle(
 
     const { teamId } = req.query as { teamId: string };
 
+    const { token } = req.query as { token: string };
+
     if (!session) {
-      res.redirect(`/login?next=/api/teams/${teamId}/invite`);
+      res.redirect(`/login?next=/api/teams/${teamId}/invite?token=${token}`);
     }
 
     try {
@@ -90,7 +111,22 @@ export default async function handle(
         return res.redirect(`/documents`);
       }
 
-      const team = await prisma.team.update({
+      const invitation = await prisma.invitation.findUnique({
+        where: {
+          token,
+        },
+      });
+
+      if (!invitation) {
+        return res.status(400).json("Invalid invitation token");
+      }
+
+      const currentTime = new Date();
+      if (currentTime > invitation.expires) {
+        return res.status(400).json("Invitation link has expired");
+      }
+
+      await prisma.team.update({
         where: {
           id: teamId,
         },
@@ -102,7 +138,6 @@ export default async function handle(
           },
         },
       });
-      console.log(team);
 
       return res.redirect("/documents");
     } catch (error) {
@@ -111,23 +146,3 @@ export default async function handle(
     }
   }
 }
-
-export const sendTeamInviteEmail = async ({
-  to,
-  senderName,
-  senderEmail,
-  teamName,
-  teamId,
-}: {
-  to: string;
-  senderName: string;
-  senderEmail: string;
-  teamName: string;
-  teamId: string;
-}) => {
-  await sendEmail({
-    to: to,
-    subject: "You are invited to join a Team",
-    react: TeamInvitation({ senderName, senderEmail, teamName, teamId }),
-  });
-};

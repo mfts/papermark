@@ -57,18 +57,19 @@ model User {
 }
 
 model Team {
-  id             String     @id @default(cuid())
+  id             String       @id @default(cuid())
   name           String
   users          UserTeam[]
   documents      Document[]
   domains        Domain[]
-  plan           String     @default("free")
-  stripeId       String?    @unique // Stripe subscription / customer ID
-  subscriptionId String?    @unique // Stripe subscription ID
+  invitations    Invitation[]
+  plan           String       @default("free")
+  stripeId       String?      @unique // Stripe subscription / customer ID
+  subscriptionId String?      @unique // Stripe subscription ID
   startsAt       DateTime? // Stripe subscription start date
   endsAt         DateTime? // Stripe subscription end date
-  createdAt      DateTime   @default(now())
-  updatedAt      DateTime   @updatedAt
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
 }
 
 enum Role {
@@ -188,4 +189,15 @@ model View {
   documentId  String
   viewerEmail String? // Email of the viewer if known
   viewedAt    DateTime @default(now())
+}
+
+model Invitation {
+  email     String
+  expires   DateTime
+  teamId    String
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  token     String   @unique
+
+  @@unique([email])
 }

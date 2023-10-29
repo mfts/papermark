@@ -47,9 +47,9 @@ export function DeleteTeamModal({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    toast.success("Team deleted successfully!");
     await mutate("/api/teams");
     setLoading(false);
+    toast.success("Team deleted successfully!");
     router.push("/documents");
   };
 
