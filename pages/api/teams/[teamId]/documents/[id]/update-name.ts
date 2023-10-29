@@ -44,7 +44,7 @@ export default async function handle(
         },
       });
 
-      res.status(200).json({ message: "Document name updated!" });
+      return res.status(200).json({ message: "Document name updated!" });
     } catch (error) {
       errorHanlder(error, res);
     }
