@@ -8,6 +8,7 @@ import Testimonials from "@/components/web/testimonials";
 import Logos from "@/components/web/logos";
 import Head from "next/head";
 import Section3 from "@/components/web/section3";
+import Background from "@/components/background/background";
 
 export default function Home() {  
   return (
@@ -50,7 +51,9 @@ export default function Home() {
           </div>
 
           <Header />
+          
           <Logos />
+    
           <Decks />
           <Section />
           <Section3 />

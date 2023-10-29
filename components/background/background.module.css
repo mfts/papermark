@@ -1,0 +1,62 @@
+
+
+.main {
+    width: 80%;
+    min-height: 80%;
+    position: absolute;
+    z-index: 1;
+    display: flex;
+    justify-content: center;
+    pointer-events: none;
+  }
+  
+  .main:before {
+    background: radial-gradient(circle,
+        rgba(24, 13, 3, 0) 0,
+        var(--background) 100%);
+    position: absolute;
+    content: "";
+    z-index: 10;
+    width: 100%;
+    height: 55%;
+    top: 0;
+  }
+  
+  .main:after {
+    content: "";
+    background-image: url("../background/grid.svg");
+    z-index: 100;
+   
+    position: absolute;
+    width: 100%;
+    height: 55%;
+    top: 0;
+    opacity: 0.3;
+    filter: invert(1);
+  }
+  
+  .content {
+    height: fit-content;
+    z-index: 3;
+    width: 100%;
+    max-width: 50%;
+    background-image: radial-gradient(at 27% 37%,
+        rgb(240, 253, 58) 0px,
+        transparent 0%),
+      radial-gradient(at 97% 21%, rgba(248, 106, 23, 0.608) 0px, transparent 50%),
+      radial-gradient(at 52% 99%, rgb(67, 0, 121) 0px, transparent 50%),
+      radial-gradient(at 10% 29%, rgb(219, 144, 31) 0px, transparent 50%),
+      radial-gradient(at 97% 96%, rgb(174, 146, 226) 0px, transparent 50%),
+      radial-gradient(at 33% 50%, rgb(10, 68, 202) 0px, transparent 50%),
+      radial-gradient(at 79% 53%, rgb(61, 3, 21) 0px, transparent 50%);
+    position: absolute;
+    content: "";
+    width: 100%;
+    height: 55%;
+    filter: blur(100px) saturate(150%);
+    opacity: 0.33;
+  }
+  
+  .dark .main:before {
+    background: radial-gradient(circle, rgba(2, 0, 36, 0) 0, #0f0215 100%);
+  }
