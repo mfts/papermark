@@ -11,8 +11,14 @@ const nextConfig = {
       "pbs.twimg.com", // twitter img
       "media.licdn.com", // linkedin img
       "localhost", // local img
+      "36so9a8uzykxknsu.public.blob.vercel-storage.com", // staging img
       "yoywvlh29jppecbh.public.blob.vercel-storage.com", // production img
     ],
+  },
+  experimental: {
+    outputFileTracingIncludes: {
+      "/api/mupdf/*": ["./node_modules/mupdf/lib/*.wasm"],
+    },
   },
 };
 

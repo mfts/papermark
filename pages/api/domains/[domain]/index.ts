@@ -5,6 +5,7 @@ import { authOptions } from "@/pages/api//auth/[...nextauth]";
 import { log } from "@/lib/utils";
 import { getApexDomain, removeDomainFromVercel } from "@/lib/domains";
 import { CustomUser } from "@/lib/types";
+import { identifyUser, trackAnalytics } from "@/lib/analytics";
 
 export default async function handle(
   req: NextApiRequest,
@@ -65,6 +66,11 @@ export default async function handle(
           where: {
             id: domainToBeDeleted.id,
           },
+        }),
+        identifyUser((session.user as CustomUser).id),
+        trackAnalytics({
+          event: "Domain Deleted",
+          slug: domain,
         }),
       ]);
 
