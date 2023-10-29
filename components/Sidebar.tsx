@@ -10,7 +10,6 @@ import ChevronUp from "@/components/shared/icons/chevron-up";
 import X from "@/components/shared/icons/x";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { cn } from "@/lib/utils";
 import { useRouter } from "next/router";
 import { ModeToggle } from "./theme-toggle";
 import LoadingSpinner from "./ui/loading-spinner";
@@ -138,6 +137,12 @@ export default function Sidebar() {
                     </p>
                   </div>
                   <nav className="flex flex-1 flex-col">
+                    <SelectTeam
+                      currentTeam={currentTeam}
+                      teams={teams}
+                      isLoading={isLoading}
+                      setCurrentTeam={() => {}}
+                    />
                     <ul role="list" className="flex flex-1 flex-col gap-y-7">
                       <li>
                         <ul role="list" className="-mx-2 space-y-1">
