@@ -29,7 +29,7 @@ export default function Billing() {
 
   const { data: session } = useSession();
   const { team, loading } = useGetTeam()!;
-  const teaminfo = useTeam();
+  const teamInfo = useTeam();
   const { teams } = useTeams();
 
   const router = useRouter();
@@ -75,11 +75,13 @@ export default function Billing() {
       return;
     }
 
-    await mutate(`/api/teams/${teamId}`);
+    await mutate(`/api/teams/${teamInfo?.currentTeam?.id}`);
+    await mutate("/api/teams");
+
     setLeavingUserId("");
     if (isCurrentUser(userId)) {
-      toast.success(`Successfully leaved team ${teaminfo?.currentTeam?.name}`);
-      teaminfo?.setCurrentTeam({ id: teams![0].id });
+      toast.success(`Successfully leaved team ${teamInfo?.currentTeam?.name}`);
+      teamInfo?.setCurrentTeam({ id: teams![0].id });
       router.push("/documents");
       return;
     }

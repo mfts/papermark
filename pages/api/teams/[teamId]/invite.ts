@@ -72,7 +72,6 @@ export default async function handle(
     const session = await getServerSession(req, res, authOptions);
 
     const { teamId } = req.query as { teamId: string };
-    console.log(teamId, "teamId found");
 
     if (!session) {
       res.redirect(`/login?next=/api/teams/${teamId}/invite`);
@@ -103,6 +102,8 @@ export default async function handle(
           },
         },
       });
+      console.log(team);
+
       return res.redirect("/documents");
     } catch (error) {
       console.log(error);

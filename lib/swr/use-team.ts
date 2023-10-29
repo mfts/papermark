@@ -6,15 +6,11 @@ import { TeamDetail } from "@/lib/types";
 export function useGetTeam() {
   const teamInfo = useTeam();
 
-  if (!teamInfo?.currentTeam?.id) {
-    return;
-  }
-
   const { data: team, error } = useSWR<TeamDetail>(
     `/api/teams/${teamInfo?.currentTeam?.id}`,
     fetcher,
     {
-      dedupingInterval: 10000,
+      dedupingInterval: 20000,
     }
   );
 

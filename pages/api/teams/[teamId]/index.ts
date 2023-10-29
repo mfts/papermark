@@ -110,7 +110,7 @@ export default async function handle(
 
       return res.status(204).end();
     } catch (error) {
-      return res.status(500).json({ message: (error as Error).message });
+      return res.status(500).json((error as Error).message);
     }
   } else {
     // We only allow GET and DELETE requests

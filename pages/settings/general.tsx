@@ -1,5 +1,6 @@
 import AppLayout from "@/components/layouts/app";
 import Navbar from "@/components/settings/navbar";
+import { DeleteTeamModal } from "@/components/teams/delete-team-modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useTeam } from "@/context/team-context";
@@ -81,9 +82,11 @@ export default function General() {
                   undone - please proceed with caution.
                 </p>
               </div>
-              <Button variant={"destructive"} size={"lg"}>
-                Delete Team
-              </Button>
+              <DeleteTeamModal>
+                <Button variant={"destructive"} size={"lg"}>
+                  Delete Team
+                </Button>
+              </DeleteTeamModal>
             </div>
           </div>
         </div>

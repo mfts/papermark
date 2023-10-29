@@ -9,16 +9,13 @@ import MenuIcon from "@/components/shared/icons/menu";
 import ChevronUp from "@/components/shared/icons/chevron-up";
 import X from "@/components/shared/icons/x";
 import Link from "next/link";
-import { cn, daysLeft } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { useRouter } from "next/router";
 import { ModeToggle } from "./theme-toggle";
-import { Button } from "./ui/button";
-import { CustomUser } from "@/lib/types";
 import LoadingSpinner from "./ui/loading-spinner";
 import Banner from "./banner";
 import SelectTeam from "./teams/select-team";
 import { TeamContextType, initialState, useTeam } from "@/context/team-context";
-import { AddTeamModal } from "./teams/add-team-modal";
 
 export default function Sidebar() {
   const { data: session, status } = useSession();
