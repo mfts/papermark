@@ -52,7 +52,7 @@ export default function Sidebar() {
     },
     {
       name: "Settings",
-      href: "/settings/people",
+      href: "/settings/general",
       icon: SettingsIcon,
       current: router.pathname.includes("settings"),
       disabled: false,
