@@ -7,8 +7,9 @@ import { View } from "@prisma/client";
 export function useLink() {
   const router = useRouter();
 
-  const { linkId } = router.query as {
+  const { linkId, authenticationCode } = router.query as {
     linkId: string;
+    authenticationCode: string | undefined;
   };
 
   const { data: link, error } = useSWR<LinkWithDocument>(
@@ -23,6 +24,7 @@ export function useLink() {
     link,
     loading: !error && !link,
     error,
+    authenticationCode
   };
 }
 

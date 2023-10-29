@@ -4,7 +4,7 @@ import { useLink } from "@/lib/swr/use-link";
 import NotFound from "@/pages/404";
 
 export default function ViewPage() {
-  const { link, error } = useLink();
+  const { link, authenticationCode, error } = useLink();
 
   if (error && error.status === 404) {
     return <NotFound />;
@@ -18,5 +18,5 @@ export default function ViewPage() {
     );
   }
 
-  return <DocumentView link={link} error={error} />;
+  return <DocumentView link={link} error={error} authenticationCode={authenticationCode} />;
 }

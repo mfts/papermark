@@ -35,7 +35,6 @@ export function AddDocumentModal({children}: {children: React.ReactNode}) {
 
     try {
       setUploading(true);
-
       const newBlob = await upload(currentFile.name, currentFile, {
         access: "public",
         handleUploadUrl: "/api/file/browser-upload",

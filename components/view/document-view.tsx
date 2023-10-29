@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { LinkWithDocument } from "@/lib/types";
 import LoadingSpinner from "../ui/loading-spinner";
 import PagesViewer from "@/components/PagesViewer";
+import EmailVerificationMessage from "./email-verification-form";
 
 export const DEFAULT_ACCESS_FORM_DATA = {
   email: null,
@@ -28,13 +29,17 @@ export type DEFAULT_DOCUMENT_VIEW_TYPE = {
 export default function DocumentView({
   link,
   error,
+  authenticationCode
 }: {
   link: LinkWithDocument;
   error: any;
+  authenticationCode: string | undefined;
 }) {
   const { data: session } = useSession();
   const plausible = usePlausible();
 
+  const [isEmailVerified, setIsEmailVerified] = useState<boolean>(false);
+  const [verificationRequested, setVerificationRequested] = useState<boolean>(false);
   const [submitted, setSubmitted] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const hasInitiatedSubmit = useRef(false);
@@ -82,7 +87,7 @@ export default function DocumentView({
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        ...data,
+        email: session?.user?.email,
         linkId: link.id,
         documentId: document.id,
       }),
@@ -106,8 +111,93 @@ export default function DocumentView({
     event: React.FormEvent
   ) => {
     event.preventDefault();
-    await handleSubmission();
+    await handleEmailVerification();
   };
+
+  //Generates verification link from backend
+  const handleEmailVerification = async () => {
+    setIsLoading(true);
+    const URL = `/api/documents/verification/email_authcode`;
+    const response = await fetch(URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body : JSON.stringify({linkId : link.id, email: data.email})
+    });
+    if (response.ok) {
+      setVerificationRequested(true);
+      setIsLoading(false);
+      return true;
+    } else {
+      setIsLoading(false);
+      return false;
+    }
+  }
+
+  //Verifies authentication code
+  const handleAuthCodeVerification = async () => {
+    setIsLoading(true);
+    const URL = `/api/documents/verification/email_authcode?authenticationCode=${authenticationCode}`;
+    const response = await fetch(URL, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      }
+    });
+    if (response.ok) {
+      setIsEmailVerified(true);
+      setVerificationRequested(false);
+      await handleSubmission();
+      return true;
+    } else {
+      setIsLoading(false);
+      return false;
+    }
+  }
+
+  //If URL contains authenticationCode
+  if (authenticationCode) {
+    useEffect(()=>{
+      (async () => {
+        setIsLoading(true);
+        await handleAuthCodeVerification();
+      })();
+    },[])
+
+    //Component to render if Loading
+    if (isLoading) {
+      return (
+        <div className="h-screen flex items-center justify-center">
+          <LoadingSpinner className="mr-1 h-20 w-20" />
+        </div>
+      )
+    }
+
+    //Component to render when verification code is invalid
+    if (!isEmailVerified) {
+      return (
+        <div className="flex h-screen flex-1 flex-col  px-6 py-12 lg:px-8 bg-black">
+          <div className="sm:mx-auto sm:w-full sm:max-w-md">
+            <h2 className="mt-10 text-2xl font-bold leading-9 tracking-tight text-white">
+              Unauthorized access
+            </h2>
+          </div>
+        </div>
+      ) 
+    }
+  }
+
+  //Components to render when email is submitted but verification is pending
+  if (verificationRequested) {
+    return (
+      <EmailVerificationMessage 
+        onSubmitHandler={handleSubmit}
+        data={data}
+        isLoading={isLoading}
+      />
+    ) 
+  }
 
   if ((!submitted && emailProtected) || (!submitted && linkPassword)) {
     return (

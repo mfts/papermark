@@ -42,7 +42,7 @@ export default function Upload() {
         access: "public",
         handleUploadUrl: "/api/file/browser-upload",
       });
-
+      
       setCurrentFile(null);
       setCurrentBlob(true);
 
