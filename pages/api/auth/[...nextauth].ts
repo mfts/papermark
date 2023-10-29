@@ -8,8 +8,6 @@ import { analytics, identifyUser, trackAnalytics } from "@/lib/analytics";
 
 const VERCEL_DEPLOYMENT = !!process.env.VERCEL_URL;
 
-console.log("The google auth client : " , process.env.GOOGLE_CLIENT_ID , ' - ' , process.env.GOOGLE_CLIENT_SECRET)
-
 export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({

@@ -16,7 +16,7 @@ import { Button } from "./ui/button";
 import { CustomUser } from "@/lib/types";
 import LoadingSpinner from "./ui/loading-spinner";
 import Banner from "./banner";
-import Link from 'next/link'
+
 
 export default function Sidebar() {
   const { data: session, status } = useSession();
