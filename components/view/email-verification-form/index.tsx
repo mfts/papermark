@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { DEFAULT_ACCESS_FORM_TYPE } from "../document-view";
+import { DEFAULT_ACCESS_FORM_TYPE } from "@/components/view/access-form";
 
 export default function EmailVerificationMessage({
   onSubmitHandler,

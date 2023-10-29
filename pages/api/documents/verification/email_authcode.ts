@@ -26,7 +26,6 @@ export default async function handle(
     const URL = process.env.NEXTAUTH_URL + '/view/' + linkId + '?authenticationCode=' + authenticationCode;
 
     verificationCodes.push(authenticationCode);
-    const writeData = await JSON.stringify(verificationCodes);
 
     await sendVerificationEmail(email, URL);
     res.status(200).json({ authenticationCode });

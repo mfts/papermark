@@ -7,6 +7,7 @@ import { LinkWithDocument } from "@/lib/types";
 import LoadingSpinner from "../ui/loading-spinner";
 import PagesViewer from "@/components/PagesViewer";
 import EmailVerificationMessage from "./email-verification-form";
+import ViewData from "./view-data";
 
 export type DEFAULT_DOCUMENT_VIEW_TYPE = {
   viewId: string;
@@ -24,7 +25,6 @@ export default function DocumentView({
   authenticationCode: string | undefined;
   userEmail: string | null | undefined;
   isProtected: boolean;
-
 }) {
   const { document, emailProtected, password: linkPassword } = link;
 
@@ -134,6 +134,7 @@ export default function DocumentView({
   }
 
   //If URL contains authenticationCode
+  //P.S: We can create separate component for links with authentication code
   if (authenticationCode) {
     useEffect(()=>{
       (async () => {
@@ -163,6 +164,12 @@ export default function DocumentView({
         </div>
       ) 
     }
+
+    return (
+      <div className="bg-gray-950">
+        <ViewData link={link} viewData={viewData}/>
+      </div>
+    );
   }
 
   //Components to render when email is submitted but verification is pending
@@ -177,6 +184,7 @@ export default function DocumentView({
   }
 
   if ((!submitted && emailProtected) || (!submitted && linkPassword)) {
+
   // If link is not submitted and does not have email / password protection, show the access form
   if (!submitted && isProtected) {
     console.log("calling access form");
@@ -201,27 +209,10 @@ export default function DocumentView({
       </div>
     );
   }
-
   return (
     <div className="bg-gray-950">
       {submitted ? (
-        viewData.pages ? (
-          <PagesViewer
-            pages={viewData.pages}
-            viewId={viewData.viewId}
-            linkId={link.id}
-            documentId={document.id}
-          />
-        ) : (
-          <PDFViewer
-            file={viewData.file}
-            viewId={viewData.viewId}
-            linkId={link.id}
-            documentId={document.id}
-            name={document.name}
-            allowDownload={link.allowDownload}
-          />
-        )
+        <ViewData link={link} viewData={viewData}/>
       ) : (
         <div className="h-screen flex items-center justify-center">
           <LoadingSpinner className="h-20 w-20" />
