@@ -1,18 +1,6 @@
 import Link from "next/link";
 import GitHubIcon from "@/components/shared/icons/github";
 import Background from "../background/background";
-async function getGitHubForks() {
-  return await fetch("https://api.github.com/repos/mfts/papermark/forks", {
-    method: "GET",
-    redirect: "follow",
-    next: {
-      revalidate: 60,
-    },
-  })
-    .then((response) => response.text())
-    .then((result) => JSON.parse(result).length)
-    .catch((error) => console.log("error", error));
-}
 
 export default function Header() {
   return (
