@@ -11,7 +11,7 @@ export default async function handle(
   res: NextApiResponse
 ) {
   if (req.method === "POST") {
-    // POST /api/billing/manage – manage a user's subscription
+    // POST /api/teams/:teamId/billing/manage – manage a user's subscription
     const session = await getServerSession(req, res, authOptions);
     if (!session) {
       res.status(401).end("Unauthorized");

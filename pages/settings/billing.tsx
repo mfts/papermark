@@ -170,9 +170,12 @@ export default function Billing() {
                         <Button
                           onClick={() => {
                             setClicked(true);
-                            fetch(`/api/billing/manage`, {
-                              method: "POST",
-                            })
+                            fetch(
+                              `/api/teams/${teamInfo?.currentTeam?.id}/billing/manage`,
+                              {
+                                method: "POST",
+                              }
+                            )
                               .then(async (res) => {
                                 const url = await res.json();
                                 router.push(url);

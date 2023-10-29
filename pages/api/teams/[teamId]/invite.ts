@@ -69,12 +69,12 @@ export default async function handle(
       const sender = session.user as CustomUser;
 
       sendTeammateInviteEmail({
-        to: email,
         senderName: sender.name || "",
         senderEmail: sender.email || "",
         teamName: team?.name || "",
         teamId: team?.id || "",
         token,
+        to: email,
       });
 
       return res.status(200).json("Invitation send!");
@@ -85,12 +85,18 @@ export default async function handle(
     // GET /api/teams/:teamId/invite
     const session = await getServerSession(req, res, authOptions);
 
-    const { teamId } = req.query as { teamId: string };
-
-    const { token } = req.query as { token: string };
+    const { token, teamId, email } = req.query as {
+      token: string;
+      teamId: string;
+      email: string;
+    };
 
     if (!session) {
       res.redirect(`/login?next=/api/teams/${teamId}/invite?token=${token}`);
+    }
+
+    if (email !== session?.user?.email) {
+      return res.status(400).json("You are not invited to the team");
     }
 
     try {

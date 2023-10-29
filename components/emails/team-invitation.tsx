@@ -16,12 +16,14 @@ export default function TeamInvitation({
   teamName,
   teamId,
   token,
+  to,
 }: {
   senderName: string;
   senderEmail: string;
   teamName: string;
   teamId: string;
   token: string;
+  to: string;
 }) {
   return (
     <Html>
@@ -40,7 +42,7 @@ export default function TeamInvitation({
               You are invited by {senderName}-{senderEmail} to join
               {teamName}. please click the link below to accept the invitation.
               \n\n{process.env.NEXTAUTH_URL}/api/teams/{teamId}
-              /invite?teamName=${teamName}&token={token}
+              /invite?email=${to}&token={token}
             </Text>
           </Container>
         </Body>

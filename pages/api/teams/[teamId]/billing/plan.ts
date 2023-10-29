@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth/next";
 import prisma from "@/lib/prisma";
 import { authOptions } from "../../../auth/[...nextauth]";
+import { errorHanlder } from "@/lib/errorHandler";
 
 export default async function handle(
   req: NextApiRequest,
@@ -16,17 +17,21 @@ export default async function handle(
 
     const { teamId } = req.query as { teamId: string };
 
-    const team = await prisma.team.findUnique({
-      where: {
-        id: teamId,
-      },
-      select: {
-        plan: true,
-      },
-    });
+    try {
+      const team = await prisma.team.findUnique({
+        where: {
+          id: teamId,
+        },
+        select: {
+          plan: true,
+        },
+      });
 
-    // console.log("Domains from GET", domains)
-    return res.status(200).json(team);
+      // console.log("Domains from GET", domains)
+      return res.status(200).json(team);
+    } catch (error) {
+      errorHanlder(error, res);
+    }
   } else {
     // We only allow GET and POST requests
     res.setHeader("Allow", ["GET"]);

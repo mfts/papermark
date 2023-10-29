@@ -38,8 +38,10 @@ interface PlanResponse {
 }
 
 export function usePlan() {
+  const teamInfo = useTeam();
+
   const { data: plan, error } = useSWR<PlanResponse>(
-    `/api/billing/plan`,
+    `/api/teams/${teamInfo?.currentTeam?.id}/billing/plan`,
     fetcher,
     {
       dedupingInterval: 60000,

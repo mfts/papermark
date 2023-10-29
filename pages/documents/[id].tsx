@@ -95,9 +95,12 @@ export default function DocumentPage() {
       return;
     }
 
-    const response = await fetch(`/api/documents/${documentId}`, {
-      method: "DELETE",
-    });
+    const response = await fetch(
+      `/api/teams/${teamInfo?.currentTeam?.id}/documents/${documentId}`,
+      {
+        method: "DELETE",
+      }
+    );
 
     if (response.ok) {
       setIsFirstClick(false);
