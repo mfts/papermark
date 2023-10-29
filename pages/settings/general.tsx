@@ -3,9 +3,43 @@ import Navbar from "@/components/settings/navbar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useTeam } from "@/context/team-context";
+import { data } from "autoprefixer";
+import { useRef, useState } from "react";
+import { toast } from "sonner";
+import { mutate } from "swr";
 
 export default function General() {
   const teamInfo = useTeam();
+  const teamNameInputRef = useRef<HTMLInputElement>(null);
+  const [isTeamNameChanging, setTeamNameChanging] = useState<boolean>(false);
+
+  const changeTeamName = async () => {
+    setTeamNameChanging(true);
+
+    const response = await fetch(
+      `/api/teams/${teamInfo?.currentTeam?.id}/update-name`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: teamNameInputRef.current?.value,
+        }),
+      }
+    );
+
+    if (response.ok) {
+      const message = await response.json();
+      toast.success(message);
+    } else {
+      const message = await response.json();
+      toast.error(message);
+    }
+
+    await mutate("/api/teams");
+    setTeamNameChanging(false);
+  };
 
   return (
     <AppLayout>
@@ -27,11 +61,14 @@ export default function General() {
                 This is the name of your team on Papermark.
               </p>
               <Input
+                ref={teamNameInputRef}
                 className="mt-6"
                 defaultValue={teamInfo?.currentTeam?.name}
               />
             </div>
-            <Button size={"lg"}>Save changes</Button>
+            <Button size={"lg"} onClick={changeTeamName}>
+              {isTeamNameChanging ? "Saving..." : "Save changes"}
+            </Button>
           </div>
 
           <div className="p-10 rounded-lg border border-destructive">

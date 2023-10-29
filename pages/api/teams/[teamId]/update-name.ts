@@ -56,7 +56,7 @@ export default async function handle(
 
       return res.status(200).json("Team name updated!");
     } catch (error) {
-      return res.status(500).json({ message: (error as Error).message });
+      return res.status(500).json((error as Error).message);
     }
   } else {
     // We only allow POST requests
