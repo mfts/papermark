@@ -53,7 +53,6 @@ export default async function handle(
       }
 
       const token = randomUUID().toString();
-      console.log("token", token);
 
       const expiresAt = new Date();
       expiresAt.setHours(expiresAt.getHours() + 24); // invitation expires in 24 hour
@@ -65,8 +64,6 @@ export default async function handle(
           teamId,
         },
       });
-
-      console.log(invitation);
 
       // send invite email
       const sender = session.user as CustomUser;
@@ -82,8 +79,6 @@ export default async function handle(
 
       return res.status(200).json("Invitation send!");
     } catch (error) {
-      console.log(error);
-
       errorHanlder(error, res);
     }
   } else if (req.method === "GET") {
@@ -141,7 +136,6 @@ export default async function handle(
 
       return res.redirect("/documents");
     } catch (error) {
-      console.log(error);
       errorHanlder(error, res);
     }
   }

@@ -57,8 +57,6 @@ export function AddTeamMembers({
       return;
     }
 
-    console.log("passes through!!");
-
     await mutate(`/api/teams/${teamInfo?.currentTeam?.id}`);
 
     toast.success("An invitation email has been sent!");
