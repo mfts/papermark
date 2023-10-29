@@ -45,9 +45,8 @@ export function AddTeamModal({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    const team = await response.json();
     toast.success("Team created successfully!");
-    router.push(`/teams/${team?.id}`);
+    router.push("/documents");
     setLoading(false);
   };
 

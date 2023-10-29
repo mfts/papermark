@@ -14,6 +14,7 @@ import { useTeam } from "@/context/team-context";
 import { useRouter } from "next/router";
 import { useState } from "react";
 import { toast } from "sonner";
+import { mutate } from "swr";
 
 export function AddTeamMembers({
   open,
@@ -27,8 +28,6 @@ export function AddTeamMembers({
   const [email, setEmail] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const teamInfo = useTeam();
-
-  console.log(teamInfo?.currentTeam);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -57,6 +56,8 @@ export function AddTeamMembers({
       toast.error(error);
       return;
     }
+
+    await mutate(`/api/teams/${teamInfo?.currentTeam?.id}`);
 
     toast.success("An invitation email has been sent!");
     setOpen(false);

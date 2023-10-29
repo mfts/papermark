@@ -16,13 +16,23 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useSession } from "next-auth/react";
 import { CustomUser } from "@/lib/types";
+import { toast } from "sonner";
+import { mutate } from "swr";
+import { useRouter } from "next/router";
+import { useTeam } from "@/context/team-context";
+import { useTeams } from "@/lib/swr/use-teams";
 
 export default function Billing() {
   const [isTeamMemberInviteModalOpen, setTeamMemberInviteModalOpen] =
     useState<boolean>(false);
+  const [leavingUserId, setLeavingUserId] = useState<string>("");
 
   const { data: session } = useSession();
-  const { team, loading } = useGetTeam();
+  const { team, loading } = useGetTeam()!;
+  const teaminfo = useTeam();
+  const { teams } = useTeams();
+
+  const router = useRouter();
 
   const getUserDocumentCount = (userId: string) => {
     const documents = team?.documents.filter(
@@ -44,6 +54,37 @@ export default function Billing() {
         user.role === "ADMIN" &&
         user.userId === (session?.user as CustomUser)?.id
     );
+  };
+
+  const removeTeammate = async (teamId: string, userId: string) => {
+    setLeavingUserId(userId);
+    const response = await fetch(`/api/teams/${teamId}/remove-teammate`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        userToBeDeleted: userId,
+      }),
+    });
+
+    if (response.status !== 204) {
+      const error = await response.json();
+      toast.error(error);
+      setLeavingUserId("");
+      return;
+    }
+
+    await mutate(`/api/teams/${teamId}`);
+    setLeavingUserId("");
+    if (isCurrentUser(userId)) {
+      toast.success(`Successfully leaved team ${teaminfo?.currentTeam?.name}`);
+      teaminfo?.setCurrentTeam({ id: teams![0].id });
+      router.push("/documents");
+      return;
+    }
+
+    toast.success("Teammate removed successfully!");
   };
 
   return (
@@ -117,33 +158,45 @@ export default function Billing() {
                 <span className="text-sm text-foreground capitalize">
                   {member.role.toLowerCase()}
                 </span>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="h-8 w-8 p-0">
-                      <span className="sr-only">Open menu</span>
-                      <MoreVertical className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                    {isCurrentUser(member.userId) && (
-                      <DropdownMenuItem className="text-red-500 focus:bg-destructive focus:text-destructive-foreground">
-                        Leave team
-                      </DropdownMenuItem>
-                    )}
-                    {isCurrentUserAdmin() && !isCurrentUser(member.userId) ? (
-                      <DropdownMenuItem className="text-red-500 focus:bg-destructive focus:text-destructive-foreground">
-                        Remove teammate
-                      </DropdownMenuItem>
-                    ) : (
-                      <DropdownMenuItem
-                        disabled
-                        className="text-red-500 focus:bg-destructive focus:text-destructive-foreground">
-                        Remove teammate
-                      </DropdownMenuItem>
-                    )}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                {leavingUserId === member.userId ? (
+                  <span className="text-xs">leaving...</span>
+                ) : (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="h-8 w-8 p-0">
+                        <span className="sr-only">Open menu</span>
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                      {isCurrentUser(member.userId) && (
+                        <DropdownMenuItem
+                          onClick={() =>
+                            removeTeammate(member.teamId, member.userId)
+                          }
+                          className="text-red-500 focus:bg-destructive focus:text-destructive-foreground hover:cursor-pointer">
+                          Leave team
+                        </DropdownMenuItem>
+                      )}
+                      {isCurrentUserAdmin() && !isCurrentUser(member.userId) ? (
+                        <DropdownMenuItem
+                          onClick={() =>
+                            removeTeammate(member.teamId, member.userId)
+                          }
+                          className="text-red-500 focus:bg-destructive focus:text-destructive-foreground hover:cursor-pointer">
+                          Remove teammate
+                        </DropdownMenuItem>
+                      ) : (
+                        <DropdownMenuItem
+                          disabled
+                          className="text-red-500 focus:bg-destructive focus:text-destructive-foreground">
+                          Remove teammate
+                        </DropdownMenuItem>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
               </div>
             </li>
           ))}

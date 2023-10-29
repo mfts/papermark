@@ -10,8 +10,7 @@ export function useTeams() {
     router.isReady && "/api/teams",
     fetcher,
     {
-      revalidateOnFocus: false,
-      dedupingInterval: 30000,
+      dedupingInterval: 20000,
     }
   );
 

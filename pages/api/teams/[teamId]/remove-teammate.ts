@@ -28,7 +28,11 @@ export default async function handle(
         },
       });
 
-      if (userTeam?.role === "ADMIN") {
+      if (!userTeam) {
+        return res.status(401).json("The teammate isn't the part of this team");
+      }
+
+      if (userTeam?.role === "ADMIN" && userTeam.userId === userToBeDeleted) {
         return res.status(401).json("You can't remove the Admin");
       }
 
@@ -40,7 +44,7 @@ export default async function handle(
           },
         },
       });
-      return res.status(204);
+      return res.status(204).json("Member removed successfully!");
     } catch (error) {
       errorHanlder(error, res);
     }

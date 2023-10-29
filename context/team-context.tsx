@@ -1,6 +1,8 @@
+import { useGetTeam } from "@/lib/swr/use-team";
 import { useTeams } from "@/lib/swr/use-teams";
-import { Team } from "@/lib/types";
-import { createContext, useContext, useMemo, useState } from "react";
+import { CustomUser, Team } from "@/lib/types";
+import { useSession } from "next-auth/react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
 interface TeamContextProps {
   children: React.ReactNode;

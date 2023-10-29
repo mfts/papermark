@@ -151,7 +151,7 @@ export type AnalyticsEvents =
 
 export interface Team {
   id: string;
-  name: string;
+  name?: string;
 }
 
 export interface TeamDetail {
