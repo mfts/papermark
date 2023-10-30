@@ -18,6 +18,8 @@ import ProBanner from "./billing/pro-banner";
 import Cookies from "js-cookie";
 import { usePlan } from "@/lib/swr/use-billing";
 import Image from "next/image";
+import { Bell } from "lucide-react";
+import NotificationDropdown from "./notifications/notification-dropdown";
 
 export default function Sidebar() {
   const { data: session, status } = useSession();
@@ -25,7 +27,7 @@ export default function Sidebar() {
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
   const [showProBanner, setShowProBanner] = useState<boolean | null>(null);
   const router = useRouter();
-  
+
   const navigation = [
     // {
     //   name: "Overview",
@@ -65,7 +67,8 @@ export default function Sidebar() {
     }
   }, []);
 
-  if (status === "loading" && loading) return <LoadingSpinner className="mr-1 h-5 w-5" />;
+  if (status === "loading" && loading)
+    return <LoadingSpinner className="mr-1 h-5 w-5" />;
 
   const userPlan = plan && plan.plan;
 
@@ -75,8 +78,7 @@ export default function Sidebar() {
         <Dialog
           as="div"
           className="relative z-50 xl:hidden"
-          onClose={setSidebarOpen}
-        >
+          onClose={setSidebarOpen}>
           <Transition.Child
             as={Fragment}
             enter="transition-opacity ease-linear duration-300"
@@ -84,8 +86,7 @@ export default function Sidebar() {
             enterTo="opacity-100"
             leave="transition-opacity ease-linear duration-300"
             leaveFrom="opacity-100"
-            leaveTo="opacity-0"
-          >
+            leaveTo="opacity-0">
             <div className="fixed inset-0 bg-background/80" />
           </Transition.Child>
 
@@ -97,8 +98,7 @@ export default function Sidebar() {
               enterTo="translate-x-0"
               leave="transition ease-in-out duration-300 transform"
               leaveFrom="translate-x-0"
-              leaveTo="-translate-x-full"
-            >
+              leaveTo="-translate-x-full">
               <Dialog.Panel className="relative mr-16 flex w-full max-w-xs flex-1">
                 <Transition.Child
                   as={Fragment}
@@ -107,14 +107,12 @@ export default function Sidebar() {
                   enterTo="opacity-100"
                   leave="ease-in-out duration-300"
                   leaveFrom="opacity-100"
-                  leaveTo="opacity-0"
-                >
+                  leaveTo="opacity-0">
                   <div className="absolute left-full top-0 flex w-16 justify-center pt-5">
                     <button
                       type="button"
                       className="-m-2.5 p-2.5"
-                      onClick={() => setSidebarOpen(false)}
-                    >
+                      onClick={() => setSidebarOpen(false)}>
                       <span className="sr-only">Close sidebar</span>
                       <X
                         className="h-6 w-6 text-foreground"
@@ -149,8 +147,7 @@ export default function Sidebar() {
                                     : "text-muted-foreground hover:text-foreground hover:bg-gray-200 hover:dark:bg-muted",
                                   "group flex gap-x-3 items-center rounded-md p-2 text-sm leading-6 w-full disabled:hover:bg-transparent disabled:text-muted-foreground disabled:cursor-default"
                                 )}
-                                disabled={item.disabled}
-                              >
+                                disabled={item.disabled}>
                                 <item.icon
                                   className="h-5 w-5 shrink-0"
                                   aria-hidden="true"
@@ -174,7 +171,7 @@ export default function Sidebar() {
       <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col">
         {/* Sidebar component, swap this element with another sidebar if you like */}
         <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-gray-50 dark:bg-black px-6">
-          <div className="flex h-16 shrink-0 items-center">
+          <div className="flex h-16 shrink-0 justify-between items-center">
             <p className="text-2xl font-bold tracking-tighter text-black dark:text-white flex items-center">
               Papermark{" "}
               {userPlan == "pro" ? (
@@ -183,6 +180,14 @@ export default function Sidebar() {
                 </span>
               ) : null}
             </p>
+            <NotificationDropdown>
+              <div className="relative bg-gray-200 text-secondary-foreground dark:bg-secondary p-2 rounded-full hover:cursor-pointer">
+                <Bell />
+                <strong className="absolute flex items-center justify-center -top-1 -right-3 text-xs bg-destructive/90 text-primary-foreground dark:text-secondary-foreground rounded-full p-1 h-6 w-6">
+                  3
+                </strong>
+              </div>
+            </NotificationDropdown>
           </div>
           <nav className="flex flex-1 flex-col">
             <ul role="list" className="flex flex-1 flex-col gap-y-7">
@@ -198,8 +203,7 @@ export default function Sidebar() {
                             : "text-muted-foreground hover:text-foreground hover:bg-gray-200 hover:dark:bg-muted",
                           "group flex gap-x-3 items-center rounded-md p-2 text-sm leading-6 w-full disabled:hover:bg-transparent disabled:text-muted-foreground disabled:cursor-default"
                         )}
-                        disabled={item.disabled}
-                      >
+                        disabled={item.disabled}>
                         <item.icon
                           className="h-5 w-5 shrink-0"
                           aria-hidden="true"
@@ -248,16 +252,15 @@ export default function Sidebar() {
                       enterTo="transform opacity-100 scale-100"
                       leave="transition ease-in duration-75"
                       leaveFrom="transform opacity-100 scale-100"
-                      leaveTo="transform opacity-0 scale-95"
-                    >
+                      leaveTo="transform opacity-0 scale-95">
                       <Menu.Items className="absolute left-0 z-10 bottom-0 mb-14 w-[max-container] origin-bottom-left rounded-md bg-gray-100 dark:bg-primary-foreground py-2 focus:outline-none">
                         {session ? (
                           <>
                             <Menu.Item>
                               <div className="w-full">
-                              <p className="block px-3 py-1 text-sm leading-6 text-muted-foreground">
-                                {session?.user?.email}
-                              </p>
+                                <p className="block px-3 py-1 text-sm leading-6 text-muted-foreground">
+                                  {session?.user?.email}
+                                </p>
                               </div>
                             </Menu.Item>
                             <Menu.Item>
@@ -265,8 +268,7 @@ export default function Sidebar() {
                                 Help?{" "}
                                 <a
                                   href="mailto:support@papermark.io"
-                                  className="underline hover:text-muted-foreground/80"
-                                >
+                                  className="underline hover:text-muted-foreground/80">
                                   support@papermark.io
                                 </a>
                               </p>
@@ -279,8 +281,7 @@ export default function Sidebar() {
                                   })
                                 }
                                 className="block px-3 py-1 text-sm leading-6 text-foreground hover:bg-gray-200 hover:dark:bg-muted"
-                                href={""}
-                              >
+                                href={""}>
                                 Sign Out
                               </Link>
                             </Menu.Item>
@@ -303,8 +304,7 @@ export default function Sidebar() {
           <button
             type="button"
             className="-m-2.5 p-2.5 text-muted-foreground lg:hidden"
-            onClick={() => setSidebarOpen(true)}
-          >
+            onClick={() => setSidebarOpen(true)}>
             <span className="sr-only">Open sidebar</span>
             <MenuIcon className="h-6 w-6" aria-hidden="true" />
           </button>
@@ -330,8 +330,7 @@ export default function Sidebar() {
                   enterTo="transform opacity-100 scale-100"
                   leave="transition ease-in duration-75"
                   leaveFrom="transform opacity-100 scale-100"
-                  leaveTo="transform opacity-0 scale-95"
-                >
+                  leaveTo="transform opacity-0 scale-95">
                   <Menu.Items className="absolute right-0 z-10 mt-2.5 w-fit origin-top-right rounded-md bg-primary-foreground shadow-lg py-2 ring-1 ring-primary-foreground/5 focus:outline-none">
                     {session ? (
                       <>
@@ -348,8 +347,7 @@ export default function Sidebar() {
                               })
                             }
                             className="block px-3 py-1 text-sm leading-6 text-foreground hover:bg-gray-200 hover:dark:bg-muted"
-                            href={""}
-                          >
+                            href={""}>
                             Sign Out
                           </Link>
                         </Menu.Item>
