@@ -2,7 +2,7 @@ import Twitter from "../shared/icons/twitter";
 
 const testimonials = [
   {
-    body: "best thing is that all the save DocSend to PDF plugins that VCs use probably won't work 😁",
+    body: "Best thing is that all the save DocSend to PDF plugins that VCs use probably won't work 😁",
     author: {
       name: "Jonathan Reimer",
       handle: "jonathimer",
@@ -22,9 +22,9 @@ const testimonials = [
     },
   },
   {
-    body: "looks so good! gonna have to steal that upload component 😍 congrats & thanks for the great idea 😄",
+    body: "Looks so good! Gonna have to steal that upload component 😍 congrats & thanks for the great idea 😄",
     author: {
-      name: "alana goyal",
+      name: "Alana Goyal",
       handle: "alanaagoyal",
       imageUrl:
         "https://pbs.twimg.com/profile_images/1679538379070005248/jwGUle5U_400x400.jpg",
@@ -61,53 +61,51 @@ const testimonials = [
       link: "https://twitter.com/mfts0/status/1663521261396320257",
     },
   },
-  // More testimonials...
+  // Add more testimonials...
 ];
 
 export default function Testimonials() {
   return (
-    <div className="bg-white py-24 sm:py-32">
+    <div className="bg-white py-16 sm:py-20">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-xl text-center">
           <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-            1000 people love Papermark, or just use it.
+            Join the community of Papermark enthusiasts!
           </p>
         </div>
-        <div className="mx-auto mt-16 flow-root max-w-2xl sm:mt-20 lg:mx-0 lg:max-w-none">
-          <div className="-mt-8 sm:-mx-4 sm:columns-2 sm:text-[0] lg:columns-3">
+        <div className="mx-auto mt-12 flow-root max-w-4xl sm:mt-16 lg:mx-0 lg:max-w-none">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {testimonials.map((testimonial) => (
               <div
                 key={testimonial.author.handle}
-                className="pt-8 sm:inline-block sm:w-full sm:px-4 relative"
+                className="bg-white rounded-xl shadow-md p-6 sm:p-8 transition-transform transform hover:scale-105"
               >
-                <figure className="rounded-2xl bg-white p-10 text-sm leading-6 border border-gray-300 relative">
-                  {testimonial.author.link && ( // Conditional rendering based on the presence of link
-                    <a
-                      href={testimonial.author.link} // Using the link from the testimonial
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="absolute top-4 right-4 z-10"
-                    >
-                      <Twitter className="w-5 h-5 text-gray-800" />
-                    </a>
-                  )}
-                  <blockquote className="text-gray-900">
-                    <p>{`${testimonial.body}`}</p>
-                  </blockquote>
-                  <figcaption className="mt-6 flex items-center gap-x-4">
-                    <img
-                      className="h-10 w-10 rounded-full bg-gray-50"
-                      src={testimonial.author.imageUrl}
-                      alt=""
-                    />
-                    <div>
-                      <div className="font-semibold text-gray-900">
-                        {testimonial.author.name}
-                      </div>
-                      <div className="text-gray-600">{`@${testimonial.author.handle}`}</div>
+                {testimonial.author.link && (
+                  <a
+                    href={testimonial.author.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="absolute top-4 right-4 z-10"
+                  >
+                    <Twitter className="w-6 h-6 text-gray-600 hover:text-gray-800" />
+                  </a>
+                )}
+                <blockquote className="text-gray-700">
+                  <p>{testimonial.body}</p>
+                </blockquote>
+                <figcaption className="mt-6 flex items-center">
+                  <img
+                    className="h-10 w-10 rounded-full bg-gray-100"
+                    src={testimonial.author.imageUrl}
+                    alt=""
+                  />
+                  <div className="ml-4">
+                    <div className="font-semibold text-gray-900">
+                      {testimonial.author.name}
                     </div>
-                  </figcaption>
-                </figure>
+                    <div className="text-gray-600">@{testimonial.author.handle}</div>
+                  </div>
+                </figcaption>
               </div>
             ))}
           </div>

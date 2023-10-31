@@ -29,6 +29,8 @@ export default function Intro() {
           variants={STAGGER_CHILD_VARIANTS}
         >
           Welcome to{" "}
+
+        
           <span className="font-bold tracking-tighter">Papermark</span>
         </motion.h1>
         <motion.p

@@ -6,7 +6,7 @@ export default function Section() {
           <div className="lg:pr-4">
             <div className="relative overflow-hidden rounded-3xl bg-gray-900 px-6 pb-9 pt-64 shadow-2xl sm:px-12 lg:max-w-lg lg:px-8 lg:pb-8 xl:px-10 xl:pb-10">
               <img
-                className="absolute inset-0 h-full w-full object-cover  "
+                className="absolute inset-0 h-full w-full object-cover"
                 src="https://www.papermark.io/_static/michael.webp"
                 alt=""
               />
@@ -25,7 +25,7 @@ export default function Section() {
                   <use href="#0ef284b8-28c2-426e-9442-8655d393522e" x={86} />
                 </svg>
 
-                <blockquote className="mt-6 text-xl font-semibold leading-none text-white ">
+                <blockquote className="mt-6 text-xl font-semibold leading-none text-black p-4 bg-white bg-opacity-80 rounded-lg">
                   <p className="m-0 py-1">
                     “ I will make them remember me, I will ”
                   </p>

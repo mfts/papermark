@@ -23,7 +23,7 @@ export default function Section2() {
             <Link
               target="_blank"
               rel="noopener noreferrer"
-              className="rounded-md  px-3.5 py-2.5 text-sm font-semibold text-black hover:text-gray-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400 flex items-center"
+              className="rounded-md px-3.5 py-2.5 text-sm font-semibold text-black hover:text-gray-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400 flex items-center"
               href="https://github.com/mfts/papermark"
             >
               <GitHubIcon className="mr-2 h-5 w-5" /> Star on Github
@@ -34,7 +34,7 @@ export default function Section2() {
             <img
               src="https://www.papermark.io/_static/image2.png"
               alt="Description of Image"
-              className="mx-auto w-full h-auto object-cover rounded-md "
+              className="mx-auto w-full h-auto object-cover rounded-md"
             />
           </div>
         </div>
