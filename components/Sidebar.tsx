@@ -3,6 +3,7 @@ import { Menu, Dialog, Transition } from "@headlessui/react";
 import { signOut, useSession } from "next-auth/react";
 import HomeIcon from "@/components/shared/icons/home";
 import FolderIcon from "@/components/shared/icons/folder";
+import DataRoomIcon from "@/components/shared/icons/data-room";
 import PieChartIcon from "@/components/shared/icons/pie-chart";
 import SettingsIcon from "@/components/shared/icons/settings";
 import MenuIcon from "@/components/shared/icons/menu";
@@ -39,6 +40,13 @@ export default function Sidebar() {
       href: "/documents",
       icon: FolderIcon,
       current: router.pathname.includes("documents"),
+      disabled: false,
+    },
+    {
+      name: "Data Room",
+      href: "/dataroom",
+      icon: DataRoomIcon,
+      current: router.pathname.includes("dataroom"),
       disabled: false,
     },
     {
