@@ -42,7 +42,7 @@ import { usePlan } from "@/lib/swr/use-billing";
 export default function LinksTable() {
   const { links } = useDocumentLinks();
   const router = useRouter();
-  const { plan } = usePlan()
+  const { plan } = usePlan();
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isLinkSheetVisible, setIsLinkSheetVisible] = useState<boolean>(false);
@@ -63,6 +63,9 @@ export default function LinksTable() {
       password: link.password,
       emailProtected: link.emailProtected,
       allowDownload: link.allowDownload ? link.allowDownload : false,
+      enableNotification: link.enableNotification
+        ? link.enableNotification
+        : false,
     });
     //wait for dropdown to close before opening the link sheet
     setTimeout(() => {
@@ -112,7 +115,7 @@ export default function LinksTable() {
     ? links.filter((link) => link.isArchived).length
     : 0;
 
-  const hasFreePlan = plan && plan.plan === "free"
+  const hasFreePlan = plan && plan.plan === "free";
 
   return (
     <>

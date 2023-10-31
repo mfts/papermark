@@ -23,6 +23,7 @@ import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import Link from "next/link";
 import DomainSection from "./domain-section";
 import AllowDownloadSection from "./allow-download-section";
+import AllowNotificationSection from "./allow-notification";
 
 export const DEFAULT_LINK_PROPS = {
   id: null,
@@ -33,6 +34,7 @@ export const DEFAULT_LINK_PROPS = {
   password: null,
   emailProtected: true,
   allowDownload: false,
+  enableNotification: true,
 };
 
 export type DEFAULT_LINK_TYPE = {
@@ -44,6 +46,7 @@ export type DEFAULT_LINK_TYPE = {
   password: string | null;
   emailProtected: boolean;
   allowDownload: boolean;
+  enableNotification: boolean;
 };
 
 export default function LinkSheet({
@@ -182,6 +185,7 @@ export default function LinkSheet({
                     <AllowDownloadSection {...{ data, setData }} />
                     <PasswordSection {...{ data, setData }} />
                     <ExpirationSection {...{ data, setData }} />
+                    <AllowNotificationSection {...{ data, setData }} />
                   </div>
                 </div>
               </div>
