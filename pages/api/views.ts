@@ -4,6 +4,7 @@ import { checkPassword, log } from "@/lib/utils";
 import { analytics, identifyUser, trackAnalytics } from "@/lib/analytics";
 import { CustomUser } from "@/lib/types";
 import { sendViewedDocumentEmail } from "@/lib/emails/send-viewed-document";
+import { createNotification } from "@/lib/notifications/notication-service";
 
 export default async function handle(
   req: NextApiRequest,
@@ -73,6 +74,7 @@ export default async function handle(
             owner: {
               select: {
                 email: true,
+                id: true,
               },
             },
             versions: {
@@ -86,6 +88,16 @@ export default async function handle(
       },
     });
 
+    // create notification for the document's owner on link viewed
+    const message = link.emailProtected
+      ? `A user (${email}) viewed your document(${newView.document.name})`
+      : `Someone viewed your document(${newView.document.name})`;
+    await createNotification({
+      userId: newView.document.owner.id,
+      message,
+      type: "LINKED_VIEWED",
+    });
+
     // TODO: cannot identify user because session is not available
     // await identifyUser((session.user as CustomUser).id);
     // await analytics.identify();
@@ -96,7 +108,6 @@ export default async function handle(
       viewerId: newView.id,
       viewerEmail: email,
     });
-
 
     // TODO: this can be offloaded to a background job in the future to save some time
     // send email to document owner that document has been viewed
@@ -122,19 +133,20 @@ export default async function handle(
         },
       });
 
-      return res
-        .status(200)
-        .json({ message: "View recorded", viewId: newView.id, file: null, pages: pages });
-    }
-
-    return res
-      .status(200)
-      .json({
+      return res.status(200).json({
         message: "View recorded",
         viewId: newView.id,
-        file: newView.document.versions[0].file,
-        pages: null,
+        file: null,
+        pages: pages,
       });
+    }
+
+    return res.status(200).json({
+      message: "View recorded",
+      viewId: newView.id,
+      file: newView.document.versions[0].file,
+      pages: null,
+    });
   } catch (error) {
     log(`Failed to record view for ${linkId}. Error: \n\n ${error}`);
     return res.status(500).json({ message: (error as Error).message });
