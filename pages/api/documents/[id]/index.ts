@@ -4,6 +4,9 @@ import prisma from "@/lib/prisma";
 import { authOptions } from "../../auth/[...nextauth]";
 import { CustomUser } from "@/lib/types";
 import { del } from "@vercel/blob";
+import { getExtension } from "@/lib/utils";
+import { client } from "@/trigger";
+import { identifyUser, trackAnalytics } from "@/lib/analytics";
 
 export default async function handle(
   req: NextApiRequest,
@@ -43,6 +46,93 @@ export default async function handle(
       }
 
       return res.status(200).json(document);
+    } catch (error) {
+      return res.status(500).json({
+        message: "Internal Server Error",
+        error: (error as Error).message,
+      });
+    }
+  } else if (req.method === "PUT") {
+    // PUT /api/documents/:id
+    const session = await getServerSession(req, res, authOptions);
+    if (!session) {
+      return res.status(401).end("Unauthorized");
+    }
+
+    const { id } = req.query as { id: string };
+
+    const { name, url, numPages } = req.body;
+
+    try {
+      const document = await prisma.document.findUnique({
+        where: {
+          id: id,
+        },
+        select: {
+          ownerId: true,
+          type: true,
+          versions: {
+            where: { isPrimary: true },
+            orderBy: { createdAt: "desc" },
+            take: 1,
+          },
+        },
+      });
+
+      // Check if the user is the owner of the document
+      if (document?.ownerId !== (session.user as CustomUser).id) {
+        return res.status(401).end("Unauthorized");
+      }
+
+      const updatedDocument = await prisma.document.update({
+        where: {
+          id: id,
+        },
+        data: {
+          name: name,
+          numPages: numPages,
+          file: url,
+          versions: {
+            updateMany: {
+              where: {
+                isPrimary: true,
+              },
+              data: {
+                isPrimary: false,
+              },
+            },
+            create: {
+              file: url,
+              type: document.type,
+              numPages: numPages,
+              isPrimary: true,
+              versionNumber: document.versions[0].versionNumber + 1,
+            },
+          },
+        },
+        include: {
+          _count: {
+            select: { links: true, views: true, versions: true },
+          },
+          links: {
+            take: 1,
+            select: { id: true },
+          },
+          versions: {
+            where: { isPrimary: true },
+            orderBy: { createdAt: "desc" },
+            take: 1,
+          },
+        },
+      });
+
+      // trigger document uploaded event to trigger convert-pdf-to-image job
+      await client.sendEvent({
+        name: "document.uploaded",
+        payload: { documentVersionId: updatedDocument.versions[0].id },
+      });
+
+      res.status(200).json(updatedDocument);
     } catch (error) {
       return res.status(500).json({
         message: "Internal Server Error",
@@ -94,7 +184,7 @@ export default async function handle(
 
   } else {
     // We only allow GET and DELETE requests
-    res.setHeader("Allow", ["GET", "DELETE"]);
+    res.setHeader("Allow", ["GET", "PUT", "DELETE"]);
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 }
