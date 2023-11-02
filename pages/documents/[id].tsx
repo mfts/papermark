@@ -15,15 +15,22 @@ import { toast } from "sonner";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useRouter } from "next/router";
 import MoreVertical from "@/components/shared/icons/more-vertical";
+import UploadFileIcon from "@/components/shared/icons/upload-file";
+import { AddUpdateDocumentModal } from "@/components/documents/add-update-document-modal";
+import useDocuments from "@/lib/swr/use-documents";
+import { mutate } from "swr";
+import { DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
 
 export default function DocumentPage() {
   const { document: prismaDocument, primaryVersion, error } = useDocument();
+  const { documents } = useDocuments();
   const router = useRouter();
 
   const [isLinkSheetOpen, setIsLinkSheetOpen] = useState<boolean>(false);
   const [isEditingName, setIsEditingName] = useState<boolean>(false);
   const [isFirstClick, setIsFirstClick] = useState<boolean>(false);
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
+  const [modalOpen, setModalOpen] = useState<boolean>(false);
 
   const nameRef = useRef<HTMLHeadingElement>(null);
   const enterPressedRef = useRef<boolean>(false);
@@ -141,7 +148,27 @@ export default function DocumentPage() {
       }
     }
   };
-  
+
+  const handleDocumentUpdate = (
+    updatedDocument: DocumentWithLinksAndLinkCountAndViewCount
+  ) => {
+    if (!documents) return;
+
+    const indexToUpdate = documents.findIndex(
+      (document) => document.id === updatedDocument.id
+    );
+
+    if (indexToUpdate === -1) return;
+
+    const updatedDocumentsCache = [
+      ...documents.slice(0, indexToUpdate),
+      updatedDocument,
+      ...documents.slice(indexToUpdate + 1),
+    ];
+
+    mutate("/api/documents", updatedDocumentsCache, false);
+  };
+
   if (error && error.status === 404) {
     return <ErrorPage statusCode={404} />;
   }
@@ -183,7 +210,20 @@ export default function DocumentPage() {
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-x-4">
+              <div className="flex items-center gap-x-4 relative">
+                <AddUpdateDocumentModal
+                  open={modalOpen}
+                  setOpen={setModalOpen}
+                  onUpdate={handleDocumentUpdate}
+                >
+                  <Button
+                    variant="ghost"
+                    className="h-8 w-8 p-0"
+                    title="Upload new version"
+                  >
+                    <UploadFileIcon className="h-5 w-5 shrink-0" />
+                  </Button>
+                </AddUpdateDocumentModal>
                 <DropdownMenu
                   open={menuOpen}
                   onOpenChange={handleMenuStateChange}
