@@ -177,49 +177,47 @@ export function AddUpdateDocumentModal({
   return (
     <Dialog {...dialogProps}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="text-foreground bg-background">
+      <DialogContent className="text-foreground bg-background" {...(id && {"aria-describedby":undefined})}>
         <DialogHeader>
           <DialogTitle>
             {id ? "Update document" : "Share a document"}
           </DialogTitle>
-          <DialogDescription>
-            {!id ? (
-              <div className="border-b border-border py-2">
-                <p className="mb-1 text-sm text-muted-foreground">
-                  After you upload the document, a shareable link will be
-                  generated and copied to your clipboard.
-                </p>
-              </div>
-            ) : null}
-            <form
-              encType="multipart/form-data"
-              onSubmit={handleBrowserUpload}
-              className="flex flex-col"
-            >
-              <div className="space-y-12">
-                <div className="pb-6">
-                  <div className="mt-10 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
-                    <DocumentUpload
-                      currentFile={currentFile}
-                      setCurrentFile={setCurrentFile}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex justify-center">
-                <Button
-                  type="submit"
-                  className="w-full lg:w-1/2"
-                  disabled={uploading || !currentFile}
-                  loading={uploading}
-                >
-                  {uploading ? "Uploading..." : "Upload Document"}
-                </Button>
-              </div>
-            </form>
-          </DialogDescription>
         </DialogHeader>
+        {!id ? (
+          <div className="border-b border-border py-2">
+            <DialogDescription className="mb-1">
+              After you upload the document, a shareable link will be generated
+              and copied to your clipboard.
+            </DialogDescription>
+          </div>
+        ) : null}
+        <form
+          encType="multipart/form-data"
+          onSubmit={handleBrowserUpload}
+          className="flex flex-col"
+        >
+          <div className="space-y-12">
+            <div className="pb-6">
+              <div className="mt-10 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
+                <DocumentUpload
+                  currentFile={currentFile}
+                  setCurrentFile={setCurrentFile}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-center">
+            <Button
+              type="submit"
+              className="w-full lg:w-1/2"
+              disabled={uploading || !currentFile}
+              loading={uploading}
+            >
+              {uploading ? "Uploading..." : "Upload Document"}
+            </Button>
+          </div>
+        </form>
       </DialogContent>
     </Dialog>
   );

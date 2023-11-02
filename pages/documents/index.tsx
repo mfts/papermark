@@ -4,7 +4,7 @@ import DocumentCard from "@/components/documents/document-card";
 import Skeleton from "@/components/Skeleton";
 import { PlusIcon } from "@heroicons/react/24/solid";
 import Link from "next/link";
-import { AddDocumentModal } from "@/components/documents/add-document-modal";
+import { AddUpdateDocumentModal } from "@/components/documents/add-update-document-modal";
 import { Separator } from "@/components/ui/separator";
 import AppLayout from "@/components/layouts/app"
 import { Button } from "@/components/ui/button";
@@ -24,9 +24,9 @@ export default function Documents() {
             <p className="text-sm text-muted-foreground">Manage your documents</p>
           </div>
           <ul className="flex items-center justify-between gap-4">
-            <AddDocumentModal>
+            <AddUpdateDocumentModal>
               <Button>Add New Document</Button>
-            </AddDocumentModal>
+            </AddUpdateDocumentModal>
           </ul>
         </div>
 
@@ -49,8 +49,8 @@ export default function Documents() {
                   key={i}
                   className="flex flex-col space-y-4 px-4 py-4 sm:px-6 lg:px-8"
                 >
-                  <Skeleton key={i} className="h-5 w-20" />
-                  <Skeleton key={i} className="mt-3 h-3 w-10" />
+                  <Skeleton className="h-5 w-20" />
+                  <Skeleton className="mt-3 h-3 w-10" />
                 </li>
               ))}
         </ul>
@@ -82,7 +82,7 @@ export function EmptyDocuments() {
         Get started by uploading a new document.
       </p>
       <div className="mt-6">
-        <AddDocumentModal>
+        <AddUpdateDocumentModal>
           <button
             type="button"
             className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-foreground bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
@@ -90,7 +90,7 @@ export function EmptyDocuments() {
             <PlusIcon className="-ml-1 mr-2 h-5 w-5" aria-hidden="true" />
             New Document
           </button>
-        </AddDocumentModal>
+        </AddUpdateDocumentModal>
       </div>
     </div>
   );
