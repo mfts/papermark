@@ -4,12 +4,13 @@ import mupdf from "mupdf";
 import { put } from "@vercel/blob";
 import prisma from "@/lib/prisma";
 
+
 // This function can run for a maximum of 60 seconds
 export const config = {
   maxDuration: 60,
 };
 
-export default async (req: NextApiRequest, res: NextApiResponse) => {
+export default async function handle(req: NextApiRequest, res: NextApiResponse) {
   // check if post method
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method Not Allowed" });
