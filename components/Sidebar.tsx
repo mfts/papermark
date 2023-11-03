@@ -25,7 +25,7 @@ export default function Sidebar() {
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
   const [showProBanner, setShowProBanner] = useState<boolean | null>(null);
   const router = useRouter();
-  
+
   const navigation = [
     // {
     //   name: "Overview",
@@ -65,7 +65,8 @@ export default function Sidebar() {
     }
   }, []);
 
-  if (status === "loading" && loading) return <LoadingSpinner className="mr-1 h-5 w-5" />;
+  if (status === "loading" && loading)
+    return <LoadingSpinner className="mr-1 h-5 w-5" />;
 
   const userPlan = plan && plan.plan;
 
@@ -127,7 +128,7 @@ export default function Sidebar() {
                 <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-gray-50 dark:bg-black px-6 ring-1 ring-foreground/10">
                   <div className="flex h-16 shrink-0 items-center">
                     <p className="text-2xl font-bold tracking-tighter text-black dark:text-white flex items-center">
-                      Papermark{" "}
+                      <Link href="/">Papermark </Link>{" "}
                       {userPlan == "pro" ? (
                         <span className="bg-background text-foreground ring-1 ring-gray-800 rounded-full px-2.5 py-1 text-xs ml-4">
                           Pro
@@ -176,7 +177,7 @@ export default function Sidebar() {
         <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-gray-50 dark:bg-black px-6">
           <div className="flex h-16 shrink-0 items-center">
             <p className="text-2xl font-bold tracking-tighter text-black dark:text-white flex items-center">
-              Papermark{" "}
+              <Link href="/">Papermark </Link>{" "}
               {userPlan == "pro" ? (
                 <span className="bg-background text-foreground ring-1 ring-gray-800 rounded-full px-2.5 py-1 text-xs ml-4">
                   Pro
@@ -255,9 +256,9 @@ export default function Sidebar() {
                           <>
                             <Menu.Item>
                               <div className="w-full">
-                              <p className="block px-3 py-1 text-sm leading-6 text-muted-foreground">
-                                {session?.user?.email}
-                              </p>
+                                <p className="block px-3 py-1 text-sm leading-6 text-muted-foreground">
+                                  {session?.user?.email}
+                                </p>
                               </div>
                             </Menu.Item>
                             <Menu.Item>

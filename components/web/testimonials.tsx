@@ -1,5 +1,6 @@
 import Twitter from "../shared/icons/twitter";
-
+import styles from '../../components/web/header.module.css'
+import { cn } from "@/lib/utils";
 const testimonials = [
   {
     body: "best thing is that all the save DocSend to PDF plugins that VCs use probably won't work 😁",
@@ -69,8 +70,8 @@ export default function Testimonials() {
     <div className="bg-white py-24 sm:py-32">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-xl text-center">
-          <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-            1000 people love Papermark, or just use it.
+          <p className="font-display mt-2 text-5xl font-bold tracking-tight text-gray-900 sm:text-5xl">
+          1000+ people love <span className={cn(styles.magicText , "bg-gradient-to-tr from-purple-500 to-rose-300 bg-clip-text text-transparent" )}>Papermark</span> , or just use it.
           </p>
         </div>
         <div className="mx-auto mt-16 flow-root max-w-2xl sm:mt-20 lg:mx-0 lg:max-w-none">

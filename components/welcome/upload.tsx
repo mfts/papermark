@@ -13,6 +13,7 @@ import { copyToClipboard, getExtension } from "@/lib/utils";
 import { Button } from "../ui/button";
 import { usePlausible } from "next-plausible";
 
+
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
 
 export default function Upload() {
@@ -25,8 +26,9 @@ export default function Upload() {
   const [currentDocId, setCurrentDocId] = useState<string | null>(null);
   const [copiedLink, setCopiedLink] = useState<boolean>(false);
   
-
+  
   const handleBrowserUpload = async (event: any) => {
+   
     event.preventDefault();
 
     // Check if the file is chosen
@@ -59,18 +61,25 @@ export default function Upload() {
       
       if (response) {
         const document = await response.json();
+        const req = await fetch('/api/currentuser')
+        const currentUser = await req.json()
+
         const linkId = document.links[0].id;
 
         // track the event
         plausible("documentUploaded");
+        toast.success(`Happy Day . ${currentUser.name} we have sucessfully received your document`)
 
         setTimeout(() => {
           setCurrentDocId(document.id);
           setCurrentLinkId(linkId);
           setUploading(false);
+          toast.dismiss()
         }, 2000);
       }
     } catch (error) {
+      
+      toast.error("Something went wrong! Please try again later.");
       console.error("An error occurred while uploading the file: ", error);
       setCurrentFile(null);
       setUploading(false);

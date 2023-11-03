@@ -50,7 +50,8 @@
 //     </footer>
 //   );
 // }
-
+import { cn } from '@/lib/utils';
+import styles from '../../components/web/header.module.css'
 const navigation = {
   product: [
     { name: "Pricing", href: "/pricing" },
@@ -76,7 +77,7 @@ const navigation = {
 export default function Footer() {
   return (
     <footer
-      className="bg-white dark:bg-black border-t border-gray-200"
+      className="font-display2 bg-white dark:bg-black border-t border-gray-200"
       aria-labelledby="footer-heading"
     >
       <h2 id="footer-heading" className="sr-only">
@@ -85,8 +86,8 @@ export default function Footer() {
       <div className="mx-auto max-w-7xl px-6 py-16 sm:py-20 lg:px-8 lg:py-12">
         <div className="xl:grid xl:grid-cols-3 xl:gap-8">
           {/* Text-based Logo */}
-          <h1 className="text-2xl font-bold tracking-tighter text-black dark:text-white">
-            Papermark
+          <h1 className="font-display text-2xl font-bold tracking-tight text-black dark:text-white">
+          <span className={cn(styles.magicText , "bg-gradient-to-tr from-purple-500 to-rose-300 bg-clip-text text-transparent" )}>Papermark</span>
           </h1>
 
           <div className="mt-16 grid grid-cols-2 gap-8 xl:col-span-2 xl:mt-0">

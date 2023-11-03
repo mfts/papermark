@@ -1,6 +1,10 @@
+const { withContentlayer } = require('next-contentlayer')
+
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  swcMinify: true,
   images: {
     minimumCacheTTL: 2592000, // 30 days
     domains: [
@@ -22,4 +26,4 @@ const nextConfig = {
   },
 };
 
-module.exports = nextConfig
+module.exports = withContentlayer(nextConfig)

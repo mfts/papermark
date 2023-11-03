@@ -32,7 +32,7 @@ export default function Section() {
                 </blockquote>
 
                 <figcaption className="mt-6 text-sm leading-6 text-gray-300">
-                  <strong className="font-semibold text-white">Michael</strong>{" "}
+                  <strong className="font-semibold text-white font-display">Michael</strong>{" "}
                   founder
                 </figcaption>
               </figure>
@@ -40,13 +40,13 @@ export default function Section() {
           </div>
           <div>
             <div className="text-base leading-7 text-gray-700 lg:max-w-lg">
-              <h1 className="mt-5 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+              <h1 className="font-display mt-5 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
                 Send via Papermark = Share your personality
               </h1>
               <ul role="list" className="mt-8 space-y-2 text-gray-600">
                 <li className="flex gap-x-3">
                   <span>
-                    <strong className="font-semibold text-gray-900">
+                    <strong className="font-display font-semibold text-gray-900">
                       Open Source
                     </strong>{" "}
                     Host it yourself
@@ -54,7 +54,7 @@ export default function Section() {
                 </li>
                 <li className="flex gap-x-3">
                   <span>
-                    <strong className="font-semibold text-gray-900">
+                    <strong className="font-display font-semibold text-gray-900">
                       Custom domain
                     </strong>{" "}
                     No more docsending you in the crowd
@@ -62,7 +62,7 @@ export default function Section() {
                 </li>
                 <li className="flex gap-x-3">
                   <span>
-                    <strong className="font-semibold text-gray-900">
+                    <strong className="font-display font-semibold text-gray-900">
                       Feedback
                     </strong>{" "}
                     For each slide
@@ -70,7 +70,7 @@ export default function Section() {
                 </li>
                 <li className="flex gap-x-3">
                   <span>
-                    <strong className="font-semibold text-gray-900">
+                    <strong className="font-display font-semibold text-gray-900">
                       Analytics
                     </strong>{" "}
                     Built in
@@ -79,7 +79,7 @@ export default function Section() {
 
                 <li className="flex gap-x-3">
                   <span>
-                    <strong className="font-semibold text-gray-900">
+                    <strong className="font-display font-semibold text-gray-900">
                       Free
                     </strong>{" "}
                     You can use it for free

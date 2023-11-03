@@ -8,8 +8,10 @@ import Testimonials from "@/components/web/testimonials";
 import Logos from "@/components/web/logos";
 import Head from "next/head";
 import Section3 from "@/components/web/section3";
+import useScroll from "@/lib/hooks/usescroll";
 
 export default function Home() {  
+  const scrolled = useScroll(50)
   return (
     <>
       <Head>
@@ -32,10 +34,12 @@ export default function Home() {
         <meta property="og:url" content="https://www.papermark.io" />
         <meta name="twitter:card" content="summary_large_image" />
       </Head>
-      <Navbar />
 
-      <div className="mt-8">
-        <div className="relative isolate overflow-hidden bg-white ">
+     
+      <Navbar />
+     
+      <div className="mt-8 font-display2">
+        <div className="relative isolate overflow-hidde ">
           <div
             className="absolute left-[calc(50%-4rem)] top-10 -z-10 transform-gpu blur-3xl sm:left-[calc(50%-18rem)] lg:left-48 lg:top-[calc(50%-30rem)] xl:left-[calc(50%-24rem)]"
             aria-hidden="true"

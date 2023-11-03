@@ -52,3 +52,7 @@ pages/api/scripts
 # marketing emails
 components/emails/marketing
 lib/emails/marketing
+
+
+#contentlayers ignore
+.contentlayer

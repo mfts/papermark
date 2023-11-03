@@ -1,0 +1,59 @@
+.main {
+    width: 80%;
+    min-height: 80%;
+    position: absolute;
+    z-index: -1;
+    display: flex;
+    justify-content: center;
+    pointer-events: none;
+  }
+  
+  .main:before {
+    background: radial-gradient(circle,
+        rgba(24, 13, 3, 0) 0,
+        var(--background) 100%);
+    position: absolute;
+    content: "";
+    z-index: 2;
+    width: 100%;
+    height: 100%;
+    top: 0;
+  }
+  
+  .main:after {
+    content: "";
+    /* background-image: url("/assets/grid.svg"); */
+    z-index: 1;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    opacity: 0.3;
+    filter: invert(1);
+  }
+  
+  .content {
+    height: fit-content;
+    z-index: 3;
+    width: 100%;
+    max-width: 640px;
+    background-image: radial-gradient(at 27% 37%,
+        hsla(215, 98%, 61%, 1) 0px,
+        transparent 0%),
+      radial-gradient(at 97% 21%, rgba(54, 35, 6, 0.608) 0px, transparent 50%),
+      radial-gradient(at 52% 99%, rgb(33, 12, 56) 0px, transparent 50%),
+      radial-gradient(at 10% 29%, rgb(61, 26, 16) 0px, transparent 50%),
+      radial-gradient(at 97% 96%, rgb(50, 42, 29) 0px, transparent 50%),
+      radial-gradient(at 33% 50%, rgb(23, 26, 33) 0px, transparent 50%),
+      radial-gradient(at 79% 53%, rgb(39, 23, 28) 0px, transparent 50%);
+    position: absolute;
+    content: "";
+    width: 100%;
+    height: 100%;
+    filter: blur(100px) saturate(150%);
+    opacity: 0.15;
+  }
+  
+  .dark .main:before {
+    background: radial-gradient(circle, rgba(2, 0, 36, 0) 0, #0f0215 100%);
+  }
