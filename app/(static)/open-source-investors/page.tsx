@@ -55,7 +55,7 @@ const getInvestors = async () => {
 };
 
 export default async function HomePage() {
-  const data = await getInvestors();
+  // const data = await getInvestors();
 
   // return <Dashboard data={data} />;
 }
