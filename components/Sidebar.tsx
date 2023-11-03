@@ -43,10 +43,10 @@ export default function Sidebar() {
       disabled: false,
     },
     {
-      name: "Data Room",
-      href: "/dataroom",
+      name: "Data Rooms",
+      href: "/datarooms",
       icon: DataRoomIcon,
-      current: router.pathname.includes("dataroom"),
+      current: router.pathname.includes("datarooms"),
       disabled: false,
     },
     {

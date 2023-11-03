@@ -146,3 +146,9 @@ export type AnalyticsEvents =
       event: "Domain Deleted";
       slug: string;
     };
+
+export type DataroomDocument = {
+  title: string
+  url: string
+  type: string
+}

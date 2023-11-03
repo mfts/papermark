@@ -10,15 +10,22 @@ import { useState } from "react";
 import { useRouter } from "next/router";
 import { type PutBlobResult } from "@vercel/blob";
 import { upload } from '@vercel/blob/client';
-import DocumentUpload from "@/components/document-upload";
 import { pdfjs } from "react-pdf";
 import { copyToClipboard, getExtension } from "@/lib/utils";
 import { Button } from "../ui/button";
 import { usePlausible } from "next-plausible";
+import { PlusIcon } from "@heroicons/react/24/solid";
+import { Input } from "../ui/input";
+import { AddDocumentToDataRoomModal } from "./add-document-to-dataroom-modal";
+import DocumentMetadataCard from "./document-metadata-card";
+import Skeleton from "@/components/Skeleton";
+import { type DataroomDocument } from "@/lib/types";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
 
-export function AddDocumentModal({children}: {children: React.ReactNode}) {
+export function AddDataRoomModal({ children }: { children: React.ReactNode }) {
+  //Documents inside data room
+  const [dataRoomDocuments, setDataRoomDocuments] = useState<DataroomDocument[]>([]);
   const router = useRouter();
   const plausible = usePlausible();
   const [uploading, setUploading] = useState<boolean>(false);
@@ -44,10 +51,9 @@ export function AddDocumentModal({children}: {children: React.ReactNode}) {
       let numPages: number | undefined;
       // create a document in the database if the document is a pdf
       if (getExtension(newBlob.pathname).includes("pdf")) {
-        numPages = await getTotalPages(newBlob.url);
-        response = await saveDocumentToDatabase(newBlob, numPages);
+        response = await saveDataroomToDatabase(newBlob, numPages);
       } else {
-        response = await saveDocumentToDatabase(newBlob);
+        response = await saveDataroomToDatabase(newBlob);
       }
 
       if (response) {
@@ -69,7 +75,7 @@ export function AddDocumentModal({children}: {children: React.ReactNode}) {
     }
   }
 
-  async function saveDocumentToDatabase(blob: PutBlobResult, numPages?: number) {
+  async function saveDataroomToDatabase(blob: PutBlobResult, numPages?: number) {
     // create a document in the database with the blob url
     const response = await fetch("/api/documents", {
       method: "POST",
@@ -90,52 +96,74 @@ export function AddDocumentModal({children}: {children: React.ReactNode}) {
     return response;
   }
 
-  // get the number of pages in the pdf
-  async function getTotalPages(url: string): Promise<number> {
-    const pdf = await pdfjs.getDocument(url).promise;
-    return pdf.numPages;
-  };
-
   return (
     <Dialog>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="text-foreground bg-background">
         <DialogHeader>
-          <DialogTitle>Share a document</DialogTitle>
+          <DialogTitle>Create a data room</DialogTitle>
           <DialogDescription>
             <div className="border-b border-border py-2">
               <p className="mb-1 text-sm text-muted-foreground">
-                After you upload the document, a shareable link will be
+                Please select the documents to be included in the data room.
+                After you create a data room, a shareable link will be
                 generated and copied to your clipboard.
               </p>
             </div>
-            <form
-              encType="multipart/form-data"
-              onSubmit={handleBrowserUpload}
-              className="flex flex-col"
-            >
-              <div className="space-y-12">
-                <div className="pb-6">
-                  <div className="mt-10 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
-                    <DocumentUpload
-                      currentFile={currentFile}
-                      setCurrentFile={setCurrentFile}
-                    />
-                  </div>
-                </div>
-              </div>
+            <div className="border-b border-border py-2  mt-3">
+              <p className="mb-1 text-sm text-muted-foreground font-bold mb-3">
+                Dataroom Name
+              </p>
+              <Input className="mb-3" placeholder={"Enter Data Room Name..."}></Input>
+            </div>
 
-              <div className="flex justify-center">
+
+            {/*dataRooms.map((dataRoom) => {})*/}
+             {/* Documents list */}
+            <ul role="list" className="space-y-4">
+              {dataRoomDocuments
+                ? dataRoomDocuments.map((dataRoomDocument) => {
+                    return <DocumentMetadataCard
+                    title={dataRoomDocument.title}
+                    url={dataRoomDocument.url}
+                    type={dataRoomDocument.type}
+                    setDataRoomDocuments={setDataRoomDocuments} />;
+                  })
+                : Array.from({ length: 3 }).map((_, i) => (
+                    <li
+                      key={i}
+                      className="flex flex-col space-y-4 px-4 py-4 sm:px-6 lg:px-8"
+                    >
+                      <Skeleton key={i} className="h-5 w-20" />
+                      <Skeleton key={i} className="mt-3 h-3 w-10" />
+                    </li>
+                  ))}
+            </ul>
+            <ul className="flex justify-center mt-3">
+              <AddDocumentToDataRoomModal
+                dataRoomDocuments={dataRoomDocuments}
+                setDataRoomDocuments={setDataRoomDocuments}
+              >
                 <Button
-                  type="submit"
-                  className="w-full lg:w-1/2"
-                  disabled={uploading || !currentFile}
+                  type="button"
+                  className="w-full"
+                  disabled={false} 
                   loading={uploading}
-                >
-                  {uploading ? "Uploading..." : "Upload Document"}
-                </Button>
-              </div>
-            </form>
+                ><PlusIcon className="-ml-1 mr-2 h-5 w-5" aria-hidden="true" />Add Document </Button>
+              </AddDocumentToDataRoomModal>
+            </ul>
+            <br />
+            <br />
+            <div className="flex justify-center">
+              <Button
+                type="button"
+                className="w-full lg:w-1/2"
+                disabled={dataRoomDocuments.length===0}
+                loading={uploading}
+              >
+                {uploading ? "Creating Data Room..." : "Create Data Room"}
+              </Button>
+            </div>
           </DialogDescription>
         </DialogHeader>
       </DialogContent>
