@@ -1,6 +1,8 @@
 import Footer from "@/components/web/footer";
 import Navbar from "@/components/web/navbar";
 import { Metadata } from "next";
+import localFont from "next/font/local";
+import { cn } from "@/lib/utils";
 
 
 const data = {
@@ -36,13 +38,21 @@ export const metadata: Metadata = {
     images: ["https://www.papermark.io/_static/meta-image.png"],
   },
 };
+const clash = localFont({
+  src: "../../public/_fonts/cd-semi.otf",
+  variable: "--font-clash",
+});
+const product2 = localFont({
+  src:'../../public/_fonts/product-google-regular.ttf',
+  variable:"--font-product2"
+})
 
 export default function Layout({children}: {children: React.ReactNode}) {
   return (
-    <>
+    <div className={cn(clash.variable ,  product2.variable)}>
       <Navbar />
 
-      <div className="mt-0">
+      <div className= 'mt-0'>
         <div className="relative isolate overflow-hidden bg-white">
           <div
             className="absolute left-[calc(50%-4rem)] top-10 -z-10 transform-gpu blur-3xl sm:left-[calc(50%-18rem)] lg:left-48 lg:top-[calc(50%-30rem)] xl:left-[calc(50%-24rem)]"
@@ -61,6 +71,6 @@ export default function Layout({children}: {children: React.ReactNode}) {
         </div>
       </div>
       <Footer />
-    </>
+    </div>
   );
 }
