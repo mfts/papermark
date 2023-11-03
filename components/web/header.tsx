@@ -55,13 +55,15 @@ export default function Header() {
                 />
               </a>
             </div>
-            {/* <div className="mt-2 mx-auto text-black py-4 flex justify-center items-center h-5 rounded-2xl border-2 border-gray-200 bg-gray-300 backdrop-blur-xl   w-40">
-              <p className="flex items-center text-gray-600 mr-2">Lastest Blogs </p>
+            <div className="mt-2 mx-auto text-black py-4 flex justify-center items-center h-5 rounded-2xl border-2 border-gray-200 bg-gray-300 backdrop-blur-xl bg-transparent   w-40">
+              <p className="flex items-center text-gray-800 mr-2">Lastest Blogs </p>
+              
+              <Link href={"/blog"}>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
-                className="aspect-square w-5 stroke-orange-300 stroke-2 "
+                className="aspect-square w-5 stroke-black stroke-2 "
               >
                 <path
                   strokeLinecap="round"
@@ -69,7 +71,8 @@ export default function Header() {
                   d="M4.5 12h15m0 0l-6.75-6.75M19.5 12l-6.75 6.75"
                 />
               </svg>
-            </div> */}
+              </Link>
+            </div>
             <motion.h1
               //@ts-ignore
               variants={fadeInConfig}
