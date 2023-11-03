@@ -30,6 +30,8 @@ export function AddDataRoomModal({ children }: { children: React.ReactNode }) {
   const plausible = usePlausible();
   const [uploading, setUploading] = useState<boolean>(false);
   const [currentFile, setCurrentFile] = useState<File | null>(null);
+  console.log("Inside add dataroom modal");
+  console.log(dataRoomDocuments)
 
   const handleBrowserUpload = async (event: any) => {
     event.preventDefault();
@@ -117,8 +119,6 @@ export function AddDataRoomModal({ children }: { children: React.ReactNode }) {
               <Input className="mb-3" placeholder={"Enter Data Room Name..."}></Input>
             </div>
 
-
-            {/*dataRooms.map((dataRoom) => {})*/}
              {/* Documents list */}
             <ul role="list" className="space-y-4">
               {dataRoomDocuments

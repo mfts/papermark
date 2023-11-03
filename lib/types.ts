@@ -148,6 +148,7 @@ export type AnalyticsEvents =
     };
 
 export type DataroomDocument = {
+  id: string
   title: string
   url: string
   type: string

@@ -44,25 +44,23 @@ export function AddDocumentToDataRoomModal(
       (documents
         .filter((document =>
           !dataRoomDocuments.some((dataRoomDocument) =>
-            dataRoomDocument.title === document.name))))
+            dataRoomDocument.id === document.id))))
       : []
   )
 
+  console.log("Inside add document to dataroom modal");
+  console.log(dataRoomDocuments);
   //Filter documents already included in data room
-  useEffect(()=>{
+  useEffect(() => {
     setDropDownMenuDocuments(
       documents ?
-      (documents
-        .filter((document =>
-          !dataRoomDocuments.some((dataRoomDocument) =>
-            dataRoomDocument.title === document.name))))
-      : []
+        (documents
+          .filter((document =>
+            !dataRoomDocuments.some((dataRoomDocument) =>
+              dataRoomDocument.id === document.id))))
+        : []
     );
   }, [dataRoomDocuments]);
-
-  console.log(documents);
-  console.log(dataRoomDocuments);
-  console.log(dropDownMenuDocuments);
 
   //No documents / out of documents error
   useEffect(() => {
@@ -72,6 +70,8 @@ export function AddDocumentToDataRoomModal(
       } else {
         setErrorMessage("Out of documents, please upload a new document to add in data room");
       }
+    } else {
+      setErrorMessage("");
     }
   }, [dropDownMenuDocuments.length]);
 
@@ -104,22 +104,28 @@ export function AddDocumentToDataRoomModal(
     if (selectedName === "") {
       setErrorMessage("Please select a document");
       return;
-    } 
+    }
     if (selectedLink.url === "") {
       setErrorMessage("Please select a link");
       return;
-    } 
+    }
     if (documentTitle === "") {
       setErrorMessage("Title cannot be blank");
       return;
     }
     const updatedropDownMenuDocuments = dropDownMenuDocuments
       .filter((dropDownMenuDocument) => !(dropDownMenuDocument.name === selectedName));
-   
-    const type: string = documents?.find(obj => obj.name === selectedName)?.type || "";
+
+    const chosenDocument = documents?.find(obj => obj.name === selectedName);
 
     setDropDownMenuDocuments(updatedropDownMenuDocuments);
-    setDataRoomDocuments([...dataRoomDocuments, { url: selectedLink.url, title: documentTitle, type: type}]);
+    setDataRoomDocuments([...dataRoomDocuments,
+    {
+      url: selectedLink.url,
+      title: documentTitle,
+      type: chosenDocument?.type || "",
+      id: chosenDocument?.id || ""
+    }]);
 
     //Reset modal's state variables
     setSelectedName("");
