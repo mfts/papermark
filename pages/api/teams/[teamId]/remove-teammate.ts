@@ -44,7 +44,7 @@ export default async function handle(
           },
         },
       });
-      return res.status(204).json("Member removed successfully!");
+      return res.status(204).end();
     } catch (error) {
       errorhandler(error, res);
     }
