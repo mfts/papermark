@@ -95,10 +95,6 @@ export default async function handle(
       res.redirect(`/login?next=/api/teams/${teamId}/invite?token=${token}`);
     }
 
-    if (email !== session?.user?.email) {
-      return res.status(400).json("You are not invited to the team");
-    }
-
     try {
       const userTeam = await prisma.userTeam.findFirst({
         where: {
@@ -122,6 +118,10 @@ export default async function handle(
         return res.status(400).json("Invalid invitation token");
       }
 
+      if (invitation.email !== (session?.user as CustomUser).email) {
+        return res.status(403).json("You are not invited to this team");
+      }
+
       const currentTime = new Date();
       if (currentTime > invitation.expires) {
         return res.status(400).json("Invitation link has expired");
@@ -137,6 +137,13 @@ export default async function handle(
               userId: (session?.user as CustomUser).id,
             },
           },
+        },
+      });
+
+      // delete the invitation record after user is successfully added to the team
+      await prisma.invitation.delete({
+        where: {
+          token,
         },
       });
 

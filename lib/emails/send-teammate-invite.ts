@@ -1,4 +1,4 @@
-import TeamInvitation from "@/components/emails/team-invitation";
+import TeamInvitation from "@/components/emails/ tation";
 import { sendEmail } from "@/lib/resend";
 
 export const sendTeammateInviteEmail = async ({
@@ -25,7 +25,6 @@ export const sendTeammateInviteEmail = async ({
       teamName,
       teamId,
       token,
-      to,
     }),
   });
 };
