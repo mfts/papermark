@@ -46,6 +46,7 @@ model User {
   accounts       Account[]
   sessions       Session[]
   documents      Document[]
+  datarooms      Dataroom[]
   domains        Domain[]
   plan           String     @default("trial")
   stripeId       String?    @unique // Stripe subscription / customer ID
@@ -150,4 +151,15 @@ model View {
   documentId  String
   viewerEmail String? // Email of the viewer if known
   viewedAt    DateTime @default(now())
+}
+
+model Dataroom {
+  id          String            @id @default(cuid())
+  name        String
+  owner       User              @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerId     String // This field holds the foreign key.
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  documentsIds   String[]
+  documentsTitles  String[]
 }

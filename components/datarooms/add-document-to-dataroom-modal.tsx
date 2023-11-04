@@ -9,7 +9,7 @@ import {
 import { useEffect, useState } from "react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
-import { DropdownMenu, DropdownMenuItem, DropdownMenuContent, DropdownMenuTrigger, DropdownMenuPortal } from "../ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuItem, DropdownMenuContent, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import ChevronDown from "@/components/shared/icons/chevron-down";
 import useDocuments from "@/lib/swr/use-documents";
 import { type DataroomDocument } from "@/lib/types";
@@ -48,8 +48,6 @@ export function AddDocumentToDataRoomModal(
       : []
   )
 
-  console.log("Inside add document to dataroom modal");
-  console.log(dataRoomDocuments);
   //Filter documents already included in data room
   useEffect(() => {
     setDropDownMenuDocuments(
@@ -220,8 +218,8 @@ export function AddDocumentToDataRoomModal(
                 defaultValue={selectedName.split(".")[0]}
                 onChange={(e) => { setDocumentTitle(e.target.value) }}></Input>
             </div>
-            <p className="mb-1 text-sm font-red text-muted-foreground font-bold mb-3 mt-2">
-              {errorMessage && errorMessage}
+            <p className="mb-1 text-sm font-red text-muted-foreground font-bold mb-1 mt-2">
+              {errorMessage ? <p className="text-red-500">{errorMessage}</p> : <br />}
             </p>
             <div className="flex justify-center">
               <Button

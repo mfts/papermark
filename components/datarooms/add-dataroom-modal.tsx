@@ -8,8 +8,6 @@ import {
 } from "@/components/ui/dialog";
 import { useState } from "react";
 import { useRouter } from "next/router";
-import { type PutBlobResult } from "@vercel/blob";
-import { upload } from '@vercel/blob/client';
 import { pdfjs } from "react-pdf";
 import { copyToClipboard, getExtension } from "@/lib/utils";
 import { Button } from "../ui/button";
@@ -26,72 +24,75 @@ pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/$
 export function AddDataRoomModal({ children }: { children: React.ReactNode }) {
   //Documents inside data room
   const [dataRoomDocuments, setDataRoomDocuments] = useState<DataroomDocument[]>([]);
-  const router = useRouter();
-  const plausible = usePlausible();
+  const [dataRoomName, setDataRoomName] = useState<string>("");
+  //const plausible = usePlausible();
   const [uploading, setUploading] = useState<boolean>(false);
-  const [currentFile, setCurrentFile] = useState<File | null>(null);
-  console.log("Inside add dataroom modal");
-  console.log(dataRoomDocuments)
+  const [errorMessage, setErrorMessage] = useState<string>("");
+  const router = useRouter();
 
-  const handleBrowserUpload = async (event: any) => {
+  const handleDataroomCreation = async (event: any) => {
     event.preventDefault();
-
-    // Check if the file is chosen
-    if (!currentFile) {
-      alert("Please select a file to upload.");
-      return; // prevent form from submitting
+    //set error messages
+    if (!dataRoomName) {
+      setErrorMessage("Dataroom's name cannot be blank");
+      setTimeout(() => setErrorMessage(""), 5000);
+      return;
+    }
+    if (dataRoomDocuments.length === 0) {
+      setErrorMessage("Please select a document to include in dataroom");
+      setTimeout(() => setErrorMessage(""), 5000);
+      return;
     }
 
     try {
       setUploading(true);
-      const newBlob = await upload(currentFile.name, currentFile, {
-        access: "public",
-        handleUploadUrl: "/api/file/browser-upload",
-      });
 
       let response: Response | undefined;
-      let numPages: number | undefined;
-      // create a document in the database if the document is a pdf
-      if (getExtension(newBlob.pathname).includes("pdf")) {
-        response = await saveDataroomToDatabase(newBlob, numPages);
-      } else {
-        response = await saveDataroomToDatabase(newBlob);
-      }
+      // Save dataroom to database
+      response = await saveDataroomToDatabase();
 
       if (response) {
-        const document = await response.json();
+        const dataroom = await response.json();
 
         // copy the link to the clipboard
-        copyToClipboard(`${process.env.NEXT_PUBLIC_BASE_URL}/view/${document.links[0].id}`, "Document uploaded and link copied to clipboard. Redirecting to document page...")
+        copyToClipboard(`${process.env.NEXT_PUBLIC_BASE_URL}/view/dataroom/${dataroom.id}`, "Dataroom created and link copied to clipboard. Redirecting to datarooms page...")
 
-        // track the event
-        plausible("documentUploaded");
+        // Do we need to track the event ??
+        // plausible("dataroomcreated");
 
         setTimeout(() => {
-          router.push("/documents/" + document.id);
+          //Refresh the page
+          location.reload();
           setUploading(false);
         }, 2000);
       }
     } catch (error) {
-      console.error("An error occurred while uploading the file: ", error);
+      setUploading(false);
+      console.error("An error occurred while creating dataroom: ", error);
     }
   }
 
-  async function saveDataroomToDatabase(blob: PutBlobResult, numPages?: number) {
-    // create a document in the database with the blob url
-    const response = await fetch("/api/documents", {
+  async function saveDataroomToDatabase() {
+    //Select documents from useDocuments for maintainig constant type in backend
+    const titles = dataRoomDocuments.map((dataRoomDocument) => dataRoomDocument.title);
+    const ids = dataRoomDocuments.map((dataRoomDocument) => dataRoomDocument.id);
+
+    const response = await fetch("/api/datarooms", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        name: blob.pathname,
-        url: blob.url,
-        numPages: numPages,
+        name: dataRoomName,
+        titles,
+        ids
       }),
     });
 
     if (!response.ok) {
+      let responseBody = await response.json();
+      setErrorMessage(responseBody.message);
+      setTimeout(() => setErrorMessage(""), 5000);
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
@@ -116,28 +117,32 @@ export function AddDataRoomModal({ children }: { children: React.ReactNode }) {
               <p className="mb-1 text-sm text-muted-foreground font-bold mb-3">
                 Dataroom Name
               </p>
-              <Input className="mb-3" placeholder={"Enter Data Room Name..."}></Input>
+              <Input
+                className="mb-3"
+                placeholder={"Enter Data Room Name..."}
+                onChange={(e) => { setDataRoomName(e.target.value) }}
+              />
             </div>
 
-             {/* Documents list */}
+            {/* Documents list */}
             <ul role="list" className="space-y-4">
               {dataRoomDocuments
                 ? dataRoomDocuments.map((dataRoomDocument) => {
-                    return <DocumentMetadataCard
+                  return <DocumentMetadataCard
                     title={dataRoomDocument.title}
                     url={dataRoomDocument.url}
                     type={dataRoomDocument.type}
                     setDataRoomDocuments={setDataRoomDocuments} />;
-                  })
+                })
                 : Array.from({ length: 3 }).map((_, i) => (
-                    <li
-                      key={i}
-                      className="flex flex-col space-y-4 px-4 py-4 sm:px-6 lg:px-8"
-                    >
-                      <Skeleton key={i} className="h-5 w-20" />
-                      <Skeleton key={i} className="mt-3 h-3 w-10" />
-                    </li>
-                  ))}
+                  <li
+                    key={i}
+                    className="flex flex-col space-y-4 px-4 py-4 sm:px-6 lg:px-8"
+                  >
+                    <Skeleton key={i} className="h-5 w-20" />
+                    <Skeleton key={i} className="mt-3 h-3 w-10" />
+                  </li>
+                ))}
             </ul>
             <ul className="flex justify-center mt-3">
               <AddDocumentToDataRoomModal
@@ -147,19 +152,21 @@ export function AddDataRoomModal({ children }: { children: React.ReactNode }) {
                 <Button
                   type="button"
                   className="w-full"
-                  disabled={false} 
-                  loading={uploading}
+                  disabled={false}
                 ><PlusIcon className="-ml-1 mr-2 h-5 w-5" aria-hidden="true" />Add Document </Button>
               </AddDocumentToDataRoomModal>
             </ul>
             <br />
-            <br />
+            <div className="flex justify-center ">
+              {errorMessage ? <p className="-mt-1 mb-1 text-sm text-muted-foreground font-bold text-red-500">{errorMessage}</p> : <br />}
+            </div>
             <div className="flex justify-center">
               <Button
                 type="button"
                 className="w-full lg:w-1/2"
-                disabled={dataRoomDocuments.length===0}
+                disabled={dataRoomDocuments.length === 0}
                 loading={uploading}
+                onClick={handleDataroomCreation}
               >
                 {uploading ? "Creating Data Room..." : "Create Data Room"}
               </Button>

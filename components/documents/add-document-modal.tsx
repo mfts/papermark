@@ -56,7 +56,7 @@ export function AddDocumentModal({children}: {children: React.ReactNode}) {
         // copy the link to the clipboard
         copyToClipboard(`${process.env.NEXT_PUBLIC_BASE_URL}/view/${document.links[0].id}`, "Document uploaded and link copied to clipboard. Redirecting to document page...")
 
-        // track the event
+        // track  the event
         plausible("documentUploaded");
 
         setTimeout(() => {

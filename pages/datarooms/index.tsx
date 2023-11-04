@@ -1,4 +1,3 @@
-import useDocuments from "@/lib/swr/use-documents";
 import DataroomCard from "@/components/datarooms/dataroom-card";
 import Skeleton from "@/components/Skeleton";
 import { PlusIcon } from "@heroicons/react/24/solid";
@@ -6,10 +5,30 @@ import { AddDataRoomModal } from "@/components/datarooms/add-dataroom-modal";
 import { Separator } from "@/components/ui/separator";
 import AppLayout from "@/components/layouts/app"
 import { Button } from "@/components/ui/button";
+import { type Dataroom } from "@prisma/client";
+import { useState, useEffect } from "react";
 
 export default function Documents() {
-  const { documents } = useDocuments();
-  //Put datarooms: useDatarooms() here
+  const [datarooms, setDatarooms] = useState<Dataroom[] | undefined>(undefined);
+  
+  //Fetch datarooms from backend
+  useEffect(() => {
+    (async () => {
+      const response = await fetch(`/api/datarooms`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      } 
+
+      const initialDatarooms = await response.json();
+      setDatarooms(initialDatarooms);
+    })();
+  }, [])
 
   return (
     <AppLayout>
@@ -30,7 +49,7 @@ export default function Documents() {
 
         <Separator className="my-6 bg-gray-200 dark:bg-gray-800" />
 
-        {documents && documents.length === 0 && (
+        {datarooms && datarooms.length === 0 && (
           <div className="flex items-center justify-center h-96">
             <EmptyDataRooms />
           </div>
@@ -38,19 +57,23 @@ export default function Documents() {
 
         {/* Documents list */}
         <ul role="list" className="space-y-4">
-          {documents
-            ? documents.map((document) => {
-                return <DataroomCard key={document.id} document={document} />;
-              })
+          {datarooms
+            ? datarooms.map((dataroom) => {
+              return <DataroomCard
+                key={dataroom.id}
+                dataroom={dataroom}
+                setDatarooms={setDatarooms}
+              />;
+            })
             : Array.from({ length: 3 }).map((_, i) => (
-                <li
-                  key={i}
-                  className="flex flex-col space-y-4 px-4 py-4 sm:px-6 lg:px-8"
-                >
-                  <Skeleton key={i} className="h-5 w-20" />
-                  <Skeleton key={i} className="mt-3 h-3 w-10" />
-                </li>
-              ))}
+              <li
+                key={i}
+                className="flex flex-col space-y-4 px-4 py-4 sm:px-6 lg:px-8"
+              >
+                <Skeleton key={i} className="h-5 w-20" />
+                <Skeleton key={i} className="mt-3 h-3 w-10" />
+              </li>
+            ))}
         </ul>
       </div>
     </AppLayout>
