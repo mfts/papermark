@@ -14,6 +14,7 @@ export default function PDFViewer(props: any) {
 
   const startTimeRef = useRef(Date.now());
   const pageNumberRef = useRef<number>(pageNumber);
+  const teamInfo = useTeam();
 
   // Update the previous page number after the effect hook has run
   useEffect(() => {
@@ -118,8 +119,6 @@ export default function PDFViewer(props: any) {
   }
 
   async function updateNumPages(numPages: number) {
-    const teamInfo = useTeam();
-
     await fetch(`/api/teams/${teamInfo?.currentTeam?.id}/documents/update`, {
       method: "POST",
       body: JSON.stringify({
