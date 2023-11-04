@@ -85,10 +85,9 @@ export default async function handle(
     // GET /api/teams/:teamId/invite
     const session = await getServerSession(req, res, authOptions);
 
-    const { token, teamId, email } = req.query as {
+    const { token, teamId } = req.query as {
       token: string;
       teamId: string;
-      email: string;
     };
 
     if (!session) {
