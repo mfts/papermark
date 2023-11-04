@@ -12,6 +12,8 @@ const nextConfig = {
       "d36r2enbzam0iu.cloudfront.net", // special document pages
       "lh3.googleusercontent.com", // google img
       "dev-to-uploads.s3.amazonaws.com",
+      "avatars.githubusercontent.com",// for github oauth
+      
       "pbs.twimg.com", // twitter img
       "media.licdn.com", // linkedin img
       "localhost", // local img
