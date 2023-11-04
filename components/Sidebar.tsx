@@ -18,6 +18,7 @@ import ProBanner from "./billing/pro-banner";
 import Cookies from "js-cookie";
 import { usePlan } from "@/lib/swr/use-billing";
 import Image from "next/image";
+import WebhookIcon from "./shared/icons/webhook-icon";
 
 export default function Sidebar() {
   const { data: session, status } = useSession();
@@ -25,7 +26,7 @@ export default function Sidebar() {
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
   const [showProBanner, setShowProBanner] = useState<boolean | null>(null);
   const router = useRouter();
-  
+
   const navigation = [
     // {
     //   name: "Overview",
@@ -55,6 +56,13 @@ export default function Sidebar() {
       current: router.pathname.includes("settings"),
       disabled: false,
     },
+    {
+      name: "Webhooks",
+      href: "/webhooks",
+      icon: WebhookIcon,
+      current: router.pathname.includes("webhooks"),
+      disabled: false,
+    },
   ];
 
   useEffect(() => {
@@ -65,7 +73,8 @@ export default function Sidebar() {
     }
   }, []);
 
-  if (status === "loading" && loading) return <LoadingSpinner className="mr-1 h-5 w-5" />;
+  if (status === "loading" && loading)
+    return <LoadingSpinner className="mr-1 h-5 w-5" />;
 
   const userPlan = plan && plan.plan;
 
@@ -255,9 +264,9 @@ export default function Sidebar() {
                           <>
                             <Menu.Item>
                               <div className="w-full">
-                              <p className="block px-3 py-1 text-sm leading-6 text-muted-foreground">
-                                {session?.user?.email}
-                              </p>
+                                <p className="block px-3 py-1 text-sm leading-6 text-muted-foreground">
+                                  {session?.user?.email}
+                                </p>
                               </div>
                             </Menu.Item>
                             <Menu.Item>

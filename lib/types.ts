@@ -1,5 +1,12 @@
 import { User as NextAuthUser } from "next-auth";
-import { Document, Link, View, User as PrismaUser, DocumentVersion } from "@prisma/client";
+import {
+  Document,
+  Link,
+  View,
+  User as PrismaUser,
+  DocumentVersion,
+  Webhook,
+} from "@prisma/client";
 
 export type CustomUser = NextAuthUser & PrismaUser;
 
@@ -21,6 +28,10 @@ export interface DocumentWithLinksAndLinkCountAndViewCount extends Document {
 
 export interface DocumentWithVersion extends Document {
   versions: DocumentVersion[];
+}
+
+export interface WebhookWithDocument extends Webhook {
+  document: Document;
 }
 
 export interface LinkWithViews extends Link {
@@ -50,7 +61,7 @@ export type DomainVerificationStatusProps =
   | "Pending Verification"
   | "Domain Not Found"
   | "Unknown Error";
-  
+
 // From https://vercel.com/docs/rest-api/endpoints#get-a-project-domain
 export interface DomainResponse {
   name: string;

@@ -47,6 +47,7 @@ model User {
   sessions       Session[]
   documents      Document[]
   domains        Domain[]
+  webhooks       Webhook[]
   plan           String     @default("trial")
   stripeId       String?    @unique // Stripe subscription / customer ID
   subscriptionId String?    @unique // Stripe subscription ID
@@ -76,6 +77,7 @@ model Document {
   links       Link[]
   views       View[]
   versions    DocumentVersion[]
+  webhook     Webhook?
 }
 
 model DocumentVersion {
@@ -150,4 +152,16 @@ model View {
   documentId  String
   viewerEmail String? // Email of the viewer if known
   viewedAt    DateTime @default(now())
+}
+
+model Webhook {
+  id          String            @id @default(cuid())
+  owner       User              @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerId     String
+  target      String //the target api endpoint 
+  events      String[]
+  document    Document           @relation(fields: [documentId], references: [id])
+  documentId  String             @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
