@@ -7,7 +7,7 @@ import prisma from "@/lib/prisma";
 
 // This function can run for a maximum of 60 seconds
 export const config = {
-  maxDuration: 60,
+  maxDuration: 9,
 };
 
 export default async function handle(req: NextApiRequest, res: NextApiResponse) {
