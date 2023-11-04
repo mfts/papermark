@@ -6,6 +6,7 @@ import { CustomUser } from "@/lib/types";
 import { log } from "@/lib/utils";
 import { addDomainToVercel, validDomainRegex } from "@/lib/domains";
 import { identifyUser, trackAnalytics } from "@/lib/analytics";
+import { Prisma } from "@prisma/client";
 
 export default async function handle(
   req: NextApiRequest,
@@ -51,7 +52,14 @@ export default async function handle(
       // TODO: Add check for if the domain already exists on another user
       const validDomain = validDomainRegex.test(domain);
       if (validDomain !== true) {
-        return res.status(422).json("Invalid domain");
+        return res.status(422).json({ message: "Invalid domain" });
+      }
+
+      // Don't allow papermark.io domains
+      if (domain.includes("papermark.io")) {
+        return res
+          .status(422)
+          .json({ message: "Papermark domains cannot be custom domains" });
       }
 
       // console.log("Valid domain", domain);
@@ -72,11 +80,23 @@ export default async function handle(
 
       res.status(201).json(response);
     } catch (error) {
-      log(`Failed to add domain. Error: \n\n ${error}`);
-      res.status(500).json({
-        message: "Internal Server Error",
-        error: (error as Error).message,
-      });
+      log(`Failed to add domain: ${domain}. Error: \n\n ${error}`);
+      // Handle unique constraint error
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2002"
+      ) {
+        return res.status(422).json({
+          message:
+            "This domain already exists. Please choose a different domain.",
+        });
+      }
+      // Handle other errors
+      res
+        .status(500)
+        .json({
+          message: "An unexpected error occurred. Please try again later.",
+        });
     }  
   } else {
     // We only allow GET and POST requests
