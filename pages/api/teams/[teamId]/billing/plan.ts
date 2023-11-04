@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth/next";
 import prisma from "@/lib/prisma";
 import { authOptions } from "../../../auth/[...nextauth]";
-import { errorHanlder } from "@/lib/errorHandler";
+import { errorhandler } from "@/lib/errorHandler";
 
 export default async function handle(
   req: NextApiRequest,
@@ -30,7 +30,7 @@ export default async function handle(
       // console.log("Domains from GET", domains)
       return res.status(200).json(team);
     } catch (error) {
-      errorHanlder(error, res);
+      errorhandler(error, res);
     }
   } else {
     // We only allow GET and POST requests

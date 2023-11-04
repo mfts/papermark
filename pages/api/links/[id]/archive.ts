@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../../auth/[...nextauth]";
-import { errorHanlder } from "@/lib/errorHandler";
+import { errorhandler } from "@/lib/errorHandler";
 
 export default async function handle(
   req: NextApiRequest,
@@ -44,7 +44,7 @@ export default async function handle(
 
       return res.status(200).json(updatedLink);
     } catch (error) {
-      errorHanlder(error, res);
+      errorhandler(error, res);
     }
   }
 

@@ -5,7 +5,7 @@ import { authOptions } from "../../../../auth/[...nextauth]";
 import { getTotalAvgPageDuration } from "@/lib/tinybird";
 import { CustomUser } from "@/lib/types";
 import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
-import { errorHanlder } from "@/lib/errorHandler";
+import { errorhandler } from "@/lib/errorHandler";
 
 export default async function handle(
   req: NextApiRequest,
@@ -57,7 +57,7 @@ export default async function handle(
 
       return res.status(200).json(stats);
     } catch (error) {
-      errorHanlder(error, res);
+      errorhandler(error, res);
     }
   } else {
     // We only allow GET requests

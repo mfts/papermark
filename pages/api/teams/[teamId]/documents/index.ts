@@ -6,7 +6,7 @@ import { CustomUser } from "@/lib/types";
 import { getExtension, log } from "@/lib/utils";
 import { identifyUser, trackAnalytics } from "@/lib/analytics";
 import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
-import { errorHanlder } from "@/lib/errorHandler";
+import { errorhandler } from "@/lib/errorHandler";
 
 export default async function handle(
   req: NextApiRequest,
@@ -47,7 +47,7 @@ export default async function handle(
 
       return res.status(200).json(documents);
     } catch (error) {
-      errorHanlder(error, res);
+      errorhandler(error, res);
     }
   } else if (req.method === "POST") {
     // POST /api/teams/:teamId/documents
@@ -129,7 +129,7 @@ export default async function handle(
       return res.status(201).json(document);
     } catch (error) {
       log(`Failed to create document. Error: \n\n ${error}`);
-      errorHanlder(error, res);
+      errorhandler(error, res);
     }
   } else {
     // We only allow GET and POST requests

@@ -4,7 +4,7 @@ import { authOptions } from "../../../auth/[...nextauth]";
 import { CustomUser } from "@/lib/types";
 import { stripe } from "@/lib/stripe";
 import prisma from "@/lib/prisma";
-import { errorHanlder } from "@/lib/errorHandler";
+import { errorhandler } from "@/lib/errorHandler";
 
 export default async function handle(
   req: NextApiRequest,
@@ -42,7 +42,7 @@ export default async function handle(
       });
       return res.status(200).json(url);
     } catch (error) {
-      errorHanlder(error, res);
+      errorhandler(error, res);
     }
   } else {
     res.setHeader("Allow", ["POST"]);

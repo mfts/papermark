@@ -4,7 +4,7 @@ import { authOptions } from "../auth/[...nextauth]";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 import { log } from "@/lib/utils";
-import { errorHanlder } from "@/lib/errorHandler";
+import { errorhandler } from "@/lib/errorHandler";
 
 export default async function handle(
   req: NextApiRequest,
@@ -65,7 +65,7 @@ export default async function handle(
       return res.status(200).json(teams);
     } catch (error) {
       log(`Failed to add domain. Error: \n\n ${error}`);
-      errorHanlder(error, res);
+      errorhandler(error, res);
     }
   } else if (req.method === "POST") {
     // POST /api/teams
@@ -95,7 +95,7 @@ export default async function handle(
       return res.status(201).json(newTeam);
     } catch (error) {
       log(`Failed to add domain. Error: \n\n ${error}`);
-      errorHanlder(error, res);
+      errorhandler(error, res);
     }
   } else {
     res.setHeader("Allow", ["GET", "POST"]);

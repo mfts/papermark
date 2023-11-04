@@ -1,6 +1,6 @@
 import { NextApiResponse } from "next";
 
-export function errorHanlder(err: unknown, res: NextApiResponse) {
+export function errorhandler(err: unknown, res: NextApiResponse) {
   if (err instanceof TeamError || err instanceof DocumentError) {
     return res.status(err.statusCode).end(err.message);
   } else {

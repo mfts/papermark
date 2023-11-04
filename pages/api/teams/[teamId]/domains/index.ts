@@ -6,7 +6,7 @@ import { CustomUser } from "@/lib/types";
 import { log } from "@/lib/utils";
 import { addDomainToVercel, validDomainRegex } from "@/lib/domains";
 import { identifyUser, trackAnalytics } from "@/lib/analytics";
-import { errorHanlder } from "@/lib/errorHandler";
+import { errorhandler } from "@/lib/errorHandler";
 import { getTeamWithDomain } from "@/lib/team/helper";
 
 export default async function handle(
@@ -42,7 +42,7 @@ export default async function handle(
       const domains = team.domains;
       return res.status(200).json(domains);
     } catch (error) {
-      errorHanlder(error, res);
+      errorhandler(error, res);
     }
   } else if (req.method === "POST") {
     // POST /api/teams/:teamId/domains
@@ -93,7 +93,7 @@ export default async function handle(
       return res.status(201).json(response);
     } catch (error) {
       log(`Failed to add domain. Error: \n\n ${error}`);
-      errorHanlder(error, res);
+      errorhandler(error, res);
     }
   } else {
     // We only allow GET and POST requests

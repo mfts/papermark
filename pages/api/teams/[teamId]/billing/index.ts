@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "../../../auth/[...nextauth]";
 import { CustomUser } from "@/lib/types";
 import prisma from "@/lib/prisma";
-import { errorHanlder } from "@/lib/errorHandler";
+import { errorhandler } from "@/lib/errorHandler";
 
 export default async function handle(
   req: NextApiRequest,
@@ -42,7 +42,7 @@ export default async function handle(
       }
       return res.status(200).json(team);
     } catch (error) {
-      errorHanlder(error, res);
+      errorhandler(error, res);
     }
 
     // console.log("user", user);

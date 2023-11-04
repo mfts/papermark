@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../../auth/[...nextauth]";
 import { CustomUser } from "@/lib/types";
-import { errorHanlder } from "@/lib/errorHandler";
+import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
 
 export default async function handle(
@@ -46,7 +46,7 @@ export default async function handle(
       });
       return res.status(204).json("Member removed successfully!");
     } catch (error) {
-      errorHanlder(error, res);
+      errorhandler(error, res);
     }
   } else {
     res.setHeader("Allow", ["DELETE"]);

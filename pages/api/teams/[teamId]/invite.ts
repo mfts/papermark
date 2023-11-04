@@ -4,7 +4,7 @@ import { authOptions } from "../../auth/[...nextauth]";
 import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
-import { errorHanlder } from "@/lib/errorHandler";
+import { errorhandler } from "@/lib/errorHandler";
 import { sendTeammateInviteEmail } from "@/lib/emails/send-teammate-invite";
 
 export default async function handle(
@@ -79,7 +79,7 @@ export default async function handle(
 
       return res.status(200).json("Invitation send!");
     } catch (error) {
-      errorHanlder(error, res);
+      errorhandler(error, res);
     }
   } else if (req.method === "GET") {
     // GET /api/teams/:teamId/invite
@@ -142,7 +142,7 @@ export default async function handle(
 
       return res.redirect("/documents");
     } catch (error) {
-      errorHanlder(error, res);
+      errorhandler(error, res);
     }
   }
 }
