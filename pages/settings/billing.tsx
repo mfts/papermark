@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useBilling } from "@/lib/swr/use-billing";
 import { cn, formattedDate, getFirstAndLastDay } from "@/lib/utils";
+import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -204,13 +205,16 @@ export default function Billing() {
                       <div className="h-10 w-24 animate-pulse rounded-md bg-border" />
                     ))}
                   {tier.id === 3 && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      className="border border-gray-700"
-                    >
-                      Contact us
-                    </Button>
+                    <Link href="https://cal.com/marcseitz/papermark" target="_blank">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        className="border border-gray-700"
+                      >
+                        
+                        Contact us
+                      </Button>
+                    </Link>
                   )}
                 </div>
               </div>

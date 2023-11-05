@@ -1,5 +1,7 @@
 // import { JSX, SVGProps } from "react";
 
+import CopyRight from "../shared/icons/copy-right";
+
 // const navigation = [
 //   {
 //     name: "Twitter",
@@ -172,8 +174,9 @@ export default function Footer() {
             </div>
           </div>
           <div className="mt-4 ">
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              © 2023 Papermark. All rights reserved.
+            <p className="text-sm text-gray-600 dark:text-gray-400 flex">
+              <CopyRight className="mt-1 mr-1" /> 2023 Papermark. All rights
+              reserved.
             </p>
           </div>
         </div>
