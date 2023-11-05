@@ -69,12 +69,12 @@ export async function getTeamWithUsersAndDocument({
   }
 
   // Check that the user is owner of the document, otherwise return 401
-  if (checkOwner) {
-    const isUserOwnerOfDocument = document?.ownerId === userId;
-    if (!isUserOwnerOfDocument) {
-      throw new TeamError("Unauthorized access to the document");
-    }
-  }
+  // if (checkOwner) {
+  //   const isUserOwnerOfDocument = document?.ownerId === userId;
+  //   if (!isUserOwnerOfDocument) {
+  //     throw new TeamError("Unauthorized access to the document");
+  //   }
+  // }
 
   return { team, document };
 }
