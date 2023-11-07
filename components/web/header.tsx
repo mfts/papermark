@@ -21,11 +21,11 @@ export default function Header() {
               </a>
             </div>
             <h1 className="mt-10 text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">
-              Papermark will make your pitchdeck stand out
+              Founder friendly document sharing platform
             </h1>
             <p className="mt-2 text-lg leading-8 text-gray-600">
-              The Open-Source Docsend Alternative to securely share documents
-              with real-time analytics.
+              The Open-Source Docsend Alternative to securely share pitch deck
+              and other docs with real-time analytics.
             </p>
             <div className="mt-10 flex items-center gap-x-6">
               <Link

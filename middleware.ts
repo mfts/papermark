@@ -33,7 +33,7 @@ export default async function middleware(req: NextRequest, ev: NextFetchEvent) {
     path !== "/privacy" &&
     path !== "/oss-friends" &&
     path !== "/pricing" &&
-    path !== "/alternatives" &&
+    path !== "/docsend-alternatives" &&
     path !== "/open-source-investors" &&
     !path.startsWith("/alternatives/") &&
     !path.startsWith("/blog/") &&

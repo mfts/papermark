@@ -10,21 +10,57 @@ import { PlanSelect } from "@/components/web/alternatives/plan";
 import { UsecaseSelect } from "@/components/web/alternatives/usecase";
 import LoadingDots from "@/components/ui/loading-dots";
 
+const features = [
+  "send unlimited documents",
+  "email capture",
+  "analytics on each page",
+  "custom domain",
+  "team access",
+  "large files upload",
+];
+
 export default function Home() {
   const [loading, setLoading] = useState(false);
   const [optimizedPost, setOptimizedPost] = useState<string>("");
   const [usecase, setUsecase] = useState<string>("");
   const [plan, setPlan] = useState<string>("");
-  const [selectedFeature, setSelectedFeature] = useState<string>("");
+  const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
 
   const shouldRenderSteps = () => {
-    return selectedFeature !== "";
+    return selectedFeatures.length > 0;
   };
 
   const handlePrompt = () => {
-    let prompt = `Provide me the list of 5 Docsend alternatives, based on the requested ${plan}, ${usecase}, and ${
-      selectedFeature ? selectedFeature : ""
-    }. The first one should be Papermark- it fits in every case. Provide only names`;
+    // Getting the list of selected features
+    let priorityFeaturesList = selectedFeatures.join(", ");
+
+    // Getting the list of features that were not selected
+    let otherFeaturesList = features
+      .filter((feature) => !selectedFeatures.includes(feature))
+      .join(", ");
+
+    let prompt = `Provide me the list of 5-10 Docsend alternatives, based on the requested plan: ${
+      plan ? plan : "Any Plan"
+    }, and use case: ${usecase ? usecase : "Any Use Case"}.
+    It should be platforms which allow to share/send documents, turn document into a shareable link.
+    The first one should be Papermark- it fits in every case and has all features in it. After papermark show most relevant, the one which have ${
+      priorityFeaturesList ? priorityFeaturesList : "the requested features"
+    }.
+  Provide name.
+  On the next line word: Price: and price for this tool. Papermark price is starting free, premium 29$/month.
+  
+  Next should be word Features: and show list of ${
+    priorityFeaturesList ? priorityFeaturesList : "the selected features"
+  }. Near each feature, indicate with a yes/no whether it is available or not for this tool. 
+
+  Also list ${otherFeaturesList} and near each indicate with a yes/no whether it is available or not for this tool. 
+
+  Show all features in the list: Feature Name, and in brackets yes or no.
+  
+  Do not show Docsend, as you are finding alternatives to Docsend. If there are not enough alternatives, list fewer.
+  
+  Add at the end always: 
+Please note that the prices and availability of features may vary, and it is recommended to visit the respective websites of these alternatives for more accurate and up-to-date information.`;
 
     return prompt;
   };
@@ -32,10 +68,9 @@ export default function Home() {
   // function to send post to OpenAI and get response
   const optimizePost = async (e: any) => {
     e.preventDefault();
+    setOptimizedPost("");
     setLoading(true);
-
     const prompt = handlePrompt();
-
     const response = await fetch("/api/optimize", {
       method: "POST",
       headers: {
@@ -51,21 +86,22 @@ export default function Home() {
     }
 
     // This data is a ReadableStream
-    const data = await response.text(); // get the full response text
-
-    // Handle no data case
+    const data = response.body;
     if (!data) {
-      setOptimizedPost("Nothing found, try another search.");
-      setLoading(false);
       return;
-
-      // Set the response data directly to state
-      setOptimizedPost(data);
-      setLoading(false);
     }
 
-    const formattedData = data.replace(/\n/g, "<br>");
-    setOptimizedPost(formattedData);
+    const reader = data.getReader();
+    const decoder = new TextDecoder();
+    let done = false;
+
+    while (!done) {
+      const { value, done: doneReading } = await reader.read();
+      done = doneReading;
+      const chunkValue = decoder.decode(value);
+      const formattedChunk = chunkValue.replace(/\n/g, "<br>");
+      setOptimizedPost((prev) => prev + formattedChunk);
+    }
     setLoading(false);
   };
 
@@ -78,23 +114,35 @@ export default function Home() {
           src="https://plausible.io/js/script.js"
         ></script>
 
-        <title>Top 10 Docsend alternatives personalised for you</title>
+        <title>
+          Top Docsend Alternatives Personalised for Your Business | Discover
+          Your Best Match
+        </title>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
 
         <meta
           name="description"
-          content="Find investors and vc funds near you"
+          content="Explore the best Docsend alternatives tailored for your startup needs. Find the right document sharing and tracking solution personalized for your use case."
         />
         <meta property="og:site_name" content="startupinvestors.vercel.app" />
         <meta
           property="og:description"
-          content="Unlock global startup funding with our app. Generate curated investor lists, connect with funds in various countries, and propel your startup to new heights today."
+          content="Seeking Docsend alternatives? Discover best document sharing platforms that cater to your unique business requirements and enhance your operational efficiency."
         />
-        <meta property="Startup investors:title" content="Startup investors" />
+        <meta
+          property="og:title"
+          content="Docsend Alternatives Personalised for Your Business"
+        />
 
-        <meta name="StartupsFunding:card" content="summary_large_image" />
-        <meta name="Startups:title" content="Startups funding" />
-        <meta name="StartupsFunding:description" content="Startups funding" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta
+          name="twitter:title"
+          content="Explore Personalized Docsend Alternatives | Find Your Match"
+        />
+        <meta
+          name="twitter:description"
+          content="Uncover personalized Docsend alternatives for your business. Find the best document and pitch deck sharing platforms tailored to fit your specific needs."
+        />
         <meta property="og:image" content="cover.png" />
       </Head>
 
@@ -121,9 +169,10 @@ export default function Home() {
                         Step 1. Select features you prioritize the most <br />
                       </p>
                       <Feature
-                        selectedFeature={selectedFeature}
-                        setSelectedFeature={setSelectedFeature}
+                        selectedFeatures={selectedFeatures}
+                        setSelectedFeatures={setSelectedFeatures}
                       />
+
                       <div className="w-full my-1 mx-auto">
                         <div className="flex space-x-4">
                           <div className="w-full">
@@ -187,7 +236,7 @@ export default function Home() {
                           </div>
 
                           <div
-                            className="bg-gray-200 text-black rounded-xl p-4 hover:bg-gray-300 transition  border"
+                            className="max-w-2x bg-gray mx-auto text-black rounded-xl p-4 hover:bg-gray-100 transition cursor-copy border"
                             onClick={() => {
                               navigator.clipboard.write([
                                 new ClipboardItem({
@@ -196,9 +245,6 @@ export default function Home() {
                                   }),
                                 }),
                               ]);
-                              toast("List copied to clipboard", {
-                                icon: "📋",
-                              });
                             }}
                             key={optimizedPost}
                           >
@@ -218,9 +264,9 @@ export default function Home() {
                           href="/login"
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="bg-black text-xs rounded-md w-full text-white px-1 py-1 hover:bg-black disabled:bg-purple-500 inline-block text-center"
+                          className="bg-gray-200 text-xs rounded-md w-full text-white px-1 py-1 hover:bg-black disabled:bg-purple-500 inline-block text-center"
                         >
-                          Send document with Papermark
+                          Send document
                         </a>
                       )}
                     </div>
