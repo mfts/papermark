@@ -212,11 +212,9 @@ Please note that the prices and availability of features may vary, and it is rec
                         <button
                           disabled={loading}
                           onClick={(e) => optimizePost(e)}
-                          className="bg-black font-medium rounded-md w-full text-white px-4 py-2 hover:bg-gray-900 disabled:bg-indigo-500"
+                          className="bg-black font-medium rounded-md w-full text-white px-4 py-2 hover:bg-gray-900 disabled:bg-black"
                         >
-                          {loading && (
-                            <LoadingDots color="white" style="large" />
-                          )}
+                          {loading && <LoadingDots color="white" />}
                           {!loading && ` Find alternatives `}
                         </button>
                       </div>
@@ -282,7 +280,6 @@ Please note that the prices and availability of features may vary, and it is rec
           </section>
         </main>
         <Footer />
-        //{" "}
       </div>
     </>
   );
