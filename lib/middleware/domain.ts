@@ -15,7 +15,7 @@ export default async function DomainMiddleware(req: NextRequest) {
     // Subdomain available, rewriting
     console.log(`>>> Rewriting: ${path} to /view/domains/${host}${path}`);
     url.pathname = `/view/domains/${host}${path}`;
-    url.host = "preview.papermark.io";
+    // url.host = "preview.papermark.io";
     return NextResponse.rewrite(url, PAPERMARK_HEADERS);
   } else {
     // redirect plain custom domain to papermark.io, eventually to it's own landing page
