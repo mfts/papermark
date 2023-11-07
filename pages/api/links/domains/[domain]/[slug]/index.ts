@@ -30,7 +30,7 @@ export default async function handle(
       console.log("plan", link);
 
       if (!link || !link.document.team) {
-        return res.status(404).json({ error: "Link not found" });
+        return res.status(404).json({ error: "Link not found", message: `no link found, team ${link?.document.team}` });
       }
 
 
@@ -38,7 +38,7 @@ export default async function handle(
 
       // if owner of document is on free plan, return 404
       if (link.document.team.plan === "free") {
-        return res.status(404).json({ error: "Link not found" });
+        return res.status(404).json({ error: "Link not found", message: `link found, team ${link.document.team.plan}` });
       }
 
       res.status(200).json(link);
