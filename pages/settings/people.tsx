@@ -113,7 +113,8 @@ export default function Billing() {
             </div>
             <AddTeamMembers
               open={isTeamMemberInviteModalOpen}
-              setOpen={setTeamMemberInviteModalOpen}>
+              setOpen={setTeamMemberInviteModalOpen}
+            >
               <Button>Invite</Button>
             </AddTeamMembers>
           </div>
@@ -135,8 +136,11 @@ export default function Billing() {
               </div>
             </div>
           )}
-          {team?.users.map((member) => (
-            <li className="flex py-4 px-10 justify-between items-center">
+          {team?.users.map((member, index) => (
+            <li
+              className="flex py-4 px-10 justify-between items-center"
+              key={index}
+            >
               <div className="flex items-center gap-12">
                 <div className="space-y-1">
                   <h4 className="font-semibold text-sm">{member.user.name}</h4>
@@ -177,7 +181,8 @@ export default function Billing() {
                           onClick={() =>
                             removeTeammate(member.teamId, member.userId)
                           }
-                          className="text-red-500 focus:bg-destructive focus:text-destructive-foreground hover:cursor-pointer">
+                          className="text-red-500 focus:bg-destructive focus:text-destructive-foreground hover:cursor-pointer"
+                        >
                           Leave team
                         </DropdownMenuItem>
                       )}
@@ -186,13 +191,15 @@ export default function Billing() {
                           onClick={() =>
                             removeTeammate(member.teamId, member.userId)
                           }
-                          className="text-red-500 focus:bg-destructive focus:text-destructive-foreground hover:cursor-pointer">
+                          className="text-red-500 focus:bg-destructive focus:text-destructive-foreground hover:cursor-pointer"
+                        >
                           Remove teammate
                         </DropdownMenuItem>
                       ) : (
                         <DropdownMenuItem
                           disabled
-                          className="text-red-500 focus:bg-destructive focus:text-destructive-foreground">
+                          className="text-red-500 focus:bg-destructive focus:text-destructive-foreground"
+                        >
                           Remove teammate
                         </DropdownMenuItem>
                       )}
