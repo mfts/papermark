@@ -1,6 +1,6 @@
 import prisma from "@/lib/prisma";
 import { DocumentError, TeamError } from "../errorHandler";
-import { Document, DocumentVersion, Domain, View } from "@prisma/client";
+import { Document, DocumentVersion, Domain, Link, View } from "@prisma/client";
 
 interface ITeamUserAndDocument {
   teamId: string;
@@ -59,7 +59,7 @@ export async function getTeamWithUsersAndDocument({
 
   // check if the document exists in the team
   let document:
-    | (Document & { views?: View[]; versions?: DocumentVersion[] })
+    | (Document & { views?: View[]; versions?: DocumentVersion[]; links?: Link[] })
     | undefined;
   if (docId) {
     document = team?.documents.find((doc) => doc.id === docId);
