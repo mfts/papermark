@@ -7,7 +7,11 @@ export default async function handle(
 ) {
   if (req.method === "GET") {
     // GET /api/links/domains/:domain/:slug
-    const { domain, slug } = req.query as { domain: string; slug: string };
+    // GET /api/links/domains/:domainSlug
+    const { domainSlug } = req.query as { domainSlug: string[] };
+
+    const domain = domainSlug[0];
+    const slug = domainSlug[1];
 
     try {
       const link = await prisma.link.findUnique({
@@ -23,22 +27,31 @@ export default async function handle(
           emailProtected: true,
           allowDownload: true,
           password: true,
-          document: { select: { id: true, team: {select: { plan: true } } }  },
+          document: { select: { id: true, team: { select: { plan: true } } } },
         },
       });
 
       console.log("plan", link);
 
       if (!link || !link.document.team) {
-        return res.status(404).json({ error: "Link not found", message: `no link found, team ${link?.document.team}` });
+        return res
+          .status(404)
+          .json({
+            error: "Link not found",
+            message: `no link found, team ${link?.document.team}`,
+          });
       }
 
-
-      console.log("plan", link.document.team.plan)
+      console.log("plan", link.document.team.plan);
 
       // if owner of document is on free plan, return 404
       if (link.document.team.plan === "free") {
-        return res.status(404).json({ error: "Link not found", message: `link found, team ${link.document.team.plan}` });
+        return res
+          .status(404)
+          .json({
+            error: "Link not found",
+            message: `link found, team ${link.document.team.plan}`,
+          });
       }
 
       res.status(200).json(link);
