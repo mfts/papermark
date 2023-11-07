@@ -23,21 +23,21 @@ export default async function handle(
           emailProtected: true,
           allowDownload: true,
           password: true,
-          document: { select: { id: true, owner: {select: { plan: true } } }  },
+          document: { select: { id: true, team: {select: { plan: true } } }  },
         },
       });
 
       console.log("plan", link);
 
-      if (!link) {
+      if (!link || link.document.team == null) {
         return res.status(404).json({ error: "Link not found" });
       }
 
 
-      console.log("plan", link.document.owner.plan)
+      console.log("plan", link.document.team.plan)
 
       // if owner of document is on free plan, return 404
-      if (link.document.owner.plan === "free") {
+      if (link.document.team.plan === "free") {
         return res.status(404).json({ error: "Link not found" });
       }
 
