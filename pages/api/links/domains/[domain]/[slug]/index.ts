@@ -29,7 +29,7 @@ export default async function handle(
 
       console.log("plan", link);
 
-      if (!link || link.document.team == null) {
+      if (!link || !link.document.team) {
         return res.status(404).json({ error: "Link not found" });
       }
 
