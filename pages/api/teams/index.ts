@@ -43,17 +43,33 @@ export default async function handle(
 
       // if no teams then create a default one
       if (teams.length === 0) {
-        const defaultTeamName = `${user.name}'s Team`;
+
+        const userDocuments = await prisma.document.findMany({
+          where: { ownerId: user.id, },
+          select: { id: true, },
+        });
+        const userDomains = await prisma.domain.findMany({
+          where: { userId: user.id, },
+          select: { id: true, },
+        });
+
+        const defaultTeamName = user.name ? `${user.name}'s Team` : "Personal Team";
         const defaultTeam = await prisma.team.create({
           data: {
             name: defaultTeamName,
-            plan: "trial",
             users: {
               create: {
                 userId: user.id,
                 role: "ADMIN",
               },
             },
+            plan: user.plan || "trial",
+            stripeId: user.stripeId,
+            subscriptionId: user.subscriptionId,
+            startsAt: user.startsAt,
+            endsAt: user.endsAt,
+            documents: { connect: userDocuments },
+            domains: { connect: userDomains },
           },
           select: {
             id: true,
