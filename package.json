@@ -72,7 +72,6 @@
     "react-dropzone": "^14.2.3",
     "react-email": "^1.9.5",
     "react-pdf": "^7.5.0",
-    "react-select": "^5.7.7",
     "resend": "^1.1.0",
     "sonner": "^1.0.3",
     "stripe": "^13.9.0",
