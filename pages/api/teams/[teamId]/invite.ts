@@ -56,7 +56,7 @@ export default async function handle(
 
       const expiresAt = new Date();
       expiresAt.setHours(expiresAt.getHours() + 24); // invitation expires in 24 hour
-      const invitation = await prisma.invitation.create({
+      await prisma.invitation.create({
         data: {
           email,
           token,
