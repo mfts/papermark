@@ -35,6 +35,11 @@ export function DeleteTeamModal({ children }: { children: React.ReactNode }) {
       return;
     }
 
+    if (teamInfo?.teams?.length === 1) {
+      toast.error("You cannot delete your only team");
+      return;
+    }
+
     setLoading(true);
     const response = await fetch(`/api/teams/${teamInfo?.currentTeam?.id}`, {
       method: "DELETE",
