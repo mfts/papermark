@@ -1,15 +1,14 @@
-"use client";
-
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 
-
 const tabs = [
+  { name: "General", href: "/settings/general" },
+  { name: "People", href: "/settings/people" },
   { name: "Domains", href: "/settings/domains" },
   { name: "Billing", href: "/settings/billing" },
 ];
 
-export default function Navbar({current}: {current?: string}) {
+export default function Navbar({ current }: { current?: string }) {
   return (
     <div className="p-4 sm:p-4 sm:m-4">
       <div className="flex items-center justify-between mb-4 md:mb-8 lg:mb-12">
@@ -35,8 +34,7 @@ export default function Navbar({current}: {current?: string}) {
                     : "border-transparent text-muted-foreground hover:border-foreground hover:text-foreground",
                   "whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium"
                 )}
-                aria-current={current === tab.name ? 'page' : undefined}
-              >
+                aria-current={current === tab.name ? "page" : undefined}>
                 {tab.name}
               </Link>
             ))}
@@ -45,4 +43,4 @@ export default function Navbar({current}: {current?: string}) {
       </div>
     </div>
   );
-};
+}
