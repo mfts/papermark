@@ -27,5 +27,6 @@ export const sendTeammateInviteEmail = async ({
       token,
     }),
     test: process.env.NODE_ENV === "development",
+    system: true,
   });
 };

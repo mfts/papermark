@@ -8,5 +8,6 @@ export const sendTrialEndReminderEmail = async (email: string, name: string | nu
     subject: `Your pro trial is ending soon`,
     react: emailTemplate,
     test: process.env.NODE_ENV === "development",
+    system: true,
   });
 };
