@@ -15,6 +15,8 @@ import { toast } from "sonner";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useRouter } from "next/router";
 import MoreVertical from "@/components/shared/icons/more-vertical";
+import InviteRecipientSheet from "@/components/documents/invite-recipient-sheet";
+import SendDocumentSheet from "@/components/documents/send-document-sheet";
 
 export default function DocumentPage() {
   const { document: prismaDocument, primaryVersion, error } = useDocument();
@@ -24,6 +26,9 @@ export default function DocumentPage() {
   const [isEditingName, setIsEditingName] = useState<boolean>(false);
   const [isFirstClick, setIsFirstClick] = useState<boolean>(false);
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
+  const [isSendDocumentModalOpen, setIsSendDocumentModalOpen] = useState<boolean>(false);
+  const [isInviteRecipientModalOpen, setIsInviteRecipientModalOpen] = useState<boolean>(false);
+
 
   const nameRef = useRef<HTMLHeadingElement>(null);
   const enterPressedRef = useRef<boolean>(false);
@@ -100,7 +105,7 @@ export default function DocumentPage() {
     }
   }
 
-  const handleMenuStateChange = (open: boolean ) => {
+  const handleMenuStateChange = (open: boolean) => {
     if (isFirstClick) {
       setMenuOpen(true); // Keep the dropdown open on the first click
       return;
@@ -141,7 +146,7 @@ export default function DocumentPage() {
       }
     }
   };
-  
+
   if (error && error.status === 404) {
     return <ErrorPage statusCode={404} />;
   }
@@ -204,12 +209,38 @@ export default function DocumentPage() {
                     >
                       {isFirstClick ? "Really delete?" : "Delete document"}
                     </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() =>
+                        setTimeout(() => {
+                          setIsSendDocumentModalOpen(true)
+                        }, 0)
+                      }
+                    >
+                      Send Document
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() =>
+                        setTimeout(() => {
+                          setIsInviteRecipientModalOpen(true)
+                        }, 0)
+                      }
+                    >
+                      Invite Recipient
+                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
                 <Button onClick={() => setIsLinkSheetOpen(true)}>
                   Create Link
                 </Button>
               </div>
+              <SendDocumentSheet
+                isOpen={isSendDocumentModalOpen}
+                setIsOpen={setIsSendDocumentModalOpen}
+              />
+              <InviteRecipientSheet
+                isOpen={isInviteRecipientModalOpen}
+                setIsOpen={setIsInviteRecipientModalOpen}
+              />
             </div>
             {/* Stats */}
             {prismaDocument.numPages !== null && (

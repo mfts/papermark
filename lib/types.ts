@@ -146,3 +146,8 @@ export type AnalyticsEvents =
       event: "Domain Deleted";
       slug: string;
     };
+  // | {
+  //     event: "Invitation To View Document";
+  //     email: string,
+  //     url: string,
+  //   };
