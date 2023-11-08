@@ -80,7 +80,7 @@ export default function DocumentView({
     event.preventDefault();
     await handleEmailVerification();
   };
-  
+
   // If link is not submitted and does not have email / password protection, show the access form
   useEffect(() => {
     if (!didMount.current) {
@@ -100,7 +100,7 @@ export default function DocumentView({
       headers: {
         "Content-Type": "application/json",
       },
-      body : JSON.stringify({linkId : link.id, email: data.email})
+      body: JSON.stringify({ linkId: link.id, email: data.email })
     });
     if (response.ok) {
       setVerificationRequested(true);
@@ -136,12 +136,12 @@ export default function DocumentView({
   //If URL contains authenticationCode
   //P.S: We can create separate component for links with authentication code
   if (authenticationCode) {
-    useEffect(()=>{
+    useEffect(() => {
       (async () => {
         setIsLoading(true);
         await handleAuthCodeVerification();
       })();
-    },[])
+    }, [])
 
     //Component to render if Loading
     if (isLoading) {
@@ -162,12 +162,12 @@ export default function DocumentView({
             </h2>
           </div>
         </div>
-      ) 
+      )
     }
 
     return (
       <div className="bg-gray-950">
-        <ViewData link={link} viewData={viewData}/>
+        <ViewData link={link} viewData={viewData} />
       </div>
     );
   }
@@ -175,49 +175,50 @@ export default function DocumentView({
   //Components to render when email is submitted but verification is pending
   if (verificationRequested) {
     return (
-      <EmailVerificationMessage 
+      <EmailVerificationMessage
         onSubmitHandler={handleSubmit}
         data={data}
         isLoading={isLoading}
       />
-    ) 
+    )
   }
 
   if ((!submitted && emailProtected) || (!submitted && linkPassword)) {
 
-  // If link is not submitted and does not have email / password protection, show the access form
-  if (!submitted && isProtected) {
-    console.log("calling access form");
-    return (
-      <AccessForm
-        data={data}
-        email={userEmail}
-        setData={setData}
-        onSubmitHandler={handleSubmit}
-        requireEmail={emailProtected}
-        requirePassword={!!linkPassword}
-        isLoading={isLoading}
-      />
-    );
-  }
+    // If link is not submitted and does not have email / password protection, show the access form
+    if (!submitted && isProtected) {
+      console.log("calling access form");
+      return (
+        <AccessForm
+          data={data}
+          email={userEmail}
+          setData={setData}
+          onSubmitHandler={handleSubmit}
+          requireEmail={emailProtected}
+          requirePassword={!!linkPassword}
+          isLoading={isLoading}
+        />
+      );
+    }
 
-  if (isLoading) {
-    console.log("loading");
-    return (
-      <div className="h-screen flex items-center justify-center">
-        <LoadingSpinner className="h-20 w-20" />
-      </div>
-    );
-  }
-  return (
-    <div className="bg-gray-950">
-      {submitted ? (
-        <ViewData link={link} viewData={viewData}/>
-      ) : (
+    if (isLoading) {
+      console.log("loading");
+      return (
         <div className="h-screen flex items-center justify-center">
           <LoadingSpinner className="h-20 w-20" />
         </div>
-      )}
-    </div>
-  );
-}}
+      );
+    }
+    return (
+      <div className="bg-gray-950">
+        {submitted ? (
+          <ViewData link={link} viewData={viewData} />
+        ) : (
+          <div className="h-screen flex items-center justify-center">
+            <LoadingSpinner className="h-20 w-20" />
+          </div>
+        )}
+      </div>
+    );
+  }
+}

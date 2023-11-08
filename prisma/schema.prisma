@@ -151,3 +151,11 @@ model View {
   viewerEmail String? // Email of the viewer if known
   viewedAt    DateTime @default(now())
 }
+
+model EmailAuthenticationCode {
+  id          String   @id @default(cuid())
+  email       String
+  code        String   @unique
+  linkId      String   
+  createdAt   DateTime @default(now())
+}
