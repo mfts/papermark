@@ -72,7 +72,7 @@ export default function General() {
             </Button>
           </div>
 
-          <div className="p-10 rounded-lg border border-destructive">
+          {/* <div className="p-10 rounded-lg border border-destructive">
             <div className="space-y-6">
               <div className="space-y-3">
                 <h2 className="text-xl font-medium">Delete Team</h2>
@@ -88,7 +88,7 @@ export default function General() {
                 </Button>
               </DeleteTeamModal>
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
     </AppLayout>
