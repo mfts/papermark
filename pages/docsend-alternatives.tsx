@@ -37,7 +37,7 @@ export default function Home() {
       .filter((feature) => !selectedFeatures.includes(feature))
       .join(", ");
 
-    let prompt = `Provide me the list of 5 Docsend alternatives, based on the requested plan: ${
+    let prompt = `Provide me the list of 4 Docsend alternatives, based on the requested plan: ${
       plan ? plan : "Free"
     }.}, and use case: ${usecase ? usecase : "Pitch Deck"}.
     It should be platforms which allow to share/send documents, turn document into a shareable link.
