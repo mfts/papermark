@@ -45,10 +45,10 @@ export function AddDomainModal({
     });
 
     if (!response.ok) {
-      const error = await response.json();
+      const { message } = await response.json();
       setLoading(false);
       setOpen(false);
-      toast.error(error);
+      toast.error(message);
       return;
     }
 

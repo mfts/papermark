@@ -101,9 +101,7 @@ export default function Pricing() {
                 <div className="text-3xl font-bold mb-4">
                   {tier.priceMonthly}
                 </div>
-                <div className="text-gray-900  mb-6">
-                  {tier.description}
-                </div>
+                <div className="text-gray-900  mb-6">{tier.description}</div>
                 {tier.features.map((feature) => (
                   <div key={feature} className="flex items-center mb-2">
                     <svg
@@ -142,7 +140,8 @@ export default function Pricing() {
                   )}
                   {tier.id === 3 && (
                     <Link
-                      href="/login"
+                      href="https://cal.com/marcseitz/papermark"
+                      target="_blank"
                       className="rounded-md bg-black px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-gray-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
                     >
                       Contact us
