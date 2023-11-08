@@ -1,8 +1,6 @@
 import Head from "next/head";
 import { useEffect, useState, useRef } from "react";
 import Feature from "@/components/web/alternatives/feature";
-
-import { Toaster, toast } from "react-hot-toast";
 // import LoadingDots from "@/components/web/alternatives/loadingdots";
 import Footer from "@/components/web/footer";
 import Navbar from "@/components/web/navbar";
@@ -39,15 +37,15 @@ export default function Home() {
       .filter((feature) => !selectedFeatures.includes(feature))
       .join(", ");
 
-    let prompt = `Provide me the list of 5-10 Docsend alternatives, based on the requested plan: ${
-      plan ? plan : "Any Plan"
-    }, and use case: ${usecase ? usecase : "Any Use Case"}.
+    let prompt = `Provide me the list of 5 Docsend alternatives, based on the requested plan: ${
+      plan ? plan : "Free"
+    }.}, and use case: ${usecase ? usecase : "Pitch Deck"}.
     It should be platforms which allow to share/send documents, turn document into a shareable link.
     The first one should be Papermark- it fits in every case and has all features in it. After papermark show most relevant, the one which have ${
       priorityFeaturesList ? priorityFeaturesList : "the requested features"
     }.
-  Provide name.
-  On the next line word: Price: and price for this tool. Papermark price is starting free, premium 29$/month.
+  Provide name. 
+  On the next line word: Price: and price for this tool. Papermark price: start for free  
   
   Next should be word Features: and show list of ${
     priorityFeaturesList ? priorityFeaturesList : "the selected features"
@@ -56,8 +54,18 @@ export default function Home() {
   Also list ${otherFeaturesList} and near each indicate with a yes/no whether it is available or not for this tool. 
 
   Show all features in the list: Feature Name, and in brackets yes or no.
+
+  Next show the text "Use case:"  ${usecase}  
+  after In brackets say, if it fits for this case. If these use case is not widely used, say not widely used
+
+  Next show the text "Plan:" ${plan}
+  After In brackets says, if it availabe in this tool, mention selected planç
+
+  Below provide 1 sentences what mainly tool for and how it compare with Docsend documnt sharing platform. 
+  It should be favourable for Papermark so after reading user is tend to try it, but do not lie about other tools features.
   
-  Do not show Docsend, as you are finding alternatives to Docsend. If there are not enough alternatives, list fewer.
+  Do not show Docsend, as you are finding alternatives to Docsend. If there are not enough alternatives, list fewer. 
+
   
   Add at the end always: 
 Please note that the prices and availability of features may vary, and it is recommended to visit the respective websites of these alternatives for more accurate and up-to-date information.`;
@@ -110,7 +118,7 @@ Please note that the prices and availability of features may vary, and it is rec
       <Head>
         <script
           defer
-          data-domain="vc.papermark.io"
+          data-domain="www.papermark.io"
           src="https://plausible.io/js/script.js"
         ></script>
 
@@ -158,10 +166,10 @@ Please note that the prices and availability of features may vary, and it is rec
                   <h1 className="text-4xl text-center font-bold pb-1 text-black lg:text-6xl ">
                     Find Docsend alternatives personalised for you
                   </h1>
-                  <p className="mt-3 mb-10 text-center text-white">
+                  {/* <p className="mt-3 mb-10 text-center text-white">
                     Raise capital with help of AI generated list of investors{" "}
                     <br />
-                  </p>
+                  </p> */}
                   <div className="max-w-5xl mx-auto px-8 lg:px-28">
                     <div className="max-w-5xl mx-auto">
                       <div className="w-full my-1 mx-auto "></div>
@@ -220,11 +228,6 @@ Please note that the prices and availability of features may vary, and it is rec
                       </div>
                     </div>
                     <div className="flex md:flex-col lg:flex-col">
-                      <Toaster
-                        position="top-right"
-                        reverseOrder={false}
-                        toastOptions={{ duration: 2000 }}
-                      />
                       {optimizedPost && (
                         <div className="my-1">
                           <div className="flex justify-between items-center pb-2 py-2 border-gray-300">
