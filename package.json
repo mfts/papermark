@@ -54,6 +54,7 @@
     "date-fns": "^2.30.0",
     "eslint": "^8.51.0",
     "eslint-config-next": "^13.5.4",
+    "eventsource-parser": "^1.1.1",
     "framer-motion": "^10.16.4",
     "fuse.js": "^6.6.2",
     "js-cookie": "^3.0.5",
