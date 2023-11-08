@@ -10,13 +10,13 @@ export default function StatsChart({
   documentId: string;
   totalPages?: number;
 }) {
-  const { stats, error } = useStats();
+  const { stats, loading, error } = useStats();
 
   if (error && error.status === 404) {
     return <ErrorPage statusCode={404} />;
   }
 
-  if (!stats?.duration.data) {
+  if (loading) {
     return <div>No data</div>;
   }
 
@@ -30,15 +30,15 @@ export default function StatsChart({
   const swrData = stats?.duration;
 
   durationData.data = durationData.data.map((item) => {
-    const swrItem = swrData.data.find(
+    const swrItem = swrData?.data.find(
       (data) => data.pageNumber === item.pageNumber
     );
     return swrItem ? swrItem : item;
   });
 
-  return (
+  return stats && stats.views.length > 0 ? (
     <div className="p-5">
       <BarChartComponent data={durationData.data} />
     </div>
-  );
+  ) : null;
 }

@@ -199,7 +199,8 @@ export default function DocumentPage() {
               <div className="flex items-center gap-x-4">
                 <DropdownMenu
                   open={menuOpen}
-                  onOpenChange={handleMenuStateChange}>
+                  onOpenChange={handleMenuStateChange}
+                >
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="h-8 w-8 p-0">
                       <span className="sr-only">Open menu</span>
@@ -212,7 +213,8 @@ export default function DocumentPage() {
                       className="text-destructive focus:bg-destructive focus:text-destructive-foreground"
                       onClick={(event) =>
                         handleButtonClick(event, prismaDocument.id)
-                      }>
+                      }
+                    >
                       {isFirstClick ? "Really delete?" : "Delete document"}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -230,10 +232,10 @@ export default function DocumentPage() {
               />
             )}
             <StatsCard />
-            {/* Visitors */}
-            <VisitorsTable numPages={primaryVersion.numPages!} />
             {/* Links */}
             <LinksTable />
+            {/* Visitors */}
+            <VisitorsTable numPages={primaryVersion.numPages!} />
             <LinkSheet
               isOpen={isLinkSheetOpen}
               setIsOpen={setIsLinkSheetOpen}
