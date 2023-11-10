@@ -94,3 +94,27 @@ export function useDocumentVisits() {
     error,
   };
 }
+
+interface DocumentProcessingStatus {
+  currentPageCount: number;
+  totalPages: number;
+  hasPages: boolean;
+}
+
+export function useDocumentProcessingStatus(documentVersionId: string) {
+  const teamInfo = useTeam();
+
+  const { data: status, error } = useSWR<DocumentProcessingStatus>(
+    `/api/teams/${teamInfo?.currentTeam?.id}/documents/document-processing-status?documentVersionId=${documentVersionId}`,
+    fetcher,
+    {
+      refreshInterval: 3000, // refresh every 3 seconds
+    }
+  );
+
+  return {
+    status: status,
+    loading: !error && !status,
+    error: error,
+  };
+}
