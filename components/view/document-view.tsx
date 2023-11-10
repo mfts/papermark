@@ -1,11 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
-import PDFViewer from "@/components/PDFViewer";
 import AccessForm, { DEFAULT_ACCESS_FORM_DATA, DEFAULT_ACCESS_FORM_TYPE } from "@/components/view/access-form";
 import { usePlausible } from "next-plausible";
 import { toast } from "sonner";
 import { LinkWithDocument } from "@/lib/types";
 import LoadingSpinner from "../ui/loading-spinner";
-import PagesViewer from "@/components/PagesViewer";
 import EmailVerificationMessage from "./email-verification-form";
 import ViewData from "./view-data";
 

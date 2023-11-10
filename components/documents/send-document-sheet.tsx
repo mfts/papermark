@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
-import { useDocumentLinks } from "@/lib/swr/use-document";
+import { useDocument, useDocumentLinks } from "@/lib/swr/use-document";
 import { useDomains } from "@/lib/swr/use-domains";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -16,7 +16,6 @@ import { Label } from "@/components/ui/label";
 import { PlusIcon } from "@heroicons/react/24/solid";
 import z from "zod";
 import SenderEmailSection from "./sender-email-section";
-import { LinkWithViews } from "@/lib/types";
 
 export const DEFAULT_EMAIL_PROPS = {
   username: "invitation",
@@ -38,13 +37,14 @@ export default function SendDocumentSheet({
   setIsOpen: Dispatch<SetStateAction<boolean>>;
 }) {
   const { domains } = useDomains();
-  const { links } = useDocumentLinks();
   const [senderEmail, setSenderEmail] = useState<DEFAULT_EMAIL_TYPE>(DEFAULT_EMAIL_PROPS);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [recipientEmails, setRecipientEmails] = useState<string[]>([]);
   const [newRecipientEmail, setNewRecipientEmail] = useState<string>('');
   const [invalidEmailError, setInvalidEmailError] = useState<string>("");
   const [errorMessage, setErrorMessage] = useState<string>("");
+  const [emailMessage, setEmailMessage] = useState<string>("");
+  const { document } = useDocument();
 
   const removeEmail = (index: number) => {
     const updatedEmails = [...recipientEmails];
@@ -64,9 +64,8 @@ export default function SendDocumentSheet({
 
     //Use sender email only if domain is verified
     const isEmailDNSVerified = domains?.find(domain => domain.slug === senderEmail.domain)?.emailDNSVerified;
-    const link: LinkWithViews | undefined = links ? links[0] : undefined;
 
-    const response = await fetch('/api/emails/invite-recipient', {
+    const response = await fetch('/api/emails/send-document', {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -76,9 +75,9 @@ export default function SendDocumentSheet({
           ? `${senderEmail.username}@${senderEmail.domain}`
           : "invitation@papermark.io",
         recipientEmails,
-        documentLink: link?.domainId
-          ? `https://${link?.domainSlug}/${link?.slug}`
-          : `https://${process.env.NEXT_PUBLIC_ROOT_DOMAIN}/view/${link?.id}`
+        blobURL: document?.file,
+        filename: document?.name,
+        message: emailMessage
       }),
     });
 
@@ -105,13 +104,13 @@ export default function SendDocumentSheet({
             Send Document
           </SheetTitle>
           <SheetDescription>
-            Send Documents within papermark
+            Send Document to chosen individual
           </SheetDescription>
         </SheetHeader>
         <form className="flex flex-col grow" onSubmit={handleSubmit}>
           <div className="h-0 flex-1">
             <div className="flex flex-1 flex-col justify-between">
-              <div className="space-y-6 pb-5 pt-6">
+              <div className="space-y-6 pb-2 pt-6">
                 <div className="space-y-2">
                   <SenderEmailSection {...{ email: senderEmail, setEmail: setSenderEmail, domains }} />
                 </div>
@@ -145,12 +144,25 @@ export default function SendDocumentSheet({
                   >
                     <PlusIcon className="h-7 w-7" aria-hidden="true" />
                   </button>
-
                 </div>
                 <div className="text-sm text-red-500 mt-4">
                   {invalidEmailError}
                 </div>
-
+                <div className="space-y-2 mt-2">
+                  <Label htmlFor="link-name">Message</Label>
+                  <div className="flex mt-2">
+                    <textarea
+                      name="email-message"
+                      id="email-message"
+                      placeholder="Add your message..."
+                      value={emailMessage}
+                      className="flex w-full rounded-md mr-2 border-0 h-24 text-foreground bg-background shadow-sm ring-1 ring-inset ring-input placeholder:text-muted-foreground focus:ring-2 focus:ring-inset focus:ring-gray-400 sm:text-sm sm:leading-6"
+                      onChange={(e) =>
+                        setEmailMessage(e.target.value)
+                      }
+                    />
+                  </div>
+                </div>
                 <div className="flex items-center relative">
                   <Separator className="bg-muted-foreground absolute" />
                   <div className="relative mx-auto">
@@ -187,8 +199,8 @@ export default function SendDocumentSheet({
 
           <SheetFooter>
             <div className="flex items-center">
-              <Button type="submit" disabled={isLoading}>
-                Send Invitation Links
+              <Button type="submit" disabled={isLoading} loading={isLoading}>
+                Send Document
               </Button>
             </div>
           </SheetFooter>

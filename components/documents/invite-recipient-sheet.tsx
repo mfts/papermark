@@ -188,7 +188,7 @@ export default function InviteRecipientSheet({
 
           <SheetFooter>
             <div className="flex items-center">
-              <Button type="submit" disabled={isLoading}>
+              <Button type="submit" disabled={isLoading} loading={isLoading}>
                 Send Invitation Links
               </Button>
             </div>

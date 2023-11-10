@@ -13,6 +13,7 @@ export const sendEmail = async ({
   react,
   marketing,
   test,
+  attachments
 }: {
   from?: string,
   to: string;
@@ -20,6 +21,7 @@ export const sendEmail = async ({
   react: ReactElement<any, string | JSXElementConstructor<any>>;
   marketing?: boolean;
   test?: boolean;
+  attachments? : any[]
 }) => {
   if (!resend) {
     console.log(
@@ -36,6 +38,7 @@ export const sendEmail = async ({
       reply_to: marketing ? "marc@papermark.io" : undefined,
       subject,
       react,
+      attachments: attachments? attachments : [],
       headers: {
         "X-Entity-Ref-ID": nanoid(),
       },
@@ -44,10 +47,11 @@ export const sendEmail = async ({
     //For custom domains
     return resend.emails.send({
       from: from,
-      to: test ? "delivered@resend.dev" : to,
+      to: to,
       reply_to: from,
       subject,
       react,
+      attachments: attachments? attachments : [],
       headers: {
         "X-Entity-Ref-ID": nanoid(),
       },
