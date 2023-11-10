@@ -97,6 +97,22 @@ client.defineJob({
       });
     };
 
+    // after all pages are uploaded, update document version to hasPages = true
+    await io.runTask("enable-pages", async () => {
+      return prisma.documentVersion.update({
+        where: {
+          id: documentVersionId,
+        },
+        data: {
+          hasPages: true,
+        },
+        select: {
+          id: true,
+          hasPages: true,
+        }
+      });
+    });
+
     return {
       success: true,
       message: "Successfully converted PDF to images",
