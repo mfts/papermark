@@ -7,12 +7,14 @@ export const resend = process.env.RESEND_API_KEY
   : null;
 
 export const sendEmail = async ({
+  from,
   to,
   subject,
   react,
   marketing,
   test,
 }: {
+  from?: string,
   to: string;
   subject: string;
   react: ReactElement<any, string | JSXElementConstructor<any>>;
@@ -25,16 +27,30 @@ export const sendEmail = async ({
     );
     return Promise.resolve();
   }
-  return resend.emails.send({
-    from: marketing
-      ? "Marc from Papermark <marc@ship.papermark.io>"
-      : "Marc from Papermark <marc@papermark.io>",
-    to: test ? "delivered@resend.dev" : to,
-    reply_to: marketing ? "marc@papermark.io" : undefined,
-    subject,
-    react,
-    headers: {
-      "X-Entity-Ref-ID": nanoid(),
-    },
-  });
+  if (!from || from?.includes("papermark")) {
+    return resend.emails.send({
+      from: marketing
+        ? "Marc from Papermark <marc@ship.papermark.io>"
+        : "Marc from Papermark <marc@papermark.io>",
+      to: test ? "delivered@resend.dev" : to,
+      reply_to: marketing ? "marc@papermark.io" : undefined,
+      subject,
+      react,
+      headers: {
+        "X-Entity-Ref-ID": nanoid(),
+      },
+    });
+  } else {
+    //For custom domains
+    return resend.emails.send({
+      from: from,
+      to: test ? "delivered@resend.dev" : to,
+      reply_to: from,
+      subject,
+      react,
+      headers: {
+        "X-Entity-Ref-ID": nanoid(),
+      },
+    });
+  }
 };

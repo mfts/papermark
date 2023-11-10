@@ -50,7 +50,14 @@ export type DomainVerificationStatusProps =
   | "Pending Verification"
   | "Domain Not Found"
   | "Unknown Error";
-  
+
+export type DomainEmailDNSVerificationStatusProps =
+  | "Valid Email DNS Configuration"
+  | "Invalid Email DNS Configuration"
+  | "Pending Email DNS Verification"
+  | "Domain Email DNS Not Created"
+  | "Unknown Error";
+
 // From https://vercel.com/docs/rest-api/endpoints#get-a-project-domain
 export interface DomainResponse {
   name: string;
@@ -105,49 +112,53 @@ export interface DomainVerificationResponse {
 
 export type AnalyticsEvents =
   | {
-      event: "User Signed Up";
-      userId: string;
-      email: string | null | undefined;
-    }
+    event: "User Signed Up";
+    userId: string;
+    email: string | null | undefined;
+  }
   | {
-      event: "Document Added";
-      documentId: string;
-      name: string;
-      fileSize: string | null | undefined;
-      path: string | null | undefined;
-    }
+    event: "Document Added";
+    documentId: string;
+    name: string;
+    fileSize: string | null | undefined;
+    path: string | null | undefined;
+  }
   | {
-      event: "Link Added";
-      linkId: string;
-      documentId: string;
-      customDomain: string | null | undefined;
-    }
+    event: "Link Added";
+    linkId: string;
+    documentId: string;
+    customDomain: string | null | undefined;
+  }
   | { event: "User Upgraded"; email: string | null | undefined }
   | {
-      event: "User Signed In";
-      email: string | null | undefined;
-    }
+    event: "User Signed In";
+    email: string | null | undefined;
+  }
   | {
-      event: "Link Viewed";
-      documentId: string;
-      linkId: string;
-      viewerId: string;
-      viewerEmail: string | null | undefined;
-    }
+    event: "Link Viewed";
+    documentId: string;
+    linkId: string;
+    viewerId: string;
+    viewerEmail: string | null | undefined;
+  }
   | {
-      event: "Domain Added";
-      slug: string;
-    }
+    event: "Domain Added";
+    slug: string;
+  }
   | {
-      event: "Domain Verified";
-      slug: string;
-    }
+    event: "Domain Verified";
+    slug: string;
+  }
   | {
-      event: "Domain Deleted";
-      slug: string;
-    };
-  // | {
-  //     event: "Invitation To View Document";
-  //     email: string,
-  //     url: string,
-  //   };
+    event: "Domain Email Verified"; //New addition for tracking, remove if not required
+    slug: string;
+  }
+  | {
+    event: "Domain Deleted";
+    slug: string;
+  };
+// | {
+//     event: "Invitation To View Document";
+//     email: string,
+//     url: string,
+//   };

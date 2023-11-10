@@ -19,25 +19,33 @@ export default async function handle(
     }
 
     // Assuming data is an object with `name` and `description` properties
-    const { senderEmail, recipientEmails, documentLink } = req.body;
+    const { recipientEmails, documentLink } = req.body;
+    var { senderEmail } = req.body;
 
     try {
       await identifyUser((session.user as CustomUser).id);
-      recipientEmails.forEach(async (email: string)=>{
-        await sendInvitationToViewDocument(email, documentLink);
-        await new Promise(resolve=>setTimeout(resolve, 200)); //To avoid exceeding resend's limit 10 req/s
+      const promises = recipientEmails.map(async (email: string) => {
+        const emailResponse = await sendInvitationToViewDocument(email, documentLink, senderEmail, session.user?.name);
+        return emailResponse;
       });
-      
+
+      const responses = await Promise.all(promises);
+
       // type already create, if tracking is needed, uncomment the code below
       // await trackAnalytics({
       //   event: "Invitation To View Document",
       //   email: session.user?.email,
       //   url: documentLink xqs1,
       // });
-   
-      res.status(201).json(document);
+
+      const hasErrors = responses.some((emailResponse: any) => emailResponse.statusCode)
+      if (hasErrors) {
+        res.status(500).json({ error: "Internal Server Error: Some or all invites were not send please try again" });
+      }
+      res.status(201).json({ message: "Successfuly emailed invitations" });
     } catch (error) {
       log(`Failed to send invitation email. Error: \n\n ${error}`)
+      console.log(error);
       res.status(500).json({
         message: "Internal Server Error",
         error: (error as Error).message,

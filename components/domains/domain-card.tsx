@@ -76,10 +76,10 @@ export default function DomainCard({
         </div>
         <div className="flex h-10 flex-col space-y-2 sm:flex-row sm:items-center sm:space-x-5 sm:space-y-0">
           <div className="flex items-center space-x-2">
-            {status ? (
-              status === "Valid Configuration" ? (
+            {status?.domainStatus ? (
+              status.domainStatus === "Valid Configuration" ? (
                 <CheckCircle2 className="h-6 w-6 text-emerald-500" />
-              ) : status === "Pending Verification" ? (
+              ) : status.domainStatus === "Pending Verification" ? (
                 <AlertCircle className="h-6 w-6 text-yellow-500" />
               ) : (
                 <XCircle className="h-6 w-6 text-red-500" />
@@ -88,13 +88,31 @@ export default function DomainCard({
               <LoadingSpinner className="mr-1 h-5 w-5" />
             )}
             <p className="text-sm text-muted-foreground">
-              {status ? status : "Checking Domain Status"}
+              {status?.domainStatus ? status.domainStatus : "Checking Domain Status"}
+            </p>
+          </div>
+          {/** Email verification symbol */}
+          <div className="flex items-center space-x-2">
+            {status?.domainEmailDNSStatus ? (
+              status?.domainEmailDNSStatus === "Valid Email DNS Configuration" ? (
+                <CheckCircle2 className="h-6 w-6 text-emerald-500" />
+              ) : status?.domainEmailDNSStatus === "Pending Email DNS Verification" ? (
+                <AlertCircle className="h-6 w-6 text-yellow-500" />
+              ) : (
+                <XCircle className="h-6 w-6 text-red-500" />
+              )
+            ) : (
+              <LoadingSpinner className="mr-1 h-5 w-5" />
+            )}
+            <p className="text-sm text-muted-foreground">
+              {status?.domainEmailDNSStatus ? status?.domainEmailDNSStatus : "Checking Email DNS Status"}
             </p>
           </div>
         </div>
-        {status && status !== "Valid Configuration" && (
-          <DomainConfiguration domain={domain} />
-        )}
+        {status?.domainStatus &&
+          (status?.domainStatus !== "Valid Configuration" || status?.domainEmailDNSStatus !== "Valid Email DNS Configuration") && (
+            <DomainConfiguration domain={domain} />
+          )}
       </div>
     </>
   );

@@ -8,41 +8,27 @@ import {
 } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
-import { useRouter } from "next/router";
 import { useDocumentLinks } from "@/lib/swr/use-document";
 import { useDomains } from "@/lib/swr/use-domains";
-import { mutate } from "swr";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
 import { PlusIcon } from "@heroicons/react/24/solid";
+import z from "zod";
+import SenderEmailSection from "./sender-email-section";
+import { LinkWithViews } from "@/lib/types";
 
-import { cn } from "@/lib/utils";
-import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
-import Link from "next/link";
-import DomainSection from "../links/link-sheet/domain-section";
-
-export const DEFAULT_LINK_PROPS = {
-  id: null,
-  name: null,
-  domain: null,
-  slug: null,
-  expiresAt: null,
-  password: null,
-  emailProtected: true,
-  allowDownload: false,
+export const DEFAULT_EMAIL_PROPS = {
+  username: "invitation",
+  domain: "papermark.io"
 };
 
-export type DEFAULT_LINK_TYPE = {
-  id: string | null;
-  name: string | null;
+export type DEFAULT_EMAIL_TYPE = {
+  username: string | null;
   domain: string | null;
-  slug: string | null;
-  expiresAt: Date | null;
-  password: string | null;
-  emailProtected: boolean;
-  allowDownload: boolean;
 };
+
+const emailSchema = z.string().email();
 
 export default function SendDocumentSheet({
   isOpen,
@@ -51,55 +37,63 @@ export default function SendDocumentSheet({
   isOpen: boolean;
   setIsOpen: Dispatch<SetStateAction<boolean>>;
 }) {
-  const { links } = useDocumentLinks();
   const { domains } = useDomains();
-  const [data, setData] = useState<DEFAULT_LINK_TYPE>(DEFAULT_LINK_PROPS);
+  const { links } = useDocumentLinks();
+  const [senderEmail, setSenderEmail] = useState<DEFAULT_EMAIL_TYPE>(DEFAULT_EMAIL_PROPS);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [emails, setEmails] = useState<string[]>([]);
-  const [newEmail, setNewEmail] = useState<string>('');
-
+  const [recipientEmails, setRecipientEmails] = useState<string[]>([]);
+  const [newRecipientEmail, setNewRecipientEmail] = useState<string>('');
+  const [invalidEmailError, setInvalidEmailError] = useState<string>("");
+  const [errorMessage, setErrorMessage] = useState<string>("");
 
   const removeEmail = (index: number) => {
-    const updatedEmails = [...emails];
+    const updatedEmails = [...recipientEmails];
     updatedEmails.splice(index, 1);
-    setEmails(updatedEmails);
+    setRecipientEmails(updatedEmails);
   };
-
-  const router = useRouter();
-  const documentId = router.query.id as string;
-
-  useEffect(() => {
-    setData(DEFAULT_LINK_PROPS);
-  }, []);
 
   const handleSubmit = async (event: any) => {
     event.preventDefault();
-
     setIsLoading(true);
-  }
+    if (!recipientEmails.length) {
+      setErrorMessage("Please insert recipient email");
+      setTimeout(() => setErrorMessage(""), 2000);
+      setIsLoading(false);
+      return;
+    }
 
-  //   const response = await fetch(endpoint, {
-  //     method: method,
-  //     headers: {
-  //       "Content-Type": "application/json",
-  //     },
-  //     body: JSON.stringify({
-  //       ...data,
-  //       documentId: documentId,
-  //     }),
-  //   });
+    //Use sender email only if domain is verified
+    const isEmailDNSVerified = domains?.find(domain => domain.slug === senderEmail.domain)?.emailDNSVerified;
+    const link: LinkWithViews | undefined = links ? links[0] : undefined;
 
-  //   if (!response.ok) {
-  //     // handle error with toast message
-  //     const { error } = await response.json();
-  //     toast.error(error);
-  //     setIsLoading(false);
-  //     return;
-  //   }
+    const response = await fetch('/api/emails/invite-recipient', {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        senderEmail: isEmailDNSVerified
+          ? `${senderEmail.username}@${senderEmail.domain}`
+          : "invitation@papermark.io",
+        recipientEmails,
+        documentLink: link?.domainId
+          ? `https://${link?.domainSlug}/${link?.slug}`
+          : `https://${process.env.NEXT_PUBLIC_ROOT_DOMAIN}/view/${link?.id}`
+      }),
+    });
 
-  //   setData(DEFAULT_LINK_PROPS);
-  //   setIsLoading(false);
-  // };
+    if (!response.ok) {
+      // handle error with toast message
+      const { error } = await response.json();
+      toast.error(error);
+      setIsLoading(false);
+      return;
+    }
+
+    setSenderEmail(DEFAULT_EMAIL_PROPS);
+    setIsLoading(false);
+    toast.success("Invitation send successfully");
+  };
 
   // console.log("current Data", data)
 
@@ -108,80 +102,84 @@ export default function SendDocumentSheet({
       <SheetContent className="bg-background text-foreground flex flex-col justify-between">
         <SheetHeader>
           <SheetTitle>
-            Invite Recipients
-
+            Send Document
           </SheetTitle>
           <SheetDescription>
-            An invitation link will be send to chosen individuals
+            Send Documents within papermark
           </SheetDescription>
         </SheetHeader>
         <form className="flex flex-col grow" onSubmit={handleSubmit}>
           <div className="h-0 flex-1">
             <div className="flex flex-1 flex-col justify-between">
-              <div className="divide-y divide-gray-200">
-                <div className="space-y-6 pb-5 pt-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="link-name">Email</Label>
-                    <div className="mt-2">
-                      <input
-                        type="text"
-                        name="link-name"
-                        id="link-name"
-                        placeholder="Recipient's Email"
-                        value={data.name || ""}
-                        className="flex w-full rounded-md border-0 py-1.5 text-foreground bg-background shadow-sm ring-1 ring-inset ring-input placeholder:text-muted-foreground focus:ring-2 focus:ring-inset focus:ring-gray-400 sm:text-sm sm:leading-6"
-                        onChange={(e) =>
-                          setData({ ...data, name: e.target.value })
-                        }
-                      />
-                      <button
-                        type="button"
-                        className="mt-1 inline-flex items-center px-2 py-2 border border-transparent shadow-sm text-sm font-medium rounded-full text-foreground bg-gray-600 hover:bg-gray-500 h-[2rem] w-[2rem]"
-                        onClick={() => {
-                          console.log("sffsdfsdf" + newEmail);
-                          if (newEmail) {
-                            setEmails([...emails, newEmail])
-                          }
-                        }}
-                      >
-                        <PlusIcon className="h-7 w-7" aria-hidden="true" />
-                      </button>
-                    </div>
-                  </div>
+              <div className="space-y-6 pb-5 pt-6">
+                <div className="space-y-2">
+                  <SenderEmailSection {...{ email: senderEmail, setEmail: setSenderEmail, domains }} />
+                </div>
+              </div>
+              <div className="space-y-2 mt-2">
+                <Label htmlFor="link-name">Recipient's Email</Label>
+                <div className="flex mt-2">
+                  <input
+                    type="text"
+                    name="email-name"
+                    id="email-name"
+                    placeholder="Add Recipient's Email..."
+                    value={newRecipientEmail}
+                    className="flex w-full rounded-md mr-2 border-0 py-1.5 text-foreground bg-background shadow-sm ring-1 ring-inset ring-input placeholder:text-muted-foreground focus:ring-2 focus:ring-inset focus:ring-gray-400 sm:text-sm sm:leading-6"
+                    onChange={(e) =>
+                      setNewRecipientEmail(e.target.value)
+                    }
+                  />
+                  <button
+                    type="button"
+                    className="mt-1 inline-flex items-center px-2 py-2 border border-transparent shadow-sm text-sm font-medium rounded-full text-foreground bg-gray-600 hover:bg-gray-500 h-[2rem] w-[2rem]"
+                    onClick={() => {
+                      try {
+                        emailSchema.parse(newRecipientEmail);
+                        setRecipientEmails([...recipientEmails, newRecipientEmail]);
+                      } catch {
+                        setInvalidEmailError("Invalid email, please try again");
+                        setTimeout(() => setInvalidEmailError(""), 5000);
+                      }
+                    }}
+                  >
+                    <PlusIcon className="h-7 w-7" aria-hidden="true" />
+                  </button>
 
-                  <div className="space-y-2">
-                    <DomainSection {...{ data, setData, domains }} />
-                  </div>
+                </div>
+                <div className="text-sm text-red-500 mt-4">
+                  {invalidEmailError}
+                </div>
 
-                  <div className="flex items-center relative">
-                    <Separator className="bg-muted-foreground absolute" />
-                    <div className="relative mx-auto">
-                      <span className="px-2 bg-background text-muted-foreground text-sm">
-                        Optional
-                      </span>
-                    </div>
+                <div className="flex items-center relative">
+                  <Separator className="bg-muted-foreground absolute" />
+                  <div className="relative mx-auto">
+                    <span className="px-2 bg-background text-muted-foreground text-sm">
+                      Recipient emails
+                    </span>
                   </div>
-                  {emails.map((email, index) => (
+                </div>
+                <div className="flex item-center">
+                  {errorMessage ?
+                    <div className="text-sm text-red-500 mt-4 font-bold">
+                      {errorMessage}
+                    </div> : null}
+                </div>
+                <div className="flex flex-wrap item-center mt-1">
+                  {recipientEmails.map((email, index) => (
                     <div
                       key={index}
-                      className="bg-gray-400 text-gray-700 px-2 py-1 rounded-full flex items-center"
+                      className="bg-gray-300 bg-opacity-20 mt-1 mr-1 sm:text-sm sm:leading-6 text-gray-400 px-2 py-1 rounded-full flex items-center"
                     >
                       <span>{email}</span>
                       <button
-                        className="ml-2 text-gray-600"
+                        className="ml-2 text-gray-400 sm:text-sm sm:leading-6"
                         onClick={() => removeEmail(index)}
                       >
                         x
                       </button>
                     </div>
                   ))}
-
-                  {/* <div>
-                    <EmailProtectionSection {...{ data, setData }} />
-                    <AllowDownloadSection {...{ data, setData }} />
-                    <PasswordSection {...{ data, setData }} />
-                    <ExpirationSection {...{ data, setData }} />
-                  </div> */}
                 </div>
               </div>
             </div>
@@ -190,7 +188,7 @@ export default function SendDocumentSheet({
           <SheetFooter>
             <div className="flex items-center">
               <Button type="submit" disabled={isLoading}>
-                Send Invite Link
+                Send Invitation Links
               </Button>
             </div>
           </SheetFooter>

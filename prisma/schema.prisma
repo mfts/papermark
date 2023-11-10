@@ -140,6 +140,7 @@ model Domain {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   links       Link[] // links associated with this domain
+  emailDNSVerified Boolean @default(false) // Whether the domain email DNS has been verified
 }
 
 model View {
@@ -157,5 +158,6 @@ model EmailAuthenticationCode {
   email       String
   code        String   @unique
   linkId      String   
+  invited     Boolean  @default(false)
   createdAt   DateTime @default(now())
 }

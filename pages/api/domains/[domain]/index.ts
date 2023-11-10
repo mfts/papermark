@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth/next";
 import prisma from "@/lib/prisma";
 import { authOptions } from "@/pages/api//auth/[...nextauth]";
 import { log } from "@/lib/utils";
-import { getApexDomain, removeDomainFromVercel } from "@/lib/domains";
+import { getApexDomain, removeDomainFromResend, removeDomainFromVercel } from "@/lib/domains";
 import { CustomUser } from "@/lib/types";
 import { identifyUser, trackAnalytics } from "@/lib/analytics";
 
@@ -62,6 +62,7 @@ export default async function handle(
 
       await Promise.allSettled([
         removeDomainFromVercel(domain, domainCount),
+        removeDomainFromResend(domain),
         prisma.domain.delete({
           where: {
             id: domainToBeDeleted.id,

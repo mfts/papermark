@@ -3,6 +3,7 @@ import {
   DomainConfigResponse,
   DomainVerificationResponse,
 } from "@/lib/types";
+import { resend } from "./resend";
 
 
 
@@ -18,6 +19,17 @@ export const addDomainToVercel = async (domain: string) => {
       method: "POST",
     }
   ).then((res) => res.json());
+};
+
+export const addDomainToResend = async (domain: string) => {
+  return await resend?.domains.create({name: domain});
+};
+
+export const removeDomainFromResend = async (domain: string) => {
+  const domains = await resend?.domains.list();
+  const domainId = domains?.find((resendDomain)=>resendDomain.name === domain)?.id as string;
+
+  return await resend?.domains.remove(domainId);
 };
 
 export const removeDomainFromVercelProject = async (domain: string) => {

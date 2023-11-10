@@ -6,7 +6,7 @@ import Link from "next/link";
 
 const tabs = [
   { name: "Domains", href: "/settings/domains" },
-  { name: "Billing", href: "/settings/billing" },
+  { name: "Billing", href: "/settings/billing" }
 ];
 
 export default function Navbar({current}: {current?: string}) {

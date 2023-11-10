@@ -37,7 +37,7 @@ export default function SenderEmailSection({
   };
 
   const currentDomain = domains?.find(domain => domain.slug === email.domain);
-  const isDomainVerified = currentDomain?.verified;
+  const isEmailDNSVerified = currentDomain?.emailDNSVerified;
 
   return (
     <>
@@ -72,7 +72,7 @@ export default function SenderEmailSection({
             type="text"
             name="key"
             disabled={true}
-            value={"invitation"}
+            value={"marc"}
             className={cn(
               "hidden w-60 rounded-l-md border-0 py-1.5 text-foreground bg-background bg-gray-300 bg-opacity-20 shadow-sm ring-1 ring-inset ring-input placeholder:text-muted-foreground focus:ring-2 focus:ring-inset focus:ring-gray-400 sm:text-sm sm:leading-6",
               "flex"
@@ -105,9 +105,9 @@ export default function SenderEmailSection({
           <option value="add_domain">Add a custom domain ✨</option>
         </select>
       </div>
-      {email && email.domain !== "papermark.io" && !isDomainVerified ? (
+      {email && email.domain !== "papermark.io" && !isEmailDNSVerified ? (
         <div className="text-sm text-red-500 mt-4">
-          Your domain is not verified yet! <Link className="underline hover:text-red-500/80" href="/settings/domains" target="_blank">Verify now</Link> to use custom email address
+          Your domain email DNS is not verified yet! <Link className="underline hover:text-red-500/80" href="/settings/domains" target="_blank">Verify now</Link> to use custom email address
         </div>
       ) : null}
 

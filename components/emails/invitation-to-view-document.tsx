@@ -15,17 +15,15 @@ import {
 
 export default function InvitationToViewDocument({
   invitationURL,
+  senderEmail
 }: {
   invitationURL: string;
+  senderEmail: string
 }) {
   var heading = "Papermark";
-  var domainName = "papermark";
-  if (!invitationURL.includes("papermark")) {
-    const domain = invitationURL.match(/https:\/\/([^/]+)\/(.+)/);
-    if (domain) {
-      domainName = domain[1];
-      heading = domainName.split(".")[0];
-    }
+  if (!senderEmail.includes("papermark")) {
+    const domain = senderEmail.split("@")[1].split(".")[0];
+    heading = domain.split(".")[0];
   }
   return (
     <Html>
@@ -35,13 +33,13 @@ export default function InvitationToViewDocument({
         <Body className="bg-white my-auto mx-auto font-sans">
           <Container className="my-10 mx-auto p-5 w-[465px]">
             <Heading className="text-2xl font-normal text-center p-0 mt-4 mb-8 mx-0">
-              <span className="font-bold tracking-tighter">{heading}</span>
+              <span className="font-bold tracking-tighter">{heading.charAt(0).toUpperCase() + heading.slice(1)}</span>
             </Heading>
             <Heading className="mx-0 my-7 p-0 text-center text-xl font-semibold text-black">
               View Document
             </Heading>
             <Text className="text-sm leading-6 text-black">
-              Welcome to {domainName}. Please click the button below to view document.
+              Welcome to {heading}. Please click the button below to view document.
             </Text>
             <Section className="my-8 text-center">
               <Button

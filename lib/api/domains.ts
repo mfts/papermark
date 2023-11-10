@@ -1,5 +1,5 @@
 import prisma from "@/lib/prisma";
-import { getApexDomain, removeDomainFromVercel } from "../domains";
+import { getApexDomain, removeDomainFromResend, removeDomainFromVercel } from "../domains";
 
 // calculate the domainCount
 export async function getDomainCount(domain: string) {
@@ -33,8 +33,9 @@ export async function deleteDomain(
   const domainCount = await getDomainCount(domain);
 
   return await Promise.allSettled([
-    // remove the domain from Vercel
+    // remove the domain from Vercel and Resend
     removeDomainFromVercel(domain, domainCount),
+    removeDomainFromResend(domain),
     // delete domain
     !skipPrismaDelete &&
       prisma.domain.delete({

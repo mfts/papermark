@@ -55,5 +55,3 @@ export default function Domains() {
     </AppLayout>
   );
 }
-
-

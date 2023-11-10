@@ -44,6 +44,7 @@ export default function InviteRecipientSheet({
   const [recipientEmails, setRecipientEmails] = useState<string[]>([]);
   const [newRecipientEmail, setNewRecipientEmail] = useState<string>('');
   const [invalidEmailError, setInvalidEmailError] = useState<string>("");
+  const [errorMessage, setErrorMessage] = useState<string>("");
 
   const removeEmail = (index: number) => {
     const updatedEmails = [...recipientEmails];
@@ -54,9 +55,15 @@ export default function InviteRecipientSheet({
   const handleSubmit = async (event: any) => {
     event.preventDefault();
     setIsLoading(true);
+    if (!recipientEmails.length) {
+      setErrorMessage("Please insert recipient email");
+      setTimeout(() => setErrorMessage(""), 2000);
+      setIsLoading(false);
+      return;
+    }
 
     //Use sender email only if domain is verified
-    const verifiedDomain = domains?.find(domain => domain.slug === senderEmail.domain)?.verified;
+    const isEmailDNSVerified = domains?.find(domain => domain.slug === senderEmail.domain)?.emailDNSVerified;
     const link: LinkWithViews | undefined = links ? links[0] : undefined;
 
     const response = await fetch('/api/emails/invite-recipient', {
@@ -65,7 +72,7 @@ export default function InviteRecipientSheet({
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        senderEmail: verifiedDomain
+        senderEmail: isEmailDNSVerified
           ? `${senderEmail.username}@${senderEmail.domain}`
           : "invitation@papermark.io",
         recipientEmails,
@@ -85,6 +92,7 @@ export default function InviteRecipientSheet({
 
     setSenderEmail(DEFAULT_EMAIL_PROPS);
     setIsLoading(false);
+    toast.success("Invitation send successfully");
   };
 
   // console.log("current Data", data)
@@ -152,7 +160,12 @@ export default function InviteRecipientSheet({
                     </span>
                   </div>
                 </div>
-
+                <div className="flex item-center">
+                  {errorMessage ?
+                    <div className="text-sm text-red-500 mt-4 font-bold">
+                      {errorMessage}
+                    </div> : null}
+                </div>
                 <div className="flex flex-wrap item-center mt-1">
                   {recipientEmails.map((email, index) => (
                     <div

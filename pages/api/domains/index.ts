@@ -4,7 +4,7 @@ import prisma from "@/lib/prisma";
 import { authOptions } from "../auth/[...nextauth]";
 import { CustomUser } from "@/lib/types";
 import { log } from "@/lib/utils";
-import { addDomainToVercel, validDomainRegex } from "@/lib/domains";
+import { addDomainToVercel, validDomainRegex, addDomainToResend } from "@/lib/domains";
 import { identifyUser, trackAnalytics } from "@/lib/analytics";
 import { Prisma } from "@prisma/client";
 
@@ -26,6 +26,7 @@ export default async function handle(
       select: {
         slug: true,
         verified: true,
+        emailDNSVerified: true
       },
       orderBy: {
         createdAt: "asc",
@@ -71,6 +72,7 @@ export default async function handle(
         },
       });
       await addDomainToVercel(domain);
+      await addDomainToResend(domain);
 
       await identifyUser((session.user as CustomUser).id);
       await trackAnalytics({
