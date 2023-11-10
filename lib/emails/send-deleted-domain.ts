@@ -8,5 +8,6 @@ export const sendDeletedDomainEmail = async (email: string, domain: string) => {
     subject: `Your domain ${domain} has been deleted`,
     react: emailTemplate,
     test: process.env.NODE_ENV === "development",
+    system: true,
   });
 };

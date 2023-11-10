@@ -1,5 +1,11 @@
 import { User as NextAuthUser } from "next-auth";
-import { Document, Link, View, User as PrismaUser, DocumentVersion } from "@prisma/client";
+import {
+  Document,
+  Link,
+  View,
+  User as PrismaUser,
+  DocumentVersion,
+} from "@prisma/client";
 
 export type CustomUser = NextAuthUser & PrismaUser;
 
@@ -156,9 +162,38 @@ export type AnalyticsEvents =
   | {
     event: "Domain Deleted";
     slug: string;
-  };
+  }
 // | {
 //     event: "Invitation To View Document";
 //     email: string,
 //     url: string,
 //   };
+  | {
+      event: "Domain Deleted";
+      slug: string;
+    };
+
+export interface Team {
+  id: string;
+  name?: string;
+}
+
+export interface TeamDetail {
+  id: string;
+  name: string;
+  documents: {
+    owner: {
+      id: string;
+      name: string;
+    };
+  }[];
+  users: {
+    role: "ADMIN" | "MEMBER";
+    teamId: string;
+    user: {
+      email: string;
+      name: string;
+    };
+    userId: string;
+  }[];
+}

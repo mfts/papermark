@@ -64,6 +64,7 @@ const navigation = {
     { name: "VC-generator", href: "https://vc.papermark.io" },
     { name: "Open Source Friends", href: "/oss-friends" },
     { name: "Open Source Investors", href: "/open-source-investors" },
+    { name: "Docsend Alternatives Finder", href: "/docsend-alternatives" },
     // { name: "Pitchdeck Summariser", href: "#" },
   ],
   alternatives: [

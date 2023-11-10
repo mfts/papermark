@@ -12,11 +12,19 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import { toast } from "sonner";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useRouter } from "next/router";
 import MoreVertical from "@/components/shared/icons/more-vertical";
 import InviteRecipientSheet from "@/components/documents/invite-recipient-sheet";
 import SendDocumentSheet from "@/components/documents/send-document-sheet";
+import { useTeam } from "@/context/team-context";
+import ProcessStatusBar from "@/components/documents/process-status-bar";
 
 export default function DocumentPage() {
   const { document: prismaDocument, primaryVersion, error } = useDocument();
@@ -34,6 +42,8 @@ export default function DocumentPage() {
   const enterPressedRef = useRef<boolean>(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
+  const teamInfo = useTeam();
+
   const handleNameSubmit = async () => {
     if (enterPressedRef.current) {
       enterPressedRef.current = false;
@@ -44,7 +54,9 @@ export default function DocumentPage() {
 
       if (newName !== prismaDocument!.name) {
         const response = await fetch(
-          `/api/documents/${prismaDocument!.id}/update-name`,
+          `/api/teams/${teamInfo?.currentTeam?.id}/documents/${
+            prismaDocument!.id
+          }/update-name`,
           {
             method: "POST",
             headers: {
@@ -68,9 +80,8 @@ export default function DocumentPage() {
     }
   };
 
-
   useEffect(() => {
-    function handleClickOutside(event: { target: any; }) {
+    function handleClickOutside(event: { target: any }) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setMenuOpen(false);
         setIsFirstClick(false);
@@ -90,20 +101,23 @@ export default function DocumentPage() {
       return;
     }
 
-    const response = await fetch(`/api/documents/${documentId}`, {
-      method: "DELETE",
-    });
+    const response = await fetch(
+      `/api/teams/${teamInfo?.currentTeam?.id}/documents/${documentId}`,
+      {
+        method: "DELETE",
+      }
+    );
 
     if (response.ok) {
       setIsFirstClick(false);
       setMenuOpen(false);
-      router.push("/documents")
+      router.push("/documents");
       toast.success("Document deleted successfully.");
     } else {
       const { message } = await response.json();
       toast.error(message);
     }
-  }
+  };
 
   const handleMenuStateChange = (open: boolean) => {
     if (isFirstClick) {
@@ -242,6 +256,13 @@ export default function DocumentPage() {
                 setIsOpen={setIsInviteRecipientModalOpen}
               />
             </div>
+            {/* Progress bar */}
+            {!primaryVersion.hasPages ? (
+              <div className="flex flex-col items-start justify-between gap-x-8 gap-y-4 p-4 sm:flex-row sm:items-center sm:m-4">
+                <ProcessStatusBar documentVersionId={primaryVersion.id} />
+              </div>
+            ) : null}
+            
             {/* Stats */}
             {prismaDocument.numPages !== null && (
               <StatsChart
@@ -250,10 +271,10 @@ export default function DocumentPage() {
               />
             )}
             <StatsCard />
-            {/* Visitors */}
-            <VisitorsTable numPages={primaryVersion.numPages!} />
             {/* Links */}
             <LinksTable />
+            {/* Visitors */}
+            <VisitorsTable numPages={primaryVersion.numPages!} />
             <LinkSheet
               isOpen={isLinkSheetOpen}
               setIsOpen={setIsLinkSheetOpen}
