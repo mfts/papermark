@@ -91,7 +91,7 @@ export default function SendDocumentSheet({
 
     setSenderEmail(DEFAULT_EMAIL_PROPS);
     setIsLoading(false);
-    toast.success("Invitation send successfully");
+    toast.success("Document sent successfully");
   };
 
   // console.log("current Data", data)

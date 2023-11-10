@@ -5,6 +5,7 @@ import { CustomUser } from "@/lib/types";
 import { log } from "@/lib/utils";
 import { identifyUser, trackAnalytics } from "@/lib/analytics";
 import { sendInvitationToViewDocument } from "@/lib/emails/send-invitation-to-view-document";
+import { generateAuthenticationCodeURL } from "@/lib/api/emails";
 
 export default async function handle(
   req: NextApiRequest,
@@ -19,13 +20,14 @@ export default async function handle(
     }
 
     // Assuming data is an object with `name` and `description` properties
-    const { recipientEmails, documentLink } = req.body;
+    const { recipientEmails, documentLink, linkId } = req.body;
     var { senderEmail } = req.body;
 
     try {
       await identifyUser((session.user as CustomUser).id);
       const promises = recipientEmails.map(async (email: string) => {
-        const emailResponse = await sendInvitationToViewDocument(email, documentLink, senderEmail, session.user?.name);
+        const URL = await generateAuthenticationCodeURL(email, linkId, true, documentLink);
+        const emailResponse = await sendInvitationToViewDocument(email, URL, senderEmail, session.user?.name);
         return emailResponse;
       });
 

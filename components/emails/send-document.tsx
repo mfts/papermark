@@ -36,27 +36,13 @@ export default function SendDocument({
               <span className="font-bold tracking-tighter">{heading.charAt(0).toUpperCase() + heading.slice(1)}</span>
             </Heading>
             <Heading className="mx-0 my-7 p-0 text-center text-xl font-semibold text-black">
-              View Document
+              Document
             </Heading>
             <Text className="text-sm leading-6 text-black">
-              {message}
+              {message ? message : "Please find the document in attachment"}
             </Text>
             <Hr />
             <Section className="mt-8 text-gray-400">
-              <Text className="text-xs">
-                © {new Date().getFullYear()}{" "}
-                <a
-                  href="https://www.papermark.io"
-                  className="no-underline text-gray-400 hover:text-gray-400 visited:text-gray-400"
-                  target="_blank"
-                >
-                  papermark.io
-                </a>
-              </Text>
-              <Text className="text-xs">
-                If you have any feedback or questions about this email, simply
-                reply to it. I&apos;d love to hear from you!
-              </Text>
             </Section>
           </Container>
         </Body>

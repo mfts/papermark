@@ -77,9 +77,11 @@ export default function InviteRecipientSheet({
           : "invitation@papermark.io",
         recipientEmails,
         documentLink: link?.domainId
+        //change to https
           ? `https://${link?.domainSlug}/${link?.slug}`
-          : `https://${process.env.NEXT_PUBLIC_ROOT_DOMAIN}/view/${link?.id}`
-      }),
+          : `https://${process.env.NEXT_PUBLIC_ROOT_DOMAIN}/view/${link?.id}`,
+        linkId: link?.id
+      })
     });
 
     if (!response.ok) {
@@ -92,7 +94,7 @@ export default function InviteRecipientSheet({
 
     setSenderEmail(DEFAULT_EMAIL_PROPS);
     setIsLoading(false);
-    toast.success("Invitation send successfully");
+    toast.success("Invitation sent successfully");
   };
 
   // console.log("current Data", data)

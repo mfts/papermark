@@ -5,7 +5,7 @@ import { CustomUser } from "@/lib/types";
 import { log } from "@/lib/utils";
 import { identifyUser, trackAnalytics } from "@/lib/analytics";
 import { sendDocument } from "@/lib/emails/send-document";
-import { fetchBlobFile } from "@/lib/api/fetch-and-manipulate-documents";
+import { fetchBlobFile } from "@/lib/api/emails";
 
 export default async function handle(
   req: NextApiRequest,
@@ -64,13 +64,5 @@ export default async function handle(
     // We only allow POST requests
     res.setHeader("Allow", ["POST"]);
     return res.status(405).end(`Method ${req.method} Not Allowed`);
-  }
-}
-
-function isBase64(str:string) {
-  try {
-    return btoa(atob(str)) === str;
-  } catch (err) {
-    return false;
   }
 }
