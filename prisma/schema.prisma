@@ -46,12 +46,46 @@ model User {
   accounts       Account[]
   sessions       Session[]
   documents      Document[]
+  teams          UserTeam[]
   domains        Domain[]
   plan           String     @default("trial")
   stripeId       String?    @unique // Stripe subscription / customer ID
   subscriptionId String?    @unique // Stripe subscription ID
   startsAt       DateTime? // Stripe subscription start date
   endsAt         DateTime? // Stripe subscription end date
+}
+
+model Team {
+  id             String       @id @default(cuid())
+  name           String
+  users          UserTeam[]
+  documents      Document[]
+  domains        Domain[]
+  invitations    Invitation[]
+  plan           String       @default("free")
+  stripeId       String?      @unique // Stripe subscription / customer ID
+  subscriptionId String?      @unique // Stripe subscription ID
+  startsAt       DateTime? // Stripe subscription start date
+  endsAt         DateTime? // Stripe subscription end date
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+enum Role {
+  ADMIN
+  MEMBER
+}
+
+model UserTeam {
+  role   Role   @default(MEMBER)
+  userId String
+  teamId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@id([userId, teamId])
+  @@index([userId])
+  @@index([teamId])
 }
 
 model VerificationToken {
@@ -70,6 +104,8 @@ model Document {
   type        String? // This should be a reference to the file type (pdf, docx, etc.)
   numPages    Int? // This should be a reference to the number of pages in the document
   owner       User              @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  teamId      String?
+  team        Team?             @relation(fields: [teamId], references: [id], onDelete: SetNull)
   ownerId     String // This field holds the foreign key.
   createdAt   DateTime          @default(now())
   updatedAt   DateTime          @updatedAt
@@ -135,6 +171,8 @@ model Domain {
   slug        String   @unique
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId      String
+  teamId      String?
+  Team        Team?    @relation(fields: [teamId], references: [id], onDelete: SetNull)
   verified    Boolean  @default(false) // Whether the domain has been verified
   lastChecked DateTime @default(now())
   createdAt   DateTime @default(now())
@@ -150,6 +188,17 @@ model View {
   documentId  String
   viewerEmail String? // Email of the viewer if known
   viewedAt    DateTime @default(now())
+}
+
+model Invitation {
+  email     String
+  expires   DateTime
+  teamId    String
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  token     String   @unique
+
+  @@unique([email])
 }
 
 model EmailAuthenticationCode {
