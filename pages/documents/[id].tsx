@@ -22,6 +22,7 @@ import {
 import { useRouter } from "next/router";
 import MoreVertical from "@/components/shared/icons/more-vertical";
 import { useTeam } from "@/context/team-context";
+import ProcessStatusBar from "@/components/documents/process-status-bar";
 
 export default function DocumentPage() {
   const { document: prismaDocument, primaryVersion, error } = useDocument();
@@ -224,6 +225,13 @@ export default function DocumentPage() {
                 </Button>
               </div>
             </div>
+            {/* Progress bar */}
+            {!primaryVersion.hasPages ? (
+              <div className="flex flex-col items-start justify-between gap-x-8 gap-y-4 p-4 sm:flex-row sm:items-center sm:m-4">
+                <ProcessStatusBar documentVersionId={primaryVersion.id} />
+              </div>
+            ) : null}
+            
             {/* Stats */}
             {prismaDocument.numPages !== null && (
               <StatsChart

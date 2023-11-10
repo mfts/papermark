@@ -41,6 +41,11 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
       access: "public",
     });
 
+    if (!blob) {
+      res.status(500).json({ error: `Failed to upload document page ${pageNumber}` });
+      return;
+    }
+
     const documentPage = await prisma.documentPage.create({
       data: {
         versionId: documentVersionId,
