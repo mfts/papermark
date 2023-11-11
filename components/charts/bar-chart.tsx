@@ -2,9 +2,11 @@ import { BarChart } from "@tremor/react";
 import { useState } from "react";
 
 type Data = {
-  versionNumber: number;
-  pageNumber: string;
-  avg_duration: number;
+  pageNumber: string; 
+  data: { 
+    versionNumber: number; 
+    avg_duration: number; 
+  }[]
 };
 
 type TransformedData = {
@@ -70,16 +72,14 @@ const renameSumDurationKey = (data: any[]) => {
 
 // Transform data
 const transformData = (data: Data[]): TransformedData[] => {
-  return data.reduce((acc, { versionNumber, pageNumber, avg_duration }) => {
-    const index = acc.findIndex((item) => item.pageNumber === pageNumber);
-    if (index === -1) {
-      acc.push({
-        pageNumber,
-        [`Version ${versionNumber}`]: avg_duration,
-      });
-    } else {
-      acc[index][`Version ${versionNumber}`] = avg_duration;
-    }
+  return data.reduce((acc, { pageNumber, data }) => {
+    const transformedItem: Partial<TransformedData> = { pageNumber };
+
+    data.forEach(({ versionNumber, avg_duration }) => {
+      transformedItem[`Version ${versionNumber}`] = avg_duration;
+    })
+
+    acc.push(transformedItem as TransformedData);
     return acc;
   }, [] as TransformedData[]);
 };
