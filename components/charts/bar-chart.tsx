@@ -103,7 +103,7 @@ const getVersionNumbers = (data: TransformedData[]) => {
 const getColors = (versionNumbers: string[]): Color[] => {
   const colorArray = [
     "emerald",
-    "blue",
+    "teal",
     "gray",
     "orange",
     "zinc",
@@ -116,7 +116,7 @@ const getColors = (versionNumbers: string[]): Color[] => {
     "green",
     "cyan",
     "sky",
-    "teal",
+    "blue",
     "indigo",
     "violet",
     "purple",
