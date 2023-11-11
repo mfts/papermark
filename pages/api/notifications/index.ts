@@ -26,7 +26,7 @@ export default async function handler(
 
     const userId = (session.user as CustomUser).id;
 
-    const notifications = await prisma.notificaiton.findMany({
+    const notifications = await prisma.notification.findMany({
       where: {
         receiverId: userId,
       },

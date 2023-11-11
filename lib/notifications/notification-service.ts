@@ -1,3 +1,5 @@
+import { Notification } from "@prisma/client";
+
 const subscriptions: {
   [key: string]: any[];
 } = {};
@@ -35,10 +37,10 @@ export function unsubscribeToNotification({
 }
 
 interface INotifySubscriber {
-  userId: string;
-  notification: string;
+  notification: Notification;
 }
-export function notifySubscriber({ userId, notification }: INotifySubscriber) {
+export function notifySubscriber({ notification }: INotifySubscriber) {
+  const userId = notification.receiverId;
   if (subscriptions[userId]) {
     subscriptions[userId].forEach((sendNotification) =>
       sendNotification(notification)
