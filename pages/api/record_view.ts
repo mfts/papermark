@@ -56,7 +56,7 @@ export default async function handle(
   const referer = req.headers.referer;
   const ua = userAgentFromString(req.headers["user-agent"]);
 
-  const { linkId, documentId, viewId, duration, pageNumber, versionNumber } = req.body;
+  const { linkId, documentId, viewId, duration, pageNumber, versionNumber } = req.body as { linkId: string, documentId: string, viewId: string, duration: number, pageNumber: number, versionNumber: number };
 
   const time = Date.now(); // in milliseconds
 
