@@ -11,6 +11,7 @@ export function useLink() {
     linkId: string;
   };
 
+  // only fetch data once when linkId is present
   const { data: link, error } = useSWR<LinkWithDocument>(
     linkId && `/api/links/${encodeURIComponent(linkId)}`,
     fetcher,

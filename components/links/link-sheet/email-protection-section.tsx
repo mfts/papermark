@@ -29,7 +29,7 @@ export default function EmailProtectionSection({data, setData}: {data: DEFAULT_L
               enabled ? "text-foreground" : "text-muted-foreground"
             )}
           >
-            Email Protection
+            Require email to view
           </h2>
         </div>
         <Switch

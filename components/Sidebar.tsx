@@ -1,4 +1,4 @@
-import { Fragment, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { Menu, Dialog, Transition } from "@headlessui/react";
 import { signOut, useSession } from "next-auth/react";
 import HomeIcon from "@/components/shared/icons/home";
@@ -9,17 +9,27 @@ import MenuIcon from "@/components/shared/icons/menu";
 import ChevronUp from "@/components/shared/icons/chevron-up";
 import X from "@/components/shared/icons/x";
 import Link from "next/link";
-import { cn, daysLeft } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { useRouter } from "next/router";
 import { ModeToggle } from "./theme-toggle";
-import { Button } from "./ui/button";
-import { CustomUser } from "@/lib/types";
 import LoadingSpinner from "./ui/loading-spinner";
+import Banner from "./banner";
+import ProBanner from "./billing/pro-banner";
+import Cookies from "js-cookie";
+import { usePlan } from "@/lib/swr/use-billing";
+import Image from "next/image";
+import SelectTeam from "./teams/select-team";
+import { TeamContextType, initialState, useTeam } from "@/context/team-context";
 
 export default function Sidebar() {
   const { data: session, status } = useSession();
+  const { plan, loading } = usePlan();
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
+  const [showProBanner, setShowProBanner] = useState<boolean | null>(null);
   const router = useRouter();
+
+  const { currentTeam, teams, isLoading }: TeamContextType =
+    useTeam() || initialState;
 
   const navigation = [
     // {
@@ -45,33 +55,25 @@ export default function Sidebar() {
     },
     {
       name: "Settings",
-      href: "/settings/domains",
+      href: "/settings/general",
       icon: SettingsIcon,
       current: router.pathname.includes("settings"),
       disabled: false,
     },
   ];
 
-  const cutoffDate = new Date('2023-10-12T00:00:00.000Z');
-  
-  const calculateDaysLeft = (accountCreationDate: Date): number => {
-    let maxDays;
-    if (accountCreationDate < cutoffDate) {
-      // If the user signed up before the 12th of October 2023
-      maxDays = 30;
-      // Override account creation date to 1st of October for correct calculation
-      accountCreationDate = new Date('2023-10-01T00:00:00.000Z');
+  useEffect(() => {
+    if (Cookies.get("hideProBanner") !== "pro-banner") {
+      setShowProBanner(true);
     } else {
-      // If the user signed up on or after the 12th of October 2023
-      maxDays = 14;
+      setShowProBanner(false);
     }
-    return daysLeft(accountCreationDate, maxDays);
-  }
+  }, []);
 
-  if (status === "loading") return <LoadingSpinner className="mr-1 h-5 w-5" />;;
+  if (status === "loading" && loading)
+    return <LoadingSpinner className="mr-1 h-5 w-5" />;
 
-  const userDaysLeft = calculateDaysLeft(new Date((session?.user as CustomUser).createdAt || 0));
-
+  const userPlan = plan && plan.plan;
 
   return (
     <>
@@ -79,8 +81,7 @@ export default function Sidebar() {
         <Dialog
           as="div"
           className="relative z-50 xl:hidden"
-          onClose={setSidebarOpen}
-        >
+          onClose={setSidebarOpen}>
           <Transition.Child
             as={Fragment}
             enter="transition-opacity ease-linear duration-300"
@@ -88,8 +89,7 @@ export default function Sidebar() {
             enterTo="opacity-100"
             leave="transition-opacity ease-linear duration-300"
             leaveFrom="opacity-100"
-            leaveTo="opacity-0"
-          >
+            leaveTo="opacity-0">
             <div className="fixed inset-0 bg-background/80" />
           </Transition.Child>
 
@@ -101,8 +101,7 @@ export default function Sidebar() {
               enterTo="translate-x-0"
               leave="transition ease-in-out duration-300 transform"
               leaveFrom="translate-x-0"
-              leaveTo="-translate-x-full"
-            >
+              leaveTo="-translate-x-full">
               <Dialog.Panel className="relative mr-16 flex w-full max-w-xs flex-1">
                 <Transition.Child
                   as={Fragment}
@@ -111,14 +110,12 @@ export default function Sidebar() {
                   enterTo="opacity-100"
                   leave="ease-in-out duration-300"
                   leaveFrom="opacity-100"
-                  leaveTo="opacity-0"
-                >
+                  leaveTo="opacity-0">
                   <div className="absolute left-full top-0 flex w-16 justify-center pt-5">
                     <button
                       type="button"
                       className="-m-2.5 p-2.5"
-                      onClick={() => setSidebarOpen(false)}
-                    >
+                      onClick={() => setSidebarOpen(false)}>
                       <span className="sr-only">Close sidebar</span>
                       <X
                         className="h-6 w-6 text-foreground"
@@ -130,11 +127,22 @@ export default function Sidebar() {
                 {/* Sidebar for mobile component, swap this element with another sidebar if you like */}
                 <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-gray-50 dark:bg-black px-6 ring-1 ring-foreground/10">
                   <div className="flex h-16 shrink-0 items-center">
-                    <p className="text-2xl font-bold tracking-tighter text-black dark:text-white">
-                      Papermark
+                    <p className="text-2xl font-bold tracking-tighter text-black dark:text-white flex items-center">
+                      Papermark{" "}
+                      {userPlan == "pro" ? (
+                        <span className="bg-background text-foreground ring-1 ring-gray-800 rounded-full px-2.5 py-1 text-xs ml-4">
+                          Pro
+                        </span>
+                      ) : null}
                     </p>
                   </div>
                   <nav className="flex flex-1 flex-col">
+                    <SelectTeam
+                      currentTeam={currentTeam}
+                      teams={teams}
+                      isLoading={isLoading}
+                      setCurrentTeam={() => {}}
+                    />
                     <ul role="list" className="flex flex-1 flex-col gap-y-7">
                       <li>
                         <ul role="list" className="-mx-2 space-y-1">
@@ -148,8 +156,7 @@ export default function Sidebar() {
                                     : "text-muted-foreground hover:text-foreground hover:bg-gray-200 hover:dark:bg-muted",
                                   "group flex gap-x-3 items-center rounded-md p-2 text-sm leading-6 w-full disabled:hover:bg-transparent disabled:text-muted-foreground disabled:cursor-default"
                                 )}
-                                disabled={item.disabled}
-                              >
+                                disabled={item.disabled}>
                                 <item.icon
                                   className="h-5 w-5 shrink-0"
                                   aria-hidden="true"
@@ -174,11 +181,22 @@ export default function Sidebar() {
         {/* Sidebar component, swap this element with another sidebar if you like */}
         <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-gray-50 dark:bg-black px-6">
           <div className="flex h-16 shrink-0 items-center">
-            <p className="text-2xl font-bold tracking-tighter text-black dark:text-white">
-              Papermark
+            <p className="text-2xl font-bold tracking-tighter text-black dark:text-white flex items-center">
+              Papermark{" "}
+              {userPlan == "pro" ? (
+                <span className="bg-background text-foreground ring-1 ring-gray-800 rounded-full px-2.5 py-1 text-xs ml-4">
+                  Pro
+                </span>
+              ) : null}
             </p>
           </div>
           <nav className="flex flex-1 flex-col">
+            <SelectTeam
+              currentTeam={currentTeam}
+              teams={teams}
+              isLoading={isLoading}
+              setCurrentTeam={() => {}}
+            />
             <ul role="list" className="flex flex-1 flex-col gap-y-7">
               <li>
                 <ul role="list" className="-mx-2 space-y-1">
@@ -192,8 +210,7 @@ export default function Sidebar() {
                             : "text-muted-foreground hover:text-foreground hover:bg-gray-200 hover:dark:bg-muted",
                           "group flex gap-x-3 items-center rounded-md p-2 text-sm leading-6 w-full disabled:hover:bg-transparent disabled:text-muted-foreground disabled:cursor-default"
                         )}
-                        disabled={item.disabled}
-                      >
+                        disabled={item.disabled}>
                         <item.icon
                           className="h-5 w-5 shrink-0"
                           aria-hidden="true"
@@ -205,25 +222,25 @@ export default function Sidebar() {
                 </ul>
               </li>
               <li className="-mx-2 mt-auto mb-4">
-                <aside className="flex flex-col justify-center w-full bg-background text-foreground p-4 mb-2 rounded-lg border border-gray-700">
-                  <div className="flex space-x-2">
-                    <span className="font-bold text-sm">✨ Pro Trial ✨</span>
-                  </div>
-                  <p className="my-4 text-sm">
-                    {`You are on the Pro trial for the next ${userDaysLeft} days.`}
-                  </p>
-                  <Button>
-                    <Link href="/settings/domains" target="_blank">
-                      Connect custom domain
-                    </Link>
-                  </Button>
-                </aside>
+                {/* if user is on trial show banner,
+                 * if user is pro show nothing,
+                 * if user is free and showProBanner is true show pro banner
+                 */}
+                {userPlan === "trial" && session ? (
+                  <Banner session={session} />
+                ) : null}
+                {userPlan === "pro" && null}
+                {userPlan === "free" && showProBanner ? (
+                  <ProBanner setShowProBanner={setShowProBanner} />
+                ) : null}
                 <div className="flex justify-between items-center space-x-2">
                   <Menu as="div" className="relative grow">
                     <Menu.Button className="flex items-center group rounded-md gap-x-3 p-2 w-full text-sm font-semibold leading-6 text-foreground hover:bg-gray-200 hover:dark:bg-secondary">
-                      <img
+                      <Image
                         className="h-8 w-8 rounded-full bg-secondary"
                         src={session?.user?.image || ""}
+                        width={32}
+                        height={32}
                         alt={`Profile picture of ${session?.user?.name}`}
                       />
                       <span className="flex items-center w-full justify-between">
@@ -242,14 +259,25 @@ export default function Sidebar() {
                       enterTo="transform opacity-100 scale-100"
                       leave="transition ease-in duration-75"
                       leaveFrom="transform opacity-100 scale-100"
-                      leaveTo="transform opacity-0 scale-95"
-                    >
+                      leaveTo="transform opacity-0 scale-95">
                       <Menu.Items className="absolute left-0 z-10 bottom-0 mb-14 w-full origin-bottom-left rounded-md bg-gray-100 dark:bg-primary-foreground py-2 focus:outline-none">
                         {session ? (
                           <>
                             <Menu.Item>
+                              <div className="w-full">
+                                <p className="block px-3 py-1 text-sm leading-6 text-muted-foreground">
+                                  {session?.user?.email}
+                                </p>
+                              </div>
+                            </Menu.Item>
+                            <Menu.Item>
                               <p className="block px-3 py-1 text-sm leading-6 text-muted-foreground">
-                                {session?.user?.email}
+                                Help?{" "}
+                                <a
+                                  href="mailto:support@papermark.io"
+                                  className="underline hover:text-muted-foreground/80">
+                                  support@papermark.io
+                                </a>
                               </p>
                             </Menu.Item>
                             <Menu.Item>
@@ -260,8 +288,7 @@ export default function Sidebar() {
                                   })
                                 }
                                 className="block px-3 py-1 text-sm leading-6 text-foreground hover:bg-gray-200 hover:dark:bg-muted"
-                                href={""}
-                              >
+                                href={""}>
                                 Sign Out
                               </Link>
                             </Menu.Item>
@@ -284,8 +311,7 @@ export default function Sidebar() {
           <button
             type="button"
             className="-m-2.5 p-2.5 text-muted-foreground lg:hidden"
-            onClick={() => setSidebarOpen(true)}
-          >
+            onClick={() => setSidebarOpen(true)}>
             <span className="sr-only">Open sidebar</span>
             <MenuIcon className="h-6 w-6" aria-hidden="true" />
           </button>
@@ -296,9 +322,11 @@ export default function Sidebar() {
               <Menu as="div" className="relative">
                 <Menu.Button className="-m-1.5 flex items-center p-1.5">
                   <span className="sr-only">Open user menu</span>
-                  <img
+                  <Image
                     className="h-8 w-8 rounded-full bg-secondary"
                     src={session?.user?.image || ""}
+                    width={32}
+                    height={32}
                     alt={`Profile picture of ${session?.user?.name}`}
                   />
                 </Menu.Button>
@@ -309,8 +337,7 @@ export default function Sidebar() {
                   enterTo="transform opacity-100 scale-100"
                   leave="transition ease-in duration-75"
                   leaveFrom="transform opacity-100 scale-100"
-                  leaveTo="transform opacity-0 scale-95"
-                >
+                  leaveTo="transform opacity-0 scale-95">
                   <Menu.Items className="absolute right-0 z-10 mt-2.5 w-fit origin-top-right rounded-md bg-primary-foreground shadow-lg py-2 ring-1 ring-primary-foreground/5 focus:outline-none">
                     {session ? (
                       <>
@@ -327,8 +354,7 @@ export default function Sidebar() {
                               })
                             }
                             className="block px-3 py-1 text-sm leading-6 text-foreground hover:bg-gray-200 hover:dark:bg-muted"
-                            href={""}
-                          >
+                            href={""}>
                             Sign Out
                           </Link>
                         </Menu.Item>

@@ -1,5 +1,7 @@
 // import { JSX, SVGProps } from "react";
 
+import CopyRight from "../shared/icons/copy-right";
+
 // const navigation = [
 //   {
 //     name: "Twitter",
@@ -53,6 +55,7 @@
 
 const navigation = {
   product: [
+    { name: "Pricing", href: "/pricing" },
     { name: "Github", href: "https://github.com/mfts/papermark" },
     { name: "Twitter", href: "https://twitter.com/papermarkio" },
   ],
@@ -61,6 +64,7 @@ const navigation = {
     { name: "VC-generator", href: "https://vc.papermark.io" },
     { name: "Open Source Friends", href: "/oss-friends" },
     { name: "Open Source Investors", href: "/open-source-investors" },
+    { name: "Docsend Alternatives Finder", href: "/docsend-alternatives" },
     // { name: "Pitchdeck Summariser", href: "#" },
   ],
   alternatives: [
@@ -84,7 +88,7 @@ export default function Footer() {
       <div className="mx-auto max-w-7xl px-6 py-16 sm:py-20 lg:px-8 lg:py-12">
         <div className="xl:grid xl:grid-cols-3 xl:gap-8">
           {/* Text-based Logo */}
-          <h1 className="text-2xl font-bold  text-black dark:text-white">
+          <h1 className="text-2xl font-bold tracking-tighter text-black dark:text-white">
             Papermark
           </h1>
 
@@ -171,8 +175,9 @@ export default function Footer() {
             </div>
           </div>
           <div className="mt-4 ">
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              © 2023 Papermark. All rights reserved.
+            <p className="text-sm text-gray-600 dark:text-gray-400 flex">
+              <CopyRight className="mt-1 mr-1" /> 2023 Papermark. All rights
+              reserved.
             </p>
           </div>
         </div>
