@@ -1,6 +1,11 @@
 import Head from "next/head";
 import { useEffect, useState, useRef } from "react";
 import Feature from "@/components/web/alternatives/feature";
+import FeaturesTable from "@/components/web/alternatives/featurestable";
+import PricingTable from "@/components/web/alternatives/pricingtable";
+import UseCaseTable from "@/components/web/alternatives/usecasetable";
+import Article from "@/components/web/alternatives/docsendtext";
+import Article2 from "@/components/web/alternatives/papermarktext";
 // import LoadingDots from "@/components/web/alternatives/loadingdots";
 import Footer from "@/components/web/footer";
 import Navbar from "@/components/web/navbar";
@@ -280,6 +285,11 @@ Please note that the prices and availability of features may vary, and it is rec
                 </div>
               </div>
             </div>
+            <FeaturesTable />
+            <Article />
+            <PricingTable />
+            <Article2 />
+            <UseCaseTable />
           </section>
         </main>
         <Footer />
