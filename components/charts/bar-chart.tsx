@@ -9,6 +9,11 @@ type Data = {
   }[]
 };
 
+type SumData = {
+  pageNumber: string; 
+  sum_duration: number; 
+};
+
 type TransformedData = {
   pageNumber: string;
   [key: string]: number | string; // Adjusted type to accommodate version keys
@@ -59,7 +64,7 @@ const timeFormatter = (number: number) => {
 //   });
 // };
 
-const renameSumDurationKey = (data: any[]) => {
+const renameSumDurationKey = (data: SumData[]) => {
   return data.map((item) => {
     return {
       ...item,
@@ -98,20 +103,20 @@ const getVersionNumbers = (data: TransformedData[]) => {
 const getColors = (versionNumbers: string[]): Color[] => {
   const colorArray = [
     "emerald",
-    "teal",
+    "blue",
     "gray",
+    "orange",
     "zinc",
     "neutral",
     "stone",
     "red",
-    "orange",
     "amber",
     "yellow",
     "lime",
     "green",
     "cyan",
     "sky",
-    "blue",
+    "teal",
     "indigo",
     "violet",
     "purple",
@@ -128,8 +133,26 @@ const getColors = (versionNumbers: string[]): Color[] => {
 export default function BarChartComponent({data, isSum = false}: {data: any, isSum?: boolean}) {
   const [, setValue] = useState<any>(null);
 
-  const renamedData = isSum ? renameSumDurationKey(data) : transformData(data);
-  // const transformedData = transformData(data);
+  if (isSum) {
+    const renamedData = renameSumDurationKey(data);
+
+    return (
+      <BarChart
+        className="mt-6 rounded-tremor-small"
+        data={renamedData}
+        index="pageNumber"
+        categories={["Time spent per page"]}
+        colors={["emerald"]}
+        valueFormatter={timeFormatter}
+        yAxisWidth={50}
+        showGridLines={false}
+        onValueChange={(v) => setValue(v)}
+      />
+    );
+  }
+
+  
+  const renamedData = transformData(data);
   const versionNumbers = getVersionNumbers(renamedData);
   const colors = getColors(versionNumbers);
 
