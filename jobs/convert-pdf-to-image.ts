@@ -11,6 +11,8 @@ client.defineJob({
     name: "document.uploaded",
     schema: z.object({
       documentVersionId: z.string(),
+      versionNumber: z.number().int().optional(),
+      documentId: z.string().optional(),
     }),
   }),
   run: async (payload, io, ctx) => {
@@ -105,13 +107,33 @@ client.defineJob({
         },
         data: {
           hasPages: true,
+          isPrimary: true,
         },
         select: {
           id: true,
           hasPages: true,
+          isPrimary: true,
         }
       });
     });
+
+    if (payload.versionNumber) {
+      const { versionNumber, documentId } = payload;
+      // after all pages are uploaded, update all other versions to be not primary
+      await io.runTask("update-version-number", async () => {
+        return prisma.documentVersion.updateMany({
+          where: {
+            documentId: documentId,
+            versionNumber: {
+              not: versionNumber,
+            },
+          },
+          data: {
+            isPrimary: false,
+          },
+        });
+      });
+    }
 
     return {
       success: true,

@@ -119,6 +119,7 @@ export default function DocumentView({
             viewId={viewData.viewId}
             linkId={link.id}
             documentId={document.id}
+            versionNumber={document.versions[0].versionNumber}
           />
         ) : (
           <PDFViewer
@@ -128,6 +129,7 @@ export default function DocumentView({
             documentId={document.id}
             name={document.name}
             allowDownload={link.allowDownload}
+            versionNumber={document.versions[0].versionNumber}
           />
         )
       ) : (

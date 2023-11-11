@@ -24,7 +24,16 @@ export default async function handle(
           emailProtected: true,
           allowDownload: true,
           password: true,
-          document: { select: { id: true, name: true } },
+          document: { 
+            select: { 
+              id: true, 
+              versions: {
+                where: { isPrimary: true }, 
+                select: { versionNumber: true }, 
+                take: 1,
+              } 
+            } 
+          },
         },
       });
 
