@@ -131,17 +131,20 @@ export function AddDocumentModal({newVersion, children}: {newVersion?: boolean, 
 
   // create a new version in the database
   async function saveNewVersionToDatabase(blob: PutBlobResult, documentId: string, numPages?: number) {
-    const response = await fetch(`/api/documents/${documentId}/versions`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        url: blob.url,
-        numPages: numPages,
-        type: "pdf",
-      }),
-    });
+    const response = await fetch(
+      `/api/teams/${teamInfo?.currentTeam?.id}/documents/${documentId}/versions`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          url: blob.url,
+          numPages: numPages,
+          type: "pdf",
+        }),
+      }
+    );
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
