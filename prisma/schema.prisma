@@ -48,6 +48,7 @@ model User {
   documents             Document[]
   teams                 UserTeam[]
   domains               Domain[]
+  webhooks              Webhook[]
   notificationsSent     Notificaiton[] @relation("notificationSent")
   notificaitonsReceived Notificaiton[] @relation("notificationReceived")
   plan                  String         @default("trial")
@@ -201,6 +202,16 @@ model Invitation {
   token     String   @unique
 
   @@unique([email])
+}
+
+model Webhook {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  targetUrl String
+  events    Event[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Notificaiton {
