@@ -37,9 +37,9 @@
     "@stripe/stripe-js": "^2.1.7",
     "@tailwindcss/typography": "^0.5.10",
     "@tremor/react": "^3.8.2",
-    "@trigger.dev/nextjs": "^2.2.3",
-    "@trigger.dev/react": "^2.2.3",
-    "@trigger.dev/sdk": "^2.2.3",
+    "@trigger.dev/nextjs": "^2.2.6",
+    "@trigger.dev/react": "^2.2.6",
+    "@trigger.dev/sdk": "^2.2.6",
     "@types/node": "^20.8.4",
     "@types/react": "^18.2.27",
     "@types/react-dom": "^18.2.12",
@@ -90,6 +90,7 @@
     "@types/js-cookie": "^3.0.4",
     "@types/ms": "^0.7.32",
     "@types/ua-parser-js": "^0.7.37",
+    "prettier": "^3.0.3",
     "prisma": "^4.16.2"
   },
   "trigger.dev": {
