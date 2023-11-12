@@ -1,5 +1,5 @@
 import { client } from "@/trigger";
-import { eventTrigger } from "@trigger.dev/sdk";
+import { eventTrigger, retry } from "@trigger.dev/sdk";
 import { z } from "zod";
 import prisma from "@/lib/prisma";
 
@@ -46,58 +46,63 @@ client.defineJob({
           headers: {
             "Content-Type": "application/json",
           },
-        }
+        },
       );
       await io.logger.info("log response", { response });
 
-      const { numPages } = await response.json() as { numPages: number; };
+      const { numPages } = (await response.json()) as { numPages: number };
       return { numPages };
     });
-    
+
     if (!muDocument || muDocument.numPages < 1) {
       await io.logger.error("Failed to get number of pages", { payload });
       return;
     }
 
-
     // iterate through pages and upload to blob in a task
     let currentPage = 0;
     for (var i = 0; i < muDocument.numPages; ++i) {
       currentPage = i + 1;
-      await io.runTask(`upload-page-${currentPage}`, 
+      await io.runTask(
+        `upload-page-${currentPage}`,
         async () => {
-        // send page number to api/convert-page endpoint in a task and get back page img url
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_BASE_URL}/api/mupdf/convert-page`,
-          {
-            method: "POST",
-            body: JSON.stringify({
-              documentVersionId: documentVersionId,
-              pageNumber: currentPage,
-              url: documentUrl.file,
-            }),
-            headers: {
-              "Content-Type": "application/json",
+          // send page number to api/convert-page endpoint in a task and get back page img url
+          const response = await fetch(
+            `${process.env.NEXT_PUBLIC_BASE_URL}/api/mupdf/convert-page`,
+            {
+              method: "POST",
+              body: JSON.stringify({
+                documentVersionId: documentVersionId,
+                pageNumber: currentPage,
+                url: documentUrl.file,
+              }),
+              headers: {
+                "Content-Type": "application/json",
+              },
             },
+          );
+
+          if (!response.ok) {
+            await io.logger.error("Failed to upload page", { payload });
+            return;
           }
-        );
 
-        if (!response.ok) {
-          await io.logger.error("Failed to upload page", { payload });
-          return;
-        }
+          const { documentPageId } = (await response.json()) as {
+            documentPageId: string;
+          };
 
-        const { documentPageId } = (await response.json()) as {
-          documentPageId: string;
-        };
-
-        await io.logger.info(`Created document page for page ${currentPage}:`, {
-          documentPageId,
-          payload,
-        });
-        return { documentPageId, payload };
-      });
-    };
+          await io.logger.info(
+            `Created document page for page ${currentPage}:`,
+            {
+              documentPageId,
+              payload,
+            },
+          );
+          return { documentPageId, payload };
+        },
+        { retry: retry.standardBackoff },
+      );
+    }
 
     // after all pages are uploaded, update document version to hasPages = true
     await io.runTask("enable-pages", async () => {
@@ -113,7 +118,7 @@ client.defineJob({
           id: true,
           hasPages: true,
           isPrimary: true,
-        }
+        },
       });
     });
 
@@ -138,6 +143,6 @@ client.defineJob({
     return {
       success: true,
       message: "Successfully converted PDF to images",
-    }
+    };
   },
 });
