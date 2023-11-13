@@ -7,7 +7,7 @@ import { authOptions } from "../../auth/[...nextauth]";
 
 export default async function handle(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   if (req.method === "GET") {
     // GET /api/links/:id
@@ -24,15 +24,16 @@ export default async function handle(
           emailProtected: true,
           allowDownload: true,
           password: true,
-          document: { 
-            select: { 
-              id: true, 
+          isArchived: true,
+          document: {
+            select: {
+              id: true,
               versions: {
-                where: { isPrimary: true }, 
-                select: { versionNumber: true }, 
+                where: { isPrimary: true },
+                select: { versionNumber: true },
                 take: 1,
-              } 
-            } 
+              },
+            },
           },
         },
       });
