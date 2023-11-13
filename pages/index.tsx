@@ -23,7 +23,7 @@ export default function Home() {
         />
         <meta
           property="og:description"
-          content="Papermark is an open-source document infrastructure for sharing and collaboration. Manage secure document sharing with real-time analytics. It is an open source and free alternative to Docsend."
+          content="Papermark is an open-source document infrastructure for sharing and collaboration. Manage secure document sharing with real-time analytics. It is a free alternative to DocSend."
         />
         <meta
           property="og:image"
