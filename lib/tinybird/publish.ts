@@ -5,12 +5,13 @@ import { Tinybird } from "@chronark/zod-bird";
 const tb = new Tinybird({ token: process.env.TINYBIRD_TOKEN! });
 
 export const publishPageView = tb.buildIngestEndpoint({
-  datasource: "page_views__v1",
+  datasource: "page_views__v2",
   event: z.object({
     id: z.string(),
     linkId: z.string(),
     documentId: z.string(),
     viewId: z.string(),
+    versionNumber: z.number().int().min(1).max(65535).optional().default(1),
     time: z.number().int(),
     duration: z.number().int(),
     pageNumber: z.string(),

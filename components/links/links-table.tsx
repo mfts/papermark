@@ -38,11 +38,13 @@ import { mutate } from "swr";
 import { toast } from "sonner";
 import { useRouter } from "next/router";
 import { usePlan } from "@/lib/swr/use-billing";
+import { useTeam } from "@/context/team-context";
 
 export default function LinksTable() {
   const { links } = useDocumentLinks();
   const router = useRouter();
-  const { plan } = usePlan()
+  const { plan } = usePlan();
+  const teamInfo = useTeam();
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isLinkSheetVisible, setIsLinkSheetVisible] = useState<boolean>(false);
@@ -95,7 +97,9 @@ export default function LinksTable() {
 
     // Update the archived link in the list of links
     mutate(
-      `/api/documents/${encodeURIComponent(documentId)}/links`,
+      `/api/teams/${teamInfo?.currentTeam?.id}/documents/${encodeURIComponent(
+        documentId
+      )}/links`,
       (links || []).map((link) => (link.id === linkId ? archivedLink : link)),
       false
     );
@@ -112,7 +116,7 @@ export default function LinksTable() {
     ? links.filter((link) => link.isArchived).length
     : 0;
 
-  const hasFreePlan = plan && plan.plan === "free"
+  const hasFreePlan = plan && plan.plan === "free";
 
   return (
     <>
@@ -156,8 +160,7 @@ export default function LinksTable() {
                                 link.domainId && hasFreePlan
                                   ? "bg-destructive hover:bg-red-700 hover:dark:bg-red-200"
                                   : "bg-secondary hover:bg-emerald-700 hover:dark:bg-emerald-200"
-                              )}
-                            >
+                              )}>
                               <div className="whitespace-nowrap hidden sm:flex text-sm group-hover/cell:hidden">
                                 {link.domainId
                                   ? `https://${link.domainSlug}/${link.slug}`
@@ -170,8 +173,7 @@ export default function LinksTable() {
                                   onClick={() =>
                                     router.push("/settings/billing")
                                   }
-                                  title="Upgrade to activate link"
-                                >
+                                  title="Upgrade to activate link">
                                   Upgrade{" "}
                                   <span className="hidden sm:inline-flex">
                                     to activate link
@@ -191,8 +193,7 @@ export default function LinksTable() {
                                             `https://${process.env.NEXT_PUBLIC_ROOT_DOMAIN}/view/${link.id}`
                                           )
                                   }
-                                  title="Copy to clipboard"
-                                >
+                                  title="Copy to clipboard">
                                   Copy{" "}
                                   <span className="hidden sm:inline-flex">
                                     to Clipboard
@@ -220,8 +221,7 @@ export default function LinksTable() {
                               <time
                                 dateTime={new Date(
                                   link.views[0].viewedAt
-                                ).toISOString()}
-                              >
+                                ).toISOString()}>
                                 {timeAgo(link.views[0].viewedAt)}
                               </time>
                             ) : (
@@ -239,8 +239,7 @@ export default function LinksTable() {
                               <DropdownMenuContent align="end">
                                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                 <DropdownMenuItem
-                                  onClick={() => handleEditLink(link)}
-                                >
+                                  onClick={() => handleEditLink(link)}>
                                   Edit Link
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
@@ -252,8 +251,7 @@ export default function LinksTable() {
                                       link.documentId,
                                       link.isArchived
                                     )
-                                  }
-                                >
+                                  }>
                                   Archive
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
@@ -300,8 +298,7 @@ export default function LinksTable() {
                 <Button
                   variant="secondary"
                   size="sm"
-                  className="text-gray-400 mx-auto flex items-center gap-x-1 h-8 justify-center mt-4 [&[data-state=open]>svg.chevron]:rotate-180"
-                >
+                  className="text-gray-400 mx-auto flex items-center gap-x-1 h-8 justify-center mt-4 [&[data-state=open]>svg.chevron]:rotate-180">
                   {archivedLinksCount} Archived Links
                   <ChevronDown className="h-4 w-4 text-gray-400 transition-transform duration-200 chevron" />
                 </Button>
@@ -363,8 +360,7 @@ export default function LinksTable() {
                                       <time
                                         dateTime={new Date(
                                           link.views[0].viewedAt
-                                        ).toISOString()}
-                                      >
+                                        ).toISOString()}>
                                         {timeAgo(link.views[0].viewedAt)}
                                       </time>
                                     ) : (
@@ -376,8 +372,7 @@ export default function LinksTable() {
                                       <DropdownMenuTrigger asChild>
                                         <Button
                                           variant="ghost"
-                                          className="h-8 w-8 p-0"
-                                        >
+                                          className="h-8 w-8 p-0">
                                           <span className="sr-only">
                                             Open menu
                                           </span>
@@ -398,8 +393,7 @@ export default function LinksTable() {
                                               link.documentId,
                                               link.isArchived
                                             )
-                                          }
-                                        >
+                                          }>
                                           Reactivate
                                         </DropdownMenuItem>
                                       </DropdownMenuContent>

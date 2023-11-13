@@ -11,12 +11,14 @@ export const sendEmail = async ({
   subject,
   react,
   marketing,
+  system,
   test,
 }: {
   to: string;
   subject: string;
   react: ReactElement<any, string | JSXElementConstructor<any>>;
   marketing?: boolean;
+  system?: boolean;
   test?: boolean;
 }) => {
   if (!resend) {
@@ -28,7 +30,7 @@ export const sendEmail = async ({
   return resend.emails.send({
     from: marketing
       ? "Marc from Papermark <marc@ship.papermark.io>"
-      : "Marc from Papermark <marc@papermark.io>",
+      : system ? "Papermark <system@papermark.io>" : "Marc from Papermark <marc@papermark.io>",
     to: test ? "delivered@resend.dev" : to,
     reply_to: marketing ? "marc@papermark.io" : undefined,
     subject,

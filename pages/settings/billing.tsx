@@ -3,12 +3,13 @@ import AppLayout from "@/components/layouts/app";
 import Navbar from "@/components/settings/navbar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useTeam } from "@/context/team-context";
 import { useBilling } from "@/lib/swr/use-billing";
 import { cn, formattedDate, getFirstAndLastDay } from "@/lib/utils";
+import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-
 
 interface Tier {
   id: number;
@@ -20,11 +21,12 @@ interface Tier {
   features: string[];
 }
 
-
 export default function Billing() {
   const router = useRouter();
   const { plan, startsAt, endsAt } = useBilling();
   const [clicked, setClicked] = useState<boolean>(false);
+
+  const teamInfo = useTeam();
 
   useEffect(() => {
     if (router.query.success) {
@@ -111,8 +113,7 @@ export default function Billing() {
                   tier.currentPlan || tier.isTrial
                     ? "ring-2 ring-primary"
                     : "ring-1 ring-gray-900/10 dark:ring-gray-200/10"
-                )}
-              >
+                )}>
                 <h2 className="text-xl font-bold mb-4 inline-flex items-center gap-x-2">
                   {tier.title}{" "}
                   {tier.currentPlan ? (
@@ -135,14 +136,12 @@ export default function Billing() {
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
+                      xmlns="http://www.w3.org/2000/svg">
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         strokeWidth="2"
-                        d="M5 13l4 4L19 7"
-                      ></path>
+                        d="M5 13l4 4L19 7"></path>
                     </svg>
                     {feature}
                   </div>
@@ -152,17 +151,14 @@ export default function Billing() {
                     (plan ? (
                       tier.currentPlan ? (
                         <UpgradePlanModal>
-                          <Button type="button">
-                            Upgrade to Pro
-                          </Button>
+                          <Button type="button">Upgrade to Pro</Button>
                         </UpgradePlanModal>
                       ) : (
                         <Button
                           type="button"
                           variant="ghost"
                           className="border border-gray-700"
-                          disabled
-                        >
+                          disabled>
                           Change plan
                         </Button>
                       )
@@ -175,9 +171,12 @@ export default function Billing() {
                         <Button
                           onClick={() => {
                             setClicked(true);
-                            fetch(`/api/billing/manage`, {
-                              method: "POST",
-                            })
+                            fetch(
+                              `/api/teams/${teamInfo?.currentTeam?.id}/billing/manage`,
+                              {
+                                method: "POST",
+                              }
+                            )
                               .then(async (res) => {
                                 const url = await res.json();
                                 router.push(url);
@@ -187,8 +186,7 @@ export default function Billing() {
                                 setClicked(false);
                               });
                           }}
-                          loading={clicked}
-                        >
+                          loading={clicked}>
                           Manage Subscription
                         </Button>
                       ) : (
@@ -204,13 +202,16 @@ export default function Billing() {
                       <div className="h-10 w-24 animate-pulse rounded-md bg-border" />
                     ))}
                   {tier.id === 3 && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      className="border border-gray-700"
-                    >
-                      Contact us
-                    </Button>
+                    <Link href="https://cal.com/marcseitz/papermark" target="_blank">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        className="border border-gray-700"
+                      >
+                        
+                        Contact us
+                      </Button>
+                    </Link>
                   )}
                 </div>
               </div>
@@ -339,9 +340,12 @@ export default function Billing() {
                     <Button
                       onClick={() => {
                         setClicked(true);
-                        fetch(`/api/billing/manage`, {
-                          method: "POST",
-                        })
+                        fetch(
+                          `/api/teams/${teamInfo?.currentTeam?.id}/billing/manage`,
+                          {
+                            method: "POST",
+                          }
+                        )
                           .then(async (res) => {
                             const url = await res.json();
                             router.push(url);
@@ -351,8 +355,7 @@ export default function Billing() {
                             setClicked(false);
                           });
                       }}
-                      loading={clicked}
-                    >
+                      loading={clicked}>
                       Manage Subscription
                     </Button>
                   )

@@ -45,7 +45,7 @@ export default function Home() {
       .filter((feature) => !selectedFeatures.includes(feature))
       .join(", ");
 
-    let prompt = `Provide me the list of 4 Docsend alternatives, based on the requested plan: ${
+    let prompt = `Provide me the list of 4 best fitting Docsend alternatives, based on the requested plan: ${
       plan ? plan : "Free"
     }.}, and use case: ${usecase ? usecase : "Pitch Deck"}.
     It should be platforms which allow to share/send documents, turn document into a shareable link.
@@ -72,7 +72,7 @@ export default function Home() {
   Below provide 1 sentences what mainly tool for and how it compare with Docsend documnt sharing platform. 
   It should be favourable for Papermark so after reading user is tend to try it, but do not lie about other tools features.
   
-  Do not show Docsend, as you are finding alternatives to Docsend. If there are not enough alternatives, list fewer. 
+  Do not show Docsend, as you are finding the best alternatives to Docsen or DropBox. You can use some of the popular like Pandadoc, Notion, Google Drive,BriefLink, Pitch but alos others. If there are not enough alternatives, list fewer. 
 
   
   Add at the end always: 

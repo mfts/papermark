@@ -1,6 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
 import PDFViewer from "@/components/PDFViewer";
-import AccessForm, { DEFAULT_ACCESS_FORM_DATA, DEFAULT_ACCESS_FORM_TYPE } from "@/components/view/access-form";
+import AccessForm, {
+  DEFAULT_ACCESS_FORM_DATA,
+  DEFAULT_ACCESS_FORM_TYPE,
+} from "@/components/view/access-form";
 import { usePlausible } from "next-plausible";
 import { toast } from "sonner";
 import { LinkWithDocument } from "@/lib/types";
@@ -35,9 +38,8 @@ export default function DocumentView({
     pages: null,
   });
   const [data, setData] = useState<DEFAULT_ACCESS_FORM_TYPE>(
-    DEFAULT_ACCESS_FORM_DATA
+    DEFAULT_ACCESS_FORM_DATA,
   );
-
 
   const handleSubmission = async (): Promise<void> => {
     setIsLoading(true);
@@ -69,12 +71,12 @@ export default function DocumentView({
   };
 
   const handleSubmit: React.FormEventHandler<HTMLFormElement> = async (
-    event: React.FormEvent
+    event: React.FormEvent,
   ): Promise<void> => {
     event.preventDefault();
     await handleSubmission();
   };
-  
+
   // If link is not submitted and does not have email / password protection, show the access form
   useEffect(() => {
     if (!didMount.current) {
@@ -119,6 +121,7 @@ export default function DocumentView({
             viewId={viewData.viewId}
             linkId={link.id}
             documentId={document.id}
+            versionNumber={document.versions[0].versionNumber}
           />
         ) : (
           <PDFViewer
@@ -128,6 +131,7 @@ export default function DocumentView({
             documentId={document.id}
             name={document.name}
             allowDownload={link.allowDownload}
+            versionNumber={document.versions[0].versionNumber}
           />
         )
       ) : (

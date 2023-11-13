@@ -13,5 +13,6 @@ export const sendViewedDocumentEmail = async (
     subject: `Your document has been viewed: ${documentName}`,
     react: emailTemplate,
     test: process.env.NODE_ENV === "development",
+    system: true,
   });
 };

@@ -23,7 +23,10 @@ export default async function middleware(req: NextRequest, ev: NextFetchEvent) {
 
   if (
     process.env.NODE_ENV !== "development" &&
-    !(host?.includes("papermark.io") || host?.endsWith(".vercel.app"))
+    !(
+      host?.includes("papermark.io") ||
+      host?.endsWith(".vercel.app")
+    )
   ) {
     return DomainMiddleware(req);
   }
