@@ -1,4 +1,3 @@
-// Feature.tsx
 import { useState } from "react";
 
 interface Props {

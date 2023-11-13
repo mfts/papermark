@@ -24,7 +24,7 @@ export default function DropDown({
   return (
     <Menu as="div" className="relative block text-left w-full">
       <div>
-        <Menu.Button className="inline-flex w-full justify-between items-center rounded-md border border-black border-2 bg-white px-4 py-2 text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none  ">
+        <Menu.Button className="inline-flex w-full justify-between items-center rounded-md border border-black bg-white px-4 py-2 text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none">
           {option}
           <ChevronDownIcon
             className="-mr-1 ml-2 h-5 w-5 ui-open:hidden"
@@ -59,7 +59,7 @@ export default function DropDown({
                     className={classNames(
                       active ? "bg-gray-100 text-gray-900" : "text-gray-700",
                       option === optionItem ? "bg-gray-200" : "",
-                      "px-4 py-2 text-sm w-full text-left flex items-center space-x-2 justify-between"
+                      "px-4 py-2 text-sm w-full text-left flex items-center space-x-2 justify-between",
                     )}
                   >
                     <span>{optionItem}</span>
