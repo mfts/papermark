@@ -5,6 +5,9 @@ import FeaturesTable from "@/components/web/alternatives/featurestable";
 import PricingTable from "@/components/web/alternatives/pricingtable";
 import UseCaseTable from "@/components/web/alternatives/usecasetable";
 import Article from "@/components/web/alternatives/docsendtext";
+import Grid from "@/components/web/alternatives/alternativesgrid";
+import Testimonials from "@/components/web/testimonials";
+import CTA from "@/components/web/cta";
 import Article2 from "@/components/web/alternatives/papermarktext";
 // import LoadingDots from "@/components/web/alternatives/loadingdots";
 import Footer from "@/components/web/footer";
@@ -163,7 +166,7 @@ Please note that the prices and availability of features may vary, and it is rec
         <main className="h-full bg-slate-900">
           <Navbar />
 
-          <section className="py-20 lg:py-40 bg-white">
+          <section className="pt-32 lg:pt-40 bg-white">
             {/* bg-[url('/image1.svg')] */}
             <div className="px-4">
               <div className="max-w-5xl mx-auto">
@@ -290,6 +293,9 @@ Please note that the prices and availability of features may vary, and it is rec
             <PricingTable />
             <Article2 />
             <UseCaseTable />
+            <Grid />
+            <Testimonials />
+            <CTA />
           </section>
         </main>
         <Footer />

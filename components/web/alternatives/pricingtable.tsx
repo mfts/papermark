@@ -10,7 +10,7 @@ const tools: ToolFeature[] = [
     name: "Papermark",
     features: {
       plan1: "Free",
-      plan2: "$29/per team",
+      plan2: "$29/month (team access)",
       plan3: "Custom",
       opensource: "Yes",
     },
@@ -18,9 +18,9 @@ const tools: ToolFeature[] = [
   {
     name: "Docsend",
     features: {
-      plan1: "$15/per user",
-      plan2: "$65/per user",
-      plan3: "250/per user",
+      plan1: "$15/month (per user)",
+      plan2: "$65/month (per user)",
+      plan3: "$250/month",
       opensource: "No",
     },
   },
@@ -28,7 +28,7 @@ const tools: ToolFeature[] = [
     name: "PandaDoc",
     features: {
       plan1: "$35/month",
-      plan2: "$65",
+      plan2: "$65/month",
       plan3: "Enterprise",
       opensource: "No",
     },
@@ -87,18 +87,19 @@ export default function ComparisonTable() {
       <div className="mt-20 px-6 py-12 sm:px-6 sm:py-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center">
           <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-            Top 3 Docsend alternatives comparison Plan and Pricing
+            Top 2 Docsend alternatives based Plan and Pricing
             <br />
           </h2>
           <p className="mx-auto mt-6 max-w-xl text-lg leading-8 text-gray-600">
-            Alternatives which have as core capabilites is sharing documents
-            securely and sharable link actions
+            Alternatives which help users to share documents and track the
+            progress on each page. So allow to capture email and set other
+            setting for sharable links.
           </p>
         </div>
       </div>
       <div className="mt-6 flow-root">
         <div className="rounded-lg border border-gray-300 mx-4 my-2 overflow-x-auto">
-          <div className="inline-block min-w-full py-2 align-middle">
+          <div className="inline-block min-w-full  align-middle">
             <table className="min-w-full divide-y divide-gray-300">
               <thead>
                 <tr>
@@ -124,7 +125,9 @@ export default function ComparisonTable() {
                     {tools.map((tool) => (
                       <td
                         key={tool.name}
-                        className="px-3 py-4 text-sm text-gray-500"
+                        className={`px-3 py-4 text-sm text-gray-500 ${
+                          tool.name === "Papermark" ? "bg-green-100" : ""
+                        }`} // Consistent text color, conditional background color
                       >
                         {tool.features[feature]}
                       </td>

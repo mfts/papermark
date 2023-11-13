@@ -9,87 +9,66 @@ const tools: ToolFeature[] = [
   {
     name: "Papermark",
     features: {
-      Description: "Yes",
+      Description: "Founder friendly document sharing platform ",
       PitchDeck: "Yes",
       SalesDeck: "Yes",
       Investmentdocs: "Yes",
-      Enchancer: "Yes",
       Otherdocs: "Yes",
+      Enchancer: "Yes",
     },
   },
-  //   {
-  //     name: "Docsend",
-  //     features: {
-  //       Description: "Sharing documnets ",
-  //       PitchDeck: "Yes",
-  //       SalesDeck: "Yes",
-  //       Investmentdocs: "Yes",
-  //       Enchancer: "No",
-  //       Otherdocs: "Yes",
-  //     },
-  //   },
   {
     name: "PandaDoc",
     features: {
-      Description: "Yes",
+      Description: "Enterprise focused sharing documents and contracts",
       PitchDeck: "Yes",
       SalesDeck: "Yes",
-      Investmentdocs: "Yes",
-      Enchancer: "Yes",
+      Investmentdocs: "No",
       Otherdocs: "Yes",
+      Enchancer: "No",
     },
   },
   {
     name: "Google Drive",
     features: {
-      Description: "Hosting documents",
-      PitchDeck: "Yes",
-      SalesDeck: "Yes",
-      Investmentdocs: "Yes",
-      Enchancer: "Yes",
+      Description: "Hosting documents and other files",
+      PitchDeck: "No",
+      SalesDeck: "No",
+      Investmentdocs: "No",
+      Enchancer: "No",
       Otherdocs: "Yes",
     },
   },
   {
     name: "Pitch",
     features: {
-      Description: "Yes",
-      PitchDeck: "Yes",
-      SalesDeck: "Yes",
-      Investmentdocs: "Yes",
-      Enchancer: "Yes",
-      Otherdocs: "Yes",
+      Description: "Creating presentations",
+      PitchDeck: "No",
+      SalesDeck: "No",
+      Investmentdocs: "No",
+      Enchancer: "No",
+      Otherdocs: "No",
     },
   },
   {
     name: "Notion",
     features: {
-      Description: "Yes",
-      PitchDeck: "Yes",
-      SalesDeck: "Yes",
-      Investmentdocs: "Yes",
+      Description: "Creating documents ",
+      PitchDeck: "No",
+      SalesDeck: "No",
+      Investmentdocs: "No",
       Enchancer: "Yes",
       Otherdocs: "Yes",
     },
   },
-  // {
-  //   name: "BriefLink",
-  //   features: {
-  //     plan1: "Free",
-  //     plan2: "29",
-  //     plan3: "Custom",
-  //     opensource: "Yes",
-  //   },
-  // },
-  // Add other tools in a similar format
 ];
 
 const featureDisplayNames: { [key: string]: string } = {
-  PitchDeck: "Sharing Pitch Deck",
-  Description: "Sending Sales Deck",
-  SalesDeck: "Main use case",
-  Enchancer: "Summarise, analyse and improve docs",
-  Investmentdocs: "Data Room and Investment docs",
+  PitchDeck: "Sharing pitch deck with analytics and link control",
+  Description: "Main use case",
+  SalesDeck: "Sending sales document with analytics",
+  Enchancer: "Summarise, analyse and improve documents",
+  Investmentdocs: "Data room and investment documents",
   Otherdocs: "All other documents",
 };
 
@@ -112,7 +91,7 @@ export default function ComparisonTable() {
       </div>
       <div className="mt-6 flow-root">
         <div className="rounded-lg border border-gray-300 mx-4 my-2 overflow-x-auto">
-          <div className="inline-block min-w-full py-2 align-middle">
+          <div className="inline-block min-w-full align-middle">
             <table className="min-w-full divide-y divide-gray-300">
               <thead>
                 <tr>
@@ -138,7 +117,9 @@ export default function ComparisonTable() {
                     {tools.map((tool) => (
                       <td
                         key={tool.name}
-                        className="px-3 py-4 text-sm text-gray-500"
+                        className={`px-3 py-4 text-sm text-gray-500 ${
+                          tool.name === "Papermark" ? "bg-green-100" : ""
+                        }`} // Consistent text color, conditional background color
                       >
                         {tool.features[feature]}
                       </td>
