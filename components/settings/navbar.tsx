@@ -5,6 +5,7 @@ const tabs = [
   { name: "General", href: "/settings/general" },
   { name: "People", href: "/settings/people" },
   { name: "Domains", href: "/settings/domains" },
+  { name: "Logo", href: "/settings/logo" },
   { name: "Billing", href: "/settings/billing" },
 ];
 
@@ -34,7 +35,8 @@ export default function Navbar({ current }: { current?: string }) {
                     : "border-transparent text-muted-foreground hover:border-foreground hover:text-foreground",
                   "whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium"
                 )}
-                aria-current={current === tab.name ? "page" : undefined}>
+                aria-current={current === tab.name ? "page" : undefined}
+              >
                 {tab.name}
               </Link>
             ))}

@@ -53,6 +53,7 @@ model User {
   subscriptionId String?    @unique // Stripe subscription ID
   startsAt       DateTime? // Stripe subscription start date
   endsAt         DateTime? // Stripe subscription end date
+  Logo           Logo[]
 }
 
 model Team {
@@ -69,6 +70,7 @@ model Team {
   endsAt         DateTime? // Stripe subscription end date
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
+  Logo           Logo[]
 }
 
 enum Role {
@@ -160,6 +162,8 @@ model Link {
   domain         Domain?   @relation(fields: [domainId], references: [id], onDelete: SetNull)
   domainId       String? // This can be nullable, representing links without custom domains
   domainSlug     String? // This will store the domain's slug even if the domain is deleted
+  logo           Logo?     @relation(fields: [logoId], references: [id], onDelete: SetNull)
+  logoId         String? // This can be nullable, representing links without custom logos
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
@@ -178,6 +182,21 @@ model Domain {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   links       Link[] // links associated with this domain
+}
+
+model Logo {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  file      String   @unique // This should be a reference to where the file is stored (S3, Google Cloud Storage, etc.)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  teamId    String?
+  Team      Team?    @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  links     Link[] // links associated with this logo
+
+  @@index([name]) //indexing on name column because most queries will be on name column
 }
 
 model View {
