@@ -8,5 +8,6 @@ export const sendTrialEndFinalReminderEmail = async (email: string, name: string
     subject: `Your pro trial expires in 24 hours`,
     react: emailTemplate,
     test: process.env.NODE_ENV === "development",
+    system: true,
   });
 };

@@ -23,6 +23,7 @@ import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import Link from "next/link";
 import DomainSection from "./domain-section";
 import AllowDownloadSection from "./allow-download-section";
+import { useTeam } from "@/context/team-context";
 import AllowNotificationSection from "./allow-notification";
 
 export const DEFAULT_LINK_PROPS = {
@@ -60,6 +61,7 @@ export default function LinkSheet({
 }) {
   const { links } = useDocumentLinks();
   const { domains } = useDomains();
+  const teamInfo = useTeam();
   const [data, setData] = useState<DEFAULT_LINK_TYPE>(DEFAULT_LINK_PROPS);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
@@ -109,20 +111,24 @@ export default function LinkSheet({
       setIsOpen(false);
       // Update the link in the list of links
       mutate(
-        `/api/documents/${encodeURIComponent(documentId)}/links`,
+        `/api/teams/${teamInfo?.currentTeam?.id}/documents/${encodeURIComponent(
+          documentId,
+        )}/links`,
         (links || []).map((link) =>
-          link.id === currentLink.id ? returnedLink : link
+          link.id === currentLink.id ? returnedLink : link,
         ),
-        false
+        false,
       );
       toast.success("Link updated successfully");
     } else {
       setIsOpen(false);
       // Add the new link to the list of links
       mutate(
-        `/api/documents/${encodeURIComponent(documentId)}/links`,
+        `/api/teams/${teamInfo?.currentTeam?.id}/documents/${encodeURIComponent(
+          documentId,
+        )}/links`,
         [...(links || []), returnedLink],
-        false
+        false,
       );
       toast.success("Link created successfully");
     }

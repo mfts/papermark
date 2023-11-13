@@ -1,5 +1,11 @@
 import { User as NextAuthUser } from "next-auth";
-import { Document, Link, View, User as PrismaUser, DocumentVersion } from "@prisma/client";
+import {
+  Document,
+  Link,
+  View,
+  User as PrismaUser,
+  DocumentVersion,
+} from "@prisma/client";
 
 export type CustomUser = NextAuthUser & PrismaUser;
 
@@ -31,7 +37,9 @@ export interface LinkWithViews extends Link {
 }
 
 export interface LinkWithDocument extends Link {
-  document: Document;
+  document: Document & {
+    versions: { versionNumber: number }[];
+  };
 }
 
 export interface Geo {
@@ -50,7 +58,7 @@ export type DomainVerificationStatusProps =
   | "Pending Verification"
   | "Domain Not Found"
   | "Unknown Error";
-  
+
 // From https://vercel.com/docs/rest-api/endpoints#get-a-project-domain
 export interface DomainResponse {
   name: string;
@@ -146,3 +154,28 @@ export type AnalyticsEvents =
       event: "Domain Deleted";
       slug: string;
     };
+
+export interface Team {
+  id: string;
+  name?: string;
+}
+
+export interface TeamDetail {
+  id: string;
+  name: string;
+  documents: {
+    owner: {
+      id: string;
+      name: string;
+    };
+  }[];
+  users: {
+    role: "ADMIN" | "MEMBER";
+    teamId: string;
+    user: {
+      email: string;
+      name: string;
+    };
+    userId: string;
+  }[];
+}

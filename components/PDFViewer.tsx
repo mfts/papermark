@@ -2,6 +2,7 @@ import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/20/solid";
 import { useEffect, useRef, useState } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
 import { Download } from "lucide-react";
+import { useTeam } from "@/context/team-context";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
 
@@ -13,6 +14,7 @@ export default function PDFViewer(props: any) {
 
   const startTimeRef = useRef(Date.now());
   const pageNumberRef = useRef<number>(pageNumber);
+  const teamInfo = useTeam();
 
   // Update the previous page number after the effect hook has run
   useEffect(() => {
@@ -45,6 +47,7 @@ export default function PDFViewer(props: any) {
   }
 
   // Send the last page view when the user leaves the page
+  // duration is measured in milliseconds
   useEffect(() => {
     const handleBeforeUnload = () => {
       const endTime = Date.now();
@@ -109,6 +112,7 @@ export default function PDFViewer(props: any) {
         viewId: props.viewId,
         duration: duration,
         pageNumber: pageNumberRef.current,
+        versionNumber: props.versionNumber,
       }),
       headers: {
         "Content-Type": "application/json",
@@ -117,7 +121,7 @@ export default function PDFViewer(props: any) {
   }
 
   async function updateNumPages(numPages: number) {
-    await fetch(`/api/documents/update`, {
+    await fetch(`/api/teams/${teamInfo?.currentTeam?.id}/documents/update`, {
       method: "POST",
       body: JSON.stringify({
         documentId: props.documentId,
@@ -140,24 +144,20 @@ export default function PDFViewer(props: any) {
       <div
         hidden={loading}
         style={{ height: "calc(100vh - 64px)" }}
-        className="flex items-center"
-      >
+        className="flex items-center">
         <div
-          className={`flex items-center justify-between w-full absolute z-10 px-2`}
-        >
+          className={`flex items-center justify-between w-full absolute z-10 px-2`}>
           <button
             onClick={goToPreviousPage}
             disabled={pageNumber <= 1}
-            className="relative h-[calc(100vh - 64px)] px-2 py-24 text-gray-400 hover:text-gray-50 focus:z-20"
-          >
+            className="relative h-[calc(100vh - 64px)] px-2 py-24 text-gray-400 hover:text-gray-50 focus:z-20">
             <span className="sr-only">Previous</span>
             <ChevronLeftIcon className="h-10 w-10" aria-hidden="true" />
           </button>
           <button
             onClick={goToNextPage}
             disabled={pageNumber >= numPages!}
-            className="relative h-[calc(100vh - 64px)] px-2 py-24 text-gray-400 hover:text-gray-50 focus:z-20"
-          >
+            className="relative h-[calc(100vh - 64px)] px-2 py-24 text-gray-400 hover:text-gray-50 focus:z-20">
             <span className="sr-only">Next</span>
             <ChevronRightIcon className="h-10 w-10" aria-hidden="true" />
           </button>
@@ -169,8 +169,7 @@ export default function PDFViewer(props: any) {
             onLoadSuccess={onDocumentLoadSuccess}
             options={options}
             renderMode="canvas"
-            className=""
-          >
+            className="">
             <Page
               className=""
               key={pageNumber}

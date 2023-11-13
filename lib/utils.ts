@@ -192,7 +192,7 @@ export function copyToClipboard(text: string, message: string): void {
       toast.success(message);
     })
     .catch((error) => {
-      toast.error("Failed to copy. Please try again.")
+      toast.warning("Please copy your link manually.")
     });
 }
 

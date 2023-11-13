@@ -1,5 +1,7 @@
 // import { JSX, SVGProps } from "react";
 
+import CopyRight from "../shared/icons/copy-right";
+
 // const navigation = [
 //   {
 //     name: "Twitter",
@@ -62,6 +64,15 @@ const navigation = {
     { name: "VC-generator", href: "https://vc.papermark.io" },
     { name: "Open Source Friends", href: "/oss-friends" },
     { name: "Open Source Investors", href: "/open-source-investors" },
+    {
+      name: "YC Application GPT",
+      href: "https://chat.openai.com/g/g-LYDRCiZB9-yc-application-gpt",
+    },
+    {
+      name: "FindVC",
+      href: "https://chat.openai.com/g/g-G5orSgI31-findvc",
+    },
+    { name: "Docsend Alternatives Finder", href: "/docsend-alternatives" },
     // { name: "Pitchdeck Summariser", href: "#" },
   ],
   alternatives: [
@@ -172,8 +183,9 @@ export default function Footer() {
             </div>
           </div>
           <div className="mt-4 ">
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              © 2023 Papermark. All rights reserved.
+            <p className="text-sm text-gray-600 dark:text-gray-400 flex">
+              <CopyRight className="mt-1 mr-1" /> 2023 Papermark. All rights
+              reserved.
             </p>
           </div>
         </div>

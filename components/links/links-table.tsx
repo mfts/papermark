@@ -38,11 +38,13 @@ import { mutate } from "swr";
 import { toast } from "sonner";
 import { useRouter } from "next/router";
 import { usePlan } from "@/lib/swr/use-billing";
+import { useTeam } from "@/context/team-context";
 
 export default function LinksTable() {
   const { links } = useDocumentLinks();
   const router = useRouter();
   const { plan } = usePlan();
+  const teamInfo = useTeam();
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isLinkSheetVisible, setIsLinkSheetVisible] = useState<boolean>(false);
@@ -76,7 +78,7 @@ export default function LinksTable() {
   const handleArchiveLink = async (
     linkId: string,
     documentId: string,
-    isArchived: boolean
+    isArchived: boolean,
   ) => {
     setIsLoading(true);
 
@@ -98,15 +100,17 @@ export default function LinksTable() {
 
     // Update the archived link in the list of links
     mutate(
-      `/api/documents/${encodeURIComponent(documentId)}/links`,
+      `/api/teams/${teamInfo?.currentTeam?.id}/documents/${encodeURIComponent(
+        documentId,
+      )}/links`,
       (links || []).map((link) => (link.id === linkId ? archivedLink : link)),
-      false
+      false,
     );
 
     toast.success(
       !isArchived
         ? "Link successfully archived"
-        : "Link successfully reactivated"
+        : "Link successfully reactivated",
     );
     setIsLoading(false);
   };
@@ -158,7 +162,7 @@ export default function LinksTable() {
                                 `group/cell flex items-center gap-x-4 rounded-md text-secondary-foreground px-3 py-1 group-hover/row:ring-1 group-hover/row:ring-gray-400 group-hover/row:dark:ring-gray-100 transition-all`,
                                 link.domainId && hasFreePlan
                                   ? "bg-destructive hover:bg-red-700 hover:dark:bg-red-200"
-                                  : "bg-secondary hover:bg-emerald-700 hover:dark:bg-emerald-200"
+                                  : "bg-secondary hover:bg-emerald-700 hover:dark:bg-emerald-200",
                               )}
                             >
                               <div className="whitespace-nowrap hidden sm:flex text-sm group-hover/cell:hidden">
@@ -187,11 +191,11 @@ export default function LinksTable() {
                                     link.domainId
                                       ? () =>
                                           handleCopyToClipboard(
-                                            `https://${link.domainSlug}/${link.slug}`
+                                            `https://${link.domainSlug}/${link.slug}`,
                                           )
                                       : () =>
                                           handleCopyToClipboard(
-                                            `https://${process.env.NEXT_PUBLIC_ROOT_DOMAIN}/view/${link.id}`
+                                            `https://${process.env.NEXT_PUBLIC_ROOT_DOMAIN}/view/${link.id}`,
                                           )
                                   }
                                   title="Copy to clipboard"
@@ -222,7 +226,7 @@ export default function LinksTable() {
                             {link.views[0] ? (
                               <time
                                 dateTime={new Date(
-                                  link.views[0].viewedAt
+                                  link.views[0].viewedAt,
                                 ).toISOString()}
                               >
                                 {timeAgo(link.views[0].viewedAt)}
@@ -253,7 +257,7 @@ export default function LinksTable() {
                                     handleArchiveLink(
                                       link.id,
                                       link.documentId,
-                                      link.isArchived
+                                      link.isArchived,
                                     )
                                   }
                                 >
@@ -365,7 +369,7 @@ export default function LinksTable() {
                                     {link.views[0] ? (
                                       <time
                                         dateTime={new Date(
-                                          link.views[0].viewedAt
+                                          link.views[0].viewedAt,
                                         ).toISOString()}
                                       >
                                         {timeAgo(link.views[0].viewedAt)}
@@ -399,7 +403,7 @@ export default function LinksTable() {
                                             handleArchiveLink(
                                               link.id,
                                               link.documentId,
-                                              link.isArchived
+                                              link.isArchived,
                                             )
                                           }
                                         >

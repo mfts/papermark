@@ -7,6 +7,7 @@ import { AddDomainModal } from "@/components/domains/add-domain-modal";
 import { Button } from "@/components/ui/button";
 import { mutate } from "swr";
 import Link from "next/link";
+import { useTeam } from "@/context/team-context";
 
 export default function DomainSection({
   data,
@@ -18,6 +19,7 @@ export default function DomainSection({
   domains?: Domain[];
 }) {
   const [isModalOpen, setModalOpen] = useState(false);
+  const teamInfo = useTeam();
 
   const handleDomainChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const value = event.target.value;
@@ -32,11 +34,11 @@ export default function DomainSection({
   };
 
   const handleSelectFocus = () => {
-    // Assuming your fetcher key for domains is '/api/domains'
-    mutate("/api/domains");
+    // Assuming your fetcher key for domains is '/api/teams/:teamId/domains'
+    mutate(`/api/teams/${teamInfo?.currentTeam?.id}/domains`);
   };
 
-  const currentDomain = domains?.find(domain => domain.slug === data.domain);
+  const currentDomain = domains?.find((domain) => domain.slug === data.domain);
   const isDomainVerified = currentDomain?.verified;
 
   return (
@@ -52,8 +54,7 @@ export default function DomainSection({
             data.domain && data.domain !== "papermark.io"
               ? ""
               : "rounded-r-md border-r-1"
-          )}
-        >
+          )}>
           <option key="papermark.io" value="papermark.io">
             papermark.io
           </option>
@@ -96,14 +97,17 @@ export default function DomainSection({
 
       {data.domain && data.domain !== "papermark.io" && !isDomainVerified ? (
         <div className="text-sm text-red-500 mt-4">
-          Your domain is not verified yet! <Link className="underline hover:text-red-500/80" href="/settings/domains" target="_blank">Verify now</Link>
+          Your domain is not verified yet!{" "}
+          <Link
+            className="underline hover:text-red-500/80"
+            href="/settings/domains"
+            target="_blank">
+            Verify now
+          </Link>
         </div>
       ) : null}
 
-      <AddDomainModal
-        open={isModalOpen}
-        setOpen={setModalOpen}
-      />
+      <AddDomainModal open={isModalOpen} setOpen={setModalOpen} />
     </>
   );
 }
