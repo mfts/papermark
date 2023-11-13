@@ -25,58 +25,99 @@ export async function POST(req: Request) {
   }
 
   try {
-    const users = await prisma.user.findMany({
+    const teams = await prisma.team.findMany({
       where: {
         plan: {
-          // exclude users who are on pro plan
-          notIn: ["pro"],
+          // exclude users who are on pro or free plan
+          notIn: ["pro", "free"],
         },
       },
       select: {
         id: true,
-        name: true,
-        email: true,
-        plan: true,
-        createdAt: true,
+        users: {
+          where: { role: "ADMIN" },
+          select: {
+            user: {
+              select: { email: true, name: true, createdAt: true },
+            },
+          },
+        },
+        sentEmails: {
+          select: {
+            type: true,
+          },
+        },
       },
     });
-    
 
     const results = await Promise.allSettled(
-      users.map(async (user) => {
-        const { id, email, name, createdAt } = user as {
+      teams.map(async (team) => {
+        const { id, users } = team as {
           id: string;
-          email: string;
-          name: string | null;
-          createdAt: Date;
+          users: { user: { email: string; name: string; createdAt: Date } }[];
         };
 
-        let userDaysLeft = calculateDaysLeft(new Date(createdAt));
+        const sentEmails = team.sentEmails.map((email) => email.type);
+        const userEmail = users[0].user.email;
+        const userName = users[0].user.name;
+        const userCreatedAt = users[0].user.createdAt;
 
-        if (userDaysLeft == 3) {
-          return await Promise.allSettled([
-            log(
-              `Trial End Reminder for user: *${id}* is expiring in ${userDaysLeft} days, email sent.`
-            ),
-            limiter.schedule(() => sendTrialEndReminderEmail(email, name)),
-          ]);
+        // TODO: workaround with the userCreatedAt should be reverted back to teamCreatedAt in December 2023
+        let userDaysLeft = calculateDaysLeft(new Date(userCreatedAt));
+
+        // send first reminder email if user has 5 days left on trial
+        if (userDaysLeft == 5) {
+          const sentFirstTrialEndReminderEmail = sentEmails.includes(
+            "FIRST_TRIAL_END_REMINDER_EMAIL",
+          );
+          if (!sentFirstTrialEndReminderEmail) {
+            return await Promise.allSettled([
+              log(
+                `Trial End Reminder for team: *${id}* is expiring in ${userDaysLeft} days, email sent.`,
+              ),
+              limiter.schedule(() =>
+                sendTrialEndReminderEmail(userEmail, userName),
+              ),
+              prisma.sentEmail.create({
+                data: {
+                  type: "FIRST_TRIAL_END_REMINDER_EMAIL",
+                  teamId: id,
+                  recipient: userEmail,
+                },
+              }),
+            ]);
+          }
         }
 
-        // send email if user has 1 day left on trial
-        if (userDaysLeft == 1) {
-          return await Promise.allSettled([
-            log(
-              `Final Trial End Reminder for user: *${id}* is expiring in ${userDaysLeft} days, email sent.`
-            ),
-            limiter.schedule(() => sendTrialEndFinalReminderEmail(email, name)),
-          ]);
+        // send final reminder email if user has 1 day left on trial
+        if (userDaysLeft <= 1) {
+          const sentFinalTrialEndReminderEmail = sentEmails.includes(
+            "FINAL_TRIAL_END_REMINDER_EMAIL",
+          );
+          if (!sentFinalTrialEndReminderEmail) {
+            return await Promise.allSettled([
+              log(
+                `Final Trial End Reminder for team: *${id}* is expiring in ${userDaysLeft} days, email sent.`,
+              ),
+              limiter.schedule(() =>
+                sendTrialEndFinalReminderEmail(userEmail, userName),
+              ),
+              prisma.sentEmail.create({
+                data: {
+                  type: "FINAL_TRIAL_END_REMINDER_EMAIL",
+                  teamId: id,
+                  recipient: userEmail,
+                },
+              }),
+            ]);
+          }
         }
 
         // downgrade the user to free if user has 0 day left on trial
         if (userDaysLeft == 0) {
           return await Promise.allSettled([
             log(
-              `Downgrade to free for user: *${id}* is expiring in ${userDaysLeft} days, email sent.`
+              `Downgrade to free for user: *${id}* is expiring in ${userDaysLeft} days, email sent.`,
             ),
             prisma.user.update({
               where: { id },
@@ -84,13 +125,13 @@ export async function POST(req: Request) {
             }),
           ]);
         }
-      })
+      }),
     );
     return NextResponse.json(results);
   } catch (error) {
     await log(
       `Trial end reminder cron failed. Error: " + ${(error as Error).message}`,
-      true
+      true,
     );
     return NextResponse.json({ error: (error as Error).message });
   }
