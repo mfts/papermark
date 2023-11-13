@@ -1,5 +1,3 @@
-import React from "react";
-
 interface ToolFeature {
   name: string;
   features: { [feature: string]: string };
@@ -33,43 +31,6 @@ const tools: ToolFeature[] = [
       opensource: "No",
     },
   },
-  //   {
-  //     name: "Google Drive",
-  //     features: {
-  //       plan1: "Free",
-  //       plan2: "29",
-  //       plan3: "Custom",
-  //       opensource: "Yes",
-  //     },
-  //   },
-  //   {
-  //     name: "Pitch",
-  //     features: {
-  //       plan1: "Free",
-  //       plan2: "29",
-  //       plan3: "Custom",
-  //       opensource: "Yes",
-  //     },
-  //   },
-  //   {
-  //     name: "Notion",
-  //     features: {
-  //       plan1: "Free",
-  //       plan2: "29",
-  //       plan3: "Custom",
-  //       opensource: "Yes",
-  //     },
-  //   },
-  //   {
-  //     name: "BriefLink",
-  //     features: {
-  //       plan1: "Free",
-  //       plan2: "29",
-  //       plan3: "Custom",
-  //       opensource: "Yes",
-  //     },
-  //   },
-  // Add other tools in a similar format
 ];
 
 const featureDisplayNames: { [key: string]: string } = {
@@ -127,7 +88,7 @@ export default function ComparisonTable() {
                         key={tool.name}
                         className={`px-3 py-4 text-sm text-gray-500 ${
                           tool.name === "Papermark" ? "bg-green-100" : ""
-                        }`} // Consistent text color, conditional background color
+                        }`}
                       >
                         {tool.features[feature]}
                       </td>

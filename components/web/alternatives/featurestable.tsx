@@ -1,5 +1,3 @@
-import React from "react";
-
 interface ToolFeature {
   name: string;
   features: { [feature: string]: string };

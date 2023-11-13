@@ -1,6 +1,6 @@
-import React from "react";
+import Link from "next/link";
 
-const DocSendAlternatives: React.FC = () => {
+const DocSendAlternatives = () => {
   return (
     <>
       <div className="bg-gray-100 p-8 mt-16">
@@ -23,12 +23,9 @@ const DocSendAlternatives: React.FC = () => {
             Below, we dive into the details of each of Docsend alternatives,
             comparing their features, pricing, and user reviews to DocSend. If
             you would like start with the free alternative to Docsend already
-            <a
-              href="http://papermark.io/login"
-              className="text-blue-600 underline px-2"
-            >
+            <Link href="/login" className="text-blue-600 underline px-2">
               Start Now
-            </a>
+            </Link>
           </p>
           <h2 className="text-2xl font-bold mb-4">What is DocSend?</h2>
           <p>
@@ -41,8 +38,8 @@ const DocSendAlternatives: React.FC = () => {
             focuses primarily on enterprise clients.
           </p>
           <img
-            src="https://dev-to-uploads.s3.amazonaws.com/uploads/articles/bqyxrz1jry4mjnk1kimo.png"
-            alt="DocSend Screenshot"
+            src="https://dknlay9ljaq1f.cloudfront.net/alterantives/bqyxrz1jry4mjnk1kimo-1.png"
+            alt="DocSend Product"
             className="my-4"
           />
           <h2 className="text-2xl font-bold mb-4">Docsend reviews</h2>
@@ -68,8 +65,8 @@ const DocSendAlternatives: React.FC = () => {
             cheap for essential features.
           </p>
           <img
-            src="https://dev-to-uploads.s3.amazonaws.com/uploads/articles/znexk7slb43uv0cmeqzw.png"
-            alt="DocSend Pricing"
+            src="https://dknlay9ljaq1f.cloudfront.net/alterantives/znexk7slb43uv0cmeqzw-2.png"
+            alt="DocSend Review #1"
             className="my-4"
           />
           <p>
@@ -85,8 +82,8 @@ const DocSendAlternatives: React.FC = () => {
           <h3 className="text-1xl font-bold mb-4">Confusing UI</h3>
           <p> Customers find the Docsend UI confusing and outdated.</p>
           <img
-            src="https://dev-to-uploads.s3.amazonaws.com/uploads/articles/n0id8nfbhq0geo7feqqu.png"
-            alt="DocSend Pricing"
+            src="https://dknlay9ljaq1f.cloudfront.net/alterantives/n0id8nfbhq0geo7feqqu-3.png"
+            alt="DocSend Review #2"
             className="my-4"
           />
           <h3 className="text-1xl font-bold mb-4">Poor customer support</h3>
@@ -95,14 +92,14 @@ const DocSendAlternatives: React.FC = () => {
             with waiting time over two weeks.
           </p>
           <img
-            src="https://dev-to-uploads.s3.amazonaws.com/uploads/articles/9rg8uwwz7t3vpkz55qfc.png"
-            alt="DocSend Pricing"
+            src="https://dknlay9ljaq1f.cloudfront.net/alterantives/9rg8uwwz7t3vpkz55qfc-4.png"
+            alt="DocSend Review #3"
             className="my-4"
           />
 
           <h2 className="text-2xl font-bold mb-4">DocSend Plans and Pricing</h2>
           <img
-            src="https://dev-to-uploads.s3.amazonaws.com/uploads/articles/1afc866si8948vjbhhye.png"
+            src="https://dknlay9ljaq1f.cloudfront.net/alterantives/1afc866si8948vjbhhye-5.png"
             alt="DocSend Pricing"
             className="my-4"
           />
@@ -119,10 +116,8 @@ const DocSendAlternatives: React.FC = () => {
           <p>
             <strong>Enterprise Plan</strong> - contact the team for pricing
           </p>
-          {/* Add more content here as needed */}
         </div>
       </div>
-      {/* Footer or other components can be added here */}
     </>
   );
 };

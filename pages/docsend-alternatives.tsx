@@ -1,5 +1,5 @@
 import Head from "next/head";
-import { useEffect, useState, useRef } from "react";
+import { useState } from "react";
 import Feature from "@/components/web/alternatives/feature";
 import FeaturesTable from "@/components/web/alternatives/featurestable";
 import PricingTable from "@/components/web/alternatives/pricingtable";
@@ -9,7 +9,6 @@ import Grid from "@/components/web/alternatives/alternativesgrid";
 import Testimonials from "@/components/web/testimonials";
 import CTA from "@/components/web/cta";
 import Article2 from "@/components/web/alternatives/papermarktext";
-// import LoadingDots from "@/components/web/alternatives/loadingdots";
 import Footer from "@/components/web/footer";
 import Navbar from "@/components/web/navbar";
 import { PlanSelect } from "@/components/web/alternatives/plan";
@@ -124,12 +123,6 @@ Please note that the prices and availability of features may vary, and it is rec
   return (
     <>
       <Head>
-        <script
-          defer
-          data-domain="www.papermark.io"
-          src="https://plausible.io/js/script.js"
-        ></script>
-
         <title>
           Top Docsend Alternatives Personalised for Your Business | Discover
           Your Best Match
@@ -167,17 +160,12 @@ Please note that the prices and availability of features may vary, and it is rec
           <Navbar />
 
           <section className="pt-32 lg:pt-40 bg-white">
-            {/* bg-[url('/image1.svg')] */}
             <div className="px-4">
               <div className="max-w-5xl mx-auto">
                 <div className="w-full mx-auto">
                   <h1 className="text-4xl text-center font-bold pb-1 text-black lg:text-6xl ">
                     Find Docsend alternatives personalised for you
                   </h1>
-                  {/* <p className="mt-3 mb-10 text-center text-white">
-                    Raise capital with help of AI generated list of investors{" "}
-                    <br />
-                  </p> */}
                   <div className="max-w-5xl mx-auto px-8 lg:px-28">
                     <div className="max-w-5xl mx-auto">
                       <div className="w-full my-1 mx-auto "></div>
@@ -280,11 +268,6 @@ Please note that the prices and availability of features may vary, and it is rec
                       )}
                     </div>
                   </div>
-                  {optimizedPost && (
-                    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 ">
-                      {/* <Grid /> */}
-                    </div>
-                  )}
                 </div>
               </div>
             </div>

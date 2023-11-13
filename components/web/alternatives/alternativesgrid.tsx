@@ -1,17 +1,3 @@
-/*
-  This example requires some changes to your config:
-  
-  ```
-  // tailwind.config.js
-  module.exports = {
-    // ...
-    plugins: [
-      // ...
-      require('@tailwindcss/aspect-ratio'),
-    ],
-  }
-  ```
-*/
 const files = [
   {
     title: "Papermark",
@@ -23,32 +9,21 @@ const files = [
     title: "Google Drive",
     size: "Document hosting platform",
     source:
-      "https://cdn.arstechnica.net/wp-content/uploads/2021/07/Google-Drive-800x420.jpg",
+      "https://dknlay9ljaq1f.cloudfront.net/alterantives/google-drive.jpg",
     link: "/alternatives/google-drive",
   },
   {
     title: "Pitch",
     size: "Presentation creation platform",
-    source:
-      "https://images.g2crowd.com/uploads/product/image/social_landscape/social_landscape_5bcb02a19143c08d1f50ce1ed6bb657d/pitch-pitch.png",
+    source: "https://dknlay9ljaq1f.cloudfront.net/alterantives/pitch.webp",
     link: "/alternatives/pitch",
   },
   {
     title: "PandaDoc",
     size: "Optimizization of agreements and workflows",
-    source:
-      "https://public-site.marketing.pandadoc-static.com/app/uploads/link-cover-image.png",
+    source: "https://dknlay9ljaq1f.cloudfront.net/alterantives/pandadoc.png",
     link: "/alternatives/pandadoc",
   },
-  //   {
-  //     title: "BriefLink",
-  //     size: "Send documents for fundraising",
-  //     source:
-  //       "https://images.saasworthy.com/brieflink_35899_logo_1643707939_cqfic.jpg",
-  //     link: "/login",
-  //   },
-
-  // More files...
 ];
 
 export default function Gridalternatives() {
@@ -72,10 +47,7 @@ export default function Gridalternatives() {
       >
         {files.map((file) => (
           <li key={file.source} className="relative">
-            <a
-              href={file.link} // Fallback to '#' if link is not provided
-              className="block focus:outline-none"
-            >
+            <a href={file.link} className="block focus:outline-none">
               <div className="group aspect-h-7 aspect-w-10 block w-full overflow-hidden rounded-lg bg-gray-200 focus-within:ring-2 focus-within:ring-indigo-500 focus-within:ring-offset-2 focus-within:ring-offset-gray-100">
                 <img
                   src={file.source}

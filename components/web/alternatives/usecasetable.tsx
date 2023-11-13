@@ -1,5 +1,3 @@
-import React from "react";
-
 interface ToolFeature {
   name: string;
   features: { [feature: string]: string };
@@ -119,7 +117,7 @@ export default function ComparisonTable() {
                         key={tool.name}
                         className={`px-3 py-4 text-sm text-gray-500 ${
                           tool.name === "Papermark" ? "bg-green-100" : ""
-                        }`} // Consistent text color, conditional background color
+                        }`}
                       >
                         {tool.features[feature]}
                       </td>
