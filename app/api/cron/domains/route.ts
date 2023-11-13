@@ -42,6 +42,7 @@ export async function POST(req: Request) {
         verified: true,
         createdAt: true,
         userId: true,
+        teamId: true,
         _count: {
           select: {
             links: true,
@@ -107,11 +108,14 @@ export async function POST(req: Request) {
           updates,
           prismaResponse,
         };
-      })
+      }),
     );
     return NextResponse.json(results);
   } catch (error) {
-    await log(`Domains cron failed. Error: " + ${(error as Error).message}`, true);
+    await log(
+      `Domains cron failed. Error: " + ${(error as Error).message}`,
+      true,
+    );
     return NextResponse.json({ error: (error as Error).message });
   }
 }

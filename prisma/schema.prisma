@@ -62,6 +62,7 @@ model Team {
   documents      Document[]
   domains        Domain[]
   invitations    Invitation[]
+  sentEmails     SentEmail[]
   plan           String       @default("free")
   stripeId       String?      @unique // Stripe subscription / customer ID
   subscriptionId String?      @unique // Stripe subscription ID
@@ -199,4 +200,23 @@ model Invitation {
   token     String   @unique
 
   @@unique([email])
+}
+
+enum EmailType {
+  FIRST_DAY_DOMAIN_REMINDER_EMAIL
+  FIRST_DOMAIN_INVALID_EMAIL
+  SECOND_DOMAIN_INVALID_EMAIL
+  FIRST_TRIAL_END_REMINDER_EMAIL
+  FINAL_TRIAL_END_REMINDER_EMAIL
+}
+model SentEmail {
+  id        String    @id @default(cuid())
+  type      EmailType
+  recipient String    // Email address of the recipient
+  marketing Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  team      Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId    String
+
+  @@index([teamId])
 }
