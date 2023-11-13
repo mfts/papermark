@@ -22,7 +22,7 @@ export default function NotFound({ message }: { message?: string }) {
                   href="/"
                   className="text-base font-medium text-indigo-600 hover:text-indigo-500"
                 >
-                  Go back home<span aria-hidden="true"> &rarr;</span>
+                  Go back home <span aria-hidden="true"> &rarr;</span>
                 </Link>
               </div>
             </div>
