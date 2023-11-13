@@ -113,18 +113,19 @@ export async function POST(req: Request) {
           }
         }
 
+        // TODO: enable on 14.11.2023
         // downgrade the user to free if user has 0 day left on trial
-        if (userDaysLeft == 0) {
-          return await Promise.allSettled([
-            log(
-              `Downgrade to free for user: *${id}* is expiring in ${userDaysLeft} days, email sent.`,
-            ),
-            prisma.user.update({
-              where: { id },
-              data: { plan: "free" },
-            }),
-          ]);
-        }
+        // if (userDaysLeft == 0) {
+        //   return await Promise.allSettled([
+        //     log(
+        //       `Downgrade to free for user: *${id}* is expiring in ${userDaysLeft} days, email sent.`,
+        //     ),
+        //     prisma.user.update({
+        //       where: { id },
+        //       data: { plan: "free" },
+        //     }),
+        //   ]);
+        // }
       }),
     );
     return NextResponse.json(results);
