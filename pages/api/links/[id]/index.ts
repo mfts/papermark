@@ -25,7 +25,16 @@ export default async function handle(
           allowDownload: true,
           password: true,
           isArchived: true,
-          document: { select: { id: true, name: true } },
+          document: {
+            select: {
+              id: true,
+              versions: {
+                where: { isPrimary: true },
+                select: { versionNumber: true },
+                take: 1,
+              },
+            },
+          },
         },
       });
 

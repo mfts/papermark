@@ -9,7 +9,7 @@ export default function ViewPage() {
   const { data: session, status } = useSession();
 
   if (error && error.status === 404) {
-    <NotFound />;
+    return <NotFound />;
   }
 
   if (!link || status === "loading") {
