@@ -13,7 +13,7 @@ import {
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   if (req.method === "POST") {
     const session = await getServerSession(req, res, authOptions);
@@ -98,6 +98,7 @@ export default async function handler(
           domainId: domainObj?.id || null,
           domainSlug: domain || null,
           slug: slug || null,
+          enableNotification: linkData.enableNotification,
         },
       });
 

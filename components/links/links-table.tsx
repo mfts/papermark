@@ -65,6 +65,9 @@ export default function LinksTable() {
       password: link.password,
       emailProtected: link.emailProtected,
       allowDownload: link.allowDownload ? link.allowDownload : false,
+      enableNotification: link.enableNotification
+        ? link.enableNotification
+        : false,
     });
     //wait for dropdown to close before opening the link sheet
     setTimeout(() => {
@@ -75,7 +78,7 @@ export default function LinksTable() {
   const handleArchiveLink = async (
     linkId: string,
     documentId: string,
-    isArchived: boolean
+    isArchived: boolean,
   ) => {
     setIsLoading(true);
 
@@ -98,16 +101,16 @@ export default function LinksTable() {
     // Update the archived link in the list of links
     mutate(
       `/api/teams/${teamInfo?.currentTeam?.id}/documents/${encodeURIComponent(
-        documentId
+        documentId,
       )}/links`,
       (links || []).map((link) => (link.id === linkId ? archivedLink : link)),
-      false
+      false,
     );
 
     toast.success(
       !isArchived
         ? "Link successfully archived"
-        : "Link successfully reactivated"
+        : "Link successfully reactivated",
     );
     setIsLoading(false);
   };
@@ -159,8 +162,9 @@ export default function LinksTable() {
                                 `group/cell flex items-center gap-x-4 rounded-md text-secondary-foreground px-3 py-1 group-hover/row:ring-1 group-hover/row:ring-gray-400 group-hover/row:dark:ring-gray-100 transition-all`,
                                 link.domainId && hasFreePlan
                                   ? "bg-destructive hover:bg-red-700 hover:dark:bg-red-200"
-                                  : "bg-secondary hover:bg-emerald-700 hover:dark:bg-emerald-200"
-                              )}>
+                                  : "bg-secondary hover:bg-emerald-700 hover:dark:bg-emerald-200",
+                              )}
+                            >
                               <div className="whitespace-nowrap hidden sm:flex text-sm group-hover/cell:hidden">
                                 {link.domainId
                                   ? `https://${link.domainSlug}/${link.slug}`
@@ -173,7 +177,8 @@ export default function LinksTable() {
                                   onClick={() =>
                                     router.push("/settings/billing")
                                   }
-                                  title="Upgrade to activate link">
+                                  title="Upgrade to activate link"
+                                >
                                   Upgrade{" "}
                                   <span className="hidden sm:inline-flex">
                                     to activate link
@@ -186,14 +191,15 @@ export default function LinksTable() {
                                     link.domainId
                                       ? () =>
                                           handleCopyToClipboard(
-                                            `https://${link.domainSlug}/${link.slug}`
+                                            `https://${link.domainSlug}/${link.slug}`,
                                           )
                                       : () =>
                                           handleCopyToClipboard(
-                                            `https://${process.env.NEXT_PUBLIC_ROOT_DOMAIN}/view/${link.id}`
+                                            `https://${process.env.NEXT_PUBLIC_ROOT_DOMAIN}/view/${link.id}`,
                                           )
                                   }
-                                  title="Copy to clipboard">
+                                  title="Copy to clipboard"
+                                >
                                   Copy{" "}
                                   <span className="hidden sm:inline-flex">
                                     to Clipboard
@@ -220,8 +226,9 @@ export default function LinksTable() {
                             {link.views[0] ? (
                               <time
                                 dateTime={new Date(
-                                  link.views[0].viewedAt
-                                ).toISOString()}>
+                                  link.views[0].viewedAt,
+                                ).toISOString()}
+                              >
                                 {timeAgo(link.views[0].viewedAt)}
                               </time>
                             ) : (
@@ -239,7 +246,8 @@ export default function LinksTable() {
                               <DropdownMenuContent align="end">
                                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                 <DropdownMenuItem
-                                  onClick={() => handleEditLink(link)}>
+                                  onClick={() => handleEditLink(link)}
+                                >
                                   Edit Link
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
@@ -249,9 +257,10 @@ export default function LinksTable() {
                                     handleArchiveLink(
                                       link.id,
                                       link.documentId,
-                                      link.isArchived
+                                      link.isArchived,
                                     )
-                                  }>
+                                  }
+                                >
                                   Archive
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
@@ -298,7 +307,8 @@ export default function LinksTable() {
                 <Button
                   variant="secondary"
                   size="sm"
-                  className="text-gray-400 mx-auto flex items-center gap-x-1 h-8 justify-center mt-4 [&[data-state=open]>svg.chevron]:rotate-180">
+                  className="text-gray-400 mx-auto flex items-center gap-x-1 h-8 justify-center mt-4 [&[data-state=open]>svg.chevron]:rotate-180"
+                >
                   {archivedLinksCount} Archived Links
                   <ChevronDown className="h-4 w-4 text-gray-400 transition-transform duration-200 chevron" />
                 </Button>
@@ -359,8 +369,9 @@ export default function LinksTable() {
                                     {link.views[0] ? (
                                       <time
                                         dateTime={new Date(
-                                          link.views[0].viewedAt
-                                        ).toISOString()}>
+                                          link.views[0].viewedAt,
+                                        ).toISOString()}
+                                      >
                                         {timeAgo(link.views[0].viewedAt)}
                                       </time>
                                     ) : (
@@ -372,7 +383,8 @@ export default function LinksTable() {
                                       <DropdownMenuTrigger asChild>
                                         <Button
                                           variant="ghost"
-                                          className="h-8 w-8 p-0">
+                                          className="h-8 w-8 p-0"
+                                        >
                                           <span className="sr-only">
                                             Open menu
                                           </span>
@@ -391,9 +403,10 @@ export default function LinksTable() {
                                             handleArchiveLink(
                                               link.id,
                                               link.documentId,
-                                              link.isArchived
+                                              link.isArchived,
                                             )
-                                          }>
+                                          }
+                                        >
                                           Reactivate
                                         </DropdownMenuItem>
                                       </DropdownMenuContent>

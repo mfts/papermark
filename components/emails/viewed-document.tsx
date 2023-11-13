@@ -77,6 +77,10 @@ export default function ViewedDocument({
                 If you have any feedback or questions about this email, simply
                 reply to it. I&apos;d love to hear from you!
               </Text>
+              <Text className="text-xs">
+                To stop email notifications for this link, edit the link and
+                uncheck &quot;Receive email notification&quot;.
+              </Text>
             </Section>
           </Container>
         </Body>
