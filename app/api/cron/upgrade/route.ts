@@ -45,9 +45,15 @@ export async function POST(req: Request) {
           },
         },
         sentEmails: {
-          select: {
-            type: true,
+          where: {
+            type: {
+              in: [
+                "FIRST_TRIAL_END_REMINDER_EMAIL",
+                "FINAL_TRIAL_END_REMINDER_EMAIL",
+              ],
+            },
           },
+          select: { type: true },
         },
       },
     });
@@ -56,7 +62,9 @@ export async function POST(req: Request) {
       teams.map(async (team) => {
         const { id, users } = team as {
           id: string;
-          users: { user: { email: string; name: string; createdAt: Date } }[];
+          users: {
+            user: { email: string; name: string | null; createdAt: Date };
+          }[];
         };
 
         const sentEmails = team.sentEmails.map((email) => email.type);
