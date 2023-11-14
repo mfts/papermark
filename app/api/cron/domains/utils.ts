@@ -43,6 +43,15 @@ export const handleDomainUpdates = async ({
       id: true,
       name: true,
       sentEmails: {
+        where: {
+          type: {
+            in: [
+              "FIRST_DAY_DOMAIN_REMINDER_EMAIL",
+              "FIRST_DOMAIN_INVALID_EMAIL",
+              "SECOND_DOMAIN_INVALID_EMAIL",
+            ],
+          },
+        },
         select: {
           type: true,
           domainSlug: true,

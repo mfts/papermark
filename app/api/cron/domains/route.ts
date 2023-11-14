@@ -52,7 +52,7 @@ export async function POST(req: Request) {
         },
       },
       orderBy: {
-        lastChecked: "asc",
+        lastChecked: "asc", // earliest first
       },
       take: 100,
     });
