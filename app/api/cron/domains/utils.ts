@@ -45,6 +45,7 @@ export const handleDomainUpdates = async ({
       sentEmails: {
         select: {
           type: true,
+          domainSlug: true,
         },
       },
       users: {
@@ -65,7 +66,11 @@ export const handleDomainUpdates = async ({
     return;
   }
 
-  const sentEmails = team.sentEmails.map((email) => email.type);
+  // create an array of tuples with email type and domain slug
+  const sentEmails = team.sentEmails.map((email) => [
+    email.type,
+    email.domainSlug,
+  ]);
   const userEmail = team.users[0].user.email!;
 
   // if domain is invalid for more than 30 days, check if we can delete it
@@ -112,8 +117,9 @@ export const handleDomainUpdates = async ({
 
   // if domain is invalid for more than 28 days, send email
   if (invalidDays >= 28) {
-    const sentSecondDomainInvalidEmail = sentEmails.includes(
-      "SECOND_DOMAIN_INVALID_EMAIL",
+    const sentSecondDomainInvalidEmail = sentEmails.some(
+      ([type, domainSlug]) =>
+        type === "SECOND_DOMAIN_INVALID_EMAIL" && domainSlug === domain,
     );
     if (!sentSecondDomainInvalidEmail) {
       return await Promise.allSettled([
@@ -128,6 +134,7 @@ export const handleDomainUpdates = async ({
             type: "SECOND_DOMAIN_INVALID_EMAIL",
             teamId: team.id,
             recipient: userEmail,
+            domainSlug: domain,
           },
         }),
       ]);
@@ -136,8 +143,9 @@ export const handleDomainUpdates = async ({
 
   // if domain is invalid for more than 14 days, send email
   if (invalidDays >= 14) {
-    const sentFirstDomainInvalidEmail = sentEmails.includes(
-      "FIRST_DOMAIN_INVALID_EMAIL",
+    const sentFirstDomainInvalidEmail = sentEmails.some(
+      ([type, domainSlug]) =>
+        type === "FIRST_DOMAIN_INVALID_EMAIL" && domainSlug === domain,
     );
     if (!sentFirstDomainInvalidEmail) {
       return await Promise.allSettled([
@@ -152,6 +160,7 @@ export const handleDomainUpdates = async ({
             type: "FIRST_DOMAIN_INVALID_EMAIL",
             teamId: team.id,
             recipient: userEmail,
+            domainSlug: domain,
           },
         }),
       ]);
@@ -160,8 +169,9 @@ export const handleDomainUpdates = async ({
 
   // if domain is invalid after the first day, send email
   if (invalidDays == 1) {
-    const sentFirstDayDomainReminderEmail = sentEmails.includes(
-      "FIRST_DAY_DOMAIN_REMINDER_EMAIL",
+    const sentFirstDayDomainReminderEmail = sentEmails.some(
+      ([type, domainSlug]) =>
+        type === "FIRST_DAY_DOMAIN_REMINDER_EMAIL" && domainSlug === domain,
     );
     if (!sentFirstDayDomainReminderEmail) {
       return await Promise.allSettled([
@@ -176,6 +186,7 @@ export const handleDomainUpdates = async ({
             type: "FIRST_DAY_DOMAIN_REMINDER_EMAIL",
             teamId: team.id,
             recipient: userEmail,
+            domainSlug: domain,
           },
         }),
       ]);

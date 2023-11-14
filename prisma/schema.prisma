@@ -218,6 +218,7 @@ model SentEmail {
   createdAt DateTime  @default(now())
   team      Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
   teamId    String
+  domainSlug  String?   // Domain that triggered the email. This can be nullable, representing emails not triggered by domains
 
   @@index([teamId])
 }
