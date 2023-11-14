@@ -31,7 +31,7 @@ export default function Header() {
               </p>
               <div className="mt-10 flex items-center gap-x-6">
                 <Link
-                  className="rounded-md bg-black px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-gray-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400"
+                  className="rounded-md bg-black px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:shadow-md hover:bg-gray-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400"
                   href={"/login"}
                 >
                   Get started
@@ -39,10 +39,10 @@ export default function Header() {
                 <Link
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="rounded-md  px-3.5 py-2.5 text-sm font-semibold text-black hover:text-gray-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400 flex items-center"
+                  className="rounded-md px-3.5 py-2.5 text-sm font-semibold text-black hover:shadow-md hover:text-gray-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400 flex items-center"
                   href="https://github.com/mfts/papermark"
                 >
-                  <GitHubIcon className="mr-2 h-5 w-5" /> Star on Github
+                  <GitHubIcon className="mr-2 h-5 w-5" /> Star on GitHub
                 </Link>
               </div>
             </div>
