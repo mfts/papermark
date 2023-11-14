@@ -39,9 +39,7 @@ const TrialEndFinalReminderEmail = ({ name }: TrialEndFinalReminderEmail) => {
             </Text>
             <Text className="text-sm leading-6 text-black">
               Your Papermark Pro trial expires in 24 hours.{" "}
-              <Link
-                href={`${process.env.NEXT_PUBLIC_BASE_URL}/settings/billing`}
-              >
+              <Link href={`https://www.papermark.io/settings/billing`}>
                 Upgrade now
               </Link>{" "}
               to:
