@@ -12,6 +12,8 @@ import { sendTrialEndFinalReminderEmail } from "@/lib/emails/send-trial-end-fina
  **/
 // Runs once per day at 12pm (0 12 * * *)
 
+export const maxDuration = 300; // 5 minutes in seconds
+
 export async function POST(req: Request) {
   const body = await req.json();
   if (process.env.VERCEL === "1") {
