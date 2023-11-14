@@ -54,7 +54,6 @@ export async function POST(req: Request) {
       orderBy: {
         lastChecked: "asc", // earliest first
       },
-      take: 100,
     });
 
     const results = await Promise.allSettled(
