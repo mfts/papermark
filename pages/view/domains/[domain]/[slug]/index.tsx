@@ -1,5 +1,5 @@
 import LoadingSpinner from "@/components/ui/loading-spinner";
-import DocumentView from "@/components/view/document-view";
+import DocumentView from "@/components/view/documents/document-view";
 import { useDomainLink } from "@/lib/swr/use-link";
 import NotFound from "@/pages/404";
 import { useSession } from "next-auth/react";

@@ -1,5 +1,5 @@
 import LoadingSpinner from "@/components/ui/loading-spinner";
-import DocumentView from "@/components/view/document-view";
+import DocumentView from "@/components/view/documents/document-view";
 import { useLink } from "@/lib/swr/use-link";
 import NotFound from "@/pages/404";
 import { useSession } from "next-auth/react";
@@ -7,6 +7,7 @@ import { useSession } from "next-auth/react";
 export default function ViewPage() {
   const { link, authenticationCode, error } = useLink();
   const { data: session, status } = useSession();
+  
 
   if (error && error.status === 404) {
     return <NotFound />;

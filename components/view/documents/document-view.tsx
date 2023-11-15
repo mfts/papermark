@@ -4,9 +4,9 @@ import AccessForm, { DEFAULT_ACCESS_FORM_DATA, DEFAULT_ACCESS_FORM_TYPE } from "
 import { usePlausible } from "next-plausible";
 import { toast } from "sonner";
 import { LinkWithDocument } from "@/lib/types";
-import LoadingSpinner from "../ui/loading-spinner";
+import LoadingSpinner from "../../ui/loading-spinner";
 import PagesViewer from "@/components/PagesViewer";
-import EmailVerificationMessage from "./email-verification-form";
+import EmailVerificationMessage from "../email-verification-form";
 import ViewData from "./view-data";
 
 export type DEFAULT_DOCUMENT_VIEW_TYPE = {
@@ -94,13 +94,13 @@ export default function DocumentView({
   //Generates verification link from backend
   const handleEmailVerification = async () => {
     setIsLoading(true);
-    const URL = `/api/documents/verification/email_authcode`;
+    const URL = `/api/verification/email_authcode`;
     const response = await fetch(URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body : JSON.stringify({linkId : link.id, email: data.email})
+      body : JSON.stringify({identifier : link.id, type: "DOCUMENT", email: data.email})
     });
     if (response.ok) {
       setVerificationRequested(true);
@@ -115,7 +115,7 @@ export default function DocumentView({
   //Verifies authentication code
   const handleAuthCodeVerification = async () => {
     setIsLoading(true);
-    const URL = `/api/documents/verification/email_authcode?authenticationCode=${authenticationCode}`;
+    const URL = `/api/verification/email_authcode?authenticationCode=${authenticationCode}`;
     const response = await fetch(URL, {
       method: "GET",
       headers: {

@@ -122,6 +122,11 @@ export type AnalyticsEvents =
     name: string;
   }
   | {
+    event: "Dataroom Viewed";
+    viewerId: string;
+    viewerEmail: string | null | undefined;
+  }
+  | {
     event: "Link Added";
     linkId: string;
     documentId: string;

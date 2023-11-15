@@ -14,7 +14,7 @@ export default function DataroomCard({
 }) {
 
   function handleCopyToClipboard(id: string) {
-    copyToClipboard(`${process.env.NEXT_PUBLIC_BASE_URL}/view/dataroom/${id}`, "Link copied to clipboard.");
+    copyToClipboard(`${process.env.NEXT_PUBLIC_BASE_URL}/view/dataroom/page/${id}`, "Link copied to clipboard.");
   }
   const [isFirstClick, setIsFirstClick] = useState<boolean>(false);
   const handleButtonClick = (event: any) => {
@@ -79,12 +79,11 @@ export default function DataroomCard({
 
 //Update database when dataroom is deleted
 async function deleteDataroomFromDatabase(id: string) {
-  const response = await fetch(`/api/datarooms`, {
+  const response = await fetch(`/api/datarooms/${id}`, {
     method: "DELETE",
     headers: {
       "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ id })
+    }
   });
 
   if (!response.ok) {

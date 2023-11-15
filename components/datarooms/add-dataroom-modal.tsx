@@ -25,9 +25,12 @@ export function AddDataRoomModal({ children }: { children: React.ReactNode }) {
   //Documents inside data room
   const [dataRoomDocuments, setDataRoomDocuments] = useState<DataroomDocument[]>([]);
   const [dataRoomName, setDataRoomName] = useState<string>("");
+  const [dataRoomDescription, setDataRoomDescription] = useState<string>("");
+
   //const plausible = usePlausible();
   const [uploading, setUploading] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>("");
+  const maxVisibleDocuments = 2;
   const router = useRouter();
 
   const handleDataroomCreation = async (event: any) => {
@@ -76,6 +79,7 @@ export function AddDataRoomModal({ children }: { children: React.ReactNode }) {
     //Select documents from useDocuments for maintainig constant type in backend
     const titles = dataRoomDocuments.map((dataRoomDocument) => dataRoomDocument.title);
     const ids = dataRoomDocuments.map((dataRoomDocument) => dataRoomDocument.id);
+    const links = dataRoomDocuments.map((dataRoomDocument) => dataRoomDocument.url);
 
     const response = await fetch("/api/datarooms", {
       method: "POST",
@@ -84,8 +88,10 @@ export function AddDataRoomModal({ children }: { children: React.ReactNode }) {
       },
       body: JSON.stringify({
         name: dataRoomName,
+        description: dataRoomDescription,
         titles,
-        ids
+        ids,
+        links
       }),
     });
 
@@ -104,7 +110,7 @@ export function AddDataRoomModal({ children }: { children: React.ReactNode }) {
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="text-foreground bg-background">
         <DialogHeader>
-          <DialogTitle>Create a data room</DialogTitle>
+          <DialogTitle>Create a single page data room</DialogTitle>
           <DialogDescription>
             <div className="border-b border-border py-2">
               <p className="mb-1 text-sm text-muted-foreground">
@@ -113,19 +119,28 @@ export function AddDataRoomModal({ children }: { children: React.ReactNode }) {
                 generated and copied to your clipboard.
               </p>
             </div>
-            <div className="border-b border-border py-2  mt-3">
-              <p className="mb-1 text-sm text-muted-foreground font-bold mb-3">
+            <div className="py-2 mt-1">
+              <p className="mb-1 text-sm text-muted-foreground font-bold mb-1">
                 Dataroom Name
               </p>
               <Input
-                className="mb-3"
                 placeholder={"Enter Data Room Name..."}
                 onChange={(e) => { setDataRoomName(e.target.value) }}
               />
             </div>
+            <div className="border-b border-border py-2">
+              <p className="text-sm text-muted-foreground font-bold mb-1">
+                Dataroom Description
+              </p>
+              <Input
+                className="mb-2"
+                placeholder={"Enter Data Room Description..."}
+                onChange={(e) => { setDataRoomDescription(e.target.value) }}
+              />
+            </div>
 
             {/* Documents list */}
-            <ul role="list" className="space-y-4">
+            <ul role="list" className={`space-y-4 overflow-y-auto max-h-48`}>
               {dataRoomDocuments
                 ? dataRoomDocuments.map((dataRoomDocument) => {
                   return <DocumentMetadataCard

@@ -154,12 +154,40 @@ model View {
 }
 
 model Dataroom {
-  id          String            @id @default(cuid())
-  name        String
-  owner       User              @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  ownerId     String // This field holds the foreign key.
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
-  documentsIds   String[]
+  id               String            @id @default(cuid())
+  name             String
+  description      String?
+  emailProtected   Boolean           @default(true) // Optional email protection
+  password         String? // Optional password for link protection
+  isArchived       Boolean           @default(false) // Indicates if the dataroom is archived
+  owner            User              @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerId          String // This field holds the foreign key.
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  documentsIds     String[] //If link is deleted, try to find from documentId
+  documentsLinks   String[] 
   documentsTitles  String[]
+  dataroomView     DataroomView[]
+}
+
+model DataroomView {
+  id          String   @id @default(cuid())
+  dataroom    Dataroom @relation(fields: [dataroomId], references: [id],  onDelete: Cascade)
+  dataroomId  String
+  viewerEmail String? // Email of the viewer if known
+  viewedAt    DateTime @default(now())
+}
+
+enum AuthenticationCodeType {
+  DOCUMENT
+  DATAROOM
+}
+
+model EmailAuthenticationCode {
+  id          String   @id @default(cuid())
+  email       String
+  code        String   @unique
+  identifier  String  
+  type        AuthenticationCodeType 
+  createdAt   DateTime @default(now())
 }
