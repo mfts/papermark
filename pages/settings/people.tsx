@@ -119,6 +119,32 @@ export default function Billing() {
     toast.success("Invitation resent successfully!");
   };
 
+  // revoke invitation function
+  const revokeInvitation = async (invitation: { email: string } & any) => {
+    const response = await fetch(
+      `/api/teams/${teamInfo?.currentTeam?.id}/invitations`,
+      {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: invitation.email as string,
+        }),
+      },
+    );
+
+    if (!response.ok) {
+      const error = await response.json();
+      toast.error(error);
+      return;
+    }
+
+    mutate(`/api/teams/${teamInfo?.currentTeam?.id}/invitations`);
+
+    toast.success("Invitation revoked successfully!");
+  };
+
   return (
     <AppLayout>
       <Navbar current="People" />
@@ -287,6 +313,12 @@ export default function Billing() {
                         className="text-red-500 focus:bg-destructive focus:text-destructive-foreground hover:cursor-pointer"
                       >
                         Resend
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => revokeInvitation(invitation)}
+                        className="text-red-500 focus:bg-destructive focus:text-destructive-foreground hover:cursor-pointer"
+                      >
+                        Revoke invitation
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>

@@ -51,5 +51,42 @@ export default async function handle(
     } catch (error) {
       errorhandler(error, res);
     }
+  } else if (req.method === "DELETE") {
+    // DELETE /api/teams/:teamId/invitations
+    const session = await getServerSession(req, res, authOptions);
+    if (!session) {
+      return res.status(401).end("Unauhorized");
+    }
+
+    const { teamId } = req.query as { teamId: string };
+
+    const { email } = req.body as { email: string };
+
+    try {
+      // check if currentUser is part of the team with the teamId
+      const userTeam = await prisma.userTeam.findFirst({
+        where: {
+          teamId,
+          userId: (session.user as CustomUser).id,
+        },
+      });
+
+      if (!userTeam) {
+        return res.status(403).json("You are not part of this team");
+      }
+
+      // delete invitation
+      await prisma.invitation.delete({
+        where: {
+          teamId: teamId,
+          email: email,
+        },
+      });
+
+      res.status(204).end();
+      return;
+    } catch (error) {
+      errorhandler(error, res);
+    }
   }
 }
