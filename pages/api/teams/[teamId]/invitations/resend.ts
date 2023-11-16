@@ -59,8 +59,10 @@ export default async function handle(
       // update invitation
       const invitation = await prisma.invitation.update({
         where: {
-          email: email,
-          teamId: teamId,
+          email_teamId: {
+            email: email,
+            teamId: teamId,
+          },
         },
         data: {
           expires: expiresAt,

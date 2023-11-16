@@ -78,8 +78,10 @@ export default async function handle(
       // delete invitation
       await prisma.invitation.delete({
         where: {
-          teamId: teamId,
-          email: email,
+          email_teamId: {
+            teamId: teamId,
+            email: email,
+          },
         },
       });
 
