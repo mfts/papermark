@@ -36,6 +36,11 @@ export default async function handle(
             select: {
               userId: true,
               role: true,
+              user: {
+                select: {
+                  email: true,
+                },
+              },
             },
           },
         },
@@ -49,13 +54,40 @@ export default async function handle(
           user.userId === (session.user as CustomUser).id,
       );
       if (!isUserAdmin) {
-        return res.status(403).json("Only admins can send the invitation!");
+        res.status(403).json("Only admins can send the invitation!");
+        return;
+      }
+
+      // check if user is already in the team
+      const isExistingMember = teamUsers?.some(
+        (user) => user.user.email === email,
+      );
+
+      if (isExistingMember) {
+        res.status(400).json("User is already a member of this team");
+        return;
+      }
+
+      // check if invitation already exists
+      const invitationExists = await prisma.invitation.findUnique({
+        where: {
+          email_teamId: {
+            teamId,
+            email,
+          },
+        },
+      });
+
+      if (invitationExists) {
+        res.status(400).json("Invitation already sent to this email");
+        return;
       }
 
       const token = newId("inv");
-
       const expiresAt = new Date();
       expiresAt.setHours(expiresAt.getHours() + 24); // invitation expires in 24 hour
+
+      // create invitation
       await prisma.invitation.create({
         data: {
           email,
