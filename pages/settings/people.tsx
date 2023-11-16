@@ -23,6 +23,7 @@ import { useTeam } from "@/context/team-context";
 import { useTeams } from "@/lib/swr/use-teams";
 import Link from "next/link";
 import { usePlan } from "@/lib/swr/use-billing";
+import { useInvitations } from "@/lib/swr/use-invitations";
 
 export default function Billing() {
   const [isTeamMemberInviteModalOpen, setTeamMemberInviteModalOpen] =
@@ -35,11 +36,13 @@ export default function Billing() {
   const { plan: userPlan } = usePlan();
   const { teams } = useTeams();
 
+  const { invitations } = useInvitations();
+
   const router = useRouter();
 
   const getUserDocumentCount = (userId: string) => {
     const documents = team?.documents.filter(
-      (document) => document.owner.id === userId
+      (document) => document.owner.id === userId,
     );
     return documents?.length;
   };
@@ -55,7 +58,7 @@ export default function Billing() {
     return team?.users.some(
       (user) =>
         user.role === "ADMIN" &&
-        user.userId === (session?.user as CustomUser)?.id
+        user.userId === (session?.user as CustomUser)?.id,
     );
   };
 
@@ -90,6 +93,30 @@ export default function Billing() {
     }
 
     toast.success("Teammate removed successfully!");
+  };
+
+  // resend invitation function
+  const resendInvitation = async (invitation: { email: string } & any) => {
+    const response = await fetch(
+      `/api/teams/${teamInfo?.currentTeam?.id}/invitations/resend`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: invitation.email as string,
+        }),
+      },
+    );
+
+    if (response.status !== 200) {
+      const error = await response.json();
+      toast.error(error);
+      return;
+    }
+
+    toast.success("Invitation resent successfully!");
   };
 
   return (
@@ -218,6 +245,54 @@ export default function Billing() {
               </div>
             </li>
           ))}
+          {invitations &&
+            invitations.map((invitation, index) => (
+              <li
+                className="flex py-4 px-10 justify-between items-center"
+                key={index}
+              >
+                <div className="flex items-center gap-12">
+                  <div className="space-y-1">
+                    <h4 className="font-semibold text-sm">
+                      {invitation.email}
+                    </h4>
+                    <p className="text-xs text-muted-foreground">
+                      {invitation.email}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-12">
+                  <span
+                    className="text-sm text-foreground"
+                    title={`Expires on ${new Date(
+                      invitation.expires,
+                    ).toLocaleString()}`}
+                  >
+                    {new Date(invitation.expires) >= new Date(Date.now())
+                      ? "Pending"
+                      : "Expired"}
+                  </span>
+
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="h-8 w-8 p-0">
+                        <span className="sr-only">Open menu</span>
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                      <DropdownMenuItem
+                        onClick={() => resendInvitation(invitation)}
+                        className="text-red-500 focus:bg-destructive focus:text-destructive-foreground hover:cursor-pointer"
+                      >
+                        Resend
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </li>
+            ))}
         </ul>
       </div>
     </AppLayout>
