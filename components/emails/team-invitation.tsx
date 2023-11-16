@@ -47,10 +47,10 @@ export default function TeamInvitation({
             </Text>
             <Section className="text-center mt-[32px] mb-[32px]">
               <Button
-                pX={20}
-                pY={12}
                 className="bg-black rounded text-white text-xs font-semibold no-underline text-center"
-                href={`${process.env.NEXT_PUBLIC_BASE_URL}/api/teams/${teamId}/invite?token=${token}`}>
+                href={`${process.env.NEXT_PUBLIC_BASE_URL}/api/teams/${teamId}/invite?token=${token}`}
+                style={{ padding: "12px 20px" }}
+              >
                 Join the team
               </Button>
             </Section>
@@ -66,7 +66,8 @@ export default function TeamInvitation({
                 <a
                   href="https://www.papermark.io"
                   className="no-underline text-gray-400 hover:text-gray-400 visited:text-gray-400"
-                  target="_blank">
+                  target="_blank"
+                >
                   papermark.io
                 </a>
               </Text>

@@ -58,18 +58,17 @@ const TrialEndReminderEmail = ({ name }: TrialEndReminderEmail) => {
             </Text>
             <Section className="text-center mt-[32px] mb-[32px]">
               <Button
-                pX={20}
-                pY={12}
                 className="bg-black rounded text-white text-xs font-semibold no-underline text-center"
                 href={`https://www.papermark.io/settings/billing`}
+                style={{ padding: "12px 20px" }}
               >
                 Upgrade your plan
               </Button>
             </Section>
             <Text className="text-sm font-semibold">
               <span className="text-red-500">⚠️</span> Links with custom domains
-              will be <span className="underline text-red-500">disabled</span> after your
-              trial.
+              will be <span className="underline text-red-500">disabled</span>{" "}
+              after your trial.
             </Text>
             <Text className="text-sm text-gray-400">Marc from Papermark</Text>
             <Hr />

@@ -14,11 +14,9 @@ import {
   Hr,
 } from "@react-email/components";
 
-
 interface WelcomeEmailProps {
   name: string | null | undefined;
 }
-
 
 const WelcomeEmail = ({ name }: WelcomeEmailProps) => {
   const previewText = `The document sharing infrastructure for the modern web`;
@@ -57,10 +55,9 @@ const WelcomeEmail = ({ name }: WelcomeEmailProps) => {
             </Text>
             <Section className="text-center mt-[32px] mb-[32px]">
               <Button
-                pX={20}
-                pY={12}
                 className="bg-black rounded text-white text-xs font-semibold no-underline text-center"
                 href={`${process.env.NEXT_PUBLIC_BASE_URL}/welcome`}
+                style={{ padding: "12px 20px" }}
               >
                 Get Started
               </Button>
