@@ -50,10 +50,9 @@ export default function ViewedDocument({
             </Text>
             <Section className="my-8 text-center">
               <Button
-                pX={20}
-                pY={12}
                 className="bg-black rounded text-white text-xs font-semibold no-underline text-center"
                 href={`https://www.papermark.io/documents/${documentId}`}
+                style={{ padding: "12px 20px" }}
               >
                 See my document insights
               </Button>
