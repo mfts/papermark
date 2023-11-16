@@ -80,12 +80,12 @@ export default function Pricing() {
 
         <div className="container mx-auto px-4">
           <div className="mx-auto max-w-2xl text-center lg:max-w-4xl">
-            <p className="mt-16 text-4xl font-bold tracking-tight text-gray-900  sm:text-5xl">
+            <p className="font-display mt-16 text-4xl font-bold tracking-tight text-gray-900  sm:text-5xl">
               Pricing
             </p>
           </div>
 
-          <p className="font-dispaly2 mx-auto mt-6 max-w-2xl text-center text-lg leading-8 text-gray-500 ">
+          <p className="font-display2 mx-auto mt-6 max-w-2xl text-center text-lg leading-8 text-gray-500 ">
             Share your Pitch Deck, Sales Deck and oher documents and monitor
             results on any suitable for you plan. You always can start open
             source
