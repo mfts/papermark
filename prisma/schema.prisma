@@ -200,7 +200,7 @@ model Invitation {
   createdAt DateTime @default(now())
   token     String   @unique
 
-  @@unique([email])
+  @@unique([email,teamId])
 }
 
 enum EmailType {
