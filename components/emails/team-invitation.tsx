@@ -28,7 +28,7 @@ export default function TeamInvitation({
   return (
     <Html>
       <Head />
-      <Preview>Team Invitation</Preview>
+      <Preview>Join the team on Papermark</Preview>
       <Tailwind>
         <Body className="bg-white my-auto mx-auto font-sans">
           <Container className="my-10 mx-auto p-5 w-[465px]">
