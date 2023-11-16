@@ -85,13 +85,13 @@ export default function Pricing() {
             </p>
           </div>
 
-          <p className="mx-auto mt-6 max-w-2xl text-center text-lg leading-8 text-gray-500 ">
+          <p className="font-dispaly2 mx-auto mt-6 max-w-2xl text-center text-lg leading-8 text-gray-500 ">
             Share your Pitch Deck, Sales Deck and oher documents and monitor
             results on any suitable for you plan. You always can start open
             source
           </p>
 
-          <div className="mx-auto mt-16 grid max-w-5xl grid-cols-1 gap-6 items-center sm:grid-cols-3 sm:gap-4">
+          <div className="font-display2 mx-auto mt-16 grid max-w-5xl grid-cols-1 gap-6 items-center sm:grid-cols-3 sm:gap-4">
             {tiers.map((tier) => (
               <div
                 key={tier.id}
