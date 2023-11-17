@@ -1,23 +1,14 @@
 import React, { useEffect, useRef, useState } from "react";
-import ErrorPage from "next/error";
 import PDFViewer from "@/components/PDFViewer";
-import AccessForm from "@/components/view/access-form";
-import { useSession } from "next-auth/react";
+import AccessForm, {
+  DEFAULT_ACCESS_FORM_DATA,
+  DEFAULT_ACCESS_FORM_TYPE,
+} from "@/components/view/access-form";
 import { usePlausible } from "next-plausible";
 import { toast } from "sonner";
 import { LinkWithDocument } from "@/lib/types";
 import LoadingSpinner from "../ui/loading-spinner";
 import PagesViewer from "@/components/PagesViewer";
-
-export const DEFAULT_ACCESS_FORM_DATA = {
-  email: null,
-  password: null,
-};
-
-export type DEFAULT_ACCESS_FORM_TYPE = {
-  email: string | null;
-  password: string | null;
-};
 
 export type DEFAULT_DOCUMENT_VIEW_TYPE = {
   viewId: string;
@@ -27,54 +18,30 @@ export type DEFAULT_DOCUMENT_VIEW_TYPE = {
 
 export default function DocumentView({
   link,
-  error,
+  userEmail,
+  isProtected,
 }: {
   link: LinkWithDocument;
-  error: any;
+  userEmail: string | null | undefined;
+  isProtected: boolean;
 }) {
-  const { data: session } = useSession();
+  const { document, emailProtected, password: linkPassword } = link;
+
   const plausible = usePlausible();
 
+  const didMount = useRef<boolean>(false);
   const [submitted, setSubmitted] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const hasInitiatedSubmit = useRef(false);
   const [viewData, setViewData] = useState<DEFAULT_DOCUMENT_VIEW_TYPE>({
     viewId: "",
     file: null,
     pages: null,
   });
-
   const [data, setData] = useState<DEFAULT_ACCESS_FORM_TYPE>(
-    DEFAULT_ACCESS_FORM_DATA
+    DEFAULT_ACCESS_FORM_DATA,
   );
 
-  useEffect(() => {
-    const userEmail = session?.user?.email;
-    if (userEmail) {
-      setData((prevData) => ({
-        ...prevData,
-        email: userEmail || prevData.email,
-      }));
-    }
-  }, [session]);
-
-  if (error && error.status === 404) {
-    return <ErrorPage statusCode={404} />;
-  }
-
-  if (!link) {
-    return <LoadingSpinner className="mr-1 h-5 w-5" />;
-  }
-
-  const { document, expiresAt, emailProtected, password: linkPassword } = link;
-
-  // Check if link is expired
-  const isExpired = expiresAt && new Date(expiresAt) < new Date();
-  if (isExpired) {
-    return <div>Link is expired</div>;
-  }
-
-  const handleSubmission = async () => {
+  const handleSubmission = async (): Promise<void> => {
     setIsLoading(true);
     const response = await fetch("/api/views", {
       method: "POST",
@@ -83,6 +50,7 @@ export default function DocumentView({
       },
       body: JSON.stringify({
         ...data,
+        email: data.email || userEmail,
         linkId: link.id,
         documentId: document.id,
       }),
@@ -103,18 +71,31 @@ export default function DocumentView({
   };
 
   const handleSubmit: React.FormEventHandler<HTMLFormElement> = async (
-    event: React.FormEvent
-  ) => {
+    event: React.FormEvent,
+  ): Promise<void> => {
     event.preventDefault();
     await handleSubmission();
   };
 
-  if ((!submitted && emailProtected) || (!submitted && linkPassword)) {
+  // If link is not submitted and does not have email / password protection, show the access form
+  useEffect(() => {
+    if (!didMount.current) {
+      if (!submitted && !isProtected) {
+        handleSubmission();
+      }
+      didMount.current = true;
+    }
+  }, [submitted, isProtected]);
+
+  // If link is not submitted and does not have email / password protection, show the access form
+  if (!submitted && isProtected) {
+    console.log("calling access form");
     return (
       <AccessForm
-        onSubmitHandler={handleSubmit}
         data={data}
+        email={userEmail}
         setData={setData}
+        onSubmitHandler={handleSubmit}
         requireEmail={emailProtected}
         requirePassword={!!linkPassword}
         isLoading={isLoading}
@@ -122,34 +103,41 @@ export default function DocumentView({
     );
   }
 
-  if (
-    !emailProtected &&
-    !linkPassword &&
-    !submitted &&
-    !hasInitiatedSubmit.current
-  ) {
-    hasInitiatedSubmit.current = true;
-    handleSubmission();
+  if (isLoading) {
+    console.log("loading");
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <LoadingSpinner className="h-20 w-20" />
+      </div>
+    );
   }
 
   return (
     <div className="bg-gray-950">
-      {viewData.pages ? (
-        <PagesViewer
-          pages={viewData.pages}
-          viewId={viewData.viewId}
-          linkId={link.id}
-          documentId={document.id}
-        />
+      {submitted ? (
+        viewData.pages ? (
+          <PagesViewer
+            pages={viewData.pages}
+            viewId={viewData.viewId}
+            linkId={link.id}
+            documentId={document.id}
+            versionNumber={document.versions[0].versionNumber}
+          />
+        ) : (
+          <PDFViewer
+            file={viewData.file}
+            viewId={viewData.viewId}
+            linkId={link.id}
+            documentId={document.id}
+            name={document.name}
+            allowDownload={link.allowDownload}
+            versionNumber={document.versions[0].versionNumber}
+          />
+        )
       ) : (
-        <PDFViewer
-          file={viewData.file}
-          viewId={viewData.viewId}
-          linkId={link.id}
-          documentId={document.id}
-          name={document.name}
-          allowDownload={link.allowDownload}
-        />
+        <div className="h-screen flex items-center justify-center">
+          <LoadingSpinner className="h-20 w-20" />
+        </div>
       )}
     </div>
   );

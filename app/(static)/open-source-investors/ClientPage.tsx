@@ -81,7 +81,7 @@ export default function Dashboard({ data }: any) {
       <div className="mx-auto max-w-6xl pt-4 mb-10">
         <div className="max-w-6xl mx-auto px-4 md:px-8 sm:pt-16 pt-8 text-gray-600">
           <div className="space-y-5 max-w-4xl mx-auto text-center">
-            <h1 className="text-3xl text-gray-800 font-extrabold mx-auto sm:text-6xl max-w-3xl">
+            <h1 className="text-3xl text-gray-800 font-extrabold mx-auto sm:text-6xl max-w-3xl tracking-tighter">
               Find the next angel investor for your open-source project
             </h1>
           </div>

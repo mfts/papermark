@@ -8,6 +8,7 @@ import Head from "next/head";
 import { Analytics } from "@vercel/analytics/react";
 import PlausibleProvider from "next-plausible";
 import { ThemeProvider } from "@/components/theme-provider";
+import { TeamProvider } from "@/context/team-context";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -24,11 +25,12 @@ export default function App({
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <PlausibleProvider
             domain="papermark.io"
-            enabled={process.env.NEXT_PUBLIC_VERCEL_ENV === "production"}
-          >
+            enabled={process.env.NEXT_PUBLIC_VERCEL_ENV === "production"}>
             <main className={inter.className}>
               <Toaster closeButton richColors theme={"system"} />
-              <Component {...pageProps} />
+              <TeamProvider>
+                <Component {...pageProps} />
+              </TeamProvider>
             </main>
           </PlausibleProvider>
         </ThemeProvider>

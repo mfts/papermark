@@ -2,12 +2,11 @@ import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/20/solid";
 import { useEffect, useRef, useState } from "react";
 import { BlurImage } from "@/components/shared/blur-image";
 
-export default function PagesViewer({pages, linkId, documentId, viewId}: {pages: { file: string, pageNumber: string }[], linkId: string, documentId: string, viewId: string}) {
+export default function PagesViewer({pages, linkId, documentId, viewId, versionNumber}: {pages: { file: string, pageNumber: string }[], linkId: string, documentId: string, viewId: string, versionNumber: number}) {
   const [pageNumber, setPageNumber] = useState<number>(1); // start on first page
 
   const startTimeRef = useRef(Date.now());
   const pageNumberRef = useRef<number>(pageNumber);
-  const isInitialPageLoad = useRef(true);
 
   const numPages = pages.length;
 
@@ -53,12 +52,6 @@ export default function PagesViewer({pages, linkId, documentId, viewId}: {pages:
   }
 
   async function trackPageView(duration: number = 0) {
-    // If this is the initial page load, don't send the request
-    if (isInitialPageLoad.current) {
-      isInitialPageLoad.current = false;
-      return;
-    }
-
     await fetch("/api/record_view", {
       method: "POST",
       body: JSON.stringify({
@@ -67,6 +60,7 @@ export default function PagesViewer({pages, linkId, documentId, viewId}: {pages:
         viewId: viewId,
         duration: duration,
         pageNumber: pageNumberRef.current,
+        versionNumber: versionNumber,
       }),
       headers: {
         "Content-Type": "application/json",
@@ -115,11 +109,27 @@ export default function PagesViewer({pages, linkId, documentId, viewId}: {pages:
             className="object-contain mx-auto"
             src={pages[pageNumber - 1].file}
             alt={`Page ${pageNumber}`}
+            sizes="100vw"
             fill
-            priority={pageNumber == 1}
+            priority={true}
             quality={100}
           />
         </div>
+
+        {/* Preload the next few images off-screen */}
+        {/* <div className="absolute top-0 left-full">
+          {pages.slice(pageNumber, pageNumber + 3).map((page, idx) => (
+            <BlurImage
+              key={idx}
+              src={page.file}
+              alt={`Preload Page ${page.pageNumber}`}
+              quality={100}
+              sizes="100vw"
+              fill
+              className="object-contain"
+            />
+          ))}
+        </div> */}
       </div>
     </>
   );

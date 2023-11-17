@@ -1,4 +1,4 @@
-VERSION 2
+VERSION 3
 
 NODE endpoint
 SQL >
@@ -7,7 +7,7 @@ SQL >
         pageNumber,
         SUM(duration) AS sum_duration
     FROM
-        page_views__v1
+        page_views__v2
     WHERE
         documentId = {{ String(documentId, required=True) }}
         AND viewId = {{ String(viewId, required=True) }}

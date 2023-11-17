@@ -8,5 +8,6 @@ export const sendInvalidDomainEmail = async (email: string, domain: string, inva
     subject: `Your domain ${domain} needs to be configured`,
     react: emailTemplate,
     test: process.env.NODE_ENV === "development",
+    system: true,
   });
 };

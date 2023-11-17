@@ -1,19 +1,20 @@
-VERSION 2
+VERSION 3
 
 NODE endpoint
 SQL >
     %
     SELECT
+        versionNumber,
         pageNumber,
         AVG(duration) AS avg_duration
     FROM
-        page_views__v1
+        page_views__v2
     WHERE
         documentId = {{ String(documentId, required=True) }}
         AND time >= {{ Int64(since, required=True) }}
         AND linkId NOT IN {{Array(linkId,String)}}
         AND viewId NOT IN {{Array(viewId,String)}}
     GROUP BY
-        pageNumber
+        versionNumber, pageNumber
     ORDER BY
-        pageNumber ASC
+        versionNumber ASC, pageNumber ASC
