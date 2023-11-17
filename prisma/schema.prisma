@@ -65,6 +65,7 @@ model Team {
   documents      Document[]
   domains        Domain[]
   invitations    Invitation[]
+  sentEmails     SentEmail[]
   plan           String       @default("free")
   stripeId       String?      @unique // Stripe subscription / customer ID
   subscriptionId String?      @unique // Stripe subscription ID
@@ -147,24 +148,25 @@ model DocumentPage {
 }
 
 model Link {
-  id             String    @id @default(cuid())
-  document       Document  @relation(fields: [documentId], references: [id], onDelete: Cascade)
-  documentId     String
-  url            String?   @unique
-  name           String? // Link name
-  slug           String? // Link slug for pretty URLs
-  expiresAt      DateTime? // Optional expiration date
-  password       String? // Optional password for link protection
-  allowedEmails  String[] // Array of emails allowed to view the document
-  emailProtected Boolean   @default(true) // Optional email protection
-  allowDownload  Boolean?  @default(false) // Optional give user a option to allow to download the document
-  isArchived     Boolean   @default(false) // Indicates if the link is archived
-  views          View[]
-  domain         Domain?   @relation(fields: [domainId], references: [id], onDelete: SetNull)
-  domainId       String? // This can be nullable, representing links without custom domains
-  domainSlug     String? // This will store the domain's slug even if the domain is deleted
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  id                 String    @id @default(cuid())
+  document           Document  @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  documentId         String
+  url                String?   @unique
+  name               String? // Link name
+  slug               String? // Link slug for pretty URLs
+  expiresAt          DateTime? // Optional expiration date
+  password           String? // Optional password for link protection
+  allowedEmails      String[] // Array of emails allowed to view the document
+  emailProtected     Boolean   @default(true) // Optional email protection
+  allowDownload      Boolean?  @default(false) // Optional give user a option to allow to download the document
+  isArchived         Boolean   @default(false) // Indicates if the link is archived
+  views              View[]
+  domain             Domain?   @relation(fields: [domainId], references: [id], onDelete: SetNull)
+  domainId           String? // This can be nullable, representing links without custom domains
+  domainSlug         String? // This will store the domain's slug even if the domain is deleted
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  enableNotification Boolean?  @default(true) // Optional give user a option to pause/resume the notifications
 
   @@unique([domainSlug, slug])
 }
@@ -201,7 +203,7 @@ model Invitation {
   createdAt DateTime @default(now())
   token     String   @unique
 
-  @@unique([email])
+  @@unique([email, teamId])
 }
 
 // model Webhook {
@@ -246,4 +248,25 @@ enum Event {
   ACCOUNT_ACTIVITY // account-related activities, such as login from a new device.
   SYSTEM_UPDATE // Notifications about system-wide updates or maintenance.
   PROMOTION // announcement about promotions, discounts, or special offers
+}
+
+enum EmailType {
+  FIRST_DAY_DOMAIN_REMINDER_EMAIL
+  FIRST_DOMAIN_INVALID_EMAIL
+  SECOND_DOMAIN_INVALID_EMAIL
+  FIRST_TRIAL_END_REMINDER_EMAIL
+  FINAL_TRIAL_END_REMINDER_EMAIL
+}
+
+model SentEmail {
+  id         String    @id @default(cuid())
+  type       EmailType
+  recipient  String // Email address of the recipient
+  marketing  Boolean   @default(false)
+  createdAt  DateTime  @default(now())
+  team       Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId     String
+  domainSlug String? // Domain that triggered the email. This can be nullable, representing emails not triggered by domains
+
+  @@index([teamId])
 }

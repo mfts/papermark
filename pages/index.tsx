@@ -9,7 +9,7 @@ import Logos from "@/components/web/logos";
 import Head from "next/head";
 import Section3 from "@/components/web/section3";
 
-export default function Home() {  
+export default function Home() {
   return (
     <>
       <Head>
@@ -23,7 +23,7 @@ export default function Home() {
         />
         <meta
           property="og:description"
-          content="Papermark is an open-source document infrastructure for sharing and collaboration. Manage secure document sharing with real-time analytics."
+          content="Papermark is an open-source document infrastructure for sharing and collaboration. Manage secure document sharing with real-time analytics. It is a free alternative to DocSend."
         />
         <meta
           property="og:image"
@@ -34,7 +34,7 @@ export default function Home() {
       </Head>
       <Navbar />
 
-      <div className="mt-8">
+      <div>
         <div className="relative isolate overflow-hidden bg-white ">
           <div
             className="absolute left-[calc(50%-4rem)] top-10 -z-10 transform-gpu blur-3xl sm:left-[calc(50%-18rem)] lg:left-48 lg:top-[calc(50%-30rem)] xl:left-[calc(50%-24rem)]"

@@ -11,6 +11,8 @@ import VisitorsTable from "@/components/visitors/visitors-table";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import LoadingSpinner from "@/components/ui/loading-spinner";
+import { AddDocumentModal } from "@/components/documents/add-document-modal";
+import FileUp from "@/components/shared/icons/file-up";
 import { toast } from "sonner";
 import {
   DropdownMenu,
@@ -198,6 +200,11 @@ export default function DocumentPage() {
                 </div>
               </div>
               <div className="flex items-center gap-x-4">
+                <AddDocumentModal newVersion>
+                  <button title="Upload a new version">
+                    <FileUp className="w-6 h-6" />
+                  </button>
+                </AddDocumentModal>
                 <DropdownMenu
                   open={menuOpen}
                   onOpenChange={handleMenuStateChange}
@@ -231,12 +238,12 @@ export default function DocumentPage() {
                 <ProcessStatusBar documentVersionId={primaryVersion.id} />
               </div>
             ) : null}
-            
+
             {/* Stats */}
             {prismaDocument.numPages !== null && (
               <StatsChart
                 documentId={prismaDocument.id}
-                totalPages={primaryVersion.numPages!}
+                totalPagesMax={primaryVersion.numPages!}
               />
             )}
             <StatsCard />

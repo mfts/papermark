@@ -27,6 +27,7 @@ export default async function handle(
     },
     select: {
       emailProtected: true,
+      enableNotification: true,
       password: true,
       _count: {
         select: {
