@@ -138,7 +138,9 @@ export default async function webhookHandler(
           });
 
           if (!user) {
-            await log("User not found in Stripe webhook `customer.subscription.deleted` callback");
+            await log(
+              "User not found in Stripe webhook `customer.subscription.deleted` callback"
+            );
             return;
           }
 

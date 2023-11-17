@@ -4,49 +4,49 @@ import { Event } from "@prisma/client";
 import { getServerSession } from "next-auth";
 import { authOptions } from "./auth/[...nextauth]";
 import { CustomUser } from "@/lib/types";
-import { notifySubscriber } from "@/lib/notifications/notification-service";
+import { handleLinkViewed } from "@/lib/notifications/notification-handlers";
 
 export default async function (req: NextApiRequest, res: NextApiResponse) {
   if (req.method === "POST") {
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      return res.status(401).end("Unauthorized");
-    }
+    // const session = await getServerSession(req, res, authOptions);
+    // if (!session) {
+    //   return res.status(401).end("Unauthorized");
+    // }
 
     // TODO: signature verification
 
-    const { eventType, eventData } = req.body as {
-      eventType: Event;
-      eventData: any;
-    };
+    try {
+      const { eventType, eventData } = req.body as {
+        eventType: Event;
+        eventData: any;
+      };
 
-    const userId = (session.user as CustomUser).id;
+      // const userId = (session.user as CustomUser).id;
 
-    const notification = await prisma.notification.create({
-      data: {
-        receiverId: eventData.receiverId,
-        senderId: eventData.senderId ? eventData.senderId : null,
-        event: eventType,
-        message: eventData.message,
-      },
-    });
+      switch (eventType) {
+        case "LINKED_VIEWED":
+          handleLinkViewed(eventData);
+          break;
 
-    // notify the user (in-app notification)
-    notifySubscriber({ notification });
+        // TODO: other events like Team created, Team member added, etc.
+      }
 
-    // notify the user (via email)
-    // TODO: check if user has allow email notification if yes then send the email notification
-    const user = await prisma.user.findUnique({
-      where: {
-        id: userId,
-      },
-    });
+      // notify the user (via email)
+      // TODO: check if user has allow email notification if yes then send the email notification
+      const user = await prisma.user.findUnique({
+        where: {
+          id: eventData.receiverId,
+        },
+      });
 
-    if (user?.isEmailNotificationEnabled) {
-      // notify user via email
+      if (user?.isEmailNotificationEnabled) {
+        // notify user via email
+      }
+
+      return res.status(201).json("hello");
+    } catch (error) {
+      console.log(error as Error);
     }
-
-    return res.status(201);
   } else {
     res.setHeader("Allow", ["POST"]);
     return res.status(405).end(`Method ${req.method} Not Allowed`);

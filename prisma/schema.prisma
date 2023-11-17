@@ -49,9 +49,8 @@ model User {
   documents                  Document[]
   teams                      UserTeam[]
   domains                    Domain[]
-  webhooks                   Webhook[]
-  notificationsSent          Notification[] @relation("notificationSent")
-  notificaitonsReceived      Notification[] @relation("notificationReceived")
+  // webhooks                   Webhook[]
+  notifications              Notification[]
   plan                       String         @default("trial")
   stripeId                   String?        @unique // Stripe subscription / customer ID
   subscriptionId             String?        @unique // Stripe subscription ID
@@ -205,24 +204,23 @@ model Invitation {
   @@unique([email])
 }
 
-model Webhook {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  targetUrl String
-  events    Event[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
+// model Webhook {
+//   id        String   @id @default(cuid())
+//   userId    String
+//   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+//   targetUrl String
+//   events    Event[]
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
+// }
 
 model Notification {
   id         String   @id @default(cuid())
-  senderId   String?
-  receiverId String
-  sender     User?    @relation("notificationSent", fields: [senderId], references: [id], onDelete: SetNull)
-  receiver   User     @relation("notificationReceived", fields: [receiverId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   event      Event
   message    String
+  documentId String?
   isRead     Boolean  @default(false)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt

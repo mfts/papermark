@@ -20,6 +20,10 @@ import { usePlan } from "@/lib/swr/use-billing";
 import Image from "next/image";
 import SelectTeam from "./teams/select-team";
 import { TeamContextType, initialState, useTeam } from "@/context/team-context";
+import NotificationDropdown from "./notifications/notification-dropdown";
+import { Bell } from "lucide-react";
+import useNotifications from "@/lib/swr/use-notifications";
+import { mutate } from "swr";
 
 export default function Sidebar() {
   const { data: session, status } = useSession();
@@ -30,6 +34,8 @@ export default function Sidebar() {
 
   const { currentTeam, teams, isLoading }: TeamContextType =
     useTeam() || initialState;
+
+  const { notifications } = useNotifications();
 
   const navigation = [
     // {
@@ -74,6 +80,16 @@ export default function Sidebar() {
     return <LoadingSpinner className="mr-1 h-5 w-5" />;
 
   const userPlan = plan && plan.plan;
+
+  const getUnReadNotificationCount = () => {
+    let count = 0;
+    for (let notification of notifications || []) {
+      if (!notification.isRead) {
+        count++;
+      }
+    }
+    return count;
+  };
 
   return (
     <>
@@ -180,7 +196,7 @@ export default function Sidebar() {
       <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col">
         {/* Sidebar component, swap this element with another sidebar if you like */}
         <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-gray-50 dark:bg-black px-6">
-          <div className="flex h-16 shrink-0 items-center">
+          <div className="flex h-16 shrink-0 justify-between items-center">
             <p className="text-2xl font-bold tracking-tighter text-black dark:text-white flex items-center">
               Papermark{" "}
               {userPlan == "pro" ? (
@@ -189,6 +205,18 @@ export default function Sidebar() {
                 </span>
               ) : null}
             </p>
+            <NotificationDropdown notifications={notifications || []}>
+              <div className="relative bg-gray-200 text-secondary-foreground dark:bg-secondary p-2 rounded-full hover:cursor-pointer">
+                <Bell />
+                {getUnReadNotificationCount() !== 0 && (
+                  <strong className="absolute flex items-center justify-center -top-1 -right-3 text-xs bg-destructive/90 text-primary-foreground dark:text-secondary-foreground rounded-full p-1 h-6 w-6">
+                    {getUnReadNotificationCount() > 9
+                      ? "9+"
+                      : getUnReadNotificationCount()}
+                  </strong>
+                )}
+              </div>
+            </NotificationDropdown>
           </div>
           <nav className="flex flex-1 flex-col">
             <SelectTeam
