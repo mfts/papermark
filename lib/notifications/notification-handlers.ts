@@ -10,6 +10,9 @@ interface IHandleLinkViewed {
     viewerEmail: string | null;
     documentId: string;
     documentOwner: string;
+    link: {
+      enableNotification: boolean;
+    };
   };
 }
 
@@ -31,12 +34,14 @@ export async function handleLinkViewed(eventData: IHandleLinkViewed) {
 
     // TODO: this can be offloaded to a background job in the future to save some time
     // send email to document owner that document has been viewed
-    await sendViewedDocumentEmail(
-      eventData.data.documentOwner,
-      eventData.data.documentId,
-      eventData.data.documentName,
-      eventData.data.viewerEmail
-    );
+    if (eventData.data.link.enableNotification) {
+      await sendViewedDocumentEmail(
+        eventData.data.documentOwner,
+        eventData.data.documentId,
+        eventData.data.documentName,
+        eventData.data.viewerEmail
+      );
+    }
     return notification;
   } catch (error) {
     throw error;
