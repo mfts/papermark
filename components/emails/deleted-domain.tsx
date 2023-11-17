@@ -43,10 +43,9 @@ export default function DomainDeleted({
             </Text>
             <Section className="my-8 text-center">
               <Button
-                pX={20}
-                pY={12}
                 className="bg-black rounded text-white text-xs font-semibold no-underline text-center"
                 href={`https://www.papermark.io/settings/domains`}
+                style={{ padding: "12px 20px" }}
               >
                 Set up your custom domain
               </Button>
@@ -77,4 +76,4 @@ export default function DomainDeleted({
       </Tailwind>
     </Html>
   );
-};
+}
