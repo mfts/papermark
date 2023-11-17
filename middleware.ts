@@ -19,11 +19,14 @@ export const config = {
 
 export default async function middleware(req: NextRequest, ev: NextFetchEvent) {
   const path = req.nextUrl.pathname;
-  const host = req.headers.get('host');
+  const host = req.headers.get("host");
 
   if (
-    process.env.NODE_ENV !== "development" && 
-    !(host?.includes("papermark.io") || host?.endsWith(".vercel.app"))
+    process.env.NODE_ENV !== "development" &&
+    !(
+      host?.includes("papermark.io") ||
+      host?.endsWith(".vercel.app")
+    )
   ) {
     return DomainMiddleware(req);
   }
@@ -32,6 +35,8 @@ export default async function middleware(req: NextRequest, ev: NextFetchEvent) {
     path !== "/" &&
     path !== "/privacy" &&
     path !== "/oss-friends" &&
+    path !== "/pricing" &&
+    path !== "/docsend-alternatives" &&
     path !== "/open-source-investors" &&
     !path.startsWith("/alternatives/") &&
     !path.startsWith("/blog/") &&

@@ -21,43 +21,103 @@ type optionsData = {
 
 export default function StatsChart({
   documentId,
-  totalPages = 0,
+  teamId,
+  totalPagesMax = 0,
 }: {
   documentId: string;
-  totalPages?: number;
+  teamId: string;
+  totalPagesMax?: number;
 }) {
-  const { stats, error } = useStats();
+  const { stats, loading, error } = useStats();
   const { links } = useDocumentLinks();
   const { views } = useDocumentVisits();
 
   const [optionsLinkData, setOptionsLinkData] = useState<optionsData[]>([]);
   const [optionsVisitorData, setOptionsVisitorData] = useState<optionsData[]>(
-    []
+    [],
   );
   const [chartData, setChartData] = useState<
-    { pageNumber: string; avg_duration: number }[]
+    {
+      pageNumber: string;
+      data: {
+        versionNumber: number;
+        avg_duration: number;
+      }[];
+    }[]
   >([]);
   const [isFilterLoading, setIsFilterLoading] = useState(false);
 
-  let durationData = {
-    data: Array.from({ length: totalPages }, (_, i) => ({
-      pageNumber: (i + 1).toString(),
-      avg_duration: 0,
-    })),
+  let durationData = Array.from({ length: totalPagesMax }, (_, i) => ({
+    pageNumber: (i + 1).toString(),
+    data: [
+      {
+        versionNumber: 1,
+        avg_duration: 0,
+      },
+    ],
+  }));
+
+  const updateDurationData = (
+    swrData:
+      | {
+          data: {
+            versionNumber: number;
+            pageNumber: string;
+            avg_duration: number;
+          }[];
+        }
+      | undefined,
+  ) => {
+    if (swrData) {
+      swrData.data.forEach((dataItem) => {
+        const pageIndex = durationData.findIndex(
+          (item) => item.pageNumber === dataItem.pageNumber,
+        );
+
+        if (pageIndex !== -1) {
+          // If page exists in the initialized array, update its data
+          const versionIndex = durationData[pageIndex].data.findIndex(
+            (v) => v.versionNumber === dataItem.versionNumber,
+          );
+          if (versionIndex === -1) {
+            // If this version number doesn't exist, add it
+            durationData[pageIndex].data.push({
+              versionNumber: dataItem.versionNumber,
+              avg_duration: dataItem.avg_duration,
+            });
+          } else {
+            // Update existing data for this version
+            durationData[pageIndex].data[versionIndex] = {
+              ...durationData[pageIndex].data[versionIndex],
+              avg_duration: dataItem.avg_duration,
+            };
+          }
+        } else {
+          // If this page number doesn't exist, add it with the version data
+          durationData.push({
+            pageNumber: dataItem.pageNumber,
+            data: [
+              {
+                versionNumber: dataItem.versionNumber,
+                avg_duration: dataItem.avg_duration,
+              },
+            ],
+          });
+        }
+      });
+
+      // Sort by page number
+      durationData.sort(
+        (a, b) => parseInt(a.pageNumber) - parseInt(b.pageNumber),
+      );
+    }
   };
 
   //Initializing the chart data and all the dropdown values
   useEffect(() => {
     const swrData = stats?.duration;
-
-    durationData.data = durationData.data.map((item: any) => {
-      const swrItem = swrData?.data.find(
-        (data) => data.pageNumber === item.pageNumber
-      );
-      return swrItem ? swrItem : item;
-    });
-
-    setChartData(durationData.data);
+    updateDurationData(swrData);
+    setChartData(durationData);
 
     if (links && links.length > 0) {
       const newOptionsLink: optionsData[] = links.map((options) => ({
@@ -69,6 +129,7 @@ export default function StatsChart({
     }
 
     if (views && views.length > 0) {
+      console.log("[vndViewsData]", views);
       const newOptionsVisitor: optionsData[] = views.map((options) => ({
         Id: options.id,
         Name: options.viewerEmail ? options.viewerEmail : "",
@@ -76,19 +137,19 @@ export default function StatsChart({
       }));
       setOptionsVisitorData(newOptionsVisitor);
     }
-  }, []);
+  }, [views, links, stats]);
 
   if (error && error.status === 404) {
     return <ErrorPage statusCode={404} />;
   }
 
-  if (!stats?.duration.data) {
+  if (loading) {
     return <div>No data</div>;
   }
 
   const hanldeOptionVisitorChange = async (
     VisitorId: string,
-    isChecked: boolean
+    isChecked: boolean,
   ) => {
     const updatedItems = optionsVisitorData.map((option) => {
       if (option.Id === VisitorId) {
@@ -114,42 +175,42 @@ export default function StatsChart({
   //refresh the chart upon selecting/deselcting views/links
   const refreshChart = async () => {
     setIsFilterLoading(true);
-    const response = await fetch(`/api/documents/${documentId}/stats`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
+    const response = await fetch(
+      `/api/teams/${teamId}/documents/${documentId}/stats`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          LinkIds: optionsLinkData
+            .filter((x) => !x.isSelected)
+            .map((x) => x.Id),
+          ViewsIds: optionsVisitorData
+            .filter((x) => !x.isSelected)
+            .map((x) => x.Id),
+        }),
       },
-      body: JSON.stringify({
-        LinkIds: optionsLinkData.filter((x) => !x.isSelected).map((x) => x.Id),
-        ViewsIds: optionsVisitorData
-          .filter((x) => !x.isSelected)
-          .map((x) => x.Id),
-      }),
-    });
+    );
 
     if (response.ok) {
       setIsFilterLoading(false);
       const stats = await response.json();
       const swrData = stats?.duration;
-      durationData.data = durationData.data.map((item) => {
-        const swrItem = swrData.data.find(
-          (data: any) => data.pageNumber === item.pageNumber
-        );
-        return swrItem ? swrItem : item;
-      });
-      setChartData(durationData.data);
+      updateDurationData(swrData);
+      setChartData(durationData);
     } else {
       setIsFilterLoading(false);
       const { message } = await response.json();
     }
   };
 
-  return (
+  return stats && stats.views.length > 0 ? (
     <div className="p-5">
       <div className="flex">
         <div className="ps-5">
           <FilterData
-            optionText="Filter Link"
+            optionText="Link"
             handleSelect={hanldeOptionChange}
             dropdownData={optionsLinkData}
             loading={isFilterLoading}
@@ -157,7 +218,7 @@ export default function StatsChart({
         </div>
         <div className="ps-5">
           <FilterData
-            optionText="Filter View"
+            optionText="View"
             handleSelect={hanldeOptionVisitorChange}
             dropdownData={optionsVisitorData}
             loading={isFilterLoading}
@@ -171,7 +232,7 @@ export default function StatsChart({
         <BarChartComponent data={chartData} />
       </div>
     </div>
-  );
+  ) : null;
 }
 
 function FilterData({
@@ -190,7 +251,7 @@ function FilterData({
       <DropdownMenuTrigger>
         <div className="flex items-center">
           <FilterX />
-          <span className="ml-2">{optionText}</span>
+          <span className="ml-2">Filter {optionText}</span>
         </div>
       </DropdownMenuTrigger>
       <DropdownMenuPortal>
@@ -204,7 +265,8 @@ function FilterData({
               }
               key={option.Id}
             >
-              {option.Name || "No link name"}
+              {option.Name ||
+                (optionText == "Link" ? "No Link Name" : "Anonymous View")}
             </DropdownMenuCheckboxItem>
           ))}
         </DropdownMenuContent>

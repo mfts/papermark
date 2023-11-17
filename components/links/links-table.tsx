@@ -23,7 +23,7 @@ import { Button } from "@/components/ui/button";
 
 import { useDocumentLinks } from "@/lib/swr/use-document";
 import BarChart from "../shared/icons/bar-chart";
-import { copyToClipboard, nFormatter, timeAgo } from "@/lib/utils";
+import { cn, copyToClipboard, nFormatter, timeAgo } from "@/lib/utils";
 import MoreHorizontal from "../shared/icons/more-horizontal";
 import { Skeleton } from "../ui/skeleton";
 import LinksVisitors from "./links-visitors";
@@ -36,9 +36,15 @@ import { useState } from "react";
 import { LinkWithViews } from "@/lib/types";
 import { mutate } from "swr";
 import { toast } from "sonner";
+import { useRouter } from "next/router";
+import { usePlan } from "@/lib/swr/use-billing";
+import { useTeam } from "@/context/team-context";
 
 export default function LinksTable() {
   const { links } = useDocumentLinks();
+  const router = useRouter();
+  const { plan } = usePlan();
+  const teamInfo = useTeam();
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isLinkSheetVisible, setIsLinkSheetVisible] = useState<boolean>(false);
@@ -59,6 +65,9 @@ export default function LinksTable() {
       password: link.password,
       emailProtected: link.emailProtected,
       allowDownload: link.allowDownload ? link.allowDownload : false,
+      enableNotification: link.enableNotification
+        ? link.enableNotification
+        : false,
     });
     //wait for dropdown to close before opening the link sheet
     setTimeout(() => {
@@ -69,7 +78,7 @@ export default function LinksTable() {
   const handleArchiveLink = async (
     linkId: string,
     documentId: string,
-    isArchived: boolean
+    isArchived: boolean,
   ) => {
     setIsLoading(true);
 
@@ -91,15 +100,17 @@ export default function LinksTable() {
 
     // Update the archived link in the list of links
     mutate(
-      `/api/documents/${encodeURIComponent(documentId)}/links`,
+      `/api/teams/${teamInfo?.currentTeam?.id}/documents/${encodeURIComponent(
+        documentId,
+      )}/links`,
       (links || []).map((link) => (link.id === linkId ? archivedLink : link)),
-      false
+      false,
     );
 
     toast.success(
       !isArchived
         ? "Link successfully archived"
-        : "Link successfully reactivated"
+        : "Link successfully reactivated",
     );
     setIsLoading(false);
   };
@@ -107,6 +118,8 @@ export default function LinksTable() {
   const archivedLinksCount = links
     ? links.filter((link) => link.isArchived).length
     : 0;
+
+  const hasFreePlan = plan && plan.plan === "free";
 
   return (
     <>
@@ -136,36 +149,63 @@ export default function LinksTable() {
                       <>
                         <TableRow key={link.id} className="group/row">
                           <TableCell className="hidden sm:table-cell font-medium truncate w-[220px]">
-                            {link.name || "No link name"}
+                            {link.name || "No link name"}{" "}
+                            {link.domainId && hasFreePlan ? (
+                              <span className="text-foreground bg-destructive ring-1 ring-destructive rounded-full px-2.5 py-0.5 text-xs ml-2">
+                                Inactive
+                              </span>
+                            ) : null}
                           </TableCell>
                           <TableCell className="max-w-[150px] sm:min-w-[450px]">
-                            <div className="group/cell flex items-center gap-x-4 rounded-md text-secondary-foreground bg-secondary px-3 py-1 group-hover/row:ring-1 group-hover/row:ring-gray-400 hover:bg-emerald-700 hover:dark:bg-emerald-200 group-hover/row:dark:ring-gray-100 transition-all">
+                            <div
+                              className={cn(
+                                `group/cell flex items-center gap-x-4 rounded-md text-secondary-foreground px-3 py-1 group-hover/row:ring-1 group-hover/row:ring-gray-400 group-hover/row:dark:ring-gray-100 transition-all`,
+                                link.domainId && hasFreePlan
+                                  ? "bg-destructive hover:bg-red-700 hover:dark:bg-red-200"
+                                  : "bg-secondary hover:bg-emerald-700 hover:dark:bg-emerald-200",
+                              )}
+                            >
                               <div className="whitespace-nowrap hidden sm:flex text-sm group-hover/cell:hidden">
                                 {link.domainId
                                   ? `https://${link.domainSlug}/${link.slug}`
                                   : `https://${process.env.NEXT_PUBLIC_ROOT_DOMAIN}/view/${link.id}`}
                               </div>
                               <div className="flex sm:hidden whitespace-nowrap text-sm group-hover/cell:hidden truncate">{`${link.id}`}</div>
-                              <button
-                                className="whitespace-nowrap text-sm text-center group-hover/cell:text-primary-foreground hidden group-hover/cell:block w-full"
-                                onClick={
-                                  link.domainId
-                                    ? () =>
-                                        handleCopyToClipboard(
-                                          `https://${link.domainSlug}/${link.slug}`
-                                        )
-                                    : () =>
-                                        handleCopyToClipboard(
-                                          `https://${process.env.NEXT_PUBLIC_ROOT_DOMAIN}/view/${link.id}`
-                                        )
-                                }
-                                title="Copy to clipboard"
-                              >
-                                Copy{" "}
-                                <span className="hidden sm:inline-flex">
-                                  to Clipboard
-                                </span>
-                              </button>
+                              {link.domainId && hasFreePlan ? (
+                                <button
+                                  className="whitespace-nowrap text-sm text-center group-hover/cell:text-primary-foreground hidden group-hover/cell:block w-full"
+                                  onClick={() =>
+                                    router.push("/settings/billing")
+                                  }
+                                  title="Upgrade to activate link"
+                                >
+                                  Upgrade{" "}
+                                  <span className="hidden sm:inline-flex">
+                                    to activate link
+                                  </span>
+                                </button>
+                              ) : (
+                                <button
+                                  className="whitespace-nowrap text-sm text-center group-hover/cell:text-primary-foreground hidden group-hover/cell:block w-full"
+                                  onClick={
+                                    link.domainId
+                                      ? () =>
+                                          handleCopyToClipboard(
+                                            `https://${link.domainSlug}/${link.slug}`,
+                                          )
+                                      : () =>
+                                          handleCopyToClipboard(
+                                            `https://${process.env.NEXT_PUBLIC_ROOT_DOMAIN}/view/${link.id}`,
+                                          )
+                                  }
+                                  title="Copy to clipboard"
+                                >
+                                  Copy{" "}
+                                  <span className="hidden sm:inline-flex">
+                                    to Clipboard
+                                  </span>
+                                </button>
+                              )}
                             </div>
                           </TableCell>
                           <TableCell>
@@ -186,7 +226,7 @@ export default function LinksTable() {
                             {link.views[0] ? (
                               <time
                                 dateTime={new Date(
-                                  link.views[0].viewedAt
+                                  link.views[0].viewedAt,
                                 ).toISOString()}
                               >
                                 {timeAgo(link.views[0].viewedAt)}
@@ -217,7 +257,7 @@ export default function LinksTable() {
                                     handleArchiveLink(
                                       link.id,
                                       link.documentId,
-                                      link.isArchived
+                                      link.isArchived,
                                     )
                                   }
                                 >
@@ -329,7 +369,7 @@ export default function LinksTable() {
                                     {link.views[0] ? (
                                       <time
                                         dateTime={new Date(
-                                          link.views[0].viewedAt
+                                          link.views[0].viewedAt,
                                         ).toISOString()}
                                       >
                                         {timeAgo(link.views[0].viewedAt)}
@@ -363,7 +403,7 @@ export default function LinksTable() {
                                             handleArchiveLink(
                                               link.id,
                                               link.documentId,
-                                              link.isArchived
+                                              link.isArchived,
                                             )
                                           }
                                         >
