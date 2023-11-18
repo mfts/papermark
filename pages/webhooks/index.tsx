@@ -1,18 +1,17 @@
-import Sidebar from "@/components/Sidebar";
-import useDocuments from "@/lib/swr/use-documents";
-import DocumentCard from "@/components/documents/document-card";
-import Skeleton from "@/components/Skeleton";
+import { useState } from "react";
 import { PlusIcon } from "@heroicons/react/24/solid";
-import Link from "next/link";
-import { AddDocumentModal } from "@/components/documents/add-document-modal";
+import { AddWebhookModal } from "@/components/webhooks/add-webhook-modal"
 import { Separator } from "@/components/ui/separator";
 import AppLayout from "@/components/layouts/app"
 import { Button } from "@/components/ui/button";
 import { Webhook } from "lucide-react";
+import useWebhooks from "@/lib/swr/use-webhooks";
+import { Skeleton } from "@/components/ui/skeleton";
+import { WebhookTable } from "@/components/webhooks/webhook-table";
 
 
-export default function Documents() {
-  // const { documents } = useDocuments();
+export default function Webhooks() {
+  const { webhooks } = useWebhooks();
 
   return (
     <AppLayout>
@@ -25,47 +24,30 @@ export default function Documents() {
             <p className="text-sm text-muted-foreground">Manage your Webhooks</p>
           </div>
           <ul className="flex items-center justify-between gap-4">
-            <AddDocumentModal>
+            <AddWebhookModal>
               <Button>Add New Webhook</Button>
-            </AddDocumentModal>
+            </AddWebhookModal>
           </ul>
         </div>
 
         <Separator className="my-6 bg-gray-200 dark:bg-gray-800" />
 
-
+        {webhooks && webhooks.length === 0 && (
           <div className="flex items-center justify-center h-96">
             <EmptyWebhooks />
           </div>
-
-        {/* {documents && documents.length === 0 && (
-          <div className="flex items-center justify-center h-96">
-            <EmptyWebhooks />
-          </div>
-        )} */}
+        )}
 
         {/* Documents list */}
-        {/* <ul role="list" className="space-y-4">
-          {documents
-            ? documents.map((document) => {
-                return <DocumentCard key={document.id} document={document} />;
-              })
-            : Array.from({ length: 3 }).map((_, i) => (
-                <li
-                  key={i}
-                  className="flex flex-col space-y-4 px-4 py-4 sm:px-6 lg:px-8"
-                >
-                  <Skeleton key={i} className="h-5 w-20" />
-                  <Skeleton key={i} className="mt-3 h-3 w-10" />
-                </li>
-              ))}
-        </ul> */}
+        <WebhookTable webhooks={webhooks || []} />
       </div>
     </AppLayout>
   );
 }
 
 export function EmptyWebhooks() {
+  const [openModal, setOpenModal] = useState<boolean>(false);
+
   return (
     <div className="flex flex-col items-center">
       <Webhook className="h-16 w-16" />
@@ -74,12 +56,12 @@ export function EmptyWebhooks() {
         Get started by creating a new webhook.
       </p>
       <div className="mt-6">
-        <AddDocumentModal>
-          <Button>
+        <AddWebhookModal>
+          <Button onClick={() => setOpenModal(true)}>
             <PlusIcon className="-ml-1 mr-2 h-5 w-5" aria-hidden="true" />
             New Webhook
           </Button>
-        </AddDocumentModal>
+        </AddWebhookModal>
       </div>
     </div>
   );

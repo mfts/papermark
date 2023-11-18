@@ -5,7 +5,10 @@ import { CustomUser } from "@/lib/types";
 import prisma from "@/lib/prisma";
 import { errorhandler } from "@/lib/errorHandler";
 
-export async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse,
+) {
   if (req.method === "POST") {
     const session = await getServerSession(req, res, authOptions);
     if (!session) {
@@ -22,15 +25,14 @@ export async function handler(req: NextApiRequest, res: NextApiResponse) {
           userId,
           targetUrl,
           events,
-        }
-      })
+        },
+      });
 
       return res.status(201).json(webhook);
-    }catch (error) {
+    } catch (error) {
       errorhandler(error, res);
     }
-  }
-  else if (req.method === "GET") {
+  } else if (req.method === "GET") {
     const session = await getServerSession(req, res, authOptions);
     if (!session) {
       return res.status(401).end("Unauthorized");
@@ -42,10 +44,13 @@ export async function handler(req: NextApiRequest, res: NextApiResponse) {
       const webhooks = await prisma.webhook.findMany({
         where: {
           userId,
-        }
-      })
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+      });
       return res.status(200).json(webhooks);
-    }catch (error) {
+    } catch (error) {
       errorhandler(error, res);
     }
   } else {
