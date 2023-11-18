@@ -6,7 +6,10 @@ import { authOptions } from "../auth/[...nextauth]";
 import { CustomUser } from "@/lib/types";
 import { handleLinkViewed } from "@/lib/notifications/notification-handlers";
 
-export default async function (req: NextApiRequest, res: NextApiResponse) {
+export default async function handle(
+  req: NextApiRequest,
+  res: NextApiResponse,
+) {
   if (req.method === "POST") {
     // const session = await getServerSession(req, res, authOptions);
     // if (!session) {
