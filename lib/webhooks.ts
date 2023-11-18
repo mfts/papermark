@@ -30,7 +30,7 @@ export async function triggerWebhooks({
     }
 
     // send data to internal webhook endpoint for notifications
-    const internalNotificationWebhook = `${process.env.NEXT_PUBLIC_BASE_URL}/api/webhooks`;
+    const internalNotificationWebhook = `${process.env.NEXT_PUBLIC_BASE_URL}/api/notifications/webhooks`;
     await sendToWebhookEndpoint(internalNotificationWebhook, {
       eventType,
       eventData,
