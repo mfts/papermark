@@ -5,7 +5,7 @@ import { CustomUser } from "@/lib/types";
 import prisma from "@/lib/prisma";
 import { errorhandler } from "@/lib/errorHandler";
 
-export default async function handler(
+export default async function handle(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {

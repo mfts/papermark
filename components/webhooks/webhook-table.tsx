@@ -6,13 +6,36 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Webhook } from "@prisma/client";
-import MoreHorizontal from "../shared/icons/more-horizontal";
-import { Badge } from "../ui/badge";
+import MoreHorizontal from "@/components/shared/icons/more-horizontal";
 import { timeAgo } from "@/lib/utils";
-import { Skeleton } from "../ui/skeleton";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import { mutate } from "swr";
 
 export function WebhookTable({ webhooks }: { webhooks: Webhook[] }) {
+  const removeWebhook = async (webhookId: string) => {
+    const response = await fetch(`/api/webhooks/${webhookId}`, {
+      method: "DELETE",
+    });
+
+    if (response.status !== 204) {
+      const error = await response.json();
+      toast.error(error);
+      return;
+    }
+    toast.success("Webhook deleted successfully!");
+    await mutate("/api/webhooks");
+  };
+
   return (
     <div className="border rounded-lg">
       <Table className="my-4">
@@ -51,7 +74,23 @@ export function WebhookTable({ webhooks }: { webhooks: Webhook[] }) {
                 {timeAgo(webhook.createdAt)}
               </TableCell>
               <TableCell>
-                <MoreHorizontal />
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="h-8 w-8 p-0">
+                      <span className="sr-only">Open menu</span>
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                    <DropdownMenuItem
+                      className="text-red-500 focus:bg-destructive focus:text-destructive-foreground hover:cursor-pointer"
+                      onClick={() => removeWebhook(webhook.id)}
+                    >
+                      Remove Webhook
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </TableCell>
             </TableRow>
           ))}
@@ -59,21 +98,4 @@ export function WebhookTable({ webhooks }: { webhooks: Webhook[] }) {
       </Table>
     </div>
   );
-}
-
-{
-  /* <TableRow>
-  <TableCell className="min-w-[100px]">
-    <Skeleton className="h-6 w-full" />
-  </TableCell>
-  <TableCell className="min-w-[150px]">
-    <Skeleton className="h-6 w-full" />
-  </TableCell>
-  <TableCell>
-    <Skeleton className="h-6 w-24" />
-  </TableCell>
-  <TableCell>
-    <Skeleton className="h-6 w-24" />
-  </TableCell>
-</TableRow> */
 }
