@@ -13,21 +13,21 @@ export async function triggerWebhooks({
   try {
     const userId = eventData.userId;
 
-    // const webhooks = await prisma.webhook.findMany({
-    //   where: {
-    //     userId,
-    //   },
-    // });
+    const webhooks = await prisma.webhook.findMany({
+      where: {
+        userId,
+      },
+    });
 
-    // for (let webhook of webhooks) {
-    //   if (webhook.events.includes(eventType)) {
-    //     // send the post request to the webhook's target url
-    //     await sendToWebhookEndpoint(webhook.targetUrl, {
-    //       eventType,
-    //       eventData,
-    //     });
-    //   }
-    // }
+    for (let webhook of webhooks) {
+      if (webhook.events.includes(eventType)) {
+        // send the post request to the webhook's target url
+        await sendToWebhookEndpoint(webhook.targetUrl, {
+          eventType,
+          eventData,
+        });
+      }
+    }
 
     // send data to internal webhook endpoint for notifications
     const internalNotificationWebhook = `${process.env.NEXT_PUBLIC_BASE_URL}/api/notifications/webhooks`;
