@@ -20,6 +20,9 @@ export default async function handle(
       where: {
         userId,
       },
+      orderBy: {
+        createdAt: "desc",
+      },
     });
 
     return res.status(200).json(notifications);
