@@ -49,7 +49,7 @@ model User {
   documents                  Document[]
   teams                      UserTeam[]
   domains                    Domain[]
-  // webhooks                   Webhook[]
+  webhooks                   Webhook[]
   notifications              Notification[]
   plan                       String         @default("trial")
   stripeId                   String?        @unique // Stripe subscription / customer ID
@@ -206,15 +206,15 @@ model Invitation {
   @@unique([email, teamId])
 }
 
-// model Webhook {
-//   id        String   @id @default(cuid())
-//   userId    String
-//   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-//   targetUrl String
-//   events    Event[]
-//   createdAt DateTime @default(now())
-//   updatedAt DateTime @updatedAt
-// }
+model Webhook {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  targetUrl String
+  events    Event[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
 
 model Notification {
   id         String   @id @default(cuid())
