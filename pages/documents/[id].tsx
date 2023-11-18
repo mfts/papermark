@@ -62,7 +62,7 @@ export default function DocumentPage() {
             body: JSON.stringify({
               name: newName,
             }),
-          }
+          },
         );
 
         if (response.ok) {
@@ -102,7 +102,7 @@ export default function DocumentPage() {
       `/api/teams/${teamInfo?.currentTeam?.id}/documents/${documentId}`,
       {
         method: "DELETE",
-      }
+      },
     );
 
     if (response.ok) {
@@ -145,7 +145,7 @@ export default function DocumentPage() {
   };
 
   const preventEnterAndSubmit = (
-    event: React.KeyboardEvent<HTMLHeadingElement>
+    event: React.KeyboardEvent<HTMLHeadingElement>,
   ) => {
     if (event.key === "Enter") {
       event.preventDefault(); // Prevent the default line break
@@ -244,6 +244,7 @@ export default function DocumentPage() {
               <StatsChart
                 documentId={prismaDocument.id}
                 totalPagesMax={primaryVersion.numPages!}
+                teamId={teamInfo?.currentTeam?.id!}
               />
             )}
             <StatsCard />
