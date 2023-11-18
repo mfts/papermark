@@ -21,7 +21,7 @@ import Image from "next/image";
 import SelectTeam from "./teams/select-team";
 import { TeamContextType, initialState, useTeam } from "@/context/team-context";
 import NotificationDropdown from "./notifications/notification-dropdown";
-import { Bell } from "lucide-react";
+import { Bell, Webhook } from "lucide-react";
 import useNotifications from "@/lib/swr/use-notifications";
 import { mutate } from "swr";
 
@@ -58,6 +58,13 @@ export default function Sidebar() {
       icon: PieChartIcon,
       current: router.pathname.includes("analytics"),
       disabled: true,
+    },
+    {
+      name: "Webhooks",
+      href: "/webhooks",
+      icon: Webhook,
+      current: router.pathname.includes("webhooks"),
+      disabled: false,
     },
     {
       name: "Settings",
