@@ -83,7 +83,7 @@ export default function Testimonials() {
                 key={testimonial.author.handle}
                 className="pt-8 sm:inline-block sm:w-full sm:px-4 relative"
               >
-                <figure className="rounded-2xl bg-white p-10 text-sm leading-6 border border-gray-300 relative">
+                <figure className="rounded-2xl hover:shadow-lg hover:border-gray-500 bg-white p-10 text-sm leading-6 border border-gray-300 relative">
                   {testimonial.author.link && ( // Conditional rendering based on the presence of link
                     <a
                       href={testimonial.author.link} // Using the link from the testimonial

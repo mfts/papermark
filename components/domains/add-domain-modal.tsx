@@ -47,7 +47,7 @@ export function AddDomainModal({
         body: JSON.stringify({
           domain: domain,
         }),
-      }
+      },
     );
 
     if (!response.ok) {
@@ -92,7 +92,7 @@ export function AddDomainModal({
               </Label>
               <Input
                 id="domain"
-                placeholder="yourdomain.com"
+                placeholder="docs.yourdomain.com"
                 className="col-span-3"
                 onChange={(e) => setDomain(e.target.value)}
               />

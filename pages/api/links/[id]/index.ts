@@ -125,6 +125,7 @@ export default async function handle(
         domainId: domainObj?.id || null,
         domainSlug: domain || null,
         slug: slug || null,
+        enableNotification: linkData.enableNotification,
       },
       include: {
         views: {

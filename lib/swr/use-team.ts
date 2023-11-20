@@ -7,11 +7,11 @@ export function useGetTeam() {
   const teamInfo = useTeam();
 
   const { data: team, error } = useSWR<TeamDetail>(
-    `/api/teams/${teamInfo?.currentTeam?.id}`,
+    teamInfo?.currentTeam && `/api/teams/${teamInfo.currentTeam.id}`,
     fetcher,
     {
       dedupingInterval: 20000,
-    }
+    },
   );
 
   return {

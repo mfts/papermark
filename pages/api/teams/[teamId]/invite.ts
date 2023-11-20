@@ -1,4 +1,3 @@
-import { randomUUID } from "crypto";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../../auth/[...nextauth]";
 import { NextApiRequest, NextApiResponse } from "next";
@@ -6,10 +5,11 @@ import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 import { errorhandler } from "@/lib/errorHandler";
 import { sendTeammateInviteEmail } from "@/lib/emails/send-teammate-invite";
+import { newId } from "@/lib/id-helper";
 
 export default async function handle(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   if (req.method === "POST") {
     // POST /api/teams/:teamId/invite
@@ -36,6 +36,11 @@ export default async function handle(
             select: {
               userId: true,
               role: true,
+              user: {
+                select: {
+                  email: true,
+                },
+              },
             },
           },
         },
@@ -46,16 +51,43 @@ export default async function handle(
       const isUserAdmin = teamUsers?.some(
         (user) =>
           user.role === "ADMIN" &&
-          user.userId === (session.user as CustomUser).id
+          user.userId === (session.user as CustomUser).id,
       );
       if (!isUserAdmin) {
-        return res.status(403).json("Only admins can send the invitation!");
+        res.status(403).json("Only admins can send the invitation!");
+        return;
       }
 
-      const token = randomUUID().toString();
+      // check if user is already in the team
+      const isExistingMember = teamUsers?.some(
+        (user) => user.user.email === email,
+      );
 
+      if (isExistingMember) {
+        res.status(400).json("User is already a member of this team");
+        return;
+      }
+
+      // check if invitation already exists
+      const invitationExists = await prisma.invitation.findUnique({
+        where: {
+          email_teamId: {
+            teamId,
+            email,
+          },
+        },
+      });
+
+      if (invitationExists) {
+        res.status(400).json("Invitation already sent to this email");
+        return;
+      }
+
+      const token = newId("inv");
       const expiresAt = new Date();
       expiresAt.setHours(expiresAt.getHours() + 24); // invitation expires in 24 hour
+
+      // create invitation
       await prisma.invitation.create({
         data: {
           email,
@@ -77,7 +109,7 @@ export default async function handle(
         to: email,
       });
 
-      return res.status(200).json("Invitation send!");
+      return res.status(200).json("Invitation sent!");
     } catch (error) {
       errorhandler(error, res);
     }
@@ -92,13 +124,16 @@ export default async function handle(
 
     if (!session) {
       res.redirect(`/login?next=/api/teams/${teamId}/invite?token=${token}`);
+      return;
     }
+
+    const userId = (session.user as CustomUser).id;
 
     try {
       const userTeam = await prisma.userTeam.findFirst({
         where: {
           teamId,
-          userId: (session?.user as CustomUser).id,
+          userId,
         },
       });
 
@@ -133,7 +168,7 @@ export default async function handle(
         data: {
           users: {
             create: {
-              userId: (session?.user as CustomUser).id,
+              userId,
             },
           },
         },

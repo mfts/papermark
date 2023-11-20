@@ -46,7 +46,7 @@ export function AddTeamMembers({
         body: JSON.stringify({
           email: email,
         }),
-      }
+      },
     );
 
     if (!response.ok) {
@@ -57,7 +57,7 @@ export function AddTeamMembers({
       return;
     }
 
-    await mutate(`/api/teams/${teamInfo?.currentTeam?.id}`);
+    mutate(`/api/teams/${teamInfo?.currentTeam?.id}/invitations`);
 
     toast.success("An invitation email has been sent!");
     setOpen(false);
