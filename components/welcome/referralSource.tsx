@@ -117,6 +117,7 @@ function classNames(...classes: any[]) {
 
 function ReferralSourceDropdown({source, setSource, setOther, accelerator, setAccelerator}:any){
 
+  const referralSourcesValues = Object.values(Sources);
 
   return (
     <div style={{display:'flex'}}>
@@ -139,103 +140,21 @@ function ReferralSourceDropdown({source, setSource, setOther, accelerator, setAc
         >
           <Menu.Items className="absolute right-0 z-10 mt-2 w-56 origin-top-right divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
             <div className="py-1">
-              <Menu.Item>
-                {({ active }) => (
-                  <a
-                    onClick={()=>{setSource(Sources.Google)}}
-                    className={classNames(
-                      active ? 'bg-gray-100 text-gray-900' : 'text-gray-700',
-                      'block px-4 py-2 text-sm'
-                    )}
-                  >
-                    {Sources.Google}
-                  </a>
-                )}
-              </Menu.Item>
-              <Menu.Item>
-                {({ active }) => (
-                  <a
-                    onClick={()=>{setSource(Sources.Accelerator)}}
-                    className={classNames(
-                      active ? 'bg-gray-100 text-gray-900' : 'text-gray-700',
-                      'block px-4 py-2 text-sm'
-                    )}
-                  >
-                    {Sources.Accelerator}
-                  </a>
-                )}
-              </Menu.Item>
-            </div>
-            <div className="py-1">
-              <Menu.Item>
-                {({ active }) => (
-                  <a
-                    onClick={()=>{setSource(Sources.ChatGPT)}}
-                    className={classNames(
-                      active ? 'bg-gray-100 text-gray-900' : 'text-gray-700',
-                      'block px-4 py-2 text-sm'
-                    )}
-                  >
-                    {Sources.ChatGPT}
-                  </a>
-                )}
-              </Menu.Item>
-              <Menu.Item>
-                {({ active }) => (
-                  <a
-                    onClick={()=>{setSource(Sources.WordOfMouth)}}
-                    className={classNames(
-                      active ? 'bg-gray-100 text-gray-900' : 'text-gray-700',
-                      'block px-4 py-2 text-sm'
-                    )}
-                  >
-                    {Sources.WordOfMouth}
-                  </a>
-                )}
-              </Menu.Item>
-            </div>
-            <div className="py-1">
-              <Menu.Item>
-                {({ active }) => (
-                  <a
-                    onClick={()=>{setSource(Sources.Twitter)}}
-                    className={classNames(
-                      active ? 'bg-gray-100 text-gray-900' : 'text-gray-700',
-                      'block px-4 py-2 text-sm'
-                    )}
-                  >
-                    {Sources.Twitter}
-                  </a>
-                )}
-              </Menu.Item>
-              <Menu.Item>
-                {({ active }) => (
-                  <a
-                    onClick={()=>{setSource(Sources.Linkedin)}}
-                    className={classNames(
-                      active ? 'bg-gray-100 text-gray-900' : 'text-gray-700',
-                      'block px-4 py-2 text-sm'
-                    )}
-                  >
-                    {Sources.Linkedin}
-                  </a>
-                )}
-              </Menu.Item>
-            </div>
-            <div className="py-1">
-              <Menu.Item>
-                {({ active }) => (
-                  <a
-                    onClick={()=>{setSource(Sources.Other)}}
-                    className={classNames(
-                      active ? 'bg-gray-100 text-gray-900' : 'text-gray-700',
-                      'block px-4 py-2 text-sm'
-                    )}
-                  >
-                    {Sources.Other}
-                  </a>
-                )}
-              </Menu.Item>
+              {referralSourcesValues.map((value)=>(
+                <Menu.Item>
+                  {({ active }) => (
+                    <a
+                      onClick={()=>{setSource(value as Sources)}}
+                      className={classNames(
+                        active ? 'bg-gray-100 text-gray-900' : 'text-gray-700',
+                        'block px-4 py-2 text-sm'
+                      )}
+                    >
+                      {value}
+                    </a>
+                  )}
+                </Menu.Item>
+              ))}
             </div>
           </Menu.Items>
         </Transition>
