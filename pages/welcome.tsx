@@ -1,6 +1,7 @@
 import { useRouter } from "next/router";
 import Intro from "@/components/welcome/intro";
 import Next from "@/components/welcome/next";
+import ReferralSource from "@/components/welcome/referralSource";
 import Upload from "@/components/welcome/upload";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import { AnimatePresence } from "framer-motion";
@@ -34,6 +35,7 @@ export default function Welcome() {
         ) : (
           <Intro key="intro" />
         )}
+        {router.query.type === "referralsource" && <ReferralSource key="referralsource" />}
         {router.query.type === "next" && <Next key="next" />}
         {router.query.type === "pitchdeck" && <Upload key="pitchdeck" />}
         {router.query.type === "document" && <Upload key="document" />}
