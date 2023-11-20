@@ -31,7 +31,6 @@ const BlogDetail = async ({ params }: any) => {
   const authors = post!.authors.map((author) =>
     allAuthors.find(({ slug }) => slug === `/authors/${author}`)
   );
-  //   console.log('Authot: ' , authors)
 
   return (
     <div className="mt-20 font-display2">
