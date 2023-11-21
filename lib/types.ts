@@ -1,5 +1,5 @@
 import { User as NextAuthUser } from "next-auth";
-import { Document, Link, View, User as PrismaUser, DocumentVersion } from "@prisma/client";
+import { Document, Link, View, User as PrismaUser, DocumentVersion, DataroomFile } from "@prisma/client";
 
 export type CustomUser = NextAuthUser & PrismaUser;
 
@@ -50,6 +50,15 @@ export type DomainVerificationStatusProps =
   | "Pending Verification"
   | "Domain Not Found"
   | "Unknown Error";
+
+//FolderDirectory for dataroom
+export type FolderDirectory = {
+  [folderId: string]: {
+    name: string,
+    subfolders: string[],
+    files: DataroomFile[]
+  }
+}
 
 // From https://vercel.com/docs/rest-api/endpoints#get-a-project-domain
 export interface DomainResponse {

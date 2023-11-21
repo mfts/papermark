@@ -1,14 +1,14 @@
 import DataroomCard from "@/components/datarooms/dataroom-card";
 import Skeleton from "@/components/Skeleton";
 import { PlusIcon } from "@heroicons/react/24/solid";
-import { AddDataRoomModal } from "@/components/datarooms/add-dataroom-modal";
+import { AddHierarchicalDataRoomModal } from "@/components/datarooms/add-hierarchical-dataroom-modal";
 import { Separator } from "@/components/ui/separator";
 import AppLayout from "@/components/layouts/app"
 import { Button } from "@/components/ui/button";
 import { type Dataroom } from "@prisma/client";
 import { useState, useEffect } from "react";
 
-export default function Documents() {
+export default function Datarooms() {
   const [datarooms, setDatarooms] = useState<Dataroom[] | undefined>(undefined);
   
   //Fetch datarooms from backend
@@ -41,9 +41,9 @@ export default function Documents() {
             <p className="text-sm text-muted-foreground">Manage your data rooms</p>
           </div>
           <ul className="flex items-center justify-between gap-4">
-            <AddDataRoomModal>
+            <AddHierarchicalDataRoomModal>
               <Button>Add New Data Room</Button>
-            </AddDataRoomModal>
+            </AddHierarchicalDataRoomModal>
           </ul>
         </div>
 
@@ -103,7 +103,7 @@ export function EmptyDataRooms() {
         Get started by creating a new data room.
       </p>
       <div className="mt-6">
-        <AddDataRoomModal>
+        <AddHierarchicalDataRoomModal>
           <button
             type="button"
             className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-foreground bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
@@ -111,7 +111,7 @@ export function EmptyDataRooms() {
             <PlusIcon className="-ml-1 mr-2 h-5 w-5" aria-hidden="true" />
             New Data Room
           </button>
-        </AddDataRoomModal>
+        </AddHierarchicalDataRoomModal>
       </div>
     </div>
   );

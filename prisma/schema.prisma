@@ -47,6 +47,7 @@ model User {
   sessions       Session[]
   documents      Document[]
   datarooms      Dataroom[]
+  hierarchicalDataroom HierarchicalDataroom[]
   domains        Domain[]
   plan           String     @default("trial")
   stripeId       String?    @unique // Stripe subscription / customer ID
@@ -173,6 +174,49 @@ model Dataroom {
 model DataroomView {
   id          String   @id @default(cuid())
   dataroom    Dataroom @relation(fields: [dataroomId], references: [id],  onDelete: Cascade)
+  dataroomId  String
+  viewerEmail String? // Email of the viewer if known
+  viewedAt    DateTime @default(now())
+}
+
+model HierarchicalDataroom {
+  id               String            @id @default(cuid())
+  name             String
+  description      String?
+  emailProtected   Boolean           @default(true) // Optional email protection
+  password         String? // Optional password for link protection
+  isArchived       Boolean           @default(false) // Indicates if the dataroom is archived
+  owner            User              @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerId          String // This field holds the foreign key.
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  hierarchicaldataroomView     HierarchicalDataroomView[]
+  files            DataroomFile[]
+  folders          DataroomFolder[]
+}
+
+model DataroomFolder {
+  id               String            @id @default(cuid())
+  name             String
+  parentFolderId   String?           
+  dataroom         HierarchicalDataroom @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
+  dataroomId       String
+  files            DataroomFile[]
+}
+
+model DataroomFile {
+  id               String            @id @default(cuid())
+  name             String
+  url              String
+  parentFolder     DataroomFolder    @relation(fields: [parentFolderId], references: [id], onDelete: Cascade)
+  parentFolderId   String
+  dataroom         HierarchicalDataroom          @relation(fields: [dataroomId], references: [id])
+  dataroomId       String
+}
+
+model HierarchicalDataroomView {
+  id          String   @id @default(cuid())
+  dataroom    HierarchicalDataroom @relation(fields: [dataroomId], references: [id],  onDelete: Cascade)
   dataroomId  String
   viewerEmail String? // Email of the viewer if known
   viewedAt    DateTime @default(now())
