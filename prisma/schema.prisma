@@ -198,6 +198,8 @@ model HierarchicalDataroom {
 model DataroomFolder {
   id               String            @id @default(cuid())
   name             String
+  parentFolder     DataroomFolder?   @relation(name: "nestedFolders", fields: [parentFolderId], references: [id],onDelete: Cascade)
+  subfolders       DataroomFolder[]  @relation(name: "nestedFolders")
   parentFolderId   String?           
   dataroom         HierarchicalDataroom @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
   dataroomId       String

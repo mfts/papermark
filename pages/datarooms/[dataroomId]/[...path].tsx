@@ -41,33 +41,50 @@ const reducer = (folderDirectory: FolderDirectory, action: ActionType) => {
   switch (action.type) {
     case "DELETE FOLDER":
       const deletedFolderDirectory = { ...folderDirectory };
+      //Delete all subfolders
+      for (let subfolderId of deletedFolderDirectory[action.folderId].subfolders) {
+        delete deletedFolderDirectory[subfolderId];
+      }
+      //Delete folder
       delete deletedFolderDirectory[action.folderId];
+      //Delete from parent's subfolder array
       deletedFolderDirectory[action.parentFolderId].subfolders =
         deletedFolderDirectory[action.parentFolderId].subfolders.filter((folderId) => folderId !== action.folderId)
       return deletedFolderDirectory;
+
     case "DELETE FILE":
       const deletedFileDirectory = { ...folderDirectory };
       deletedFileDirectory[action.parentFolderId].files =
         deletedFileDirectory[action.parentFolderId].files.filter((file) => file.id !== action.fileId);
       return deletedFileDirectory;
+
     case "CREATE FOLDER":
       const createdFolderDirectory = { ...folderDirectory };
       createdFolderDirectory[action.parentFolderId].subfolders.push(action.folder.id);
-      createdFolderDirectory[action.folder.id] = { name: action.folder.name, subfolders: [], files: [] };
+      createdFolderDirectory[action.folder.id] = {
+        name: action.folder.name,
+        subfolders: [],
+        files: [],
+        href: createdFolderDirectory[action.parentFolderId].href + `/${action.folder.id}`,
+      };
       return createdFolderDirectory;
+
     case "CREATE FILE":
       const createFileDirectory = { ...folderDirectory };
       createFileDirectory[action.parentFolderId].files.push(action.file);
       return createFileDirectory;
+
     case "UPDATE FOLDERNAME":
       const updatedFolderDirectory = { ...folderDirectory };
       updatedFolderDirectory[action.folderId].name = action.name
       return updatedFolderDirectory;
+
     case "UPDATE FILENAME":
       const updatedFileDirectory = { ...folderDirectory };
       let file: DataroomFile = updatedFileDirectory[action.parentFolderId].files.find((file) => file.id === action.fileId) as DataroomFile;
       file.name = action.updateFileName;
       return updatedFileDirectory;
+
     default:
       return folderDirectory;
   }
@@ -110,7 +127,7 @@ export default function Page({
   const currPath = router.query.path as string[];
 
   //In cases when user presses back in browser
-  if (currPath && currPath.length !== path.length) {
+  if (currPath && currPath[currPath.length - 1] !== path[path.length - 1]) {
     setPath(currPath);
     setCurrentFolderId(currPath[currPath.length - 1]);
   }
@@ -262,7 +279,7 @@ export default function Page({
             </div>
           </div>
           <div>
-            <p className="text-sm text-muted-foreground w-96 -mr-10"
+            <p className="text-sm text-muted-foreground md:w-96 -mr-10"
               ref={descriptionRef}
               contentEditable={true}
               onFocus={() => setIsEditingDescription(true)}
@@ -284,12 +301,11 @@ export default function Page({
       <Separator className="mb-1 bg-gray-200 dark:bg-gray-800" />
       <NavigationBar folderDirectory={folderDirectory} />
       {/* Page */}
-      <div className="ml-80 mt-8">
+      <div className="md:ml-80 mt-8">
         {/* Navigation */}
         <div className="flex" >
           {path && path.map((folderId: string, index: number) => {
-            const pathSlice = path.slice(0, index + 1);
-            const href = pathSlice.length > 1 ? `/datarooms/${dataroom.id}/${pathSlice.join('/')}` : `/datarooms/${dataroom.id}/${pathSlice[0]}`;
+            const href = `/datarooms/${dataroom.id}${folderDirectory[folderId].href}`;
             return (
               <React.Fragment key={index}>
                 {index > 0 &&
@@ -297,11 +313,11 @@ export default function Page({
                 <Link
                   className="text-muted-foreground hover:text-foreground underline"
                   href={`/datarooms/[dataroomId]/[...path]`}
-                      as={href}
-                      shallow={true}
+                  as={href}
+                  shallow={true}
                   onClick={() => {
                     setCurrentFolderId(folderId);
-                    setPath(pathSlice)
+                    setPath(folderDirectory[folderId].href.split("/").splice(1));
                   }}
                 >
                   {folderDirectory[folderId].name}
@@ -325,12 +341,11 @@ export default function Page({
                       shallow={true}
                       onClick={() => {
                         setCurrentFolderId(subfolderId);
-                        setPath((path)=>[...path, subfolderId]);
+                        setPath((path) => [...path, subfolderId]);
                       }}
                     >
                       <img src="/_icons/folder.svg" alt="Folder Icon" className="w-11 h-11 mr-2" />
                       <span className="mt-3"> {folderDirectory[subfolderId].name}</span>
-
                     </Link>
                   </div>
                   <div className="text-center sm:text-right">

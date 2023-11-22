@@ -56,7 +56,8 @@ export type FolderDirectory = {
   [folderId: string]: {
     name: string,
     subfolders: string[],
-    files: DataroomFile[]
+    files: DataroomFile[],
+    href: string            //Relative path for that folder
   }
 }
 

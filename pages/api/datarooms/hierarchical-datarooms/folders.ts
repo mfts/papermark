@@ -24,6 +24,8 @@ export default async function handle(
 
     const id = req.body.id;
     try {
+
+      //Delete the folder
       const folder = await prisma.dataroomFolder.delete({
         where: {
           id: id

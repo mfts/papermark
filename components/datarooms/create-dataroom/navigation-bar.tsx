@@ -1,13 +1,14 @@
 import { useSession } from "next-auth/react";
 import FolderIcon from "@/components/shared/icons/folder";
-import DataRoomIcon from "@/components/shared/icons/data-room";
-import PieChartIcon from "@/components/shared/icons/pie-chart";
-import SettingsIcon from "@/components/shared/icons/settings";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/router";
 import LoadingSpinner from "./../../ui/loading-spinner";
 import { useState, useEffect } from "react";
 import { FolderDirectory } from "@/lib/types";
+import ChevronRight from "@/components/shared/icons/chevron-right";
+import ChevronDown from "@/components/shared/icons/chevron-down";
+import Link from "next/link";
+import OpenFolder from "@/components/shared/icons/open-folder";
 
 export default function NavigationBar({
   folderDirectory
@@ -19,44 +20,10 @@ export default function NavigationBar({
   const [isBottom, setIsBottom] = useState(true);
 
   const router = useRouter();
-
-  const navigation = [
-    // {
-    //   name: "Overview",
-    //   href: "/overview",
-    //   icon: HomeIcon,
-    //   current: router.pathname.includes("overview"),
-    //   disabled: true,
-    // },
-    {
-      name: "Documents",
-      href: "/documents",
-      icon: FolderIcon,
-      current: router.pathname.includes("documents"),
-      disabled: false,
-    },
-    {
-      name: "Data Rooms",
-      href: "/datarooms",
-      icon: DataRoomIcon,
-      current: router.pathname.includes("datarooms"),
-      disabled: false,
-    },
-    {
-      name: "Analytics",
-      href: "/analytics",
-      icon: PieChartIcon,
-      current: router.pathname.includes("analytics"),
-      disabled: true,
-    },
-    {
-      name: "Settings",
-      href: "/settings/domains",
-      icon: SettingsIcon,
-      current: router.pathname.includes("settings"),
-      disabled: false,
-    },
-  ];
+  const path = router.query.path as string[]
+  const currentFolderId = path[path.length - 1];
+  const homeFolderId = path[0];
+  const dataroomId = router.query.dataroomId as string;
 
   //Dynamically increase size of navigation bar on scroll
   useEffect(() => {
@@ -82,43 +49,90 @@ export default function NavigationBar({
     <>
       {/* Static sidebar for desktop */}
       <div className={`hidden lg:fixed lg:z-0 lg:flex lg:w-72 lg:flex-col ${isBottom ? 'bottom-2' : 'bottom-0'} ${isScrolled ? 'h-full' : 'h-4/5'}`}>
-        {/* Sidebar component, swap this element with another sidebar if you like */}
         <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-gray-50 dark:bg-gray-800 px-6 rounded-md">
           <div className="flex h-16 shrink-0 items-center">
             <p className="text-2xl font-bold tracking-tighter text-black dark:text-white flex items-center">
-              Papermark{" "}
+              {folderDirectory[currentFolderId].name}{" "}
             </p>
           </div>
-          <nav className="flex flex-1 flex-col">
-            <ul role="list" className="flex flex-1 flex-col gap-y-7">
-              <li>
-                <ul role="list" className="-mx-2 space-y-1">
-                  {navigation.map((item) => (
-                    <li key={item.name}>
-                      <button
-                        onClick={() => router.push(item.href)}
-                        className={cn(
-                          item.current
-                            ? "bg-gray-200 dark:bg-secondary text-secondary-foreground font-semibold"
-                            : "text-muted-foreground hover:text-foreground hover:bg-gray-200 hover:dark:bg-muted",
-                          "group flex gap-x-3 items-center rounded-md p-2 text-sm leading-6 w-full disabled:hover:bg-transparent disabled:text-muted-foreground disabled:cursor-default"
-                        )}
-                        disabled={item.disabled}
-                      >
-                        <item.icon
-                          className="h-5 w-5 shrink-0"
-                          aria-hidden="true"
-                        />
-                        {item.name}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </li>
-            </ul>
-          </nav>
+          <div className="-mt-4">
+            <FolderComponent
+              folderId={homeFolderId}
+              folderDirectory={folderDirectory}
+              currentFolderId={currentFolderId}
+              dataroomId={dataroomId}
+              path={path}
+            />
+          </div>
         </div>
       </div>
     </>
   );
+}
+
+function FolderComponent({
+  folderId,
+  folderDirectory,
+  currentFolderId,
+  dataroomId,
+  path
+}: {
+  folderId: string,
+  folderDirectory: FolderDirectory,
+  currentFolderId: string,
+  dataroomId: string,
+  path: string[]
+}) {
+  const [isExpanded, setIsExpanded] = useState<boolean>(false);
+  return (
+    <div>
+      <div className="flex item-center">
+        {isExpanded
+          ? <div onClick={() => setIsExpanded(false)} className="mt-2"><ChevronDown /></div>
+          : <div onClick={() => setIsExpanded(true)} className="mt-2"><ChevronRight /></div>
+        }
+        <Link
+          href={`/datarooms/[dataroomId]/[...path]`}
+          as={`/datarooms/${dataroomId}/${folderDirectory[folderId].href}`}
+          shallow={true}
+          className={cn(
+            path.includes(folderId)
+              ? "bg-gray-200 dark:bg-secondary text-secondary-foreground font-semibold"
+              : "text-muted-foreground hover:text-foreground hover:bg-gray-200 hover:dark:bg-muted",
+            "group flex gap-x-3 items-center rounded-md p-1 text-sm w-full disabled:hover:bg-transparent disabled:text-muted-foreground disabled:cursor-default"
+          )}>
+          {path.includes(folderId)
+            ?
+            <OpenFolder
+              className="h-6 w-6 shrink-0"
+              aria-hidden="true"
+            />
+            :
+            <FolderIcon
+              className="h-6 w-6 shrink-0"
+              aria-hidden="true"
+            />
+          }
+          {folderDirectory[folderId].name}
+        </Link>
+      </div>
+      <div className="ml-4 mt-2">
+        {isExpanded &&
+          folderDirectory[folderId].subfolders.map((subfolderId) => {
+            return (
+              <div>
+                <FolderComponent
+                  folderId={subfolderId}
+                  folderDirectory={folderDirectory}
+                  currentFolderId={currentFolderId}
+                  dataroomId={dataroomId}
+                  path={path}
+                />
+              </div>
+            )
+          })
+        }
+      </div>
+    </div>
+  )
 }

@@ -60,7 +60,10 @@ export default async function handle(
         folderDirectory[folderId] = {
           name: currFolder.name,
           subfolders: folders.filter(folder => folder.parentFolderId === currFolder.id).map(folder => folder.id),
-          files: files.filter(file => file.parentFolderId === currFolder.id)
+          files: files.filter(file => file.parentFolderId === currFolder.id),
+          href: currFolder.parentFolderId 
+          ? folderDirectory[currFolder.parentFolderId].href + `/${currFolder.id}`
+          : `/${currFolder.id}`,
         }
         folderQueue = [...folderQueue, ...folderDirectory[folderId].subfolders];
       }
