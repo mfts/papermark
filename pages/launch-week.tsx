@@ -6,6 +6,7 @@ import Navbar from "@/components/web/navbar";
 import Hero from "@/components/web/launch/hero";
 import Grid from "@/components/web/launch/daysgrid";
 import CTA from "@/components/web/launch/cta";
+import Contributors from "@/components/web/contributors";
 import Head from "next/head";
 // import Section3 from "@/components/web/section3";
 
@@ -57,6 +58,7 @@ export default function Home() {
           <Section3 />
           <Testimonials /> */}
           <Grid/>
+          <Contributors/>
           <CTA/>
         </div>
       </div>
