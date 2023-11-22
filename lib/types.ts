@@ -153,6 +153,10 @@ export type AnalyticsEvents =
   | {
       event: "Domain Deleted";
       slug: string;
+    }
+  | {
+      event: "Logo Added";
+      name: string;
     };
 
 export interface Team {

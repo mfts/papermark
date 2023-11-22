@@ -1,33 +1,32 @@
-import { AddDomainModal } from "@/components/domains/add-domain-modal";
-import DomainCard from "@/components/domains/domain-card";
 import AppLayout from "@/components/layouts/app";
 import { AddLogoModal } from "@/components/logos/add-logo-modal";
+import LogoCard from "@/components/logos/logo-card";
 import Navbar from "@/components/settings/navbar";
 import { Button } from "@/components/ui/button";
 import { useTeam } from "@/context/team-context";
-import { useDomains } from "@/lib/swr/use-domains";
+import { useLogo } from "@/lib/swr/use-logo";
 import { useState } from "react";
 import { mutate } from "swr";
 
 export default function Logo() {
-  const { domains } = useDomains();
+  const { logo } = useLogo();
   const teamInfo = useTeam();
 
   const [open, setOpen] = useState<boolean>(false);
 
-  const handleDomainDeletion = (deletedDomain: string) => {
+  const handleLogoDeletion = (deletedLogo: string) => {
     mutate(
-      `/api/teams/${teamInfo?.currentTeam?.id}/domains`,
-      domains?.filter((domain) => domain.slug !== deletedDomain),
-      false
+      `/api/teams/${teamInfo?.currentTeam?.id}/logo`,
+      logo?.filter((l) => l.name !== deletedLogo),
+      false,
     );
   };
 
-  const handleDomainAddition = (newDomain: string) => {
+  const handleLogoAddition = (newLogo: string) => {
     mutate(
-      `/api/teams/${teamInfo?.currentTeam?.id}/domains`,
-      [...(domains || []), newDomain],
-      false
+      `/api/teams/${teamInfo?.currentTeam?.id}/logo`,
+      [...(logo || []), newLogo],
+      false,
     );
   };
 
@@ -48,20 +47,21 @@ export default function Logo() {
             <AddLogoModal
               open={open}
               setOpen={setOpen}
-              onAddition={handleDomainAddition}
+              onAddition={handleLogoAddition}
             >
               <Button>Add Logo</Button>
             </AddLogoModal>
           </ul>
         </div>
-        {domains && domains.length !== 0 ? (
+        {logo && logo.length !== 0 ? (
           <div>
             <ul>
-              {domains.map((domain, index) => (
+              {logo.map((l, index) => (
                 <li key={index} className="mt-4">
-                  <DomainCard
-                    domain={domain.slug}
-                    onDelete={handleDomainDeletion}
+                  <LogoCard
+                    name={l.name}
+                    logoId={l.id}
+                    onDelete={handleLogoDeletion}
                   />
                 </li>
               ))}

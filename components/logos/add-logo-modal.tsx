@@ -3,16 +3,19 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useTeam } from "@/context/team-context";
+import { getExtension } from "@/lib/utils";
+import { PutBlobResult } from "@vercel/blob";
+import { upload } from "@vercel/blob/client";
+import { usePlausible } from "next-plausible";
+import { useRouter } from "next/router";
 import { useState } from "react";
 import { toast } from "sonner";
+import DocumentUpload from "../document-upload";
 
 export function AddLogoModal({
   open,
@@ -25,54 +28,83 @@ export function AddLogoModal({
   onAddition?: (newDomain: string) => void;
   children?: React.ReactNode;
 }) {
-  const [domain, setDomain] = useState<string>("");
-  const [loading, setLoading] = useState<boolean>(false);
-
+  const router = useRouter();
+  const plausible = usePlausible();
+  const [uploading, setUploading] = useState<boolean>(false);
+  const [currentFile, setCurrentFile] = useState<File | null>(null);
   const teamInfo = useTeam();
 
-  const handleSubmit = async (event: any) => {
+  const handleBrowserUpload = async (event: any) => {
     event.preventDefault();
     event.stopPropagation();
 
-    if (domain == "") return;
+    // Check if the file is chosen
+    if (!currentFile) {
+      alert("Please select a file to upload.");
+      return; // prevent form from submitting
+    }
 
-    setLoading(true);
+    try {
+      setUploading(true);
+
+      const newBlob = await upload(currentFile.name, currentFile, {
+        access: "public",
+        handleUploadUrl: "/api/file/browser-upload",
+      });
+
+      let response: Response | undefined;
+      // create a document or new version in the database if the document is a pdf
+      if (getExtension(newBlob.pathname).includes("pdf")) {
+        // create a new version for existing document in the database
+        const documentId = router.query.id;
+        response = await saveLogoToDatabase(newBlob);
+      }
+
+      if (response) {
+        const document = await response.json();
+
+        console.log("document: ", document);
+        // track the event
+        plausible("documentVersionUploaded");
+
+        toast.success("Logo added successfully! 🎉");
+        onAddition && onAddition(document);
+
+        !onAddition && window.open("/settings/logo", "_blank");
+
+        // reload to the document page
+        setTimeout(() => {
+          router.reload();
+          setUploading(false);
+        }, 2000);
+      }
+    } catch (error) {
+      console.error("An error occurred while uploading the file: ", error);
+    }
+  };
+
+  async function saveLogoToDatabase(blob: PutBlobResult) {
     const response = await fetch(
-      `/api/teams/${teamInfo?.currentTeam?.id}/domains`,
+      `/api/teams/${teamInfo?.currentTeam?.id}/logo`,
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          domain: domain,
+          file: blob.url,
+          name: blob.pathname,
+          type: "pdf",
         }),
-      }
+      },
     );
 
     if (!response.ok) {
-      const { message } = await response.json();
-      setLoading(false);
-      setOpen(false);
-      toast.error(message);
-      return;
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const newDomain = await response.json();
-
-    toast.success("Domain added successfully! 🎉");
-
-    // console.log(newDomain);
-
-    // Update local data with the new link
-    onAddition && onAddition(newDomain);
-
-    setOpen(false);
-
-    setLoading(false);
-
-    !onAddition && window.open("/settings/domains", "_blank");
-  };
+    return response;
+  }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -84,23 +116,32 @@ export function AddLogoModal({
             You can easily add a custom logo.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit}>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="domain" className="text-right">
-                Logo
-              </Label>
-              <Input
-                id="domain"
-                placeholder="yourdomain.com"
-                className="col-span-3"
-                onChange={(e) => setDomain(e.target.value)}
-              />
+        <form
+          encType="multipart/form-data"
+          onSubmit={handleBrowserUpload}
+          className="flex flex-col"
+        >
+          <div className="space-y-12">
+            <div className="pb-6">
+              <div className="mt-10 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
+                <DocumentUpload
+                  currentFile={currentFile}
+                  setCurrentFile={setCurrentFile}
+                />
+              </div>
             </div>
           </div>
-          <DialogFooter>
-            <Button type="submit">Add Logo</Button>
-          </DialogFooter>
+
+          <div className="flex justify-center">
+            <Button
+              type="submit"
+              className="w-full lg:w-1/2"
+              disabled={uploading || !currentFile}
+              loading={uploading}
+            >
+              {uploading ? "Uploading..." : "Upload Document"}
+            </Button>
+          </div>
         </form>
       </DialogContent>
     </Dialog>

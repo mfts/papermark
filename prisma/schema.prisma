@@ -53,7 +53,7 @@ model User {
   subscriptionId String?    @unique // Stripe subscription ID
   startsAt       DateTime? // Stripe subscription start date
   endsAt         DateTime? // Stripe subscription end date
-  Logo           Logo[]
+  logos          Logo[]
 }
 
 model Team {
@@ -71,7 +71,7 @@ model Team {
   endsAt         DateTime? // Stripe subscription end date
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
-  Logo           Logo[]
+  logos          Logo[]
 }
 
 enum Role {
@@ -190,6 +190,7 @@ model Logo {
   id        String   @id @default(cuid())
   name      String   @unique
   file      String   @unique // This should be a reference to where the file is stored (S3, Google Cloud Storage, etc.)
+  type      String? // This should be a reference to the file type (png,jpg etc.)
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId    String
   teamId    String?

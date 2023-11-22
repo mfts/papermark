@@ -1,6 +1,13 @@
 import prisma from "@/lib/prisma";
 import { DocumentError, TeamError } from "../errorHandler";
-import { Document, DocumentVersion, Domain, Link, View } from "@prisma/client";
+import {
+  Document,
+  DocumentVersion,
+  Domain,
+  Link,
+  Logo,
+  View,
+} from "@prisma/client";
 
 interface ITeamUserAndDocument {
   teamId: string;
@@ -20,6 +27,13 @@ interface ITeamWithDomain {
 interface IDocumentWithLink {
   docId: string;
   userId: string;
+  options?: {};
+}
+
+interface ITeamWithLogo {
+  teamId: string;
+  userId: string;
+  logoId?: string;
   options?: {};
 }
 
@@ -59,7 +73,11 @@ export async function getTeamWithUsersAndDocument({
 
   // check if the document exists in the team
   let document:
-    | (Document & { views?: View[]; versions?: DocumentVersion[]; links?: Link[] })
+    | (Document & {
+        views?: View[];
+        versions?: DocumentVersion[];
+        links?: Link[];
+      })
     | undefined;
   if (docId) {
     document = team.documents.find((doc) => doc.id === docId);
@@ -143,11 +161,56 @@ export async function getDocumentWithTeamAndUser({
   }
 
   const teamHasUser = document.team?.users.some(
-    (user) => user.userId === userId
+    (user) => user.userId === userId,
   );
   if (!teamHasUser) {
     throw new TeamError("You are not a member of the team");
   }
 
   return { document };
+}
+
+export async function getTeamWithLogo({
+  teamId,
+  userId,
+  logoId,
+  options,
+}: ITeamWithLogo) {
+  const team = await prisma.team.findUnique({
+    where: {
+      id: teamId,
+    },
+    include: {
+      users: {
+        select: {
+          userId: true,
+        },
+      },
+      logos: {
+        ...options,
+      },
+    },
+  });
+
+  // check if the team exists
+  if (!team) {
+    throw new TeamError("Team doesn't exists");
+  }
+
+  // check if the user is part the team
+  const teamHasUser = team?.users.some((user) => user.userId === userId);
+  if (!teamHasUser) {
+    throw new TeamError("You are not a member of the team");
+  }
+
+  // check if the domain exists in the team
+  let logo: Logo | undefined;
+  if (logoId) {
+    logo = team.logos.find((_logo) => _logo.id === logoId);
+    if (!logo) {
+      throw new TeamError("Domain doesn't exists in the team");
+    }
+  }
+
+  return { team, logo };
 }
