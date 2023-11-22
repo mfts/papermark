@@ -209,7 +209,7 @@ module.exports = {
           display: "none",
         },
         ".no-scrollbar": {
-          "-ms-overflow-style": "mone",
+          "-ms-overflow-style": "none",
           "scrollbar-width": "none",
         },
       };

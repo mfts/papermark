@@ -5,6 +5,7 @@ import {
   View,
   User as PrismaUser,
   DocumentVersion,
+  Event,
 } from "@prisma/client";
 
 export type CustomUser = NextAuthUser & PrismaUser;

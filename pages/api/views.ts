@@ -8,7 +8,7 @@ import { triggerWebhooks } from "@/lib/webhooks";
 
 export default async function handle(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   // We only allow POST requests
   if (req.method !== "POST") {
@@ -29,11 +29,6 @@ export default async function handle(
       emailProtected: true,
       enableNotification: true,
       password: true,
-      _count: {
-        select: {
-          views: true,
-        },
-      },
     },
   });
 
@@ -107,10 +102,10 @@ export default async function handle(
 
     // this will trigger the webhook and also notification(both in-app and email)
     await triggerWebhooks({
-      eventType: "LINKED_VIEWED",
+      eventType: "LINK_VIEWED",
       eventData: {
         receiverId: newView.document.owner.id,
-        event: "LINKED_VIEWED",
+        event: "LINK_VIEWED",
         data: {
           documentId,
           documentName: newView.document.name,

@@ -15,8 +15,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Event } from "@prisma/client";
 import { mutate } from "swr";
 
-
-export function AddWebhookModal({children}: {children: React.ReactNode}) {
+export function AddWebhookModal({ children }: { children: React.ReactNode }) {
   const [targetUrl, setTargetUrl] = useState<string>("");
   const [creating, setCreating] = useState<boolean>(false);
   const [events, setEvents] = useState<Event[]>([]);
@@ -30,7 +29,7 @@ export function AddWebhookModal({children}: {children: React.ReactNode}) {
 
     if (!targetUrl) {
       setCreating(false);
-      setUrlError("please enter the endpoint url")
+      setUrlError("please enter the endpoint url");
       return;
     }
 
@@ -41,19 +40,16 @@ export function AddWebhookModal({children}: {children: React.ReactNode}) {
     }
 
     // create a document in the database with the blob url
-    const response = await fetch(
-      "/api/webhooks",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          targetUrl,
-          events,
-        }),
-      }
-    );
+    const response = await fetch("/api/webhooks", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        targetUrl,
+        events,
+      }),
+    });
 
     if (!response.ok) {
       setCreating(false);
@@ -69,17 +65,19 @@ export function AddWebhookModal({children}: {children: React.ReactNode}) {
 
   const handleEventSelect = (value: Event) => {
     console.log("selected");
-    
+
     if (events.includes(value)) {
       setEvents(events.filter((event) => event !== value));
-    }else {
+    } else {
       setEvents([...events, value]);
     }
-  }
+  };
 
   return (
     <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-      <DialogTrigger onClick={() => setModalOpen(true)} asChild>{children}</DialogTrigger>
+      <DialogTrigger onClick={() => setModalOpen(true)} asChild>
+        {children}
+      </DialogTrigger>
       <DialogContent className="text-foreground bg-background">
         <DialogHeader>
           <DialogTitle>Add Webhook</DialogTitle>
@@ -87,11 +85,18 @@ export function AddWebhookModal({children}: {children: React.ReactNode}) {
             <form
               encType="multipart/form-data"
               onSubmit={handleWebhookCreation}
-              className="flex flex-col gap-3">
+              className="flex flex-col gap-3"
+            >
               <div className="my-4 space-y-2">
                 <Label htmlFor="endpoint">Endpoint URL</Label>
-                <Input id="enpoint" placeholder="https://" onChange={(e) => setTargetUrl(e.target.value)}/>
-                {urlError && !targetUrl && <p className="text-xs text-red-500">{urlError}</p>}
+                <Input
+                  id="enpoint"
+                  placeholder="https://"
+                  onChange={(e) => setTargetUrl(e.target.value)}
+                />
+                {urlError && !targetUrl && (
+                  <p className="text-xs text-red-500">{urlError}</p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -99,18 +104,21 @@ export function AddWebhookModal({children}: {children: React.ReactNode}) {
 
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
-                    <Checkbox id="1" onCheckedChange={() => handleEventSelect("LINKED_VIEWED")}/>
+                    <Checkbox
+                      id="1"
+                      onCheckedChange={() => handleEventSelect("LINK_VIEWED")}
+                    />
                     <Label htmlFor="1">document.viewed</Label>
                   </div>
 
-                  {checkboxError && <p className="text-xs text-red-500">{checkboxError}</p>}
+                  {checkboxError && (
+                    <p className="text-xs text-red-500">{checkboxError}</p>
+                  )}
                 </div>
               </div>
 
               <div className="flex justify-start mt-3">
-                <Button
-                  type="submit"
-                  loading={creating}>
+                <Button type="submit" loading={creating}>
                   {creating ? "Creating..." : "Create Webhook"}
                 </Button>
               </div>

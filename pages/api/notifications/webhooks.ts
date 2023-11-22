@@ -1,22 +1,28 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/lib/prisma";
-import { Event } from "@prisma/client";
+import { Event, Notification } from "@prisma/client";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]";
 import { CustomUser } from "@/lib/types";
 import { handleLinkViewed } from "@/lib/notifications/notification-handlers";
+import { errorhandler } from "@/lib/errorHandler";
+import { verifySignature } from "@/lib/webhooks";
 
 export default async function handle(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
   if (req.method === "POST") {
-    // const session = await getServerSession(req, res, authOptions);
-    // if (!session) {
-    //   return res.status(401).end("Unauthorized");
-    // }
+    //signature verification
+    const signature = req.headers["x-signature"] as string;
+    if (!signature) {
+      return res.status(400).end("x-signature header missing from the request");
+    }
 
-    // TODO: signature verification
+    const body = JSON.stringify(req.body);
+    if (!verifySignature(body, signature)) {
+      return res.status(401).end("Invalid signature");
+    }
 
     try {
       const { eventType, eventData } = req.body as {
@@ -25,30 +31,19 @@ export default async function handle(
       };
 
       // const userId = (session.user as CustomUser).id;
-
+      let notification: Notification | null = null;
       switch (eventType) {
-        case "LINKED_VIEWED":
-          handleLinkViewed(eventData);
+        case "LINK_VIEWED":
+          notification = await handleLinkViewed(eventData);
           break;
 
         // TODO: other events like Team created, Team member added, etc.
       }
 
-      // notify the user (via email)
-      // TODO: check if user has allow email notification if yes then send the email notification
-      const user = await prisma.user.findUnique({
-        where: {
-          id: eventData.receiverId,
-        },
-      });
-
-      if (user?.isEmailNotificationEnabled) {
-        // notify user via email
-      }
-
-      return res.status(201).json("hello");
+      // since the internal webhook is for notification purpose we are returning the notification that is being created
+      return res.status(201).json(notification);
     } catch (error) {
-      console.log(error as Error);
+      errorhandler(error, res);
     }
   } else {
     res.setHeader("Allow", ["POST"]);

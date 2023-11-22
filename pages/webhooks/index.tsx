@@ -1,14 +1,13 @@
 import { useState } from "react";
 import { PlusIcon } from "@heroicons/react/24/solid";
-import { AddWebhookModal } from "@/components/webhooks/add-webhook-modal"
+import { AddWebhookModal } from "@/components/webhooks/add-webhook-modal";
 import { Separator } from "@/components/ui/separator";
-import AppLayout from "@/components/layouts/app"
+import AppLayout from "@/components/layouts/app";
 import { Button } from "@/components/ui/button";
 import { Webhook } from "lucide-react";
 import useWebhooks from "@/lib/swr/use-webhooks";
 import { Skeleton } from "@/components/ui/skeleton";
 import { WebhookTable } from "@/components/webhooks/webhook-table";
-
 
 export default function Webhooks() {
   const { webhooks } = useWebhooks();
@@ -21,7 +20,9 @@ export default function Webhooks() {
             <h2 className="text-2xl text-foreground font-semibold tracking-tight">
               Webhooks
             </h2>
-            <p className="text-sm text-muted-foreground">Manage your Webhooks</p>
+            <p className="text-sm text-muted-foreground">
+              Manage your Webhooks
+            </p>
           </div>
           <ul className="flex items-center justify-between gap-4">
             <AddWebhookModal>
@@ -32,14 +33,13 @@ export default function Webhooks() {
 
         <Separator className="my-6 bg-gray-200 dark:bg-gray-800" />
 
-        {webhooks && webhooks.length === 0 && (
+        {webhooks && webhooks.length === 0 ? (
           <div className="flex items-center justify-center h-96">
             <EmptyWebhooks />
           </div>
+        ) : (
+          <WebhookTable webhooks={webhooks || []} />
         )}
-
-        {/* Documents list */}
-        <WebhookTable webhooks={webhooks || []} />
       </div>
     </AppLayout>
   );

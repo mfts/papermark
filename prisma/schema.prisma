@@ -229,8 +229,8 @@ model Notification {
 }
 
 enum Event {
-  LINKED_VIEWED // When a shared document link is viewed by someone.
-  LINKED_SHARED // When a user shares a document link with others.
+  LINK_VIEWED // When a shared document link is viewed by someone.
+  LINK_SHARED // When a user shares a document link with others.
   SUBSCRIPTION_RENEWAL // notifications about upcoming subscription renewals or changes.
   DOCUMENT_ADDED // when a new document is added
   DOCUMENT_UPDATED // when a document's detail changed such as Document Name, etc
