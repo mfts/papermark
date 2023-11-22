@@ -19,10 +19,6 @@ export const NotionPage = ({
   documentId: string;
   versionNumber: number;
 }) => {
-  if (!recordMap) {
-    return null;
-  }
-
   const [pageNumber, setPageNumber] = useState<number>(1); // start on first page
   const [maxScrollPercentage, setMaxScrollPercentage] = useState<number>(0);
 
@@ -106,6 +102,10 @@ export const NotionPage = ({
       window.removeEventListener("scroll", handleScroll);
     };
   }, [maxScrollPercentage]);
+
+  if (!recordMap) {
+    return null;
+  }
 
   return (
     <>
