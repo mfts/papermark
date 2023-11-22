@@ -49,7 +49,7 @@ export default async function handle(
 
       return res.status(201).json({ message: "Document updated successfully" });
     } catch (error) {
-      log(`Failed to create document. Error: \n\n ${error}`);
+      log(`Failed to update document: ${documentId}. Error: \n\n ${error}`);
       errorhandler(error, res);
     }
   } else {

@@ -7,7 +7,7 @@ import { authOptions } from "../../auth/[...nextauth]";
 
 export default async function handle(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   if (req.method === "GET") {
     // GET /api/links/:id
@@ -24,7 +24,17 @@ export default async function handle(
           emailProtected: true,
           allowDownload: true,
           password: true,
-          document: { select: { id: true, name: true } },
+          isArchived: true,
+          document: {
+            select: {
+              id: true,
+              versions: {
+                where: { isPrimary: true },
+                select: { versionNumber: true, type: true },
+                take: 1,
+              },
+            },
+          },
         },
       });
 
@@ -115,6 +125,7 @@ export default async function handle(
         domainId: domainObj?.id || null,
         domainSlug: domain || null,
         slug: slug || null,
+        enableNotification: linkData.enableNotification,
       },
       include: {
         views: {

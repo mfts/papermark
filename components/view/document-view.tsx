@@ -1,11 +1,16 @@
 import React, { useEffect, useRef, useState } from "react";
 import PDFViewer from "@/components/PDFViewer";
-import AccessForm, { DEFAULT_ACCESS_FORM_DATA, DEFAULT_ACCESS_FORM_TYPE } from "@/components/view/access-form";
+import AccessForm, {
+  DEFAULT_ACCESS_FORM_DATA,
+  DEFAULT_ACCESS_FORM_TYPE,
+} from "@/components/view/access-form";
 import { usePlausible } from "next-plausible";
 import { toast } from "sonner";
 import { LinkWithDocument } from "@/lib/types";
 import LoadingSpinner from "../ui/loading-spinner";
 import PagesViewer from "@/components/PagesViewer";
+import { NotionPage } from "../NotionPage";
+import { ExtendedRecordMap } from "notion-types";
 
 export type DEFAULT_DOCUMENT_VIEW_TYPE = {
   viewId: string;
@@ -17,10 +22,15 @@ export default function DocumentView({
   link,
   userEmail,
   isProtected,
+  notionData,
 }: {
   link: LinkWithDocument;
   userEmail: string | null | undefined;
   isProtected: boolean;
+  notionData: {
+    rootNotionPageId: string | null;
+    recordMap: ExtendedRecordMap | null;
+  };
 }) {
   const { document, emailProtected, password: linkPassword } = link;
 
@@ -35,9 +45,8 @@ export default function DocumentView({
     pages: null,
   });
   const [data, setData] = useState<DEFAULT_ACCESS_FORM_TYPE>(
-    DEFAULT_ACCESS_FORM_DATA
+    DEFAULT_ACCESS_FORM_DATA,
   );
-
 
   const handleSubmission = async (): Promise<void> => {
     setIsLoading(true);
@@ -69,12 +78,12 @@ export default function DocumentView({
   };
 
   const handleSubmit: React.FormEventHandler<HTMLFormElement> = async (
-    event: React.FormEvent
+    event: React.FormEvent,
   ): Promise<void> => {
     event.preventDefault();
     await handleSubmission();
   };
-  
+
   // If link is not submitted and does not have email / password protection, show the access form
   useEffect(() => {
     if (!didMount.current) {
@@ -113,12 +122,22 @@ export default function DocumentView({
   return (
     <div className="bg-gray-950">
       {submitted ? (
-        viewData.pages ? (
+        notionData.recordMap && notionData.rootNotionPageId ? (
+          <NotionPage
+            recordMap={notionData.recordMap}
+            rootPageId={notionData.rootNotionPageId}
+            viewId={viewData.viewId}
+            linkId={link.id}
+            documentId={document.id}
+            versionNumber={document.versions[0].versionNumber}
+          />
+        ) : viewData.pages ? (
           <PagesViewer
             pages={viewData.pages}
             viewId={viewData.viewId}
             linkId={link.id}
             documentId={document.id}
+            versionNumber={document.versions[0].versionNumber}
           />
         ) : (
           <PDFViewer
@@ -128,6 +147,7 @@ export default function DocumentView({
             documentId={document.id}
             name={document.name}
             allowDownload={link.allowDownload}
+            versionNumber={document.versions[0].versionNumber}
           />
         )
       ) : (

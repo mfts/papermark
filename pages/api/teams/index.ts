@@ -43,16 +43,6 @@ export default async function handle(
 
       // if no teams then create a default one
       if (teams.length === 0) {
-
-        const userDocuments = await prisma.document.findMany({
-          where: { ownerId: user.id, },
-          select: { id: true, },
-        });
-        const userDomains = await prisma.domain.findMany({
-          where: { userId: user.id, },
-          select: { id: true, },
-        });
-
         const defaultTeamName = user.name ? `${user.name}'s Team` : "Personal Team";
         const defaultTeam = await prisma.team.create({
           data: {
@@ -63,13 +53,6 @@ export default async function handle(
                 role: "ADMIN",
               },
             },
-            plan: user.plan || "trial",
-            stripeId: user.stripeId,
-            subscriptionId: user.subscriptionId,
-            startsAt: user.startsAt,
-            endsAt: user.endsAt,
-            documents: { connect: userDocuments },
-            domains: { connect: userDomains },
           },
           select: {
             id: true,
@@ -81,7 +64,7 @@ export default async function handle(
 
       return res.status(200).json(teams);
     } catch (error) {
-      log(`Failed to add domain. Error: \n\n ${error}`);
+      log(`Failed to find team for user: ${user.id} \n\n ${error}`);
       errorhandler(error, res);
     }
   } else if (req.method === "POST") {
@@ -93,13 +76,15 @@ export default async function handle(
 
     const { team } = req.body;
 
+    const user = session.user as CustomUser
+
     try {
       const newTeam = await prisma.team.create({
         data: {
           name: team,
           users: {
             create: {
-              userId: (session.user as CustomUser).id,
+              userId: user.id,
               role: "ADMIN",
             },
           },
@@ -111,7 +96,7 @@ export default async function handle(
 
       return res.status(201).json(newTeam);
     } catch (error) {
-      log(`Failed to add domain. Error: \n\n ${error}`);
+      log(`Failed to create team "${team}" for user: ${user.id}. Error: \n\n ${error}`);
       errorhandler(error, res);
     }
   } else {

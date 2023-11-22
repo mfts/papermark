@@ -7,7 +7,7 @@ import { sendViewedDocumentEmail } from "@/lib/emails/send-viewed-document";
 
 export default async function handle(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   // We only allow POST requests
   if (req.method !== "POST") {
@@ -26,6 +26,7 @@ export default async function handle(
     },
     select: {
       emailProtected: true,
+      enableNotification: true,
       password: true,
     },
   });
@@ -79,7 +80,7 @@ export default async function handle(
               where: { isPrimary: true },
               orderBy: { createdAt: "desc" },
               take: 1,
-              select: { file: true, id: true, hasPages: true },
+              select: { file: true, id: true, hasPages: true, type: true },
             },
           },
         },
@@ -97,15 +98,16 @@ export default async function handle(
       viewerEmail: email,
     });
 
-
     // TODO: this can be offloaded to a background job in the future to save some time
-    // send email to document owner that document has been viewed
-    await sendViewedDocumentEmail(
-      newView.document.owner.email as string,
-      documentId,
-      newView.document.name,
-      email
-    );
+    // send email to document owner that document has been viewed if user has not disabled notifications
+    if (link.enableNotification) {
+      await sendViewedDocumentEmail(
+        newView.document.owner.email as string,
+        documentId,
+        newView.document.name,
+        email,
+      );
+    }
 
     // check if document version has multiple pages, if so, return the pages
     if (newView.document.versions[0].hasPages) {
@@ -122,19 +124,29 @@ export default async function handle(
         },
       });
 
-      return res
-        .status(200)
-        .json({ message: "View recorded", viewId: newView.id, file: null, pages: pages });
-    }
-
-    return res
-      .status(200)
-      .json({
+      return res.status(200).json({
         message: "View recorded",
         viewId: newView.id,
-        file: newView.document.versions[0].file,
+        file: null,
+        pages: pages,
+      });
+    }
+
+    if (newView.document.versions[0].type === "notion") {
+      return res.status(200).json({
+        message: "View recorded",
+        viewId: newView.id,
+        file: null,
         pages: null,
       });
+    }
+
+    return res.status(200).json({
+      message: "View recorded",
+      viewId: newView.id,
+      file: newView.document.versions[0].file,
+      pages: null,
+    });
   } catch (error) {
     log(`Failed to record view for ${linkId}. Error: \n\n ${error}`);
     return res.status(500).json({ message: (error as Error).message });

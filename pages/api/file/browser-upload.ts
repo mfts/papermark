@@ -6,9 +6,9 @@ import { CustomUser } from "@/lib/types";
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
-  const body = JSON.parse(req.body) as HandleUploadBody;
+  const body = req.body as HandleUploadBody;
 
   try {
     const jsonResponse = await handleUpload({

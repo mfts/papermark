@@ -24,6 +24,7 @@ import Link from "next/link";
 import DomainSection from "./domain-section";
 import AllowDownloadSection from "./allow-download-section";
 import { useTeam } from "@/context/team-context";
+import AllowNotificationSection from "./allow-notification";
 
 export const DEFAULT_LINK_PROPS = {
   id: null,
@@ -34,6 +35,7 @@ export const DEFAULT_LINK_PROPS = {
   password: null,
   emailProtected: true,
   allowDownload: false,
+  enableNotification: true,
 };
 
 export type DEFAULT_LINK_TYPE = {
@@ -45,6 +47,7 @@ export type DEFAULT_LINK_TYPE = {
   password: string | null;
   emailProtected: boolean;
   allowDownload: boolean;
+  enableNotification: boolean;
 };
 
 export default function LinkSheet({
@@ -109,12 +112,12 @@ export default function LinkSheet({
       // Update the link in the list of links
       mutate(
         `/api/teams/${teamInfo?.currentTeam?.id}/documents/${encodeURIComponent(
-          documentId
+          documentId,
         )}/links`,
         (links || []).map((link) =>
-          link.id === currentLink.id ? returnedLink : link
+          link.id === currentLink.id ? returnedLink : link,
         ),
-        false
+        false,
       );
       toast.success("Link updated successfully");
     } else {
@@ -122,10 +125,10 @@ export default function LinkSheet({
       // Add the new link to the list of links
       mutate(
         `/api/teams/${teamInfo?.currentTeam?.id}/documents/${encodeURIComponent(
-          documentId
+          documentId,
         )}/links`,
         [...(links || []), returnedLink],
-        false
+        false,
       );
       toast.success("Link created successfully");
     }
@@ -188,6 +191,7 @@ export default function LinkSheet({
                     <AllowDownloadSection {...{ data, setData }} />
                     <PasswordSection {...{ data, setData }} />
                     <ExpirationSection {...{ data, setData }} />
+                    <AllowNotificationSection {...{ data, setData }} />
                   </div>
                 </div>
               </div>

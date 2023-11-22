@@ -62,7 +62,7 @@ export async function getTeamWithUsersAndDocument({
     | (Document & { views?: View[]; versions?: DocumentVersion[]; links?: Link[] })
     | undefined;
   if (docId) {
-    document = team?.documents.find((doc) => doc.id === docId);
+    document = team.documents.find((doc) => doc.id === docId);
     if (!document) {
       throw new TeamError("Document doesn't exists in the team");
     }
