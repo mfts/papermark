@@ -43,7 +43,7 @@ export default function Sidebar() {
       disabled: false,
     },
     {
-      name: "Data Rooms",
+      name: "Datarooms",
       href: "/datarooms",
       icon: DataRoomIcon,
       current: router.pathname.includes("datarooms"),

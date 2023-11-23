@@ -7,9 +7,9 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useEffect, useState } from "react";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
-import { DropdownMenu, DropdownMenuItem, DropdownMenuContent, DropdownMenuTrigger } from "../ui/dropdown-menu";
+import { Button } from "../../ui/button";
+import { Input } from "../../ui/input";
+import { DropdownMenu, DropdownMenuItem, DropdownMenuContent, DropdownMenuTrigger } from "../../ui/dropdown-menu";
 import ChevronDown from "@/components/shared/icons/chevron-down";
 import useDocuments from "@/lib/swr/use-documents";
 import { type DataroomDocument } from "@/lib/types";

@@ -1,11 +1,11 @@
 import LoadingSpinner from "@/components/ui/loading-spinner";
-import DataroomSinglePageView from "@/components/view/datarooms/dataroom-single-paged";
-import { useDataroom } from "@/lib/swr/use-dataroom";
+import DataroomSinglePageView from "@/components/view/datarooms/paged";
+import { useDataroom, useHierarchicalDataroom } from "@/lib/swr/use-dataroom";
 import NotFound from "@/pages/404";
 import { useSession } from "next-auth/react";
 
-export default function ViewPagedDataroom() {
-  const { dataroom, authenticationCode, error } = useDataroom();
+export default function ViewHierarchicalDataroom() {
+  const { dataroom, authenticationCode, error } = useHierarchicalDataroom();
   const { data: session, status } = useSession();
   
   if (error && error.status === 404) {

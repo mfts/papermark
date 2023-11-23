@@ -107,7 +107,7 @@ export default async function handle(
         }
        });
 
-       res.status(201).json({ folder });
+       res.status(201).json({ folder, message: "Folder renamed successfully" });
      } catch (error) {
        log(`Failed to create folder. Error: \n\n ${error}`)
        res.status(500).json({

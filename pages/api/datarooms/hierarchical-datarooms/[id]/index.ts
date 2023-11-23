@@ -86,7 +86,7 @@ export default async function handle(
     const { id } = req.query as { id: string };
 
     try {
-      const dataroom = await prisma.dataroom.findUnique({
+      const dataroom = await prisma.hierarchicalDataroom.findUnique({
         where: {
           id: id,
         }
@@ -98,11 +98,11 @@ export default async function handle(
 
       // check that the user is owner of the dataroom, otherwise return 401
       if (dataroom.ownerId !== (session.user as CustomUser).id) {
-        return res.status(401).end("Unauthorized to access the document");
+        return res.status(401).end("Unauthorized to delete the document");
       }
 
       // delete the dataroom from database
-      await prisma.dataroom.delete({
+      await prisma.hierarchicalDataroom.delete({
         where: {
           id: id
         }

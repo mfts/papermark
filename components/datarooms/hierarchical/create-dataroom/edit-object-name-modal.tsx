@@ -8,12 +8,12 @@ import {
   DialogFooter
 } from "@/components/ui/dialog";
 import { useEffect, useState } from "react";
-import { Button } from "../../ui/button";
-import { Input } from "../../ui/input";
+import { Button } from "../../../ui/button";
+import { Input } from "../../../ui/input";
 import { Dispatch } from "react";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { ActionType } from "@/pages/datarooms/[dataroomId]/[...path]";
+import { ActionType } from "./state-management";
 
 export default function EditObjectNameModal({
   isOpen,

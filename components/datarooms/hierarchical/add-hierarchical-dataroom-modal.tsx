@@ -9,12 +9,12 @@ import {
 import { useState } from "react";
 import { pdfjs } from "react-pdf";
 import { copyToClipboard, getExtension } from "@/lib/utils";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
+import { Button } from "../../ui/button";
+import { Input } from "../../ui/input";
 import { useRouter } from "next/router";
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
 
-export function AddHierarchicalDataRoomModal({ children }: { children: React.ReactNode }) {
+export function AddHierarchicalDataroomModal({ children }: { children: React.ReactNode }) {
   //Documents inside data room
   const [dataRoomName, setDataRoomName] = useState<string>("");
   const [dataRoomDescription, setDataRoomDescription] = useState<string>("");

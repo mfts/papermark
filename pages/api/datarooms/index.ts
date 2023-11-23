@@ -27,13 +27,42 @@ export default async function handle(
     }
 
     try {
-      const dataroom = await prisma.dataroom.findMany({
+      const pagedDatarooms = await prisma.dataroom.findMany({
         where: {
           ownerId: (session.user as CustomUser).id,
+        },
+        select: {
+          id: true,
+          name: true,
+          createdAt: true,
+          documentsIds: true
         }
       })
 
-      res.status(200).json(dataroom);
+      const hierarchicalDatarooms = await prisma.hierarchicalDataroom.findMany({
+        where: {
+          ownerId: (session.user as CustomUser).id
+        },
+        select: {
+          id: true,
+          name: true,
+          createdAt: true,
+          _count: {
+            select:{
+              files: true
+            }
+          }
+        }
+        
+      })
+
+      const homePages = await prisma.dataroomFolder.findMany({
+        where: {
+          parentFolderId: null
+        }
+      })
+
+      res.status(200).json({ pagedDatarooms, hierarchicalDatarooms, homePages });
     } catch (error) {
       return res.status(500).json({
         message: "Internal Server Error",

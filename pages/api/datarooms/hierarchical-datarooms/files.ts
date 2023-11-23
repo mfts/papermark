@@ -73,13 +73,13 @@ export default async function handle(
 
       res.status(201).json({ file });
     } catch (error) {
-      log(`Failed to create folder. Error: \n\n ${error}`)
+      log(`Failed to add file. Error: \n\n ${error}`)
       res.status(500).json({
         message: "Internal Server Error",
         error: (error as Error).message,
       });
     }
-  } else if (req.method === "PUT"){
+  } else if (req.method === "PUT") {
     // PUT /api/datarooms/hierarchical-datarooms/files
     const session = await getServerSession(req, res, authOptions);
     if (!session) {
@@ -90,25 +90,25 @@ export default async function handle(
     //Input validation 
     const { updatedFileName, fileId } = req.body;
     if (updatedFileName.length > 150) {
-     res.status(400).json({
-       message: "Invalid Inputs",
-       error: "Please enter a file name with fewer than 150 characters",
-     });
-     return;
+      res.status(400).json({
+        message: "Invalid Inputs",
+        error: "Please enter a file name with fewer than 150 characters",
+      });
+      return;
     }
-   
+
     //Update file name
     try {
       const file = await prisma.dataroomFile.update({
-       where: {
-         id: fileId
-       },
-       data: {
-         name: updatedFileName
-       }
+        where: {
+          id: fileId
+        },
+        data: {
+          name: updatedFileName
+        }
       });
 
-      res.status(201).json({ file });
+      res.status(201).json({ file, message: "File renamed successfully" });
     } catch (error) {
       log(`Failed to create file. Error: \n\n ${error}`)
       res.status(500).json({
@@ -118,9 +118,9 @@ export default async function handle(
     }
 
 
- } else {
-   // We only allow POST, DELETE AND PUT requests
-   res.setHeader("Allow", ["DELETE", "POST", "PUT"]);
-   return res.status(405).end(`Method ${req.method} Not Allowed`);
- }
+  } else {
+    // We only allow POST, DELETE AND PUT requests
+    res.setHeader("Allow", ["DELETE", "POST", "PUT"]);
+    return res.status(405).end(`Method ${req.method} Not Allowed`);
+  }
 }

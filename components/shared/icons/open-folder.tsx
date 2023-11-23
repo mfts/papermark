@@ -1,4 +1,4 @@
-export default function OpenFolder({ className }: { className?: string }) {
+export default function OpenFolderIcon({ className }: { className?: string }) {
   return (
     <svg
       width="14"

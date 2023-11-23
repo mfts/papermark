@@ -1,16 +1,21 @@
 import DataroomCard from "@/components/datarooms/dataroom-card";
 import Skeleton from "@/components/Skeleton";
 import { PlusIcon } from "@heroicons/react/24/solid";
-import { AddHierarchicalDataRoomModal } from "@/components/datarooms/add-hierarchical-dataroom-modal";
+import { AddHierarchicalDataroomModal } from "@/components/datarooms/hierarchical/add-hierarchical-dataroom-modal";
 import { Separator } from "@/components/ui/separator";
 import AppLayout from "@/components/layouts/app"
 import { Button } from "@/components/ui/button";
-import { type Dataroom } from "@prisma/client";
+import { HierarchicalDataroom, type Dataroom } from "@prisma/client";
 import { useState, useEffect } from "react";
+import { DataroomFolder } from "@prisma/client";
+import LoadingSpinner from "@/components/ui/loading-spinner";
+import { DataroomCardType } from "@/components/datarooms/dataroom-card";
 
 export default function Datarooms() {
-  const [datarooms, setDatarooms] = useState<Dataroom[] | undefined>(undefined);
-  
+  const [datarooms, setDatarooms] = useState<DataroomCardType[] | undefined>(undefined);
+  const [homePages, setHomePages] = useState<DataroomFolder[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+
   //Fetch datarooms from backend
   useEffect(() => {
     (async () => {
@@ -23,59 +28,98 @@ export default function Datarooms() {
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
-      } 
+      }
 
-      const initialDatarooms = await response.json();
-      setDatarooms(initialDatarooms);
+      const data = await response.json();
+      const homePages = data.homePages;
+      const pagedDatarooms = data.datarooms;
+      let hierarchicalDatarooms = data.hierarchicalDatarooms;
+
+      if (homePages) {
+        setHomePages([...homePages]);
+      }
+
+      let updatedDatarooms: DataroomCardType[] = []
+      if (pagedDatarooms) {
+        updatedDatarooms = pagedDatarooms.map((dataroom: Dataroom) => ({
+          id: dataroom.id,
+          name: dataroom.name,
+          createdAt: dataroom.createdAt,
+          _count: {
+            files: dataroom.documentsIds.length
+          },
+          type: "PAGE"
+        }))
+      }
+
+      hierarchicalDatarooms =  hierarchicalDatarooms.map(
+        (dataroom: HierarchicalDataroom) => ({
+          ...dataroom,
+          type: "HIERARCHICAL"
+        }))
+      updatedDatarooms = [...updatedDatarooms, ...hierarchicalDatarooms]
+      setDatarooms(updatedDatarooms);
     })();
   }, [])
 
   return (
     <AppLayout>
-      <div className="p-4 sm:p-4 sm:m-4">
-        <div className="flex items-center justify-between mb-4 md:mb-8 lg:mb-12">
-          <div className="space-y-1">
-            <h2 className="text-2xl text-foreground font-semibold tracking-tight">
-              Data Rooms
-            </h2>
-            <p className="text-sm text-muted-foreground">Manage your data rooms</p>
-          </div>
-          <ul className="flex items-center justify-between gap-4">
-            <AddHierarchicalDataRoomModal>
-              <Button>Add New Data Room</Button>
-            </AddHierarchicalDataRoomModal>
-          </ul>
+      {loading
+        ?
+        <div className="h-screen flex items-center justify-center">
+          <LoadingSpinner className="h-20 w-20" />
         </div>
-
-        <Separator className="my-6 bg-gray-200 dark:bg-gray-800" />
-
-        {datarooms && datarooms.length === 0 && (
-          <div className="flex items-center justify-center h-96">
-            <EmptyDataRooms />
+        :
+        <div className="p-4 sm:p-4 sm:m-4">
+          <div className="flex items-center justify-between mb-4 md:mb-8 lg:mb-12">
+            <div className="space-y-1">
+              <h2 className="text-2xl text-foreground font-semibold tracking-tight">
+                Datarooms
+              </h2>
+              <p className="text-sm text-muted-foreground">Manage your datarooms</p>
+            </div>
+            <ul className="flex items-center justify-between gap-4">
+              <AddHierarchicalDataroomModal>
+                <Button>Add New Dataroom</Button>
+              </AddHierarchicalDataroomModal>
+            </ul>
           </div>
-        )}
 
-        {/* Documents list */}
-        <ul role="list" className="space-y-4">
-          {datarooms
-            ? datarooms.map((dataroom) => {
-              return <DataroomCard
-                key={dataroom.id}
-                dataroom={dataroom}
-                setDatarooms={setDatarooms}
-              />;
-            })
-            : Array.from({ length: 3 }).map((_, i) => (
-              <li
-                key={i}
-                className="flex flex-col space-y-4 px-4 py-4 sm:px-6 lg:px-8"
-              >
-                <Skeleton key={i} className="h-5 w-20" />
-                <Skeleton key={i} className="mt-3 h-3 w-10" />
-              </li>
-            ))}
-        </ul>
-      </div>
+          <Separator className="my-6 bg-gray-200 dark:bg-gray-800" />
+
+          {datarooms && datarooms.length === 0 &&
+            (
+              <div className="flex items-center justify-center h-96">
+                <EmptyDataRooms />
+              </div>
+            )}
+
+          {/* Documents list */}
+          <ul role="list" className="space-y-4">
+            {!datarooms &&
+              Array.from({ length: 3 }).map((_, i) => (
+                <li
+                  key={i}
+                  className="flex flex-col space-y-4 px-4 py-4 sm:px-6 lg:px-8"
+                >
+                  <Skeleton key={i} className="h-5 w-20" />
+                  <Skeleton key={i} className="mt-3 h-3 w-10" />
+                </li>
+              ))}
+
+            {datarooms
+              && (datarooms.map((dataroom) => {
+                return <DataroomCard
+                  key={dataroom.id}
+                  dataroom={dataroom}
+                  setDatarooms={setDatarooms}
+                  setLoading={setLoading}
+                  homePages={homePages}
+                />;
+              }))
+            }
+          </ul>
+        </div>}
     </AppLayout>
   );
 }
@@ -103,7 +147,7 @@ export function EmptyDataRooms() {
         Get started by creating a new data room.
       </p>
       <div className="mt-6">
-        <AddHierarchicalDataRoomModal>
+        <AddHierarchicalDataroomModal>
           <button
             type="button"
             className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-foreground bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
@@ -111,7 +155,7 @@ export function EmptyDataRooms() {
             <PlusIcon className="-ml-1 mr-2 h-5 w-5" aria-hidden="true" />
             New Data Room
           </button>
-        </AddHierarchicalDataRoomModal>
+        </AddHierarchicalDataroomModal>
       </div>
     </div>
   );

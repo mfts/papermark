@@ -8,12 +8,11 @@ import {
   DialogFooter
 } from "@/components/ui/dialog";
 import { useState } from "react";
-import { Button } from "../../ui/button";
-import { Input } from "../../ui/input";
+import { Button } from "../../../ui/button";
+import { Input } from "../../../ui/input";
 import { useRouter } from "next/router";
 import { Dispatch } from "react";
-import { Label } from "@/components/ui/label";
-import { ActionType } from "@/pages/datarooms/[dataroomId]/[...path]";
+import { ActionType } from "./state-management";
 import useDocuments from "@/lib/swr/use-documents";
 import { useEffect } from "react";
 import { LinkWithViews, DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
@@ -30,12 +29,10 @@ export default function AddFileModal({
   children,
   updateFolderDirectory,
   parentFolderId,
-  // dataroomType
 }: {
   children: React.ReactNode,
   updateFolderDirectory: Dispatch<ActionType>,
   parentFolderId: string,
-  // dataroomType: "Hierarchical" | "Single-Paged"
 }) {
   //Current selection from drop-down meu
   const [selectedDocumentName, setSelectedDocumentName] = useState<string>("");
@@ -53,7 +50,7 @@ export default function AddFileModal({
   const router = useRouter();
   const [links, setLinks] = useState<LinkWithViews[]>([]);
   const [dropDownMenuDocuments, setDropDownMenuDocuments] = useState<DocumentWithLinksAndLinkCountAndViewCount[]>([])
-  useEffect(()=>{setDropDownMenuDocuments(documents ? documents : [])},[documents])
+  useEffect(() => { setDropDownMenuDocuments(documents ? documents : []) }, [documents])
 
   //No documents / out of documents error
   useEffect(() => {
@@ -103,30 +100,26 @@ export default function AddFileModal({
       return;
     }
 
-    //Save file in database if hierarchical dataroom and delete from local variable
-    // if (dataroomType === "Hierarchical") {
-      //Save file in database
-      setLoading(true);
-      const { dataroomId, path } = router.query as { dataroomId: string, path: string[] };
-      const body = { fileName: documentTitle, dataroomId, parentFolderId: path[path.length - 1], url: selectedLink.url }
-      const response = await fetch(`/api/datarooms/hierarchical-datarooms/files`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(body)
-      });
+    setLoading(true);
+    const { dataroomId, path } = router.query as { dataroomId: string, path: string[] };
+    const body = { fileName: documentTitle, dataroomId, parentFolderId: path[path.length - 1], url: selectedLink.url }
+    const response = await fetch(`/api/datarooms/hierarchical-datarooms/files`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body)
+    });
 
-      if (!response.ok) {
-        setLoading(false);
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
+    if (!response.ok) {
       setLoading(false);
-      const file = (await response.json()).file;
-      //Update folder directory locally
-      updateFolderDirectory({ type: "CREATE FILE", parentFolderId: path[path.length - 1], file });
-    // }
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    setLoading(false);
+    const file = (await response.json()).file;
+    //Update folder directory locally
+    updateFolderDirectory({ type: "CREATE FILE", parentFolderId: path[path.length - 1], file });
 
     toast.success("File included successfully");
     //Reset modal's state variables

@@ -1,94 +1,24 @@
-import NavigationBar from "@/components/datarooms/create-dataroom/navigation-bar";
+import NavigationBar from "@/components/datarooms/hierarchical/create-dataroom/navigation/navigation-bar";
 import AppLayout from "@/components/layouts/app";
 import Image from "next/image";
-import React, { useState, useRef, useEffect, useReducer } from "react";
+import React, { useState, useRef, useReducer } from "react";
 import { toast } from "sonner";
 import { Separator } from "@/components/ui/separator";
-import ChevronRight from "@/components/shared/icons/chevron-right";
 import { Dataroom, DataroomFile, DataroomFolder } from "@prisma/client";
 import { PlusIcon } from "@heroicons/react/24/solid";
-import AddFolderModal from "@/components/datarooms/create-dataroom/add-folder-modal";
+import AddFolderModal from "@/components/datarooms/hierarchical/create-dataroom/add-folder-modal";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import NotFound from "@/pages/404";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
-import MoreHorizontal from "@/components/shared/icons/more-horizontal";
 import { FolderDirectory } from "@/lib/types";
 import { GetServerSidePropsContext } from "next";
-import EditObjectNameModal from "@/components/datarooms/create-dataroom/edit-object-name-modal";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../../api/auth/[...nextauth]";
 import { useRouter } from "next/router";
-import Link from "next/link";
-import AddFileModal from "@/components/datarooms/create-dataroom/add-file-modal";
-
-export type ActionType =
-  | { type: "DELETE FOLDER"; folderId: string; parentFolderId: string }
-  | { type: "DELETE FILE"; parentFolderId: string; fileId: string }
-  | { type: "UPDATE FOLDERNAME"; folderId: string; name: string }
-  | { type: "UPDATE FILENAME"; parentFolderId: string; fileId: string; updateFileName: string }
-  | { type: "CREATE FOLDER"; parentFolderId: string; folder: DataroomFolder }
-  | { type: "CREATE FILE"; parentFolderId: string; file: DataroomFile };
-
-const reducer = (folderDirectory: FolderDirectory, action: ActionType) => {
-  switch (action.type) {
-    case "DELETE FOLDER":
-      const deletedFolderDirectory = { ...folderDirectory };
-      //Delete all subfolders
-      for (let subfolderId of deletedFolderDirectory[action.folderId].subfolders) {
-        delete deletedFolderDirectory[subfolderId];
-      }
-      //Delete folder
-      delete deletedFolderDirectory[action.folderId];
-      //Delete from parent's subfolder array
-      deletedFolderDirectory[action.parentFolderId].subfolders =
-        deletedFolderDirectory[action.parentFolderId].subfolders.filter((folderId) => folderId !== action.folderId)
-      return deletedFolderDirectory;
-
-    case "DELETE FILE":
-      const deletedFileDirectory = { ...folderDirectory };
-      deletedFileDirectory[action.parentFolderId].files =
-        deletedFileDirectory[action.parentFolderId].files.filter((file) => file.id !== action.fileId);
-      return deletedFileDirectory;
-
-    case "CREATE FOLDER":
-      const createdFolderDirectory = { ...folderDirectory };
-      createdFolderDirectory[action.parentFolderId].subfolders.push(action.folder.id);
-      createdFolderDirectory[action.folder.id] = {
-        name: action.folder.name,
-        subfolders: [],
-        files: [],
-        href: createdFolderDirectory[action.parentFolderId].href + `/${action.folder.id}`,
-      };
-      return createdFolderDirectory;
-
-    case "CREATE FILE":
-      const createFileDirectory = { ...folderDirectory };
-      createFileDirectory[action.parentFolderId].files.push(action.file);
-      return createFileDirectory;
-
-    case "UPDATE FOLDERNAME":
-      const updatedFolderDirectory = { ...folderDirectory };
-      updatedFolderDirectory[action.folderId].name = action.name
-      return updatedFolderDirectory;
-
-    case "UPDATE FILENAME":
-      const updatedFileDirectory = { ...folderDirectory };
-      let file: DataroomFile = updatedFileDirectory[action.parentFolderId].files.find((file) => file.id === action.fileId) as DataroomFile;
-      file.name = action.updateFileName;
-      return updatedFileDirectory;
-
-    default:
-      return folderDirectory;
-  }
-}
+import AddFileModal from "@/components/datarooms/hierarchical/create-dataroom/add-file-modal";
+import { Subfolders } from "@/components/datarooms/hierarchical/create-dataroom/folders/subfolders";
+import { Files } from "@/components/datarooms/hierarchical/create-dataroom/files/files";
+import { BreadcrumbNavigation } from "@/components/datarooms/hierarchical/create-dataroom/navigation/breadcrumb-navigation";
+import { reducer } from "@/components/datarooms/hierarchical/create-dataroom/state-management";
 
 export default function Page({
   dataroom,
@@ -108,18 +38,7 @@ export default function Page({
 
   const [isEditingName, setIsEditingName] = useState<boolean>(false);
   const [isEditingDescription, setIsEditingDescription] = useState<boolean>(false);
-  const [isEditObjectNameModalOpen, setIsEditObjectNameModalOpen] = useState<boolean>(false);
-  const [editObjectMetadata, setEditObjectMetadata] = useState<{
-    name: string,
-    id: string,
-    parentFolderId: string,
-    type: "FILE" | "FOLDER"
-  }>({
-    name: "",
-    id: "",
-    parentFolderId: "",
-    type: "FOLDER"
-  });
+
   const router = useRouter();
   const [folderDirectory, updateFolderDirectory] = useReducer(reducer, directory);
   const [currentFolderId, setCurrentFolderId] = useState<string>(initialFolderId);
@@ -173,46 +92,6 @@ export default function Page({
       setIsEditingDescription(false);
     }
   };
-
-  const handleDeleteFolder = async (folderId: string) => {
-    //Delete folder from database
-    const response = await fetch(`/api/datarooms/hierarchical-datarooms/folders`, {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ id: folderId })
-    })
-
-    if (!response.ok) {
-      toast.error("Failed to delete folder");
-      return;
-    }
-
-    //Delete folder locally
-    updateFolderDirectory({ type: "DELETE FOLDER", folderId, parentFolderId: currentFolderId });
-    toast.success("Folder deleted successfully");
-  }
-
-  const handleDeleteFile = async (fileId: string) => {
-    //Delete file from database
-    const response = await fetch(`/api/datarooms/hierarchical-datarooms/files`, {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ id: fileId })
-    })
-
-    if (!response.ok) {
-      toast.error("Failed to delete file");
-      return;
-    }
-
-    //Delete file locally
-    updateFolderDirectory({ type: "DELETE FILE", fileId, parentFolderId: currentFolderId });
-    toast.success("File deleted successfully");
-  }
 
   const preventEnterAndSubmit = (
     event: React.KeyboardEvent<HTMLHeadingElement>
@@ -299,154 +178,36 @@ export default function Page({
         </div>
       </div>
       <Separator className="mb-1 bg-gray-200 dark:bg-gray-800" />
-      <NavigationBar folderDirectory={folderDirectory} />
+      <NavigationBar
+        folderDirectory={folderDirectory}
+        updateFolderDirectory={updateFolderDirectory}
+      />
       {/* Page */}
       <div className="md:ml-80 mt-8">
-        {/* Navigation */}
-        <div className="flex" >
-          {path && path.map((folderId: string, index: number) => {
-            const href = `/datarooms/${dataroom.id}${folderDirectory[folderId].href}`;
-            return (
-              <React.Fragment key={index}>
-                {index > 0 &&
-                  <div className="mt-2 mr-1 ml-1"><ChevronRight /></div>}
-                <Link
-                  className="text-muted-foreground hover:text-foreground underline"
-                  href={`/datarooms/[dataroomId]/[...path]`}
-                  as={href}
-                  shallow={true}
-                  onClick={() => {
-                    setCurrentFolderId(folderId);
-                    setPath(folderDirectory[folderId].href.split("/").splice(1));
-                  }}
-                >
-                  {folderDirectory[folderId].name}
-                </Link>
-              </React.Fragment>
-            )
-          })}
-        </div>
+        {/* Breadcrumb Navigation */}
+        <BreadcrumbNavigation
+          folderDirectory={folderDirectory}
+          dataroomId={dataroom.id}
+          path={path}
+          setPath={setPath}
+          setCurrentFolderId={setCurrentFolderId}
+        />
         {/* Folder Contents */}
         <div className="mt-5">
           {/* Subfolders */}
-          <div>
-            {folderDirectory[currentFolderId].subfolders.map((subfolderId) => {
-              return (
-                <div className="flex items-center justify-between border-b p-2" key={subfolderId}>
-                  <div className="flex items-center">
-                    <Link
-                      className="flex"
-                      href={`/datarooms/[dataroomId]/[...path]`}
-                      as={`/datarooms/${dataroom.id}/${path.join('/')}/${subfolderId}`}
-                      shallow={true}
-                      onClick={() => {
-                        setCurrentFolderId(subfolderId);
-                        setPath((path) => [...path, subfolderId]);
-                      }}
-                    >
-                      <img src="/_icons/folder.svg" alt="Folder Icon" className="w-11 h-11 mr-2" />
-                      <span className="mt-3"> {folderDirectory[subfolderId].name}</span>
-                    </Link>
-                  </div>
-                  <div className="text-center sm:text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <span className="sr-only">Open menu</span>
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem
-                          onClick={() => setTimeout(() => {
-                            setEditObjectMetadata({
-                              name: folderDirectory[subfolderId].name,
-                              id: subfolderId,
-                              parentFolderId: currentFolderId,
-                              type: "FOLDER"
-                            });
-                            setIsEditObjectNameModalOpen(true);
-                          }, 0)}
-                        >
-                          Edit Name
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          className="text-destructive focus:bg-destructive focus:text-destructive-foreground"
-                          onClick={() =>
-                            handleDeleteFolder(subfolderId)
-                          }
-                        >
-                          Delete Folder
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
+          <Subfolders
+            folderDirectory={folderDirectory}
+            currentFolderId={currentFolderId}
+            dataroom={dataroom}
+            path={path}
+            updateFolderDirectory={updateFolderDirectory}
+            setPath={setPath}
+            setCurrentFolderId={setCurrentFolderId}
+          />
           {/* Files */}
-          <div>
-            {folderDirectory[currentFolderId].files.map((file) => {
-              return (
-                <div className="flex items-center justify-between border-b p-2" key={file.id}>
-                  <div className="flex items-center">
-                    <a
-                      className="flex"
-                      href={file.url}
-                      target="_blank"
-                    >
-                      <img src="/_icons/file.svg" alt="File Icon" className="w-11 h-11 mr-2" />
-                      <span className="mt-3">{file.name}</span>
-                    </a>
-                  </div>
-                  {/* Add your Tailwind CSS classes for actions here */}
-                  <div className="text-center sm:text-right">
-                    <DropdownMenu >
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <span className="sr-only">Open menu</span>
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem
-                          onClick={() => setTimeout(() => {
-                            setEditObjectMetadata({
-                              name: file.name,
-                              id: file.id,
-                              parentFolderId: currentFolderId,
-                              type: "FILE"
-                            });
-                            setIsEditObjectNameModalOpen(true);
-                          }, 0)}
-                        >
-                          Edit Name
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          className="text-destructive focus:bg-destructive focus:text-destructive-foreground"
-                          onClick={() =>
-                            handleDeleteFile(file.id)
-                          }
-                        >
-                          Delete File
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-          {/* Edit file/folder name modal */}
-          <EditObjectNameModal
-            isOpen={isEditObjectNameModalOpen}
-            setIsOpen={setIsEditObjectNameModalOpen}
-            objectMetadata={editObjectMetadata}
+          <Files
+            folderDirectory={folderDirectory}
+            currentFolderId={currentFolderId}
             updateFolderDirectory={updateFolderDirectory}
           />
         </div>
@@ -484,22 +245,8 @@ export default function Page({
 
 export async function getServerSideProps(context: GetServerSidePropsContext) {
   const { params } = context;
-
-  if (!params) {
-    // Case where params is undefined
-    return {
-      props: {
-        dataroom: null,
-        directory: null,
-        initialPath: [],
-        initialFolderId: "",
-        error: { status: 404, message: 'Not Found' }
-      },
-    };
-  }
-
-  const dataroomId: string = params.dataroomId as string;
-  const path: string[] = params.path as string[];
+  const dataroomId: string = params?.dataroomId as string;
+  const path: string[] = params?.path as string[];
   const session = await getServerSession(context.req, context.res, authOptions);
 
   try {

@@ -2,18 +2,19 @@ import { useSession } from "next-auth/react";
 import FolderIcon from "@/components/shared/icons/folder";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/router";
-import LoadingSpinner from "./../../ui/loading-spinner";
+import LoadingSpinner from "../../../ui/loading-spinner";
 import { useState, useEffect } from "react";
 import { FolderDirectory } from "@/lib/types";
 import ChevronRight from "@/components/shared/icons/chevron-right";
 import ChevronDown from "@/components/shared/icons/chevron-down";
 import Link from "next/link";
-import OpenFolder from "@/components/shared/icons/open-folder";
+import OpenFolderIcon from "@/components/shared/icons/open-folder";
 
 export default function NavigationBar({
-  folderDirectory
+  folderDirectory,
+
 }: {
-  folderDirectory: FolderDirectory
+  folderDirectory: FolderDirectory,
 }) {
   const { data: session, status } = useSession();
   const [isScrolled, setIsScrolled] = useState(false);
@@ -75,13 +76,13 @@ function FolderComponent({
   folderDirectory,
   currentFolderId,
   dataroomId,
-  path
+  path,
 }: {
   folderId: string,
   folderDirectory: FolderDirectory,
   currentFolderId: string,
   dataroomId: string,
-  path: string[]
+  path: string[],
 }) {
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
   return (
@@ -92,8 +93,8 @@ function FolderComponent({
           : <div onClick={() => setIsExpanded(true)} className="mt-2"><ChevronRight /></div>
         }
         <Link
-          href={`/datarooms/[dataroomId]/[...path]`}
-          as={`/datarooms/${dataroomId}/${folderDirectory[folderId].href}`}
+          href={`/view/dataroom/hierarchical/[dataroomId]/[...path]`}
+          as={`/view/dataroom/hierarchical/${dataroomId}${folderDirectory[folderId].href}`}
           shallow={true}
           className={cn(
             path.includes(folderId)
@@ -103,7 +104,7 @@ function FolderComponent({
           )}>
           {path.includes(folderId)
             ?
-            <OpenFolder
+            <OpenFolderIcon
               className="h-6 w-6 shrink-0"
               aria-hidden="true"
             />

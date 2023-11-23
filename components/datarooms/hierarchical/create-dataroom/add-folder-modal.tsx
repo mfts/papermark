@@ -8,12 +8,12 @@ import {
   DialogFooter
 } from "@/components/ui/dialog";
 import { useState } from "react";
-import { Button } from "../../ui/button";
-import { Input } from "../../ui/input";
+import { Button } from "../../../ui/button";
+import { Input } from "../../../ui/input";
 import { useRouter } from "next/router";
 import { Dispatch, SetStateAction } from "react";
 import { Label } from "@/components/ui/label";
-import { ActionType } from "@/pages/datarooms/[dataroomId]/[...path]";
+import { ActionType } from "./state-management";
 
 export default function AddFolderModal({ 
   children,
