@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Event } from "@prisma/client";
 import { mutate } from "swr";
+import { useTeam } from "@/context/team-context";
 
 export function AddWebhookModal({ children }: { children: React.ReactNode }) {
   const [targetUrl, setTargetUrl] = useState<string>("");
@@ -22,6 +23,8 @@ export function AddWebhookModal({ children }: { children: React.ReactNode }) {
   const [urlError, setUrlError] = useState<string>("");
   const [checkboxError, setCheckboxError] = useState<string>("");
   const [modalOpen, setModalOpen] = useState<boolean>(false);
+
+  const teamInfo = useTeam();
 
   const handleWebhookCreation = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -40,16 +43,19 @@ export function AddWebhookModal({ children }: { children: React.ReactNode }) {
     }
 
     // create a document in the database with the blob url
-    const response = await fetch("/api/webhooks", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
+    const response = await fetch(
+      `/api/teams/${teamInfo?.currentTeam?.id}/webhooks`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          targetUrl,
+          events,
+        }),
       },
-      body: JSON.stringify({
-        targetUrl,
-        events,
-      }),
-    });
+    );
 
     if (!response.ok) {
       setCreating(false);
@@ -58,7 +64,7 @@ export function AddWebhookModal({ children }: { children: React.ReactNode }) {
     }
 
     setCreating(false);
-    mutate("/api/webhooks");
+    mutate(`/api/teams/${teamInfo?.currentTeam?.id}/webhooks`);
     toast.success("Webhook created successfully!");
     setModalOpen(false);
   };

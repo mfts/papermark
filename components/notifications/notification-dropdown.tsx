@@ -3,16 +3,15 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Notifications } from "@/lib/types";
-import Folder from "@/components/shared/icons/folder";
 import { Badge } from "@/components/ui/badge";
 import { Bell } from "lucide-react";
 import { mutate } from "swr";
 import { useRouter } from "next/router";
 import { timeAgo } from "@/lib/utils";
+import { useTeam } from "@/context/team-context";
 
 export default function NotificationDropdown({
   children,
@@ -22,16 +21,17 @@ export default function NotificationDropdown({
   notifications: Notifications[];
 }) {
   const router = useRouter();
+  const teamInfo = useTeam();
 
   const markNotificationRead = async (
     notificationId: string,
-    documentId: string
+    documentId: string,
   ) => {
     const response = await fetch(
-      `/api/notifications/${notificationId}/mark-read`,
+      `/api/teams/${teamInfo?.currentTeam?.id}/notifications/${notificationId}/mark-read`,
       {
         method: "POST",
-      }
+      },
     );
 
     if (!response.ok) {
@@ -40,7 +40,7 @@ export default function NotificationDropdown({
 
     router.push(`/documents/${documentId}`);
 
-    mutate("/api/notifications");
+    mutate(`/api/teams/${teamInfo?.currentTeam?.id}/notifications`);
   };
 
   return (
@@ -61,12 +61,13 @@ export default function NotificationDropdown({
               className="relative py-4 pr-4 flex gap-3 hover:cursor-pointer"
               onClick={() =>
                 markNotificationRead(notification.id, notification.documentId)
-              }>
+              }
+            >
               {notification.message}
               {!notification.isRead && (
                 <Badge className="absolute top-[45%] right-1 p-1 bg-green-500"></Badge>
               )}
-              <span className="absolute bottom-2 right-2 text-xs text-foreground">
+              <span className="absolute bottom-0.5 right-0.5 text-xs text-foreground">
                 {timeAgo(notification.createdAt)}
               </span>
             </DropdownMenuItem>

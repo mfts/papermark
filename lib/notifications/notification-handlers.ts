@@ -4,6 +4,7 @@ import { sendViewedDocumentEmail } from "../emails/send-viewed-document";
 
 interface IHandleLinkViewed {
   receiverId: string;
+  teamId: string;
   event: Event;
   data: {
     documentName: string;
@@ -11,6 +12,7 @@ interface IHandleLinkViewed {
     documentId: string;
     documentOwner: string;
     link: {
+      id: string;
       enableNotification: boolean;
     };
   };
@@ -25,9 +27,11 @@ export async function handleLinkViewed(eventData: IHandleLinkViewed) {
       : `Someone viewed your ${documentName}`;
     const notification = await prisma.notification.create({
       data: {
+        teamId: eventData.teamId,
         userId: eventData.receiverId,
         event: eventData.event,
         message,
+        linkId: eventData.data.link.id,
         documentId: eventData.data.documentId,
       },
     });

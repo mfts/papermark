@@ -37,42 +37,42 @@ model Session {
 }
 
 model User {
-  id                         String         @id @default(cuid())
+  id                         String     @id @default(cuid())
   name                       String?
-  email                      String?        @unique
+  email                      String?    @unique
   emailVerified              DateTime?
   image                      String?
-  isEmailNotificationEnabled Boolean        @default(true) // by default the user get email for all the events
-  createdAt                  DateTime       @default(now())
+  isEmailNotificationEnabled Boolean    @default(true) // by default the user get email for all the events
+  createdAt                  DateTime   @default(now())
   accounts                   Account[]
   sessions                   Session[]
   documents                  Document[]
   teams                      UserTeam[]
   domains                    Domain[]
-  webhooks                   Webhook[]
-  notifications              Notification[]
-  plan                       String         @default("trial")
-  stripeId                   String?        @unique // Stripe subscription / customer ID
-  subscriptionId             String?        @unique // Stripe subscription ID
+  plan                       String     @default("trial")
+  stripeId                   String?    @unique // Stripe subscription / customer ID
+  subscriptionId             String?    @unique // Stripe subscription ID
   startsAt                   DateTime? // Stripe subscription start date
   endsAt                     DateTime? // Stripe subscription end date
 }
 
 model Team {
-  id             String       @id @default(cuid())
+  id             String         @id @default(cuid())
   name           String
   users          UserTeam[]
   documents      Document[]
   domains        Domain[]
   invitations    Invitation[]
   sentEmails     SentEmail[]
-  plan           String       @default("free")
-  stripeId       String?      @unique // Stripe subscription / customer ID
-  subscriptionId String?      @unique // Stripe subscription ID
+  webhooks       Webhook[]
+  notifications  Notification[]
+  plan           String         @default("free")
+  stripeId       String?        @unique // Stripe subscription / customer ID
+  subscriptionId String?        @unique // Stripe subscription ID
   startsAt       DateTime? // Stripe subscription start date
   endsAt         DateTime? // Stripe subscription end date
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
 }
 
 enum Role {
@@ -209,7 +209,8 @@ model Invitation {
 model Webhook {
   id        String   @id @default(cuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  teamId    String
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
   targetUrl String
   events    Event[]
   createdAt DateTime @default(now())
@@ -219,10 +220,12 @@ model Webhook {
 model Notification {
   id         String   @id @default(cuid())
   userId     String
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  teamId     String
+  team       Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
   event      Event
   message    String
   documentId String?
+  linkId     String?
   isRead     Boolean  @default(false)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt

@@ -1,9 +1,10 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth";
-import { authOptions } from "../auth/[...nextauth]";
+import { authOptions } from "../../../auth/[...nextauth]";
 import { CustomUser } from "@/lib/types";
 import prisma from "@/lib/prisma";
 import { errorhandler } from "@/lib/errorHandler";
+import { getTeamWithUser } from "@/lib/team/helper";
 
 export default async function handle(
   req: NextApiRequest,
@@ -17,11 +18,16 @@ export default async function handle(
 
     const userId = (session.user as CustomUser).id;
 
+    const { teamId } = req.query as { teamId: string };
+
     const { targetUrl, events } = req.body;
 
     try {
+      await getTeamWithUser({ teamId, userId });
+
       const webhook = await prisma.webhook.create({
         data: {
+          teamId,
           userId,
           targetUrl,
           events,
@@ -40,10 +46,14 @@ export default async function handle(
 
     const userId = (session.user as CustomUser).id;
 
+    const { teamId } = req.query as { teamId: string };
+
     try {
+      await getTeamWithUser({ teamId, userId });
+
       const webhooks = await prisma.webhook.findMany({
         where: {
-          userId,
+          teamId,
         },
         orderBy: {
           createdAt: "desc",

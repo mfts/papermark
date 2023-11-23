@@ -26,6 +26,7 @@ export default async function handle(
       id: linkId,
     },
     select: {
+      id: true,
       emailProtected: true,
       enableNotification: true,
       password: true,
@@ -72,6 +73,7 @@ export default async function handle(
         document: {
           select: {
             name: true,
+            teamId: true,
             owner: {
               select: {
                 email: true,
@@ -105,6 +107,7 @@ export default async function handle(
       eventType: "LINK_VIEWED",
       eventData: {
         receiverId: newView.document.owner.id,
+        teamId: newView.document.teamId,
         event: "LINK_VIEWED",
         data: {
           documentId,

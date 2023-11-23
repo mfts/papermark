@@ -1,9 +1,10 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "../../auth/[...nextauth]";
+import { authOptions } from "../../../../auth/[...nextauth]";
 import { CustomUser } from "@/lib/types";
 import prisma from "@/lib/prisma";
 import { errorhandler } from "@/lib/errorHandler";
+import { getTeamWithUser } from "@/lib/team/helper";
 
 export default async function handle(
   req: NextApiRequest,
@@ -19,17 +20,19 @@ export default async function handle(
 
     const { id } = req.query as { id: string };
 
+    const { teamId } = req.query as { teamId: string };
+
     try {
+      await getTeamWithUser({ teamId, userId });
+
       const webhook = await prisma.webhook.findUnique({
         where: {
           id,
         },
       });
 
-      if (webhook?.userId !== userId) {
-        return res
-          .status(401)
-          .json("You are not permitted to delete this webhook");
+      if (webhook?.teamId !== teamId) {
+        return res.status(401).json("Webhook doesn't belong to this team");
       }
 
       await prisma.webhook.delete({
