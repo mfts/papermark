@@ -20,12 +20,18 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { mutate } from "swr";
+import { useTeam } from "@/context/team-context";
 
 export function WebhookTable({ webhooks }: { webhooks: Webhook[] }) {
+  const teamInfo = useTeam();
+
   const removeWebhook = async (webhookId: string) => {
-    const response = await fetch(`/api/webhooks/${webhookId}`, {
-      method: "DELETE",
-    });
+    const response = await fetch(
+      `/api/teams/${teamInfo?.currentTeam?.id}/webhooks/${webhookId}`,
+      {
+        method: "DELETE",
+      },
+    );
 
     if (response.status !== 204) {
       const error = await response.json();
@@ -33,7 +39,7 @@ export function WebhookTable({ webhooks }: { webhooks: Webhook[] }) {
       return;
     }
     toast.success("Webhook deleted successfully!");
-    await mutate("/api/webhooks");
+    await mutate(`/api/teams/${teamInfo?.currentTeam?.id}/webhooks`);
   };
 
   return (

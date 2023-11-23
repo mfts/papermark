@@ -16,7 +16,7 @@ export async function triggerWebhooks({
 
     const webhooks = await prisma.webhook.findMany({
       where: {
-        userId,
+        teamId: eventData.teamId,
         events: {
           has: eventType,
         },
