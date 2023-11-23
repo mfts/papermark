@@ -7,7 +7,7 @@ import { generateUniqueString } from "@/lib/api/authentication";
 const bodySchema = z.object({
   email: z.string().email(),
   identifier: z.string(),    //linkId if link, dataroomId if dataroom
-  type: z.enum(["DOCUMENT", "DATAROOM"])
+  type: z.enum(["DOCUMENT", "PAGED DATAROOM", "HIERARCHICAL DATAROOM"])
 })
 
 export default async function handle(
@@ -15,7 +15,7 @@ export default async function handle(
   res: NextApiResponse
 ) {
   if (req.method === "GET") {
-    // GET /api/verification/email_authcode 
+    // GET /api/verification/email-authcode 
     // Verify authcode
     const { authenticationCode } = req.query;
     const code = authenticationCode as string;
@@ -27,18 +27,18 @@ export default async function handle(
           code
         }
       })
-      res.status(200).json({ message: "Verification successful" });
+      res.status(200).json({ message: "Verification successfull" });
     } catch {
       res.status(401).json({ message: "Unauthorized access" });
     }
 
   } else if (req.method === "POST") {
-    // POST /api/verification/email_authcode
+    // POST /api/verification/email-authcode
 
     // Input validation
     let email: string;
     let identifier: string;
-    let type: "DOCUMENT" | "DATAROOM";
+    let type: "DOCUMENT" | "PAGED DATAROOM" | "HIERARCHICAL DATAROOM";
     try {
       const parsedBody = bodySchema.parse(req.body);
       email = parsedBody.email;
@@ -49,6 +49,24 @@ export default async function handle(
       return;
     }
 
+    let homeFolderId: string = "";
+    if (type === "HIERARCHICAL DATAROOM") {
+      const folder = await prisma.dataroomFolder.findFirst({
+        where: {
+          dataroomId: identifier,
+          parentFolderId: null
+        },
+        select: {
+          id: true
+        }
+      })
+      if (!folder) {
+        res.status(404).json({ message: "Home folder doesn't exists"})
+        return;
+      }
+      homeFolderId = folder.id;
+    }
+
     // Generate authcode
     const authenticationCode = generateUniqueString(12);
     await prisma.emailAuthenticationCode.create({
@@ -56,12 +74,14 @@ export default async function handle(
         email,
         code: authenticationCode,
         identifier,
-        type
+        type: type === "DOCUMENT" ? "DOCUMENT" : "DATAROOM"
       }
     })
     const URL = type === "DOCUMENT" 
     ? `${process.env.NEXTAUTH_URL}/view/${identifier}?authenticationCode=${authenticationCode}`
-    : `${process.env.NEXTAUTH_URL}/view/dataroom/page/${identifier}?authenticationCode=${authenticationCode}`;
+    : type === "PAGED DATAROOM"
+    ? `${process.env.NEXTAUTH_URL}/view/dataroom/paged/${identifier}?authenticationCode=${authenticationCode}`
+    : `${process.env.NEXTAUTH_URL}/view/dataroom/hierarchical/${identifier}/${homeFolderId}?authenticationCode=${authenticationCode}`;
 
     await sendVerificationEmail(email, URL);
     res.status(200).json({ authenticationCode });

@@ -90,13 +90,13 @@ export default function DataroomSinglePageView({
   //Generates verification link from backend
   const handleEmailVerification = async () => {
     setIsLoading(true);
-    const URL = `/api/verification/email_authcode`;
+    const URL = `/api/verification/email-authcode`;
     const response = await fetch(URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ identifier: dataroomId, type: "DATAROOM", email: data.email })
+      body: JSON.stringify({ identifier: dataroomId, type: "PAGED DATAROOM", email: data.email })
     });
     if (response.ok) {
       setVerificationRequested(true);
@@ -110,8 +110,10 @@ export default function DataroomSinglePageView({
 
   //Verifies authentication code
   const handleAuthCodeVerification = async () => {
-    setIsLoading(true);
-    const URL = `/api/verification/email_authcode?authenticationCode=${authenticationCode}`;
+    if (!isLoading) {
+      setIsLoading(true);
+    }
+    const URL = `/api/verification/email-authcode?authenticationCode=${authenticationCode}`;
     const response = await fetch(URL, {
       method: "GET",
       headers: {
@@ -122,10 +124,8 @@ export default function DataroomSinglePageView({
       setIsEmailVerified(true);
       setVerificationRequested(false);
       await handleSubmission();
-      return true;
     } else {
       setIsLoading(false);
-      return false;
     }
   }
 
@@ -163,7 +163,7 @@ export default function DataroomSinglePageView({
 
     return (
       <div className="bg-gray-950">
-        <ViewSinglePagedDataroom dataroom={dataroom}/>
+        <ViewSinglePagedDataroom dataroom={dataroom} />
       </div>
     );
   }
@@ -208,7 +208,7 @@ export default function DataroomSinglePageView({
     return (
       <div className="bg-gray-950">
         {submitted ? (
-          <ViewSinglePagedDataroom dataroom={dataroom}/>
+          <ViewSinglePagedDataroom dataroom={dataroom} />
         ) : (
           <div className="h-screen flex items-center justify-center">
             <LoadingSpinner className="h-20 w-20" />

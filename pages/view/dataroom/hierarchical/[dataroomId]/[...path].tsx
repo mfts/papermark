@@ -206,13 +206,10 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: JSON.stringify(session),
     }
   })
 
-  const { isAuthenticated } = await response.json()
-
-  if (!isAuthenticated) {
+  if (!response.ok) {
     return {
       props: {
         dataroom: null,
@@ -221,7 +218,7 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
         initialFolderId: "",
         loading: false,
         error: { status: 401, message: 'Unauthorized access' },
-      },
+      }
     };
   }
 

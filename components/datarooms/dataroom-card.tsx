@@ -69,12 +69,21 @@ export default function DataroomCard({
         <div className="flex-col">
           <div className="flex items-center">
             <h2 className="min-w-0 text-sm font-semibold leading-6 text-foreground truncate max-w-[240px] sm:max-w-md">
-              <Link
-                href={`/datarooms/${dataroom.id}/${(homePages?.find((homePage) => homePage.dataroomId === dataroom.id))?.id}`}
-                onClick={() => setLoading(true)}>
-                <span className="">{dataroom.name}</span>
-                <span className="absolute inset-0" />
-              </Link>
+              {
+                dataroom.type === "HIERARCHICAL"
+                  ?
+                  <Link
+                    href={`/datarooms/${dataroom.id}/${(homePages?.find((homePage) => homePage.dataroomId === dataroom.id))?.id}`}
+                    onClick={() => setLoading(true)}>
+                    <span className="">{dataroom.name}</span>
+                    <span className="absolute inset-0" />
+                  </Link>
+                  :
+                  <div>
+                    <span className="">{dataroom.name}</span>
+                    <span className="absolute inset-0" />
+                  </div>
+              }
             </h2>
             <div className="flex ml-2">
               <button

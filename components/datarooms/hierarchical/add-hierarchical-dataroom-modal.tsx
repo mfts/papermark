@@ -12,12 +12,17 @@ import { copyToClipboard, getExtension } from "@/lib/utils";
 import { Button } from "../../ui/button";
 import { Input } from "../../ui/input";
 import { useRouter } from "next/router";
+import { Separator } from "@/components/ui/separator";
+import PasswordSection from "@/components/links/link-sheet/password-section";
+import EmailProtectionSection from "@/components/links/link-sheet/email-protection-section";
+import { DEFAULT_DATAROOM_TYPE, DEFAULT_DATAROOM_PROPS } from "../paged/add-paged-dataroom-modal";
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
 
 export function AddHierarchicalDataroomModal({ children }: { children: React.ReactNode }) {
   //Documents inside data room
   const [dataRoomName, setDataRoomName] = useState<string>("");
   const [dataRoomDescription, setDataRoomDescription] = useState<string>("");
+  const [data, setData] = useState<DEFAULT_DATAROOM_TYPE>(DEFAULT_DATAROOM_PROPS);
 
   //const plausible = usePlausible();
   const [loading, setLoading] = useState<boolean>(false);
@@ -51,7 +56,7 @@ export function AddHierarchicalDataroomModal({ children }: { children: React.Rea
 
         setTimeout(() => {
           //Refresh the page
-          router.push(`datarooms/${data.dataroom.id}/${data.homeFolder.id}`)
+          router.push(`/datarooms/${data.dataroom.id}/${data.homeFolder.id}`)
           setLoading(false);
         }, 2000);
       }
@@ -70,6 +75,8 @@ export function AddHierarchicalDataroomModal({ children }: { children: React.Rea
       body: JSON.stringify({
         name: dataRoomName,
         description: dataRoomDescription,
+        password: data.password ? data.password : "",
+        emailProtected: data.emailProtected
       }),
     });
 
@@ -105,7 +112,7 @@ export function AddHierarchicalDataroomModal({ children }: { children: React.Rea
                 onChange={(e) => { setDataRoomName(e.target.value) }}
               />
             </div>
-            <div className="border-b border-border py-2">
+            <div>
               <p className="text-sm text-muted-foreground font-bold mb-1">
                 Dataroom Description
               </p>
@@ -114,6 +121,19 @@ export function AddHierarchicalDataroomModal({ children }: { children: React.Rea
                 placeholder={"Enter Data Room Description..."}
                 onChange={(e) => { setDataRoomDescription(e.target.value) }}
               />
+            </div>
+            <div className="flex items-center relative">
+              <Separator className="bg-muted-foreground absolute" />
+              <div className="relative mx-auto">
+                <span className="px-2 bg-background text-muted-foreground text-sm">
+                  Optional
+                </span>
+              </div>
+            </div>
+
+            <div>
+              <EmailProtectionSection {...{ data, setData }} />
+              <PasswordSection {...{ data, setData }} />
             </div>
             <div className="flex justify-center ">
               {errorMessage ? <p className="-mt-1 mb-1 text-sm text-muted-foreground font-bold text-red-500">{errorMessage}</p> : <br />}

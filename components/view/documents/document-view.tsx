@@ -94,7 +94,7 @@ export default function DocumentView({
   //Generates verification link from backend
   const handleEmailVerification = async () => {
     setIsLoading(true);
-    const URL = `/api/verification/email_authcode`;
+    const URL = `/api/verification/email-authcode`;
     const response = await fetch(URL, {
       method: "POST",
       headers: {
@@ -115,7 +115,7 @@ export default function DocumentView({
   //Verifies authentication code
   const handleAuthCodeVerification = async () => {
     setIsLoading(true);
-    const URL = `/api/verification/email_authcode?authenticationCode=${authenticationCode}`;
+    const URL = `/api/verification/email-authcode?authenticationCode=${authenticationCode}`;
     const response = await fetch(URL, {
       method: "GET",
       headers: {

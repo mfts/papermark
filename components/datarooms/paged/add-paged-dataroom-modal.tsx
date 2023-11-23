@@ -21,7 +21,7 @@ import { Separator } from "@/components/ui/separator";
 import PasswordSection from "@/components/links/link-sheet/password-section";
 import EmailProtectionSection from "@/components/links/link-sheet/email-protection-section";
 
-export const DEFAULT_PAGED_DATAROOM_PROPS = {
+export const DEFAULT_DATAROOM_PROPS = {
   id: null,
   name: null,
   description: null,
@@ -29,7 +29,7 @@ export const DEFAULT_PAGED_DATAROOM_PROPS = {
   emailProtected: true,
 };
 
-export type DEFAULT_PAGED_DATAROOM_TYPE = {
+export type DEFAULT_DATAROOM_TYPE = {
   id: string | null;
   name: string | null;
   description: string | null;
@@ -42,7 +42,7 @@ export function AddPagedDataroomModal({ children }: { children: React.ReactNode 
   const [dataRoomDocuments, setDataRoomDocuments] = useState<DataroomDocument[]>([]);
   const [dataRoomName, setDataRoomName] = useState<string>("");
   const [dataRoomDescription, setDataRoomDescription] = useState<string>("");
-  const [data, setData] = useState<DEFAULT_PAGED_DATAROOM_TYPE>(DEFAULT_PAGED_DATAROOM_PROPS);
+  const [data, setData] = useState<DEFAULT_DATAROOM_TYPE>(DEFAULT_DATAROOM_PROPS);
 
   //const plausible = usePlausible();
   const [uploading, setUploading] = useState<boolean>(false);
@@ -73,7 +73,7 @@ export function AddPagedDataroomModal({ children }: { children: React.ReactNode 
         const dataroom = await response.json();
 
         // copy the link to the clipboard
-        copyToClipboard(`${process.env.NEXT_PUBLIC_BASE_URL}/view/dataroom/${dataroom.id}`, "Dataroom created and link copied to clipboard. Redirecting to datarooms page...")
+        copyToClipboard(`${process.env.NEXT_PUBLIC_BASE_URL}/view/dataroom/paged/${dataroom.id}`, "Dataroom created and link copied to clipboard. Redirecting to datarooms page...")
 
         // Do we need to track the event ??
         // plausible("dataroomcreated");
@@ -96,7 +96,7 @@ export function AddPagedDataroomModal({ children }: { children: React.ReactNode 
     const ids = dataRoomDocuments.map((dataRoomDocument) => dataRoomDocument.id);
     const links = dataRoomDocuments.map((dataRoomDocument) => dataRoomDocument.url);
 
-    const response = await fetch("/api/datarooms", {
+    const response = await fetch("/api/datarooms/paged", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -107,7 +107,7 @@ export function AddPagedDataroomModal({ children }: { children: React.ReactNode 
         titles,
         ids,
         links,
-        password: data.password,
+        password: data.password ? data.password : "",
         emailProtected: data.emailProtected
       }),
     });
@@ -130,9 +130,7 @@ export function AddPagedDataroomModal({ children }: { children: React.ReactNode 
           <DialogDescription>
             <div className="border-b border-border py-2">
               <p className="mb-1 text-sm text-muted-foreground">
-                Please select the documents to be included in the dataroom.
-                After you create a dataroom, a shareable link will be
-                generated and copied to your clipboard.
+                Please select the documents to be included in the dataroom
               </p>
             </div>
             <div className="py-2 mt-1">
@@ -144,7 +142,7 @@ export function AddPagedDataroomModal({ children }: { children: React.ReactNode 
                 onChange={(e) => { setDataRoomName(e.target.value) }}
               />
             </div>
-            <div className="border-b border-border py-2">
+            <div>
               <p className="text-sm text-muted-foreground font-bold mb-1">
                 Dataroom Description
               </p>
@@ -196,13 +194,13 @@ export function AddPagedDataroomModal({ children }: { children: React.ReactNode 
               </div>
             </div>
 
-            <div>
+            <div className="-mb-2">
               <EmailProtectionSection {...{ data, setData }} />
               <PasswordSection {...{ data, setData }} />
             </div>
             <br />
             <div className="flex justify-center ">
-              {errorMessage ? <p className="-mt-1 mb-1 text-sm text-muted-foreground font-bold text-red-500">{errorMessage}</p> : <br />}
+              {errorMessage && <p className="-mt-1 mb-1 text-sm text-muted-foreground font-bold text-red-500">{errorMessage}</p>}
             </div>
             <div className="flex justify-center">
               <Button

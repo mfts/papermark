@@ -2,11 +2,11 @@ import { Dispatch, SetStateAction, useState, useEffect } from "react";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { DEFAULT_LINK_TYPE } from ".";
-import { DEFAULT_PAGED_DATAROOM_TYPE } from "@/components/datarooms/paged/add-paged-dataroom-modal";
+import { DEFAULT_DATAROOM_TYPE } from "@/components/datarooms/paged/add-paged-dataroom-modal";
 
 
 
-export default function EmailProtectionSection({data, setData}: {data: DEFAULT_LINK_TYPE | DEFAULT_PAGED_DATAROOM_TYPE, setData: Dispatch<SetStateAction<any>>}) {
+export default function EmailProtectionSection({data, setData}: {data: DEFAULT_LINK_TYPE | DEFAULT_DATAROOM_TYPE, setData: Dispatch<SetStateAction<any>>}) {
   const { emailProtected } = data;
   const [enabled, setEnabled] = useState<boolean>(true);
 
@@ -21,7 +21,7 @@ export default function EmailProtectionSection({data, setData}: {data: DEFAULT_L
   };
 
   return (
-    <div className="pb-5">
+    <div className="pb-2">
       <div className="flex items-center justify-between">
         <div className="flex items-center justify-between space-x-2">
           <h2

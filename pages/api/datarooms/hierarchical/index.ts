@@ -12,7 +12,9 @@ import z from "zod";
 
 const bodySchema = z.object({
   name: z.string(),
-  description: z.string().max(150), //Description should be less than 150 words
+  description: z.string().max(150), //Description should be less than 150 characters
+  password: z.string().max(30), //Password cannot be more than 30 characters
+  emailProtected: z.boolean()
 })
 
 export default async function handle(
@@ -96,8 +98,10 @@ export default async function handle(
     //Input validation 
     let name: string;
     let description: string;
+    let password: string;
+    let emailProtected: boolean;
     try {
-      ({ name, description } = bodySchema.parse(req.body));
+      ({ name, description, password, emailProtected } = bodySchema.parse(req.body));
     } catch (error) {
       res.status(400).json({
         message: "Invalid Inputs",
@@ -125,6 +129,8 @@ export default async function handle(
         data: {
           name: name,
           description: description,
+          password,
+          emailProtected,
           ownerId: (session.user as CustomUser).id,
         }
       });
@@ -202,14 +208,10 @@ export default async function handle(
 
     const { id } = req.query as { id: string };
     //Input validation 
-    let name: string;
-    let description: string;
-    try {
-      ({ name, description } = bodySchema.parse(req.body));
-    } catch (error) {
+    const { name, description } = req.body;
+    if (name.length > 150 || description.length > 150) {
       res.status(400).json({
-        message: "Invalid Inputs",
-        error: (error as Error).message,
+        message: "Invalid Inputs" 
       });
       return;
     }

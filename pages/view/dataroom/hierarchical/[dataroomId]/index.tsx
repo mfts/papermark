@@ -1,5 +1,5 @@
 import LoadingSpinner from "@/components/ui/loading-spinner";
-import DataroomSinglePageView from "@/components/view/datarooms/paged";
+import HierarchicalDataroomView from "@/components/view/datarooms/hierarchical";
 import { useDataroom, useHierarchicalDataroom } from "@/lib/swr/use-dataroom";
 import NotFound from "@/pages/404";
 import { useSession } from "next-auth/react";
@@ -26,9 +26,9 @@ export default function ViewHierarchicalDataroom() {
 
   if (emailProtected || linkPassword) {
     return (
-      <DataroomSinglePageView dataroom={dataroom} userEmail={userEmail} isProtected={true} authenticationCode={authenticationCode} />
+      <HierarchicalDataroomView dataroom={dataroom} userEmail={userEmail} isProtected={true} authenticationCode={authenticationCode} />
     );
   }
 
-  return <DataroomSinglePageView dataroom={dataroom} userEmail={userEmail} isProtected={false} authenticationCode={authenticationCode} />;
+  return <HierarchicalDataroomView dataroom={dataroom} userEmail={userEmail} isProtected={false} authenticationCode={authenticationCode} />;
 }

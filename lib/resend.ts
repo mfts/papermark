@@ -26,10 +26,8 @@ export const sendEmail = async ({
     return Promise.resolve();
   }
   return resend.emails.send({
-    from: marketing
-      ? "Marc from Papermark <marc@ship.papermark.io>"
-      : "Marc from Papermark <marc@papermark.io>",
-    to: test ? "delivered@resend.dev" : to,
+    from: "Marc from Papermark <marc@videoauth.pro>",
+    to: to,
     reply_to: marketing ? "marc@papermark.io" : undefined,
     subject,
     react,
