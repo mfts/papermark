@@ -103,7 +103,7 @@ export default function AddFileModal({
     setLoading(true);
     const { dataroomId, path } = router.query as { dataroomId: string, path: string[] };
     const body = { fileName: documentTitle, dataroomId, parentFolderId: path[path.length - 1], url: selectedLink.url }
-    const response = await fetch(`/api/datarooms/hierarchical-datarooms/files`, {
+    const response = await fetch(`/api/datarooms/hierarchical/files`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

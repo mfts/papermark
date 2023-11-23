@@ -226,7 +226,7 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
   }
 
   try {
-    const response = await fetch(`${process.env.NEXTAUTH_URL}/api/datarooms/hierarchical-datarooms/${encodeURIComponent(dataroomId)}`,
+    const response = await fetch(`${process.env.NEXTAUTH_URL}/api/datarooms/hierarchical?id=${encodeURIComponent(dataroomId)}`,
       {
         method: 'GET',
         headers: {

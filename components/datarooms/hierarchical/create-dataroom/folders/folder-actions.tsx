@@ -39,7 +39,7 @@ export const FolderActions = React.memo(function ({
   });
   const handleDeleteFolder = async (folderId: string) => {
     //Delete folder from database
-    const response = await fetch(`/api/datarooms/hierarchical-datarooms/folders`, {
+    const response = await fetch(`/api/datarooms/hierarchical/folders`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",

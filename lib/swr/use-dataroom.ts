@@ -14,7 +14,7 @@ export function useDataroom() {
 
   // only fetch data once when dataroomId is present
   const { data: dataroom, error } = useSWR<Dataroom>(
-    dataroomId && `/api/datarooms/${encodeURIComponent(dataroomId)}`,
+    dataroomId && `/api/datarooms/paged?id=${encodeURIComponent(dataroomId)}`,
     fetcher,
     {
       dedupingInterval: 10000,
@@ -42,7 +42,7 @@ export function useHierarchicalDataroom() {
 
   // only fetch data once when dataroomId is present
   const { data, error } = useSWR<{dataroom: Dataroom,  folderDirectory: FolderDirectory, homeFolder: DataroomFolder}>(
-    dataroomId && `/api/datarooms/hierarchical-datarooms/${encodeURIComponent(dataroomId)}`,
+    dataroomId && `/api/datarooms/hierarchical?id=${encodeURIComponent(dataroomId)}`,
     fetcher,
     {
       dedupingInterval: 10000,

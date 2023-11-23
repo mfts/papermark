@@ -14,13 +14,13 @@ export default async function handle(
     res.status(405).json({ message: "Method Not Allowed" });
     return;
   }
-  // POST /api/datarooms/hierarchical-datarooms/views
+  // POST /api/datarooms/paged/views
   const { dataroomId, ...data } = req.body;
 
   const { email, password } = data as { email: string; password: string };
 
   // Fetch the dataroom to verify the settings
-  const dataroom = await prisma.hierarchicalDataroom.findUnique({
+  const dataroom = await prisma.dataroom.findUnique({
     where: {
       id: dataroomId,
     },
@@ -60,7 +60,7 @@ export default async function handle(
   }
 
   try {
-    const newDataroomView = await prisma.hierarchicalDataroomView.create({
+    const newDataroomView = await prisma.dataroomView.create({
       data: {
         dataroomId: dataroomId,
         viewerEmail: email,

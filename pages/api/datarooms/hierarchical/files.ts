@@ -17,7 +17,7 @@ export default async function handle(
   res: NextApiResponse
 ) {
   if (req.method === "DELETE") {
-    // GET /api/datarooms/hierarchical-datarooms/files
+    // GET /api/datarooms/hierarchical/files
     const session = await getServerSession(req, res, authOptions);
     if (!session) {
       return res.status(401).end("Unauthorized");
@@ -39,7 +39,7 @@ export default async function handle(
       });
     }
   } else if (req.method === "POST") {
-    // POST /api/datarooms/hierarchical-datarooms/files
+    // POST /api/datarooms/hierarchical/files
     const session = await getServerSession(req, res, authOptions);
     if (!session) {
       res.status(401).end("Unauthorized");
@@ -80,7 +80,7 @@ export default async function handle(
       });
     }
   } else if (req.method === "PUT") {
-    // PUT /api/datarooms/hierarchical-datarooms/files
+    // PUT /api/datarooms/hierarchical/files
     const session = await getServerSession(req, res, authOptions);
     if (!session) {
       res.status(401).end("Unauthorized");

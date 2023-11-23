@@ -114,22 +114,24 @@ export default function DataroomCard({
 //Update database when dataroom is deleted
 async function deleteDataroomFromDatabase(id: string, type: "PAGE" | "HIERARCHICAL") {
   if (type === "PAGE") {
-    const response = await fetch(`/api/datarooms/${id}`, {
+    const response = await fetch(`/api/datarooms/paged`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
-      }
+      },
+      body: JSON.stringify({ id })
     });
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
   } else {
-    const response = await fetch(`/api/datarooms/hierarchical-datarooms/${id}`, {
+    const response = await fetch(`/api/datarooms/hierarchical`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
-      }
+      },
+      body: JSON.stringify({ id })
     });
 
     if (!response.ok) {

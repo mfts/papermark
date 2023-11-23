@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import LoadingSpinner from "../../../ui/loading-spinner";
 import EmailVerificationMessage from "../../email-verification-form";
 import { Dataroom } from "@prisma/client";
-import ViewSinglePagedDataroom from "./../view-single-paged-dataroom";
+import ViewSinglePagedDataroom from "../paged/view-single-paged-dataroom";
 
 export type DEFAULT_DATAROOM_VIEW_TYPE = {
   viewId: string;
@@ -44,7 +44,7 @@ export default function DataroomSinglePageView({
 
   const handleSubmission = async (): Promise<void> => {
     setIsLoading(true);
-    const response = await fetch("/api/datarooms/views", {
+    const response = await fetch("/api/datarooms/paged/views", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

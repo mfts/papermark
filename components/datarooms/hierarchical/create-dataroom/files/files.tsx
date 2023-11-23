@@ -39,7 +39,7 @@ export const Files = React.memo(function ({
 
   const handleDeleteFile = async (fileId: string) => {
     //Delete file from database
-    const response = await fetch(`/api/datarooms/hierarchical-datarooms/files`, {
+    const response = await fetch(`/api/datarooms/hierarchical/files`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",

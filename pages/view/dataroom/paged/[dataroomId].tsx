@@ -7,10 +7,6 @@ import { useSession } from "next-auth/react";
 export default function ViewPagedDataroom() {
   const { dataroom, authenticationCode, error } = useDataroom();
   const { data: session, status } = useSession();
-  
-  if (error && error.status === 404) {
-    return <NotFound />;
-  }
 
   if (!dataroom || status === "loading") {
     return (
@@ -18,6 +14,10 @@ export default function ViewPagedDataroom() {
         <LoadingSpinner className="h-20 w-20" />
       </div>
     );
+  }
+
+  if (error && error.status === 404) {
+    return <NotFound />;
   }
 
   const { emailProtected, password: linkPassword } = dataroom;

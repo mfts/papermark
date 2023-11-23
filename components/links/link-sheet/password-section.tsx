@@ -6,10 +6,9 @@ import Eye from "@/components/shared/icons/eye"
 import EyeOff from "@/components/shared/icons/eye-off"
 import { cn } from "@/lib/utils";
 import { DEFAULT_LINK_TYPE } from ".";
+import { DEFAULT_PAGED_DATAROOM_TYPE } from "@/components/datarooms/paged/add-paged-dataroom-modal";
 
-
-
-export default function PasswordSection({data, setData}: {data: DEFAULT_LINK_TYPE, setData: Dispatch<SetStateAction<DEFAULT_LINK_TYPE>>}) {
+export default function PasswordSection({data, setData}: {data: DEFAULT_LINK_TYPE | DEFAULT_PAGED_DATAROOM_TYPE, setData: Dispatch<SetStateAction<any>>}) {
   const { password } = data;
   const [enabled, setEnabled] = useState<boolean>(false);
   const [showPassword, setShowPassword] = useState<boolean>(false);

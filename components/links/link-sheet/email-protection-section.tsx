@@ -2,10 +2,11 @@ import { Dispatch, SetStateAction, useState, useEffect } from "react";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { DEFAULT_LINK_TYPE } from ".";
+import { DEFAULT_PAGED_DATAROOM_TYPE } from "@/components/datarooms/paged/add-paged-dataroom-modal";
 
 
 
-export default function EmailProtectionSection({data, setData}: {data: DEFAULT_LINK_TYPE, setData: Dispatch<SetStateAction<DEFAULT_LINK_TYPE>>}) {
+export default function EmailProtectionSection({data, setData}: {data: DEFAULT_LINK_TYPE | DEFAULT_PAGED_DATAROOM_TYPE, setData: Dispatch<SetStateAction<any>>}) {
   const { emailProtected } = data;
   const [enabled, setEnabled] = useState<boolean>(true);
 

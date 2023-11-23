@@ -62,7 +62,7 @@ export function AddHierarchicalDataroomModal({ children }: { children: React.Rea
   }
 
   async function saveDataroomToDatabase() {
-    const response = await fetch("/api/datarooms/hierarchical-datarooms", {
+    const response = await fetch("/api/datarooms/hierarchical", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -87,12 +87,12 @@ export function AddHierarchicalDataroomModal({ children }: { children: React.Rea
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="text-foreground bg-background">
         <DialogHeader>
-          <DialogTitle>Create a folder structured data room</DialogTitle>
+          <DialogTitle>Create a hierarchical dataroom</DialogTitle>
           <DialogDescription>
             <div className="border-b border-border py-2">
               <p className="mb-1 text-sm text-muted-foreground">
-                Please enter the name and description of data room.
-                After you create a data room, a shareable link will be
+                Please enter the name and description of dataroom.
+                After you create a dataroom, a shareable link will be
                 generated and copied to your clipboard.
               </p>
             </div>

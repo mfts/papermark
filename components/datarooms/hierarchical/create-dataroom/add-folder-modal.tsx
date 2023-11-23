@@ -40,7 +40,7 @@ export default function AddFolderModal({
 
     const { dataroomId, path } = router.query as { dataroomId: string, path: string[] };
     const body = { folderName, dataroomId, parentFolderId: path[path.length - 1] }
-    const response = await fetch(`/api/datarooms/hierarchical-datarooms/folders`, {
+    const response = await fetch(`/api/datarooms/hierarchical/folders`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

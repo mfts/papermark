@@ -35,7 +35,7 @@ export default function EditObjectNameModal({
     const body = objectMetadata.type === "FOLDER"
       ? { updatedFolderName: updatedObjectName, folderId: objectMetadata.id }
       : { updatedFileName: updatedObjectName, fileId: objectMetadata.id }
-    const URL = `/api/datarooms/hierarchical-datarooms/${objectMetadata.type === "FOLDER" ? "folders" : "files"}`
+    const URL = `/api/datarooms/hierarchical/${objectMetadata.type === "FOLDER" ? "folders" : "files"}`
     const response = await fetch(URL, {
       method: "PUT",
       headers: {

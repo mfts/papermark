@@ -44,7 +44,7 @@ export default function DataroomSinglePageView({
 
   const handleSubmission = async (): Promise<void> => {
     setIsLoading(true);
-    const response = await fetch("/api/datarooms/views", {
+    const response = await fetch("/api/datarooms/paged/views", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

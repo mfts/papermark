@@ -67,9 +67,9 @@ export default function Page({
 
       if (newName !== dataroom!.name || newDescription !== dataroom!.description) {
         const response = await fetch(
-          `/api/datarooms/hierarchical-datarooms/${dataroom!.id}/update-name`,
+          `/api/datarooms/hierarchical?id=${dataroom.id}`,
           {
-            method: "POST",
+            method: "PUT",
             headers: {
               "Content-Type": "application/json",
             },
@@ -250,7 +250,7 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
   const session = await getServerSession(context.req, context.res, authOptions);
 
   try {
-    const response = await fetch(`${process.env.NEXTAUTH_URL}/api/datarooms/hierarchical-datarooms/${encodeURIComponent(dataroomId)}`,
+    const response = await fetch(`${process.env.NEXTAUTH_URL}/api/datarooms/hierarchical?id=${encodeURIComponent(dataroomId)}`,
       {
         method: 'GET',
         headers: {

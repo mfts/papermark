@@ -10,6 +10,7 @@ import { useState, useEffect } from "react";
 import { DataroomFolder } from "@prisma/client";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import { DataroomCardType } from "@/components/datarooms/dataroom-card";
+import SelectDataroomTypeModal from "@/components/datarooms/select-dataroom-type-modal";
 
 export default function Datarooms() {
   const [datarooms, setDatarooms] = useState<DataroomCardType[] | undefined>(undefined);
@@ -32,7 +33,7 @@ export default function Datarooms() {
 
       const data = await response.json();
       const homePages = data.homePages;
-      const pagedDatarooms = data.datarooms;
+      const pagedDatarooms = data.pagedDatarooms;
       let hierarchicalDatarooms = data.hierarchicalDatarooms;
 
       if (homePages) {
@@ -40,6 +41,7 @@ export default function Datarooms() {
       }
 
       let updatedDatarooms: DataroomCardType[] = []
+      console.log(pagedDatarooms)
       if (pagedDatarooms) {
         updatedDatarooms = pagedDatarooms.map((dataroom: Dataroom) => ({
           id: dataroom.id,
@@ -79,9 +81,9 @@ export default function Datarooms() {
               <p className="text-sm text-muted-foreground">Manage your datarooms</p>
             </div>
             <ul className="flex items-center justify-between gap-4">
-              <AddHierarchicalDataroomModal>
+              <SelectDataroomTypeModal>
                 <Button>Add New Dataroom</Button>
-              </AddHierarchicalDataroomModal>
+              </SelectDataroomTypeModal>
             </ul>
           </div>
 
