@@ -7,12 +7,12 @@ export default function DocumentMetadataCard({
   title,
   url,
   type,
-  setDataRoomDocuments
+  setDataroomDocuments
 }: {
   title: string,
   url: string,
   type: string,
-  setDataRoomDocuments: (dataRoomDocuments: any) => void
+  setDataroomDocuments: (dataroomDocuments: any) => void
 }) {
 
   return (
@@ -43,7 +43,7 @@ export default function DocumentMetadataCard({
       </div>
       <Button
         onClick={() => {
-          setDataRoomDocuments((dataRoomDocuments: DataroomDocument[]) => dataRoomDocuments.filter((dataRoomDocument) => !(dataRoomDocument.title === title)));
+          setDataroomDocuments((dataroomDocuments: DataroomDocument[]) => dataroomDocuments.filter((dataroomDocument) => !(dataroomDocument.title === title)));
         }}
         className="flex items-center z-10 space-x-1 rounded-md bg-gray-200 dark:bg-gray-700 px-2 py-0.5 transition-all duration-75 hover:scale-105 active:scale-100"
       >

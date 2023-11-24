@@ -1,20 +1,24 @@
 import DataroomCard from "@/components/datarooms/dataroom-card";
 import Skeleton from "@/components/Skeleton";
 import { PlusIcon } from "@heroicons/react/24/solid";
-import { AddHierarchicalDataroomModal } from "@/components/datarooms/hierarchical/add-hierarchical-dataroom-modal";
 import { Separator } from "@/components/ui/separator";
 import AppLayout from "@/components/layouts/app"
 import { Button } from "@/components/ui/button";
-import { HierarchicalDataroom, type Dataroom } from "@prisma/client";
-import { useState, useEffect } from "react";
-import { DataroomFolder } from "@prisma/client";
+import { useState, useEffect, useRef } from "react";
 import LoadingSpinner from "@/components/ui/loading-spinner";
-import { DataroomCardType } from "@/components/datarooms/dataroom-card";
 import SelectDataroomTypeModal from "@/components/datarooms/select-dataroom-type-modal";
+import { DataroomWithFilesAndFolders } from "@/lib/types";
+import { AuthenticationCode } from '@prisma/client';
+
+export interface DataroomWithFilesFoldersAuthCodeAndFilesCount extends DataroomWithFilesAndFolders {
+  authenticationCodes: AuthenticationCode[],
+  _count: {
+    files: number
+  }
+}
 
 export default function Datarooms() {
-  const [datarooms, setDatarooms] = useState<DataroomCardType[] | undefined>(undefined);
-  const [homePages, setHomePages] = useState<DataroomFolder[]>([]);
+  const [datarooms, setDatarooms] = useState<DataroomWithFilesFoldersAuthCodeAndFilesCount[] | undefined>(undefined);
   const [loading, setLoading] = useState<boolean>(false);
 
   //Fetch datarooms from backend
@@ -32,35 +36,7 @@ export default function Datarooms() {
       }
 
       const data = await response.json();
-      const homePages = data.homePages;
-      const pagedDatarooms = data.pagedDatarooms;
-      let hierarchicalDatarooms = data.hierarchicalDatarooms;
-
-      if (homePages) {
-        setHomePages([...homePages]);
-      }
-
-      let updatedDatarooms: DataroomCardType[] = []
-      console.log(pagedDatarooms)
-      if (pagedDatarooms) {
-        updatedDatarooms = pagedDatarooms.map((dataroom: Dataroom) => ({
-          id: dataroom.id,
-          name: dataroom.name,
-          createdAt: dataroom.createdAt,
-          _count: {
-            files: dataroom.documentsIds.length
-          },
-          type: "PAGE"
-        }))
-      }
-
-      hierarchicalDatarooms =  hierarchicalDatarooms.map(
-        (dataroom: HierarchicalDataroom) => ({
-          ...dataroom,
-          type: "HIERARCHICAL"
-        }))
-      updatedDatarooms = [...updatedDatarooms, ...hierarchicalDatarooms]
-      setDatarooms(updatedDatarooms);
+      setDatarooms(data.datarooms);
     })();
   }, [])
 
@@ -116,7 +92,6 @@ export default function Datarooms() {
                   dataroom={dataroom}
                   setDatarooms={setDatarooms}
                   setLoading={setLoading}
-                  homePages={homePages}
                 />;
               }))
             }
@@ -149,7 +124,7 @@ export function EmptyDataRooms() {
         Get started by creating a new data room.
       </p>
       <div className="mt-6">
-        <AddHierarchicalDataroomModal>
+        <SelectDataroomTypeModal>
           <button
             type="button"
             className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-foreground bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
@@ -157,7 +132,7 @@ export function EmptyDataRooms() {
             <PlusIcon className="-ml-1 mr-2 h-5 w-5" aria-hidden="true" />
             New Data Room
           </button>
-        </AddHierarchicalDataroomModal>
+        </SelectDataroomTypeModal>
       </div>
     </div>
   );

@@ -3,6 +3,7 @@ import useSWR from "swr";
 import { fetcher } from "@/lib/utils";
 import { Dataroom, DataroomFolder } from "@prisma/client";
 import { FolderDirectory } from "@/lib/types"
+import { DataroomWithFiles } from "@/lib/types";
 
 export function useDataroom() {
   const router = useRouter();
@@ -13,7 +14,7 @@ export function useDataroom() {
   };
 
   // only fetch data once when dataroomId is present
-  const { data: dataroom, error } = useSWR<Dataroom>(
+  const { data: dataroom, error } = useSWR<DataroomWithFiles>(
     dataroomId && `/api/datarooms/paged?id=${encodeURIComponent(dataroomId)}`,
     fetcher,
     {

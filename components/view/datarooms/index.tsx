@@ -2,22 +2,19 @@ import React, { useEffect, useRef, useState } from "react";
 import AccessForm, { DEFAULT_ACCESS_FORM_DATA, DEFAULT_ACCESS_FORM_TYPE } from "@/components/view/access-form";
 import { usePlausible } from "next-plausible";
 import { toast } from "sonner";
-import LoadingSpinner from "../../../ui/loading-spinner";
-import EmailVerificationMessage from "../../email-verification-form";
-import { Dataroom } from "@prisma/client";
-import ViewSinglePagedDataroom from "../paged/view-single-paged-dataroom";
+import LoadingSpinner from "../../ui/loading-spinner";
+import EmailVerificationMessage from "../email-verification-form";
+import ViewSinglePagedDataroom from "./paged/view-single-paged-dataroom";
+import { DataroomWithFiles } from "@/lib/types";
+import { useRouter } from "next/router";
 
-export type DEFAULT_DATAROOM_VIEW_TYPE = {
-  viewId: string;
-};
-
-export default function HierarchicalDataroomView({
+export default function DataroomSinglePageView({
   dataroom,
   userEmail,
   isProtected,
   authenticationCode
 }: {
-  dataroom: Dataroom;
+  dataroom: DataroomWithFiles;
   authenticationCode: string | undefined;
   userEmail: string | null | undefined;
   isProtected: boolean;
@@ -35,16 +32,14 @@ export default function HierarchicalDataroomView({
   const didMount = useRef<boolean>(false);
   const [submitted, setSubmitted] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [viewData, setViewData] = useState<DEFAULT_DATAROOM_VIEW_TYPE>({
-    viewId: "",
-  });
   const [data, setData] = useState<DEFAULT_ACCESS_FORM_TYPE>(
     DEFAULT_ACCESS_FORM_DATA
   );
+  const router = useRouter();
 
   const handleSubmission = async (): Promise<void> => {
     setIsLoading(true);
-    const response = await fetch("/api/datarooms/paged/views", {
+    const response = await fetch("/api/datarooms/views", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -57,10 +52,7 @@ export default function HierarchicalDataroomView({
     });
 
     if (response.ok) {
-      const { viewId } =
-        (await response.json()) as DEFAULT_DATAROOM_VIEW_TYPE;
       plausible("dataroomViewed"); // track the event
-      setViewData({ viewId });
       setSubmitted(true);
       setIsLoading(false);
     } else {
@@ -96,7 +88,7 @@ export default function HierarchicalDataroomView({
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ identifier: dataroomId, type: "HIERARCHICAL DATAROOM", email: data.email })
+      body: JSON.stringify({ identifier: dataroomId, type: "PAGED DATAROOM", email: data.email })
     });
     if (response.ok) {
       setVerificationRequested(true);
@@ -105,6 +97,74 @@ export default function HierarchicalDataroomView({
     } else {
       setIsLoading(false);
       return false;
+    }
+  }
+
+  //Verifies authentication code
+  const handleAuthCodeVerification = async () => {
+    if (!isLoading) {
+      setIsLoading(true);
+    }
+    const URL = `/api/verification/email-authcode?authenticationCode=${authenticationCode}`;
+    const response = await fetch(URL, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      }
+    });
+    if (response.ok) {
+      setIsEmailVerified(true);
+      setVerificationRequested(false);
+      await handleSubmission();
+    } else {
+      setIsLoading(false);
+    }
+  }
+
+  //If URL contains authenticationCode
+  //P.S: We can create separate component for links with authentication code
+  if (authenticationCode) {
+    if (dataroom.type === "HIERARCHICAL") {
+      router.push(`/view/datarooms/hierarchical/${dataroom.id}/${dataroom.folders[0].id}?authenticationCode`)
+    }
+    useEffect(() => {
+      (async () => {
+        setIsLoading(true);
+        await handleAuthCodeVerification();
+      })();
+    }, [])
+
+    //Component to render if Loading
+    if (isLoading) {
+      return (
+        <div className="h-screen flex items-center justify-center">
+          <LoadingSpinner className="mr-1 h-20 w-20" />
+        </div>
+      )
+    }
+
+    //Component to render when verification code is invalid
+    if (!isEmailVerified) {
+      return (
+        <div className="flex h-screen flex-1 flex-col  px-6 py-12 lg:px-8 bg-black">
+          <div className="sm:mx-auto sm:w-full sm:max-w-md">
+            <h2 className="mt-10 text-2xl font-bold leading-9 tracking-tight text-white">
+              Unauthorized access
+            </h2>
+          </div>
+        </div>
+      )
+    }
+
+    if (dataroom.type === "PAGED") {
+      return (
+        <div className="bg-gray-950">
+          <ViewSinglePagedDataroom dataroom={dataroom} />
+        </div>
+      );
+    } else {
+      setIsLoading(true);
+      router.push(`/view/datarooms/hierarchical/${dataroom.id}/${dataroom.folders[0].id}`)
     }
   }
 
@@ -145,5 +205,21 @@ export default function HierarchicalDataroomView({
         </div>
       );
     }
+    return (
+      <div className="bg-gray-950">
+        {submitted
+          ?
+          dataroom.type === "PAGED"
+            ? (
+              <ViewSinglePagedDataroom dataroom={dataroom} />
+            )
+            : router.push(`/view/datarooms/hierarchical/${dataroom.id}/${dataroom.folders[0].id}`)
+          : (
+            <div className="h-screen flex items-center justify-center">
+              <LoadingSpinner className="h-20 w-20" />
+            </div>
+          )}
+      </div>
+    );
   }
 }

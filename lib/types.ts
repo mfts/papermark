@@ -1,5 +1,5 @@
 import { User as NextAuthUser } from "next-auth";
-import { Document, Link, View, User as PrismaUser, DocumentVersion, DataroomFile } from "@prisma/client";
+import { Document, Link, View, User as PrismaUser, DocumentVersion, DataroomFile, DataroomFolder, Dataroom } from "@prisma/client";
 
 export type CustomUser = NextAuthUser & PrismaUser;
 
@@ -51,7 +51,7 @@ export type DomainVerificationStatusProps =
   | "Domain Not Found"
   | "Unknown Error";
 
-//FolderDirectory for dataroom
+//FolderDirectory for hierarchical dataroom
 export type FolderDirectory = {
   [folderId: string]: {
     name: string,
@@ -166,6 +166,14 @@ export type AnalyticsEvents =
     event: "Domain Deleted";
     slug: string;
   };
+
+export interface DataroomWithFiles extends Dataroom {
+  files: DataroomFile[]
+}
+
+export interface DataroomWithFilesAndFolders extends DataroomWithFiles {
+  folders: DataroomFolder[]
+}
 
 export type DataroomDocument = {
   id: string

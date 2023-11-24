@@ -4,12 +4,8 @@ import { usePlausible } from "next-plausible";
 import { toast } from "sonner";
 import LoadingSpinner from "../../../ui/loading-spinner";
 import EmailVerificationMessage from "../../email-verification-form";
-import { Dataroom } from "@prisma/client";
 import ViewSinglePagedDataroom from "./view-single-paged-dataroom";
-
-export type DEFAULT_DATAROOM_VIEW_TYPE = {
-  viewId: string;
-};
+import { DataroomWithFiles } from "@/lib/types";
 
 export default function DataroomSinglePageView({
   dataroom,
@@ -17,7 +13,7 @@ export default function DataroomSinglePageView({
   isProtected,
   authenticationCode
 }: {
-  dataroom: Dataroom;
+  dataroom: DataroomWithFiles;
   authenticationCode: string | undefined;
   userEmail: string | null | undefined;
   isProtected: boolean;
@@ -35,16 +31,13 @@ export default function DataroomSinglePageView({
   const didMount = useRef<boolean>(false);
   const [submitted, setSubmitted] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [viewData, setViewData] = useState<DEFAULT_DATAROOM_VIEW_TYPE>({
-    viewId: "",
-  });
   const [data, setData] = useState<DEFAULT_ACCESS_FORM_TYPE>(
     DEFAULT_ACCESS_FORM_DATA
   );
 
   const handleSubmission = async (): Promise<void> => {
     setIsLoading(true);
-    const response = await fetch("/api/datarooms/paged/views", {
+    const response = await fetch("/api/datarooms/views", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -57,10 +50,7 @@ export default function DataroomSinglePageView({
     });
 
     if (response.ok) {
-      const { viewId } =
-        (await response.json()) as DEFAULT_DATAROOM_VIEW_TYPE;
       plausible("dataroomViewed"); // track the event
-      setViewData({ viewId });
       setSubmitted(true);
       setIsLoading(false);
     } else {

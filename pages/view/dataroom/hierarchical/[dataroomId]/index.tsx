@@ -1,5 +1,4 @@
 import LoadingSpinner from "@/components/ui/loading-spinner";
-import HierarchicalDataroomView from "@/components/view/datarooms/hierarchical";
 import { useDataroom, useHierarchicalDataroom } from "@/lib/swr/use-dataroom";
 import NotFound from "@/pages/404";
 import { useSession } from "next-auth/react";

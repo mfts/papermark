@@ -1,15 +1,13 @@
 
 import { Button } from "@/components/ui/button";
-import { Dataroom } from "@prisma/client";
+import { DataroomWithFiles } from "@/lib/types";
 
 export default function ViewSinglePagedDataroom({
   dataroom
 }: {
-  dataroom: Dataroom,
+  dataroom: DataroomWithFiles,
 }) {
-  const titles = dataroom.documentsTitles;
-  const links = dataroom.documentsLinks;
-
+  const files = dataroom.files;
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen">
@@ -25,10 +23,10 @@ export default function ViewSinglePagedDataroom({
         <h2 className="text-2xl font-bold mb-4">{dataroom.name}</h2>
         <p className="text-gray-600 mb-4">{dataroom.description || ""}</p>
         <div className="flex flex-col justify-center mt-12">
-          {titles.map((title, index) => (
-            <a key={index} href={links[index]} target="_blank" rel="noopener noreferrer" className="mb-2">
+          {files.map((files, index) => (
+            <a key={index} href={files.url} target="_blank" rel="noopener noreferrer" className="mb-2">
               <Button className="w-96 text-black font-bold py-2 px-4 rounded m-2">
-                {title}
+                {files.name}
               </Button>
             </a>
           ))}

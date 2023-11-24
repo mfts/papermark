@@ -26,7 +26,7 @@ export default function PasswordSection({data, setData}: {data: DEFAULT_LINK_TYP
   };
 
   return (
-    <div className="pb-2">
+    <div className="pb-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center justify-between space-x-2">
           <h2

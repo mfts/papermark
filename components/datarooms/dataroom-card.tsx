@@ -1,54 +1,43 @@
 import { copyToClipboard, timeAgo } from "@/lib/utils";
-import { DataroomFolder, type Dataroom, type HierarchicalDataroom } from "@prisma/client";
 import Copy from "@/components/shared/icons/copy";
 import Image from "next/image";
 import { Button } from "../ui/button";
 import { useState } from "react";
 import { Dispatch, SetStateAction } from "react";
-import { useRouter } from "next/router";
 import Link from "next/link";
 import FolderIcon from "../shared/icons/folder";
-
-export type DataroomCardType = {
-  id: string;
-  name: string;
-  createdAt: Date;
-  _count: {
-    files: number;
-  };
-  type: "PAGE" | "HIERARCHICAL"
-}
+import { DataroomWithFilesFoldersAuthCodeAndFilesCount } from "@/pages/datarooms";
 
 export default function DataroomCard({
   dataroom,
-  homePages,
   setDatarooms,
-  setLoading
+  setLoading,
 }: {
-  dataroom: DataroomCardType
-  homePages?: DataroomFolder[];
-  setDatarooms: Dispatch<SetStateAction<DataroomCardType[] | undefined>>,
-  setLoading: Dispatch<SetStateAction<boolean>>;
+  dataroom: DataroomWithFilesFoldersAuthCodeAndFilesCount
+  setDatarooms: Dispatch<SetStateAction<DataroomWithFilesFoldersAuthCodeAndFilesCount[] | undefined>>
+  setLoading: Dispatch<SetStateAction<boolean>>
 }) {
-  const router = useRouter();
-  function handleCopyToClipboard(id: string, type: "PAGE" | "HIERARCHICAL") {
-    if (dataroom.type === "PAGE") {
-      copyToClipboard(`${process.env.NEXT_PUBLIC_BASE_URL}/view/dataroom/paged/${id}`, "Link copied to clipboard.");
+  const [isFirstClick, setIsFirstClick] = useState<boolean>(false);
+
+  function handleCopyToClipboard(id: string) {
+    const type = dataroom.type;
+    //Authencation code is required by design for accessing hierarchical datarooms as we need to use nextjs routes
+    //For unprotected datarooms, we generate auth code on our own and send it to user in link
+    if (type === "HIERARCHICAL" && !dataroom.emailProtected && !dataroom.password) {
+      const authenticationCode = dataroom.authenticationCodes[0].code;
+      copyToClipboard(`${process.env.NEXT_PUBLIC_BASE_URL}/view/dataroom/hierarchical/${id}?authenticationCode=${authenticationCode}`,
+        "Link copied to clipboard.");
     } else {
-      copyToClipboard(`${process.env.NEXT_PUBLIC_BASE_URL}/view/dataroom/hierarchical/${id}`, "Link copied to clipboard.");
+    copyToClipboard(`${process.env.NEXT_PUBLIC_BASE_URL}/view/dataroom/${type === "PAGED" ? "paged" : "hierarchical"}/${id}`,
+      "Link copied to clipboard.");
     }
   }
-  const [isFirstClick, setIsFirstClick] = useState<boolean>(false);
+
   const handleButtonClick = (event: any) => {
     event.preventDefault();
     if (isFirstClick) {
-      if (dataroom.type === "PAGE") {
-        setDatarooms((currentDatarooms) => currentDatarooms?.filter((currentDataroom) => !(currentDataroom === dataroom)));
-        deleteDataroomFromDatabase(dataroom.id, dataroom.type);
-      } else {
-        setDatarooms((currentDatarooms) => currentDatarooms?.filter((currentDataroom) => !(currentDataroom === dataroom)));
-        deleteDataroomFromDatabase(dataroom.id, dataroom.type);
-      }
+      setDatarooms((currentDatarooms) => currentDatarooms?.filter((currentDataroom) => !(currentDataroom === dataroom)));
+      deleteDataroomFromDatabase(dataroom.id);
     } else {
       setIsFirstClick(true);
     }
@@ -73,7 +62,7 @@ export default function DataroomCard({
                 dataroom.type === "HIERARCHICAL"
                   ?
                   <Link
-                    href={`/datarooms/${dataroom.id}/${(homePages?.find((homePage) => homePage.dataroomId === dataroom.id))?.id}`}
+                    href={`/datarooms/${dataroom.id}/${dataroom.folders[0].id}`}
                     onClick={() => setLoading(true)}>
                     <span className="">{dataroom.name}</span>
                     <span className="absolute inset-0" />
@@ -88,7 +77,7 @@ export default function DataroomCard({
             <div className="flex ml-2">
               <button
                 className="group rounded-full bg-gray-200 dark:bg-gray-700 z-10 p-1.5 transition-all duration-75 hover:scale-105 hover:bg-emerald-100 hover:dark:bg-emerald-200 active:scale-95"
-                onClick={() => handleCopyToClipboard(dataroom.id, dataroom.type)}
+                onClick={() => handleCopyToClipboard(dataroom.id)}
                 title="Copy to clipboard"
               >
                 <Copy
@@ -121,30 +110,16 @@ export default function DataroomCard({
 }
 
 //Update database when dataroom is deleted
-async function deleteDataroomFromDatabase(id: string, type: "PAGE" | "HIERARCHICAL") {
-  if (type === "PAGE") {
-    const response = await fetch(`/api/datarooms/paged`, {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ id })
-    });
+async function deleteDataroomFromDatabase(id: string) {
+  const response = await fetch(`/api/datarooms`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ id })
+  });
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-  } else {
-    const response = await fetch(`/api/datarooms/hierarchical`, {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ id })
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
   }
 }

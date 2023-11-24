@@ -13,7 +13,7 @@ import { Button } from "../../ui/button";
 import { usePlausible } from "next-plausible";
 import { PlusIcon } from "@heroicons/react/24/solid";
 import { Input } from "../../ui/input";
-import { AddDocumentToDataRoomModal } from "./add-document-to-dataroom-modal";
+import { AddDocumentToDataroomModal } from "./add-document-to-dataroom-modal";
 import DocumentMetadataCard from "./document-metadata-card";
 import Skeleton from "@/components/Skeleton";
 import { type DataroomDocument } from "@/lib/types";
@@ -38,10 +38,10 @@ export type DEFAULT_DATAROOM_TYPE = {
 };
 
 export function AddPagedDataroomModal({ children }: { children: React.ReactNode }) {
-  //Documents inside data room
-  const [dataRoomDocuments, setDataRoomDocuments] = useState<DataroomDocument[]>([]);
-  const [dataRoomName, setDataRoomName] = useState<string>("");
-  const [dataRoomDescription, setDataRoomDescription] = useState<string>("");
+  //Documents inside Dataroom
+  const [dataroomDocuments, setDataroomDocuments] = useState<DataroomDocument[]>([]);
+  const [dataroomName, setDataroomName] = useState<string>("");
+  const [dataroomDescription, setDataroomDescription] = useState<string>("");
   const [data, setData] = useState<DEFAULT_DATAROOM_TYPE>(DEFAULT_DATAROOM_PROPS);
 
   //const plausible = usePlausible();
@@ -51,12 +51,12 @@ export function AddPagedDataroomModal({ children }: { children: React.ReactNode 
   const handleDataroomCreation = async (event: any) => {
     event.preventDefault();
     //set error messages
-    if (!dataRoomName) {
+    if (!dataroomName) {
       setErrorMessage("Dataroom's name cannot be blank");
       setTimeout(() => setErrorMessage(""), 5000);
       return;
     }
-    if (dataRoomDocuments.length === 0) {
+    if (dataroomDocuments.length === 0) {
       setErrorMessage("Please select a document to include in dataroom");
       setTimeout(() => setErrorMessage(""), 5000);
       return;
@@ -91,10 +91,9 @@ export function AddPagedDataroomModal({ children }: { children: React.ReactNode 
   }
 
   async function saveDataroomToDatabase() {
-    //Select documents from useDocuments for maintainig constant type in backend
-    const titles = dataRoomDocuments.map((dataRoomDocument) => dataRoomDocument.title);
-    const ids = dataRoomDocuments.map((dataRoomDocument) => dataRoomDocument.id);
-    const links = dataRoomDocuments.map((dataRoomDocument) => dataRoomDocument.url);
+    //Select documents from useDocuments for maintaining constant type in backend
+    const titles = dataroomDocuments.map((dataroomDocument) => dataroomDocument.title);
+    const links = dataroomDocuments.map((dataroomDocument) => dataroomDocument.url);
 
     const response = await fetch("/api/datarooms/paged", {
       method: "POST",
@@ -102,10 +101,9 @@ export function AddPagedDataroomModal({ children }: { children: React.ReactNode 
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        name: dataRoomName,
-        description: dataRoomDescription,
+        name: dataroomName,
+        description: dataroomDescription,
         titles,
-        ids,
         links,
         password: data.password ? data.password : "",
         emailProtected: data.emailProtected
@@ -126,7 +124,7 @@ export function AddPagedDataroomModal({ children }: { children: React.ReactNode 
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="text-foreground bg-background">
         <DialogHeader>
-          <DialogTitle>Create a single page data room</DialogTitle>
+          <DialogTitle>Create single page dataroom</DialogTitle>
           <DialogDescription>
             <div className="border-b border-border py-2">
               <p className="mb-1 text-sm text-muted-foreground">
@@ -138,8 +136,8 @@ export function AddPagedDataroomModal({ children }: { children: React.ReactNode 
                 Dataroom Name
               </p>
               <Input
-                placeholder={"Enter Data Room Name..."}
-                onChange={(e) => { setDataRoomName(e.target.value) }}
+                placeholder={"Enter Dataroom Name..."}
+                onChange={(e) => { setDataroomName(e.target.value) }}
               />
             </div>
             <div>
@@ -148,20 +146,20 @@ export function AddPagedDataroomModal({ children }: { children: React.ReactNode 
               </p>
               <Input
                 className="mb-2"
-                placeholder={"Enter Data Room Description..."}
-                onChange={(e) => { setDataRoomDescription(e.target.value) }}
+                placeholder={"Enter Dataroom Description..."}
+                onChange={(e) => { setDataroomDescription(e.target.value) }}
               />
             </div>
 
             {/* Documents list */}
             <ul role="list" className={`space-y-4 overflow-y-auto max-h-48`}>
-              {dataRoomDocuments
-                ? dataRoomDocuments.map((dataRoomDocument) => {
+              {dataroomDocuments
+                ? dataroomDocuments.map((dataroomDocument) => {
                   return <DocumentMetadataCard
-                    title={dataRoomDocument.title}
-                    url={dataRoomDocument.url}
-                    type={dataRoomDocument.type}
-                    setDataRoomDocuments={setDataRoomDocuments} />;
+                    title={dataroomDocument.title}
+                    url={dataroomDocument.url}
+                    type={dataroomDocument.type}
+                    setDataroomDocuments={setDataroomDocuments} />;
                 })
                 : Array.from({ length: 3 }).map((_, i) => (
                   <li
@@ -174,16 +172,16 @@ export function AddPagedDataroomModal({ children }: { children: React.ReactNode 
                 ))}
             </ul>
             <ul className="flex justify-center mt-3">
-              <AddDocumentToDataRoomModal
-                dataRoomDocuments={dataRoomDocuments}
-                setDataRoomDocuments={setDataRoomDocuments}
+              <AddDocumentToDataroomModal
+                dataroomDocuments={dataroomDocuments}
+                setDataroomDocuments={setDataroomDocuments}
               >
                 <Button
                   type="button"
                   className="w-full"
                   disabled={false}
                 ><PlusIcon className="-ml-1 mr-2 h-5 w-5" aria-hidden="true" />Add Document </Button>
-              </AddDocumentToDataRoomModal>
+              </AddDocumentToDataroomModal>
             </ul>
             <div className="flex items-center relative">
               <Separator className="bg-muted-foreground absolute" />
@@ -206,11 +204,11 @@ export function AddPagedDataroomModal({ children }: { children: React.ReactNode 
               <Button
                 type="button"
                 className="w-full lg:w-1/2"
-                disabled={dataRoomDocuments.length === 0}
+                disabled={dataroomDocuments.length === 0}
                 loading={uploading}
                 onClick={handleDataroomCreation}
               >
-                {uploading ? "Creating Data Room..." : "Create Data Room"}
+                {uploading ? "Creating Dataroom..." : "Create Dataroom"}
               </Button>
             </div>
           </DialogDescription>

@@ -14,7 +14,7 @@ export default async function handle(
     res.status(405).json({ message: "Method Not Allowed" });
     return;
   }
-  // POST /api/datarooms/paged/views
+  // POST /api/datarooms/views
   const { dataroomId, ...data } = req.body;
 
   const { email, password } = data as { email: string; password: string };

@@ -46,8 +46,7 @@ model User {
   accounts       Account[]
   sessions       Session[]
   documents      Document[]
-  datarooms      Dataroom[]
-  hierarchicalDataroom HierarchicalDataroom[]
+  dataroom       Dataroom[]
   domains        Domain[]
   plan           String     @default("trial")
   stripeId       String?    @unique // Stripe subscription / customer ID
@@ -78,6 +77,7 @@ model Document {
   links       Link[]
   views       View[]
   versions    DocumentVersion[]
+  authenticationCodes AuthenticationCode[]
 }
 
 model DocumentVersion {
@@ -154,9 +154,15 @@ model View {
   viewedAt    DateTime @default(now())
 }
 
+enum DataroomType {
+  HIERARCHICAL
+  PAGED
+}
+
 model Dataroom {
   id               String            @id @default(cuid())
   name             String
+  type             DataroomType
   description      String?
   emailProtected   Boolean           @default(true) // Optional email protection
   password         String? // Optional password for link protection
@@ -165,34 +171,18 @@ model Dataroom {
   ownerId          String // This field holds the foreign key.
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
-  documentsIds     String[] //If link is deleted, try to find from documentId
-  documentsLinks   String[] 
-  documentsTitles  String[]
+  files            DataroomFile[]
+  folders          DataroomFolder[]
   dataroomView     DataroomView[]
+  authenticationCodes AuthenticationCode[]
 }
 
 model DataroomView {
-  id          String   @id @default(cuid())
-  dataroom    Dataroom @relation(fields: [dataroomId], references: [id],  onDelete: Cascade)
-  dataroomId  String
-  viewerEmail String? // Email of the viewer if known
-  viewedAt    DateTime @default(now())
-}
-
-model HierarchicalDataroom {
-  id               String            @id @default(cuid())
-  name             String
-  description      String?
-  emailProtected   Boolean           @default(true) // Optional email protection
-  password         String? // Optional password for link protection
-  isArchived       Boolean           @default(false) // Indicates if the dataroom is archived
-  owner            User              @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  ownerId          String // This field holds the foreign key.
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
-  hierarchicaldataroomView     HierarchicalDataroomView[]
-  files            DataroomFile[]
-  folders          DataroomFolder[]
+  id                      String                @id @default(cuid())
+  dataroom                Dataroom              @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
+  dataroomId              String
+  viewerEmail             String?               // Email of the viewer if known
+  viewedAt                DateTime              @default(now())
 }
 
 model DataroomFolder {
@@ -201,39 +191,28 @@ model DataroomFolder {
   parentFolder     DataroomFolder?   @relation(name: "nestedFolders", fields: [parentFolderId], references: [id],onDelete: Cascade)
   subfolders       DataroomFolder[]  @relation(name: "nestedFolders")
   parentFolderId   String?           
-  dataroom         HierarchicalDataroom @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
+  dataroom         Dataroom          @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
   dataroomId       String
   files            DataroomFile[]
 }
 
 model DataroomFile {
-  id               String            @id @default(cuid())
-  name             String
-  url              String
-  parentFolder     DataroomFolder    @relation(fields: [parentFolderId], references: [id], onDelete: Cascade)
-  parentFolderId   String
-  dataroom         HierarchicalDataroom          @relation(fields: [dataroomId], references: [id])
-  dataroomId       String
+  id                           String                 @id @default(cuid())
+  name                         String
+  url                          String
+  parentFolder                 DataroomFolder?        @relation(fields: [parentFolderId], references: [id], onDelete: Cascade)
+  parentFolderId               String?
+  dataroom                     Dataroom               @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
+  dataroomId                   String
 }
 
-model HierarchicalDataroomView {
-  id          String   @id @default(cuid())
-  dataroom    HierarchicalDataroom @relation(fields: [dataroomId], references: [id],  onDelete: Cascade)
-  dataroomId  String
-  viewerEmail String? // Email of the viewer if known
-  viewedAt    DateTime @default(now())
-}
-
-enum AuthenticationCodeType {
-  DOCUMENT
-  DATAROOM
-}
-
-model EmailAuthenticationCode {
+model AuthenticationCode {
   id          String   @id @default(cuid())
   email       String
   code        String   @unique
-  identifier  String  
-  type        AuthenticationCodeType 
+  dataroom    Dataroom?  @relation(fields: [identifier], references: [id], onDelete: Cascade, map: "dataroom_relation")
+  document    Document?  @relation(fields: [identifier], references: [id], onDelete: Cascade, map: "document_relation")
+  identifier  String   //DataroomId if dataroom else documentId
+  permanent   Boolean  @default(false)
   createdAt   DateTime @default(now())
 }

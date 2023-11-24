@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { sendVerificationEmail } from "@/lib/emails/send-email-verification";
 import prisma from "@/lib/prisma";
 import z from "zod";
-import { generateUniqueString } from "@/lib/api/authentication";
+import { generateAuthenticationCode } from "@/lib/api/authentication";
 
 const bodySchema = z.object({
   email: z.string().email(),
@@ -22,12 +22,12 @@ export default async function handle(
 
     //Check verification code in database and delete it
     try {
-      await prisma.emailAuthenticationCode.delete({
+      await prisma.authenticationCode.delete({
         where: {
           code
         }
       })
-      res.status(200).json({ message: "Verification successfull" });
+      res.status(200).json({ message: "Verification successful" });
     } catch {
       res.status(401).json({ message: "Unauthorized access" });
     }
@@ -68,15 +68,7 @@ export default async function handle(
     }
 
     // Generate authcode
-    const authenticationCode = generateUniqueString(12);
-    await prisma.emailAuthenticationCode.create({
-      data: {
-        email,
-        code: authenticationCode,
-        identifier,
-        type: type === "DOCUMENT" ? "DOCUMENT" : "DATAROOM"
-      }
-    })
+    const authenticationCode = await generateAuthenticationCode(12, email, identifier, "DATAROOM", "ONE-TIME");
     const URL = type === "DOCUMENT" 
     ? `${process.env.NEXTAUTH_URL}/view/${identifier}?authenticationCode=${authenticationCode}`
     : type === "PAGED DATAROOM"

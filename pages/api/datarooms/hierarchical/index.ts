@@ -9,12 +9,11 @@ import { FolderDirectory } from "@/lib/types";
 import { Session } from "next-auth";
 import { DataroomFolder } from "@prisma/client";
 import z from "zod";
+import { generateAuthenticationCode } from "@/lib/api/authentication";
 
 const bodySchema = z.object({
   name: z.string(),
   description: z.string().max(150), //Description should be less than 150 characters
-  password: z.string().max(30), //Password cannot be more than 30 characters
-  emailProtected: z.boolean()
 })
 
 export default async function handle(
@@ -31,7 +30,7 @@ export default async function handle(
     const { id } = req.query as { id: string };
 
     try {
-      const dataroom = await prisma.hierarchicalDataroom.findUnique({
+      const dataroom = await prisma.dataroom.findUnique({
         where: {
           id: id
         }
@@ -98,10 +97,10 @@ export default async function handle(
     //Input validation 
     let name: string;
     let description: string;
-    let password: string;
-    let emailProtected: boolean;
+    const subBody = { name: req.body.name, description: req.body.name }
+    const { password, emailProtected } = req.body;
     try {
-      ({ name, description, password, emailProtected } = bodySchema.parse(req.body));
+      ({ name, description} = bodySchema.parse(subBody));
     } catch (error) {
       res.status(400).json({
         message: "Invalid Inputs",
@@ -111,7 +110,7 @@ export default async function handle(
     }
 
     try {
-      const dataroomName = await prisma.hierarchicalDataroom.findFirst({
+      const dataroomName = await prisma.dataroom.findFirst({
         where: {
           name: name
         }
@@ -125,12 +124,13 @@ export default async function handle(
       }
 
       // Save data to the database
-      const dataroom = await prisma.hierarchicalDataroom.create({
+      const dataroom = await prisma.dataroom.create({
         data: {
           name: name,
           description: description,
           password,
           emailProtected,
+          type: "HIERARCHICAL",
           ownerId: (session.user as CustomUser).id,
         }
       });
@@ -143,6 +143,12 @@ export default async function handle(
         }
       })
 
+      //Create a authentication code (To be used for verification if not emailProtected and not password protected)
+      let authenticationCode: string = "";
+      if (!emailProtected && !password) {
+        authenticationCode = await generateAuthenticationCode(12, session.user?.email as string, dataroom.id, "DATAROOM", "PERMANENT")
+      }
+
       await identifyUser((session.user as CustomUser).id);
       await trackAnalytics({
         event: "Dataroom Created",
@@ -150,7 +156,7 @@ export default async function handle(
         name: dataroom.name,
       });
 
-      res.status(201).json({ dataroom, homeFolder });
+      res.status(201).json({ dataroom, homeFolder, authenticationCode });
     } catch (error) {
       log(`Failed to create dataroom. Error: \n\n ${error}`)
       res.status(500).json({
@@ -159,46 +165,6 @@ export default async function handle(
       });
     }
 
-  } else if (req.method === "DELETE") {
-    // DELETE /api/datarooms/hierarchical
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      res.status(401).end("Unauthorized");
-      return;
-    }
-
-    const { id } = req.body as { id: string };
-
-    try {
-      const dataroom = await prisma.hierarchicalDataroom.findUnique({
-        where: {
-          id: id
-        }
-      });
-
-      if (!dataroom) {
-        return res.status(404).end("Dataroom not found");
-      }
-
-      // check that the user is owner of the dataroom, otherwise return 401
-      if (dataroom.ownerId !== (session.user as CustomUser).id) {
-        return res.status(401).end("Unauthorized to delete the document");
-      }
-
-      // delete the dataroom from database
-      await prisma.hierarchicalDataroom.delete({
-        where: {
-          id: id
-        }
-      })
-
-      res.status(204).end(); // 204 No Content response for successful deletes
-    } catch (error) {
-      return res.status(500).json({
-        message: "Internal Server Error",
-        error: (error as Error).message,
-      });
-    }
   } else if (req.method === "PUT") {
     // PUT /api/datarooms/hierarchical
     const session = await getServerSession(req, res, authOptions);
@@ -208,16 +174,21 @@ export default async function handle(
 
     const { id } = req.query as { id: string };
     //Input validation 
-    const { name, description } = req.body;
-    if (name.length > 150 || description.length > 150) {
+    let name: string;
+    let description: string;
+    try {
+      ({ name, description} = bodySchema.parse(req.body));
+    } catch (error) {
       res.status(400).json({
-        message: "Invalid Inputs" 
+        message: "Invalid Inputs",
+        error: (error as Error).message,
       });
       return;
     }
 
+
     try {
-      const dataroom = await prisma.hierarchicalDataroom.findUnique({
+      const dataroom = await prisma.dataroom.findUnique({
         where: {
           id: id,
         },
@@ -231,7 +202,7 @@ export default async function handle(
         return res.status(401).end("Unauthorized");
       }
 
-      await prisma.hierarchicalDataroom.update({
+      await prisma.dataroom.update({
         where: {
           id: id,
         },
@@ -248,10 +219,9 @@ export default async function handle(
         error: (error as Error).message,
       });
     }
-  }
-  else {
-    // We only allow POST, GET, PUT and DELETE requests
-    res.setHeader("Allow", ["POST", "GET", "DELETE", "PUT"]);
+  } else {
+    // We only allow POST, GET, and PUT requests
+    res.setHeader("Allow", ["POST", "GET", "PUT"]);
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 }

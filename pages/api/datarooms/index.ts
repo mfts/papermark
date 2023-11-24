@@ -9,33 +9,29 @@ export default async function handle(
   res: NextApiResponse
 ) {
   if (req.method === "GET") {
-    // GET /api/datarooms/paged
+    // GET /api/datarooms
     const session = await getServerSession(req, res, authOptions);
     if (!session) {
       return res.status(401).end("Unauthorized");
     }
 
     try {
-      const pagedDatarooms = await prisma.dataroom.findMany({
+      const datarooms = await prisma.dataroom.findMany({
         where: {
           ownerId: (session.user as CustomUser).id,
         },
-        select: {
-          id: true,
-          name: true,
-          createdAt: true,
-          documentsIds: true
-        }
-      })
-
-      const hierarchicalDatarooms = await prisma.hierarchicalDataroom.findMany({
-        where: {
-          ownerId: (session.user as CustomUser).id
-        },
-        select: {
-          id: true,
-          name: true,
-          createdAt: true,
+        include: {
+          folders: {
+            where: {
+              parentFolderId: null
+            }
+          },
+          authenticationCodes: {
+            where: {
+              email: session.user?.email as string,
+              permanent: true
+            }
+          },
           _count: {
             select:{
               files: true
@@ -44,22 +40,57 @@ export default async function handle(
         }
       })
 
-      const homePages = await prisma.dataroomFolder.findMany({
-        where: {
-          parentFolderId: null
-        }
-      })
-
-      res.status(200).json({ pagedDatarooms, hierarchicalDatarooms, homePages });
+      res.status(200).json({ datarooms });
     } catch (error) {
       return res.status(500).json({
         message: "Internal Server Error",
         error: (error as Error).message,
       });
     }
+  } else if (req.method === "DELETE") {
+    // DELETE /api/datarooms
+    const session = await getServerSession(req, res, authOptions);
+    if (!session) { 
+      res.status(401).end("Unauthorized");
+      return;
+    }
+
+    const { id } = req.body as { id: string };
+
+    try{
+      const dataroom = await prisma.dataroom.findUnique({
+        where: {
+          id: id
+        }
+      });
+
+      if (!dataroom) {
+        return res.status(404).end("Dataroom not found");
+      }
+
+      // check that the user is owner of the dataroom, otherwise return 401
+      if (dataroom.ownerId !== (session.user as CustomUser).id) {
+        return res.status(401).end("Unauthorized to access the document");
+      }
+
+      // delete the dataroom from database
+      await prisma.dataroom.delete({
+        where: {
+          id: id
+        }
+      })
+
+      res.status(204).end(); // 204 No Content response for successful deletes
+    } catch (error) {
+      return res.status(500).json({
+        message: "Internal Server Error",
+        error: (error as Error).message,
+      });
+    }
+
   } else {
-    // We only allow GET requests
-    res.setHeader("Allow", ["GET"]);
+    // We only allow GET and DELETE requests
+    res.setHeader("Allow", ["GET", "DELETE"]);
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 }

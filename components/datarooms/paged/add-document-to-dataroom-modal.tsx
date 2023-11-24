@@ -16,15 +16,15 @@ import { type DataroomDocument } from "@/lib/types";
 import { DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
 import { LinkWithViews } from "@/lib/types";
 
-export function AddDocumentToDataRoomModal(
+export function AddDocumentToDataroomModal(
   {
     children,
-    dataRoomDocuments,
-    setDataRoomDocuments
+    dataroomDocuments,
+    setDataroomDocuments
   }: {
     children: React.ReactNode,
-    dataRoomDocuments: DataroomDocument[],
-    setDataRoomDocuments: (dataRooms: DataroomDocument[]) => void
+    dataroomDocuments: DataroomDocument[],
+    setDataroomDocuments: (datarooms: DataroomDocument[]) => void
   }) {
   //Current selection from drop-down meu
   const [selectedName, setSelectedName] = useState<string>("");
@@ -43,8 +43,8 @@ export function AddDocumentToDataRoomModal(
     documents ?
       (documents
         .filter((document =>
-          !dataRoomDocuments.some((dataRoomDocument) =>
-            dataRoomDocument.id === document.id))))
+          !dataroomDocuments.some((dataroomDocument) =>
+            dataroomDocument.id === document.id))))
       : []
   )
 
@@ -54,16 +54,16 @@ export function AddDocumentToDataRoomModal(
       documents ?
         (documents
           .filter((document =>
-            !dataRoomDocuments.some((dataRoomDocument) =>
-              dataRoomDocument.id === document.id))))
+            !dataroomDocuments.some((dataroomDocument) =>
+              dataroomDocument.id === document.id))))
         : []
     );
-  }, [dataRoomDocuments]);
+  }, [dataroomDocuments]);
 
   //No documents / out of documents error
   useEffect(() => {
     if (dropDownMenuDocuments.length === 0) {
-      if (dataRoomDocuments.length === 0) {
+      if (dataroomDocuments.length === 0) {
         setErrorMessage("No documents found, please upload a document to create a data room");
       } else {
         setErrorMessage("Out of documents, please upload a new document to add in data room");
@@ -117,7 +117,7 @@ export function AddDocumentToDataRoomModal(
     const chosenDocument = documents?.find(obj => obj.name === selectedName);
 
     setDropDownMenuDocuments(updatedropDownMenuDocuments);
-    setDataRoomDocuments([...dataRoomDocuments,
+    setDataroomDocuments([...dataroomDocuments,
     {
       url: selectedLink.url,
       title: documentTitle,
