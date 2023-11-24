@@ -68,6 +68,7 @@ export default function LinksTable() {
       enableNotification: link.enableNotification
         ? link.enableNotification
         : false,
+      logo: link.logoId,
     });
     //wait for dropdown to close before opening the link sheet
     setTimeout(() => {

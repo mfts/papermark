@@ -188,7 +188,7 @@ model Domain {
 
 model Logo {
   id        String   @id @default(cuid())
-  name      String   @unique
+  name      String   
   file      String   @unique // This should be a reference to where the file is stored (S3, Google Cloud Storage, etc.)
   type      String? // This should be a reference to the file type (png,jpg etc.)
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)

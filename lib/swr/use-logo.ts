@@ -7,7 +7,7 @@ export function useLogo() {
   const teamInfo = useTeam();
 
   const { data: logo, error } = useSWR<Logo[]>(
-    `/api/teams/${teamInfo?.currentTeam?.id}/logo`,
+    teamInfo?.isLoading ? null : `/api/teams/${teamInfo?.currentTeam?.id}/logo`,
     fetcher,
     {
       dedupingInterval: 60000,

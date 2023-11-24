@@ -31,6 +31,7 @@ export default async function handle(
         options: {
           select: {
             name: true,
+            id: true,
           },
           orderBy: {
             createdAt: "asc",

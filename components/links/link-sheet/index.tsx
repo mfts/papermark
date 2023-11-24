@@ -25,6 +25,8 @@ import DomainSection from "./domain-section";
 import AllowDownloadSection from "./allow-download-section";
 import { useTeam } from "@/context/team-context";
 import AllowNotificationSection from "./allow-notification";
+import { useLogo } from "@/lib/swr/use-logo";
+import LogoSection from "./logo-section";
 
 export const DEFAULT_LINK_PROPS = {
   id: null,
@@ -36,6 +38,7 @@ export const DEFAULT_LINK_PROPS = {
   emailProtected: true,
   allowDownload: false,
   enableNotification: true,
+  logo: null,
 };
 
 export type DEFAULT_LINK_TYPE = {
@@ -48,6 +51,7 @@ export type DEFAULT_LINK_TYPE = {
   emailProtected: boolean;
   allowDownload: boolean;
   enableNotification: boolean;
+  logo: string | null;
 };
 
 export default function LinkSheet({
@@ -61,6 +65,7 @@ export default function LinkSheet({
 }) {
   const { links } = useDocumentLinks();
   const { domains } = useDomains();
+  const { logo } = useLogo();
   const teamInfo = useTeam();
   const [data, setData] = useState<DEFAULT_LINK_TYPE>(DEFAULT_LINK_PROPS);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -175,6 +180,9 @@ export default function LinkSheet({
 
                   <div className="space-y-2">
                     <DomainSection {...{ data, setData, domains }} />
+                  </div>
+                  <div className="space-y-2">
+                    <LogoSection {...{ data, setData, logo }} />
                   </div>
 
                   <div className="flex items-center relative">

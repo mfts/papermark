@@ -63,12 +63,17 @@ export default async function handle(
       password && password.length > 0 ? await hashPassword(password) : null;
     const exat = expiresAt ? new Date(expiresAt) : null;
 
-    let { domain, slug, ...linkData } = linkDomainData;
+    let { domain, slug, logo, ...linkData } = linkDomainData;
 
     // set domain and slug to null if the domain is papermark.io
     if (domain && domain === "papermark.io") {
       domain = null;
       slug = null;
+    }
+
+    // set logo to null if the logo is papermark-logo
+    if (logo && logo === "papermark-logo") {
+      logo = null;
     }
 
     let domainObj;
@@ -126,6 +131,7 @@ export default async function handle(
         domainSlug: domain || null,
         slug: slug || null,
         enableNotification: linkData.enableNotification,
+        logoId: logo,
       },
       include: {
         views: {
