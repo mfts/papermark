@@ -205,11 +205,13 @@ export default function DocumentPage() {
                 </div>
               </div>
               <div className="flex items-center gap-x-4">
-                <AddDocumentModal newVersion>
-                  <button title="Upload a new version">
-                    <FileUp className="w-6 h-6" />
-                  </button>
-                </AddDocumentModal>
+                {primaryVersion.type !== "notion" ? (
+                  <AddDocumentModal newVersion>
+                    <button title="Upload a new version">
+                      <FileUp className="w-6 h-6" />
+                    </button>
+                  </AddDocumentModal>
+                ) : null}
                 <DropdownMenu
                   open={menuOpen}
                   onOpenChange={handleMenuStateChange}
