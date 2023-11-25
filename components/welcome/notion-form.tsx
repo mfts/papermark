@@ -133,7 +133,7 @@ export default function NotionForm() {
                   />
                 </div>
                 <small className="text-xs text-muted-foreground">
-                  Your Notion page needs to be shared publicly. Learn more.
+                  Your Notion page needs to be shared publicly.
                 </small>
               </div>
               <div className="flex justify-center">
