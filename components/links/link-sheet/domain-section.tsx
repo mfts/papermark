@@ -1,10 +1,9 @@
-import { Dispatch, SetStateAction, useState, useEffect } from "react";
+import { Dispatch, SetStateAction, useState } from "react";
 import { cn } from "@/lib/utils";
 import { DEFAULT_LINK_TYPE } from ".";
 import { Label } from "@/components/ui/label";
 import { Domain } from "@prisma/client";
 import { AddDomainModal } from "@/components/domains/add-domain-modal";
-import { Button } from "@/components/ui/button";
 import { mutate } from "swr";
 import Link from "next/link";
 import { useTeam } from "@/context/team-context";
@@ -53,8 +52,9 @@ export default function DomainSection({
             "w-48 rounded-l-md border border-r-0 border-border bg-secondary px-5 text-sm text-secondary-foreground focus:border-border focus:outline-none focus:ring-0",
             data.domain && data.domain !== "papermark.io"
               ? ""
-              : "rounded-r-md border-r-1"
-          )}>
+              : "rounded-r-md border-r-1",
+          )}
+        >
           <option key="papermark.io" value="papermark.io">
             papermark.io
           </option>
@@ -77,13 +77,13 @@ export default function DomainSection({
             pattern="[\p{L}\p{N}\p{Pd}\/]+"
             onInvalid={(e) => {
               e.currentTarget.setCustomValidity(
-                "Only letters, numbers, '-', and '/' are allowed."
+                "Only letters, numbers, '-', and '/' are allowed.",
               );
             }}
             autoComplete="off"
             className={cn(
               "hidden w-full rounded-r-md border-0 py-1.5 text-foreground bg-background shadow-sm ring-1 ring-inset ring-input placeholder:text-muted-foreground focus:ring-2 focus:ring-inset focus:ring-gray-400 sm:text-sm sm:leading-6",
-              data.domain && data.domain !== "papermark.io" ? "flex" : ""
+              data.domain && data.domain !== "papermark.io" ? "flex" : "",
             )}
             placeholder="deck"
             onChange={(e) => {
@@ -101,7 +101,8 @@ export default function DomainSection({
           <Link
             className="underline hover:text-red-500/80"
             href="/settings/domains"
-            target="_blank">
+            target="_blank"
+          >
             Verify now
           </Link>
         </div>

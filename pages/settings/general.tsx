@@ -4,7 +4,6 @@ import { DeleteTeamModal } from "@/components/teams/delete-team-modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useTeam } from "@/context/team-context";
-import { data } from "autoprefixer";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { mutate } from "swr";
@@ -27,7 +26,7 @@ export default function General() {
         body: JSON.stringify({
           name: teamNameInputRef.current?.value,
         }),
-      }
+      },
     );
 
     if (response.ok) {

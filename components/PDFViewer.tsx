@@ -144,20 +144,24 @@ export default function PDFViewer(props: any) {
       <div
         hidden={loading}
         style={{ height: "calc(100vh - 64px)" }}
-        className="flex items-center">
+        className="flex items-center"
+      >
         <div
-          className={`flex items-center justify-between w-full absolute z-10 px-2`}>
+          className={`flex items-center justify-between w-full absolute z-10 px-2`}
+        >
           <button
             onClick={goToPreviousPage}
             disabled={pageNumber <= 1}
-            className="relative h-[calc(100vh - 64px)] px-2 py-24 text-gray-400 hover:text-gray-50 focus:z-20">
+            className="relative h-[calc(100vh - 64px)] px-2 py-24 text-gray-400 hover:text-gray-50 focus:z-20"
+          >
             <span className="sr-only">Previous</span>
             <ChevronLeftIcon className="h-10 w-10" aria-hidden="true" />
           </button>
           <button
             onClick={goToNextPage}
             disabled={pageNumber >= numPages!}
-            className="relative h-[calc(100vh - 64px)] px-2 py-24 text-gray-400 hover:text-gray-50 focus:z-20">
+            className="relative h-[calc(100vh - 64px)] px-2 py-24 text-gray-400 hover:text-gray-50 focus:z-20"
+          >
             <span className="sr-only">Next</span>
             <ChevronRightIcon className="h-10 w-10" aria-hidden="true" />
           </button>
@@ -169,7 +173,8 @@ export default function PDFViewer(props: any) {
             onLoadSuccess={onDocumentLoadSuccess}
             options={options}
             renderMode="canvas"
-            className="">
+            className=""
+          >
             <Page
               className=""
               key={pageNumber}

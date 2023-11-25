@@ -55,7 +55,8 @@ export function AddTeamModal({ children }: { children: React.ReactNode }) {
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent
         className="text-foreground bg-background"
-        onClick={(e) => e.stopPropagation()}>
+        onClick={(e) => e.stopPropagation()}
+      >
         <DialogHeader>
           <DialogTitle>Create a Team</DialogTitle>
           <DialogDescription className="py-2 mb-1 text-sm text-muted-foreground">
@@ -65,7 +66,8 @@ export function AddTeamModal({ children }: { children: React.ReactNode }) {
         <form
           onSubmit={handleCreateTeam}
           className="flex flex-col gap-8 mt-4"
-          onClick={(e) => e.stopPropagation()}>
+          onClick={(e) => e.stopPropagation()}
+        >
           <div className="flex flex-col gap-3">
             <div>
               <Label htmlFor="team">Team name</Label>

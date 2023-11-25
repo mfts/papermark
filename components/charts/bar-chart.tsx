@@ -2,16 +2,16 @@ import { BarChart } from "@tremor/react";
 import { useState } from "react";
 
 type Data = {
-  pageNumber: string; 
-  data: { 
-    versionNumber: number; 
-    avg_duration: number; 
-  }[]
+  pageNumber: string;
+  data: {
+    versionNumber: number;
+    avg_duration: number;
+  }[];
 };
 
 type SumData = {
-  pageNumber: string; 
-  sum_duration: number; 
+  pageNumber: string;
+  sum_duration: number;
 };
 
 type TransformedData = {
@@ -74,7 +74,6 @@ const renameSumDurationKey = (data: SumData[]) => {
   });
 };
 
-
 // Transform data
 const transformData = (data: Data[]): TransformedData[] => {
   return data.reduce((acc, { pageNumber, data }) => {
@@ -82,7 +81,7 @@ const transformData = (data: Data[]): TransformedData[] => {
 
     data.forEach(({ versionNumber, avg_duration }) => {
       transformedItem[`Version ${versionNumber}`] = avg_duration;
-    })
+    });
 
     acc.push(transformedItem as TransformedData);
     return acc;
@@ -93,12 +92,11 @@ const getVersionNumbers = (data: TransformedData[]) => {
   return [
     ...new Set(
       data.flatMap((item) =>
-        Object.keys(item).filter((key) => key !== "pageNumber")
-      )
+        Object.keys(item).filter((key) => key !== "pageNumber"),
+      ),
     ),
   ];
 };
-
 
 const getColors = (versionNumbers: string[]): Color[] => {
   const colorArray = [
@@ -130,7 +128,13 @@ const getColors = (versionNumbers: string[]): Color[] => {
   });
 };
 
-export default function BarChartComponent({data, isSum = false}: {data: any, isSum?: boolean}) {
+export default function BarChartComponent({
+  data,
+  isSum = false,
+}: {
+  data: any;
+  isSum?: boolean;
+}) {
   const [, setValue] = useState<any>(null);
 
   if (isSum) {
@@ -151,7 +155,6 @@ export default function BarChartComponent({data, isSum = false}: {data: any, isS
     );
   }
 
-  
   const renamedData = transformData(data);
   const versionNumbers = getVersionNumbers(renamedData);
   const colors = getColors(versionNumbers);
@@ -159,7 +162,7 @@ export default function BarChartComponent({data, isSum = false}: {data: any, isS
   console.log("renamedData", renamedData);
   console.log("versionNumbers", versionNumbers);
   console.log("colors", colors);
-  
+
   return (
     <BarChart
       className="mt-6 rounded-tremor-small"

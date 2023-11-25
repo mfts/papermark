@@ -1,7 +1,6 @@
 import { Dispatch, SetStateAction } from "react";
 import { DEFAULT_ACCESS_FORM_TYPE } from ".";
 
-
 export default function EmailSection({
   data,
   setData,
@@ -33,7 +32,9 @@ export default function EmailSection({
           }}
           aria-invalid="true"
         />
-        <p className="text-sm text-gray-600">This data will be shared with the sender.</p>
+        <p className="text-sm text-gray-600">
+          This data will be shared with the sender.
+        </p>
       </div>
     </div>
   );

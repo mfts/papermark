@@ -20,7 +20,7 @@ export default function Domains() {
     mutate(
       `/api/teams/${teamInfo?.currentTeam?.id}/domains`,
       domains?.filter((domain) => domain.slug !== deletedDomain),
-      false
+      false,
     );
   };
 
@@ -28,7 +28,7 @@ export default function Domains() {
     mutate(
       `/api/teams/${teamInfo?.currentTeam?.id}/domains`,
       [...(domains || []), newDomain],
-      false
+      false,
     );
   };
 
@@ -49,7 +49,8 @@ export default function Domains() {
             <AddDomainModal
               open={open}
               setOpen={setOpen}
-              onAddition={handleDomainAddition}>
+              onAddition={handleDomainAddition}
+            >
               <Button>Add Domain</Button>
             </AddDomainModal>
           </ul>

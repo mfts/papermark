@@ -16,7 +16,7 @@ export default function useDocuments() {
     {
       revalidateOnFocus: false,
       dedupingInterval: 30000,
-    }
+    },
   );
 
   return {
