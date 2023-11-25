@@ -1,8 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/lib/prisma";
-import { checkPassword, log } from "@/lib/utils";
-import { analytics, identifyUser, trackAnalytics } from "@/lib/analytics";
-import { CustomUser } from "@/lib/types";
+import { log } from "@/lib/utils";
+import { analytics, trackAnalytics } from "@/lib/analytics";
 import { sendViewedDataroomEmail } from "@/lib/emails/send-viewed-dataroom";
 
 export default async function handle(
@@ -45,20 +44,6 @@ export default async function handle(
     // You can implement more thorough email validation if required
   }
 
-  // Check if password is required for visiting the dataroom
-  if (dataroom.password) {
-    if (!password || password.trim() === "") {
-      res.status(400).json({ message: "Password is required." });
-      return;
-    }
-
-    const isPasswordValid = await checkPassword(password, dataroom.password);
-    if (!isPasswordValid) {
-      res.status(403).json({ message: "Invalid password." });
-      return;
-    }
-  }
-
   try {
     const newDataroomView = await prisma.dataroomView.create({
       data: {
@@ -84,7 +69,6 @@ export default async function handle(
       viewerId: newDataroomView.id,
       viewerEmail: email,
     });
-
 
     // TODO: this can be offloaded to a background job in the future to save some time
     // send email to document owner that document has been viewed

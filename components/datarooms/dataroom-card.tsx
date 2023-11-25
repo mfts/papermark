@@ -28,8 +28,8 @@ export default function DataroomCard({
       copyToClipboard(`${process.env.NEXT_PUBLIC_BASE_URL}/view/dataroom/hierarchical/${id}?authenticationCode=${authenticationCode}`,
         "Link copied to clipboard.");
     } else {
-    copyToClipboard(`${process.env.NEXT_PUBLIC_BASE_URL}/view/dataroom/${type === "PAGED" ? "paged" : "hierarchical"}/${id}`,
-      "Link copied to clipboard.");
+      copyToClipboard(`${process.env.NEXT_PUBLIC_BASE_URL}/view/dataroom/${id}`,
+        "Link copied to clipboard.");
     }
   }
 

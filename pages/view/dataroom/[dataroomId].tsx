@@ -1,15 +1,12 @@
 import LoadingSpinner from "@/components/ui/loading-spinner";
-import { useDataroom, useHierarchicalDataroom } from "@/lib/swr/use-dataroom";
+import DataroomView from "@/components/view/datarooms";
+import { useDataroom } from "@/lib/swr/use-dataroom";
 import NotFound from "@/pages/404";
 import { useSession } from "next-auth/react";
 
-export default function ViewHierarchicalDataroom() {
-  const { dataroom, authenticationCode, error } = useHierarchicalDataroom();
+export default function ViewDataroom() {
+  const { dataroom, authenticationCode, error } = useDataroom();
   const { data: session, status } = useSession();
-  
-  if (error && error.status === 404) {
-    return <NotFound />;
-  }
 
   if (!dataroom || status === "loading") {
     return (
@@ -19,15 +16,19 @@ export default function ViewHierarchicalDataroom() {
     );
   }
 
+  if (error && error.status === 404) {
+    return <NotFound />;
+  }
+
   const { emailProtected, password: linkPassword } = dataroom;
 
   const { email: userEmail } = session?.user || {};
 
   if (emailProtected || linkPassword) {
     return (
-      <HierarchicalDataroomView dataroom={dataroom} userEmail={userEmail} isProtected={true} authenticationCode={authenticationCode} />
+      <DataroomView dataroom={dataroom} userEmail={userEmail} isProtected={true} authenticationCode={authenticationCode} />
     );
   }
 
-  return <HierarchicalDataroomView dataroom={dataroom} userEmail={userEmail} isProtected={false} authenticationCode={authenticationCode} />;
+  return <DataroomView dataroom={dataroom} userEmail={userEmail} isProtected={false} authenticationCode={authenticationCode} />;
 }

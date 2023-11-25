@@ -15,6 +15,26 @@ export default async function handle(
       return res.status(401).end("Unauthorized");
     }
 
+    const { id } = req.query;
+
+    //For useDataroom hook
+    if (id) {
+      const dataroom = await prisma.dataroom.findUnique({
+        where: {
+          id
+        }
+      })
+
+      if (!dataroom) {
+        res.status(404).json({message: "Dataroom doesn't exist"});
+        return;
+      }
+
+      res.status(200).json(dataroom);
+      return;
+    }
+
+    //For fetching datarooms for /datarooms page
     try {
       const datarooms = await prisma.dataroom.findMany({
         where: {

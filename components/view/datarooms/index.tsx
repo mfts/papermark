@@ -5,16 +5,15 @@ import { toast } from "sonner";
 import LoadingSpinner from "../../ui/loading-spinner";
 import EmailVerificationMessage from "../email-verification-form";
 import ViewSinglePagedDataroom from "./paged/view-single-paged-dataroom";
-import { DataroomWithFiles } from "@/lib/types";
-import { useRouter } from "next/router";
+import { Dataroom } from "@prisma/client"
 
-export default function DataroomSinglePageView({
+export default function DataroomView({
   dataroom,
   userEmail,
   isProtected,
   authenticationCode
 }: {
-  dataroom: DataroomWithFiles;
+  dataroom: Dataroom;
   authenticationCode: string | undefined;
   userEmail: string | null | undefined;
   isProtected: boolean;
@@ -35,7 +34,6 @@ export default function DataroomSinglePageView({
   const [data, setData] = useState<DEFAULT_ACCESS_FORM_TYPE>(
     DEFAULT_ACCESS_FORM_DATA
   );
-  const router = useRouter();
 
   const handleSubmission = async (): Promise<void> => {
     setIsLoading(true);
@@ -47,7 +45,8 @@ export default function DataroomSinglePageView({
       body: JSON.stringify({
         ...data,
         email: data.email || userEmail,
-        dataroomId: dataroomId
+        dataroomId: dataroomId,
+        password: data.password
       }),
     });
 
@@ -88,7 +87,12 @@ export default function DataroomSinglePageView({
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ identifier: dataroomId, type: "PAGED DATAROOM", email: data.email })
+      body: JSON.stringify({
+        identifier: dataroomId,
+        type: dataroom.type === "PAGED" ? "PAGED DATAROOM" : "HIERARCHICAL DATAROOM",
+        email: data.email,
+        password: data.password
+      })
     });
     if (response.ok) {
       setVerificationRequested(true);
@@ -105,7 +109,7 @@ export default function DataroomSinglePageView({
     if (!isLoading) {
       setIsLoading(true);
     }
-    const URL = `/api/verification/email-authcode?authenticationCode=${authenticationCode}`;
+    const URL = `/api/verification/email-authcode?authenticationCode=${authenticationCode}&identifier=${dataroom.id}`;
     const response = await fetch(URL, {
       method: "GET",
       headers: {
@@ -122,11 +126,7 @@ export default function DataroomSinglePageView({
   }
 
   //If URL contains authenticationCode
-  //P.S: We can create separate component for links with authentication code
   if (authenticationCode) {
-    if (dataroom.type === "HIERARCHICAL") {
-      router.push(`/view/datarooms/hierarchical/${dataroom.id}/${dataroom.folders[0].id}?authenticationCode`)
-    }
     useEffect(() => {
       (async () => {
         setIsLoading(true);
@@ -156,16 +156,11 @@ export default function DataroomSinglePageView({
       )
     }
 
-    if (dataroom.type === "PAGED") {
-      return (
-        <div className="bg-gray-950">
-          <ViewSinglePagedDataroom dataroom={dataroom} />
-        </div>
-      );
-    } else {
-      setIsLoading(true);
-      router.push(`/view/datarooms/hierarchical/${dataroom.id}/${dataroom.folders[0].id}`)
-    }
+    return (
+      <div className="bg-gray-950">
+        <ViewSinglePagedDataroom dataroom={dataroom} />
+      </div>
+    );
   }
 
   //Component to render when email is submitted but verification is pending
@@ -179,47 +174,40 @@ export default function DataroomSinglePageView({
     )
   }
 
-  if ((!submitted && emailProtected) || (!submitted && dataroomPassword)) {
-
-    // If link is not submitted and does not have email / password protection, show the access form
-    if (!submitted && isProtected) {
-      console.log("calling access form");
-      return (
-        <AccessForm
-          data={data}
-          email={userEmail}
-          setData={setData}
-          onSubmitHandler={handleSubmit}
-          requireEmail={emailProtected}
-          requirePassword={!!dataroomPassword}
-          isLoading={isLoading}
-        />
-      );
-    }
-
-    if (isLoading) {
-      console.log("loading");
-      return (
-        <div className="h-screen flex items-center justify-center">
-          <LoadingSpinner className="h-20 w-20" />
-        </div>
-      );
-    }
+  // If link is not submitted and does not have email / password protection, show the access form
+  if (!submitted && isProtected) {
+    console.log("calling access form");
     return (
-      <div className="bg-gray-950">
-        {submitted
-          ?
-          dataroom.type === "PAGED"
-            ? (
-              <ViewSinglePagedDataroom dataroom={dataroom} />
-            )
-            : router.push(`/view/datarooms/hierarchical/${dataroom.id}/${dataroom.folders[0].id}`)
-          : (
-            <div className="h-screen flex items-center justify-center">
-              <LoadingSpinner className="h-20 w-20" />
-            </div>
-          )}
+      <AccessForm
+        data={data}
+        email={userEmail}
+        setData={setData}
+        onSubmitHandler={handleSubmit}
+        requireEmail={emailProtected}
+        requirePassword={!!dataroomPassword}
+        isLoading={isLoading}
+      />
+    );
+  }
+
+  if (isLoading) {
+    console.log("loading");
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <LoadingSpinner className="h-20 w-20" />
       </div>
     );
   }
+
+  return (
+    <div className="bg-gray-950">
+      {submitted ? (
+        <ViewSinglePagedDataroom dataroom={dataroom} />
+      ) : (
+        <div className="h-screen flex items-center justify-center">
+          <LoadingSpinner className="h-20 w-20" />
+        </div>
+      )}
+    </div>
+  );
 }

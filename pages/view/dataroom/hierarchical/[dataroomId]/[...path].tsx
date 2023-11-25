@@ -1,7 +1,7 @@
 import NavigationBar from "@/components/view/datarooms/hierarchical/navigation-bar";
 import AppLayout from "@/components/layouts/app";
 import Image from "next/image";
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Separator } from "@/components/ui/separator";
 import { Dataroom } from "@prisma/client";
 import LoadingSpinner from "@/components/ui/loading-spinner";
@@ -13,8 +13,11 @@ import { authOptions } from "../../../../api/auth/[...nextauth]";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import ChevronRight from "@/components/shared/icons/chevron-right";
+import { usePlausible } from "next-plausible";
+import { toast } from "sonner";
 
 export default function Page({
+  email,
   dataroom,
   directory: folderDirectory,
   initialFolderId,
@@ -22,6 +25,7 @@ export default function Page({
   loading,
   error
 }: {
+  email: string,
   dataroom: Dataroom,
   directory: FolderDirectory,
   initialFolderId: string,
@@ -36,6 +40,30 @@ export default function Page({
   const [currentFolderId, setCurrentFolderId] = useState<string>(initialFolderId);
   const [path, setPath] = useState<string[]>(initialPath);
   const currPath = router.query.path as string[];
+  const plausible = usePlausible();
+
+  //Enter view in database
+  useEffect(() => {
+    (async () => {
+      const response = await fetch("/api/datarooms/views", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: email,
+          dataroomId: dataroom.id,
+        }),
+      });
+
+      if (response.ok) {
+        plausible("dataroomViewed"); // track the event
+      } else {
+        const { message } = await response.json();
+        toast.error(message);
+      }
+    })();
+  }, []);
 
   //In cases when user presses back in browser
   if (currPath && currPath[currPath.length - 1] !== path[path.length - 1]) {
@@ -199,19 +227,21 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
   const path: string[] = params?.path as string[];
   const session = await getServerSession(context.req, context.res, authOptions);
   const authenticationCode: string = query.authenticationCode as string;
+  const email = query.email as string;
 
   //Check if user is authorized
-  const response = await fetch(`${process.env.NEXTAUTH_URL}/api/verification/email-authcode?authenticationCode=${authenticationCode}`,
-  {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-    }
-  })
+  const response = await fetch(`${process.env.NEXTAUTH_URL}/api/verification/email-authcode?authenticationCode=${authenticationCode}&identifier=${dataroomId}`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    })
 
   if (!response.ok) {
     return {
       props: {
+        email: "",
         dataroom: null,
         directory: null,
         initialPath: [],
@@ -235,6 +265,7 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
 
     return {
       props: {
+        email,
         dataroom,
         directory,
         initialPath: path,
@@ -246,6 +277,7 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
   } catch (error) {
     return {
       props: {
+        email: "",
         dataroom: null,
         directory: null,
         initialPath: [],
