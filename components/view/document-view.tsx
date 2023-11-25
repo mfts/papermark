@@ -122,10 +122,10 @@ export default function DocumentView({
   return (
     <div className="bg-gray-950">
       {submitted ? (
-        notionData.recordMap && notionData.rootNotionPageId ? (
+        notionData.recordMap ? (
           <NotionPage
             recordMap={notionData.recordMap}
-            rootPageId={notionData.rootNotionPageId}
+            // rootPageId={notionData.rootNotionPageId}
             viewId={viewData.viewId}
             linkId={link.id}
             documentId={document.id}
