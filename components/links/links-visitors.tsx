@@ -4,11 +4,15 @@ import { TableCell, TableRow } from "@/components/ui/table";
 import { useLinkVisits } from "@/lib/swr/use-link";
 import { Gauge } from "@/components/ui/gauge";
 
-
-
-export default function LinksVisitors({linkId, linkName}: {linkId: string, linkName: string}) {
+export default function LinksVisitors({
+  linkId,
+  linkName,
+}: {
+  linkId: string;
+  linkName: string;
+}) {
   const { views } = useLinkVisits(linkId);
-  
+
   return (
     <>
       {views
@@ -115,4 +119,3 @@ export default function LinksVisitors({linkId, linkName}: {linkId: string, linkN
     </>
   );
 }
-

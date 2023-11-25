@@ -1,4 +1,4 @@
-export default function Stats({ angelsLength }: { angelsLength: any; }) {
+export default function Stats({ angelsLength }: { angelsLength: any }) {
   return (
     <div className="relative mt-10">
       <div className="absolute inset-0 h-1/2" />

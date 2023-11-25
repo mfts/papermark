@@ -11,7 +11,7 @@ export function useTeams() {
     fetcher,
     {
       dedupingInterval: 20000,
-    }
+    },
   );
 
   return {

@@ -18,15 +18,10 @@ interface Fields {
   websiteUrl: string;
   twitterImageUrl: string;
   openSourceInvestments: string;
-  checkSize:
-    | "Unknown"
-    | "$5k - $50k"
-    | "$50k+"
-    | "$100k+"
-    | "$250k+"
+  checkSize: "Unknown" | "$5k - $50k" | "$50k+" | "$100k+" | "$250k+";
 }
 
-export default function Table({ investors }: { investors: Investor[]; }) {
+export default function Table({ investors }: { investors: Investor[] }) {
   return (
     <div>
       <table className="min-w-full md:divide-y bg-gray-100 md:bg-transparent divide-gray-300 rounded-lg overflow-hidden md:rounded-none">
@@ -124,15 +119,15 @@ export default function Table({ investors }: { investors: Investor[]; }) {
                     person.fields.checkSize === "Unknown"
                       ? "bg-gray-100 text-gray-800"
                       : person.fields.checkSize === "$5k - $50k"
-                      ? "bg-green-100 text-green-800"
-                      : person.fields.checkSize === "$50k+"
-                      ? "bg-blue-100 text-blue-800"
-                      : person.fields.checkSize === "$100k+"
-                      ? "bg-purple-100 text-purple-800"
-                      : person.fields.checkSize === "$250k+"
-                      ? "bg-yellow-100 text-yellow-800"
-                      : "bg-orange-100 text-orange-800",
-                    "inline-flex rounded-full px-[9px] py-[2px] text-xs font-semibold leading-5"
+                        ? "bg-green-100 text-green-800"
+                        : person.fields.checkSize === "$50k+"
+                          ? "bg-blue-100 text-blue-800"
+                          : person.fields.checkSize === "$100k+"
+                            ? "bg-purple-100 text-purple-800"
+                            : person.fields.checkSize === "$250k+"
+                              ? "bg-yellow-100 text-yellow-800"
+                              : "bg-orange-100 text-orange-800",
+                    "inline-flex rounded-full px-[9px] py-[2px] text-xs font-semibold leading-5",
                   )}
                 >
                   {person.fields.checkSize}

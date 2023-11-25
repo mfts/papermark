@@ -1,14 +1,11 @@
-import Sidebar from "@/components/Sidebar";
 import useDocuments from "@/lib/swr/use-documents";
 import DocumentCard from "@/components/documents/document-card";
 import Skeleton from "@/components/Skeleton";
 import { PlusIcon } from "@heroicons/react/24/solid";
-import Link from "next/link";
 import { AddDocumentModal } from "@/components/documents/add-document-modal";
 import { Separator } from "@/components/ui/separator";
-import AppLayout from "@/components/layouts/app"
+import AppLayout from "@/components/layouts/app";
 import { Button } from "@/components/ui/button";
-
 
 export default function Documents() {
   const { documents } = useDocuments();
@@ -21,7 +18,9 @@ export default function Documents() {
             <h2 className="text-2xl text-foreground font-semibold tracking-tight">
               Documents
             </h2>
-            <p className="text-sm text-muted-foreground">Manage your documents</p>
+            <p className="text-sm text-muted-foreground">
+              Manage your documents
+            </p>
           </div>
           <ul className="flex items-center justify-between gap-4">
             <AddDocumentModal>

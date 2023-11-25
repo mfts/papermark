@@ -59,7 +59,11 @@ export async function getTeamWithUsersAndDocument({
 
   // check if the document exists in the team
   let document:
-    | (Document & { views?: View[]; versions?: DocumentVersion[]; links?: Link[] })
+    | (Document & {
+        views?: View[];
+        versions?: DocumentVersion[];
+        links?: Link[];
+      })
     | undefined;
   if (docId) {
     document = team.documents.find((doc) => doc.id === docId);
@@ -143,7 +147,7 @@ export async function getDocumentWithTeamAndUser({
   }
 
   const teamHasUser = document.team?.users.some(
-    (user) => user.userId === userId
+    (user) => user.userId === userId,
   );
   if (!teamHasUser) {
     throw new TeamError("You are not a member of the team");

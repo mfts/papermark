@@ -11,16 +11,16 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Gauge } from "@/components/ui/gauge";
 
 import { useDocumentVisits } from "@/lib/swr/use-document";
-import { durationFormat, nFormatter, timeAgo } from "@/lib/utils";
+import { durationFormat, timeAgo } from "@/lib/utils";
 import { Skeleton } from "../ui/skeleton";
 import ChevronDown from "../shared/icons/chevron-down";
 import VisitorChart from "./visitor-chart";
 
-export default function VisitorsTable({numPages}: {numPages: number}) {
+export default function VisitorsTable({ numPages }: { numPages: number }) {
   const { views } = useDocumentVisits();
 
   return (
@@ -46,7 +46,7 @@ export default function VisitorsTable({numPages}: {numPages: number}) {
                   <>
                     <TableRow key={view.id} className="group/row">
                       {/* Name */}
-                      <TableCell  className="">
+                      <TableCell className="">
                         <div className="flex items-center sm:space-x-3 overflow-visible">
                           <Avatar className="flex-shrink-0 hidden sm:inline-flex">
                             <AvatarFallback>
@@ -56,7 +56,9 @@ export default function VisitorsTable({numPages}: {numPages: number}) {
                           <div className="min-w-0 flex-1">
                             <div className="focus:outline-none">
                               <p className="text-sm font-medium text-gray-800 dark:text-gray-200 overflow-visible">
-                                {view.viewerEmail? view.viewerEmail : "Anonymous"}
+                                {view.viewerEmail
+                                  ? view.viewerEmail
+                                  : "Anonymous"}
                               </p>
                               <p className="text-sm text-muted-foreground/60">
                                 {view.link.name ? view.link.name : view.linkId}
@@ -83,11 +85,7 @@ export default function VisitorsTable({numPages}: {numPages: number}) {
                       </TableCell>
                       {/* Last Viewed */}
                       <TableCell className="text-sm text-muted-foreground">
-                        <time
-                          dateTime={new Date(
-                            view.viewedAt
-                          ).toISOString()}
-                        >
+                        <time dateTime={new Date(view.viewedAt).toISOString()}>
                           {timeAgo(view.viewedAt)}
                         </time>
                       </TableCell>
@@ -105,7 +103,7 @@ export default function VisitorsTable({numPages}: {numPages: number}) {
                         <TableRow className="hover:bg-transparent">
                           <TableCell colSpan={5}>
                             <div>
-                              <VisitorChart 
+                              <VisitorChart
                                 documentId={view.documentId}
                                 viewId={view.id}
                                 totalPages={numPages}

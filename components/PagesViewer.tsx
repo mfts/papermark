@@ -2,7 +2,19 @@ import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/20/solid";
 import { useEffect, useRef, useState } from "react";
 import { BlurImage } from "@/components/shared/blur-image";
 
-export default function PagesViewer({pages, linkId, documentId, viewId, versionNumber}: {pages: { file: string, pageNumber: string }[], linkId: string, documentId: string, viewId: string, versionNumber: number}) {
+export default function PagesViewer({
+  pages,
+  linkId,
+  documentId,
+  viewId,
+  versionNumber,
+}: {
+  pages: { file: string; pageNumber: string }[];
+  linkId: string;
+  documentId: string;
+  viewId: string;
+  versionNumber: number;
+}) {
   const [pageNumber, setPageNumber] = useState<number>(1); // start on first page
 
   const startTimeRef = useRef(Date.now());
@@ -135,8 +147,13 @@ export default function PagesViewer({pages, linkId, documentId, viewId, versionN
   );
 }
 
-
-function Nav({pageNumber, numPages}: {pageNumber: number, numPages: number}) {
+function Nav({
+  pageNumber,
+  numPages,
+}: {
+  pageNumber: number;
+  numPages: number;
+}) {
   return (
     <nav className="bg-black">
       <div className="mx-auto px-2 sm:px-6 lg:px-8">

@@ -45,7 +45,7 @@ const getInvestors = async () => {
       headers: {
         Authorization: `Bearer ${process.env.AIRTABLE_API_KEY}`,
       },
-    }
+    },
   );
   if (!response.ok) {
     throw new Error("Network response was not ok " + response.statusText);

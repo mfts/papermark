@@ -8,9 +8,8 @@ export const stripe = new Stripe(
       name: "Papermark.io",
       version: "0.1.0",
     },
-  }
+  },
 );
-
 
 export async function cancelSubscription(customer?: string) {
   if (!customer) return;

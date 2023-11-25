@@ -1,6 +1,5 @@
 import Head from "next/head";
 import Footer from "@/components/web/footer";
-import Logos from "@/components/web/logos";
 import { Disclosure } from "@headlessui/react";
 import { MinusSmallIcon, PlusSmallIcon } from "@heroicons/react/24/outline";
 import {
@@ -233,9 +232,9 @@ export default function Home() {
                       tier.featured
                         ? ""
                         : tierIdx === 0
-                        ? "text-gray-800 dark:text-white rounded-t-3xl lg:rounded-bl-3xl"
-                        : "bg-black dark:bg-transparent sm:rounded-t-none lg:rounded-tr-3xl lg:rounded-bl-none",
-                      "rounded-3xl p-8 ring-1 ring-gray-900/10 dark:ring-gray-200/10 sm:p-10"
+                          ? "text-gray-800 dark:text-white rounded-t-3xl lg:rounded-bl-3xl"
+                          : "bg-black dark:bg-transparent sm:rounded-t-none lg:rounded-tr-3xl lg:rounded-bl-none",
+                      "rounded-3xl p-8 ring-1 ring-gray-900/10 dark:ring-gray-200/10 sm:p-10",
                     )}
                   >
                     <p className="mt-4 flex items-baseline gap-x-2">
@@ -244,7 +243,7 @@ export default function Home() {
                           tier.featured
                             ? "text-gray-800 dark:text-white"
                             : "text-gray-800 dark:text-gray-400",
-                          "text-5xl font-bold tracking-tight"
+                          "text-5xl font-bold tracking-tight",
                         )}
                       >
                         {tier.priceMonthly}
@@ -254,7 +253,7 @@ export default function Home() {
                           tier.featured
                             ? "text-gray-600 dark:text-white"
                             : "text-gray-400 dark:text-gray-100",
-                          "text-base"
+                          "text-base",
                         )}
                       ></span>
                     </p>
@@ -263,7 +262,7 @@ export default function Home() {
                         tier.featured
                           ? "text-gray-600 dark:text-gray-300"
                           : "text-gray-600 dark:text-gray-400",
-                        "mt-6 text-base leading-7"
+                        "mt-6 text-base leading-7",
                       )}
                     >
                       {tier.description}
@@ -274,7 +273,7 @@ export default function Home() {
                         tier.featured
                           ? "text-gray-600 dark:text-gray-300"
                           : "text-gray-600 dark:text-gray-400",
-                        "mt-8 space-y-3 text-sm leading-6 sm:mt-10"
+                        "mt-8 space-y-3 text-sm leading-6 sm:mt-10",
                       )}
                     >
                       {tier.features.map((feature) => (
@@ -290,7 +289,7 @@ export default function Home() {
                         tier.featured
                           ? "bg-black dark:bg-white text-white dark:text-black shadow-sm hover:bg-gray-500 focus:ring-2 focus:ring-indigo-500"
                           : "text-transparent ring-1 ring-inset ring-transparent focus:ring-2 focus:ring-indigo-600",
-                        "mt-8 block rounded-md py-2.5 px-3.5 text-center text-sm font-semibold"
+                        "mt-8 block rounded-md py-2.5 px-3.5 text-center text-sm font-semibold",
                       )}
                     >
                       Send Document

@@ -16,7 +16,7 @@ export const InlineSnippet = ({
     <span
       className={cn(
         "inline-block rounded-md bg-blue-100 px-1 py-0.5 font-mono text-blue-900 dark:bg-blue-900 dark:text-blue-100",
-        className
+        className,
       )}
     >
       {children}
@@ -26,8 +26,12 @@ export const InlineSnippet = ({
 export default function DomainConfiguration({ domain }: { domain: string }) {
   const { status, domainJson } = useDomainStatus({ domain });
 
-  const subdomain = domainJson ? getSubdomain(domainJson.name, domainJson.apexName): null; 
-  const [recordType, setRecordType] = useState<"CNAME" | "A">(!!subdomain ? "CNAME" : "A");
+  const subdomain = domainJson
+    ? getSubdomain(domainJson.name, domainJson.apexName)
+    : null;
+  const [recordType, setRecordType] = useState<"CNAME" | "A">(
+    !!subdomain ? "CNAME" : "A",
+  );
 
   if (!status || status === "Valid Configuration" || !domainJson) return null;
 
@@ -55,7 +59,9 @@ export default function DomainConfiguration({ domain }: { domain: string }) {
               <p className="mt-2 font-mono text-sm">
                 {txtVerification.domain.slice(
                   0,
-                  txtVerification.domain.length - domainJson.apexName.length - 1
+                  txtVerification.domain.length -
+                    domainJson.apexName.length -
+                    1,
                 )}
               </p>
             </div>
@@ -126,9 +132,7 @@ export default function DomainConfiguration({ domain }: { domain: string }) {
               <div>
                 <p className="text-sm font-bold">Value</p>
                 <p className="mt-2 font-mono text-sm">
-                  {recordType === "A"
-                    ? `76.76.21.21`
-                    : `cname.vercel-dns.com`}
+                  {recordType === "A" ? `76.76.21.21` : `cname.vercel-dns.com`}
                 </p>
               </div>
               <div>

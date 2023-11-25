@@ -23,7 +23,7 @@ export function useBilling() {
     fetcher,
     {
       dedupingInterval: 30000,
-    }
+    },
   );
 
   return {
@@ -45,7 +45,7 @@ export function usePlan() {
     fetcher,
     {
       dedupingInterval: 60000,
-    }
+    },
   );
 
   return {
