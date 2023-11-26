@@ -22,6 +22,16 @@ const roleToNameMap: Record<Message["role"], string> = {
 export const getServerSideProps = async (context: any) => {
   const { linkId } = context.params;
   const session = await getServerSession(context.req, context.res, authOptions);
+
+  if (!session) {
+    return {
+      redirect: {
+        permanent: false,
+        destination: `/login?next=/view/${linkId}/chat`,
+      },
+    };
+  }
+
   const document = await prisma.link.findUnique({
     where: { id: linkId },
     select: {
@@ -43,7 +53,7 @@ export const getServerSideProps = async (context: any) => {
       },
       body: JSON.stringify({
         documentId: document!.document.id,
-        userId: (session!.user as CustomUser).id,
+        userId: (session.user as CustomUser).id,
       }),
     },
   );
