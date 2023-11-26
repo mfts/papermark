@@ -1,18 +1,22 @@
 import { Button } from "../ui/button";
 import { useState } from "react";
 import { useTeam } from "@/context/team-context";
+import Image from "next/image";
 
 export default function LogoCard({
   logoId,
   name,
+  file,
   onDelete,
 }: {
   logoId: string;
   name: string;
+  file: string;
   onDelete: (deletedLogo: string) => void;
 }) {
   const [deleting, setDeleting] = useState<boolean>(false);
   const teamInfo = useTeam();
+  console.log("file", file);
 
   const handleDelete = async () => {
     setDeleting(true);
@@ -48,6 +52,15 @@ export default function LogoCard({
               Delete
             </Button>
           </div>
+        </div>
+        <div className="flex h-10 flex-col space-y-2 sm:flex-row sm:items-center sm:space-x-5 sm:space-y-0">
+          <Image
+            src={file}
+            alt={"sdfs"}
+            width={500}
+            height={1000}
+            className="h-12 w-full sm:w-1/2 flex-none rounded-lg bg-white object-center aspect-[3/4]"
+          />
         </div>
       </div>
     </>

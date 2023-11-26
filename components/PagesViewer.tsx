@@ -1,8 +1,23 @@
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/20/solid";
 import { useEffect, useRef, useState } from "react";
 import { BlurImage } from "@/components/shared/blur-image";
+import Image from "next/image";
 
-export default function PagesViewer({pages, linkId, documentId, viewId, versionNumber}: {pages: { file: string, pageNumber: string }[], linkId: string, documentId: string, viewId: string, versionNumber: number}) {
+export default function PagesViewer({
+  pages,
+  linkId,
+  documentId,
+  viewId,
+  versionNumber,
+  logoUrl,
+}: {
+  pages: { file: string; pageNumber: string }[];
+  linkId: string;
+  documentId: string;
+  viewId: string;
+  versionNumber: number;
+  logoUrl: string;
+}) {
   const [pageNumber, setPageNumber] = useState<number>(1); // start on first page
 
   const startTimeRef = useRef(Date.now());
@@ -70,7 +85,7 @@ export default function PagesViewer({pages, linkId, documentId, viewId, versionN
 
   return (
     <>
-      <Nav pageNumber={pageNumber} numPages={numPages} />
+      <Nav pageNumber={pageNumber} numPages={numPages} logoUrl={logoUrl} />
       <div
         style={{ height: "calc(100vh - 64px)" }}
         className="flex items-center relative"
@@ -135,17 +150,36 @@ export default function PagesViewer({pages, linkId, documentId, viewId, versionN
   );
 }
 
-
-function Nav({pageNumber, numPages}: {pageNumber: number, numPages: number}) {
+function Nav({
+  pageNumber,
+  numPages,
+  logoUrl,
+}: {
+  pageNumber: number;
+  numPages: number;
+  logoUrl: string;
+}) {
   return (
     <nav className="bg-black">
       <div className="mx-auto px-2 sm:px-6 lg:px-8">
         <div className="relative flex h-16 items-center justify-between">
           <div className="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start">
             <div className="flex flex-shrink-0 items-center">
-              <p className="text-2xl font-bold tracking-tighter text-white">
-                Papermark
-              </p>
+              {logoUrl ? (
+                <div className="flex h-10 flex-col space-y-2 sm:flex-row sm:items-center sm:space-x-5 sm:space-y-0">
+                  <Image
+                    src={logoUrl}
+                    alt={"sdfs"}
+                    width={500}
+                    height={1000}
+                    className="h-12 w-full sm:w-1/2 flex-none rounded-lg bg-white object-center aspect-[3/4]"
+                  />
+                </div>
+              ) : (
+                <p className="text-2xl font-bold tracking-tighter text-white">
+                  Papermark
+                </p>
+              )}
             </div>
           </div>
           <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">

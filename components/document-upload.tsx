@@ -1,9 +1,16 @@
 import { useMemo } from "react";
-import { useDropzone } from "react-dropzone";
-import { ArrowUpTrayIcon, DocumentIcon, PhotoIcon } from "@heroicons/react/24/outline";
-import { DocumentTextIcon, PresentationChartBarIcon } from "@heroicons/react/20/solid";
+import { Accept, useDropzone } from "react-dropzone";
+import {
+  ArrowUpTrayIcon,
+  DocumentIcon,
+  PhotoIcon,
+} from "@heroicons/react/24/outline";
+import {
+  DocumentTextIcon,
+  PresentationChartBarIcon,
+} from "@heroicons/react/20/solid";
 import { bytesToSize } from "@/lib/utils";
-import { toast } from "sonner" 
+import { toast } from "sonner";
 
 function fileIcon(fileType: string) {
   switch (fileType) {
@@ -27,16 +34,24 @@ function fileIcon(fileType: string) {
 export default function DocumentUpload({
   currentFile,
   setCurrentFile,
+  acceptedFileTypes = ["pdf"],
+  AcceptedFormats = {
+    "application/pdf": [], // ".pdf"
+  },
+  maxFileSizeInMB = 30,
 }: {
   currentFile: File | null;
   setCurrentFile: React.Dispatch<React.SetStateAction<File | null>>;
+  acceptedFileTypes?: string[];
+  AcceptedFormats?: Accept;
+  maxFileSizeInMB?: number;
 }) {
+  const supportedFileTypes = acceptedFileTypes.join(",");
+
   const { getRootProps, getInputProps } = useDropzone({
-    accept: {
-      "application/pdf": [], // ".pdf"
-    },
+    accept: AcceptedFormats,
     multiple: false,
-    maxSize: 30 * 1024 * 1024, // 30 MB
+    maxSize: maxFileSizeInMB * 1024 * 1024,
     onDropAccepted: (acceptedFiles) => {
       setCurrentFile(acceptedFiles[0]);
     },
@@ -44,11 +59,11 @@ export default function DocumentUpload({
       const { errors } = fileRejections[0];
       let message;
       if (errors[0].code === "file-too-large") {
-        message = "File size too big (max. 30 MB)"
+        message = `File size too big (max. ${maxFileSizeInMB} MB)`;
       } else if (errors[0].code === "file-invalid-type") {
-        message = "File type not supported (.pdf only)"
+        message = `File type not supported (${supportedFileTypes} only)`;
       } else {
-        message = errors[0].message
+        message = errors[0].message;
       }
       toast.error(message);
     },
@@ -56,7 +71,7 @@ export default function DocumentUpload({
 
   const imageBlobUrl = useMemo(
     () => (currentFile ? URL.createObjectURL(currentFile) : ""),
-    [currentFile]
+    [currentFile],
   );
 
   return (
@@ -99,7 +114,9 @@ export default function DocumentUpload({
             <p className="text-xs leading-5 text-gray-500">
               {currentFile
                 ? "Replace file?"
-                : "Only *.pdf & 30 MB limit"}
+                : `Only ${acceptedFileTypes
+                    .map((ext) => `*.${ext}`)
+                    .join(",")} & ${maxFileSizeInMB} MB limit`}
             </p>
           </div>
         </div>

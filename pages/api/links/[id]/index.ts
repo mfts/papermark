@@ -35,6 +35,11 @@ export default async function handle(
               },
             },
           },
+          logo: {
+            select: {
+              file: true,
+            },
+          },
         },
       });
 

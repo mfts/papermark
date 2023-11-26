@@ -5,6 +5,7 @@ import {
   View,
   User as PrismaUser,
   DocumentVersion,
+  Logo,
 } from "@prisma/client";
 
 export type CustomUser = NextAuthUser & PrismaUser;
@@ -40,6 +41,7 @@ export interface LinkWithDocument extends Link {
   document: Document & {
     versions: { versionNumber: number }[];
   };
+  logo: Logo;
 }
 
 export interface Geo {

@@ -11,6 +11,7 @@ import { mutate } from "swr";
 export default function Logo() {
   const teamInfo = useTeam();
   const { logo } = useLogo();
+  console.log("logo", logo);
 
   const [open, setOpen] = useState<boolean>(false);
 
@@ -62,6 +63,7 @@ export default function Logo() {
                   <LogoCard
                     name={l.name}
                     logoId={l.id}
+                    file={l.file}
                     onDelete={handleLogoDeletion}
                   />
                 </li>

@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
 import { Download } from "lucide-react";
 import { useTeam } from "@/context/team-context";
+import Image from "next/image";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
 
@@ -15,6 +16,8 @@ export default function PDFViewer(props: any) {
   const startTimeRef = useRef(Date.now());
   const pageNumberRef = useRef<number>(pageNumber);
   const teamInfo = useTeam();
+
+  console.log("viewProps", props);
 
   // Update the previous page number after the effect hook has run
   useEffect(() => {
@@ -140,24 +143,29 @@ export default function PDFViewer(props: any) {
         numPages={numPages}
         downloadFile={downloadfile}
         allowDownload={props.allowDownload}
+        logoUrl={props.logo}
       />
       <div
         hidden={loading}
         style={{ height: "calc(100vh - 64px)" }}
-        className="flex items-center">
+        className="flex items-center"
+      >
         <div
-          className={`flex items-center justify-between w-full absolute z-10 px-2`}>
+          className={`flex items-center justify-between w-full absolute z-10 px-2`}
+        >
           <button
             onClick={goToPreviousPage}
             disabled={pageNumber <= 1}
-            className="relative h-[calc(100vh - 64px)] px-2 py-24 text-gray-400 hover:text-gray-50 focus:z-20">
+            className="relative h-[calc(100vh - 64px)] px-2 py-24 text-gray-400 hover:text-gray-50 focus:z-20"
+          >
             <span className="sr-only">Previous</span>
             <ChevronLeftIcon className="h-10 w-10" aria-hidden="true" />
           </button>
           <button
             onClick={goToNextPage}
             disabled={pageNumber >= numPages!}
-            className="relative h-[calc(100vh - 64px)] px-2 py-24 text-gray-400 hover:text-gray-50 focus:z-20">
+            className="relative h-[calc(100vh - 64px)] px-2 py-24 text-gray-400 hover:text-gray-50 focus:z-20"
+          >
             <span className="sr-only">Next</span>
             <ChevronRightIcon className="h-10 w-10" aria-hidden="true" />
           </button>
@@ -169,7 +177,8 @@ export default function PDFViewer(props: any) {
             onLoadSuccess={onDocumentLoadSuccess}
             options={options}
             renderMode="canvas"
-            className="">
+            className=""
+          >
             <Page
               className=""
               key={pageNumber}
@@ -192,10 +201,12 @@ function Nav({
   numPages,
   allowDownload,
   downloadFile,
+  logoUrl,
 }: {
   pageNumber: number;
   numPages: number;
   allowDownload: boolean;
+  logoUrl: string;
   downloadFile: (e: React.MouseEvent<HTMLButtonElement>) => void;
 }) {
   return (
@@ -204,9 +215,21 @@ function Nav({
         <div className="relative flex h-16 items-center justify-between">
           <div className="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start">
             <div className="flex flex-shrink-0 items-center">
-              <p className="text-2xl font-bold tracking-tighter text-white">
-                Papermark
-              </p>
+              {logoUrl ? (
+                <div className="flex h-10 flex-col space-y-2 sm:flex-row sm:items-center sm:space-x-5 sm:space-y-0">
+                  <Image
+                    src={logoUrl}
+                    alt={"sdfs"}
+                    width={500}
+                    height={1000}
+                    className="h-12 w-full sm:w-1/2 flex-none rounded-lg bg-white object-center aspect-[3/4]"
+                  />
+                </div>
+              ) : (
+                <p className="text-2xl font-bold tracking-tighter text-white">
+                  Papermark
+                </p>
+              )}
             </div>
           </div>
           <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">

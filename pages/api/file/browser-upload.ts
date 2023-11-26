@@ -24,7 +24,12 @@ export default async function handler(
         }
 
         return {
-          allowedContentTypes: ["application/pdf"],
+          allowedContentTypes: [
+            "application/pdf",
+            "image/png",
+            "image/jpg",
+            "image/jpeg",
+          ],
           maximumSizeInBytes: 30 * 1024 * 1024, // 30 MB
           metadata: JSON.stringify({
             // optional, sent to your server on upload completion

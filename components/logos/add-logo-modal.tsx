@@ -16,6 +16,7 @@ import { useRouter } from "next/router";
 import { useState } from "react";
 import { toast } from "sonner";
 import DocumentUpload from "../document-upload";
+import { Accept } from "react-dropzone";
 
 export function AddLogoModal({
   open,
@@ -33,6 +34,12 @@ export function AddLogoModal({
   const [uploading, setUploading] = useState<boolean>(false);
   const [currentFile, setCurrentFile] = useState<File | null>(null);
   const teamInfo = useTeam();
+  const acceptedFileFormats: Accept = {
+    "image/png": [".png"],
+    "image/jpg": [".jpg"],
+    "image/jpeg": [".jpeg"],
+  };
+  const accetedFileTypes = ["png", "jpg", "jpeg"];
 
   const handleBrowserUpload = async (event: any) => {
     event.preventDefault();
@@ -54,7 +61,11 @@ export function AddLogoModal({
 
       let response: Response | undefined;
       // create a document or new version in the database if the document is a pdf
-      if (getExtension(newBlob.pathname).includes("pdf")) {
+      if (
+        accetedFileTypes.some((fileType) =>
+          getExtension(newBlob.pathname).includes(fileType),
+        )
+      ) {
         // create a new version for existing document in the database
         const documentId = router.query.id;
         response = await saveLogoToDatabase(newBlob);
@@ -127,6 +138,8 @@ export function AddLogoModal({
                 <DocumentUpload
                   currentFile={currentFile}
                   setCurrentFile={setCurrentFile}
+                  acceptedFileTypes={accetedFileTypes}
+                  AcceptedFormats={acceptedFileFormats}
                 />
               </div>
             </div>

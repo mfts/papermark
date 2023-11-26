@@ -32,6 +32,7 @@ export default async function handle(
           select: {
             name: true,
             id: true,
+            file: true,
           },
           orderBy: {
             createdAt: "asc",
