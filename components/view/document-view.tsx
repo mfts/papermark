@@ -183,42 +183,40 @@ export default function DocumentView({
     )
   }
 
-  if ((!submitted && emailProtected) || (!submitted && linkPassword)) {
 
-    // If link is not submitted and does not have email / password protection, show the access form
-    if (!submitted && isProtected) {
-      console.log("calling access form");
-      return (
-        <AccessForm
-          data={data}
-          email={userEmail}
-          setData={setData}
-          onSubmitHandler={handleSubmit}
-          requireEmail={emailProtected}
-          requirePassword={!!linkPassword}
-          isLoading={isLoading}
-        />
-      );
-    }
-
-    if (isLoading) {
-      console.log("loading");
-      return (
-        <div className="h-screen flex items-center justify-center">
-          <LoadingSpinner className="h-20 w-20" />
-        </div>
-      );
-    }
+  // If link is not submitted and does not have email / password protection, show the access form
+  if (!submitted && isProtected) {
+    console.log("calling access form");
     return (
-      <div className="bg-gray-950">
-        {submitted ? (
-          <ViewData link={link} viewData={viewData} />
-        ) : (
-          <div className="h-screen flex items-center justify-center">
-            <LoadingSpinner className="h-20 w-20" />
-          </div>
-        )}
+      <AccessForm
+        data={data}
+        email={userEmail}
+        setData={setData}
+        onSubmitHandler={handleSubmit}
+        requireEmail={emailProtected}
+        requirePassword={!!linkPassword}
+        isLoading={isLoading}
+      />
+    );
+  }
+
+  if (isLoading) {
+    console.log("loading");
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <LoadingSpinner className="h-20 w-20" />
       </div>
     );
   }
+  return (
+    <div className="bg-gray-950">
+      {submitted ? (
+        <ViewData link={link} viewData={viewData} />
+      ) : (
+        <div className="h-screen flex items-center justify-center">
+          <LoadingSpinner className="h-20 w-20" />
+        </div>
+      )}
+    </div>
+  );
 }
