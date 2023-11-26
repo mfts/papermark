@@ -1,24 +1,9 @@
-import { Message, experimental_useAssistant as useAssistant } from "ai/react";
-import { useEffect, useRef, useState } from "react";
+import { type Message } from "ai/react";
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { CustomUser } from "@/lib/types";
 import { Chat } from "@/components/chat/chat";
-
-const roleToColorMap: Record<Message["role"], string> = {
-  system: "red",
-  user: "black",
-  function: "blue",
-  assistant: "green",
-};
-
-const roleToNameMap: Record<Message["role"], string> = {
-  system: "System",
-  user: "You",
-  function: "Function",
-  assistant: "Papermark Assistant",
-};
 
 export const getServerSideProps = async (context: any) => {
   const { linkId } = context.params;
@@ -90,7 +75,9 @@ export default function ChatPage({
 }) {
   return (
     <>
-      <Chat initialMessages={messages} threadId={threadId} />
+      <div>
+        <Chat initialMessages={messages} threadId={threadId} />
+      </div>
     </>
   );
 }

@@ -5,6 +5,7 @@ import Textarea from "react-textarea-autosize";
 import { useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { useEnterSubmit } from "@/lib/utils/use-enter-submit";
+import ArrowUp from "../shared/icons/arrow-up";
 
 export function ChatInput({
   status,
@@ -34,7 +35,7 @@ export function ChatInput({
       <div className="mx-auto sm:max-w-3xl sm:px-4">
         <div className="space-y-4 bg-background px-4 py-4 shadow-lg md:py-4">
           <form onSubmit={submitMessage} ref={formRef}>
-            <div className="relative flex max-h-60 w-full flex-col overflow-hidden bg-background pr-8 rounded-md sm:border sm:pr-12 focus-within:ring-1 focus-within:ring-foreground">
+            <div className="relative flex max-h-60 w-full flex-col overflow-hidden bg-background pr-8 rounded-xl ring-1 ring-muted-foreground/50 sm:pr-12 focus-within:ring-1 focus-within:ring-foreground">
               <Textarea
                 ref={inputRef}
                 tabIndex={0}
@@ -47,14 +48,15 @@ export function ChatInput({
                 onChange={handleInputChange}
                 spellCheck={false}
               />
-              <div className="absolute top-3 right-2.5">
+              <div className="absolute bottom-3 right-3">
                 <Button
                   type="submit"
-                  size="icon"
+                  // size="icon"
                   disabled={status === "in_progress" || input === ""}
                   title="Send message"
+                  className="rounded-md p-1 md:p-2 h-10 w-10"
                 >
-                  <IconArrowElbow />
+                  <ArrowUp className="h-full w-full" />
                   <span className="sr-only">Send message</span>
                 </Button>
               </div>

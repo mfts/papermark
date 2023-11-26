@@ -27,7 +27,7 @@ export function ChatMessageActions({
   return (
     <div
       className={cn(
-        "flex items-center justify-end md:absolute md:-right-10 md:-top-2",
+        "flex items-center justify-end md:hidden md:absolute md:right-0 md:-top-2",
         className,
       )}
       {...props}
