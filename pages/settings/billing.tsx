@@ -8,7 +8,7 @@ import { useBilling } from "@/lib/swr/use-billing";
 import { cn, formattedDate, getFirstAndLastDay } from "@/lib/utils";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 interface Tier {
@@ -112,8 +112,9 @@ export default function Billing() {
                   `rounded-3xl p-8 sm:p-10 bg-white dark:bg-gray-800`,
                   tier.currentPlan || tier.isTrial
                     ? "ring-2 ring-primary"
-                    : "ring-1 ring-gray-900/10 dark:ring-gray-200/10"
-                )}>
+                    : "ring-1 ring-gray-900/10 dark:ring-gray-200/10",
+                )}
+              >
                 <h2 className="text-xl font-bold mb-4 inline-flex items-center gap-x-2">
                   {tier.title}{" "}
                   {tier.currentPlan ? (
@@ -136,12 +137,14 @@ export default function Billing() {
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg">
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         strokeWidth="2"
-                        d="M5 13l4 4L19 7"></path>
+                        d="M5 13l4 4L19 7"
+                      ></path>
                     </svg>
                     {feature}
                   </div>
@@ -158,7 +161,8 @@ export default function Billing() {
                           type="button"
                           variant="ghost"
                           className="border border-gray-700"
-                          disabled>
+                          disabled
+                        >
                           Change plan
                         </Button>
                       )
@@ -175,7 +179,7 @@ export default function Billing() {
                               `/api/teams/${teamInfo?.currentTeam?.id}/billing/manage`,
                               {
                                 method: "POST",
-                              }
+                              },
                             )
                               .then(async (res) => {
                                 const url = await res.json();
@@ -186,7 +190,8 @@ export default function Billing() {
                                 setClicked(false);
                               });
                           }}
-                          loading={clicked}>
+                          loading={clicked}
+                        >
                           Manage Subscription
                         </Button>
                       ) : (
@@ -202,13 +207,15 @@ export default function Billing() {
                       <div className="h-10 w-24 animate-pulse rounded-md bg-border" />
                     ))}
                   {tier.id === 3 && (
-                    <Link href="https://cal.com/marcseitz/papermark" target="_blank">
+                    <Link
+                      href="https://cal.com/marcseitz/papermark"
+                      target="_blank"
+                    >
                       <Button
                         type="button"
                         variant="ghost"
                         className="border border-gray-700"
                       >
-                        
                         Contact us
                       </Button>
                     </Link>

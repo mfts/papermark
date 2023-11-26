@@ -30,7 +30,6 @@ export default function AccessForm({
   requirePassword: boolean;
   isLoading: boolean;
 }) {
-  
   useEffect(() => {
     const userEmail = email;
     if (userEmail) {

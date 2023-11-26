@@ -3,9 +3,13 @@ import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { DEFAULT_LINK_TYPE } from ".";
 
-
-
-export default function EmailProtectionSection({data, setData}: {data: DEFAULT_LINK_TYPE, setData: Dispatch<SetStateAction<DEFAULT_LINK_TYPE>>}) {
+export default function EmailProtectionSection({
+  data,
+  setData,
+}: {
+  data: DEFAULT_LINK_TYPE;
+  setData: Dispatch<SetStateAction<DEFAULT_LINK_TYPE>>;
+}) {
   const { emailProtected } = data;
   const [enabled, setEnabled] = useState<boolean>(true);
 
@@ -26,16 +30,13 @@ export default function EmailProtectionSection({data, setData}: {data: DEFAULT_L
           <h2
             className={cn(
               "text-sm font-medium leading-6",
-              enabled ? "text-foreground" : "text-muted-foreground"
+              enabled ? "text-foreground" : "text-muted-foreground",
             )}
           >
             Require email to view
           </h2>
         </div>
-        <Switch
-          checked={enabled}
-          onCheckedChange={handleEnableProtection}
-        />
+        <Switch checked={enabled} onCheckedChange={handleEnableProtection} />
       </div>
     </div>
   );

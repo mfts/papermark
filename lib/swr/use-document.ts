@@ -16,12 +16,12 @@ export function useDocument() {
   const { data: document, error } = useSWR<DocumentWithVersion>(
     id &&
       `/api/teams/${teamInfo?.currentTeam?.id}/documents/${encodeURIComponent(
-        id
+        id,
       )}`,
     fetcher,
     {
       dedupingInterval: 10000,
-    }
+    },
   );
 
   return {
@@ -43,12 +43,12 @@ export function useDocumentLinks() {
   const { data: links, error } = useSWR<LinkWithViews[]>(
     id &&
       `/api/teams/${teamInfo?.currentTeam?.id}/documents/${encodeURIComponent(
-        id
+        id,
       )}/links`,
     fetcher,
     {
       dedupingInterval: 10000,
-    }
+    },
   );
 
   return {
@@ -80,12 +80,12 @@ export function useDocumentVisits() {
   const { data: views, error } = useSWR<ViewWithDuration[]>(
     id &&
       `/api/teams/${teamInfo?.currentTeam?.id}/documents/${encodeURIComponent(
-        id
+        id,
       )}/views`,
     fetcher,
     {
       dedupingInterval: 10000,
-    }
+    },
   );
 
   return {
@@ -109,7 +109,7 @@ export function useDocumentProcessingStatus(documentVersionId: string) {
     fetcher,
     {
       refreshInterval: 3000, // refresh every 3 seconds
-    }
+    },
   );
 
   return {

@@ -18,8 +18,8 @@ export default async function AppMiddleware(req: NextRequest) {
     return NextResponse.redirect(
       new URL(
         `/login${path !== "/" ? `?next=${encodeURIComponent(path)}` : ""}`,
-        req.url
-      )
+        req.url,
+      ),
     );
 
     // if there's a token

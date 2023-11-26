@@ -9,7 +9,10 @@ export default function Document() {
           name="description"
           content="Papermark is an open-source document sharing alternative to DocSend with built-in analytics."
         />
-        <meta property="og:title" content="Papermark | The Open Source DocSend Alternative" />
+        <meta
+          property="og:title"
+          content="Papermark | The Open Source DocSend Alternative"
+        />
         <meta
           property="og:description"
           content="Papermark is an open-source document sharing alternative to DocSend with built-in analytics."
