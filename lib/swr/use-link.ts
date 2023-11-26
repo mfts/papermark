@@ -32,9 +32,10 @@ export function useLink() {
 export function useDomainLink() {
   const router = useRouter();
 
-  const { domain, slug } = router.query as {
+  const { domain, slug, authenticationCode } = router.query as {
     domain: string;
     slug: string;
+    authenticationCode: string | undefined;
   };
 
   const { data: link, error } = useSWR<LinkWithDocument>(
@@ -73,6 +74,7 @@ export function useLinkVisits(linkId: string) {
 
   return {
     views,
+    authenticationCode,
     loading: !error && !views,
     error,
   };
