@@ -4,6 +4,7 @@ import { allPosts } from "contentlayer/generated"
 import { compareDesc } from "date-fns"
 import style from '@/components/web/header.module.css'
 import { cn, formatDate } from "@/lib/utils"
+import Background from "@/components/web/background/background"
 
 export const metadata = {
   title: "Blog",
@@ -18,6 +19,7 @@ export default async function BlogPage() {
 
   return (
     <div className="mt-20 container max-w-4xl py-6 lg:py-10">
+      <Background />
       <div className="flex flex-col items-start gap-4 md:flex-row md:justify-between md:gap-8">
         <div className="flex-1 space-y-4">
           <h1 className="font-display inline-block font-heading text-4xl tracking-tight lg:text-5xl">
