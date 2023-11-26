@@ -225,6 +225,32 @@ export default function DocumentPage() {
                     >
                       {isFirstClick ? "Really delete?" : "Delete document"}
                     </DropdownMenuItem>
+                    {/* create a dropdownmenuitem that onclick calls a post request to /api/assistants with the documentId */}
+
+                    <DropdownMenuItem
+                      className="text-destructive focus:bg-destructive focus:text-destructive-foreground"
+                      onClick={async () =>
+                        await fetch("/api/assistants", {
+                          method: "POST",
+                          headers: {
+                            "Content-Type": "application/json",
+                          },
+                          body: JSON.stringify({
+                            documentId: prismaDocument.id,
+                          }),
+                        }).then((res) => {
+                          if (res.ok) {
+                            toast.success("Papermark Assistant successfully.");
+                          } else {
+                            toast.error(
+                              "Something went wrong. Please try again.",
+                            );
+                          }
+                        })
+                      }
+                    >
+                      Activate Assistant
+                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
                 <Button onClick={() => setIsLinkSheetOpen(true)}>
