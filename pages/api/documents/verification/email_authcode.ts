@@ -54,7 +54,7 @@ export default async function handle(
         linkId
       }
     })
-    const URL = `${process.env.NEXTAUTH_URL}/view/${linkId}?authenticationCode=${authenticationCode}`;
+    const URL = `${process.env.NEXT_PUBLIC_BASE_URL}/view/${linkId}?authenticationCode=${authenticationCode}`;
 
     await sendVerificationEmail(email, URL);
     res.status(200).json({ authenticationCode });
