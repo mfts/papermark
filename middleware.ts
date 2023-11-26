@@ -29,15 +29,15 @@ export default async function middleware(req: NextRequest, ev: NextFetchEvent) {
   }
 
   if (
-    false
-    // path !== "/" &&
-    // path !== "/privacy" &&
-    // path !== "/oss-friends" &&
-    // path !== "/pricing" &&
-    // path !== "/open-source-investors" &&
-    // !path.startsWith("/alternatives/") &&
-    // // !path.startsWith("/blog/") &&
-    // !path.startsWith("/view/")
+    
+    path !== "/" &&
+    path !== "/privacy" &&
+    path !== "/oss-friends" &&
+    path !== "/pricing" &&
+    path !== "/open-source-investors" &&
+    !path.startsWith("/alternatives/") &&
+    !path.startsWith("/blog/") &&
+    !path.startsWith("/view/")
   ) {
     return AppMiddleware(req);
   }

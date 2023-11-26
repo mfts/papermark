@@ -11,6 +11,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import Image from "next/image";
+import Background from "@/components/web/background/background";
 export async function generateStaticParams() {
     return allChangelogs.map((post) => ({
         slug: post.slug,
@@ -66,7 +67,9 @@ export default async function ChangelogPost({
     }
 
     return (
-        <div className="mx-auto my-20 grid max-w-screen-xl md:grid-cols-4 md:px-20">
+        <div className="font-display2   mx-auto my-20 grid max-w-screen-xl md:grid-cols-4 md:px-20">
+            <Background />
+            
             <div className="sticky top-10 hidden self-start md:col-span-1 md:block">
                 <Link
                     href="/changelog"
