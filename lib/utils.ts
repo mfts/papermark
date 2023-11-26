@@ -85,7 +85,6 @@ const isValidUrl = (url: string) => {
     return false;
   }
 };
-
 export const getDomainWithoutWWW = (url: string) => {
   if (isValidUrl(url)) {
     return new URL(url).hostname.replace(/^www\./, "");

@@ -56,11 +56,46 @@ export const Author = defineDocumentType(() => ({
   computedFields,
 }));
 
+export const Changelog = defineDocumentType(() => ({
+  name: "Changelog",
+  filePathPattern: "changelog/**/*.mdx",
+  contentType: "mdx",
+  fields: {
+      title: {
+          type: "string",
+          required: true,
+      },
+      date: {
+          type: "string",
+          required: true,
+      },
+      summary: {
+          type: "string",
+          required: true,
+      },
+      image: {
+          type: "string",
+          required: true,
+      },
+      authors: {
+        type: "list",
+        of: { type: "string" },
+        required: true,
+      },
+      draft: {
+          type: "boolean",
+          default: false,
+      },
+  },
+  // @ts-ignore
+  computedFields,
+}));
+
 // export default makeSource({ contentDirPath: 'contents', documentTypes: [Post,Author] })
 
 export default makeSource({
   contentDirPath: "./contents",
-  documentTypes: [Post, Author],
+  documentTypes: [Post, Author , Changelog],
   mdx: {
     remarkPlugins: [remarkGfm],
     rehypePlugins: [
