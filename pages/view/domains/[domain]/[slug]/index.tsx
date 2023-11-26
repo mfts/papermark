@@ -5,7 +5,7 @@ import NotFound from "@/pages/404";
 import { useSession } from "next-auth/react";
 
 export default function ViewPage() {
-  const { link, error } = useDomainLink();
+  const { link, error, authenticationCode } = useDomainLink();
   const { data: session, status } = useSession();
 
   if (error && error.status === 404) {
@@ -31,9 +31,9 @@ export default function ViewPage() {
 
   if (emailProtected || linkPassword) {
     return (
-      <DocumentView link={link} userEmail={userEmail} isProtected={true} />
+      <DocumentView link={link} userEmail={userEmail} isProtected={true} authenticationCode={authenticationCode} />
     );
   }
 
-  return <DocumentView link={link} userEmail={userEmail} isProtected={false} />;
+  return <DocumentView link={link} userEmail={userEmail} isProtected={false} authenticationCode={authenticationCode} />;
 }
