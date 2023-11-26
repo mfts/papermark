@@ -11,6 +11,7 @@ export function ChatInput({
   status,
   error,
   input,
+  setInput,
   handleInputChange,
   submitMessage,
   messages,
@@ -18,6 +19,7 @@ export function ChatInput({
   status: AssistantStatus;
   error: unknown;
   input: string;
+  setInput: (input: string) => void;
   handleInputChange: (e: any) => void;
   submitMessage: (e: any) => Promise<void>;
   messages: Message[];
@@ -51,7 +53,6 @@ export function ChatInput({
               <div className="absolute bottom-3 right-3">
                 <Button
                   type="submit"
-                  // size="icon"
                   disabled={status === "in_progress" || input === ""}
                   title="Send message"
                   className="rounded-md p-1 md:p-2 h-10 w-10"

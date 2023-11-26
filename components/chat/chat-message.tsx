@@ -14,7 +14,7 @@ export function ChatMessage({ message, ...props }: ChatMessageProps) {
     <div
       key={message.id}
       className={cn(
-        "group relative mb-4 flex items-start md:-ml-12 whitespace-pre-wrap",
+        "group relative mb-4 flex items-start md:ml-5 whitespace-pre-wrap",
       )}
       {...props}
     >

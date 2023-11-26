@@ -16,7 +16,7 @@ export function ChatList({ messages, status }: ChatList) {
   }
 
   return (
-    <div className="relative mx-auto max-w-xl px-4">
+    <div className="relative mx-auto max-w-2xl px-4">
       {messages.map((message, index) => (
         <div key={index}>
           <ChatMessage message={message} />
@@ -30,7 +30,7 @@ export function ChatList({ messages, status }: ChatList) {
           <Separator className="my-4 bg-background" />
           <div
             key={"loading-message"}
-            className="group relative mb-4 flex items-start md:-ml-12 whitespace-pre-wrap"
+            className="group relative mb-4 flex items-start ml-5 whitespace-pre-wrap"
           >
             <div className="flex h-8 w-8 shrink-0 select-none items-center justify-center rounded-md border shadow bg-primary text-primary-foreground">
               <PapermarkSparkle />

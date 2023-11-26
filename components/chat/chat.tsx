@@ -6,23 +6,28 @@ import {
 } from "ai/react";
 
 import { cn } from "@/lib/utils";
-import { ChatList } from "@/components/chat/chat-list";
-import { ChatInput } from "@/components/chat/chat-input";
-// import { EmptyScreen } from "@/components/empty-screen";
-import { ChatScrollAnchor } from "@/components/chat/chat-scroll-anchor";
+import { ChatList } from "./chat-list";
+import { ChatInput } from "./chat-input";
+import { ChatScrollAnchor } from "./chat-scroll-anchor";
+import { EmptyScreen } from "./empty-screen";
 import { useEffect, useState } from "react";
-import Sparkle from "../shared/icons/sparke";
 
 export interface ChatProps extends React.ComponentProps<"div"> {
   initialMessages: Message[];
   threadId: string;
+  firstPage: string;
 }
 
-export function Chat({ initialMessages, threadId, className }: ChatProps) {
+export function Chat({
+  initialMessages,
+  threadId,
+  firstPage,
+  className,
+}: ChatProps) {
   const {
     status,
     messages: hookMessages,
-    input,
+    input: hookInput,
     submitMessage,
     handleInputChange,
     error,
@@ -47,51 +52,33 @@ export function Chat({ initialMessages, threadId, className }: ChatProps) {
     isLoading = true;
   }
 
+  const [_, setInput] = useState<string>(hookInput);
+
   return (
     <>
-      <Nav />
       <div className={cn("pb-[100px] pt-24", className)}>
         {combinedMessages.length ? (
           <>
             <ChatList messages={combinedMessages} status={status} />
             <ChatScrollAnchor trackVisibility={isLoading} />
           </>
-        ) : // <EmptyScreen handleInputChange={handleInputChange} />
-        null}
+        ) : (
+          <EmptyScreen
+            firstPage={firstPage}
+            handleInputChange={handleInputChange}
+            setInput={setInput}
+          />
+        )}
       </div>
       <ChatInput
         status={status}
         error={error}
         messages={combinedMessages}
-        input={input}
+        input={hookInput}
+        setInput={setInput}
         submitMessage={submitMessage}
         handleInputChange={handleInputChange}
       />
     </>
-  );
-}
-
-function Nav() {
-  return (
-    <nav className="bg-black fixed top-0 inset-x-0 z-10">
-      <div className="mx-auto px-2 sm:px-6 lg:px-8">
-        <div className="relative flex h-16 items-center justify-between">
-          <div className="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start">
-            <div className="flex flex-shrink-0 items-center gap-x-2">
-              <p className="text-2xl font-bold tracking-tighter text-white">
-                Papermark
-              </p>
-              <Sparkle className="h-5 w-5 text-white" />
-            </div>
-          </div>
-          <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
-            <div className="bg-gray-900 text-white rounded-md px-3 py-2 text-sm font-medium">
-              {/* <span>{pageNumber}</span>
-              <span className="text-gray-400"> / {numPages}</span> */}
-            </div>
-          </div>
-        </div>
-      </div>
-    </nav>
   );
 }
