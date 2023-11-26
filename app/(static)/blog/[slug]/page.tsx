@@ -8,6 +8,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { Icons } from "@/components/icons";
 import { Mdx } from "@/components/mdx-components";
 import "@/styles/mdx.css";
+import Background from "@/components/web/background/background";
 
 interface PostPageProps {
   params: {
@@ -34,6 +35,7 @@ const BlogDetail = async ({ params }: any) => {
 
   return (
     <div className="mt-20 font-display2">
+      <Background />
       <article className="container relative max-w-3xl py-6 lg:py-10">
         <Link
           href="/blog"
