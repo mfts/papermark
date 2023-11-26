@@ -42,14 +42,14 @@ export default async function Changelog() {
               className="flex mt-10 flex-col justify-center items-center max-w-screen-xl"
             >
               <div className="md:col-span-3 ">
-                <div className="mb-[-30px] mx-2 flex justify-start items-start">
+                <div className="mx-2 flex justify-start items-start">
                   <div className="flex items-center space-x-2">
                     <p className="text-sm text-gray-500">
                       Subscribe to updates →
                     </p>
                     <Link
-                      href="https://twitter.com/loglib_io"
-                      className="rounded-full bg-blue-100 p-2 transition-colors hover:bg-blue-200"
+                      href="https://twitter.com/papermark_io"
+                      className="rounded-full bg-blue-100 p-2 transition-colors cursor-pointer hover:bg-blue-200"
                       target="_blank"
                       rel="noopener noreferrer"
                     >
@@ -60,7 +60,7 @@ export default async function Changelog() {
                 <div className="flex flex-col gap-6">
                   <div className="flex justify-end items-end">
                     <div className="sticky top-10 hidden self-start md:col-span-1 md:block">
-                      <Link href={`/changelog/${post.slug}`}>
+                      <Link href={`${post.slug}`}>
                         <time
                           dateTime={post.date}
                           className="text-gray-500 transition-colors hover:"
