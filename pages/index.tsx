@@ -9,6 +9,7 @@ import Logos from "@/components/web/logos";
 import Head from "next/head";
 import Section3 from "@/components/web/section3";
 import useScroll from "@/lib/hooks/usescroll";
+import ChangelogSection from "@/components/web/changelog";
 
 export default function Home() {  
   const scrolled = useScroll(50)
@@ -58,6 +59,7 @@ export default function Home() {
           <Decks />
           <Section />
           <Section3 />
+          <ChangelogSection />
           <Testimonials />
           <Section2 />
         </div>
