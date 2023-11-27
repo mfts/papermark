@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@chronark/zod-bird": "^0.3.0",
+    "@github/webauthn-json": "^2.1.1",
     "@headlessui/react": "^1.7.17",
     "@heroicons/react": "^2.0.18",
     "@jitsu/js": "^1.7.1",
@@ -36,6 +37,7 @@
     "@react-email/components": "^0.0.11",
     "@stripe/stripe-js": "^2.1.7",
     "@tailwindcss/typography": "^0.5.10",
+    "@teamhanko/passkeys-next-auth-provider": "^0.1.8",
     "@tremor/react": "^3.11.1",
     "@trigger.dev/nextjs": "^2.2.6",
     "@trigger.dev/react": "^2.2.6",

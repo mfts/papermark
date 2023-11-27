@@ -5,6 +5,8 @@ import prisma from "@/lib/prisma";
 import { CreateUserEmailProps, CustomUser } from "@/lib/types";
 import { sendWelcomeEmail } from "@/lib/emails/send-welcome";
 import { analytics, identifyUser, trackAnalytics } from "@/lib/analytics";
+import { PasskeyProvider } from "@teamhanko/passkeys-next-auth-provider";
+import hanko from "@/lib/hanko";
 
 const VERCEL_DEPLOYMENT = !!process.env.VERCEL_URL;
 
@@ -18,6 +20,14 @@ export const authOptions: NextAuthOptions = {
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID as string,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+    }),
+    PasskeyProvider({
+      tenant: hanko,
+      async authorize({ userId }) {
+        const user = await prisma.user.findUnique({ where: { id: userId } });
+        if (!user) return null;
+        return user;
+      },
     }),
   ],
   adapter: PrismaAdapter(prisma),
@@ -51,6 +61,7 @@ export const authOptions: NextAuthOptions = {
         // @ts-ignore
         ...(token || session).user,
       };
+      console.log("session", session);
       return session;
     },
   },
