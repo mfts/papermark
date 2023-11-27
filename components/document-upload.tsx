@@ -38,7 +38,7 @@ export default function DocumentUpload({
     multiple: false,
     maxSize: 30 * 1024 * 1024, // 30 MB
     onDropAccepted: (acceptedFiles) => {
-      setCurrentFile(acceptedFiles[0]);
+      setCurrentFile(acceptedFiles[0]);o
     },
     onDropRejected: (fileRejections) => {
       const { errors } = fileRejections[0];
