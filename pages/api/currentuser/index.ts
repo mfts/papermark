@@ -11,6 +11,7 @@ export default async function handle(
   if (req.method === "GET") {
     const response = await getCurrentUser(req, res);
     const currentUser = await response;  
+
     return res.json(currentUser)
   }
 }

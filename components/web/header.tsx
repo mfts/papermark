@@ -8,7 +8,8 @@ import styles from "./header.module.css";
 import { cn } from "@/lib/utils";
 import useScroll from "@/lib/hooks/usescroll";
 import { useEffect } from "react";
-export default function Header() {
+import { getCurrentUser } from "@/lib/session";
+export default  function Header() {
   const scrolled = useScroll(50);
   const fadeInConfig = {
     initial: { opacity: 0 },
@@ -36,6 +37,8 @@ export default function Header() {
         setInterval(() => animate(star as HTMLElement), 1000);
       }, index++ * (interval / 3));
     }
+  
+
   }, []);
   return (
     <div className="relative mt-[-100px] font-inter bg-gradient-to-br from-purple-100 via-blue-50 to-rose-100 mb-[-40px]">
