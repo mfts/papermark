@@ -20,7 +20,7 @@ const ChangelogSection = () => {
 
       <div>
         <Link
-          className="rounded-md bg-white text-black px-4 py-3 text-sm font-semibold  shadow-sm hover:transition-opacity hover:animate-out hover:bg-gray-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400"
+          className="rounded-md  bg-transparent border-2 border-white  text-black dark:text-white  px-4 py-3 text-sm font-semibold  shadow-sm hover:transition-opacity hover:animate-[200] hover:dark:bg-gray-200 hover:dark:text-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400"
           href={"/changelog"}
         >
           Explore Changelogs

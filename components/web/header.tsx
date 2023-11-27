@@ -55,7 +55,7 @@ export default function Header() {
                 />
               </a>
             </div>
-            <div className="mt-2 mx-auto text-black py-4 flex justify-center items-center h-5 rounded-2xl  backdrop-blur-xl bg-accent   w-40">
+            <div className="mt-2 mx-auto text-black py-4 flex justify-center items-center h-5 rounded-2xl  backdrop-blur-xl bg-accent/20 dark:bg-transparent  w-40">
               <p className="flex items-center bg-acc  text-gray-800 mr-2">Lastest Blogs </p>
               
               <Link href={"/blog"}>
