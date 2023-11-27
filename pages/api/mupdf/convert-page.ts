@@ -6,9 +6,14 @@ import prisma from "@/lib/prisma";
 
 
 // This function can run for a maximum of 60 seconds
+// for free tier issue
 export const config = {
   maxDuration: 9,
 };
+
+// export const config = {
+//   maxDuration: 60,
+// };
 
 export default async function handle(req: NextApiRequest, res: NextApiResponse) {
   // check if post method
