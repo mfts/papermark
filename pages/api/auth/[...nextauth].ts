@@ -32,7 +32,6 @@ export const authOptions: NextAuthOptions = {
   
     allowDangerousEmailAccountLinking: true,
   
-
     }),
   ],
   adapter: PrismaAdapter(prisma),
