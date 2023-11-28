@@ -139,10 +139,10 @@ export default async function handle(
     // Generate authcode
     const authenticationCode = await generateAuthenticationCode(12, email, identifier, "DATAROOM", "ONE-TIME");
     const URL = type === "DOCUMENT"
-      ? `${process.env.NEXTAUTH_URL}/view/${identifier}?authenticationCode=${authenticationCode}`
+      ? `${process.env.NEXT_PUBLIC_BASE_URL}/view/${identifier}?authenticationCode=${authenticationCode}`
       : type === "PAGED DATAROOM"
-        ? `${process.env.NEXTAUTH_URL}/view/dataroom/paged/${identifier}?authenticationCode=${authenticationCode}`
-        : `${process.env.NEXTAUTH_URL}/view/dataroom/hierarchical/${identifier}/${homeFolderId}?authenticationCode=${authenticationCode}`;
+        ? `${process.env.NEXT_PUBLIC_BASE_URL}/view/dataroom/${identifier}?authenticationCode=${authenticationCode}`
+        : `${process.env.NEXT_PUBLIC_BASE_URL}/view/dataroom/hierarchical/${identifier}/${homeFolderId}?authenticationCode=${authenticationCode}`;
 
     await sendVerificationEmail(email, URL);
     res.status(200).json({ authenticationCode });
