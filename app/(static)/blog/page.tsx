@@ -45,6 +45,7 @@ export default async function BlogPage() {
               key={post._id}
               className="group relative flex flex-col space-y-2"
             >
+              
               {post.image && (
                 <Image
                   src={`/_images/blogs${post.image}`}
