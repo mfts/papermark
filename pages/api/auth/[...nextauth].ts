@@ -46,6 +46,7 @@ export const authOptions: NextAuthOptions = {
         // When working on localhost, the cookie domain must be omitted entirely (https://stackoverflow.com/a/1188145)
         domain: VERCEL_DEPLOYMENT ? ".papermark.io" || ".papermark-kinfish.vercel.app" : undefined,
         secure: VERCEL_DEPLOYMENT,
+        
       },
     },
   },
