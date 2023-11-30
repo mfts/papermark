@@ -113,6 +113,9 @@ model Document {
   links       Link[]
   views       View[]
   versions    DocumentVersion[]
+
+  @@index([ownerId])
+  @@index([teamId])
 }
 
 model DocumentVersion {
@@ -130,6 +133,7 @@ model DocumentVersion {
   updatedAt     DateTime       @updatedAt
 
   @@unique([versionNumber, documentId])
+  @@index([documentId])
 }
 
 model DocumentPage {
@@ -142,6 +146,7 @@ model DocumentPage {
   updatedAt  DateTime        @updatedAt
 
   @@unique([pageNumber, versionId])
+  @@index([versionId])
 }
 
 model Link {
@@ -166,6 +171,7 @@ model Link {
   enableNotification Boolean?  @default(true) // Optional give user a option to pause/resume the notifications
 
   @@unique([domainSlug, slug])
+  @@index([documentId])
 }
 
 model Domain {
@@ -180,6 +186,9 @@ model Domain {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   links       Link[] // links associated with this domain
+
+  @@index([userId])
+  @@index([teamId])
 }
 
 model View {
@@ -190,6 +199,9 @@ model View {
   documentId  String
   viewerEmail String? // Email of the viewer if known
   viewedAt    DateTime @default(now())
+
+  @@index([linkId])
+  @@index([documentId])
 }
 
 model Invitation {
@@ -200,7 +212,7 @@ model Invitation {
   createdAt DateTime @default(now())
   token     String   @unique
 
-  @@unique([email,teamId])
+  @@unique([email, teamId])
 }
 
 enum EmailType {
@@ -210,15 +222,16 @@ enum EmailType {
   FIRST_TRIAL_END_REMINDER_EMAIL
   FINAL_TRIAL_END_REMINDER_EMAIL
 }
+
 model SentEmail {
-  id        String    @id @default(cuid())
-  type      EmailType
-  recipient String    // Email address of the recipient
-  marketing Boolean   @default(false)
-  createdAt DateTime  @default(now())
-  team      Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  teamId    String
-  domainSlug  String?   // Domain that triggered the email. This can be nullable, representing emails not triggered by domains
+  id         String    @id @default(cuid())
+  type       EmailType
+  recipient  String // Email address of the recipient
+  marketing  Boolean   @default(false)
+  createdAt  DateTime  @default(now())
+  team       Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId     String
+  domainSlug String? // Domain that triggered the email. This can be nullable, representing emails not triggered by domains
 
   @@index([teamId])
 }
