@@ -12,66 +12,25 @@ import { ExtendedRecordMap } from "notion-types";
 import notion from "@/lib/notion";
 import { parsePageId } from "notion-utils";
 
-export const getStaticProps = async (context: {
-  params: { domain: string; slug: string };
-}) => {
-  const domain = context.params.domain as string;
-  const slug = context.params.slug as string;
+export const getStaticProps = async (context: GetStaticPropsContext) => {
+  const { domain, slug } = context.params as { domain: string; slug: string };
 
-  console.log("domain", domain);
-  console.log("slug", slug);
-
-  const link = await prisma.link.findUnique({
-    where: {
-      domainSlug_slug: {
-        slug: slug,
-        domainSlug: domain,
-      },
-    },
-    select: {
-      id: true,
-      expiresAt: true,
-      emailProtected: true,
-      allowDownload: true,
-      password: true,
-      isArchived: true,
-      document: {
-        select: {
-          id: true,
-          team: { select: { plan: true } },
-          versions: {
-            where: { isPrimary: true },
-            select: { versionNumber: true, type: true, file: true },
-            take: 1,
-          },
-        },
-      },
-    },
-  });
-
-  if (!link || !link.document.team) {
-    return {
-      notFound: true,
-    };
+  // Fetch the link
+  const res = await fetch(
+    `${process.env.NEXTAUTH_URL}/api/links/domains/${encodeURIComponent(
+      domain,
+    )}/${encodeURIComponent(slug)}`,
+  );
+  if (!res.ok) {
+    return { notFound: true };
   }
-
-  console.log("plan", link.document.team.plan);
-
-  // if owner of document is on free plan, return 404
-  if (link.document.team.plan === "free") {
-    return {
-      notFound: true,
-    };
-  }
+  const link = (await res.json()) as LinkWithDocument;
 
   let pageId = null;
   let recordMap = null;
 
   const { type, file, ...versionWithoutTypeAndFile } =
     link.document.versions[0];
-
-  console.log("type", type);
-  console.log("file", file);
 
   if (type === "notion") {
     // regex match to get the page id from the notion url
@@ -176,40 +135,3 @@ export default function ViewPage({
     />
   );
 }
-
-// export async function getStaticProps(context: GetStaticPropsContext) {
-//   // const router = useRouter()
-//   // const { domain, slug } = router.query as {
-//   //   domain: string;
-//   //   slug: string;
-//   // };
-//   const { domain, slug } = context.params as { domain: string; slug: string };
-
-//   console.log(context.params);
-
-//   // Fetch the link
-//   const res = await fetch(
-//     `${process.env.NEXTAUTH_URL}/api/links/domains/${encodeURIComponent(
-//       domain,
-//     )}/${encodeURIComponent(slug)}`,
-//   );
-//   if (!res.ok) {
-//     return { notFound: true };
-//   }
-//   const link = (await res.json()) as LinkWithDocument;
-
-//   console.log(link);
-
-//   return {
-//     props: {
-//       link,
-//     },
-//   };
-// }
-
-// export async function getStaticPaths() {
-//   return {
-//     paths: [],
-//     fallback: true,
-//   };
-// }

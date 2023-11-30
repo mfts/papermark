@@ -36,6 +36,7 @@ export default async function handle(
                   versionNumber: true,
                   type: true,
                   hasPages: true,
+                  file: true,
                 },
                 take: 1,
               },
