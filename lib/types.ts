@@ -38,7 +38,7 @@ export interface LinkWithViews extends Link {
 
 export interface LinkWithDocument extends Link {
   document: Document & {
-    versions: { versionNumber: number }[];
+    versions: { id: string; versionNumber: number; hasPages: true }[];
   };
 }
 
