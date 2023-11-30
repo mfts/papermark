@@ -37,7 +37,7 @@
     "@react-email/components": "^0.0.11",
     "@stripe/stripe-js": "^2.1.7",
     "@tailwindcss/typography": "^0.5.10",
-    "@teamhanko/passkeys-next-auth-provider": "^0.1.9",
+    "@teamhanko/passkeys-next-auth-provider": "^0.1.10",
     "@tremor/react": "^3.11.1",
     "@trigger.dev/nextjs": "^2.2.6",
     "@trigger.dev/react": "^2.2.6",
