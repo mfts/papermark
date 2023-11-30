@@ -146,6 +146,10 @@ export default async function handle(
       return res.status(404).json({ error: "Link not found" });
     }
 
+    await fetch(
+      `${process.env.NEXTAUTH_URL}/api/revalidate?secret=${process.env.REVALIDATE_TOKEN}&linkId=${id}`,
+    );
+
     return res.status(200).json(updatedLink);
   } else if (req.method == "DELETE") {
     // DELETE /api/links/:id
