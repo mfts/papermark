@@ -1,12 +1,17 @@
 import { sendEmail } from "@/lib/resend";
 import ViewedDocumentEmail from "@/components/emails/viewed-document";
 
-export const sendViewedDocumentEmail = async (
-  email: string,
-  documentId: string,
-  documentName: string,
-  viewerEmail: string | null,
-) => {
+export const sendViewedDocumentEmail = async ({
+  email,
+  documentId,
+  documentName,
+  viewerEmail,
+}: {
+  email: string;
+  documentId: string;
+  documentName: string;
+  viewerEmail: string | null;
+}) => {
   const emailTemplate = ViewedDocumentEmail({
     documentId,
     documentName,
