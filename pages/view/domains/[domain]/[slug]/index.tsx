@@ -1,75 +1,36 @@
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import DocumentView from "@/components/view/document-view";
 import { useDomainLink } from "@/lib/swr/use-link";
+import { CustomUser, LinkWithDocument } from "@/lib/types";
 import NotFound from "@/pages/404";
+import { GetStaticPropsContext } from "next";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/router";
 import prisma from "@/lib/prisma";
 
 import { ExtendedRecordMap } from "notion-types";
 import notion from "@/lib/notion";
-import { LinkWithDocument } from "@/lib/types";
 import { parsePageId } from "notion-utils";
 
-export const getStaticProps = async (context: {
-  params: { domain: string; slug: string };
-}) => {
-  const domain = context.params.domain as string;
-  const slug = context.params.slug as string;
+export const getStaticProps = async (context: GetStaticPropsContext) => {
+  const { domain, slug } = context.params as { domain: string; slug: string };
 
-  console.log("domain", domain);
-  console.log("slug", slug);
-
-  const link = await prisma.link.findUnique({
-    where: {
-      domainSlug_slug: {
-        slug: slug,
-        domainSlug: domain,
-      },
-    },
-    select: {
-      id: true,
-      expiresAt: true,
-      emailProtected: true,
-      allowDownload: true,
-      password: true,
-      isArchived: true,
-      document: {
-        select: {
-          id: true,
-          team: { select: { plan: true } },
-          versions: {
-            where: { isPrimary: true },
-            select: { versionNumber: true, type: true, file: true },
-            take: 1,
-          },
-        },
-      },
-    },
-  });
-
-  if (!link || !link.document.team) {
-    return {
-      notFound: true,
-    };
+  // Fetch the link
+  const res = await fetch(
+    `${process.env.NEXTAUTH_URL}/api/links/domains/${encodeURIComponent(
+      domain,
+    )}/${encodeURIComponent(slug)}`,
+  );
+  if (!res.ok) {
+    return { notFound: true };
   }
-
-  console.log("plan", link.document.team.plan);
-
-  // if owner of document is on free plan, return 404
-  if (link.document.team.plan === "free") {
-    return {
-      notFound: true,
-    };
-  }
+  const link = (await res.json()) as LinkWithDocument;
 
   let pageId = null;
   let recordMap = null;
 
   const { type, file, ...versionWithoutTypeAndFile } =
     link.document.versions[0];
-
-  console.log("type", type);
-  console.log("file", file);
 
   if (type === "notion") {
     // regex match to get the page id from the notion url
@@ -137,7 +98,7 @@ export default function ViewPage({
     isArchived,
   } = link;
 
-  const { email: userEmail } = session?.user || {};
+  const { email: userEmail, id: userId } = (session?.user as CustomUser) || {};
 
   // If the link is expired, show a 404 page
   if (expiresAt && new Date(expiresAt) < new Date()) {
@@ -157,6 +118,7 @@ export default function ViewPage({
       <DocumentView
         link={link}
         userEmail={userEmail}
+        userId={userId}
         isProtected={true}
         notionData={notionData}
       />
@@ -167,6 +129,7 @@ export default function ViewPage({
     <DocumentView
       link={link}
       userEmail={userEmail}
+      userId={userId}
       isProtected={false}
       notionData={notionData}
     />

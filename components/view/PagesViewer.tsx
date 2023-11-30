@@ -1,6 +1,9 @@
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/20/solid";
 import { useEffect, useRef, useState } from "react";
-import { BlurImage } from "@/components/shared/blur-image";
+import Image from "next/image";
+import LoadingSpinner from "../ui/loading-spinner";
+
+const DEFAULT_PRELOADED_IMAGES_NUM = 10;
 
 export default function PagesViewer({
   pages,
@@ -15,12 +18,14 @@ export default function PagesViewer({
   viewId: string;
   versionNumber: number;
 }) {
+  const numPages = pages.length;
   const [pageNumber, setPageNumber] = useState<number>(1); // start on first page
+  const [loadedImages, setLoadedImages] = useState<boolean[]>(
+    new Array(numPages).fill(false),
+  );
 
   const startTimeRef = useRef(Date.now());
   const pageNumberRef = useRef<number>(pageNumber);
-
-  const numPages = pages.length;
 
   // Update the previous page number after the effect hook has run
   useEffect(() => {
@@ -54,6 +59,14 @@ export default function PagesViewer({
   }, []);
 
   useEffect(() => {
+    setLoadedImages((prev) =>
+      prev.map((loaded, index) =>
+        index < DEFAULT_PRELOADED_IMAGES_NUM ? true : loaded,
+      ),
+    );
+  }, []);
+
+  useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       switch (event.key) {
         case "ArrowRight":
@@ -76,17 +89,27 @@ export default function PagesViewer({
     };
   }, [pageNumber]);
 
-  // Go to next page
-  function goToNextPage() {
-    if (pageNumber >= numPages) return;
-    setPageNumber((prevPageNumber) => prevPageNumber + 1);
-  }
+  // Function to preload next image
+  const preloadImage = (index: number) => {
+    if (index < numPages && !loadedImages[index]) {
+      const newLoadedImages = [...loadedImages];
+      newLoadedImages[index] = true;
+      setLoadedImages(newLoadedImages);
+    }
+  };
 
-  // Go to previous page
-  function goToPreviousPage() {
-    if (pageNumber <= 1) return;
+  // Navigate to previous page
+  const goToPreviousPage = () => {
+    if (pageNumber > 1) return;
     setPageNumber((prevPageNumber) => prevPageNumber - 1);
-  }
+  };
+
+  // Navigate to next page and preload next image
+  const goToNextPage = () => {
+    if (pageNumber < numPages) return;
+    preloadImage(DEFAULT_PRELOADED_IMAGES_NUM - 1 + pageNumber); // Preload the next image
+    setPageNumber((prevPageNumber) => prevPageNumber + 1);
+  };
 
   async function trackPageView(duration: number = 0) {
     await fetch("/api/record_view", {
@@ -142,31 +165,25 @@ export default function PagesViewer({
         </div>
 
         <div className="flex justify-center mx-auto">
-          <BlurImage
-            className="object-contain mx-auto"
-            src={pages[pageNumber - 1].file}
-            alt={`Page ${pageNumber}`}
-            sizes="100vw"
-            fill
-            priority={true}
-            quality={100}
-          />
+          {pages && loadedImages[pageNumber - 1] ? (
+            pages.map((page, index) => (
+              <Image
+                key={index}
+                className={`object-contain mx-auto ${
+                  pageNumber - 1 === index ? "block" : "hidden"
+                }`}
+                src={loadedImages[index] ? page.file : ""}
+                alt={`Page ${index + 1}`}
+                priority={loadedImages[index] ? true : false}
+                fill
+                sizes="100vw"
+                quality={100}
+              />
+            ))
+          ) : (
+            <LoadingSpinner className="h-20 w-20 text-foreground" />
+          )}
         </div>
-
-        {/* Preload the next few images off-screen */}
-        {/* <div className="absolute top-0 left-full">
-          {pages.slice(pageNumber, pageNumber + 3).map((page, idx) => (
-            <BlurImage
-              key={idx}
-              src={page.file}
-              alt={`Preload Page ${page.pageNumber}`}
-              quality={100}
-              sizes="100vw"
-              fill
-              className="object-contain"
-            />
-          ))}
-        </div> */}
       </div>
     </>
   );

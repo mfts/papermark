@@ -98,7 +98,7 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
-model Document {
+model Document {  
   id               String            @id @default(cuid())
   name             String
   description      String?
@@ -116,6 +116,9 @@ model Document {
   views            View[]
   versions         DocumentVersion[]
   conversations    Conversation[]
+
+  @@index([ownerId])
+  @@index([teamId])
 }
 
 model DocumentVersion {
@@ -134,6 +137,7 @@ model DocumentVersion {
   updatedAt     DateTime       @updatedAt
 
   @@unique([versionNumber, documentId])
+  @@index([documentId])
 }
 
 model DocumentPage {
@@ -146,6 +150,7 @@ model DocumentPage {
   updatedAt  DateTime        @updatedAt
 
   @@unique([pageNumber, versionId])
+  @@index([versionId])
 }
 
 model Link {
@@ -170,6 +175,7 @@ model Link {
   enableNotification Boolean?  @default(true) // Optional give user a option to pause/resume the notifications
 
   @@unique([domainSlug, slug])
+  @@index([documentId])
 }
 
 model Domain {
@@ -184,6 +190,9 @@ model Domain {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   links       Link[] // links associated with this domain
+
+  @@index([userId])
+  @@index([teamId])
 }
 
 model View {
@@ -194,6 +203,9 @@ model View {
   documentId  String
   viewerEmail String? // Email of the viewer if known
   viewedAt    DateTime @default(now())
+
+  @@index([linkId])
+  @@index([documentId])
 }
 
 model Invitation {
