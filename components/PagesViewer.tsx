@@ -53,13 +53,38 @@ export default function PagesViewer({
     };
   }, []);
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      switch (event.key) {
+        case "ArrowRight":
+          goToNextPage();
+          break;
+        case "ArrowLeft":
+          goToPreviousPage();
+          break;
+        default:
+          break;
+      }
+    };
+
+    // when the component mounts, attach the event listener
+    document.addEventListener("keydown", handleKeyDown);
+
+    // when the component unmounts, detach the event listener
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [pageNumber]);
+
   // Go to next page
   function goToNextPage() {
+    if (pageNumber >= numPages) return;
     setPageNumber((prevPageNumber) => prevPageNumber + 1);
   }
 
   // Go to previous page
   function goToPreviousPage() {
+    if (pageNumber <= 1) return;
     setPageNumber((prevPageNumber) => prevPageNumber - 1);
   }
 
