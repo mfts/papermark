@@ -25,6 +25,7 @@ import { useRouter } from "next/router";
 import MoreVertical from "@/components/shared/icons/more-vertical";
 import { useTeam } from "@/context/team-context";
 import ProcessStatusBar from "@/components/documents/process-status-bar";
+import NotionIcon from "@/components/shared/icons/notion";
 
 export default function DocumentPage() {
   const { document: prismaDocument, primaryVersion, error } = useDocument();
@@ -172,13 +173,17 @@ export default function DocumentPage() {
               <div className="space-y-2">
                 <div className="flex space-x-4 items-center">
                   <div className="w-8">
-                    <Image
-                      src={`/_icons/${getExtension(primaryVersion.file)}.svg`}
-                      alt="File icon"
-                      width={50}
-                      height={50}
-                      className=""
-                    />
+                    {primaryVersion.type === "notion" ? (
+                      <NotionIcon className="w-8 h-8" />
+                    ) : (
+                      <Image
+                        src={`/_icons/${getExtension(primaryVersion.file)}.svg`}
+                        alt="File icon"
+                        width={50}
+                        height={50}
+                        className=""
+                      />
+                    )}
                   </div>
                   <div className="flex flex-col">
                     <h2
@@ -200,11 +205,13 @@ export default function DocumentPage() {
                 </div>
               </div>
               <div className="flex items-center gap-x-4">
-                <AddDocumentModal newVersion>
-                  <button title="Upload a new version">
-                    <FileUp className="w-6 h-6" />
-                  </button>
-                </AddDocumentModal>
+                {primaryVersion.type !== "notion" ? (
+                  <AddDocumentModal newVersion>
+                    <button title="Upload a new version">
+                      <FileUp className="w-6 h-6" />
+                    </button>
+                  </AddDocumentModal>
+                ) : null}
                 <DropdownMenu
                   open={menuOpen}
                   onOpenChange={handleMenuStateChange}
@@ -259,7 +266,7 @@ export default function DocumentPage() {
               </div>
             </div>
             {/* Progress bar */}
-            {!primaryVersion.hasPages ? (
+            {primaryVersion.type !== "notion" && !primaryVersion.hasPages ? (
               <div className="flex flex-col items-start justify-between gap-x-8 gap-y-4 p-4 sm:flex-row sm:items-center sm:m-4">
                 <ProcessStatusBar documentVersionId={primaryVersion.id} />
               </div>

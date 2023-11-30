@@ -30,7 +30,7 @@ export default async function handle(
               id: true,
               versions: {
                 where: { isPrimary: true },
-                select: { versionNumber: true },
+                select: { versionNumber: true, type: true },
                 take: 1,
               },
             },

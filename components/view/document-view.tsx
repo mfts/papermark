@@ -9,6 +9,8 @@ import { toast } from "sonner";
 import { LinkWithDocument } from "@/lib/types";
 import LoadingSpinner from "../ui/loading-spinner";
 import PagesViewer from "@/components/PagesViewer";
+import { NotionPage } from "../NotionPage";
+import { ExtendedRecordMap } from "notion-types";
 
 export type DEFAULT_DOCUMENT_VIEW_TYPE = {
   viewId: string;
@@ -20,10 +22,15 @@ export default function DocumentView({
   link,
   userEmail,
   isProtected,
+  notionData,
 }: {
   link: LinkWithDocument;
   userEmail: string | null | undefined;
   isProtected: boolean;
+  notionData: {
+    rootNotionPageId: string | null;
+    recordMap: ExtendedRecordMap | null;
+  };
 }) {
   const { document, emailProtected, password: linkPassword } = link;
 
@@ -115,7 +122,16 @@ export default function DocumentView({
   return (
     <div className="bg-gray-950">
       {submitted ? (
-        viewData.pages ? (
+        notionData.recordMap ? (
+          <NotionPage
+            recordMap={notionData.recordMap}
+            // rootPageId={notionData.rootNotionPageId}
+            viewId={viewData.viewId}
+            linkId={link.id}
+            documentId={document.id}
+            versionNumber={document.versions[0].versionNumber}
+          />
+        ) : viewData.pages ? (
           <PagesViewer
             pages={viewData.pages}
             viewId={viewData.viewId}

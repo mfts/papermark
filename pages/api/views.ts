@@ -7,7 +7,7 @@ import { sendViewedDocumentEmail } from "@/lib/emails/send-viewed-document";
 
 export default async function handle(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   // We only allow POST requests
   if (req.method !== "POST") {
@@ -80,7 +80,7 @@ export default async function handle(
               where: { isPrimary: true },
               orderBy: { createdAt: "desc" },
               take: 1,
-              select: { file: true, id: true, hasPages: true },
+              select: { file: true, id: true, hasPages: true, type: true },
             },
           },
         },
@@ -105,7 +105,7 @@ export default async function handle(
         newView.document.owner.email as string,
         documentId,
         newView.document.name,
-        email
+        email,
       );
     }
 
@@ -129,6 +129,15 @@ export default async function handle(
         viewId: newView.id,
         file: null,
         pages: pages,
+      });
+    }
+
+    if (newView.document.versions[0].type === "notion") {
+      return res.status(200).json({
+        message: "View recorded",
+        viewId: newView.id,
+        file: null,
+        pages: null,
       });
     }
 
