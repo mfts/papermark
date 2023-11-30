@@ -1,32 +1,24 @@
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import DocumentView from "@/components/view/document-view";
-import { useDomainLink } from "@/lib/swr/use-link";
-import { CustomUser, LinkWithDocument } from "@/lib/types";
 import NotFound from "@/pages/404";
-import { GetStaticPropsContext } from "next";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/router";
 import prisma from "@/lib/prisma";
 
 import { ExtendedRecordMap } from "notion-types";
 import notion from "@/lib/notion";
+import { LinkWithDocument } from "@/lib/types";
 import { parsePageId } from "notion-utils";
 
 export const getStaticProps = async (context: {
-  params: { domain: string; slug: string };
+  params: { linkId: string };
 }) => {
-  const domain = context.params.domain as string;
-  const slug = context.params.slug as string;
+  const linkId = context.params.linkId as string;
 
-  console.log("domain", domain);
-  console.log("slug", slug);
+  console.log("linkId", linkId);
 
   const link = await prisma.link.findUnique({
     where: {
-      domainSlug_slug: {
-        slug: slug,
-        domainSlug: domain,
-      },
+      id: linkId,
     },
     select: {
       id: true,
@@ -38,7 +30,6 @@ export const getStaticProps = async (context: {
       document: {
         select: {
           id: true,
-          team: { select: { plan: true } },
           versions: {
             where: { isPrimary: true },
             select: { versionNumber: true, type: true, file: true },
@@ -49,16 +40,7 @@ export const getStaticProps = async (context: {
     },
   });
 
-  if (!link || !link.document.team) {
-    return {
-      notFound: true,
-    };
-  }
-
-  console.log("plan", link.document.team.plan);
-
-  // if owner of document is on free plan, return 404
-  if (link.document.team.plan === "free") {
+  if (!link || !link.document) {
     return {
       notFound: true,
     };
@@ -70,11 +52,7 @@ export const getStaticProps = async (context: {
   const { type, file, ...versionWithoutTypeAndFile } =
     link.document.versions[0];
 
-  console.log("type", type);
-  console.log("file", file);
-
   if (type === "notion") {
-    // regex match to get the page id from the notion url
     const notionPageId = parsePageId(file, { uuid: false });
     if (!notionPageId) {
       return {
@@ -97,7 +75,7 @@ export const getStaticProps = async (context: {
         },
       },
       notionData: {
-        rootNotionPageId: pageId,
+        rootNotionPageId: null, // do not pass rootNotionPageId to the client
         recordMap,
       },
     },
@@ -139,7 +117,7 @@ export default function ViewPage({
     isArchived,
   } = link;
 
-  const { email: userEmail, id: userId } = (session?.user as CustomUser) || {};
+  const { email: userEmail } = session?.user || {};
 
   // If the link is expired, show a 404 page
   if (expiresAt && new Date(expiresAt) < new Date()) {
@@ -159,7 +137,6 @@ export default function ViewPage({
       <DocumentView
         link={link}
         userEmail={userEmail}
-        userId={userId}
         isProtected={true}
         notionData={notionData}
       />
@@ -170,46 +147,8 @@ export default function ViewPage({
     <DocumentView
       link={link}
       userEmail={userEmail}
-      userId={userId}
       isProtected={false}
       notionData={notionData}
     />
   );
 }
-
-// export async function getStaticProps(context: GetStaticPropsContext) {
-//   // const router = useRouter()
-//   // const { domain, slug } = router.query as {
-//   //   domain: string;
-//   //   slug: string;
-//   // };
-//   const { domain, slug } = context.params as { domain: string; slug: string };
-
-//   console.log(context.params);
-
-//   // Fetch the link
-//   const res = await fetch(
-//     `${process.env.NEXTAUTH_URL}/api/links/domains/${encodeURIComponent(
-//       domain,
-//     )}/${encodeURIComponent(slug)}`,
-//   );
-//   if (!res.ok) {
-//     return { notFound: true };
-//   }
-//   const link = (await res.json()) as LinkWithDocument;
-
-//   console.log(link);
-
-//   return {
-//     props: {
-//       link,
-//     },
-//   };
-// }
-
-// export async function getStaticPaths() {
-//   return {
-//     paths: [],
-//     fallback: true,
-//   };
-// }

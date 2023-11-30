@@ -1,6 +1,5 @@
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/20/solid";
 import { useEffect, useRef, useState } from "react";
-import { BlurImage } from "@/components/shared/blur-image";
 import Image from "next/image";
 import LoadingSpinner from "../ui/loading-spinner";
 
@@ -67,6 +66,29 @@ export default function PagesViewer({
     );
   }, []);
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      switch (event.key) {
+        case "ArrowRight":
+          goToNextPage();
+          break;
+        case "ArrowLeft":
+          goToPreviousPage();
+          break;
+        default:
+          break;
+      }
+    };
+
+    // when the component mounts, attach the event listener
+    document.addEventListener("keydown", handleKeyDown);
+
+    // when the component unmounts, detach the event listener
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [pageNumber]);
+
   // Function to preload next image
   const preloadImage = (index: number) => {
     if (index < numPages && !loadedImages[index]) {
@@ -78,17 +100,15 @@ export default function PagesViewer({
 
   // Navigate to previous page
   const goToPreviousPage = () => {
-    if (pageNumber > 1) {
-      setPageNumber(pageNumber - 1);
-    }
+    if (pageNumber > 1) return;
+    setPageNumber((prevPageNumber) => prevPageNumber - 1);
   };
 
   // Navigate to next page and preload next image
   const goToNextPage = () => {
-    if (pageNumber < numPages) {
-      preloadImage(DEFAULT_PRELOADED_IMAGES_NUM - 1 + pageNumber); // Preload the next image
-      setPageNumber(pageNumber + 1);
-    }
+    if (pageNumber < numPages) return;
+    preloadImage(DEFAULT_PRELOADED_IMAGES_NUM - 1 + pageNumber); // Preload the next image
+    setPageNumber((prevPageNumber) => prevPageNumber + 1);
   };
 
   async function trackPageView(duration: number = 0) {

@@ -9,6 +9,7 @@ import { DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
 import Copy from "@/components/shared/icons/copy";
 import BarChart from "@/components/shared/icons/bar-chart";
 import Image from "next/image";
+import NotionIcon from "@/components/shared/icons/notion";
 
 export default function DocumentsCard({
   document,
@@ -26,13 +27,17 @@ export default function DocumentsCard({
     <li className="relative rounded-lg p-3 border-0 dark:bg-secondary ring-1 ring-gray-200 dark:ring-gray-700 transition-all hover:ring-gray-400 hover:dark:ring-gray-500 hover:bg-secondary sm:p-4 flex justify-between items-center">
       <div className="min-w-0 flex shrink items-center space-x-4">
         <div className="w-8 mx-1 text-center flex justify-center items-center">
-          <Image
-            src={`/_icons/${document.type}.svg`}
-            alt="File icon"
-            width={50}
-            height={50}
-            className=""
-          />
+          {document.type === "notion" ? (
+            <NotionIcon className="w-8 h-8" />
+          ) : (
+            <Image
+              src={`/_icons/${document.type}.svg`}
+              alt="File icon"
+              width={50}
+              height={50}
+              className=""
+            />
+          )}
         </div>
         <div className="flex-col">
           <div className="flex items-center">
