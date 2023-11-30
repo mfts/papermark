@@ -16,11 +16,9 @@ export async function startServerPasskeyRegistration() {
     select: { id: true, name: true },
   });
 
-  console.log("user prisma", user);
-
   const createOptions = await hanko.registration.initialize({
     userId: user!.id,
-    username: user!.name,
+    username: user!.name || "",
   });
 
   return createOptions;
@@ -34,16 +32,12 @@ export async function finishServerPasskeyRegistration(credential: any) {
 
   await hanko.registration.finalize(credential);
 
+  // const sessionUser = session.user as CustomUser;
+
   // Now the user has registered their passkey and can use it to log in.
 
-  const user = await prisma.user.findUnique({
-    where: { id: (session.user as CustomUser).id },
-    select: { id: true },
-  });
-
-  console.log("user has registered their passkey", user?.id);
-
-  // if (user) {
-  //   user.hasPasskeys = true;
-  // }
+  // const user = await prisma.user.update({
+  //   where: { email: sessionUser.email as string },
+  //   select: { id: true },
+  // });
 }

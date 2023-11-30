@@ -2,29 +2,13 @@
 
 import { Button } from "@/components/ui/button";
 import { signIn } from "next-auth/react";
+import { signInWithPasskey } from "@teamhanko/passkeys-next-auth-provider/client";
 import Link from "next/link";
-import { useRouter, useParams } from "next/navigation";
+import { useParams } from "next/navigation";
 import Passkey from "@/components/shared/icons/passkey";
-import {
-  finishServerPasskeyRegistration,
-  startServerPasskeyRegistration,
-} from "@/lib/api/auth/passkey";
-import { create } from "@github/webauthn-json";
 
-export default function Register() {
-  const router = useRouter();
+export default function Login() {
   const { next } = useParams as { next?: string };
-
-  async function registerPasskey() {
-    const createOptions = await startServerPasskeyRegistration();
-
-    // Open "register passkey" dialog
-    const credential = await create(createOptions as any);
-
-    await finishServerPasskeyRegistration(credential);
-
-    // Now the user has registered their passkey and can use it to log in.
-  }
 
   return (
     <div className="flex h-screen w-screen justify-center">
@@ -51,7 +35,7 @@ export default function Register() {
             Start sharing documents
           </h3>
         </div>
-        <div className="flex flex-col px-4 py-8 sm:px-16">
+        <div className="flex flex-col px-4 py-8 sm:px-16 space-y-2">
           <Button
             onClick={() => {
               signIn("google", {
@@ -71,11 +55,16 @@ export default function Register() {
             <span>Continue with Google</span>
           </Button>
           <Button
-            onClick={() => registerPasskey().then(router.refresh)}
+            onClick={() =>
+              signInWithPasskey({
+                tenantId: process.env.NEXT_PUBLIC_HANKO_TENANT_ID as string,
+              })
+            }
+            variant="outline"
             className="flex justify-center items-center space-x-2"
           >
             <Passkey className="w-4 h-4" />
-            <span>Register a passkey</span>
+            <span>Sign in with a passkey</span>
           </Button>
         </div>
       </div>

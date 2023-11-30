@@ -1,13 +1,29 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { signIn } from "next-auth/react";
-import { signInWithPasskey } from "@teamhanko/passkeys-next-auth-provider/client";
 import Link from "next/link";
-import { useRouter } from "next/router";
+import { useRouter, useParams } from "next/navigation";
 import Passkey from "@/components/shared/icons/passkey";
+import {
+  finishServerPasskeyRegistration,
+  startServerPasskeyRegistration,
+} from "@/lib/api/auth/passkey";
+import { create } from "@github/webauthn-json";
 
-export default function Login() {
+export default function Register() {
   const router = useRouter();
-  const { next } = router.query as { next?: string };
+  const { next } = useParams as { next?: string };
+
+  async function registerPasskey() {
+    const createOptions = await startServerPasskeyRegistration();
+
+    // Open "register passkey" dialog
+    const credential = await create(createOptions as any);
+
+    await finishServerPasskeyRegistration(credential);
+    // Now the user has registered their passkey and can use it to log in.
+  }
 
   return (
     <div className="flex h-screen w-screen justify-center">
@@ -34,7 +50,7 @@ export default function Login() {
             Start sharing documents
           </h3>
         </div>
-        <div className="flex flex-col px-4 py-8 sm:px-16">
+        <div className="flex flex-col px-4 py-8 sm:px-16 space-y-2">
           <Button
             onClick={() => {
               signIn("google", {
@@ -53,17 +69,13 @@ export default function Login() {
             </svg>
             <span>Continue with Google</span>
           </Button>
-          {/* <Button
-            onClick={() =>
-              signInWithPasskey({
-                tenantId: process.env.HANKO_TENANT_ID as string,
-              })
-            }
+          <Button
+            onClick={() => registerPasskey().then(router.refresh)}
             className="flex justify-center items-center space-x-2"
           >
             <Passkey className="w-4 h-4" />
-            <span>Sign in with a passkey</span>
-          </Button> */}
+            <span>Register a passkey</span>
+          </Button>
         </div>
       </div>
     </div>
