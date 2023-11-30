@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from "react";
-import PDFViewer from "@/components/PDFViewer";
 import AccessForm, {
   DEFAULT_ACCESS_FORM_DATA,
   DEFAULT_ACCESS_FORM_TYPE,
@@ -7,8 +6,9 @@ import AccessForm, {
 import { usePlausible } from "next-plausible";
 import { toast } from "sonner";
 import { LinkWithDocument } from "@/lib/types";
-import LoadingSpinner from "../ui/loading-spinner";
-import PagesViewer from "@/components/PagesViewer";
+import LoadingSpinner from "@/components/ui/loading-spinner";
+import PagesViewer from "@/components/view/PagesViewer";
+import PDFViewer from "@/components/view/PDFViewer";
 
 export type DEFAULT_DOCUMENT_VIEW_TYPE = {
   viewId: string;
@@ -19,10 +19,12 @@ export type DEFAULT_DOCUMENT_VIEW_TYPE = {
 export default function DocumentView({
   link,
   userEmail,
+  userId,
   isProtected,
 }: {
   link: LinkWithDocument;
   userEmail: string | null | undefined;
+  userId: string | null | undefined;
   isProtected: boolean;
 }) {
   const { document, emailProtected, password: linkPassword } = link;
@@ -53,6 +55,9 @@ export default function DocumentView({
         email: data.email || userEmail,
         linkId: link.id,
         documentId: document.id,
+        userId: userId || null,
+        documentVersionId: document.versions[0].id,
+        hasPages: document.versions[0].hasPages,
       }),
     });
 
