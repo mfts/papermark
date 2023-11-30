@@ -2,6 +2,7 @@ import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/20/solid";
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import LoadingSpinner from "../ui/loading-spinner";
+import BlankImg from "@/public/_static/blank.gif";
 
 const DEFAULT_PRELOADED_IMAGES_NUM = 10;
 
@@ -66,28 +67,22 @@ export default function PagesViewer({
     );
   }, []);
 
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      switch (event.key) {
-        case "ArrowRight":
-          goToNextPage();
-          break;
-        case "ArrowLeft":
-          goToPreviousPage();
-          break;
-        default:
-          break;
-      }
-    };
-
-    // when the component mounts, attach the event listener
-    document.addEventListener("keydown", handleKeyDown);
-
-    // when the component unmounts, detach the event listener
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [pageNumber]);
+  const handleKeyDown = (event: KeyboardEvent) => {
+    switch (event.key) {
+      case "ArrowRight":
+        event.preventDefault(); // Prevent default behavior
+        event.stopPropagation(); // Stop propagation
+        goToNextPage();
+        break;
+      case "ArrowLeft":
+        event.preventDefault(); // Prevent default behavior
+        event.stopPropagation(); // Stop propagation
+        goToPreviousPage();
+        break;
+      default:
+        break;
+    }
+  };
 
   // Function to preload next image
   const preloadImage = (index: number) => {
@@ -101,14 +96,14 @@ export default function PagesViewer({
   // Navigate to previous page
   const goToPreviousPage = () => {
     if (pageNumber <= 1) return;
-    setPageNumber((prevPageNumber) => prevPageNumber - 1);
+    setPageNumber(pageNumber - 1);
   };
 
   // Navigate to next page and preload next image
   const goToNextPage = () => {
     if (pageNumber >= numPages) return;
     preloadImage(DEFAULT_PRELOADED_IMAGES_NUM - 1 + pageNumber); // Preload the next image
-    setPageNumber((prevPageNumber) => prevPageNumber + 1);
+    setPageNumber(pageNumber + 1);
   };
 
   async function trackPageView(duration: number = 0) {
@@ -127,6 +122,16 @@ export default function PagesViewer({
       },
     });
   }
+
+  useEffect(() => {
+    // when the component mounts, attach the event listener
+    document.addEventListener("keydown", handleKeyDown);
+
+    // when the component unmounts, detach the event listener
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [handleKeyDown, goToNextPage, goToPreviousPage]);
 
   return (
     <>
@@ -164,7 +169,7 @@ export default function PagesViewer({
           </button>
         </div>
 
-        <div className="flex justify-center mx-auto">
+        <div className="flex justify-center mx-auto relative h-full w-full">
           {pages && loadedImages[pageNumber - 1] ? (
             pages.map((page, index) => (
               <Image
@@ -172,11 +177,11 @@ export default function PagesViewer({
                 className={`object-contain mx-auto ${
                   pageNumber - 1 === index ? "block" : "hidden"
                 }`}
-                src={loadedImages[index] ? page.file : ""}
+                src={loadedImages[index] ? page.file : BlankImg}
                 alt={`Page ${index + 1}`}
                 priority={loadedImages[index] ? true : false}
                 fill
-                sizes="100vw"
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 75vw, 50vw"
                 quality={100}
               />
             ))
