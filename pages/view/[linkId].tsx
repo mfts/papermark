@@ -52,11 +52,7 @@ export const getStaticProps = async (context: {
   const { type, file, ...versionWithoutTypeAndFile } =
     link.document.versions[0];
 
-  console.log("type", type);
-  console.log("file", file);
-
   if (type === "notion") {
-    // regex match to get the page id from the notion url
     const notionPageId = parsePageId(file, { uuid: false });
     if (!notionPageId) {
       return {
@@ -79,7 +75,7 @@ export const getStaticProps = async (context: {
         },
       },
       notionData: {
-        rootNotionPageId: pageId,
+        rootNotionPageId: null, // do not pass rootNotionPageId to the client
         recordMap,
       },
     },

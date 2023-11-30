@@ -13,7 +13,7 @@ interface StatsData {
   views: View[];
   groupedViews: GroupedView[];
   duration: {
-    data: { versionNumber: number, pageNumber: string; avg_duration: number }[];
+    data: { versionNumber: number; pageNumber: string; avg_duration: number }[];
   };
   total_duration: number;
 }
@@ -30,12 +30,12 @@ export function useStats() {
   const { data: stats, error } = useSWR<StatsData>(
     id &&
       `/api/teams/${teamInfo?.currentTeam?.id}/documents/${encodeURIComponent(
-        id
+        id,
       )}/stats`,
     fetcher,
     {
       dedupingInterval: 10000,
-    }
+    },
   );
 
   return {
@@ -65,12 +65,12 @@ export function useVisitorStats(viewId: string) {
     documentId &&
       viewId &&
       `/api/teams/${teamInfo?.currentTeam?.id}/documents/${encodeURIComponent(
-        documentId
+        documentId,
       )}/views/${encodeURIComponent(viewId)}/stats`,
     fetcher,
     {
       dedupingInterval: 10000,
-    }
+    },
   );
 
   return {

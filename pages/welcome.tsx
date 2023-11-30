@@ -4,10 +4,10 @@ import Next from "@/components/welcome/next";
 import Upload from "@/components/welcome/upload";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import { AnimatePresence } from "framer-motion";
+import NotionForm from "@/components/welcome/notion-form";
 
 export default function Welcome() {
   const router = useRouter();
-
 
   return (
     <div className="flex h-screen flex-col items-center justify-center max-w-3xl mx-auto overflow-x-hidden">
@@ -37,6 +37,7 @@ export default function Welcome() {
         {router.query.type === "next" && <Next key="next" />}
         {router.query.type === "pitchdeck" && <Upload key="pitchdeck" />}
         {router.query.type === "document" && <Upload key="document" />}
+        {router.query.type === "notion" && <NotionForm key="notion" />}
       </AnimatePresence>
     </div>
   );

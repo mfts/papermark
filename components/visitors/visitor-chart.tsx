@@ -30,7 +30,7 @@ export default function VisitorChart({
 
   durationData = durationData.map((item) => {
     const swrItem = swrData.data.find(
-      (data) => data.pageNumber === item.pageNumber
+      (data) => data.pageNumber === item.pageNumber,
     );
     return swrItem ? swrItem : item;
   });

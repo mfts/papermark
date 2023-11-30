@@ -30,7 +30,7 @@ export default function DomainCard({
       `/api/teams/${teamInfo?.currentTeam?.id}/domains/${domain}`,
       {
         method: "DELETE",
-      }
+      },
     );
 
     if (!response.ok) {
@@ -51,7 +51,8 @@ export default function DomainCard({
               href={`http://${domain}`}
               target="_blank"
               rel="noreferrer"
-              className="flex items-center space-x-2">
+              className="flex items-center space-x-2"
+            >
               <p className="flex items-center text-xl font-semibold">
                 {domain}
               </p>
@@ -65,15 +66,17 @@ export default function DomainCard({
               loading={loading}
               onClick={() => {
                 mutate(
-                  `/api/teams/${teamInfo?.currentTeam?.id}/domains/${domain}/verify`
+                  `/api/teams/${teamInfo?.currentTeam?.id}/domains/${domain}/verify`,
                 );
-              }}>
+              }}
+            >
               Refresh
             </Button>
             <Button
               variant="destructive"
               onClick={handleDelete}
-              loading={deleting}>
+              loading={deleting}
+            >
               Delete
             </Button>
           </div>

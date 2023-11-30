@@ -16,7 +16,7 @@ export function useDomainStatus({ domain }: { domain: string }) {
       revalidateOnMount: true,
       refreshInterval: 5000,
       keepPreviousData: true,
-    }
+    },
   );
 
   return {

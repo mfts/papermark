@@ -2,7 +2,6 @@ import { useStats } from "@/lib/swr/use-stats";
 import ErrorPage from "next/error";
 import BarChartComponent from "../charts/bar-chart";
 
-
 export default function StatsChart({
   documentId,
   totalPagesMax = 0,
@@ -35,14 +34,13 @@ export default function StatsChart({
   if (swrData) {
     swrData.data.forEach((dataItem) => {
       const pageIndex = durationData.findIndex(
-        (item) => item.pageNumber === dataItem.pageNumber
+        (item) => item.pageNumber === dataItem.pageNumber,
       );
 
-      
       if (pageIndex !== -1) {
         // If page exists in the initialized array, update its data
         const versionIndex = durationData[pageIndex].data.findIndex(
-          (v) => v.versionNumber === dataItem.versionNumber
+          (v) => v.versionNumber === dataItem.versionNumber,
         );
         if (versionIndex === -1) {
           // If this version number doesn't exist, add it
@@ -73,7 +71,7 @@ export default function StatsChart({
 
     // Sort by page number
     durationData.sort(
-      (a, b) => parseInt(a.pageNumber) - parseInt(b.pageNumber)
+      (a, b) => parseInt(a.pageNumber) - parseInt(b.pageNumber),
     );
   }
 

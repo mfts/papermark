@@ -1,7 +1,6 @@
 import Sidebar from "../Sidebar";
 
-
-export default function AppLayout({children}: {children: React.ReactNode}) {
+export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <div>
       <div className="flex flex-col lg:flex-row min-h-screen bg-gray-50 dark:bg-black">
