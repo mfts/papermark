@@ -1,13 +1,12 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/lib/prisma";
 import { checkPassword, log } from "@/lib/utils";
-import { analytics, identifyUser, trackAnalytics } from "@/lib/analytics";
-import { CustomUser } from "@/lib/types";
-import { sendViewedDocumentEmail } from "@/lib/emails/send-viewed-document";
+import { trackAnalytics } from "@/lib/analytics";
+import { client } from "@/trigger";
 
 export default async function handle(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   // We only allow POST requests
   if (req.method !== "POST") {
@@ -15,7 +14,8 @@ export default async function handle(
     return;
   }
   // POST /api/views
-  const { linkId, documentId, ...data } = req.body;
+  const { linkId, documentId, userId, documentVersionId, hasPages, ...data } =
+    req.body;
 
   const { email, password } = data as { email: string; password: string };
 
@@ -61,35 +61,55 @@ export default async function handle(
   }
 
   try {
+    console.time("create-view");
     const newView = await prisma.view.create({
       data: {
         linkId: linkId,
         viewerEmail: email,
         documentId: documentId,
       },
-      include: {
-        document: {
-          select: {
-            name: true,
-            owner: {
-              select: {
-                email: true,
-              },
-            },
-            versions: {
-              where: { isPrimary: true },
-              orderBy: { createdAt: "desc" },
-              take: 1,
-              select: { file: true, id: true, hasPages: true },
-            },
-          },
-        },
-      },
+      select: { id: true },
     });
+    console.timeEnd("create-view");
+
+    // if document version has pages, then return pages
+    // otherwise, return file from document version
+    let documentPages, documentVersion;
+    // let documentPagesPromise, documentVersionPromise;
+    if (hasPages) {
+      // get pages from document version
+      console.time("get-pages");
+      documentPages = await prisma.documentPage.findMany({
+        where: { versionId: documentVersionId },
+        orderBy: { pageNumber: "asc" },
+        select: {
+          file: true,
+          pageNumber: true,
+        },
+      });
+      console.timeEnd("get-pages");
+    } else {
+      // get file from document version
+      console.time("get-file");
+      documentVersion = await prisma.documentVersion.findUnique({
+        where: { id: documentVersionId },
+        select: {
+          file: true,
+        },
+      });
+      console.timeEnd("get-file");
+    }
+
+    // const [newView, documentPages, documentVersion] = await Promise.all([
+    //   newViewPromise,
+    //   documentPagesPromise,
+    //   documentVersionPromise,
+    // ]);
 
     // TODO: cannot identify user because session is not available
     // await identifyUser((session.user as CustomUser).id);
     // await analytics.identify();
+    console.time("track-analytics");
     await trackAnalytics({
       event: "Link Viewed",
       linkId: linkId,
@@ -97,47 +117,26 @@ export default async function handle(
       viewerId: newView.id,
       viewerEmail: email,
     });
+    console.timeEnd("track-analytics");
 
-    // TODO: this can be offloaded to a background job in the future to save some time
-    // send email to document owner that document has been viewed if user has not disabled notifications
     if (link.enableNotification) {
-      await sendViewedDocumentEmail(
-        newView.document.owner.email as string,
-        documentId,
-        newView.document.name,
-        email
-      );
+      // trigger link viewed event to trigger send-notification job
+      console.time("sendemail");
+      await client.sendEvent({
+        name: "link.viewed",
+        payload: { viewId: newView.id },
+      });
+      console.timeEnd("sendemail");
     }
 
-    // check if document version has multiple pages, if so, return the pages
-    if (newView.document.versions[0].hasPages) {
-      const pages = await prisma.documentPage.findMany({
-        where: {
-          versionId: newView.document.versions[0].id,
-        },
-        orderBy: {
-          pageNumber: "asc",
-        },
-        select: {
-          file: true,
-          pageNumber: true,
-        },
-      });
-
-      return res.status(200).json({
-        message: "View recorded",
-        viewId: newView.id,
-        file: null,
-        pages: pages,
-      });
-    }
-
-    return res.status(200).json({
+    const returnObject = {
       message: "View recorded",
       viewId: newView.id,
-      file: newView.document.versions[0].file,
-      pages: null,
-    });
+      file: documentVersion ? documentVersion.file : null,
+      pages: documentPages ? documentPages : null,
+    };
+
+    return res.status(200).json(returnObject);
   } catch (error) {
     log(`Failed to record view for ${linkId}. Error: \n\n ${error}`);
     return res.status(500).json({ message: (error as Error).message });
