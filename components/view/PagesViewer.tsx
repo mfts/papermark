@@ -100,13 +100,13 @@ export default function PagesViewer({
 
   // Navigate to previous page
   const goToPreviousPage = () => {
-    if (pageNumber > 1) return;
+    if (pageNumber <= 1) return;
     setPageNumber((prevPageNumber) => prevPageNumber - 1);
   };
 
   // Navigate to next page and preload next image
   const goToNextPage = () => {
-    if (pageNumber < numPages) return;
+    if (pageNumber >= numPages) return;
     preloadImage(DEFAULT_PRELOADED_IMAGES_NUM - 1 + pageNumber); // Preload the next image
     setPageNumber((prevPageNumber) => prevPageNumber + 1);
   };
