@@ -48,7 +48,7 @@ export default function Intro() {
               router.push({
                 pathname: "/welcome",
                 query: {
-                  type: "next",
+                  type: "referralsource",
                 },
               })
             }

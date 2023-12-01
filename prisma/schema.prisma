@@ -42,6 +42,7 @@ model User {
   email          String?    @unique
   emailVerified  DateTime?
   image          String?
+  referralSource String?
   createdAt      DateTime   @default(now())
   accounts       Account[]
   sessions       Session[]
