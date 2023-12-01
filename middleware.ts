@@ -39,6 +39,8 @@ export default async function middleware(req: NextRequest, ev: NextFetchEvent) {
     path !== "/docsend-alternatives" &&
     path !== "/launch-week" &&
     path !== "/open-source-investors" &&
+    path !== "/ai" &&
+     path !== "/share-notion-page" &&
     !path.startsWith("/alternatives/") &&
     !path.startsWith("/blog/") &&
     !path.startsWith("/view/")

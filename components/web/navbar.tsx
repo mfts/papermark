@@ -8,7 +8,7 @@ function classNames(...classes: any[]) {
 export default function Navbar() {
   return (
     <>
-      <nav className=" fixed top-0 w-full z-50 backdrop-blur-md">
+      <nav className="top-0 w-full z-50 backdrop-blur-md">
         <div className="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
           <div className="relative flex h-16 justify-between">
             <div className="absolute inset-y-0 left-0 flex items-center sm:hidden">
