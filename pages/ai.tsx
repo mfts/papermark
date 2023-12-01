@@ -1,4 +1,5 @@
 import Head from "next/head";
+import Navbar from "@/components/web/navbar";
 import Footer from "@/components/web/footer";
 import { Disclosure } from "@headlessui/react";
 import { MinusSmallIcon, PlusSmallIcon } from "@heroicons/react/24/outline";
@@ -156,6 +157,7 @@ export default function Home() {
         <meta property="og:url" content="https://www.papermark.io" />
         <meta name="twitter:card" content="summary_large_image" />
       </Head>
+        <Navbar />
 
 
       <main>
@@ -234,7 +236,7 @@ export default function Home() {
               <div className="relative overflow-hidden pt-16">
                 <div className="mx-auto max-w-2xl px-6 lg:px-8">
                   <img
-                    src="http://localhost:3000/_static/upload2.png"
+                    src="https://www.papermark.io/_static/upload2.png"
                     alt="App screenshot"
                     className="mb-[-12%] rounded-xl shadow-2xl ring-1 ring-gray-900/10"
                     width={2432}

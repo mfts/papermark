@@ -27,7 +27,7 @@ export default function Example() {
           }}
         />
       </div>
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+      <div className="flex justify-center  items-center gap-x-4 gap-y-2">
         <p className="text-sm leading-6 text-white">
           <strong className="font-semibold">Papermark Launch Week </strong>
           <svg
@@ -41,7 +41,7 @@ export default function Example() {
         </p>
         <a
           href="https://www.papermark.io/launch-week"
-          className="flex-none rounded-full bg-green-600 px-3.5 py-1 text-sm font-semibold text-white shadow-sm hover:bg-green-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-900"
+          className="flex-none rounded-md bg-green-600 px-3.5 py-1 text-sm font-semibold text-white shadow-sm hover:bg-green-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-900"
         >
           Follow this madness <span aria-hidden="true"></span>
         </a>

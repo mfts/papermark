@@ -1,5 +1,6 @@
 import Head from "next/head";
 import Footer from "@/components/web/footer";
+import Navbar from "@/components/web/navbar";
 import { Disclosure } from "@headlessui/react";
 import { MinusSmallIcon, PlusSmallIcon } from "@heroicons/react/24/outline";
 import {
@@ -57,68 +58,71 @@ const faqs = [
   {
     question: "What is Papermark?",
     answer:
-      "Papermark is a dynamic, open-source alternative to DocSend. It enables secure document sharing, tracking, and storage, providing users with real-time analytics. Like your Pitchdeck.",
+      "Papermark is an innovative platform designed to extend the capabilities of Notion pages. It allows users to share Notion documents or pages with custom domain support, password protection, email capture, and comprehensive analytics tracking.",
   },
   {
-    question: "How can I use Papermark?",
+    question: "How can I use Papermark for Notion?",
     answer:
-      "You can subscribe to one of our plans or use it for free and host it yourself. Simply visit our GitHub page, clone the repository, follow the setup instructions and start using Papermark. You can customize it according to your specific needs as it is open-source. https://github.com/mfts/papermark",
+      "Using Papermark is straightforward. Set up your Notion page, then use Papermark to share it with enhanced features like custom domains, password protection, and more. It's perfect for professionals who need secure and trackable document sharing.",
   },
   {
-    question: "Is Papermark free?",
+    question: "Is Papermark free to use?",
     answer:
-      "Yes, Papermark is completely open-source. This means you are free to use, modify, and distribute it as you see fit according to the terms of our license.",
+      "Papermark offers both free and premium options. The open-source nature of Papermark allows for flexibility and customization, with advanced features available in our premium plans.",
   },
   {
-    question: "Can I add my custom domain to look professional?",
+    question: "Can I add my custom domain to Papermark?",
     answer:
-      "Yes, with Papermark you can connect your custom domain and send your Pitchdeck or document via it. While continue tracking the analytics",
+      "Absolutely! Papermark supports custom domains, enabling you to maintain your brand's identity while sharing your Notion pages or documents.",
   },
   {
-    question: "How I can reach more investors with Papermark?",
+    question: "How can I track visitor engagement on my shared Notion pages?",
     answer:
-      "Papermark has recommendations for more similar investors for your specific startup build in.",
+      "Papermark provides detailed analytics for your shared Notion pages, including visitor insights, engagement metrics, and more, helping you understand your audience better.",
   },
   {
-    question: "How I can use Papermark as a VC?",
+    question: "Can I secure my Notion pages with Papermark?",
     answer:
-      "You can use it to summarise and analyse data for different Pitchdecks",
+      "Yes, Papermark offers robust password protection for your Notion pages, ensuring that your shared documents are accessed only by intended recipients.",
   },
   {
-    question: "Can I contribute to the Papermark project?",
+    question: "Can I contribute to improving Papermark?",
     answer:
-      "Yes, contributions are welcome! Please visit our GitHub repository to learn about how you can contribute. Whether it&apos;s by improving the code, adding new features, or even reporting bugs, all contributions are appreciated. https://github.com/mfts/papermark",
+      "We welcome contributions to Papermark! Our GitHub repository is open for developers to contribute, whether it's through code enhancements, feature additions, or bug reporting.",
   },
-
   // More questions...
 ];
+
 
 
 
 export default function Home() {
   return (
     <div>
-      <Head>
-        <title>Papermark: Open-Source Alternative to BriefLink</title>
-        <meta
-          name="description"
-          content="Looking for a BriefLink alternative? Choose Papermark, the paramount open-source alternative to BriefLink. Send decks with your custom domain, coupled with secure document sharing and real-time analytics."
-        />
-        <meta
-          property="og:title"
-          content="Papermark: Leading Open-Source Alternative to BriefLink"
-        />
-        <meta
-          property="og:description"
-          content="Explore Papermark: Your go-to open-source alternative to BriefLink. Send decks using a custom domain, benefit from top-notch document security, and gain insights in real-time."
-        />
-        <meta
-          property="og:image"
-          content="https://www.papermark.io/_static/meta-image.png"
-        />
-        <meta property="og:url" content="https://www.papermark.io" />
-        <meta name="twitter:card" content="summary_large_image" />
-      </Head>
+     <Head>
+  <title>Papermark: Share Notion Pages with Custom Domains and Analytics</title>
+  <meta
+    name="description"
+    content="Discover Papermark, the ultimate tool for sharing Notion pages. Add custom domains, secure your pages, capture emails, and track detailed analytics."
+  />
+  <meta
+    property="og:title"
+    content="Papermark: Advanced Notion Sharing with Custom Domains"
+  />
+  <meta
+    property="og:description"
+    content="Enhance your Notion experience with Papermark. Share Notion documents securely, use custom domains, and gain insightful analytics."
+  />
+  <meta
+    property="og:image"
+    content="https://www.papermark.io/_static/notion.png"
+  />
+  <meta property="og:url" content="https://www.papermark.io" />
+  <meta name="twitter:card" content="summary_large_image" />
+</Head>
+  <Navbar />
+
+
 
       <main>
         {/* Hero section */}
@@ -139,12 +143,12 @@ export default function Home() {
             <div className="mx-auto max-w-2xl py-12 sm:py-12 lg:py-32 ">
               <div className="hidden sm:mb-8 sm:flex sm:justify-center">
                 <div className="relative rounded-full px-3 py-1 text-sm leading-6 text-black dark:text-white ring-1 ring-black/10 dark:ring-white/10 hover:ring-white/20">
-                  Papermark AI 🌟
+                  Papermark for Notion ✍️
                 </div>
               </div>
               <div className="text-center">
                 <h1 className="text-4xl font-bold tracking-tight text-black dark:text-white sm:text-6xl">
-                  Share Notion page 
+                  Share Notion Page 
                 </h1>
                 <p className="mt-6 text-lg leading-8 text-gray-500">
                   Custom domain, Password protection, Email capture, Advanced analytics
@@ -154,7 +158,7 @@ export default function Home() {
                     className="rounded-md bg-black dark:bg-white px-3.5 py-2.5 text-sm font-semibold text-white dark:text-black shadow-sm hover:bg-gray-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400"
                     href="/login"
                   >
-                    Chat with your document
+                    Share your Notion
                   </Link>
                 </div>
               </div>
@@ -177,57 +181,7 @@ export default function Home() {
           </video>
         </div>
 
-  {/* Feature section */}
-            <div className="mt-32 sm:mt-56">
-              <div className="mx-auto max-w-7xl px-6 lg:px-8">
-                <div className="mx-auto max-w-2xl sm:text-center">
-                  <h2 className="text-base font-semibold leading-7 text-black dark:texxt-white">
-                    Share docs with ease
-                  </h2>
-                  <p className="mt-2 text-3xl font-bold tracking-tight text-black dark:text-white sm:text-4xl">
-                    Chat with your own document
-                  </p>
-                  <p className="mt-6 text-lg leading-8 text-gray-500">
-                    Upload your document and 
-                  </p>
-                </div>
-              </div>
-              <div className="relative overflow-hidden pt-16">
-                <div className="mx-auto max-w-2xl px-6 lg:px-8">
-                  <img
-                    src="http://localhost:3000/_static/upload2.png"
-                    alt="App screenshot"
-                    className="mb-[-12%] rounded-xl shadow-2xl ring-1 ring-gray-900/10"
-                    width={2432}
-                    height={1442}
-                  />
-                  <div className="relative" aria-hidden="true">
-                    <div className="absolute -inset-x-20 bottom-0 bg-gradient-to-t from-black pt-[7%]" />
-                  </div>
-                </div>
-              </div>
-              <div className="mx-auto mt-16 max-w-7xl px-6 sm:mt-20 md:mt-24 lg:px-8">
-                <dl className="mx-auto grid max-w-2xl grid-cols-1 gap-x-6 gap-y-10 text-base leading-7 text-gray-500 sm:grid-cols-2 lg:mx-0 lg:max-w-none lg:grid-cols-3 lg:gap-x-8 lg:gap-y-16">
-                  {features.map((feature) => (
-                    <div key={feature.name} className="relative pl-9">
-                      <dt className="inline font-semibold text-gray-600 dark:text-gray-200">
-                        <feature.icon
-                          className="absolute left-1 top-1 h-5 w-5 text-black dark:text-white"
-                          aria-hidden="true"
-                        />
-                        {feature.name}
-                      </dt>{" "}
-                      <dd className="inline">{feature.description}</dd>
-                    </div>
-                  ))}
-                </dl>
-              </div>
-            </div>
-
- 
-
-        
-
+  
             {/* Testimonial section */}
             <div className="relative z-10 mt-32 bg-white dark:bg-gray-900 pb-20 sm:mt-56 sm:pb-24 xl:pb-0">
               <div

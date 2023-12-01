@@ -37,11 +37,9 @@ export default function Home() {
       
       
         <Banner />
-   
-      
+  
 
         <Navbar />
-     
      
 
       <div>
