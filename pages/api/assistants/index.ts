@@ -3,11 +3,7 @@ import { getServerSession } from "next-auth";
 import prisma from "@/lib/prisma";
 import { authOptions } from "../auth/[...nextauth]";
 import { errorhandler } from "@/lib/errorHandler";
-import OpenAI from "openai";
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || "",
-});
+import { openai } from "@/lib/openai";
 
 export default async function handle(
   req: NextApiRequest,

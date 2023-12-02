@@ -1,13 +1,9 @@
 import { experimental_AssistantResponse } from "ai";
-import OpenAI from "openai";
+import { type Run } from "openai/resources/beta/threads/runs/runs";
 import { type MessageContentText } from "openai/resources/beta/threads/messages/messages";
 import { Ratelimit } from "@upstash/ratelimit";
 import { redis } from "@/lib/redis";
-
-// Create an OpenAI API client (that's edge friendly!)
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || "",
-});
+import { openai } from "@/lib/openai";
 
 const ratelimit = {
   public: new Ratelimit({
@@ -93,7 +89,7 @@ export default async function POST(req: Request) {
         assistant_id: assistantId!,
       });
 
-      async function waitForRun(run: OpenAI.Beta.Threads.Runs.Run) {
+      async function waitForRun(run: Run) {
         // Poll for status change
         while (run.status === "queued" || run.status === "in_progress") {
           // delay for 500ms:
