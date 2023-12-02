@@ -10,7 +10,7 @@ import { errorhandler } from "@/lib/errorHandler";
 
 export default async function handle(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   if (req.method === "GET") {
     // GET /api/links/:id/visits
@@ -91,7 +91,7 @@ export default async function handle(
       const summedDurations = durations.map((duration) => {
         return duration.data.reduce(
           (totalDuration, data) => totalDuration + data.sum_duration,
-          0
+          0,
         );
       });
 
@@ -112,7 +112,7 @@ export default async function handle(
 
       // TODO: Check that the user is owner of the links, otherwise return 401
 
-      // console.log("viewsWithDuration:", viewsWithDuration)
+      // console.log("viewsWithDuration:", viewsWithDuration);
 
       return res.status(200).json(viewsWithDuration);
     } catch (error) {
