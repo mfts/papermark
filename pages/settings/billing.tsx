@@ -45,7 +45,7 @@ export default function Billing() {
     {
       id: 1,
       title: "Free",
-      priceMonthly: "$0/mo",
+      priceMonthly: "€0/mo",
       description: "Enjoy free access",
       currentPlan: plan && plan == "free" ? true : false,
       features: [
@@ -62,10 +62,9 @@ export default function Billing() {
     {
       id: 2,
       title: "Starter",
-      priceMonthly: "$15/mo",
-      description: "Use all freemium features+ ",
-      currentPlan: plan && plan == "pro" ? true : false,
-      isTrial: plan && plan == "trial" ? true : false,
+      priceMonthly: "€15/mo",
+      description: "All free features +",
+      currentPlan: plan && plan == "starter" ? true : false,
       features: [
         "Custom domains",
         "Unlimited documents",
@@ -76,16 +75,17 @@ export default function Billing() {
     {
       id: 3,
       title: "Pro",
-      priceMonthly: "$30/mo",
-      description: "Get more advanced plan",
-      currentPlan: false,
+      priceMonthly: "€30/mo",
+      description: "All features and more",
+      currentPlan: plan && plan == "pro" ? true : false,
+      isTrial: plan && plan == "trial" ? true : false,
       features: [
         "Team members",
         "Priority Support",
         "Custom Branding",
         "Large file uploads",
         "Papermark AI",
-        "2000 questions",
+        "1500 questions",
       ],
     },
   ];
@@ -106,11 +106,10 @@ export default function Billing() {
                 href="https://cal.com/marcseitz/papermark"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-white hover:underline"
+                className="text-foreground hover:underline"
               >
-                {" "}
-                contact us{" "}
-              </Link>
+                contact us
+              </Link>{" "}
               for support and enterprise requests
             </p>
           </div>
@@ -208,7 +207,40 @@ export default function Billing() {
                           Manage Subscription
                         </Button>
                       ) : (
-                        <UpgradePlanModal>
+                        <UpgradePlanModal clickedPlan="Starter">
+                          <Button type="button">Upgrade to Starter</Button>
+                        </UpgradePlanModal>
+                      )
+                    ) : (
+                      <div className="h-10 w-24 animate-pulse rounded-md bg-border" />
+                    ))}
+                  {tier.id === 3 &&
+                    (plan ? (
+                      tier.currentPlan ? (
+                        <Button
+                          onClick={() => {
+                            setClicked(true);
+                            fetch(
+                              `/api/teams/${teamInfo?.currentTeam?.id}/billing/manage`,
+                              {
+                                method: "POST",
+                              },
+                            )
+                              .then(async (res) => {
+                                const url = await res.json();
+                                router.push(url);
+                              })
+                              .catch((err) => {
+                                alert(err);
+                                setClicked(false);
+                              });
+                          }}
+                          loading={clicked}
+                        >
+                          Manage Subscription
+                        </Button>
+                      ) : (
+                        <UpgradePlanModal clickedPlan="Pro">
                           <Button type="button">
                             {tier.isTrial
                               ? "Upgrade to remain on Pro"
@@ -219,20 +251,6 @@ export default function Billing() {
                     ) : (
                       <div className="h-10 w-24 animate-pulse rounded-md bg-border" />
                     ))}
-                  {tier.id === 3 && (
-                    <Link
-                      href="https://cal.com/marcseitz/papermark"
-                      target="_blank"
-                    >
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        className="border border-gray-700"
-                      >
-                        Contact us
-                      </Button>
-                    </Link>
-                  )}
                 </div>
               </div>
             ))}

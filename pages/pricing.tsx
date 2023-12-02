@@ -24,8 +24,8 @@ export default function Pricing() {
     {
       id: 2,
       title: "Starter",
-      priceMonthly: "$15/mo",
-      description: "Use all freemium features+ ",
+      priceMonthly: "€15/mo",
+      description: "All free features + ",
       features: [
         "Custom domains",
         "Unlimited documents",
@@ -36,15 +36,15 @@ export default function Pricing() {
     {
       id: 3,
       title: "Pro",
-      priceMonthly: "$30/mo",
-      description: "Get more advanced plan",
+      priceMonthly: "€30/mo",
+      description: "All features and more",
       features: [
         "Team members",
         "Priority Support",
         "Custom Branding",
         "Large file uploads",
         "Papermark AI",
-        "2000 questions",
+        "1500 questions",
       ],
     },
   ];
