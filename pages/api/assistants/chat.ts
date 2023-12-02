@@ -49,13 +49,12 @@ export default async function POST(req: Request) {
       redis: redis,
       // rate limit to 5 requests per hour
       limiter: Ratelimit.slidingWindow(5, "3600s"),
+      analytics: true,
     });
 
     const { success, limit, reset, remaining } = await ratelimit.limit(
       `ratelimit_${ip}`,
     );
-
-    console.log("ratelimit", { success, limit, reset, remaining });
 
     if (!success) {
       return new Response("You have reached your request limit for the day.", {

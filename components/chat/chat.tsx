@@ -11,6 +11,7 @@ import { ChatInput } from "./chat-input";
 import { ChatScrollAnchor } from "./chat-scroll-anchor";
 import { EmptyScreen } from "./empty-screen";
 import { useEffect, useState } from "react";
+import { nanoid } from "nanoid";
 
 export interface ChatProps extends React.ComponentProps<"div"> {
   initialMessages: Message[];
@@ -42,6 +43,19 @@ export function Chat({
   });
 
   const [combinedMessages, setCombinedMessages] = useState<Message[]>([]);
+
+  useEffect(() => {
+    if (error instanceof Error) {
+      const message: Message = {
+        role: "system",
+        content:
+          "You have reached your request limit for the day. Sign up for a free account to continue using Papermark Assistant.",
+        id: nanoid(),
+      };
+
+      setCombinedMessages((prev) => [...prev, message]);
+    }
+  }, [error]);
 
   useEffect(() => {
     // Concatenate existing messages with messages from the hook
