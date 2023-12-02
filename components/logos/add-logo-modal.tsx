@@ -13,10 +13,12 @@ import { PutBlobResult } from "@vercel/blob";
 import { upload } from "@vercel/blob/client";
 import { usePlausible } from "next-plausible";
 import { useRouter } from "next/router";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
-import DocumentUpload from "../document-upload";
 import { Accept } from "react-dropzone";
+import AvatarEditor from "react-avatar-editor";
+import DocumentUpload from "../document-upload";
+import { Slider } from "@/components/ui/slider";
 
 export function AddLogoModal({
   open,
@@ -33,7 +35,9 @@ export function AddLogoModal({
   const plausible = usePlausible();
   const [uploading, setUploading] = useState<boolean>(false);
   const [currentFile, setCurrentFile] = useState<File | null>(null);
+  const [scale, setScale] = useState<number[]>([100]);
   const teamInfo = useTeam();
+  const editor = useRef<AvatarEditor>(null);
   const acceptedFileFormats: Accept = {
     "image/png": [".png"],
     "image/jpg": [".jpg"],
@@ -54,10 +58,30 @@ export function AddLogoModal({
     try {
       setUploading(true);
 
-      const newBlob = await upload(currentFile.name, currentFile, {
-        access: "public",
-        handleUploadUrl: "/api/file/browser-upload",
-      });
+      let editedFile;
+      if (editor && editor.current) {
+        const blob = await new Promise<Blob | null>((resolve) => {
+          editor?.current
+            ?.getImage()
+            .toBlob((blob) => resolve(blob), "image/png");
+        });
+
+        if (blob) {
+          // Create a File object from the Blob
+          editedFile = new File([blob], "edited_avatar.png", {
+            type: "image/png",
+          });
+        }
+      }
+
+      const newBlob = await upload(
+        currentFile.name,
+        editedFile ? editedFile : currentFile,
+        {
+          access: "public",
+          handleUploadUrl: "/api/file/browser-upload",
+        },
+      );
 
       let response: Response | undefined;
       // create a document or new version in the database if the document is a pdf
@@ -117,6 +141,10 @@ export function AddLogoModal({
     return response;
   }
 
+  const handleScaleChange = (newValue: number[]) => {
+    setScale(newValue);
+  };
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
@@ -140,8 +168,46 @@ export function AddLogoModal({
                   setCurrentFile={setCurrentFile}
                   acceptedFileTypes={accetedFileTypes}
                   AcceptedFormats={acceptedFileFormats}
+                  maxFileSizeInMB={30}
                 />
               </div>
+            </div>
+          </div>
+          <div>
+            <div className="flex justify-center pb-6">
+              {currentFile ? (
+                <AvatarEditor
+                  ref={editor}
+                  scale={scale[0] * 0.01}
+                  width={200}
+                  height={80}
+                  // position={state.position}
+                  // showGrid={state.showGrid}
+                  // onPositionChange={handlePositionChange}
+                  // rotate={state.rotate}
+                  // borderRadius={state.width / (100 / state.borderRadius)}
+                  // backgroundColor={state.backgroundColor}
+                  // onLoadFailure={logCallback.bind(this, "onLoadFailed")}
+                  // onLoadSuccess={logCallback.bind(this, "onLoadSuccess")}
+                  // onImageReady={logCallback.bind(this, "onImageReady")}
+                  image={currentFile !== null ? currentFile : "EmptyFile"}
+                  // disableCanvasRotation={state.disableCanvasRotation}
+                />
+              ) : (
+                ""
+              )}
+            </div>
+            <div className="flex justify-center pb-6">
+              {currentFile ? (
+                <Slider
+                  value={scale}
+                  onValueChange={handleScaleChange}
+                  className="my-6"
+                  orientation="horizontal"
+                />
+              ) : (
+                ""
+              )}
             </div>
           </div>
 
@@ -152,7 +218,7 @@ export function AddLogoModal({
               disabled={uploading || !currentFile}
               loading={uploading}
             >
-              {uploading ? "Uploading..." : "Upload Document"}
+              {uploading ? "Uploading..." : "Upload Logo"}
             </Button>
           </div>
         </form>

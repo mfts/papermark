@@ -56,10 +56,10 @@ export default function LogoCard({
         <div className="flex h-10 flex-col space-y-2 sm:flex-row sm:items-center sm:space-x-5 sm:space-y-0">
           <Image
             src={file}
-            alt={"sdfs"}
+            alt={"Custom logo"}
             width={500}
             height={1000}
-            className="h-12 w-full sm:w-1/2 flex-none rounded-lg bg-white object-center aspect-[3/4]"
+            className="h-12 w-full sm:w-1/2 flex-none rounded-lg object-center aspect-[3/4]"
           />
         </div>
       </div>
