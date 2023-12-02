@@ -53,36 +53,39 @@ export default function Billing() {
         "Unlimited links",
         "Analytics for each page",
         "Feedback on each page",
+        "Notion Documents",
         "Email Notifications on views",
+        "Papermark AI",
+        "100 questions, 3/day",
       ],
     },
     {
       id: 2,
-      title: "Pro",
-      priceMonthly: "$29/mo",
+      title: "Starter",
+      priceMonthly: "$15/mo",
       description: "Use all freemium features+ ",
       currentPlan: plan && plan == "pro" ? true : false,
       isTrial: plan && plan == "trial" ? true : false,
       features: [
-        "Team members",
         "Custom domains",
         "Unlimited documents",
-        "Large file uploads",
-        "Full customization",
+        "Papermark AI",
+        "500 questions",
       ],
     },
     {
       id: 3,
-      title: "Contact us",
-      priceMonthly: "Custom",
-      description: "Get more perfect plan for you",
+      title: "Pro",
+      priceMonthly: "$30/mo",
+      description: "Get more advanced plan",
       currentPlan: false,
       features: [
+        "Team members",
         "Priority Support",
-        "Full customization",
-        "Separate Hosting",
-        "Custom features request",
-        "Personal Onboarding",
+        "Custom Branding",
+        "Large file uploads",
+        "Papermark AI",
+        "2000 questions",
       ],
     },
   ];
@@ -98,13 +101,23 @@ export default function Billing() {
               Billing
             </h3>
             <p className="text-sm text-muted-foreground">
-              Manage your subscription
+              Manage your subscription{" "}
+              <Link
+                href="https://cal.com/marcseitz/papermark"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-white hover:underline"
+              >
+                {" "}
+                contact us{" "}
+              </Link>
+              for support and enterprise requests
             </p>
           </div>
         </div>
 
         <div>
-          <div className="grid grid-cols-1 gap-6 items-center sm:grid-cols-3 sm:gap-4">
+          <div className="mx-auto mt-16 grid max-w-5xl grid-cols-1 gap-6 items-stretch sm:grid-cols-3 sm:gap-4">
             {tiers.map((tier) => (
               <div
                 key={tier.id}
