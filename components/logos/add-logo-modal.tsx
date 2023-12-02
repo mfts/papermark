@@ -19,6 +19,8 @@ import { Accept } from "react-dropzone";
 import AvatarEditor from "react-avatar-editor";
 import DocumentUpload from "../document-upload";
 import { Slider } from "@/components/ui/slider";
+import { Undo } from "lucide-react";
+import { Redo } from "lucide-react";
 
 export function AddLogoModal({
   open,
@@ -35,7 +37,8 @@ export function AddLogoModal({
   const plausible = usePlausible();
   const [uploading, setUploading] = useState<boolean>(false);
   const [currentFile, setCurrentFile] = useState<File | null>(null);
-  const [scale, setScale] = useState<number[]>([100]);
+  const [scale, setScale] = useState<number[]>([90]);
+  const [rotate, setRotate] = useState<number>(0);
   const teamInfo = useTeam();
   const editor = useRef<AvatarEditor>(null);
   const acceptedFileFormats: Accept = {
@@ -114,7 +117,7 @@ export function AddLogoModal({
         }, 2000);
       }
     } catch (error) {
-      console.error("An error occurred while uploading the file: ", error);
+      console.error("An error occurred while uploading the logo: ", error);
     }
   };
 
@@ -143,6 +146,10 @@ export function AddLogoModal({
 
   const handleScaleChange = (newValue: number[]) => {
     setScale(newValue);
+  };
+
+  const rotatePreviewImage = (rotateDirection: number) => {
+    setRotate((prev) => prev + rotateDirection * 30);
   };
 
   return (
@@ -182,10 +189,9 @@ export function AddLogoModal({
                   width={200}
                   height={80}
                   // position={state.position}
-                  // showGrid={state.showGrid}
                   // onPositionChange={handlePositionChange}
-                  // rotate={state.rotate}
-                  // borderRadius={state.width / (100 / state.borderRadius)}
+                  rotate={rotate}
+                  borderRadius={2}
                   // backgroundColor={state.backgroundColor}
                   // onLoadFailure={logCallback.bind(this, "onLoadFailed")}
                   // onLoadSuccess={logCallback.bind(this, "onLoadSuccess")}
@@ -199,12 +205,29 @@ export function AddLogoModal({
             </div>
             <div className="flex justify-center pb-6">
               {currentFile ? (
-                <Slider
-                  value={scale}
-                  onValueChange={handleScaleChange}
-                  className="my-6"
-                  orientation="horizontal"
-                />
+                <div className="flex space-x-1">
+                  {" "}
+                  <Button
+                    className="my-4 h-8 rounded-full px-1 text-xs py-1"
+                    type="button"
+                    onClick={() => rotatePreviewImage(1)}
+                  >
+                    <Redo />
+                  </Button>
+                  <Slider
+                    value={scale}
+                    onValueChange={handleScaleChange}
+                    className="my-6 px-4 py-2"
+                    orientation="horizontal"
+                  />
+                  <Button
+                    className="my-4 h-8 rounded-full px-1 text-xs py-1"
+                    type="button"
+                    onClick={() => rotatePreviewImage(-1)}
+                  >
+                    <Undo />
+                  </Button>
+                </div>
               ) : (
                 ""
               )}
