@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
-import Sparkle from "../shared/icons/sparke";
+import Sparkle from "../shared/icons/sparkle";
 
 const exampleMessages = [
   {

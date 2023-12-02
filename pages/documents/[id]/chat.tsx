@@ -4,7 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { CustomUser } from "@/lib/types";
 import { Chat } from "@/components/chat/chat";
-import Sparkle from "@/components/shared/icons/sparke";
+import Sparkle from "@/components/shared/icons/sparkle";
 
 export const getServerSideProps = async (context: any) => {
   const { id } = context.params;
