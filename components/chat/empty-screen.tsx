@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
+import Sparkle from "../shared/icons/sparkle";
 
 const exampleMessages = [
   {
@@ -26,7 +27,7 @@ export function EmptyScreen({
   setInput,
   handleInputChange,
 }: {
-  firstPage: string;
+  firstPage?: string;
   setInput: (input: string) => void;
   handleInputChange: (e: any) => void;
 }) {
@@ -40,19 +41,36 @@ export function EmptyScreen({
     <>
       <div className="mx-auto w-1/2 md:w-1/3">
         <div className="flex items-center justify-center">
-          <Image
-            src={firstPage}
-            width={768}
-            height={100}
-            className="object-contain rounded-md ring-1 ring-gray-700"
-            alt="First page of the document"
-          />
+          {firstPage ? (
+            <Image
+              src={firstPage}
+              width={768}
+              height={100}
+              className="object-contain rounded-md ring-1 ring-gray-700"
+              alt="First page of the document"
+            />
+          ) : (
+            <div className="flex items-center justify-center rounded-md w-full">
+              <p className="inline-flex text-xl">
+                Chat with{" "}
+                <span className="inline-flex items-center mx-1 space-x-1">
+                  <span className="text-xl font-bold tracking-tighter ">
+                    Papermark
+                  </span>
+                  's
+                </span>
+                pitchdeck
+              </p>
+            </div>
+          )}
         </div>
+
         <div className="flex justify-center text-lg mt-4">
           What would you like to know?
         </div>
       </div>
-      <div className="mx-auto max-w-2xl px-4 fixed bottom-28 inset-x-0">
+
+      <div className="mx-auto max-w-2xl px-4 absolute bottom-0 inset-x-0">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {exampleMessages.map((message, index) => (
             <Button

@@ -103,7 +103,7 @@ export default function DocumentsCard({
       </div>
 
       <div className="flex flex-row space-x-2">
-        {document.type === "notion" ? (
+        {document.type !== "notion" ? (
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -111,8 +111,8 @@ export default function DocumentsCard({
             }}
             className="group/button flex items-center z-10 space-x-1 rounded-md ring-1 ring-gray-200 dark:ring-gray-700 px-2 py-0.5 transition-all duration-75 hover:scale-105 active:scale-95"
           >
-            <PapermarkSparkle className="h-4 w-4 text-gray-400 group-hover/row:text-foreground group-hover/row:animate-pulse group-hover/button:text-white group-hover/button:animate-none" />
-            <span className="whitespace-nowrap text-sm ml-1 hidden sm:inline-block text-gray-400 group-hover/button:text-white">
+            <PapermarkSparkle className="h-4 w-4 text-gray-400 group-hover/row:text-foreground group-hover/row:animate-pulse group-hover/button:text-foreground group-hover/button:animate-none" />
+            <span className="whitespace-nowrap text-sm ml-1 hidden sm:inline-block text-gray-400 group-hover/button:text-foreground">
               AI Assistant
             </span>
           </button>
