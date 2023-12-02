@@ -101,7 +101,7 @@ export default function DataroomCard({
 
       <Button
         onClick={handleButtonClick}
-        className="flex items-center z-10 space-x-1 rounded-md text-destructive hover:bg-red-500 bg-gray-200 dark:bg-gray-700 px-2 py-0.5 transition-all duration-75 hover:scale-105 active:scale-100"
+        className="flex items-center z-10 space-x-1 rounded-md text-red-500 bg-gray-200 dark:bg-gray-700 px-2 py-0.5 transition-all duration-75 hover:scale-105 active:scale-100"
       >
         {isFirstClick ? "Really remove?" : "Remove dataroom"}
       </Button>
