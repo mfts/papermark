@@ -14,8 +14,9 @@ import { useEffect, useState } from "react";
 
 export interface ChatProps extends React.ComponentProps<"div"> {
   initialMessages: Message[];
-  threadId: string;
-  firstPage: string;
+  threadId?: string;
+  firstPage?: string;
+  isPublic?: boolean;
 }
 
 export function Chat({
@@ -23,6 +24,7 @@ export function Chat({
   threadId,
   firstPage,
   className,
+  isPublic,
 }: ChatProps) {
   const {
     status,
@@ -34,6 +36,9 @@ export function Chat({
   } = useAssistant({
     api: "/api/assistants/chat",
     threadId: threadId,
+    body: {
+      isPublic: isPublic,
+    },
   });
 
   const [combinedMessages, setCombinedMessages] = useState<Message[]>([]);
@@ -56,11 +61,18 @@ export function Chat({
 
   return (
     <>
-      <div className={cn("pb-[100px] pt-24", className)}>
+      <div
+        className={cn(
+          "pb-[20px] pt-24 h-[calc(100vh-96px)] relative overflow-y-auto",
+          className,
+        )}
+      >
         {combinedMessages.length ? (
           <>
             <ChatList messages={combinedMessages} status={status} />
-            <ChatScrollAnchor trackVisibility={isLoading} />
+            {!isPublic ? (
+              <ChatScrollAnchor trackVisibility={isLoading} />
+            ) : null}
           </>
         ) : (
           <EmptyScreen

@@ -15,28 +15,34 @@ export const config = {
 export default async function POST(req: Request) {
   // Parse the request body
   const input: {
-    threadId: string;
+    threadId: string | null;
     message: string;
+    isPublic: boolean | null;
   } = await req.json();
 
+  // create a threadId if one wasn't provided
+  const threadId = input.threadId ?? (await openai.beta.threads.create()).id;
+
   // Add a message to the thread
-  const createdMessage = await openai.beta.threads.messages.create(
-    input.threadId,
-    {
-      role: "user",
-      content: input.message,
-    },
-  );
+  const createdMessage = await openai.beta.threads.messages.create(threadId, {
+    role: "user",
+    content: input.message,
+  });
+
+  // select the assistantId based on the isPublic flag
+  const assistantId = input.isPublic
+    ? (process.env.OAI_PUBLIC_ASSISTANT_ID as string)
+    : (process.env.OAI_ASSISTANT_ID as string);
 
   return experimental_AssistantResponse(
     {
-      threadId: input.threadId,
+      threadId,
       messageId: createdMessage.id,
     },
     async ({ threadId, sendMessage }) => {
       // Run the assistant on the thread
       const run = await openai.beta.threads.runs.create(threadId, {
-        assistant_id: process.env.OAI_ASSISTANT_ID!,
+        assistant_id: assistantId!,
       });
 
       async function waitForRun(run: OpenAI.Beta.Threads.Runs.Run) {
