@@ -19,6 +19,8 @@ import ProBanner from "./billing/pro-banner";
 import Cookies from "js-cookie";
 import { usePlan } from "@/lib/swr/use-billing";
 import Image from "next/image";
+import SelectTeam from "./teams/select-team";
+import { TeamContextType, initialState, useTeam } from "@/context/team-context";
 
 export default function Sidebar() {
   const { data: session, status } = useSession();
@@ -26,7 +28,10 @@ export default function Sidebar() {
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
   const [showProBanner, setShowProBanner] = useState<boolean | null>(null);
   const router = useRouter();
-  
+
+  const { currentTeam, teams, isLoading }: TeamContextType =
+    useTeam() || initialState;
+
   const navigation = [
     // {
     //   name: "Overview",
@@ -58,7 +63,7 @@ export default function Sidebar() {
     },
     {
       name: "Settings",
-      href: "/settings/domains",
+      href: "/settings/general",
       icon: SettingsIcon,
       current: router.pathname.includes("settings"),
       disabled: false,
@@ -73,7 +78,8 @@ export default function Sidebar() {
     }
   }, []);
 
-  if (status === "loading" && loading) return <LoadingSpinner className="mr-1 h-5 w-5" />;
+  if (status === "loading" && loading)
+    return <LoadingSpinner className="mr-1 h-5 w-5" />;
 
   const userPlan = plan && plan.plan;
 
@@ -144,6 +150,12 @@ export default function Sidebar() {
                     </p>
                   </div>
                   <nav className="flex flex-1 flex-col">
+                    <SelectTeam
+                      currentTeam={currentTeam}
+                      teams={teams}
+                      isLoading={isLoading}
+                      setCurrentTeam={() => {}}
+                    />
                     <ul role="list" className="flex flex-1 flex-col gap-y-7">
                       <li>
                         <ul role="list" className="-mx-2 space-y-1">
@@ -155,7 +167,7 @@ export default function Sidebar() {
                                   item.current
                                     ? "bg-gray-200 dark:bg-secondary text-secondary-foreground font-semibold"
                                     : "text-muted-foreground hover:text-foreground hover:bg-gray-200 hover:dark:bg-muted",
-                                  "group flex gap-x-3 items-center rounded-md p-2 text-sm leading-6 w-full disabled:hover:bg-transparent disabled:text-muted-foreground disabled:cursor-default"
+                                  "group flex gap-x-3 items-center rounded-md p-2 text-sm leading-6 w-full disabled:hover:bg-transparent disabled:text-muted-foreground disabled:cursor-default",
                                 )}
                                 disabled={item.disabled}
                               >
@@ -193,6 +205,12 @@ export default function Sidebar() {
             </p>
           </div>
           <nav className="flex flex-1 flex-col">
+            <SelectTeam
+              currentTeam={currentTeam}
+              teams={teams}
+              isLoading={isLoading}
+              setCurrentTeam={() => {}}
+            />
             <ul role="list" className="flex flex-1 flex-col gap-y-7">
               <li>
                 <ul role="list" className="-mx-2 space-y-1">
@@ -204,7 +222,7 @@ export default function Sidebar() {
                           item.current
                             ? "bg-gray-200 dark:bg-secondary text-secondary-foreground font-semibold"
                             : "text-muted-foreground hover:text-foreground hover:bg-gray-200 hover:dark:bg-muted",
-                          "group flex gap-x-3 items-center rounded-md p-2 text-sm leading-6 w-full disabled:hover:bg-transparent disabled:text-muted-foreground disabled:cursor-default"
+                          "group flex gap-x-3 items-center rounded-md p-2 text-sm leading-6 w-full disabled:hover:bg-transparent disabled:text-muted-foreground disabled:cursor-default",
                         )}
                         disabled={item.disabled}
                       >
@@ -258,14 +276,14 @@ export default function Sidebar() {
                       leaveFrom="transform opacity-100 scale-100"
                       leaveTo="transform opacity-0 scale-95"
                     >
-                      <Menu.Items className="absolute left-0 z-10 bottom-0 mb-14 w-[max-container] origin-bottom-left rounded-md bg-gray-100 dark:bg-primary-foreground py-2 focus:outline-none">
+                      <Menu.Items className="absolute left-0 z-10 bottom-0 mb-14 w-full origin-bottom-left rounded-md bg-gray-100 dark:bg-primary-foreground py-2 focus:outline-none">
                         {session ? (
                           <>
                             <Menu.Item>
                               <div className="w-full">
-                              <p className="block px-3 py-1 text-sm leading-6 text-muted-foreground">
-                                {session?.user?.email}
-                              </p>
+                                <p className="block px-3 py-1 text-sm leading-6 text-muted-foreground">
+                                  {session?.user?.email}
+                                </p>
                               </div>
                             </Menu.Item>
                             <Menu.Item>

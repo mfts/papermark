@@ -15,8 +15,8 @@ export default function PrivacyPage() {
           </p>
           <p>
             Papermark (“us”, “we”, or “our”) operates{" "}
-            <a href="https://papermark.io">https://papermark.io</a>{" "}
-            (hereinafter referred to as “<strong>Service</strong>”).
+            <a href="https://papermark.io">https://papermark.io</a> (hereinafter
+            referred to as “<strong>Service</strong>”).
           </p>
           <p>
             Our Privacy Policy governs your visit to{" "}
@@ -236,12 +236,12 @@ export default function PrivacyPage() {
             such information represents your agreement to that transfer.
           </p>
           <p>
-            Papermark will take all the steps reasonably necessary to
-            ensure that your data is treated securely and in accordance with
-            this Privacy Policy and no transfer of your Personal Data will take
-            place to an organisation or a country unless there are adequate
-            controls in place including the security of your data and other
-            personal information.
+            Papermark will take all the steps reasonably necessary to ensure
+            that your data is treated securely and in accordance with this
+            Privacy Policy and no transfer of your Personal Data will take place
+            to an organisation or a country unless there are adequate controls
+            in place including the security of your data and other personal
+            information.
           </p>
           <h3>8. Disclosure of Data</h3>
           <p>
@@ -576,8 +576,8 @@ export default function PrivacyPage() {
           <p>
             Our Service may contain links to other sites that are not operated
             by us. If you click a third party link, you will be directed to that
-            third party&APOS;s site. We strongly advise you to review the Privacy
-            Policy of every site you visit.
+            third party&APOS;s site. We strongly advise you to review the
+            Privacy Policy of every site you visit.
           </p>
           <p>
             We have no control over and assume no responsibility for the

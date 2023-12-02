@@ -35,6 +35,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: new Date(),
     },
     {
+      url: "https://www.papermark.io/docsend-alternatives",
+      lastModified: new Date(),
+    },
+    {
       url: "https://www.papermark.io/oss-friends",
       lastModified: new Date(),
     },

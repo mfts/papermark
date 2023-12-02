@@ -4,7 +4,10 @@ import { useState } from "react";
 import { type PutBlobResult } from "@vercel/blob";
 import { upload } from "@vercel/blob/client";
 import DocumentUpload from "@/components/document-upload";
-import { ArrowRightIcon, DocumentDuplicateIcon } from "@heroicons/react/24/outline";
+import {
+  ArrowRightIcon,
+  DocumentDuplicateIcon,
+} from "@heroicons/react/24/outline";
 import { toast } from "sonner";
 import Skeleton from "../Skeleton";
 import { STAGGER_CHILD_VARIANTS } from "@/lib/constants";
@@ -12,6 +15,7 @@ import { pdfjs } from "react-pdf";
 import { copyToClipboard, getExtension } from "@/lib/utils";
 import { Button } from "../ui/button";
 import { usePlausible } from "next-plausible";
+import { useTeam } from "@/context/team-context";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
 
@@ -24,7 +28,7 @@ export default function Upload() {
   const [currentLinkId, setCurrentLinkId] = useState<string | null>(null);
   const [currentDocId, setCurrentDocId] = useState<string | null>(null);
   const [copiedLink, setCopiedLink] = useState<boolean>(false);
-  
+  const teamInfo = useTeam();
 
   const handleBrowserUpload = async (event: any) => {
     event.preventDefault();
@@ -56,7 +60,6 @@ export default function Upload() {
         response = await saveDocumentToDatabase(newBlob);
       }
 
-      
       if (response) {
         const document = await response.json();
         const linkId = document.links[0].id;
@@ -79,20 +82,23 @@ export default function Upload() {
 
   const saveDocumentToDatabase = async (
     blob: PutBlobResult,
-    numPages?: number
+    numPages?: number,
   ) => {
     // create a document in the database with the blob url
-    const response = await fetch("/api/documents", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
+    const response = await fetch(
+      `/api/teams/${teamInfo?.currentTeam?.id}/documents`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: blob.pathname,
+          url: blob.url,
+          numPages: numPages,
+        }),
       },
-      body: JSON.stringify({
-        name: blob.pathname,
-        url: blob.url,
-        numPages: numPages,
-      }),
-    });
+    );
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -110,7 +116,7 @@ export default function Upload() {
   const handleContinue = (id: string) => {
     copyToClipboard(
       `${process.env.NEXT_PUBLIC_BASE_URL}/view/${id}`,
-      "Link copied to clipboard. Redirecting to document page..."
+      "Link copied to clipboard. Redirecting to document page...",
     );
     setTimeout(() => {
       router.push(`/documents/${currentDocId}`);

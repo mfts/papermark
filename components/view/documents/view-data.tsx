@@ -16,6 +16,7 @@ export default function ViewData({
       viewId={viewData.viewId}
       linkId={link.id}
       documentId={link.document.id}
+      versionNumber={document.versions[0].versionNumber}
     />
     ) : (
     <PDFViewer
@@ -25,6 +26,7 @@ export default function ViewData({
       documentId={link.document.id}
       name={link.document.name}
       allowDownload={link.allowDownload}
+      versionNumber={document.versions[0].versionNumber}
     />
     )
   )

@@ -9,6 +9,7 @@ import LoadingSpinner from "../ui/loading-spinner";
 import ExternalLink from "../shared/icons/external-link";
 import { Button } from "../ui/button";
 import { useState } from "react";
+import { useTeam } from "@/context/team-context";
 
 export default function DomainCard({
   domain,
@@ -18,15 +19,19 @@ export default function DomainCard({
   onDelete: (deletedDomain: string) => void;
 }) {
   const { status, loading } = useDomainStatus({ domain });
-  const [deleting, setDeleting] = useState<boolean>(false)
+  const [deleting, setDeleting] = useState<boolean>(false);
+  const teamInfo = useTeam();
 
   const handleDelete = async () => {
     // console.log("Deleting domain...", domain);
 
-    setDeleting(true)
-    const response = await fetch(`/api/domains/${domain}`, {
-      method: "DELETE",
-    });
+    setDeleting(true);
+    const response = await fetch(
+      `/api/teams/${teamInfo?.currentTeam?.id}/domains/${domain}`,
+      {
+        method: "DELETE",
+      },
+    );
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -60,7 +65,9 @@ export default function DomainCard({
               className="bg-gray-300 hover:bg-gray-300/80 dark:bg-gray-700 hover:dark:bg-gray-700/80"
               loading={loading}
               onClick={() => {
-                mutate(`/api/domains/${domain}/verify`);
+                mutate(
+                  `/api/teams/${teamInfo?.currentTeam?.id}/domains/${domain}/verify`,
+                );
               }}
             >
               Refresh

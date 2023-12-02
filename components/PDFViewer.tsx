@@ -2,6 +2,7 @@ import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/20/solid";
 import { useEffect, useRef, useState } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
 import { Download } from "lucide-react";
+import { useTeam } from "@/context/team-context";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
 
@@ -13,6 +14,7 @@ export default function PDFViewer(props: any) {
 
   const startTimeRef = useRef(Date.now());
   const pageNumberRef = useRef<number>(pageNumber);
+  const teamInfo = useTeam();
 
   // Update the previous page number after the effect hook has run
   useEffect(() => {
@@ -45,6 +47,7 @@ export default function PDFViewer(props: any) {
   }
 
   // Send the last page view when the user leaves the page
+  // duration is measured in milliseconds
   useEffect(() => {
     const handleBeforeUnload = () => {
       const endTime = Date.now();
@@ -70,12 +73,37 @@ export default function PDFViewer(props: any) {
     standardFontDataUrl: "standard_fonts/",
   };
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      switch (event.key) {
+        case "ArrowRight":
+          goToNextPage();
+          break;
+        case "ArrowLeft":
+          goToPreviousPage();
+          break;
+        default:
+          break;
+      }
+    };
+
+    // when the component mounts, attach the event listener
+    document.addEventListener("keydown", handleKeyDown);
+
+    // when the component unmounts, detach the event listener
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [pageNumber]);
+
   // Go to next page
   function goToNextPage() {
+    if (pageNumber >= numPages!) return;
     setPageNumber((prevPageNumber) => prevPageNumber + 1);
   }
 
   function goToPreviousPage() {
+    if (pageNumber <= 1) return;
     setPageNumber((prevPageNumber) => prevPageNumber - 1);
   }
 
@@ -109,6 +137,7 @@ export default function PDFViewer(props: any) {
         viewId: props.viewId,
         duration: duration,
         pageNumber: pageNumberRef.current,
+        versionNumber: props.versionNumber,
       }),
       headers: {
         "Content-Type": "application/json",
@@ -117,7 +146,7 @@ export default function PDFViewer(props: any) {
   }
 
   async function updateNumPages(numPages: number) {
-    await fetch(`/api/documents/update`, {
+    await fetch(`/api/teams/${teamInfo?.currentTeam?.id}/documents/update`, {
       method: "POST",
       body: JSON.stringify({
         documentId: props.documentId,

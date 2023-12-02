@@ -2,7 +2,19 @@ import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/20/solid";
 import { useEffect, useRef, useState } from "react";
 import { BlurImage } from "@/components/shared/blur-image";
 
-export default function PagesViewer({pages, linkId, documentId, viewId}: {pages: { file: string, pageNumber: string }[], linkId: string, documentId: string, viewId: string}) {
+export default function PagesViewer({
+  pages,
+  linkId,
+  documentId,
+  viewId,
+  versionNumber,
+}: {
+  pages: { file: string; pageNumber: string }[];
+  linkId: string;
+  documentId: string;
+  viewId: string;
+  versionNumber: number;
+}) {
   const [pageNumber, setPageNumber] = useState<number>(1); // start on first page
 
   const startTimeRef = useRef(Date.now());
@@ -41,13 +53,38 @@ export default function PagesViewer({pages, linkId, documentId, viewId}: {pages:
     };
   }, []);
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      switch (event.key) {
+        case "ArrowRight":
+          goToNextPage();
+          break;
+        case "ArrowLeft":
+          goToPreviousPage();
+          break;
+        default:
+          break;
+      }
+    };
+
+    // when the component mounts, attach the event listener
+    document.addEventListener("keydown", handleKeyDown);
+
+    // when the component unmounts, detach the event listener
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [pageNumber]);
+
   // Go to next page
   function goToNextPage() {
+    if (pageNumber >= numPages) return;
     setPageNumber((prevPageNumber) => prevPageNumber + 1);
   }
 
   // Go to previous page
   function goToPreviousPage() {
+    if (pageNumber <= 1) return;
     setPageNumber((prevPageNumber) => prevPageNumber - 1);
   }
 
@@ -60,6 +97,7 @@ export default function PagesViewer({pages, linkId, documentId, viewId}: {pages:
         viewId: viewId,
         duration: duration,
         pageNumber: pageNumberRef.current,
+        versionNumber: versionNumber,
       }),
       headers: {
         "Content-Type": "application/json",
@@ -134,8 +172,13 @@ export default function PagesViewer({pages, linkId, documentId, viewId}: {pages:
   );
 }
 
-
-function Nav({pageNumber, numPages}: {pageNumber: number, numPages: number}) {
+function Nav({
+  pageNumber,
+  numPages,
+}: {
+  pageNumber: number;
+  numPages: number;
+}) {
   return (
     <nav className="bg-black">
       <div className="mx-auto px-2 sm:px-6 lg:px-8">

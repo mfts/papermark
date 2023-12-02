@@ -8,6 +8,11 @@ import { analytics, identifyUser, trackAnalytics } from "@/lib/analytics";
 
 const VERCEL_DEPLOYMENT = !!process.env.VERCEL_URL;
 
+// This function can run for a maximum of 60 seconds
+export const config = {
+  maxDuration: 120,
+};
+
 export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
@@ -74,7 +79,7 @@ export const authOptions: NextAuthOptions = {
         event: "User Signed In",
         email: message.user.email,
       });
-    }
+    },
   },
 };
 

@@ -1,6 +1,6 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-import ms from "ms"
+import ms from "ms";
 import bcrypt from "bcryptjs";
 import { toast } from "sonner";
 import { customAlphabet } from "nanoid";
@@ -25,7 +25,7 @@ interface SWRError extends Error {
 
 export async function fetcher<JSON = any>(
   input: RequestInfo,
-  init?: RequestInit
+  init?: RequestInit,
 ): Promise<JSON> {
   const res = await fetch(input, init);
 
@@ -76,7 +76,6 @@ export function bytesToSize(bytes: number) {
   return `${Math.round(sizeInCurrentUnit)} ${sizes[i]}`;
 }
 
-
 const isValidUrl = (url: string) => {
   try {
     new URL(url);
@@ -103,7 +102,6 @@ export function capitalize(str: string) {
   if (!str || typeof str !== "string") return str;
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
-
 
 export const timeAgo = (timestamp?: Date): string => {
   if (!timestamp) return "Just now";
@@ -170,7 +168,6 @@ export const getDateTimeLocal = (timestamp?: Date): string => {
     .join(":");
 };
 
-
 export async function hashPassword(password: string): Promise<string> {
   const saltRounds = 10;
   const hashedPassword = await bcrypt.hash(password, saltRounds);
@@ -179,7 +176,7 @@ export async function hashPassword(password: string): Promise<string> {
 
 export async function checkPassword(
   password: string,
-  hashedPassword: string
+  hashedPassword: string,
 ): Promise<boolean> {
   const match = await bcrypt.compare(password, hashedPassword);
   return match;
@@ -192,7 +189,7 @@ export function copyToClipboard(text: string, message: string): void {
       toast.success(message);
     })
     .catch((error) => {
-      toast.error("Failed to copy. Please try again.")
+      toast.warning("Please copy your link manually.");
     });
 }
 
@@ -224,15 +221,17 @@ export const formattedDate = (date: Date) => {
     day: "2-digit",
     year: "numeric",
   });
-}
+};
 
 export const nanoid = customAlphabet(
   "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
   7,
 ); // 7-character random string
 
-
-export const daysLeft = (accountCreationDate: Date, maxDays: number): number => {
+export const daysLeft = (
+  accountCreationDate: Date,
+  maxDays: number,
+): number => {
   const now = new Date();
   const endPeriodDate = new Date(accountCreationDate);
   endPeriodDate.setDate(accountCreationDate.getDate() + maxDays);
@@ -241,7 +240,7 @@ export const daysLeft = (accountCreationDate: Date, maxDays: number): number => 
 
   // Convert milliseconds to days and return
   return Math.ceil(diffInMilliseconds / (1000 * 60 * 60 * 24));
-}
+};
 
 const cutoffDate = new Date("2023-10-17T00:00:00.000Z");
 

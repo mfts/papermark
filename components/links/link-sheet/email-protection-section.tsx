@@ -4,7 +4,14 @@ import { cn } from "@/lib/utils";
 import { DEFAULT_LINK_TYPE } from ".";
 import { DEFAULT_DATAROOM_TYPE } from "@/components/datarooms/paged/add-paged-dataroom-modal";
 
-export default function EmailProtectionSection({data, setData}: {data: DEFAULT_LINK_TYPE | DEFAULT_DATAROOM_TYPE, setData: Dispatch<SetStateAction<any>>}) {
+export default function EmailProtectionSection(
+  { 
+    data,
+    setData
+  }:{
+    data: DEFAULT_LINK_TYPE | DEFAULT_DATAROOM_TYPE, 
+    setData: Dispatch<SetStateAction<any>>
+  }) {
   const { emailProtected } = data;
   const [enabled, setEnabled] = useState<boolean>(true);
 
@@ -25,16 +32,13 @@ export default function EmailProtectionSection({data, setData}: {data: DEFAULT_L
           <h2
             className={cn(
               "text-sm font-medium leading-6",
-              enabled ? "text-foreground" : "text-muted-foreground"
+              enabled ? "text-foreground" : "text-muted-foreground",
             )}
           >
             Require email to view
           </h2>
         </div>
-        <Switch
-          checked={enabled}
-          onCheckedChange={handleEnableProtection}
-        />
+        <Switch checked={enabled} onCheckedChange={handleEnableProtection} />
       </div>
     </div>
   );

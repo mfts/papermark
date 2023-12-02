@@ -5,7 +5,14 @@ import { FADE_IN_ANIMATION_SETTINGS } from "@/lib/constants";
 import { cn, getDateTimeLocal } from "@/lib/utils";
 import { DEFAULT_LINK_TYPE } from ".";
 
-export default function ExpirationSection({data, setData}: {data: DEFAULT_LINK_TYPE, setData: Dispatch<SetStateAction<DEFAULT_LINK_TYPE>>}) {
+export default function ExpirationSection(
+  {
+    data, 
+    setData
+  }: {
+    data: DEFAULT_LINK_TYPE,
+    setData: Dispatch<SetStateAction<DEFAULT_LINK_TYPE>>}
+  ) {
   const { expiresAt } = data;
   const [enabled, setEnabled] = useState<boolean>(false);
 
@@ -28,7 +35,7 @@ export default function ExpirationSection({data, setData}: {data: DEFAULT_LINK_T
           <h2
             className={cn(
               "text-sm font-medium leading-6",
-              enabled ? "text-foreground" : "text-muted-foreground"
+              enabled ? "text-foreground" : "text-muted-foreground",
             )}
           >
             Expiration Date

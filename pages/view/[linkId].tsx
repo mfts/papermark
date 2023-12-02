@@ -21,13 +21,26 @@ export default function ViewPage() {
     );
   }
 
-  const { expiresAt, emailProtected, password: linkPassword } = link;
+  const {
+    expiresAt,
+    emailProtected,
+    password: linkPassword,
+    isArchived,
+  } = link;
 
   const { email: userEmail } = session?.user || {};
 
   // If the link is expired, show a 404 page
   if (expiresAt && new Date(expiresAt) < new Date()) {
-    return <NotFound />;
+    return (
+      <NotFound message="Sorry, the link you're looking for is expired." />
+    );
+  }
+
+  if (isArchived) {
+    return (
+      <NotFound message="Sorry, the file you're looking for is archived." />
+    );
   }
 
   if (emailProtected || linkPassword) {

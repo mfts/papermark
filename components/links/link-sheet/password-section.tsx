@@ -2,13 +2,20 @@ import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { Switch } from "@/components/ui/switch";
 import { motion } from "framer-motion";
 import { FADE_IN_ANIMATION_SETTINGS } from "@/lib/constants";
-import Eye from "@/components/shared/icons/eye"
-import EyeOff from "@/components/shared/icons/eye-off"
+import Eye from "@/components/shared/icons/eye";
+import EyeOff from "@/components/shared/icons/eye-off";
 import { cn } from "@/lib/utils";
 import { DEFAULT_LINK_TYPE } from ".";
 import { DEFAULT_DATAROOM_TYPE } from "@/components/datarooms/paged/add-paged-dataroom-modal";
 
-export default function PasswordSection({data, setData}: {data: DEFAULT_LINK_TYPE | DEFAULT_DATAROOM_TYPE, setData: Dispatch<SetStateAction<any>>}) {
+export default function PasswordSection(
+  {
+    data, 
+    setData
+  }: {
+    data: DEFAULT_LINK_TYPE | DEFAULT_DATAROOM_TYPE, 
+    setData: Dispatch<SetStateAction<any>>
+  }) {
   const { password } = data;
   const [enabled, setEnabled] = useState<boolean>(false);
   const [showPassword, setShowPassword] = useState<boolean>(false);
@@ -32,7 +39,7 @@ export default function PasswordSection({data, setData}: {data: DEFAULT_LINK_TYP
           <h2
             className={cn(
               "text-sm font-medium leading-6",
-              enabled ? "text-foreground" : "text-muted-foreground"
+              enabled ? "text-foreground" : "text-muted-foreground",
             )}
           >
             Require password to view
@@ -63,9 +70,15 @@ export default function PasswordSection({data, setData}: {data: DEFAULT_LINK_TYP
             className="absolute inset-y-0 right-0 flex items-center pr-3"
           >
             {showPassword ? (
-              <Eye className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+              <Eye
+                className="h-4 w-4 text-muted-foreground"
+                aria-hidden="true"
+              />
             ) : (
-              <EyeOff className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+              <EyeOff
+                className="h-4 w-4 text-muted-foreground"
+                aria-hidden="true"
+              />
             )}
           </button>
         </motion.div>

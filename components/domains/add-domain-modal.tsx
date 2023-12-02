@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useTeam } from "@/context/team-context";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -27,6 +28,8 @@ export function AddDomainModal({
   const [domain, setDomain] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
 
+  const teamInfo = useTeam();
+
   const handleSubmit = async (event: any) => {
     event.preventDefault();
     event.stopPropagation();
@@ -34,15 +37,18 @@ export function AddDomainModal({
     if (domain == "") return;
 
     setLoading(true);
-    const response = await fetch("/api/domains", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
+    const response = await fetch(
+      `/api/teams/${teamInfo?.currentTeam?.id}/domains`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          domain: domain,
+        }),
       },
-      body: JSON.stringify({
-        domain: domain,
-      }),
-    });
+    );
 
     if (!response.ok) {
       const { message } = await response.json();
@@ -54,7 +60,7 @@ export function AddDomainModal({
 
     const newDomain = await response.json();
 
-    toast.success("Domain added successfully! 🎉")
+    toast.success("Domain added successfully! 🎉");
 
     // console.log(newDomain);
 
@@ -65,7 +71,7 @@ export function AddDomainModal({
 
     setLoading(false);
 
-    !onAddition && window.open("/settings/domains", "_blank")
+    !onAddition && window.open("/settings/domains", "_blank");
   };
 
   return (
@@ -86,7 +92,7 @@ export function AddDomainModal({
               </Label>
               <Input
                 id="domain"
-                placeholder="yourdomain.com"
+                placeholder="docs.yourdomain.com"
                 className="col-span-3"
                 onChange={(e) => setDomain(e.target.value)}
               />
