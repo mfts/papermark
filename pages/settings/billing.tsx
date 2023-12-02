@@ -208,7 +208,13 @@ export default function Billing() {
                         </Button>
                       ) : (
                         <UpgradePlanModal clickedPlan="Starter">
-                          <Button type="button">Upgrade to Starter</Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="border border-gray-700 dark:bg-secondary hover:dark:border-gray-500 hover:dark:bg-gray-700"
+                          >
+                            Upgrade to Starter
+                          </Button>
                         </UpgradePlanModal>
                       )
                     ) : (
