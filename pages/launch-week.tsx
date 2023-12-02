@@ -4,6 +4,7 @@ import Hero from "@/components/web/launch/hero";
 import Grid from "@/components/web/launch/daysgrid";
 import CTA from "@/components/web/launch/cta";
 import Head from "next/head";
+import ChatPage from "@/components/web/assistant/public-chat";
 
 export default function LaunchWeek() {
   return (
@@ -32,6 +33,9 @@ export default function LaunchWeek() {
           <Hero />
           <Grid />
           <CTA />
+          <div className="relative bg-background">
+            <ChatPage />
+          </div>
         </div>
       </div>
       <Footer />
