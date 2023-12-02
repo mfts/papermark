@@ -1,9 +1,6 @@
 -- CreateEnum
 CREATE TYPE "DataroomType" AS ENUM ('HIERARCHICAL', 'PAGED');
 
--- AlterTable
-ALTER TABLE "User" ALTER COLUMN "plan" SET DEFAULT 'trial';
-
 -- CreateTable
 CREATE TABLE "Dataroom" (
     "id" TEXT NOT NULL,
