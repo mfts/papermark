@@ -10,7 +10,6 @@ import {
   Section,
   Text,
   Tailwind,
-  Link,
   Hr,
 } from "@react-email/components";
 

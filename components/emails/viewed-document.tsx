@@ -16,7 +16,7 @@ import {
 export default function ViewedDocument({
   documentId = "123",
   documentName = "Pitchdeck",
-  viewerEmail = "marc@papermark.io",
+  viewerEmail,
 }: {
   documentId: string;
   documentName: string;

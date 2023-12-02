@@ -33,7 +33,7 @@ export default function Navbar({ current }: { current?: string }) {
                   current === tab.name
                     ? "border-foreground text-foreground"
                     : "border-transparent text-muted-foreground hover:border-foreground hover:text-foreground",
-                  "whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium"
+                  "whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium",
                 )}
                 aria-current={current === tab.name ? "page" : undefined}
               >

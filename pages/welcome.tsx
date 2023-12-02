@@ -8,7 +8,6 @@ import { AnimatePresence } from "framer-motion";
 export default function Welcome() {
   const router = useRouter();
 
-
   return (
     <div className="flex h-screen flex-col items-center justify-center max-w-3xl mx-auto overflow-x-hidden">
       <div

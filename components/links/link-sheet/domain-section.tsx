@@ -1,10 +1,9 @@
-import { Dispatch, SetStateAction, useState, useEffect } from "react";
+import { Dispatch, SetStateAction, useState } from "react";
 import { cn } from "@/lib/utils";
 import { DEFAULT_LINK_TYPE } from ".";
 import { Label } from "@/components/ui/label";
 import { Domain } from "@prisma/client";
 import { AddDomainModal } from "@/components/domains/add-domain-modal";
-import { Button } from "@/components/ui/button";
 import { mutate } from "swr";
 import Link from "next/link";
 import { useTeam } from "@/context/team-context";

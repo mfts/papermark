@@ -20,7 +20,13 @@ import { useTeam } from "@/context/team-context";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
 
-export function AddDocumentModal({newVersion, children}: {newVersion?: boolean, children: React.ReactNode}) {
+export function AddDocumentModal({
+  newVersion,
+  children,
+}: {
+  newVersion?: boolean;
+  children: React.ReactNode;
+}) {
   const router = useRouter();
   const plausible = usePlausible();
   const [uploading, setUploading] = useState<boolean>(false);
@@ -58,7 +64,7 @@ export function AddDocumentModal({newVersion, children}: {newVersion?: boolean, 
           response = await saveNewVersionToDatabase(
             newBlob,
             documentId as string,
-            numPages
+            numPages,
           );
         }
       }
@@ -66,13 +72,13 @@ export function AddDocumentModal({newVersion, children}: {newVersion?: boolean, 
       if (response) {
         const document = await response.json();
 
-        console.log("document: ", document)
+        console.log("document: ", document);
 
         if (!newVersion) {
           // copy the link to the clipboard
           copyToClipboard(
             `${process.env.NEXT_PUBLIC_BASE_URL}/view/${document.links[0].id}`,
-            "Document uploaded and link copied to clipboard. Redirecting to document page..."
+            "Document uploaded and link copied to clipboard. Redirecting to document page...",
           );
 
           // track the event
@@ -94,8 +100,6 @@ export function AddDocumentModal({newVersion, children}: {newVersion?: boolean, 
             setUploading(false);
           }, 2000);
         }
-        
-        
       }
     } catch (error) {
       console.error("An error occurred while uploading the file: ", error);
@@ -104,7 +108,7 @@ export function AddDocumentModal({newVersion, children}: {newVersion?: boolean, 
 
   async function saveDocumentToDatabase(
     blob: PutBlobResult,
-    numPages?: number
+    numPages?: number,
   ) {
     // create a document in the database with the blob url
     const response = await fetch(
@@ -119,7 +123,7 @@ export function AddDocumentModal({newVersion, children}: {newVersion?: boolean, 
           url: blob.url,
           numPages: numPages,
         }),
-      }
+      },
     );
 
     if (!response.ok) {
@@ -130,7 +134,11 @@ export function AddDocumentModal({newVersion, children}: {newVersion?: boolean, 
   }
 
   // create a new version in the database
-  async function saveNewVersionToDatabase(blob: PutBlobResult, documentId: string, numPages?: number) {
+  async function saveNewVersionToDatabase(
+    blob: PutBlobResult,
+    documentId: string,
+    numPages?: number,
+  ) {
     const response = await fetch(
       `/api/teams/${teamInfo?.currentTeam?.id}/documents/${documentId}/versions`,
       {
@@ -143,7 +151,7 @@ export function AddDocumentModal({newVersion, children}: {newVersion?: boolean, 
           numPages: numPages,
           type: "pdf",
         }),
-      }
+      },
     );
 
     if (!response.ok) {
@@ -164,18 +172,23 @@ export function AddDocumentModal({newVersion, children}: {newVersion?: boolean, 
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="text-foreground bg-background">
         <DialogHeader>
-          <DialogTitle>{newVersion ? `Upload a new version` : `Share a document`}</DialogTitle>
+          <DialogTitle>
+            {newVersion ? `Upload a new version` : `Share a document`}
+          </DialogTitle>
           <DialogDescription>
             <div className="border-b border-border py-2">
               <p className="mb-1 text-sm text-muted-foreground">
-                {newVersion ? `After you upload a new version, the existing links will remain the unchanged but ` : `After you upload the document, a shareable link will be
+                {newVersion
+                  ? `After you upload a new version, the existing links will remain the unchanged but `
+                  : `After you upload the document, a shareable link will be
                 generated and copied to your clipboard.`}
               </p>
             </div>
             <form
               encType="multipart/form-data"
               onSubmit={handleBrowserUpload}
-              className="flex flex-col">
+              className="flex flex-col"
+            >
               <div className="space-y-12">
                 <div className="pb-6">
                   <div className="mt-10 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
@@ -192,7 +205,8 @@ export function AddDocumentModal({newVersion, children}: {newVersion?: boolean, 
                   type="submit"
                   className="w-full lg:w-1/2"
                   disabled={uploading || !currentFile}
-                  loading={uploading}>
+                  loading={uploading}
+                >
                   {uploading ? "Uploading..." : "Upload Document"}
                 </Button>
               </div>

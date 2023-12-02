@@ -82,7 +82,7 @@ export default function Upload() {
 
   const saveDocumentToDatabase = async (
     blob: PutBlobResult,
-    numPages?: number
+    numPages?: number,
   ) => {
     // create a document in the database with the blob url
     const response = await fetch(
@@ -97,7 +97,7 @@ export default function Upload() {
           url: blob.url,
           numPages: numPages,
         }),
-      }
+      },
     );
 
     if (!response.ok) {
@@ -116,7 +116,7 @@ export default function Upload() {
   const handleContinue = (id: string) => {
     copyToClipboard(
       `${process.env.NEXT_PUBLIC_BASE_URL}/view/${id}`,
-      "Link copied to clipboard. Redirecting to document page..."
+      "Link copied to clipboard. Redirecting to document page...",
     );
     setTimeout(() => {
       router.push(`/documents/${currentDocId}`);
@@ -142,10 +142,12 @@ export default function Upload() {
           initial="hidden"
           animate="show"
           exit="hidden"
-          transition={{ duration: 0.3, type: "spring" }}>
+          transition={{ duration: 0.3, type: "spring" }}
+        >
           <motion.div
             variants={STAGGER_CHILD_VARIANTS}
-            className="flex flex-col items-center space-y-10 text-center">
+            className="flex flex-col items-center space-y-10 text-center"
+          >
             <h1 className="font-display text-3xl font-semibold text-foreground transition-colors sm:text-4xl">
               {`Upload your ${router.query.type}`}
             </h1>
@@ -155,7 +157,8 @@ export default function Upload() {
               <form
                 encType="multipart/form-data"
                 onSubmit={handleBrowserUpload}
-                className="flex flex-col">
+                className="flex flex-col"
+              >
                 <div className="space-y-12">
                   <div className="pb-6">
                     <div className="mt-10 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
@@ -171,7 +174,8 @@ export default function Upload() {
                   <Button
                     type="submit"
                     className="w-full"
-                    disabled={uploading || !currentFile}>
+                    disabled={uploading || !currentFile}
+                  >
                     {uploading ? "Uploading..." : "Upload Document"}
                   </Button>
                 </div>
@@ -197,10 +201,12 @@ export default function Upload() {
           initial="hidden"
           animate="show"
           exit="hidden"
-          transition={{ duration: 0.3, type: "spring" }}>
+          transition={{ duration: 0.3, type: "spring" }}
+        >
           <motion.div
             variants={STAGGER_CHILD_VARIANTS}
-            className="flex flex-col items-center space-y-10 text-center">
+            className="flex flex-col items-center space-y-10 text-center"
+          >
             <h1 className="font-display text-3xl font-semibold text-foreground transition-colors sm:text-4xl">
               Share your unique link
             </h1>
