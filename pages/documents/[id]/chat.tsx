@@ -5,6 +5,7 @@ import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { CustomUser } from "@/lib/types";
 import { Chat } from "@/components/chat/chat";
 import Sparkle from "@/components/shared/icons/sparkle";
+import { usePlan } from "@/lib/swr/use-billing";
 
 export const getServerSideProps = async (context: any) => {
   const { id } = context.params;
@@ -43,6 +44,8 @@ export const getServerSideProps = async (context: any) => {
     };
   }
 
+  const userId = (session.user as CustomUser).id;
+
   // create or fetch threadId
   const res = await fetch(
     `${process.env.NEXTAUTH_URL}/api/assistants/threads`,
@@ -53,7 +56,7 @@ export const getServerSideProps = async (context: any) => {
       },
       body: JSON.stringify({
         documentId: document.id,
-        userId: (session.user as CustomUser).id,
+        userId: userId,
       }),
     },
   );
@@ -71,6 +74,7 @@ export const getServerSideProps = async (context: any) => {
       threadId,
       messages: messages || [],
       firstPage: document.versions[0].pages[0].file,
+      userId,
     },
   };
 };
@@ -79,11 +83,14 @@ export default function ChatPage({
   threadId,
   messages,
   firstPage,
+  userId,
 }: {
   threadId: string;
   messages: Message[];
   firstPage: string;
+  userId: string;
 }) {
+  const { plan } = usePlan();
   return (
     <>
       <Nav />
@@ -91,6 +98,8 @@ export default function ChatPage({
         initialMessages={messages}
         threadId={threadId}
         firstPage={firstPage}
+        userId={userId}
+        plan={plan?.plan}
       />
     </>
   );

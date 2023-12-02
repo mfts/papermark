@@ -18,6 +18,8 @@ export interface ChatProps extends React.ComponentProps<"div"> {
   threadId?: string;
   firstPage?: string;
   isPublic?: boolean;
+  userId?: string;
+  plan?: string;
 }
 
 export function Chat({
@@ -26,6 +28,8 @@ export function Chat({
   firstPage,
   className,
   isPublic,
+  userId,
+  plan,
 }: ChatProps) {
   const {
     status,
@@ -39,6 +43,8 @@ export function Chat({
     threadId: threadId,
     body: {
       isPublic: isPublic,
+      userId: userId,
+      plan: plan,
     },
   });
 
@@ -46,10 +52,19 @@ export function Chat({
 
   useEffect(() => {
     if (error instanceof Error) {
+      let content: string = "";
+      if (isPublic) {
+        content =
+          "You have reached your request limit for the day. Sign up for a free account to continue using Papermark Assistant.";
+      }
+      if (userId && plan !== "pro") {
+        content =
+          "You have reached your request limit for the day. Upgrade to a paid account to continue using Papermark Assistant.";
+      }
+
       const message: Message = {
         role: "system",
-        content:
-          "You have reached your request limit for the day. Sign up for a free account to continue using Papermark Assistant.",
+        content: content,
         id: nanoid(),
       };
 
