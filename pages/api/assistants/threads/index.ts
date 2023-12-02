@@ -1,12 +1,8 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/lib/prisma";
 import { errorhandler } from "@/lib/errorHandler";
-import OpenAI from "openai";
+import { openai } from "@/lib/openai";
 import { convertThreadMessagesToMessages } from "@/lib/utils";
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || "",
-});
 
 export default async function handle(
   req: NextApiRequest,

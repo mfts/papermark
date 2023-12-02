@@ -33,9 +33,9 @@ export function ChatInput({
   }, [status]);
 
   return (
-    <div className="fixed inset-x-0 bottom-0">
+    <div className="relative inset-x-0 bottom-0">
       <div className="mx-auto sm:max-w-3xl sm:px-4">
-        <div className="space-y-4 bg-background px-4 py-4 shadow-lg md:py-4">
+        <div className="space-y-4 bg-background px-4 py-4 md:py-4">
           <form onSubmit={submitMessage} ref={formRef}>
             <div className="relative flex max-h-60 w-full flex-col overflow-hidden bg-background pr-8 rounded-xl ring-1 ring-muted-foreground/50 sm:pr-12 focus-within:ring-1 focus-within:ring-foreground">
               <Textarea
