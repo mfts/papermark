@@ -2,6 +2,7 @@ import Head from "next/head";
 import Navbar from "@/components/web/navbar";
 import Footer from "@/components/web/footer";
 import { Disclosure } from "@headlessui/react";
+import ChatPage from "@/components/web/assistant/public-chat";
 import { MinusSmallIcon, PlusSmallIcon } from "@heroicons/react/24/outline";
 import {
   ArrowPathIcon,
@@ -13,6 +14,14 @@ import {
 } from "@heroicons/react/20/solid";
 import Link from "next/link";
 import { classNames } from "@/lib/utils";
+
+const scrollDown = () => {
+  window.scrollBy({
+    top: 600, // Adjust this value for different scroll distances
+    left: 0,
+    behavior: "smooth", // For smooth scrolling
+  });
+};
 
 const features = [
   {
@@ -89,7 +98,7 @@ const faqs = [
     answer:
       "You can use one of the starting commands and get the summary of received docuement. If you want that documents shared with you.",
   },
-   {
+  {
     question: "How to turn Pitch Deck into Memo?",
     answer:
       "You can use Papermark AI and ask it to create Memo from Pitch Deck received. You can also uplaod your own Pitch deck there.",
@@ -104,7 +113,8 @@ const tiers = [
     id: "tier-professional",
     href: "#",
     priceMonthly: "Shared documents",
-    description: "Designed for interacting and improving your documents before sharing",
+    description:
+      "Designed for interacting and improving your documents before sharing",
     features: [
       "✅ AI-powered insights on shared documents",
       "✅ Enchance document before sharing",
@@ -120,7 +130,8 @@ const tiers = [
     id: "tier-enterprise",
     href: "#",
     priceMonthly: "Receive documents",
-    description: "AI functionality helps you to analyse the received document in click",
+    description:
+      "AI functionality helps you to analyse the received document in click",
     features: [
       "✅ Chat with received documents",
       "✅ Use AI to find info in received doc",
@@ -137,7 +148,10 @@ export default function Home() {
   return (
     <div>
       <Head>
-        <title>Papermark AI: Revolutionize Your Document Interaction</title>
+        <title>
+          Papermark AI: First AI assistant to chat with shared and received
+          documents
+        </title>
         <meta
           name="description"
           content="Transform the way you interact with documents using Papermark AI, the ultimate AI docuemnt assistant to chat with your documents, like pitch decks and sales materials."
@@ -157,8 +171,7 @@ export default function Home() {
         <meta property="og:url" content="https://www.papermark.io" />
         <meta name="twitter:card" content="summary_large_image" />
       </Head>
-        <Navbar />
-
+      <Navbar />
 
       <main>
         {/* Hero section */}
@@ -176,7 +189,7 @@ export default function Home() {
             />
           </div>
           <div className="mx-auto max-w-7xl px-6 lg:px-8">
-            <div className="mx-auto max-w-2xl py-8 sm:py-12 lg:py-32 ">
+            <div className="mx-auto max-w-2xl py-8 sm:py-12 lg:py-24 ">
               <div className="hidden sm:mb-8 sm:flex sm:justify-center">
                 <div className="relative rounded-full px-3 py-1 text-sm leading-6 text-black dark:text-white ring-1 ring-black/10 dark:ring-white/10 hover:ring-white/20">
                   Papermark AI 🌟
@@ -184,86 +197,36 @@ export default function Home() {
               </div>
               <div className="text-center">
                 <h1 className="text-4xl font-bold tracking-tight text-black dark:text-white sm:text-6xl">
-                  AI Documents Asisstant 
+                  AI Documents Asisstant
                 </h1>
                 <p className="mt-6 text-lg leading-8 text-gray-500">
-                  Powerful Ai-assitant for your shared and received documents 
+                  Powerful Ai-assitant for your shared and received documents
                 </p>
+
                 <div className="mt-10 flex items-center justify-center gap-x-6">
-                  <Link
-                    className="rounded-md bg-black dark:bg-white px-3.5 py-2.5 text-sm font-semibold text-white dark:text-black shadow-sm hover:bg-gray-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400"
-                    href="/login"
+                  <button
+                    className="rounded-md bg-black dark:bg-white px-3.5 py-2.5 text-sm font-semibold text-white dark:text-black shadow-sm hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-400"
+                    onClick={scrollDown}
                   >
-                    Chat with your document
-                  </Link>
+                    Chat with our pitchdeck ↓
+                  </button>
                 </div>
               </div>
             </div>
-             {/* Video added below */}
-        <div className=" mx-auto w-full max-w-5xl">
-          <video
-            width="100%"
-            id="video1"
-            style={{ borderRadius: "6px" }}
-            aria-hidden="true"
-            playsInline
-            autoPlay
-            muted
-            loop
-          >
-            <source
-              src="https://forwebsitevideo.s3.eu-central-1.amazonaws.com/Papermark+AI+(15+sec).mp4"
-              type="video/mp4"
-            />
-          </video>
-        </div>
 
-  {/* Feature section */}
-            <div className="mt-32 sm:mt-56">
-              <div className="mx-auto max-w-7xl px-6 lg:px-8">
-                <div className="mx-auto max-w-2xl sm:text-center">
-                  {/* <h2 className="text-base font-semibold leading-7 text-black dark:texxt-white">
-                    Share docs with ease
-                  </h2> */}
-                  <p className="mt-2 text-3xl font-bold tracking-tight text-black dark:text-white sm:text-4xl">
-                    Chat with your document or one shared with you
-                  </p>
-                  <p className="mt-6 text-lg leading-8 text-gray-500">
-                    Upload your document, pitch deck , sales deck and get insights on it. Instanlty chat with received pdf, or other document.
-                  </p>
-                </div>
-              </div>
-              <div className="relative overflow-hidden pt-16">
-                <div className="mx-auto max-w-2xl px-6 lg:px-8">
-                  <img
-                    src="https://www.papermark.io/_static/upload2.png"
-                    alt="App screenshot"
-                    className="mb-[-12%] rounded-xl shadow-2xl ring-1 ring-gray-900/10"
-                    width={2432}
-                    height={1442}
-                  />
-                
-                </div>
-              </div>
-              <div className="mx-auto mt-16 max-w-7xl px-6 sm:mt-20 md:mt-24 lg:px-8">
-                <dl className="mx-auto grid max-w-2xl grid-cols-1 gap-x-6 gap-y-10 text-base leading-7 text-gray-500 sm:grid-cols-2 lg:mx-0 lg:max-w-none lg:grid-cols-3 lg:gap-x-8 lg:gap-y-16">
-                  {features.map((feature) => (
-                    <div key={feature.name} className="relative pl-9">
-                      <dt className="inline font-semibold text-gray-600 dark:text-gray-200">
-                        <feature.icon
-                          className="absolute left-1 top-1 h-5 w-5 text-black dark:text-white"
-                          aria-hidden="true"
-                        />
-                        {feature.name}
-                      </dt>{" "}
-                      <dd className="inline">{feature.description}</dd>
-                    </div>
-                  ))}
-                </dl>
-              </div>
+            <div className="relative bg-background">
+              <ChatPage />
+            </div>
+            <div className="mt-10 flex items-center justify-center gap-x-6">
+              <Link
+                className="rounded-md bg-black dark:bg-white px-3.5 py-2.5 text-sm font-semibold text-white dark:text-black shadow-sm hover:bg-gray-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400"
+                href="/login"
+              >
+                Papermark Pitchdeck you chat with
+              </Link>
             </div>
 
- {/* Pricing section */}
+            {/* Pricing section */}
             <div className="relative isolate mt-32  px-6 sm:mt-36 lg:px-8">
               <div
                 className="absolute inset-x-0 -top-3 -z-10 transform-gpu overflow-hidden px-36 blur-3xl"
@@ -367,14 +330,55 @@ export default function Home() {
                 ))}
               </div>
             </div>
-        
 
-          
-
-
+            {/* Feature section */}
+            <div className="mt-32 sm:mt-56">
+              <div className="mx-auto max-w-7xl px-6 lg:px-8">
+                <div className="mx-auto max-w-2xl sm:text-center">
+                  {/* <h2 className="text-base font-semibold leading-7 text-black dark:texxt-white">
+                    Share docs with ease
+                  </h2> */}
+                  <p className="mt-2 text-3xl font-bold tracking-tight text-black dark:text-white sm:text-4xl">
+                    Chat with your document or one shared with you
+                  </p>
+                  <p className="mt-6 text-lg leading-8 text-gray-500">
+                    Upload your document, pitch deck , sales deck and get
+                    insights on it. Instanlty chat with received pdf, or other
+                    document.
+                  </p>
+                </div>
+              </div>
+              <div className="relative overflow-hidden pt-16">
+                <div className="mx-auto max-w-2xl px-6 lg:px-8">
+                  <img
+                    src="https://www.papermark.io/_static/upload2.png"
+                    alt="App screenshot"
+                    className="mb-[-12%] rounded-xl shadow-2xl ring-1 ring-gray-900/10"
+                    width={2432}
+                    height={1442}
+                  />
+                </div>
+              </div>
+              <div className="mx-auto mt-16 max-w-7xl px-6 sm:mt-20 md:mt-24 lg:px-8">
+                <dl className="mx-auto grid max-w-2xl grid-cols-1 gap-x-6 gap-y-10 text-base leading-7 text-gray-500 sm:grid-cols-2 lg:mx-0 lg:max-w-none lg:grid-cols-3 lg:gap-x-8 lg:gap-y-16">
+                  {features.map((feature) => (
+                    <div key={feature.name} className="relative pl-9">
+                      <dt className="inline font-semibold text-gray-600 dark:text-gray-200">
+                        <feature.icon
+                          className="absolute left-1 top-1 h-5 w-5 text-black dark:text-white"
+                          aria-hidden="true"
+                        />
+                        {feature.name}
+                      </dt>{" "}
+                      <dd className="inline">{feature.description}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
+            </div>
 
             {/* Testimonial section */}
-           <div className="relative z-10 mt-32 bg-white dark:bg-gray-900 pb-20 sm:mt-56 sm:pb-24 xl:pb-0">
+            <div className="relative z-10 mt-32 bg-white dark:bg-gray-900 pb-20 sm:mt-56 sm:pb-24 xl:pb-0">
               <div
                 className="absolute inset-0 overflow-hidden"
                 aria-hidden="true"
@@ -435,6 +439,24 @@ export default function Home() {
                   </figure>
                 </div>
               </div>
+            </div>
+
+            <div className=" mx-auto w-full max-w-5xl">
+              <video
+                width="100%"
+                id="video1"
+                style={{ borderRadius: "6px" }}
+                aria-hidden="true"
+                playsInline
+                autoPlay
+                muted
+                loop
+              >
+                <source
+                  src="https://forwebsitevideo.s3.eu-central-1.amazonaws.com/Papermark+AI+(15+sec).mp4"
+                  type="video/mp4"
+                />
+              </video>
             </div>
 
             {/* FAQ section */}

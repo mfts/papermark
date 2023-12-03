@@ -33,9 +33,9 @@ export default function LaunchWeek() {
           <Hero />
           <Grid />
           <CTA />
-          <div className="relative bg-background">
+          {/* <div className="relative bg-background">
             <ChatPage />
-          </div>
+          </div> */}
         </div>
       </div>
       <Footer />

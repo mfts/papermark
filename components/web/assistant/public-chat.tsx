@@ -9,6 +9,7 @@ export default function ChatPage() {
         initialMessages={initialMessages}
         isPublic={true}
         className="h-[calc(100vh-180px)]"
+        firstPage=""
       />
     </>
   );
