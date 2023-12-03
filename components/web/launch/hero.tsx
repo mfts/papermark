@@ -20,7 +20,7 @@ export default function Example() {
             </h1>
             <div className="mt-10 flex items-center justify-center gap-x-6">
               <a
-                href="https://t.me/+yxHQdNAyACszN2Rl"
+                href="https://x.com/papermarkio"
                 target="_blank"
                 className="rounded-md bg-black px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-gray-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
               >

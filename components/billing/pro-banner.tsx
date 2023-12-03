@@ -38,7 +38,7 @@ export default function ProBanner({
         more.
       </p>
       <div className="flex">
-        <UpgradePlanModal>
+        <UpgradePlanModal clickedPlan={"Pro"}>
           <Button
             type="button"
             className="grow"

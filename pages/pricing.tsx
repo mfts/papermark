@@ -15,33 +15,36 @@ export default function Pricing() {
         "Unlimited links",
         "Analytics for each page",
         "Feedback on each page",
+        "Notion Documents",
         "Email Notifications on views",
+        "Papermark AI",
+        "100 questions, 3/day",
       ],
     },
     {
       id: 2,
-      title: "Pro",
-      priceMonthly: "$29/mo",
-      description: "Use all freemium features+ ",
+      title: "Starter",
+      priceMonthly: "€15/mo",
+      description: "All free features + ",
       features: [
-        "Team members",
         "Custom domains",
         "Unlimited documents",
-        "Large file uploads",
-        "Full customization",
+        "Papermark AI",
+        "500 questions",
       ],
     },
     {
       id: 3,
-      title: "Contact us",
-      priceMonthly: "Custom",
-      description: "Get more perfect plan for you",
+      title: "Pro",
+      priceMonthly: "€30/mo",
+      description: "All features and more",
       features: [
+        "Team members",
         "Priority Support",
-        "Full customization",
-        "Separate Hosting",
-        "Custom features request",
-        "Personal Onboarding",
+        "Custom Branding",
+        "Large file uploads",
+        "Papermark AI",
+        "1500 questions",
       ],
     },
   ];
@@ -49,9 +52,7 @@ export default function Pricing() {
   return (
     <>
       <Head>
-        <title>
-          Papermark | How to launch Open Source project on Product Hunt?
-        </title>
+        <title>Papermark | Pricing</title>
         <meta
           name="description"
           content="How to launch Open Source project on Product Hunt? Best tips to launch on Product Hunt and get first place"
@@ -86,41 +87,63 @@ export default function Pricing() {
           </div>
 
           <p className="mx-auto mt-6 max-w-2xl text-center text-lg leading-8 text-gray-500 ">
-            Share your Pitch Deck, Sales Deck and oher documents and monitor
-            results on any suitable for you plan. You always can start open
-            source
+            Share your Pitch Deck, Sales Deck and other documents and monitor
+            results on any suitable for you plan. You always can start
+            <Link
+              href="https://github.com/mfts/papermark"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-black hover:underline"
+            >
+              {" "}
+              open source{" "}
+            </Link>
+            or
+            <Link
+              href="https://cal.com/marcseitz/papermark"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-black hover:underline"
+            >
+              {" "}
+              contact us{" "}
+            </Link>
+            for custom requests, like self hosting, customization and AI
+            document comparison.
           </p>
 
-          <div className="mx-auto mt-16 grid max-w-5xl grid-cols-1 gap-6 items-center sm:grid-cols-3 sm:gap-4">
+          <div className="mx-auto mt-16 grid max-w-5xl grid-cols-1 gap-6 items-stretch sm:grid-cols-3 sm:gap-4">
             {tiers.map((tier) => (
               <div
                 key={tier.id}
-                className="rounded-3xl p-8 ring-1 ring-gray-900/10  sm:p-10"
+                className="flex flex-col rounded-3xl p-8 ring-1 ring-gray-900/10 sm:p-10"
               >
                 <h2 className="text-xl font-bold mb-4">{tier.title}</h2>
                 <div className="text-3xl font-bold mb-4">
                   {tier.priceMonthly}
                 </div>
                 <div className="text-gray-900  mb-6">{tier.description}</div>
-                {tier.features.map((feature) => (
-                  <div key={feature} className="flex items-center mb-2">
-                    <svg
-                      className="h-5 w-5 text-green-500 mr-2"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M5 13l4 4L19 7"
-                      ></path>
-                    </svg>
-                    {feature}
-                  </div>
-                ))}
+                <div className="flex-grow">
+                  {tier.features.map((feature) => (
+                    <div key={feature} className="flex items-center mb-2">
+                      <svg
+                        className="h-5 w-5 text-green-500 mr-2"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M5 13l4 4L19 7"
+                        ></path>
+                      </svg>
+                      {feature}
+                    </div>
+                  ))}
+                </div>
                 <div className="mt-6 flex items-center justify-center gap-x-6">
                   {tier.id === 1 && (
                     <Link
