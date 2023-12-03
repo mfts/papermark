@@ -25,7 +25,7 @@ export default function LogoSection({
     const value = event.target.value;
 
     if (value === "add_logo") {
-      // Redirect to the add domain page
+      // Redirect to the add logo page
       setModalOpen(true);
       return;
     }

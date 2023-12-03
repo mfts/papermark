@@ -16,7 +16,6 @@ export default function LogoCard({
 }) {
   const [deleting, setDeleting] = useState<boolean>(false);
   const teamInfo = useTeam();
-  console.log("file", file);
 
   const handleDelete = async () => {
     setDeleting(true);
@@ -57,9 +56,9 @@ export default function LogoCard({
           <Image
             src={file}
             alt={"Custom logo"}
-            width={2000}
-            height={1400}
-            className="h-14 w-20 sm:w-1/2 flex-none rounded-lg object-left"
+            width={1400}
+            height={1200}
+            className="sm:w-1/6 sm:h-16 flex-none rounded-lg object-left"
           />
         </div>
       </div>

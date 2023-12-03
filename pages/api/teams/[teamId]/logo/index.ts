@@ -35,7 +35,7 @@ export default async function handle(
             file: true,
           },
           orderBy: {
-            createdAt: "asc",
+            createdAt: "desc",
           },
         },
       });

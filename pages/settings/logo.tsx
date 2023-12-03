@@ -11,12 +11,10 @@ import { mutate } from "swr";
 export default function Logo() {
   const teamInfo = useTeam();
   const { logo } = useLogo();
-  console.log("logo", logo);
 
   const [open, setOpen] = useState<boolean>(false);
 
   const handleLogoDeletion = (deletedLogoId: string) => {
-    console.log("deleted log", deletedLogoId);
     mutate(
       `/api/teams/${teamInfo?.currentTeam?.id}/logo`,
       logo?.filter((l) => l.id !== deletedLogoId),

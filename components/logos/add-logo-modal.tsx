@@ -37,7 +37,7 @@ export function AddLogoModal({
   const plausible = usePlausible();
   const [uploading, setUploading] = useState<boolean>(false);
   const [currentFile, setCurrentFile] = useState<File | null>(null);
-  const [scale, setScale] = useState<number[]>([90]);
+  const [scale, setScale] = useState<number[]>([100]);
   const [rotate, setRotate] = useState<number>(0);
   const teamInfo = useTeam();
   const editor = useRef<AvatarEditor>(null);
@@ -99,14 +99,14 @@ export function AddLogoModal({
       }
 
       if (response) {
-        const document = await response.json();
+        const logo = await response.json();
 
-        console.log("document: ", document);
+        console.log("logo: ", logo);
         // track the event
-        plausible("documentVersionUploaded");
+        plausible("logoUploaded");
 
         toast.success("Logo added successfully! 🎉");
-        onAddition && onAddition(document);
+        onAddition && onAddition(logo);
 
         !onAddition && window.open("/settings/logo", "_blank");
 
@@ -215,6 +215,9 @@ export function AddLogoModal({
                     <Redo />
                   </Button>
                   <Slider
+                    defaultValue={scale}
+                    max={200}
+                    step={1}
                     value={scale}
                     onValueChange={handleScaleChange}
                     className="my-6 px-4 py-2"
