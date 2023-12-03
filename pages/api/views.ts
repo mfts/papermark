@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { checkPassword, log } from "@/lib/utils";
 import { analytics, identifyUser, trackAnalytics } from "@/lib/analytics";
 import { CustomUser } from "@/lib/types";
+import { sendViewedDocumentEmail } from "@/lib/emails/send-viewed-document";
 
 export default async function handle(
   req: NextApiRequest,
@@ -25,6 +26,7 @@ export default async function handle(
     },
     select: {
       emailProtected: true,
+      enableNotification: true,
       password: true,
     },
   });
@@ -68,10 +70,21 @@ export default async function handle(
       include: {
         document: {
           select: {
-            file: true
-          }
-        }
-      }
+            name: true,
+            owner: {
+              select: {
+                email: true,
+              },
+            },
+            versions: {
+              where: { isPrimary: true },
+              orderBy: { createdAt: "desc" },
+              take: 1,
+              select: { file: true, id: true, hasPages: true },
+            },
+          },
+        },
+      },
     });
 
     // TODO: cannot identify user because session is not available
@@ -85,9 +98,48 @@ export default async function handle(
       viewerEmail: email,
     });
 
-    res.status(200).json({ message: "View recorded", viewId: newView.id, file: newView.document.file });
+    // TODO: this can be offloaded to a background job in the future to save some time
+    // send email to document owner that document has been viewed if user has not disabled notifications
+    if (link.enableNotification) {
+      await sendViewedDocumentEmail(
+        newView.document.owner.email as string,
+        documentId,
+        newView.document.name,
+        email
+      );
+    }
+
+    // check if document version has multiple pages, if so, return the pages
+    if (newView.document.versions[0].hasPages) {
+      const pages = await prisma.documentPage.findMany({
+        where: {
+          versionId: newView.document.versions[0].id,
+        },
+        orderBy: {
+          pageNumber: "asc",
+        },
+        select: {
+          file: true,
+          pageNumber: true,
+        },
+      });
+
+      return res.status(200).json({
+        message: "View recorded",
+        viewId: newView.id,
+        file: null,
+        pages: pages,
+      });
+    }
+
+    return res.status(200).json({
+      message: "View recorded",
+      viewId: newView.id,
+      file: newView.document.versions[0].file,
+      pages: null,
+    });
   } catch (error) {
     log(`Failed to record view for ${linkId}. Error: \n\n ${error}`);
-    res.status(500).json({ message: (error as Error).message });
+    return res.status(500).json({ message: (error as Error).message });
   }
 }

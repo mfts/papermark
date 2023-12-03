@@ -6,14 +6,14 @@ export function getPlanFromPriceId(priceId: string) {
   return PLANS.find(
     (plan) =>
       plan.price.monthly.priceIds[env] === priceId ||
-      plan.price.yearly.priceIds[env] === priceId
+      plan.price.yearly.priceIds[env] === priceId,
   )!;
 }
 
 // custom type coercion because Stripe's types are wrong
 export function isNewCustomer(
   previousAttributes: // Stripe.Event.Data.PreviousAttributes | undefined
-    | {
+  | {
         default_payment_method?: string;
         items?: {
           data?: {
@@ -23,7 +23,7 @@ export function isNewCustomer(
           };
         };
       }
-    | undefined
+    | undefined,
 ) {
   let isNewCustomer = false;
   try {
@@ -32,7 +32,7 @@ export function isNewCustomer(
       previousAttributes?.default_payment_method === null
     ) {
       isNewCustomer = true;
-    } 
+    }
   } catch (error) {
     console.error("An error occurred:", error);
   }

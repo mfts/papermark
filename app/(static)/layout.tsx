@@ -2,7 +2,6 @@ import Footer from "@/components/web/footer";
 import Navbar from "@/components/web/navbar";
 import { Metadata } from "next";
 
-
 const data = {
   description:
     "Papermark is an open-source document infrastructure for sharing and collaboration. Free alternative to Docsend with custom domain. Manage secure document sharing with real-time analytics.",
@@ -37,7 +36,7 @@ export const metadata: Metadata = {
   },
 };
 
-export default function Layout({children}: {children: React.ReactNode}) {
+export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <>
       <Navbar />

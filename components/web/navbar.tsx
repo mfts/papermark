@@ -8,7 +8,7 @@ function classNames(...classes: any[]) {
 export default function Navbar() {
   return (
     <>
-      <nav className="bg-white  fixed top-0 w-full z-50 border-b border-gray-200">
+      <nav className=" fixed top-0 w-full z-50 backdrop-blur-md">
         <div className="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
           <div className="relative flex h-16 justify-between">
             <div className="absolute inset-y-0 left-0 flex items-center sm:hidden">
@@ -30,13 +30,13 @@ export default function Navbar() {
                 className="rounded-md  px-3.5 py-2.5 text-sm font-semibold text-black hover:text-gray-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400 flex items-center"
                 href="https://github.com/mfts/papermark"
               >
-                <GitHubIcon className="mr-2 h-5 w-5" /> Github
+                <GitHubIcon className="mr-2 h-5 w-5" /> GitHub
               </Link>
               <Link
                 className="rounded-md bg-black px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-gray-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400"
                 href="/login"
               >
-                Send deck
+                Send Deck
               </Link>
             </div>
           </div>

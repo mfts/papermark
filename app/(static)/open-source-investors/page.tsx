@@ -6,7 +6,7 @@ export const revalidate = 3600; // revalidate the data at most every 24 hours
 
 const data = {
   description:
-    "Find your next open-source investor. Share pitchdecks with your investors using Papermark, an open-source document infrastructure.",
+    "List of 100 open-source investors. Open-source VC, open-source angel investors. Share pitchdecks with your investors using Papermark, an open-source document infrastructure.",
   title: "Open Source Investors | Papermark",
   url: "https://www.papermark.io",
 };
@@ -45,7 +45,7 @@ const getInvestors = async () => {
       headers: {
         Authorization: `Bearer ${process.env.AIRTABLE_API_KEY}`,
       },
-    }
+    },
   );
   if (!response.ok) {
     throw new Error("Network response was not ok " + response.statusText);

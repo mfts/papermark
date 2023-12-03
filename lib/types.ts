@@ -1,10 +1,13 @@
 import { User as NextAuthUser } from "next-auth";
-import { Document, Link, View } from "@prisma/client";
+import {
+  Document,
+  Link,
+  View,
+  User as PrismaUser,
+  DocumentVersion,
+} from "@prisma/client";
 
-export interface CustomUser extends NextAuthUser {
-  id: string;
-  createdAt: Date;
-}
+export type CustomUser = NextAuthUser & PrismaUser;
 
 export interface CreateUserEmailProps {
   user: {
@@ -17,8 +20,13 @@ export interface DocumentWithLinksAndLinkCountAndViewCount extends Document {
   _count: {
     links: number;
     views: number;
+    versions: number;
   };
   links: Link[];
+}
+
+export interface DocumentWithVersion extends Document {
+  versions: DocumentVersion[];
 }
 
 export interface LinkWithViews extends Link {
@@ -29,7 +37,9 @@ export interface LinkWithViews extends Link {
 }
 
 export interface LinkWithDocument extends Link {
-  document: Document;
+  document: Document & {
+    versions: { versionNumber: number }[];
+  };
 }
 
 export interface Geo {
@@ -48,7 +58,7 @@ export type DomainVerificationStatusProps =
   | "Pending Verification"
   | "Domain Not Found"
   | "Unknown Error";
-  
+
 // From https://vercel.com/docs/rest-api/endpoints#get-a-project-domain
 export interface DomainResponse {
   name: string;
@@ -120,7 +130,7 @@ export type AnalyticsEvents =
       documentId: string;
       customDomain: string | null | undefined;
     }
-  | { event: "User Upgraded"; email: string | null | undefined; }
+  | { event: "User Upgraded"; email: string | null | undefined }
   | {
       event: "User Signed In";
       email: string | null | undefined;
@@ -139,4 +149,33 @@ export type AnalyticsEvents =
   | {
       event: "Domain Verified";
       slug: string;
+    }
+  | {
+      event: "Domain Deleted";
+      slug: string;
     };
+
+export interface Team {
+  id: string;
+  name?: string;
+}
+
+export interface TeamDetail {
+  id: string;
+  name: string;
+  documents: {
+    owner: {
+      id: string;
+      name: string;
+    };
+  }[];
+  users: {
+    role: "ADMIN" | "MEMBER";
+    teamId: string;
+    user: {
+      email: string;
+      name: string;
+    };
+    userId: string;
+  }[];
+}

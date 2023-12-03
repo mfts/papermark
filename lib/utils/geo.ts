@@ -20,8 +20,7 @@ export function getGeoData(headers: {
       ? headers["x-vercel-ip-longitude"][0]
       : headers["x-vercel-ip-longitude"],
   };
-} 
-
+}
 
 export const LOCALHOST_GEO_DATA = {
   city: "Munich",

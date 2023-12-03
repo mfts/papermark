@@ -17,7 +17,7 @@ export default function StatsElement({ stat, statIdx }: StatsElementProps) {
       key={statIdx}
       className={classNames(
         statIdx % 2 === 1 ? "sm:border-l" : statIdx === 2 ? "lg:border-l" : "",
-        "border-t border-foreground/5 py-6 px-4 sm:px-6 lg:px-8"
+        "border-t border-foreground/5 py-6 px-4 sm:px-6 lg:px-8",
       )}
     >
       <p
@@ -25,7 +25,7 @@ export default function StatsElement({ stat, statIdx }: StatsElementProps) {
           !stat.active
             ? "text-gray-300 dark:text-gray-700"
             : "text-muted-foreground",
-          "text-sm font-medium leading-6"
+          "text-sm font-medium leading-6",
         )}
       >
         {stat.name}
@@ -33,8 +33,10 @@ export default function StatsElement({ stat, statIdx }: StatsElementProps) {
       <p className="mt-2 flex items-baseline gap-x-2">
         <span
           className={classNames(
-            !stat.active ? "text-gray-300 dark:text-gray-700" : "text-foreground",
-            "text-4xl font-semibold tracking-tight "
+            !stat.active
+              ? "text-gray-300 dark:text-gray-700"
+              : "text-foreground",
+            "text-4xl font-semibold tracking-tight ",
           )}
         >
           {stat.value}
@@ -42,8 +44,10 @@ export default function StatsElement({ stat, statIdx }: StatsElementProps) {
         {stat.unit ? (
           <span
             className={classNames(
-              !stat.active ? "text-gray-300 dark:text-gray-700" : "text-muted-foreground",
-              "text-sm"
+              !stat.active
+                ? "text-gray-300 dark:text-gray-700"
+                : "text-muted-foreground",
+              "text-sm",
             )}
           >
             {stat.unit}

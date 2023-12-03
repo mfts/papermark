@@ -1,12 +1,5 @@
-import {
-  useMemo,
-  useState,
-} from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { useMemo, useState } from "react";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { STAGGER_CHILD_VARIANTS } from "@/lib/constants";
@@ -15,18 +8,20 @@ import { capitalize } from "@/lib/utils";
 import { PLANS } from "@/lib/stripe/utils";
 import { getStripe } from "@/lib/stripe/client";
 import { Badge } from "../ui/badge";
-
+import { useTeam } from "@/context/team-context";
 
 export function UpgradePlanModal({ children }: { children: React.ReactNode }) {
   const [plan, setPlan] = useState<"Pro">("Pro");
   const [period, setPeriod] = useState<"monthly" | "yearly">("monthly");
   const [clicked, setClicked] = useState<boolean>(false);
+  const teamInfo = useTeam();
+
   const features = useMemo(() => {
     return [
       "Custom domain",
       "Unlimited link views",
       "Unlimited documents",
-      "Unlimited team members (ETA Oct 2023)",
+      "Unlimited team members (ETA Nov 2023)",
     ];
   }, [plan]);
 
@@ -124,7 +119,8 @@ export function UpgradePlanModal({ children }: { children: React.ReactNode }) {
               onClick={() => {
                 setClicked(true);
                 fetch(
-                  `/api/billing/upgrade?priceId=${
+                  `/api/teams/${teamInfo?.currentTeam
+                    ?.id}/billing/upgrade?priceId=${
                     PLANS.find((p) => p.name === plan)!.price[period].priceIds[
                       process.env.NEXT_PUBLIC_VERCEL_ENV === "production"
                         ? "production"
@@ -133,7 +129,7 @@ export function UpgradePlanModal({ children }: { children: React.ReactNode }) {
                   }`,
                   {
                     method: "POST",
-                  }
+                  },
                 )
                   .then(async (res) => {
                     const data = await res.json();

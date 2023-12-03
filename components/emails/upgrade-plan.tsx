@@ -31,7 +31,7 @@ const UpgradePlanEmail = ({ name }: UpgradePlanEmailProps) => {
             <Heading className="text-2xl font-normal text-center p-0 mt-4 mb-8 mx-0">
               <span className="font-bold tracking-tighter">Papermark</span>
             </Heading>
-            <Heading className="text-2xl font-normal text-center p-0 mt-4 mb-8 mx-0">
+            <Heading className="text-xl font-seminbold text-center p-0 mt-4 mb-8 mx-0">
               Thanks for for upgrading to Papermark Pro!
             </Heading>
             <Text className="text-sm leading-6 text-black">
@@ -71,10 +71,9 @@ const UpgradePlanEmail = ({ name }: UpgradePlanEmailProps) => {
             </Text>
             <Section className="text-center mt-[32px] mb-[32px]">
               <Button
-                pX={20}
-                pY={12}
                 className="bg-black rounded text-white text-xs font-semibold no-underline text-center"
                 href={`${process.env.NEXT_PUBLIC_BASE_URL}/settings/domains`}
+                style={{ padding: "12px 20px" }}
               >
                 Set up your custom domain
               </Button>
