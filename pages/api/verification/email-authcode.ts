@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { sendVerificationEmail } from "@/lib/emails/send-email-verification";
 import prisma from "@/lib/prisma";
-import z from "zod";
+import z, { ZodError } from "zod";
 import { generateAuthenticationCode } from "@/lib/api/authentication";
 import { checkPassword } from "@/lib/utils";
 
@@ -24,63 +24,54 @@ export default async function handle(
   if (req.method === "GET") {
     // GET /api/verification/email-authcode 
     // Verify authcode
-    let authenticationCode: string = "";
-    let identifier: string = "";
     try {
-      ({ authenticationCode, identifier } = authSchema.parse(req.query));
-    } catch (error) {
-      return res.status(409).json({
-        message: "Invalid inputs",
-        error: (error as Error).message,
+      //Input Validation
+      const { authenticationCode, identifier } = authSchema.parse(req.query);
+
+      //Check verification code in database 
+      const verificationCode = await prisma.authenticationCode.findFirst({
+        where: {
+          code: authenticationCode,
+          identifier
+        }
       });
-    }
 
-    //Check verification code in database 
-    const verificationCode = await prisma.authenticationCode.findFirst({
-      where: {
-        code: authenticationCode,
-        identifier
+      if (!verificationCode) {
+        res.status(401).json({ message: "Unauthorized access" });
+        return;
       }
-    });
-
-    if (!verificationCode) {
-      res.status(401).json({ message: "Unauthorized access" });
-      return;
-    }
-
-    //Delete the code if not permanent
-    if (!verificationCode.permanent) {
-      try {
+      //Delete the code if not permanent
+      if (!verificationCode.permanent) {
         await prisma.authenticationCode.delete({
           where: {
             code: authenticationCode,
           }
         })
-      } catch (error) {
-        return res.status(500).json({
-          message: "Internal Server Error",
-          error: (error as Error).message,
-        });
       }
+      res.status(200).json({ message: "Verification successful" });
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return res.status(403).json({
+          message: "Invalid inputs",
+          error: (error as Error).message,
+        })
+      }
+      return res.status(500).json({
+        message: "Internal Server Error",
+        error: (error as Error).message,
+      });
     }
-    res.status(200).json({ message: "Verification successful" });
   } else if (req.method === "POST") {
     // POST /api/verification/email-authcode
-
     // Input validation
     let email: string;
     let identifier: string;
     let type: "DOCUMENT" | "PAGED DATAROOM" | "HIERARCHICAL DATAROOM";
     let password: string;
     try {
-      const parsedBody = bodySchema.parse(req.body);
-      email = parsedBody.email;
-      identifier = parsedBody.identifier;
-      type = parsedBody.type;
-      password = parsedBody.password
+      ({ email, identifier, type, password } = bodySchema.parse(req.body));
     } catch (error) {
-      res.status(409).json({ message: `Invalid inputs` })
-      return;
+      return res.status(403).json({ message: `Invalid inputs` });
     }
 
     //Password validation

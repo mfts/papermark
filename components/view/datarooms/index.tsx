@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import LoadingSpinner from "../../ui/loading-spinner";
 import EmailVerificationMessage from "../email-verification-form";
 import ViewSinglePagedDataroom from "./paged/view-single-paged-dataroom";
-import { Dataroom } from "@prisma/client"
+import { DataroomWithFiles } from "@/lib/types";
 
 export default function DataroomView({
   dataroom,
@@ -13,7 +13,7 @@ export default function DataroomView({
   isProtected,
   authenticationCode
 }: {
-  dataroom: Dataroom;
+  dataroom: DataroomWithFiles;
   authenticationCode: string | undefined;
   userEmail: string | null | undefined;
   isProtected: boolean;

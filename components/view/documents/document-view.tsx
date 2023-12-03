@@ -102,7 +102,7 @@ export default function DocumentView({
       headers: {
         "Content-Type": "application/json",
       },
-      body : JSON.stringify({identifier : link.id, type: "DOCUMENT", email: data.email})
+      body : JSON.stringify({identifier : link.id, type: "DOCUMENT", email: data.email, password: data.password})
     });
     if (response.ok) {
       setVerificationRequested(true);

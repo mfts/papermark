@@ -20,6 +20,7 @@ import { type DataroomDocument } from "@/lib/types";
 import { Separator } from "@/components/ui/separator";
 import PasswordSection from "@/components/links/link-sheet/password-section";
 import EmailProtectionSection from "@/components/links/link-sheet/email-protection-section";
+import { useTeam } from "@/context/team-context";
 
 export const DEFAULT_DATAROOM_PROPS = {
   id: null,
@@ -47,6 +48,7 @@ export function AddPagedDataroomModal({ children }: { children: React.ReactNode 
   //const plausible = usePlausible();
   const [uploading, setUploading] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>("");
+  const teamInfo = useTeam();
 
   const handleDataroomCreation = async (event: any) => {
     event.preventDefault();
@@ -106,7 +108,8 @@ export function AddPagedDataroomModal({ children }: { children: React.ReactNode 
         titles,
         links,
         password: data.password ? data.password : "",
-        emailProtected: data.emailProtected
+        emailProtected: data.emailProtected,
+        teamId: teamInfo?.currentTeam?.id
       }),
     });
 

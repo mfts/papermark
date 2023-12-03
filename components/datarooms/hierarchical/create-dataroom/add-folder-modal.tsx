@@ -14,6 +14,7 @@ import { useRouter } from "next/router";
 import { Dispatch, SetStateAction } from "react";
 import { Label } from "@/components/ui/label";
 import { ActionType } from "./state-management";
+import { useTeam } from "@/context/team-context";
 
 export default function AddFolderModal({ 
   children,
@@ -28,6 +29,7 @@ export default function AddFolderModal({
   const [loading, setLoading] = useState<boolean>(false);
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const router = useRouter();
+  const teamInfo = useTeam();
 
   const handleFolderCreation = async (event: any) => {
     event.preventDefault();
@@ -39,7 +41,7 @@ export default function AddFolderModal({
     setLoading(true);
 
     const { dataroomId, path } = router.query as { dataroomId: string, path: string[] };
-    const body = { folderName, dataroomId, parentFolderId: path[path.length - 1] }
+    const body = { folderName, dataroomId, parentFolderId: path[path.length - 1], teamId: teamInfo?.currentTeam?.id }
     const response = await fetch(`/api/datarooms/hierarchical/folders`, {
       method: "POST",
       headers: {

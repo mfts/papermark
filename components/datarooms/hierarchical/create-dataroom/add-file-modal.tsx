@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import ChevronDown from "@/components/shared/icons/chevron-down";
 import { toast } from "sonner";
+import { useTeam } from "@/context/team-context";
 
 export default function AddFileModal({
   children,
@@ -48,6 +49,7 @@ export default function AddFileModal({
   //Dropdown menu documents
   const { documents } = useDocuments();
   const router = useRouter();
+  const teamInfo = useTeam();
   const [links, setLinks] = useState<LinkWithViews[]>([]);
   const [dropDownMenuDocuments, setDropDownMenuDocuments] = useState<DocumentWithLinksAndLinkCountAndViewCount[]>([])
   useEffect(() => { setDropDownMenuDocuments(documents ? documents : []) }, [documents])
@@ -102,7 +104,13 @@ export default function AddFileModal({
 
     setLoading(true);
     const { dataroomId, path } = router.query as { dataroomId: string, path: string[] };
-    const body = { fileName: documentTitle, dataroomId, parentFolderId: path[path.length - 1], url: selectedLink.url }
+    const body = { 
+      fileName: documentTitle, 
+      dataroomId, 
+      parentFolderId: path[path.length - 1], 
+      url: selectedLink.url, 
+      teamId: teamInfo?.currentTeam?.id 
+    }
     const response = await fetch(`/api/datarooms/hierarchical/files`, {
       method: "POST",
       headers: {

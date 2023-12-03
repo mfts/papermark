@@ -14,6 +14,7 @@ import { ActionType } from "../state-management";
 import React, { Dispatch } from "react";
 import { useState } from "react";
 import EditObjectNameModal from "@/components/datarooms/hierarchical/create-dataroom/edit-object-name-modal";
+import { useTeam } from "@/context/team-context";
 
 export const Files = React.memo(function ({
   folderDirectory,
@@ -37,6 +38,7 @@ export const Files = React.memo(function ({
     type: "FOLDER"
   });
 
+  const teamInfo = useTeam();
   const handleDeleteFile = async (fileId: string) => {
     //Delete file from database
     const response = await fetch(`/api/datarooms/hierarchical/files`, {
@@ -44,7 +46,7 @@ export const Files = React.memo(function ({
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ id: fileId })
+      body: JSON.stringify({ fileId, teamId: teamInfo?.currentTeam?.id })
     })
 
     if (!response.ok) {

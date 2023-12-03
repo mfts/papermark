@@ -4,11 +4,16 @@ import prisma from "@/lib/prisma";
 import { authOptions } from "../../auth/[...nextauth]";
 import { log } from "@/lib/utils";
 import z from "zod";
+import { isUserMemberOfTeam } from "@/lib/team/helper";
+import { CustomUser } from "@/lib/types";
+import { TeamError } from "@/lib/errorHandler";
+import { ZodError } from "zod";
 
 const bodySchema = z.object({
   folderName: z.string().max(30), //Folder name should be less than 30 words
   dataroomId: z.string(),
-  parentFolderId: z.string()
+  parentFolderId: z.string(),
+  teamId: z.string()
 })
 
 export default async function handle(
@@ -22,18 +27,22 @@ export default async function handle(
       return res.status(401).end("Unauthorized");
     }
 
-    const id = req.body.id;
+    const { teamId, folderId } = req.body;
+    const userId = (session?.user as CustomUser).id;
     try {
-
-      //Delete the folder
+      //Check if user if member of team
+      await isUserMemberOfTeam({ teamId, userId });
       const folder = await prisma.dataroomFolder.delete({
         where: {
-          id: id
+          id: folderId
         }
       })
 
       res.status(200).json({ folder });
     } catch (error) {
+      if (error instanceof TeamError) {
+        return res.status(401).json({ message: "Unauthorized access" });
+      }
       return res.status(500).json({
         message: "Internal Server Error",
         error: (error as Error).message,
@@ -51,17 +60,14 @@ export default async function handle(
     let folderName: string;
     let dataroomId: string;
     let parentFolderId: string;
-    try {
-      ({ folderName, dataroomId, parentFolderId } = bodySchema.parse(req.body));
-    } catch (error) {
-      res.status(400).json({
-        message: "Invalid Inputs",
-        error: (error as Error).message,
-      });
-      return;
-    }
+    let teamId: string;
 
+    const userId = (session?.user as CustomUser).id;
     try {
+      //Input validation
+      ({ folderName, dataroomId, parentFolderId, teamId } = bodySchema.parse(req.body));
+      //Check if user if member of team
+      await isUserMemberOfTeam({ teamId, userId });
       const folder = await prisma.dataroomFolder.create({
         data: {
           name: folderName,
@@ -72,6 +78,14 @@ export default async function handle(
 
       res.status(201).json({ folder });
     } catch (error) {
+      if (error instanceof TeamError) {
+        return res.status(401).json({ message: "Unauthorized access" });
+      } else if (error instanceof ZodError) {
+        return res.status(403).json({
+          message: "Invalid Inputs",
+          error: "Please enter a folder name with fewer than 150 characters",
+        });
+      }
       log(`Failed to create folder. Error: \n\n ${error}`)
       res.status(500).json({
         message: "Internal Server Error",
@@ -79,44 +93,44 @@ export default async function handle(
       });
     }
   } else if (req.method === "PUT"){
-     // PUT /api/datarooms/hierarchical/folders
-     const session = await getServerSession(req, res, authOptions);
-     if (!session) {
-       res.status(401).end("Unauthorized");
-       return;
-     }
- 
-     //Input validation 
-     const { updatedFolderName, folderId } = req.body;
-     if (updatedFolderName.length > 150) {
-      res.status(400).json({
-        message: "Invalid Inputs",
-        error: "Please enter a folder name with fewer than 150 characters",
-      });
-      return;
-     }
+    // PUT /api/datarooms/hierarchical/folders
+    const session = await getServerSession(req, res, authOptions);
+    if (!session) {
+      return res.status(401).end("Unauthorized");
+    }
+    const { updatedFolderName, folderId, teamId } = req.body;
     
-     //Update folder name
-     try {
-       const folder = await prisma.dataroomFolder.update({
+    //Update folder name
+    const userId = (session?.user as CustomUser).id;
+    try {
+      //Input validation (Max no of words = 150)
+      z.string().max(150).parse(updatedFolderName);
+      //Check if user if member of team
+      await isUserMemberOfTeam({ teamId, userId });
+      const folder = await prisma.dataroomFolder.update({
         where: {
           id: folderId
         },
         data: {
           name: updatedFolderName
         }
-       });
-
-       res.status(201).json({ folder, message: "Folder renamed successfully" });
-     } catch (error) {
-       log(`Failed to create folder. Error: \n\n ${error}`)
-       res.status(500).json({
-         message: "Internal Server Error",
-         error: (error as Error).message,
-       });
-     }
-
-
+      });
+      res.status(201).json({ folder, message: "Folder renamed successfully" });
+    } catch (error) {
+      if (error instanceof TeamError) {
+        return res.status(401).json({ message: "Unauthorized access" });
+      } else if (error instanceof ZodError) {
+        return res.status(403).json({
+          message: "Invalid Inputs",
+          error: "Please enter a folder name with fewer than 150 characters",
+        });
+      }
+      log(`Failed to create folder. Error: \n\n ${error}`)
+      res.status(500).json({
+        message: "Internal Server Error",
+        error: (error as Error).message,
+      });
+    }
   } else {
     // We only allow POST, DELETE AND PUT requests
     res.setHeader("Allow", ["DELETE", "POST", "PUT"]);

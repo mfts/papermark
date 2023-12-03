@@ -9,6 +9,7 @@ import LoadingSpinner from "@/components/ui/loading-spinner";
 import SelectDataroomTypeModal from "@/components/datarooms/select-dataroom-type-modal";
 import { DataroomWithFilesAndFolders } from "@/lib/types";
 import { AuthenticationCode } from '@prisma/client';
+import { useTeam } from "@/context/team-context";
 
 export interface DataroomWithFilesFoldersAuthCodeAndFilesCount extends DataroomWithFilesAndFolders {
   authenticationCodes: AuthenticationCode[],
@@ -20,11 +21,12 @@ export interface DataroomWithFilesFoldersAuthCodeAndFilesCount extends DataroomW
 export default function Datarooms() {
   const [datarooms, setDatarooms] = useState<DataroomWithFilesFoldersAuthCodeAndFilesCount[] | undefined>(undefined);
   const [loading, setLoading] = useState<boolean>(false);
+  const teamInfo = useTeam();
 
   //Fetch datarooms from backend
   useEffect(() => {
     (async () => {
-      const response = await fetch(`/api/datarooms`, {
+      const response = await fetch(`/api/datarooms?teamId=${teamInfo?.currentTeam?.id}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",

@@ -44,6 +44,8 @@ export default async function handle(
     // You can implement more thorough email validation if required
   }
 
+  //Password validation in email-authcode.ts
+
   try {
     const newDataroomView = await prisma.dataroomView.create({
       data: {

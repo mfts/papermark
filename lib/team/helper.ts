@@ -155,3 +155,29 @@ export async function getDocumentWithTeamAndUser({
 
   return { document };
 }
+
+export async function isUserMemberOfTeam({
+  teamId,
+  userId
+}: {
+  teamId: string,
+  userId: string
+}) {
+  const team = await prisma.team.findUnique({
+    where: {
+      id: teamId,
+    },
+    include: {
+      users: {
+        select: {
+          userId: true,
+        },
+      }
+    },
+  });
+  // check if the user is part the team
+  const teamHasUser = team?.users.some((user) => user.userId === userId);
+  if (!teamHasUser) {
+    throw new TeamError("You are not a member of the team");
+  }
+}

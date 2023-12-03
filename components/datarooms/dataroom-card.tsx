@@ -7,6 +7,7 @@ import { Dispatch, SetStateAction } from "react";
 import Link from "next/link";
 import FolderIcon from "../shared/icons/folder";
 import { DataroomWithFilesFoldersAuthCodeAndFilesCount } from "@/pages/datarooms";
+import { useTeam } from "@/context/team-context";
 
 export default function DataroomCard({
   dataroom,
@@ -18,7 +19,7 @@ export default function DataroomCard({
   setLoading: Dispatch<SetStateAction<boolean>>
 }) {
   const [isFirstClick, setIsFirstClick] = useState<boolean>(false);
-
+  
   function handleCopyToClipboard(id: string) {
     const type = dataroom.type;
     //Authencation code is required by design for accessing hierarchical datarooms as we need to use nextjs routes
@@ -111,12 +112,13 @@ export default function DataroomCard({
 
 //Update database when dataroom is deleted
 async function deleteDataroomFromDatabase(id: string) {
+  const teamInfo = useTeam();
   const response = await fetch(`/api/datarooms`, {
     method: "DELETE",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ id })
+    body: JSON.stringify({ id, teamId: teamInfo?.currentTeam?.id })
   });
 
   if (!response.ok) {

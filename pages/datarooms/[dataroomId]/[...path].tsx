@@ -19,6 +19,7 @@ import { Subfolders } from "@/components/datarooms/hierarchical/create-dataroom/
 import { Files } from "@/components/datarooms/hierarchical/create-dataroom/files/files";
 import { BreadcrumbNavigation } from "@/components/datarooms/hierarchical/create-dataroom/navigation/breadcrumb-navigation";
 import { reducer } from "@/components/datarooms/hierarchical/create-dataroom/state-management";
+import { useTeam } from "@/context/team-context";
 
 export default function Page({
   dataroom,
@@ -38,11 +39,11 @@ export default function Page({
 
   const [isEditingName, setIsEditingName] = useState<boolean>(false);
   const [isEditingDescription, setIsEditingDescription] = useState<boolean>(false);
-
-  const router = useRouter();
   const [folderDirectory, updateFolderDirectory] = useReducer(reducer, directory);
   const [currentFolderId, setCurrentFolderId] = useState<string>(initialFolderId);
   const [path, setPath] = useState<string[]>(initialPath);
+  const router = useRouter();
+  const teamInfo = useTeam();
   const currPath = router.query.path as string[];
 
   //In cases when user presses back in browser
@@ -67,7 +68,7 @@ export default function Page({
 
       if (newName !== dataroom!.name || newDescription !== dataroom!.description) {
         const response = await fetch(
-          `/api/datarooms/hierarchical?id=${dataroom.id}`,
+          "/api/datarooms/hierarchical",
           {
             method: "PUT",
             headers: {
@@ -75,7 +76,9 @@ export default function Page({
             },
             body: JSON.stringify({
               name: newName,
-              description: newDescription
+              description: newDescription,
+              id: dataroom.id,
+              teamId: teamInfo?.currentTeam?.id
             }),
           }
         );
@@ -247,10 +250,12 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
   const { params } = context;
   const dataroomId: string = params?.dataroomId as string;
   const path: string[] = params?.path as string[];
+  const teamId: string = params?.teamId as string;
   const session = await getServerSession(context.req, context.res, authOptions);
 
   try {
-    const response = await fetch(`${process.env.NEXTAUTH_URL}/api/datarooms/hierarchical?id=${encodeURIComponent(dataroomId)}`,
+    const response = await fetch(
+      `${process.env.NEXTAUTH_URL}/api/datarooms/hierarchical?id=${encodeURIComponent(dataroomId)}&teamId=${encodeURIComponent(teamId)}`,
       {
         method: 'GET',
         headers: {

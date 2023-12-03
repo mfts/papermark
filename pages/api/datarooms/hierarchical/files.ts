@@ -3,13 +3,17 @@ import { getServerSession } from "next-auth/next";
 import prisma from "@/lib/prisma";
 import { authOptions } from "../../auth/[...nextauth]";
 import { log } from "@/lib/utils";
-import z from "zod";
+import z, { ZodError } from "zod";
+import { isUserMemberOfTeam } from "@/lib/team/helper";
+import { CustomUser } from "@/lib/types";
+import { TeamError } from "@/lib/errorHandler";
 
 const bodySchema = z.object({
   fileName: z.string().max(30), //File name should be less than 30 words
   dataroomId: z.string(),
   parentFolderId: z.string(),
-  url: z.string()
+  url: z.string(),
+  teamId: z.string()
 })
 
 export default async function handle(
@@ -23,16 +27,22 @@ export default async function handle(
       return res.status(401).end("Unauthorized");
     }
 
-    const id = req.body.id;
+    const { teamId, fileId } = req.body;
+    const userId = (session?.user as CustomUser).id;
     try {
+      //Check if user if member of team
+      await isUserMemberOfTeam({ teamId, userId });
       const file = await prisma.dataroomFile.delete({
         where: {
-          id: id
+          id: fileId
         }
       })
 
       res.status(200).json({ file });
     } catch (error) {
+      if (error instanceof TeamError) {
+        return res.status(401).json({ message: "Unauthorized access" });
+      }
       return res.status(500).json({
         message: "Internal Server Error",
         error: (error as Error).message,
@@ -50,18 +60,15 @@ export default async function handle(
     let fileName: string;
     let dataroomId: string;
     let parentFolderId: string;
-    let url: string
-    try {
-      ({ fileName, dataroomId, parentFolderId, url } = bodySchema.parse(req.body));
-    } catch (error) {
-      res.status(400).json({
-        message: "Invalid Inputs",
-        error: (error as Error).message,
-      });
-      return;
-    }
+    let url: string;
+    let teamId: string;
 
+    const userId = (session?.user as CustomUser).id;
     try {
+      //Input validation
+      ({ fileName, dataroomId, parentFolderId, url, teamId } = bodySchema.parse(req.body));
+      //Check if user if member of team
+      await isUserMemberOfTeam({ teamId, userId });
       const file = await prisma.dataroomFile.create({
         data: {
           name: fileName,
@@ -73,6 +80,14 @@ export default async function handle(
 
       res.status(201).json({ file });
     } catch (error) {
+      if (error instanceof TeamError) {
+        return res.status(401).json({ message: "Unauthorized access" });
+      } else if (error instanceof ZodError) {
+        return res.status(403).json({
+          message: "Invalid Inputs",
+          error: "Please enter a file name with fewer than 150 characters",
+        });
+      }
       log(`Failed to add file. Error: \n\n ${error}`)
       res.status(500).json({
         message: "Internal Server Error",
@@ -86,19 +101,15 @@ export default async function handle(
       res.status(401).end("Unauthorized");
       return;
     }
-
-    //Input validation 
-    const { updatedFileName, fileId } = req.body;
-    if (updatedFileName.length > 150) {
-      res.status(400).json({
-        message: "Invalid Inputs",
-        error: "Please enter a file name with fewer than 150 characters",
-      });
-      return;
-    }
+    const { updatedFileName, fileId, teamId } = req.body;
 
     //Update file name
+    const userId = (session?.user as CustomUser).id;
     try {
+      //Input validation (Max no of words = 150)
+      z.string().max(150).parse(updatedFileName);
+      //Check if user if member of team
+      await isUserMemberOfTeam({ teamId, userId });
       const file = await prisma.dataroomFile.update({
         where: {
           id: fileId
@@ -110,14 +121,20 @@ export default async function handle(
 
       res.status(201).json({ file, message: "File renamed successfully" });
     } catch (error) {
+      if (error instanceof TeamError) {
+        return res.status(401).json({ message: "Unauthorized access" });
+      } else if (error instanceof ZodError) {
+        return res.status(403).json({
+          message: "Invalid Inputs",
+          error: "Please enter a file name with fewer than 150 characters",
+        });
+      }
       log(`Failed to create file. Error: \n\n ${error}`)
       res.status(500).json({
         message: "Internal Server Error",
         error: (error as Error).message,
       });
     }
-
-
   } else {
     // We only allow POST, DELETE AND PUT requests
     res.setHeader("Allow", ["DELETE", "POST", "PUT"]);

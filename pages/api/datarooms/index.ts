@@ -3,6 +3,8 @@ import { getServerSession } from "next-auth/next";
 import prisma from "@/lib/prisma";
 import { authOptions } from "../auth/[...nextauth]";
 import { CustomUser } from "@/lib/types";
+import { isUserMemberOfTeam } from "@/lib/team/helper";
+import { TeamError } from "@/lib/errorHandler";
 
 export default async function handle(
   req: NextApiRequest,
@@ -14,31 +16,15 @@ export default async function handle(
     if (!session) {
       return res.status(401).end("Unauthorized");
     }
-
-    const { id } = req.query;
-
-    //For useDataroom hook
-    if (id) {
-      const dataroom = await prisma.dataroom.findUnique({
-        where: {
-          id
-        }
-      })
-
-      if (!dataroom) {
-        res.status(404).json({message: "Dataroom doesn't exist"});
-        return;
-      }
-
-      res.status(200).json(dataroom);
-      return;
-    }
-
+    const userId = (session?.user as CustomUser).id;
+    const teamId = req.query.teamId as string;
     //For fetching datarooms for /datarooms page
     try {
+      //Check if user if member of team
+      await isUserMemberOfTeam({ teamId, userId });
       const datarooms = await prisma.dataroom.findMany({
         where: {
-          ownerId: (session.user as CustomUser).id,
+          teamId
         },
         include: {
           folders: {
@@ -62,6 +48,9 @@ export default async function handle(
 
       res.status(200).json({ datarooms });
     } catch (error) {
+      if (error instanceof TeamError) {
+        return res.status(401).json({ message: "Unauthorized access" });
+      }
       return res.status(500).json({
         message: "Internal Server Error",
         error: (error as Error).message,
@@ -74,10 +63,12 @@ export default async function handle(
       res.status(401).end("Unauthorized");
       return;
     }
-
-    const { id } = req.body as { id: string };
+    const { teamId, id } = req.body as { teamId: string, id: string };
+    const userId = (session?.user as CustomUser).id;
 
     try{
+      //Check if user if member of team
+      await isUserMemberOfTeam({ teamId, userId });
       const dataroom = await prisma.dataroom.findUnique({
         where: {
           id: id
@@ -86,11 +77,6 @@ export default async function handle(
 
       if (!dataroom) {
         return res.status(404).end("Dataroom not found");
-      }
-
-      // check that the user is owner of the dataroom, otherwise return 401
-      if (dataroom.ownerId !== (session.user as CustomUser).id) {
-        return res.status(401).end("Unauthorized to access the document");
       }
 
       // delete the dataroom from database
@@ -102,6 +88,9 @@ export default async function handle(
 
       res.status(204).end(); // 204 No Content response for successful deletes
     } catch (error) {
+      if (error instanceof TeamError) {
+        return res.status(401).json({ message: "Unauthorized access" });
+      }
       return res.status(500).json({
         message: "Internal Server Error",
         error: (error as Error).message,

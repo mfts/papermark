@@ -225,7 +225,6 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
   const { params, query } = context;
   const dataroomId: string = params?.dataroomId as string;
   const path: string[] = params?.path as string[];
-  const session = await getServerSession(context.req, context.res, authOptions);
   const authenticationCode: string = query.authenticationCode as string;
   const email = query.email as string;
 
@@ -257,8 +256,7 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
       {
         method: 'GET',
         headers: {
-          'Content-Type': 'application/json',
-          Authorization: JSON.stringify(session),
+          'Content-Type': 'application/json'
         }
       },)
     const { dataroom, folderDirectory: directory } = await response.json();

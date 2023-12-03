@@ -16,6 +16,7 @@ import { Separator } from "@/components/ui/separator";
 import PasswordSection from "@/components/links/link-sheet/password-section";
 import EmailProtectionSection from "@/components/links/link-sheet/email-protection-section";
 import { DEFAULT_DATAROOM_TYPE, DEFAULT_DATAROOM_PROPS } from "../paged/add-paged-dataroom-modal";
+import { useTeam } from "@/context/team-context";
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
 
 export function AddHierarchicalDataroomModal({ children }: { children: React.ReactNode }) {
@@ -28,6 +29,7 @@ export function AddHierarchicalDataroomModal({ children }: { children: React.Rea
   const [loading, setLoading] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>("");
   const router = useRouter();
+  const teamInfo = useTeam();
 
   const handleDataroomCreation = async (event: any) => {
     event.preventDefault();
@@ -76,7 +78,8 @@ export function AddHierarchicalDataroomModal({ children }: { children: React.Rea
         name: dataroomName,
         description: dataroomDescription,
         password: data.password ? data.password : "",
-        emailProtected: data.emailProtected
+        emailProtected: data.emailProtected,
+        teamId: teamInfo?.currentTeam?.id
       }),
     });
 

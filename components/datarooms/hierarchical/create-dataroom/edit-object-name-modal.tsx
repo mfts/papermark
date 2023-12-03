@@ -14,6 +14,7 @@ import { Dispatch } from "react";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { ActionType } from "./state-management";
+import { useTeam } from "@/context/team-context";
 
 export default function EditObjectNameModal({
   isOpen,
@@ -28,13 +29,14 @@ export default function EditObjectNameModal({
 }) {
   const [updatedObjectName, setUpdatedObjectName] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
+  const teamInfo = useTeam();
 
   useEffect(()=>{setUpdatedObjectName(objectMetadata.name)},[objectMetadata])
 
   const updateObjectNameInDatabase = async () => {
     const body = objectMetadata.type === "FOLDER"
-      ? { updatedFolderName: updatedObjectName, folderId: objectMetadata.id }
-      : { updatedFileName: updatedObjectName, fileId: objectMetadata.id }
+      ? { updatedFolderName: updatedObjectName, folderId: objectMetadata.id, teamId: teamInfo?.currentTeam?.id}
+      : { updatedFileName: updatedObjectName, fileId: objectMetadata.id, teamId: teamInfo?.currentTeam?.id }
     const URL = `/api/datarooms/hierarchical/${objectMetadata.type === "FOLDER" ? "folders" : "files"}`
     const response = await fetch(URL, {
       method: "PUT",

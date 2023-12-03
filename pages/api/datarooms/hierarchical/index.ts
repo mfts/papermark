@@ -6,10 +6,11 @@ import { CustomUser } from "@/lib/types";
 import { log } from "@/lib/utils";
 import { identifyUser, trackAnalytics } from "@/lib/analytics";
 import { FolderDirectory } from "@/lib/types";
-import { Session } from "next-auth";
 import { DataroomFolder } from "@prisma/client";
-import z from "zod";
+import z, { ZodError } from "zod";
 import { generateAuthenticationCode } from "@/lib/api/authentication";
+import { isUserMemberOfTeam } from "@/lib/team/helper";
+import { TeamError } from "@/lib/errorHandler";
 
 const bodySchema = z.object({
   name: z.string(),
@@ -22,12 +23,20 @@ export default async function handle(
 ) {
   if (req.method === "GET") {
     // GET /api/datarooms/hierarchical
-    const session = await getServerSession(req, res, authOptions);
-    if (session) {
-      return res.status(401).end("Unauthorized");
-    }
+    const { teamId, id } = req.query as { teamId: string, id: string };
+    const session = req.query.authentication 
+    ? JSON.parse(req.query.authentication as string) 
+    : await getServerSession(req, res, authOptions);
+    const userId = (session?.user as CustomUser).id;
 
-    const { id } = req.query as { id: string };
+    //Prevent unauthorized access from dashboard, however bypass this check if a recipient is trying to access dataroom
+    if (teamId) {
+      try {
+        await isUserMemberOfTeam({ teamId, userId });
+      } catch {
+        return res.status(401).end("Unauthorized");
+      }
+    }
 
     try {
       const dataroom = await prisma.dataroom.findUnique({
@@ -40,8 +49,7 @@ export default async function handle(
         return res.status(404).end("Dataroom not found");
       }
 
-      //We want to minimize database calls as processing data on server
-      //is more efficient
+      //We want to minimize database calls as processing data on server is more efficient
       const folders = await prisma.dataroomFolder.findMany({
         where: {
           dataroomId: id
@@ -93,18 +101,14 @@ export default async function handle(
     let name: string;
     let description: string;
     const subBody = { name: req.body.name, description: req.body.name }
-    const { password, emailProtected } = req.body;
-    try {
-      ({ name, description} = bodySchema.parse(subBody));
-    } catch (error) {
-      res.status(400).json({
-        message: "Invalid Inputs",
-        error: (error as Error).message,
-      });
-      return;
-    }
+    const { password, emailProtected, teamId } = req.body;
+    const userId = (session?.user as CustomUser).id;
 
     try {
+      //Input Validation
+      ({ name, description} = bodySchema.parse(subBody));
+      //Check if user if member of team
+      await isUserMemberOfTeam({ teamId, userId });
       const dataroomName = await prisma.dataroom.findFirst({
         where: {
           name: name
@@ -112,10 +116,9 @@ export default async function handle(
       })
 
       if (dataroomName) {
-        res.status(409).json({
+        return res.status(409).json({
           message: `A dataroom with name "${name}" already exists. Please try another name`,
         });
-        return;
       }
 
       // Save data to the database
@@ -127,6 +130,7 @@ export default async function handle(
           emailProtected,
           type: "HIERARCHICAL",
           ownerId: (session.user as CustomUser).id,
+          teamId
         }
       });
 
@@ -153,6 +157,14 @@ export default async function handle(
 
       res.status(201).json({ dataroom, homeFolder, authenticationCode });
     } catch (error) {
+      if (error instanceof TeamError) {
+        return res.status(401).json({ message: "Unauthorized access" });
+      } else if (error instanceof ZodError) {
+        return res.status(403).json({
+          message: "Invalid Inputs",
+          error: (error as Error).message,
+        });
+      }
       log(`Failed to create dataroom. Error: \n\n ${error}`)
       res.status(500).json({
         message: "Internal Server Error",
@@ -167,22 +179,19 @@ export default async function handle(
       return res.status(401).end("Unauthorized");
     }
 
-    const { id } = req.query as { id: string };
     //Input validation 
     let name: string;
     let description: string;
-    try {
-      ({ name, description} = bodySchema.parse(req.body));
-    } catch (error) {
-      res.status(400).json({
-        message: "Invalid Inputs",
-        error: (error as Error).message,
-      });
-      return;
-    }
-
+    const subBody = { name: req.body.name, description: req.body.name }
+    const { teamId, id } = req.body;
+    const userId = (session?.user as CustomUser).id;
 
     try {
+      //Input validation
+      ({ name, description } = bodySchema.parse(subBody));
+      //Check if user if member of team
+      await isUserMemberOfTeam({ teamId, userId });
+      //Check if dataroom exists
       const dataroom = await prisma.dataroom.findUnique({
         where: {
           id: id,
@@ -191,11 +200,6 @@ export default async function handle(
           ownerId: true,
         }
       });
-
-      // Check if the user is the owner of the document
-      if (dataroom?.ownerId !== (session.user as CustomUser).id) {
-        return res.status(401).end("Unauthorized");
-      }
 
       await prisma.dataroom.update({
         where: {
@@ -209,6 +213,14 @@ export default async function handle(
 
       res.status(200).json({ message: "Dataroom name/description updated!" });
     } catch (error) {
+      if (error instanceof TeamError) {
+        return res.status(401).json({ message: "Unauthorized access" });
+      } else if (error instanceof ZodError) {
+        return res.status(403).json({
+          message: "Invalid Inputs",
+          error: (error as Error).message,
+        });
+      }
       return res.status(500).json({
         message: "Internal Server Error",
         error: (error as Error).message,

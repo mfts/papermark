@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { ActionType } from "../state-management";
 import React, { Dispatch, useState } from "react";
 import EditObjectNameModal from "@/components/datarooms/hierarchical/create-dataroom/edit-object-name-modal";
+import { useTeam } from "@/context/team-context";
 
 export const FolderActions = React.memo(function ({
   folderDirectory,
@@ -37,6 +38,7 @@ export const FolderActions = React.memo(function ({
     parentFolderId: "",
     type: "FOLDER"
   });
+  const teamInfo = useTeam();
   const handleDeleteFolder = async (folderId: string) => {
     //Delete folder from database
     const response = await fetch(`/api/datarooms/hierarchical/folders`, {
@@ -44,7 +46,7 @@ export const FolderActions = React.memo(function ({
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ id: folderId })
+      body: JSON.stringify({ folderId, teamId: teamInfo?.currentTeam?.id})
     })
 
     if (!response.ok) {

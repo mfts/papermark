@@ -1,11 +1,11 @@
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import DataroomView from "@/components/view/datarooms";
-import { useDataroom } from "@/lib/swr/use-dataroom";
+import { usePagedDataroom } from "@/lib/swr/use-dataroom";
 import NotFound from "@/pages/404";
 import { useSession } from "next-auth/react";
 
 export default function ViewDataroom() {
-  const { dataroom, authenticationCode, error } = useDataroom();
+  const { dataroom, authenticationCode, error } = usePagedDataroom();
   const { data: session, status } = useSession();
 
   if (!dataroom || status === "loading") {

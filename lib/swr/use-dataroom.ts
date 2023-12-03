@@ -1,9 +1,9 @@
 import { useRouter } from "next/router";
 import useSWR from "swr";
 import { fetcher } from "@/lib/utils";
-import { Dataroom } from "@prisma/client";
+import { DataroomWithFiles } from "../types";
 
-export function useDataroom() {
+export function usePagedDataroom() {
   const router = useRouter();
 
   const { dataroomId, authenticationCode } = router.query as {
@@ -12,8 +12,8 @@ export function useDataroom() {
   };
 
   // only fetch data once when dataroomId is present
-  const { data: dataroom, error } = useSWR<Dataroom>(
-    dataroomId && `/api/datarooms?id=${encodeURIComponent(dataroomId)}`,
+  const { data: dataroom, error } = useSWR<DataroomWithFiles>(
+    dataroomId && `/api/datarooms/paged?id=${encodeURIComponent(dataroomId)}`,
     fetcher,
     {
       dedupingInterval: 10000,
@@ -21,7 +21,7 @@ export function useDataroom() {
   );
 
   return {
-    dataroom,
+    dataroom: dataroom as DataroomWithFiles,
     loading: !error && !dataroom,
     error,
     authenticationCode
