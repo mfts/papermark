@@ -6,6 +6,7 @@ CREATE TABLE "Logo" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "file" TEXT NOT NULL,
+    "type" TEXT,
     "userId" TEXT NOT NULL,
     "teamId" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -13,9 +14,6 @@ CREATE TABLE "Logo" (
 
     CONSTRAINT "Logo_pkey" PRIMARY KEY ("id")
 );
-
--- CreateIndex
-CREATE UNIQUE INDEX "Logo_name_key" ON "Logo"("name");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Logo_file_key" ON "Logo"("file");

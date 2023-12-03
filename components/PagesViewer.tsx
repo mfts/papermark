@@ -191,13 +191,13 @@ function Nav({
           <div className="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start">
             <div className="flex flex-shrink-0 items-center">
               {logoUrl ? (
-                <div className="flex h-10 w-30 flex-col space-y-2 sm:flex-row sm:items-center sm:space-x-5 sm:space-y-0">
+                <div className="flex h-14 w-30 flex-col space-y-2 sm:flex-row sm:items-center sm:space-x-5 sm:space-y-0">
                   <Image
                     src={logoUrl}
                     alt={"Custom Logo"}
-                    width={1000}
-                    height={500}
-                    className="h-10 w-30 sm:w-auto flex-none rounded-lg object-center"
+                    width={150}
+                    height={50}
+                    className="h-14 w-30 sm:w-auto flex-none rounded-lg object-center"
                   />
                 </div>
               ) : (

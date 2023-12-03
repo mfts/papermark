@@ -57,7 +57,7 @@ export default function Logo() {
           <div>
             <ul>
               {logo.map((l, index) => (
-                <li key={index} className="mt-4">
+                <li key={l.id} className="mt-4">
                   <LogoCard
                     name={l.name}
                     logoId={l.id}

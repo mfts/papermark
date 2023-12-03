@@ -188,6 +188,7 @@ export function AddLogoModal({
                   scale={scale[0] * 0.01}
                   width={200}
                   height={80}
+                  color={[180, 180, 180, 0.4]}
                   // position={state.position}
                   // onPositionChange={handlePositionChange}
                   rotate={rotate}

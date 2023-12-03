@@ -1,7 +1,8 @@
 import { Button } from "../ui/button";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTeam } from "@/context/team-context";
 import Image from "next/image";
+import { Separator } from "../ui/separator";
 
 export default function LogoCard({
   logoId,
@@ -15,24 +16,45 @@ export default function LogoCard({
   onDelete: (deletedLogo: string) => void;
 }) {
   const [deleting, setDeleting] = useState<boolean>(false);
+  const [isFirstClick, setIsFirstClick] = useState<boolean>(false);
+  const deleteButtonRef = useRef<HTMLButtonElement | null>(null);
   const teamInfo = useTeam();
 
-  const handleDelete = async () => {
-    setDeleting(true);
-    const response = await fetch(
-      `/api/teams/${teamInfo?.currentTeam?.id}/logo/${logoId}`,
-      {
-        method: "DELETE",
-      },
-    );
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+  useEffect(() => {
+    function handleClickOutside(event: { target: any }) {
+      if (
+        deleteButtonRef.current &&
+        !deleteButtonRef.current.contains(event.target)
+      ) {
+        setIsFirstClick(false);
+      }
     }
 
-    // Update local data by filtering out the deleted domain
-    onDelete(logoId);
-    setDeleting(false);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+  const handleDelete = async () => {
+    if (isFirstClick) {
+      setDeleting(true);
+      const response = await fetch(
+        `/api/teams/${teamInfo?.currentTeam?.id}/logo/${logoId}`,
+        {
+          method: "DELETE",
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      // Update local data by filtering out the deleted domain
+      onDelete(logoId);
+      setDeleting(false);
+    } else {
+      setIsFirstClick(true);
+    }
   };
 
   return (
@@ -44,21 +66,23 @@ export default function LogoCard({
           </div>
           <div className="flex space-x-3">
             <Button
+              ref={deleteButtonRef}
               variant="destructive"
               onClick={handleDelete}
               loading={deleting}
             >
-              Delete
+              {isFirstClick ? "Really delete?" : "Delete"}
             </Button>
           </div>
         </div>
-        <div className="flex h-10 flex-col space-y-2 sm:flex-row sm:items-left sm:space-x-5 sm:space-y-0">
+        <Separator />
+        <div className="flex h-30 flex-col space-y-2 sm:flex-row sm:items-left sm:space-x-5 sm:space-y-0">
           <Image
             src={file}
             alt={"Custom logo"}
-            width={1400}
-            height={1200}
-            className="sm:w-1/6 sm:h-16 flex-none rounded-lg object-left"
+            width={140}
+            height={120}
+            className="sm:w-1/5 sm:h-16 w-full flex-none rounded-lg object-left"
           />
         </div>
       </div>
