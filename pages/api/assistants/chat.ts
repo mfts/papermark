@@ -1,32 +1,37 @@
 import { experimental_AssistantResponse } from "ai";
-import OpenAI from "openai";
+import { type Run } from "openai/resources/beta/threads/runs/runs";
 import { type MessageContentText } from "openai/resources/beta/threads/messages/messages";
 import { Ratelimit } from "@upstash/ratelimit";
 import { redis } from "@/lib/redis";
-
-// Create an OpenAI API client (that's edge friendly!)
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || "",
-});
+import { openai } from "@/lib/openai";
 
 const ratelimit = {
   public: new Ratelimit({
     redis,
     analytics: true,
     prefix: "ratelimit:public",
-    limiter: Ratelimit.slidingWindow(1, "3600s"),
+    // rate limit public to 3 request per hour
+    limiter: Ratelimit.slidingWindow(3, "1h"),
   }),
   free: new Ratelimit({
     redis,
     analytics: true,
     prefix: "ratelimit:free",
-    limiter: Ratelimit.slidingWindow(60, "10s"),
+    // rate limit to 3 request per day
+    limiter: Ratelimit.fixedWindow(3, "24h"),
   }),
   paid: new Ratelimit({
     redis,
     analytics: true,
     prefix: "ratelimit:paid",
     limiter: Ratelimit.slidingWindow(60, "10s"),
+  }),
+  pro: new Ratelimit({
+    redis,
+    analytics: true,
+    prefix: "ratelimit:pro",
+    // rate limit to 1000 request per 30 days
+    limiter: Ratelimit.fixedWindow(1000, "30d"),
   }),
 };
 
@@ -41,21 +46,33 @@ export default async function POST(req: Request) {
     threadId: string | null;
     message: string;
     isPublic: boolean | null;
+    userId: string | null;
+    plan: string | null;
   } = await req.json();
 
   if (input.isPublic) {
     const ip = req.headers.get("x-forwarded-for");
-    const ratelimit = new Ratelimit({
-      redis: redis,
-      // rate limit to 5 requests per hour
-      limiter: Ratelimit.slidingWindow(5, "3600s"),
-    });
 
-    const { success, limit, reset, remaining } = await ratelimit.limit(
+    const { success, limit, reset, remaining } = await ratelimit.public.limit(
       `ratelimit_${ip}`,
     );
 
-    console.log("ratelimit", { success, limit, reset, remaining });
+    if (!success) {
+      return new Response("You have reached your request limit for the day.", {
+        status: 429,
+        headers: {
+          "X-RateLimit-Limit": limit.toString(),
+          "X-RateLimit-Remaining": remaining.toString(),
+          "X-RateLimit-Reset": reset.toString(),
+        },
+      });
+    }
+  }
+
+  if (input.userId && input.plan !== "pro") {
+    const { success, limit, reset, remaining } = await ratelimit.free.limit(
+      `ratelimit_${input.userId}`,
+    );
 
     if (!success) {
       return new Response("You have reached your request limit for the day.", {
@@ -94,7 +111,7 @@ export default async function POST(req: Request) {
         assistant_id: assistantId!,
       });
 
-      async function waitForRun(run: OpenAI.Beta.Threads.Runs.Run) {
+      async function waitForRun(run: Run) {
         // Poll for status change
         while (run.status === "queued" || run.status === "in_progress") {
           // delay for 500ms:

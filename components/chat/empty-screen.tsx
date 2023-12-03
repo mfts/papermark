@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
-import Sparkle from "../shared/icons/sparke";
+import Sparkle from "../shared/icons/sparkle";
 
 const exampleMessages = [
   {
@@ -51,15 +51,12 @@ export function EmptyScreen({
             />
           ) : (
             <div className="flex items-center justify-center rounded-md w-full">
-              <p className="inline-flex text-xl">
+              <p className="text-2xl text-center">
                 Chat with{" "}
-                <span className="inline-flex items-center mx-1 space-x-1">
-                  <span className="text-xl font-bold tracking-tighter ">
-                    Papermark
-                  </span>
-                  's
+                <span className="text-2xl font-bold tracking-tighter ">
+                  Papermark
                 </span>
-                pitchdeck
+                &apos;s pitchdeck
               </p>
             </div>
           )}

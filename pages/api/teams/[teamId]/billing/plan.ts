@@ -3,10 +3,11 @@ import { getServerSession } from "next-auth/next";
 import prisma from "@/lib/prisma";
 import { authOptions } from "../../../auth/[...nextauth]";
 import { errorhandler } from "@/lib/errorHandler";
+import { CustomUser } from "@/lib/types";
 
 export default async function handle(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   if (req.method === "GET") {
     // GET /api/teams/:teamId/billing/plan
@@ -16,11 +17,17 @@ export default async function handle(
     }
 
     const { teamId } = req.query as { teamId: string };
+    const userId = (session.user as CustomUser).id;
 
     try {
       const team = await prisma.team.findUnique({
         where: {
           id: teamId,
+          users: {
+            some: {
+              userId: userId,
+            },
+          },
         },
         select: {
           plan: true,
