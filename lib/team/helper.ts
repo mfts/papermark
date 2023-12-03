@@ -208,7 +208,7 @@ export async function getTeamWithLogo({
   if (logoId) {
     logo = team.logos.find((_logo) => _logo.id === logoId);
     if (!logo) {
-      throw new TeamError("Domain doesn't exists in the team");
+      throw new TeamError("Logo doesn't exists in the team");
     }
   }
 
