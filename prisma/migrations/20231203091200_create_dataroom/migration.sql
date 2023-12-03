@@ -13,6 +13,7 @@ CREATE TABLE "Dataroom" (
     "ownerId" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "teamId" TEXT NOT NULL,
 
     CONSTRAINT "Dataroom_pkey" PRIMARY KEY ("id")
 );
@@ -65,6 +66,9 @@ CREATE UNIQUE INDEX "AuthenticationCode_code_key" ON "AuthenticationCode"("code"
 
 -- AddForeignKey
 ALTER TABLE "Dataroom" ADD CONSTRAINT "Dataroom_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Dataroom" ADD CONSTRAINT "Dataroom_teamId_fkey" FOREIGN KEY ("teamId") REFERENCES "Team"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "DataroomView" ADD CONSTRAINT "DataroomView_dataroomId_fkey" FOREIGN KEY ("dataroomId") REFERENCES "Dataroom"("id") ON DELETE CASCADE ON UPDATE CASCADE;

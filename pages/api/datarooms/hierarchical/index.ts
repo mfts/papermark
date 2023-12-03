@@ -22,8 +22,8 @@ export default async function handle(
 ) {
   if (req.method === "GET") {
     // GET /api/datarooms/hierarchical
-    const session: Session | null = req.headers.authorization ? await JSON.parse(req.headers.authorization as string) : await getServerSession(req, res, authOptions);
-    if (!session) {
+    const session = await getServerSession(req, res, authOptions);
+    if (session) {
       return res.status(401).end("Unauthorized");
     }
 
@@ -38,11 +38,6 @@ export default async function handle(
 
       if (!dataroom) {
         return res.status(404).end("Dataroom not found");
-      }
-
-      // Check that the user is owner of the dataroom, otherwise return 401
-      if (dataroom.ownerId !== (session.user as CustomUser).id) {
-        return res.status(401).end("Unauthorized to access this document");
       }
 
       //We want to minimize database calls as processing data on server

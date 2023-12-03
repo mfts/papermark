@@ -61,6 +61,7 @@ model Team {
   name           String
   users          UserTeam[]
   documents      Document[]
+  datarooms      Dataroom[]
   domains        Domain[]
   invitations    Invitation[]
   sentEmails     SentEmail[]
@@ -214,6 +215,8 @@ model Dataroom {
   files            DataroomFile[]
   folders          DataroomFolder[]
   dataroomView     DataroomView[]
+  team             Team              @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId           String
   authenticationCodes AuthenticationCode[]
 }
 
