@@ -165,7 +165,7 @@ export default function Billing() {
                   {tier.id === 1 &&
                     (plan ? (
                       tier.currentPlan ? (
-                        <UpgradePlanModal>
+                        <UpgradePlanModal clickedPlan={"Pro"}>
                           <Button type="button">Upgrade to Pro</Button>
                         </UpgradePlanModal>
                       ) : (
@@ -207,7 +207,7 @@ export default function Billing() {
                           Manage Subscription
                         </Button>
                       ) : (
-                        <UpgradePlanModal clickedPlan="Starter">
+                        <UpgradePlanModal clickedPlan={"Starter"}>
                           <Button
                             type="button"
                             variant="outline"
@@ -246,7 +246,7 @@ export default function Billing() {
                           Manage Subscription
                         </Button>
                       ) : (
-                        <UpgradePlanModal clickedPlan="Pro">
+                        <UpgradePlanModal clickedPlan={"Pro"}>
                           <Button type="button">
                             {tier.isTrial
                               ? "Upgrade to remain on Pro"
