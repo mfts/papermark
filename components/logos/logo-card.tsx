@@ -128,7 +128,7 @@ export default function LogoCard({
             />
             {isEditingName && (
               <p className="text-sm text-muted-foreground mt-1">
-                {`You are editing the document name. Press <Enter> to save.`}
+                {`You are editing the logo name. Press <Enter> to save.`}
               </p>
             )}
           </div>
