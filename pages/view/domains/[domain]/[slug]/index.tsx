@@ -12,76 +12,71 @@ import { ExtendedRecordMap } from "notion-types";
 import notion from "@/lib/notion";
 import { parsePageId } from "notion-utils";
 
-export const getStaticProps = async (context: GetStaticPropsContext) => {
-  const { domain, slug } = context.params as { domain: string; slug: string };
+// export const getStaticProps = async (context: GetStaticPropsContext) => {
+//   const { domain, slug } = context.params as { domain: string; slug: string };
 
-  // Fetch the link
-  const res = await fetch(
-    `${process.env.NEXTAUTH_URL}/api/links/domains/${encodeURIComponent(
-      domain,
-    )}/${encodeURIComponent(slug)}`,
-  );
-  if (!res.ok) {
-    return { notFound: true };
-  }
-  const link = (await res.json()) as LinkWithDocument;
+//   // Fetch the link
+//   const res = await fetch(
+//     `${process.env.NEXTAUTH_URL}/api/links/domains/${encodeURIComponent(
+//       domain,
+//     )}/${encodeURIComponent(slug)}`,
+//   );
+//   if (!res.ok) {
+//     return { notFound: true };
+//   }
+//   const link = (await res.json()) as LinkWithDocument;
 
-  let pageId = null;
-  let recordMap = null;
+//   let pageId = null;
+//   let recordMap = null;
 
-  const { type, file, ...versionWithoutTypeAndFile } =
-    link.document.versions[0];
+//   const { type, file, ...versionWithoutTypeAndFile } =
+//     link.document.versions[0];
 
-  if (type === "notion") {
-    // regex match to get the page id from the notion url
-    const notionPageId = parsePageId(file, { uuid: false });
-    if (!notionPageId) {
-      return {
-        notFound: true,
-      };
-    }
+//   if (type === "notion") {
+//     // regex match to get the page id from the notion url
+//     const notionPageId = parsePageId(file, { uuid: false });
+//     if (!notionPageId) {
+//       return {
+//         notFound: true,
+//       };
+//     }
 
-    pageId = notionPageId;
-    recordMap = await notion.getPage(pageId);
-  }
+//     pageId = notionPageId;
+//     recordMap = await notion.getPage(pageId);
+//   }
 
-  return {
-    props: {
-      // return link without file and type to avoid sending the file to the client
-      link: {
-        ...link,
-        document: {
-          ...link.document,
-          versions: [versionWithoutTypeAndFile],
-        },
-      },
-      notionData: {
-        rootNotionPageId: pageId,
-        recordMap,
-      },
-    },
-    revalidate: 10,
-  };
-};
+//   return {
+//     props: {
+//       // return link without file and type to avoid sending the file to the client
+//       link: {
+//         ...link,
+//         document: {
+//           ...link.document,
+//           versions: [versionWithoutTypeAndFile],
+//         },
+//       },
+//       notionData: {
+//         rootNotionPageId: pageId,
+//         recordMap,
+//       },
+//     },
+//   };
+// };
 
-export async function getStaticPaths() {
-  return {
-    paths: [],
-    fallback: true,
-  };
-}
+// export async function getStaticPaths() {
+//   return {
+//     paths: [],
+//     fallback: true,
+//   };
+// }
 
-export default function ViewPage({
-  link,
-  notionData,
-}: {
-  link: LinkWithDocument;
-  notionData: {
-    rootNotionPageId: string | null;
-    recordMap: ExtendedRecordMap | null;
-  };
-}) {
+export default function ViewPage() {
+  const { link, error } = useDomainLink();
   const { data: session, status } = useSession();
+
+  if (error && error.status === 404) {
+    return <NotFound />;
+  }
 
   if (!link || status === "loading") {
     return (
@@ -120,7 +115,7 @@ export default function ViewPage({
         userEmail={userEmail}
         userId={userId}
         isProtected={true}
-        notionData={notionData}
+        // notionData={notionData}
       />
     );
   }
@@ -131,7 +126,7 @@ export default function ViewPage({
       userEmail={userEmail}
       userId={userId}
       isProtected={false}
-      notionData={notionData}
+      // notionData={notionData}
     />
   );
 }

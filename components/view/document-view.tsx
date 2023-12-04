@@ -29,7 +29,7 @@ export default function DocumentView({
   userEmail: string | null | undefined;
   userId: string | null | undefined;
   isProtected: boolean;
-  notionData: {
+  notionData?: {
     rootNotionPageId: string | null;
     recordMap: ExtendedRecordMap | null;
   };
@@ -127,7 +127,7 @@ export default function DocumentView({
   return (
     <div className="bg-gray-950">
       {submitted ? (
-        notionData.recordMap ? (
+        notionData && notionData.recordMap ? (
           <NotionPage
             recordMap={notionData.recordMap}
             // rootPageId={notionData.rootNotionPageId}
