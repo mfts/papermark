@@ -29,6 +29,7 @@ export default async function handle(
           document: {
             select: {
               id: true,
+              assistantEnabled: true,
               versions: {
                 where: { isPrimary: true },
                 select: {

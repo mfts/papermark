@@ -6,6 +6,8 @@ import { CustomUser } from "@/lib/types";
 import { Chat } from "@/components/chat/chat";
 import Sparkle from "@/components/shared/icons/sparkle";
 import { usePlan } from "@/lib/swr/use-billing";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 export const getServerSideProps = async (context: any) => {
   const { id } = context.params;
@@ -20,10 +22,23 @@ export const getServerSideProps = async (context: any) => {
     };
   }
 
+  const userId = (session.user as CustomUser).id;
+
   const document = await prisma.document.findUnique({
-    where: { id },
+    where: {
+      id,
+      assistantEnabled: true,
+      team: {
+        users: {
+          some: {
+            userId: userId,
+          },
+        },
+      },
+    },
     select: {
       id: true,
+      assistantEnabled: true,
       versions: {
         where: { isPrimary: true },
         select: {
@@ -43,8 +58,6 @@ export const getServerSideProps = async (context: any) => {
       notFound: true,
     };
   }
-
-  const userId = (session.user as CustomUser).id;
 
   // create or fetch threadId
   const res = await fetch(
@@ -73,8 +86,9 @@ export const getServerSideProps = async (context: any) => {
     props: {
       threadId,
       messages: messages || [],
-      firstPage: document.versions[0].pages[0].file,
+      firstPage: document.versions[0].pages[0]?.file || "",
       userId,
+      documentId: document.id,
     },
   };
 };
@@ -84,16 +98,18 @@ export default function ChatPage({
   messages,
   firstPage,
   userId,
+  documentId,
 }: {
   threadId: string;
   messages: Message[];
   firstPage: string;
   userId: string;
+  documentId: string;
 }) {
   const { plan } = usePlan();
   return (
     <>
-      <Nav />
+      <Nav documentId={documentId} />
       <Chat
         initialMessages={messages}
         threadId={threadId}
@@ -105,7 +121,7 @@ export default function ChatPage({
   );
 }
 
-function Nav() {
+function Nav({ documentId }: { documentId: string }) {
   return (
     <nav className="bg-black fixed top-0 inset-x-0 z-10">
       <div className="mx-auto px-2 sm:px-6 lg:px-8">
@@ -119,10 +135,9 @@ function Nav() {
             </div>
           </div>
           <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
-            <div className="bg-gray-900 text-white rounded-md px-3 py-2 text-sm font-medium">
-              {/* <span>{pageNumber}</span>
-              <span className="text-gray-400"> / {numPages}</span> */}
-            </div>
+            <Link href={`/documents/${documentId}`}>
+              <Button variant="secondary">Back to document</Button>
+            </Link>
           </div>
         </div>
       </div>

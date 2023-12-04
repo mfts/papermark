@@ -142,6 +142,7 @@ export default function DocumentView({
             viewId={viewData.viewId}
             linkId={link.id}
             documentId={document.id}
+            assistantEnabled={document.assistantEnabled}
             versionNumber={document.versions[0].versionNumber}
           />
         ) : (
@@ -152,6 +153,7 @@ export default function DocumentView({
             documentId={document.id}
             name={document.name}
             allowDownload={link.allowDownload}
+            assistantEnabled={document.assistantEnabled}
             versionNumber={document.versions[0].versionNumber}
           />
         )

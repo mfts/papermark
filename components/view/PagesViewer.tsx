@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import LoadingSpinner from "../ui/loading-spinner";
 import BlankImg from "@/public/_static/blank.gif";
+import Nav from "./nav";
 
 const DEFAULT_PRELOADED_IMAGES_NUM = 10;
 
@@ -11,12 +12,14 @@ export default function PagesViewer({
   linkId,
   documentId,
   viewId,
+  assistantEnabled,
   versionNumber,
 }: {
   pages: { file: string; pageNumber: string }[];
   linkId: string;
   documentId: string;
   viewId: string;
+  assistantEnabled: boolean;
   versionNumber: number;
 }) {
   const numPages = pages.length;
@@ -135,7 +138,11 @@ export default function PagesViewer({
 
   return (
     <>
-      <Nav pageNumber={pageNumber} numPages={numPages} />
+      <Nav
+        pageNumber={pageNumber}
+        numPages={numPages}
+        assistantEnabled={assistantEnabled}
+      />
       <div
         style={{ height: "calc(100vh - 64px)" }}
         className="flex items-center relative"
@@ -191,35 +198,5 @@ export default function PagesViewer({
         </div>
       </div>
     </>
-  );
-}
-
-function Nav({
-  pageNumber,
-  numPages,
-}: {
-  pageNumber: number;
-  numPages: number;
-}) {
-  return (
-    <nav className="bg-black">
-      <div className="mx-auto px-2 sm:px-6 lg:px-8">
-        <div className="relative flex h-16 items-center justify-between">
-          <div className="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start">
-            <div className="flex flex-shrink-0 items-center">
-              <p className="text-2xl font-bold tracking-tighter text-white">
-                Papermark
-              </p>
-            </div>
-          </div>
-          <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
-            <div className="bg-gray-900 text-white rounded-md px-3 py-2 text-sm font-medium">
-              <span>{pageNumber}</span>
-              <span className="text-gray-400"> / {numPages}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </nav>
   );
 }
