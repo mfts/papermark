@@ -1,5 +1,6 @@
 import Link from "next/link";
 import GitHubIcon from "@/components/shared/icons/github";
+import Banner from "./banner-launch-week";
 
 function classNames(...classes: any[]) {
   return classes.filter(Boolean).join(" ");
@@ -8,6 +9,7 @@ function classNames(...classes: any[]) {
 export default function Navbar() {
   return (
     <>
+      <Banner />
       <nav className="top-0 w-full z-50 backdrop-blur-md bg-white">
         <div className="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8 ">
           <div className="relative flex h-16 justify-between">
@@ -45,4 +47,3 @@ export default function Navbar() {
     </>
   );
 }
-

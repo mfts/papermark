@@ -12,8 +12,7 @@ import Banner from "@/components/web/banner-launch-week";
 
 export default function Home() {
   return (
-    
-     <>
+    <>
       <Head>
         <meta
           name="description"
@@ -34,13 +33,8 @@ export default function Home() {
         <meta property="og:url" content="https://www.papermark.io" />
         <meta name="twitter:card" content="summary_large_image" />
       </Head>
-      
-      
-        <Banner />
-  
 
-        <Navbar />
-     
+      <Navbar />
 
       <div>
         <div className="relative isolate overflow-hidden bg-white ">
@@ -56,7 +50,6 @@ export default function Home() {
               }}
             />
           </div>
-          
 
           <Header />
           <Logos />

@@ -1,6 +1,4 @@
-import { XMarkIcon } from "@heroicons/react/20/solid";
-
-export default function Example() {
+export default function Banner() {
   return (
     <div className="relative isolate flex items-center gap-x-6 overflow-hidden bg-gray-900 px-6 py-2.5 sm:px-3.5 sm:before:flex-1">
       <div
@@ -29,21 +27,34 @@ export default function Example() {
       </div>
       <div className="flex justify-center  items-center gap-x-4 gap-y-2">
         <p className="text-sm leading-6 text-white">
-          <strong className="font-semibold">Papermark Launch Week </strong>
-          <svg
+          <strong className="font-semibold">Papermark AI</strong> on Product
+          Hunt
+          {/* <svg
             viewBox="0 0 2 2"
             className="mx-2 inline h-0.5 w-0.5 fill-current"
             aria-hidden="true"
           >
             <circle cx={1} cy={1} r={1} />
-          </svg>
-          04.12-08.12
+          </svg> */}
+          {/* 04.12-08.12 */}
         </p>
-        <a
+        {/* <a
           href="https://www.papermark.io/launch-week"
           className="flex-none rounded-md bg-green-600 px-3.5 py-1 text-sm font-semibold text-white shadow-sm hover:bg-green-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-900"
         >
           Follow this madness <span aria-hidden="true"></span>
+        </a> */}
+        <a
+          href="https://www.producthunt.com/posts/papermark-ai?utm_source=badge-featured&utm_medium=badge&utm_souce=badge-papermark&#0045;ai"
+          target="_blank"
+        >
+          <img
+            src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=427633&theme=light"
+            alt="Papermark&#0032;AI - Open&#0032;source&#0032;AI&#0032;document&#0032;assistant | Product Hunt"
+            style={{ width: "200px", height: "54px" }}
+            width="200"
+            height="54"
+          />
         </a>
       </div>
       <div className="flex flex-1 justify-end">

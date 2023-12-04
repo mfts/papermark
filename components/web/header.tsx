@@ -1,5 +1,6 @@
 import Link from "next/link";
 import GitHubIcon from "@/components/shared/icons/github";
+import { Button } from "../ui/button";
 
 export default function Header() {
   return (
@@ -11,7 +12,7 @@ export default function Header() {
           <div className="pb-4 pt-10 lg:pb-56 lg:pt-48 lg:flex-1">
             <div className="mx-auto max-w-2xl">
               <div className="mt-24 sm:mt-10">
-                <a
+                {/* <a
                   target="_blank"
                   href="https://www.producthunt.com/posts/papermark-3?utm_source=badge-top-post-badge&amp;utm_medium=badge&amp;utm_souce=badge-papermark"
                 >
@@ -20,7 +21,19 @@ export default function Header() {
                     alt="Papermark - The open-source DocSend alternative | Product Hunt"
                     className="w-[250px] h-[54px]"
                   />
-                </a>
+                </a> */}
+                {/* <Button className="bg-">Launch Week Dec 4-8</Button> */}
+                <Link href={"/launch-week"}>
+                  <Button
+                    className="group space-x-1 bg-gradient-to-r from-[#16222A] via-emerald-500 to-[#16222A]"
+                    variant={"special"}
+                    style={{
+                      backgroundSize: "200% auto",
+                    }}
+                  >
+                    Launch Week Dec 4-8
+                  </Button>
+                </Link>
               </div>
               <h1 className="mt-10 text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">
                 Founder friendly document sharing platform
