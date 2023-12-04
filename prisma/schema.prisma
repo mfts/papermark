@@ -49,7 +49,7 @@ model User {
   teams          UserTeam[]
   domains        Domain[]
   conversations  Conversation[]
-  plan           String         @default("trial")
+  plan           String         @default("free")
   stripeId       String?        @unique // Stripe subscription / customer ID
   subscriptionId String?        @unique // Stripe subscription ID
   startsAt       DateTime? // Stripe subscription start date

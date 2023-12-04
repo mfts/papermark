@@ -36,11 +36,12 @@ export async function POST(req: Request) {
       },
       select: {
         id: true,
+        createdAt: true,
         users: {
           where: { role: "ADMIN" },
           select: {
             user: {
-              select: { email: true, name: true, createdAt: true },
+              select: { email: true, name: true },
             },
           },
         },
@@ -60,30 +61,30 @@ export async function POST(req: Request) {
 
     const results = await Promise.allSettled(
       teams.map(async (team) => {
-        const { id, users } = team as {
+        const { id, users, createdAt } = team as {
           id: string;
+          createdAt: Date;
           users: {
-            user: { email: string; name: string | null; createdAt: Date };
+            user: { email: string; name: string | null };
           }[];
         };
 
         const sentEmails = team.sentEmails.map((email) => email.type);
         const userEmail = users[0].user.email;
         const userName = users[0].user.name;
-        const userCreatedAt = users[0].user.createdAt;
+        const teamCreatedAt = createdAt;
 
-        // TODO: workaround with the userCreatedAt should be reverted back to teamCreatedAt in December 2023
-        let userDaysLeft = calculateDaysLeft(new Date(userCreatedAt));
+        let teamDaysLeft = calculateDaysLeft(new Date(teamCreatedAt));
 
-        // send first reminder email if user has 5 days left on trial
-        if (userDaysLeft == 5) {
+        // send first reminder email if team has 5 days left on trial
+        if (teamDaysLeft == 5) {
           const sentFirstTrialEndReminderEmail = sentEmails.includes(
             "FIRST_TRIAL_END_REMINDER_EMAIL",
           );
           if (!sentFirstTrialEndReminderEmail) {
             return await Promise.allSettled([
               log(
-                `Trial End Reminder for team: *${id}* is expiring in ${userDaysLeft} days, email sent.`,
+                `Trial End Reminder for team: *${id}* is expiring in ${teamDaysLeft} days, email sent.`,
               ),
               limiter.schedule(() =>
                 sendTrialEndReminderEmail(userEmail, userName),
@@ -99,15 +100,15 @@ export async function POST(req: Request) {
           }
         }
 
-        // send final reminder email if user has 1 day left on trial
-        if (userDaysLeft <= 1) {
+        // send final reminder email if team has 1 day left on trial
+        if (teamDaysLeft <= 1) {
           const sentFinalTrialEndReminderEmail = sentEmails.includes(
             "FINAL_TRIAL_END_REMINDER_EMAIL",
           );
           if (!sentFinalTrialEndReminderEmail) {
             return await Promise.allSettled([
               log(
-                `Final Trial End Reminder for team: *${id}* is expiring in ${userDaysLeft} days, email sent.`,
+                `Final Trial End Reminder for team: *${id}* is expiring in ${teamDaysLeft} days, email sent.`,
               ),
               limiter.schedule(() =>
                 sendTrialEndFinalReminderEmail(userEmail, userName),
@@ -123,19 +124,22 @@ export async function POST(req: Request) {
           }
         }
 
-        // TODO: enable on 14.11.2023
-        // downgrade the user to free if user has 0 day left on trial
-        // if (userDaysLeft == 0) {
-        //   return await Promise.allSettled([
-        //     log(
-        //       `Downgrade to free for user: *${id}* is expiring in ${userDaysLeft} days, email sent.`,
-        //     ),
-        //     prisma.user.update({
-        //       where: { id },
-        //       data: { plan: "free" },
-        //     }),
-        //   ]);
-        // }
+        // downgrade the user to free if team has 0 day left on trial
+        if (teamDaysLeft <= 0) {
+          return await Promise.allSettled([
+            log(
+              `Downgrade to free for user: *${id}* is expiring in ${teamDaysLeft} days, downgraded.`,
+            ),
+            prisma.user.update({
+              where: { email: userEmail },
+              data: { plan: "free" },
+            }),
+            prisma.team.update({
+              where: { id },
+              data: { plan: "free" },
+            }),
+          ]);
+        }
       }),
     );
     return NextResponse.json(results);

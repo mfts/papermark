@@ -14,6 +14,7 @@ import {
 } from "@heroicons/react/20/solid";
 import Link from "next/link";
 import { classNames } from "@/lib/utils";
+import PapermarkSparkle from "@/components/shared/icons/papermark-sparkle";
 
 const scrollDown = () => {
   window.scrollBy({
@@ -191,8 +192,9 @@ export default function Home() {
           <div className="mx-auto max-w-7xl px-6 lg:px-8">
             <div className="mx-auto max-w-2xl py-8 sm:py-12 lg:py-24 ">
               <div className="hidden sm:mb-8 sm:flex sm:justify-center">
-                <div className="relative rounded-full px-3 py-1 text-sm leading-6 text-black dark:text-white ring-1 ring-black/10 dark:ring-white/10 hover:ring-white/20">
-                  Papermark AI 🌟
+                <div className="relative rounded-full flex items-center px-3 py-1 text-sm leading-6 text-black dark:text-white ring-1 ring-black/10 dark:ring-white/10 hover:ring-white/20">
+                  <PapermarkSparkle className="h-4 w-4 mr-1" />
+                  Papermark AI
                 </div>
               </div>
               <div className="text-center">
@@ -221,8 +223,9 @@ export default function Home() {
               <Link
                 className="rounded-md bg-black dark:bg-white px-3.5 py-2.5 text-sm font-semibold text-white dark:text-black shadow-sm hover:bg-gray-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400"
                 href="/login"
+                target="_blank"
               >
-                Papermark Pitchdeck you chat with
+                Sign up to use Papermark AI
               </Link>
             </div>
 
