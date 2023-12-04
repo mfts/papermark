@@ -5,7 +5,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogFooter
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { useEffect, useState } from "react";
 import { Button } from "../../../ui/button";
@@ -20,34 +20,52 @@ export default function EditObjectNameModal({
   isOpen,
   setIsOpen,
   objectMetadata,
-  updateFolderDirectory
+  updateFolderDirectory,
 }: {
-  isOpen: boolean,
-  setIsOpen: Dispatch<boolean>,
-  objectMetadata: { name: string, id: string, parentFolderId: string, type: "FOLDER" | "FILE" },
-  updateFolderDirectory: Dispatch<ActionType>
+  isOpen: boolean;
+  setIsOpen: Dispatch<boolean>;
+  objectMetadata: {
+    name: string;
+    id: string;
+    parentFolderId: string;
+    type: "FOLDER" | "FILE";
+  };
+  updateFolderDirectory: Dispatch<ActionType>;
 }) {
   const [updatedObjectName, setUpdatedObjectName] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const teamInfo = useTeam();
 
-  useEffect(()=>{setUpdatedObjectName(objectMetadata.name)},[objectMetadata])
+  useEffect(() => {
+    setUpdatedObjectName(objectMetadata.name);
+  }, [objectMetadata]);
 
   const updateObjectNameInDatabase = async () => {
-    const body = objectMetadata.type === "FOLDER"
-      ? { updatedFolderName: updatedObjectName, folderId: objectMetadata.id, teamId: teamInfo?.currentTeam?.id}
-      : { updatedFileName: updatedObjectName, fileId: objectMetadata.id, teamId: teamInfo?.currentTeam?.id }
-    const URL = `/api/datarooms/hierarchical/${objectMetadata.type === "FOLDER" ? "folders" : "files"}`
+    const body =
+      objectMetadata.type === "FOLDER"
+        ? {
+            updatedFolderName: updatedObjectName,
+            folderId: objectMetadata.id,
+            teamId: teamInfo?.currentTeam?.id,
+          }
+        : {
+            updatedFileName: updatedObjectName,
+            fileId: objectMetadata.id,
+            teamId: teamInfo?.currentTeam?.id,
+          };
+    const URL = `/api/datarooms/hierarchical/${
+      objectMetadata.type === "FOLDER" ? "folders" : "files"
+    }`;
     const response = await fetch(URL, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(body)
+      body: JSON.stringify(body),
     });
 
     return response;
-  }
+  };
 
   const handleEdit = async (event: any) => {
     event.preventDefault();
@@ -67,18 +85,18 @@ export default function EditObjectNameModal({
 
     //Updated folderDirectory locally
     if (objectMetadata.type === "FOLDER") {
-      updateFolderDirectory({ 
-        type: "UPDATE FOLDERNAME", 
-        folderId: objectMetadata.id, 
-        name: updatedObjectName
-       });
+      updateFolderDirectory({
+        type: "UPDATE FOLDERNAME",
+        folderId: objectMetadata.id,
+        name: updatedObjectName,
+      });
     } else {
-      updateFolderDirectory({ 
-        type: "UPDATE FILENAME", 
-        fileId: objectMetadata.id, 
-        parentFolderId: objectMetadata.parentFolderId, 
-        updateFileName: updatedObjectName
-       });
+      updateFolderDirectory({
+        type: "UPDATE FILENAME",
+        fileId: objectMetadata.id,
+        parentFolderId: objectMetadata.parentFolderId,
+        updateFileName: updatedObjectName,
+      });
     }
 
     setLoading(false);
@@ -93,9 +111,7 @@ export default function EditObjectNameModal({
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Edit Name</DialogTitle>
-          <DialogDescription>
-            Edit file/folder name
-          </DialogDescription>
+          <DialogDescription>Edit file/folder name</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleEdit}>
           <div className="grid gap-4 py-4">
@@ -113,7 +129,9 @@ export default function EditObjectNameModal({
             </div>
           </div>
           <DialogFooter>
-            <Button loading={loading} type="submit">Save Changes</Button>
+            <Button loading={loading} type="submit">
+              Save Changes
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

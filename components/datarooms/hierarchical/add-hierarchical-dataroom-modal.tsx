@@ -15,15 +15,24 @@ import { useRouter } from "next/router";
 import { Separator } from "@/components/ui/separator";
 import PasswordSection from "@/components/links/link-sheet/password-section";
 import EmailProtectionSection from "@/components/links/link-sheet/email-protection-section";
-import { DEFAULT_DATAROOM_TYPE, DEFAULT_DATAROOM_PROPS } from "../paged/add-paged-dataroom-modal";
+import {
+  DEFAULT_DATAROOM_TYPE,
+  DEFAULT_DATAROOM_PROPS,
+} from "../paged/add-paged-dataroom-modal";
 import { useTeam } from "@/context/team-context";
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
 
-export function AddHierarchicalDataroomModal({ children }: { children: React.ReactNode }) {
+export function AddHierarchicalDataroomModal({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   //Documents inside Dataroom
   const [dataroomName, setDataroomName] = useState<string>("");
   const [dataroomDescription, setDataroomDescription] = useState<string>("");
-  const [data, setData] = useState<DEFAULT_DATAROOM_TYPE>(DEFAULT_DATAROOM_PROPS);
+  const [data, setData] = useState<DEFAULT_DATAROOM_TYPE>(
+    DEFAULT_DATAROOM_PROPS,
+  );
 
   //const plausible = usePlausible();
   const [loading, setLoading] = useState<boolean>(false);
@@ -51,22 +60,29 @@ export function AddHierarchicalDataroomModal({ children }: { children: React.Rea
         const data = await response.json();
 
         // copy the link to the clipboard
-        copyToClipboard(`${process.env.NEXT_PUBLIC_BASE_URL}/view/dataroom/${data.dataroom.id}/${data.homeFolder.id}${!data.emailProtected && `?authenticationCode=${data.authenticationCode}`}`,
-          "Dataroom created and link copied to clipboard. Redirecting to dataroom's page...")
+        copyToClipboard(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/view/dataroom/${
+            data.dataroom.id
+          }/${data.homeFolder.id}${
+            !data.emailProtected &&
+            `?authenticationCode=${data.authenticationCode}`
+          }`,
+          "Dataroom created and link copied to clipboard. Redirecting to dataroom's page...",
+        );
 
         // Do we need to track the event ??
         // plausible("dataroomcreated");
 
         setTimeout(() => {
           //Refresh the page
-          router.push(`/datarooms/${data.dataroom.id}/${data.homeFolder.id}`)
+          router.push(`/datarooms/${data.dataroom.id}/${data.homeFolder.id}`);
         }, 2000);
       }
     } catch (error) {
       setLoading(false);
       console.error("An error occurred while creating dataroom: ", error);
     }
-  }
+  };
 
   async function saveDataroomToDatabase() {
     const response = await fetch("/api/datarooms/hierarchical", {
@@ -79,7 +95,7 @@ export function AddHierarchicalDataroomModal({ children }: { children: React.Rea
         description: dataroomDescription,
         password: data.password ? data.password : "",
         emailProtected: data.emailProtected,
-        teamId: teamInfo?.currentTeam?.id
+        teamId: teamInfo?.currentTeam?.id,
       }),
     });
 
@@ -101,9 +117,9 @@ export function AddHierarchicalDataroomModal({ children }: { children: React.Rea
           <DialogDescription>
             <div className="border-b border-border py-2">
               <p className="mb-1 text-sm text-muted-foreground">
-                Please enter the name and description of dataroom.
-                After you create a dataroom, a shareable link will be
-                generated and copied to your clipboard.
+                Please enter the name and description of dataroom. After you
+                create a dataroom, a shareable link will be generated and copied
+                to your clipboard.
               </p>
             </div>
             <div className="py-2 mt-1">
@@ -112,7 +128,9 @@ export function AddHierarchicalDataroomModal({ children }: { children: React.Rea
               </p>
               <Input
                 placeholder={"Enter Dataroom Name..."}
-                onChange={(e) => { setDataroomName(e.target.value) }}
+                onChange={(e) => {
+                  setDataroomName(e.target.value);
+                }}
               />
             </div>
             <div>
@@ -122,7 +140,9 @@ export function AddHierarchicalDataroomModal({ children }: { children: React.Rea
               <Input
                 className="mb-2"
                 placeholder={"Enter Dataroom Description..."}
-                onChange={(e) => { setDataroomDescription(e.target.value) }}
+                onChange={(e) => {
+                  setDataroomDescription(e.target.value);
+                }}
               />
             </div>
             <div className="flex items-center relative mt-2">
@@ -139,7 +159,13 @@ export function AddHierarchicalDataroomModal({ children }: { children: React.Rea
               <PasswordSection {...{ data, setData }} />
             </div>
             <div className="flex justify-center ">
-              {errorMessage ? <p className="-mt-1 mb-1 text-sm text-muted-foreground font-bold text-red-500">{errorMessage}</p> : <br />}
+              {errorMessage ? (
+                <p className="-mt-1 mb-1 text-sm text-muted-foreground font-bold text-red-500">
+                  {errorMessage}
+                </p>
+              ) : (
+                <br />
+              )}
             </div>
             <div className="flex justify-center">
               <Button

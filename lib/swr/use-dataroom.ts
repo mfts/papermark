@@ -17,13 +17,13 @@ export function usePagedDataroom() {
     fetcher,
     {
       dedupingInterval: 10000,
-    }
+    },
   );
 
   return {
     dataroom: dataroom as DataroomWithFiles,
     loading: !error && !dataroom,
     error,
-    authenticationCode
+    authenticationCode,
   };
 }

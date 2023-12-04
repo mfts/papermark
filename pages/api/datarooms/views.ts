@@ -6,7 +6,7 @@ import { sendViewedDataroomEmail } from "@/lib/emails/send-viewed-dataroom";
 
 export default async function handle(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   // We only allow POST requests
   if (req.method !== "POST") {
@@ -56,10 +56,10 @@ export default async function handle(
         dataroom: {
           select: {
             owner: true,
-            name: true
-          }
-        }
-      }
+            name: true,
+          },
+        },
+      },
     });
 
     // TODO: cannot identify user because session is not available
@@ -78,15 +78,13 @@ export default async function handle(
       newDataroomView.dataroom.owner.email as string,
       dataroomId,
       newDataroomView.dataroom.name,
-      email
+      email,
     );
 
-    return res
-      .status(200)
-      .json({
-        message: "Dataroom View recorded",
-        viewId: newDataroomView.id,
-      });
+    return res.status(200).json({
+      message: "Dataroom View recorded",
+      viewId: newDataroomView.id,
+    });
   } catch (error) {
     log(`Failed to record view for ${dataroomId}. Error: \n\n ${error}`);
     return res.status(500).json({ message: (error as Error).message });

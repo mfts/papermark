@@ -17,12 +17,12 @@ const bodySchema = z.object({
   links: z.array(z.string()), //Links which are string,
   password: z.string().max(30),
   emailProtected: z.boolean(),
-  teamId: z.string()
-})
+  teamId: z.string(),
+});
 
 export default async function handle(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   if (req.method === "GET") {
     // GET /api/datarooms/paged
@@ -30,11 +30,11 @@ export default async function handle(
     try {
       const dataroom = await prisma.dataroom.findUnique({
         where: {
-          id
-        }, 
+          id,
+        },
         include: {
-          files: true
-        }
+          files: true,
+        },
       });
       if (!dataroom) {
         return res.status(404).end("Dataroom not found");
@@ -54,7 +54,7 @@ export default async function handle(
       return;
     }
 
-    //Input validation 
+    //Input validation
     let name: string;
     let description: string;
     let titles: string[];
@@ -66,14 +66,15 @@ export default async function handle(
 
     try {
       //Input Validation
-      ({ name, description, titles, links, password, emailProtected, teamId } = bodySchema.parse(req.body));
+      ({ name, description, titles, links, password, emailProtected, teamId } =
+        bodySchema.parse(req.body));
       //Check if user if member of team
       await isUserMemberOfTeam({ teamId, userId });
       const dataroomName = await prisma.dataroom.findFirst({
         where: {
-          name: name
-        }
-      })
+          name: name,
+        },
+      });
 
       if (dataroomName) {
         return res.status(409).json({
@@ -90,7 +91,7 @@ export default async function handle(
           emailProtected: emailProtected,
           password: password,
           ownerId: (session.user as CustomUser).id,
-          teamId
+          teamId,
         },
       });
 
@@ -100,9 +101,9 @@ export default async function handle(
           data: {
             name: titles[i],
             url: links[i],
-            dataroomId: dataroom.id
-          }
-        })
+            dataroomId: dataroom.id,
+          },
+        });
       }
 
       await identifyUser((session.user as CustomUser).id);
@@ -122,7 +123,7 @@ export default async function handle(
           error: (error as Error).message,
         });
       }
-      log(`Failed to create dataroom. Error: \n\n ${error}`)
+      log(`Failed to create dataroom. Error: \n\n ${error}`);
       res.status(500).json({
         message: "Internal Server Error",
         error: (error as Error).message,

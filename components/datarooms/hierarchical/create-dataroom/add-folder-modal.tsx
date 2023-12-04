@@ -5,7 +5,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogFooter
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { useState } from "react";
 import { Button } from "../../../ui/button";
@@ -16,15 +16,15 @@ import { Label } from "@/components/ui/label";
 import { ActionType } from "./state-management";
 import { useTeam } from "@/context/team-context";
 
-export default function AddFolderModal({ 
+export default function AddFolderModal({
   children,
   updateFolderDirectory,
-  parentFolderId
- }: { 
-  children: React.ReactNode,
-  updateFolderDirectory: Dispatch<ActionType>,
-  parentFolderId: string
- }) {
+  parentFolderId,
+}: {
+  children: React.ReactNode;
+  updateFolderDirectory: Dispatch<ActionType>;
+  parentFolderId: string;
+}) {
   const [folderName, setFolderName] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const [isOpen, setIsOpen] = useState<boolean>(false);
@@ -40,14 +40,22 @@ export default function AddFolderModal({
     }
     setLoading(true);
 
-    const { dataroomId, path } = router.query as { dataroomId: string, path: string[] };
-    const body = { folderName, dataroomId, parentFolderId: path[path.length - 1], teamId: teamInfo?.currentTeam?.id }
+    const { dataroomId, path } = router.query as {
+      dataroomId: string;
+      path: string[];
+    };
+    const body = {
+      folderName,
+      dataroomId,
+      parentFolderId: path[path.length - 1],
+      teamId: teamInfo?.currentTeam?.id,
+    };
     const response = await fetch(`/api/datarooms/hierarchical/folders`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(body)
+      body: JSON.stringify(body),
     });
 
     if (!response.ok) {
@@ -57,7 +65,12 @@ export default function AddFolderModal({
 
     const data = await response.json();
     const folder = data.folder;
-    updateFolderDirectory({type: "CREATE FOLDER", parentFolderId, folder: folder});    setLoading(false);
+    updateFolderDirectory({
+      type: "CREATE FOLDER",
+      parentFolderId,
+      folder: folder,
+    });
+    setLoading(false);
     setIsOpen(false);
   };
 
@@ -86,7 +99,9 @@ export default function AddFolderModal({
             </div>
           </div>
           <DialogFooter>
-            <Button loading={loading} type="submit">Create Folder</Button>
+            <Button loading={loading} type="submit">
+              Create Folder
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

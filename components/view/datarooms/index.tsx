@@ -1,5 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
-import AccessForm, { DEFAULT_ACCESS_FORM_DATA, DEFAULT_ACCESS_FORM_TYPE } from "@/components/view/access-form";
+import AccessForm, {
+  DEFAULT_ACCESS_FORM_DATA,
+  DEFAULT_ACCESS_FORM_TYPE,
+} from "@/components/view/access-form";
 import { usePlausible } from "next-plausible";
 import { toast } from "sonner";
 import LoadingSpinner from "../../ui/loading-spinner";
@@ -11,7 +14,7 @@ export default function DataroomView({
   dataroom,
   userEmail,
   isProtected,
-  authenticationCode
+  authenticationCode,
 }: {
   dataroom: DataroomWithFiles;
   authenticationCode: string | undefined;
@@ -27,12 +30,13 @@ export default function DataroomView({
   const plausible = usePlausible();
 
   const [isEmailVerified, setIsEmailVerified] = useState<boolean>(false);
-  const [verificationRequested, setVerificationRequested] = useState<boolean>(false);
+  const [verificationRequested, setVerificationRequested] =
+    useState<boolean>(false);
   const didMount = useRef<boolean>(false);
   const [submitted, setSubmitted] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [data, setData] = useState<DEFAULT_ACCESS_FORM_TYPE>(
-    DEFAULT_ACCESS_FORM_DATA
+    DEFAULT_ACCESS_FORM_DATA,
   );
 
   const handleSubmission = async (): Promise<void> => {
@@ -46,7 +50,7 @@ export default function DataroomView({
         ...data,
         email: data.email || userEmail,
         dataroomId: dataroomId,
-        password: data.password
+        password: data.password,
       }),
     });
 
@@ -62,7 +66,7 @@ export default function DataroomView({
   };
 
   const handleSubmit: React.FormEventHandler<HTMLFormElement> = async (
-    event: React.FormEvent
+    event: React.FormEvent,
   ): Promise<void> => {
     event.preventDefault();
     await handleEmailVerification();
@@ -89,10 +93,13 @@ export default function DataroomView({
       },
       body: JSON.stringify({
         identifier: dataroomId,
-        type: dataroom.type === "PAGED" ? "PAGED DATAROOM" : "HIERARCHICAL DATAROOM",
+        type:
+          dataroom.type === "PAGED"
+            ? "PAGED DATAROOM"
+            : "HIERARCHICAL DATAROOM",
         email: data.email,
-        password: data.password
-      })
+        password: data.password,
+      }),
     });
     if (response.ok) {
       setVerificationRequested(true);
@@ -102,7 +109,7 @@ export default function DataroomView({
       setIsLoading(false);
       return false;
     }
-  }
+  };
 
   //Verifies authentication code
   const handleAuthCodeVerification = async () => {
@@ -114,7 +121,7 @@ export default function DataroomView({
       method: "GET",
       headers: {
         "Content-Type": "application/json",
-      }
+      },
     });
     if (response.ok) {
       setIsEmailVerified(true);
@@ -123,7 +130,7 @@ export default function DataroomView({
     } else {
       setIsLoading(false);
     }
-  }
+  };
 
   //If URL contains authenticationCode
   if (authenticationCode) {
@@ -132,7 +139,7 @@ export default function DataroomView({
         setIsLoading(true);
         await handleAuthCodeVerification();
       })();
-    }, [])
+    }, []);
 
     //Component to render if Loading
     if (isLoading) {
@@ -140,7 +147,7 @@ export default function DataroomView({
         <div className="h-screen flex items-center justify-center">
           <LoadingSpinner className="mr-1 h-20 w-20" />
         </div>
-      )
+      );
     }
 
     //Component to render when verification code is invalid
@@ -153,7 +160,7 @@ export default function DataroomView({
             </h2>
           </div>
         </div>
-      )
+      );
     }
 
     return (
@@ -171,7 +178,7 @@ export default function DataroomView({
         data={data}
         isLoading={isLoading}
       />
-    )
+    );
   }
 
   // If link is not submitted and does not have email / password protection, show the access form

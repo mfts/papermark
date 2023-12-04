@@ -13,12 +13,12 @@ const bodySchema = z.object({
   folderName: z.string().max(30), //Folder name should be less than 30 words
   dataroomId: z.string(),
   parentFolderId: z.string(),
-  teamId: z.string()
-})
+  teamId: z.string(),
+});
 
 export default async function handle(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   if (req.method === "DELETE") {
     // GET /api/datarooms/hierarchical/folders
@@ -34,9 +34,9 @@ export default async function handle(
       await isUserMemberOfTeam({ teamId, userId });
       const folder = await prisma.dataroomFolder.delete({
         where: {
-          id: folderId
-        }
-      })
+          id: folderId,
+        },
+      });
 
       res.status(200).json({ folder });
     } catch (error) {
@@ -56,7 +56,7 @@ export default async function handle(
       return;
     }
 
-    //Input validation 
+    //Input validation
     let folderName: string;
     let dataroomId: string;
     let parentFolderId: string;
@@ -65,15 +65,17 @@ export default async function handle(
     const userId = (session?.user as CustomUser).id;
     try {
       //Input validation
-      ({ folderName, dataroomId, parentFolderId, teamId } = bodySchema.parse(req.body));
+      ({ folderName, dataroomId, parentFolderId, teamId } = bodySchema.parse(
+        req.body,
+      ));
       //Check if user if member of team
       await isUserMemberOfTeam({ teamId, userId });
       const folder = await prisma.dataroomFolder.create({
         data: {
           name: folderName,
           parentFolderId,
-          dataroomId
-        }
+          dataroomId,
+        },
       });
 
       res.status(201).json({ folder });
@@ -86,20 +88,20 @@ export default async function handle(
           error: "Please enter a folder name with fewer than 150 characters",
         });
       }
-      log(`Failed to create folder. Error: \n\n ${error}`)
+      log(`Failed to create folder. Error: \n\n ${error}`);
       res.status(500).json({
         message: "Internal Server Error",
         error: (error as Error).message,
       });
     }
-  } else if (req.method === "PUT"){
+  } else if (req.method === "PUT") {
     // PUT /api/datarooms/hierarchical/folders
     const session = await getServerSession(req, res, authOptions);
     if (!session) {
       return res.status(401).end("Unauthorized");
     }
     const { updatedFolderName, folderId, teamId } = req.body;
-    
+
     //Update folder name
     const userId = (session?.user as CustomUser).id;
     try {
@@ -109,11 +111,11 @@ export default async function handle(
       await isUserMemberOfTeam({ teamId, userId });
       const folder = await prisma.dataroomFolder.update({
         where: {
-          id: folderId
+          id: folderId,
         },
         data: {
-          name: updatedFolderName
-        }
+          name: updatedFolderName,
+        },
       });
       res.status(201).json({ folder, message: "Folder renamed successfully" });
     } catch (error) {
@@ -125,7 +127,7 @@ export default async function handle(
           error: "Please enter a folder name with fewer than 150 characters",
         });
       }
-      log(`Failed to create folder. Error: \n\n ${error}`)
+      log(`Failed to create folder. Error: \n\n ${error}`);
       res.status(500).json({
         message: "Internal Server Error",
         error: (error as Error).message,

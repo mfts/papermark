@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from "react";
-import PDFViewer from "@/components/PDFViewer";
 import AccessForm, {
   DEFAULT_ACCESS_FORM_DATA,
   DEFAULT_ACCESS_FORM_TYPE,
@@ -7,10 +6,13 @@ import AccessForm, {
 import { usePlausible } from "next-plausible";
 import { toast } from "sonner";
 import { LinkWithDocument } from "@/lib/types";
-import LoadingSpinner from "../../ui/loading-spinner";
-import PagesViewer from "@/components/PagesViewer";
 import EmailVerificationMessage from "../email-verification-form";
 import ViewData from "./view-data";
+import LoadingSpinner from "@/components/ui/loading-spinner";
+import PagesViewer from "@/components/view/PagesViewer";
+import PDFViewer from "@/components/view/PDFViewer";
+import { NotionPage } from "../../NotionPage";
+import { ExtendedRecordMap } from "notion-types";
 
 export type DEFAULT_DOCUMENT_VIEW_TYPE = {
   viewId: string;
@@ -21,20 +23,28 @@ export type DEFAULT_DOCUMENT_VIEW_TYPE = {
 export default function DocumentView({
   link,
   userEmail,
+  userId,
   isProtected,
-  authenticationCode
+  authenticationCode,
+  notionData,
 }: {
   link: LinkWithDocument;
   authenticationCode: string | undefined;
   userEmail: string | null | undefined;
+  userId: string | null | undefined;
   isProtected: boolean;
+  notionData?: {
+    rootNotionPageId: string | null;
+    recordMap: ExtendedRecordMap | null;
+  };
 }) {
   const { document, emailProtected, password: linkPassword } = link;
 
   const plausible = usePlausible();
 
   const [isEmailVerified, setIsEmailVerified] = useState<boolean>(false);
-  const [verificationRequested, setVerificationRequested] = useState<boolean>(false);
+  const [verificationRequested, setVerificationRequested] =
+    useState<boolean>(false);
   const didMount = useRef<boolean>(false);
   const [submitted, setSubmitted] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -59,6 +69,9 @@ export default function DocumentView({
         email: data.email || userEmail,
         linkId: link.id,
         documentId: document.id,
+        userId: userId || null,
+        documentVersionId: document.versions[0].id || null,
+        hasPages: document.versions[0].hasPages || null,
       }),
     });
 
@@ -102,7 +115,12 @@ export default function DocumentView({
       headers: {
         "Content-Type": "application/json",
       },
-      body : JSON.stringify({identifier : link.id, type: "DOCUMENT", email: data.email, password: data.password})
+      body: JSON.stringify({
+        identifier: link.id,
+        type: "DOCUMENT",
+        email: data.email,
+        password: data.password,
+      }),
     });
     if (response.ok) {
       setVerificationRequested(true);
@@ -112,7 +130,7 @@ export default function DocumentView({
       setIsLoading(false);
       return false;
     }
-  }
+  };
 
   //Verifies authentication code
   const handleAuthCodeVerification = async () => {
@@ -122,7 +140,7 @@ export default function DocumentView({
       method: "GET",
       headers: {
         "Content-Type": "application/json",
-      }
+      },
     });
     if (response.ok) {
       setIsEmailVerified(true);
@@ -133,17 +151,17 @@ export default function DocumentView({
       setIsLoading(false);
       return false;
     }
-  }
+  };
 
   //If URL contains authenticationCode
   //P.S: We can create separate component for links with authentication code
   if (authenticationCode) {
-    useEffect(()=>{
+    useEffect(() => {
       (async () => {
         setIsLoading(true);
         await handleAuthCodeVerification();
       })();
-    },[])
+    }, []);
 
     //Component to render if Loading
     if (isLoading) {
@@ -151,7 +169,7 @@ export default function DocumentView({
         <div className="h-screen flex items-center justify-center">
           <LoadingSpinner className="mr-1 h-20 w-20" />
         </div>
-      )
+      );
     }
 
     //Component to render when verification code is invalid
@@ -164,12 +182,17 @@ export default function DocumentView({
             </h2>
           </div>
         </div>
-      ) 
+      );
     }
 
     return (
       <div className="bg-gray-950">
-        <ViewData link={link} viewData={viewData}/>
+        <ViewData
+          link={link}
+          viewData={viewData}
+          document={document}
+          notionData={notionData}
+        />
       </div>
     );
   }
@@ -177,12 +200,12 @@ export default function DocumentView({
   //Components to render when email is submitted but verification is pending
   if (verificationRequested) {
     return (
-      <EmailVerificationMessage 
+      <EmailVerificationMessage
         onSubmitHandler={handleSubmit}
         data={data}
         isLoading={isLoading}
       />
-    ) 
+    );
   }
 
   // If link is not submitted and does not have email / password protection, show the access form
@@ -212,7 +235,12 @@ export default function DocumentView({
   return (
     <div className="bg-gray-950">
       {submitted ? (
-        <ViewData link={link} viewData={viewData}/>
+        <ViewData
+          link={link}
+          viewData={viewData}
+          document={document}
+          notionData={notionData}
+        />
       ) : (
         <div className="h-screen flex items-center justify-center">
           <LoadingSpinner className="h-20 w-20" />

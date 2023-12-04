@@ -2,61 +2,70 @@ import DataroomCard from "@/components/datarooms/dataroom-card";
 import Skeleton from "@/components/Skeleton";
 import { PlusIcon } from "@heroicons/react/24/solid";
 import { Separator } from "@/components/ui/separator";
-import AppLayout from "@/components/layouts/app"
+import AppLayout from "@/components/layouts/app";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect, useRef } from "react";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import SelectDataroomTypeModal from "@/components/datarooms/select-dataroom-type-modal";
 import { DataroomWithFilesAndFolders } from "@/lib/types";
-import { AuthenticationCode } from '@prisma/client';
+import { AuthenticationCode } from "@prisma/client";
 import { useTeam } from "@/context/team-context";
 
-export interface DataroomWithFilesFoldersAuthCodeAndFilesCount extends DataroomWithFilesAndFolders {
-  authenticationCodes: AuthenticationCode[],
+export interface DataroomWithFilesFoldersAuthCodeAndFilesCount
+  extends DataroomWithFilesAndFolders {
+  authenticationCodes: AuthenticationCode[];
   _count: {
-    files: number
-  }
+    files: number;
+  };
 }
 
 export default function Datarooms() {
-  const [datarooms, setDatarooms] = useState<DataroomWithFilesFoldersAuthCodeAndFilesCount[] | undefined>(undefined);
+  const [datarooms, setDatarooms] = useState<
+    DataroomWithFilesFoldersAuthCodeAndFilesCount[] | undefined
+  >(undefined);
   const [loading, setLoading] = useState<boolean>(false);
   const teamInfo = useTeam();
 
   //Fetch datarooms from backend
   useEffect(() => {
     (async () => {
-      const response = await fetch(`/api/datarooms?teamId=${teamInfo?.currentTeam?.id}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
+      if (teamInfo) {
+        const response = await fetch(
+          `/api/datarooms?teamId=${teamInfo?.currentTeam?.id}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          },
+        );
+
+        if (!response.ok) {
+          return;
         }
-      });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const data = await response.json();
+        setDatarooms(data.datarooms);
       }
-
-      const data = await response.json();
-      setDatarooms(data.datarooms);
     })();
-  }, [])
+  }, [teamInfo]);
 
   return (
     <AppLayout>
-      {loading
-        ?
+      {loading ? (
         <div className="h-screen flex items-center justify-center">
           <LoadingSpinner className="h-20 w-20" />
         </div>
-        :
+      ) : (
         <div className="p-4 sm:p-4 sm:m-4">
           <div className="flex items-center justify-between mb-4 md:mb-8 lg:mb-12">
             <div className="space-y-1">
               <h2 className="text-2xl text-foreground font-semibold tracking-tight">
                 Datarooms
               </h2>
-              <p className="text-sm text-muted-foreground">Manage your datarooms</p>
+              <p className="text-sm text-muted-foreground">
+                Manage your datarooms
+              </p>
             </div>
             <ul className="flex items-center justify-between gap-4">
               <SelectDataroomTypeModal>
@@ -67,12 +76,11 @@ export default function Datarooms() {
 
           <Separator className="my-6 bg-gray-200 dark:bg-gray-800" />
 
-          {datarooms && datarooms.length === 0 &&
-            (
-              <div className="flex items-center justify-center h-96">
-                <EmptyDataRooms />
-              </div>
-            )}
+          {datarooms && datarooms.length === 0 && (
+            <div className="flex items-center justify-center h-96">
+              <EmptyDataRooms />
+            </div>
+          )}
 
           {/* Documents list */}
           <ul role="list" className="space-y-4">
@@ -87,18 +95,20 @@ export default function Datarooms() {
                 </li>
               ))}
 
-            {datarooms
-              && (datarooms.map((dataroom) => {
-                return <DataroomCard
-                  key={dataroom.id}
-                  dataroom={dataroom}
-                  setDatarooms={setDatarooms}
-                  setLoading={setLoading}
-                />;
-              }))
-            }
+            {datarooms &&
+              datarooms.map((dataroom) => {
+                return (
+                  <DataroomCard
+                    key={dataroom.id}
+                    dataroom={dataroom}
+                    setDatarooms={setDatarooms}
+                    setLoading={setLoading}
+                  />
+                );
+              })}
           </ul>
-        </div>}
+        </div>
+      )}
     </AppLayout>
   );
 }
@@ -121,7 +131,9 @@ export function EmptyDataRooms() {
           d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"
         />
       </svg>
-      <h3 className="mt-2 text-sm font-medium text-foreground">No data rooms</h3>
+      <h3 className="mt-2 text-sm font-medium text-foreground">
+        No data rooms
+      </h3>
       <p className="mt-1 text-sm text-muted-foreground">
         Get started by creating a new data room.
       </p>

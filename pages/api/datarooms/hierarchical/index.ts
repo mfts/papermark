@@ -6,7 +6,7 @@ import { CustomUser } from "@/lib/types";
 import { log } from "@/lib/utils";
 import { identifyUser, trackAnalytics } from "@/lib/analytics";
 import { FolderDirectory } from "@/lib/types";
-import { DataroomFolder } from "@prisma/client";
+import { DataroomFile, DataroomFolder } from "@prisma/client";
 import z, { ZodError } from "zod";
 import { generateAuthenticationCode } from "@/lib/api/authentication";
 import { isUserMemberOfTeam } from "@/lib/team/helper";
@@ -15,18 +15,18 @@ import { TeamError } from "@/lib/errorHandler";
 const bodySchema = z.object({
   name: z.string(),
   description: z.string().max(150), //Description should be less than 150 characters
-})
+});
 
 export default async function handle(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   if (req.method === "GET") {
     // GET /api/datarooms/hierarchical
-    const { teamId, id } = req.query as { teamId: string, id: string };
-    const session = req.query.authentication 
-    ? JSON.parse(req.query.authentication as string) 
-    : await getServerSession(req, res, authOptions);
+    const { teamId, id } = req.query as { teamId: string; id: string };
+    const session = req.query.authentication
+      ? JSON.parse(req.query.authentication as string)
+      : await getServerSession(req, res, authOptions);
     const userId = (session?.user as CustomUser).id;
 
     //Prevent unauthorized access from dashboard, however bypass this check if a recipient is trying to access dataroom
@@ -41,8 +41,8 @@ export default async function handle(
     try {
       const dataroom = await prisma.dataroom.findUnique({
         where: {
-          id: id
-        }
+          id: id,
+        },
       });
 
       if (!dataroom) {
@@ -52,32 +52,44 @@ export default async function handle(
       //We want to minimize database calls as processing data on server is more efficient
       const folders = await prisma.dataroomFolder.findMany({
         where: {
-          dataroomId: id
-        }
-      })
+          dataroomId: id,
+        },
+      });
 
       const files = await prisma.dataroomFile.findMany({
         where: {
-          dataroomId: id
-        }
-      })
+          dataroomId: id,
+        },
+      });
 
       //Create FolderDirectory data structure
-      const homeFolder = folders.find(folder => !folder.parentFolderId) as DataroomFolder;
+      const homeFolder = folders.find(
+        (folder: DataroomFolder) => !folder.parentFolderId,
+      ) as DataroomFolder;
       let folderDirectory: FolderDirectory = {};
       let folderQueue: string[] = [];
       folderQueue.push(homeFolder.id);
       while (folderQueue.length !== 0) {
         const folderId = folderQueue.pop() as string;
-        const currFolder = folders.find(folder => folder.id === folderId) as DataroomFolder;
+        const currFolder = folders.find(
+          (folder: DataroomFolder) => folder.id === folderId,
+        ) as DataroomFolder;
         folderDirectory[folderId] = {
           name: currFolder.name,
-          subfolders: folders.filter(folder => folder.parentFolderId === currFolder.id).map(folder => folder.id),
-          files: files.filter(file => file.parentFolderId === currFolder.id),
+          subfolders: folders
+            .filter(
+              (folder: DataroomFolder) =>
+                folder.parentFolderId === currFolder.id,
+            )
+            .map((folder: DataroomFolder) => folder.id),
+          files: files.filter(
+            (file: DataroomFile) => file.parentFolderId === currFolder.id,
+          ),
           href: currFolder.parentFolderId
-            ? folderDirectory[currFolder.parentFolderId].href + `/${currFolder.id}`
+            ? folderDirectory[currFolder.parentFolderId].href +
+              `/${currFolder.id}`
             : `/${currFolder.id}`,
-        }
+        };
         folderQueue = [...folderQueue, ...folderDirectory[folderId].subfolders];
       }
 
@@ -88,7 +100,6 @@ export default async function handle(
         error: (error as Error).message,
       });
     }
-
   } else if (req.method === "POST") {
     // POST /api/datarooms/hierarchical
     const session = await getServerSession(req, res, authOptions);
@@ -97,23 +108,23 @@ export default async function handle(
       return;
     }
 
-    //Input validation 
+    //Input validation
     let name: string;
     let description: string;
-    const subBody = { name: req.body.name, description: req.body.name }
+    const subBody = { name: req.body.name, description: req.body.name };
     const { password, emailProtected, teamId } = req.body;
     const userId = (session?.user as CustomUser).id;
 
     try {
       //Input Validation
-      ({ name, description} = bodySchema.parse(subBody));
+      ({ name, description } = bodySchema.parse(subBody));
       //Check if user if member of team
       await isUserMemberOfTeam({ teamId, userId });
       const dataroomName = await prisma.dataroom.findFirst({
         where: {
-          name: name
-        }
-      })
+          name: name,
+        },
+      });
 
       if (dataroomName) {
         return res.status(409).json({
@@ -130,8 +141,8 @@ export default async function handle(
           emailProtected,
           type: "HIERARCHICAL",
           ownerId: (session.user as CustomUser).id,
-          teamId
-        }
+          teamId,
+        },
       });
 
       // Create a home folder
@@ -139,13 +150,19 @@ export default async function handle(
         data: {
           name: "Home",
           dataroomId: dataroom.id,
-        }
-      })
+        },
+      });
 
       //Create a authentication code (To be used for verification if not emailProtected and not password protected)
       let authenticationCode: string = "";
       if (!emailProtected && !password) {
-        authenticationCode = await generateAuthenticationCode(12, session.user?.email as string, dataroom.id, "DATAROOM", "PERMANENT")
+        authenticationCode = await generateAuthenticationCode(
+          12,
+          session.user?.email as string,
+          dataroom.id,
+          "DATAROOM",
+          "PERMANENT",
+        );
       }
 
       await identifyUser((session.user as CustomUser).id);
@@ -165,13 +182,12 @@ export default async function handle(
           error: (error as Error).message,
         });
       }
-      log(`Failed to create dataroom. Error: \n\n ${error}`)
+      log(`Failed to create dataroom. Error: \n\n ${error}`);
       res.status(500).json({
         message: "Internal Server Error",
         error: (error as Error).message,
       });
     }
-
   } else if (req.method === "PUT") {
     // PUT /api/datarooms/hierarchical
     const session = await getServerSession(req, res, authOptions);
@@ -179,10 +195,10 @@ export default async function handle(
       return res.status(401).end("Unauthorized");
     }
 
-    //Input validation 
+    //Input validation
     let name: string;
     let description: string;
-    const subBody = { name: req.body.name, description: req.body.name }
+    const subBody = { name: req.body.name, description: req.body.name };
     const { teamId, id } = req.body;
     const userId = (session?.user as CustomUser).id;
 
@@ -198,7 +214,7 @@ export default async function handle(
         },
         select: {
           ownerId: true,
-        }
+        },
       });
 
       await prisma.dataroom.update({
@@ -207,8 +223,8 @@ export default async function handle(
         },
         data: {
           name,
-          description
-        }
+          description,
+        },
       });
 
       res.status(200).json({ message: "Dataroom name/description updated!" });

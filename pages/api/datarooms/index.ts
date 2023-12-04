@@ -8,7 +8,7 @@ import { TeamError } from "@/lib/errorHandler";
 
 export default async function handle(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   if (req.method === "GET") {
     // GET /api/datarooms
@@ -24,27 +24,27 @@ export default async function handle(
       await isUserMemberOfTeam({ teamId, userId });
       const datarooms = await prisma.dataroom.findMany({
         where: {
-          teamId
+          teamId,
         },
         include: {
           folders: {
             where: {
-              parentFolderId: null
-            }
+              parentFolderId: null,
+            },
           },
           authenticationCodes: {
             where: {
               email: session.user?.email as string,
-              permanent: true
-            }
+              permanent: true,
+            },
           },
           _count: {
-            select:{
-              files: true
-            }
-          }
-        }
-      })
+            select: {
+              files: true,
+            },
+          },
+        },
+      });
 
       res.status(200).json({ datarooms });
     } catch (error) {
@@ -59,20 +59,20 @@ export default async function handle(
   } else if (req.method === "DELETE") {
     // DELETE /api/datarooms
     const session = await getServerSession(req, res, authOptions);
-    if (!session) { 
+    if (!session) {
       res.status(401).end("Unauthorized");
       return;
     }
-    const { teamId, id } = req.body as { teamId: string, id: string };
+    const { teamId, id } = req.body as { teamId: string; id: string };
     const userId = (session?.user as CustomUser).id;
 
-    try{
+    try {
       //Check if user if member of team
       await isUserMemberOfTeam({ teamId, userId });
       const dataroom = await prisma.dataroom.findUnique({
         where: {
-          id: id
-        }
+          id: id,
+        },
       });
 
       if (!dataroom) {
@@ -82,9 +82,9 @@ export default async function handle(
       // delete the dataroom from database
       await prisma.dataroom.delete({
         where: {
-          id: id
-        }
-      })
+          id: id,
+        },
+      });
 
       res.status(204).end(); // 204 No Content response for successful deletes
     } catch (error) {
@@ -96,7 +96,6 @@ export default async function handle(
         error: (error as Error).message,
       });
     }
-
   } else {
     // We only allow GET and DELETE requests
     res.setHeader("Allow", ["GET", "DELETE"]);

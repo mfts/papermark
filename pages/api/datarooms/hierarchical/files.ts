@@ -13,12 +13,12 @@ const bodySchema = z.object({
   dataroomId: z.string(),
   parentFolderId: z.string(),
   url: z.string(),
-  teamId: z.string()
-})
+  teamId: z.string(),
+});
 
 export default async function handle(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   if (req.method === "DELETE") {
     // GET /api/datarooms/hierarchical/files
@@ -34,9 +34,9 @@ export default async function handle(
       await isUserMemberOfTeam({ teamId, userId });
       const file = await prisma.dataroomFile.delete({
         where: {
-          id: fileId
-        }
-      })
+          id: fileId,
+        },
+      });
 
       res.status(200).json({ file });
     } catch (error) {
@@ -56,7 +56,7 @@ export default async function handle(
       return;
     }
 
-    //Input validation 
+    //Input validation
     let fileName: string;
     let dataroomId: string;
     let parentFolderId: string;
@@ -66,7 +66,9 @@ export default async function handle(
     const userId = (session?.user as CustomUser).id;
     try {
       //Input validation
-      ({ fileName, dataroomId, parentFolderId, url, teamId } = bodySchema.parse(req.body));
+      ({ fileName, dataroomId, parentFolderId, url, teamId } = bodySchema.parse(
+        req.body,
+      ));
       //Check if user if member of team
       await isUserMemberOfTeam({ teamId, userId });
       const file = await prisma.dataroomFile.create({
@@ -74,8 +76,8 @@ export default async function handle(
           name: fileName,
           parentFolderId,
           dataroomId,
-          url
-        }
+          url,
+        },
       });
 
       res.status(201).json({ file });
@@ -88,7 +90,7 @@ export default async function handle(
           error: "Please enter a file name with fewer than 150 characters",
         });
       }
-      log(`Failed to add file. Error: \n\n ${error}`)
+      log(`Failed to add file. Error: \n\n ${error}`);
       res.status(500).json({
         message: "Internal Server Error",
         error: (error as Error).message,
@@ -112,11 +114,11 @@ export default async function handle(
       await isUserMemberOfTeam({ teamId, userId });
       const file = await prisma.dataroomFile.update({
         where: {
-          id: fileId
+          id: fileId,
         },
         data: {
-          name: updatedFileName
-        }
+          name: updatedFileName,
+        },
       });
 
       res.status(201).json({ file, message: "File renamed successfully" });
@@ -129,7 +131,7 @@ export default async function handle(
           error: "Please enter a file name with fewer than 150 characters",
         });
       }
-      log(`Failed to create file. Error: \n\n ${error}`)
+      log(`Failed to create file. Error: \n\n ${error}`);
       res.status(500).json({
         message: "Internal Server Error",
         error: (error as Error).message,

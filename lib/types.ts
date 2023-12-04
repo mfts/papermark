@@ -1,13 +1,14 @@
 import { User as NextAuthUser } from "next-auth";
-import { 
-  Document, 
-  Link, 
-  View, 
-  User as PrismaUser, 
-  DocumentVersion, 
-  DataroomFile, 
-  DataroomFolder, 
-  Dataroom } from "@prisma/client";
+import {
+  Document,
+  Link,
+  View,
+  User as PrismaUser,
+  DocumentVersion,
+  DataroomFile,
+  DataroomFolder,
+  Dataroom,
+} from "@prisma/client";
 
 export type CustomUser = NextAuthUser & PrismaUser;
 
@@ -40,7 +41,17 @@ export interface LinkWithViews extends Link {
 
 export interface LinkWithDocument extends Link {
   document: Document & {
-    versions: { versionNumber: number }[];
+    versions: {
+      id: string;
+      versionNumber: number;
+      type: string;
+      hasPages: boolean;
+      file: string;
+    }[] & {
+      team?: {
+        plan: string;
+      };
+    };
   };
 }
 
@@ -64,12 +75,12 @@ export type DomainVerificationStatusProps =
 //FolderDirectory for hierarchical dataroom
 export type FolderDirectory = {
   [folderId: string]: {
-    name: string,
-    subfolders: string[],
-    files: DataroomFile[],
-    href: string            //Relative path for that folder
-  }
-}
+    name: string;
+    subfolders: string[];
+    files: DataroomFile[];
+    href: string; //Relative path for that folder
+  };
+};
 
 // From https://vercel.com/docs/rest-api/endpoints#get-a-project-domain
 export interface DomainResponse {
@@ -125,72 +136,72 @@ export interface DomainVerificationResponse {
 
 export type AnalyticsEvents =
   | {
-    event: "User Signed Up";
-    userId: string;
-    email: string | null | undefined;
-  }
+      event: "User Signed Up";
+      userId: string;
+      email: string | null | undefined;
+    }
   | {
-    event: "Document Added";
-    documentId: string;
-    name: string;
-    fileSize: string | null | undefined;
-    path: string | null | undefined;
-  }
+      event: "Document Added";
+      documentId: string;
+      name: string;
+      fileSize: string | null | undefined;
+      path: string | null | undefined;
+    }
   | {
-    event: "Dataroom Created";
-    dataroomId: string;
-    name: string;
-  }
+      event: "Dataroom Created";
+      dataroomId: string;
+      name: string;
+    }
   | {
-    event: "Dataroom Viewed";
-    viewerId: string;
-    viewerEmail: string | null | undefined;
-  }
+      event: "Dataroom Viewed";
+      viewerId: string;
+      viewerEmail: string | null | undefined;
+    }
   | {
-    event: "Link Added";
-    linkId: string;
-    documentId: string;
-    customDomain: string | null | undefined;
-  }
+      event: "Link Added";
+      linkId: string;
+      documentId: string;
+      customDomain: string | null | undefined;
+    }
   | { event: "User Upgraded"; email: string | null | undefined }
   | {
-    event: "User Signed In";
-    email: string | null | undefined;
-  }
+      event: "User Signed In";
+      email: string | null | undefined;
+    }
   | {
-    event: "Link Viewed";
-    documentId: string;
-    linkId: string;
-    viewerId: string;
-    viewerEmail: string | null | undefined;
-  }
+      event: "Link Viewed";
+      documentId: string;
+      linkId: string;
+      viewerId: string;
+      viewerEmail: string | null | undefined;
+    }
   | {
-    event: "Domain Added";
-    slug: string;
-  }
+      event: "Domain Added";
+      slug: string;
+    }
   | {
-    event: "Domain Verified";
-    slug: string;
-  }
+      event: "Domain Verified";
+      slug: string;
+    }
   | {
-    event: "Domain Deleted";
-    slug: string;
-  };
+      event: "Domain Deleted";
+      slug: string;
+    };
 
 export interface DataroomWithFiles extends Dataroom {
-  files: DataroomFile[]
+  files: DataroomFile[];
 }
 
 export interface DataroomWithFilesAndFolders extends DataroomWithFiles {
-  folders: DataroomFolder[]
+  folders: DataroomFolder[];
 }
 
 export type DataroomDocument = {
-  id: string
-  title: string
-  url: string
-  type: string
-}
+  id: string;
+  title: string;
+  url: string;
+  type: string;
+};
 
 export interface Team {
   id: string;

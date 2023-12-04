@@ -18,7 +18,7 @@ export function useLink() {
     fetcher,
     {
       dedupingInterval: 10000,
-    }
+    },
   );
 
   return {
@@ -38,11 +38,15 @@ export function useDomainLink() {
   };
 
   const { data: link, error } = useSWR<LinkWithDocument>(
-    domain && slug && `/api/links/domains/${encodeURIComponent(domain)}/${encodeURIComponent(slug)}`,
+    domain &&
+      slug &&
+      `/api/links/domains/${encodeURIComponent(domain)}/${encodeURIComponent(
+        slug,
+      )}`,
     fetcher,
     {
       dedupingInterval: 10000,
-    }
+    },
   );
 
   return {
@@ -60,15 +64,13 @@ interface ViewWithDuration extends View {
   completionRate: number;
 }
 
-
 export function useLinkVisits(linkId: string) {
-
   const { data: views, error } = useSWR<ViewWithDuration[]>(
     linkId && `/api/links/${encodeURIComponent(linkId)}/visits`,
     fetcher,
     {
       dedupingInterval: 10000,
-    }
+    },
   );
 
   return {

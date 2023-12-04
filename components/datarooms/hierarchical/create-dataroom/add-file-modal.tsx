@@ -5,7 +5,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogFooter
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { useState } from "react";
 import { Button } from "../../../ui/button";
@@ -15,7 +15,10 @@ import { Dispatch } from "react";
 import { ActionType } from "./state-management";
 import useDocuments from "@/lib/swr/use-documents";
 import { useEffect } from "react";
-import { LinkWithViews, DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
+import {
+  LinkWithViews,
+  DocumentWithLinksAndLinkCountAndViewCount,
+} from "@/lib/types";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,13 +34,16 @@ export default function AddFileModal({
   updateFolderDirectory,
   parentFolderId,
 }: {
-  children: React.ReactNode,
-  updateFolderDirectory: Dispatch<ActionType>,
-  parentFolderId: string,
+  children: React.ReactNode;
+  updateFolderDirectory: Dispatch<ActionType>;
+  parentFolderId: string;
 }) {
   //Current selection from drop-down meu
   const [selectedDocumentName, setSelectedDocumentName] = useState<string>("");
-  const [selectedLink, setSelectedLink] = useState<{ name: string, url: string }>({ name: "", url: "" });
+  const [selectedLink, setSelectedLink] = useState<{
+    name: string;
+    url: string;
+  }>({ name: "", url: "" });
   const [loading, setLoading] = useState<boolean>(false);
   //Current document title
   const [documentTitle, setDocumentTitle] = useState<string>("");
@@ -51,13 +57,19 @@ export default function AddFileModal({
   const router = useRouter();
   const teamInfo = useTeam();
   const [links, setLinks] = useState<LinkWithViews[]>([]);
-  const [dropDownMenuDocuments, setDropDownMenuDocuments] = useState<DocumentWithLinksAndLinkCountAndViewCount[]>([])
-  useEffect(() => { setDropDownMenuDocuments(documents ? documents : []) }, [documents])
+  const [dropDownMenuDocuments, setDropDownMenuDocuments] = useState<
+    DocumentWithLinksAndLinkCountAndViewCount[]
+  >([]);
+  useEffect(() => {
+    setDropDownMenuDocuments(documents ? documents : []);
+  }, [documents]);
 
   //No documents / out of documents error
   useEffect(() => {
     if (dropDownMenuDocuments.length === 0) {
-      setErrorMessage("No documents found, please upload a document to create a data room");
+      setErrorMessage(
+        "No documents found, please upload a document to create a data room",
+      );
     } else {
       setErrorMessage("");
     }
@@ -68,14 +80,18 @@ export default function AddFileModal({
     //Assign current selection and default title
     setSelectedDocumentName(currentSelectedDocument);
     setDocumentTitle(currentSelectedDocument.split(".")[0]);
-    const id: string = documents?.find(obj => obj.name === currentSelectedDocument)?.id || "";
+    const id: string =
+      documents?.find((obj) => obj.name === currentSelectedDocument)?.id || "";
     //Fetch links related to documents
-    const response = await fetch(`/api/documents/${encodeURIComponent(id)}/links`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
+    const response = await fetch(
+      `/api/documents/${encodeURIComponent(id)}/links`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
       },
-    });
+    );
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -83,8 +99,9 @@ export default function AddFileModal({
     const data = await response.json();
     setLinks(data);
     setSelectedLink({
-      name: data[0].name, url: createURL(data[0])
-    })
+      name: data[0].name,
+      url: createURL(data[0]),
+    });
   };
 
   //Includes documents into data room
@@ -103,20 +120,23 @@ export default function AddFileModal({
     }
 
     setLoading(true);
-    const { dataroomId, path } = router.query as { dataroomId: string, path: string[] };
-    const body = { 
-      fileName: documentTitle, 
-      dataroomId, 
-      parentFolderId: path[path.length - 1], 
-      url: selectedLink.url, 
-      teamId: teamInfo?.currentTeam?.id 
-    }
+    const { dataroomId, path } = router.query as {
+      dataroomId: string;
+      path: string[];
+    };
+    const body = {
+      fileName: documentTitle,
+      dataroomId,
+      parentFolderId: path[path.length - 1],
+      url: selectedLink.url,
+      teamId: teamInfo?.currentTeam?.id,
+    };
     const response = await fetch(`/api/datarooms/hierarchical/files`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(body)
+      body: JSON.stringify(body),
     });
 
     if (!response.ok) {
@@ -127,7 +147,11 @@ export default function AddFileModal({
     setLoading(false);
     const file = (await response.json()).file;
     //Update folder directory locally
-    updateFolderDirectory({ type: "CREATE FILE", parentFolderId: path[path.length - 1], file });
+    updateFolderDirectory({
+      type: "CREATE FILE",
+      parentFolderId: path[path.length - 1],
+      file,
+    });
 
     toast.success("File included successfully");
     //Reset modal's state variables
@@ -136,7 +160,7 @@ export default function AddFileModal({
     setDocumentTitle("");
     setLinks([]);
     setOpen(false);
-  }
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -153,19 +177,26 @@ export default function AddFileModal({
                 <DropdownMenuTrigger className="w-full">
                   {/* Display the currently selected name */}
                   <span className="flex items-center w-full justify-between">
-                    <span aria-hidden="true">{selectedDocumentName || 'Select a document'}</span>
+                    <span aria-hidden="true">
+                      {selectedDocumentName || "Select a document"}
+                    </span>
                     <ChevronDown
                       className="ml-2 h-5 w-5 text-muted-foreground"
                       aria-hidden="true"
                     />
                   </span>
-
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="min-w-[526px]" align="start" loop={true} >
+                <DropdownMenuContent
+                  className="min-w-[526px]"
+                  align="start"
+                  loop={true}
+                >
                   {dropDownMenuDocuments.map((document) => (
                     <DropdownMenuItem
                       key={document.name}
-                      onSelect={() => { handleDocumentSelection(document.name) }}
+                      onSelect={() => {
+                        handleDocumentSelection(document.name);
+                      }}
                       className="hover:bg-gray-200 hover:dark:bg-muted"
                     >
                       {document.name}
@@ -173,7 +204,6 @@ export default function AddFileModal({
                   ))}
                 </DropdownMenuContent>
               </DropdownMenu>
-
             </div>
             <div className="border-b border-border py-2  mt-3">
               <p className="mb-1 text-sm text-muted-foreground font-bold mb-3">
@@ -182,26 +212,33 @@ export default function AddFileModal({
               <DropdownMenu>
                 <DropdownMenuTrigger className="w-full">
                   <span className="flex items-center w-full justify-between">
-                    <span aria-hidden="true">{
-                      selectedLink.url ?
-                        (selectedLink.name ? `${selectedLink.name}: ${selectedLink.url}` : selectedLink.url)
-                        : 'Select a link'}</span>
+                    <span aria-hidden="true">
+                      {selectedLink.url
+                        ? selectedLink.name
+                          ? `${selectedLink.name}: ${selectedLink.url}`
+                          : selectedLink.url
+                        : "Select a link"}
+                    </span>
                     <ChevronDown
                       className="ml-2 h-5 w-5 text-muted-foreground"
                       aria-hidden="true"
                     />
                   </span>
-
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="min-w-[526px]" align="start" loop={true} >
+                <DropdownMenuContent
+                  className="min-w-[526px]"
+                  align="start"
+                  loop={true}
+                >
                   {links &&
                     links.map((link) => (
                       <DropdownMenuItem
                         key={link.name}
                         onSelect={() => {
                           setSelectedLink({
-                            name: link.name || "", url: createURL(link)
-                          })
+                            name: link.name || "",
+                            url: createURL(link),
+                          });
                         }}
                         className="hover:bg-gray-200 hover:dark:bg-muted"
                       >
@@ -211,7 +248,6 @@ export default function AddFileModal({
                     ))}
                 </DropdownMenuContent>
               </DropdownMenu>
-
             </div>
             <div className="border-b border-border py-2  mt-3">
               <p className="mb-1 text-sm text-muted-foreground font-bold mb-3">
@@ -221,10 +257,17 @@ export default function AddFileModal({
                 className="mb-3"
                 placeholder={"Title to display from data room..."}
                 defaultValue={selectedDocumentName.split(".")[0]}
-                onChange={(e) => { setDocumentTitle(e.target.value) }}></Input>
+                onChange={(e) => {
+                  setDocumentTitle(e.target.value);
+                }}
+              ></Input>
             </div>
             <p className="mb-1 text-sm font-red text-muted-foreground font-bold mb-1 mt-2">
-              {errorMessage ? <p className="text-red-500">{errorMessage}</p> : <br />}
+              {errorMessage ? (
+                <p className="text-red-500">{errorMessage}</p>
+              ) : (
+                <br />
+              )}
             </p>
             <div className="flex justify-center">
               <Button
@@ -241,7 +284,7 @@ export default function AddFileModal({
         </DialogHeader>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
 
 function createURL(link: LinkWithViews) {

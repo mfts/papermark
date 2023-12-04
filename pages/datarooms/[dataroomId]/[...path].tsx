@@ -27,20 +27,24 @@ export default function Page({
   initialFolderId,
   initialPath,
   loading,
-  error
+  error,
 }: {
-  dataroom: Dataroom,
-  directory: FolderDirectory,
-  initialFolderId: string,
-  initialPath: string[],
-  loading: boolean,
-  error: { status: 404, message: string }
+  dataroom: Dataroom;
+  directory: FolderDirectory;
+  initialFolderId: string;
+  initialPath: string[];
+  loading: boolean;
+  error: { status: 404; message: string };
 }) {
-
   const [isEditingName, setIsEditingName] = useState<boolean>(false);
-  const [isEditingDescription, setIsEditingDescription] = useState<boolean>(false);
-  const [folderDirectory, updateFolderDirectory] = useReducer(reducer, directory);
-  const [currentFolderId, setCurrentFolderId] = useState<string>(initialFolderId);
+  const [isEditingDescription, setIsEditingDescription] =
+    useState<boolean>(false);
+  const [folderDirectory, updateFolderDirectory] = useReducer(
+    reducer,
+    directory,
+  );
+  const [currentFolderId, setCurrentFolderId] =
+    useState<string>(initialFolderId);
   const [path, setPath] = useState<string[]>(initialPath);
   const router = useRouter();
   const teamInfo = useTeam();
@@ -61,27 +65,29 @@ export default function Page({
       enterPressedRef.current = false;
       return;
     }
-    if ((nameRef.current && isEditingName) ||
-      (descriptionRef.current && isEditingDescription)) {
+    if (
+      (nameRef.current && isEditingName) ||
+      (descriptionRef.current && isEditingDescription)
+    ) {
       const newName = nameRef.current?.innerText;
       const newDescription = descriptionRef.current?.innerText;
 
-      if (newName !== dataroom!.name || newDescription !== dataroom!.description) {
-        const response = await fetch(
-          "/api/datarooms/hierarchical",
-          {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              name: newName,
-              description: newDescription,
-              id: dataroom.id,
-              teamId: teamInfo?.currentTeam?.id
-            }),
-          }
-        );
+      if (
+        newName !== dataroom!.name ||
+        newDescription !== dataroom!.description
+      ) {
+        const response = await fetch("/api/datarooms/hierarchical", {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: newName,
+            description: newDescription,
+            id: dataroom.id,
+            teamId: teamInfo?.currentTeam?.id,
+          }),
+        });
 
         if (response.ok) {
           const { message } = await response.json();
@@ -97,7 +103,7 @@ export default function Page({
   };
 
   const preventEnterAndSubmit = (
-    event: React.KeyboardEvent<HTMLHeadingElement>
+    event: React.KeyboardEvent<HTMLHeadingElement>,
   ) => {
     if (event.key === "Enter") {
       event.preventDefault(); // Prevent the default line break
@@ -120,8 +126,8 @@ export default function Page({
           <LoadingSpinner className="h-20 w-20" />
         </div>
       </AppLayout>
-    )
-  };
+    );
+  }
 
   if (error && error.status === 404) {
     return <NotFound />;
@@ -151,7 +157,9 @@ export default function Page({
                 onBlur={handleSubmit}
                 onKeyDown={preventEnterAndSubmit}
                 title="Click to edit"
-                dangerouslySetInnerHTML={{ __html: dataroom?.name || "Loading..." }}
+                dangerouslySetInnerHTML={{
+                  __html: dataroom?.name || "Loading...",
+                }}
               />
               {isEditingName && (
                 <p className="text-sm text-muted-foreground mt-1">
@@ -161,22 +169,23 @@ export default function Page({
             </div>
           </div>
           <div>
-            <p className="text-sm text-muted-foreground md:w-96 -mr-10"
+            <p
+              className="text-sm text-muted-foreground md:w-96 -mr-10"
               ref={descriptionRef}
               contentEditable={true}
               onFocus={() => setIsEditingDescription(true)}
               onBlur={handleSubmit}
               onKeyDown={preventEnterAndSubmit}
               title="Click to edit"
-              dangerouslySetInnerHTML={{ __html: dataroom?.description || "Loading..." }}
+              dangerouslySetInnerHTML={{
+                __html: dataroom?.description || "Loading...",
+              }}
             />
-            {isEditingDescription
-              && (
-                <p className="text-sm text-muted-foreground mt-1">
-                  {`You are editing the dataroom description. Press <Enter> to save.`}
-                </p>
-              )
-            }
+            {isEditingDescription && (
+              <p className="text-sm text-muted-foreground mt-1">
+                {`You are editing the dataroom description. Press <Enter> to save.`}
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -243,7 +252,7 @@ export default function Page({
         </div>
       </div>
     </AppLayout>
-  )
+  );
 }
 
 export async function getServerSideProps(context: GetServerSidePropsContext) {
@@ -255,14 +264,19 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
 
   try {
     const response = await fetch(
-      `${process.env.NEXTAUTH_URL}/api/datarooms/hierarchical?id=${encodeURIComponent(dataroomId)}&teamId=${encodeURIComponent(teamId)}`,
+      `${
+        process.env.NEXTAUTH_URL
+      }/api/datarooms/hierarchical?id=${encodeURIComponent(
+        dataroomId,
+      )}&teamId=${encodeURIComponent(teamId)}`,
       {
-        method: 'GET',
+        method: "GET",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
           Authorization: JSON.stringify(session),
-        }
-      },)
+        },
+      },
+    );
     const { dataroom, folderDirectory: directory } = await response.json();
 
     return {
@@ -283,7 +297,7 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
         initialPath: [],
         initialFolderId: "",
         loading: false,
-        error: { status: 500, message: 'Internal Server Error' },
+        error: { status: 500, message: "Internal Server Error" },
       },
     };
   }

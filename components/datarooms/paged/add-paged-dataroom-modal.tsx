@@ -38,12 +38,20 @@ export type DEFAULT_DATAROOM_TYPE = {
   emailProtected: boolean;
 };
 
-export function AddPagedDataroomModal({ children }: { children: React.ReactNode }) {
+export function AddPagedDataroomModal({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   //Documents inside Dataroom
-  const [dataroomDocuments, setDataroomDocuments] = useState<DataroomDocument[]>([]);
+  const [dataroomDocuments, setDataroomDocuments] = useState<
+    DataroomDocument[]
+  >([]);
   const [dataroomName, setDataroomName] = useState<string>("");
   const [dataroomDescription, setDataroomDescription] = useState<string>("");
-  const [data, setData] = useState<DEFAULT_DATAROOM_TYPE>(DEFAULT_DATAROOM_PROPS);
+  const [data, setData] = useState<DEFAULT_DATAROOM_TYPE>(
+    DEFAULT_DATAROOM_PROPS,
+  );
 
   //const plausible = usePlausible();
   const [uploading, setUploading] = useState<boolean>(false);
@@ -75,7 +83,10 @@ export function AddPagedDataroomModal({ children }: { children: React.ReactNode 
         const dataroom = await response.json();
 
         // copy the link to the clipboard
-        copyToClipboard(`${process.env.NEXT_PUBLIC_BASE_URL}/view/dataroom/paged/${dataroom.id}`, "Dataroom created and link copied to clipboard. Redirecting to datarooms page...")
+        copyToClipboard(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/view/dataroom/paged/${dataroom.id}`,
+          "Dataroom created and link copied to clipboard. Redirecting to datarooms page...",
+        );
 
         // Do we need to track the event ??
         // plausible("dataroomcreated");
@@ -90,12 +101,16 @@ export function AddPagedDataroomModal({ children }: { children: React.ReactNode 
       setUploading(false);
       console.error("An error occurred while creating dataroom: ", error);
     }
-  }
+  };
 
   async function saveDataroomToDatabase() {
     //Select documents from useDocuments for maintaining constant type in backend
-    const titles = dataroomDocuments.map((dataroomDocument) => dataroomDocument.title);
-    const links = dataroomDocuments.map((dataroomDocument) => dataroomDocument.url);
+    const titles = dataroomDocuments.map(
+      (dataroomDocument) => dataroomDocument.title,
+    );
+    const links = dataroomDocuments.map(
+      (dataroomDocument) => dataroomDocument.url,
+    );
 
     const response = await fetch("/api/datarooms/paged", {
       method: "POST",
@@ -109,7 +124,7 @@ export function AddPagedDataroomModal({ children }: { children: React.ReactNode 
         links,
         password: data.password ? data.password : "",
         emailProtected: data.emailProtected,
-        teamId: teamInfo?.currentTeam?.id
+        teamId: teamInfo?.currentTeam?.id,
       }),
     });
 
@@ -140,7 +155,9 @@ export function AddPagedDataroomModal({ children }: { children: React.ReactNode 
               </p>
               <Input
                 placeholder={"Enter Dataroom Name..."}
-                onChange={(e) => { setDataroomName(e.target.value) }}
+                onChange={(e) => {
+                  setDataroomName(e.target.value);
+                }}
               />
             </div>
             <div>
@@ -150,7 +167,9 @@ export function AddPagedDataroomModal({ children }: { children: React.ReactNode 
               <Input
                 className="mb-2"
                 placeholder={"Enter Dataroom Description..."}
-                onChange={(e) => { setDataroomDescription(e.target.value) }}
+                onChange={(e) => {
+                  setDataroomDescription(e.target.value);
+                }}
               />
             </div>
 
@@ -158,32 +177,34 @@ export function AddPagedDataroomModal({ children }: { children: React.ReactNode 
             <ul role="list" className={`space-y-4 overflow-y-auto max-h-48`}>
               {dataroomDocuments
                 ? dataroomDocuments.map((dataroomDocument) => {
-                  return <DocumentMetadataCard
-                    title={dataroomDocument.title}
-                    url={dataroomDocument.url}
-                    type={dataroomDocument.type}
-                    setDataroomDocuments={setDataroomDocuments} />;
-                })
+                    return (
+                      <DocumentMetadataCard
+                        title={dataroomDocument.title}
+                        url={dataroomDocument.url}
+                        type={dataroomDocument.type}
+                        setDataroomDocuments={setDataroomDocuments}
+                      />
+                    );
+                  })
                 : Array.from({ length: 3 }).map((_, i) => (
-                  <li
-                    key={i}
-                    className="flex flex-col space-y-4 px-4 py-4 sm:px-6 lg:px-8"
-                  >
-                    <Skeleton key={i} className="h-5 w-20" />
-                    <Skeleton key={i} className="mt-3 h-3 w-10" />
-                  </li>
-                ))}
+                    <li
+                      key={i}
+                      className="flex flex-col space-y-4 px-4 py-4 sm:px-6 lg:px-8"
+                    >
+                      <Skeleton key={i} className="h-5 w-20" />
+                      <Skeleton key={i} className="mt-3 h-3 w-10" />
+                    </li>
+                  ))}
             </ul>
             <ul className="flex justify-center mt-3">
               <AddDocumentToDataroomModal
                 dataroomDocuments={dataroomDocuments}
                 setDataroomDocuments={setDataroomDocuments}
               >
-                <Button
-                  type="button"
-                  className="w-full"
-                  disabled={false}
-                ><PlusIcon className="-ml-1 mr-2 h-5 w-5" aria-hidden="true" />Add Document </Button>
+                <Button type="button" className="w-full" disabled={false}>
+                  <PlusIcon className="-ml-1 mr-2 h-5 w-5" aria-hidden="true" />
+                  Add Document{" "}
+                </Button>
               </AddDocumentToDataroomModal>
             </ul>
             <div className="flex items-center relative">
@@ -201,7 +222,11 @@ export function AddPagedDataroomModal({ children }: { children: React.ReactNode 
             </div>
             <br />
             <div className="flex justify-center ">
-              {errorMessage && <p className="-mt-1 mb-1 text-sm text-muted-foreground font-bold text-red-500">{errorMessage}</p>}
+              {errorMessage && (
+                <p className="-mt-1 mb-1 text-sm text-muted-foreground font-bold text-red-500">
+                  {errorMessage}
+                </p>
+              )}
             </div>
             <div className="flex justify-center">
               <Button

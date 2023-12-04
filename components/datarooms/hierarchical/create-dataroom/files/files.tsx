@@ -21,21 +21,22 @@ export const Files = React.memo(function ({
   currentFolderId,
   updateFolderDirectory,
 }: {
-  folderDirectory: FolderDirectory,
-  currentFolderId: string,
-  updateFolderDirectory: Dispatch<ActionType>,
+  folderDirectory: FolderDirectory;
+  currentFolderId: string;
+  updateFolderDirectory: Dispatch<ActionType>;
 }) {
-  const [isEditObjectNameModalOpen, setIsEditObjectNameModalOpen] = useState<boolean>(false);
+  const [isEditObjectNameModalOpen, setIsEditObjectNameModalOpen] =
+    useState<boolean>(false);
   const [editObjectMetadata, setEditObjectMetadata] = useState<{
-    name: string,
-    id: string,
-    parentFolderId: string,
-    type: "FILE" | "FOLDER"
+    name: string;
+    id: string;
+    parentFolderId: string;
+    type: "FILE" | "FOLDER";
   }>({
     name: "",
     id: "",
     parentFolderId: "",
-    type: "FOLDER"
+    type: "FOLDER",
   });
 
   const teamInfo = useTeam();
@@ -46,8 +47,8 @@ export const Files = React.memo(function ({
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ fileId, teamId: teamInfo?.currentTeam?.id })
-    })
+      body: JSON.stringify({ fileId, teamId: teamInfo?.currentTeam?.id }),
+    });
 
     if (!response.ok) {
       toast.error("Failed to delete file");
@@ -55,29 +56,36 @@ export const Files = React.memo(function ({
     }
 
     //Delete file locally
-    updateFolderDirectory({ type: "DELETE FILE", fileId, parentFolderId: currentFolderId });
+    updateFolderDirectory({
+      type: "DELETE FILE",
+      fileId,
+      parentFolderId: currentFolderId,
+    });
     toast.success("File deleted successfully");
-  }
+  };
 
   return (
     <div>
       <div>
         {folderDirectory[currentFolderId].files.map((file) => {
           return (
-            <div className="flex items-center justify-between border-b p-2" key={file.id}>
+            <div
+              className="flex items-center justify-between border-b p-2"
+              key={file.id}
+            >
               <div className="flex items-center">
-                <a
-                  className="flex"
-                  href={file.url}
-                  target="_blank"
-                >
-                  <img src="/_icons/file.svg" alt="File Icon" className="w-11 h-11 mr-2" />
+                <a className="flex" href={file.url} target="_blank">
+                  <img
+                    src="/_icons/file.svg"
+                    alt="File Icon"
+                    className="w-11 h-11 mr-2"
+                  />
                   <span className="mt-3">{file.name}</span>
                 </a>
               </div>
               {/* Add your Tailwind CSS classes for actions here */}
               <div className="text-center sm:text-right">
-                <DropdownMenu >
+                <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="h-8 w-8 p-0">
                       <span className="sr-only">Open menu</span>
@@ -87,24 +95,24 @@ export const Files = React.memo(function ({
                   <DropdownMenuContent align="end">
                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
                     <DropdownMenuItem
-                      onClick={() => setTimeout(() => {
-                        setEditObjectMetadata({
-                          name: file.name,
-                          id: file.id,
-                          parentFolderId: currentFolderId,
-                          type: "FILE"
-                        });
-                        setIsEditObjectNameModalOpen(true);
-                      }, 0)}
+                      onClick={() =>
+                        setTimeout(() => {
+                          setEditObjectMetadata({
+                            name: file.name,
+                            id: file.id,
+                            parentFolderId: currentFolderId,
+                            type: "FILE",
+                          });
+                          setIsEditObjectNameModalOpen(true);
+                        }, 0)
+                      }
                     >
                       Edit Name
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
                       className="text-destructive focus:bg-destructive focus:text-destructive-foreground"
-                      onClick={() =>
-                        handleDeleteFile(file.id)
-                      }
+                      onClick={() => handleDeleteFile(file.id)}
                     >
                       Delete File
                     </DropdownMenuItem>
@@ -112,7 +120,7 @@ export const Files = React.memo(function ({
                 </DropdownMenu>
               </div>
             </div>
-          )
+          );
         })}
       </div>
       {/* Edit file/folder name modal */}
@@ -123,5 +131,5 @@ export const Files = React.memo(function ({
         updateFolderDirectory={updateFolderDirectory}
       />
     </div>
-  )
-})
+  );
+});
