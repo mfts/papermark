@@ -8,6 +8,8 @@ import Sparkle from "@/components/shared/icons/sparkle";
 import { usePlan } from "@/lib/swr/use-billing";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { usePlausible } from "next-plausible";
+import { useEffect } from "react";
 
 export const getServerSideProps = async (context: any) => {
   const { id } = context.params;
@@ -107,6 +109,14 @@ export default function ChatPage({
   documentId: string;
 }) {
   const { plan } = usePlan();
+  const plausible = usePlausible();
+
+  useEffect(() => {
+    plausible("assistantViewedFromDocument", {
+      props: { documentId: documentId },
+    });
+  }, []);
+
   return (
     <>
       <Nav documentId={documentId} />

@@ -28,6 +28,7 @@ import ProcessStatusBar from "@/components/documents/process-status-bar";
 import NotionIcon from "@/components/shared/icons/notion";
 import PapermarkSparkle from "@/components/shared/icons/papermark-sparkle";
 import { Document } from "@prisma/client";
+import { usePlausible } from "next-plausible";
 
 export default function DocumentPage() {
   const { document: prismaDocument, primaryVersion, error } = useDocument();
@@ -43,6 +44,7 @@ export default function DocumentPage() {
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
   const teamInfo = useTeam();
+  const plausible = usePlausible();
 
   const handleNameSubmit = async () => {
     if (enterPressedRef.current) {
@@ -176,6 +178,7 @@ export default function DocumentPage() {
           }),
         }).then(() => {
           // Once the assistant is activated, redirect to the chat
+          plausible("assistantEnabled", { props: { documentId: document.id } }); // track the event
           router.push(`/documents/${document.id}/chat`);
         }),
         {
