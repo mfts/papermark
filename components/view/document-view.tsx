@@ -63,8 +63,8 @@ export default function DocumentView({
         linkId: link.id,
         documentId: document.id,
         userId: userId || null,
-        documentVersionId: document.versions[0].id,
-        hasPages: document.versions[0].hasPages,
+        documentVersionId: document.versions[0].id || null,
+        hasPages: document.versions[0].hasPages || null,
       }),
     });
 
