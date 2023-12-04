@@ -12,7 +12,6 @@ import {
   ServerIcon,
 } from "@heroicons/react/20/solid";
 import Link from "next/link";
-import { classNames } from "@/lib/utils";
 
 const features = [
   {
@@ -51,8 +50,6 @@ const features = [
     icon: ServerIcon,
   },
 ];
-
-
 
 const faqs = [
   {
@@ -93,36 +90,33 @@ const faqs = [
   // More questions...
 ];
 
-
-
-
 export default function Home() {
   return (
     <div>
-     <Head>
-  <title>Papermark: Share Notion Pages with Custom Domains and Analytics</title>
-  <meta
-    name="description"
-    content="Discover Papermark, the ultimate tool for sharing Notion pages. Add custom domains, secure your pages, capture emails, and track detailed analytics."
-  />
-  <meta
-    property="og:title"
-    content="Papermark: Advanced Notion Sharing with Custom Domains"
-  />
-  <meta
-    property="og:description"
-    content="Enhance your Notion experience with Papermark. Share Notion documents securely, use custom domains, and gain insightful analytics."
-  />
-  <meta
-    property="og:image"
-    content="https://www.papermark.io/_static/notion.png"
-  />
-  <meta property="og:url" content="https://www.papermark.io" />
-  <meta name="twitter:card" content="summary_large_image" />
-</Head>
-  <Navbar />
-
-
+      <Head>
+        <title>
+          Papermark: Share Notion Pages with Custom Domains and Analytics
+        </title>
+        <meta
+          name="description"
+          content="Discover Papermark, the ultimate tool for sharing Notion pages. Add custom domains, secure your pages, capture emails, and track detailed analytics."
+        />
+        <meta
+          property="og:title"
+          content="Papermark: Advanced Notion Sharing with Custom Domains"
+        />
+        <meta
+          property="og:description"
+          content="Enhance your Notion experience with Papermark. Share Notion documents securely, use custom domains, and gain insightful analytics."
+        />
+        <meta
+          property="og:image"
+          content="https://www.papermark.io/_static/notion.png"
+        />
+        <meta property="og:url" content="https://www.papermark.io" />
+        <meta name="twitter:card" content="summary_large_image" />
+      </Head>
+      <Navbar />
 
       <main>
         {/* Hero section */}
@@ -148,10 +142,11 @@ export default function Home() {
               </div>
               <div className="text-center">
                 <h1 className="text-4xl font-bold tracking-tight text-black dark:text-white sm:text-6xl">
-                  Share Notion Page 
+                  Share Notion Page
                 </h1>
                 <p className="mt-6 text-lg leading-8 text-gray-500">
-                  Custom domain, Password protection, Email capture, Advanced analytics
+                  Custom domain, Password protection, Email capture, Advanced
+                  analytics
                 </p>
                 <div className="mt-10 flex items-center justify-center gap-x-6">
                   <Link
@@ -163,25 +158,24 @@ export default function Home() {
                 </div>
               </div>
             </div>
-             <div className=" mx-auto w-full max-w-5xl">
-          <video
-            width="100%"
-            id="video1"
-            style={{ borderRadius: "6px" }}
-            aria-hidden="true"
-            playsInline
-            autoPlay
-            muted
-            loop
-          >
-            <source
-              src="https://forwebsitevideo.s3.eu-central-1.amazonaws.com/Notion+full+(30+sec).mp4"
-              type="video/mp4"
-            />
-          </video>
-        </div>
+            <div className=" mx-auto w-full max-w-5xl">
+              <video
+                width="100%"
+                id="video1"
+                style={{ borderRadius: "6px" }}
+                aria-hidden="true"
+                playsInline
+                autoPlay
+                muted
+                loop
+              >
+                <source
+                  src="https://dknlay9ljaq1f.cloudfront.net/papermark-notion-video.mp4"
+                  type="video/mp4"
+                />
+              </video>
+            </div>
 
-  
             {/* Testimonial section */}
             <div className="relative z-10 mt-32 bg-white dark:bg-gray-900 pb-20 sm:mt-56 sm:pb-24 xl:pb-0">
               <div

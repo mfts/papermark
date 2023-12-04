@@ -453,7 +453,7 @@ export default function Home() {
                 loop
               >
                 <source
-                  src="https://forwebsitevideo.s3.eu-central-1.amazonaws.com/Papermark+AI+(15+sec).mp4"
+                  src="https://dknlay9ljaq1f.cloudfront.net/papermark-ai-video.mp4"
                   type="video/mp4"
                 />
               </video>
