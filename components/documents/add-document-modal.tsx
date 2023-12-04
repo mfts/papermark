@@ -241,9 +241,10 @@ export function AddDocumentModal({
         isDocumentDialog
       >
         <Tabs defaultValue="document">
-          <TabsList className="grid w-full grid-cols-2">
+          {/* TODO: change to grid-cols-2 and uncomment notion stuff */}
+          <TabsList className="grid w-full grid-cols-1">
             <TabsTrigger value="document">Document</TabsTrigger>
-            <TabsTrigger value="notion">Notion Page</TabsTrigger>
+            {/* <TabsTrigger value="notion">Notion Page</TabsTrigger> */}
           </TabsList>
           <TabsContent value="document">
             <Card>
@@ -289,7 +290,7 @@ export function AddDocumentModal({
               </CardContent>
             </Card>
           </TabsContent>
-          <TabsContent value="notion">
+          {/* <TabsContent value="notion">
             <Card>
               <CardHeader className="space-y-3">
                 <CardTitle>Share a Notion Page</CardTitle>
@@ -335,7 +336,7 @@ export function AddDocumentModal({
                 </form>
               </CardContent>
             </Card>
-          </TabsContent>
+          </TabsContent> */}
         </Tabs>
       </DialogContent>
     </Dialog>
