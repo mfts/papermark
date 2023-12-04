@@ -34,7 +34,7 @@ export function useBilling() {
 }
 
 interface PlanResponse {
-  plan: "free" | "pro" | "trial";
+  plan: "free" | "starter" | "pro" | "trial";
 }
 
 export function usePlan() {

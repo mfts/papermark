@@ -10,18 +10,31 @@ import { getStripe } from "@/lib/stripe/client";
 import { Badge } from "../ui/badge";
 import { useTeam } from "@/context/team-context";
 
-export function UpgradePlanModal({ children }: { children: React.ReactNode }) {
-  const [plan, setPlan] = useState<"Pro">("Pro");
+export function UpgradePlanModal({
+  clickedPlan,
+  children,
+}: {
+  clickedPlan: "Starter" | "Pro";
+  children: React.ReactNode;
+}) {
+  const [plan, setPlan] = useState<"Starter" | "Pro">(clickedPlan);
   const [period, setPeriod] = useState<"monthly" | "yearly">("monthly");
   const [clicked, setClicked] = useState<boolean>(false);
   const teamInfo = useTeam();
 
   const features = useMemo(() => {
     return [
-      "Custom domain",
+      "Custom domains",
+      "Notion documents",
       "Unlimited link views",
       "Unlimited documents",
-      "Unlimited team members (ETA Nov 2023)",
+      ...(plan === "Pro"
+        ? [
+            "AI Document Assistant incl. 1500 credits",
+            "Unlimited team members",
+            "Priority Support",
+          ]
+        : ["AI Document Assistant incl. 500 credits"]),
     ];
   }, [plan]);
 
@@ -75,7 +88,7 @@ export function UpgradePlanModal({ children }: { children: React.ReactNode }) {
                   <Badge
                     variant="outline"
                     className="text-sm font-normal normal-case"
-                  >{`$${
+                  >{`€${
                     PLANS.find((p) => p.name === plan)!.price[period].amount
                   }/${period.replace("ly", "")}`}</Badge>
                 </div>
@@ -143,6 +156,25 @@ export function UpgradePlanModal({ children }: { children: React.ReactNode }) {
                   });
               }}
             >{`Upgrade to ${plan} ${capitalize(period)}`}</Button>
+            <div className="flex items-center justify-center space-x-2">
+              <button
+                onClick={() => {
+                  setPlan(plan === "Pro" ? "Starter" : "Pro");
+                }}
+                className="text-center text-xs text-muted-foreground underline-offset-4 transition-all hover:text-gray-800 hover:dark:text-muted-foreground/80 hover:underline"
+              >
+                Papermark {plan === "Pro" ? "Starter" : "Pro"}
+              </button>
+              <p className="text-muted-foreground">•</p>
+              <a
+                href={`${process.env.NEXT_PUBLIC_BASE_URL}/pricing`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-center text-xs text-muted-foreground underline-offset-4 transition-all hover:text-gray-800 hover:dark:text-muted-foreground/80 hover:underline"
+              >
+                Compare plans
+              </a>
+            </div>
           </motion.div>
         </div>
       </DialogContent>

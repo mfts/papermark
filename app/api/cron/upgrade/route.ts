@@ -31,7 +31,7 @@ export async function POST(req: Request) {
       where: {
         plan: {
           // exclude users who are on pro or free plan
-          notIn: ["pro", "free"],
+          notIn: ["pro", "starter", "free"],
         },
       },
       select: {

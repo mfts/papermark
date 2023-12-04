@@ -34,7 +34,12 @@ export default async function handle(
               team: { select: { plan: true } },
               versions: {
                 where: { isPrimary: true },
-                select: { versionNumber: true },
+                select: {
+                  versionNumber: true,
+                  hasPages: true,
+                  type: true,
+                  file: true,
+                },
                 take: 1,
               },
             },

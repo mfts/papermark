@@ -45,7 +45,7 @@ export default function Billing() {
     {
       id: 1,
       title: "Free",
-      priceMonthly: "$0/mo",
+      priceMonthly: "€0/mo",
       description: "Enjoy free access",
       currentPlan: plan && plan == "free" ? true : false,
       features: [
@@ -53,36 +53,39 @@ export default function Billing() {
         "Unlimited links",
         "Analytics for each page",
         "Feedback on each page",
+        "Notion Documents",
         "Email Notifications on views",
+        "Papermark AI",
+        "100 questions, 3/day",
       ],
     },
     {
       id: 2,
-      title: "Pro",
-      priceMonthly: "$29/mo",
-      description: "Use all freemium features+ ",
-      currentPlan: plan && plan == "pro" ? true : false,
-      isTrial: plan && plan == "trial" ? true : false,
+      title: "Starter",
+      priceMonthly: "€15/mo",
+      description: "All free features +",
+      currentPlan: plan && plan == "starter" ? true : false,
       features: [
-        "Team members",
         "Custom domains",
         "Unlimited documents",
-        "Large file uploads",
-        "Full customization",
+        "Papermark AI",
+        "500 questions",
       ],
     },
     {
       id: 3,
-      title: "Contact us",
-      priceMonthly: "Custom",
-      description: "Get more perfect plan for you",
-      currentPlan: false,
+      title: "Pro",
+      priceMonthly: "€30/mo",
+      description: "All features and more",
+      currentPlan: plan && plan == "pro" ? true : false,
+      isTrial: plan && plan == "trial" ? true : false,
       features: [
+        "Team members",
         "Priority Support",
-        "Full customization",
-        "Separate Hosting",
-        "Custom features request",
-        "Personal Onboarding",
+        "Custom Branding",
+        "Large file uploads",
+        "Papermark AI",
+        "1500 questions",
       ],
     },
   ];
@@ -98,13 +101,22 @@ export default function Billing() {
               Billing
             </h3>
             <p className="text-sm text-muted-foreground">
-              Manage your subscription
+              Manage your subscription{" "}
+              <Link
+                href="https://cal.com/marcseitz/papermark"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-foreground hover:underline"
+              >
+                contact us
+              </Link>{" "}
+              for support and enterprise requests
             </p>
           </div>
         </div>
 
         <div>
-          <div className="grid grid-cols-1 gap-6 items-center sm:grid-cols-3 sm:gap-4">
+          <div className="mx-auto mt-16 grid max-w-5xl grid-cols-1 gap-6 items-stretch sm:grid-cols-3 sm:gap-4">
             {tiers.map((tier) => (
               <div
                 key={tier.id}
@@ -153,7 +165,7 @@ export default function Billing() {
                   {tier.id === 1 &&
                     (plan ? (
                       tier.currentPlan ? (
-                        <UpgradePlanModal>
+                        <UpgradePlanModal clickedPlan={"Pro"}>
                           <Button type="button">Upgrade to Pro</Button>
                         </UpgradePlanModal>
                       ) : (
@@ -195,7 +207,46 @@ export default function Billing() {
                           Manage Subscription
                         </Button>
                       ) : (
-                        <UpgradePlanModal>
+                        <UpgradePlanModal clickedPlan={"Starter"}>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="border border-gray-700 dark:bg-secondary hover:dark:border-gray-500 hover:dark:bg-gray-700"
+                          >
+                            Upgrade to Starter
+                          </Button>
+                        </UpgradePlanModal>
+                      )
+                    ) : (
+                      <div className="h-10 w-24 animate-pulse rounded-md bg-border" />
+                    ))}
+                  {tier.id === 3 &&
+                    (plan ? (
+                      tier.currentPlan ? (
+                        <Button
+                          onClick={() => {
+                            setClicked(true);
+                            fetch(
+                              `/api/teams/${teamInfo?.currentTeam?.id}/billing/manage`,
+                              {
+                                method: "POST",
+                              },
+                            )
+                              .then(async (res) => {
+                                const url = await res.json();
+                                router.push(url);
+                              })
+                              .catch((err) => {
+                                alert(err);
+                                setClicked(false);
+                              });
+                          }}
+                          loading={clicked}
+                        >
+                          Manage Subscription
+                        </Button>
+                      ) : (
+                        <UpgradePlanModal clickedPlan={"Pro"}>
                           <Button type="button">
                             {tier.isTrial
                               ? "Upgrade to remain on Pro"
@@ -206,20 +257,6 @@ export default function Billing() {
                     ) : (
                       <div className="h-10 w-24 animate-pulse rounded-md bg-border" />
                     ))}
-                  {tier.id === 3 && (
-                    <Link
-                      href="https://cal.com/marcseitz/papermark"
-                      target="_blank"
-                    >
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        className="border border-gray-700"
-                      >
-                        Contact us
-                      </Button>
-                    </Link>
-                  )}
                 </div>
               </div>
             ))}
