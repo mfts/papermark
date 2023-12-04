@@ -59,7 +59,6 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
         recordMap,
       },
     },
-    revalidate: 10,
   };
 };
 

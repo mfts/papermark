@@ -35,6 +35,7 @@ export default async function handle(
               versions: {
                 where: { isPrimary: true },
                 select: {
+                  id: true,
                   versionNumber: true,
                   hasPages: true,
                   type: true,
