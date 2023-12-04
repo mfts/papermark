@@ -5,68 +5,69 @@ import { Button } from "../ui/button";
 export default function Header() {
   return (
     <div className="relative bg-white">
-      <div className="mx-auto max-w-7xl px-6 lg:px-8">
-        {/* Flex container with direction changing based on screen size */}
-        <div className="flex flex-col lg:items-center lg:flex-row lg:gap-x-8">
-          {/* Text container */}
-          <div className="pb-4 pt-10 lg:pb-56 lg:pt-48 lg:flex-1">
-            <div className="mx-auto max-w-2xl">
-              <div className="mt-24 sm:mt-10">
-                {/* <a
-                  target="_blank"
-                  href="https://www.producthunt.com/posts/papermark-3?utm_source=badge-top-post-badge&amp;utm_medium=badge&amp;utm_souce=badge-papermark"
-                >
-                  <img
-                    src="https://api.producthunt.com/widgets/embed-image/v1/top-post-badge.svg?post_id=411605&amp;theme=light&amp;period=daily"
-                    alt="Papermark - The open-source DocSend alternative | Product Hunt"
-                    className="w-[250px] h-[54px]"
-                  />
-                </a> */}
-                {/* <Button className="bg-">Launch Week Dec 4-8</Button> */}
-                <Link href={"/launch-week"}>
-                  <Button
-                    className="group space-x-1 bg-gradient-to-r from-[#16222A] via-emerald-500 to-[#16222A]"
-                    variant={"special"}
-                    style={{
-                      backgroundSize: "200% auto",
-                    }}
-                  >
-                    Launch Week Dec 4-8
-                  </Button>
-                </Link>
-              </div>
-              <h1 className="mt-10 text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">
-                Founder friendly document sharing platform
-              </h1>
-              <p className="mt-2 text-lg leading-8 text-gray-600">
-                The Open-Source Docsend Alternative to securely share pitch deck
-                and other docs with real-time analytics.
-              </p>
-              <div className="mt-10 flex items-center gap-x-6">
-                <Link
-                  className="rounded-md bg-black px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:shadow-md hover:bg-gray-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400"
-                  href={"/login"}
-                >
-                  Get started
-                </Link>
-                <Link
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="rounded-md px-3.5 py-2.5 text-sm font-semibold text-black hover:shadow-md hover:text-gray-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400 flex items-center"
-                  href="https://github.com/mfts/papermark"
-                >
-                  <GitHubIcon className="mr-2 h-5 w-5" /> Star on GitHub
-                </Link>
-              </div>
+      <div className="relative isolate px-6 lg:px-8">
+        <div
+          className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80"
+          aria-hidden="true"
+        >
+          <div
+            className="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-[#ff80b5] to-[#00FFD0] opacity-30 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]"
+            style={{
+              clipPath:
+                "polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)",
+            }}
+          />
+        </div>
+        <div className="mx-auto max-w-2xl py-32 sm:py-48 lg:py-56">
+          <div className="hidden sm:mb-8 sm:flex sm:justify-center">
+            <div className="relative rounded-full px-3 py-1 text-sm leading-6 text-gray-600 ring-1 ring-gray-900/10 hover:ring-gray-900/20">
+              Announcing Launch Week Dec 4-8.{" "}
+              <Link
+                href="/launch-week"
+                className="font-semibold text-emerald-500"
+              >
+                <span className="absolute inset-0" aria-hidden="true" />
+                Follow for more <span aria-hidden="true">&rarr;</span>
+              </Link>
             </div>
           </div>
-          <div className="hidden lg:flex lg:mt-0 lg:flex-1">
-            <img
-              className="aspect-[3/2] w-full object-contain"
-              src="https://www.papermark.io/_static/image3.png"
-              alt=""
-            />
+          <div className="text-center">
+            <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
+              Open source document sharing platform
+            </h1>
+            <p className="mt-6 text-lg leading-8 text-gray-600">
+              The Open-Source Docsend Alternative to securely share pitch deck
+              and other docs with real-time analytics and AI document assistent.
+            </p>
+            <div className="mt-10 flex items-center justify-center gap-x-6">
+              <Link
+                href={"/login"}
+                className="rounded-md bg-black px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-gray-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+              >
+                Get started
+              </Link>
+              <Link
+                href="https://github.com/mfts/papermark"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm font-semibold leading-6 text-gray-900 flex items-center"
+              >
+                <GitHubIcon className="mr-2 h-5 w-5" /> Star on GitHub
+              </Link>
+            </div>
           </div>
+        </div>
+        <div
+          className="absolute inset-x-0 top-[calc(100%-13rem)] -z-10 transform-gpu overflow-hidden blur-3xl sm:top-[calc(100%-30rem)]"
+          aria-hidden="true"
+        >
+          <div
+            className="relative left-[calc(50%+3rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 bg-gradient-to-tr from-[#ff80b5] to-[#00FFD0] opacity-30 sm:left-[calc(50%+36rem)] sm:w-[72.1875rem]"
+            style={{
+              clipPath:
+                "polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)",
+            }}
+          />
         </div>
       </div>
     </div>
