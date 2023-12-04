@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
 import { Download } from "lucide-react";
 import { useTeam } from "@/context/team-context";
-import Image from "next/image";
+import Nav from "./nav";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
 
@@ -16,8 +16,6 @@ export default function PDFViewer(props: any) {
   const startTimeRef = useRef(Date.now());
   const pageNumberRef = useRef<number>(pageNumber);
   const teamInfo = useTeam();
-
-  console.log("viewProps", props);
 
   // Update the previous page number after the effect hook has run
   useEffect(() => {
@@ -166,8 +164,9 @@ export default function PDFViewer(props: any) {
       <Nav
         pageNumber={pageNumber}
         numPages={numPages}
-        downloadFile={downloadfile}
         allowDownload={props.allowDownload}
+        assistantEnabled={props.assistantEnabled}
+        file={{ name: props.name, url: props.file }}
         logoUrl={props.logo}
       />
       <div
@@ -218,62 +217,5 @@ export default function PDFViewer(props: any) {
         </div>
       </div>
     </>
-  );
-}
-
-function Nav({
-  pageNumber,
-  numPages,
-  allowDownload,
-  downloadFile,
-  logoUrl,
-}: {
-  pageNumber: number;
-  numPages: number;
-  allowDownload: boolean;
-  logoUrl: string;
-  downloadFile: (e: React.MouseEvent<HTMLButtonElement>) => void;
-}) {
-  return (
-    <nav className="bg-black">
-      <div className="mx-auto px-2 sm:px-6 lg:px-8">
-        <div className="relative flex h-16 items-center justify-between">
-          <div className="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start">
-            <div className="flex flex-shrink-0 items-center">
-              {logoUrl ? (
-                <div className="flex h-14 w-30 flex-col space-y-2 sm:flex-row sm:items-center sm:space-x-5 sm:space-y-0">
-                  <Image
-                    src={logoUrl}
-                    alt={"Custom Logo"}
-                    width={150}
-                    height={50}
-                    className="h-14 w-30 sm:w-auto flex-none rounded-lg object-center"
-                  />
-                </div>
-              ) : (
-                <p className="text-2xl font-bold tracking-tighter text-white">
-                  Papermark
-                </p>
-              )}
-            </div>
-          </div>
-          <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
-            <div className="bg-gray-900 text-white rounded-md px-3 py-2 text-sm font-medium m-1">
-              <span>{pageNumber}</span>
-              <span className="text-gray-400"> / {numPages}</span>
-            </div>
-            {allowDownload ? (
-              <div className="bg-gray-900 text-white rounded-md px-2 py-1 text-sm  m-1">
-                <button onClick={downloadFile}>
-                  <Download className="w-8 h-6" />
-                </button>
-              </div>
-            ) : (
-              ""
-            )}
-          </div>
-        </div>
-      </div>
-    </nav>
   );
 }

@@ -14,6 +14,7 @@ export default async function handle(
     const { id } = req.query as { id: string };
 
     try {
+      console.time("get-link");
       const link = await prisma.link.findUnique({
         where: {
           id: id,
@@ -28,9 +29,16 @@ export default async function handle(
           document: {
             select: {
               id: true,
+              assistantEnabled: true,
               versions: {
                 where: { isPrimary: true },
-                select: { versionNumber: true },
+                select: {
+                  id: true,
+                  versionNumber: true,
+                  type: true,
+                  hasPages: true,
+                  file: true,
+                },
                 take: 1,
               },
             },
@@ -42,6 +50,8 @@ export default async function handle(
           },
         },
       });
+
+      console.timeEnd("get-link");
 
       if (!link) {
         return res.status(404).json({ error: "Link not found" });
@@ -153,6 +163,10 @@ export default async function handle(
     if (!updatedLink) {
       return res.status(404).json({ error: "Link not found" });
     }
+
+    await fetch(
+      `${process.env.NEXTAUTH_URL}/api/revalidate?secret=${process.env.REVALIDATE_TOKEN}&linkId=${id}`,
+    );
 
     return res.status(200).json(updatedLink);
   } else if (req.method == "DELETE") {

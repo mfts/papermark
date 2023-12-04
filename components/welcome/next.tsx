@@ -5,6 +5,7 @@ import {
   PresentationChartBarIcon,
 } from "@heroicons/react/24/outline";
 import { STAGGER_CHILD_VARIANTS } from "@/lib/constants";
+import NotionIcon from "@/components/shared/icons/notion";
 
 export default function Next() {
   const router = useRouter();
@@ -39,7 +40,7 @@ export default function Next() {
       </motion.div>
       <motion.div
         variants={STAGGER_CHILD_VARIANTS}
-        className="grid w-full grid-cols-1 divide-y divide-border text-foreground rounded-md border border-border md:grid-cols-2 md:divide-x"
+        className="grid w-full grid-cols-1 divide-y divide-border text-foreground rounded-md border border-border md:grid-cols-3 md:divide-x"
       >
         <button
           onClick={() =>
@@ -52,7 +53,7 @@ export default function Next() {
           }
           className="flex flex-col items-center justify-center overflow-hidden p-5 space-y-5 transition-colors hover:bg-gray-200 hover:dark:bg-gray-800 md:p-10 min-h-[200px]"
         >
-          <PresentationChartBarIcon className="h-auto  pointer-events-none w-12 sm:w-12" />
+          <PresentationChartBarIcon className="h-auto pointer-events-none w-12 sm:w-12" />
           <p>Pitchdeck</p>
         </button>
         <button
@@ -66,8 +67,22 @@ export default function Next() {
           }
           className="flex flex-col items-center justify-center overflow-hidden p-5 space-y-5 transition-colors hover:bg-gray-200 hover:dark:bg-gray-800 md:p-10 min-h-[200px]"
         >
-          <DocumentIcon className="h-auto  pointer-events-none w-12 sm:w-12" />
+          <DocumentIcon className="h-auto pointer-events-none w-12 sm:w-12" />
           <p>Another document</p>
+        </button>
+        <button
+          onClick={() =>
+            router.push({
+              pathname: "/welcome",
+              query: {
+                type: "notion",
+              },
+            })
+          }
+          className="flex flex-col items-center justify-center overflow-hidden p-5 space-y-5 transition-colors hover:bg-gray-200 hover:dark:bg-gray-800 md:p-10 min-h-[200px]"
+        >
+          <NotionIcon className="h-auto pointer-events-none w-12 sm:w-12" />
+          <p>Notion Page</p>
         </button>
       </motion.div>
     </motion.div>
