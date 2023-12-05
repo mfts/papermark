@@ -87,14 +87,14 @@ export function AddLogoModal({
       );
 
       let response: Response | undefined;
-      // create a document or new version in the database if the document is a pdf
+
       if (
         accetedFileTypes.some((fileType) =>
           getExtension(newBlob.pathname).includes(fileType),
         )
       ) {
-        // create a new version for existing document in the database
-        const documentId = router.query.id;
+        // create a new logo in the database
+        const logoId = router.query.id;
         response = await saveLogoToDatabase(newBlob);
       }
 
