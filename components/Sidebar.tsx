@@ -104,7 +104,8 @@ export default function Sidebar() {
         <Dialog
           as="div"
           className="relative z-50 xl:hidden"
-          onClose={setSidebarOpen}>
+          onClose={setSidebarOpen}
+        >
           <Transition.Child
             as={Fragment}
             enter="transition-opacity ease-linear duration-300"
@@ -112,7 +113,8 @@ export default function Sidebar() {
             enterTo="opacity-100"
             leave="transition-opacity ease-linear duration-300"
             leaveFrom="opacity-100"
-            leaveTo="opacity-0">
+            leaveTo="opacity-0"
+          >
             <div className="fixed inset-0 bg-background/80" />
           </Transition.Child>
 
@@ -124,7 +126,8 @@ export default function Sidebar() {
               enterTo="translate-x-0"
               leave="transition ease-in-out duration-300 transform"
               leaveFrom="translate-x-0"
-              leaveTo="-translate-x-full">
+              leaveTo="-translate-x-full"
+            >
               <Dialog.Panel className="relative mr-16 flex w-full max-w-xs flex-1">
                 <Transition.Child
                   as={Fragment}
@@ -133,12 +136,14 @@ export default function Sidebar() {
                   enterTo="opacity-100"
                   leave="ease-in-out duration-300"
                   leaveFrom="opacity-100"
-                  leaveTo="opacity-0">
+                  leaveTo="opacity-0"
+                >
                   <div className="absolute left-full top-0 flex w-16 justify-center pt-5">
                     <button
                       type="button"
                       className="-m-2.5 p-2.5"
-                      onClick={() => setSidebarOpen(false)}>
+                      onClick={() => setSidebarOpen(false)}
+                    >
                       <span className="sr-only">Close sidebar</span>
                       <X
                         className="h-6 w-6 text-foreground"
@@ -177,9 +182,10 @@ export default function Sidebar() {
                                   item.current
                                     ? "bg-gray-200 dark:bg-secondary text-secondary-foreground font-semibold"
                                     : "text-muted-foreground hover:text-foreground hover:bg-gray-200 hover:dark:bg-muted",
-                                  "group flex gap-x-3 items-center rounded-md p-2 text-sm leading-6 w-full disabled:hover:bg-transparent disabled:text-muted-foreground disabled:cursor-default"
+                                  "group flex gap-x-3 items-center rounded-md p-2 text-sm leading-6 w-full disabled:hover:bg-transparent disabled:text-muted-foreground disabled:cursor-default",
                                 )}
-                                disabled={item.disabled}>
+                                disabled={item.disabled}
+                              >
                                 <item.icon
                                   className="h-5 w-5 shrink-0"
                                   aria-hidden="true"
@@ -243,9 +249,10 @@ export default function Sidebar() {
                           item.current
                             ? "bg-gray-200 dark:bg-secondary text-secondary-foreground font-semibold"
                             : "text-muted-foreground hover:text-foreground hover:bg-gray-200 hover:dark:bg-muted",
-                          "group flex gap-x-3 items-center rounded-md p-2 text-sm leading-6 w-full disabled:hover:bg-transparent disabled:text-muted-foreground disabled:cursor-default"
+                          "group flex gap-x-3 items-center rounded-md p-2 text-sm leading-6 w-full disabled:hover:bg-transparent disabled:text-muted-foreground disabled:cursor-default",
                         )}
-                        disabled={item.disabled}>
+                        disabled={item.disabled}
+                      >
                         <item.icon
                           className="h-5 w-5 shrink-0"
                           aria-hidden="true"
@@ -294,7 +301,8 @@ export default function Sidebar() {
                       enterTo="transform opacity-100 scale-100"
                       leave="transition ease-in duration-75"
                       leaveFrom="transform opacity-100 scale-100"
-                      leaveTo="transform opacity-0 scale-95">
+                      leaveTo="transform opacity-0 scale-95"
+                    >
                       <Menu.Items className="absolute left-0 z-10 bottom-0 mb-14 w-full origin-bottom-left rounded-md bg-gray-100 dark:bg-primary-foreground py-2 focus:outline-none">
                         {session ? (
                           <>
@@ -310,7 +318,8 @@ export default function Sidebar() {
                                 Help?{" "}
                                 <a
                                   href="mailto:support@papermark.io"
-                                  className="underline hover:text-muted-foreground/80">
+                                  className="underline hover:text-muted-foreground/80"
+                                >
                                   support@papermark.io
                                 </a>
                               </p>
@@ -323,7 +332,8 @@ export default function Sidebar() {
                                   })
                                 }
                                 className="block px-3 py-1 text-sm leading-6 text-foreground hover:bg-gray-200 hover:dark:bg-muted"
-                                href={""}>
+                                href={""}
+                              >
                                 Sign Out
                               </Link>
                             </Menu.Item>
@@ -346,7 +356,8 @@ export default function Sidebar() {
           <button
             type="button"
             className="-m-2.5 p-2.5 text-muted-foreground lg:hidden"
-            onClick={() => setSidebarOpen(true)}>
+            onClick={() => setSidebarOpen(true)}
+          >
             <span className="sr-only">Open sidebar</span>
             <MenuIcon className="h-6 w-6" aria-hidden="true" />
           </button>
@@ -372,7 +383,8 @@ export default function Sidebar() {
                   enterTo="transform opacity-100 scale-100"
                   leave="transition ease-in duration-75"
                   leaveFrom="transform opacity-100 scale-100"
-                  leaveTo="transform opacity-0 scale-95">
+                  leaveTo="transform opacity-0 scale-95"
+                >
                   <Menu.Items className="absolute right-0 z-10 mt-2.5 w-fit origin-top-right rounded-md bg-primary-foreground shadow-lg py-2 ring-1 ring-primary-foreground/5 focus:outline-none">
                     {session ? (
                       <>
@@ -389,7 +401,8 @@ export default function Sidebar() {
                               })
                             }
                             className="block px-3 py-1 text-sm leading-6 text-foreground hover:bg-gray-200 hover:dark:bg-muted"
-                            href={""}>
+                            href={""}
+                          >
                             Sign Out
                           </Link>
                         </Menu.Item>

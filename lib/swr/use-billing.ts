@@ -23,7 +23,7 @@ export function useBilling() {
     fetcher,
     {
       dedupingInterval: 30000,
-    }
+    },
   );
 
   return {
@@ -34,7 +34,7 @@ export function useBilling() {
 }
 
 interface PlanResponse {
-  plan: "free" | "pro" | "trial";
+  plan: "free" | "starter" | "pro" | "trial";
 }
 
 export function usePlan() {
@@ -45,7 +45,7 @@ export function usePlan() {
     fetcher,
     {
       dedupingInterval: 60000,
-    }
+    },
   );
 
   return {

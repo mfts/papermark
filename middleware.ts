@@ -24,6 +24,7 @@ export default async function middleware(req: NextRequest, ev: NextFetchEvent) {
   if (
     process.env.NODE_ENV !== "development" &&
     !(
+      host?.includes("localhost") ||
       host?.includes("papermark.io") ||
       host?.endsWith(".vercel.app")
     )
@@ -37,7 +38,10 @@ export default async function middleware(req: NextRequest, ev: NextFetchEvent) {
     path !== "/oss-friends" &&
     path !== "/pricing" &&
     path !== "/docsend-alternatives" &&
+    path !== "/launch-week" &&
     path !== "/open-source-investors" &&
+    path !== "/ai" &&
+    path !== "/share-notion-page" &&
     !path.startsWith("/alternatives/") &&
     !path.startsWith("/blog/") &&
     !path.startsWith("/view/")

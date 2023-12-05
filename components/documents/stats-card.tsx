@@ -32,17 +32,17 @@ export default function StatsCard() {
       active: true,
     },
     {
-      name: "Total avgerage view duration",
+      name: "Total average view duration",
       value:
         stats?.total_duration == null
           ? "46"
           : stats?.total_duration < 60000
-          ? `${Math.round(stats?.total_duration / 1000)}`
-          : `${Math.floor(stats?.total_duration / 60000)}:${
-              Math.round((stats?.total_duration % 60000) / 1000) < 10
-                ? `0${Math.round((stats?.total_duration % 60000) / 1000)}`
-                : Math.round((stats?.total_duration % 60000) / 1000)
-            }`,
+            ? `${Math.round(stats?.total_duration / 1000)}`
+            : `${Math.floor(stats?.total_duration / 60000)}:${
+                Math.round((stats?.total_duration % 60000) / 1000) < 10
+                  ? `0${Math.round((stats?.total_duration % 60000) / 1000)}`
+                  : Math.round((stats?.total_duration % 60000) / 1000)
+              }`,
       unit: stats?.total_duration! < 60000 ? "seconds" : "minutes",
       active: stats?.total_duration ? true : false,
     },

@@ -30,7 +30,7 @@ export default function AllowDownloadSection({
           <h2
             className={cn(
               "text-sm font-medium leading-6",
-              enabled ? "text-foreground" : "text-muted-foreground"
+              enabled ? "text-foreground" : "text-muted-foreground",
             )}
           >
             Allow downloading

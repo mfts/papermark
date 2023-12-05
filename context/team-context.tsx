@@ -29,8 +29,8 @@ export const TeamProvider = ({ children }: TeamContextProps): JSX.Element => {
   const currentTeamId = currentTeam
     ? currentTeam.id
     : typeof localStorage !== "undefined"
-    ? localStorage.getItem("currentTeamId")
-    : null;
+      ? localStorage.getItem("currentTeamId")
+      : null;
 
   const value = useMemo(
     () => ({
@@ -41,7 +41,7 @@ export const TeamProvider = ({ children }: TeamContextProps): JSX.Element => {
       isLoading: loading,
       setCurrentTeam,
     }),
-    [teams, currentTeam, loading]
+    [teams, currentTeam, loading],
   );
 
   return <TeamContext.Provider value={value}>{children}</TeamContext.Provider>;

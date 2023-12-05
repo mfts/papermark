@@ -1,12 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Check, Loader, PlusIcon } from "lucide-react";
 import { TeamContextType, useTeam } from "@/context/team-context";
-import { AddTeamModal } from "./add-team-modal";
 import { ChevronUpDownIcon } from "@heroicons/react/20/solid";
 import { Team } from "@/lib/types";
 import { useRouter } from "next/router";
-import { AddTeamMembers } from "./add-team-member-modal";
-import { Button } from "../ui/button";
 import Link from "next/link";
 
 const SelectTeam = ({ teams, currentTeam, isLoading }: TeamContextType) => {

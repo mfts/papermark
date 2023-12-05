@@ -1,4 +1,5 @@
 import Twitter from "../shared/icons/twitter";
+import Image from "next/image";
 
 const testimonials = [
   {
@@ -7,7 +8,7 @@ const testimonials = [
       name: "Jonathan Reimer",
       handle: "jonathimer",
       imageUrl:
-        "https://pbs.twimg.com/profile_images/1485560739679068161/lfB1bBo1_400x400.jpg",
+        "https://pbs.twimg.com/profile_images/1704777684046209024/_JdBcXWp_400x400.jpg",
       link: "https://twitter.com/jonathimer/status/1663651278872891395",
     },
   },
@@ -98,9 +99,11 @@ export default function Testimonials() {
                     <p>{`${testimonial.body}`}</p>
                   </blockquote>
                   <figcaption className="mt-6 flex items-center gap-x-4">
-                    <img
+                    <Image
                       className="h-10 w-10 rounded-full bg-gray-50"
                       src={testimonial.author.imageUrl}
+                      width={40}
+                      height={40}
                       alt=""
                     />
                     <div>

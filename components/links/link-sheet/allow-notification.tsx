@@ -30,7 +30,7 @@ export default function AllowNotificationSection({
           <h2
             className={cn(
               "text-sm font-medium leading-6",
-              enabled ? "text-foreground" : "text-muted-foreground"
+              enabled ? "text-foreground" : "text-muted-foreground",
             )}
           >
             Receive email notification

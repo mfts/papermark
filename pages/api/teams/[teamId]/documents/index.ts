@@ -11,7 +11,7 @@ import { client } from "@/trigger";
 
 export default async function handle(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   if (req.method === "GET") {
     // GET /api/teams/:teamId/documents
@@ -63,7 +63,17 @@ export default async function handle(
     const userId = (session.user as CustomUser).id;
 
     // Assuming data is an object with `name` and `description` properties
-    const { name, url: fileUrl, numPages } = req.body as { name: string; url: string; numPages: number }
+    const {
+      name,
+      url: fileUrl,
+      numPages,
+      type: fileType,
+    } = req.body as {
+      name: string;
+      url: string;
+      numPages: number;
+      type?: string;
+    };
 
     try {
       await getTeamWithUsersAndDocument({
@@ -71,8 +81,8 @@ export default async function handle(
         userId,
       });
 
-      // Get the file extension and save it as the type
-      const type = getExtension(name);
+      // Get passed type property or alternatively, the file extension and save it as the type
+      const type = fileType || getExtension(name);
 
       // You could perform some validation here
 
@@ -127,16 +137,19 @@ export default async function handle(
         customDomain: null,
       });
 
-      // trigger document uploaded event to trigger convert-pdf-to-image job
-      await client.sendEvent({
-        name: "document.uploaded",
-        payload: { documentVersionId: document.versions[0].id },
-      });
+      // skip triggering convert-pdf-to-image job for "notion" documents
+      if (type !== "notion") {
+        // trigger document uploaded event to trigger convert-pdf-to-image job
+        await client.sendEvent({
+          name: "document.uploaded",
+          payload: { documentVersionId: document.versions[0].id },
+        });
+      }
 
       return res.status(201).json(document);
     } catch (error) {
       log(
-        `Failed to create document. \n\n teamId: ${teamId}, file: ${fileUrl} \n\n ${error}`
+        `Failed to create document. \n\n teamId: ${teamId}, file: ${fileUrl} \n\n ${error}`,
       );
       errorhandler(error, res);
     }
