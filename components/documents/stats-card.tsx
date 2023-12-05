@@ -32,7 +32,7 @@ export default function StatsCard() {
       active: true,
     },
     {
-      name: "Total avgerage view duration",
+      name: "Total average view duration",
       value:
         stats?.total_duration == null
           ? "46"
