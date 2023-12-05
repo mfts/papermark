@@ -113,10 +113,11 @@ export default async function handle(
         return;
       }
 
-      // Upload the file to OpenAI
+      // get the open AI file Id from db
       const fileId = document.versions[0].fileId;
 
       if (fileId) {
+        //deleting the file from openai
         await openai.files.del(fileId);
       }
 
