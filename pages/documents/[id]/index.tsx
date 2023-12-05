@@ -293,10 +293,10 @@ export default function DocumentPage() {
                             });
 
                             toast.promise(fetchPromise, {
-                              loading: "Activating Assistant...",
+                              loading: "Deactivating Assistant...",
                               success:
-                                "Papermark Assistant successfully activated.",
-                              error: "Activation failed. Please try again.",
+                                "Papermark Assistant successfully de-activated.",
+                              error: "De-activation failed. Please try again.",
                             });
                           }}
                         >
