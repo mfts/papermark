@@ -135,7 +135,7 @@ export default function DocumentView({
   //Verifies authentication code
   const handleAuthCodeVerification = async () => {
     setIsLoading(true);
-    const URL = `/api/verification/email-authcode?authenticationCode=${authenticationCode}&identifier=${document.id}`;
+    const URL = `/api/verification/email-authcode?authenticationCode=${authenticationCode}&identifier=${link.id}`;
     const response = await fetch(URL, {
       method: "GET",
       headers: {

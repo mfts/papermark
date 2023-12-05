@@ -47,18 +47,18 @@ export default async function handle(
   }
 
   // Check if password is required for visiting the link
-  if (link.password) {
-    if (!password || password.trim() === "") {
-      res.status(400).json({ message: "Password is required." });
-      return;
-    }
+  // if (link.password) {
+  //   if (!password || password.trim() === "") {
+  //     res.status(400).json({ message: "Password is required." });
+  //     return;
+  //   }
 
-    const isPasswordValid = await checkPassword(password, link.password);
-    if (!isPasswordValid) {
-      res.status(403).json({ message: "Invalid password." });
-      return;
-    }
-  }
+  //   const isPasswordValid = await checkPassword(password, link.password);
+  //   if (!isPasswordValid) {
+  //     res.status(403).json({ message: "Invalid password." });
+  //     return;
+  //   }
+  // }
 
   try {
     console.time("create-view");
@@ -121,12 +121,12 @@ export default async function handle(
 
     if (link.enableNotification) {
       // trigger link viewed event to trigger send-notification job
-      // console.time("sendemail");
-      // await client.sendEvent({
-      //   name: "link.viewed",
-      //   payload: { viewId: newView.id },
-      // });
-      // console.timeEnd("sendemail");
+      console.time("sendemail");
+      await client.sendEvent({
+        name: "link.viewed",
+        payload: { viewId: newView.id },
+      });
+      console.timeEnd("sendemail");
     }
 
     const returnObject = {

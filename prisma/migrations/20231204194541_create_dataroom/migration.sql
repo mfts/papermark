@@ -1,6 +1,9 @@
 -- CreateEnum
 CREATE TYPE "DataroomType" AS ENUM ('HIERARCHICAL', 'PAGED');
 
+-- CreateEnum
+CREATE TYPE "AuthenticationCodeType" AS ENUM ('DATAROOM', 'DOCUMENT');
+
 -- CreateTable
 CREATE TABLE "Dataroom" (
     "id" TEXT NOT NULL,
@@ -55,6 +58,7 @@ CREATE TABLE "AuthenticationCode" (
     "email" TEXT NOT NULL,
     "code" TEXT NOT NULL,
     "identifier" TEXT NOT NULL,
+    "type" "AuthenticationCodeType" NOT NULL,
     "permanent" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -84,9 +88,3 @@ ALTER TABLE "DataroomFile" ADD CONSTRAINT "DataroomFile_parentFolderId_fkey" FOR
 
 -- AddForeignKey
 ALTER TABLE "DataroomFile" ADD CONSTRAINT "DataroomFile_dataroomId_fkey" FOREIGN KEY ("dataroomId") REFERENCES "Dataroom"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "AuthenticationCode" ADD CONSTRAINT "dataroom_relation" FOREIGN KEY ("identifier") REFERENCES "Dataroom"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "AuthenticationCode" ADD CONSTRAINT "document_relation" FOREIGN KEY ("identifier") REFERENCES "Document"("id") ON DELETE CASCADE ON UPDATE CASCADE;

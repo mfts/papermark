@@ -118,7 +118,6 @@ model Document {
   views            View[]
   versions         DocumentVersion[]
   conversations    Conversation[]
-  authenticationCodes AuthenticationCode[]
 
   @@index([ownerId])
   @@index([teamId])
@@ -233,7 +232,6 @@ model Dataroom {
   dataroomView     DataroomView[]
   team             Team              @relation(fields: [teamId], references: [id], onDelete: Cascade)
   teamId           String
-  authenticationCodes AuthenticationCode[]
 }
 
 model DataroomView {
@@ -265,13 +263,17 @@ model DataroomFile {
   dataroomId                   String
 }
 
+enum AuthenticationCodeType {
+  DATAROOM 
+  DOCUMENT
+}
+
 model AuthenticationCode {
   id          String   @id @default(cuid())
   email       String
   code        String   @unique
-  dataroom    Dataroom?  @relation(fields: [identifier], references: [id], onDelete: Cascade, map: "dataroom_relation")
-  document    Document?  @relation(fields: [identifier], references: [id], onDelete: Cascade, map: "document_relation")
   identifier  String   //DataroomId if dataroom else documentId
+  type        AuthenticationCodeType
   permanent   Boolean  @default(false)
   createdAt   DateTime @default(now())
 }

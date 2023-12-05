@@ -27,12 +27,11 @@ export default async function handle(
     try {
       //Input Validation
       const { authenticationCode, identifier } = authSchema.parse(req.query);
-
       //Check verification code in database
       const verificationCode = await prisma.authenticationCode.findFirst({
         where: {
           code: authenticationCode,
-          identifier,
+          identifier: identifier
         },
       });
 
@@ -42,13 +41,15 @@ export default async function handle(
       }
       //Delete the code if not permanent
       if (!verificationCode.permanent) {
+        console.log("delete")
         await prisma.authenticationCode.delete({
           where: {
             code: authenticationCode,
           },
         });
       }
-      res.status(200).json({ message: "Verification successful" });
+      console.log("hererggas");
+      res.status(200).json({ message: "Verification successfull" });
     } catch (error) {
       if (error instanceof ZodError) {
         return res.status(403).json({
@@ -147,6 +148,7 @@ export default async function handle(
           ? `${process.env.NEXT_PUBLIC_BASE_URL}/view/dataroom/${identifier}?authenticationCode=${authenticationCode}`
           : `${process.env.NEXT_PUBLIC_BASE_URL}/view/dataroom/hierarchical/${identifier}/${homeFolderId}?authenticationCode=${authenticationCode}`;
 
+    console.log(URL);
     await sendVerificationEmail(email, URL);
     res.status(200).json({ authenticationCode });
   } else {

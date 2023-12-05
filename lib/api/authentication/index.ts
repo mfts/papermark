@@ -15,6 +15,7 @@ export async function generateAuthenticationCode(
       code: authenticationCode,
       identifier,
       permanent: duration === "PERMANENT" ? true : false,
+      type
     },
   });
   return authenticationCode;

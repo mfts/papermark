@@ -11,9 +11,8 @@ import { GetStaticPropsContext } from "next";
 import { useRouter } from "next/router";
 
 export const getStaticProps = async (context: GetStaticPropsContext) => {
-  const { linkId, authenticationCode } = context.params as {
+  const { linkId } = context.params as {
     linkId: string;
-    authenticationCode: string;
   };
 
   // Fetch the link
@@ -61,7 +60,6 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
         rootNotionPageId: null, // do not pass rootNotionPageId to the client
         recordMap,
       },
-      authenticationCode: authenticationCode || null,
     },
   };
 };
@@ -76,17 +74,16 @@ export async function getStaticPaths() {
 export default function ViewPage({
   link,
   notionData,
-  authenticationCode,
 }: {
   link: LinkWithDocument;
   notionData: {
     rootNotionPageId: string | null;
     recordMap: ExtendedRecordMap | null;
   };
-  authenticationCode: string;
 }) {
   const router = useRouter();
   const { data: session, status } = useSession();
+  const { authenticationCode } = router.query as { authenticationCode: string };
 
   if (!link || status === "loading" || router.isFallback) {
     return (
@@ -118,6 +115,7 @@ export default function ViewPage({
     );
   }
 
+  console.log("auth-code", authenticationCode);
   if (emailProtected || linkPassword) {
     return (
       <DocumentView

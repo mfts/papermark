@@ -13,10 +13,9 @@ import notion from "@/lib/notion";
 import { parsePageId } from "notion-utils";
 
 export const getStaticProps = async (context: GetStaticPropsContext) => {
-  const { domain, slug, authenticationCode } = context.params as {
+  const { domain, slug } = context.params as {
     domain: string;
     slug: string;
-    authenticationCode: string;
   };
 
   // Fetch the link
@@ -63,7 +62,6 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
         rootNotionPageId: pageId,
         recordMap,
       },
-      authenticationCode: authenticationCode || null,
     },
     revalidate: 10,
   };
@@ -79,17 +77,16 @@ export async function getStaticPaths() {
 export default function ViewPage({
   link,
   notionData,
-  authenticationCode,
 }: {
   link: LinkWithDocument;
   notionData: {
     rootNotionPageId: string | null;
     recordMap: ExtendedRecordMap | null;
   };
-  authenticationCode: string;
 }) {
   const router = useRouter();
   const { data: session, status } = useSession();
+  const { authenticationCode } = router.query as { authenticationCode: string };
 
   if (!link || status === "loading" || router.isFallback) {
     return (
