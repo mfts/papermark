@@ -255,53 +255,55 @@ export default function DocumentPage() {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" ref={dropdownRef}>
                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                    {!prismaDocument.assistantEnabled ? (
-                      <DropdownMenuItem
-                        onClick={() => {
-                          const fetchPromise = fetch("/api/assistants", {
-                            method: "POST",
-                            headers: {
-                              "Content-Type": "application/json",
-                            },
-                            body: JSON.stringify({
-                              documentId: prismaDocument.id,
-                            }),
-                          });
+                    {primaryVersion.type !== "notion" ? (
+                      !prismaDocument.assistantEnabled ? (
+                        <DropdownMenuItem
+                          onClick={() => {
+                            const fetchPromise = fetch("/api/assistants", {
+                              method: "POST",
+                              headers: {
+                                "Content-Type": "application/json",
+                              },
+                              body: JSON.stringify({
+                                documentId: prismaDocument.id,
+                              }),
+                            });
 
-                          toast.promise(fetchPromise, {
-                            loading: "Activating Assistant...",
-                            success:
-                              "Papermark Assistant successfully activated.",
-                            error: "Activation failed. Please try again.",
-                          });
-                        }}
-                      >
-                        Activate Assistant
-                      </DropdownMenuItem>
-                    ) : (
-                      <DropdownMenuItem
-                        onClick={() => {
-                          const fetchPromise = fetch("/api/assistants", {
-                            method: "DELETE",
-                            headers: {
-                              "Content-Type": "application/json",
-                            },
-                            body: JSON.stringify({
-                              documentId: prismaDocument.id,
-                            }),
-                          });
+                            toast.promise(fetchPromise, {
+                              loading: "Activating Assistant...",
+                              success:
+                                "Papermark Assistant successfully activated.",
+                              error: "Activation failed. Please try again.",
+                            });
+                          }}
+                        >
+                          Activate Assistant
+                        </DropdownMenuItem>
+                      ) : (
+                        <DropdownMenuItem
+                          onClick={() => {
+                            const fetchPromise = fetch("/api/assistants", {
+                              method: "DELETE",
+                              headers: {
+                                "Content-Type": "application/json",
+                              },
+                              body: JSON.stringify({
+                                documentId: prismaDocument.id,
+                              }),
+                            });
 
-                          toast.promise(fetchPromise, {
-                            loading: "Activating Assistant...",
-                            success:
-                              "Papermark Assistant successfully activated.",
-                            error: "Activation failed. Please try again.",
-                          });
-                        }}
-                      >
-                        Disable Assistant
-                      </DropdownMenuItem>
-                    )}
+                            toast.promise(fetchPromise, {
+                              loading: "Activating Assistant...",
+                              success:
+                                "Papermark Assistant successfully activated.",
+                              error: "Activation failed. Please try again.",
+                            });
+                          }}
+                        >
+                          Disable Assistant
+                        </DropdownMenuItem>
+                      )
+                    ) : null}
                     <DropdownMenuItem
                       className="text-destructive focus:bg-destructive focus:text-destructive-foreground"
                       onClick={(event) =>
@@ -314,17 +316,19 @@ export default function DocumentPage() {
                   </DropdownMenuContent>
                 </DropdownMenu>
 
-                <Button
-                  className="group space-x-1 bg-gradient-to-r from-[#16222A] via-emerald-500 to-[#16222A] duration-200 ease-linear hover:bg-right"
-                  variant={"special"}
-                  style={{
-                    backgroundSize: "200% auto",
-                  }}
-                  onClick={() => activateOrRedirectAssistant(prismaDocument)}
-                >
-                  <PapermarkSparkle className="h-5 w-5 animate-pulse group-hover:animate-none" />{" "}
-                  <span>AI Assistant</span>
-                </Button>
+                {prismaDocument.type !== "notion" ? (
+                  <Button
+                    className="group space-x-1 bg-gradient-to-r from-[#16222A] via-emerald-500 to-[#16222A] duration-200 ease-linear hover:bg-right"
+                    variant={"special"}
+                    style={{
+                      backgroundSize: "200% auto",
+                    }}
+                    onClick={() => activateOrRedirectAssistant(prismaDocument)}
+                  >
+                    <PapermarkSparkle className="h-5 w-5 animate-pulse group-hover:animate-none" />{" "}
+                    <span>AI Assistant</span>
+                  </Button>
+                ) : null}
 
                 <Button onClick={() => setIsLinkSheetOpen(true)}>
                   Create Link
