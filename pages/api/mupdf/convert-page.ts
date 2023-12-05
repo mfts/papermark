@@ -6,7 +6,7 @@ import prisma from "@/lib/prisma";
 
 // This function can run for a maximum of 60 seconds
 export const config = {
-  maxDuration: 60,
+  maxDuration: 120,
 };
 
 export default async (req: NextApiRequest, res: NextApiResponse) => {
@@ -20,7 +20,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     const { documentVersionId, pageNumber, url } = req.body as {
       documentVersionId: string;
       pageNumber: number;
-      url: string; 
+      url: string;
     };
 
     // Fetch the PDF data
@@ -30,11 +30,11 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     // Create a MuPDF instance
     var doc = mupdf.Document.openDocument(pdfData, "application/pdf");
 
-    var page = doc.loadPage(pageNumber-1); // 0-based page index
+    var page = doc.loadPage(pageNumber - 1); // 0-based page index
     var pixmap = page.toPixmap(
       // mupdf.Matrix.identity,
-      [3,0,0,3,0,0], // scale 3x
-      mupdf.ColorSpace.DeviceRGB
+      [3, 0, 0, 3, 0, 0], // scale 3x
+      mupdf.ColorSpace.DeviceRGB,
     );
     var pngBuffer = pixmap.asPNG();
     const blob = await put(`page-${pageNumber}.png`, pngBuffer, {
@@ -42,7 +42,9 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     });
 
     if (!blob) {
-      res.status(500).json({ error: `Failed to upload document page ${pageNumber}` });
+      res
+        .status(500)
+        .json({ error: `Failed to upload document page ${pageNumber}` });
       return;
     }
 

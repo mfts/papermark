@@ -37,20 +37,21 @@ model Session {
 }
 
 model User {
-  id             String     @id @default(cuid())
+  id             String         @id @default(cuid())
   name           String?
-  email          String?    @unique
+  email          String?        @unique
   emailVerified  DateTime?
   image          String?
-  createdAt      DateTime   @default(now())
+  createdAt      DateTime       @default(now())
   accounts       Account[]
   sessions       Session[]
   documents      Document[]
   teams          UserTeam[]
   domains        Domain[]
-  plan           String     @default("trial")
-  stripeId       String?    @unique // Stripe subscription / customer ID
-  subscriptionId String?    @unique // Stripe subscription ID
+  conversations  Conversation[]
+  plan           String         @default("free")
+  stripeId       String?        @unique // Stripe subscription / customer ID
+  subscriptionId String?        @unique // Stripe subscription ID
   startsAt       DateTime? // Stripe subscription start date
   endsAt         DateTime? // Stripe subscription end date
 }
@@ -97,22 +98,27 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
-model Document {
-  id          String            @id @default(cuid())
-  name        String
-  description String?
-  file        String // This should be a reference to where the file is stored (S3, Google Cloud Storage, etc.)
-  type        String? // This should be a reference to the file type (pdf, docx, etc.)
-  numPages    Int? // This should be a reference to the number of pages in the document
-  owner       User              @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  teamId      String?
-  team        Team?             @relation(fields: [teamId], references: [id], onDelete: SetNull)
-  ownerId     String // This field holds the foreign key.
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
-  links       Link[]
-  views       View[]
-  versions    DocumentVersion[]
+model Document {  
+  id               String            @id @default(cuid())
+  name             String
+  description      String?
+  file             String // This should be a reference to where the file is stored (S3, Google Cloud Storage, etc.)
+  type             String? // This should be a reference to the file type (pdf, docx, etc.)
+  numPages         Int? // This should be a reference to the number of pages in the document
+  owner            User              @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  teamId           String?
+  team             Team?             @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  ownerId          String // This field holds the foreign key.
+  assistantEnabled Boolean           @default(false) // This indicates if assistant is enabled for this document
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  links            Link[]
+  views            View[]
+  versions         DocumentVersion[]
+  conversations    Conversation[]
+
+  @@index([ownerId])
+  @@index([teamId])
 }
 
 model DocumentVersion {
@@ -124,12 +130,14 @@ model DocumentVersion {
   type          String? // This should be a reference to the file type (pdf, docx, etc.)
   numPages      Int? // This should be a reference to the number of pages in the document
   isPrimary     Boolean        @default(false) // Indicates if this is the primary version
+  fileId        String? // This is the file ID of the OpenAI File API
   pages         DocumentPage[]
   hasPages      Boolean        @default(false) // Indicates if the document has pages
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 
   @@unique([versionNumber, documentId])
+  @@index([documentId])
 }
 
 model DocumentPage {
@@ -142,6 +150,7 @@ model DocumentPage {
   updatedAt  DateTime        @updatedAt
 
   @@unique([pageNumber, versionId])
+  @@index([versionId])
 }
 
 model Link {
@@ -166,6 +175,7 @@ model Link {
   enableNotification Boolean?  @default(true) // Optional give user a option to pause/resume the notifications
 
   @@unique([domainSlug, slug])
+  @@index([documentId])
 }
 
 model Domain {
@@ -180,6 +190,9 @@ model Domain {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   links       Link[] // links associated with this domain
+
+  @@index([userId])
+  @@index([teamId])
 }
 
 model View {
@@ -190,6 +203,9 @@ model View {
   documentId  String
   viewerEmail String? // Email of the viewer if known
   viewedAt    DateTime @default(now())
+
+  @@index([linkId])
+  @@index([documentId])
 }
 
 model Invitation {
@@ -200,7 +216,7 @@ model Invitation {
   createdAt DateTime @default(now())
   token     String   @unique
 
-  @@unique([email,teamId])
+  @@unique([email, teamId])
 }
 
 enum EmailType {
@@ -210,15 +226,31 @@ enum EmailType {
   FIRST_TRIAL_END_REMINDER_EMAIL
   FINAL_TRIAL_END_REMINDER_EMAIL
 }
+
 model SentEmail {
-  id        String    @id @default(cuid())
-  type      EmailType
-  recipient String    // Email address of the recipient
-  marketing Boolean   @default(false)
-  createdAt DateTime  @default(now())
-  team      Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  teamId    String
-  domainSlug  String?   // Domain that triggered the email. This can be nullable, representing emails not triggered by domains
+  id         String    @id @default(cuid())
+  type       EmailType
+  recipient  String // Email address of the recipient
+  marketing  Boolean   @default(false)
+  createdAt  DateTime  @default(now())
+  team       Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId     String
+  domainSlug String? // Domain that triggered the email. This can be nullable, representing emails not triggered by domains
 
   @@index([teamId])
+}
+
+model Conversation {
+  id            String    @id @default(cuid())
+  threadId      String    @unique // This is the thread ID from OpenAI Assistant API
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId        String
+  document      Document  @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  documentId    String
+  createdAt     DateTime  @default(now())
+  lastMessageAt DateTime? // This is the last time a message was sent in the thread
+
+  @@index([threadId])
+  @@unique([userId, documentId])
+  @@unique([threadId, documentId])
 }

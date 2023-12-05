@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
 import { Download } from "lucide-react";
 import { useTeam } from "@/context/team-context";
+import Nav from "./nav";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
 
@@ -73,12 +74,37 @@ export default function PDFViewer(props: any) {
     standardFontDataUrl: "standard_fonts/",
   };
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      switch (event.key) {
+        case "ArrowRight":
+          goToNextPage();
+          break;
+        case "ArrowLeft":
+          goToPreviousPage();
+          break;
+        default:
+          break;
+      }
+    };
+
+    // when the component mounts, attach the event listener
+    document.addEventListener("keydown", handleKeyDown);
+
+    // when the component unmounts, detach the event listener
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [pageNumber]);
+
   // Go to next page
   function goToNextPage() {
+    if (pageNumber >= numPages!) return;
     setPageNumber((prevPageNumber) => prevPageNumber + 1);
   }
 
   function goToPreviousPage() {
+    if (pageNumber <= 1) return;
     setPageNumber((prevPageNumber) => prevPageNumber - 1);
   }
 
@@ -138,8 +164,9 @@ export default function PDFViewer(props: any) {
       <Nav
         pageNumber={pageNumber}
         numPages={numPages}
-        downloadFile={downloadfile}
         allowDownload={props.allowDownload}
+        assistantEnabled={props.assistantEnabled}
+        file={{ name: props.name, url: props.file }}
       />
       <div
         hidden={loading}
@@ -189,48 +216,5 @@ export default function PDFViewer(props: any) {
         </div>
       </div>
     </>
-  );
-}
-
-function Nav({
-  pageNumber,
-  numPages,
-  allowDownload,
-  downloadFile,
-}: {
-  pageNumber: number;
-  numPages: number;
-  allowDownload: boolean;
-  downloadFile: (e: React.MouseEvent<HTMLButtonElement>) => void;
-}) {
-  return (
-    <nav className="bg-black">
-      <div className="mx-auto px-2 sm:px-6 lg:px-8">
-        <div className="relative flex h-16 items-center justify-between">
-          <div className="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start">
-            <div className="flex flex-shrink-0 items-center">
-              <p className="text-2xl font-bold tracking-tighter text-white">
-                Papermark
-              </p>
-            </div>
-          </div>
-          <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
-            <div className="bg-gray-900 text-white rounded-md px-3 py-2 text-sm font-medium m-1">
-              <span>{pageNumber}</span>
-              <span className="text-gray-400"> / {numPages}</span>
-            </div>
-            {allowDownload ? (
-              <div className="bg-gray-900 text-white rounded-md px-2 py-1 text-sm  m-1">
-                <button onClick={downloadFile}>
-                  <Download className="w-8 h-6" />
-                </button>
-              </div>
-            ) : (
-              ""
-            )}
-          </div>
-        </div>
-      </div>
-    </nav>
   );
 }

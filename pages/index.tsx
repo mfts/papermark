@@ -8,6 +8,7 @@ import Testimonials from "@/components/web/testimonials";
 import Logos from "@/components/web/logos";
 import Head from "next/head";
 import Section3 from "@/components/web/section3";
+import Banner from "@/components/web/banner-launch-week";
 
 export default function Home() {
   return (
@@ -32,6 +33,7 @@ export default function Home() {
         <meta property="og:url" content="https://www.papermark.io" />
         <meta name="twitter:card" content="summary_large_image" />
       </Head>
+
       <Navbar />
 
       <div>
