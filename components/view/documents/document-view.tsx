@@ -120,10 +120,15 @@ export default function DocumentView({
         type: "DOCUMENT",
         email: data.email,
         password: data.password,
+        emailProtected: link.emailProtected,
       }),
     });
     if (response.ok) {
-      setVerificationRequested(true);
+      if (!link.emailProtected && link.password) {
+        await handleSubmission();
+      } else {
+        setVerificationRequested(true);
+      }
       setIsLoading(false);
       return true;
     } else {

@@ -84,7 +84,6 @@ export default function DataroomView({
 
   //Generates verification link from backend
   const handleEmailVerification = async () => {
-    setIsLoading(true);
     const URL = `/api/verification/email-authcode`;
     const response = await fetch(URL, {
       method: "POST",
@@ -99,10 +98,16 @@ export default function DataroomView({
             : "HIERARCHICAL DATAROOM",
         email: data.email,
         password: data.password,
+        emailProtected: dataroom.emailProtected,
       }),
     });
     if (response.ok) {
-      setVerificationRequested(true);
+      //If only password protected and response is ok mean password is verified
+      if (!dataroom.emailProtected && dataroom.password) {
+        await handleSubmission();
+      } else {
+        setVerificationRequested(true);
+      }
       setIsLoading(false);
       return true;
     } else {
@@ -113,9 +118,7 @@ export default function DataroomView({
 
   //Verifies authentication code
   const handleAuthCodeVerification = async () => {
-    if (!isLoading) {
-      setIsLoading(true);
-    }
+    setIsLoading(true);
     const URL = `/api/verification/email-authcode?authenticationCode=${authenticationCode}&identifier=${dataroom.id}`;
     const response = await fetch(URL, {
       method: "GET",
@@ -136,7 +139,6 @@ export default function DataroomView({
   if (authenticationCode) {
     useEffect(() => {
       (async () => {
-        setIsLoading(true);
         await handleAuthCodeVerification();
       })();
     }, []);

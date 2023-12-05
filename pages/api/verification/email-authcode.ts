@@ -10,6 +10,7 @@ const bodySchema = z.object({
   identifier: z.string(), //linkId if link, dataroomId if dataroom
   type: z.enum(["DOCUMENT", "PAGED DATAROOM", "HIERARCHICAL DATAROOM"]),
   password: z.string().nullable(),
+  emailProtected: z.boolean(),
 });
 
 const authSchema = z.object({
@@ -31,7 +32,7 @@ export default async function handle(
       const verificationCode = await prisma.authenticationCode.findFirst({
         where: {
           code: authenticationCode,
-          identifier: identifier
+          identifier: identifier,
         },
       });
 
@@ -41,14 +42,12 @@ export default async function handle(
       }
       //Delete the code if not permanent
       if (!verificationCode.permanent) {
-        console.log("delete")
         await prisma.authenticationCode.delete({
           where: {
             code: authenticationCode,
           },
         });
       }
-      console.log("hererggas");
       res.status(200).json({ message: "Verification successfull" });
     } catch (error) {
       if (error instanceof ZodError) {
@@ -69,8 +68,11 @@ export default async function handle(
     let identifier: string;
     let type: "DOCUMENT" | "PAGED DATAROOM" | "HIERARCHICAL DATAROOM";
     let password: string | null;
+    let emailProtected: boolean;
     try {
-      ({ email, identifier, type, password } = bodySchema.parse(req.body));
+      ({ email, identifier, type, password, emailProtected } = bodySchema.parse(
+        req.body,
+      ));
     } catch (error) {
       return res.status(403).json({ message: `Invalid inputs` });
     }
@@ -148,8 +150,10 @@ export default async function handle(
           ? `${process.env.NEXT_PUBLIC_BASE_URL}/view/dataroom/${identifier}?authenticationCode=${authenticationCode}`
           : `${process.env.NEXT_PUBLIC_BASE_URL}/view/dataroom/hierarchical/${identifier}/${homeFolderId}?authenticationCode=${authenticationCode}`;
 
-    console.log(URL);
-    await sendVerificationEmail(email, URL);
+    //Send email only if email is required
+    if (emailProtected) {
+      await sendVerificationEmail(email, URL);
+    }
     res.status(200).json({ authenticationCode });
   } else {
     // We only allow GET and POST requests
