@@ -9,6 +9,7 @@ import LoadingSpinner from "../../ui/loading-spinner";
 import EmailVerificationMessage from "../email-verification-form";
 import ViewSinglePagedDataroom from "./paged/view-single-paged-dataroom";
 import { DataroomWithFiles } from "@/lib/types";
+import { useRouter } from "next/router";
 
 export default function DataroomView({
   dataroom,
@@ -38,9 +39,12 @@ export default function DataroomView({
   const [data, setData] = useState<DEFAULT_ACCESS_FORM_TYPE>(
     DEFAULT_ACCESS_FORM_DATA,
   );
+  const router = useRouter();
 
   const handleSubmission = async (): Promise<void> => {
-    setIsLoading(true);
+    if (!isLoading) {
+      setIsLoading(true);
+    }
     const response = await fetch("/api/datarooms/views", {
       method: "POST",
       headers: {
@@ -84,6 +88,7 @@ export default function DataroomView({
 
   //Generates verification link from backend
   const handleEmailVerification = async () => {
+    setIsLoading(true);
     const URL = `/api/verification/email-authcode`;
     const response = await fetch(URL, {
       method: "POST",
@@ -102,9 +107,14 @@ export default function DataroomView({
       }),
     });
     if (response.ok) {
-      //If only password protected and response is ok mean password is verified
+      //If only password protected and response is ok concludes password is verified
       if (!dataroom.emailProtected && dataroom.password) {
-        await handleSubmission();
+        if (dataroom.type === "PAGED") {
+          await handleSubmission();
+        } else {
+          const { URL } = await response.json();
+          router.push(URL);
+        }
       } else {
         setVerificationRequested(true);
       }

@@ -1,5 +1,5 @@
 import LoadingSpinner from "@/components/ui/loading-spinner";
-import DataroomView from "@/components/view/datarooms";
+import DataroomView from "@/components/view/datarooms/dataroom-view";
 import { usePagedDataroom } from "@/lib/swr/use-dataroom";
 import NotFound from "@/pages/404";
 import { useSession } from "next-auth/react";
@@ -26,9 +26,21 @@ export default function ViewDataroom() {
 
   if (emailProtected || linkPassword) {
     return (
-      <DataroomView dataroom={dataroom} userEmail={userEmail} isProtected={true} authenticationCode={authenticationCode} />
+      <DataroomView
+        dataroom={dataroom}
+        userEmail={userEmail}
+        isProtected={true}
+        authenticationCode={authenticationCode}
+      />
     );
   }
 
-  return <DataroomView dataroom={dataroom} userEmail={userEmail} isProtected={false} authenticationCode={authenticationCode} />;
+  return (
+    <DataroomView
+      dataroom={dataroom}
+      userEmail={userEmail}
+      isProtected={false}
+      authenticationCode={authenticationCode}
+    />
+  );
 }

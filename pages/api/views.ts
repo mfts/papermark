@@ -139,7 +139,6 @@ export default async function handle(
     return res.status(200).json(returnObject);
   } catch (error) {
     log(`Failed to record view for ${linkId}. Error: \n\n ${error}`);
-    console.log(error);
     return res.status(500).json({ message: (error as Error).message });
   }
 }

@@ -2,20 +2,20 @@ import prisma from "@/lib/prisma";
 
 export async function generateAuthenticationCode(
   length: number,
-  email: string,
   identifier: string,
-  type: "DATAROOM" | "DOCUMENT",
   duration: "PERMANENT" | "ONE-TIME",
 ) {
   const authenticationCode = generateUniqueString(length);
+  const expiresAt =
+    duration === "ONE-TIME"
+      ? new Date(Date.now() + 10 * 60 * 1000) //10 minutes
+      : new Date(Date.now() + 100 * 365 * 24 * 60 * 60 * 1000); //100 years
   //Save authentication code to database
-  await prisma.authenticationCode.create({
+  await prisma.verificationToken.create({
     data: {
-      email,
-      code: authenticationCode,
+      token: authenticationCode,
       identifier,
-      permanent: duration === "PERMANENT" ? true : false,
-      type
+      expiresAt,
     },
   });
   return authenticationCode;

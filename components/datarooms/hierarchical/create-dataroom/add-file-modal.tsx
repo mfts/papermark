@@ -5,7 +5,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogFooter,
 } from "@/components/ui/dialog";
 import { useState } from "react";
 import { Button } from "../../../ui/button";
@@ -84,7 +83,9 @@ export default function AddFileModal({
       documents?.find((obj) => obj.name === currentSelectedDocument)?.id || "";
     //Fetch links related to documents
     const response = await fetch(
-      `/api/documents/${encodeURIComponent(id)}/links`,
+      `/api/teams/${teamInfo?.currentTeam?.id}/documents/${encodeURIComponent(
+        id,
+      )}/links`,
       {
         method: "GET",
         headers: {

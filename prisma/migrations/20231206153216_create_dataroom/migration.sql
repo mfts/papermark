@@ -1,8 +1,15 @@
+/*
+  Warnings:
+
+  - You are about to drop the column `expires` on the `VerificationToken` table. All the data in the column will be lost.
+
+*/
 -- CreateEnum
 CREATE TYPE "DataroomType" AS ENUM ('HIERARCHICAL', 'PAGED');
 
--- CreateEnum
-CREATE TYPE "AuthenticationCodeType" AS ENUM ('DATAROOM', 'DOCUMENT');
+-- AlterTable
+ALTER TABLE "VerificationToken" DROP COLUMN "expires",
+ADD COLUMN     "expiresAt" TIMESTAMP(3) NOT NULL DEFAULT '2100-01-01 00:00:00 +00:00';
 
 -- CreateTable
 CREATE TABLE "Dataroom" (
@@ -51,22 +58,6 @@ CREATE TABLE "DataroomFile" (
 
     CONSTRAINT "DataroomFile_pkey" PRIMARY KEY ("id")
 );
-
--- CreateTable
-CREATE TABLE "AuthenticationCode" (
-    "id" TEXT NOT NULL,
-    "email" TEXT NOT NULL,
-    "code" TEXT NOT NULL,
-    "identifier" TEXT NOT NULL,
-    "type" "AuthenticationCodeType" NOT NULL,
-    "permanent" BOOLEAN NOT NULL DEFAULT false,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "AuthenticationCode_pkey" PRIMARY KEY ("id")
-);
-
--- CreateIndex
-CREATE UNIQUE INDEX "AuthenticationCode_code_key" ON "AuthenticationCode"("code");
 
 -- AddForeignKey
 ALTER TABLE "Dataroom" ADD CONSTRAINT "Dataroom_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;

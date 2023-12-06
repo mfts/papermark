@@ -20,6 +20,7 @@ import { Files } from "@/components/datarooms/hierarchical/create-dataroom/files
 import { BreadcrumbNavigation } from "@/components/datarooms/hierarchical/create-dataroom/navigation/breadcrumb-navigation";
 import { reducer } from "@/components/datarooms/hierarchical/create-dataroom/state-management";
 import { useTeam } from "@/context/team-context";
+import UnauthorizedAccess from "@/pages/401";
 
 export default function Page({
   dataroom,
@@ -129,8 +130,12 @@ export default function Page({
     );
   }
 
-  if (error && error.status === 404) {
-    return <NotFound />;
+  if (error) {
+    if (error.status === 404) {
+      return <NotFound />;
+    } else if (error.status === 401) {
+      return <UnauthorizedAccess />;
+    }
   }
 
   return (
@@ -259,7 +264,6 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
   const { params } = context;
   const dataroomId: string = params?.dataroomId as string;
   const path: string[] = params?.path as string[];
-  const teamId: string = params?.teamId as string;
   const session = await getServerSession(context.req, context.res, authOptions);
 
   try {
@@ -268,7 +272,7 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
         process.env.NEXTAUTH_URL
       }/api/datarooms/hierarchical?id=${encodeURIComponent(
         dataroomId,
-      )}&teamId=${encodeURIComponent(teamId)}`,
+      )}&type=DASHBOARD`,
       {
         method: "GET",
         headers: {
@@ -277,6 +281,18 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
         },
       },
     );
+    if (response.status === 401) {
+      return {
+        props: {
+          dataroom: null,
+          directory: null,
+          initialPath: [],
+          initialFolderId: "",
+          loading: false,
+          error: { status: 401, message: "Unauthorized access" },
+        },
+      };
+    }
     const { dataroom, folderDirectory: directory } = await response.json();
 
     return {

@@ -8,7 +8,6 @@ import { identifyUser, trackAnalytics } from "@/lib/analytics";
 import { FolderDirectory } from "@/lib/types";
 import { DataroomFile, DataroomFolder } from "@prisma/client";
 import z, { ZodError } from "zod";
-import { generateAuthenticationCode } from "@/lib/api/authentication";
 import { isUserMemberOfTeam } from "@/lib/team/helper";
 import { TeamError } from "@/lib/errorHandler";
 
@@ -23,17 +22,35 @@ export default async function handle(
 ) {
   if (req.method === "GET") {
     // GET /api/datarooms/hierarchical
-    const { teamId, id } = req.query as { teamId: string; id: string };
-    const session = req.query.authentication
-      ? JSON.parse(req.query.authentication as string)
-      : await getServerSession(req, res, authOptions);
-    const userId = (session?.user as CustomUser).id;
+    const { id, type } = req.query as {
+      id: string;
+      type: "DASHBOARD" | "VIEW";
+    };
 
-    //Prevent unauthorized access from dashboard, however bypass this check if a recipient is trying to access dataroom
-    if (teamId) {
-      try {
-        await isUserMemberOfTeam({ teamId, userId });
-      } catch {
+    //Prevent unauthorized access from dashboard, however bypass this check if a viewer from /pages/view/dataroom is trying to access dataroom
+    if (type === "DASHBOARD") {
+      const session = JSON.parse(req.headers.authorization as string);
+      const userId = (session?.user as CustomUser).id;
+      const team = await prisma.team.findFirst({
+        where: {
+          datarooms: {
+            some: {
+              id,
+            },
+          },
+        },
+        include: {
+          users: {
+            select: {
+              userId: true,
+            },
+          },
+        },
+      });
+      if (!team) {
+        return res.status(404).json({ message: "Dataroom not found" });
+      }
+      if (team?.users.some((user) => user.userId === userId) === false) {
         return res.status(401).end("Unauthorized");
       }
     }
@@ -46,7 +63,7 @@ export default async function handle(
       });
 
       if (!dataroom) {
-        return res.status(404).end("Dataroom not found");
+        return res.status(404).json({ message: "Dataroom not found" });
       }
 
       //We want to minimize database calls as processing data on server is more efficient
@@ -153,18 +170,6 @@ export default async function handle(
         },
       });
 
-      //Create a authentication code (To be used for verification if not emailProtected and not password protected)
-      let authenticationCode: string = "";
-      if (!emailProtected && !password) {
-        authenticationCode = await generateAuthenticationCode(
-          12,
-          session.user?.email as string,
-          dataroom.id,
-          "DATAROOM",
-          "PERMANENT",
-        );
-      }
-
       await identifyUser((session.user as CustomUser).id);
       await trackAnalytics({
         event: "Dataroom Created",
@@ -172,7 +177,7 @@ export default async function handle(
         name: dataroom.name,
       });
 
-      res.status(201).json({ dataroom, homeFolder, authenticationCode });
+      res.status(201).json({ dataroom, homeFolder });
     } catch (error) {
       if (error instanceof TeamError) {
         return res.status(401).json({ message: "Unauthorized access" });
@@ -216,6 +221,10 @@ export default async function handle(
           ownerId: true,
         },
       });
+
+      if (!dataroom) {
+        return res.status(404).json({ message: "Dataroom not found" });
+      };
 
       await prisma.dataroom.update({
         where: {

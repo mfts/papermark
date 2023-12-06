@@ -6,7 +6,7 @@ import { useState } from "react";
 import { Dispatch, SetStateAction } from "react";
 import Link from "next/link";
 import FolderIcon from "../shared/icons/folder";
-import { DataroomWithFilesFoldersAuthCodeAndFilesCount } from "@/pages/datarooms";
+import { DataroomWithFilesFoldersAndFilesCount } from "@/pages/datarooms";
 import { useTeam } from "@/context/team-context";
 
 export default function DataroomCard({
@@ -14,31 +14,30 @@ export default function DataroomCard({
   setDatarooms,
   setLoading,
 }: {
-  dataroom: DataroomWithFilesFoldersAuthCodeAndFilesCount;
+  dataroom: DataroomWithFilesFoldersAndFilesCount;
   setDatarooms: Dispatch<
-    SetStateAction<DataroomWithFilesFoldersAuthCodeAndFilesCount[] | undefined>
+    SetStateAction<DataroomWithFilesFoldersAndFilesCount[] | undefined>
   >;
   setLoading: Dispatch<SetStateAction<boolean>>;
 }) {
   const [isFirstClick, setIsFirstClick] = useState<boolean>(false);
+  const teamInfo = useTeam();
 
-  function handleCopyToClipboard(id: string) {
+  function handleCopyToClipboard() {
     const type = dataroom.type;
-    //Authencation code is required by design for accessing hierarchical datarooms as we need to use nextjs routes
-    //For unprotected datarooms, we generate auth code on our own and send it to user in link
+    //For unprotected hierarchical datarooms, bypass all verification process and give the link directly
     if (
       type === "HIERARCHICAL" &&
       !dataroom.emailProtected &&
       !dataroom.password
     ) {
-      const authenticationCode = dataroom.authenticationCodes[0].code;
       copyToClipboard(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/view/dataroom/hierarchical/${id}?authenticationCode=${authenticationCode}`,
+        `${process.env.NEXT_PUBLIC_BASE_URL}/view/dataroom/hierarchical/${dataroom.id}/${dataroom.folders[0].id}`,
         "Link copied to clipboard.",
       );
     } else {
       copyToClipboard(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/view/dataroom/${id}`,
+        `${process.env.NEXT_PUBLIC_BASE_URL}/view/dataroom/${dataroom.id}`,
         "Link copied to clipboard.",
       );
     }
@@ -76,7 +75,7 @@ export default function DataroomCard({
             <h2 className="min-w-0 text-sm font-semibold leading-6 text-foreground truncate max-w-[240px] sm:max-w-md">
               {dataroom.type === "HIERARCHICAL" ? (
                 <Link
-                  href={`/datarooms/${dataroom.id}/${dataroom.folders[0].id}`}
+                  href={`/datarooms/${dataroom.id}/${dataroom.folders[0].id}?teamId=${teamInfo?.currentTeam?.id}`}
                   onClick={() => setLoading(true)}
                 >
                   <span className="">{dataroom.name}</span>
@@ -92,7 +91,7 @@ export default function DataroomCard({
             <div className="flex ml-2">
               <button
                 className="group rounded-full bg-gray-200 dark:bg-gray-700 z-10 p-1.5 transition-all duration-75 hover:scale-105 hover:bg-emerald-100 hover:dark:bg-emerald-200 active:scale-95"
-                onClick={() => handleCopyToClipboard(dataroom.id)}
+                onClick={() => handleCopyToClipboard()}
                 title="Copy to clipboard"
               >
                 <Copy

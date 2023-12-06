@@ -9,54 +9,69 @@ import {
 import { useEffect, useState } from "react";
 import { Button } from "../../ui/button";
 import { Input } from "../../ui/input";
-import { DropdownMenu, DropdownMenuItem, DropdownMenuContent, DropdownMenuTrigger } from "../../ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuItem,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "../../ui/dropdown-menu";
 import ChevronDown from "@/components/shared/icons/chevron-down";
 import useDocuments from "@/lib/swr/use-documents";
 import { type DataroomDocument } from "@/lib/types";
 import { DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
 import { LinkWithViews } from "@/lib/types";
+import { useTeam } from "@/context/team-context";
 
-export function AddDocumentToDataroomModal(
-  {
-    children,
-    dataroomDocuments,
-    setDataroomDocuments
-  }: {
-    children: React.ReactNode,
-    dataroomDocuments: DataroomDocument[],
-    setDataroomDocuments: (datarooms: DataroomDocument[]) => void
-  }) {
+export function AddDocumentToDataroomModal({
+  children,
+  dataroomDocuments,
+  setDataroomDocuments,
+}: {
+  children: React.ReactNode;
+  dataroomDocuments: DataroomDocument[];
+  setDataroomDocuments: (datarooms: DataroomDocument[]) => void;
+}) {
   //Current selection from drop-down meu
   const [selectedName, setSelectedName] = useState<string>("");
-  const [selectedLink, setSelectedLink] = useState<{ name: string, url: string }>({ name: "", url: "" });
+  const [selectedLink, setSelectedLink] = useState<{
+    name: string;
+    url: string;
+  }>({ name: "", url: "" });
   //Current document title
   const [documentTitle, setDocumentTitle] = useState<string>("");
   //Messages
   const [errorMessage, setErrorMessage] = useState<string>("");
   //Modal open
   const [open, setOpen] = useState<boolean>(false);
+  const teamInfo = useTeam();
 
   //Dropdown menu documents
   const { documents } = useDocuments();
   const [links, setLinks] = useState<LinkWithViews[]>([]);
-  const [dropDownMenuDocuments, setDropDownMenuDocuments] = useState<DocumentWithLinksAndLinkCountAndViewCount[]>(
-    documents ?
-      (documents
-        .filter((document =>
-          !dataroomDocuments.some((dataroomDocument) =>
-            dataroomDocument.id === document.id))))
-      : []
-  )
+  const [dropDownMenuDocuments, setDropDownMenuDocuments] = useState<
+    DocumentWithLinksAndLinkCountAndViewCount[]
+  >(
+    documents
+      ? documents.filter(
+          (document) =>
+            !dataroomDocuments.some(
+              (dataroomDocument) => dataroomDocument.id === document.id,
+            ),
+        )
+      : [],
+  );
 
   //Filter documents already included in data room
   useEffect(() => {
     setDropDownMenuDocuments(
-      documents ?
-        (documents
-          .filter((document =>
-            !dataroomDocuments.some((dataroomDocument) =>
-              dataroomDocument.id === document.id))))
-        : []
+      documents
+        ? documents.filter(
+            (document) =>
+              !dataroomDocuments.some(
+                (dataroomDocument) => dataroomDocument.id === document.id,
+              ),
+          )
+        : [],
     );
   }, [dataroomDocuments]);
 
@@ -64,9 +79,13 @@ export function AddDocumentToDataroomModal(
   useEffect(() => {
     if (dropDownMenuDocuments.length === 0) {
       if (dataroomDocuments.length === 0) {
-        setErrorMessage("No documents found, please upload a document to create a data room");
+        setErrorMessage(
+          "No documents found, please upload a document to create a data room",
+        );
       } else {
-        setErrorMessage("Out of documents, please upload a new document to add in data room");
+        setErrorMessage(
+          "Out of documents, please upload a new document to add in data room",
+        );
       }
     } else {
       setErrorMessage("");
@@ -78,14 +97,20 @@ export function AddDocumentToDataroomModal(
     //Assign current selection and default title
     setSelectedName(currentSelectedDocument);
     setDocumentTitle(currentSelectedDocument.split(".")[0]);
-    const id: string = documents?.find(obj => obj.name === currentSelectedDocument)?.id || "";
+    const id: string =
+      documents?.find((obj) => obj.name === currentSelectedDocument)?.id || "";
     //Fetch links related to documents
-    const response = await fetch(`/api/documents/${encodeURIComponent(id)}/links`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
+    const response = await fetch(
+      `/api/teams/${teamInfo?.currentTeam?.id}/documents/${encodeURIComponent(
+        id,
+      )}/links`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
       },
-    });
+    );
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -93,8 +118,9 @@ export function AddDocumentToDataroomModal(
     const data = await response.json();
     setLinks(data);
     setSelectedLink({
-      name: data[0].name, url: createURL(data[0])
-    })
+      name: data[0].name,
+      url: createURL(data[0]),
+    });
   };
 
   //Includes documents into data room
@@ -111,19 +137,22 @@ export function AddDocumentToDataroomModal(
       setErrorMessage("Title cannot be blank");
       return;
     }
-    const updatedropDownMenuDocuments = dropDownMenuDocuments
-      .filter((dropDownMenuDocument) => !(dropDownMenuDocument.name === selectedName));
+    const updatedropDownMenuDocuments = dropDownMenuDocuments.filter(
+      (dropDownMenuDocument) => !(dropDownMenuDocument.name === selectedName),
+    );
 
-    const chosenDocument = documents?.find(obj => obj.name === selectedName);
+    const chosenDocument = documents?.find((obj) => obj.name === selectedName);
 
     setDropDownMenuDocuments(updatedropDownMenuDocuments);
-    setDataroomDocuments([...dataroomDocuments,
-    {
-      url: selectedLink.url,
-      title: documentTitle,
-      type: chosenDocument?.type || "",
-      id: chosenDocument?.id || ""
-    }]);
+    setDataroomDocuments([
+      ...dataroomDocuments,
+      {
+        url: selectedLink.url,
+        title: documentTitle,
+        type: chosenDocument?.type || "",
+        id: chosenDocument?.id || "",
+      },
+    ]);
 
     //Reset modal's state variables
     setSelectedName("");
@@ -131,7 +160,7 @@ export function AddDocumentToDataroomModal(
     setDocumentTitle("");
     setLinks([]);
     setOpen(false);
-  }
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -148,19 +177,26 @@ export function AddDocumentToDataroomModal(
                 <DropdownMenuTrigger className="w-full">
                   {/* Display the currently selected name */}
                   <span className="flex items-center w-full justify-between">
-                    <span aria-hidden="true">{selectedName || 'Select a document'}</span>
+                    <span aria-hidden="true">
+                      {selectedName || "Select a document"}
+                    </span>
                     <ChevronDown
                       className="ml-2 h-5 w-5 text-muted-foreground"
                       aria-hidden="true"
                     />
                   </span>
-
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="min-w-[526px]" align="start" loop={true} >
+                <DropdownMenuContent
+                  className="min-w-[526px]"
+                  align="start"
+                  loop={true}
+                >
                   {dropDownMenuDocuments.map((document) => (
                     <DropdownMenuItem
                       key={document.name}
-                      onSelect={() => { handleDocumentSelection(document.name) }}
+                      onSelect={() => {
+                        handleDocumentSelection(document.name);
+                      }}
                       className="hover:bg-gray-200 hover:dark:bg-muted"
                     >
                       {document.name}
@@ -168,7 +204,6 @@ export function AddDocumentToDataroomModal(
                   ))}
                 </DropdownMenuContent>
               </DropdownMenu>
-
             </div>
             <div className="border-b border-border py-2  mt-3">
               <p className="mb-1 text-sm text-muted-foreground font-bold mb-3">
@@ -177,26 +212,33 @@ export function AddDocumentToDataroomModal(
               <DropdownMenu>
                 <DropdownMenuTrigger className="w-full">
                   <span className="flex items-center w-full justify-between">
-                    <span aria-hidden="true">{
-                      selectedLink.url ?
-                        (selectedLink.name ? `${selectedLink.name}: ${selectedLink.url}` : selectedLink.url)
-                        : 'Select a link'}</span>
+                    <span aria-hidden="true">
+                      {selectedLink.url
+                        ? selectedLink.name
+                          ? `${selectedLink.name}: ${selectedLink.url}`
+                          : selectedLink.url
+                        : "Select a link"}
+                    </span>
                     <ChevronDown
                       className="ml-2 h-5 w-5 text-muted-foreground"
                       aria-hidden="true"
                     />
                   </span>
-
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="min-w-[526px]" align="start" loop={true} >
+                <DropdownMenuContent
+                  className="min-w-[526px]"
+                  align="start"
+                  loop={true}
+                >
                   {links &&
                     links.map((link) => (
                       <DropdownMenuItem
                         key={link.name}
                         onSelect={() => {
                           setSelectedLink({
-                            name: link.name || "", url: createURL(link)
-                          })
+                            name: link.name || "",
+                            url: createURL(link),
+                          });
                         }}
                         className="hover:bg-gray-200 hover:dark:bg-muted"
                       >
@@ -206,7 +248,6 @@ export function AddDocumentToDataroomModal(
                     ))}
                 </DropdownMenuContent>
               </DropdownMenu>
-
             </div>
             <div className="border-b border-border py-2  mt-3">
               <p className="mb-1 text-sm text-muted-foreground font-bold mb-3">
@@ -216,10 +257,17 @@ export function AddDocumentToDataroomModal(
                 className="mb-3"
                 placeholder={"Title to display from data room..."}
                 defaultValue={selectedName.split(".")[0]}
-                onChange={(e) => { setDocumentTitle(e.target.value) }}></Input>
+                onChange={(e) => {
+                  setDocumentTitle(e.target.value);
+                }}
+              ></Input>
             </div>
             <p className="mb-1 text-sm font-red text-muted-foreground font-bold mb-1 mt-2">
-              {errorMessage ? <p className="text-red-500">{errorMessage}</p> : <br />}
+              {errorMessage ? (
+                <p className="text-red-500">{errorMessage}</p>
+              ) : (
+                <br />
+              )}
             </p>
             <div className="flex justify-center">
               <Button
@@ -235,7 +283,7 @@ export function AddDocumentToDataroomModal(
         </DialogHeader>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
 
 function createURL(link: LinkWithViews) {

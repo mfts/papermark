@@ -8,12 +8,10 @@ import { useState, useEffect, useRef } from "react";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import SelectDataroomTypeModal from "@/components/datarooms/select-dataroom-type-modal";
 import { DataroomWithFilesAndFolders } from "@/lib/types";
-import { AuthenticationCode } from "@prisma/client";
 import { useTeam } from "@/context/team-context";
 
-export interface DataroomWithFilesFoldersAuthCodeAndFilesCount
+export interface DataroomWithFilesFoldersAndFilesCount
   extends DataroomWithFilesAndFolders {
-  authenticationCodes: AuthenticationCode[];
   _count: {
     files: number;
   };
@@ -21,7 +19,7 @@ export interface DataroomWithFilesFoldersAuthCodeAndFilesCount
 
 export default function Datarooms() {
   const [datarooms, setDatarooms] = useState<
-    DataroomWithFilesFoldersAuthCodeAndFilesCount[] | undefined
+    DataroomWithFilesFoldersAndFilesCount[] | undefined
   >(undefined);
   const [loading, setLoading] = useState<boolean>(false);
   const teamInfo = useTeam();

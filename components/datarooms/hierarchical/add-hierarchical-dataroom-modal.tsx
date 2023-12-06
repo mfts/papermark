@@ -61,12 +61,7 @@ export function AddHierarchicalDataroomModal({
 
         // copy the link to the clipboard
         copyToClipboard(
-          `${process.env.NEXT_PUBLIC_BASE_URL}/view/dataroom/${
-            data.dataroom.id
-          }/${data.homeFolder.id}${
-            !data.emailProtected &&
-            `?authenticationCode=${data.authenticationCode}`
-          }`,
+          `${process.env.NEXT_PUBLIC_BASE_URL}/view/dataroom/${data.dataroom.id}/${data.homeFolder.id}?teamId=${teamInfo?.currentTeam?.id}`,
           "Dataroom created and link copied to clipboard. Redirecting to dataroom's page...",
         );
 
@@ -75,7 +70,9 @@ export function AddHierarchicalDataroomModal({
 
         setTimeout(() => {
           //Refresh the page
-          router.push(`/datarooms/${data.dataroom.id}/${data.homeFolder.id}`);
+          router.push(
+            `/datarooms/${data.dataroom.id}/${data.homeFolder.id}?teamId=${teamInfo?.currentTeam?.id}`,
+          );
         }, 2000);
       }
     } catch (error) {

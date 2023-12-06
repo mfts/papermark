@@ -13,6 +13,9 @@ import Link from "next/link";
 import ChevronRight from "@/components/shared/icons/chevron-right";
 import { usePlausible } from "next-plausible";
 import { toast } from "sonner";
+import UnauthorizedAccess from "@/pages/401";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/pages/api/auth/[...nextauth]";
 
 export default function Page({
   email,
@@ -42,25 +45,27 @@ export default function Page({
 
   //Enter view in database
   useEffect(() => {
-    (async () => {
-      const response = await fetch("/api/datarooms/views", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: email,
-          dataroomId: dataroom.id,
-        }),
-      });
+    if (!error) {
+      (async () => {
+        const response = await fetch("/api/datarooms/views", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: email,
+            dataroomId: dataroom.id,
+          }),
+        });
 
-      if (response.ok) {
-        plausible("dataroomViewed"); // track the event
-      } else {
-        const { message } = await response.json();
-        toast.error(message);
-      }
-    })();
+        if (response.ok) {
+          plausible("dataroomViewed"); // track the event
+        } else {
+          const { message } = await response.json();
+          toast.error(message);
+        }
+      })();
+    }
   }, []);
 
   //In cases when user presses back in browser
@@ -83,26 +88,7 @@ export default function Page({
     if (error.status === 404) {
       return <NotFound />;
     } else if (error.status === 401) {
-      return (
-        <div className="min-h-screen pt-16 pb-12 flex flex-col">
-          <main className="flex-grow flex flex-col justify-center max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="py-16">
-              <div className="text-center">
-                <p className="text-sm font-semibold text-indigo-600 uppercase tracking-wide">
-                  401 error
-                </p>
-                <h1 className="mt-2 text-4xl font-extrabold text-gray-100 tracking-tight sm:text-5xl">
-                  Unauthorized access
-                </h1>
-                <p className="mt-2 text-base text-gray-600">
-                  You are not authorized to access this dataroom. Please contact
-                  the owner
-                </p>
-              </div>
-            </div>
-          </main>
-        </div>
-      );
+      return <UnauthorizedAccess />;
     }
   }
 
@@ -248,8 +234,11 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
   const { params, query } = context;
   const dataroomId: string = params?.dataroomId as string;
   const path: string[] = params?.path as string[];
-  const authenticationCode: string = query.authenticationCode as string;
-  const email = query.email as string;
+  const authenticationCode: string | undefined = query.authenticationCode as
+    | string
+    | undefined;
+  const session = await getServerSession(context.req, context.res, authOptions);
+  const email = session?.user?.email;
 
   //Check if user is authorized
   const response = await fetch(
@@ -280,7 +269,9 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
     const response = await fetch(
       `${
         process.env.NEXTAUTH_URL
-      }/api/datarooms/hierarchical?id=${encodeURIComponent(dataroomId)}`,
+      }/api/datarooms/hierarchical?id=${encodeURIComponent(
+        dataroomId,
+      )}&type=VIEW`,
       {
         method: "GET",
         headers: {

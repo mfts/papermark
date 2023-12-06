@@ -32,12 +32,6 @@ export default async function handle(
               parentFolderId: null,
             },
           },
-          authenticationCodes: {
-            where: {
-              email: session.user?.email as string,
-              permanent: true,
-            },
-          },
           _count: {
             select: {
               files: true,

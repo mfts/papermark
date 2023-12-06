@@ -13,11 +13,6 @@ const bodySchema = z.object({
   emailProtected: z.boolean(),
 });
 
-const authSchema = z.object({
-  authenticationCode: z.string().max(20),
-  identifier: z.string().max(40),
-});
-
 export default async function handle(
   req: NextApiRequest,
   res: NextApiResponse,
@@ -26,29 +21,45 @@ export default async function handle(
     // GET /api/verification/email-authcode
     // Verify authcode
     try {
-      //Input Validation
-      const { authenticationCode, identifier } = authSchema.parse(req.query);
+      const authenticationToken: string =
+        req.query.authenticationCode !== "undefined"
+          ? (req.query.authenticationCode as string)
+          : "";
+      const identifier = req.query.identifier as string;
+      //If verification code is null but dataroom is not email protected send ok
+      if (!authenticationToken) {
+        const dataroom = await prisma.dataroom.findFirst({
+          where: {
+            id: identifier,
+          },
+        });
+        if (!dataroom?.emailProtected && dataroom?.type === "HIERARCHICAL") {
+          return res.status(200).json({ message: "Verification successful" });
+        }
+      }
       //Check verification code in database
-      const verificationCode = await prisma.authenticationCode.findFirst({
+      const token = await prisma.verificationToken.findFirst({
         where: {
-          code: authenticationCode,
+          token: authenticationToken,
           identifier: identifier,
         },
       });
 
-      if (!verificationCode) {
+      if (!token) {
         res.status(401).json({ message: "Unauthorized access" });
         return;
       }
-      //Delete the code if not permanent
-      if (!verificationCode.permanent) {
-        await prisma.authenticationCode.delete({
+      //Check the token's expiry
+      if (Date.now() > token.expiresAt.getTime()) {
+        //Delete the token if expired
+        await prisma.verificationToken.delete({
           where: {
-            code: authenticationCode,
+            token: authenticationToken,
           },
         });
+        return res.status(401).json({ message: "Verification code expired" });
       }
-      res.status(200).json({ message: "Verification successfull" });
+      res.status(200).json({ message: "Verification successful" });
     } catch (error) {
       if (error instanceof ZodError) {
         return res.status(403).json({
@@ -138,9 +149,7 @@ export default async function handle(
     // Generate authcode
     const authenticationCode = await generateAuthenticationCode(
       12,
-      email,
       identifier,
-      "DATAROOM",
       "ONE-TIME",
     );
     const URL =
@@ -150,11 +159,12 @@ export default async function handle(
           ? `${process.env.NEXT_PUBLIC_BASE_URL}/view/dataroom/${identifier}?authenticationCode=${authenticationCode}`
           : `${process.env.NEXT_PUBLIC_BASE_URL}/view/dataroom/hierarchical/${identifier}/${homeFolderId}?authenticationCode=${authenticationCode}`;
 
-    //Send email only if email is required
+    console.log(URL);
+    //Send email only if emailProtected
     if (emailProtected) {
       await sendVerificationEmail(email, URL);
     }
-    res.status(200).json({ authenticationCode });
+    res.status(200).json({ authenticationCode, URL });
   } else {
     // We only allow GET and POST requests
     res.setHeader("Allow", ["GET", "POST"]);
