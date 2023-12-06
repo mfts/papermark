@@ -8,7 +8,6 @@ import { triggerWebhooks } from "@/lib/webhooks";
 export default async function handle(
   req: NextApiRequest,
   res: NextApiResponse,
-  res: NextApiResponse,
 ) {
   // We only allow POST requests
   if (req.method !== "POST") {
@@ -71,7 +70,15 @@ export default async function handle(
         viewerEmail: email,
         documentId: documentId,
       },
-      select: { id: true },
+      select: {
+        id: true,
+        document: {
+          include: {
+            owner: true,
+            team: true,
+          },
+        },
+      },
     });
     console.timeEnd("create-view");
 
@@ -122,46 +129,26 @@ export default async function handle(
     });
     console.timeEnd("track-analytics");
 
-    // this will trigger the webhook and also notification(both in-app and email)
+    // // this will trigger the webhook and also notification(both in-app and email)
     await triggerWebhooks({
       eventType: "LINK_VIEWED",
       eventData: {
         receiverId: newView.document.owner.id,
-        teamId: newView.document.teamId,
-        event: "LINK_VIEWED",
-        data: {
-          documentId,
-          documentName: newView.document.name,
-          documentOwner: newView.document.owner.email as string,
-          viewerEmail: email,
-          link,
-          documentVersions: newView.document.versions,
+        receiverEmail: newView.document.owner.email as string,
+        receiverName: newView.document.owner.name as string,
+        teamId: newView.document.teamId as string,
+        teamName: newView.document.team?.name as string,
+        documentId: documentId,
+        documentName: newView.document.name,
+        documentOwner: newView.document.owner.name as string,
+        viewerEmail: email,
+        link: {
+          id: link.id,
+          enableNotification: link.enableNotification!,
         },
+        viewId: newView.id,
       },
     });
-
-    // check if document version has multiple pages, if so, return the pages
-    if (newView.document.versions[0].hasPages) {
-      const pages = await prisma.documentPage.findMany({
-        where: {
-          versionId: newView.document.versions[0].id,
-        },
-        orderBy: {
-          pageNumber: "asc",
-        },
-        select: {
-          file: true,
-          pageNumber: true,
-        },
-      });
-
-      return res.status(200).json({
-        message: "View recorded",
-        viewId: newView.id,
-        file: null,
-        pages: pages,
-      });
-    }
 
     const returnObject = {
       message: "View recorded",

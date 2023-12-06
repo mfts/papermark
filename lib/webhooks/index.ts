@@ -1,19 +1,12 @@
 import crypto from "crypto";
 import prisma from "@/lib/prisma";
-import { Event } from "@prisma/client";
-
-interface IWebhookTrigger {
-  eventType: Event;
-  eventData: any;
-}
+import { IWebhookTrigger } from "./types";
 
 export async function triggerWebhooks({
   eventType,
   eventData,
 }: IWebhookTrigger) {
   try {
-    const userId = eventData.userId;
-
     const webhooks = await prisma.webhook.findMany({
       where: {
         teamId: eventData.teamId,

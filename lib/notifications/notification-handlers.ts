@@ -1,27 +1,15 @@
 import prisma from "@/lib/prisma";
-import { Event } from "@prisma/client";
-import { sendViewedDocumentEmail } from "../emails/send-viewed-document";
+import { EventData } from "../webhooks/types";
+import { client } from "@/trigger";
 
-interface IHandleLinkViewed {
-  receiverId: string;
-  teamId: string;
-  event: Event;
-  data: {
-    documentName: string;
-    viewerEmail: string | null;
-    documentId: string;
-    documentOwner: string;
-    link: {
-      id: string;
-      enableNotification: boolean;
-    };
-  };
-}
-
-export async function handleLinkViewed(eventData: IHandleLinkViewed) {
+export async function handleLinkViewed(eventData: EventData) {
   try {
-    const viewerEmail = eventData.data.viewerEmail;
-    const documentName = eventData.data.documentName;
+    // const viewerEmail = eventData.data.viewerEmail;
+    const viewerEmail = eventData.viewerEmail;
+
+    // const documentName = eventData.data.documentName;
+    const documentName = eventData.documentName;
+
     const message = viewerEmail
       ? `${viewerEmail} viewed your ${documentName}`
       : `Someone viewed your ${documentName}`;
@@ -29,10 +17,10 @@ export async function handleLinkViewed(eventData: IHandleLinkViewed) {
       data: {
         teamId: eventData.teamId,
         userId: eventData.receiverId,
-        event: eventData.event,
+        event: "LINK_VIEWED",
         message,
-        linkId: eventData.data.link.id,
-        documentId: eventData.data.documentId,
+        linkId: eventData.link.id,
+        documentId: eventData.documentId,
       },
     });
 
@@ -47,15 +35,14 @@ export async function handleLinkViewed(eventData: IHandleLinkViewed) {
     // check if user has enabled email notification, if yes then check if the link has enable email notification
     if (user?.isEmailNotificationEnabled) {
       // notify user via email
-      // TODO: this can be offloaded to a background job in the future to save some time
-      // send email to document owner that document has been viewed
-      if (eventData.data.link.enableNotification) {
-        await sendViewedDocumentEmail(
-          eventData.data.documentOwner,
-          eventData.data.documentId,
-          eventData.data.documentName,
-          eventData.data.viewerEmail,
-        );
+      if (eventData.link.enableNotification) {
+        // trigger link viewed event to trigger send-notification job
+        console.time("sendemail");
+        await client.sendEvent({
+          name: "link.viewed",
+          payload: { viewId: eventData.viewId },
+        });
+        console.timeEnd("sendemail");
       }
     }
 
