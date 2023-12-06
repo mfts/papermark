@@ -38,7 +38,9 @@ export default function NotificationDropdown({
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    router.push(`/documents/${documentId}`);
+    if (documentId) {
+      router.push(`/documents/${documentId}`);
+    }
 
     mutate(`/api/teams/${teamInfo?.currentTeam?.id}/notifications`);
   };
@@ -60,7 +62,7 @@ export default function NotificationDropdown({
             <DropdownMenuItem
               className="relative py-4 pr-4 flex gap-3 hover:cursor-pointer"
               onClick={() =>
-                markNotificationRead(notification.id, notification.documentId)
+                markNotificationRead(notification.id, notification?.documentId)
               }
             >
               {notification.message}

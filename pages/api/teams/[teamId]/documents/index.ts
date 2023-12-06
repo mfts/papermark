@@ -8,6 +8,7 @@ import { identifyUser, trackAnalytics } from "@/lib/analytics";
 import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
 import { errorhandler } from "@/lib/errorHandler";
 import { client } from "@/trigger";
+import { triggerWebhooks } from "@/lib/webhooks";
 
 export default async function handle(
   req: NextApiRequest,
@@ -76,7 +77,7 @@ export default async function handle(
     };
 
     try {
-      await getTeamWithUsersAndDocument({
+      const { team } = await getTeamWithUsersAndDocument({
         teamId,
         userId,
       });
@@ -111,6 +112,7 @@ export default async function handle(
         include: {
           links: true,
           versions: true,
+          owner: true,
         },
       });
 
@@ -146,6 +148,22 @@ export default async function handle(
         });
       }
 
+      // trigger webhook and notification
+      await triggerWebhooks({
+        eventType: "DOCUMENT_ADDED",
+        eventData: {
+          ownerId: document.ownerId,
+          ownerEmail: document.owner.email as string,
+          ownerName: document.owner.name as string,
+          teamId: document.teamId as string,
+          teamName: team.name,
+          documentId: document.id,
+          documentName: document.name,
+          numPages: document.numPages as number,
+          type: document.type as string,
+          fileUrl: document.file,
+        },
+      });
       return res.status(201).json(document);
     } catch (error) {
       log(

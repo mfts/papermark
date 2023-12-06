@@ -1,23 +1,24 @@
 import prisma from "@/lib/prisma";
-import { EventData } from "../webhooks/types";
+import {
+  DocumentUploadedData,
+  DocumentViewdData,
+  EventData,
+} from "../webhooks/types";
 import { client } from "@/trigger";
 
-export async function handleLinkViewed(eventData: EventData) {
+export async function handleDocumentViewed(eventData: DocumentViewdData) {
   try {
-    // const viewerEmail = eventData.data.viewerEmail;
     const viewerEmail = eventData.viewerEmail;
-
-    // const documentName = eventData.data.documentName;
     const documentName = eventData.documentName;
-
     const message = viewerEmail
       ? `${viewerEmail} viewed your ${documentName}`
       : `Someone viewed your ${documentName}`;
+
     const notification = await prisma.notification.create({
       data: {
         teamId: eventData.teamId,
-        userId: eventData.receiverId,
-        event: "LINK_VIEWED",
+        userId: eventData.ownerId,
+        event: "DOCUMENT_VIEWED",
         message,
         linkId: eventData.link.id,
         documentId: eventData.documentId,
@@ -28,7 +29,7 @@ export async function handleLinkViewed(eventData: EventData) {
     // TODO: check if user has allow email notification if yes then send the email notification
     const user = await prisma.user.findUnique({
       where: {
-        id: eventData.receiverId,
+        id: eventData.ownerId,
       },
     });
 
@@ -45,6 +46,28 @@ export async function handleLinkViewed(eventData: EventData) {
         console.timeEnd("sendemail");
       }
     }
+
+    return notification;
+  } catch (error) {
+    throw error;
+  }
+}
+
+export async function handleDocumentUploaded(eventData: DocumentUploadedData) {
+  try {
+    const documentName = eventData.documentName;
+    const documentOwnerName = eventData.ownerName;
+    const message = `A new document ${documentName} uploaded by ${documentOwnerName}`;
+
+    const notification = await prisma.notification.create({
+      data: {
+        teamId: eventData.teamId,
+        userId: eventData.ownerId,
+        event: "DOCUMENT_ADDED",
+        message,
+        documentId: eventData.documentId,
+      },
+    });
 
     return notification;
   } catch (error) {

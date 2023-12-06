@@ -112,9 +112,21 @@ export function AddWebhookModal({ children }: { children: React.ReactNode }) {
                   <div className="flex items-center gap-2">
                     <Checkbox
                       id="1"
-                      onCheckedChange={() => handleEventSelect("LINK_VIEWED")}
+                      onCheckedChange={() =>
+                        handleEventSelect("DOCUMENT_VIEWED")
+                      }
                     />
                     <Label htmlFor="1">document.viewed</Label>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="2"
+                      onCheckedChange={() =>
+                        handleEventSelect("DOCUMENT_ADDED")
+                      }
+                    />
+                    <Label htmlFor="2">document.uploaded</Label>
                   </div>
 
                   {checkboxError && (

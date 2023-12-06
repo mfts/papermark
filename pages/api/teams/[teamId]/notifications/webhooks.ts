@@ -1,9 +1,16 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { Notification } from "@prisma/client";
-import { handleLinkViewed } from "@/lib/notifications/notification-handlers";
+import {
+  handleDocumentViewed,
+  handleDocumentUploaded,
+} from "@/lib/notifications/notification-handlers";
 import { errorhandler } from "@/lib/errorHandler";
 import { verifySignature } from "@/lib/webhooks";
-import { IWebhookTrigger } from "@/lib/webhooks/types";
+import {
+  DocumentUploadedData,
+  DocumentViewdData,
+  IWebhookTrigger,
+} from "@/lib/webhooks/types";
 
 export default async function handle(
   req: NextApiRequest,
@@ -27,11 +34,17 @@ export default async function handle(
       // const userId = (session.user as CustomUser).id;
       let notification: Notification | null = null;
       switch (eventType) {
-        case "LINK_VIEWED":
-          notification = await handleLinkViewed(eventData);
+        case "DOCUMENT_VIEWED":
+          notification = await handleDocumentViewed(
+            eventData as DocumentViewdData,
+          );
           break;
 
-        // TODO: other events like Team created, Team member added, etc.
+        case "DOCUMENT_ADDED":
+          notification = await handleDocumentUploaded(
+            eventData as DocumentUploadedData,
+          );
+          break;
       }
 
       // since the internal webhook is for notification purpose we are returning the notification that is being created

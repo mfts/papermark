@@ -1,14 +1,13 @@
-import { Event, Link } from "@prisma/client";
+import { Event } from "@prisma/client";
 
-export interface LinkViewedData {
-  receiverId: string;
-  receiverEmail: string;
-  receiverName: string;
+export interface DocumentViewdData {
+  ownerId: string;
+  ownerEmail: string;
+  ownerName: string;
   teamId: string;
   teamName: string;
   documentId: string;
   documentName: string;
-  documentOwner: string;
   viewerEmail: string;
   link: {
     id: string;
@@ -17,9 +16,22 @@ export interface LinkViewedData {
   viewId: string;
 }
 
+export interface DocumentUploadedData {
+  ownerId: string;
+  ownerEmail: string;
+  ownerName: string;
+  teamId: string;
+  teamName: string;
+  documentId: string;
+  documentName: string;
+  numPages: number;
+  type: string;
+  fileUrl: string;
+}
+
 type EventType = Event;
 
-export type EventData = LinkViewedData;
+export type EventData = DocumentViewdData | DocumentUploadedData;
 
 export interface IWebhookTrigger {
   eventType: EventType;

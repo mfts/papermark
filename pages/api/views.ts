@@ -2,7 +2,6 @@ import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/lib/prisma";
 import { checkPassword, log } from "@/lib/utils";
 import { trackAnalytics } from "@/lib/analytics";
-import { client } from "@/trigger";
 import { triggerWebhooks } from "@/lib/webhooks";
 
 export default async function handle(
@@ -131,16 +130,15 @@ export default async function handle(
 
     // // this will trigger the webhook and also notification(both in-app and email)
     await triggerWebhooks({
-      eventType: "LINK_VIEWED",
+      eventType: "DOCUMENT_VIEWED",
       eventData: {
-        receiverId: newView.document.owner.id,
-        receiverEmail: newView.document.owner.email as string,
-        receiverName: newView.document.owner.name as string,
+        ownerId: newView.document.owner.id,
+        ownerEmail: newView.document.owner.email as string,
+        ownerName: newView.document.owner.name as string,
         teamId: newView.document.teamId as string,
         teamName: newView.document.team?.name as string,
         documentId: documentId,
         documentName: newView.document.name,
-        documentOwner: newView.document.owner.name as string,
         viewerEmail: email,
         link: {
           id: link.id,
