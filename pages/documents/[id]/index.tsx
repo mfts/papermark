@@ -25,6 +25,10 @@ import { useRouter } from "next/router";
 import MoreVertical from "@/components/shared/icons/more-vertical";
 import { useTeam } from "@/context/team-context";
 import ProcessStatusBar from "@/components/documents/process-status-bar";
+import NotionIcon from "@/components/shared/icons/notion";
+import PapermarkSparkle from "@/components/shared/icons/papermark-sparkle";
+import { Document } from "@prisma/client";
+import { usePlausible } from "next-plausible";
 
 export default function DocumentPage() {
   const { document: prismaDocument, primaryVersion, error } = useDocument();
@@ -40,6 +44,7 @@ export default function DocumentPage() {
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
   const teamInfo = useTeam();
+  const plausible = usePlausible();
 
   const handleNameSubmit = async () => {
     if (enterPressedRef.current) {
@@ -158,6 +163,33 @@ export default function DocumentPage() {
     }
   };
 
+  const activateOrRedirectAssistant = async (document: Document) => {
+    if (document.assistantEnabled) {
+      router.push(`/documents/${document.id}/chat`);
+    } else {
+      toast.promise(
+        fetch("/api/assistants", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            documentId: document.id,
+          }),
+        }).then(() => {
+          // Once the assistant is activated, redirect to the chat
+          plausible("assistantEnabled", { props: { documentId: document.id } }); // track the event
+          router.push(`/documents/${document.id}/chat`);
+        }),
+        {
+          loading: "Activating Assistant...",
+          success: "Papermark Assistant successfully activated.",
+          error: "Activation failed. Please try again.",
+        },
+      );
+    }
+  };
+
   if (error && error.status === 404) {
     return <ErrorPage statusCode={404} />;
   }
@@ -172,13 +204,17 @@ export default function DocumentPage() {
               <div className="space-y-2">
                 <div className="flex space-x-4 items-center">
                   <div className="w-8">
-                    <Image
-                      src={`/_icons/${getExtension(primaryVersion.file)}.svg`}
-                      alt="File icon"
-                      width={50}
-                      height={50}
-                      className=""
-                    />
+                    {primaryVersion.type === "notion" ? (
+                      <NotionIcon className="w-8 h-8" />
+                    ) : (
+                      <Image
+                        src={`/_icons/${getExtension(primaryVersion.file)}.svg`}
+                        alt="File icon"
+                        width={50}
+                        height={50}
+                        className=""
+                      />
+                    )}
                   </div>
                   <div className="flex flex-col">
                     <h2
@@ -200,11 +236,13 @@ export default function DocumentPage() {
                 </div>
               </div>
               <div className="flex items-center gap-x-4">
-                <AddDocumentModal newVersion>
-                  <button title="Upload a new version">
-                    <FileUp className="w-6 h-6" />
-                  </button>
-                </AddDocumentModal>
+                {primaryVersion.type !== "notion" ? (
+                  <AddDocumentModal newVersion>
+                    <button title="Upload a new version">
+                      <FileUp className="w-6 h-6" />
+                    </button>
+                  </AddDocumentModal>
+                ) : null}
                 <DropdownMenu
                   open={menuOpen}
                   onOpenChange={handleMenuStateChange}
@@ -217,6 +255,55 @@ export default function DocumentPage() {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" ref={dropdownRef}>
                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                    {primaryVersion.type !== "notion" ? (
+                      !prismaDocument.assistantEnabled ? (
+                        <DropdownMenuItem
+                          onClick={() => {
+                            const fetchPromise = fetch("/api/assistants", {
+                              method: "POST",
+                              headers: {
+                                "Content-Type": "application/json",
+                              },
+                              body: JSON.stringify({
+                                documentId: prismaDocument.id,
+                              }),
+                            });
+
+                            toast.promise(fetchPromise, {
+                              loading: "Activating Assistant...",
+                              success:
+                                "Papermark Assistant successfully activated.",
+                              error: "Activation failed. Please try again.",
+                            });
+                          }}
+                        >
+                          Activate Assistant
+                        </DropdownMenuItem>
+                      ) : (
+                        <DropdownMenuItem
+                          onClick={() => {
+                            const fetchPromise = fetch("/api/assistants", {
+                              method: "DELETE",
+                              headers: {
+                                "Content-Type": "application/json",
+                              },
+                              body: JSON.stringify({
+                                documentId: prismaDocument.id,
+                              }),
+                            });
+
+                            toast.promise(fetchPromise, {
+                              loading: "Deactivating Assistant...",
+                              success:
+                                "Papermark Assistant successfully de-activated.",
+                              error: "De-activation failed. Please try again.",
+                            });
+                          }}
+                        >
+                          Disable Assistant
+                        </DropdownMenuItem>
+                      )
+                    ) : null}
                     <DropdownMenuItem
                       className="text-destructive focus:bg-destructive focus:text-destructive-foreground"
                       onClick={(event) =>
@@ -225,15 +312,31 @@ export default function DocumentPage() {
                     >
                       {isFirstClick ? "Really delete?" : "Delete document"}
                     </DropdownMenuItem>
+                    {/* create a dropdownmenuitem that onclick calls a post request to /api/assistants with the documentId */}
                   </DropdownMenuContent>
                 </DropdownMenu>
+
+                {prismaDocument.type !== "notion" ? (
+                  <Button
+                    className="group space-x-1 bg-gradient-to-r from-[#16222A] via-emerald-500 to-[#16222A] duration-200 ease-linear hover:bg-right"
+                    variant={"special"}
+                    style={{
+                      backgroundSize: "200% auto",
+                    }}
+                    onClick={() => activateOrRedirectAssistant(prismaDocument)}
+                  >
+                    <PapermarkSparkle className="h-5 w-5 animate-pulse group-hover:animate-none" />{" "}
+                    <span>AI Assistant</span>
+                  </Button>
+                ) : null}
+
                 <Button onClick={() => setIsLinkSheetOpen(true)}>
                   Create Link
                 </Button>
               </div>
             </div>
             {/* Progress bar */}
-            {!primaryVersion.hasPages ? (
+            {primaryVersion.type !== "notion" && !primaryVersion.hasPages ? (
               <div className="flex flex-col items-start justify-between gap-x-8 gap-y-4 p-4 sm:flex-row sm:items-center sm:m-4">
                 <ProcessStatusBar documentVersionId={primaryVersion.id} />
               </div>

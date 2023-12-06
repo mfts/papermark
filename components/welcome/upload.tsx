@@ -4,10 +4,6 @@ import { useState } from "react";
 import { type PutBlobResult } from "@vercel/blob";
 import { upload } from "@vercel/blob/client";
 import DocumentUpload from "@/components/document-upload";
-import {
-  ArrowRightIcon,
-  DocumentDuplicateIcon,
-} from "@heroicons/react/24/outline";
 import { toast } from "sonner";
 import Skeleton from "../Skeleton";
 import { STAGGER_CHILD_VARIANTS } from "@/lib/constants";
@@ -27,7 +23,6 @@ export default function Upload() {
   const [currentBlob, setCurrentBlob] = useState<boolean>(false);
   const [currentLinkId, setCurrentLinkId] = useState<string | null>(null);
   const [currentDocId, setCurrentDocId] = useState<string | null>(null);
-  const [copiedLink, setCopiedLink] = useState<boolean>(false);
   const teamInfo = useTeam();
 
   const handleBrowserUpload = async (event: any) => {

@@ -45,17 +45,37 @@ export const PLANS = [
     slug: "pro",
     price: {
       monthly: {
-        amount: 29,
+        amount: 30,
         priceIds: {
-          test: "price_1NmHGzFJyGSZ96lhp946ODFI",
-          production: "price_1NmMZ7FJyGSZ96lhyad2LW90",
+          test: "price_1OJFd8FJyGSZ96lh3v4jW7Bf",
+          production: "price_1OJTUNFJyGSZ96lhOqTkCxkY",
         },
       },
       yearly: {
-        amount: 290,
+        amount: 300,
         priceIds: {
-          test: "price_1NmHHaFJyGSZ96lhXxg2fTr7",
-          production: "price_1NmMZ7FJyGSZ96lhqZEkh50e",
+          test: "price_1OJFd8FJyGSZ96lhVmparJSc",
+          production: "price_1OJTUNFJyGSZ96lhDxXgXm1e",
+        },
+      },
+    },
+  },
+  {
+    name: "Starter",
+    slug: "starter",
+    price: {
+      monthly: {
+        amount: 15,
+        priceIds: {
+          test: "price_1OIsDmFJyGSZ96lh2aIhaerk",
+          production: "price_1OJTUWFJyGSZ96lhTcJPVBgS",
+        },
+      },
+      yearly: {
+        amount: 150,
+        priceIds: {
+          test: "price_1OIsDmFJyGSZ96lhVOYVN8PN",
+          production: "price_1OJTUWFJyGSZ96lhGnKb3E9F",
         },
       },
     },
