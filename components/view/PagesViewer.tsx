@@ -4,6 +4,7 @@ import Image from "next/image";
 import LoadingSpinner from "../ui/loading-spinner";
 import BlankImg from "@/public/_static/blank.gif";
 import Nav from "./nav";
+import Toolbar from "./toolbar";
 
 const DEFAULT_PRELOADED_IMAGES_NUM = 10;
 
@@ -196,6 +197,7 @@ export default function PagesViewer({
             <LoadingSpinner className="h-20 w-20 text-foreground" />
           )}
         </div>
+        <Toolbar viewId={viewId} pageNumber={pageNumber} />
       </div>
     </>
   );
