@@ -107,7 +107,11 @@ export function AddDocumentModal({
         }
       }
     } catch (error) {
+      setUploading(false);
+      toast.error("An error occurred while uploading the file.");
       console.error("An error occurred while uploading the file: ", error);
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -226,10 +230,14 @@ export function AddDocumentModal({
         }
       }
     } catch (error) {
+      setUploading(false);
+      toast.error("An error occurred while processing the Notion link.");
       console.error(
         "An error occurred while processing the Notion link: ",
         error,
       );
+    } finally {
+      setUploading(false);
     }
   };
 
