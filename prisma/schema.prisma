@@ -91,9 +91,9 @@ model UserTeam {
 }
 
 model VerificationToken {
-  identifier String
-  token      String   @unique
-  expires    DateTime
+  identifier  String  
+  token       String   @unique
+  expiresAt   DateTime @default("2100-01-01T00:00:00.000Z")
 
   @@unique([identifier, token])
 }

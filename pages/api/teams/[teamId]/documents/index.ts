@@ -112,7 +112,7 @@ export default async function handle(
           links: true,
           versions: true,
         },
-      });
+      });      
 
       // calculate the path of the page where the document was added
       const referer = req.headers.referer;
