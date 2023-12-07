@@ -1,0 +1,40 @@
+-- CreateEnum
+CREATE TYPE "Event" AS ENUM ('LINK_SHARED', 'SUBSCRIPTION_RENEWAL', 'DOCUMENT_VIEWED', 'DOCUMENT_ADDED', 'DOCUMENT_UPDATED', 'DOCUMENT_DELETED', 'DOCUMENT_FEEDBACK', 'TEAM_CREATED', 'TEAM_UPDATED', 'TEAM_DELETED', 'TEAM_MEMBER_INVITED', 'TEAM_MEMBER_REMOVED', 'TEAM_MEMBER_PROMOTED', 'TEAM_MEMBER_DEMOTED', 'DOMAIN_ADDED', 'DOMAIN_REMOVED', 'ACCOUNT_ACTIVITY', 'SYSTEM_UPDATE', 'PROMOTION');
+
+-- AlterTable
+ALTER TABLE "User" ADD COLUMN     "isEmailNotificationEnabled" BOOLEAN NOT NULL DEFAULT true;
+
+-- CreateTable
+CREATE TABLE "Webhook" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "teamId" TEXT NOT NULL,
+    "targetUrl" TEXT NOT NULL,
+    "events" "Event"[],
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Webhook_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Notification" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "teamId" TEXT NOT NULL,
+    "event" "Event" NOT NULL,
+    "message" TEXT NOT NULL,
+    "documentId" TEXT,
+    "linkId" TEXT,
+    "isRead" BOOLEAN NOT NULL DEFAULT false,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Notification_pkey" PRIMARY KEY ("id")
+);
+
+-- AddForeignKey
+ALTER TABLE "Webhook" ADD CONSTRAINT "Webhook_teamId_fkey" FOREIGN KEY ("teamId") REFERENCES "Team"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Notification" ADD CONSTRAINT "Notification_teamId_fkey" FOREIGN KEY ("teamId") REFERENCES "Team"("id") ON DELETE CASCADE ON UPDATE CASCADE;

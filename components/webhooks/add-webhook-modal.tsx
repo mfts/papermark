@@ -130,7 +130,7 @@ export function AddWebhookModal({ children }: { children: React.ReactNode }) {
 
                 <div className="space-y-3">
                   {webhooks.map((webhook, index) => (
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2" key={index}>
                       <Checkbox
                         id={`${index}`}
                         onCheckedChange={() =>
