@@ -6,8 +6,6 @@ import NotFound from "@/pages/404";
 import { GetStaticPropsContext } from "next";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
-import prisma from "@/lib/prisma";
-
 import { ExtendedRecordMap } from "notion-types";
 import notion from "@/lib/notion";
 import { parsePageId } from "notion-utils";
@@ -81,10 +79,11 @@ export default function ViewPage({
     recordMap: ExtendedRecordMap | null;
   };
 }) {
-  const router = useRouter();
   const { data: session, status } = useSession();
+  const router = useRouter();
+  const { authenticationCode } = router.query as { authenticationCode: string };
 
-  if (!link || status === "loading" || router.isFallback) {
+  if (!link || status === "loading") {
     return (
       <div className="h-screen flex items-center justify-center">
         <LoadingSpinner className="h-20 w-20" />
@@ -122,6 +121,7 @@ export default function ViewPage({
         userId={userId}
         isProtected={true}
         notionData={notionData}
+        authenticationCode={authenticationCode}
       />
     );
   }
@@ -133,6 +133,7 @@ export default function ViewPage({
       userId={userId}
       isProtected={false}
       notionData={notionData}
+      authenticationCode={authenticationCode}
     />
   );
 }

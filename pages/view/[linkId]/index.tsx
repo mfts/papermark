@@ -59,6 +59,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
         recordMap,
       },
     },
+    revalidate: 10,
   };
 };
 
@@ -80,6 +81,7 @@ export default function ViewPage({
   };
 }) {
   const router = useRouter();
+  const { authenticationCode } = router.query as { authenticationCode: string };
   const { data: session, status } = useSession();
 
   if (!link || status === "loading" || router.isFallback) {
@@ -120,6 +122,7 @@ export default function ViewPage({
         userId={userId}
         isProtected={true}
         notionData={notionData}
+        authenticationCode={authenticationCode}
       />
     );
   }
@@ -131,6 +134,7 @@ export default function ViewPage({
       userId={userId}
       isProtected={false}
       notionData={notionData}
+      authenticationCode={authenticationCode}
     />
   );
 }
