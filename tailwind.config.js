@@ -159,10 +159,21 @@ module.exports = {
           from: { "stroke-dashoffset": "332", opacity: "0" },
           to: { opacity: "1" },
         },
+        flyEmoji: {
+          "0%": {
+            transform: "translateY(0) scale(1)",
+            opacity: "0.7",
+          },
+          "100%": {
+            transform: "translateY(-150px) scale(2)",
+            opacity: "0",
+          },
+        },
       },
       animation: {
         gauge_fadeIn: "gauge_fadeIn 1s ease forwards",
         gauge_fill: "gauge_fill 1s ease forwards",
+        flyEmoji: "flyEmoji 1s forwards",
       },
     },
   },
