@@ -14,6 +14,8 @@ export default function General() {
   const [isTeamNameChanging, setTeamNameChanging] = useState<boolean>(false);
 
   const changeTeamName = async () => {
+    if (teamInfo?.currentTeam?.name === teamNameInputRef.current?.value) return;
+
     setTeamNameChanging(true);
 
     const response = await fetch(
@@ -66,7 +68,11 @@ export default function General() {
                 defaultValue={teamInfo?.currentTeam?.name}
               />
             </div>
-            <Button size={"lg"} onClick={changeTeamName}>
+            <Button
+              size={"lg"}
+              onClick={changeTeamName}
+              disabled={isTeamNameChanging}
+            >
               {isTeamNameChanging ? "Saving..." : "Save changes"}
             </Button>
           </div>
