@@ -5,6 +5,7 @@ import {
   View,
   User as PrismaUser,
   DocumentVersion,
+  Event,
 } from "@prisma/client";
 
 export type CustomUser = NextAuthUser & PrismaUser;
@@ -188,4 +189,14 @@ export interface TeamDetail {
     };
     userId: string;
   }[];
+}
+
+export interface Notifications {
+  id: string;
+  userId: string;
+  event: Event;
+  message: string;
+  documentId: string;
+  isRead: boolean;
+  createdAt: Date;
 }

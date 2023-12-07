@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/lib/prisma";
 import { checkPassword, log } from "@/lib/utils";
 import { trackAnalytics } from "@/lib/analytics";
-import { client } from "@/trigger";
+import { triggerWebhooks } from "@/lib/webhooks";
 
 export default async function handle(
   req: NextApiRequest,
@@ -25,6 +25,7 @@ export default async function handle(
       id: linkId,
     },
     select: {
+      id: true,
       emailProtected: true,
       enableNotification: true,
       password: true,
@@ -68,7 +69,15 @@ export default async function handle(
         viewerEmail: email,
         documentId: documentId,
       },
-      select: { id: true },
+      select: {
+        id: true,
+        document: {
+          include: {
+            owner: true,
+            team: true,
+          },
+        },
+      },
     });
     console.timeEnd("create-view");
 
@@ -119,15 +128,25 @@ export default async function handle(
     });
     console.timeEnd("track-analytics");
 
-    if (link.enableNotification) {
-      // trigger link viewed event to trigger send-notification job
-      console.time("sendemail");
-      await client.sendEvent({
-        name: "link.viewed",
-        payload: { viewId: newView.id },
-      });
-      console.timeEnd("sendemail");
-    }
+    // // this will trigger the webhook and also notification(both in-app and email)
+    await triggerWebhooks({
+      eventType: "DOCUMENT_VIEWED",
+      eventData: {
+        ownerId: newView.document.owner.id,
+        ownerEmail: newView.document.owner.email as string,
+        ownerName: newView.document.owner.name as string,
+        teamId: newView.document.teamId as string,
+        teamName: newView.document.team?.name as string,
+        documentId: documentId,
+        documentName: newView.document.name,
+        viewerEmail: email,
+        link: {
+          id: link.id,
+          enableNotification: link.enableNotification!,
+        },
+        viewId: newView.id,
+      },
+    });
 
     const returnObject = {
       message: "View recorded",

@@ -37,40 +37,43 @@ model Session {
 }
 
 model User {
-  id             String         @id @default(cuid())
-  name           String?
-  email          String?        @unique
-  emailVerified  DateTime?
-  image          String?
-  createdAt      DateTime       @default(now())
-  accounts       Account[]
-  sessions       Session[]
-  documents      Document[]
-  teams          UserTeam[]
-  domains        Domain[]
-  conversations  Conversation[]
-  plan           String         @default("free")
-  stripeId       String?        @unique // Stripe subscription / customer ID
-  subscriptionId String?        @unique // Stripe subscription ID
-  startsAt       DateTime? // Stripe subscription start date
-  endsAt         DateTime? // Stripe subscription end date
+  id                         String         @id @default(cuid())
+  name                       String?
+  email                      String?        @unique
+  emailVerified              DateTime?
+  image                      String?
+  isEmailNotificationEnabled Boolean        @default(true) // by default the user get email for all the events
+  createdAt                  DateTime       @default(now())
+  accounts                   Account[]
+  sessions                   Session[]
+  documents                  Document[]
+  teams                      UserTeam[]
+  domains                    Domain[]
+  conversations              Conversation[]
+  plan                       String         @default("free")
+  stripeId                   String?        @unique // Stripe subscription / customer ID
+  subscriptionId             String?        @unique // Stripe subscription ID
+  startsAt                   DateTime? // Stripe subscription start date
+  endsAt                     DateTime? // Stripe subscription end date
 }
 
 model Team {
-  id             String       @id @default(cuid())
+  id             String         @id @default(cuid())
   name           String
   users          UserTeam[]
   documents      Document[]
   domains        Domain[]
   invitations    Invitation[]
   sentEmails     SentEmail[]
-  plan           String       @default("free")
-  stripeId       String?      @unique // Stripe subscription / customer ID
-  subscriptionId String?      @unique // Stripe subscription ID
+  webhooks       Webhook[]
+  notifications  Notification[]
+  plan           String         @default("free")
+  stripeId       String?        @unique // Stripe subscription / customer ID
+  subscriptionId String?        @unique // Stripe subscription ID
   startsAt       DateTime? // Stripe subscription start date
   endsAt         DateTime? // Stripe subscription end date
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
 }
 
 enum Role {
@@ -98,7 +101,7 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
-model Document {  
+model Document {
   id               String            @id @default(cuid())
   name             String
   description      String?
@@ -219,6 +222,53 @@ model Invitation {
   @@unique([email, teamId])
 }
 
+model Webhook {
+  id        String   @id @default(cuid())
+  userId    String
+  teamId    String
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  targetUrl String
+  events    Event[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Notification {
+  id         String   @id @default(cuid())
+  userId     String
+  teamId     String
+  team       Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  event      Event
+  message    String
+  documentId String?
+  linkId     String?
+  isRead     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+enum Event {
+  LINK_SHARED // When a user shares a document link with others.
+  SUBSCRIPTION_RENEWAL // notifications about upcoming subscription renewals or changes.
+  DOCUMENT_VIEWED // When a shared document link is viewed by someone.
+  DOCUMENT_ADDED // when a new document is added
+  DOCUMENT_UPDATED // when a document's detail changed such as Document Name, etc
+  DOCUMENT_DELETED // when a document is deleted
+  DOCUMENT_FEEDBACK // upvote / downvote, reactions, comments etc
+  TEAM_CREATED // when a team is created
+  TEAM_UPDATED // when team's detail changed such as Team Name, etc
+  TEAM_DELETED // when a team is deleted
+  TEAM_MEMBER_INVITED // when a new team member is invited
+  TEAM_MEMBER_REMOVED // when a team member is removed from the team
+  TEAM_MEMBER_PROMOTED // when a team member gets promoted to admin
+  TEAM_MEMBER_DEMOTED // when a team member gets demoted to member
+  DOMAIN_ADDED // when a new domain is added
+  DOMAIN_REMOVED // when a existing domain is removed
+  ACCOUNT_ACTIVITY // account-related activities, such as login from a new device.
+  SYSTEM_UPDATE // Notifications about system-wide updates or maintenance.
+  PROMOTION // announcement about promotions, discounts, or special offers
+}
+
 enum EmailType {
   FIRST_DAY_DOMAIN_REMINDER_EMAIL
   FIRST_DOMAIN_INVALID_EMAIL
@@ -250,7 +300,7 @@ model Conversation {
   createdAt     DateTime  @default(now())
   lastMessageAt DateTime? // This is the last time a message was sent in the thread
 
-  @@index([threadId])
   @@unique([userId, documentId])
   @@unique([threadId, documentId])
+  @@index([threadId])
 }

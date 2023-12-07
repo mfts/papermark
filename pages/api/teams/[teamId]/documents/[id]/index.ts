@@ -6,6 +6,7 @@ import { CustomUser } from "@/lib/types";
 import { del } from "@vercel/blob";
 import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
 import { errorhandler } from "@/lib/errorHandler";
+import { triggerWebhooks } from "@/lib/webhooks";
 
 export default async function handle(
   req: NextApiRequest,
@@ -61,7 +62,7 @@ export default async function handle(
     const userId = (session.user as CustomUser).id;
 
     try {
-      const { document } = await getTeamWithUsersAndDocument({
+      const { document, team } = await getTeamWithUsersAndDocument({
         teamId,
         userId,
         docId,
@@ -83,9 +84,29 @@ export default async function handle(
       }
 
       // delete the document from database
-      await prisma.document.delete({
+      const deletedDocument = await prisma.document.delete({
         where: {
           id: docId,
+        },
+        include: {
+          owner: true,
+        },
+      });
+
+      // trigger webhook and notification
+      await triggerWebhooks({
+        eventType: "DOCUMENT_DELETED",
+        eventData: {
+          ownerId: deletedDocument.ownerId,
+          ownerEmail: deletedDocument.owner.email as string,
+          ownerName: deletedDocument.owner.name as string,
+          teamId: deletedDocument.teamId as string,
+          teamName: team.name,
+          documentId: deletedDocument.id,
+          documentName: deletedDocument.name,
+          numPages: deletedDocument.numPages as number,
+          type: deletedDocument.type as string,
+          fileUrl: deletedDocument.file,
         },
       });
 

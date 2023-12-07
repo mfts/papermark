@@ -23,6 +23,11 @@ interface IDocumentWithLink {
   options?: {};
 }
 
+interface ITeamWithUser {
+  teamId: string;
+  userId: string;
+}
+
 export async function getTeamWithUsersAndDocument({
   teamId,
   userId,
@@ -154,4 +159,32 @@ export async function getDocumentWithTeamAndUser({
   }
 
   return { document };
+}
+
+export async function getTeamWithUser({ teamId, userId }: ITeamWithUser) {
+  const team = await prisma.team.findUnique({
+    where: {
+      id: teamId,
+    },
+    include: {
+      users: {
+        select: {
+          userId: true,
+        },
+      },
+    },
+  });
+
+  // check if the team exists
+  if (!team) {
+    throw new TeamError("Team doesn't exists");
+  }
+
+  // check if the user is part the team
+  const teamHasUser = team?.users.some((user) => user.userId === userId);
+  if (!teamHasUser) {
+    throw new TeamError("You are not a member of the team");
+  }
+
+  return { team };
 }
