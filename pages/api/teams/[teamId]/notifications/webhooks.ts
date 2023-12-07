@@ -3,10 +3,12 @@ import { Notification } from "@prisma/client";
 import {
   handleDocumentViewed,
   handleDocumentUploaded,
+  handleDocumentDeleted,
 } from "@/lib/notifications/notification-handlers";
 import { errorhandler } from "@/lib/errorHandler";
 import { verifySignature } from "@/lib/webhooks";
 import {
+  DocumentDeletedData,
   DocumentUploadedData,
   DocumentViewdData,
   IWebhookTrigger,
@@ -45,6 +47,11 @@ export default async function handle(
             eventData as DocumentUploadedData,
           );
           break;
+
+        case "DOCUMENT_DELETED":
+          notification = await handleDocumentDeleted(
+            eventData as DocumentDeletedData,
+          );
       }
 
       // since the internal webhook is for notification purpose we are returning the notification that is being created

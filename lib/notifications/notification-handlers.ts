@@ -1,5 +1,6 @@
 import prisma from "@/lib/prisma";
 import {
+  DocumentDeletedData,
   DocumentUploadedData,
   DocumentViewdData,
   EventData,
@@ -64,6 +65,30 @@ export async function handleDocumentUploaded(eventData: DocumentUploadedData) {
         teamId: eventData.teamId,
         userId: eventData.ownerId,
         event: "DOCUMENT_ADDED",
+        message,
+        documentId: eventData.documentId,
+      },
+    });
+
+    // TODO: send email notification on document upload
+
+    return notification;
+  } catch (error) {
+    throw error;
+  }
+}
+
+export async function handleDocumentDeleted(eventData: DocumentDeletedData) {
+  try {
+    const documentName = eventData.documentName;
+    const documentOwnerName = eventData.ownerName;
+    const message = `Document ${documentName} is deleted by ${documentOwnerName}`;
+
+    const notification = await prisma.notification.create({
+      data: {
+        teamId: eventData.teamId,
+        userId: eventData.ownerId,
+        event: "DOCUMENT_DELETED",
         message,
         documentId: eventData.documentId,
       },

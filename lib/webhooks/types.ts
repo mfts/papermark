@@ -29,6 +29,8 @@ export interface DocumentUploadedData {
   fileUrl: string;
 }
 
+export interface DocumentDeletedData extends DocumentUploadedData {}
+
 type EventType = Event;
 
 export type EventData = DocumentViewdData | DocumentUploadedData;

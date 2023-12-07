@@ -12,6 +12,7 @@ import { mutate } from "swr";
 import { useRouter } from "next/router";
 import { timeAgo } from "@/lib/utils";
 import { useTeam } from "@/context/team-context";
+import { Notification } from "@prisma/client";
 
 export default function NotificationDropdown({
   children,
@@ -37,6 +38,10 @@ export default function NotificationDropdown({
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
+
+    const notification = (await response.json()) as Notification;
+    console.log(notification);
+    if (notification.event === "DOCUMENT_DELETED") return;
 
     if (documentId) {
       router.push(`/documents/${documentId}`);

@@ -16,6 +16,26 @@ import { Event } from "@prisma/client";
 import { mutate } from "swr";
 import { useTeam } from "@/context/team-context";
 
+interface webhookProps {
+  eventType: Event;
+  displayText: string;
+}
+
+const webhooks: webhookProps[] = [
+  {
+    eventType: "DOCUMENT_ADDED",
+    displayText: "document.uploaded",
+  },
+  {
+    eventType: "DOCUMENT_VIEWED",
+    displayText: "document.viewed",
+  },
+  {
+    eventType: "DOCUMENT_DELETED",
+    displayText: "document.deleted",
+  },
+];
+
 export function AddWebhookModal({ children }: { children: React.ReactNode }) {
   const [targetUrl, setTargetUrl] = useState<string>("");
   const [creating, setCreating] = useState<boolean>(false);
@@ -109,25 +129,17 @@ export function AddWebhookModal({ children }: { children: React.ReactNode }) {
                 <Label>Select events to listen</Label>
 
                 <div className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <Checkbox
-                      id="1"
-                      onCheckedChange={() =>
-                        handleEventSelect("DOCUMENT_VIEWED")
-                      }
-                    />
-                    <Label htmlFor="1">document.viewed</Label>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <Checkbox
-                      id="2"
-                      onCheckedChange={() =>
-                        handleEventSelect("DOCUMENT_ADDED")
-                      }
-                    />
-                    <Label htmlFor="2">document.uploaded</Label>
-                  </div>
+                  {webhooks.map((webhook, index) => (
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id={`${index}`}
+                        onCheckedChange={() =>
+                          handleEventSelect(webhook.eventType)
+                        }
+                      />
+                      <Label htmlFor={`${index}`}>{webhook.displayText}</Label>
+                    </div>
+                  ))}
 
                   {checkboxError && (
                     <p className="text-xs text-red-500">{checkboxError}</p>
@@ -143,6 +155,7 @@ export function AddWebhookModal({ children }: { children: React.ReactNode }) {
             </form>
           </DialogDescription>
         </DialogHeader>
+        ∆
       </DialogContent>
     </Dialog>
   );
