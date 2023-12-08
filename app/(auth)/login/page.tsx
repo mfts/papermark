@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { signIn } from "next-auth/react";
 import { signInWithPasskey } from "@teamhanko/passkeys-next-auth-provider/client";
 import Link from "next/link";
-import { useRouter } from "next/router";
 import { Input } from "@/components/ui/input";
 import { useParams } from "next/navigation";
 import Passkey from "@/components/shared/icons/passkey";
