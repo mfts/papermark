@@ -28,7 +28,7 @@ export async function deleteDomain(
   {
     // Note: in certain cases, we don't need to remove the domain from the Prisma
     skipPrismaDelete = false,
-  } = {}
+  } = {},
 ) {
   const domainCount = await getDomainCount(domain);
 

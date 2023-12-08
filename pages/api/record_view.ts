@@ -8,12 +8,12 @@ import { LOCALHOST_GEO_DATA, getGeoData } from "@/lib/utils/geo";
 
 import { z } from "zod";
 
-
 const bodyValidation = z.object({
   id: z.string(),
   linkId: z.string(),
   documentId: z.string(),
   viewId: z.string(),
+  versionNumber: z.number().int().optional(),
   time: z.number().int(),
   duration: z.number().int(),
   pageNumber: z.string(),
@@ -40,7 +40,7 @@ const bodyValidation = z.object({
 
 export default async function handle(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   // We only allow POST requests
   if (req.method !== "POST") {
@@ -51,22 +51,29 @@ export default async function handle(
   const geo: Geo =
     process.env.VERCEL === "1" ? getGeoData(req.headers) : LOCALHOST_GEO_DATA;
 
-
   const referer = req.headers.referer;
   const ua = userAgentFromString(req.headers["user-agent"]);
 
-  const { linkId, documentId, viewId, duration, pageNumber } = req.body;
+  const { linkId, documentId, viewId, duration, pageNumber, versionNumber } =
+    req.body as {
+      linkId: string;
+      documentId: string;
+      viewId: string;
+      duration: number;
+      pageNumber: number;
+      versionNumber: number;
+    };
 
   const time = Date.now(); // in milliseconds
 
   const pageViewId = newId("view");
-
 
   const pageViewObject = {
     id: pageViewId,
     linkId,
     documentId,
     viewId,
+    versionNumber: versionNumber || 1,
     time,
     duration,
     pageNumber: pageNumber.toString(),
@@ -93,13 +100,15 @@ export default async function handle(
 
   const result = bodyValidation.safeParse(pageViewObject);
   if (!result.success) {
-    return res.status(400).json(
-      { error: `Invalid body: ${result.error.message}` }
-    );
+    return res
+      .status(400)
+      .json({ error: `Invalid body: ${result.error.message}` });
   }
 
   try {
     await publishPageView(result.data);
+
+    // console.log(`Recorded view for ${linkId}`, result.data);
 
     res.status(200).json({ message: "View recorded" });
   } catch (error) {

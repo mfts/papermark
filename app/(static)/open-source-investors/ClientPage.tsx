@@ -14,12 +14,24 @@ const searchOptions = {
   location: 0,
   distance: 100,
   minMatchCharLength: 2,
-  keys: ["fields.name", "fields.twitterUrl", "fields.company", "fields.title", "fields.openSourceInvestments"],
+  keys: [
+    "fields.name",
+    "fields.twitterUrl",
+    "fields.company",
+    "fields.title",
+    "fields.openSourceInvestments",
+  ],
 };
 
 function compare(a: any, b: any) {
   // Define the order of the checkSize labels
-  const checkSizesOrder = ["$5k - $50k", "$50k+", "$100k+", "$250k+", "Unknown"];
+  const checkSizesOrder = [
+    "$5k - $50k",
+    "$50k+",
+    "$100k+",
+    "$250k+",
+    "Unknown",
+  ];
 
   const orderA = checkSizesOrder.indexOf(a.fields.checkSize);
   const orderB = checkSizesOrder.indexOf(b.fields.checkSize);
@@ -31,8 +43,6 @@ function compare(a: any, b: any) {
   // Sort according to the checkSize order
   return orderA - orderB;
 }
-
-
 
 export default function Dashboard({ data }: any) {
   const { records: allInvestors } = data;
@@ -50,12 +60,11 @@ export default function Dashboard({ data }: any) {
   ];
 
   const selectedCheckSize = checkSizes.find(
-    (checkSize) => checkSize.id === category
+    (checkSize) => checkSize.id === category,
   );
   const labelForSelectedCategory = selectedCheckSize
     ? selectedCheckSize.label
     : null;
-
 
   // Define filtered & sorted investor array
   const ALL_INVESTORS = allInvestors
@@ -81,7 +90,7 @@ export default function Dashboard({ data }: any) {
       <div className="mx-auto max-w-6xl pt-4 mb-10">
         <div className="max-w-6xl mx-auto px-4 md:px-8 sm:pt-16 pt-8 text-gray-600">
           <div className="space-y-5 max-w-4xl mx-auto text-center">
-            <h1 className="text-3xl text-gray-800 font-extrabold mx-auto sm:text-6xl max-w-3xl">
+            <h1 className="text-3xl text-gray-800 font-extrabold mx-auto sm:text-6xl max-w-3xl tracking-tighter">
               Find the next angel investor for your open-source project
             </h1>
           </div>
@@ -102,7 +111,7 @@ export default function Dashboard({ data }: any) {
                     (!category && checkSize.id === "7")
                     ? "bg-gray-200"
                     : "bg-white hover:bg-gray-50",
-                  "relative inline-flex items-center first-of-type:rounded-l-md last-of-type:rounded-r-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 focus:z-10 focus:outline-none focus:ring-gray-500 -ml-px first-of-type:-ml-0"
+                  "relative inline-flex items-center first-of-type:rounded-l-md last-of-type:rounded-r-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 focus:z-10 focus:outline-none focus:ring-gray-500 -ml-px first-of-type:-ml-0",
                 )}
               >
                 {checkSize.label}

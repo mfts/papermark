@@ -21,25 +21,23 @@ export default function VisitorChart({
     return <div>No data</div>;
   }
 
-  let durationData = {
-    data: Array.from({ length: totalPages }, (_, i) => ({
-      pageNumber: (i + 1).toString(),
-      sum_duration: 0,
-    })),
-  };
+  let durationData = Array.from({ length: totalPages }, (_, i) => ({
+    pageNumber: (i + 1).toString(),
+    sum_duration: 0,
+  }));
 
   const swrData = stats?.duration;
 
-  durationData.data = durationData.data.map((item) => {
+  durationData = durationData.map((item) => {
     const swrItem = swrData.data.find(
-      (data) => data.pageNumber === item.pageNumber
+      (data) => data.pageNumber === item.pageNumber,
     );
     return swrItem ? swrItem : item;
   });
 
   return (
     <div className="">
-      <BarChartComponent data={durationData.data} isSum={true} />
+      <BarChartComponent data={durationData} isSum={true} />
     </div>
   );
 }

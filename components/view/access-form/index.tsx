@@ -1,25 +1,44 @@
-import { Dispatch, SetStateAction } from "react";
+import { useEffect } from "react";
 import PasswordSection from "./password-section";
 import EmailSection from "./email-section";
 import { Button } from "@/components/ui/button";
-import { DEFAULT_ACCESS_FORM_TYPE } from "../document-view";
 
+export const DEFAULT_ACCESS_FORM_DATA = {
+  email: null,
+  password: null,
+};
+
+export type DEFAULT_ACCESS_FORM_TYPE = {
+  email: string | null;
+  password: string | null;
+};
 
 export default function AccessForm({
-  onSubmitHandler,
   data,
+  email,
   setData,
+  onSubmitHandler,
   requireEmail,
   requirePassword,
   isLoading,
 }: {
-  onSubmitHandler: React.FormEventHandler<HTMLFormElement>;
   data: DEFAULT_ACCESS_FORM_TYPE;
-  setData: Dispatch<SetStateAction<DEFAULT_ACCESS_FORM_TYPE>>;
+  email: string | null | undefined;
+  setData: React.Dispatch<React.SetStateAction<DEFAULT_ACCESS_FORM_TYPE>>;
+  onSubmitHandler: React.FormEventHandler<HTMLFormElement>;
   requireEmail: boolean;
   requirePassword: boolean;
   isLoading: boolean;
 }) {
+  useEffect(() => {
+    const userEmail = email;
+    if (userEmail) {
+      setData((prevData: DEFAULT_ACCESS_FORM_TYPE) => ({
+        ...prevData,
+        email: userEmail || prevData.email,
+      }));
+    }
+  }, [email]);
 
   return (
     <>

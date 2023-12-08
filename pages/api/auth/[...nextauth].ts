@@ -11,6 +11,11 @@ import LoginLink from "@/components/emails/login-link";
 
 const VERCEL_DEPLOYMENT = !!process.env.VERCEL_URL;
 
+// This function can run for a maximum of 60 seconds
+export const config = {
+  maxDuration: 120,
+};
+
 export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({

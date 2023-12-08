@@ -7,13 +7,14 @@ import { authOptions } from "../../auth/[...nextauth]";
 
 export default async function handle(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   if (req.method === "GET") {
     // GET /api/links/:id
     const { id } = req.query as { id: string };
 
     try {
+      console.time("get-link");
       const link = await prisma.link.findUnique({
         where: {
           id: id,
@@ -24,9 +25,28 @@ export default async function handle(
           emailProtected: true,
           allowDownload: true,
           password: true,
-          document: { select: { id: true, name: true } },
+          isArchived: true,
+          document: {
+            select: {
+              id: true,
+              assistantEnabled: true,
+              versions: {
+                where: { isPrimary: true },
+                select: {
+                  id: true,
+                  versionNumber: true,
+                  type: true,
+                  hasPages: true,
+                  file: true,
+                },
+                take: 1,
+              },
+            },
+          },
         },
       });
+
+      console.timeEnd("get-link");
 
       if (!link) {
         return res.status(404).json({ error: "Link not found" });
@@ -115,6 +135,7 @@ export default async function handle(
         domainId: domainObj?.id || null,
         domainSlug: domain || null,
         slug: slug || null,
+        enableNotification: linkData.enableNotification,
       },
       include: {
         views: {
@@ -131,6 +152,10 @@ export default async function handle(
     if (!updatedLink) {
       return res.status(404).json({ error: "Link not found" });
     }
+
+    await fetch(
+      `${process.env.NEXTAUTH_URL}/api/revalidate?secret=${process.env.REVALIDATE_TOKEN}&linkId=${id}`,
+    );
 
     return res.status(200).json(updatedLink);
   } else if (req.method == "DELETE") {

@@ -1,0 +1,20 @@
+-- CreateEnum
+CREATE TYPE "EmailType" AS ENUM ('FIRST_DAY_DOMAIN_REMINDER_EMAIL', 'FIRST_DOMAIN_INVALID_EMAIL', 'SECOND_DOMAIN_INVALID_EMAIL', 'FIRST_TRIAL_END_REMINDER_EMAIL', 'FINAL_TRIAL_END_REMINDER_EMAIL');
+
+-- CreateTable
+CREATE TABLE "SentEmail" (
+    "id" TEXT NOT NULL,
+    "type" "EmailType" NOT NULL,
+    "recipient" TEXT NOT NULL,
+    "marketing" BOOLEAN NOT NULL DEFAULT false,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "teamId" TEXT NOT NULL,
+
+    CONSTRAINT "SentEmail_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateIndex
+CREATE INDEX "SentEmail_teamId_idx" ON "SentEmail"("teamId");
+
+-- AddForeignKey
+ALTER TABLE "SentEmail" ADD CONSTRAINT "SentEmail_teamId_fkey" FOREIGN KEY ("teamId") REFERENCES "Team"("id") ON DELETE CASCADE ON UPDATE CASCADE;

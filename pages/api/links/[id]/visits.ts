@@ -4,10 +4,13 @@ import prisma from "@/lib/prisma";
 import { authOptions } from "../../auth/[...nextauth]";
 import { log } from "@/lib/utils";
 import { getViewPageDuration } from "@/lib/tinybird";
+import { getDocumentWithTeamAndUser } from "@/lib/team/helper";
+import { CustomUser } from "@/lib/types";
+import { errorhandler } from "@/lib/errorHandler";
 
 export default async function handle(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   if (req.method === "GET") {
     // GET /api/links/:id/visits
@@ -28,6 +31,7 @@ export default async function handle(
         select: {
           document: {
             select: {
+              id: true,
               numPages: true,
               versions: {
                 where: { isPrimary: true },
@@ -39,7 +43,30 @@ export default async function handle(
           },
         },
       });
-      const numPages = result?.document?.versions[0]?.numPages || result?.document?.numPages || 0;
+
+      const docId = result?.document.id!;
+      const userId = (session.user as CustomUser).id;
+      // check if the the team that own the document has the current user
+      await getDocumentWithTeamAndUser({
+        docId,
+        userId,
+        options: {
+          team: {
+            select: {
+              users: {
+                select: {
+                  userId: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      const numPages =
+        result?.document?.versions[0]?.numPages ||
+        result?.document?.numPages ||
+        0;
 
       const views = await prisma.view.findMany({
         where: {
@@ -64,34 +91,33 @@ export default async function handle(
       const summedDurations = durations.map((duration) => {
         return duration.data.reduce(
           (totalDuration, data) => totalDuration + data.sum_duration,
-          0
+          0,
         );
       });
 
       // Construct the response combining views and their respective durations
       const viewsWithDuration = views.map((view, index) => {
-        // calculate the completion rate 
-        const completionRate = numPages ? (durations[index].data.length / numPages) * 100 : 0;
-        
+        // calculate the completion rate
+        const completionRate = numPages
+          ? (durations[index].data.length / numPages) * 100
+          : 0;
+
         return {
           ...view,
           duration: durations[index],
           totalDuration: summedDurations[index],
           completionRate: completionRate.toFixed(),
-        }
+        };
       });
 
       // TODO: Check that the user is owner of the links, otherwise return 401
 
-      // console.log("viewsWithDuration:", viewsWithDuration)
+      // console.log("viewsWithDuration:", viewsWithDuration);
 
-      res.status(200).json(viewsWithDuration);
+      return res.status(200).json(viewsWithDuration);
     } catch (error) {
       log(`Failed to get views for link ${id}. Error: \n\n ${error}`);
-      return res.status(500).json({
-        message: "Internal Server Error",
-        error: (error as Error).message,
-      });
+      errorhandler(error, res);
     }
   } else {
     // We only allow GET requests

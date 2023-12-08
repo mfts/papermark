@@ -1,4 +1,5 @@
 import Twitter from "../shared/icons/twitter";
+import Image from "next/image";
 
 const testimonials = [
   {
@@ -7,7 +8,7 @@ const testimonials = [
       name: "Jonathan Reimer",
       handle: "jonathimer",
       imageUrl:
-        "https://pbs.twimg.com/profile_images/1485560739679068161/lfB1bBo1_400x400.jpg",
+        "https://pbs.twimg.com/profile_images/1704777684046209024/_JdBcXWp_400x400.jpg",
       link: "https://twitter.com/jonathimer/status/1663651278872891395",
     },
   },
@@ -66,11 +67,14 @@ const testimonials = [
 
 export default function Testimonials() {
   return (
-    <div className="bg-white py-24 sm:py-32">
+    <div className="bg-white py-24 sm:py-24">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-xl text-center">
           <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-            1000 people love Papermark, or just use it.
+            2000 people love Papermark and actively use it
+          </p>
+          <p className="mx-auto mt-6 max-w-xl text-lg leading-8 text-gray-600">
+            Do not take it from us, listen what our happy users say
           </p>
         </div>
         <div className="mx-auto mt-16 flow-root max-w-2xl sm:mt-20 lg:mx-0 lg:max-w-none">
@@ -80,7 +84,7 @@ export default function Testimonials() {
                 key={testimonial.author.handle}
                 className="pt-8 sm:inline-block sm:w-full sm:px-4 relative"
               >
-                <figure className="rounded-2xl bg-white p-10 text-sm leading-6 border border-gray-300 relative">
+                <figure className="rounded-2xl hover:shadow-lg hover:border-gray-500 bg-white p-10 text-sm leading-6 border border-gray-300 relative">
                   {testimonial.author.link && ( // Conditional rendering based on the presence of link
                     <a
                       href={testimonial.author.link} // Using the link from the testimonial
@@ -95,9 +99,11 @@ export default function Testimonials() {
                     <p>{`${testimonial.body}`}</p>
                   </blockquote>
                   <figcaption className="mt-6 flex items-center gap-x-4">
-                    <img
+                    <Image
                       className="h-10 w-10 rounded-full bg-gray-50"
                       src={testimonial.author.imageUrl}
+                      width={40}
+                      height={40}
                       alt=""
                     />
                     <div>

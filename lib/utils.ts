@@ -1,9 +1,11 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-import ms from "ms"
+import ms from "ms";
 import bcrypt from "bcryptjs";
 import { toast } from "sonner";
 import { customAlphabet } from "nanoid";
+import { ThreadMessage } from "openai/resources/beta/threads/messages/messages";
+import { Message } from "ai";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -25,7 +27,7 @@ interface SWRError extends Error {
 
 export async function fetcher<JSON = any>(
   input: RequestInfo,
-  init?: RequestInit
+  init?: RequestInit,
 ): Promise<JSON> {
   const res = await fetch(input, init);
 
@@ -76,7 +78,6 @@ export function bytesToSize(bytes: number) {
   return `${Math.round(sizeInCurrentUnit)} ${sizes[i]}`;
 }
 
-
 const isValidUrl = (url: string) => {
   try {
     new URL(url);
@@ -103,7 +104,6 @@ export function capitalize(str: string) {
   if (!str || typeof str !== "string") return str;
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
-
 
 export const timeAgo = (timestamp?: Date): string => {
   if (!timestamp) return "Just now";
@@ -170,7 +170,6 @@ export const getDateTimeLocal = (timestamp?: Date): string => {
     .join(":");
 };
 
-
 export async function hashPassword(password: string): Promise<string> {
   const saltRounds = 10;
   const hashedPassword = await bcrypt.hash(password, saltRounds);
@@ -179,7 +178,7 @@ export async function hashPassword(password: string): Promise<string> {
 
 export async function checkPassword(
   password: string,
-  hashedPassword: string
+  hashedPassword: string,
 ): Promise<boolean> {
   const match = await bcrypt.compare(password, hashedPassword);
   return match;
@@ -192,7 +191,7 @@ export function copyToClipboard(text: string, message: string): void {
       toast.success(message);
     })
     .catch((error) => {
-      toast.error("Failed to copy. Please try again.")
+      toast.warning("Please copy your link manually.");
     });
 }
 
@@ -224,15 +223,17 @@ export const formattedDate = (date: Date) => {
     day: "2-digit",
     year: "numeric",
   });
-}
+};
 
 export const nanoid = customAlphabet(
   "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
   7,
 ); // 7-character random string
 
-
-export const daysLeft = (accountCreationDate: Date, maxDays: number): number => {
+export const daysLeft = (
+  accountCreationDate: Date,
+  maxDays: number,
+): number => {
   const now = new Date();
   const endPeriodDate = new Date(accountCreationDate);
   endPeriodDate.setDate(accountCreationDate.getDate() + maxDays);
@@ -241,4 +242,64 @@ export const daysLeft = (accountCreationDate: Date, maxDays: number): number => 
 
   // Convert milliseconds to days and return
   return Math.ceil(diffInMilliseconds / (1000 * 60 * 60 * 24));
-}
+};
+
+const cutoffDate = new Date("2023-10-17T00:00:00.000Z");
+
+export const calculateDaysLeft = (accountCreationDate: Date): number => {
+  let maxDays;
+  if (accountCreationDate < cutoffDate) {
+    maxDays = 30;
+    accountCreationDate = new Date("2023-10-01T00:00:00.000Z");
+  } else {
+    maxDays = 14;
+  }
+  return daysLeft(accountCreationDate, maxDays);
+};
+
+// helper function to convert ThreadMessages (an OpenAI type for messages) to Messages (an vercel/ai type for messages)
+export const convertThreadMessagesToMessages = (
+  threadMessages: ThreadMessage[],
+): Message[] => {
+  // Filter out messages with metaData.intitialMessage == 'True'
+  const filteredMessages = threadMessages.filter((threadMessage) => {
+    if (
+      typeof threadMessage.metadata === "object" &&
+      threadMessage.metadata !== null
+    ) {
+      // Safely typecast metadata to an object with the expected structure
+      const metadata = threadMessage.metadata as { intitialMessage?: string };
+      return metadata.intitialMessage !== "True";
+    }
+    return true; // Include messages where metadata is not an object or is null
+  });
+
+  return filteredMessages.map((threadMessage) => {
+    const {
+      id,
+      created_at,
+      content,
+      role,
+      // other fields you might need from ThreadMessage
+    } = threadMessage;
+
+    // Assuming content is an array and you want to convert it into a string or JSX element
+    const messageContent = content.map((item) => {
+      if (item.type === "text") {
+        return item.text.value;
+      } else {
+        return "";
+      }
+    });
+
+    return {
+      id,
+      createdAt: new Date(created_at * 1000), // converting Unix timestamp to Date object
+      content: messageContent[0],
+      role: role === "assistant" ? "assistant" : "user", // Adjust according to your needs
+      // Set other properties as required by Message interface
+      ui: null, // example, set based on your UI requirements
+      // name, function_call, and other fields as needed
+    };
+  });
+};

@@ -1,8 +1,9 @@
 import Cookies from "js-cookie";
 import { Dispatch, SetStateAction } from "react";
 import { UpgradePlanModal } from "./upgrade-plan-modal";
-import { Button } from "../ui/button";
+import { Button } from "@/components/ui/button";
 import { usePlausible } from "next-plausible";
+import X from "@/components/shared/icons/x";
 
 export default function ProBanner({
   setShowProBanner,
@@ -10,27 +11,34 @@ export default function ProBanner({
   setShowProBanner: Dispatch<SetStateAction<boolean | null>>;
 }) {
   const plausible = usePlausible();
+
+  const handleHideBanner = () => {
+    setShowProBanner(false);
+    plausible("clickedHideBanner");
+    Cookies.set("hideProBanner", "pro-banner", {
+      expires: 7,
+    });
+  };
+
   return (
-    <div className="fixed bottom-5 z-20 mx-5 flex flex-col space-y-4 rounded-lg border border-gray-700 bg-background p-5 shadow-lg sm:right-5 sm:mx-auto sm:max-w-sm">
-      <h3 className="text-lg font-semibold">Product Hunt Special ✨😻</h3>
-      <p className="text-sm text-gray-500">
-        To celebrate the launch of Papermark on Product Hunt, we are offering a{" "}
-        <span className="font-bold">30% discount</span> on Pro plans today only.
-        The coupon code is{" "}
-        <span className="font-bold text-emerald-500">30YEARLYPH</span>.
+    <aside className="flex flex-col justify-center w-full bg-background text-foreground p-4 mb-2 rounded-lg border border-gray-700 relative">
+      <button
+        type="button"
+        onClick={handleHideBanner}
+        className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground"
+      >
+        <X className="w-4 h-4" />
+        <span className="sr-only">Close</span>
+      </button>
+      <div className="flex space-x-2">
+        <span className="font-bold text-sm">✨ Papermark Pro ✨</span>
+      </div>
+      <p className="my-4 text-sm">
+        Join the Papermark Pro plan to unlock custom domains, team members, and
+        more.
       </p>
-      <div className="flex space-x-5">
-        <Button
-          variant="secondary"
-          onClick={() => {
-            setShowProBanner(false);
-            plausible("clickedHideBanner");
-            Cookies.set("hideProBanner", "producthunt-banner", { expires: 7 });
-          }}
-        >
-          Don&apos;t show again
-        </Button>
-        <UpgradePlanModal>
+      <div className="flex">
+        <UpgradePlanModal clickedPlan={"Pro"}>
           <Button
             type="button"
             className="grow"
@@ -42,6 +50,6 @@ export default function ProBanner({
           </Button>
         </UpgradePlanModal>
       </div>
-    </div>
+    </aside>
   );
 }

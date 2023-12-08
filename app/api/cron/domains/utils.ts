@@ -25,13 +25,13 @@ export const handleDomainUpdates = async ({
   if (verified) return;
 
   const invalidDays = Math.floor(
-    (new Date().getTime() - new Date(createdAt).getTime()) / (1000 * 3600 * 24)
+    (new Date().getTime() - new Date(createdAt).getTime()) / (1000 * 3600 * 24),
   );
 
   // do nothing if domain is invalid for less than 14 days
   if (invalidDays != 1 && invalidDays < 14) return;
 
-  const user = await prisma.user.findFirst({
+  const team = await prisma.team.findFirst({
     where: {
       domains: {
         some: {
@@ -42,16 +42,45 @@ export const handleDomainUpdates = async ({
     select: {
       id: true,
       name: true,
-      email: true,
+      sentEmails: {
+        where: {
+          type: {
+            in: [
+              "FIRST_DAY_DOMAIN_REMINDER_EMAIL",
+              "FIRST_DOMAIN_INVALID_EMAIL",
+              "SECOND_DOMAIN_INVALID_EMAIL",
+            ],
+          },
+        },
+        select: {
+          type: true,
+          domainSlug: true,
+        },
+      },
+      users: {
+        where: { role: "ADMIN" },
+        select: {
+          user: {
+            select: { email: true },
+          },
+        },
+      },
     },
   });
-  if (!user) {
+  if (!team) {
     await log(
       `Domain *${domain}* is invalid but not associated with any user, skipping.`,
-      true
+      true,
     );
     return;
   }
+
+  // create an array of tuples with email type and domain slug
+  const sentEmails = team.sentEmails.map((email) => [
+    email.type,
+    email.domainSlug,
+  ]);
+  const userEmail = team.users[0].user.email!;
 
   // if domain is invalid for more than 30 days, check if we can delete it
   if (invalidDays >= 30) {
@@ -74,12 +103,12 @@ export const handleDomainUpdates = async ({
 
       const totalLinksViews = linksViews.reduce(
         (acc, link) => acc + link._count.views,
-        0
+        0,
       );
 
       if (totalLinksViews > 0) {
         return await log(
-          `Domain *${domain}* has been invalid for > 30 days and has links with clicks, skipping.`
+          `Domain *${domain}* has been invalid for > 30 days and has links with clicks, skipping.`,
         );
       }
     }
@@ -89,40 +118,88 @@ export const handleDomainUpdates = async ({
       log(
         `Domain *${domain}* has been invalid for > 30 days and ${
           linksCount > 0 ? "has links but no link clicks" : "has no links"
-        }, deleting.`
+        }, deleting.`,
       ),
-      limiter.schedule(() => sendDeletedDomainEmail(user.email!, domain)),
+      limiter.schedule(() => sendDeletedDomainEmail(userEmail, domain)),
     ]);
   }
 
   // if domain is invalid for more than 28 days, send email
-  if (invalidDays == 28) {
-    return await Promise.allSettled([
-      log(`Domain *${domain}* is invalid for ${invalidDays} days, email sent.`),
-      limiter.schedule(() =>
-        sendInvalidDomainEmail(user.email!, domain, invalidDays)
-      ),
-    ]);
+  if (invalidDays >= 28) {
+    const sentSecondDomainInvalidEmail = sentEmails.some(
+      ([type, domainSlug]) =>
+        type === "SECOND_DOMAIN_INVALID_EMAIL" && domainSlug === domain,
+    );
+    if (!sentSecondDomainInvalidEmail) {
+      return await Promise.allSettled([
+        log(
+          `Domain *${domain}* is invalid for ${invalidDays} days, email sent.`,
+        ),
+        limiter.schedule(() =>
+          sendInvalidDomainEmail(userEmail, domain, invalidDays),
+        ),
+        prisma.sentEmail.create({
+          data: {
+            type: "SECOND_DOMAIN_INVALID_EMAIL",
+            teamId: team.id,
+            recipient: userEmail,
+            domainSlug: domain,
+          },
+        }),
+      ]);
+    }
   }
 
   // if domain is invalid for more than 14 days, send email
-  if (invalidDays == 14) {
-    return await Promise.allSettled([
-      log(`Domain *${domain}* is invalid for ${invalidDays} days, email sent.`),
-      limiter.schedule(() =>
-        sendInvalidDomainEmail(user.email!, domain, invalidDays)
-      ),
-    ]);
+  if (invalidDays >= 14) {
+    const sentFirstDomainInvalidEmail = sentEmails.some(
+      ([type, domainSlug]) =>
+        type === "FIRST_DOMAIN_INVALID_EMAIL" && domainSlug === domain,
+    );
+    if (!sentFirstDomainInvalidEmail) {
+      return await Promise.allSettled([
+        log(
+          `Domain *${domain}* is invalid for ${invalidDays} days, email sent.`,
+        ),
+        limiter.schedule(() =>
+          sendInvalidDomainEmail(userEmail, domain, invalidDays),
+        ),
+        prisma.sentEmail.create({
+          data: {
+            type: "FIRST_DOMAIN_INVALID_EMAIL",
+            teamId: team.id,
+            recipient: userEmail,
+            domainSlug: domain,
+          },
+        }),
+      ]);
+    }
   }
 
   // if domain is invalid after the first day, send email
   if (invalidDays == 1) {
-    return await Promise.allSettled([
-      log(`Domain *${domain}* is invalid for ${invalidDays} days, email sent.`),
-      limiter.schedule(() =>
-        sendInvalidDomainEmail(user.email!, domain, invalidDays)
-      ),
-    ]);
+    const sentFirstDayDomainReminderEmail = sentEmails.some(
+      ([type, domainSlug]) =>
+        type === "FIRST_DAY_DOMAIN_REMINDER_EMAIL" && domainSlug === domain,
+    );
+    if (!sentFirstDayDomainReminderEmail) {
+      return await Promise.allSettled([
+        log(
+          `Domain *${domain}* is invalid for ${invalidDays} days, email sent.`,
+        ),
+        limiter.schedule(() =>
+          sendInvalidDomainEmail(userEmail, domain, invalidDays),
+        ),
+        prisma.sentEmail.create({
+          data: {
+            type: "FIRST_DAY_DOMAIN_REMINDER_EMAIL",
+            teamId: team.id,
+            recipient: userEmail,
+            domainSlug: domain,
+          },
+        }),
+      ]);
+    }
   }
 
   return;

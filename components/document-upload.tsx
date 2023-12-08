@@ -1,9 +1,16 @@
 import { useMemo } from "react";
 import { useDropzone } from "react-dropzone";
-import { ArrowUpTrayIcon, DocumentIcon, PhotoIcon } from "@heroicons/react/24/outline";
-import { DocumentTextIcon, PresentationChartBarIcon } from "@heroicons/react/20/solid";
+import {
+  ArrowUpTrayIcon,
+  DocumentIcon,
+  PhotoIcon,
+} from "@heroicons/react/24/outline";
+import {
+  DocumentTextIcon,
+  PresentationChartBarIcon,
+} from "@heroicons/react/20/solid";
 import { bytesToSize } from "@/lib/utils";
-import { toast } from "sonner" 
+import { toast } from "sonner";
 
 function fileIcon(fileType: string) {
   switch (fileType) {
@@ -44,11 +51,11 @@ export default function DocumentUpload({
       const { errors } = fileRejections[0];
       let message;
       if (errors[0].code === "file-too-large") {
-        message = "File size too big (max. 30 MB)"
+        message = "File size too big (max. 30 MB)";
       } else if (errors[0].code === "file-invalid-type") {
-        message = "File type not supported (.pdf only)"
+        message = "File type not supported (.pdf only)";
       } else {
-        message = errors[0].message
+        message = errors[0].message;
       }
       toast.error(message);
     },
@@ -56,7 +63,7 @@ export default function DocumentUpload({
 
   const imageBlobUrl = useMemo(
     () => (currentFile ? URL.createObjectURL(currentFile) : ""),
-    [currentFile]
+    [currentFile],
   );
 
   return (
@@ -97,9 +104,7 @@ export default function DocumentUpload({
               </span>
             </div>
             <p className="text-xs leading-5 text-gray-500">
-              {currentFile
-                ? "Replace file?"
-                : "Only *.pdf & 30 MB limit"}
+              {currentFile ? "Replace file?" : "Only *.pdf & 30 MB limit"}
             </p>
           </div>
         </div>

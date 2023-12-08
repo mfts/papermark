@@ -71,10 +71,9 @@ const UpgradePlanEmail = ({ name }: UpgradePlanEmailProps) => {
             </Text>
             <Section className="text-center mt-[32px] mb-[32px]">
               <Button
-                pX={20}
-                pY={12}
                 className="bg-black rounded text-white text-xs font-semibold no-underline text-center"
                 href={`${process.env.NEXT_PUBLIC_BASE_URL}/settings/domains`}
+                style={{ padding: "12px 20px" }}
               >
                 Set up your custom domain
               </Button>
