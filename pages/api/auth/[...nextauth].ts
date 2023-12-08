@@ -7,6 +7,8 @@ import { sendWelcomeEmail } from "@/lib/emails/send-welcome";
 import { analytics, identifyUser, trackAnalytics } from "@/lib/analytics";
 import EmailProvider from "next-auth/providers/email";
 import { sendVerificationRequestEmail } from "@/lib/emails/send-verification-request";
+import { PasskeyProvider } from "@teamhanko/passkeys-next-auth-provider";
+import hanko from "@/lib/hanko";
 
 const VERCEL_DEPLOYMENT = !!process.env.VERCEL_URL;
 
@@ -32,6 +34,14 @@ export const authOptions: NextAuthOptions = {
             email: identifier,
           });
         }
+      },
+    }),
+    PasskeyProvider({
+      tenant: hanko,
+      async authorize({ userId }) {
+        const user = await prisma.user.findUnique({ where: { id: userId } });
+        if (!user) return null;
+        return user;
       },
     }),
   ],
@@ -66,6 +76,7 @@ export const authOptions: NextAuthOptions = {
         // @ts-ignore
         ...(token || session).user,
       };
+      console.log("session", session);
       return session;
     },
   },
