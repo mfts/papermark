@@ -1,13 +1,14 @@
 import NextAuth, { type NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
+import LinkedInProvider from "next-auth/providers/linkedin";
+import EmailProvider from "next-auth/providers/email";
+import { PasskeyProvider } from "@teamhanko/passkeys-next-auth-provider";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import prisma from "@/lib/prisma";
 import { CreateUserEmailProps, CustomUser } from "@/lib/types";
 import { sendWelcomeEmail } from "@/lib/emails/send-welcome";
 import { analytics, identifyUser, trackAnalytics } from "@/lib/analytics";
-import EmailProvider from "next-auth/providers/email";
 import { sendVerificationRequestEmail } from "@/lib/emails/send-verification-request";
-import { PasskeyProvider } from "@teamhanko/passkeys-next-auth-provider";
 import hanko from "@/lib/hanko";
 
 const VERCEL_DEPLOYMENT = !!process.env.VERCEL_URL;
@@ -18,10 +19,34 @@ export const config = {
 };
 
 export const authOptions: NextAuthOptions = {
+  pages: {
+    error: "/login",
+  },
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID as string,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+      allowDangerousEmailAccountLinking: true,
+    }),
+    LinkedInProvider({
+      clientId: process.env.LINKEDIN_CLIENT_ID as string,
+      clientSecret: process.env.LINKEDIN_CLIENT_SECRET as string,
+      authorization: {
+        params: { scope: "openid profile email" },
+      },
+      issuer: "https://www.linkedin.com",
+      jwks_endpoint: "https://www.linkedin.com/oauth/openid/jwks",
+      profile(profile, tokens) {
+        const defaultImage =
+          "https://cdn-icons-png.flaticon.com/512/174/174857.png";
+        return {
+          id: profile.sub,
+          name: profile.name,
+          email: profile.email,
+          image: profile.picture ?? defaultImage,
+        };
+      },
+      allowDangerousEmailAccountLinking: true,
     }),
     EmailProvider({
       async sendVerificationRequest({ identifier, url }) {
