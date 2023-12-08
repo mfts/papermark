@@ -6,8 +6,7 @@ import { CreateUserEmailProps, CustomUser } from "@/lib/types";
 import { sendWelcomeEmail } from "@/lib/emails/send-welcome";
 import { analytics, identifyUser, trackAnalytics } from "@/lib/analytics";
 import EmailProvider from "next-auth/providers/email";
-import { sendEmail } from "@/lib/resend";
-import LoginLink from "@/components/emails/login-link";
+import { sendVerificationRequestEmail } from "@/lib/emails/send-verification-request";
 
 const VERCEL_DEPLOYMENT = !!process.env.VERCEL_URL;
 
@@ -24,11 +23,15 @@ export const authOptions: NextAuthOptions = {
     }),
     EmailProvider({
       sendVerificationRequest({ identifier, url }) {
-        sendEmail({
-          to: identifier,
-          subject: "Your Papermark Login Link",
-          react: LoginLink({ url, email: identifier }),
-        });
+        if (process.env.NODE_ENV === "development") {
+          console.log(`Login link: ${url}`);
+          return;
+        } else {
+          sendVerificationRequestEmail({
+            url,
+            email: identifier,
+          });
+        }
       },
     }),
   ],
