@@ -1,12 +1,13 @@
-"use server";
-
 import hanko from "@/lib/hanko";
 import { CustomUser } from "@/lib/types";
-import { getServerSession } from "next-auth";
+import { type Session } from "next-auth";
 import prisma from "@/lib/prisma";
 
-export async function startServerPasskeyRegistration() {
-  const session = await getServerSession();
+export async function startServerPasskeyRegistration({
+  session,
+}: {
+  session: Session;
+}) {
   if (!session) throw new Error("Not logged in");
 
   const sessionUser = session.user as CustomUser;
@@ -26,8 +27,13 @@ export async function startServerPasskeyRegistration() {
 
 // This is *your* server-side code; you need to implement this yourself.
 // NextAuth takes care of logging in the user after they have registered their passkey.
-export async function finishServerPasskeyRegistration(credential: any) {
-  const session = await getServerSession();
+export async function finishServerPasskeyRegistration({
+  credential,
+  session,
+}: {
+  credential: any;
+  session: Session;
+}) {
   if (!session) throw new Error("Not logged in");
 
   await hanko.registration.finalize(credential);
