@@ -8,9 +8,13 @@ import { useRouter } from "next/router";
 import { Input } from "@/components/ui/input";
 import { useParams } from "next/navigation";
 import Passkey from "@/components/shared/icons/passkey";
+import { useState } from "react";
+import { toast } from "sonner";
 
 export default function Login() {
   const { next } = useParams as { next?: string };
+
+  const [email, setEmail] = useState<string>("");
 
   return (
     <div className="flex h-screen w-screen justify-center">
@@ -26,7 +30,7 @@ export default function Login() {
           }}
         />
       </div>
-      <div className="z-10 mt-[calc(30vh)] h-fit w-full mx-5 sm:mx-0 max-w-md overflow-hidden border border-border bg-gray-50 dark:bg-gray-900 rounded-lg sm:shadow-xl">
+      <div className="z-10 mt-[calc(20vh)] h-fit w-full mx-5 sm:mx-0 max-w-md overflow-hidden border border-border bg-gray-50 dark:bg-gray-900 rounded-lg sm:shadow-xl">
         <div className="flex flex-col items-center justify-center space-y-3 px-4 py-6 pt-8 text-center sm:px-16">
           <Link href="/">
             <span className="text-xl font-bold tracking-tighter text-foreground">
@@ -41,13 +45,26 @@ export default function Login() {
           className="flex flex-col p-4 pt-8 sm:px-16 gap-4"
           onSubmit={(e) => {
             e.preventDefault();
-            const form = e.target as HTMLFormElement;
             signIn("email", {
-              email: (form.elements[0] as HTMLInputElement).value,
+              email: email,
+              redirect: false,
+              ...(next && next.length > 0 ? { callbackUrl: next } : {}),
+            }).then((res) => {
+              if (res?.ok && !res?.error) {
+                setEmail("");
+                toast.success("Email sent - check your inbox!");
+              } else {
+                toast.error("Error sending email - try again?");
+              }
             });
           }}
         >
-          <Input className=" border-4" placeholder="John.deo@mail.com" />
+          <Input
+            className=" border-4"
+            placeholder="jsmith@company.co"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
           <Button type="submit">Continue with Email</Button>
         </form>
         <p className="text-center">or</p>
@@ -68,7 +85,7 @@ export default function Login() {
             >
               <path d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z" />
             </svg>
-            <span>Sign in with Google</span>
+            <span>Continue with Google</span>
           </Button>
           <Button
             onClick={() =>
@@ -80,7 +97,7 @@ export default function Login() {
             className="flex justify-center items-center space-x-2"
           >
             <Passkey className="w-4 h-4" />
-            <span>Sign in with a passkey</span>
+            <span>Continue with a passkey</span>
           </Button>
         </div>
       </div>

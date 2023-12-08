@@ -10,10 +10,15 @@ import {
   startServerPasskeyRegistration,
 } from "@/lib/api/auth/passkey";
 import { create } from "@github/webauthn-json";
+import { Input } from "@/components/ui/input";
+import { useState } from "react";
+import { toast } from "sonner";
 
 export default function Register() {
   const router = useRouter();
   const { next } = useParams as { next?: string };
+
+  const [email, setEmail] = useState<string>("");
 
   async function registerPasskey() {
     const createOptions = await startServerPasskeyRegistration();
@@ -50,6 +55,33 @@ export default function Register() {
             Start sharing documents
           </h3>
         </div>
+        <form
+          className="flex flex-col p-4 pt-8 sm:px-16 gap-4"
+          onSubmit={(e) => {
+            e.preventDefault();
+            signIn("email", {
+              email: email,
+              redirect: false,
+              ...(next && next.length > 0 ? { callbackUrl: next } : {}),
+            }).then((res) => {
+              if (res?.ok && !res?.error) {
+                setEmail("");
+                toast.success("Email sent - check your inbox!");
+              } else {
+                toast.error("Error sending email - try again?");
+              }
+            });
+          }}
+        >
+          <Input
+            className=" border-4"
+            placeholder="jsmith@company.co"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <Button type="submit">Continue with Email</Button>
+        </form>
+        <p className="text-center">or</p>
         <div className="flex flex-col px-4 py-8 sm:px-16 space-y-2">
           <Button
             onClick={() => {
@@ -69,13 +101,13 @@ export default function Register() {
             </svg>
             <span>Continue with Google</span>
           </Button>
-          <Button
+          {/* <Button
             onClick={() => registerPasskey().then(router.refresh)}
             className="flex justify-center items-center space-x-2"
           >
             <Passkey className="w-4 h-4" />
             <span>Register a passkey</span>
-          </Button>
+          </Button> */}
         </div>
       </div>
     </div>

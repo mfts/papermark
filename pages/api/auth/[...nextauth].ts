@@ -24,12 +24,12 @@ export const authOptions: NextAuthOptions = {
       clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
     }),
     EmailProvider({
-      sendVerificationRequest({ identifier, url }) {
+      async sendVerificationRequest({ identifier, url }) {
         if (process.env.NODE_ENV === "development") {
           console.log(`Login link: ${url}`);
           return;
         } else {
-          sendVerificationRequestEmail({
+          await sendVerificationRequestEmail({
             url,
             email: identifier,
           });
@@ -76,7 +76,7 @@ export const authOptions: NextAuthOptions = {
         // @ts-ignore
         ...(token || session).user,
       };
-      console.log("session", session);
+      // console.log("session", session);
       return session;
     },
   },
@@ -84,9 +84,7 @@ export const authOptions: NextAuthOptions = {
     async createUser(message) {
       const params: CreateUserEmailProps = {
         user: {
-          name: message?.user?.name
-            ? message.user.name
-            : message.user.email?.split("@")[0],
+          name: message.user.name,
           email: message.user.email,
         },
       };
