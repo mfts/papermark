@@ -20,6 +20,7 @@ import { usePlan } from "@/lib/swr/use-billing";
 import Image from "next/image";
 import SelectTeam from "./teams/select-team";
 import { TeamContextType, initialState, useTeam } from "@/context/team-context";
+import UserRound from "./shared/icons/user-round";
 
 export default function Sidebar() {
   const { data: session, status } = useSession();
@@ -243,16 +244,26 @@ export default function Sidebar() {
                 <div className="flex justify-between items-center space-x-2">
                   <Menu as="div" className="relative grow">
                     <Menu.Button className="flex items-center group rounded-md gap-x-3 p-2 w-full text-sm font-semibold leading-6 text-foreground hover:bg-gray-200 hover:dark:bg-secondary">
-                      <Image
-                        className="h-8 w-8 rounded-full bg-secondary"
-                        src={session?.user?.image || ""}
-                        width={32}
-                        height={32}
-                        alt={`Profile picture of ${session?.user?.name}`}
-                      />
+                      {session?.user?.image ? (
+                        <Image
+                          className="h-8 w-8 rounded-full bg-secondary"
+                          src={session?.user?.image}
+                          width={32}
+                          height={32}
+                          alt={`Profile picture of ${session?.user?.name}`}
+                        />
+                      ) : (
+                        <div className="">
+                          <UserRound className="h-8 w-8 p-1 rounded-full ring-1 ring-muted-foreground/50 bg-secondary" />
+                        </div>
+                      )}
                       <span className="flex items-center w-full justify-between">
                         <span className="sr-only">Your profile</span>
-                        <span aria-hidden="true">{session?.user?.name}</span>
+                        <span aria-hidden="true">
+                          {session?.user?.name
+                            ? session?.user?.name
+                            : session?.user?.email?.split("@")[0]}
+                        </span>
                         <ChevronUp
                           className="ml-2 h-5 w-5 text-muted-foreground"
                           aria-hidden="true"
@@ -333,13 +344,19 @@ export default function Sidebar() {
               <Menu as="div" className="relative">
                 <Menu.Button className="-m-1.5 flex items-center p-1.5">
                   <span className="sr-only">Open user menu</span>
-                  <Image
-                    className="h-8 w-8 rounded-full bg-secondary"
-                    src={session?.user?.image || ""}
-                    width={32}
-                    height={32}
-                    alt={`Profile picture of ${session?.user?.name}`}
-                  />
+                  {session?.user?.image ? (
+                    <Image
+                      className="h-8 w-8 rounded-full bg-secondary"
+                      src={session?.user?.image}
+                      width={32}
+                      height={32}
+                      alt={`Profile picture of ${session?.user?.name}`}
+                    />
+                  ) : (
+                    <div className="">
+                      <UserRound className="h-8 w-8 p-1 rounded-full ring-1 ring-muted-foreground/50 bg-secondary" />
+                    </div>
+                  )}
                 </Menu.Button>
                 <Transition
                   as={Fragment}

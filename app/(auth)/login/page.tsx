@@ -4,11 +4,17 @@ import { Button } from "@/components/ui/button";
 import { signIn } from "next-auth/react";
 import { signInWithPasskey } from "@teamhanko/passkeys-next-auth-provider/client";
 import Link from "next/link";
+import { useRouter } from "next/router";
+import { Input } from "@/components/ui/input";
 import { useParams } from "next/navigation";
 import Passkey from "@/components/shared/icons/passkey";
+import { useState } from "react";
+import { toast } from "sonner";
 
 export default function Login() {
   const { next } = useParams as { next?: string };
+
+  const [email, setEmail] = useState<string>("");
 
   return (
     <div className="flex h-screen w-screen justify-center">
@@ -24,7 +30,7 @@ export default function Login() {
           }}
         />
       </div>
-      <div className="z-10 mt-[calc(30vh)] h-fit w-full mx-5 sm:mx-0 max-w-md overflow-hidden border border-border bg-gray-50 dark:bg-gray-900 rounded-lg sm:shadow-xl">
+      <div className="z-10 mt-[calc(20vh)] h-fit w-full mx-5 sm:mx-0 max-w-md overflow-hidden border border-border bg-gray-50 dark:bg-gray-900 rounded-lg sm:shadow-xl">
         <div className="flex flex-col items-center justify-center space-y-3 px-4 py-6 pt-8 text-center sm:px-16">
           <Link href="/">
             <span className="text-xl font-bold tracking-tighter text-foreground">
@@ -35,6 +41,33 @@ export default function Login() {
             Start sharing documents
           </h3>
         </div>
+        <form
+          className="flex flex-col p-4 pt-8 sm:px-16 gap-4"
+          onSubmit={(e) => {
+            e.preventDefault();
+            signIn("email", {
+              email: email,
+              redirect: false,
+              ...(next && next.length > 0 ? { callbackUrl: next } : {}),
+            }).then((res) => {
+              if (res?.ok && !res?.error) {
+                setEmail("");
+                toast.success("Email sent - check your inbox!");
+              } else {
+                toast.error("Error sending email - try again?");
+              }
+            });
+          }}
+        >
+          <Input
+            className=" border-4"
+            placeholder="jsmith@company.co"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <Button type="submit">Continue with Email</Button>
+        </form>
+        <p className="text-center">or</p>
         <div className="flex flex-col px-4 py-8 sm:px-16 space-y-2">
           <Button
             onClick={() => {
@@ -64,7 +97,7 @@ export default function Login() {
             className="flex justify-center items-center space-x-2"
           >
             <Passkey className="w-4 h-4" />
-            <span>Sign in with a passkey</span>
+            <span>Continue with a passkey</span>
           </Button>
         </div>
       </div>

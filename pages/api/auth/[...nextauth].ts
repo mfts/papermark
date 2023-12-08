@@ -5,6 +5,8 @@ import prisma from "@/lib/prisma";
 import { CreateUserEmailProps, CustomUser } from "@/lib/types";
 import { sendWelcomeEmail } from "@/lib/emails/send-welcome";
 import { analytics, identifyUser, trackAnalytics } from "@/lib/analytics";
+import EmailProvider from "next-auth/providers/email";
+import { sendVerificationRequestEmail } from "@/lib/emails/send-verification-request";
 import { PasskeyProvider } from "@teamhanko/passkeys-next-auth-provider";
 import hanko from "@/lib/hanko";
 
@@ -20,6 +22,19 @@ export const authOptions: NextAuthOptions = {
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID as string,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+    }),
+    EmailProvider({
+      async sendVerificationRequest({ identifier, url }) {
+        if (process.env.NODE_ENV === "development") {
+          console.log(`Login link: ${url}`);
+          return;
+        } else {
+          await sendVerificationRequestEmail({
+            url,
+            email: identifier,
+          });
+        }
+      },
     }),
     PasskeyProvider({
       tenant: hanko,
@@ -61,7 +76,7 @@ export const authOptions: NextAuthOptions = {
         // @ts-ignore
         ...(token || session).user,
       };
-      console.log("session", session);
+      // console.log("session", session);
       return session;
     },
   },
