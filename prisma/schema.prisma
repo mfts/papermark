@@ -95,7 +95,7 @@ model UserTeam {
 model VerificationToken {
   identifier  String   //DataroomId if dataroom else documentId
   token       String   @unique
-  expiresAt   DateTime @default("2100-01-01T00:00:00.000Z")
+  expiresAt   DateTime
 
   @@unique([identifier, token])
 }
