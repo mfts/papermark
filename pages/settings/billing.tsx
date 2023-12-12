@@ -16,6 +16,7 @@ interface Tier {
   title: string;
   priceMonthly: string;
   currentPlan: boolean;
+  hasPlan: boolean;
   isTrial?: boolean;
   description: string;
   features: string[];
@@ -48,6 +49,7 @@ export default function Billing() {
       priceMonthly: "€0/mo",
       description: "Enjoy free access",
       currentPlan: plan && plan == "free" ? true : false,
+      hasPlan: false,
       features: [
         "PDF up to 30 mb",
         "Unlimited links",
@@ -65,6 +67,7 @@ export default function Billing() {
       priceMonthly: "€15/mo",
       description: "All free features +",
       currentPlan: plan && plan == "starter" ? true : false,
+      hasPlan: plan && plan !== "free" ? true : false,
       features: [
         "Custom domains",
         "Unlimited documents",
@@ -78,6 +81,7 @@ export default function Billing() {
       priceMonthly: "€30/mo",
       description: "All features and more",
       currentPlan: plan && plan == "pro" ? true : false,
+      hasPlan: plan && plan !== "free" ? true : false,
       isTrial: plan && plan == "trial" ? true : false,
       features: [
         "Team members",
@@ -121,46 +125,48 @@ export default function Billing() {
               <div
                 key={tier.id}
                 className={cn(
-                  `rounded-3xl p-8 sm:p-10 bg-white dark:bg-gray-800`,
+                  `rounded-3xl p-8 sm:p-10 bg-white dark:bg-gray-800 flex flex-col justify-between h-full`,
                   tier.currentPlan || tier.isTrial
                     ? "ring-2 ring-primary"
                     : "ring-1 ring-gray-900/10 dark:ring-gray-200/10",
                 )}
               >
-                <h2 className="text-xl font-bold mb-4 inline-flex items-center gap-x-2">
-                  {tier.title}{" "}
-                  {tier.currentPlan ? (
-                    <Badge className="rounded-none">Current Plan</Badge>
-                  ) : null}
-                  {tier.isTrial ? (
-                    <Badge className="rounded-none">Trial</Badge>
-                  ) : null}
-                </h2>
-                <div className="text-3xl font-bold mb-4">
-                  {tier.priceMonthly}
-                </div>
-                <div className="text-gray-900 dark:text-gray-400 mb-6">
-                  {tier.description}
-                </div>
-                {tier.features.map((feature) => (
-                  <div key={feature} className="flex items-center mb-2">
-                    <svg
-                      className="h-5 w-5 text-green-500 dark:text-green-300 mr-2"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M5 13l4 4L19 7"
-                      ></path>
-                    </svg>
-                    {feature}
+                <div className="">
+                  <h2 className="text-xl font-bold mb-4 inline-flex items-center gap-x-2">
+                    {tier.title}{" "}
+                    {tier.currentPlan ? (
+                      <Badge className="rounded-none">Current Plan</Badge>
+                    ) : null}
+                    {tier.isTrial ? (
+                      <Badge className="rounded-none">Trial</Badge>
+                    ) : null}
+                  </h2>
+                  <div className="text-3xl font-bold mb-4">
+                    {tier.priceMonthly}
                   </div>
-                ))}
+                  <div className="text-gray-900 dark:text-gray-400 mb-6">
+                    {tier.description}
+                  </div>
+                  {tier.features.map((feature) => (
+                    <div key={feature} className="flex items-center mb-2">
+                      <svg
+                        className="h-5 w-5 text-green-500 dark:text-green-300 mr-2"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M5 13l4 4L19 7"
+                        ></path>
+                      </svg>
+                      {feature}
+                    </div>
+                  ))}
+                </div>
                 <div className="mt-6 flex items-center justify-center gap-x-6">
                   {tier.id === 1 &&
                     (plan ? (
@@ -183,8 +189,13 @@ export default function Billing() {
                     ))}
                   {tier.id === 2 &&
                     (plan ? (
-                      tier.currentPlan ? (
+                      tier.hasPlan ? (
                         <Button
+                          className={cn(
+                            !tier.currentPlan &&
+                              "border border-gray-700 dark:bg-secondary hover:dark:border-gray-500 hover:dark:bg-gray-700",
+                          )}
+                          variant={tier.currentPlan ? "default" : "outline"}
                           onClick={() => {
                             setClicked(true);
                             fetch(

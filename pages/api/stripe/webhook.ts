@@ -29,9 +29,23 @@ const relevantEvents = new Set([
   "customer.subscription.deleted",
 ]);
 
+interface SubscriptionInfo {
+  plan: {
+    name: string;
+    slug: string;
+    price: { monthly: any; yearly: any };
+  };
+  subscriptionId: string;
+  startsAt: Date;
+  endsAt: Date;
+  newCustomer: boolean;
+}
+
+const pendingSubscriptionUpdates = new Map<string, SubscriptionInfo>();
+
 export default async function webhookHandler(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   // POST /api/stripe/webhook – listen to Stripe webhooks
   if (req.method === "POST") {
@@ -46,6 +60,7 @@ export default async function webhookHandler(
       console.log(`❌ Error message: ${err.message}`);
       return res.status(400).send(`Webhook Error: ${err.message}`);
     }
+
     if (relevantEvents.has(event.type)) {
       try {
         if (event.type === "checkout.session.completed") {
@@ -59,17 +74,57 @@ export default async function webhookHandler(
             return;
           }
 
-          // when the project subscribes to a plan, set their stripe customer ID
-          // in the database for easy identification in future webhook events
+          const clientReferenceId = checkoutSession.client_reference_id;
+          const stripeId = checkoutSession.customer.toString();
 
-          await prisma.user.update({
-            where: {
-              id: checkoutSession.client_reference_id,
-            },
-            data: {
-              stripeId: checkoutSession.customer.toString(),
-            },
-          });
+          // Check if there are pending subscription updates for this user
+          if (pendingSubscriptionUpdates.has(stripeId)) {
+            const pendingUpdate = pendingSubscriptionUpdates.get(stripeId);
+            const { plan, subscriptionId, startsAt, endsAt, newCustomer } =
+              pendingUpdate as SubscriptionInfo;
+
+            // Update the user with the subscription information and stripeId
+            const team = await prisma.team.update({
+              where: {
+                id: clientReferenceId,
+              },
+              data: {
+                stripeId,
+                plan: plan.slug,
+                subscriptionId,
+                startsAt,
+                endsAt,
+              },
+              select: {
+                id: true,
+                users: {
+                  where: { role: "ADMIN" },
+                  select: {
+                    user: { select: { id: true, email: true, name: true } },
+                  },
+                },
+              },
+            });
+
+            // Send thank you email to project owner if they are a new customer
+            if (newCustomer) {
+              await sendUpgradePlanEmail({
+                user: {
+                  email: team.users[0].user.email as string,
+                  name: team.users[0].user.name as string,
+                },
+              });
+            }
+
+            await identifyUser(team.users[0].user.id);
+            await trackAnalytics({
+              event: "User Upgraded",
+              email: team.users[0].user.email,
+            });
+
+            // Remove the pending update from the store
+            pendingSubscriptionUpdates.delete(stripeId);
+          }
 
           // for subscription updates
         } else if (event.type === "customer.subscription.updated") {
@@ -81,42 +136,18 @@ export default async function webhookHandler(
           const stripeId = subscriptionUpdated.customer.toString();
           const subscriptionId = subscriptionUpdated.id;
           const startsAt = new Date(
-            subscriptionUpdated.current_period_start * 1000
+            subscriptionUpdated.current_period_start * 1000,
           );
           const endsAt = new Date(
-            subscriptionUpdated.current_period_end * 1000
+            subscriptionUpdated.current_period_end * 1000,
           );
 
-          // If a project upgrades/downgrades their subscription, update their usage limit in the database.
-          const user = await prisma.user.update({
-            where: {
-              stripeId,
-            },
-            data: {
-              plan: plan.slug,
-              subscriptionId,
-              startsAt,
-              endsAt,
-            },
-          });
-          if (!user) {
-            await log(
-              "User not found in Stripe webhook `customer.subscription.created` callback"
-            );
-            return;
-          }
-
-          // Send thank you email to project owner if they are a new customer
-          if (newCustomer) {
-            await sendUpgradePlanEmail({
-              user: { email: user.email as string, name: user.name as string },
-            });
-          }
-
-          await identifyUser(user.id);
-          await trackAnalytics({
-            event: "User Upgraded",
-            email: user.email,
+          pendingSubscriptionUpdates.set(stripeId, {
+            plan,
+            subscriptionId,
+            startsAt,
+            endsAt,
+            newCustomer,
           });
 
           // If project cancels their subscription
@@ -138,7 +169,9 @@ export default async function webhookHandler(
           });
 
           if (!user) {
-            await log("User not found in Stripe webhook `customer.subscription.deleted` callback");
+            await log(
+              "User not found in Stripe webhook `customer.subscription.deleted` callback",
+            );
             return;
           }
 
