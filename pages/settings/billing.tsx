@@ -233,7 +233,7 @@ export default function Billing() {
                     ))}
                   {tier.id === 3 &&
                     (plan ? (
-                      tier.currentPlan ? (
+                      tier.hasPlan ? (
                         <Button
                           onClick={() => {
                             setClicked(true);
@@ -254,7 +254,9 @@ export default function Billing() {
                           }}
                           loading={clicked}
                         >
-                          Manage Subscription
+                          {tier.currentPlan
+                            ? `Manage Subscription`
+                            : `Upgrade to Pro`}
                         </Button>
                       ) : (
                         <UpgradePlanModal clickedPlan={"Pro"}>

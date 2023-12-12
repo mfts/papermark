@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { Readable } from "node:stream";
-import Stripe from "stripe";
+import type Stripe from "stripe";
 import prisma from "@/lib/prisma";
 import { stripe } from "@/lib/stripe";
 import { getPlanFromPriceId, isNewCustomer } from "@/lib/stripe/utils";
@@ -158,37 +158,31 @@ export default async function webhookHandler(
 
           // If a project deletes their subscription, reset their usage limit in the database to 1000.
           // Also remove the root domain redirect for all their domains from Redis.
-          const user = await prisma.user.findUnique({
+          const team = await prisma.team.update({
             where: {
               stripeId,
             },
-            select: {
-              id: true,
-              name: true,
+            data: {
+              plan: "free",
+              subscriptionId: null,
+              endsAt: null,
+              startsAt: null,
             },
+            select: { id: true },
           });
 
-          if (!user) {
+          if (!team) {
             await log(
-              "User not found in Stripe webhook `customer.subscription.deleted` callback",
+              "Team with stripeId: `" +
+                stripeId +
+                "`not found in Stripe webhook `customer.subscription.deleted` callback",
             );
             return;
           }
 
-          await Promise.all([
-            prisma.user.update({
-              where: {
-                stripeId,
-              },
-              data: {
-                plan: "free",
-                subscriptionId: null,
-                endsAt: null,
-                startsAt: null,
-              },
-            }),
-            log(":cry: User *`" + user.id + "`* deleted their subscription"),
-          ]);
+          await log(
+            ":cry: Team *`" + team.id + "`* deleted their subscription",
+          );
         } else {
           throw new Error("Unhandled relevant event!");
         }

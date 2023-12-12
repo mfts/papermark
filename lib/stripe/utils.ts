@@ -1,5 +1,3 @@
-import type Stripe from "stripe";
-
 export function getPlanFromPriceId(priceId: string) {
   const env =
     process.env.NEXT_PUBLIC_VERCEL_ENV === "production" ? "production" : "test";
