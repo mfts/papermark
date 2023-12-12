@@ -48,7 +48,6 @@ export default async function handle(
 
       return res.status(200).json(documents);
     } catch (error) {
-      console.log(error);
       errorhandler(error, res);
     }
   } else if (req.method === "POST") {
