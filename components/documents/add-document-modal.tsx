@@ -77,8 +77,6 @@ export function AddDocumentModal({
       if (response) {
         const document = await response.json();
 
-        console.log("document: ", document);
-
         if (!newVersion) {
           // copy the link to the clipboard
           copyToClipboard(
@@ -208,8 +206,6 @@ export function AddDocumentModal({
 
       if (response) {
         const document = await response.json();
-
-        console.log("document: ", document);
 
         if (!newVersion) {
           // copy the link to the clipboard
