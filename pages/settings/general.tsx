@@ -71,7 +71,7 @@ export default function General() {
             <Button
               size={"lg"}
               onClick={changeTeamName}
-              disabled={isTeamNameChanging}
+              loading={isTeamNameChanging}
             >
               {isTeamNameChanging ? "Saving..." : "Save changes"}
             </Button>
