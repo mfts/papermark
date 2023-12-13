@@ -138,6 +138,12 @@ client.defineJob({
           },
         });
       });
+
+      await io.runTask("initiate-link-revalidation", async () => {
+        await fetch(
+          `${process.env.NEXTAUTH_URL}/api/revalidate?secret=${process.env.REVALIDATE_TOKEN}&documentId=${documentId}`,
+        );
+      });
     }
 
     return {
