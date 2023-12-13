@@ -92,15 +92,17 @@ export default async function handle(
       });
 
       //Save files to dataroom
-      for (let i = 0; i < links.length; i++) {
-        await prisma.dataroomFile.create({
-          data: {
-            name: titles[i],
-            url: links[i],
-            dataroomId: dataroom.id,
-          },
-        });
-      }
+      await prisma.$transaction(
+        links.map((link, i) => {
+          return prisma.dataroomFile.create({
+            data: {
+              name: titles[i],
+              url: link,
+              dataroomId: dataroom.id,
+            },
+          });
+        }),
+      );
 
       await identifyUser((session.user as CustomUser).id);
       await trackAnalytics({
