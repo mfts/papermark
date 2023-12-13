@@ -1,4 +1,4 @@
-VERSION 2
+VERSION 3
 
 NODE endpoint
 SQL >
@@ -12,6 +12,8 @@ SQL >
     WHERE
         documentId = {{ String(documentId, required=True) }}
         AND time >= {{ Int64(since, required=True) }}
+        AND linkId NOT IN {{Array(linkId,String)}}
+        AND viewId NOT IN {{Array(viewId,String)}}
     GROUP BY
         versionNumber, pageNumber
     ORDER BY

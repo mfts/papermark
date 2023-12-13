@@ -347,6 +347,7 @@ export default function DocumentPage() {
               <StatsChart
                 documentId={prismaDocument.id}
                 totalPagesMax={primaryVersion.numPages!}
+                teamId={teamInfo?.currentTeam?.id!}
               />
             )}
             <StatsCard />
