@@ -6,7 +6,7 @@ import { CustomUser } from "@/lib/types";
 import { getExtension, log } from "@/lib/utils";
 import { identifyUser, trackAnalytics } from "@/lib/analytics";
 import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
-import { errorhandler } from "@/lib/errorHandler";
+import { errorHandler } from "@/lib/errorHandler";
 import { client } from "@/trigger";
 
 export default async function handle(
@@ -48,7 +48,7 @@ export default async function handle(
 
       return res.status(200).json(documents);
     } catch (error) {
-      errorhandler(error, res);
+      errorHandler(error, res);
     }
   } else if (req.method === "POST") {
     // POST /api/teams/:teamId/documents
@@ -151,7 +151,7 @@ export default async function handle(
       log(
         `Failed to create document. \n\n teamId: ${teamId}, file: ${fileUrl} \n\n ${error}`,
       );
-      errorhandler(error, res);
+      errorHandler(error, res);
     }
   } else {
     // We only allow GET and POST requests

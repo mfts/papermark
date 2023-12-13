@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth";
 import prisma from "@/lib/prisma";
 import { authOptions } from "../auth/[...nextauth]";
-import { errorhandler } from "@/lib/errorHandler";
+import { errorHandler } from "@/lib/errorHandler";
 import { openai } from "@/lib/openai";
 
 export default async function handle(
@@ -73,7 +73,7 @@ export default async function handle(
       res.status(200).json("Assistant Enabled");
       return;
     } catch (error) {
-      errorhandler(error, res);
+      errorHandler(error, res);
     }
   } else {
     // We only allow GET and DELETE requests

@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 import { authOptions } from "../../auth/[...nextauth]";
-import { errorhandler } from "@/lib/errorHandler";
+import { errorHandler } from "@/lib/errorHandler";
 
 export default async function handle(
   req: NextApiRequest,
@@ -63,7 +63,7 @@ export default async function handle(
 
       return res.status(200).json(team);
     } catch (error) {
-      errorhandler(error, res);
+      errorHandler(error, res);
     }
   } else if (req.method === "DELETE") {
     // DELETE /api/teams/:teamId

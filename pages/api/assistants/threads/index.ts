@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/lib/prisma";
-import { errorhandler } from "@/lib/errorHandler";
+import { errorHandler } from "@/lib/errorHandler";
 import { openai } from "@/lib/openai";
 import { convertThreadMessagesToMessages } from "@/lib/utils";
 
@@ -76,7 +76,7 @@ export default async function handle(
         messages: convertThreadMessagesToMessages(data),
       });
     } catch (error) {
-      errorhandler(error, res);
+      errorHandler(error, res);
     }
   } else {
     // We only allow GET and DELETE requests

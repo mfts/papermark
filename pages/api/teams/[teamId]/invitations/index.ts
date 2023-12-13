@@ -2,7 +2,7 @@ import { getServerSession } from "next-auth";
 import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
-import { errorhandler } from "@/lib/errorHandler";
+import { errorHandler } from "@/lib/errorHandler";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 
 export default async function handle(
@@ -49,7 +49,7 @@ export default async function handle(
       res.status(200).json(invitations);
       return;
     } catch (error) {
-      errorhandler(error, res);
+      errorHandler(error, res);
     }
   } else if (req.method === "DELETE") {
     // DELETE /api/teams/:teamId/invitations
@@ -88,7 +88,7 @@ export default async function handle(
       res.status(204).end();
       return;
     } catch (error) {
-      errorhandler(error, res);
+      errorHandler(error, res);
     }
   }
 }

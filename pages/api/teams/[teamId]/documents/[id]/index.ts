@@ -5,7 +5,7 @@ import { authOptions } from "../../../../auth/[...nextauth]";
 import { CustomUser } from "@/lib/types";
 import { del } from "@vercel/blob";
 import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
-import { errorhandler } from "@/lib/errorHandler";
+import { errorHandler } from "@/lib/errorHandler";
 
 export default async function handle(
   req: NextApiRequest,
@@ -46,7 +46,7 @@ export default async function handle(
 
       return res.status(200).json(document);
     } catch (error) {
-      errorhandler(error, res);
+      errorHandler(error, res);
     }
   } else if (req.method === "DELETE") {
     // DELETE /api/teams/:teamId/document/:id
@@ -86,7 +86,7 @@ export default async function handle(
 
       return res.status(204).end(); // 204 No Content response for successful deletes
     } catch (error) {
-      errorhandler(error, res);
+      errorHandler(error, res);
     }
   } else {
     // We only allow GET and DELETE requests
