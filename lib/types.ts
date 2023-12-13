@@ -154,7 +154,7 @@ export type AnalyticsEvents =
     }
   | {
       event: "Dataroom Viewed";
-      viewerId: string;
+      viewId: string;
       viewerEmail: string | null | undefined;
     }
   | {

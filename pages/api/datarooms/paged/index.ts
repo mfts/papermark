@@ -7,8 +7,7 @@ import { log } from "@/lib/utils";
 import { identifyUser, trackAnalytics } from "@/lib/analytics";
 import z from "zod";
 import { isUserMemberOfTeam } from "@/lib/team/helper";
-import { TeamError } from "@/lib/errorHandler";
-import { ZodError } from "zod";
+import { errorHandler } from "@/lib/errorHandler";
 
 const bodySchema = z.object({
   name: z.string(),
@@ -41,10 +40,7 @@ export default async function handle(
       }
       return res.status(200).json(dataroom);
     } catch (error) {
-      return res.status(500).json({
-        message: "Internal Server Error",
-        error: (error as Error).message,
-      });
+      errorHandler(error, res);
     }
   } else if (req.method === "POST") {
     // POST /api/datarooms/paged
@@ -115,19 +111,8 @@ export default async function handle(
 
       res.status(201).json(dataroom);
     } catch (error) {
-      if (error instanceof TeamError) {
-        return res.status(401).json({ message: "Unauthorized access" });
-      } else if (error instanceof ZodError) {
-        return res.status(403).json({
-          message: "Invalid Inputs",
-          error: (error as Error).message,
-        });
-      }
+      errorHandler(error, res);
       log(`Failed to create dataroom. Error: \n\n ${error}`);
-      res.status(500).json({
-        message: "Internal Server Error",
-        error: (error as Error).message,
-      });
     }
   } else {
     // We only allow GET and POST requests

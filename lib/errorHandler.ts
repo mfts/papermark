@@ -1,8 +1,11 @@
 import { NextApiResponse } from "next";
+import { ZodError } from "zod";
 
-export function errorhandler(err: unknown, res: NextApiResponse) {
+export function errorHandler(err: unknown, res: NextApiResponse) {
   if (err instanceof TeamError || err instanceof DocumentError) {
     return res.status(err.statusCode).end(err.message);
+  } else if (err instanceof ZodError) {
+    return res.status(403).end(err.message);
   } else {
     return res.status(500).json({
       message: "Internal Server Error",

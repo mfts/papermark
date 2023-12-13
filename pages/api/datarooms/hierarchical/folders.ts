@@ -6,8 +6,7 @@ import { log } from "@/lib/utils";
 import z from "zod";
 import { isUserMemberOfTeam } from "@/lib/team/helper";
 import { CustomUser } from "@/lib/types";
-import { TeamError } from "@/lib/errorHandler";
-import { ZodError } from "zod";
+import { errorHandler } from "@/lib/errorHandler";
 
 const bodySchema = z.object({
   folderName: z.string().max(30), //Folder name should be less than 30 words
@@ -40,13 +39,7 @@ export default async function handle(
 
       res.status(200).json({ folder });
     } catch (error) {
-      if (error instanceof TeamError) {
-        return res.status(401).json({ message: "Unauthorized access" });
-      }
-      return res.status(500).json({
-        message: "Internal Server Error",
-        error: (error as Error).message,
-      });
+      errorHandler(error, res);
     }
   } else if (req.method === "POST") {
     // POST /api/datarooms/hierarchical/folders
@@ -80,19 +73,8 @@ export default async function handle(
 
       res.status(201).json({ folder });
     } catch (error) {
-      if (error instanceof TeamError) {
-        return res.status(401).json({ message: "Unauthorized access" });
-      } else if (error instanceof ZodError) {
-        return res.status(403).json({
-          message: "Invalid Inputs",
-          error: "Please enter a folder name with fewer than 150 characters",
-        });
-      }
+      errorHandler(error, res);
       log(`Failed to create folder. Error: \n\n ${error}`);
-      res.status(500).json({
-        message: "Internal Server Error",
-        error: (error as Error).message,
-      });
     }
   } else if (req.method === "PUT") {
     // PUT /api/datarooms/hierarchical/folders
@@ -119,19 +101,8 @@ export default async function handle(
       });
       res.status(201).json({ folder, message: "Folder renamed successfully" });
     } catch (error) {
-      if (error instanceof TeamError) {
-        return res.status(401).json({ message: "Unauthorized access" });
-      } else if (error instanceof ZodError) {
-        return res.status(403).json({
-          message: "Invalid Inputs",
-          error: "Please enter a folder name with fewer than 150 characters",
-        });
-      }
       log(`Failed to create folder. Error: \n\n ${error}`);
-      res.status(500).json({
-        message: "Internal Server Error",
-        error: (error as Error).message,
-      });
+      errorHandler(error, res);
     }
   } else {
     // We only allow POST, DELETE AND PUT requests

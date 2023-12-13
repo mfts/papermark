@@ -4,7 +4,7 @@ import prisma from "@/lib/prisma";
 import { authOptions } from "../auth/[...nextauth]";
 import { CustomUser } from "@/lib/types";
 import { isUserMemberOfTeam } from "@/lib/team/helper";
-import { TeamError } from "@/lib/errorHandler";
+import { errorHandler } from "@/lib/errorHandler";
 
 export default async function handle(
   req: NextApiRequest,
@@ -42,13 +42,7 @@ export default async function handle(
 
       res.status(200).json({ datarooms });
     } catch (error) {
-      if (error instanceof TeamError) {
-        return res.status(401).json({ message: "Unauthorized access" });
-      }
-      return res.status(500).json({
-        message: "Internal Server Error",
-        error: (error as Error).message,
-      });
+      errorHandler(error, res);
     }
   } else if (req.method === "DELETE") {
     // DELETE /api/datarooms
@@ -82,13 +76,7 @@ export default async function handle(
 
       res.status(204).end(); // 204 No Content response for successful deletes
     } catch (error) {
-      if (error instanceof TeamError) {
-        return res.status(401).json({ message: "Unauthorized access" });
-      }
-      return res.status(500).json({
-        message: "Internal Server Error",
-        error: (error as Error).message,
-      });
+      errorHandler(error, res);
     }
   } else {
     // We only allow GET and DELETE requests

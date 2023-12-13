@@ -7,9 +7,9 @@ import { log } from "@/lib/utils";
 import { identifyUser, trackAnalytics } from "@/lib/analytics";
 import { FolderDirectory } from "@/lib/types";
 import { DataroomFile, DataroomFolder } from "@prisma/client";
-import z, { ZodError } from "zod";
+import z from "zod";
 import { isUserMemberOfTeam } from "@/lib/team/helper";
-import { TeamError } from "@/lib/errorHandler";
+import { errorHandler } from "@/lib/errorHandler";
 
 const bodySchema = z.object({
   name: z.string(),
@@ -112,10 +112,7 @@ export default async function handle(
 
       return res.status(200).json({ dataroom, folderDirectory });
     } catch (error) {
-      return res.status(500).json({
-        message: "Internal Server Error",
-        error: (error as Error).message,
-      });
+      errorHandler(error, res);
     }
   } else if (req.method === "POST") {
     // POST /api/datarooms/hierarchical
@@ -179,19 +176,8 @@ export default async function handle(
 
       res.status(201).json({ dataroom, homeFolder });
     } catch (error) {
-      if (error instanceof TeamError) {
-        return res.status(401).json({ message: "Unauthorized access" });
-      } else if (error instanceof ZodError) {
-        return res.status(403).json({
-          message: "Invalid Inputs",
-          error: (error as Error).message,
-        });
-      }
       log(`Failed to create dataroom. Error: \n\n ${error}`);
-      res.status(500).json({
-        message: "Internal Server Error",
-        error: (error as Error).message,
-      });
+      errorHandler(error, res);
     }
   } else if (req.method === "PUT") {
     // PUT /api/datarooms/hierarchical
@@ -224,7 +210,7 @@ export default async function handle(
 
       if (!dataroom) {
         return res.status(404).json({ message: "Dataroom not found" });
-      };
+      }
 
       await prisma.dataroom.update({
         where: {
@@ -238,18 +224,7 @@ export default async function handle(
 
       res.status(200).json({ message: "Dataroom name/description updated!" });
     } catch (error) {
-      if (error instanceof TeamError) {
-        return res.status(401).json({ message: "Unauthorized access" });
-      } else if (error instanceof ZodError) {
-        return res.status(403).json({
-          message: "Invalid Inputs",
-          error: (error as Error).message,
-        });
-      }
-      return res.status(500).json({
-        message: "Internal Server Error",
-        error: (error as Error).message,
-      });
+      errorHandler(error, res);
     }
   } else {
     // We only allow POST, GET, and PUT requests

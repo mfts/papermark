@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { log } from "@/lib/utils";
 import { analytics, trackAnalytics } from "@/lib/analytics";
 import { sendViewedDataroomEmail } from "@/lib/emails/send-viewed-dataroom";
+import { errorHandler } from "@/lib/errorHandler";
 
 export default async function handle(
   req: NextApiRequest,
@@ -68,7 +69,7 @@ export default async function handle(
 
     await trackAnalytics({
       event: "Dataroom Viewed",
-      viewerId: newDataroomView.id,
+      viewId: newDataroomView.id,
       viewerEmail: email,
     });
 
@@ -87,6 +88,6 @@ export default async function handle(
     });
   } catch (error) {
     log(`Failed to record view for ${dataroomId}. Error: \n\n ${error}`);
-    return res.status(500).json({ message: (error as Error).message });
+    errorHandler(error, res);
   }
 }
