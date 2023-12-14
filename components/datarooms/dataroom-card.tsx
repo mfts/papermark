@@ -8,6 +8,8 @@ import Link from "next/link";
 import FolderIcon from "../shared/icons/folder";
 import { DataroomWithFilesFoldersAndFilesCount } from "@/pages/datarooms";
 import { useTeam } from "@/context/team-context";
+import { useSession } from "next-auth/react";
+import { CustomUser } from "@/lib/types";
 
 export default function DataroomCard({
   dataroom,
@@ -21,6 +23,7 @@ export default function DataroomCard({
   setLoading: Dispatch<SetStateAction<boolean>>;
 }) {
   const [isFirstClick, setIsFirstClick] = useState<boolean>(false);
+  const session = useSession();
   const teamInfo = useTeam();
 
   function handleCopyToClipboard() {
@@ -115,13 +118,14 @@ export default function DataroomCard({
           </div>
         </div>
       </div>
-
-      <Button
-        onClick={handleButtonClick}
-        className="flex items-center z-10 space-x-1 rounded-md text-red-500 bg-gray-200 dark:bg-gray-700 px-2 py-0.5 transition-all duration-75 hover:scale-105 active:scale-100"
-      >
-        {isFirstClick ? "Really remove?" : "Remove dataroom"}
-      </Button>
+      {dataroom.ownerId === (session.data?.user as CustomUser).id && (
+        <Button
+          onClick={handleButtonClick}
+          className="flex items-center z-10 space-x-1 rounded-md text-red-500 bg-gray-200 dark:bg-gray-700 px-2 py-0.5 transition-all duration-75 hover:scale-105 active:scale-100"
+        >
+          {isFirstClick ? "Really remove?" : "Remove dataroom"}
+        </Button>
+      )}
     </li>
   );
 }

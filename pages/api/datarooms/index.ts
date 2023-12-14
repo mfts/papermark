@@ -55,13 +55,16 @@ export default async function handle(
     const userId = (session?.user as CustomUser).id;
 
     try {
-      //Check if user if member of team
-      await isUserMemberOfTeam({ teamId, userId });
       const dataroom = await prisma.dataroom.findUnique({
         where: {
           id: id,
         },
       });
+
+      //Check if user is admin of the team
+      if (dataroom?.ownerId !== userId) {
+        return res.status(403).end("Deleting datarooms is restricted to administrators only")
+      }
 
       if (!dataroom) {
         return res.status(404).end("Dataroom not found");
