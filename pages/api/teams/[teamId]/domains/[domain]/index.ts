@@ -6,7 +6,7 @@ import { log } from "@/lib/utils";
 import { getApexDomain, removeDomainFromVercel } from "@/lib/domains";
 import { CustomUser } from "@/lib/types";
 import { getTeamWithDomain } from "@/lib/team/helper";
-import { errorhandler } from "@/lib/errorHandler";
+import { errorHandler } from "@/lib/errorHandler";
 
 export default async function handle(
   req: NextApiRequest,
@@ -66,7 +66,7 @@ export default async function handle(
       return res.status(204).end(); // 204 No Content response for successful deletes
     } catch (error) {
       log(`Failed to delete domain: ${domain}. Error: \n\n ${error}`);
-      errorhandler(error, res);
+      errorHandler(error, res);
     }
   } else {
     // We only allow POST requests

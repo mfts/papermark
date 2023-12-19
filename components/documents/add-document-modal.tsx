@@ -50,7 +50,6 @@ export function AddDocumentModal({
 
     try {
       setUploading(true);
-
       const newBlob = await upload(currentFile.name, currentFile, {
         access: "public",
         handleUploadUrl: "/api/file/browser-upload",

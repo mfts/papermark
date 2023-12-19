@@ -5,7 +5,7 @@ import { authOptions } from "../auth/[...nextauth]";
 import { hashPassword } from "@/lib/utils";
 import { identifyUser, trackAnalytics } from "@/lib/analytics";
 import { CustomUser } from "@/lib/types";
-import { errorhandler } from "@/lib/errorHandler";
+import { errorHandler } from "@/lib/errorHandler";
 import {
   getDocumentWithTeamAndUser,
   getTeamWithUsersAndDocument,
@@ -122,7 +122,7 @@ export default async function handler(
 
       return res.status(200).json(linkWithView);
     } catch (error) {
-      errorhandler(error, res);
+      errorHandler(error, res);
     }
   }
 

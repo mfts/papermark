@@ -1,5 +1,5 @@
 import LoadingSpinner from "@/components/ui/loading-spinner";
-import DocumentView from "@/components/view/document-view";
+import DocumentView from "@/components/view/documents/document-view";
 import { useDomainLink } from "@/lib/swr/use-link";
 import { CustomUser, LinkWithDocument } from "@/lib/types";
 import NotFound from "@/pages/404";
@@ -13,7 +13,10 @@ import notion from "@/lib/notion";
 import { parsePageId } from "notion-utils";
 
 export const getStaticProps = async (context: GetStaticPropsContext) => {
-  const { domain, slug } = context.params as { domain: string; slug: string };
+  const { domain, slug } = context.params as {
+    domain: string;
+    slug: string;
+  };
 
   // Fetch the link
   const res = await fetch(
@@ -83,6 +86,7 @@ export default function ViewPage({
 }) {
   const router = useRouter();
   const { data: session, status } = useSession();
+  const { authenticationCode } = router.query as { authenticationCode: string };
 
   if (!link || status === "loading" || router.isFallback) {
     return (
@@ -122,6 +126,7 @@ export default function ViewPage({
         userId={userId}
         isProtected={true}
         notionData={notionData}
+        authenticationCode={authenticationCode}
       />
     );
   }
@@ -133,6 +138,7 @@ export default function ViewPage({
       userId={userId}
       isProtected={false}
       notionData={notionData}
+      authenticationCode={authenticationCode}
     />
   );
 }

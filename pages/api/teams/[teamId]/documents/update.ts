@@ -5,7 +5,7 @@ import { authOptions } from "../../../auth/[...nextauth]";
 import { CustomUser } from "@/lib/types";
 import { getExtension, log } from "@/lib/utils";
 import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
-import { errorhandler } from "@/lib/errorHandler";
+import { errorHandler } from "@/lib/errorHandler";
 
 export default async function handle(
   req: NextApiRequest,
@@ -50,7 +50,7 @@ export default async function handle(
       return res.status(201).json({ message: "Document updated successfully" });
     } catch (error) {
       log(`Failed to update document: ${documentId}. Error: \n\n ${error}`);
-      errorhandler(error, res);
+      errorHandler(error, res);
     }
   } else {
     // We only allow POST requests

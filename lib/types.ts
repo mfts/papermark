@@ -5,6 +5,9 @@ import {
   View,
   User as PrismaUser,
   DocumentVersion,
+  DataroomFile,
+  DataroomFolder,
+  Dataroom,
 } from "@prisma/client";
 
 export type CustomUser = NextAuthUser & PrismaUser;
@@ -68,6 +71,16 @@ export type DomainVerificationStatusProps =
   | "Pending Verification"
   | "Domain Not Found"
   | "Unknown Error";
+
+//FolderDirectory for hierarchical dataroom
+export type FolderDirectory = {
+  [folderId: string]: {
+    name: string;
+    subfolders: string[];
+    files: DataroomFile[];
+    href: string; //Relative path for that folder
+  };
+};
 
 // From https://vercel.com/docs/rest-api/endpoints#get-a-project-domain
 export interface DomainResponse {
@@ -135,6 +148,16 @@ export type AnalyticsEvents =
       path: string | null | undefined;
     }
   | {
+      event: "Dataroom Created";
+      dataroomId: string;
+      name: string;
+    }
+  | {
+      event: "Dataroom Viewed";
+      viewId: string;
+      viewerEmail: string | null | undefined;
+    }
+  | {
       event: "Link Added";
       linkId: string;
       documentId: string;
@@ -164,6 +187,21 @@ export type AnalyticsEvents =
       event: "Domain Deleted";
       slug: string;
     };
+
+export interface DataroomWithFiles extends Dataroom {
+  files: DataroomFile[];
+}
+
+export interface DataroomWithFilesAndFolders extends DataroomWithFiles {
+  folders: DataroomFolder[];
+}
+
+export type DataroomDocument = {
+  id: string;
+  title: string;
+  url: string;
+  type: string;
+};
 
 export interface Team {
   id: string;

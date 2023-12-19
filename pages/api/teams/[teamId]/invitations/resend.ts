@@ -2,7 +2,7 @@ import { getServerSession } from "next-auth";
 import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
-import { errorhandler } from "@/lib/errorHandler";
+import { errorHandler } from "@/lib/errorHandler";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { sendTeammateInviteEmail } from "@/lib/emails/send-teammate-invite";
 import { newId } from "@/lib/id-helper";
@@ -87,7 +87,7 @@ export default async function handle(
       res.status(200).json("Invitation sent again!");
       return;
     } catch (error) {
-      errorhandler(error, res);
+      errorHandler(error, res);
     }
   }
 }

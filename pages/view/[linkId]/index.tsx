@@ -1,5 +1,5 @@
 import LoadingSpinner from "@/components/ui/loading-spinner";
-import DocumentView from "@/components/view/document-view";
+import DocumentView from "@/components/view/documents/document-view";
 import NotFound from "@/pages/404";
 import { useSession } from "next-auth/react";
 
@@ -11,7 +11,9 @@ import { GetStaticPropsContext } from "next";
 import { useRouter } from "next/router";
 
 export const getStaticProps = async (context: GetStaticPropsContext) => {
-  const { linkId } = context.params as { linkId: string };
+  const { linkId } = context.params as {
+    linkId: string;
+  };
 
   // Fetch the link
   const res = await fetch(`${process.env.NEXTAUTH_URL}/api/links/${linkId}`);
@@ -81,6 +83,7 @@ export default function ViewPage({
 }) {
   const router = useRouter();
   const { data: session, status } = useSession();
+  const { authenticationCode } = router.query as { authenticationCode: string };
 
   if (!link || status === "loading" || router.isFallback) {
     return (
@@ -112,6 +115,7 @@ export default function ViewPage({
     );
   }
 
+  console.log("auth-code", authenticationCode);
   if (emailProtected || linkPassword) {
     return (
       <DocumentView
@@ -119,6 +123,7 @@ export default function ViewPage({
         userEmail={userEmail}
         userId={userId}
         isProtected={true}
+        authenticationCode={authenticationCode}
         notionData={notionData}
       />
     );
@@ -130,6 +135,7 @@ export default function ViewPage({
       userEmail={userEmail}
       userId={userId}
       isProtected={false}
+      authenticationCode={authenticationCode}
       notionData={notionData}
     />
   );
