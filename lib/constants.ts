@@ -16,3 +16,10 @@ export const PAPERMARK_HEADERS = {
       "Papermark.io - Document sharing infrastructure for the modern web",
   },
 };
+
+export const REACTIONS = {
+  heart: "❤️",
+  money: "💸",
+  thumbsUp: "👍",
+  thumbsDown: "👎",
+};
