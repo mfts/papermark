@@ -1,9 +1,13 @@
 import AppLayout from "@/components/layouts/app";
 import Navbar from "@/components/settings/navbar";
-import { DeleteTeamModal } from "@/components/teams/delete-team-modal";
+import Passkey from "@/components/shared/icons/passkey";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useTeam } from "@/context/team-context";
+import {
+  create,
+  type CredentialCreationOptionsJSON,
+} from "@github/webauthn-json";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { mutate } from "swr";
@@ -14,6 +18,8 @@ export default function General() {
   const [isTeamNameChanging, setTeamNameChanging] = useState<boolean>(false);
 
   const changeTeamName = async () => {
+    if (teamInfo?.currentTeam?.name === teamNameInputRef.current?.value) return;
+
     setTeamNameChanging(true);
 
     const response = await fetch(
@@ -41,6 +47,33 @@ export default function General() {
     setTeamNameChanging(false);
   };
 
+  async function registerPasskey() {
+    const createOptionsResponse = await fetch("/api/passkeys/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ start: true, finish: false, credential: null }),
+    });
+
+    const { createOptions } = await createOptionsResponse.json();
+
+    // Open "register passkey" dialog
+    const credential = await create(
+      createOptions as CredentialCreationOptionsJSON,
+    );
+
+    const response = await fetch("/api/passkeys/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ start: false, finish: true, credential }),
+    });
+
+    if (response.ok) {
+      toast.success("Registered passkey successfully!");
+      return;
+    }
+    // Now the user has registered their passkey and can use it to log in.
+  }
+
   return (
     <AppLayout>
       <Navbar current="General" />
@@ -66,28 +99,33 @@ export default function General() {
                 defaultValue={teamInfo?.currentTeam?.name}
               />
             </div>
-            <Button size={"lg"} onClick={changeTeamName}>
+            <Button
+              size={"lg"}
+              onClick={changeTeamName}
+              loading={isTeamNameChanging}
+            >
               {isTeamNameChanging ? "Saving..." : "Save changes"}
             </Button>
           </div>
 
-          {/* <div className="p-10 rounded-lg border border-destructive">
+          <div className="p-10 rounded-lg border border-muted">
             <div className="space-y-6">
               <div className="space-y-3">
-                <h2 className="text-xl font-medium">Delete Team</h2>
+                <h2 className="text-xl font-medium">Register a passkey</h2>
                 <p className="text-sm text-secondary-foreground mt-3">
-                  Permanently delete your team, custom domain, and all
-                  associated documents + their stats. This action cannot be
-                  undone - please proceed with caution.
+                  Never use a password or oauth again. Register a passkey to
+                  make logging in easy.
                 </p>
               </div>
-              <DeleteTeamModal>
-                <Button variant={"destructive"} size={"lg"}>
-                  Delete Team
-                </Button>
-              </DeleteTeamModal>
+              <Button
+                onClick={() => registerPasskey()}
+                className="flex justify-center items-center space-x-2"
+              >
+                <Passkey className="w-4 h-4" />
+                <span>Register a new passkey</span>
+              </Button>
             </div>
-          </div> */}
+          </div>
         </div>
       </div>
     </AppLayout>

@@ -12,6 +12,7 @@ interface GroupedView {
 interface StatsData {
   views: View[];
   groupedViews: GroupedView[];
+  groupedReactions: { type: string; _count: { type: number } }[];
   duration: {
     data: { versionNumber: number; pageNumber: string; avg_duration: number }[];
   };

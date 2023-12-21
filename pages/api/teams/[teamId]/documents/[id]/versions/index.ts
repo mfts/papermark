@@ -9,7 +9,7 @@ import { client } from "@/trigger";
 
 export default async function handle(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   if (req.method === "POST") {
     // GET /api/teams/:teamId/documents/:id/versions
@@ -19,14 +19,20 @@ export default async function handle(
     }
 
     // get document id from query params
-    const { teamId, id: documentId } = req.query as { teamId: string; id: string };
-    const { url, type, numPages } = req.body as { url: string, type: string, numPages: number };
+    const { teamId, id: documentId } = req.query as {
+      teamId: string;
+      id: string;
+    };
+    const { url, type, numPages } = req.body as {
+      url: string;
+      type: string;
+      numPages: number;
+    };
 
-    console.log("documentId", documentId)
-    console.log("file", url)
+    console.log("documentId", documentId);
+    console.log("file", url);
 
     const userId = (session.user as CustomUser).id;
-
 
     try {
       const { document } = await getTeamWithUsersAndDocument({
@@ -83,13 +89,17 @@ export default async function handle(
       // trigger document uploaded event to trigger convert-pdf-to-image job
       await client.sendEvent({
         name: "document.uploaded",
-        payload: { documentVersionId: version.id, versionNumber: version.versionNumber, documentId: documentId },
+        payload: {
+          documentVersionId: version.id,
+          versionNumber: version.versionNumber,
+          documentId: documentId,
+        },
       });
 
       res.status(200).json({ id: documentId });
     } catch (error) {
       log(
-        `Failed to create new version for document ${documentId}. Error: \n\n ${error}`
+        `Failed to create new version for document ${documentId}. Error: \n\n ${error}`,
       );
       return res.status(500).json({
         message: "Internal Server Error",

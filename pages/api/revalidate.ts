@@ -1,4 +1,5 @@
 import { NextApiRequest, NextApiResponse } from "next";
+import prisma from "@/lib/prisma";
 
 export default async function handler(
   req: NextApiRequest,
@@ -13,16 +14,36 @@ export default async function handler(
     return res.status(401).json({ message: "Invalid token" });
   }
 
-  const { linkId } = req.query as { linkId: string };
+  const { linkId, documentId } = req.query as {
+    linkId: string;
+    documentId: string;
+  };
 
   try {
-    // this should be the actual path not a rewritten path
-    // e.g. for "/blog/[slug]" this should be "/blog/post-1"
-    await res.revalidate(`/view/${linkId}`);
+    if (linkId) {
+      // revalidate this link
+      await res.revalidate(`/view/${linkId}`);
+    }
+
+    if (documentId) {
+      // revalidate all links for this document
+      const links = await prisma.link.findMany({
+        where: {
+          documentId: documentId,
+          domainId: null,
+        },
+        select: { id: true },
+      });
+      for (const link of links) {
+        await res.revalidate(`/view/${link.id}`);
+      }
+    }
+
     return res.json({ revalidated: true });
   } catch (err) {
     // If there was an error, Next.js will continue
     // to show the last successfully generated page
+    console.error("Error during revalidation:", err);
     return res.status(500).send("Error revalidating");
   }
 }

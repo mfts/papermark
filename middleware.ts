@@ -34,6 +34,7 @@ export default async function middleware(req: NextRequest, ev: NextFetchEvent) {
 
   if (
     path !== "/" &&
+    path !== "/register" &&
     path !== "/privacy" &&
     path !== "/oss-friends" &&
     path !== "/pricing" &&
