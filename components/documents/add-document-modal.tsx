@@ -20,8 +20,6 @@ import { usePlausible } from "next-plausible";
 import { toast } from "sonner";
 import { useTeam } from "@/context/team-context";
 import { parsePageId } from "notion-utils";
-import useDocuments from "@/lib/swr/use-documents";
-import { DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
 
@@ -38,7 +36,6 @@ export function AddDocumentModal({
   const [currentFile, setCurrentFile] = useState<File | null>(null);
   const [notionLink, setNotionLink] = useState<string | null>(null);
   const teamInfo = useTeam();
-  const { documents } = useDocuments();
 
   const handleBrowserUpload = async (
     event: FormEvent<HTMLFormElement>,
@@ -181,23 +178,11 @@ export function AddDocumentModal({
   const createNotionFileName = () => {
     // Extract Notion file name from the URL
     const urlSegments = (notionLink as string).split("/")[3];
-
     // Remove the last hyphen along with the Notion ID
     const extractName = urlSegments.replace(/-([^/-]+)$/, "");
     const notionFileName = extractName.replaceAll("-", " ") || "Notion Link";
 
-    // Check if a Notion file with the same name already exists
-    const existingNotionFiles = documents
-      ?.filter((item) => item.type === "notion")
-      .filter((item) =>
-        item.name.includes(notionFileName),
-      ) as DocumentWithLinksAndLinkCountAndViewCount[];
-
-    if (existingNotionFiles?.length > 0) {
-      return `${notionFileName} ${existingNotionFiles.length}`;
-    } else {
-      return notionFileName;
-    }
+    return notionFileName;
   };
 
   const handleNotionUpload = async (
