@@ -52,3 +52,6 @@ pages/api/scripts
 # marketing emails
 components/emails/marketing
 lib/emails/marketing
+
+# vscode configs
+.vscode
