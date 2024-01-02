@@ -256,8 +256,13 @@ export function AddDocumentModal({
     }
   };
 
+  const clearModelStates = () => {
+    currentFile !== null && setCurrentFile(null);
+    notionLink !== null && setNotionLink(null);
+  };
+
   return (
-    <Dialog>
+    <Dialog onOpenChange={clearModelStates}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent
         className="text-foreground bg-transparent border-none shadow-none"
