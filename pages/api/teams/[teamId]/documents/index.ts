@@ -87,12 +87,16 @@ export default async function handle(
       const type = fileType || getExtension(name);
 
       // Check whether the Notion page is publically accessible or not
-      try {
-        const pageId = parsePageId(fileUrl, { uuid: false });
-        // if the page isn't accessible then end the process here.
-        await notion.getPage(pageId);
-      } catch (error) {
-        return res.status(404).end("This Notion page isn't publically available.");
+      if (type === "notion") {
+        try {
+          const pageId = parsePageId(fileUrl, { uuid: false });
+          // if the page isn't accessible then end the process here.
+          await notion.getPage(pageId);
+        } catch (error) {
+          return res
+            .status(404)
+            .end("This Notion page isn't publically available.");
+        }
       }
 
       // Save data to the database
