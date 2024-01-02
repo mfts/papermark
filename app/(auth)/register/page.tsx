@@ -14,7 +14,7 @@ export default function Register() {
   const [email, setEmail] = useState<string>("");
 
   return (
-    <div className="flex h-screen w-screen justify-center">
+    <div className="flex h-screen w-full justify-center">
       <div
         className="absolute inset-x-0 top-10 -z-10 flex transform-gpu justify-center overflow-hidden blur-3xl"
         aria-hidden="true"

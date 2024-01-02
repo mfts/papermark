@@ -175,6 +175,16 @@ export function AddDocumentModal({
     return pdf.numPages;
   }
 
+  const createNotionFileName = () => {
+    // Extract Notion file name from the URL
+    const urlSegments = (notionLink as string).split("/")[3];
+    // Remove the last hyphen along with the Notion ID
+    const extractName = urlSegments.replace(/-([^/-]+)$/, "");
+    const notionFileName = extractName.replaceAll("-", " ") || "Notion Link";
+
+    return notionFileName;
+  };
+
   const handleNotionUpload = async (
     event: FormEvent<HTMLFormElement>,
   ): Promise<void> => {
@@ -205,7 +215,7 @@ export function AddDocumentModal({
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            name: "Notion Link", // TODO: get the title of the notion page
+            name: createNotionFileName(),
             url: notionLink,
             numPages: 1,
             type: "notion",
@@ -248,8 +258,13 @@ export function AddDocumentModal({
     }
   };
 
+  const clearModelStates = () => {
+    currentFile !== null && setCurrentFile(null);
+    notionLink !== null && setNotionLink(null);
+  };
+
   return (
-    <Dialog>
+    <Dialog onOpenChange={clearModelStates}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent
         className="text-foreground bg-transparent border-none shadow-none"
