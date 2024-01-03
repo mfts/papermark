@@ -246,7 +246,9 @@ export function AddDocumentModal({
       }
     } catch (error) {
       setUploading(false);
-      toast.error("An error occurred while processing the Notion link.");
+      toast.error(
+        "Oops! Can't access the Notion page. Please double-check it's set to 'Public'.",
+      );
       console.error(
         "An error occurred while processing the Notion link: ",
         error,
