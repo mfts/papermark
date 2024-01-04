@@ -1,0 +1,28 @@
+name: '✨ Feature Request'
+labels: ['feature']
+title: "Feature: "
+description: Suggest a new idea or enhancement for this project.
+body:
+  - type: textarea
+    attributes:
+      label: Description
+      description: Describe the feature you are requesting in detail. Explain what problem it solves or what value it adds to the project.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Use Cases
+      description: Provide a scenario or use case where this feature would be beneficial.
+    validations:
+      required: true 
+  - type: textarea
+    attributes:
+      label: Additional Context
+      description: Add any additional context or information that might be relevant to the feature request.
+  - type: checkboxes
+    attributes:
+      label: Please check the boxes that apply to this feature request.
+      options:
+        - label: I have searched the existing feature requests to make sure this is not a duplicate.
+        - label: I have provided a detailed description of the requested feature.
+        - label: I want to work on this issue if it gets approved.

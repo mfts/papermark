@@ -1,0 +1,26 @@
+name: '🐛 Bug Report'
+labels: ['bug']
+description: Create a bug report to help us improve.
+title: "Bug: "
+body:
+  - type: textarea
+    attributes:
+      label: Description
+      description: Please provide a clear and concise description of the issue.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Steps to Reproduce
+      description: Please provide any relevant information such as code snippets or error messages that could help us reproduce the issue.
+  - type: textarea
+    attributes:
+      label: Screenshots
+      description: If applicable, add screenshots to help explain the issue.
+  - type: checkboxes
+    attributes:
+      label: Please check the boxes that apply to this issue report.
+      options:
+        - label: I have searched the existing issues to make sure this is not a duplicate.
+        - label: I have included relevant screenshots.
+        - label: I want to work on this issue if it gets approved.

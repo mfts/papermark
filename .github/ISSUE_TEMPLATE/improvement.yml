@@ -1,0 +1,32 @@
+name: '⚒️ General Improvement'
+labels: ['enhancement']
+description: Suggest improvement or enhancement that could be made to this project.
+title: "Enhance: "
+
+body:
+  - type: textarea
+    attributes:
+      label: Description
+      description: Provide a detailed description of the suggested improvement.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Benefits
+      description: Explain why this improvement would be beneficial. Share any reasons for suggesting this change.
+  - type: textarea
+    attributes:
+      label: Proposed Solution ( Optional )
+      description: If you have a suggestion for how this improvement could be implemented, describe it here.
+  - type: textarea
+    attributes:
+      label: Additional Context
+      description: Add any additional context or information that might be relevant to the improvement suggestion.
+  - type: checkboxes
+    attributes:
+      label: Please check the boxes that apply to this improvement suggestion.
+      options:
+        - label: I have searched the existing issues and improvement suggestions to avoid duplication.
+        - label: I have provided a clear description of the improvement being suggested.
+        - label: I have explained the bnefits behind this improvement.
+        - label: I want to work on this issue if it gets approved.
