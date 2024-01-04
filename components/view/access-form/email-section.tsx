@@ -1,6 +1,5 @@
 import { Dispatch, SetStateAction, useEffect } from "react";
 import { DEFAULT_ACCESS_FORM_TYPE } from ".";
-import handle from "@/pages/api/record_reaction";
 
 export default function EmailSection({
   data,
