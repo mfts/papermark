@@ -29,6 +29,7 @@ import NotionIcon from "@/components/shared/icons/notion";
 import PapermarkSparkle from "@/components/shared/icons/papermark-sparkle";
 import { Document } from "@prisma/client";
 import { usePlausible } from "next-plausible";
+import { mutate } from "swr";
 
 export default function DocumentPage() {
   const { document: prismaDocument, primaryVersion, error } = useDocument();
@@ -179,6 +180,12 @@ export default function DocumentPage() {
         }).then(() => {
           // Once the assistant is activated, redirect to the chat
           plausible("assistantEnabled", { props: { documentId: document.id } }); // track the event
+
+          // refetch to fix the UI delay
+          mutate(
+            `/api/teams/${teamInfo?.currentTeam?.id}/documents/${document.id}`,
+          );
+
           router.push(`/documents/${document.id}/chat`);
         }),
         {
@@ -267,6 +274,11 @@ export default function DocumentPage() {
                               body: JSON.stringify({
                                 documentId: prismaDocument.id,
                               }),
+                            }).then(() => {
+                              // refetch to fix the UI delay
+                              mutate(
+                                `/api/teams/${teamInfo?.currentTeam?.id}/documents/${prismaDocument.id}`,
+                              );
                             });
 
                             toast.promise(fetchPromise, {
@@ -290,6 +302,11 @@ export default function DocumentPage() {
                               body: JSON.stringify({
                                 documentId: prismaDocument.id,
                               }),
+                            }).then(() => {
+                              // refetch to fix the UI delay
+                              mutate(
+                                `/api/teams/${teamInfo?.currentTeam?.id}/documents/${prismaDocument.id}`,
+                              );
                             });
 
                             toast.promise(fetchPromise, {
