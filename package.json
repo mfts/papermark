@@ -80,6 +80,7 @@
     "postcss": "^8.4.32",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-draggable": "^4.4.6",
     "react-dropzone": "^14.2.3",
     "react-email": "^1.9.5",
     "react-intersection-observer": "^9.5.3",
