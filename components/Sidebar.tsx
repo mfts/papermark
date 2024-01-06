@@ -259,13 +259,13 @@ export default function Sidebar() {
                       )}
                       <span className="flex items-center w-full justify-between">
                         <span className="sr-only">Your profile</span>
-                        <span aria-hidden="true">
+                        <span aria-hidden="true" className="line-clamp-2">
                           {session?.user?.name
                             ? session?.user?.name
                             : session?.user?.email?.split("@")[0]}
                         </span>
                         <ChevronUp
-                          className="ml-2 h-5 w-5 text-muted-foreground"
+                          className="ml-2 h-5 w-5 text-muted-foreground shrink-0"
                           aria-hidden="true"
                         />
                       </span>
