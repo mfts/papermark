@@ -1,6 +1,9 @@
 import { useRouter } from "next/router";
 import { motion } from "framer-motion";
-import { DocumentIcon, PresentationChartBarIcon } from "@heroicons/react/24/outline";
+import {
+  DocumentIcon,
+  PresentationChartBarIcon,
+} from "@heroicons/react/24/outline";
 import { STAGGER_CHILD_VARIANTS } from "@/lib/constants";
 import { AddHierarchicalDataroomModal } from "./hierarchical/add-hierarchical-dataroom-modal";
 import { AddPagedDataroomModal } from "./paged/add-paged-dataroom-modal";
@@ -14,7 +17,11 @@ import {
 } from "@/components/ui/dialog";
 import FolderStructureIcon from "../shared/icons/folder-structure";
 import SinglePageIcon from "../shared/icons/single-page";
-export default function SelectDataroomTypeModal({ children }: { children: React.ReactNode }) {
+export default function SelectDataroomTypeModal({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const router = useRouter();
   return (
     <div>
@@ -52,12 +59,12 @@ export default function SelectDataroomTypeModal({ children }: { children: React.
                   variants={STAGGER_CHILD_VARIANTS}
                   className="grid w-full grid-cols-1 divide-y divide-border text-foreground rounded-md border border-border md:grid-cols-2 md:divide-x"
                 >
-                  <AddHierarchicalDataroomModal>
+                  {/* <AddHierarchicalDataroomModal>
                     <button className="flex flex-col items-center justify-center overflow-hidden p-5 space-y-5 transition-colors hover:bg-gray-200 hover:dark:bg-gray-800 md:p-10 min-h-[200px]">
                       <FolderStructureIcon className="h-auto  pointer-events-none w-16 sm:w-16" />
                       <p>Hierarchical</p>
                     </button>
-                  </AddHierarchicalDataroomModal>
+                  </AddHierarchicalDataroomModal> */}
                   <AddPagedDataroomModal>
                     <button className="flex flex-col items-center justify-center overflow-hidden p-5 space-y-5 transition-colors hover:bg-gray-200 hover:dark:bg-gray-800 md:p-10 min-h-[200px]">
                       <SinglePageIcon className="h-auto  pointer-events-none w-16 sm:w-16" />
@@ -66,12 +73,10 @@ export default function SelectDataroomTypeModal({ children }: { children: React.
                   </AddPagedDataroomModal>
                 </motion.div>
               </motion.div>
-
             </DialogDescription>
           </DialogHeader>
         </DialogContent>
       </Dialog>
     </div>
-
-  )
+  );
 }
