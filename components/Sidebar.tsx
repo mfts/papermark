@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useState } from "react";
-import { Menu, Dialog, Transition } from "@headlessui/react";
+import { Dialog, Transition } from "@headlessui/react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -250,8 +250,8 @@ export default function Sidebar() {
                   <ProBanner setShowProBanner={setShowProBanner} />
                 ) : null}
                 <div className="flex justify-between items-center space-x-2">
-                  <Menu as="div" className="relative grow">
-                    <Menu.Button className="flex items-center group rounded-md gap-x-3 p-2 w-full text-sm font-semibold leading-6 text-foreground hover:bg-gray-200 hover:dark:bg-secondary">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger className="flex items-center group rounded-md gap-x-2 p-2 grow text-sm font-semibold leading-6 text-foreground hover:bg-gray-200 hover:dark:bg-secondary ">
                       {session?.user?.image ? (
                         <Image
                           className="h-8 w-8 rounded-full bg-secondary"
@@ -277,55 +277,45 @@ export default function Sidebar() {
                           aria-hidden="true"
                         />
                       </span>
-                    </Menu.Button>
-                    <Transition
-                      as={Fragment}
-                      enter="transition ease-out duration-100"
-                      enterFrom="transform opacity-0 scale-95"
-                      enterTo="transform opacity-100 scale-100"
-                      leave="transition ease-in duration-75"
-                      leaveFrom="transform opacity-100 scale-100"
-                      leaveTo="transform opacity-0 scale-95"
-                    >
-                      <Menu.Items className="absolute left-0 z-10 bottom-0 mb-14 w-full origin-bottom-left rounded-md bg-gray-100 dark:bg-primary-foreground py-2 focus:outline-none">
-                        {session ? (
-                          <>
-                            <Menu.Item>
-                              <div className="w-full">
-                                <p className="block px-3 py-1 text-sm leading-6 text-muted-foreground">
-                                  {session?.user?.email}
-                                </p>
-                              </div>
-                            </Menu.Item>
-                            <Menu.Item>
-                              <p className="block px-3 py-1 text-sm leading-6 text-muted-foreground">
-                                Help?{" "}
-                                <a
-                                  href="mailto:support@papermark.io"
-                                  className="underline hover:text-muted-foreground/80"
-                                >
-                                  support@papermark.io
-                                </a>
-                              </p>
-                            </Menu.Item>
-                            <Menu.Item>
-                              <Link
-                                onClick={() =>
-                                  signOut({
-                                    callbackUrl: `${window.location.origin}`,
-                                  })
-                                }
-                                className="block px-3 py-1 text-sm leading-6 text-foreground hover:bg-gray-200 hover:dark:bg-muted"
-                                href={""}
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-52">
+                      {session ? (
+                        <>
+                          <DropdownMenuItem disabled >
+                            <div className="w-full">
+                                {session?.user?.email}
+                            </div>
+                          </DropdownMenuItem >
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem disabled >
+                              Help?
+                          </DropdownMenuItem>
+                          <DropdownMenuItem className="text-muted-foreground" >
+                              <a
+                                href="mailto:support@papermark.io"
+                                className="underline hover:text-muted-foreground/80"
                               >
-                                Sign Out
-                              </Link>
-                            </Menu.Item>
-                          </>
-                        ) : null}
-                      </Menu.Items>
-                    </Transition>
-                  </Menu>
+                                support@papermark.io
+                              </a>
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem>
+                            <Link
+                              onClick={() =>
+                                signOut({
+                                  callbackUrl: `${window.location.origin}`,
+                                })
+                              }
+                              // className="block px-3 py-1 text-sm leading-6 text-foreground hover:bg-gray-200 hover:dark:bg-muted"
+                              href={""}
+                            >
+                              Sign Out
+                            </Link>
+                          </DropdownMenuItem>
+                        </>
+                      ) : null}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                   <ModeToggle />
                 </div>
               </li>
