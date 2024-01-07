@@ -1,5 +1,13 @@
 import { Fragment, useEffect, useState } from "react";
 import { Menu, Dialog, Transition } from "@headlessui/react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { signOut, useSession } from "next-auth/react";
 import HomeIcon from "@/components/shared/icons/home";
 import FolderIcon from "@/components/shared/icons/folder";
@@ -341,8 +349,8 @@ export default function Sidebar() {
           <div className="flex flex-1 gap-x-4 self-stretch items-center lg:gap-x-6 justify-end">
             <div className="flex items-center gap-x-4 lg:gap-x-6">
               {/* Profile dropdown */}
-              <Menu as="div" className="relative">
-                <Menu.Button className="-m-1.5 flex items-center p-1.5">
+              <DropdownMenu>
+                <DropdownMenuTrigger>
                   <span className="sr-only">Open user menu</span>
                   {session?.user?.image ? (
                     <Image
@@ -357,42 +365,26 @@ export default function Sidebar() {
                       <UserRound className="h-8 w-8 p-1 rounded-full ring-1 ring-muted-foreground/50 bg-secondary" />
                     </div>
                   )}
-                </Menu.Button>
-                <Transition
-                  as={Fragment}
-                  enter="transition ease-out duration-100"
-                  enterFrom="transform opacity-0 scale-95"
-                  enterTo="transform opacity-100 scale-100"
-                  leave="transition ease-in duration-75"
-                  leaveFrom="transform opacity-100 scale-100"
-                  leaveTo="transform opacity-0 scale-95"
-                >
-                  <Menu.Items className="absolute right-0 z-10 mt-2.5 w-fit origin-top-right rounded-md bg-primary-foreground shadow-lg py-2 ring-1 ring-primary-foreground/5 focus:outline-none">
-                    {session ? (
-                      <>
-                        <Menu.Item>
-                          <p className="block px-3 py-1 text-sm leading-6 text-muted-foreground">
-                            {session?.user?.email}
-                          </p>
-                        </Menu.Item>
-                        <Menu.Item>
-                          <Link
-                            onClick={() =>
-                              signOut({
-                                callbackUrl: `${window.location.origin}`,
-                              })
-                            }
-                            className="block px-3 py-1 text-sm leading-6 text-foreground hover:bg-gray-200 hover:dark:bg-muted"
-                            href={""}
-                          >
-                            Sign Out
-                          </Link>
-                        </Menu.Item>
-                      </>
-                    ) : null}
-                  </Menu.Items>
-                </Transition>
-              </Menu>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  {session ? (
+                    <>
+                      <DropdownMenuItem disabled>
+                        <p>{session?.user?.email}</p>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() =>
+                          signOut({
+                            callbackUrl: `${window.location.origin}`,
+                          })
+                        }
+                      >
+                        Sign Out
+                      </DropdownMenuItem>
+                    </>
+                  ) : null}
+                </DropdownMenuContent>
+              </DropdownMenu>
               <ModeToggle />
             </div>
           </div>
