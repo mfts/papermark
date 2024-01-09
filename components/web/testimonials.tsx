@@ -71,7 +71,7 @@ export default function Testimonials() {
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-xl text-center">
           <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-            2000 people love Papermark and actively use it
+            3000 people love Papermark and actively use it
           </p>
           <p className="mx-auto mt-6 max-w-xl text-lg leading-8 text-gray-600">
             Do not take it from us, listen what our happy users say

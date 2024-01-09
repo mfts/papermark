@@ -20,6 +20,13 @@ export default function StatsCard() {
     );
   }
 
+  const groupedReactionsTotal =
+    stats?.groupedReactions
+      .reduce((accumulator, item) => {
+        return accumulator + item._count.type;
+      }, 0)
+      .toString() ?? "0";
+
   const statistics = [
     {
       name: "Number of visits",
@@ -27,12 +34,12 @@ export default function StatsCard() {
       active: true,
     },
     {
-      name: "Number of unique visitors",
-      value: stats?.groupedViews.length.toString() ?? "0",
+      name: "Number of reactions",
+      value: groupedReactionsTotal,
       active: true,
     },
     {
-      name: "Total avgerage view duration",
+      name: "Total average view duration",
       value:
         stats?.total_duration == null
           ? "46"

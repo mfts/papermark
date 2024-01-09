@@ -9,7 +9,7 @@ import { errorHandler } from "@/lib/errorHandler";
 
 export default async function handle(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   if (req.method === "GET") {
     // GET /api/teams/:teamId/documents/:id
@@ -71,12 +71,17 @@ export default async function handle(
             id: true,
             ownerId: true,
             file: true,
+            type: true,
           },
         },
       });
 
-      // delete the document from vercel blob
-      await del(document!.file);
+      //if it is not notion document then only delete the document from vercel blob
+      if (document?.type !== "notion") {
+        // delete the document from vercel blob
+        await del(document!.file);
+      }
+
       // delete the document from database
       await prisma.document.delete({
         where: {

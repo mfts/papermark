@@ -16,3 +16,22 @@ export const PAPERMARK_HEADERS = {
       "Papermark.io - Document sharing infrastructure for the modern web",
   },
 };
+
+export const REACTIONS = [
+  {
+    emoji: "❤️",
+    label: "heart",
+  },
+  {
+    emoji: "💸",
+    label: "money",
+  },
+  {
+    emoji: "👍",
+    label: "up",
+  },
+  {
+    emoji: "👎",
+    label: "down",
+  },
+];

@@ -9,7 +9,7 @@ import { errorHandler } from "@/lib/errorHandler";
 
 export default async function handle(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   if (req.method === "GET") {
     // GET /api/teams/:teamId/documents/:id/stats
@@ -43,6 +43,14 @@ export default async function handle(
         _count: { id: true },
       });
 
+      const groupedReactions = await prisma.reaction.groupBy({
+        by: ["type"],
+        where: { view: { documentId: docId } },
+        _count: { type: true },
+      });
+
+      console.log("groupedReactions", groupedReactions);
+
       const duration = await getTotalAvgPageDuration({
         documentId: docId,
         since: 0,
@@ -50,10 +58,16 @@ export default async function handle(
 
       const total_duration = duration.data.reduce(
         (totalDuration, data) => totalDuration + data.avg_duration,
-        0
+        0,
       );
 
-      const stats = { views, groupedViews, duration, total_duration };
+      const stats = {
+        views,
+        groupedViews,
+        duration,
+        total_duration,
+        groupedReactions,
+      };
 
       return res.status(200).json(stats);
     } catch (error) {

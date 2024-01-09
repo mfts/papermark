@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction } from "react";
+import { Dispatch, SetStateAction, useEffect } from "react";
 import { DEFAULT_ACCESS_FORM_TYPE } from ".";
 
 export default function EmailSection({
@@ -9,6 +9,22 @@ export default function EmailSection({
   setData: Dispatch<SetStateAction<DEFAULT_ACCESS_FORM_TYPE>>;
 }) {
   const { email } = data;
+
+  useEffect(() => {
+    // Load email from localStorage when the component mounts
+    const storedEmail = window.localStorage.getItem("papermark.email");
+    if (storedEmail) {
+      setData((prevData) => ({ ...prevData, email: storedEmail }));
+    }
+  }, [setData]);
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newEmail = e.target.value;
+    // Store the new email in localStorage
+    window.localStorage.setItem("papermark.email", newEmail);
+    // Update the state
+    setData({ ...data, email: newEmail });
+  };
 
   return (
     <div className="pb-5">
@@ -27,9 +43,7 @@ export default function EmailSection({
           className="flex w-full rounded-md border-0 py-1.5 text-white bg-black shadow-sm ring-1 ring-inset ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-gray-300 sm:text-sm sm:leading-6"
           value={email || ""}
           placeholder="Enter email"
-          onChange={(e) => {
-            setData({ ...data, email: e.target.value });
-          }}
+          onChange={handleEmailChange}
           aria-invalid="true"
         />
         <p className="text-sm text-gray-600">

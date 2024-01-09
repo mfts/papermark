@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { usePlausible } from "next-plausible";
 import { toast } from "sonner";
 import { useTeam } from "@/context/team-context";
+import { parsePageId } from "notion-utils";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
 
@@ -76,8 +77,6 @@ export function AddDocumentModal({
       if (response) {
         const document = await response.json();
 
-        console.log("document: ", document);
-
         if (!newVersion) {
           // copy the link to the clipboard
           copyToClipboard(
@@ -106,7 +105,11 @@ export function AddDocumentModal({
         }
       }
     } catch (error) {
+      setUploading(false);
+      toast.error("An error occurred while uploading the file.");
       console.error("An error occurred while uploading the file: ", error);
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -171,15 +174,33 @@ export function AddDocumentModal({
     return pdf.numPages;
   }
 
+  const createNotionFileName = () => {
+    // Extract Notion file name from the URL
+    const urlSegments = (notionLink as string).split("/")[3];
+    // Remove the last hyphen along with the Notion ID
+    const extractName = urlSegments.replace(/-([^/-]+)$/, "");
+    const notionFileName = extractName.replaceAll("-", " ") || "Notion Link";
+
+    return notionFileName;
+  };
+
   const handleNotionUpload = async (
     event: FormEvent<HTMLFormElement>,
   ): Promise<void> => {
     event.preventDefault();
+    const validateNotionPageURL = parsePageId(notionLink);
+    // Check if it's a valid URL or not by Regx
+    const isValidURL =
+      /^(https?:\/\/)?([a-zA-Z0-9-]+\.){1,}[a-zA-Z]{2,}([a-zA-Z0-9-._~:/?#[\]@!$&'()*+,;=]+)?$/;
 
-    // Check if the file is chosen
+    // Check if the field is empty or not
     if (!notionLink) {
       toast.error("Please enter a Notion link to proceed.");
       return; // prevent form from submitting
+    }
+    if (validateNotionPageURL === null || !isValidURL.test(notionLink)) {
+      toast.error("Please enter a valid Notion link to proceed.");
+      return;
     }
 
     try {
@@ -193,7 +214,7 @@ export function AddDocumentModal({
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            name: "Notion Link", // TODO: get the title of the notion page
+            name: createNotionFileName(),
             url: notionLink,
             numPages: 1,
             type: "notion",
@@ -203,8 +224,6 @@ export function AddDocumentModal({
 
       if (response) {
         const document = await response.json();
-
-        console.log("document: ", document);
 
         if (!newVersion) {
           // copy the link to the clipboard
@@ -225,25 +244,35 @@ export function AddDocumentModal({
         }
       }
     } catch (error) {
+      setUploading(false);
+      toast.error(
+        "Oops! Can't access the Notion page. Please double-check it's set to 'Public'.",
+      );
       console.error(
         "An error occurred while processing the Notion link: ",
         error,
       );
+    } finally {
+      setUploading(false);
     }
   };
 
+  const clearModelStates = () => {
+    currentFile !== null && setCurrentFile(null);
+    notionLink !== null && setNotionLink(null);
+  };
+
   return (
-    <Dialog>
+    <Dialog onOpenChange={clearModelStates}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent
         className="text-foreground bg-transparent border-none shadow-none"
         isDocumentDialog
       >
         <Tabs defaultValue="document">
-          {/* TODO: change to grid-cols-2 and uncomment notion stuff */}
-          <TabsList className="grid w-full grid-cols-1">
+          <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="document">Document</TabsTrigger>
-            {/* <TabsTrigger value="notion">Notion Page</TabsTrigger> */}
+            <TabsTrigger value="notion">Notion Page</TabsTrigger>
           </TabsList>
           <TabsContent value="document">
             <Card>
@@ -289,7 +318,7 @@ export function AddDocumentModal({
               </CardContent>
             </Card>
           </TabsContent>
-          {/* <TabsContent value="notion">
+          <TabsContent value="notion">
             <Card>
               <CardHeader className="space-y-3">
                 <CardTitle>Share a Notion Page</CardTitle>
@@ -335,7 +364,7 @@ export function AddDocumentModal({
                 </form>
               </CardContent>
             </Card>
-          </TabsContent> */}
+          </TabsContent>
         </Tabs>
       </DialogContent>
     </Dialog>

@@ -7,6 +7,7 @@ datasource db {
 
 generator client {
   provider = "prisma-client-js"
+  previewFeatures = ["relationJoins"]
 }
 
 model Account {
@@ -100,7 +101,7 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
-model Document {  
+model Document {
   id               String            @id @default(cuid())
   name             String
   description      String?
@@ -198,13 +199,14 @@ model Domain {
 }
 
 model View {
-  id          String   @id @default(cuid())
-  link        Link     @relation(fields: [linkId], references: [id])
+  id          String     @id @default(cuid())
+  link        Link       @relation(fields: [linkId], references: [id])
   linkId      String
-  document    Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  document    Document   @relation(fields: [documentId], references: [id], onDelete: Cascade)
   documentId  String
   viewerEmail String? // Email of the viewer if known
-  viewedAt    DateTime @default(now())
+  viewedAt    DateTime   @default(now())
+  reactions   Reaction[]
 
   @@index([linkId])
   @@index([documentId])
@@ -261,6 +263,16 @@ model DataroomFile {
   parentFolderId               String?
   dataroom                     Dataroom               @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
   dataroomId                   String
+
+model Reaction {
+  id         String   @id @default(cuid())
+  view       View     @relation(fields: [viewId], references: [id], onDelete: Cascade)
+  viewId     String
+  pageNumber Int
+  type       String // e.g., "like", "dislike", "love", "hate", etc.
+  createdAt  DateTime @default(now())
+
+  @@index([viewId])
 }
 
 model Invitation {
@@ -305,7 +317,7 @@ model Conversation {
   createdAt     DateTime  @default(now())
   lastMessageAt DateTime? // This is the last time a message was sent in the thread
 
-  @@index([threadId])
   @@unique([userId, documentId])
   @@unique([threadId, documentId])
+  @@index([threadId])
 }
