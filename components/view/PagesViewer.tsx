@@ -14,6 +14,7 @@ export default function PagesViewer({
   documentId,
   viewId,
   assistantEnabled,
+  feedbackEnabled,
   versionNumber,
 }: {
   pages: { file: string; pageNumber: string }[];
@@ -21,6 +22,7 @@ export default function PagesViewer({
   documentId: string;
   viewId: string;
   assistantEnabled: boolean;
+  feedbackEnabled: boolean;
   versionNumber: number;
 }) {
   const numPages = pages.length;
@@ -197,7 +199,9 @@ export default function PagesViewer({
             <LoadingSpinner className="h-20 w-20 text-foreground" />
           )}
         </div>
-        <Toolbar viewId={viewId} pageNumber={pageNumber} />
+        {feedbackEnabled ? (
+          <Toolbar viewId={viewId} pageNumber={pageNumber} />
+        ) : null}
       </div>
     </>
   );

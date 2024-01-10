@@ -99,6 +99,7 @@ export default async function handler(
           domainSlug: domain || null,
           slug: slug || null,
           enableNotification: linkData.enableNotification,
+          enableFeedback: linkData.enableFeedback,
         },
       });
 

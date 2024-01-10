@@ -25,6 +25,7 @@ import DomainSection from "./domain-section";
 import AllowDownloadSection from "./allow-download-section";
 import { useTeam } from "@/context/team-context";
 import AllowNotificationSection from "./allow-notification";
+import FeedbackSection from "./feedback-section";
 
 export const DEFAULT_LINK_PROPS = {
   id: null,
@@ -36,6 +37,7 @@ export const DEFAULT_LINK_PROPS = {
   emailProtected: true,
   allowDownload: false,
   enableNotification: true,
+  enableFeedback: true,
 };
 
 export type DEFAULT_LINK_TYPE = {
@@ -48,6 +50,7 @@ export type DEFAULT_LINK_TYPE = {
   emailProtected: boolean;
   allowDownload: boolean;
   enableNotification: boolean;
+  enableFeedback: boolean;
 };
 
 export default function LinkSheet({
@@ -137,7 +140,7 @@ export default function LinkSheet({
     setIsLoading(false);
   };
 
-  // console.log("current Data", data)
+  // console.log("current Data", data);
 
   return (
     <Sheet open={isOpen} onOpenChange={(open: boolean) => setIsOpen(open)}>
@@ -192,6 +195,7 @@ export default function LinkSheet({
                     <PasswordSection {...{ data, setData }} />
                     <ExpirationSection {...{ data, setData }} />
                     <AllowNotificationSection {...{ data, setData }} />
+                    <FeedbackSection {...{ data, setData }} />
                   </div>
                 </div>
               </div>
