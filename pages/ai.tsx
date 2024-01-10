@@ -253,7 +253,7 @@ export default function Home() {
               </div>
               <p className="mx-auto mt-6 max-w-2xl text-center text-lg leading-8 text-gray-500 dark:text-gray-400">
                 AI-powered platform revolutionizing document sharing and
-                collaboration. It enables secure document sharing, davanced
+                collaboration. It enables secure document sharing, advanced
                 tracking, and storage, providing users with real-time analytics.
               </p>
               <div className="mx-auto mt-16 grid max-w-lg grid-cols-1 gap-x-6 items-center gap-y-6 sm:mt-20 sm:gap-y-0 lg:max-w-4xl lg:grid-cols-2">
