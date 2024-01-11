@@ -13,6 +13,8 @@ import { Label } from "@/components/ui/label";
 import { useTeam } from "@/context/team-context";
 import { useState } from "react";
 import { toast } from "sonner";
+import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
+import { usePlan } from "@/lib/swr/use-billing";
 
 export function AddDomainModal({
   open,
@@ -29,6 +31,7 @@ export function AddDomainModal({
   const [loading, setLoading] = useState<boolean>(false);
 
   const teamInfo = useTeam();
+  const { plan } = usePlan();
 
   const handleSubmit = async (event: any) => {
     event.preventDefault();
@@ -73,6 +76,21 @@ export function AddDomainModal({
 
     !onAddition && window.open("/settings/domains", "_blank");
   };
+
+  // If the team is on a free plan, show the upgrade modal
+  if (plan && plan.plan === "free") {
+    if (children) {
+      return (
+        <UpgradePlanModal clickedPlan="Pro">
+          <Button>Upgrade to Add Domain</Button>
+        </UpgradePlanModal>
+      );
+    } else {
+      return (
+        <UpgradePlanModal clickedPlan="Pro" open={open} setOpen={setOpen} />
+      );
+    }
+  }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
