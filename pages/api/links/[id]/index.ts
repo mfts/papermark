@@ -24,6 +24,7 @@ export default async function handle(
           expiresAt: true,
           emailProtected: true,
           allowDownload: true,
+          enableFeedback: true,
           password: true,
           isArchived: true,
           document: {
@@ -136,6 +137,7 @@ export default async function handle(
         domainSlug: domain || null,
         slug: slug || null,
         enableNotification: linkData.enableNotification,
+        enableFeedback: linkData.enableFeedback,
       },
       include: {
         views: {

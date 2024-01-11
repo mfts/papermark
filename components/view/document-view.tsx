@@ -143,6 +143,7 @@ export default function DocumentView({
             linkId={link.id}
             documentId={document.id}
             assistantEnabled={document.assistantEnabled}
+            feedbackEnabled={link.enableFeedback!}
             versionNumber={document.versions[0].versionNumber}
           />
         ) : (
