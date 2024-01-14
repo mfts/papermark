@@ -2,6 +2,7 @@ import { copyToClipboard, nFormatter, timeAgo } from "@/lib/utils";
 import Link from "next/link";
 import { DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
 import Copy from "@/components/shared/icons/copy";
+import { Pin } from "lucide-react";
 import BarChart from "@/components/shared/icons/bar-chart";
 import Image from "next/image";
 import NotionIcon from "@/components/shared/icons/notion";
@@ -85,7 +86,16 @@ export default function DocumentsCard({
                 />
               </button>
             </div>
+            {document.pinned && (
+              <div className="ml-2 sm:ml-3 p-[7px] sm:py-[3px] sm:px-2 rounded-full sm:rounded-md opacity-80 bg-gray-200 dark:bg-gray-700 flex items-center">
+                <Pin className="w-3 h-3 rotate-45" />
+                <span className="ml-1 text-xs hidden sm:inline-block">
+                  Pinned
+                </span>
+              </div>
+            )}
           </div>
+
           <div className="mt-1 flex items-center space-x-1 text-xs leading-5 text-muted-foreground">
             <p className="truncate">{timeAgo(document.createdAt)}</p>
             <p>•</p>

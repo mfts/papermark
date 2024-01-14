@@ -197,6 +197,31 @@ export default function DocumentPage() {
     }
   };
 
+  const pinDocument = async (document: Document) => {
+    const response = await fetch(
+      `/api/teams/${teamInfo?.currentTeam?.id}/documents/${
+        prismaDocument!.id
+      }/pin-document`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          pinned: !document.pinned,
+        }),
+      },
+    );
+
+    if (response.ok) {
+      const { message } = await response.json();
+      toast.success(message);
+    } else {
+      const { message } = await response.json();
+      toast.error(message);
+    }
+  };
+
   if (error && error.status === 404) {
     return <ErrorPage statusCode={404} />;
   }
@@ -321,6 +346,11 @@ export default function DocumentPage() {
                         </DropdownMenuItem>
                       )
                     ) : null}
+                    <DropdownMenuItem
+                      onClick={() => pinDocument(prismaDocument)}
+                    >
+                      {prismaDocument.pinned ? "Unpin document" : "Pin document"}
+                    </DropdownMenuItem>
                     <DropdownMenuItem
                       className="text-destructive focus:bg-destructive focus:text-destructive-foreground"
                       onClick={(event) =>

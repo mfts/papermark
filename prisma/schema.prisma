@@ -117,6 +117,7 @@ model Document {
   views            View[]
   versions         DocumentVersion[]
   conversations    Conversation[]
+  pinned           Boolean?          @default(false)
 
   @@index([ownerId])
   @@index([teamId])

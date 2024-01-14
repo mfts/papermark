@@ -108,6 +108,7 @@ export default async function handle(
           type: type,
           ownerId: (session.user as CustomUser).id,
           teamId: teamId,
+          pinned: false,
           links: {
             create: {},
           },
