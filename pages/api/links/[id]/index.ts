@@ -31,6 +31,7 @@ export default async function handle(
             select: {
               id: true,
               assistantEnabled: true,
+              teamId: true,
               versions: {
                 where: { isPrimary: true },
                 select: {
@@ -53,7 +54,21 @@ export default async function handle(
         return res.status(404).json({ error: "Link not found" });
       }
 
-      return res.status(200).json(link);
+      let brand = await prisma.brand.findFirst({
+        where: {
+          teamId: link.document.teamId!,
+        },
+        select: {
+          logo: true,
+          brandColor: true,
+        },
+      });
+
+      if (!brand) {
+        brand = null;
+      }
+
+      return res.status(200).json({ link, brand });
     } catch (error) {
       return res.status(500).json({
         message: "Internal Server Error",
