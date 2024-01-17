@@ -184,7 +184,7 @@ export default function Sidebar() {
       </Transition.Root>
 
       {/* Static sidebar for desktop */}
-      <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col">
+      <div className="hidden lg:w-[350px] lg:flex lg:flex-col">
         {/* Sidebar component, swap this element with another sidebar if you like */}
         <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-gray-50 dark:bg-black px-6">
           <div className="flex h-16 shrink-0 items-center">
@@ -326,7 +326,7 @@ export default function Sidebar() {
         </div>
       </div>
 
-      <div className="lg:pl-72">
+      <div>
         {/* Navbar */}
         <div className="sticky top-0 z-40 mb-1 flex h-14 shrink-0 items-center gap-x-4 border-b border-gray-50/90 bg-gray-50 dark:border-black/10 dark:bg-black/95 px-4 sm:gap-x-6 sm:px-6 lg:px-8 lg:hidden">
           <button
@@ -404,7 +404,7 @@ export default function Sidebar() {
 
 Sidebar.Skeleton = function SidebarSkeleton() {
   return (
-    <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col">
+    <div className="hidden lg:flex lg:w-[350px] lg:flex-col">
       <div className="flex grow flex-col gap-y-6 overflow-y-auto bg-gray-50 dark:bg-black px-6">
         <div className="flex h-16 shrink-0 items-center">
           <Skeleton className="w-40 h-9" />
