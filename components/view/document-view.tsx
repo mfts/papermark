@@ -101,7 +101,6 @@ export default function DocumentView({
 
   // If link is not submitted and does not have email / password protection, show the access form
   if (!submitted && isProtected) {
-    console.log("calling access form");
     return (
       <AccessForm
         data={data}
@@ -116,7 +115,6 @@ export default function DocumentView({
   }
 
   if (isLoading) {
-    console.log("loading");
     return (
       <div className="h-screen flex items-center justify-center">
         <LoadingSpinner className="h-20 w-20" />

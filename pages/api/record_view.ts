@@ -108,8 +108,6 @@ export default async function handle(
   try {
     await publishPageView(result.data);
 
-    // console.log(`Recorded view for ${linkId}`, result.data);
-
     res.status(200).json({ message: "View recorded" });
   } catch (error) {
     log(`Failed to record view for ${linkId}. Error: \n\n ${error}`);

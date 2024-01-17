@@ -65,8 +65,6 @@ export function AddDomainModal({
 
     toast.success("Domain added successfully! 🎉");
 
-    // console.log(newDomain);
-
     // Update local data with the new link
     onAddition && onAddition(newDomain);
 

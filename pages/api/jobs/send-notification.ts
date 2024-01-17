@@ -69,7 +69,6 @@ export default async function handle(
     res.status(200).json({ message: "Successfully sent notification", viewId });
     return;
   } catch (error) {
-    console.log("Error:", error);
     return res.status(500).json({ message: (error as Error).message });
   }
 }

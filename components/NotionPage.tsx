@@ -88,8 +88,6 @@ export const NotionPage = ({
       type: "scroll",
     };
 
-    console.log("Scroll data:", data);
-    console.log("Max scroll percentage:", maxScrollPercentage);
     // TODO: Store data for later use with heatmap.js
   };
 

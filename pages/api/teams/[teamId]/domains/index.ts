@@ -11,7 +11,7 @@ import { getTeamWithDomain } from "@/lib/team/helper";
 
 export default async function handle(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   if (req.method === "GET") {
     // GET /api/teams/:teamId/domains
@@ -72,8 +72,6 @@ export default async function handle(
       if (validDomain !== true) {
         return res.status(422).json("Invalid domain");
       }
-
-      // console.log("Valid domain", domain);
 
       const response = await prisma.domain.create({
         data: {

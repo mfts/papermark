@@ -61,9 +61,7 @@ export const log = async (message: string, mention?: boolean) => {
         ],
       }),
     });
-  } catch (e) {
-    // console.log(`Failed to log to Papermark Slack. Error: ${e}`);
-  }
+  } catch (e) {}
 };
 
 export function bytesToSize(bytes: number) {

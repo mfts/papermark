@@ -37,8 +37,6 @@ export default async function handler(
         // ⚠️ This will not work on `localhost` websites,
         // Use ngrok or similar to get the full upload flow
 
-        console.log("blob upload completed", blob, tokenPayload);
-
         try {
           // Run any logic after the file upload completed
           // const { userId } = JSON.parse(tokenPayload);

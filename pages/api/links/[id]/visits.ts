@@ -112,8 +112,6 @@ export default async function handle(
 
       // TODO: Check that the user is owner of the links, otherwise return 401
 
-      // console.log("viewsWithDuration:", viewsWithDuration);
-
       return res.status(200).json(viewsWithDuration);
     } catch (error) {
       log(`Failed to get views for link ${id}. Error: \n\n ${error}`);
