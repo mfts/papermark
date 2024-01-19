@@ -4,6 +4,7 @@ import { Button } from "../ui/button";
 import PapermarkSparkle from "../shared/icons/papermark-sparkle";
 import { Download } from "lucide-react";
 import { Brand } from "@prisma/client";
+import Image from "next/image";
 
 export default function Nav({
   pageNumber,
@@ -45,8 +46,6 @@ export default function Nav({
     }
   }
 
-  console.log("brand ", brand);
-
   return (
     <nav
       className="bg-black"
@@ -57,9 +56,16 @@ export default function Nav({
       <div className="mx-auto px-2 sm:px-6 lg:px-8">
         <div className="relative flex h-16 items-center justify-between">
           <div className="flex flex-1 items-stretch justify-start">
-            <div className="flex flex-shrink-0 items-center">
+            <div className="flex flex-shrink-0 items-center relative h-8 w-36">
               {brand && brand.logo ? (
-                <img className="block h-8 w-auto" src={brand.logo} alt="Logo" />
+                <Image
+                  className="object-contain"
+                  src={brand.logo}
+                  alt="Logo"
+                  fill
+                  quality={100}
+                  priority
+                />
               ) : (
                 <p className="text-2xl font-bold tracking-tighter text-white">
                   Papermark

@@ -1,22 +1,12 @@
-import { AddDomainModal } from "@/components/domains/add-domain-modal";
-import DomainCard from "@/components/domains/domain-card";
 import AppLayout from "@/components/layouts/app";
 import Navbar from "@/components/settings/navbar";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useTeam } from "@/context/team-context";
 import { useCallback, useEffect, useState } from "react";
@@ -25,9 +15,8 @@ import { HexColorInput, HexColorPicker } from "react-colorful";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import { PlusIcon } from "lucide-react";
 import { useBrand } from "@/lib/swr/use-brand";
-import { upload } from "@vercel/blob/client";
-import { set } from "date-fns";
 import { toast } from "sonner";
+import { convertDataUrlToFile, uploadImage } from "@/lib/utils";
 
 export default function Branding() {
   const { brand } = useBrand();
@@ -35,7 +24,6 @@ export default function Branding() {
 
   const [brandColor, setBrandColor] = useState<string>("#000000");
   const [logo, setLogo] = useState<string | null>(null);
-  const [logoFile, setLogoFile] = useState<File | null>(null); // [TODO
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [fileError, setFileError] = useState<string | null>(null);
@@ -46,8 +34,8 @@ export default function Branding() {
       setFileError(null);
       const file = e.target.files[0];
       if (file) {
-        if (file.size / 1024 / 1024 > 5) {
-          setFileError("File size too big (max 5MB)");
+        if (file.size / 1024 / 1024 > 2) {
+          setFileError("File size too big (max 2MB)");
         } else if (file.type !== "image/png" && file.type !== "image/jpeg") {
           setFileError("File type not supported (.png or .jpg only)");
         } else {
@@ -56,7 +44,6 @@ export default function Branding() {
             setLogo(e.target?.result as string);
           };
           reader.readAsDataURL(file);
-          setLogoFile(file);
         }
       }
     },
@@ -70,29 +57,24 @@ export default function Branding() {
     }
   }, [brand]);
 
-  const uploadImage = async (file: File) => {
-    const newBlob = await upload(file.name, file, {
-      access: "public",
-      handleUploadUrl: "/api/file/logo-upload",
-    });
-
-    return newBlob.url;
-  };
-
   const saveBranding = async (e: any) => {
     e.preventDefault();
 
     setIsLoading(true);
 
-    let newLogo: string | null = logo;
-    if (logoFile) {
-      newLogo = await uploadImage(logoFile);
+    // Upload the image if it's a data URL
+    let blobUrl: string | null = logo && logo.startsWith("data:") ? null : logo;
+    if (logo && logo.startsWith("data:")) {
+      // Convert the data URL to a blob
+      const blob = convertDataUrlToFile({ dataUrl: logo });
+      // Upload the blob to vercel storage
+      blobUrl = await uploadImage(blob);
+      setLogo(blobUrl);
     }
 
     const data = {
       brandColor: brandColor,
-      logo: newLogo,
-      isNewLogo: newLogo !== brand?.logo,
+      logo: blobUrl,
     };
 
     const res = await fetch(
@@ -106,7 +88,7 @@ export default function Branding() {
       },
     );
     if (res.ok) {
-      mutate("/api/teams");
+      mutate(`/api/teams/${teamInfo?.currentTeam?.id}/branding`);
       setIsLoading(false);
       toast.success("Branding updated successfully");
     }
@@ -190,7 +172,6 @@ export default function Branding() {
                             const reader = new FileReader();
                             reader.onload = (e) => {
                               setLogo(e.target?.result as string);
-                              setLogoFile(file);
                             };
                             reader.readAsDataURL(file);
                           }

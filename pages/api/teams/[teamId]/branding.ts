@@ -4,8 +4,6 @@ import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 import { authOptions } from "../../auth/[...nextauth]";
 import { errorhandler } from "@/lib/errorHandler";
-import { PutBlobResult, put } from "@vercel/blob";
-import { Brand } from "@prisma/client";
 
 export default async function handle(
   req: NextApiRequest,
@@ -56,41 +54,33 @@ export default async function handle(
     return res.status(200).json(brand);
   } else if (req.method === "POST") {
     // POST /api/teams/:teamId/branding
-    const { logo, brandColor, accentColor, isNewLogo } = req.body as {
+    const { logo, brandColor, accentColor } = req.body as {
       logo?: string;
       brandColor?: string;
       accentColor?: string;
-      isNewLogo: boolean;
     };
-
-    let blob: PutBlobResult | null = null;
-
-    if (isNewLogo && logo) {
-      const logoString = Buffer.from(logo, "base64").toString("utf-8");
-
-      // upload logo to blob storage
-      blob = await put("Logo", logoString, { access: "public" });
-      console.log(blob);
-    }
 
     // update team with new branding
     const brand = await prisma.brand.create({
       data: {
-        logo: blob ? blob.url : null,
+        logo: logo,
         brandColor,
         accentColor,
         teamId: teamId,
       },
     });
 
+    await fetch(
+      `${process.env.NEXTAUTH_URL}/api/revalidate?secret=${process.env.REVALIDATE_TOKEN}&teamId=${teamId}`,
+    );
+
     return res.status(200).json(brand);
   } else if (req.method === "PUT") {
     // POST /api/teams/:teamId/branding
-    const { logo, brandColor, accentColor, isNewLogo } = req.body as {
+    const { logo, brandColor, accentColor } = req.body as {
       logo?: string;
       brandColor?: string;
       accentColor?: string;
-      isNewLogo: boolean;
     };
 
     const brand = await prisma.brand.update({
@@ -104,10 +94,14 @@ export default async function handle(
       },
     });
 
+    await fetch(
+      `${process.env.NEXTAUTH_URL}/api/revalidate?secret=${process.env.REVALIDATE_TOKEN}&teamId=${teamId}`,
+    );
+
     return res.status(200).json(brand);
   } else {
     // We only allow GET and DELETE requests
-    res.setHeader("Allow", ["GET", "DELETE"]);
+    res.setHeader("Allow", ["GET", "POST", "PUT"]);
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 }
