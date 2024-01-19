@@ -11,6 +11,8 @@ import prisma from "@/lib/prisma";
 import { ExtendedRecordMap } from "notion-types";
 import notion from "@/lib/notion";
 import { parsePageId } from "notion-utils";
+import { Brand } from "@prisma/client";
+import CustomMetatag from "@/components/view/custom-metatag";
 
 export const getStaticProps = async (context: GetStaticPropsContext) => {
   const { domain, slug } = context.params as { domain: string; slug: string };
@@ -24,7 +26,10 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
   if (!res.ok) {
     return { notFound: true };
   }
-  const link = (await res.json()) as LinkWithDocument;
+  const { link, brand } = (await res.json()) as {
+    link: LinkWithDocument;
+    brand: Brand | null;
+  };
 
   let pageId = null;
   let recordMap = null;
@@ -59,6 +64,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
         rootNotionPageId: pageId,
         recordMap,
       },
+      brand, // pass the brand to client
     },
     revalidate: 10,
   };
@@ -74,12 +80,14 @@ export async function getStaticPaths() {
 export default function ViewPage({
   link,
   notionData,
+  brand,
 }: {
   link: LinkWithDocument;
   notionData: {
     rootNotionPageId: string | null;
     recordMap: ExtendedRecordMap | null;
   };
+  brand?: Brand;
 }) {
   const router = useRouter();
   const { data: session, status } = useSession();
@@ -114,25 +122,47 @@ export default function ViewPage({
     );
   }
 
+  const { enableCustomMetatag, metaTitle, metaDescription, metaImage } = link;
+
   if (emailProtected || linkPassword) {
     return (
-      <DocumentView
-        link={link}
-        userEmail={userEmail}
-        userId={userId}
-        isProtected={true}
-        notionData={notionData}
-      />
+      <>
+        {enableCustomMetatag ? (
+          <CustomMetatag
+            title={metaTitle!}
+            description={metaDescription!}
+            imageUrl={metaImage!}
+          />
+        ) : null}
+        <DocumentView
+          link={link}
+          userEmail={userEmail}
+          userId={userId}
+          isProtected={true}
+          notionData={notionData}
+          brand={brand}
+        />
+      </>
     );
   }
 
   return (
-    <DocumentView
-      link={link}
-      userEmail={userEmail}
-      userId={userId}
-      isProtected={false}
-      notionData={notionData}
-    />
+    <>
+      {enableCustomMetatag ? (
+        <CustomMetatag
+          title={metaTitle!}
+          description={metaDescription!}
+          imageUrl={metaImage!}
+        />
+      ) : null}
+      <DocumentView
+        link={link}
+        userEmail={userEmail}
+        userId={userId}
+        isProtected={false}
+        notionData={notionData}
+        brand={brand}
+      />
+    </>
   );
 }

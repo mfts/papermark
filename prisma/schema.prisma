@@ -189,6 +189,12 @@ model Link {
   enableNotification Boolean?  @default(true) // Optional give user a option to pause/resume the notifications
   enableFeedback     Boolean?  @default(true) // Optional give user a option to enable the feedback toolbar
 
+  // custom metatags
+  metaTitle String? // This will be the meta title of the link
+  metaDescription String? // This will be the meta description of the link
+  metaImage String? // This will be the meta image of the link
+  enableCustomMetatag Boolean? @default(false) // Optional give user a option to enable the custom metatag
+
   @@unique([domainSlug, slug])
   @@index([documentId])
 }

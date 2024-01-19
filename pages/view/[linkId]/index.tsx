@@ -10,6 +10,8 @@ import { parsePageId } from "notion-utils";
 import { GetStaticPropsContext } from "next";
 import { useRouter } from "next/router";
 import { Brand } from "@prisma/client";
+import CustomMetatag from "@/components/view/custom-metatag";
+import Head from "next/head";
 
 export const getStaticProps = async (context: GetStaticPropsContext) => {
   const { linkId } = context.params as { linkId: string };
@@ -119,27 +121,47 @@ export default function ViewPage({
     );
   }
 
+  const { enableCustomMetatag, metaTitle, metaDescription, metaImage } = link;
+
   if (emailProtected || linkPassword) {
     return (
-      <DocumentView
-        link={link}
-        userEmail={userEmail}
-        userId={userId}
-        isProtected={true}
-        notionData={notionData}
-        brand={brand}
-      />
+      <>
+        {enableCustomMetatag ? (
+          <CustomMetatag
+            title={metaTitle!}
+            description={metaDescription!}
+            imageUrl={metaImage!}
+          />
+        ) : null}
+        <DocumentView
+          link={link}
+          userEmail={userEmail}
+          userId={userId}
+          isProtected={true}
+          notionData={notionData}
+          brand={brand}
+        />
+      </>
     );
   }
 
   return (
-    <DocumentView
-      link={link}
-      userEmail={userEmail}
-      userId={userId}
-      isProtected={false}
-      notionData={notionData}
-      brand={brand}
-    />
+    <>
+      {enableCustomMetatag ? (
+        <CustomMetatag
+          title={metaTitle!}
+          description={metaDescription!}
+          imageUrl={metaImage!}
+        />
+      ) : null}
+      <DocumentView
+        link={link}
+        userEmail={userEmail}
+        userId={userId}
+        isProtected={false}
+        notionData={notionData}
+        brand={brand}
+      />
+    </>
   );
 }
