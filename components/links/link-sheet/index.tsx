@@ -24,7 +24,7 @@ import Link from "next/link";
 import DomainSection from "./domain-section";
 import AllowDownloadSection from "./allow-download-section";
 import { useTeam } from "@/context/team-context";
-import AllowNotificationSection from "./allow-notification";
+import AllowNotificationSection from "./allow-notification-section";
 import FeedbackSection from "./feedback-section";
 
 export const DEFAULT_LINK_PROPS = {
