@@ -65,6 +65,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
         recordMap,
       },
       meta: {
+        enableCustomMetatag: link.enableCustomMetatag,
         metaTitle: link.metaTitle,
         metaDescription: link.metaDescription,
         metaImage: link.metaImage,
@@ -94,6 +95,7 @@ export default function ViewPage({
     recordMap: ExtendedRecordMap | null;
   };
   meta: {
+    enableCustomMetatag: boolean;
     metaTitle: string | null;
     metaDescription: string | null;
     metaImage: string | null;
@@ -106,11 +108,13 @@ export default function ViewPage({
   if (!link || status === "loading" || router.isFallback) {
     return (
       <>
-        <CustomMetatag
-          title={meta.metaTitle}
-          description={meta.metaDescription}
-          imageUrl={meta.metaImage}
-        />
+        {meta.enableCustomMetatag ? (
+          <CustomMetatag
+            title={meta.metaTitle}
+            description={meta.metaDescription}
+            imageUrl={meta.metaImage}
+          />
+        ) : null}
         <div className="h-screen flex items-center justify-center">
           <LoadingSpinner className="h-20 w-20" />
         </div>
