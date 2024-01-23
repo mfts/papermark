@@ -49,7 +49,10 @@ export default async function handler(
         },
         select: {
           links: {
-            where: { isArchived: false },
+            where: {
+              isArchived: false,
+              domainId: null,
+            },
             select: {
               id: true,
             },
