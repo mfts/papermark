@@ -65,7 +65,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
         recordMap,
       },
       meta: {
-        enableCustomMetatag: link.enableCustomMetatag,
+        enableCustomMetatag: link.enableCustomMetatag || false,
         metaTitle: link.metaTitle,
         metaDescription: link.metaDescription,
         metaImage: link.metaImage,
