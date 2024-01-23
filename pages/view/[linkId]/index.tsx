@@ -128,9 +128,9 @@ export default function ViewPage({
       <>
         {enableCustomMetatag ? (
           <CustomMetatag
-            title={metaTitle!}
-            description={metaDescription!}
-            imageUrl={metaImage!}
+            title={metaTitle}
+            description={metaDescription}
+            imageUrl={metaImage}
           />
         ) : null}
         <DocumentView
@@ -149,9 +149,9 @@ export default function ViewPage({
     <>
       {enableCustomMetatag ? (
         <CustomMetatag
-          title={metaTitle!}
-          description={metaDescription!}
-          imageUrl={metaImage!}
+          title={metaTitle}
+          description={metaDescription}
+          imageUrl={metaImage}
         />
       ) : null}
       <DocumentView
