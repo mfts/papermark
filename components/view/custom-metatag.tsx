@@ -12,16 +12,39 @@ const CustomMetatag = ({
   return (
     <Head>
       {title ? <title>{title}</title> : null}
-      {title ? <meta property="og:title" content={title} /> : null}
       {description ? (
-        <meta name="og:description" content={description} />
+        <meta
+          property="og:description"
+          content={description}
+          key="description"
+        />
       ) : null}
-      {imageUrl ? <meta name="og:image" content={imageUrl} /> : null}
-      {title ? <meta name="twitter:title" content={title} /> : null}
+      {title ? (
+        <meta property="og:title" content={title} key="og-title" />
+      ) : null}
       {description ? (
-        <meta name="twitter:description" content={description} />
+        <meta
+          name="og:description"
+          content={description}
+          key="og-description"
+        />
       ) : null}
-      {imageUrl ? <meta name="twitter:image" content={imageUrl} /> : null}
+      {imageUrl ? (
+        <meta name="og:image" content={imageUrl} key="og-image" />
+      ) : null}
+      {title ? (
+        <meta name="twitter:title" content={title} key="tw-title" />
+      ) : null}
+      {description ? (
+        <meta
+          name="twitter:description"
+          content={description}
+          key="tw-description"
+        />
+      ) : null}
+      {imageUrl ? (
+        <meta name="twitter:image" content={imageUrl} key="tw-image" />
+      ) : null}
     </Head>
   );
 };
