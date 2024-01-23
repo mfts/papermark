@@ -91,13 +91,13 @@ export default function ViewPage({
   const router = useRouter();
   const { data: session, status } = useSession();
 
-  // if (!link || status === "loading" || router.isFallback) {
-  //   return (
-  //     <div className="h-screen flex items-center justify-center">
-  //       <LoadingSpinner className="h-20 w-20" />
-  //     </div>
-  //   );
-  // }
+  if (!link || status === "loading" || router.isFallback) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <LoadingSpinner className="h-20 w-20" />
+      </div>
+    );
+  }
 
   const {
     expiresAt,
