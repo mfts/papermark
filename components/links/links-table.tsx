@@ -68,6 +68,7 @@ export default function LinksTable() {
       enableNotification: link.enableNotification
         ? link.enableNotification
         : false,
+      enableFeedback: link.enableFeedback ? link.enableFeedback : false,
     });
     //wait for dropdown to close before opening the link sheet
     setTimeout(() => {

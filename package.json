@@ -13,7 +13,8 @@
     "postinstall": "prisma generate",
     "vercel-build": "prisma migrate deploy && next build",
     "email": "email dev --dir ./components/emails --port 3001",
-    "trigger:dev": "npx @trigger.dev/cli@latest dev"
+    "trigger:dev": "npx @trigger.dev/cli@latest dev",
+    "stripe:webhook": "pkgx stripe listen --forward-to localhost:3000/api/stripe/webhook"
   },
   "dependencies": {
     "@chronark/zod-bird": "^0.3.0",
@@ -80,6 +81,7 @@
     "postcss": "^8.4.32",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-draggable": "^4.4.6",
     "react-dropzone": "^14.2.3",
     "react-email": "^1.9.5",
     "react-intersection-observer": "^9.5.3",

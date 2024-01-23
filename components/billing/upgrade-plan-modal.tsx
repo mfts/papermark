@@ -12,10 +12,14 @@ import { useTeam } from "@/context/team-context";
 
 export function UpgradePlanModal({
   clickedPlan,
+  open,
+  setOpen,
   children,
 }: {
   clickedPlan: "Starter" | "Pro";
-  children: React.ReactNode;
+  open?: boolean;
+  setOpen?: React.Dispatch<React.SetStateAction<boolean>>;
+  children?: React.ReactNode;
 }) {
   const [plan, setPlan] = useState<"Starter" | "Pro">(clickedPlan);
   const [period, setPeriod] = useState<"monthly" | "yearly">("monthly");
@@ -39,7 +43,7 @@ export function UpgradePlanModal({
   }, [plan]);
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="text-foreground bg-background">
         <motion.div

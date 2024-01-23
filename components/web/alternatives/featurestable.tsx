@@ -7,6 +7,7 @@ const tools: ToolFeature[] = [
   {
     name: "Papermark",
     features: {
+      selfhosted: "Yes",
       unlimitedDocuments: "Yes",
       emailCapture: "Yes",
       teamAccess: "Yes",
@@ -20,6 +21,7 @@ const tools: ToolFeature[] = [
   {
     name: "Docsend",
     features: {
+      selfhosted: "No",
       unlimitedDocuments: "No",
       emailCapture: "Yes",
       teamAccess: "Yes",
@@ -33,6 +35,7 @@ const tools: ToolFeature[] = [
   {
     name: "PandaDoc",
     features: {
+      selfhosted: "No",
       unlimitedDocuments: "No",
       emailCapture: "No",
       teamAccess: "Yes",
@@ -46,6 +49,7 @@ const tools: ToolFeature[] = [
   {
     name: "Google Drive",
     features: {
+      selfhosted: "No",
       unlimitedDocuments: "Yes",
       emailCapture: "No",
       teamAccess: "Yes",
@@ -59,6 +63,7 @@ const tools: ToolFeature[] = [
   {
     name: "Pitch",
     features: {
+      selfhosted: "No",
       unlimitedDocuments: "Yes",
       emailCapture: "No",
       teamAccess: "Yes",
@@ -72,6 +77,7 @@ const tools: ToolFeature[] = [
   {
     name: "Notion",
     features: {
+      selfhosted: "No",
       unlimitedDocuments: "Yes",
       emailCapture: "No",
       teamAccess: "Yes",
@@ -85,6 +91,7 @@ const tools: ToolFeature[] = [
   {
     name: "BriefLink",
     features: {
+      selfhosted: "No",
       unlimitedDocuments: "No",
       emailCapture: "Yes",
       teamAccess: "No",
@@ -107,6 +114,7 @@ const featureDisplayNames: { [key: string]: string } = {
   feedbackOnPage: "Feedback on each page",
   emailnotifications: "Email Notifications",
   aiEnhancements: "AI-Enhancements",
+  selfhosted: "Self-Hosted and Open Source",
 };
 
 export default function ComparisonTable() {
@@ -116,13 +124,13 @@ export default function ComparisonTable() {
     <div className="px-6 sm:px-8 lg:px-20">
       <div className="mt-20 px-6 py-12 sm:px-6 sm:py-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-            Compare top 7 Docsend alternatives based on core features
+          {/* <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+            Compare best Docsend alternatives based on core features
             <br />
           </h2>
           <p className="mx-auto mt-6 max-w-xl text-lg leading-8 text-gray-600">
             Check all the features you need to securely share documents
-          </p>
+          </p> */}
         </div>
       </div>
       <div className="mt-6 flow-root">
