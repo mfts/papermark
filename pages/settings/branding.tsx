@@ -18,11 +18,14 @@ import { useBrand } from "@/lib/swr/use-brand";
 import { toast } from "sonner";
 import { convertDataUrlToFile, uploadImage } from "@/lib/utils";
 import { useRouter } from "next/router";
+import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
+import { usePlan } from "@/lib/swr/use-billing";
 
 export default function Branding() {
   const { brand } = useBrand();
   const teamInfo = useTeam();
   const router = useRouter();
+  const { plan } = usePlan();
 
   const [brandColor, setBrandColor] = useState<string>("#000000");
   const [logo, setLogo] = useState<string | null>(null);
@@ -266,10 +269,15 @@ export default function Branding() {
               </div>
             </CardContent>
             <CardFooter className="border-t p-6">
-              <Button onClick={saveBranding} loading={isLoading}>
-                Save changes
-              </Button>
-
+              {plan && plan.plan === "free" ? (
+                <UpgradePlanModal clickedPlan="Pro">
+                  <Button>Upgrade to Save Branding</Button>
+                </UpgradePlanModal>
+              ) : (
+                <Button onClick={saveBranding} loading={isLoading}>
+                  Save changes
+                </Button>
+              )}
               {/* delete button */}
               <Button variant="link" onClick={handleDelete} disabled={!brand}>
                 Reset branding
