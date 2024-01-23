@@ -23,8 +23,8 @@ export default function Document() {
         />
         <meta property="og:url" content="https://www.papermark.io" />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:site" content="@mfts0" />
-        <meta name="twitter:creator" content="@mfts0" />
+        <meta name="twitter:site" content="@papermarkio" />
+        <meta name="twitter:creator" content="@papermarkio" />
         <meta name="twitter:title" content="Papermark" />
         <meta
           name="twitter:description"

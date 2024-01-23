@@ -69,6 +69,12 @@ export default function LinksTable() {
         ? link.enableNotification
         : false,
       enableFeedback: link.enableFeedback ? link.enableFeedback : false,
+      enableCustomMetatag: link.enableCustomMetatag
+        ? link.enableCustomMetatag
+        : false,
+      metaTitle: link.metaTitle,
+      metaDescription: link.metaDescription,
+      metaImage: link.metaImage,
     });
     //wait for dropdown to close before opening the link sheet
     setTimeout(() => {

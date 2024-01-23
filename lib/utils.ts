@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { customAlphabet } from "nanoid";
 import { ThreadMessage } from "openai/resources/beta/threads/messages/messages";
 import { Message } from "ai";
+import { upload } from "@vercel/blob/client";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -302,4 +303,83 @@ export const convertThreadMessagesToMessages = (
       // name, function_call, and other fields as needed
     };
   });
+};
+
+export function constructMetadata({
+  title = "Papermark | The Open Source DocSend Alternative",
+  description = "Papermark is an open-source document sharing alternative to DocSend with built-in engagement analytics and 100% white-labeling.",
+  image = "https://www.papermark.io/_static/meta-image.png",
+  favicon = "/favicon.ico",
+  noIndex = false,
+}: {
+  title?: string;
+  description?: string;
+  image?: string;
+  favicon?: string;
+  noIndex?: boolean;
+} = {}) {
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      images: [
+        {
+          url: image,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [image],
+      creator: "@papermarkio",
+    },
+    favicon,
+    ...(noIndex && {
+      robots: {
+        index: false,
+        follow: false,
+      },
+    }),
+  };
+}
+
+export const convertDataUrlToFile = ({
+  dataUrl,
+  filename = "logo.png",
+}: {
+  dataUrl: string;
+  filename?: string;
+}) => {
+  let arr = dataUrl.split(","),
+    match = arr[0].match(/:(.*?);/),
+    mime = match ? match[1] : "",
+    bstr = atob(arr[1]),
+    n = bstr.length,
+    u8arr = new Uint8Array(n);
+
+  while (n--) {
+    u8arr[n] = bstr.charCodeAt(n);
+  }
+
+  filename =
+    mime == "image/png"
+      ? "logo.png"
+      : mime == "image/jpeg"
+        ? "logo.jpg"
+        : filename;
+
+  return new File([u8arr], filename, { type: mime });
+};
+
+export const uploadImage = async (file: File) => {
+  const newBlob = await upload(file.name, file, {
+    access: "public",
+    handleUploadUrl: "/api/file/logo-upload",
+  });
+
+  return newBlob.url;
 };
