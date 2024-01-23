@@ -67,9 +67,13 @@ export default function Nav({
                   priority
                 />
               ) : (
-                <p className="text-2xl font-bold tracking-tighter text-white">
+                <Link
+                  href="https://www.papermark.io"
+                  target="_blank"
+                  className="text-2xl font-bold tracking-tighter text-white"
+                >
                   Papermark
-                </p>
+                </Link>
               )}
             </div>
           </div>
