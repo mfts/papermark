@@ -64,6 +64,12 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
         rootNotionPageId: null, // do not pass rootNotionPageId to the client
         recordMap,
       },
+      meta: {
+        enableCustomMetatag: link.enableCustomMetatag || false,
+        metaTitle: link.metaTitle,
+        metaDescription: link.metaDescription,
+        metaImage: link.metaImage,
+      },
       brand, // pass brand to the client
     },
   };
@@ -79,6 +85,7 @@ export async function getStaticPaths() {
 export default function ViewPage({
   link,
   notionData,
+  meta,
   brand,
 }: {
   link: LinkWithDocument;
@@ -86,6 +93,12 @@ export default function ViewPage({
     rootNotionPageId: string | null;
     recordMap: ExtendedRecordMap | null;
   };
+  meta: {
+    enableCustomMetatag: boolean;
+    metaTitle: string | null;
+    metaDescription: string | null;
+    metaImage: string | null;
+  } | null;
   brand?: Brand;
 }) {
   const router = useRouter();
@@ -93,9 +106,18 @@ export default function ViewPage({
 
   if (!link || status === "loading" || router.isFallback) {
     return (
-      <div className="h-screen flex items-center justify-center">
-        <LoadingSpinner className="h-20 w-20" />
-      </div>
+      <>
+        {meta && meta.enableCustomMetatag ? (
+          <CustomMetatag
+            title={meta.metaTitle}
+            description={meta.metaDescription}
+            imageUrl={meta.metaImage}
+          />
+        ) : null}
+        <div className="h-screen flex items-center justify-center">
+          <LoadingSpinner className="h-20 w-20" />
+        </div>
+      </>
     );
   }
 

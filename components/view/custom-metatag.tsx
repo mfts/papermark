@@ -13,11 +13,7 @@ const CustomMetatag = ({
     <Head>
       {title ? <title>{title}</title> : null}
       {description ? (
-        <meta
-          property="og:description"
-          content={description}
-          key="description"
-        />
+        <meta property="description" content={description} key="description" />
       ) : null}
       {title ? (
         <meta property="og:title" content={title} key="og-title" />
