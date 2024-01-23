@@ -99,7 +99,7 @@ export default function ViewPage({
     metaTitle: string | null;
     metaDescription: string | null;
     metaImage: string | null;
-  };
+  } | null;
   brand?: Brand;
 }) {
   const router = useRouter();
@@ -108,7 +108,7 @@ export default function ViewPage({
   if (!link || status === "loading" || router.isFallback) {
     return (
       <>
-        {meta.enableCustomMetatag ? (
+        {meta && meta.enableCustomMetatag ? (
           <CustomMetatag
             title={meta.metaTitle}
             description={meta.metaDescription}
