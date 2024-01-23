@@ -17,10 +17,12 @@ import { PlusIcon } from "lucide-react";
 import { useBrand } from "@/lib/swr/use-brand";
 import { toast } from "sonner";
 import { convertDataUrlToFile, uploadImage } from "@/lib/utils";
+import { useRouter } from "next/router";
 
 export default function Branding() {
   const { brand } = useBrand();
   const teamInfo = useTeam();
+  const router = useRouter();
 
   const [brandColor, setBrandColor] = useState<string>("#000000");
   const [logo, setLogo] = useState<string | null>(null);
@@ -91,6 +93,27 @@ export default function Branding() {
       mutate(`/api/teams/${teamInfo?.currentTeam?.id}/branding`);
       setIsLoading(false);
       toast.success("Branding updated successfully");
+    }
+  };
+
+  const handleDelete = async () => {
+    setIsLoading(true);
+
+    const res = await fetch(
+      `/api/teams/${teamInfo?.currentTeam?.id}/branding`,
+      {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      },
+    );
+    if (res.ok) {
+      setLogo(null);
+      setBrandColor("#000000");
+      setIsLoading(false);
+      toast.success("Branding reset successfully");
+      router.reload();
     }
   };
 
@@ -209,7 +232,7 @@ export default function Branding() {
                       id="image"
                       name="image"
                       type="file"
-                      accept="image/*"
+                      accept="image/jpeg,image/png"
                       className="sr-only"
                       onChange={onChangeLogo}
                     />
@@ -245,6 +268,11 @@ export default function Branding() {
             <CardFooter className="border-t p-6">
               <Button onClick={saveBranding} loading={isLoading}>
                 Save changes
+              </Button>
+
+              {/* delete button */}
+              <Button variant="link" onClick={handleDelete} disabled={!brand}>
+                Reset branding
               </Button>
             </CardFooter>
           </Card>

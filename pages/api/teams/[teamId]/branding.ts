@@ -4,6 +4,7 @@ import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 import { authOptions } from "../../auth/[...nextauth]";
 import { errorhandler } from "@/lib/errorHandler";
+import { del } from "@vercel/blob";
 
 export default async function handle(
   req: NextApiRequest,
@@ -72,7 +73,7 @@ export default async function handle(
 
     return res.status(200).json(brand);
   } else if (req.method === "PUT") {
-    // POST /api/teams/:teamId/branding
+    // PUT /api/teams/:teamId/branding
     const { logo, brandColor, accentColor } = req.body as {
       logo?: string;
       brandColor?: string;
@@ -91,6 +92,28 @@ export default async function handle(
     });
 
     return res.status(200).json(brand);
+  } else if (req.method === "DELETE") {
+    // DELETE /api/teams/:teamId/branding
+    const brand = await prisma.brand.findFirst({
+      where: {
+        teamId: teamId,
+      },
+      select: { id: true, logo: true },
+    });
+
+    if (brand && brand.logo) {
+      // delete the logo from vercel blob
+      await del(brand.logo);
+    }
+
+    // delete the branding from database
+    await prisma.brand.delete({
+      where: {
+        id: brand?.id,
+      },
+    });
+
+    return res.status(200).json("Branding deleted");
   } else {
     // We only allow GET and DELETE requests
     res.setHeader("Allow", ["GET", "POST", "PUT"]);
