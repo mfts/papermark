@@ -70,10 +70,6 @@ export default async function handle(
       },
     });
 
-    await fetch(
-      `${process.env.NEXTAUTH_URL}/api/revalidate?secret=${process.env.REVALIDATE_TOKEN}&teamId=${teamId}`,
-    );
-
     return res.status(200).json(brand);
   } else if (req.method === "PUT") {
     // POST /api/teams/:teamId/branding
@@ -93,10 +89,6 @@ export default async function handle(
         accentColor,
       },
     });
-
-    await fetch(
-      `${process.env.NEXTAUTH_URL}/api/revalidate?secret=${process.env.REVALIDATE_TOKEN}&teamId=${teamId}`,
-    );
 
     return res.status(200).json(brand);
   } else {
