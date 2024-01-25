@@ -23,10 +23,10 @@ export default function Sidebar() {
 
       {/* sidebar for mobile */}
       <nav>
-        <div className="sticky top-0 z-40 mb-1 flex h-14 shrink-0 items-center gap-x-4 border-b border-gray-50/90 bg-gray-50 dark:border-black/10 dark:bg-black/95 px-4 sm:gap-x-6 sm:px-6 lg:px-8 lg:hidden">
+        <div className="sticky top-0 z-40 mb-1 flex items-center h-14 shrink-0 border-gray-50/90 bg-gray-50 dark:border-black/10 dark:bg-black/95 px-6 sm:px-12 border-b dark:border-none lg:hidden">
           <Sheet>
             <SheetTrigger asChild>
-              <button className="-m-2.5 p-2.5 text-muted-foreground lg:hidden">
+              <button className="mt-1 p-0.5 text-muted-foreground lg:hidden">
                 <MenuIcon className="h-6 w-6" aria-hidden="true" />
               </button>
             </SheetTrigger>

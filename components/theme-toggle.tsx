@@ -19,7 +19,7 @@ export function ModeToggle() {
 
   return (
     <DropdownMenuSub>
-      <DropdownMenuSubTrigger className="w-full flex items-center px-3 !py-2 text-sm hover:bg-muted duration-200 rounded-none pr-2">
+      <DropdownMenuSubTrigger className="w-full flex items-center px-3 !py-2 text-sm hover:!bg-gray-200 dark:hover:!bg-muted duration-200 rounded-none pr-2">
         <Palette className="w-4 h-4 mr-2" /> Themes
       </DropdownMenuSubTrigger>
       <DropdownMenuPortal>

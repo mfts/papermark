@@ -1,7 +1,7 @@
 import useDocuments from "@/lib/swr/use-documents";
 import { useTeam } from "@/context/team-context";
 import DocumentCard from "@/components/documents/document-card";
-import Skeleton from "@/components/Skeleton";
+import { Skeleton } from "@/components/ui/skeleton";
 import { PlusIcon } from "@heroicons/react/24/solid";
 import { AddDocumentModal } from "@/components/documents/add-document-modal";
 import { Separator } from "@/components/ui/separator";

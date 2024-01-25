@@ -28,8 +28,8 @@ const ProfileMenu = ({ className, size }: ProfileMenuProps) => {
     <div className="flex justify-between items-center space-x-2">
       {status === "loading" ? (
         <div className="w-full flex items-center rounded-md gap-x-3 p-2">
-          <Skeleton className="h-8 w-9 rounded-full" />
-          {isSize && <Skeleton className="h-7 w-full" />}
+          <Skeleton className="h-8 w-8 rounded-full" />
+          {isSize && <Skeleton className="h-7 w-[90%]" />}
         </div>
       ) : (
         <DropdownMenu>
@@ -74,7 +74,7 @@ const ProfileMenu = ({ className, size }: ProfileMenuProps) => {
 
                 <a
                   href="mailto:support@papermark.io"
-                  className="flex items-center px-3 py-2 my-1 text-sm hover:bg-muted duration-200"
+                  className="flex items-center px-3 py-2 my-1 text-sm hover:bg-gray-200 dark:hover:bg-muted duration-200"
                 >
                   <HelpCircle className="w-4 h-4 mr-2" />
                   Need Help?
@@ -86,7 +86,7 @@ const ProfileMenu = ({ className, size }: ProfileMenuProps) => {
                       callbackUrl: `${window.location.origin}`,
                     })
                   }
-                  className="flex items-center px-3 py-2 text-sm hover:bg-muted duration-200"
+                  className="flex items-center px-3 py-2 text-sm hover:bg-gray-200 dark:hover:bg-muted duration-200"
                   href={""}
                 >
                   <LogOut className="w-4 h-4 mr-2" />

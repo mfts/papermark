@@ -91,7 +91,7 @@ export default function DocumentsCard({
   };
 
   return (
-    <li className="group/row relative rounded-lg p-3 border-0 dark:bg-secondary ring-1 ring-gray-200 dark:ring-gray-700 transition-all hover:ring-gray-400 hover:dark:ring-gray-500 hover:bg-secondary sm:p-4 flex justify-between items-center">
+    <li className="group/row relative rounded-lg p-3 border-0 dark:bg-secondary ring-1 ring-gray-200 dark:ring-gray-700 transition-all hover:ring-gray-300 hover:dark:ring-gray-500 hover:bg-secondary sm:p-4 flex justify-between items-center">
       <div className="min-w-0 flex shrink items-center space-x-2 sm:space-x-4">
         <div className="w-8 mx-0.5 sm:mx-1 text-center flex justify-center items-center">
           {document.type === "notion" ? (
@@ -180,7 +180,7 @@ export default function DocumentsCard({
             <Button
               size="icon"
               variant="ghost"
-              className="w-6 sm:w-7 h-6 sm:h-7 z-10 hover:bg-background duration-200 focus:!outline-none"
+              className="w-6 sm:w-7 h-6 sm:h-7 z-10 hover:bg-white dark:hover:bg-gray-900 duration-200"
             >
               <MoreVertical className="w-4 h-4 text-gray-400" />
             </Button>
@@ -193,7 +193,7 @@ export default function DocumentsCard({
 
             <DropdownMenuItem
               onClick={() => handleDeleteDocument(document.id)}
-              className="flex items-center hover:!bg-red-500 hover:opacity-80 duration-200 cursor-pointer"
+              className="flex items-center hover:!bg-red-600 dark:hover:!bg-red-500 hover:!text-white hover:opacity-80 duration-200 cursor-pointer"
             >
               <TrashIcon className="w-4 h-4 mr-2" /> Delete Doc
             </DropdownMenuItem>

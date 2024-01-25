@@ -5,7 +5,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     <div>
       <div className="flex flex-col lg:flex-row min-h-screen bg-gray-50 dark:bg-black">
         <Sidebar />
-        <main className="grow w-full bg-white dark:bg-gray-900 ring-gray-200 dark:ring-gray-800">
+        <main className="grow w-full bg-white dark:bg-gray-900 ring-gray-200 dark:ring-gray-800 lg:border-l dark:border-none">
           {children}
         </main>
       </div>
