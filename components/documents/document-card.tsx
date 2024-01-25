@@ -18,6 +18,7 @@ import {
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import { TrashIcon, Link as LinkIcon, MoreVertical } from "lucide-react";
+import { useSWRConfig } from "swr";
 
 type DocumentsCardProps = {
   document: DocumentWithLinksAndLinkCountAndViewCount;
@@ -27,6 +28,7 @@ export default function DocumentsCard({
   document,
   teamInfo,
 }: DocumentsCardProps) {
+  const { mutate } = useSWRConfig();
   const router = useRouter();
 
   function handleCopyToClipboard(id: string) {
@@ -71,6 +73,16 @@ export default function DocumentsCard({
     );
 
     if (response.ok) {
+      // remove the document from the cache
+      mutate(`/api/teams/${teamInfo?.currentTeam?.id}/documents`, null, {
+        populateCache: (_, docs) => {
+          return docs.filter(
+            (doc: DocumentWithLinksAndLinkCountAndViewCount) =>
+              doc.id !== documentId,
+          );
+        },
+        revalidate: false,
+      });
       toast.success("Document deleted successfully.");
     } else {
       const { message } = await response.json();
