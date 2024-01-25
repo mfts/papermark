@@ -3,6 +3,7 @@ import ChevronUp from "@/components/shared/icons/chevron-up";
 import Link from "next/link";
 import Image from "next/image";
 import UserRound from "./shared/icons/user-round";
+import { ModeToggle } from "./theme-toggle";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   DropdownMenu,
@@ -69,10 +70,11 @@ const ProfileMenu = ({ className, size }: ProfileMenuProps) => {
                   {session?.user?.email}
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator className="!my-2" />
+                <ModeToggle />
 
                 <a
                   href="mailto:support@papermark.io"
-                  className="flex items-center px-3 py-2 mb-1 text-sm hover:bg-muted duration-200"
+                  className="flex items-center px-3 py-2 my-1 text-sm hover:bg-muted duration-200"
                 >
                   <HelpCircle className="w-4 h-4 mr-2" />
                   Need Help?

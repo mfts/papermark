@@ -30,7 +30,10 @@ export default function Sidebar() {
                 <MenuIcon className="h-6 w-6" aria-hidden="true" />
               </button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-[280px] sm:w-[300px] lg:hidden p-0 m-0">
+            <SheetContent
+              side="left"
+              className="w-[280px] sm:w-[300px] lg:hidden p-0 m-0"
+            >
               <SidebarComponent className="flex" />
             </SheetContent>
           </Sheet>
