@@ -9,6 +9,7 @@ import Link from "next/link";
 import Image from "next/image";
 import PlaceholderImg from "@/public/_static/placeholder.png";
 import PapermarkPImg from "@/public/_static/papermark-p.svg";
+import Head from "next/head";
 
 const searchOptions = {
   threshold: 0.3,
@@ -65,6 +66,7 @@ export default function Dashboard({ data }: any) {
 
   const stages = [
     { id: "7", label: "All" },
+    { id: "5", label: "Pre-Seed" },
     { id: "1", label: "Seed" },
     { id: "2", label: "Series A" },
     { id: "3", label: "Series B" },
@@ -123,7 +125,7 @@ export default function Dashboard({ data }: any) {
         </div>
         {/* <Stats angelsLength={angels.length} /> */}
         <div className="sm:flex flex-col md:flex-row justify-between mt-4">
-          <span className="isolate mt-5 inline-flex rounded-md shadow-sm w-fit">
+          <span className="isolate mt-5 inline-flex rounded-md shadow-sm w-fit px-2 lg:px-2 ">
             {stages.map((stage) => (
               <Link
                 href={
@@ -143,7 +145,7 @@ export default function Dashboard({ data }: any) {
               </Link>
             ))}
           </span>
-          <div className="relative mt-5">
+          <div className="relative mt-5 px-2 ">
             <SearchIcon
               className="h-5 w-5 absolute z-20 left-3 bottom-2"
               aria-hidden="true"
