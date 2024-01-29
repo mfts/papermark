@@ -1,8 +1,8 @@
 import { durationFormat, timeAgo } from "@/lib/utils";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { useLinkVisits } from "@/lib/swr/use-link";
 import { Gauge } from "@/components/ui/gauge";
+import { VisitorAvatar } from "@/components/visitors/visitor-avatar";
 
 export default function LinksVisitors({
   linkId,
@@ -23,11 +23,7 @@ export default function LinksVisitors({
                 <div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3 overflow-visible w-[220px]">
-                      <Avatar className="flex-shrink-0 hidden sm:inline-flex">
-                        <AvatarFallback>
-                          {view.viewerEmail?.slice(0, 2).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
+                      <VisitorAvatar viewerEmail={view.viewerEmail} />
                       <div className="min-w-0 flex-1">
                         <div className="focus:outline-none">
                           <p className="text-sm text-gray-800 dark:text-gray-200 overflow-visible">
@@ -60,11 +56,7 @@ export default function LinksVisitors({
                 <div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center truncate w-[220px]">
-                      <Avatar className="flex-shrink-0 hidden sm:inline-flex">
-                        <AvatarFallback>
-                          {view.viewerEmail?.slice(0, 2).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
+                      <VisitorAvatar viewerEmail={view.viewerEmail} />
                       <div className="min-w-0 flex-1">
                         <div className="focus:outline-none">
                           <p className="text-sm font-medium text-muted-foreground overflow-visible">
