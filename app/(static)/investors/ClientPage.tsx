@@ -4,7 +4,7 @@ import Fuse from "fuse.js";
 import { useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { GlobeIcon, SearchIcon } from "lucide-react";
-import classNames from "classnames";
+import classNames from "clsx";
 import Link from "next/link";
 import Image from "next/image";
 import PlaceholderImg from "@/public/_static/placeholder.png";
