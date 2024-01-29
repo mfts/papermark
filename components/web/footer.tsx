@@ -64,10 +64,7 @@ const navigation = {
     { name: "VC-generator", href: "https://vc.papermark.io" },
     { name: "Open Source Friends", href: "/oss-friends" },
     { name: "Open Source Investors", href: "/open-source-investors" },
-    {
-      name: "Open Investor Database",
-      href: "https://investors.papermark.io",
-    },
+    { name: "Open Investor Database", href: "/investors" },
     {
       name: "YC Application GPT",
       href: "https://chat.openai.com/g/g-LYDRCiZB9-yc-application-gpt",
