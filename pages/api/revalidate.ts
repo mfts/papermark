@@ -1,6 +1,5 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/lib/prisma";
-import { P } from "@upstash/redis/zmscore-b6b93f14";
 
 export default async function handler(
   req: NextApiRequest,
