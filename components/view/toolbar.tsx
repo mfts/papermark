@@ -1,13 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { Avatar, AvatarFallback } from "../ui/avatar";
-import UserRound from "../shared/icons/user-round";
 import { REACTIONS } from "@/lib/constants";
 import GripVertical from "../shared/icons/grip-vertical";
 import Draggable from "react-draggable";
-
-function getKeyByValue(object: { [x: string]: any }, value: any) {
-  return Object.keys(object).find((key) => object[key] === value);
-}
 
 export default function Toolbar({
   viewId,
