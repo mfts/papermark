@@ -47,49 +47,51 @@ export default function Billing() {
       id: 1,
       title: "Free",
       priceMonthly: "€0/mo",
-      description: "Enjoy free access",
+      description: "What's included:",
       currentPlan: plan && plan == "free" ? true : false,
       hasPlan: false,
       features: [
-        "PDF up to 30 mb",
         "Unlimited links",
-        "Analytics for each page",
-        "Feedback on each page",
-        "Notion Documents",
-        "Email Notifications on views",
-        "Papermark AI",
-        "100 questions, 3/day",
+        "30 MB document size limit",
+        "Notion documents",
+        "1 user",
+        "Basic support",
+        "Email notifications",
+        "Basic Papermark AI",
+        "100 credits, 3/day",
       ],
     },
     {
       id: 2,
-      title: "Starter",
-      priceMonthly: "€15/mo",
-      description: "All free features +",
-      currentPlan: plan && plan == "starter" ? true : false,
-      hasPlan: plan && plan !== "free" ? true : false,
-      features: [
-        "Custom domains",
-        "Unlimited documents",
-        "Papermark AI",
-        "500 questions",
-      ],
-    },
-    {
-      id: 3,
       title: "Pro",
-      priceMonthly: "€30/mo",
-      description: "All features and more",
+      priceMonthly: "€29/mo",
+      description: "Everything in Free, plus:",
       currentPlan: plan && plan == "pro" ? true : false,
       hasPlan: plan && plan !== "free" ? true : false,
       isTrial: plan && plan == "trial" ? true : false,
       features: [
-        "Team members",
-        "Priority Support",
-        "Custom Branding",
+        "Unlimited documents",
         "Large file uploads",
-        "Papermark AI",
-        "1500 questions",
+        "Team members",
+        "Priority support",
+        "Custom domains",
+        "Custom branding",
+        "Advanced Papermark AI",
+        "1500 credits",
+      ],
+    },
+    {
+      id: 3,
+      title: "Enterprise",
+      priceMonthly: "Contact us",
+      description: "Custom tailored plans, incl.:",
+      currentPlan: plan && plan == "enterprise" ? true : false,
+      hasPlan: plan && plan !== "free" ? true : false,
+      features: [
+        "Up to 5TB file uploads",
+        "Dedicated support",
+        "Custom Papermark AI / BYO",
+        "Unlimited credits",
       ],
     },
   ];
@@ -105,16 +107,7 @@ export default function Billing() {
               Billing
             </h3>
             <p className="text-sm text-muted-foreground">
-              Manage your subscription{" "}
-              <Link
-                href="https://cal.com/marcseitz/papermark"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-foreground hover:underline"
-              >
-                contact us
-              </Link>{" "}
-              for support and enterprise requests
+              Manage your subscription and billing information.
             </p>
           </div>
         </div>
@@ -168,25 +161,9 @@ export default function Billing() {
                   ))}
                 </div>
                 <div className="mt-6 flex items-center justify-center gap-x-6">
-                  {tier.id === 1 &&
-                    (plan ? (
-                      tier.currentPlan ? (
-                        <UpgradePlanModal clickedPlan={"Pro"}>
-                          <Button type="button">Upgrade to Pro</Button>
-                        </UpgradePlanModal>
-                      ) : (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          className="border border-gray-700"
-                          disabled
-                        >
-                          Change plan
-                        </Button>
-                      )
-                    ) : (
-                      <div className="h-10 w-24 animate-pulse rounded-md bg-border" />
-                    ))}
+                  {tier.id === 1 && (
+                    <div className="h-10 w-24 animate-pulse rounded-md bg-border" />
+                  )}
                   {tier.id === 2 &&
                     (plan ? (
                       tier.hasPlan ? (
@@ -195,7 +172,7 @@ export default function Billing() {
                             !tier.currentPlan &&
                               "border border-gray-700 dark:bg-secondary hover:dark:border-gray-500 hover:dark:bg-gray-700",
                           )}
-                          variant={tier.currentPlan ? "default" : "outline"}
+                          variant={tier.currentPlan ? "default" : "default"}
                           onClick={() => {
                             setClicked(true);
                             fetch(
@@ -218,211 +195,34 @@ export default function Billing() {
                           Manage Subscription
                         </Button>
                       ) : (
-                        <UpgradePlanModal clickedPlan={"Starter"}>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            className="border border-gray-700 dark:bg-secondary hover:dark:border-gray-500 hover:dark:bg-gray-700"
-                          >
-                            Upgrade to Starter
-                          </Button>
-                        </UpgradePlanModal>
-                      )
-                    ) : (
-                      <div className="h-10 w-24 animate-pulse rounded-md bg-border" />
-                    ))}
-                  {tier.id === 3 &&
-                    (plan ? (
-                      tier.hasPlan ? (
-                        <Button
-                          onClick={() => {
-                            setClicked(true);
-                            fetch(
-                              `/api/teams/${teamInfo?.currentTeam?.id}/billing/manage`,
-                              {
-                                method: "POST",
-                              },
-                            )
-                              .then(async (res) => {
-                                const url = await res.json();
-                                router.push(url);
-                              })
-                              .catch((err) => {
-                                alert(err);
-                                setClicked(false);
-                              });
-                          }}
-                          loading={clicked}
-                        >
-                          {tier.currentPlan
-                            ? `Manage Subscription`
-                            : `Upgrade to Pro`}
-                        </Button>
-                      ) : (
                         <UpgradePlanModal clickedPlan={"Pro"}>
-                          <Button type="button">
-                            {tier.isTrial
-                              ? "Upgrade to remain on Pro"
-                              : "Upgrade to Pro"}
-                          </Button>
+                          <Button>Upgrade to Pro</Button>
                         </UpgradePlanModal>
                       )
                     ) : (
                       <div className="h-10 w-24 animate-pulse rounded-md bg-border" />
                     ))}
+                  {tier.id === 3 && (
+                    <Link
+                      href="https://cal.com/marcseitz/papermark"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-foreground hover:underline"
+                    >
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="border border-gray-700 dark:bg-secondary hover:dark:border-gray-500 hover:dark:bg-gray-700"
+                      >
+                        Contact us
+                      </Button>
+                    </Link>
+                  )}
                 </div>
               </div>
             ))}
           </div>
         </div>
-
-        {/* <div>
-          <div className="rounded-lg border border-border bg-secondary">
-            <div className="flex flex-col space-y-3 p-10">
-              <h2 className="text-xl font-medium">Plan &amp; Usage</h2>
-              <p className="text-sm text-secondary-foreground">
-                You are currently on the{" "}
-                {plan ? (
-                  <Badge>{plan}</Badge>
-                ) : (
-                  <span className="rounded-full bg-border px-2 py-0.5 text-xs text-foreground">
-                    load
-                  </span>
-                )}{" "}
-                plan.
-                {endsAt && startsAt && (
-                  <>
-                    {" "}
-                    Current billing cycle:{" "}
-                    <span className="font-medium text-foreground">
-                      {`${formattedDate(startsAt)} - ${formattedDate(endsAt)}`}
-                    </span>
-                    .
-                  </>
-                )}
-              </p>
-            </div>
-            <div className="border-b border-gray-200 dark:border-gray-700" />
-            <div className="grid grid-cols-1 divide-y divide-gray-200 dark:divide-gray-700 sm:grid-cols-2 sm:divide-x sm:divide-y-0">
-              <div className="p-10">
-                <div className="flex items-center space-x-2">
-                  <h3 className="font-medium">Total Documents</h3>
-                </div>
-                {plan === "enterprise" ? (
-                  <div className="mt-4 flex items-center">
-                    {usage || usage === 0 ? (
-                      <Number value={usage}>
-                        <p className="text-2xl font-semibold text-black">
-                          {nFormatter(usage)}
-                        </p>
-                      </Number>
-                    ) : (
-                      <div className="h-8 w-8 animate-pulse rounded-md bg-gray-200" />
-                    )}
-                    <Divider className="h-8 w-8 text-gray-500" />
-                    <Infinity className="h-8 w-8 text-gray-500" />
-                  </div>
-                ) : (
-                  <div className="mt-2 flex flex-col space-y-2">
-                    {usage !== undefined && usageLimit ? (
-                      <p className="text-sm text-gray-600">
-                        <Number value={usage}>
-                          <span>{nFormatter(usage)} </span>
-                        </Number>
-                        / {nFormatter(usageLimit)} clicks (
-                        {((usage / usageLimit) * 100).toFixed(1)}%)
-                      </p>
-                    ) : (
-                      <div className="h-5 w-32 animate-pulse rounded-md bg-gray-200" />
-                    )}
-                    <div className="h-3 w-full overflow-hidden rounded-full bg-gray-200">
-                      <motion.div
-                        initial={{ width: 0 }}
-                        animate={{
-                          width:
-                            usage !== undefined && usageLimit
-                              ? (usage / usageLimit) * 100 + "%"
-                              : "0%",
-                        }}
-                        transition={{ duration: 0.5, type: "spring" }}
-                        className={`${
-                          usage && usageLimit && usage > usageLimit
-                            ? "bg-red-500"
-                            : "bg-blue-500"
-                        } h-3 rounded-full`}
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-              <div className="p-10">
-                <div className="flex items-center space-x-2">
-                  <h3 className="font-medium">Number of Links</h3>
-                  <InfoTooltip content="Number of short links in your project." />
-                </div>
-                <div className="mt-4 flex items-center">
-                  {links || links === 0 ? (
-                    <Number value={links} unit="links">
-                      <p className="text-2xl font-semibold text-black">
-                        {nFormatter(links)}
-                      </p>
-                    </Number>
-                  ) : (
-                    <div className="h-8 w-8 animate-pulse rounded-md bg-gray-200" />
-                  )}
-                  <Divider className="h-8 w-8 text-gray-500" />
-                  <Infinity className="h-8 w-8 text-gray-500" />
-                </div>
-              </div>
-            </div>
-
-            <div className="border-b border-gray-200 dark:border-gray-700" />
-            <div className="flex flex-col items-center justify-between space-y-3 px-10 py-4 text-center sm:flex-row sm:space-y-0 sm:text-left">
-              {plan ? (
-                <p className="text-sm text-muted-foreground">
-                  {plan === "pro"
-                    ? "On the Pro plan, the sky's the limit! Thank you for your support."
-                    : "For higher limits, upgrade to the Pro plan."}
-                </p>
-              ) : (
-                <div className="h-3 w-28 animate-pulse rounded-full bg-border" />
-              )}
-              <div>
-                {plan ? (
-                  plan !== "pro" ? (
-                    <UpgradePlanModal>
-                      <Button type="button">Upgrade</Button>
-                    </UpgradePlanModal>
-                  ) : (
-                    <Button
-                      onClick={() => {
-                        setClicked(true);
-                        fetch(
-                          `/api/teams/${teamInfo?.currentTeam?.id}/billing/manage`,
-                          {
-                            method: "POST",
-                          }
-                        )
-                          .then(async (res) => {
-                            const url = await res.json();
-                            router.push(url);
-                          })
-                          .catch((err) => {
-                            alert(err);
-                            setClicked(false);
-                          });
-                      }}
-                      loading={clicked}>
-                      Manage Subscription
-                    </Button>
-                  )
-                ) : (
-                  <div className="h-10 w-24 animate-pulse rounded-md bg-border" />
-                )}
-              </div>
-            </div>
-          </div>
-        </div> */}
       </div>
     </AppLayout>
   );
