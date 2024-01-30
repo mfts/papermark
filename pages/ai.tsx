@@ -199,10 +199,10 @@ export default function Home() {
               </div>
               <div className="text-center">
                 <h1 className="text-4xl font-bold tracking-tight text-black dark:text-white sm:text-6xl">
-                  AI Documents Asisstant
+                  AI Documents Assistant
                 </h1>
                 <p className="mt-6 text-lg leading-8 text-gray-500">
-                  Powerful Ai-assitant for your shared and received documents
+                  Powerful Ai-assistant for your shared and received documents
                 </p>
 
                 <div className="mt-10 flex items-center justify-center gap-x-6">
