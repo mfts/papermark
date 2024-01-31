@@ -207,7 +207,7 @@ export default function DocumentsCard({
       </div>
 
       <div className="flex flex-row space-x-2">
-        {document.type !== "notion" ? (
+        {prismaDocument.type !== "notion" ? (
           <button
             onClick={(e) => {
               e.stopPropagation();
