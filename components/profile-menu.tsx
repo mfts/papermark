@@ -63,7 +63,7 @@ const ProfileMenu = ({ className, size }: ProfileMenuProps) => {
               )}
             </div>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className={cn("p-0 pb-2", className)}>
+          <DropdownMenuContent className="lg:w-[240px] xl:w-[270px] mr-2 lg:mr-0 px-0 pb-2">
             {session ? (
               <>
                 <DropdownMenuLabel className="px-3 !py-[3px] mt-2 text-sm text-muted-foreground truncate">

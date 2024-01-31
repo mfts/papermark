@@ -18,12 +18,14 @@ import ProfileMenu from "./profile-menu";
 export default function Sidebar() {
   return (
     <>
-      {/* Static sidebar for desktop */}
-      <SidebarComponent className="hidden lg:flex" />
-
-      {/* sidebar for mobile */}
       <nav>
-        <div className="sticky top-0 z-40 mb-1 flex items-center h-14 shrink-0 border-gray-50/90 bg-gray-50 dark:border-black/10 dark:bg-black/95 px-6 sm:px-12 border-b dark:border-none lg:hidden">
+        {/* sidebar for desktop */}
+        <SidebarComponent className="hidden lg:fixed lg:inset-y-0 lg:flex lg:z-50" />
+
+        {/* move main screen to the right by width of the sidebar on desktop */}
+        <div className="lg:pl-72"></div>
+        {/* sidebar for mobile */}
+        <div className="sticky lg:hidden top-0 z-40 mb-1 flex items-center h-14 shrink-0 border-gray-50/90 bg-gray-50 dark:border-black/10 dark:bg-black/95 px-6 sm:px-12 border-b dark:border-none">
           <Sheet>
             <SheetTrigger asChild>
               <button className="mt-1 p-0.5 text-muted-foreground lg:hidden">
@@ -98,71 +100,65 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
 
   return (
     <aside
-      className={cn("w-full lg:w-[380px] flex flex-col relative", className)}
+      className={cn(
+        "w-full h-screen lg:w-72 flex-shrink-0 flex-col justify-between gap-y-4 bg-gray-50 dark:bg-black px-4 lg:px-6 pt-4 lg:pt-6",
+        className,
+      )}
     >
       {/* Sidebar component, swap this element with another sidebar if you like */}
-      <div className="flex grow flex-col gap-y-4 overflow-y-auto bg-gray-50 dark:bg-black px-4 lg:px-6 pt-4 lg:pt-6">
-        <div className="flex h-16 shrink-0 items-center space-x-3">
-          <p className="text-2xl font-bold tracking-tighter text-black dark:text-white flex items-center">
-            Papermark{" "}
-            {userPlan == "pro" ? (
-              <span className="bg-background text-foreground ring-1 ring-gray-800 rounded-full px-2.5 py-1 text-xs ml-4">
-                Pro
-              </span>
-            ) : null}
-          </p>
+
+      <div className="flex h-16 shrink-0 items-center space-x-3">
+        <p className="text-2xl font-bold tracking-tighter text-black dark:text-white flex items-center">
+          Papermark{" "}
+          {userPlan == "pro" ? (
+            <span className="bg-background text-foreground ring-1 ring-gray-800 rounded-full px-2.5 py-1 text-xs ml-4">
+              Pro
+            </span>
+          ) : null}
+        </p>
+      </div>
+
+      <SelectTeam
+        currentTeam={currentTeam}
+        teams={teams}
+        isLoading={isLoading}
+        setCurrentTeam={() => {}}
+      />
+
+      <section className="flex flex-1 flex-col gap-y-7">
+        <div className="space-y-2">
+          {navigation.map((item) => (
+            <button
+              key={item.name}
+              onClick={() => router.push(item.href)}
+              disabled={item.disabled}
+              className={cn(
+                item.current
+                  ? "bg-gray-200 dark:bg-secondary text-secondary-foreground font-semibold"
+                  : "text-muted-foreground hover:text-foreground hover:bg-gray-200 hover:dark:bg-muted duration-200",
+                "group flex gap-x-3 items-center rounded-md px-3 py-2 text-sm leading-6 w-full disabled:hover:bg-transparent disabled:text-muted-foreground disabled:cursor-default",
+              )}
+            >
+              <item.icon className="h-5 w-5 shrink-0" aria-hidden="true" />
+              {item.name}
+            </button>
+          ))}
         </div>
+      </section>
+      <div className="mb-4">
+        {/* if user is on trial show banner,
+         * if user is pro show nothing,
+         * if user is free and showProBanner is true show pro banner
+         */}
+        {userPlan === "trial" && session ? <Banner session={session} /> : null}
+        {userPlan === "pro" && null}
+        {userPlan === "free" && showProBanner ? (
+          <ProBanner setShowProBanner={setShowProBanner} />
+        ) : null}
 
-        <nav className="flex flex-1 flex-col">
-          <SelectTeam
-            currentTeam={currentTeam}
-            teams={teams}
-            isLoading={isLoading}
-            setCurrentTeam={() => {}}
-          />
-
-          <section className="flex flex-1 flex-col gap-y-7 !mt-5">
-            <div className="space-y-2">
-              {navigation.map((item) => (
-                <button
-                  key={item.name}
-                  onClick={() => router.push(item.href)}
-                  disabled={item.disabled}
-                  className={cn(
-                    item.current
-                      ? "bg-gray-200 dark:bg-secondary text-secondary-foreground font-semibold"
-                      : "text-muted-foreground hover:text-foreground hover:bg-gray-200 hover:dark:bg-muted duration-200",
-                    "group flex gap-x-3 items-center rounded-md px-3 py-2 text-sm leading-6 w-full disabled:hover:bg-transparent disabled:text-muted-foreground disabled:cursor-default",
-                  )}
-                >
-                  <item.icon className="h-5 w-5 shrink-0" aria-hidden="true" />
-                  {item.name}
-                </button>
-              ))}
-            </div>
-
-            <div className="-mx-2 mt-auto mb-4">
-              {/* if user is on trial show banner,
-               * if user is pro show nothing,
-               * if user is free and showProBanner is true show pro banner
-               */}
-              {userPlan === "trial" && session ? (
-                <Banner session={session} />
-              ) : null}
-              {userPlan === "pro" && null}
-              {userPlan === "free" && showProBanner ? (
-                <ProBanner setShowProBanner={setShowProBanner} />
-              ) : null}
-
-              <div className="w-full hidden lg:block">
-                <ProfileMenu
-                  size="large"
-                  className="lg:w-[240px] xl:w-[270px]"
-                />
-              </div>
-            </div>
-          </section>
-        </nav>
+        <div className="w-full hidden lg:block">
+          <ProfileMenu size="large" />
+        </div>
       </div>
     </aside>
   );
