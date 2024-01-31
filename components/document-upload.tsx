@@ -1,16 +1,15 @@
 import { useMemo } from "react";
 import { useDropzone } from "react-dropzone";
-import {
-  ArrowUpTrayIcon,
-  DocumentIcon,
-  PhotoIcon,
-} from "@heroicons/react/24/outline";
-import {
-  DocumentTextIcon,
-  PresentationChartBarIcon,
-} from "@heroicons/react/20/solid";
 import { bytesToSize } from "@/lib/utils";
 import { toast } from "sonner";
+
+import {
+  Upload as ArrowUpTrayIcon,
+  File as DocumentIcon,
+  FileText as DocumentTextIcon,
+  Presentation as PresentationChartBarIcon,
+  Image as PhotoIcon,
+} from "lucide-react";
 
 function fileIcon(fileType: string) {
   switch (fileType) {
@@ -93,7 +92,7 @@ export default function DocumentUpload({
               </div>
             ) : (
               <ArrowUpTrayIcon
-                className="mx-auto h-12 w-12 text-gray-500"
+                className="mx-auto h-10 w-10 text-gray-500"
                 aria-hidden="true"
               />
             )}

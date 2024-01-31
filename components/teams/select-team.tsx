@@ -1,6 +1,6 @@
 import { Check, Loader, PlusIcon } from "lucide-react";
 import { TeamContextType, useTeam } from "@/context/team-context";
-import { ChevronUpDownIcon } from "@heroicons/react/20/solid";
+import { ChevronsUpDown as ChevronUpDownIcon } from "lucide-react";
 import { Team } from "@/lib/types";
 import { useRouter } from "next/router";
 import Link from "next/link";
