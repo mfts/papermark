@@ -32,7 +32,6 @@ export function EmptyScreen({
   handleInputChange: (e: any) => void;
 }) {
   const manageInput = (message: string) => {
-    console.log(message);
     setInput(message);
     handleInputChange(message);
   };
@@ -75,7 +74,6 @@ export function EmptyScreen({
               variant="outline"
               className="h-auto p-4 text-sm"
               onClick={() => {
-                console.log(message.message);
                 return handleInputChange({
                   target: { value: message.message },
                 });

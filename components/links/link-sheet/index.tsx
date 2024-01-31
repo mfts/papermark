@@ -165,8 +165,6 @@ export default function LinkSheet({
     setIsLoading(false);
   };
 
-  // console.log("current Data", data);
-
   return (
     <Sheet open={isOpen} onOpenChange={(open: boolean) => setIsOpen(open)}>
       <SheetContent className="bg-background text-foreground flex flex-col justify-between">

@@ -10,7 +10,7 @@ import { errorhandler } from "@/lib/errorHandler";
 
 export default async function handle(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   if (req.method === "GET") {
     // GET /api/teams/:teamId/documents/:id/views
@@ -79,7 +79,7 @@ export default async function handle(
         return duration.data.reduce(
           (totalDuration: number, data: { sum_duration: number }) =>
             totalDuration + data.sum_duration,
-          0
+          0,
         );
       });
 
@@ -97,8 +97,6 @@ export default async function handle(
           completionRate: completionRate.toFixed(),
         };
       });
-
-      // console.log("viewsWithDuration:", viewsWithDuration)
 
       return res.status(200).json(viewsWithDuration);
     } catch (error) {
