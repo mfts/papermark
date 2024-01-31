@@ -11,14 +11,14 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Gauge } from "@/components/ui/gauge";
 
 import { useDocumentVisits } from "@/lib/swr/use-document";
 import { durationFormat, timeAgo } from "@/lib/utils";
-import { Skeleton } from "../ui/skeleton";
-import ChevronDown from "../shared/icons/chevron-down";
+import { Skeleton } from "@/components/ui/skeleton";
+import ChevronDown from "@/components/shared/icons/chevron-down";
 import VisitorChart from "./visitor-chart";
+import { VisitorAvatar } from "./visitor-avatar";
 
 export default function VisitorsTable({ numPages }: { numPages: number }) {
   const { views } = useDocumentVisits();
@@ -48,11 +48,7 @@ export default function VisitorsTable({ numPages }: { numPages: number }) {
                       {/* Name */}
                       <TableCell className="">
                         <div className="flex items-center sm:space-x-3 overflow-visible">
-                          <Avatar className="flex-shrink-0 hidden sm:inline-flex">
-                            <AvatarFallback>
-                              {view.viewerEmail?.slice(0, 2).toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
+                          <VisitorAvatar viewerEmail={view.viewerEmail} />
                           <div className="min-w-0 flex-1">
                             <div className="focus:outline-none">
                               <p className="text-sm font-medium text-gray-800 dark:text-gray-200 overflow-visible">

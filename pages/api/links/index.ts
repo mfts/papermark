@@ -98,6 +98,10 @@ export default async function handler(
           slug: slug || null,
           enableNotification: linkData.enableNotification,
           enableFeedback: linkData.enableFeedback,
+          enableCustomMetatag: linkData.enableCustomMetatag,
+          metaTitle: linkData.metaTitle || null,
+          metaDescription: linkData.metaDescription || null,
+          metaImage: linkData.metaImage || null,
         },
       });
 

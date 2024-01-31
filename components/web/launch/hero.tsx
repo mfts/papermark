@@ -1,5 +1,5 @@
 import Image from "next/image";
-import michaelImg from "public/_static/michael.png";
+import michaelImg from "@/public/_static/michael.png";
 
 export default function Example() {
   return (

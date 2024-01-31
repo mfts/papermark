@@ -1,6 +1,5 @@
 import { Metadata } from "next";
 import Dashboard from "./ClientPage";
-import { cache } from "react";
 
 export const revalidate = 3600; // revalidate the data at most every 24 hours
 

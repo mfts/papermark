@@ -28,10 +28,14 @@ export default async function handle(
           allowDownload: true,
           password: true,
           isArchived: true,
+          enableCustomMetatag: true,
+          metaTitle: true,
+          metaDescription: true,
+          metaImage: true,
           document: {
             select: {
               id: true,
-              team: { select: { plan: true } },
+              team: { select: { id: true, plan: true } },
               versions: {
                 where: { isPrimary: true },
                 select: {
@@ -63,7 +67,21 @@ export default async function handle(
         });
       }
 
-      res.status(200).json(link);
+      let brand = await prisma.brand.findFirst({
+        where: {
+          teamId: link.document.team.id,
+        },
+        select: {
+          logo: true,
+          brandColor: true,
+        },
+      });
+
+      if (!brand) {
+        brand = null;
+      }
+
+      res.status(200).json({ link, brand });
     } catch (error) {
       return res.status(500).json({
         message: "Internal Server Error",

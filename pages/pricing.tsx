@@ -8,43 +8,45 @@ export default function Pricing() {
     {
       id: 1,
       title: "Free",
-      priceMonthly: "$0/mo",
-      description: "Enjoy free access",
+      priceMonthly: "€0/mo",
+      description: "What's included:",
       features: [
-        "PDF up to 30 mb",
         "Unlimited links",
-        "Analytics for each page",
-        "Feedback on each page",
-        "Notion Documents",
-        "Email Notifications on views",
-        "Papermark AI",
-        "100 questions, 3/day",
+        "30 MB document size limit",
+        "Notion documents",
+        "1 user",
+        "Basic support",
+        "Email notifications",
+        "Basic Papermark AI",
+        "100 credits, 3/day",
       ],
     },
     {
       id: 2,
-      title: "Starter",
-      priceMonthly: "€15/mo",
-      description: "All free features + ",
+      title: "Pro",
+      priceMonthly: "€29/mo",
+      description: "Everything in Free, plus:",
       features: [
-        "Custom domains",
         "Unlimited documents",
-        "Papermark AI",
-        "500 questions",
+        "Large file uploads",
+        "Team members",
+        "Priority support",
+        "Custom domains",
+        "Custom branding",
+        "Advanced Papermark AI",
+        "1500 credits",
       ],
     },
     {
       id: 3,
-      title: "Pro",
-      priceMonthly: "€30/mo",
-      description: "All features and more",
+      title: "Enterprise",
+      priceMonthly: "Get in touch",
+      description: "Custom tailored plans, incl.:",
       features: [
-        "Team members",
-        "Priority Support",
-        "Custom Branding",
-        "Large file uploads",
-        "Papermark AI",
-        "1500 questions",
+        "Up to 5TB file uploads",
+        "Dedicated support",
+        "Custom Papermark AI / BYO",
+        "Unlimited credits",
       ],
     },
   ];
@@ -53,32 +55,10 @@ export default function Pricing() {
     <>
       <Head>
         <title>Papermark | Pricing</title>
-        <meta
-          name="description"
-          content="How to launch Open Source project on Product Hunt? Best tips to launch on Product Hunt and get first place"
-        />
-        <meta
-          property="og:title"
-          content="How to launch Open Source project on Product Hunt?"
-        />
-        <meta
-          property="og:description"
-          content="How to launch Open Source project on Product Hunt? Best tips to launch on Product Hunt and get first place"
-        />
-        <meta
-          property="og:image"
-          content="https://dev-to-uploads.s3.amazonaws.com/uploads/articles/fejivoe3vst4rsdzjblo.png"
-        />
-        <meta property="og:url" content="https://www.papermark.io" />
-        <meta name="twitter:card" content="summary_large_image" />
       </Head>
       <Navbar />
 
       <div className="min-h-screen bg-white text-black py-20">
-        <Head>
-          <title>Pricing Page</title>
-        </Head>
-
         <div className="container mx-auto px-4">
           <div className="mx-auto max-w-2xl text-center lg:max-w-4xl">
             <p className="mt-16 text-4xl font-bold tracking-tight text-gray-900  sm:text-5xl">
@@ -147,7 +127,7 @@ export default function Pricing() {
                 <div className="mt-6 flex items-center justify-center gap-x-6">
                   {tier.id === 1 && (
                     <Link
-                      href="/login?next=/settings/billing"
+                      href="/login"
                       className="rounded-md bg-white px-3.5 py-2.5 text-sm font-semibold text-black shadow-sm border-2 border-gray-700 hover:bg-gray-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
                     >
                       Start for free
@@ -155,7 +135,7 @@ export default function Pricing() {
                   )}
                   {tier.id === 2 && (
                     <Link
-                      href="/login"
+                      href="/login?next=/settings/billing"
                       className="rounded-md bg-black px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-gray-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
                     >
                       Start for free
