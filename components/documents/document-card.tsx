@@ -1,4 +1,4 @@
-import { copyToClipboard, nFormatter, timeAgo } from "@/lib/utils";
+import { nFormatter, timeAgo } from "@/lib/utils";
 import Link from "next/link";
 import { DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
 import { TeamContextType } from "@/context/team-context";
@@ -16,20 +16,27 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
-import { TrashIcon, Link as LinkIcon, MoreVertical } from "lucide-react";
-import { useSWRConfig } from "swr";
+} from "@/components/ui/dropdown-menu";
+import { TrashIcon, MoreVertical } from "lucide-react";
+import { mutate } from "swr";
+import { useCopyToClipboard } from "@/lib/utils/use-copy-to-clipboard";
+import Check from "../shared/icons/check";
+import Copy from "../shared/icons/copy";
+import { useEffect, useRef, useState } from "react";
 
 type DocumentsCardProps = {
   document: DocumentWithLinksAndLinkCountAndViewCount;
   teamInfo: TeamContextType | null;
 };
 export default function DocumentsCard({
-  document,
+  document: prismaDocument,
   teamInfo,
 }: DocumentsCardProps) {
-  const { mutate } = useSWRConfig();
   const router = useRouter();
+  const { isCopied, copyToClipboard } = useCopyToClipboard({});
+  const [isFirstClick, setIsFirstClick] = useState<boolean>(false);
+  const [menuOpen, setMenuOpen] = useState<boolean>(false);
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
 
   function handleCopyToClipboard(id: string) {
     copyToClipboard(
@@ -38,9 +45,36 @@ export default function DocumentsCard({
     );
   }
 
+  useEffect(() => {
+    function handleClickOutside(event: { target: any }) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setMenuOpen(false);
+        setIsFirstClick(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const handleButtonClick = (event: any, documentId: string) => {
+    event.stopPropagation();
+    event.preventDefault();
+
+    if (isFirstClick) {
+      handleDeleteDocument(documentId);
+      setIsFirstClick(false);
+      setMenuOpen(false); // Close the dropdown after deleting
+    } else {
+      setIsFirstClick(true);
+    }
+  };
+
   const activateOrRedirectAssistant = async () => {
-    if (document.assistantEnabled) {
-      router.push(`/documents/${document.id}/chat`);
+    if (prismaDocument.assistantEnabled) {
+      router.push(`/documents/${prismaDocument.id}/chat`);
     } else {
       toast.promise(
         fetch("/api/assistants", {
@@ -49,11 +83,11 @@ export default function DocumentsCard({
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            documentId: document.id,
+            documentId: prismaDocument.id,
           }),
         }).then(() => {
           // Once the assistant is activated, redirect to the chat
-          router.push(`/documents/${document.id}/chat`);
+          router.push(`/documents/${prismaDocument.id}/chat`);
         }),
         {
           loading: "Activating Assistant...",
@@ -65,6 +99,12 @@ export default function DocumentsCard({
   };
 
   const handleDeleteDocument = async (documentId: string) => {
+    // Prevent the first click from deleting the document
+    if (!isFirstClick) {
+      setIsFirstClick(true);
+      return;
+    }
+
     const response = await fetch(
       `/api/teams/${teamInfo?.currentTeam?.id}/documents/${documentId}`,
       {
@@ -90,15 +130,30 @@ export default function DocumentsCard({
     }
   };
 
+  const handleMenuStateChange = (open: boolean) => {
+    if (isFirstClick) {
+      setMenuOpen(true); // Keep the dropdown open on the first click
+      return;
+    }
+
+    // If the menu is closed, reset the isFirstClick state
+    if (!open) {
+      setIsFirstClick(false);
+      setMenuOpen(false); // Ensure the dropdown is closed
+    } else {
+      setMenuOpen(true); // Open the dropdown
+    }
+  };
+
   return (
     <li className="group/row relative rounded-lg p-3 border-0 dark:bg-secondary ring-1 ring-gray-200 dark:ring-gray-700 transition-all hover:ring-gray-300 hover:dark:ring-gray-500 hover:bg-secondary sm:p-4 flex justify-between items-center">
       <div className="min-w-0 flex shrink items-center space-x-2 sm:space-x-4">
         <div className="w-8 mx-0.5 sm:mx-1 text-center flex justify-center items-center">
-          {document.type === "notion" ? (
+          {prismaDocument.type === "notion" ? (
             <NotionIcon className="w-8 h-8" />
           ) : (
             <Image
-              src={`/_icons/${document.type}.svg`}
+              src={`/_icons/${prismaDocument.type}.svg`}
               alt="File icon"
               width={50}
               height={50}
@@ -111,34 +166,40 @@ export default function DocumentsCard({
           <div className="flex items-center">
             <h2 className="min-w-0 text-sm font-semibold leading-6 text-foreground truncate max-w-[150px] sm:max-w-md">
               <Link
-                href={`/documents/${document.id}`}
+                href={`/documents/${prismaDocument.id}`}
                 className="truncate w-full"
               >
-                <span>{document.name}</span>
+                <span>{prismaDocument.name}</span>
                 <span className="absolute inset-0" />
               </Link>
             </h2>
             <div className="flex ml-2">
               <button
                 className="group rounded-md bg-gray-200 dark:bg-gray-700 z-10 p-1 transition-all duration-75 hover:scale-105 hover:bg-emerald-100 hover:dark:bg-emerald-200 active:scale-95"
-                onClick={() => handleCopyToClipboard(document.links[0].id)}
+                onClick={() =>
+                  handleCopyToClipboard(prismaDocument.links[0].id)
+                }
                 title="Copy to clipboard"
               >
-                <LinkIcon className="w-3 h-3 text-gray-400 group-hover:text-emerald-700" />
+                {isCopied ? (
+                  <Check className="size-3 text-muted-foreground group-hover:text-emerald-700" />
+                ) : (
+                  <Copy className="size-3 text-muted-foreground group-hover:text-emerald-700" />
+                )}
               </button>
             </div>
           </div>
           <div className="mt-1 flex items-center space-x-1 text-xs leading-5 text-muted-foreground">
-            <p className="truncate">{timeAgo(document.createdAt)}</p>
+            <p className="truncate">{timeAgo(prismaDocument.createdAt)}</p>
             <p>•</p>
             <p className="truncate">
-              {document._count.links}{" "}
-              {document._count.links === 1 ? "Link" : "Links"}
+              {prismaDocument._count.links}{" "}
+              {prismaDocument._count.links === 1 ? "Link" : "Links"}
             </p>
-            {document._count.versions > 1 ? (
+            {prismaDocument._count.versions > 1 ? (
               <>
                 <p>•</p>
-                <p className="truncate">{`${document._count.versions} Versions`}</p>
+                <p className="truncate">{`${prismaDocument._count.versions} Versions`}</p>
               </>
             ) : null}
           </div>
@@ -165,37 +226,41 @@ export default function DocumentsCard({
           onClick={(e) => {
             e.stopPropagation();
           }}
-          href={`/documents/${document.id}`}
+          href={`/documents/${prismaDocument.id}`}
           className="flex items-center z-10 space-x-1 rounded-md bg-gray-200 dark:bg-gray-700 px-1.5 sm:px-2 py-0.5 transition-all duration-75 hover:scale-105 active:scale-100"
         >
           <BarChart className="h-3 sm:h-4 w-3 sm:w-4 text-muted-foreground" />
           <p className="whitespace-nowrap text-xs sm:text-sm text-muted-foreground">
-            {nFormatter(document._count.views)}
+            {nFormatter(prismaDocument._count.views)}
             <span className="ml-1 hidden sm:inline-block">views</span>
           </p>
         </Link>
 
-        <DropdownMenu>
+        <DropdownMenu open={menuOpen} onOpenChange={handleMenuStateChange}>
           <DropdownMenuTrigger asChild>
             <Button
               size="icon"
               variant="ghost"
-              className="w-6 sm:w-7 h-6 sm:h-7 z-10 hover:bg-white dark:hover:bg-gray-900 duration-200"
+              className="w-6 sm:w-7 h-6 sm:h-7 z-10"
             >
-              <MoreVertical className="w-4 h-4 text-gray-400" />
+              <MoreVertical className="w-4 h-4 text-muted-foreground" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-36 !rounded-md" align="end">
-            <DropdownMenuLabel className="text-sm text-gray-500 !py-[3px]">
-              Menu
-            </DropdownMenuLabel>
+          <DropdownMenuContent align="end" ref={dropdownRef}>
+            <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuSeparator />
 
             <DropdownMenuItem
-              onClick={() => handleDeleteDocument(document.id)}
-              className="flex items-center hover:!bg-red-600 dark:hover:!bg-red-500 hover:!text-white hover:opacity-80 duration-200 cursor-pointer"
+              onClick={(event) => handleButtonClick(event, prismaDocument.id)}
+              className="text-destructive focus:bg-destructive focus:text-destructive-foreground duration-200"
             >
-              <TrashIcon className="w-4 h-4 mr-2" /> Delete Doc
+              {isFirstClick ? (
+                "Really delete?"
+              ) : (
+                <>
+                  <TrashIcon className="w-4 h-4 mr-2" /> Delete document
+                </>
+              )}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
