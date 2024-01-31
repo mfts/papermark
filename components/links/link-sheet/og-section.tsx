@@ -11,7 +11,7 @@ import { DEFAULT_LINK_TYPE } from ".";
 import { motion } from "framer-motion";
 import { FADE_IN_ANIMATION_SETTINGS } from "@/lib/constants";
 import LoadingSpinner from "@/components/ui/loading-spinner";
-import { ArrowUpTrayIcon } from "@heroicons/react/20/solid";
+import { Upload as ArrowUpTrayIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 

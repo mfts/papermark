@@ -1,7 +1,6 @@
-import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/20/solid";
+import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
-import { Download } from "lucide-react";
 import { useTeam } from "@/context/team-context";
 import Nav from "./nav";
 
