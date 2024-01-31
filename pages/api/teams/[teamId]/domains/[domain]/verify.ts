@@ -80,7 +80,7 @@ export default async function handle(
         await trackAnalytics({
           event: "Domain Verified",
           slug: domain,
-        }).then(() => {});
+        });
       }
     }
 
