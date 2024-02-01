@@ -159,10 +159,6 @@ export default function BarChartComponent({
   const versionNumbers = getVersionNumbers(renamedData);
   const colors = getColors(versionNumbers);
 
-  console.log("renamedData", renamedData);
-  console.log("versionNumbers", versionNumbers);
-  console.log("colors", colors);
-
   return (
     <BarChart
       className="mt-6 rounded-tremor-small"

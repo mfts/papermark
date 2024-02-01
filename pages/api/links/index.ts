@@ -68,8 +68,6 @@ export default async function handler(
           return res.status(400).json({ error: "Domain not found." });
         }
 
-        // console.log(domainObj);
-
         const existingLink = await prisma.link.findUnique({
           where: {
             domainSlug_slug: {
@@ -99,6 +97,11 @@ export default async function handler(
           domainSlug: domain || null,
           slug: slug || null,
           enableNotification: linkData.enableNotification,
+          enableFeedback: linkData.enableFeedback,
+          enableCustomMetatag: linkData.enableCustomMetatag,
+          metaTitle: linkData.metaTitle || null,
+          metaDescription: linkData.metaDescription || null,
+          metaImage: linkData.metaImage || null,
         },
       });
 

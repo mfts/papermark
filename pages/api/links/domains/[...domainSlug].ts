@@ -28,10 +28,14 @@ export default async function handle(
           allowDownload: true,
           password: true,
           isArchived: true,
+          enableCustomMetatag: true,
+          metaTitle: true,
+          metaDescription: true,
+          metaImage: true,
           document: {
             select: {
               id: true,
-              team: { select: { plan: true } },
+              team: { select: { id: true, plan: true } },
               versions: {
                 where: { isPrimary: true },
                 select: {
@@ -48,16 +52,12 @@ export default async function handle(
         },
       });
 
-      console.log("plan", link);
-
       if (!link || !link.document.team) {
         return res.status(404).json({
           error: "Link not found",
           message: `no link found, team ${link?.document.team}`,
         });
       }
-
-      console.log("plan", link.document.team.plan);
 
       // if owner of document is on free plan, return 404
       if (link.document.team.plan === "free") {
@@ -67,7 +67,21 @@ export default async function handle(
         });
       }
 
-      res.status(200).json(link);
+      let brand = await prisma.brand.findFirst({
+        where: {
+          teamId: link.document.team.id,
+        },
+        select: {
+          logo: true,
+          brandColor: true,
+        },
+      });
+
+      if (!brand) {
+        brand = null;
+      }
+
+      res.status(200).json({ link, brand });
     } catch (error) {
       return res.status(500).json({
         message: "Internal Server Error",

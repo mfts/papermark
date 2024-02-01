@@ -11,6 +11,7 @@ import PagesViewer from "@/components/view/PagesViewer";
 import PDFViewer from "@/components/view/PDFViewer";
 import { NotionPage } from "../NotionPage";
 import { ExtendedRecordMap } from "notion-types";
+import { Brand } from "@prisma/client";
 
 export type DEFAULT_DOCUMENT_VIEW_TYPE = {
   viewId: string;
@@ -24,6 +25,7 @@ export default function DocumentView({
   userId,
   isProtected,
   notionData,
+  brand,
 }: {
   link: LinkWithDocument;
   userEmail: string | null | undefined;
@@ -33,6 +35,7 @@ export default function DocumentView({
     rootNotionPageId: string | null;
     recordMap: ExtendedRecordMap | null;
   };
+  brand?: Brand;
 }) {
   const { document, emailProtected, password: linkPassword } = link;
 
@@ -101,7 +104,6 @@ export default function DocumentView({
 
   // If link is not submitted and does not have email / password protection, show the access form
   if (!submitted && isProtected) {
-    console.log("calling access form");
     return (
       <AccessForm
         data={data}
@@ -116,7 +118,6 @@ export default function DocumentView({
   }
 
   if (isLoading) {
-    console.log("loading");
     return (
       <div className="h-screen flex items-center justify-center">
         <LoadingSpinner className="h-20 w-20" />
@@ -143,7 +144,9 @@ export default function DocumentView({
             linkId={link.id}
             documentId={document.id}
             assistantEnabled={document.assistantEnabled}
+            feedbackEnabled={link.enableFeedback!}
             versionNumber={document.versions[0].versionNumber}
+            brand={brand}
           />
         ) : (
           <PDFViewer

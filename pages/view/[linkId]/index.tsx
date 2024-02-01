@@ -9,6 +9,9 @@ import { CustomUser, LinkWithDocument } from "@/lib/types";
 import { parsePageId } from "notion-utils";
 import { GetStaticPropsContext } from "next";
 import { useRouter } from "next/router";
+import { Brand } from "@prisma/client";
+import CustomMetatag from "@/components/view/custom-metatag";
+import Head from "next/head";
 
 export const getStaticProps = async (context: GetStaticPropsContext) => {
   const { linkId } = context.params as { linkId: string };
@@ -18,7 +21,10 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
   if (!res.ok) {
     return { notFound: true };
   }
-  const link = (await res.json()) as LinkWithDocument;
+  const { link, brand } = (await res.json()) as {
+    link: LinkWithDocument;
+    brand: Brand | null;
+  };
 
   if (!link || !link.document) {
     return {
@@ -58,7 +64,15 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
         rootNotionPageId: null, // do not pass rootNotionPageId to the client
         recordMap,
       },
+      meta: {
+        enableCustomMetatag: link.enableCustomMetatag || false,
+        metaTitle: link.metaTitle,
+        metaDescription: link.metaDescription,
+        metaImage: link.metaImage,
+      },
+      brand, // pass brand to the client
     },
+    revalidate: brand ? 10 : false,
   };
 };
 
@@ -72,21 +86,39 @@ export async function getStaticPaths() {
 export default function ViewPage({
   link,
   notionData,
+  meta,
+  brand,
 }: {
   link: LinkWithDocument;
   notionData: {
     rootNotionPageId: string | null;
     recordMap: ExtendedRecordMap | null;
   };
+  meta: {
+    enableCustomMetatag: boolean;
+    metaTitle: string | null;
+    metaDescription: string | null;
+    metaImage: string | null;
+  } | null;
+  brand?: Brand;
 }) {
   const router = useRouter();
   const { data: session, status } = useSession();
 
   if (!link || status === "loading" || router.isFallback) {
     return (
-      <div className="h-screen flex items-center justify-center">
-        <LoadingSpinner className="h-20 w-20" />
-      </div>
+      <>
+        {meta && meta.enableCustomMetatag ? (
+          <CustomMetatag
+            title={meta.metaTitle}
+            description={meta.metaDescription}
+            imageUrl={meta.metaImage}
+          />
+        ) : null}
+        <div className="h-screen flex items-center justify-center">
+          <LoadingSpinner className="h-20 w-20" />
+        </div>
+      </>
     );
   }
 
@@ -112,25 +144,47 @@ export default function ViewPage({
     );
   }
 
+  const { enableCustomMetatag, metaTitle, metaDescription, metaImage } = link;
+
   if (emailProtected || linkPassword) {
     return (
-      <DocumentView
-        link={link}
-        userEmail={userEmail}
-        userId={userId}
-        isProtected={true}
-        notionData={notionData}
-      />
+      <>
+        {enableCustomMetatag ? (
+          <CustomMetatag
+            title={metaTitle}
+            description={metaDescription}
+            imageUrl={metaImage}
+          />
+        ) : null}
+        <DocumentView
+          link={link}
+          userEmail={userEmail}
+          userId={userId}
+          isProtected={true}
+          notionData={notionData}
+          brand={brand}
+        />
+      </>
     );
   }
 
   return (
-    <DocumentView
-      link={link}
-      userEmail={userEmail}
-      userId={userId}
-      isProtected={false}
-      notionData={notionData}
-    />
+    <>
+      {enableCustomMetatag ? (
+        <CustomMetatag
+          title={metaTitle}
+          description={metaDescription}
+          imageUrl={metaImage}
+        />
+      ) : null}
+      <DocumentView
+        link={link}
+        userEmail={userEmail}
+        userId={userId}
+        isProtected={false}
+        notionData={notionData}
+        brand={brand}
+      />
+    </>
   );
 }

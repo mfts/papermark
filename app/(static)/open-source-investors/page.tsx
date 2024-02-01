@@ -1,6 +1,5 @@
 import { Metadata } from "next";
 import Dashboard from "./ClientPage";
-import { cache } from "react";
 
 export const revalidate = 3600; // revalidate the data at most every 24 hours
 
@@ -8,10 +7,11 @@ const data = {
   description:
     "List of 100 open-source investors. Open-source VC, open-source angel investors. Share pitchdecks with your investors using Papermark, an open-source document infrastructure.",
   title: "Open Source Investors | Papermark",
-  url: "https://www.papermark.io",
+  url: "/open-source-investors",
 };
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://www.papermark.io"),
   title: data.title,
   description: data.description,
   openGraph: {
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     siteName: "Papermark",
     images: [
       {
-        url: "https://www.papermark.io/_static/meta-image.png",
+        url: "/_static/meta-image.png",
         width: 800,
         height: 600,
       },
@@ -34,7 +34,7 @@ export const metadata: Metadata = {
     title: data.title,
     description: data.description,
     creator: "@papermarkio",
-    images: ["https://www.papermark.io/_static/meta-image.png"],
+    images: ["/_static/meta-image.png"],
   },
 };
 
