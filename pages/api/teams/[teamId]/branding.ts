@@ -49,10 +49,10 @@ export default async function handle(
     });
 
     if (!brand) {
-      res.status(404).end("Brand not found");
+      res.status(200).json(null);
     }
 
-    return res.status(200).json(brand);
+    res.status(200).json(brand);
   } else if (req.method === "POST") {
     // POST /api/teams/:teamId/branding
     const { logo, brandColor, accentColor } = req.body as {
