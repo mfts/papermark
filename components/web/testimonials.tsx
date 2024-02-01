@@ -38,7 +38,7 @@ const testimonials = [
       name: "Lukas Lunzmann",
       handle: "lucaslunzmann",
       imageUrl:
-        "https://pbs.twimg.com/profile_images/1589657534264213504/d0tljS03_400x400.jpg",
+        "https://pbs.twimg.com/profile_images/1738781878792921088/5kSW6ymD_400x400.jpg",
       link: "https://twitter.com/lucaslunzmann/status/1673052992541523968",
     },
   },
