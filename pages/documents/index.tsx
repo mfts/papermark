@@ -75,10 +75,10 @@ export default function Documents() {
                   <Skeleton key={i} className="h-9 w-9" />
                   <div>
                     <Skeleton key={i} className="h-4 w-32" />
-                    <Skeleton key={i} className="mt-2 h-3 w-12" />
+                    <Skeleton key={i + 1} className="mt-2 h-3 w-12" />
                   </div>
                   <Skeleton
-                    key={i}
+                    key={i + 1}
                     className="h-5 w-20 absolute top-[50%] transform -translate-y-[50%] right-5"
                   />
                 </li>

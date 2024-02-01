@@ -72,7 +72,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
       },
       brand, // pass brand to the client
     },
-    revalidate: 10,
+    revalidate: brand ? 10 : false,
   };
 };
 

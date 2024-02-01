@@ -49,10 +49,10 @@ export default async function handle(
     });
 
     if (!brand) {
-      res.status(404).end("Brand not found");
+      res.status(200).json(null);
     }
 
-    return res.status(200).json(brand);
+    res.status(200).json(brand);
   } else if (req.method === "POST") {
     // POST /api/teams/:teamId/branding
     const { logo, brandColor, accentColor } = req.body as {
@@ -113,10 +113,10 @@ export default async function handle(
       },
     });
 
-    return res.status(200).json("Branding deleted");
+    res.status(204).end();
   } else {
     // We only allow GET and DELETE requests
-    res.setHeader("Allow", ["GET", "POST", "PUT"]);
+    res.setHeader("Allow", ["GET", "POST", "PUT", "DELETE"]);
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 }
