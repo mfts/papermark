@@ -5,10 +5,11 @@ const data = {
   description:
     "Find over 10,000 investors based on stage, sector, or location. Powered by Papermark.",
   title: "Investor Search | Papermark",
-  url: "https://www.papermark.io/investors",
+  url: "/investors",
 };
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://www.papermark.io"),
   title: data.title,
   description: data.description,
   openGraph: {
@@ -18,7 +19,7 @@ export const metadata: Metadata = {
     siteName: "Papermark",
     images: [
       {
-        url: "https://www.papermark.io/_static/investor-meta.png",
+        url: "/_static/investor-meta.png",
         width: 800,
         height: 600,
       },
@@ -31,7 +32,7 @@ export const metadata: Metadata = {
     title: data.title,
     description: data.description,
     creator: "@papermarkio",
-    images: ["https://www.papermark.io/_static/investor-meta.png"],
+    images: ["/_static/investor-meta.png"],
   },
 };
 
