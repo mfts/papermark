@@ -49,10 +49,10 @@ export default async function handle(
     });
 
     if (!brand) {
-      res.status(200).json(null);
+      return res.status(200).json(null);
     }
 
-    res.status(200).json(brand);
+    return res.status(200).json(brand);
   } else if (req.method === "POST") {
     // POST /api/teams/:teamId/branding
     const { logo, brandColor, accentColor } = req.body as {
@@ -113,7 +113,7 @@ export default async function handle(
       },
     });
 
-    res.status(204).end();
+    return res.status(204).end();
   } else {
     // We only allow GET and DELETE requests
     res.setHeader("Allow", ["GET", "POST", "PUT", "DELETE"]);
