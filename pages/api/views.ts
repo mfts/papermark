@@ -23,6 +23,7 @@ export default async function handle(
     documentVersionId,
     hasPages,
     token,
+    verifiedEmail,
     ...data
   } = req.body as {
     linkId: string;
@@ -31,6 +32,7 @@ export default async function handle(
     documentVersionId: string;
     hasPages: boolean;
     token: string | null;
+    verifiedEmail: string | null;
   };
 
   const { email, password } = data as { email: string; password: string };
@@ -45,6 +47,8 @@ export default async function handle(
       enableNotification: true,
       emailAuthenticated: true,
       password: true,
+      domainSlug: true,
+      slug: true,
     },
   });
 
@@ -86,12 +90,19 @@ export default async function handle(
     await prisma.verificationToken.create({
       data: {
         token,
-        identifier: email,
+        identifier: `${linkId}:${email}`,
         expires: expiresAt,
       },
     });
 
-    const verificationUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/view/${linkId}/?token=${token}`;
+    // set the default verification url
+    let verificationUrl: string = `${process.env.NEXT_PUBLIC_BASE_URL}/view/${linkId}/?token=${token}&email=${encodeURIComponent(email)}`;
+
+    if (link.domainSlug && link.slug) {
+      // if custom domain is enabled, use the custom domain
+      verificationUrl = `https://${link.domainSlug}/${link.slug}/?token=${token}&email=${encodeURIComponent(email)}`;
+    }
+
     await sendVerificationEmail(email, verificationUrl);
     res.status(200).json({
       type: "email-verification",
@@ -103,7 +114,10 @@ export default async function handle(
   let isEmailVerified: boolean = false;
   if (link.emailAuthenticated && token) {
     const verification = await prisma.verificationToken.findUnique({
-      where: { token: token },
+      where: {
+        token: token,
+        identifier: `${linkId}:${verifiedEmail}`,
+      },
     });
 
     if (!verification) {
@@ -113,7 +127,7 @@ export default async function handle(
 
     // Check the token's expiration date
     if (Date.now() > verification.expires.getTime()) {
-      res.status(401).json({ message: "Token expired" });
+      res.status(401).json({ message: "Access expired" });
       return;
     }
 

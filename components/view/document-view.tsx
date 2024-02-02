@@ -11,6 +11,7 @@ import { ExtendedRecordMap } from "notion-types";
 import EmailVerificationMessage from "./email-verification-form";
 import ViewData from "./view-data";
 import { Brand } from "@prisma/client";
+import { useRouter } from "next/router";
 
 export type DEFAULT_DOCUMENT_VIEW_TYPE = {
   viewId: string;
@@ -23,28 +24,27 @@ export default function DocumentView({
   userEmail,
   userId,
   isProtected,
-  hasEmailVerification,
   notionData,
+  brand,
   token,
   verifiedEmail,
-  brand,
 }: {
   link: LinkWithDocument;
   userEmail: string | null | undefined;
   userId: string | null | undefined;
   isProtected: boolean;
-  hasEmailVerification: boolean;
   notionData?: {
     rootNotionPageId: string | null;
     recordMap: ExtendedRecordMap | null;
   };
-  token: string | undefined;
-  verifiedEmail: string | undefined;
   brand?: Brand;
+  token?: string;
+  verifiedEmail?: string;
 }) {
   const { document, emailProtected, password: linkPassword } = link;
 
   const plausible = usePlausible();
+  const router = useRouter();
 
   const didMount = useRef<boolean>(false);
   const [submitted, setSubmitted] = useState<boolean>(false);
@@ -69,13 +69,14 @@ export default function DocumentView({
       },
       body: JSON.stringify({
         ...data,
-        email: data.email || userEmail,
+        email: data.email || verifiedEmail || userEmail,
         linkId: link.id,
         documentId: document.id,
         userId: userId || null,
         documentVersionId: document.versions[0].id,
         hasPages: document.versions[0].hasPages,
         token: token || null,
+        verifiedEmail: verifiedEmail || null,
       }),
     });
 
@@ -108,21 +109,15 @@ export default function DocumentView({
   };
 
   // If token is present, run handle submit which will verify token and get document
-  useEffect(() => {
-    if (token) {
-      handleSubmission();
-    }
-  }, [token]);
-
   // If link is not submitted and does not have email / password protection, show the access form
   useEffect(() => {
     if (!didMount.current) {
-      if (!submitted && !isProtected) {
+      if ((!submitted && !isProtected) || token) {
         handleSubmission();
       }
       didMount.current = true;
     }
-  }, [submitted, isProtected]);
+  }, [submitted, isProtected, token]);
 
   // Components to render when email is submitted but verification is pending
   if (verificationRequested) {

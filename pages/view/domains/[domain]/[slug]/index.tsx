@@ -102,7 +102,10 @@ export default function ViewPage({
 }) {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const { authenticationCode } = router.query as { authenticationCode: string };
+  const { token, email: verifiedEmail } = router.query as {
+    token: string;
+    email: string;
+  };
 
   if (!link || status === "loading") {
     return (
@@ -162,6 +165,8 @@ export default function ViewPage({
           isProtected={true}
           notionData={notionData}
           brand={brand}
+          token={token}
+          verifiedEmail={verifiedEmail}
         />
       </>
     );
