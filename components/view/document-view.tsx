@@ -160,7 +160,12 @@ export default function DocumentView({
   return (
     <div className="bg-gray-950">
       {submitted ? (
-        <ViewData link={link} viewData={viewData} notionData={notionData} />
+        <ViewData
+          link={link}
+          viewData={viewData}
+          notionData={notionData}
+          brand={brand}
+        />
       ) : (
         <div className="h-screen flex items-center justify-center">
           <LoadingSpinner className="h-20 w-20" />

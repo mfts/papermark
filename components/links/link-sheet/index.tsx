@@ -18,9 +18,7 @@ import { mutate } from "swr";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
-import { cn, convertDataUrlToFile, uploadImage } from "@/lib/utils";
-import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
-import Link from "next/link";
+import { convertDataUrlToFile, uploadImage } from "@/lib/utils";
 import DomainSection from "./domain-section";
 import AllowDownloadSection from "./allow-download-section";
 import { useTeam } from "@/context/team-context";
@@ -29,7 +27,6 @@ import AllowNotificationSection from "./allow-notification-section";
 import FeedbackSection from "./feedback-section";
 import OGSection from "./og-section";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { upload } from "@vercel/blob/client";
 
 export const DEFAULT_LINK_PROPS = {
   id: null,
