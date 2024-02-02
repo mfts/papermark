@@ -57,7 +57,6 @@ export default async function webhookHandler(
       if (!sig || !webhookSecret) return;
       event = stripe.webhooks.constructEvent(buf, sig, webhookSecret);
     } catch (err: any) {
-      console.log(`❌ Error message: ${err.message}`);
       return res.status(400).send(`Webhook Error: ${err.message}`);
     }
 
@@ -187,10 +186,12 @@ export default async function webhookHandler(
           throw new Error("Unhandled relevant event!");
         }
       } catch (error) {
-        await log(`Stripe webook failed. Error: ${(error as Error).message}`);
-        return res
-          .status(400)
-          .send('Webhook error: "Webhook handler failed. View logs."');
+        await log(
+          `Stripe webook failed for Event: *${event.type}* (_${
+            event.id
+          }_) \n\n Error: ${(error as Error).message}`,
+        );
+        return;
       }
     } else {
       return res.status(400).send(`🤷‍♀️ Unhandled event type: ${event.type}`);

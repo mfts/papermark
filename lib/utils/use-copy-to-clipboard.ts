@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { toast } from "sonner";
 
 export interface useCopyToClipboardProps {
   timeout?: number;
@@ -11,7 +12,7 @@ export function useCopyToClipboard({
 }: useCopyToClipboardProps) {
   const [isCopied, setIsCopied] = React.useState<Boolean>(false);
 
-  const copyToClipboard = (value: string) => {
+  const copyToClipboard = (value: string, message?: string) => {
     if (typeof window === "undefined" || !navigator.clipboard?.writeText) {
       return;
     }
@@ -22,6 +23,7 @@ export function useCopyToClipboard({
 
     navigator.clipboard.writeText(value).then(() => {
       setIsCopied(true);
+      message && toast.success(message);
 
       setTimeout(() => {
         setIsCopied(false);

@@ -12,7 +12,7 @@ export default async function DomainMiddleware(req: NextRequest) {
   // if there's a path and it's not "/" then we need to check if it's a custom domain
   if (path !== "/") {
     // Subdomain available, rewriting
-    console.log(`>>> Rewriting: ${path} to /view/domains/${host}${path}`);
+    // >>> Rewriting: ${path} to /view/domains/${host}${path}`
     url.pathname = `/view/domains/${host}${path}`;
     return NextResponse.rewrite(url, PAPERMARK_HEADERS);
   } else {

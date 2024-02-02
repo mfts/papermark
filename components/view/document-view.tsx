@@ -10,8 +10,7 @@ import LoadingSpinner from "@/components/ui/loading-spinner";
 import { ExtendedRecordMap } from "notion-types";
 import EmailVerificationMessage from "./email-verification-form";
 import ViewData from "./view-data";
-import { is } from "date-fns/locale";
-import handle from "@/pages/api/record_reaction";
+import { Brand } from "@prisma/client";
 
 export type DEFAULT_DOCUMENT_VIEW_TYPE = {
   viewId: string;
@@ -28,6 +27,7 @@ export default function DocumentView({
   notionData,
   token,
   verifiedEmail,
+  brand,
 }: {
   link: LinkWithDocument;
   userEmail: string | null | undefined;
@@ -40,6 +40,7 @@ export default function DocumentView({
   };
   token: string | undefined;
   verifiedEmail: string | undefined;
+  brand?: Brand;
 }) {
   const { document, emailProtected, password: linkPassword } = link;
 
@@ -135,8 +136,7 @@ export default function DocumentView({
   }
 
   // If link is not submitted and does not have email / password protection, show the access form
-  if (!submitted && isProtected && !token) {
-    console.log("calling access form");
+  if (!submitted && isProtected) {
     return (
       <AccessForm
         data={data}
@@ -151,7 +151,6 @@ export default function DocumentView({
   }
 
   if (isLoading) {
-    console.log("loading");
     return (
       <div className="h-screen flex items-center justify-center">
         <LoadingSpinner className="h-20 w-20" />

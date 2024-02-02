@@ -17,9 +17,21 @@ export const PAPERMARK_HEADERS = {
   },
 };
 
-export const REACTIONS = {
-  heart: "❤️",
-  money: "💸",
-  thumbsUp: "👍",
-  thumbsDown: "👎",
-};
+export const REACTIONS = [
+  {
+    emoji: "❤️",
+    label: "heart",
+  },
+  {
+    emoji: "💸",
+    label: "money",
+  },
+  {
+    emoji: "👍",
+    label: "up",
+  },
+  {
+    emoji: "👎",
+    label: "down",
+  },
+];

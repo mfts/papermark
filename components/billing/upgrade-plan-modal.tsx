@@ -12,12 +12,16 @@ import { useTeam } from "@/context/team-context";
 
 export function UpgradePlanModal({
   clickedPlan,
+  open,
+  setOpen,
   children,
 }: {
-  clickedPlan: "Starter" | "Pro";
-  children: React.ReactNode;
+  clickedPlan: "Enterprise" | "Pro";
+  open?: boolean;
+  setOpen?: React.Dispatch<React.SetStateAction<boolean>>;
+  children?: React.ReactNode;
 }) {
-  const [plan, setPlan] = useState<"Starter" | "Pro">(clickedPlan);
+  const [plan, setPlan] = useState<"Pro" | "Enterprise">(clickedPlan);
   const [period, setPeriod] = useState<"monthly" | "yearly">("monthly");
   const [clicked, setClicked] = useState<boolean>(false);
   const teamInfo = useTeam();
@@ -25,21 +29,18 @@ export function UpgradePlanModal({
   const features = useMemo(() => {
     return [
       "Custom domains",
+      "Custom branding",
       "Notion documents",
       "Unlimited link views",
       "Unlimited documents",
-      ...(plan === "Pro"
-        ? [
-            "AI Document Assistant incl. 1500 credits",
-            "Unlimited team members",
-            "Priority Support",
-          ]
-        : ["AI Document Assistant incl. 500 credits"]),
+      "Team members",
+      "AI Document Assistant incl. 1500 credits",
+      ...(plan === "Enterprise" ? ["Priority Support"] : []),
     ];
   }, [plan]);
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="text-foreground bg-background">
         <motion.div
@@ -90,7 +91,7 @@ export function UpgradePlanModal({
                     className="text-sm font-normal normal-case"
                   >{`€${
                     PLANS.find((p) => p.name === plan)!.price[period].amount
-                  }/${period.replace("ly", "")}`}</Badge>
+                  }/month`}</Badge>
                 </div>
                 <button
                   onClick={() => {
@@ -157,14 +158,13 @@ export function UpgradePlanModal({
               }}
             >{`Upgrade to ${plan} ${capitalize(period)}`}</Button>
             <div className="flex items-center justify-center space-x-2">
-              <button
-                onClick={() => {
-                  setPlan(plan === "Pro" ? "Starter" : "Pro");
-                }}
+              <a
+                href="https://cal.com/marcseitz/papermark"
+                target="_blank"
                 className="text-center text-xs text-muted-foreground underline-offset-4 transition-all hover:text-gray-800 hover:dark:text-muted-foreground/80 hover:underline"
               >
-                Papermark {plan === "Pro" ? "Starter" : "Pro"}
-              </button>
+                Papermark Enterprise
+              </a>
               <p className="text-muted-foreground">•</p>
               <a
                 href={`${process.env.NEXT_PUBLIC_BASE_URL}/pricing`}

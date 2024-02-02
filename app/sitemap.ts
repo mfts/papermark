@@ -46,5 +46,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
       url: "https://vc.papermark.io",
       lastModified: new Date(),
     },
+    {
+      url: "https://www.papermark.io/investors",
+      lastModified: new Date(),
+    },
   ];
 }

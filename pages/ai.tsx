@@ -3,15 +3,16 @@ import Navbar from "@/components/web/navbar";
 import Footer from "@/components/web/footer";
 import { Disclosure } from "@headlessui/react";
 import ChatPage from "@/components/web/assistant/public-chat";
-import { MinusSmallIcon, PlusSmallIcon } from "@heroicons/react/24/outline";
 import {
-  ArrowPathIcon,
-  CloudArrowUpIcon,
-  Cog6ToothIcon,
-  FingerPrintIcon,
-  LockClosedIcon,
-  ServerIcon,
-} from "@heroicons/react/20/solid";
+  Plus as PlusSmallIcon,
+  Minus as MinusSmallIcon,
+  RefreshCw as ArrowPathIcon,
+  GitPullRequestArrow as CloudArrowUpIcon,
+  Settings as Cog6ToothIcon,
+  Fingerprint as FingerPrintIcon,
+  Lock as LockClosedIcon,
+  HardDrive as ServerIcon,
+} from "lucide-react";
 import Link from "next/link";
 import { classNames } from "@/lib/utils";
 import PapermarkSparkle from "@/components/shared/icons/papermark-sparkle";
@@ -199,10 +200,10 @@ export default function Home() {
               </div>
               <div className="text-center">
                 <h1 className="text-4xl font-bold tracking-tight text-black dark:text-white sm:text-6xl">
-                  AI Documents Asisstant
+                  AI Documents Assistant
                 </h1>
                 <p className="mt-6 text-lg leading-8 text-gray-500">
-                  Powerful Ai-assitant for your shared and received documents
+                  Powerful Ai-assistant for your shared and received documents
                 </p>
 
                 <div className="mt-10 flex items-center justify-center gap-x-6">
@@ -253,7 +254,7 @@ export default function Home() {
               </div>
               <p className="mx-auto mt-6 max-w-2xl text-center text-lg leading-8 text-gray-500 dark:text-gray-400">
                 AI-powered platform revolutionizing document sharing and
-                collaboration. It enables secure document sharing, davanced
+                collaboration. It enables secure document sharing, advanced
                 tracking, and storage, providing users with real-time analytics.
               </p>
               <div className="mx-auto mt-16 grid max-w-lg grid-cols-1 gap-x-6 items-center gap-y-6 sm:mt-20 sm:gap-y-0 lg:max-w-4xl lg:grid-cols-2">

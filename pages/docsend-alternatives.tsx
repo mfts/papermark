@@ -124,14 +124,14 @@ Please note that the prices and availability of features may vary, and it is rec
     <>
       <Head>
         <title>
-          Top Docsend Alternatives Personalised for Your Business | Discover
-          Your Best Match
+          Top 7 Docsend Alternatives in 2024 Personalised for Your Business |
+          Discover Your Best Match
         </title>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
 
         <meta
           name="description"
-          content="Explore the best Docsend alternatives tailored for your startup needs. Find the right document sharing and tracking solution personalized for your use case."
+          content="Explore the best Docsend alternatives tailored for your needs. Find the right document sharing and tracking solution personalized for your use case."
         />
         <meta property="og:site_name" content="startupinvestors.vercel.app" />
         <meta
@@ -140,13 +140,13 @@ Please note that the prices and availability of features may vary, and it is rec
         />
         <meta
           property="og:title"
-          content="Docsend Alternatives Personalised for Your Business"
+          content="Best 7 Docsend Alternatives in 2024 Personalised for Your Business"
         />
 
         <meta name="twitter:card" content="summary_large_image" />
         <meta
           name="twitter:title"
-          content="Explore Personalized Docsend Alternatives | Find Your Match"
+          content="Explore Best Docsend Alternatives | Find Your Match"
         />
         <meta
           name="twitter:description"
@@ -164,110 +164,13 @@ Please note that the prices and availability of features may vary, and it is rec
               <div className="max-w-5xl mx-auto">
                 <div className="w-full mx-auto">
                   <h1 className="text-4xl text-center font-bold pb-1 text-black lg:text-6xl ">
-                    Find Docsend alternatives personalised for you
+                    Top 7 Docsend alternatives in 2024
                   </h1>
-                  <div className="max-w-5xl mx-auto px-8 lg:px-28">
-                    <div className="max-w-5xl mx-auto">
-                      <div className="w-full my-1 mx-auto "></div>
-                      <p className="text-1xl mt-3 mb-5 text-center text-black font-semibold ">
-                        Step 1. Select features you prioritize the most <br />
-                      </p>
-                      <Feature
-                        selectedFeatures={selectedFeatures}
-                        setSelectedFeatures={setSelectedFeatures}
-                      />
-
-                      <div className="w-full my-1 mx-auto">
-                        <div className="flex space-x-4">
-                          <div className="w-full">
-                            {shouldRenderSteps() && (
-                              <>
-                                <p className="text-1xl mt-10 mb-5 text-center text-black font-semibold ">
-                                  Step 2. Select your plan
-                                  <br />
-                                </p>
-                                <div className="flex space-x-4">
-                                  {/* PlanSelect's width is decreased to half on larger screens using w-1/2 */}
-                                  <div className="w-full lg:w-1/2 mx-auto">
-                                    <PlanSelect plan={plan} setPlan={setPlan} />
-                                  </div>
-                                </div>
-                                <p className="text-1xl mt-10 mb-5 text-center text-black font-semibold ">
-                                  Step 3. Select your use case
-                                  <br />
-                                </p>
-                                <div className="w-full lg:w-1/2 mx-auto">
-                                  <UsecaseSelect
-                                    usecase={usecase}
-                                    setUsecase={setUsecase}
-                                  />
-                                </div>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="w-full my-1 mx-auto">
-                        <div className="flex space-x-6"></div>
-                      </div>
-
-                      <div className="my-4 lg:px-72 ">
-                        <button
-                          disabled={loading}
-                          onClick={(e) => optimizePost(e)}
-                          className="bg-black font-medium rounded-md w-full text-white px-4 py-2 hover:bg-gray-900 disabled:bg-black"
-                        >
-                          {loading && <LoadingDots color="white" />}
-                          {!loading && ` Find alternatives `}
-                        </button>
-                      </div>
-                    </div>
-                    <div className="flex md:flex-col lg:flex-col">
-                      {optimizedPost && (
-                        <div className="my-1">
-                          <div className="flex justify-between items-center pb-2 py-2 border-gray-300">
-                            <h2 className="text-xl font-bold text-white mx-auto">
-                              Docsend alternatives just for you
-                            </h2>
-                          </div>
-
-                          <div
-                            className="max-w-2x bg-gray mx-auto text-black rounded-xl p-4 hover:bg-gray-100 transition cursor-copy border"
-                            onClick={() => {
-                              navigator.clipboard.write([
-                                new ClipboardItem({
-                                  "text/html": new Blob([optimizedPost], {
-                                    type: "text/html",
-                                  }),
-                                }),
-                              ]);
-                            }}
-                            key={optimizedPost}
-                          >
-                            <p
-                              className="text-black-700"
-                              dangerouslySetInnerHTML={{
-                                __html: optimizedPost,
-                              }}
-                            />
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                    <div className="my-4 lg:px-80">
-                      {optimizedPost && (
-                        <a
-                          href="/login"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="bg-gray-200 text-xs rounded-md w-full text-white px-1 py-1 hover:bg-black disabled:bg-purple-500 inline-block text-center"
-                        >
-                          Send document
-                        </a>
-                      )}
-                    </div>
-                  </div>
+                  <h3 className="text-center text-m my-4 tracking-tight text-gray-900 sm:text-xl">
+                    Compare best Docsend alternatives based on core features,
+                    pricing, plans
+                    <br />
+                  </h3>
                 </div>
               </div>
             </div>
@@ -277,6 +180,109 @@ Please note that the prices and availability of features may vary, and it is rec
             <Article2 />
             <UseCaseTable />
             <Grid />
+            <div className="max-w-5xl mx-auto px-8 lg:px-28">
+              <div className="max-w-5xl mx-auto">
+                <div className="w-full my-1 mx-auto "></div>
+                <p className="text-1xl mt-3 mb-5 text-center text-black font-semibold ">
+                  Step 1. Select features you prioritize the most <br />
+                </p>
+                <Feature
+                  selectedFeatures={selectedFeatures}
+                  setSelectedFeatures={setSelectedFeatures}
+                />
+
+                <div className="w-full my-1 mx-auto">
+                  <div className="flex space-x-4">
+                    <div className="w-full">
+                      {shouldRenderSteps() && (
+                        <>
+                          <p className="text-1xl mt-10 mb-5 text-center text-black font-semibold ">
+                            Step 2. Select your plan
+                            <br />
+                          </p>
+                          <div className="flex space-x-4">
+                            {/* PlanSelect's width is decreased to half on larger screens using w-1/2 */}
+                            <div className="w-full lg:w-1/2 mx-auto">
+                              <PlanSelect plan={plan} setPlan={setPlan} />
+                            </div>
+                          </div>
+                          <p className="text-1xl mt-10 mb-5 text-center text-black font-semibold ">
+                            Step 3. Select your use case
+                            <br />
+                          </p>
+                          <div className="w-full lg:w-1/2 mx-auto">
+                            <UsecaseSelect
+                              usecase={usecase}
+                              setUsecase={setUsecase}
+                            />
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="w-full my-1 mx-auto">
+                  <div className="flex space-x-6"></div>
+                </div>
+
+                <div className="my-4 lg:px-72 ">
+                  <button
+                    disabled={loading}
+                    onClick={(e) => optimizePost(e)}
+                    className="bg-black font-medium rounded-md w-full text-white px-4 py-2 hover:bg-gray-900 disabled:bg-black"
+                  >
+                    {loading && <LoadingDots color="white" />}
+                    {!loading && ` Find alternatives `}
+                  </button>
+                </div>
+              </div>
+              <div className="flex md:flex-col lg:flex-col">
+                {optimizedPost && (
+                  <div className="my-1">
+                    <div className="flex justify-between items-center pb-2 py-2 border-gray-300">
+                      <h2 className="text-xl font-bold text-white mx-auto">
+                        Docsend alternatives just for you
+                      </h2>
+                    </div>
+
+                    <div
+                      className="max-w-2x bg-gray mx-auto text-black rounded-xl p-4 hover:bg-gray-100 transition cursor-copy border"
+                      onClick={() => {
+                        navigator.clipboard.write([
+                          new ClipboardItem({
+                            "text/html": new Blob([optimizedPost], {
+                              type: "text/html",
+                            }),
+                          }),
+                        ]);
+                      }}
+                      key={optimizedPost}
+                    >
+                      <p
+                        className="text-black-700"
+                        dangerouslySetInnerHTML={{
+                          __html: optimizedPost,
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div className="my-4 lg:px-80">
+                {optimizedPost && (
+                  <a
+                    href="/login"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-gray-200 text-xs rounded-md w-full text-white px-1 py-1 hover:bg-black disabled:bg-purple-500 inline-block text-center"
+                  >
+                    Send document
+                  </a>
+                )}
+              </div>
+            </div>
+
             <Testimonials />
             <CTA />
           </section>

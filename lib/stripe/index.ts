@@ -28,7 +28,6 @@ export async function cancelSubscription(customer?: string) {
       },
     });
   } catch (error) {
-    console.log("Error cancelling Stripe subscription", error);
     return;
   }
 }

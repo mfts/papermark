@@ -18,14 +18,18 @@ import { mutate } from "swr";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
-import { cn } from "@/lib/utils";
+import { cn, convertDataUrlToFile, uploadImage } from "@/lib/utils";
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import Link from "next/link";
 import DomainSection from "./domain-section";
 import AllowDownloadSection from "./allow-download-section";
 import { useTeam } from "@/context/team-context";
-import AllowNotificationSection from "./allow-notification";
 import EmailAuthenticationSection from "./email-authentication-section";
+import AllowNotificationSection from "./allow-notification-section";
+import FeedbackSection from "./feedback-section";
+import OGSection from "./og-section";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { upload } from "@vercel/blob/client";
 
 export const DEFAULT_LINK_PROPS = {
   id: null,
@@ -38,6 +42,11 @@ export const DEFAULT_LINK_PROPS = {
   emailAuthenticated: false,
   allowDownload: false,
   enableNotification: true,
+  enableFeedback: true,
+  enableCustomMetatag: false,
+  metaTitle: null,
+  metaDescription: null,
+  metaImage: null,
 };
 
 export type DEFAULT_LINK_TYPE = {
@@ -51,6 +60,11 @@ export type DEFAULT_LINK_TYPE = {
   emailAuthenticated: boolean;
   allowDownload: boolean;
   enableNotification: boolean;
+  enableFeedback: boolean;
+  enableCustomMetatag: boolean; // metatags
+  metaTitle: string | null; // metatags
+  metaDescription: string | null; // metatags
+  metaImage: string | null; // metatags
 };
 
 export default function LinkSheet({
@@ -80,6 +94,19 @@ export default function LinkSheet({
 
     setIsLoading(true);
 
+    // Upload the image if it's a data URL
+    let blobUrl: string | null =
+      data.metaImage && data.metaImage.startsWith("data:")
+        ? null
+        : data.metaImage;
+    if (data.metaImage && data.metaImage.startsWith("data:")) {
+      // Convert the data URL to a blob
+      const blob = convertDataUrlToFile({ dataUrl: data.metaImage });
+      // Upload the blob to vercel storage
+      blobUrl = await uploadImage(blob);
+      setData({ ...data, metaImage: blobUrl });
+    }
+
     let endpoint = "/api/links";
     let method = "POST";
 
@@ -96,6 +123,7 @@ export default function LinkSheet({
       },
       body: JSON.stringify({
         ...data,
+        metaImage: blobUrl,
         documentId: documentId,
       }),
     });
@@ -140,8 +168,6 @@ export default function LinkSheet({
     setIsLoading(false);
   };
 
-  // console.log("current Data", data)
-
   return (
     <Sheet open={isOpen} onOpenChange={(open: boolean) => setIsOpen(open)}>
       <SheetContent className="bg-background text-foreground flex flex-col justify-between">
@@ -154,57 +180,62 @@ export default function LinkSheet({
             done.
           </SheetDescription>
         </SheetHeader>
+
         <form className="flex flex-col grow" onSubmit={handleSubmit}>
-          <div className="h-0 flex-1">
-            <div className="flex flex-1 flex-col justify-between">
-              <div className="divide-y divide-gray-200">
-                <div className="space-y-6 pb-5 pt-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="link-name">Link Name</Label>
-                    <div className="mt-2">
-                      <input
-                        type="text"
-                        name="link-name"
-                        id="link-name"
-                        placeholder="Recipient's Organization"
-                        value={data.name || ""}
-                        className="flex w-full rounded-md border-0 py-1.5 text-foreground bg-background shadow-sm ring-1 ring-inset ring-input placeholder:text-muted-foreground focus:ring-2 focus:ring-inset focus:ring-gray-400 sm:text-sm sm:leading-6"
-                        onChange={(e) =>
-                          setData({ ...data, name: e.target.value })
-                        }
-                      />
+          <ScrollArea className="flex-grow">
+            <div className="h-0 flex-1">
+              <div className="flex flex-1 flex-col justify-between">
+                <div className="divide-y divide-gray-200">
+                  <div className="space-y-6 pb-5 pt-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="link-name">Link Name</Label>
+                      <div className="mt-2">
+                        <input
+                          type="text"
+                          name="link-name"
+                          id="link-name"
+                          placeholder="Recipient's Organization"
+                          value={data.name || ""}
+                          className="flex w-full rounded-md border-0 py-1.5 text-foreground bg-background shadow-sm ring-1 ring-inset ring-input placeholder:text-muted-foreground focus:ring-2 focus:ring-inset focus:ring-gray-400 sm:text-sm sm:leading-6"
+                          onChange={(e) =>
+                            setData({ ...data, name: e.target.value })
+                          }
+                        />
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="space-y-2">
-                    <DomainSection {...{ data, setData, domains }} />
-                  </div>
-
-                  <div className="flex items-center relative">
-                    <Separator className="bg-muted-foreground absolute" />
-                    <div className="relative mx-auto">
-                      <span className="px-2 bg-background text-muted-foreground text-sm">
-                        Optional
-                      </span>
+                    <div className="space-y-2">
+                      <DomainSection {...{ data, setData, domains }} />
                     </div>
-                  </div>
 
-                  <div>
-                    <EmailProtectionSection {...{ data, setData }} />
-                    <EmailAuthenticationSection {...{ data, setData }} />
-                    <AllowDownloadSection {...{ data, setData }} />
-                    <PasswordSection {...{ data, setData }} />
-                    <ExpirationSection {...{ data, setData }} />
-                    <AllowNotificationSection {...{ data, setData }} />
+                    <div className="flex items-center relative">
+                      <Separator className="bg-muted-foreground absolute" />
+                      <div className="relative mx-auto">
+                        <span className="px-2 bg-background text-muted-foreground text-sm">
+                          Optional
+                        </span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <EmailProtectionSection {...{ data, setData }} />
+                      <EmailAuthenticationSection {...{ data, setData }} />
+                      <AllowDownloadSection {...{ data, setData }} />
+                      <PasswordSection {...{ data, setData }} />
+                      <ExpirationSection {...{ data, setData }} />
+                      <OGSection {...{ data, setData }} />
+                      <AllowNotificationSection {...{ data, setData }} />
+                      <FeedbackSection {...{ data, setData }} />
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
+          </ScrollArea>
 
           <SheetFooter>
             <div className="flex items-center">
-              <Button type="submit" disabled={isLoading}>
+              <Button type="submit" loading={isLoading}>
                 {currentLink ? "Update Link" : "Save Link"}
               </Button>
             </div>
