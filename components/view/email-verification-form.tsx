@@ -23,7 +23,9 @@ export default function EmailVerificationMessage({
           </p>
           <form className="mt-10 space-y-4" onSubmit={onSubmitHandler}>
             <div className="flex items-center">
-              <p className="text-sm text-gray-600">Didn't receive the email?</p>{" "}
+              <p className="text-sm text-gray-600">
+                Didn&apos;t receive the email?
+              </p>{" "}
               <Button
                 type="submit"
                 variant="link"
