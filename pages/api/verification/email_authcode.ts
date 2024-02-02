@@ -6,9 +6,8 @@ import { checkPassword } from "@/lib/utils";
 
 const bodySchema = z.object({
   email: z.string().email(),
-  identifier: z.string(),
+  linkId: z.string(),
   password: z.string().nullable(),
-  emailProtected: z.boolean(),
 });
 
 export default async function handle(
@@ -24,10 +23,9 @@ export default async function handle(
     };
 
     //Check verification code in database
-    const token = await prisma.verificationToken.findFirst({
+    const token = await prisma.verificationToken.findUnique({
       where: {
         token: authenticationToken,
-        identifier: identifier,
       },
     });
 
@@ -36,7 +34,7 @@ export default async function handle(
       return;
     }
     //Check the token's expiry
-    if (Date.now() > token.expiresAt.getTime()) {
+    if (Date.now() > token.expires.getTime()) {
       //Delete the token if expired
       await prisma.verificationToken.delete({
         where: {
@@ -51,13 +49,11 @@ export default async function handle(
 
     // Input validation
     let email: string;
-    let identifier: string;
+    let linkId: string;
     let password: string | null;
     let emailProtected: boolean;
     try {
-      ({ email, identifier, password, emailProtected } = bodySchema.parse(
-        req.body,
-      ));
+      ({ email, linkId, password } = bodySchema.parse(req.body));
     } catch (error) {
       res.status(403).json({ message: `Invalid inputs` });
       return;
@@ -65,14 +61,14 @@ export default async function handle(
 
     //Password validation
     if (password) {
-      const link = await prisma.link.findFirst({
+      const link = await prisma.link.findUnique({
         where: {
-          id: identifier,
+          id: linkId,
         },
       });
 
       if (!link) {
-        return res.status(404).json({ message: "Object not found" });
+        return res.status(404).json({ message: "Link not found" });
       }
 
       const isPasswordValid = await checkPassword(
@@ -91,6 +87,7 @@ export default async function handle(
       data: {
         token: authenticationCode,
         identifier,
+        expires: new Date(Date.now() + 1000 * 60 * 60 * 24),
       },
     });
     const URL = `${process.env.NEXT_PUBLIC_BASE_URL}/view/${identifier}?authenticationCode=${authenticationCode}`;

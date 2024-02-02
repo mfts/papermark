@@ -12,13 +12,13 @@ export default function ViewData({
 }: {
   viewData: DEFAULT_DOCUMENT_VIEW_TYPE;
   link: LinkWithDocument;
-  notionData: {
+  notionData?: {
     rootNotionPageId: string | null;
     recordMap: ExtendedRecordMap | null;
   };
 }) {
   const { document } = link;
-  return notionData.recordMap ? (
+  return notionData?.recordMap ? (
     <NotionPage
       recordMap={notionData.recordMap}
       // rootPageId={notionData.rootNotionPageId}

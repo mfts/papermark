@@ -25,6 +25,7 @@ import DomainSection from "./domain-section";
 import AllowDownloadSection from "./allow-download-section";
 import { useTeam } from "@/context/team-context";
 import AllowNotificationSection from "./allow-notification";
+import EmailAuthenticationSection from "./email-authentication-section";
 
 export const DEFAULT_LINK_PROPS = {
   id: null,
@@ -34,6 +35,7 @@ export const DEFAULT_LINK_PROPS = {
   expiresAt: null,
   password: null,
   emailProtected: true,
+  emailAuthenticated: false,
   allowDownload: false,
   enableNotification: true,
 };
@@ -46,6 +48,7 @@ export type DEFAULT_LINK_TYPE = {
   expiresAt: Date | null;
   password: string | null;
   emailProtected: boolean;
+  emailAuthenticated: boolean;
   allowDownload: boolean;
   enableNotification: boolean;
 };
@@ -188,6 +191,7 @@ export default function LinkSheet({
 
                   <div>
                     <EmailProtectionSection {...{ data, setData }} />
+                    <EmailAuthenticationSection {...{ data, setData }} />
                     <AllowDownloadSection {...{ data, setData }} />
                     <PasswordSection {...{ data, setData }} />
                     <ExpirationSection {...{ data, setData }} />

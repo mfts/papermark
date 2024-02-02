@@ -9,6 +9,8 @@ import { CustomUser, LinkWithDocument } from "@/lib/types";
 import { parsePageId } from "notion-utils";
 import { GetStaticPropsContext } from "next";
 import { useRouter } from "next/router";
+import { useEffect, useState } from "react";
+import { set } from "date-fns";
 
 export const getStaticProps = async (context: GetStaticPropsContext) => {
   const { linkId } = context.params as { linkId: string };
@@ -81,7 +83,10 @@ export default function ViewPage({
   };
 }) {
   const router = useRouter();
-  const { authenticationCode } = router.query as { authenticationCode: string };
+  const { token, email: verifiedEmail } = router.query as {
+    token: string;
+    email: string;
+  };
   const { data: session, status } = useSession();
 
   if (!link || status === "loading" || router.isFallback) {
@@ -95,6 +100,7 @@ export default function ViewPage({
   const {
     expiresAt,
     emailProtected,
+    emailAuthenticated,
     password: linkPassword,
     isArchived,
   } = link;
@@ -114,15 +120,17 @@ export default function ViewPage({
     );
   }
 
-  if (emailProtected || linkPassword) {
+  if (emailProtected || emailAuthenticated || linkPassword) {
     return (
       <DocumentView
         link={link}
         userEmail={userEmail}
         userId={userId}
         isProtected={true}
+        hasEmailVerification={emailAuthenticated}
         notionData={notionData}
-        authenticationCode={authenticationCode}
+        token={token}
+        verifiedEmail={verifiedEmail}
       />
     );
   }
@@ -133,8 +141,10 @@ export default function ViewPage({
       userEmail={userEmail}
       userId={userId}
       isProtected={false}
+      hasEmailVerification={false}
       notionData={notionData}
-      authenticationCode={authenticationCode}
+      token={token}
+      verifiedEmail={verifiedEmail}
     />
   );
 }

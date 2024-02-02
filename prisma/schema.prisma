@@ -165,6 +165,7 @@ model Link {
   password           String? // Optional password for link protection
   allowedEmails      String[] // Array of emails allowed to view the document
   emailProtected     Boolean   @default(true) // Optional email protection
+  emailAuthenticated Boolean   @default(false) // Optional email authentication flag
   allowDownload      Boolean?  @default(false) // Optional give user a option to allow to download the document
   isArchived         Boolean   @default(false) // Indicates if the link is archived
   views              View[]
@@ -203,6 +204,7 @@ model View {
   document    Document   @relation(fields: [documentId], references: [id], onDelete: Cascade)
   documentId  String
   viewerEmail String? // Email of the viewer if known
+  verified    Boolean    @default(false) // Whether the viewer email has been verified
   viewedAt    DateTime   @default(now())
   reactions   Reaction[]
 

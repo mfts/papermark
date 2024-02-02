@@ -3,6 +3,8 @@ import prisma from "@/lib/prisma";
 import { checkPassword, log } from "@/lib/utils";
 import { trackAnalytics } from "@/lib/analytics";
 import { client } from "@/trigger";
+import { newId } from "@/lib/id-helper";
+import { sendVerificationEmail } from "@/lib/emails/send-email-verification";
 
 export default async function handle(
   req: NextApiRequest,
@@ -14,8 +16,22 @@ export default async function handle(
     return;
   }
   // POST /api/views
-  const { linkId, documentId, userId, documentVersionId, hasPages, ...data } =
-    req.body;
+  const {
+    linkId,
+    documentId,
+    userId,
+    documentVersionId,
+    hasPages,
+    token,
+    ...data
+  } = req.body as {
+    linkId: string;
+    documentId: string;
+    userId: string | null;
+    documentVersionId: string;
+    hasPages: boolean;
+    token: string | null;
+  };
 
   const { email, password } = data as { email: string; password: string };
 
@@ -27,6 +43,7 @@ export default async function handle(
     select: {
       emailProtected: true,
       enableNotification: true,
+      emailAuthenticated: true,
       password: true,
     },
   });
@@ -60,6 +77,49 @@ export default async function handle(
     }
   }
 
+  // Check if email verification is required for visiting the link
+  if (link.emailAuthenticated && !token) {
+    const token = newId("email");
+    const expiresAt = new Date();
+    expiresAt.setHours(expiresAt.getHours() + 24); // token expires in 24 hour
+
+    await prisma.verificationToken.create({
+      data: {
+        token,
+        identifier: email,
+        expires: expiresAt,
+      },
+    });
+
+    const verificationUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/view/${linkId}/?token=${token}`;
+    await sendVerificationEmail(email, verificationUrl);
+    res.status(200).json({
+      type: "email-verification",
+      message: "Verification email sent.",
+    });
+    return;
+  }
+
+  let isEmailVerified: boolean = false;
+  if (link.emailAuthenticated && token) {
+    const verification = await prisma.verificationToken.findUnique({
+      where: { token: token },
+    });
+
+    if (!verification) {
+      res.status(401).json({ message: "Unauthorized access" });
+      return;
+    }
+
+    // Check the token's expiration date
+    if (Date.now() > verification.expires.getTime()) {
+      res.status(401).json({ message: "Token expired" });
+      return;
+    }
+
+    isEmailVerified = true;
+  }
+
   try {
     console.time("create-view");
     const newView = await prisma.view.create({
@@ -67,6 +127,7 @@ export default async function handle(
         linkId: linkId,
         viewerEmail: email,
         documentId: documentId,
+        verified: isEmailVerified,
       },
       select: { id: true },
     });
