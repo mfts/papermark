@@ -19,6 +19,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import ChevronDown from "@/components/shared/icons/chevron-down";
 import VisitorChart from "./visitor-chart";
 import { VisitorAvatar } from "./visitor-avatar";
+import BadgeCheck from "../shared/icons/badge-check";
 
 export default function VisitorsTable({ numPages }: { numPages: number }) {
   const { views } = useDocumentVisits();
@@ -51,10 +52,17 @@ export default function VisitorsTable({ numPages }: { numPages: number }) {
                           <VisitorAvatar viewerEmail={view.viewerEmail} />
                           <div className="min-w-0 flex-1">
                             <div className="focus:outline-none">
-                              <p className="text-sm font-medium text-gray-800 dark:text-gray-200 overflow-visible">
-                                {view.viewerEmail
-                                  ? view.viewerEmail
-                                  : "Anonymous"}
+                              <p className="text-sm font-medium text-gray-800 dark:text-gray-200 overflow-visible flex items-center gap-x-2">
+                                {view.viewerEmail ? (
+                                  <>
+                                    {view.viewerEmail}{" "}
+                                    {view.verified ? (
+                                      <BadgeCheck className="h-4 w-4 text-emerald-500" />
+                                    ) : null}
+                                  </>
+                                ) : (
+                                  "Anonymous"
+                                )}
                               </p>
                               <p className="text-sm text-muted-foreground/60">
                                 {view.link.name ? view.link.name : view.linkId}
