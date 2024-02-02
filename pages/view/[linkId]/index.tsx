@@ -11,7 +11,6 @@ import { GetStaticPropsContext } from "next";
 import { useRouter } from "next/router";
 import { Brand } from "@prisma/client";
 import CustomMetatag from "@/components/view/custom-metatag";
-import Head from "next/head";
 
 export const getStaticProps = async (context: GetStaticPropsContext) => {
   const { linkId } = context.params as { linkId: string };
@@ -103,6 +102,10 @@ export default function ViewPage({
   brand?: Brand;
 }) {
   const router = useRouter();
+  const { token, email: verifiedEmail } = router.query as {
+    token: string;
+    email: string;
+  };
   const { data: session, status } = useSession();
 
   if (!link || status === "loading" || router.isFallback) {
@@ -125,6 +128,7 @@ export default function ViewPage({
   const {
     expiresAt,
     emailProtected,
+    emailAuthenticated,
     password: linkPassword,
     isArchived,
   } = link;
@@ -163,6 +167,8 @@ export default function ViewPage({
           isProtected={true}
           notionData={notionData}
           brand={brand}
+          token={token}
+          verifiedEmail={verifiedEmail}
         />
       </>
     );

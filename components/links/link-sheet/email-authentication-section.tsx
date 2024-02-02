@@ -3,7 +3,7 @@ import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { DEFAULT_LINK_TYPE } from ".";
 
-export default function EmailProtectionSection({
+export default function EmailAuthenticationSection({
   data,
   setData,
 }: {
@@ -14,17 +14,17 @@ export default function EmailProtectionSection({
   const [enabled, setEnabled] = useState<boolean>(true);
 
   useEffect(() => {
-    setEnabled(emailProtected);
-  }, [emailProtected]);
+    setEnabled(emailAuthenticated);
+  }, [emailAuthenticated]);
 
-  const handleEnableProtection = () => {
-    const updatedEmailProtection = !enabled;
+  const handleEnableAuthentication = () => {
+    const updatedEmailAuthentication = !enabled;
     setData({
       ...data,
-      emailProtected: updatedEmailProtection,
-      emailAuthenticated: !updatedEmailProtection && false,
+      emailProtected: updatedEmailAuthentication ? true : emailProtected,
+      emailAuthenticated: updatedEmailAuthentication,
     });
-    setEnabled(updatedEmailProtection);
+    setEnabled(updatedEmailAuthentication);
   };
 
   return (
@@ -37,10 +37,13 @@ export default function EmailProtectionSection({
               enabled ? "text-foreground" : "text-muted-foreground",
             )}
           >
-            Require email to view
+            Require email authentication to view
           </h2>
         </div>
-        <Switch checked={enabled} onCheckedChange={handleEnableProtection} />
+        <Switch
+          checked={enabled}
+          onCheckedChange={handleEnableAuthentication}
+        />
       </div>
     </div>
   );

@@ -6,8 +6,6 @@ import NotFound from "@/pages/404";
 import { GetStaticPropsContext } from "next";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
-import prisma from "@/lib/prisma";
-
 import { ExtendedRecordMap } from "notion-types";
 import notion from "@/lib/notion";
 import { parsePageId } from "notion-utils";
@@ -102,10 +100,14 @@ export default function ViewPage({
   } | null;
   brand?: Brand;
 }) {
-  const router = useRouter();
   const { data: session, status } = useSession();
+  const router = useRouter();
+  const { token, email: verifiedEmail } = router.query as {
+    token: string;
+    email: string;
+  };
 
-  if (!link || status === "loading" || router.isFallback) {
+  if (!link || status === "loading") {
     return (
       <>
         {meta && meta.enableCustomMetatag ? (
@@ -163,6 +165,8 @@ export default function ViewPage({
           isProtected={true}
           notionData={notionData}
           brand={brand}
+          token={token}
+          verifiedEmail={verifiedEmail}
         />
       </>
     );

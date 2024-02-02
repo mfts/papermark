@@ -64,6 +64,7 @@ export default function LinksTable() {
       expiresAt: link.expiresAt,
       password: link.password,
       emailProtected: link.emailProtected,
+      emailAuthenticated: link.emailAuthenticated,
       allowDownload: link.allowDownload ? link.allowDownload : false,
       enableNotification: link.enableNotification
         ? link.enableNotification

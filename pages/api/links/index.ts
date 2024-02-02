@@ -91,6 +91,7 @@ export default async function handler(
           password: hashedPassword,
           name: linkData.name || null,
           emailProtected: linkData.emailProtected,
+          emailAuthenticated: linkData.emailAuthenticated,
           expiresAt: exat,
           allowDownload: linkData.allowDownload,
           domainId: domainObj?.id || null,

@@ -14,8 +14,8 @@ export default function Nav({
   file,
   brand,
 }: {
-  pageNumber: number;
-  numPages: number;
+  pageNumber?: number;
+  numPages?: number;
   allowDownload?: boolean;
   assistantEnabled?: boolean;
   file?: { name: string; url: string };
@@ -99,10 +99,12 @@ export default function Nav({
                 </Button>
               </div>
             ) : null}
-            <div className="bg-gray-900 text-white rounded-md h-10 px-4 py-2 items-center flex text-sm font-medium">
-              <span>{pageNumber}</span>
-              <span className="text-gray-400"> / {numPages}</span>
-            </div>
+            {pageNumber && numPages ? (
+              <div className="bg-gray-900 text-white rounded-md h-10 px-4 py-2 items-center flex text-sm font-medium">
+                <span>{pageNumber}</span>
+                <span className="text-gray-400"> / {numPages}</span>
+              </div>
+            ) : null}
           </div>
         </div>
       </div>
