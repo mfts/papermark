@@ -3,7 +3,7 @@ import type { AppProps } from "next/app";
 import { Inter } from "next/font/google";
 import type { Session } from "next-auth";
 import { SessionProvider } from "next-auth/react";
-import { Toaster } from "sonner";
+import { Toaster } from "@/components/ui/sonner";
 import Head from "next/head";
 import { Analytics } from "@vercel/analytics/react";
 import PlausibleProvider from "next-plausible";
@@ -65,7 +65,7 @@ export default function App({
             enabled={process.env.NEXT_PUBLIC_VERCEL_ENV === "production"}
           >
             <main className={inter.className}>
-              <Toaster closeButton richColors theme={"system"} />
+              <Toaster closeButton richColors />
               <TeamProvider>
                 <Component {...pageProps} />
               </TeamProvider>

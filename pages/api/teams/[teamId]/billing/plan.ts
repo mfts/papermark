@@ -34,7 +34,6 @@ export default async function handle(
         },
       });
 
-      // console.log("Domains from GET", domains)
       return res.status(200).json(team);
     } catch (error) {
       errorhandler(error, res);

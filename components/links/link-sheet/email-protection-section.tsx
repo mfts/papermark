@@ -10,7 +10,7 @@ export default function EmailProtectionSection({
   data: DEFAULT_LINK_TYPE;
   setData: Dispatch<SetStateAction<DEFAULT_LINK_TYPE>>;
 }) {
-  const { emailProtected } = data;
+  const { emailProtected, emailAuthenticated } = data;
   const [enabled, setEnabled] = useState<boolean>(true);
 
   useEffect(() => {
@@ -19,7 +19,11 @@ export default function EmailProtectionSection({
 
   const handleEnableProtection = () => {
     const updatedEmailProtection = !enabled;
-    setData({ ...data, emailProtected: updatedEmailProtection });
+    setData({
+      ...data,
+      emailProtected: updatedEmailProtection,
+      emailAuthenticated: !updatedEmailProtection && false,
+    });
     setEnabled(updatedEmailProtection);
   };
 

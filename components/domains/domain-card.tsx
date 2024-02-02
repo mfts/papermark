@@ -23,8 +23,6 @@ export default function DomainCard({
   const teamInfo = useTeam();
 
   const handleDelete = async () => {
-    // console.log("Deleting domain...", domain);
-
     setDeleting(true);
     const response = await fetch(
       `/api/teams/${teamInfo?.currentTeam?.id}/domains/${domain}`,

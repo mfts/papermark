@@ -9,7 +9,8 @@ export function useBrand() {
   const teamInfo = useTeam();
 
   const { data: brand, error } = useSWR<Brand>(
-    `/api/teams/${teamInfo?.currentTeam?.id}/branding`,
+    teamInfo?.currentTeam?.id &&
+      `/api/teams/${teamInfo?.currentTeam?.id}/branding`,
     fetcher,
     {
       dedupingInterval: 30000,
