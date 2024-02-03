@@ -2,7 +2,7 @@ import { type Message } from "ai";
 
 import { Separator } from "@/components/ui/separator";
 import { ChatMessage } from "./chat-message";
-import Skeleton from "../Skeleton";
+import { Skeleton } from "../ui/skeleton";
 import PapermarkSparkle from "../shared/icons/papermark-sparkle";
 
 export interface ChatList {

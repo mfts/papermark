@@ -5,7 +5,7 @@ import { type PutBlobResult } from "@vercel/blob";
 import { upload } from "@vercel/blob/client";
 import DocumentUpload from "@/components/document-upload";
 import { toast } from "sonner";
-import Skeleton from "../Skeleton";
+import { Skeleton } from "../ui/skeleton";
 import { STAGGER_CHILD_VARIANTS } from "@/lib/constants";
 import { pdfjs } from "react-pdf";
 import { copyToClipboard, getExtension } from "@/lib/utils";

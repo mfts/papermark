@@ -2,7 +2,7 @@ import { useRouter } from "next/router";
 import { motion } from "framer-motion";
 import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
-import Skeleton from "../Skeleton";
+import { Skeleton } from "../ui/skeleton";
 import { STAGGER_CHILD_VARIANTS } from "@/lib/constants";
 import { copyToClipboard } from "@/lib/utils";
 import { Button } from "../ui/button";
