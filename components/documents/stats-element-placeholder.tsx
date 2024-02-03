@@ -1,4 +1,4 @@
-import { classNames } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 
 export default function StatsElementPlaceholder({
   statIdx,
@@ -7,7 +7,7 @@ export default function StatsElementPlaceholder({
 }) {
   return (
     <div
-      className={classNames(
+      className={cn(
         statIdx % 2 === 1 ? "sm:border-l" : statIdx === 2 ? "lg:border-l" : "",
         "border-t border-foreground/5 py-6 px-4 sm:px-6 lg:px-8",
       )}

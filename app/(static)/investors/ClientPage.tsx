@@ -4,7 +4,7 @@ import Fuse from "fuse.js";
 import { useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { GlobeIcon, SearchIcon } from "lucide-react";
-import classNames from "clsx";
+import { cn } from "@/lib/utils";
 import Link from "next/link";
 import Image from "next/image";
 import PlaceholderImg from "@/public/_static/placeholder.png";
@@ -133,7 +133,7 @@ export default function Dashboard({ data }: any) {
                     : "/investors"
                 }
                 key={stage.id}
-                className={classNames(
+                className={cn(
                   category === stage.id || (!category && stage.id === "7")
                     ? "bg-gray-200"
                     : "bg-white hover:bg-gray-50",

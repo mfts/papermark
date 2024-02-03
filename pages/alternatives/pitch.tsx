@@ -12,7 +12,7 @@ import {
   HardDrive as ServerIcon,
 } from "lucide-react";
 import Link from "next/link";
-import { classNames } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 
 const features = [
   {
@@ -223,7 +223,7 @@ export default function Home() {
                 {tiers.map((tier, tierIdx) => (
                   <div
                     key={tier.id}
-                    className={classNames(
+                    className={cn(
                       tier.featured
                         ? " text-gray-800 dark:text-white relative shadow-2xl"
                         : " bg-white dark:bg-transparent sm:mx-8 lg:mx-0",
@@ -237,7 +237,7 @@ export default function Home() {
                   >
                     <p className="mt-4 flex items-baseline gap-x-2">
                       <span
-                        className={classNames(
+                        className={cn(
                           tier.featured
                             ? "text-gray-800 dark:text-white"
                             : "text-gray-800 dark:text-gray-400",
@@ -247,7 +247,7 @@ export default function Home() {
                         {tier.priceMonthly}
                       </span>
                       <span
-                        className={classNames(
+                        className={cn(
                           tier.featured
                             ? "text-gray-600 dark:text-white"
                             : "text-gray-400 dark:text-gray-100",
@@ -256,7 +256,7 @@ export default function Home() {
                       ></span>
                     </p>
                     <p
-                      className={classNames(
+                      className={cn(
                         tier.featured
                           ? "text-gray-600 dark:text-gray-300"
                           : "text-gray-600 dark:text-gray-400",
@@ -267,7 +267,7 @@ export default function Home() {
                     </p>
                     <ul
                       role="list"
-                      className={classNames(
+                      className={cn(
                         tier.featured
                           ? "text-gray-600 dark:text-gray-300"
                           : "text-gray-600 dark:text-gray-400",
@@ -283,7 +283,7 @@ export default function Home() {
                     <Link
                       href="/login"
                       aria-describedby={tier.id.toString()}
-                      className={classNames(
+                      className={cn(
                         tier.featured
                           ? "bg-black dark:bg-white text-white dark:text-black shadow-sm hover:bg-gray-500 focus:ring-2 focus:ring-indigo-500"
                           : "text-transparent ring-1 ring-inset ring-transparent focus:ring-2 focus:ring-indigo-600",

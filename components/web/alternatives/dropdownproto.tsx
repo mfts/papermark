@@ -1,10 +1,7 @@
 import { Menu, Transition } from "@headlessui/react";
 import { CheckIcon, ChevronDownIcon, ChevronUpIcon } from "lucide-react";
 import { Fragment, Dispatch, SetStateAction } from "react";
-
-function classNames(...classes: string[]) {
-  return classes.filter(Boolean).join(" ");
-}
+import { cn } from "@/lib/utils";
 
 interface DropDownProps {
   options: string[];
@@ -52,7 +49,7 @@ export default function DropDown({
                 {({ active }) => (
                   <button
                     onClick={() => setOption(optionItem)}
-                    className={classNames(
+                    className={cn(
                       active ? "bg-gray-100 text-gray-900" : "text-gray-700",
                       option === optionItem ? "bg-gray-200" : "",
                       "px-4 py-2 text-sm w-full text-left flex items-center space-x-2 justify-between",
