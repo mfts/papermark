@@ -5,6 +5,14 @@ import PapermarkSparkle from "../shared/icons/papermark-sparkle";
 import { Download } from "lucide-react";
 import { Brand } from "@prisma/client";
 import Image from "next/image";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import DropDown from "../web/alternatives/dropdownproto";
+
+// TODO: trigger dev job start garni ani matra file upload garni ho k
 
 export default function Nav({
   pageNumber,
@@ -13,6 +21,7 @@ export default function Nav({
   assistantEnabled,
   file,
   brand,
+  embeddedLinks,
 }: {
   pageNumber: number;
   numPages: number;
@@ -20,6 +29,7 @@ export default function Nav({
   assistantEnabled?: boolean;
   file?: { name: string; url: string };
   brand?: Brand;
+  embeddedLinks?: string[];
 }) {
   const router = useRouter();
   const { linkId } = router.query as { linkId: string };
@@ -77,7 +87,29 @@ export default function Nav({
               )}
             </div>
           </div>
-          <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0 space-x-2">
+          <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0 space-x-4">
+            {embeddedLinks && embeddedLinks.length > 0 && (
+              <DropdownMenu>
+                <DropdownMenuTrigger>
+                  <div className="text-sm font-semibold mr-6">
+                    Embedded Links
+                  </div>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="space-y-2 pt-2 px-4">
+                  {embeddedLinks.map((link, index) => (
+                    <Link
+                      href={link}
+                      target="_blank"
+                      className="text-sm flex items-start gap-2"
+                      key={index}
+                    >
+                      <span>{index + 1}.</span>
+                      <span className="underline">{link}</span>
+                    </Link>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
             {assistantEnabled ? (
               <Link href={`/view/${linkId}/chat`}>
                 <Button
