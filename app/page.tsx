@@ -639,7 +639,7 @@ export default function Home() {
           <div className="w-full mx-auto max-w-7xl px-4 md:px-8">
             <h2 className="text-4xl text-balance pt-20 pb-20">
               Share your documents, securely.{" "}
-              <span className="text-muted-foreground">
+              <span className="text-gray-500">
                 {/* Fine-tune access control. Receive real-time page analytics.
                 Customize the experience with your brand and domain. Papermark
                 is 100% open source. */}
@@ -706,7 +706,7 @@ export default function Home() {
         >
           <h2 className="text-4xl text-balance pt-12 pb-20">
             Built for modern teams.{" "}
-            <span className="text-muted-foreground">
+            <span className="text-gray-500">
               Share your documents with an impression that lasts.
             </span>
           </h2>
@@ -837,7 +837,7 @@ function Footer() {
             <span className="text-2xl font-bold tracking-tighter text-black">
               Papermark
             </span>
-            <p className="leading-6 text-muted-foreground">
+            <p className="leading-6 text-gray-500">
               Sharing documents, securely and on brand.
             </p>
             <div className="flex space-x-2">
@@ -864,7 +864,7 @@ function Footer() {
                     <li key={item.name}>
                       <a
                         href={item.href}
-                        className="leading-6 text-muted-foreground hover:text-black"
+                        className="leading-6 text-gray-500 hover:text-black"
                       >
                         {item.name}
                       </a>
@@ -881,7 +881,7 @@ function Footer() {
                     <li key={item.name}>
                       <a
                         href={item.href}
-                        className="leading-6 text-muted-foreground hover:text-black"
+                        className="leading-6 text-gray-500 hover:text-black"
                       >
                         {item.name}
                       </a>
@@ -898,7 +898,7 @@ function Footer() {
                     <li key={item.name}>
                       <a
                         href={item.href}
-                        className="leading-6 text-muted-foreground hover:text-black"
+                        className="leading-6 text-gray-500 hover:text-black"
                       >
                         {item.name}
                       </a>
@@ -915,7 +915,7 @@ function Footer() {
                     <li key={item.name}>
                       <a
                         href={item.href}
-                        className="leading-6 text-muted-foreground hover:text-black"
+                        className="leading-6 text-gray-500 hover:text-black"
                       >
                         {item.name}
                       </a>
@@ -927,7 +927,7 @@ function Footer() {
           </div>
         </div>
         <div className="mt-16 border-t border-black/10 pt-4 sm:mt-20 lg:mt-24">
-          <p className="text-sm leading-5 text-muted-foreground">
+          <p className="text-sm leading-5 text-gray-500">
             &copy; 2024 Papermark. All rights reserved.
           </p>
         </div>
@@ -1015,7 +1015,7 @@ function Testimonials() {
         <h2 className="text-4xl text-balance">
           Loved by over 3000 users.
           <br />
-          <span className="text-muted-foreground">
+          <span className="text-gray-500">
             Here&apos;s what they have to say about us.
           </span>
         </h2>
