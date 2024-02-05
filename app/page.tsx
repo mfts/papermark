@@ -116,7 +116,7 @@ export default function Home() {
             <h1 className="text-6xl md:text-8xl text-balance">
               The Open-Source DocSend Alternative
             </h1>
-            <p className="text-2xl mt-8 text-balance">
+            <p className="text-2xl mt-8 text-balance max-w-3xl">
               Papermark is an open-source document sharing infrastructure with
               built-in page analytics and custom domains.
             </p>
@@ -704,7 +704,7 @@ export default function Home() {
           className="w-full mx-auto max-w-7xl px-4 md:px-8 py-20"
           id="features"
         >
-          <h2 className="text-4xl text-balance pt-12 pb-20">
+          <h2 className="text-4xl text-balance pt-12 pb-20 max-w-3xl">
             Built for modern teams.{" "}
             <span className="text-gray-500">
               Share your documents with an impression that lasts.
