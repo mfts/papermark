@@ -1,9 +1,9 @@
 import { useRouter } from "next/router";
 import { motion } from "framer-motion";
 import {
-  DocumentIcon,
-  PresentationChartBarIcon,
-} from "@heroicons/react/24/outline";
+  File as DocumentIcon,
+  Presentation as PresentationChartBarIcon,
+} from "lucide-react";
 import { STAGGER_CHILD_VARIANTS } from "@/lib/constants";
 import NotionIcon from "@/components/shared/icons/notion";
 

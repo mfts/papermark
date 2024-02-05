@@ -12,6 +12,8 @@ const mapMessageRole = {
   system: { icon: <AlertCircle />, name: "System" },
   assistant: { icon: <PapermarkSparkle />, name: "Papermark Assistant" },
   function: { icon: <PapermarkSparkle />, name: "Papermark Assistant" },
+  data: { icon: <PapermarkSparkle />, name: "Papermark Assistant" },
+  tool: { icon: <PapermarkSparkle />, name: "Papermark Assistant" },
 };
 
 export interface ChatMessageProps {

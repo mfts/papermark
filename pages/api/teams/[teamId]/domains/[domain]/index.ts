@@ -10,7 +10,7 @@ import { errorhandler } from "@/lib/errorHandler";
 
 export default async function handle(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   if (req.method === "DELETE") {
     // DELETE /api/teams/:teamId/domains/:domain
@@ -23,8 +23,6 @@ export default async function handle(
     const { teamId, domain } = req.query as { teamId: string; domain: string };
 
     const userId = (session.user as CustomUser).id;
-
-    // console.log("Deleting domain:", domain);
 
     if (!domain) {
       return res.status(400).json("Domain is required for deletion");

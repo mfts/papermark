@@ -1,9 +1,5 @@
 import { Menu, Transition } from "@headlessui/react";
-import {
-  CheckIcon,
-  ChevronDownIcon,
-  ChevronUpIcon,
-} from "@heroicons/react/20/solid";
+import { CheckIcon, ChevronDownIcon, ChevronUpIcon } from "lucide-react";
 import { Fragment, Dispatch, SetStateAction } from "react";
 
 function classNames(...classes: string[]) {

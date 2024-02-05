@@ -7,7 +7,7 @@ import { errorhandler } from "@/lib/errorHandler";
 
 export default async function handle(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   if (req.method === "GET") {
     // POST /api/teams/:teamId/billing/manage – manage a user's subscription
@@ -44,8 +44,6 @@ export default async function handle(
     } catch (error) {
       errorhandler(error, res);
     }
-
-    // console.log("user", user);
   } else {
     res.setHeader("Allow", ["GET"]);
     return res.status(405).end(`Method ${req.method} Not Allowed`);

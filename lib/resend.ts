@@ -22,9 +22,6 @@ export const sendEmail = async ({
   test?: boolean;
 }) => {
   if (!resend) {
-    console.log(
-      "Resend is not configured. You need to add a RESEND_API_KEY in your .env file for emails to work.",
-    );
     return Promise.resolve();
   }
   return resend.emails.send({
