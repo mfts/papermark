@@ -1,10 +1,6 @@
 import Link from "next/link";
 import GitHubIcon from "@/components/shared/icons/github";
 
-function classNames(...classes: any[]) {
-  return classes.filter(Boolean).join(" ");
-}
-
 export default function Navbar() {
   return (
     <>
