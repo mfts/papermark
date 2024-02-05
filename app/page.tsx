@@ -1016,7 +1016,7 @@ function Testimonials() {
           Loved by over 3000 users.
           <br />
           <span className="text-muted-foreground">
-            Here's what they have to say about us.
+            Here&apos;s what they have to say about us.
           </span>
         </h2>
         <div className="mx-auto max-w-2xl lg:max-w-none mt-8">
