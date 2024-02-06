@@ -25,7 +25,6 @@ import { useDocumentLinks } from "@/lib/swr/use-document";
 import BarChart from "../shared/icons/bar-chart";
 import { cn, copyToClipboard, nFormatter, timeAgo } from "@/lib/utils";
 import MoreHorizontal from "../shared/icons/more-horizontal";
-import { Skeleton } from "../ui/skeleton";
 import LinksVisitors from "./links-visitors";
 import ChevronDown from "../shared/icons/chevron-down";
 import LinkSheet, {
@@ -39,8 +38,15 @@ import { toast } from "sonner";
 import { useRouter } from "next/router";
 import { usePlan } from "@/lib/swr/use-billing";
 import { useTeam } from "@/context/team-context";
+import { Archive, FilePen } from "lucide-react";
+import LinksTableSekeleton from "../skeletons/links-table-sekeleton";
+import ProcessStatusBar from "../documents/process-status-bar";
 
-export default function LinksTable() {
+export default function LinksTable({
+  primaryVersion,
+}: {
+  primaryVersion: any;
+}) {
   const { links } = useDocumentLinks();
   const router = useRouter();
   const { plan } = usePlan();
@@ -131,21 +137,21 @@ export default function LinksTable() {
 
   return (
     <>
-      <div className="w-full sm:p-4">
+      <div className="w-full">
         <div>
-          <h2 className="p-4">All links</h2>
+          <h2 className="mb-2 md:mb-4">All links</h2>
         </div>
-        <div className="rounded-md sm:border">
+        <div className="rounded-md border">
           <Table>
             <TableHeader>
-              <TableRow className="hover:bg-transparent">
-                <TableHead className="font-medium hidden sm:table-cell">
-                  Name
+              <TableRow className="hover:bg-transparent *:whitespace-nowrap *:font-medium">
+                <TableHead>Name</TableHead>
+                <TableHead className="w-[150px] sm:w-[200px] md:w-[250px]">
+                  Link
                 </TableHead>
-                <TableHead className="font-medium sm:w-[250px]">Link</TableHead>
-                <TableHead className="font-medium">Views</TableHead>
-                <TableHead className="font-medium">Last Viewed</TableHead>
-                <TableHead className="font-medium text-center sm:text-right"></TableHead>
+                <TableHead className="w-[250px] sm:w-auto">Views</TableHead>
+                <TableHead>Last Viewed</TableHead>
+                <TableHead className="ftext-center sm:text-right"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -156,7 +162,7 @@ export default function LinksTable() {
                     <Collapsible key={link.id} asChild>
                       <>
                         <TableRow key={link.id} className="group/row">
-                          <TableCell className="hidden sm:table-cell font-medium truncate w-[220px]">
+                          <TableCell className="font-medium truncate w-[220px]">
                             {link.name || "No link name"}{" "}
                             {link.domainId && hasFreePlan ? (
                               <span className="text-foreground bg-destructive ring-1 ring-destructive rounded-full px-2.5 py-0.5 text-xs ml-2">
@@ -164,60 +170,63 @@ export default function LinksTable() {
                               </span>
                             ) : null}
                           </TableCell>
-                          <TableCell className="max-w-[150px] sm:min-w-[450px]">
+                          <TableCell className="max-w-[250px] sm:min-w-[300px] md:min-w-[400px] lg:min-w-[450px]">
                             <div
                               className={cn(
-                                `group/cell flex items-center gap-x-4 rounded-md text-secondary-foreground px-3 py-1 group-hover/row:ring-1 group-hover/row:ring-gray-400 group-hover/row:dark:ring-gray-100 transition-all`,
+                                `group/cell relative w-full overflow-hidden flex items-center gap-x-4 rounded-sm text-secondary-foreground text-center px-3 py-1.5 md:py-1 group-hover/row:ring-1 group-hover/row:ring-gray-400 group-hover/row:dark:ring-gray-100 transition-all truncate`,
                                 link.domainId && hasFreePlan
                                   ? "bg-destructive hover:bg-red-700 hover:dark:bg-red-200"
                                   : "bg-secondary hover:bg-emerald-700 hover:dark:bg-emerald-200",
                               )}
                             >
-                              <div className="whitespace-nowrap hidden sm:flex text-sm group-hover/cell:hidden">
+                              {/* Progress bar */}
+                              {primaryVersion.type !== "notion" &&
+                              !primaryVersion.hasPages ? (
+                                <ProcessStatusBar
+                                  documentVersionId={primaryVersion.id}
+                                  className="absolute z-20 top-0 left-0 right-0 bottom-0 h-full gap-x-8 flex items-center"
+                                />
+                              ) : null}
+
+                              <div className="whitespace-nowrap w-full flex text-xs md:text-sm group-hover/cell:opacity-0">
                                 {link.domainId
                                   ? `https://${link.domainSlug}/${link.slug}`
                                   : `https://${process.env.NEXT_PUBLIC_ROOT_DOMAIN}/view/${link.id}`}
                               </div>
-                              <div className="flex sm:hidden whitespace-nowrap text-sm group-hover/cell:hidden truncate">{`${link.id}`}</div>
+
                               {link.domainId && hasFreePlan ? (
                                 <button
-                                  className="whitespace-nowrap text-sm text-center group-hover/cell:text-primary-foreground hidden group-hover/cell:block w-full"
+                                  className="whitespace-nowrap text-sm text-center group-hover/cell:text-primary-foreground hidden group-hover/cell:block w-full absolute top-0 left-0 right-0 bottom-0 z-10"
                                   onClick={() =>
                                     router.push("/settings/billing")
                                   }
                                   title="Upgrade to activate link"
                                 >
-                                  Upgrade{" "}
-                                  <span className="hidden sm:inline-flex">
-                                    to activate link
-                                  </span>
+                                  Upgrade to activate link
                                 </button>
                               ) : (
                                 <button
-                                  className="whitespace-nowrap text-sm text-center group-hover/cell:text-primary-foreground hidden group-hover/cell:block w-full"
-                                  onClick={
-                                    link.domainId
-                                      ? () =>
-                                          handleCopyToClipboard(
-                                            `https://${link.domainSlug}/${link.slug}`,
-                                          )
-                                      : () =>
-                                          handleCopyToClipboard(
-                                            `https://${process.env.NEXT_PUBLIC_ROOT_DOMAIN}/view/${link.id}`,
-                                          )
+                                  className="whitespace-nowrap w-full text-xs sm:text-sm text-center group-hover/cell:text-primary-foreground hidden group-hover/cell:block absolute top-0 left-0 right-0 bottom-0 z-10"
+                                  onClick={() =>
+                                    handleCopyToClipboard(
+                                      link.domainId
+                                        ? `https://${link.domainSlug}/${link.slug}`
+                                        : `https://${process.env.NEXT_PUBLIC_ROOT_DOMAIN}/view/${link.id}`,
+                                    )
                                   }
                                   title="Copy to clipboard"
                                 >
-                                  Copy{" "}
-                                  <span className="hidden sm:inline-flex">
-                                    to Clipboard
-                                  </span>
+                                  Copy to Clipboard
                                 </button>
                               )}
                             </div>
                           </TableCell>
                           <TableCell>
-                            <CollapsibleTrigger asChild>
+                            <CollapsibleTrigger
+                              disabled={
+                                Number(nFormatter(link._count.views)) === 0
+                              }
+                            >
                               <div className="flex items-center space-x-1 [&[data-state=open]>svg.chevron]:rotate-180">
                                 <BarChart className="h-4 w-4 text-muted-foreground" />
                                 <p className="whitespace-nowrap text-sm text-muted-foreground">
@@ -253,12 +262,12 @@ export default function LinksTable() {
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
                                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                <DropdownMenuSeparator />
                                 <DropdownMenuItem
                                   onClick={() => handleEditLink(link)}
                                 >
-                                  Edit Link
+                                  <FilePen className="w-4 h-4 mr-2" /> Edit Link
                                 </DropdownMenuItem>
-                                <DropdownMenuSeparator />
                                 <DropdownMenuItem
                                   className="text-destructive focus:bg-destructive focus:text-destructive-foreground"
                                   onClick={() =>
@@ -269,7 +278,7 @@ export default function LinksTable() {
                                     )
                                   }
                                 >
-                                  Archive
+                                  <Archive className="w-4 h-4 mr-2" /> Archive
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
@@ -285,30 +294,19 @@ export default function LinksTable() {
                     </Collapsible>
                   ))
               ) : (
-                <TableRow>
-                  <TableCell className="min-w-[100px]">
-                    <Skeleton className="h-6 w-full" />
-                  </TableCell>
-                  <TableCell className="min-w-[450px]">
-                    <Skeleton className="h-6 w-full" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-6 w-24" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-6 w-24" />
-                  </TableCell>
-                </TableRow>
+                <LinksTableSekeleton />
               )}
             </TableBody>
           </Table>
         </div>
+
         <LinkSheet
           isOpen={isLinkSheetVisible}
           setIsOpen={setIsLinkSheetVisible}
           currentLink={selectedLink}
         />
-        {archivedLinksCount > 0 ? (
+
+        {archivedLinksCount > 0 && (
           <Collapsible asChild>
             <>
               <CollapsibleTrigger asChild>
@@ -321,116 +319,109 @@ export default function LinksTable() {
                   <ChevronDown className="h-4 w-4 text-gray-400 transition-transform duration-200 chevron" />
                 </Button>
               </CollapsibleTrigger>
-              <CollapsibleContent>
+              <CollapsibleContent className="mt-2">
                 <div>
-                  <h2 className="p-4">Archived Links</h2>
+                  <h2 className="mb-2 md:mb-4">Archived Links</h2>
                 </div>
-                <div className="rounded-md sm:border">
+                <div className="rounded-md border">
                   <Table>
                     <TableHeader>
-                      <TableRow className="hover:bg-transparent">
-                        <TableHead className="font-medium hidden sm:table-cell">
-                          Name
-                        </TableHead>
-                        <TableHead className="font-medium sm:w-[250px]">
+                      <TableRow className="hover:bg-transparent *:whitespace-nowrap *:font-medium">
+                        <TableHead>Name</TableHead>
+                        <TableHead className="w-[150px] sm:w-[200px] md:w-[250px]">
                           Link
                         </TableHead>
-                        <TableHead className="font-medium">Views</TableHead>
-                        <TableHead className="font-medium">
-                          Last Viewed
-                        </TableHead>
-                        <TableHead className="font-medium text-center sm:text-right"></TableHead>
+                        <TableHead>Views</TableHead>
+                        <TableHead>Last Viewed</TableHead>
+                        <TableHead className="ftext-center sm:text-right"></TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {links
-                        ? links
-                            .filter((link) => link.isArchived)
-                            .map((link) => (
-                              <>
-                                <TableRow key={link.id} className="group/row">
-                                  <TableCell className="hidden sm:table-cell truncate w-[220px]">
-                                    {link.name || "No link name"}
-                                  </TableCell>
-                                  <TableCell className="max-w-[150px] sm:min-w-[450px]">
-                                    <div className="flex items-center gap-x-4 rounded-md text-secondary-foreground bg-secondary group-hover/row:ring-1 group-hover/row:ring-gray-400 group-hover/row:dark:ring-gray-100 px-3 py-1">
-                                      <div className="whitespace-nowrap hidden sm:flex text-sm">
-                                        {link.domainId
-                                          ? `https://${link.domainSlug}/${link.slug}`
-                                          : `https://${process.env.NEXT_PUBLIC_ROOT_DOMAIN}/view/${link.id}`}
-                                      </div>
-                                      <div className="flex sm:hidden whitespace-nowrap text-sm truncate">{`${link.id}`}</div>
-                                    </div>
-                                  </TableCell>
-                                  <TableCell>
-                                    <div className="flex items-center space-x-1 [&[data-state=open]>svg.chevron]:rotate-180">
-                                      <BarChart className="h-4 w-4 text-gray-400" />
-                                      <p className="whitespace-nowrap text-sm text-gray-400">
-                                        {nFormatter(link._count.views)}
-                                        <span className="ml-1 hidden sm:inline-block">
-                                          views
-                                        </span>
-                                      </p>
-                                    </div>
-                                  </TableCell>
-                                  <TableCell className="text-sm text-gray-400">
-                                    {link.views[0] ? (
-                                      <time
-                                        dateTime={new Date(
-                                          link.views[0].viewedAt,
-                                        ).toISOString()}
+                      {links &&
+                        links
+                          .filter((link) => link.isArchived)
+                          .map((link) => (
+                            <>
+                              <TableRow key={link.id} className="group/row">
+                                <TableCell className="truncate w-[180px]">
+                                  {link.name || "No link name"}
+                                </TableCell>
+                                <TableCell className="max-w-[250px] sm:min-w-[300px] md:min-w-[400px] lg:min-w-[450px]">
+                                  <div className="flex items-center gap-x-4 whitespace-nowrap text-xs sm:text-sm rounded-sm text-secondary-foreground bg-secondary px-3 py-1.5 sm:py-1">
+                                    {link.domainId
+                                      ? `https://${link.domainSlug}/${link.slug}`
+                                      : `https://${process.env.NEXT_PUBLIC_ROOT_DOMAIN}/view/${link.id}`}
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex items-center space-x-1 [&[data-state=open]>svg.chevron]:rotate-180">
+                                    <BarChart className="h-4 w-4 text-gray-400" />
+                                    <p className="whitespace-nowrap text-sm text-gray-400">
+                                      {nFormatter(link._count.views)}
+                                      <span className="ml-1 hidden sm:inline-block">
+                                        views
+                                      </span>
+                                    </p>
+                                  </div>
+                                </TableCell>
+                                <TableCell className="text-sm text-gray-400">
+                                  {link.views[0] ? (
+                                    <time
+                                      dateTime={new Date(
+                                        link.views[0].viewedAt,
+                                      ).toISOString()}
+                                    >
+                                      {timeAgo(link.views[0].viewedAt)}
+                                    </time>
+                                  ) : (
+                                    "-"
+                                  )}
+                                </TableCell>
+                                <TableCell className="text-center sm:text-right">
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <Button
+                                        variant="ghost"
+                                        className="h-8 w-8 p-0"
                                       >
-                                        {timeAgo(link.views[0].viewedAt)}
-                                      </time>
-                                    ) : (
-                                      "-"
-                                    )}
-                                  </TableCell>
-                                  <TableCell className="text-center sm:text-right">
-                                    <DropdownMenu>
-                                      <DropdownMenuTrigger asChild>
-                                        <Button
-                                          variant="ghost"
-                                          className="h-8 w-8 p-0"
-                                        >
-                                          <span className="sr-only">
-                                            Open menu
-                                          </span>
-                                          <MoreHorizontal className="h-4 w-4" />
-                                        </Button>
-                                      </DropdownMenuTrigger>
-                                      <DropdownMenuContent align="end">
-                                        <DropdownMenuLabel>
-                                          Actions
-                                        </DropdownMenuLabel>
+                                        <span className="sr-only">
+                                          Open menu
+                                        </span>
+                                        <MoreHorizontal className="h-4 w-4" />
+                                      </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                      <DropdownMenuLabel>
+                                        Actions
+                                      </DropdownMenuLabel>
 
-                                        <DropdownMenuSeparator />
-                                        <DropdownMenuItem
-                                          className="text-destructive focus:bg-destructive focus:text-destructive-foreground"
-                                          onClick={() =>
-                                            handleArchiveLink(
-                                              link.id,
-                                              link.documentId,
-                                              link.isArchived,
-                                            )
-                                          }
-                                        >
-                                          Reactivate
-                                        </DropdownMenuItem>
-                                      </DropdownMenuContent>
-                                    </DropdownMenu>
-                                  </TableCell>
-                                </TableRow>
-                              </>
-                            ))
-                        : null}
+                                      <DropdownMenuSeparator />
+                                      <DropdownMenuItem
+                                        className="text-destructive focus:bg-destructive focus:text-destructive-foreground"
+                                        onClick={() =>
+                                          handleArchiveLink(
+                                            link.id,
+                                            link.documentId,
+                                            link.isArchived,
+                                          )
+                                        }
+                                      >
+                                        <Archive className="w-4 h-4 mr-2" />
+                                        Reactivate
+                                      </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
+                                </TableCell>
+                              </TableRow>
+                            </>
+                          ))}
                     </TableBody>
                   </Table>
                 </div>
               </CollapsibleContent>
             </>
           </Collapsible>
-        ) : null}
+        )}
       </div>
     </>
   );

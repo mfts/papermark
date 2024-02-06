@@ -1,6 +1,7 @@
 import { useVisitorStats } from "@/lib/swr/use-stats";
 import ErrorPage from "next/error";
 import BarChartComponent from "@/components/charts/bar-chart";
+import StatsChartSkeleton from "../skeletons/stats-chart-skeleton";
 
 export default function VisitorChart({
   documentId,
@@ -18,7 +19,7 @@ export default function VisitorChart({
   }
 
   if (!stats?.duration.data) {
-    return <div>No data</div>;
+    return <StatsChartSkeleton />;
   }
 
   let durationData = Array.from({ length: totalPages }, (_, i) => ({
@@ -36,7 +37,7 @@ export default function VisitorChart({
   });
 
   return (
-    <div className="">
+    <div className="pl-0.5 md:pl-1 pb-0.5 md:pb-1 border-l border-b rounded-bl-lg">
       <BarChartComponent data={durationData} isSum={true} />
     </div>
   );

@@ -1,7 +1,8 @@
 import { useStats } from "@/lib/swr/use-stats";
 import ErrorPage from "next/error";
 import StatsElement from "./stats-element";
-import StatsElementPlaceholder from "./stats-element-placeholder";
+import StatsCardSkeleton from "../skeletons/stats-card-skeleton";
+import { BarChart3, ThumbsUp, TimerIcon } from "lucide-react";
 
 export default function StatsCard() {
   const { stats, loading, error } = useStats();
@@ -12,9 +13,9 @@ export default function StatsCard() {
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-3 border-b border-foreground/5">
+      <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-3 border-foreground/5 space-y-2 sm:space-y-0 sm:space-x-2 lg:space-x-3">
         {Array.from({ length: 3 }).map((_, i) => (
-          <StatsElementPlaceholder key={i} statIdx={i} />
+          <StatsCardSkeleton key={i} />
         ))}
       </div>
     );
@@ -30,16 +31,19 @@ export default function StatsCard() {
   const statistics = [
     {
       name: "Number of visits",
+      icon: BarChart3,
       value: stats?.views.length.toString() ?? "0",
       active: true,
     },
     {
       name: "Number of reactions",
+      icon: ThumbsUp,
       value: groupedReactionsTotal,
       active: true,
     },
     {
       name: "Total average view duration",
+      icon: TimerIcon,
       value:
         stats?.total_duration == null
           ? "46"
@@ -56,7 +60,7 @@ export default function StatsCard() {
   ];
 
   return stats && stats.views.length > 0 ? (
-    <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-3 border-b border-foreground/5">
+    <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-3 border-foreground/5 space-y-2 sm:space-y-0 sm:space-x-2 lg:space-x-3">
       {statistics.map((stat, statIdx) => (
         <StatsElement key={statIdx} stat={stat} statIdx={statIdx} />
       ))}

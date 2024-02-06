@@ -167,8 +167,8 @@ export default function LinkSheet({
 
   return (
     <Sheet open={isOpen} onOpenChange={(open: boolean) => setIsOpen(open)}>
-      <SheetContent className="bg-background text-foreground flex flex-col justify-between">
-        <SheetHeader>
+      <SheetContent className="bg-background text-foreground flex flex-col justify-between px-4 md:px-5 w-[90%] sm:w-[450px]">
+        <SheetHeader className="text-start">
           <SheetTitle>
             {currentLink ? "Edit link" : "Create a new link"}
           </SheetTitle>

@@ -1,7 +1,9 @@
-import { classNames } from "@/lib/utils";
+import { cn } from "@/lib/utils";
+import { LucideType } from "lucide-react";
 
 interface Stat {
   name: string;
+  icon: typeof LucideType;
   value: string;
   unit?: string;
   active: boolean;
@@ -15,24 +17,27 @@ export default function StatsElement({ stat, statIdx }: StatsElementProps) {
   return (
     <div
       key={statIdx}
-      className={classNames(
-        statIdx % 2 === 1 ? "sm:border-l" : statIdx === 2 ? "lg:border-l" : "",
-        "border-t border-foreground/5 py-6 px-4 sm:px-6 lg:px-8",
-      )}
+      className="border border-foreground/5 py-6 px-6 xl:px-8 rounded-lg overflow-hidden"
     >
-      <p
-        className={classNames(
+      <div
+        className={cn(
+          "flex sm:flex-col lg:flex-row items-center sm:items-start lg:items-center space-x-2 sm:space-x-0 sm:space-y-2 lg:space-y-0 lg:space-x-2",
           !stat.active
             ? "text-gray-300 dark:text-gray-700"
             : "text-muted-foreground",
-          "text-sm font-medium leading-6",
         )}
       >
-        {stat.name}
-      </p>
-      <p className="mt-2 flex items-baseline gap-x-2">
+        <div className="*:w-5 sm:*:w-6 lg:*:w-5 *:h-5 sm:*:h-6 lg:*:h-5">
+          <stat.icon />
+        </div>
+        <p className="text-sm font-medium leading-6 whitespace-nowrap capitalize">
+          {stat.name}
+        </p>
+      </div>
+
+      <p className="mt-3 flex items-baseline gap-x-2">
         <span
-          className={classNames(
+          className={cn(
             !stat.active
               ? "text-gray-300 dark:text-gray-700"
               : "text-foreground",
@@ -43,7 +48,7 @@ export default function StatsElement({ stat, statIdx }: StatsElementProps) {
         </span>
         {stat.unit ? (
           <span
-            className={classNames(
+            className={cn(
               !stat.active
                 ? "text-gray-300 dark:text-gray-700"
                 : "text-muted-foreground",
