@@ -62,7 +62,7 @@ export default function Home() {
                 <Link
                   aria-label="Return home"
                   className="flex h-full flex-none items-center rounded-md text-black ring-0"
-                  href="/v1"
+                  href="/"
                 >
                   <div className="flex items-center space-x-2">
                     <span className="text-2xl font-bold tracking-tighter text-black">
