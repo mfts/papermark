@@ -27,6 +27,11 @@ export const authOptions: NextAuthOptions = {
       clientId: process.env.GOOGLE_CLIENT_ID as string,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
       allowDangerousEmailAccountLinking: true,
+      authorization: {
+        params: {
+          scope: "openid https://www.googleapis.com/auth/drive",
+        },
+      },
     }),
     LinkedInProvider({
       clientId: process.env.LINKEDIN_CLIENT_ID as string,
@@ -85,12 +90,18 @@ export const authOptions: NextAuthOptions = {
     },
   },
   callbacks: {
-    jwt: async ({ token, user }) => {
+    jwt: async ({ token, user, account }) => {
       if (!token.email) {
         return {};
       }
       if (user) {
         token.user = user;
+      }
+      if (account) {
+        token.access_token = account.access_token;
+        token.provider = account.provider;
+        // Google Refresh token is provided on the first login only
+        token.refresh_token = account.refresh_token;
       }
       return token;
     },
@@ -100,6 +111,12 @@ export const authOptions: NextAuthOptions = {
         // @ts-ignore
         ...(token || session).user,
       };
+      // @ts-ignore
+      session.accessToken = token.access_token;
+      // @ts-ignore
+      session.refreshToken = token.refresh_token;
+      // @ts-ignore
+      session.provider = token.provider;
       return session;
     },
   },
