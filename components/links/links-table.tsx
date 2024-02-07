@@ -39,6 +39,8 @@ import { toast } from "sonner";
 import { useRouter } from "next/router";
 import { usePlan } from "@/lib/swr/use-billing";
 import { useTeam } from "@/context/team-context";
+import ShareLink from "./share-link";
+import { Share2 } from "lucide-react";
 
 export default function LinksTable() {
   const { links } = useDocumentLinks();
@@ -48,6 +50,7 @@ export default function LinksTable() {
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isLinkSheetVisible, setIsLinkSheetVisible] = useState<boolean>(false);
+  const [isShareVisible, setIsShareVisible] = useState<boolean>(false);
   const [selectedLink, setSelectedLink] =
     useState<DEFAULT_LINK_TYPE>(DEFAULT_LINK_PROPS);
 
@@ -254,6 +257,11 @@ export default function LinksTable() {
                               <DropdownMenuContent align="end">
                                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                 <DropdownMenuItem
+                                  onClick={() => setIsShareVisible(true)}
+                                >
+                                  <Share2 className="w-4 h-4 mr-2" /> Share Link
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
                                   onClick={() => handleEditLink(link)}
                                 >
                                   Edit Link
@@ -275,6 +283,18 @@ export default function LinksTable() {
                             </DropdownMenu>
                           </TableCell>
                         </TableRow>
+
+                        <ShareLink
+                          url={
+                            link.domainId
+                              ? `https://${link.domainSlug}/${link.slug}`
+                              : `https://${process.env.NEXT_PUBLIC_ROOT_DOMAIN}/view/${link.id}`
+                          }
+                          title="Shared a document from papermarkio"
+                          isOpen={isShareVisible}
+                          setIsOpen={setIsShareVisible}
+                        />
+
                         <CollapsibleContent asChild>
                           <LinksVisitors
                             linkName={link.name || "No link name"}
@@ -308,6 +328,7 @@ export default function LinksTable() {
           setIsOpen={setIsLinkSheetVisible}
           currentLink={selectedLink}
         />
+
         {archivedLinksCount > 0 ? (
           <Collapsible asChild>
             <>
