@@ -47,7 +47,7 @@ model User {
   accounts       Account[]
   sessions       Session[]
   documents      Document[]
-  dataroom       Dataroom[]
+  datarooms      Dataroom[]
   teams          UserTeam[]
   domains        Domain[]
   conversations  Conversation[]
