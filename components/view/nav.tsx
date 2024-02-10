@@ -3,6 +3,8 @@ import { useRouter } from "next/router";
 import { Button } from "../ui/button";
 import PapermarkSparkle from "../shared/icons/papermark-sparkle";
 import { Download } from "lucide-react";
+import { Brand } from "@prisma/client";
+import Image from "next/image";
 
 export default function Nav({
   pageNumber,
@@ -10,12 +12,14 @@ export default function Nav({
   allowDownload,
   assistantEnabled,
   file,
+  brand,
 }: {
-  pageNumber: number;
-  numPages: number;
+  pageNumber?: number;
+  numPages?: number;
   allowDownload?: boolean;
   assistantEnabled?: boolean;
   file?: { name: string; url: string };
+  brand?: Brand;
 }) {
   const router = useRouter();
   const { linkId } = router.query as { linkId: string };
@@ -43,14 +47,34 @@ export default function Nav({
   }
 
   return (
-    <nav className="bg-black">
+    <nav
+      className="bg-black"
+      style={{
+        backgroundColor: brand && brand.brandColor ? brand.brandColor : "black",
+      }}
+    >
       <div className="mx-auto px-2 sm:px-6 lg:px-8">
         <div className="relative flex h-16 items-center justify-between">
           <div className="flex flex-1 items-stretch justify-start">
-            <div className="flex flex-shrink-0 items-center">
-              <p className="text-2xl font-bold tracking-tighter text-white">
-                Papermark
-              </p>
+            <div className="flex flex-shrink-0 items-center relative h-8 w-36">
+              {brand && brand.logo ? (
+                <Image
+                  className="object-contain"
+                  src={brand.logo}
+                  alt="Logo"
+                  fill
+                  quality={100}
+                  priority
+                />
+              ) : (
+                <Link
+                  href="https://www.papermark.io"
+                  target="_blank"
+                  className="text-2xl font-bold tracking-tighter text-white"
+                >
+                  Papermark
+                </Link>
+              )}
             </div>
           </div>
           <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0 space-x-2">
@@ -75,10 +99,12 @@ export default function Nav({
                 </Button>
               </div>
             ) : null}
-            <div className="bg-gray-900 text-white rounded-md h-10 px-4 py-2 items-center flex text-sm font-medium">
-              <span>{pageNumber}</span>
-              <span className="text-gray-400"> / {numPages}</span>
-            </div>
+            {pageNumber && numPages ? (
+              <div className="bg-gray-900 text-white rounded-md h-10 px-4 py-2 items-center flex text-sm font-medium">
+                <span>{pageNumber}</span>
+                <span className="text-gray-400"> / {numPages}</span>
+              </div>
+            ) : null}
           </div>
         </div>
       </div>

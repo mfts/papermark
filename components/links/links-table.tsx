@@ -64,10 +64,18 @@ export default function LinksTable() {
       expiresAt: link.expiresAt,
       password: link.password,
       emailProtected: link.emailProtected,
+      emailAuthenticated: link.emailAuthenticated,
       allowDownload: link.allowDownload ? link.allowDownload : false,
       enableNotification: link.enableNotification
         ? link.enableNotification
         : false,
+      enableFeedback: link.enableFeedback ? link.enableFeedback : false,
+      enableCustomMetatag: link.enableCustomMetatag
+        ? link.enableCustomMetatag
+        : false,
+      metaTitle: link.metaTitle,
+      metaDescription: link.metaDescription,
+      metaImage: link.metaImage,
     });
     //wait for dropdown to close before opening the link sheet
     setTimeout(() => {

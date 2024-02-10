@@ -67,6 +67,7 @@ model Team {
   domains        Domain[]
   invitations    Invitation[]
   sentEmails     SentEmail[]
+  brand          Brand?
   plan           String       @default("free")
   stripeId       String?      @unique // Stripe subscription / customer ID
   subscriptionId String?      @unique // Stripe subscription ID
@@ -74,6 +75,18 @@ model Team {
   endsAt         DateTime? // Stripe subscription end date
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
+}
+
+model Brand {
+  id          String   @id @default(cuid())
+  logo        String? // This should be a reference to where the file is stored (S3, Google Cloud Storage, etc.)
+  brandColor  String? // This should be a reference to the brand color
+  accentColor String? // This should be a reference to the accent color
+  teamId      String   @unique
+  team        Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 enum Role {
@@ -167,6 +180,7 @@ model Link {
   password           String? // Optional password for link protection
   allowedEmails      String[] // Array of emails allowed to view the document
   emailProtected     Boolean   @default(true) // Optional email protection
+  emailAuthenticated Boolean   @default(false) // Optional email authentication flag
   allowDownload      Boolean?  @default(false) // Optional give user a option to allow to download the document
   isArchived         Boolean   @default(false) // Indicates if the link is archived
   views              View[]
@@ -176,6 +190,13 @@ model Link {
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
   enableNotification Boolean?  @default(true) // Optional give user a option to pause/resume the notifications
+  enableFeedback     Boolean?  @default(true) // Optional give user a option to enable the feedback toolbar
+
+  // custom metatags
+  metaTitle String? // This will be the meta title of the link
+  metaDescription String? // This will be the meta description of the link
+  metaImage String? // This will be the meta image of the link
+  enableCustomMetatag Boolean? @default(false) // Optional give user a option to enable the custom metatag
 
   @@unique([domainSlug, slug])
   @@index([documentId])
@@ -205,6 +226,7 @@ model View {
   document    Document   @relation(fields: [documentId], references: [id], onDelete: Cascade)
   documentId  String
   viewerEmail String? // Email of the viewer if known
+  verified    Boolean    @default(false) // Whether the viewer email has been verified
   viewedAt    DateTime   @default(now())
   reactions   Reaction[]
 
@@ -213,7 +235,6 @@ model View {
 }
 
 enum DataroomType {
-  HIERARCHICAL
   PAGED
 }
 
@@ -263,6 +284,7 @@ model DataroomFile {
   parentFolderId               String?
   dataroom                     Dataroom               @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
   dataroomId                   String
+}
 
 model Reaction {
   id         String   @id @default(cuid())

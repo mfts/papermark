@@ -1,17 +1,16 @@
-import { useRouter } from "next/router";
 import useSWR from "swr";
 import { fetcher } from "@/lib/utils";
 import { DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
 import { useTeam } from "@/context/team-context";
 
 export default function useDocuments() {
-  const router = useRouter();
   const teamInfo = useTeam();
 
-  const { data: documents, isValidating } = useSWR<
+  const { data: documents, error } = useSWR<
     DocumentWithLinksAndLinkCountAndViewCount[]
   >(
-    router.isReady && `/api/teams/${teamInfo?.currentTeam?.id}/documents`,
+    teamInfo?.currentTeam?.id &&
+      `/api/teams/${teamInfo?.currentTeam?.id}/documents`,
     fetcher,
     {
       revalidateOnFocus: false,
@@ -21,7 +20,7 @@ export default function useDocuments() {
 
   return {
     documents,
-    loading: documents ? false : true,
-    isValidating,
+    loading: !documents && !error,
+    error,
   };
 }

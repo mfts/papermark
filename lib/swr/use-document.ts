@@ -14,7 +14,8 @@ export function useDocument() {
   };
 
   const { data: document, error } = useSWR<DocumentWithVersion>(
-    id &&
+    teamInfo?.currentTeam?.id &&
+      id &&
       `/api/teams/${teamInfo?.currentTeam?.id}/documents/${encodeURIComponent(
         id,
       )}`,
@@ -41,7 +42,8 @@ export function useDocumentLinks() {
   };
 
   const { data: links, error } = useSWR<LinkWithViews[]>(
-    id &&
+    teamInfo?.currentTeam?.id &&
+      id &&
       `/api/teams/${teamInfo?.currentTeam?.id}/documents/${encodeURIComponent(
         id,
       )}/links`,
@@ -78,7 +80,8 @@ export function useDocumentVisits() {
   };
 
   const { data: views, error } = useSWR<ViewWithDuration[]>(
-    id &&
+    teamInfo?.currentTeam?.id &&
+      id &&
       `/api/teams/${teamInfo?.currentTeam?.id}/documents/${encodeURIComponent(
         id,
       )}/views`,

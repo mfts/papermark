@@ -8,7 +8,7 @@ import { checkPassword } from "@/lib/utils";
 const bodySchema = z.object({
   email: z.string().email(),
   identifier: z.string(), //linkId if link, dataroomId if dataroom
-  type: z.enum(["DOCUMENT", "PAGED DATAROOM", "HIERARCHICAL DATAROOM"]),
+  type: z.enum(["DOCUMENT", "PAGED DATAROOM"]),
   password: z.string().nullable(),
   emailProtected: z.boolean(),
 });
@@ -33,7 +33,7 @@ export default async function handle(
             id: identifier,
           },
         });
-        if (!dataroom?.emailProtected && dataroom?.type === "HIERARCHICAL") {
+        if (!dataroom?.emailProtected) {
           return res.status(200).json({ message: "Verification successful" });
         }
       }
@@ -77,7 +77,7 @@ export default async function handle(
     // Input validation
     let email: string;
     let identifier: string;
-    let type: "DOCUMENT" | "PAGED DATAROOM" | "HIERARCHICAL DATAROOM";
+    let type: "DOCUMENT" | "PAGED DATAROOM";
     let password: string | null;
     let emailProtected: boolean;
     try {
@@ -130,21 +130,6 @@ export default async function handle(
     }
 
     let homeFolderId: string = "";
-    if (type === "HIERARCHICAL DATAROOM") {
-      const folder = await prisma.dataroomFolder.findFirst({
-        where: {
-          dataroomId: identifier,
-          parentFolderId: null,
-        },
-        select: {
-          id: true,
-        },
-      });
-      if (!folder) {
-        return res.status(404).json({ message: "Home folder doesn't exists" });
-      }
-      homeFolderId = folder.id;
-    }
 
     // Generate authcode
     const authenticationCode = await generateAuthenticationCode(
@@ -155,9 +140,7 @@ export default async function handle(
     const URL =
       type === "DOCUMENT"
         ? `${process.env.NEXT_PUBLIC_BASE_URL}/view/${identifier}?authenticationCode=${authenticationCode}`
-        : type === "PAGED DATAROOM"
-          ? `${process.env.NEXT_PUBLIC_BASE_URL}/view/dataroom/${identifier}?authenticationCode=${authenticationCode}`
-          : `${process.env.NEXT_PUBLIC_BASE_URL}/view/dataroom/hierarchical/${identifier}/${homeFolderId}?authenticationCode=${authenticationCode}`;
+        : `${process.env.NEXT_PUBLIC_BASE_URL}/view/dataroom/${identifier}?authenticationCode=${authenticationCode}`
 
     console.log(URL);
     //Send email only if emailProtected

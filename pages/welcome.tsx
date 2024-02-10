@@ -2,7 +2,7 @@ import { useRouter } from "next/router";
 import Intro from "@/components/welcome/intro";
 import Next from "@/components/welcome/next";
 import Upload from "@/components/welcome/upload";
-import { ArrowLeftIcon } from "@heroicons/react/24/outline";
+import { ArrowLeft as ArrowLeftIcon } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import NotionForm from "@/components/welcome/notion-form";
 

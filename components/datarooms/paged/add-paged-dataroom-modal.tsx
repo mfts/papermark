@@ -11,7 +11,7 @@ import { pdfjs } from "react-pdf";
 import { copyToClipboard } from "@/lib/utils";
 import { Button } from "../../ui/button";
 import { usePlausible } from "next-plausible";
-import { PlusIcon } from "@heroicons/react/24/solid";
+import { PlusIcon } from "lucide-react";
 import { Input } from "../../ui/input";
 import { AddDocumentToDataroomModal } from "./add-document-to-dataroom-modal";
 import DocumentMetadataCard from "./document-metadata-card";

@@ -5,6 +5,7 @@ const tabs = [
   { name: "General", href: "/settings/general" },
   { name: "People", href: "/settings/people" },
   { name: "Domains", href: "/settings/domains" },
+  { name: "Branding", href: "/settings/branding" },
   { name: "Billing", href: "/settings/billing" },
 ];
 

@@ -97,10 +97,7 @@ export default function DataroomView({
       },
       body: JSON.stringify({
         identifier: dataroomId,
-        type:
-          dataroom.type === "PAGED"
-            ? "PAGED DATAROOM"
-            : "HIERARCHICAL DATAROOM",
+        type: "PAGED DATAROOM",
         email: data.email,
         password: data.password,
         emailProtected: dataroom.emailProtected,

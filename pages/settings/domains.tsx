@@ -12,8 +12,6 @@ export default function Domains() {
   const { domains } = useDomains();
   const teamInfo = useTeam();
 
-  console.log("domains", domains);
-
   const [open, setOpen] = useState<boolean>(false);
 
   const handleDomainDeletion = (deletedDomain: string) => {

@@ -72,16 +72,6 @@ export type DomainVerificationStatusProps =
   | "Domain Not Found"
   | "Unknown Error";
 
-//FolderDirectory for hierarchical dataroom
-export type FolderDirectory = {
-  [folderId: string]: {
-    name: string;
-    subfolders: string[];
-    files: DataroomFile[];
-    href: string; //Relative path for that folder
-  };
-};
-
 // From https://vercel.com/docs/rest-api/endpoints#get-a-project-domain
 export interface DomainResponse {
   name: string;

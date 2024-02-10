@@ -21,7 +21,11 @@ export default function EmailProtectionSection(
 
   const handleEnableProtection = () => {
     const updatedEmailProtection = !enabled;
-    setData({ ...data, emailProtected: updatedEmailProtection });
+    setData({
+      ...data,
+      emailProtected: updatedEmailProtection,
+      emailAuthenticated: !updatedEmailProtection && false,
+    });
     setEnabled(updatedEmailProtection);
   };
 

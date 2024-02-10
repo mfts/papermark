@@ -1,6 +1,6 @@
 import DataroomCard from "@/components/datarooms/dataroom-card";
 import Skeleton from "@/components/Skeleton";
-import { PlusIcon } from "@heroicons/react/24/solid";
+import { PlusIcon } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import AppLayout from "@/components/layouts/app";
 import { Button } from "@/components/ui/button";
@@ -80,7 +80,7 @@ export default function Datarooms() {
             </div>
           )}
 
-          {/* Documents list */}
+          {/* Datarooms list */}
           <ul role="list" className="space-y-4">
             {!datarooms &&
               Array.from({ length: 3 }).map((_, i) => (

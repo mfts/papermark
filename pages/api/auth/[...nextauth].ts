@@ -51,7 +51,6 @@ export const authOptions: NextAuthOptions = {
     EmailProvider({
       async sendVerificationRequest({ identifier, url }) {
         if (process.env.NODE_ENV === "development") {
-          console.log(`Login link: ${url}`);
           return;
         } else {
           await sendVerificationRequestEmail({
@@ -101,7 +100,6 @@ export const authOptions: NextAuthOptions = {
         // @ts-ignore
         ...(token || session).user,
       };
-      // console.log("session", session);
       return session;
     },
   },

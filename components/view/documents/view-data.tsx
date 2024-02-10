@@ -2,25 +2,26 @@ import { DEFAULT_DOCUMENT_VIEW_TYPE } from "./document-view";
 import { LinkWithDocument } from "@/lib/types";
 import PagesViewer from "@/components/view/PagesViewer";
 import PDFViewer from "@/components/view/PDFViewer";
-import { NotionPage } from "../../NotionPage";
+import { NotionPage } from "@/components/NotionPage";
 import { ExtendedRecordMap } from "notion-types";
-import { Document } from "@prisma/client";
+import { Brand } from "@prisma/client";
 
 export default function ViewData({
   viewData,
   link,
-  document,
   notionData,
+  brand,
 }: {
   viewData: DEFAULT_DOCUMENT_VIEW_TYPE;
   link: LinkWithDocument;
-  document: Document;
   notionData?: {
     rootNotionPageId: string | null;
     recordMap: ExtendedRecordMap | null;
   };
+  brand?: Brand;
 }) {
-  return notionData && notionData.recordMap ? (
+  const { document } = link;
+  return notionData?.recordMap ? (
     <NotionPage
       recordMap={notionData.recordMap}
       // rootPageId={notionData.rootNotionPageId}
@@ -28,6 +29,7 @@ export default function ViewData({
       linkId={link.id}
       documentId={document.id}
       versionNumber={document.versions[0].versionNumber}
+      brand={brand}
     />
   ) : viewData.pages ? (
     <PagesViewer
@@ -36,7 +38,9 @@ export default function ViewData({
       linkId={link.id}
       documentId={document.id}
       assistantEnabled={document.assistantEnabled}
+      feedbackEnabled={link.enableFeedback!}
       versionNumber={document.versions[0].versionNumber}
+      brand={brand}
     />
   ) : (
     <PDFViewer
@@ -47,7 +51,7 @@ export default function ViewData({
       name={document.name}
       allowDownload={link.allowDownload}
       assistantEnabled={document.assistantEnabled}
-      versionNumber={document.versions.versionNumber}
+      versionNumber={document.versions[0].versionNumber}
     />
   );
 }
