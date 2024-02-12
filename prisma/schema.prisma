@@ -6,7 +6,7 @@ datasource db {
 }
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
   previewFeatures = ["relationJoins"]
 }
 
@@ -76,15 +76,15 @@ model Team {
 }
 
 model Brand {
-  id          String   @id @default(cuid())
+  id          String  @id @default(cuid())
   logo        String? // This should be a reference to where the file is stored (S3, Google Cloud Storage, etc.)
   brandColor  String? // This should be a reference to the brand color
   accentColor String? // This should be a reference to the accent color
-  teamId      String   @unique
-  team        Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId      String  @unique
+  team        Team    @relation(fields: [teamId], references: [id], onDelete: Cascade)
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 enum Role {
@@ -191,9 +191,9 @@ model Link {
   enableFeedback     Boolean?  @default(true) // Optional give user a option to enable the feedback toolbar
 
   // custom metatags
-  metaTitle String? // This will be the meta title of the link
-  metaDescription String? // This will be the meta description of the link
-  metaImage String? // This will be the meta image of the link
+  metaTitle           String? // This will be the meta title of the link
+  metaDescription     String? // This will be the meta description of the link
+  metaImage           String? // This will be the meta image of the link
   enableCustomMetatag Boolean? @default(false) // Optional give user a option to enable the custom metatag
 
   @@unique([domainSlug, slug])
@@ -218,15 +218,16 @@ model Domain {
 }
 
 model View {
-  id          String     @id @default(cuid())
-  link        Link       @relation(fields: [linkId], references: [id])
-  linkId      String
-  document    Document   @relation(fields: [documentId], references: [id], onDelete: Cascade)
-  documentId  String
-  viewerEmail String? // Email of the viewer if known
-  verified    Boolean    @default(false) // Whether the viewer email has been verified
-  viewedAt    DateTime   @default(now())
-  reactions   Reaction[]
+  id           String     @id @default(cuid())
+  link         Link       @relation(fields: [linkId], references: [id])
+  linkId       String
+  document     Document   @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  documentId   String
+  viewerEmail  String? // Email of the viewer if known
+  verified     Boolean    @default(false) // Whether the viewer email has been verified
+  viewedAt     DateTime   @default(now())
+  downloadedAt DateTime? // This is the time the document was downloaded
+  reactions    Reaction[]
 
   @@index([linkId])
   @@index([documentId])
