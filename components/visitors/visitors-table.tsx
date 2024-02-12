@@ -12,6 +12,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { Gauge } from "@/components/ui/gauge";
+import { Skeleton } from "@/components/ui/skeleton";
 
 import { useDocumentVisits } from "@/lib/swr/use-document";
 import { durationFormat, timeAgo } from "@/lib/utils";
@@ -19,7 +20,6 @@ import ChevronDown from "@/components/shared/icons/chevron-down";
 import VisitorChart from "./visitor-chart";
 import { VisitorAvatar } from "./visitor-avatar";
 import BadgeCheck from "../shared/icons/badge-check";
-import VisitorsTableSkeleton from "../skeletons/visitors-table-skeleton";
 
 export default function VisitorsTable({ numPages }: { numPages: number }) {
   const { views } = useDocumentVisits();
@@ -111,7 +111,7 @@ export default function VisitorsTable({ numPages }: { numPages: number }) {
                         </CollapsibleTrigger>
                       </TableCell>
                     </TableRow>
-                    
+
                     <CollapsibleContent asChild>
                       <>
                         <TableRow className="hover:bg-transparent">
@@ -129,7 +129,20 @@ export default function VisitorsTable({ numPages }: { numPages: number }) {
                 </Collapsible>
               ))
             ) : (
-              <VisitorsTableSkeleton />
+              <TableRow>
+                <TableCell className="min-w-[100px]">
+                  <Skeleton className="h-6 w-full" />
+                </TableCell>
+                <TableCell className="min-w-[450px]">
+                  <Skeleton className="h-6 w-full" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton className="h-6 w-24" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton className="h-6 w-24" />
+                </TableCell>
+              </TableRow>
             )}
           </TableBody>
         </Table>

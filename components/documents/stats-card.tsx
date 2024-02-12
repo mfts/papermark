@@ -1,8 +1,7 @@
 import { useStats } from "@/lib/swr/use-stats";
 import ErrorPage from "next/error";
 import StatsElement from "./stats-element";
-import StatsCardSkeleton from "../skeletons/stats-card-skeleton";
-import { BarChart3, ThumbsUp, TimerIcon } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function StatsCard() {
   const { stats, loading, error } = useStats();
@@ -15,7 +14,13 @@ export default function StatsCard() {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-3 border-foreground/5 space-y-2 sm:space-y-0 sm:space-x-2 lg:space-x-3">
         {Array.from({ length: 3 }).map((_, i) => (
-          <StatsCardSkeleton key={i} />
+          <div
+            className="border border-foreground/5 py-6 px-4 sm:px-6 lg:px-8 rounded-lg"
+            key={i}
+          >
+            <Skeleton className="h-6 w-[80%] rounded-sm" />
+            <Skeleton className="mt-4 h-8 w-9" />
+          </div>
         ))}
       </div>
     );
@@ -31,19 +36,16 @@ export default function StatsCard() {
   const statistics = [
     {
       name: "Number of visits",
-      icon: BarChart3,
       value: stats?.views.length.toString() ?? "0",
       active: true,
     },
     {
       name: "Number of reactions",
-      icon: ThumbsUp,
       value: groupedReactionsTotal,
       active: true,
     },
     {
       name: "Total average view duration",
-      icon: TimerIcon,
       value:
         stats?.total_duration == null
           ? "46"

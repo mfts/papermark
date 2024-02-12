@@ -7,15 +7,6 @@ import { AddDomainModal } from "@/components/domains/add-domain-modal";
 import { mutate } from "swr";
 import Link from "next/link";
 import { useTeam } from "@/context/team-context";
-import {
-  Select,
-  SelectGroup,
-  SelectValue,
-  SelectTrigger,
-  SelectContent,
-  SelectItem,
-} from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
 
 export default function DomainSection({
   data,
@@ -29,7 +20,9 @@ export default function DomainSection({
   const [isModalOpen, setModalOpen] = useState(false);
   const teamInfo = useTeam();
 
-  const handleDomainChange = (value: string) => {
+  const handleDomainChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = event.target.value;
+
     if (value === "add_domain") {
       // Redirect to the add domain page
       setModalOpen(true);
@@ -39,11 +32,9 @@ export default function DomainSection({
     setData({ ...data, domain: value });
   };
 
-  const handleSelectFocus = (open: boolean) => {
-    if (open) {
-      // Assuming your fetcher key for domains is '/api/teams/:teamId/domains'
-      mutate(`/api/teams/${teamInfo?.currentTeam?.id}/domains`);
-    }
+  const handleSelectFocus = () => {
+    // Assuming your fetcher key for domains is '/api/teams/:teamId/domains'
+    mutate(`/api/teams/${teamInfo?.currentTeam?.id}/domains`);
   };
 
   const currentDomain = domains?.find((domain) => domain.slug === data.domain);
@@ -52,32 +43,33 @@ export default function DomainSection({
   return (
     <>
       <Label htmlFor="link-domain">Domain</Label>
-      <div className="px-1">
-        <Select
+      <div className="flex">
+        <select
           value={data.domain || "papermark.io"}
-          onValueChange={handleDomainChange}
-          onOpenChange={handleSelectFocus}
+          onChange={handleDomainChange}
+          onFocus={handleSelectFocus}
+          className={cn(
+            "w-full rounded-l-md border border-r-0 border-border bg-secondary px-5 text-sm text-secondary-foreground focus:border-border focus:outline-none focus:ring-0",
+            data.domain && data.domain !== "papermark.io"
+              ? ""
+              : "rounded-r-md border-r-1",
+          )}
         >
-          <SelectTrigger>
-            <SelectValue placeholder="papermark.io" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              <SelectItem key="papermark.io" value="papermark.io">
-                papermark.io
-              </SelectItem>
-              {domains?.map(({ slug }) => (
-                <SelectItem key={slug} value={slug}>
-                  {slug}
-                </SelectItem>
-              ))}
-              <SelectItem value="add_domain">Add a custom domain ✨</SelectItem>
-            </SelectGroup>
-          </SelectContent>
-        </Select>
+          <option key="papermark.io" value="papermark.io">
+            papermark.io
+          </option>
+          {domains
+            // ?.filter((domain) => domain.verified)
+            ?.map(({ slug }) => (
+              <option key={slug} value={slug}>
+                {slug}
+              </option>
+            ))}
+          <option value="add_domain">Add a custom domain ✨</option>
+        </select>
 
         {data.domain && data.domain !== "papermark.io" ? (
-          <Input
+          <input
             type="text"
             name="key"
             required
@@ -90,10 +82,10 @@ export default function DomainSection({
             }}
             autoComplete="off"
             className={cn(
-              "hidden w-full mt-5 placeholder:text-muted-foreground",
+              "hidden w-full rounded-r-md border-0 py-1.5 text-foreground bg-background shadow-sm ring-1 ring-inset ring-input placeholder:text-muted-foreground focus:ring-2 focus:ring-inset focus:ring-gray-400 sm:text-sm sm:leading-6",
               data.domain && data.domain !== "papermark.io" ? "flex" : "",
             )}
-            placeholder="Deck"
+            placeholder="deck"
             onChange={(e) => {
               e.currentTarget.setCustomValidity("");
               setData({ ...data, slug: e.target.value });
@@ -101,20 +93,20 @@ export default function DomainSection({
             aria-invalid="true"
           />
         ) : null}
-
-        {data.domain && data.domain !== "papermark.io" && !isDomainVerified ? (
-          <div className="text-sm text-red-500 mt-3">
-            Your domain is not verified yet!{" "}
-            <Link
-              className="underline hover:text-red-500/80"
-              href="/settings/domains"
-              target="_blank"
-            >
-              Verify now
-            </Link>
-          </div>
-        ) : null}
       </div>
+
+      {data.domain && data.domain !== "papermark.io" && !isDomainVerified ? (
+        <div className="text-sm text-red-500 mt-4">
+          Your domain is not verified yet!{" "}
+          <Link
+            className="underline hover:text-red-500/80"
+            href="/settings/domains"
+            target="_blank"
+          >
+            Verify now
+          </Link>
+        </div>
+      ) : null}
 
       <AddDomainModal open={isModalOpen} setOpen={setModalOpen} />
     </>

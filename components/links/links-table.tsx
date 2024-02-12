@@ -20,6 +20,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 
 import { useDocumentLinks } from "@/lib/swr/use-document";
 import BarChart from "../shared/icons/bar-chart";
@@ -38,8 +39,6 @@ import { toast } from "sonner";
 import { useRouter } from "next/router";
 import { usePlan } from "@/lib/swr/use-billing";
 import { useTeam } from "@/context/team-context";
-import { Archive, FilePen } from "lucide-react";
-import LinksTableSekeleton from "../skeletons/links-table-sekeleton";
 import ProcessStatusBar from "../documents/process-status-bar";
 
 export default function LinksTable({
@@ -266,7 +265,7 @@ export default function LinksTable({
                                 <DropdownMenuItem
                                   onClick={() => handleEditLink(link)}
                                 >
-                                  <FilePen className="w-4 h-4 mr-2" /> Edit Link
+                                  Edit Link
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   className="text-destructive focus:bg-destructive focus:text-destructive-foreground"
@@ -278,7 +277,7 @@ export default function LinksTable({
                                     )
                                   }
                                 >
-                                  <Archive className="w-4 h-4 mr-2" /> Archive
+                                  Archive
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
@@ -294,7 +293,20 @@ export default function LinksTable({
                     </Collapsible>
                   ))
               ) : (
-                <LinksTableSekeleton />
+                <TableRow>
+                  <TableCell className="min-w-[100px]">
+                    <Skeleton className="h-6 w-full" />
+                  </TableCell>
+                  <TableCell className="min-w-[450px]">
+                    <Skeleton className="h-6 w-full" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-6 w-24" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-6 w-24" />
+                  </TableCell>
+                </TableRow>
               )}
             </TableBody>
           </Table>
@@ -406,7 +418,6 @@ export default function LinksTable({
                                           )
                                         }
                                       >
-                                        <Archive className="w-4 h-4 mr-2" />
                                         Reactivate
                                       </DropdownMenuItem>
                                     </DropdownMenuContent>

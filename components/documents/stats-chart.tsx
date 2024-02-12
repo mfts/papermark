@@ -1,7 +1,7 @@
 import { useStats } from "@/lib/swr/use-stats";
 import ErrorPage from "next/error";
 import BarChartComponent from "../charts/bar-chart";
-import StatsChartSkeleton from "../skeletons/stats-chart-skeleton";
+import StatsChartSkeleton from "./stats-chart-skeleton";
 
 export default function StatsChart({
   documentId,

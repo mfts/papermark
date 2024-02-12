@@ -1,9 +1,7 @@
 import { cn } from "@/lib/utils";
-import { LucideType } from "lucide-react";
 
 interface Stat {
   name: string;
-  icon: typeof LucideType;
   value: string;
   unit?: string;
   active: boolean;
@@ -27,9 +25,6 @@ export default function StatsElement({ stat, statIdx }: StatsElementProps) {
             : "text-muted-foreground",
         )}
       >
-        <div className="*:w-5 sm:*:w-6 lg:*:w-5 *:h-5 sm:*:h-6 lg:*:h-5">
-          <stat.icon />
-        </div>
         <p className="text-sm font-medium leading-6 whitespace-nowrap capitalize">
           {stat.name}
         </p>
