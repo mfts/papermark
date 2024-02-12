@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Dashboard from "./ClientPage";
 
 export const revalidate = 3600; // revalidate the data at most every 24 hours
@@ -24,5 +25,9 @@ export default async function HomePage() {
   //   name: "test"}
   // ]
 
-  return <Dashboard data={data} />;
+  return (
+    <Suspense>
+      <Dashboard data={data} />
+    </Suspense>
+  );
 }
