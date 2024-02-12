@@ -40,7 +40,6 @@ import { useRouter } from "next/router";
 import { usePlan } from "@/lib/swr/use-billing";
 import { useTeam } from "@/context/team-context";
 import ShareLink from "./share-link";
-import { Share2 } from "lucide-react";
 
 export default function LinksTable() {
   const { links } = useDocumentLinks();
@@ -259,7 +258,7 @@ export default function LinksTable() {
                                 <DropdownMenuItem
                                   onClick={() => setIsShareVisible(true)}
                                 >
-                                  <Share2 className="w-4 h-4 mr-2" /> Share Link
+                                  Share Link
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() => handleEditLink(link)}
