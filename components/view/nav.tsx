@@ -9,10 +9,8 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuTrigger,
+  DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
-import DropDown from "../web/alternatives/dropdownproto";
-
-// TODO: trigger dev job start garni ani matra file upload garni ho k
 
 export default function Nav({
   pageNumber,
@@ -90,28 +88,30 @@ export default function Nav({
             </div>
           </div>
           <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0 space-x-4">
-            {embeddedLinks && embeddedLinks.length > 0 && (
+            {embeddedLinks && embeddedLinks.length > 0 ? (
               <DropdownMenu>
                 <DropdownMenuTrigger>
-                  <div className="text-sm font-semibold mr-6">
-                    Embedded Links
-                  </div>
+                  <Button className="text-sm font-semibold mr-6">
+                    Links on Page
+                  </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="space-y-2 pt-2 px-4">
+                <DropdownMenuContent className="space-y-2 pt-2 px-2">
                   {embeddedLinks.map((link, index) => (
                     <Link
+                      rel="noopener noreferrer"
                       href={link}
                       target="_blank"
                       className="text-sm flex items-start gap-2"
                       key={index}
                     >
-                      <span>{index + 1}.</span>
-                      <span className="underline">{link}</span>
+                      <DropdownMenuItem className="hover:cursor-pointer">
+                        {link}
+                      </DropdownMenuItem>
                     </Link>
                   ))}
                 </DropdownMenuContent>
               </DropdownMenu>
-            )}
+            ) : null}
             {assistantEnabled ? (
               <Link href={`/view/${linkId}/chat`}>
                 <Button
