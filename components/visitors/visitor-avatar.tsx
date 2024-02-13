@@ -1,10 +1,13 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { generateGravatarHash } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 
 export const VisitorAvatar = ({
   viewerEmail,
+  className,
 }: {
   viewerEmail: string | null;
+  className?: string;
 }) => {
   // Convert email string to a simple hash
   const hashString = (str: string) => {
@@ -36,7 +39,7 @@ export const VisitorAvatar = ({
 
   if (!viewerEmail) {
     return (
-      <Avatar className="flex-shrink-0 hidden sm:inline-flex">
+      <Avatar className={cn("flex-shrink-0 hidden sm:inline-flex", className)}>
         <AvatarFallback className="bg-gray-200/50 dark:bg-gray-200/50">
           AN
         </AvatarFallback>
@@ -45,7 +48,7 @@ export const VisitorAvatar = ({
   }
 
   return (
-    <Avatar className="flex-shrink-0 hidden sm:inline-flex">
+    <Avatar className={cn("flex-shrink-0 hidden sm:inline-flex", className)}>
       <AvatarImage
         src={`https://gravatar.com/avatar/${generateGravatarHash(
           viewerEmail,

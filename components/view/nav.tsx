@@ -1,10 +1,10 @@
 import Link from "next/link";
-import { useRouter } from "next/router";
 import { Button } from "../ui/button";
 import PapermarkSparkle from "../shared/icons/papermark-sparkle";
 import { Download } from "lucide-react";
 import { Brand } from "@prisma/client";
 import Image from "next/image";
+import { toast } from "sonner";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,42 +19,44 @@ export default function Nav({
   numPages,
   allowDownload,
   assistantEnabled,
-  file,
   brand,
+  viewId,
+  linkId,
+  type,
   embeddedLinks,
 }: {
   pageNumber?: number;
   numPages?: number;
   allowDownload?: boolean;
   assistantEnabled?: boolean;
-  file?: { name: string; url: string };
   brand?: Brand;
   embeddedLinks?: string[];
+  viewId?: string;
+  linkId?: string;
+  type?: "pdf" | "notion";
 }) {
-  const router = useRouter();
-  const { linkId } = router.query as { linkId: string };
-
-  async function downloadFile(e: React.MouseEvent<HTMLButtonElement>) {
-    if (!allowDownload || !file) return;
+  const downloadFile = async () => {
+    if (!allowDownload || type === "notion") return;
     try {
-      //get file data
-      const response = await fetch(file.url);
-      const fileData = await response.blob();
+      const response = await fetch(`/api/links/download`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ linkId, viewId }),
+      });
 
-      //create <a/> to download the file
-      const a = document.createElement("a");
-      a.href = window.URL.createObjectURL(fileData);
-      a.download = file.name;
-      document.body.appendChild(a);
-      a.click();
+      if (!response.ok) {
+        toast.error("Error downloading file");
+        return;
+      }
 
-      //clean up used resources
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(a.href);
+      const { downloadUrl } = await response.json();
+      window.open(downloadUrl, "_blank");
     } catch (error) {
       console.error("Error downloading file:", error);
     }
-  }
+  };
 
   return (
     <nav
@@ -125,11 +127,14 @@ export default function Nav({
               </Link>
             ) : null}
             {allowDownload ? (
-              <div className="bg-gray-900 text-white rounded-md px-2 py-1 text-sm  m-1">
-                <Button onClick={downloadFile} size="icon">
-                  <Download className="w-6 h-6" />
-                </Button>
-              </div>
+              <Button
+                onClick={downloadFile}
+                className="text-white bg-gray-900 hover:bg-gray-900/80 m-1"
+                size="icon"
+                title="Download document"
+              >
+                <Download className="w-5 h-5" />
+              </Button>
             ) : null}
             {pageNumber && numPages ? (
               <div className="bg-gray-900 text-white rounded-md h-10 px-4 py-2 items-center flex text-sm font-medium">

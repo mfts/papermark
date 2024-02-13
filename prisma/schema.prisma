@@ -219,15 +219,16 @@ model Domain {
 }
 
 model View {
-  id          String     @id @default(cuid())
-  link        Link       @relation(fields: [linkId], references: [id])
-  linkId      String
-  document    Document   @relation(fields: [documentId], references: [id], onDelete: Cascade)
-  documentId  String
-  viewerEmail String? // Email of the viewer if known
-  verified    Boolean    @default(false) // Whether the viewer email has been verified
-  viewedAt    DateTime   @default(now())
-  reactions   Reaction[]
+  id           String     @id @default(cuid())
+  link         Link       @relation(fields: [linkId], references: [id])
+  linkId       String
+  document     Document   @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  documentId   String
+  viewerEmail  String? // Email of the viewer if known
+  verified     Boolean    @default(false) // Whether the viewer email has been verified
+  viewedAt     DateTime   @default(now())
+  downloadedAt DateTime? // This is the time the document was downloaded
+  reactions    Reaction[]
 
   @@index([linkId])
   @@index([documentId])

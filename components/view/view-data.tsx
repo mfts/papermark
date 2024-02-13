@@ -38,6 +38,7 @@ export default function ViewData({
       linkId={link.id}
       documentId={document.id}
       assistantEnabled={document.assistantEnabled}
+      allowDownload={link.allowDownload!}
       feedbackEnabled={link.enableFeedback!}
       versionNumber={document.versions[0].versionNumber}
       brand={brand}
