@@ -7,13 +7,15 @@ import { cache } from "react";
 // this means getPosts() will only be called once per page build, even though we may call it multiple times
 // when rendering the page.
 export const getPosts = cache(async () => {
-  const posts = await fs.readdir("./content/blog/");
+  const postsDir = path.join(process.cwd(), 'content/blog/')
+  const posts = await fs.readdir(postsDir);
 
+  console.log("posts", posts)
   return Promise.all(
     posts
       .filter((file) => path.extname(file) === ".mdx")
       .map(async (file) => {
-        const filePath = `./content/blog/${file}`;
+        const filePath = path.join(process.cwd(), `content/blog/${file}`)
         const postContent = await fs.readFile(filePath, "utf8");
         const { data, content } = matter(postContent);
 
@@ -28,5 +30,6 @@ export const getPosts = cache(async () => {
 
 export async function getPost(slug: string) {
   const posts = await getPosts();
+  console.log("posts", posts)
   return posts.find((post: any) => post.data.slug === slug);
 }
