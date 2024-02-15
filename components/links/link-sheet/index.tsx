@@ -27,6 +27,8 @@ import AllowNotificationSection from "./allow-notification-section";
 import FeedbackSection from "./feedback-section";
 import OGSection from "./og-section";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import AllowListSection from "./allow-list-section";
+import DenyListSection from "./deny-list-section";
 
 export const DEFAULT_LINK_PROPS = {
   id: null,
@@ -38,6 +40,8 @@ export const DEFAULT_LINK_PROPS = {
   emailProtected: true,
   emailAuthenticated: false,
   allowDownload: false,
+  allowList: [],
+  denyList: [],
   enableNotification: true,
   enableFeedback: true,
   enableCustomMetatag: false,
@@ -56,6 +60,8 @@ export type DEFAULT_LINK_TYPE = {
   emailProtected: boolean;
   emailAuthenticated: boolean;
   allowDownload: boolean;
+  allowList: string[];
+  denyList: string[];
   enableNotification: boolean;
   enableFeedback: boolean;
   enableCustomMetatag: boolean; // metatags
@@ -217,6 +223,8 @@ export default function LinkSheet({
                     <div>
                       <EmailProtectionSection {...{ data, setData }} />
                       <EmailAuthenticationSection {...{ data, setData }} />
+                      <AllowListSection {...{ data, setData }} />
+                      <DenyListSection {...{ data, setData }} />
                       <AllowDownloadSection {...{ data, setData }} />
                       <PasswordSection {...{ data, setData }} />
                       <ExpirationSection {...{ data, setData }} />
