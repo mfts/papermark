@@ -29,6 +29,7 @@ import OGSection from "./og-section";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import AllowListSection from "./allow-list-section";
 import DenyListSection from "./deny-list-section";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 export const DEFAULT_LINK_PROPS = {
   id: null,
@@ -215,22 +216,34 @@ export default function LinkSheet({
                       <Separator className="bg-muted-foreground absolute" />
                       <div className="relative mx-auto">
                         <span className="px-2 bg-background text-muted-foreground text-sm">
-                          Optional
+                          Link Options
                         </span>
                       </div>
                     </div>
 
                     <div>
                       <EmailProtectionSection {...{ data, setData }} />
-                      <EmailAuthenticationSection {...{ data, setData }} />
-                      <AllowListSection {...{ data, setData }} />
-                      <DenyListSection {...{ data, setData }} />
-                      <AllowDownloadSection {...{ data, setData }} />
-                      <PasswordSection {...{ data, setData }} />
-                      <ExpirationSection {...{ data, setData }} />
-                      <OGSection {...{ data, setData }} />
                       <AllowNotificationSection {...{ data, setData }} />
-                      <FeedbackSection {...{ data, setData }} />
+                      <AllowDownloadSection {...{ data, setData }} />
+                      <ExpirationSection {...{ data, setData }} />
+
+                      <Accordion type="single" collapsible>
+                        <AccordionItem value="item-1" className="border-none">
+                          <AccordionTrigger className="py-0 rounded-lg space-x-2">
+                            <span className="text-sm font-medium leading-6 text-foreground">
+                              Advanced Link Access Options
+                            </span>
+                          </AccordionTrigger>
+                          <AccordionContent className="first:pt-5">
+                            <EmailAuthenticationSection {...{ data, setData }} />
+                            <AllowListSection {...{ data, setData }} />
+                            <DenyListSection {...{ data, setData }} />
+                            <PasswordSection {...{ data, setData }} />
+                            <OGSection {...{ data, setData }} />
+                            <FeedbackSection {...{ data, setData }} />
+                          </AccordionContent>
+                        </AccordionItem>
+                      </Accordion>
                     </div>
                   </div>
                 </div>
