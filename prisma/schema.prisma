@@ -176,7 +176,8 @@ model Link {
   slug               String? // Link slug for pretty URLs
   expiresAt          DateTime? // Optional expiration date
   password           String? // Optional password for link protection
-  allowedEmails      String[] // Array of emails allowed to view the document
+  allowList          String[] // Array of emails and domains allowed to view the document
+  denyList           String[] // Array of emails and domains denied to view the document
   emailProtected     Boolean   @default(true) // Optional email protection
   emailAuthenticated Boolean   @default(false) // Optional email authentication flag
   allowDownload      Boolean?  @default(false) // Optional give user a option to allow to download the document
