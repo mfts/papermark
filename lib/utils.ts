@@ -401,3 +401,14 @@ export const generateGravatarHash = (email: string | null): string => {
 
   return hash;
 };
+
+export const sanitizeAllowDenyList = (list: string): string[] => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const domainRegex = /^@[^\s@]+\.[^\s@]+$/;
+
+    return list
+      .split("\n")
+      .map(item => item.trim().replace(/,$/, '')) // Trim whitespace and remove trailing commas
+      .filter(item => item !== "") // Remove empty items
+      .filter(item => emailRegex.test(item) || domainRegex.test(item)); // Remove items that don't match email or domain regex
+  };
