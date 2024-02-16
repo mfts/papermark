@@ -1,109 +1,31 @@
-"use client";
-
-import Fuse from "fuse.js";
-import { useSearchParams } from "next/navigation";
-import { useMemo, useState } from "react";
-import { GlobeIcon, SearchIcon } from "lucide-react";
-import classNames from "clsx";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 import Image from "next/image";
 import PlaceholderImg from "@/public/_static/placeholder.png";
 import PapermarkPImg from "@/public/_static/papermark-p.svg";
+import { GlobeIcon } from "lucide-react";
 
-const searchOptions = {
-  threshold: 0.3,
-  location: 0,
-  distance: 100,
-  minMatchCharLength: 2,
-  keys: ["name", "round", "sector", "website", "location"],
-};
+const stages = [
+  { id: "7", label: "All" },
+  { id: "5", label: "Pre-Seed" },
+  { id: "1", label: "Seed" },
+  { id: "2", label: "Series A" },
+  { id: "3", label: "Series B" },
+  { id: "4", label: "Series C" },
+];
 
-const statuses = {
-  Active: "text-green-700 bg-green-50 ring-green-600/20",
-  Withdraw: "text-gray-600 bg-gray-50 ring-gray-500/10",
-  Overdue: "text-red-700 bg-red-50 ring-red-600/10",
-};
+export const FallbackInvestors = async ({allInvestors}: {allInvestors: any[]}) => {
 
-// function compare(a: any, b: any) {
-//   // Define the order of the checkSize labels
-//   const checkSizesOrder = [
-//     "$5k - $50k",
-//     "$50k+",
-//     "$100k+",
-//     "$250k+",
-//     "Unknown",
-//   ];
-
-//   const orderA = checkSizesOrder.indexOf(a.fields.checkSize);
-//   const orderB = checkSizesOrder.indexOf(b.fields.checkSize);
-
-//   // Ensure that the checkSize exists in our order array. If not, place it at the end.
-//   if (orderA === -1) return 1;
-//   if (orderB === -1) return -1;
-
-//   // Sort according to the checkSize order
-//   return orderA - orderB;
-// }
-
-export default function Dashboard({ data }: any) {
-  const allInvestors = data;
-
-  const [search, setSearch] = useState<string>("");
-  const [currentPage, setCurrentPage] = useState<number>(1);
+  const category = "7";
 
   const pageSize = 10; // Showing 10 investors per page
   const totalPages = Math.ceil(allInvestors.length / pageSize);
 
-  const searchParams = useSearchParams();
-  const category = searchParams!.get("category");
+  const currentPage = 1;
 
-  // const page = searchParams?.get("page") ?? '1'
-  // const per_page = searchParams?.get("per_page") ?? '20'
-
-  // const start = (Number(page) - 1) * Number(per_page) // 0, 5, 10 ...
-  // const end = start + Number(per_page) // 5, 10, 15 ...
-
-  const stages = [
-    { id: "7", label: "All" },
-    { id: "5", label: "Pre-Seed" },
-    { id: "1", label: "Seed" },
-    { id: "2", label: "Series A" },
-    { id: "3", label: "Series B" },
-    { id: "4", label: "Series C" },
-  ];
-
-  const selectedStage = stages.find((round) => round.id === category);
-  const labelForSelectedCategory = selectedStage ? selectedStage.label : null;
-
-  // Define filtered & sorted investor array
-  const ALL_INVESTORS = allInvestors
-    // .filter((angel: any) => !angel.hidden)
-    // .sort(compare)
-    .filter((investor: any) => {
-      if (!labelForSelectedCategory || labelForSelectedCategory === "All")
-        return true;
-      return investor.round.includes(labelForSelectedCategory);
-    });
-
-  // Fuzzy search with highlighting
-  const fuse = new Fuse(ALL_INVESTORS, searchOptions);
-  const currentInvestors = useMemo(() => {
-    if (search.length > 0) {
-      return fuse.search(search).map((match) => match.item);
-    }
-    return ALL_INVESTORS;
-  }, [search, ALL_INVESTORS]);
-
-  // Pagination
-  // Function to handle page change
-  const goToPage = (pageNumber: React.SetStateAction<number>) => {
-    setCurrentPage(pageNumber);
-  };
-
-  // Calculate the investors to display on the current page
-  const indexOfLastInvestor = currentPage * pageSize;
-  const indexOfFirstInvestor = indexOfLastInvestor - pageSize;
-  const paginatedInvestors = currentInvestors.slice(
+  const indexOfLastInvestor = 10;
+  const indexOfFirstInvestor = indexOfLastInvestor - 10;
+  const paginatedInvestors = allInvestors.slice(
     indexOfFirstInvestor,
     indexOfLastInvestor,
   );
@@ -111,7 +33,7 @@ export default function Dashboard({ data }: any) {
   return (
     <>
       <div className="sm:flex flex-col md:flex-row justify-between mt-4">
-        <span className="isolate mt-5 inline-flex rounded-md shadow-sm w-fit px-2 md:px-0">
+        <span className="isolate mt-5 inline-flex rounded-md shadow-sm w-fit px-2 lg:px-2 ">
           {stages.map((stage) => (
             <Link
               href={
@@ -120,7 +42,7 @@ export default function Dashboard({ data }: any) {
                   : "/investors"
               }
               key={stage.id}
-              className={classNames(
+              className={cn(
                 category === stage.id || (!category && stage.id === "7")
                   ? "bg-gray-200"
                   : "bg-white hover:bg-gray-50",
@@ -131,27 +53,12 @@ export default function Dashboard({ data }: any) {
             </Link>
           ))}
         </span>
-        <div className="relative mt-5 px-2 md:px-0">
-          <SearchIcon
-            className="h-5 w-5 absolute z-20 left-3 bottom-2 ml-1 md:ml-0"
-            aria-hidden="true"
-          />
-          <input
-            type="text"
-            id="search"
-            name="search"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-xl shadow-sm inline-flex relative items-center border border-gray-300 px-4 py-2 text-sm text-gray-700 placeholder:text-gray-400 focus:z-10 focus:outline-none focus:ring-gray-500 md:w-72 pl-10 xs:pl-12"
-            placeholder="Search by name or country"
-          />
-        </div>
       </div>
       <div className="mt-8 flex flex-col">
         <div className="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-8">
           <div className="inline-block min-w-full py-2 align-middle px-6 lg:px-8">
             <div className="py-2">
-              <span className="font-bold">{currentInvestors.length}</span>{" "}
+              <span className="font-bold">{allInvestors.length}</span>{" "}
               investors
             </div>
             <div className="overflow-hidden md:shadow md:ring-1 md:ring-black md:ring-opacity-5 rounded-lg">
@@ -261,7 +168,6 @@ export default function Dashboard({ data }: any) {
               </table>
               <div className="flex justify-between items-center w-full my-4 px-4">
                 <button
-                  onClick={() => goToPage(currentPage - 1)}
                   disabled={currentPage === 1}
                   className="px-2 py-2 rounded border text-xs"
                 >
@@ -271,14 +177,13 @@ export default function Dashboard({ data }: any) {
                   Page {currentPage} of {totalPages}
                 </div>
                 <button
-                  onClick={() => goToPage(currentPage + 1)}
                   disabled={currentPage === totalPages}
                   className="px-2 py-2 rounded border text-xs"
                 >
                   Next
                 </button>
               </div>
-              {currentInvestors.length === 0 && (
+              {allInvestors.length === 0 && (
                 <div className="text-center my-10">No results found</div>
               )}
             </div>

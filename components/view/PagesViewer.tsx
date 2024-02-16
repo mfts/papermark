@@ -16,6 +16,7 @@ export default function PagesViewer({
   documentId,
   viewId,
   assistantEnabled,
+  allowDownload,
   feedbackEnabled,
   versionNumber,
   brand,
@@ -27,6 +28,7 @@ export default function PagesViewer({
   documentId: string;
   viewId: string;
   assistantEnabled: boolean;
+  allowDownload: boolean;
   feedbackEnabled: boolean;
   versionNumber: number;
   brand?: Brand;
@@ -153,7 +155,10 @@ export default function PagesViewer({
         pageNumber={pageNumber}
         numPages={numPages}
         assistantEnabled={assistantEnabled}
+        allowDownload={allowDownload}
         brand={brand}
+        viewId={viewId}
+        linkId={linkId}
       />
       <div
         style={{ height: "calc(100vh - 64px)" }}

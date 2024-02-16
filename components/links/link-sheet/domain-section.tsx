@@ -49,7 +49,7 @@ export default function DomainSection({
           onChange={handleDomainChange}
           onFocus={handleSelectFocus}
           className={cn(
-            "w-48 rounded-l-md border border-r-0 border-border bg-secondary px-5 text-sm text-secondary-foreground focus:border-border focus:outline-none focus:ring-0",
+            "w-full rounded-l-md border border-r-0 border-border bg-secondary px-5 text-sm text-secondary-foreground focus:border-border focus:outline-none focus:ring-0",
             data.domain && data.domain !== "papermark.io"
               ? ""
               : "rounded-r-md border-r-1",
