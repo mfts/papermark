@@ -11,6 +11,7 @@ import notion from "@/lib/notion";
 import { parsePageId } from "notion-utils";
 import { Brand } from "@prisma/client";
 import CustomMetatag from "@/components/view/custom-metatag";
+import { log } from "@/lib/utils";
 
 export const getStaticProps = async (context: GetStaticPropsContext) => {
   const { domain, slug } = context.params as { domain: string; slug: string };

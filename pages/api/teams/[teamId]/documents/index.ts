@@ -161,9 +161,10 @@ export default async function handle(
 
       return res.status(201).json(document);
     } catch (error) {
-      log(
-        `Failed to create document. \n\n teamId: ${teamId}, file: ${fileUrl} \n\n ${error}`,
-      );
+      log({
+        message: `Failed to create document. \n\n*teamId*: _${teamId}_, \n\n*file*: ${fileUrl} \n\n ${error}`,
+        type: "error",
+      });
       errorhandler(error, res);
     }
   } else {

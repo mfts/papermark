@@ -90,7 +90,7 @@ export default async function handle(
 
       return res.status(201).json(response);
     } catch (error) {
-      log(`Failed to add domain. Error: \n\n ${error}`);
+      log({message: `Failed to add domain. \n\n ${error} \n\n*Metadata*: \`{teamId: ${teamId}, userId: ${userId}}\``, type: "error", mention: true});
       errorhandler(error, res);
     }
   } else {
