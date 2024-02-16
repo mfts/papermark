@@ -3,6 +3,21 @@ import { ContentBody } from "@/components/mdx/post-body";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import BlurImage from "@/components/blur-image";
+import { constructMetadata, formatDate } from "@/lib/utils";
+import { Metadata } from "next";
+
+export const generateMetadata = async ({
+  params,
+}: {
+  params: {
+    slug: string
+  }
+}): Promise<Metadata> => {
+  const post = (await getPosts()).find((post) => post.data.slug === params.slug)
+  const { title, summary: description, image } = post?.data || {} 
+  
+  return constructMetadata({ title: `${title} - Papermark`, description, image })
+}
 
 export default async function BlogPage({
   params,
