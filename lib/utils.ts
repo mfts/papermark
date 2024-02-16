@@ -43,8 +43,22 @@ export async function fetcher<JSON = any>(
   return res.json();
 }
 
-export const log = async (message: string, mention?: boolean) => {
-  /* Log a message to the console */
+export const log = async ({
+  message,
+  type,
+  mention = false,
+}: {
+  message: string;
+  type: "info" | "cron" | "links" | "error";
+  mention?: boolean;
+}) => {
+  /* If in development or env variable not set, log to the console */
+  if (process.env.NODE_ENV === "development" || !process.env.PPMK_SLACK_WEBHOOK_URL) {
+    console.log(message);
+    return;
+  }
+
+  /* Log a message to channel */
   try {
     return await fetch(`${process.env.PPMK_SLACK_WEBHOOK_URL}`, {
       method: "POST",
@@ -57,7 +71,8 @@ export const log = async (message: string, mention?: boolean) => {
             type: "section",
             text: {
               type: "mrkdwn",
-              text: `${mention ? "<@U05BTDUKPLZ> " : ""}${message}`,
+              // prettier-ignore
+              text: `${mention ? "<@U05BTDUKPLZ> " : ""}${type === "error" ? ":rotating_light: " : ""}${message}`,
             },
           },
         ],

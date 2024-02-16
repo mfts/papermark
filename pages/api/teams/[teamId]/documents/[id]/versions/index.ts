@@ -90,9 +90,10 @@ export default async function handle(
 
       res.status(200).json({ id: documentId });
     } catch (error) {
-      log(
-        `Failed to create new version for document ${documentId}. Error: \n\n ${error}`,
-      );
+      log({
+        message: `Failed to create new version for document: _${documentId}_. \n\n ${error} \n\n*Metadata*: \`{teamId: ${teamId}, userId: ${userId}}\``,
+        type: "error",
+      });
       return res.status(500).json({
         message: "Internal Server Error",
         error: (error as Error).message,

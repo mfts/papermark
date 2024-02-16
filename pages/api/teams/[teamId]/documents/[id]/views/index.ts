@@ -1,6 +1,5 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth/next";
-import prisma from "@/lib/prisma";
 import { log } from "@/lib/utils";
 import { getViewPageDuration } from "@/lib/tinybird";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
@@ -100,7 +99,7 @@ export default async function handle(
 
       return res.status(200).json(viewsWithDuration);
     } catch (error) {
-      log(`Failed to get views for link ${docId}. Error: \n\n ${error}`);
+      log({message: `Failed to get views for document: _${docId}_. \n\n ${error} \n\n*Metadata*: \`{teamId: ${teamId}, userId: ${userId}}\``, type: "error"});
       errorhandler(error, res);
     }
   } else {

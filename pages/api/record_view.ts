@@ -110,7 +110,7 @@ export default async function handle(
 
     res.status(200).json({ message: "View recorded" });
   } catch (error) {
-    log(`Failed to record view for ${linkId}. Error: \n\n ${error}`);
+    log({message: `Failed to record view (tinybird) for ${linkId}. \n\n ${error}`, type: "error", mention: true});
     res.status(500).json({ message: (error as Error).message });
   }
 }

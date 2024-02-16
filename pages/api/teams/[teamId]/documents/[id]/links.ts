@@ -54,7 +54,7 @@ export default async function handle(
       const links = document!.links;
       return res.status(200).json(links);
     } catch (error) {
-      log(`Failed to get links for document ${docId}. Error: \n\n ${error}`);
+      log({message: `Failed to get links for document: _${docId}_. \n\n ${error} \n\n*Metadata*: \`{teamId: ${teamId}, userId: ${userId}}\``, type: "error"});
       errorhandler(error, res);
     }
   } else {
