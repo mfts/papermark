@@ -26,6 +26,7 @@
     "@next-auth/prisma-adapter": "^1.0.7",
     "@next/mdx": "^14.1.0",
     "@prisma/client": "^5.9.1",
+    "@radix-ui/react-accordion": "^1.1.2",
     "@radix-ui/react-avatar": "^1.0.4",
     "@radix-ui/react-checkbox": "^1.0.4",
     "@radix-ui/react-collapsible": "^1.0.3",

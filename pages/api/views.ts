@@ -49,6 +49,8 @@ export default async function handle(
       password: true,
       domainSlug: true,
       slug: true,
+      allowList: true,
+      denyList: true,
     },
   });
 
@@ -63,8 +65,6 @@ export default async function handle(
       res.status(400).json({ message: "Email is required." });
       return;
     }
-
-    // You can implement more thorough email validation if required
   }
 
   // Check if password is required for visiting the link
@@ -77,6 +77,40 @@ export default async function handle(
     const isPasswordValid = await checkPassword(password, link.password);
     if (!isPasswordValid) {
       res.status(403).json({ message: "Invalid password." });
+      return;
+    }
+  }
+
+  // Check if email is allowed to visit the link
+  if (link.allowList && link.allowList.length > 0) {
+    // Extract the domain from the email address
+    const emailDomain = email.substring(email.lastIndexOf("@"));
+
+    // Determine if the email or its domain is allowed
+    const isAllowed = link.allowList.some((allowed) => {
+      return allowed === email || (allowed.startsWith("@") && emailDomain === allowed);
+    });
+
+    // Deny access if the email is not allowed
+    if (!isAllowed) {
+      res.status(403).json({ message: "Unauthorized access" });
+      return;
+    }
+  }
+
+  // Check if email is denied to visit the link
+  if (link.denyList && link.denyList.length > 0) {
+    // Extract the domain from the email address
+    const emailDomain = email.substring(email.lastIndexOf("@"));
+
+    // Determine if the email or its domain is denied
+    const isDenied = link.denyList.some((denied) => {
+      return denied === email || (denied.startsWith("@") && emailDomain === denied);
+    });
+
+    // Deny access if the email is denied
+    if (isDenied) {
+      res.status(403).json({ message: "Unauthorized access" });
       return;
     }
   }
