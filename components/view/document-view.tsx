@@ -160,6 +160,7 @@ export default function DocumentView({
           viewData={viewData}
           notionData={notionData}
           brand={brand}
+          viewerEmail={data.email ?? 'papermark.io'}
         />
       ) : (
         <div className="h-screen flex items-center justify-center">

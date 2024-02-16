@@ -6,6 +6,7 @@ import BlankImg from "@/public/_static/blank.gif";
 import Nav from "./nav";
 import Toolbar from "./toolbar";
 import { Brand } from "@prisma/client";
+import Watermark from "./watermark";
 
 const DEFAULT_PRELOADED_IMAGES_NUM = 10;
 
@@ -18,6 +19,8 @@ export default function PagesViewer({
   feedbackEnabled,
   versionNumber,
   brand,
+  watermark,
+  viewerEmail,
 }: {
   pages: { file: string; pageNumber: string }[];
   linkId: string;
@@ -27,6 +30,8 @@ export default function PagesViewer({
   feedbackEnabled: boolean;
   versionNumber: number;
   brand?: Brand;
+  watermark: boolean;
+  viewerEmail: string;
 }) {
   const numPages = pages.length;
   const [pageNumber, setPageNumber] = useState<number>(1); // start on first page
@@ -181,6 +186,10 @@ export default function PagesViewer({
               />
             </div>
           </button>
+        </div>
+
+        <div className="fixed top-[20%] min-[450px]:top-[10%] sm:top-16 bottom-[15%] min-[450px]:bottom-[5%] sm:bottom-0 left-1/2 z-10 w-full sm:w-[90%] md:w-[630px] transform -translate-x-[50%]">
+          {watermark && <Watermark email={viewerEmail} />}
         </div>
 
         <div className="flex justify-center mx-auto relative h-full w-full">

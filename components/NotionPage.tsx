@@ -5,6 +5,7 @@ import { NotionRenderer } from "react-notion-x";
 import "react-notion-x/src/styles.css";
 import Nav from "./view/nav";
 import { Brand } from "@prisma/client";
+import Watermark from "./view/watermark";
 
 export const NotionPage = ({
   recordMap,
@@ -14,6 +15,8 @@ export const NotionPage = ({
   documentId,
   versionNumber,
   brand,
+  watermark,
+  viewerEmail,
 }: {
   recordMap: ExtendedRecordMap;
   rootPageId?: string;
@@ -22,6 +25,8 @@ export const NotionPage = ({
   documentId: string;
   versionNumber: number;
   brand?: Brand;
+  watermark: boolean;
+  viewerEmail: string;
 }) => {
   const [pageNumber, setPageNumber] = useState<number>(1); // start on first page
   const [maxScrollPercentage, setMaxScrollPercentage] = useState<number>(0);
@@ -113,6 +118,14 @@ export const NotionPage = ({
     <>
       <div className="bg-white">
         <Nav brand={brand} />
+
+        {watermark && (
+          <Watermark
+            email={viewerEmail}
+            className="fixed !mt-16 m-2"
+            moveable={false}
+          />
+        )}
 
         <div>
           <NotionRenderer

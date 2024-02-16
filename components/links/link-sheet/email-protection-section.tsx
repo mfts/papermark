@@ -23,6 +23,7 @@ export default function EmailProtectionSection({
       ...data,
       emailProtected: updatedEmailProtection,
       emailAuthenticated: !updatedEmailProtection && false,
+      watermark: !updatedEmailProtection && false,
     });
     setEnabled(updatedEmailProtection);
   };

@@ -11,6 +11,7 @@ export default function ViewData({
   link,
   notionData,
   brand,
+  viewerEmail,
 }: {
   viewData: DEFAULT_DOCUMENT_VIEW_TYPE;
   link: LinkWithDocument;
@@ -19,6 +20,7 @@ export default function ViewData({
     recordMap: ExtendedRecordMap | null;
   };
   brand?: Brand;
+  viewerEmail: string;
 }) {
   const { document } = link;
   return notionData?.recordMap ? (
@@ -30,6 +32,8 @@ export default function ViewData({
       documentId={document.id}
       versionNumber={document.versions[0].versionNumber}
       brand={brand}
+      watermark={link.watermark ? link.watermark : false}
+      viewerEmail={viewerEmail}
     />
   ) : viewData.pages ? (
     <PagesViewer
@@ -41,6 +45,8 @@ export default function ViewData({
       feedbackEnabled={link.enableFeedback!}
       versionNumber={document.versions[0].versionNumber}
       brand={brand}
+      watermark={link.watermark ?? false}
+      viewerEmail={viewerEmail}
     />
   ) : (
     <PDFViewer
