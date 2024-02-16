@@ -3,7 +3,6 @@ import { ContentBody } from "@/components/mdx/post-body";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import BlurImage from "@/components/blur-image";
-import { formattedDate } from "@/lib/utils";
 
 export default async function BlogPage({
   params,
@@ -19,7 +18,7 @@ export default async function BlogPage({
         <div className="flex max-w-screen-sm flex-col space-y-4 pt-16">
           <div className="flex items-center space-x-4">
             <time dateTime={post.data.publishedAt} className="text-sm">
-              {formattedDate(post.data.publishedAt)}
+              {formatDate(post.data.publishedAt)}
             </time>
           </div>
           <h1 className="text-4xl md:text-6xl text-balance">
