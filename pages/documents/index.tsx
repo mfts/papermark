@@ -8,6 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import AppLayout from "@/components/layouts/app";
 import { Button } from "@/components/ui/button";
 import { Files } from "lucide-react";
+import Drive from "@/components/Drive";
 
 export default function Documents() {
   const { documents } = useDocuments();
@@ -26,6 +27,7 @@ export default function Documents() {
             </p>
           </div>
           <div className="flex items-center justify-between gap-4">
+            <Drive />
             <AddDocumentModal>
               <Button
                 size="icon"
