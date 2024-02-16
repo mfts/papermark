@@ -6,6 +6,11 @@ import BlurImage from "@/components/blur-image";
 import { constructMetadata, formatDate } from "@/lib/utils";
 import { Metadata } from "next";
 
+export async function generateStaticParams() {
+  const posts = await getPosts()
+  return posts.map((post) => ({ slug: post?.data.slug }))
+}
+
 export const generateMetadata = async ({
   params,
 }: {
@@ -13,7 +18,7 @@ export const generateMetadata = async ({
     slug: string
   }
 }): Promise<Metadata> => {
-  const post = (await getPosts()).find((post) => post.data.slug === params.slug)
+  const post = (await getPosts()).find((post) => post?.data.slug === params.slug)
   const { title, summary: description, image } = post?.data || {} 
   
   return constructMetadata({ title: `${title} - Papermark`, description, image })

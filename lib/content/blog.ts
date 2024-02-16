@@ -11,6 +11,7 @@ type Post = {
     author: string;
     image: string;
     slug: string;
+    published: boolean;
   };
   body: string;
 };
@@ -30,9 +31,9 @@ export const getPosts = cache(async () => {
         const postContent = await fs.readFile(filePath, "utf8");
         const { data, content } = matter(postContent);
 
-        // if (data.published === false) {
-        //   return null;
-        // }
+        if (data.published === false) {
+          return null;
+        }
 
         return { data, body: content } as Post;
       }),
@@ -41,5 +42,5 @@ export const getPosts = cache(async () => {
 
 export async function getPost(slug: string) {
   const posts = await getPosts();
-  return posts.find((post) => post.data.slug === slug);
+  return posts.find((post) => post?.data.slug === slug);
 }
