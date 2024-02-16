@@ -232,11 +232,12 @@ export const getFirstAndLastDay = (day: number) => {
   }
 };
 
-export const formattedDate = (date: Date) => {
-  return new Date(date).toLocaleDateString("en-US", {
-    month: "short",
-    day: "2-digit",
+export const formatDate = (dateString: string) => {
+  return new Date(dateString).toLocaleDateString("en-US", {
+    day: "numeric",
+    month: "long",
     year: "numeric",
+    timeZone: "UTC",
   });
 };
 
