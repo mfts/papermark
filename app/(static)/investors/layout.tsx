@@ -3,7 +3,7 @@ import Script from "next/script";
 
 const data = {
   description:
-    "Find over 10,000 investors based on stage, sector, or location. Powered by Papermark.",
+    "Open investor and vc funds list of over 10,000 investors based on stage, sector, or location. Powered by Papermark.",
   title: "Investor Search | Papermark",
   url: "/investors",
 };
