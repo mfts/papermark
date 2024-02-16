@@ -53,7 +53,7 @@ export default async function BlogPage({
       <div className="relative">
         <div className="grid grid-cols-4 gap-10 py-10 max-w-7xl w-full mx-auto px-4 md:px-8">
           <div className="relative col-span-4 mb-10 flex flex-col space-y-8 bg-white md:col-span-3 sm:border-r sm:border-orange-500/50">
-            <div className="prose  prose-h2:mb-2 first:prose-h2:mt-0 prose-h2:mt-10 prose-headings:font-normal sm:max-w-screen-md sm:pr-2 md:pr-0">
+            <div className="prose prose-h2:mb-2 first:prose-h2:mt-0 prose-h2:mt-10 prose-headings:font-medium sm:max-w-screen-md sm:pr-2 md:pr-0">
               <ContentBody>{post.body}</ContentBody>
             </div>
           </div>
