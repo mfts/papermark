@@ -3,6 +3,18 @@ import path from "path";
 import fs from "fs/promises";
 import { cache } from "react";
 
+type Post = {
+  data: {
+    title: string;
+    summary: string;
+    publishedAt: string;
+    author: string;
+    image: string;
+    slug: string;
+  };
+  body: string;
+};
+
 // `cache` is a React 18 feature that allows you to cache a function for the lifetime of a request.
 // this means getPosts() will only be called once per page build, even though we may call it multiple times
 // when rendering the page.
@@ -10,7 +22,6 @@ export const getPosts = cache(async () => {
   const postsDir = path.join(process.cwd(), 'content/blog/')
   const posts = await fs.readdir(postsDir);
 
-  console.log("posts", posts)
   return Promise.all(
     posts
       .filter((file) => path.extname(file) === ".mdx")
@@ -23,13 +34,12 @@ export const getPosts = cache(async () => {
         //   return null;
         // }
 
-        return { data, body: content }; // TODO: type this post object
+        return { data, body: content } as Post;
       }),
   );
 });
 
 export async function getPost(slug: string) {
   const posts = await getPosts();
-  console.log("posts", posts)
-  return posts.find((post: any) => post.data.slug === slug);
+  return posts.find((post) => post.data.slug === slug);
 }
