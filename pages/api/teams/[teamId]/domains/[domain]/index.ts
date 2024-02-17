@@ -63,7 +63,7 @@ export default async function handle(
 
       return res.status(204).end(); // 204 No Content response for successful deletes
     } catch (error) {
-      log(`Failed to delete domain: ${domain}. Error: \n\n ${error}`);
+      log({message: `Failed to delete domain: _${domain}_. \n\n ${error} \n\n*Metadata*: \`{teamId: ${teamId}, userId: ${userId}}\``, type: "error", mention: true});
       errorhandler(error, res);
     }
   } else {
