@@ -102,8 +102,13 @@ export default function Nav({
                   <DropdownMenuLabel>Links on current page</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   {embeddedLinks.map((link, index) => (
-                    <Link href={link} target="_blank" rel="noopener noreferrer">
-                      <DropdownMenuItem key={index} className="group h-10">
+                    <Link
+                      href={link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      key={index}
+                    >
+                      <DropdownMenuItem className="group h-10">
                         <span className="w-[200px] truncate group-focus:text-clip group-focus:overflow-x-auto">
                           {link}
                         </span>
