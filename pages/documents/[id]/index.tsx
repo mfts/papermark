@@ -31,13 +31,15 @@ import PapermarkSparkle from "@/components/shared/icons/papermark-sparkle";
 import { Document } from "@prisma/client";
 import { usePlausible } from "next-plausible";
 import { mutate } from "swr";
-import { TrashIcon, Sparkles, LinkIcon } from "lucide-react";
+import { TrashIcon, Sparkles, LinkIcon, Eye } from "lucide-react";
+import DocumentPreview from "@/components/preview/document-preview";
 
 export default function DocumentPage() {
   const { document: prismaDocument, primaryVersion, error } = useDocument();
   const router = useRouter();
 
   const [isLinkSheetOpen, setIsLinkSheetOpen] = useState<boolean>(false);
+  const [isPreview, setIsPreview] = useState(false);
   const [isEditingName, setIsEditingName] = useState<boolean>(false);
   const [isFirstClick, setIsFirstClick] = useState<boolean>(false);
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
@@ -337,6 +339,12 @@ export default function DocumentPage() {
                       <DropdownMenuSeparator />
                     </DropdownMenuGroup>
 
+                    {primaryVersion.type !== "notion" && (
+                      <DropdownMenuItem onClick={() => setIsPreview(true)}>
+                        <Eye className="w-4 h-4 mr-2" /> Document Preview
+                      </DropdownMenuItem>
+                    )}
+
                     {primaryVersion.type !== "notion" &&
                       (!prismaDocument.assistantEnabled ? (
                         <DropdownMenuItem
@@ -401,6 +409,8 @@ export default function DocumentPage() {
               isOpen={isLinkSheetOpen}
               setIsOpen={setIsLinkSheetOpen}
             />
+
+            <DocumentPreview isOpen={isPreview} setIsOpen={setIsPreview} />
           </>
         ) : (
           <div className="h-screen flex items-center justify-center">
