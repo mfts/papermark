@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Button } from "../ui/button";
 import PapermarkSparkle from "../shared/icons/papermark-sparkle";
-import { Download } from "lucide-react";
+import { ArrowUpRight, Download } from "lucide-react";
 import { Brand } from "@prisma/client";
 import Image from "next/image";
 import { toast } from "sonner";
@@ -10,6 +10,9 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuShortcut,
 } from "@/components/ui/dropdown-menu";
 
 export default function Nav({
@@ -91,21 +94,22 @@ export default function Nav({
             {embeddedLinks && embeddedLinks.length > 0 ? (
               <DropdownMenu>
                 <DropdownMenuTrigger>
-                  <Button className="text-sm font-semibold mr-6">
+                  <Button className="text-sm font-medium text-white bg-gray-900 hover:bg-gray-900/80">
                     Links on Page
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="space-y-2 pt-2 px-2">
+                <DropdownMenuContent className="space-y-2" align="end">
+                  <DropdownMenuLabel>Links on current page</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
                   {embeddedLinks.map((link, index) => (
-                    <Link
-                      rel="noopener noreferrer"
-                      href={link}
-                      target="_blank"
-                      className="text-sm flex items-start gap-2"
-                      key={index}
-                    >
-                      <DropdownMenuItem className="hover:cursor-pointer">
-                        {link}
+                    <Link href={link} target="_blank" rel="noopener noreferrer">
+                      <DropdownMenuItem key={index} className="group h-10">
+                        <span className="w-[200px] truncate group-focus:text-clip group-focus:overflow-x-auto">
+                          {link}
+                        </span>
+                        <DropdownMenuShortcut className="pl-2 opacity-0 group-hover:opacity-60 group-focus:opacity-60">
+                          <ArrowUpRight />
+                        </DropdownMenuShortcut>
                       </DropdownMenuItem>
                     </Link>
                   ))}
