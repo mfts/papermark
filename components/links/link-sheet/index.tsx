@@ -29,6 +29,7 @@ import OGSection from "./og-section";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import AllowListSection from "./allow-list-section";
 import DenyListSection from "./deny-list-section";
+import AddWatermarkSection from "./add-watermark-section";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 export const DEFAULT_LINK_PROPS = {
@@ -49,6 +50,7 @@ export const DEFAULT_LINK_PROPS = {
   metaTitle: null,
   metaDescription: null,
   metaImage: null,
+  watermark: true,
 };
 
 export type DEFAULT_LINK_TYPE = {
@@ -69,6 +71,7 @@ export type DEFAULT_LINK_TYPE = {
   metaTitle: string | null; // metatags
   metaDescription: string | null; // metatags
   metaImage: string | null; // metatags
+  watermark: boolean;
 };
 
 export default function LinkSheet({
@@ -236,6 +239,7 @@ export default function LinkSheet({
                           </AccordionTrigger>
                           <AccordionContent className="first:pt-5">
                             <EmailAuthenticationSection {...{ data, setData }} />
+                            <AddWatermarkSection {...{ data, setData }} />
                             <AllowListSection {...{ data, setData }} />
                             <DenyListSection {...{ data, setData }} />
                             <PasswordSection {...{ data, setData }} />

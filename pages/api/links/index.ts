@@ -105,6 +105,7 @@ export default async function handler(
           metaImage: linkData.metaImage || null,
           allowList: linkData.allowList,
           denyList: linkData.denyList,
+          watermark: linkData.watermark,
         },
       });
 

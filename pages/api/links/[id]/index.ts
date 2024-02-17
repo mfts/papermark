@@ -32,6 +32,7 @@ export default async function handle(
           metaTitle: true,
           metaDescription: true,
           metaImage: true,
+          watermark: true,
           document: {
             select: {
               id: true,
@@ -165,6 +166,7 @@ export default async function handle(
         metaTitle: linkData.metaTitle || null,
         metaDescription: linkData.metaDescription || null,
         metaImage: linkData.metaImage || null,
+        watermark: linkData.watermark,
       },
       include: {
         views: {

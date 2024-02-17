@@ -83,6 +83,7 @@ export default function LinksTable({
       metaTitle: link.metaTitle,
       metaDescription: link.metaDescription,
       metaImage: link.metaImage,
+      watermark: link.watermark ? link.watermark : false,
     });
     //wait for dropdown to close before opening the link sheet
     setTimeout(() => {

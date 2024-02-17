@@ -51,6 +51,7 @@ export default async function handle(
       slug: true,
       allowList: true,
       denyList: true,
+      watermark: true,
     },
   });
 
