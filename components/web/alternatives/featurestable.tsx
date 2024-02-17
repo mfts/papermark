@@ -124,13 +124,13 @@ export default function ComparisonTable() {
     <div className="px-6 sm:px-8 lg:px-20">
       <div className="mt-20 px-6 py-12 sm:px-6 sm:py-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center">
-          {/* <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+          <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
             Compare best Docsend alternatives based on core features
             <br />
           </h2>
           <p className="mx-auto mt-6 max-w-xl text-lg leading-8 text-gray-600">
             Check all the features you need to securely share documents
-          </p> */}
+          </p>
         </div>
       </div>
       <div className="mt-6 flow-root">
@@ -162,7 +162,7 @@ export default function ComparisonTable() {
                       <td
                         key={tool.name}
                         className={`px-3 py-4 text-sm text-gray-500 ${
-                          tool.name === "Papermark" ? "bg-green-100" : ""
+                          tool.name === "Papermark" ? "bg-orange-100" : ""
                         }`} // Consistent text color, conditional background color
                       >
                         {tool.features[feature]}

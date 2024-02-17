@@ -11,7 +11,7 @@ export default function EmailAuthenticationSection({
   setData: Dispatch<SetStateAction<DEFAULT_LINK_TYPE>>;
 }) {
   const { emailProtected, emailAuthenticated } = data;
-  const [enabled, setEnabled] = useState<boolean>(true);
+  const [enabled, setEnabled] = useState<boolean>(emailAuthenticated);
 
   useEffect(() => {
     setEnabled(emailAuthenticated);
@@ -23,6 +23,8 @@ export default function EmailAuthenticationSection({
       ...data,
       emailProtected: updatedEmailAuthentication ? true : emailProtected,
       emailAuthenticated: updatedEmailAuthentication,
+      allowList: updatedEmailAuthentication ? data.allowList : [],
+      denyList: updatedEmailAuthentication ? data.denyList : [],
     });
     setEnabled(updatedEmailAuthentication);
   };
@@ -37,7 +39,7 @@ export default function EmailAuthenticationSection({
               enabled ? "text-foreground" : "text-muted-foreground",
             )}
           >
-            Require email authentication to view
+            Require email verification
           </h2>
         </div>
         <Switch

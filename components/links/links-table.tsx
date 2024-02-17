@@ -71,6 +71,8 @@ export default function LinksTable({
       emailProtected: link.emailProtected,
       emailAuthenticated: link.emailAuthenticated,
       allowDownload: link.allowDownload ? link.allowDownload : false,
+      allowList: link.allowList,
+      denyList: link.denyList,
       enableNotification: link.enableNotification
         ? link.enableNotification
         : false,

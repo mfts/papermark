@@ -113,10 +113,11 @@ export async function POST(req: Request) {
     );
     return NextResponse.json(results);
   } catch (error) {
-    await log(
-      `Domains cron failed. Error: " + ${(error as Error).message}`,
-      true,
-    );
+    await log({
+      message: `Domains cron failed. \n\nError: ${(error as Error).message}`,
+      type: "cron",
+      mention: true
+    });
     return NextResponse.json({ error: (error as Error).message });
   }
 }

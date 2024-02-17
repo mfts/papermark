@@ -19,7 +19,7 @@ export const handleDomainUpdates = async ({
   linksCount: number;
 }) => {
   if (changed) {
-    await log(`Domain *${domain}* changed status to *${verified}*`, verified);
+    await log({message: `Domain *${domain}* changed status to *${verified}*`, type: "cron"});
   }
 
   if (verified) return;
@@ -68,10 +68,11 @@ export const handleDomainUpdates = async ({
     },
   });
   if (!team) {
-    await log(
-      `Domain *${domain}* is invalid but not associated with any user, skipping.`,
-      true,
-    );
+    await log({
+      message: `Domain *${domain}* is invalid but not associated with any user, skipping.`,
+      type: "cron",
+      mention: true,
+    });
     return;
   }
 
@@ -107,19 +108,24 @@ export const handleDomainUpdates = async ({
       );
 
       if (totalLinksViews > 0) {
-        return await log(
-          `Domain *${domain}* has been invalid for > 30 days and has links with clicks, skipping.`,
-        );
+        await log({
+          message: `Domain *${domain}* has been invalid for > 30 days and has links with clicks, skipping.`,
+          type: "cron",
+          mention: true
+        });
+        return;
       }
     }
     // else, delete the domain and send email
     return await Promise.allSettled([
       deleteDomain(domain),
-      log(
-        `Domain *${domain}* has been invalid for > 30 days and ${
+      log({
+        message: `Domain *${domain}* has been invalid for > 30 days and ${
           linksCount > 0 ? "has links but no link clicks" : "has no links"
         }, deleting.`,
-      ),
+        type: "cron",
+        mention: true,
+      }),
       limiter.schedule(() => sendDeletedDomainEmail(userEmail, domain)),
     ]);
   }
@@ -132,9 +138,10 @@ export const handleDomainUpdates = async ({
     );
     if (!sentSecondDomainInvalidEmail) {
       return await Promise.allSettled([
-        log(
-          `Domain *${domain}* is invalid for ${invalidDays} days, email sent.`,
-        ),
+        log({
+          message: `Domain *${domain}* is invalid for ${invalidDays} days, email sent.`,
+          type: "cron",
+        }),
         limiter.schedule(() =>
           sendInvalidDomainEmail(userEmail, domain, invalidDays),
         ),
@@ -158,9 +165,10 @@ export const handleDomainUpdates = async ({
     );
     if (!sentFirstDomainInvalidEmail) {
       return await Promise.allSettled([
-        log(
-          `Domain *${domain}* is invalid for ${invalidDays} days, email sent.`,
-        ),
+        log({
+          message: `Domain *${domain}* is invalid for ${invalidDays} days, email sent.`,
+          type: "cron",
+        }),
         limiter.schedule(() =>
           sendInvalidDomainEmail(userEmail, domain, invalidDays),
         ),
@@ -184,9 +192,10 @@ export const handleDomainUpdates = async ({
     );
     if (!sentFirstDayDomainReminderEmail) {
       return await Promise.allSettled([
-        log(
-          `Domain *${domain}* is invalid for ${invalidDays} days, email sent.`,
-        ),
+        log({
+          message: `Domain *${domain}* is invalid for ${invalidDays} days, email sent.`,
+          type: "cron",
+        }),
         limiter.schedule(() =>
           sendInvalidDomainEmail(userEmail, domain, invalidDays),
         ),

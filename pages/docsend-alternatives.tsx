@@ -8,7 +8,6 @@ import Article from "@/components/web/alternatives/docsendtext";
 import Grid from "@/components/web/alternatives/alternativesgrid";
 import Testimonials from "@/components/web/testimonials";
 import CTA from "@/components/web/cta";
-import Article2 from "@/components/web/alternatives/papermarktext";
 import Footer from "@/components/web/footer";
 import Navbar from "@/components/web/navbar";
 import { PlanSelect } from "@/components/web/alternatives/plan";
@@ -155,29 +154,30 @@ Please note that the prices and availability of features may vary, and it is rec
         <meta property="og:image" content="cover.png" />
       </Head>
 
-      <div className="flex flex-col min-h-screen justify-between bg-slate-900">
-        <main className="h-full bg-slate-900">
-          <Navbar />
-
-          <section className="pt-32 lg:pt-40 bg-white">
-            <div className="px-4">
-              <div className="max-w-5xl mx-auto">
-                <div className="w-full mx-auto">
-                  <h1 className="text-4xl text-center font-bold pb-1 text-black lg:text-6xl ">
-                    Top 7 Docsend alternatives in 2024
-                  </h1>
-                  <h3 className="text-center text-m my-4 tracking-tight text-gray-900 sm:text-xl">
-                    Compare best Docsend alternatives based on core features,
-                    pricing, plans
-                    <br />
-                  </h3>
+      <div className="flex flex-1 flex-col bg-white text-black">
+        <Navbar />
+        <main>
+          <section className="pt-24 lg:pt-40 bg-white">
+            <div className="px-4 lg:px-2">
+              <div className="max-w-7xl mx-auto px-4 md:px-8">
+                <div className="w-full ">
+                  <div className="prose prose-h2:mb-2 first:prose-h2:mt-0 prose-h2:mt-10 prose-headings:font-medium sm:max-w-screen-md sm:pr-2 md:pr-0">
+                    <h1 className="text-4xl font-bold  text-black lg:text-6xl my-8 ">
+                      Top 7 Docsend alternatives in 2024
+                    </h1>
+                    {/* <p className=" text-m my-4 tracking-tight text-gray-500 sm:text-xl">
+                      Compare best Docsend alternatives based on core features,
+                      pricing, plans
+                      <br />
+                    </p> */}
+                  </div>
                 </div>
               </div>
             </div>
-            <FeaturesTable />
+
             <Article />
+            <FeaturesTable />
             <PricingTable />
-            <Article2 />
             <UseCaseTable />
             <Grid />
             <div className="max-w-5xl mx-auto px-8 lg:px-28">
