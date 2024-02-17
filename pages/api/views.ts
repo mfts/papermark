@@ -194,6 +194,7 @@ export default async function handle(
         select: {
           file: true,
           pageNumber: true,
+          embeddedLinks: true,
         },
       });
       console.timeEnd("get-pages");

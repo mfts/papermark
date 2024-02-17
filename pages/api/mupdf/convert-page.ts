@@ -31,6 +31,11 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     var doc = mupdf.Document.openDocument(pdfData, "application/pdf");
 
     var page = doc.loadPage(pageNumber - 1); // 0-based page index
+
+    // get links
+    const links = page.getLinks();
+    const embeddedLinks = links.map((link: any) => link.getURI());
+
     var pixmap = page.toPixmap(
       // mupdf.Matrix.identity,
       [3, 0, 0, 3, 0, 0], // scale 3x
@@ -53,6 +58,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
         versionId: documentVersionId,
         pageNumber: pageNumber,
         file: blob.url,
+        embeddedLinks: embeddedLinks,
       },
     });
 

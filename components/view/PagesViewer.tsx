@@ -20,7 +20,7 @@ export default function PagesViewer({
   versionNumber,
   brand,
 }: {
-  pages: { file: string; pageNumber: string }[];
+  pages: { file: string; pageNumber: string; embeddedLinks: string[] }[];
   linkId: string;
   documentId: string;
   viewId: string;
@@ -154,6 +154,7 @@ export default function PagesViewer({
         brand={brand}
         viewId={viewId}
         linkId={linkId}
+        embeddedLinks={pages[pageNumber - 1].embeddedLinks}
       />
       <div
         style={{ height: "calc(100vh - 64px)" }}
