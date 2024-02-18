@@ -10,7 +10,7 @@ export const revalidate = 3600; // revalidate the data at most every 24 hours
 
 const data = {
   description:
-    "List of 100 open-source investors. Open-source VC, open-source angel investors. Share pitchdecks with your investors using Papermark, an open-source document infrastructure.",
+    "List of 100 open-source investors. Open-source VC, open-source angel investors, created and powered by Papermark",
   title: "Open Source Investors | Papermark",
   url: "/open-source-investors",
 };
@@ -43,12 +43,11 @@ export const metadata: Metadata = {
   },
 };
 
-
 export type Investor = {
   id: string;
   createdTime: string;
   fields: Fields;
-}
+};
 
 export type Fields = {
   name: string;
@@ -60,7 +59,7 @@ export type Fields = {
   twitterImageUrl: string;
   openSourceInvestments: string;
   checkSize: "Unknown" | "$5k - $50k" | "$50k+" | "$100k+" | "$250k+";
-}
+};
 
 const getInvestors = async () => {
   const response = await fetch(
@@ -79,14 +78,14 @@ const getInvestors = async () => {
 };
 
 const checkSizes = [
-    { id: "7", label: "All" },
-    { id: "1", label: "$5k - $50k" },
-    { id: "2", label: "$50k+" },
-    { id: "3", label: "$100k+" },
-    { id: "4", label: "$250k+" },
-  ];
+  { id: "7", label: "All" },
+  { id: "1", label: "$5k - $50k" },
+  { id: "2", label: "$50k+" },
+  { id: "3", label: "$100k+" },
+  { id: "4", label: "$250k+" },
+];
 
-const InvestorFallback = ({ allInvestors } : { allInvestors: Investor[] }) => {
+const InvestorFallback = ({ allInvestors }: { allInvestors: Investor[] }) => {
   const category = "7";
   return (
     <>
@@ -102,8 +101,7 @@ const InvestorFallback = ({ allInvestors } : { allInvestors: Investor[] }) => {
               }
               key={checkSize.id}
               className={cn(
-                category === checkSize.id ||
-                  (!category && checkSize.id === "7")
+                category === checkSize.id || (!category && checkSize.id === "7")
                   ? "bg-gray-200"
                   : "bg-white hover:bg-gray-50",
                 "relative inline-flex items-center first-of-type:rounded-l-md last-of-type:rounded-r-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 focus:z-10 focus:outline-none focus:ring-gray-500 -ml-px first-of-type:-ml-0",
@@ -125,7 +123,7 @@ const InvestorFallback = ({ allInvestors } : { allInvestors: Investor[] }) => {
       </div>
     </>
   );
-}
+};
 
 export default async function HomePage() {
   const data = await getInvestors();
