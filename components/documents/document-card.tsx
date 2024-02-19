@@ -17,13 +17,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { TrashIcon, MoreVertical } from "lucide-react";
+import { TrashIcon, MoreVertical, Pin, PinOff } from "lucide-react";
 import { mutate } from "swr";
 import { useCopyToClipboard } from "@/lib/utils/use-copy-to-clipboard";
 import Check from "../shared/icons/check";
 import Copy from "../shared/icons/copy";
 import { useEffect, useRef, useState } from "react";
-import { Pin } from "lucide-react";
 
 type DocumentsCardProps = {
   document: DocumentWithLinksAndLinkCountAndViewCount;
@@ -146,6 +145,43 @@ export default function DocumentsCard({
     }
   };
 
+  const pinDocument = async (
+    document: DocumentWithLinksAndLinkCountAndViewCount,
+  ) => {
+    const response = await fetch(
+      `/api/teams/${teamInfo?.currentTeam?.id}/documents/${prismaDocument.id}/pin-document`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          pinned: !document.pinned,
+        }),
+      },
+    );
+
+    if (response.ok) {
+      const { message } = await response.json();
+      // update document from the cache
+      mutate(`/api/teams/${teamInfo?.currentTeam?.id}/documents`, null, {
+        populateCache: (_, docs) => {
+          return docs.map((doc: DocumentWithLinksAndLinkCountAndViewCount) => {
+            if (doc.id === prismaDocument.id) {
+              return { ...doc, pinned: !doc.pinned };
+            }
+            return doc;
+          });
+        },
+        revalidate: false,
+      });
+      toast.success(message);
+    } else {
+      const { message } = await response.json();
+      toast.error(message);
+    }
+  };
+
   return (
     <li className="group/row relative rounded-lg p-3 border-0 dark:bg-secondary ring-1 ring-gray-200 dark:ring-gray-700 transition-all hover:ring-gray-300 hover:dark:ring-gray-500 hover:bg-secondary sm:p-4 flex justify-between items-center">
       <div className="min-w-0 flex shrink items-center space-x-2 sm:space-x-4">
@@ -189,7 +225,7 @@ export default function DocumentsCard({
                 )}
               </button>
             </div>
-            {document.pinned && (
+            {prismaDocument.pinned && (
               <div className="ml-2 sm:ml-3 p-[7px] sm:py-[3px] sm:px-2 rounded-full sm:rounded-md opacity-80 bg-gray-200 dark:bg-gray-700 flex items-center">
                 <Pin className="w-3 h-3 rotate-45" />
                 <span className="ml-1 text-xs hidden sm:inline-block">
@@ -256,21 +292,28 @@ export default function DocumentsCard({
               <MoreVertical className="w-4 h-4 text-muted-foreground" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" ref={dropdownRef}>
+          <DropdownMenuContent align="end" ref={dropdownRef} className="w-[180px]">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuSeparator />
-
+            <DropdownMenuItem onClick={() => pinDocument(prismaDocument)}>
+              {prismaDocument.pinned ? (
+                <>
+                  <PinOff className="w-4 h-4 mr-2" />
+                  Unpin document
+                </>
+              ) : (
+                <>
+                  <Pin className="w-4 h-4 mr-2" />
+                  Pin document
+                </>
+              )}
+            </DropdownMenuItem>
             <DropdownMenuItem
               onClick={(event) => handleButtonClick(event, prismaDocument.id)}
               className="text-destructive focus:bg-destructive focus:text-destructive-foreground duration-200"
             >
-              {isFirstClick ? (
-                "Really delete?"
-              ) : (
-                <>
-                  <TrashIcon className="w-4 h-4 mr-2" /> Delete document
-                </>
-              )}
+              <TrashIcon className="w-4 h-4 mr-2" />
+              {isFirstClick ? "Really delete?" : "Delete document"}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
