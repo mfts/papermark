@@ -2,6 +2,7 @@ import Head from "next/head";
 import Footer from "@/components/web/footer";
 import { Disclosure } from "@headlessui/react";
 import { CheckIcon } from "lucide-react";
+import { XIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   Plus as PlusSmallIcon,
@@ -124,17 +125,12 @@ const tiers: {
     price: { monthly: "$0", annually: "$144" },
     description: "Papermark plans start from freemium",
     features: [
-      "1 user",
-      "Unlimited links",
-      "Unlimited files",
-      "Analytics for each page",
-      "Document sharing controls",
       "Open Source",
-      "✅ Custom domain",
-      "✅ Advanced tracking system",
-      "✅ Work as a team",
-      "✅ Host by yourself",
-      "✅ Pitchdeck analytics",
+      "Custom domain",
+      "Advanced tracking system",
+      "Work as a team",
+      "Host by yourself",
+      "Pitchdeck analytics",
     ],
 
     bgColor: "#fb7a00",
@@ -157,7 +153,7 @@ const tiers: {
       "Team access",
       "Hosting",
     ],
-    bgColor: "bg-gray-200",
+    bgColor: "bg-gray-100",
     borderColor: "#bg-gray-800",
     textColor: "#bg-gray-800",
     buttonText: "Start with DocSend alternative",
@@ -224,7 +220,7 @@ export default function DocsendPage() {
           />
           <meta
             property="og:description"
-            content="Looking for DocSend alternatives? Papermark is the leading open-source alternative to DocSend. Experience the advantages of secure document sharing, real-time analytics, and more."
+            content="Looking for DocSend alternatives? Papermark is the leading open-source alternative to DocSend in 2024. Experience the advantages of secure document sharing, real-time analytics, and more."
           />
           <meta
             property="og:image"
@@ -235,33 +231,34 @@ export default function DocsendPage() {
         </Head>
 
         {/* Hero section */}
-        <div className="flex flex-1 flex-col bg-white text-black">
+        <div className="flex flex-1 flex-col bg-white text-black justify-center">
           <Navbar />
-          <div className="max-w-5xl w-full mx-auto px-4 md:px-8">
-            <div className="pt-24">
+          <div className="max-w-5xl w-full mx-auto px-4 md:px-8 text-center">
+            <div className="pt-32">
               <div className=" pb-4">
                 <img
                   src="https://www.papermark.io/_static/docsend/logo.png"
                   alt="App screenshot"
-                  className=""
-                  width={100}
+                  className="mx-auto"
+                  width={150}
                   height={50}
                 />
               </div>
-              <div className="relative rounded-full px-3 py-1 text-sm leading-6 text-black dark:text-white ring-1 ring-black/10 dark:ring-white/10 hover:ring-white/20">
+              {/* <div className="relative rounded-full px-3 py-1 text-sm leading-6 text-black ring-black/10  hover:ring-white/20">
                 Free DocSend alternative
-              </div>
-              <h1 className="text-6xl md:text-6xl text-balance">
+              </div> */}
+              <h1 className="text-6xl text-balance">
                 Open Source
                 <br />
                 DocSend alternative
               </h1>
-              <p className="text-2xl mt-8 text-balance max-w-3xl">
-                Powerful software to send PitchDeck with custom domain
+              <p className="text-xl mt-8 text-balance max-w-3xl  mx-auto md:text-2xl">
+                Powerful software to send PitchDeck and other documents with
+                custom domain
               </p>
               <div className="pt-8 space-x-2">
                 <Link href="/login">
-                  <Button className="text-white bg-gray-800 rounded-3xl hover:bg-gray-600">
+                  <Button className="text-white bg-gray-800 rounded-3xl hover:bg-gray-500 justify-center">
                     Send document for free
                   </Button>
                 </Link>
@@ -292,11 +289,10 @@ export default function DocsendPage() {
               </div>
             </div>
           </div>
-
           {/* Comparison section */}
           <div className="max-w-5xl w-full mx-auto px-4 md:px-8">
             <div className="pt-32 pb-2">
-              <h2 className="text-4xl md:text-6xl text-balance">
+              <h2 className="text-5xl  text-balance">
                 Select Free
                 <br />
                 DocSend alternative
@@ -320,22 +316,22 @@ export default function DocsendPage() {
                       <div className="border-b border-black p-6 bg-gray-100">
                         <h3
                           id={tier.id}
-                          className="text-balance text-gray-900 text-xl leading-8"
+                          className="text-balance text-gray-800 text-xl leading-8"
                         >
                           {tier.name}
                         </h3>
                       </div>
                       <div className="p-6">
-                        <p className="mt-4 text-sm leading-6 text-gray-600 text-balance">
+                        <p className="mt-4 text-sm leading-6 text-gray-500 text-balance">
                           {tier.description}
                         </p>
                         <p className="mt-6 flex items-baseline gap-x-1">
-                          <span className="text-balance text-4xl font-medium  text-gray-900">
+                          <span className="text-balance text-4xl font-medium  text-gray-800">
                             {tier.price[frequency.value]}
                           </span>
                           <span
                             className={cn(
-                              "text-sm font-semibold leading-6 text-gray-600",
+                              "text-sm font-semibold leading-6 text-gray-500",
                               tier.id === "tier-enterprise" ? "hidden" : "",
                             )}
                           >
@@ -344,14 +340,24 @@ export default function DocsendPage() {
                         </p>
                         <ul
                           role="list"
-                          className="mt-8 space-y-3 text-sm leading-6 text-gray-600"
+                          className="mt-8 space-y-3 text-sm leading-6 text-gray-500"
                         >
-                          {tier.features.map((feature) => (
-                            <li key={feature} className="flex gap-x-3">
-                              <CheckIcon
-                                className="h-6 w-5 flex-none text-[#fb7a00]"
-                                aria-hidden="true"
-                              />
+                          {tier.features.map((feature, index) => (
+                            <li
+                              key={index}
+                              className="flex items-center gap-x-3"
+                            >
+                              {tier.id === "tier-free" ? (
+                                <CheckIcon
+                                  className="h-6 w-6 text-green-500"
+                                  aria-hidden="true"
+                                />
+                              ) : (
+                                <XIcon
+                                  className="h-6 w-6 text-red-500"
+                                  aria-hidden="true"
+                                />
+                              )}
                               {feature}
                             </li>
                           ))}
@@ -381,6 +387,8 @@ export default function DocsendPage() {
             </div>
           </div>
 
+          {/* /* Feature Section*/}
+
           <div
             className="w-full mx-auto max-w-5xl px-4 md:px-8 py-20"
             id="features"
@@ -406,7 +414,7 @@ export default function DocsendPage() {
                     <dt className="inline text-gray-500 text-xl">
                       {feature.name}
                     </dt>{" "}
-                    <dd className="inline text-base text-balance">
+                    <dd className="inline text-balance text-balance">
                       {feature.description}
                     </dd>
                   </div>
@@ -414,30 +422,18 @@ export default function DocsendPage() {
               </dl>
             </div>
           </div>
-
           {/* Testimonial section */}
-          <div className="relative z-10 mt-32 bg-white dark:bg-gray-900 pb-20 sm:mt-56 sm:pb-24 xl:pb-0">
-            <div
-              className="absolute inset-0 overflow-hidden"
-              aria-hidden="true"
-            >
-              <div className="absolute left-[calc(50%-19rem)] top-[calc(50%-36rem)] transform-gpu blur-3xl">
-                <div
-                  className="aspect-[1097/1023] w-[68.5625rem] bg-gradient-to-r from-[#ff4694] to-[#776fff] opacity-25"
-                  style={{
-                    clipPath:
-                      "polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)",
-                  }}
-                />
-              </div>
-            </div>
-            <div className="mx-auto flex max-w-7xl flex-col items-center gap-x-8 gap-y-10 px-6 sm:gap-y-8 lg:px-8 xl:flex-row xl:items-stretch">
+          <div
+            className="w-full mx-auto max-w-5xl px-4 md:px-8 py-20 bg-gray-100 rounded-3xl"
+            id="features"
+          >
+            <div className="mx-auto flex flex-col items-center gap-x-8 gap-y-10 px-6 sm:gap-y-8 lg:px-8 xl:flex-row xl:items-stretch">
               <div className="-mt-8 w-full max-w-2xl xl:-mb-8 xl:w-96 xl:flex-none flex items-center justify-center">
                 <div className="relative w-64 h-64">
                   {" "}
                   <img
                     className="absolute inset-0 object-cover rounded-2xl bg-gray-800  shadow-2xl"
-                    src="https://pbs.twimg.com/profile_images/1506792347840888834/dS-r50Je_400x400.jpg"
+                    src="http://localhost:3000/_static/testimonials/jaski.jpeg"
                     alt=""
                   />
                 </div>
@@ -456,46 +452,44 @@ export default function DocsendPage() {
                     />
                     <use href="#b56e9dab-6ccb-4d32-ad02-6b4bb5d9bbeb" x={86} />
                   </svg>
-                  <blockquote className="text-xl font-semibold leading-8 text-gray-800 dark:text-white sm:text-2xl sm:leading-9">
+                  <blockquote className="text-xl font-medium leading-8 text-balance  text-gray-800 text-black sm:text-2xl sm:leading-9">
                     <p>
-                      This looks awesome!! Incredible work – love how the link
-                      was automatically copied to clipboard when it&apos;s
-                      created.
+                      True builders listen to their users and build what they
+                      need. Thanks Papermark team for solving a big pain point.
+                      DocSend monopoly will end soon!
                     </p>
                   </blockquote>
-                  <figcaption className="mt-8 text-base">
-                    <div className="font-semibold text-black dark:text-white">
-                      Steven Tey
-                    </div>
-                    <div className="mt-1 text-gray-500">
-                      Senior Developer Advocate at Vercel
+                  <figcaption className="mt-8 text-balance ">
+                    <div className="font-semibold text-black ">Jaski</div>
+                    <div className="mt-1 text-gray-500  ">
+                      Founder in web3 space
                     </div>
                   </figcaption>
                 </figure>
               </div>
             </div>
           </div>
-
           {/* FAQ section */}
           <div
-            className="w-full mx-auto max-w-5xl px-4 md:px-8 py-20 "
+            className="w-full mx-auto max-w-5xl px-4 md:px-8 py-32 "
             id="features"
           >
-            <h2 className="text-4xl text-balance pt-12 pb-20 max-w-3xl">
-              Share docs with ease{" "}
+            <h2 className="text-4xl text-balance pt-6  max-w-3xl">
+              FAQ{" "}
               <span className="text-gray-500">
-                Share your document with custom domain and branding
+                Everything you need to know about Papermark - DocSend
+                alternative
               </span>
             </h2>
             <div className="">
-              <dl className="mt-10 space-y-6 divide-y divide-gray-900/10 dark:divide-gray-200/10">
+              <dl className="mt-10 space-y-6 divide-y divide-gray-800/10 ">
                 {faqs.map((faq) => (
                   <Disclosure as="div" key={faq.question} className="pt-6">
                     {({ open }) => (
                       <>
                         <dt>
-                          <Disclosure.Button className="flex w-full items-start justify-between text-left text-gray-900 dark:text-gray-200">
-                            <span className="text-base font-semibold leading-7">
+                          <Disclosure.Button className="flex w-full items-start justify-between text-left text-gray-800">
+                            <span className="text-balance  font-medium leading-7">
                               {faq.question}
                             </span>
                             <span className="ml-6 flex h-7 items-center">
@@ -514,7 +508,7 @@ export default function DocsendPage() {
                           </Disclosure.Button>
                         </dt>
                         <Disclosure.Panel as="dd" className="mt-2 pr-12">
-                          <p className="text-base leading-7 text-gray-500">
+                          <p className="text-balance leading-7 text-gray-500">
                             {faq.answer}
                           </p>
                         </Disclosure.Panel>
@@ -525,9 +519,7 @@ export default function DocsendPage() {
               </dl>
             </div>
           </div>
-
           {/* CTA */}
-
           <div className="bg-[#fb7a00]">
             <div className="w-full mx-auto max-w-5xl py-32 px-4 md:px-8">
               <h2 className="text-4xl text-balance  ">
@@ -542,13 +534,13 @@ export default function DocsendPage() {
                 >
                   <Button
                     variant="outline"
-                    className="text-base rounded-3xl bg-transparent border-black"
+                    className="text-balance rounded-3xl bg-transparent border-black"
                   >
                     Book a demo
                   </Button>
                 </Link>
                 <Link href="/login">
-                  <Button className="text-base rounded-3xl">
+                  <Button className="text-balance rounded-3xl">
                     Start for free
                   </Button>
                 </Link>
