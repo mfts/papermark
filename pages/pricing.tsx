@@ -7,11 +7,30 @@ import Link from "next/link";
 import GitHubIcon from "@/components/shared/icons/github";
 import { usePlausible } from "next-plausible";
 
-const frequencies = [
+const frequencies: {
+  value: "monthly" | "annually";
+  label: "Monthly" | "Annually";
+  priceSuffix: "/month" | "/year";
+}[] = [
   { value: "monthly", label: "Monthly", priceSuffix: "/month" },
   { value: "annually", label: "Annually", priceSuffix: "/year" },
 ];
-const tiers = [
+const tiers: {
+  name: string;
+  id: string;
+  href: string;
+  price: {
+    monthly: string;
+    annually: string;
+  };
+  description: string;
+  features: string[];
+  bgColor: string;
+  borderColor: string;
+  textColor: string;
+  buttonText: string;
+  mostPopular: boolean;
+}[] = [
   {
     name: "Free",
     id: "tier-free",
