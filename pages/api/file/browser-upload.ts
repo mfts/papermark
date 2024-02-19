@@ -3,6 +3,7 @@ import type { NextApiResponse, NextApiRequest } from "next";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]";
 import { CustomUser } from "@/lib/types";
+import prisma from "@/lib/prisma";
 
 export default async function handler(
   req: NextApiRequest,
@@ -24,7 +25,7 @@ export default async function handler(
         }
 
         const userId = (session.user as CustomUser).id;
-        const team = await prisma?.team.findFirst({
+        const team = await prisma.team.findFirst({
           where: {
             users: {
               some: {
