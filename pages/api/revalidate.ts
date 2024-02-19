@@ -14,9 +14,10 @@ export default async function handler(
     return res.status(401).json({ message: "Invalid token" });
   }
 
-  const { linkId, documentId } = req.query as {
+  const { linkId, documentId, teamId } = req.query as {
     linkId: string;
     documentId: string;
+    teamId: string;
   };
 
   try {
@@ -35,6 +36,36 @@ export default async function handler(
         select: { id: true },
       });
       for (const link of links) {
+        await res.revalidate(`/view/${link.id}`);
+      }
+    }
+
+    if (teamId) {
+      // revalidate all links for this team
+      const documentLinks = await prisma.document.findMany({
+        where: {
+          teamId: teamId,
+        },
+        select: {
+          links: {
+            where: {
+              isArchived: false,
+              domainId: null,
+            },
+            select: {
+              id: true,
+            },
+          },
+        },
+      });
+
+      // Flatten the array of arrays into a single array
+      const flattenedLinkIds = documentLinks.flatMap(
+        (document) => document.links,
+      );
+
+      // Now linkIds is an array of only link IDs
+      for (const link of flattenedLinkIds) {
         await res.revalidate(`/view/${link.id}`);
       }
     }

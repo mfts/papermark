@@ -3,6 +3,8 @@ import prisma from "@/lib/prisma";
 import { checkPassword, log } from "@/lib/utils";
 import { trackAnalytics } from "@/lib/analytics";
 import { client } from "@/trigger";
+import { newId } from "@/lib/id-helper";
+import { sendVerificationEmail } from "@/lib/emails/send-email-verification";
 
 export default async function handle(
   req: NextApiRequest,
@@ -14,8 +16,24 @@ export default async function handle(
     return;
   }
   // POST /api/views
-  const { linkId, documentId, userId, documentVersionId, hasPages, ...data } =
-    req.body;
+  const {
+    linkId,
+    documentId,
+    userId,
+    documentVersionId,
+    hasPages,
+    token,
+    verifiedEmail,
+    ...data
+  } = req.body as {
+    linkId: string;
+    documentId: string;
+    userId: string | null;
+    documentVersionId: string;
+    hasPages: boolean;
+    token: string | null;
+    verifiedEmail: string | null;
+  };
 
   const { email, password } = data as { email: string; password: string };
 
@@ -27,7 +45,12 @@ export default async function handle(
     select: {
       emailProtected: true,
       enableNotification: true,
+      emailAuthenticated: true,
       password: true,
+      domainSlug: true,
+      slug: true,
+      allowList: true,
+      denyList: true,
     },
   });
 
@@ -42,8 +65,6 @@ export default async function handle(
       res.status(400).json({ message: "Email is required." });
       return;
     }
-
-    // You can implement more thorough email validation if required
   }
 
   // Check if password is required for visiting the link
@@ -60,6 +81,93 @@ export default async function handle(
     }
   }
 
+  // Check if email is allowed to visit the link
+  if (link.allowList && link.allowList.length > 0) {
+    // Extract the domain from the email address
+    const emailDomain = email.substring(email.lastIndexOf("@"));
+
+    // Determine if the email or its domain is allowed
+    const isAllowed = link.allowList.some((allowed) => {
+      return allowed === email || (allowed.startsWith("@") && emailDomain === allowed);
+    });
+
+    // Deny access if the email is not allowed
+    if (!isAllowed) {
+      res.status(403).json({ message: "Unauthorized access" });
+      return;
+    }
+  }
+
+  // Check if email is denied to visit the link
+  if (link.denyList && link.denyList.length > 0) {
+    // Extract the domain from the email address
+    const emailDomain = email.substring(email.lastIndexOf("@"));
+
+    // Determine if the email or its domain is denied
+    const isDenied = link.denyList.some((denied) => {
+      return denied === email || (denied.startsWith("@") && emailDomain === denied);
+    });
+
+    // Deny access if the email is denied
+    if (isDenied) {
+      res.status(403).json({ message: "Unauthorized access" });
+      return;
+    }
+  }
+
+  // Check if email verification is required for visiting the link
+  if (link.emailAuthenticated && !token) {
+    const token = newId("email");
+    const expiresAt = new Date();
+    expiresAt.setHours(expiresAt.getHours() + 24); // token expires in 24 hour
+
+    await prisma.verificationToken.create({
+      data: {
+        token,
+        identifier: `${linkId}:${email}`,
+        expires: expiresAt,
+      },
+    });
+
+    // set the default verification url
+    let verificationUrl: string = `${process.env.NEXT_PUBLIC_BASE_URL}/view/${linkId}/?token=${token}&email=${encodeURIComponent(email)}`;
+
+    if (link.domainSlug && link.slug) {
+      // if custom domain is enabled, use the custom domain
+      verificationUrl = `https://${link.domainSlug}/${link.slug}/?token=${token}&email=${encodeURIComponent(email)}`;
+    }
+
+    await sendVerificationEmail(email, verificationUrl);
+    res.status(200).json({
+      type: "email-verification",
+      message: "Verification email sent.",
+    });
+    return;
+  }
+
+  let isEmailVerified: boolean = false;
+  if (link.emailAuthenticated && token) {
+    const verification = await prisma.verificationToken.findUnique({
+      where: {
+        token: token,
+        identifier: `${linkId}:${verifiedEmail}`,
+      },
+    });
+
+    if (!verification) {
+      res.status(401).json({ message: "Unauthorized access" });
+      return;
+    }
+
+    // Check the token's expiration date
+    if (Date.now() > verification.expires.getTime()) {
+      res.status(401).json({ message: "Access expired" });
+      return;
+    }
+
+    isEmailVerified = true;
+  }
+
   try {
     console.time("create-view");
     const newView = await prisma.view.create({
@@ -67,6 +175,7 @@ export default async function handle(
         linkId: linkId,
         viewerEmail: email,
         documentId: documentId,
+        verified: isEmailVerified,
       },
       select: { id: true },
     });
@@ -85,6 +194,7 @@ export default async function handle(
         select: {
           file: true,
           pageNumber: true,
+          embeddedLinks: true,
         },
       });
       console.timeEnd("get-pages");
@@ -138,7 +248,7 @@ export default async function handle(
 
     return res.status(200).json(returnObject);
   } catch (error) {
-    log(`Failed to record view for ${linkId}. Error: \n\n ${error}`);
+    log({message: `Failed to record view for ${linkId}. \n\n ${error}`, type: "error", mention: true});
     return res.status(500).json({ message: (error as Error).message });
   }
 }

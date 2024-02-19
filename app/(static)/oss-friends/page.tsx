@@ -6,10 +6,11 @@ const data = {
   description:
     "Meet our fellow open source projects. Papermark is an open-source document infrastructure for sharing and collaboration.",
   title: "Open Source Friends | Papermark",
-  url: "https://www.papermark.io",
+  url: "/oss-friends",
 };
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://www.papermark.io"),
   title: data.title,
   description: data.description,
   openGraph: {
@@ -19,7 +20,7 @@ export const metadata: Metadata = {
     siteName: "Papermark",
     images: [
       {
-        url: "https://www.papermark.io/_static/meta-image.png",
+        url: "/_static/meta-image.png",
         width: 800,
         height: 600,
       },
@@ -32,7 +33,7 @@ export const metadata: Metadata = {
     title: data.title,
     description: data.description,
     creator: "@papermarkio",
-    images: ["https://www.papermark.io/_static/meta-image.png"],
+    images: ["/_static/meta-image.png"],
   },
 };
 

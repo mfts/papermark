@@ -29,9 +29,6 @@ export default async function handle(
       numPages: number;
     };
 
-    console.log("documentId", documentId);
-    console.log("file", url);
-
     const userId = (session.user as CustomUser).id;
 
     try {
@@ -66,13 +63,10 @@ export default async function handle(
       //   },
       // });
 
-      console.log("document", document);
-
       // create a new document version
       const currentVersionNumber = document?.versions
         ? document.versions[0].versionNumber
         : 1;
-      console.log("currentVersionNumber", currentVersionNumber);
       const version = await prisma.documentVersion.create({
         data: {
           documentId: documentId,
@@ -83,8 +77,6 @@ export default async function handle(
           versionNumber: currentVersionNumber + 1,
         },
       });
-
-      console.log("version", version);
 
       // trigger document uploaded event to trigger convert-pdf-to-image job
       await client.sendEvent({
@@ -98,9 +90,10 @@ export default async function handle(
 
       res.status(200).json({ id: documentId });
     } catch (error) {
-      log(
-        `Failed to create new version for document ${documentId}. Error: \n\n ${error}`,
-      );
+      log({
+        message: `Failed to create new version for document: _${documentId}_. \n\n ${error} \n\n*Metadata*: \`{teamId: ${teamId}, userId: ${userId}}\``,
+        type: "error",
+      });
       return res.status(500).json({
         message: "Internal Server Error",
         error: (error as Error).message,

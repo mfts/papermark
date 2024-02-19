@@ -68,28 +68,25 @@ export function AddTeamMembers({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
+        <DialogHeader className="text-start">
           <DialogTitle>Add Member</DialogTitle>
           <DialogDescription>
             You can easily add team members.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="domain" className="text-right">
-                Email
-              </Label>
-              <Input
-                id="email"
-                placeholder="team@member.com"
-                className="col-span-3"
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-          </div>
+          <Label htmlFor="domain" className="opacity-80">
+            Email
+          </Label>
+          <Input
+            id="email"
+            placeholder="team@member.com"
+            className="w-full mt-1 mb-8"
+            onChange={(e) => setEmail(e.target.value)}
+          />
+
           <DialogFooter>
-            <Button type="submit">
+            <Button type="submit" className="w-full h-9">
               {loading ? "Sending email..." : "Add member"}
             </Button>
           </DialogFooter>

@@ -10,7 +10,7 @@ import { analytics, identifyUser, trackAnalytics } from "@/lib/analytics";
 
 export default async function handle(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   // GET /api/teams/:teamId/domains/[domain]/verify - get domain verification status
   if (req.method === "GET") {
@@ -80,8 +80,6 @@ export default async function handle(
         await trackAnalytics({
           event: "Domain Verified",
           slug: domain,
-        }).then(() => {
-          console.log("Success: Domain Verified event tracked");
         });
       }
     }

@@ -2,15 +2,16 @@ import Head from "next/head";
 import Footer from "@/components/web/footer";
 import Navbar from "@/components/web/navbar";
 import { Disclosure } from "@headlessui/react";
-import { MinusSmallIcon, PlusSmallIcon } from "@heroicons/react/24/outline";
 import {
-  ArrowPathIcon,
-  CloudArrowUpIcon,
-  Cog6ToothIcon,
-  FingerPrintIcon,
-  LockClosedIcon,
-  ServerIcon,
-} from "@heroicons/react/20/solid";
+  Plus as PlusSmallIcon,
+  Minus as MinusSmallIcon,
+  RefreshCw as ArrowPathIcon,
+  GitPullRequestArrow as CloudArrowUpIcon,
+  Settings as Cog6ToothIcon,
+  Fingerprint as FingerPrintIcon,
+  Lock as LockClosedIcon,
+  HardDrive as ServerIcon,
+} from "lucide-react";
 import Link from "next/link";
 
 const features = [

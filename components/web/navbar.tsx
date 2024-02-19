@@ -1,47 +1,64 @@
 import Link from "next/link";
 import GitHubIcon from "@/components/shared/icons/github";
 
-function classNames(...classes: any[]) {
-  return classes.filter(Boolean).join(" ");
-}
-
 export default function Navbar() {
   return (
     <>
-      <nav className="top-0 w-full z-50 backdrop-blur-md bg-white">
-        <div className="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8 ">
-          <div className="relative flex h-16 justify-between">
-            <div className="absolute inset-y-0 left-0 flex items-center sm:hidden">
-              {/* Mobile menu button */}
-            </div>
-            <div className="flex flex-1 items-stretch justify-start">
-              <div className="flex flex-shrink-0 items-center">
-                <Link href="/">
-                  <span className="text-xl font-bold tracking-tighter text-black">
+      <div className="sticky top-0 z-50">
+        <div className="flex h-14 w-full mx-auto items-center justify-center bg-white/75 backdrop-blur-lg">
+          <div className="mx-auto flex w-full max-w-7xl items-center justify-between self-center px-4 md:px-8">
+            <div className="flex items-center space-x-10">
+              <Link
+                aria-label="Return home"
+                className="flex h-full flex-none items-center rounded-md text-black ring-0"
+                href="/"
+              >
+                <div className="flex items-center space-x-2">
+                  <span className="text-2xl font-bold tracking-tighter text-black">
                     Papermark
+                  </span>
+                </div>
+              </Link>
+              <div className="hidden items-center gap-2 md:flex">
+                <Link
+                  className="group inline-flex h-10 w-max items-center justify-center rounded-md px-2.5 py-1 font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50"
+                  href="#"
+                >
+                  <span className="relative z-[2] flex items-center gap-1">
+                    <span>Features</span>
+                  </span>
+                </Link>
+                <Link
+                  className="group inline-flex h-10 w-max items-center justify-center rounded-md px-2.5 py-1 font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50"
+                  href="/pricing"
+                >
+                  <span className="relative z-[2] flex items-center gap-1">
+                    <span>Pricing</span>
                   </span>
                 </Link>
               </div>
             </div>
-            <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
+            <div className="flex items-center gap-2 justify-self-end">
               <Link
                 target="_blank"
                 rel="noopener noreferrer"
-                className="rounded-md  px-3.5 py-2.5 text-sm font-semibold text-black hover:text-gray-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400 flex items-center"
+                className="group inline-flex h-10 w-max items-center justify-center rounded-md px-2.5 py-1 font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50"
                 href="https://github.com/mfts/papermark"
               >
-                <GitHubIcon className="mr-2 h-5 w-5" /> GitHub
+                <GitHubIcon className="mr-2 h-6 w-6" /> 1.8k
               </Link>
               <Link
-                className="rounded-md bg-black px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-gray-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400"
+                className="group inline-flex h-10 w-max items-center justify-center rounded-md px-2.5 py-1 font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50"
                 href="/login"
               >
-                Share document
+                <span className="relative z-[2] flex items-center gap-1">
+                  <span>Log in</span>
+                </span>
               </Link>
             </div>
           </div>
         </div>
-      </nav>
+      </div>
     </>
   );
 }

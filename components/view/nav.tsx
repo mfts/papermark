@@ -1,59 +1,126 @@
 import Link from "next/link";
-import { useRouter } from "next/router";
 import { Button } from "../ui/button";
 import PapermarkSparkle from "../shared/icons/papermark-sparkle";
-import { Download } from "lucide-react";
+import { ArrowUpRight, Download } from "lucide-react";
+import { Brand } from "@prisma/client";
+import Image from "next/image";
+import { toast } from "sonner";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuShortcut,
+} from "@/components/ui/dropdown-menu";
 
 export default function Nav({
   pageNumber,
   numPages,
   allowDownload,
   assistantEnabled,
-  file,
+  brand,
+  viewId,
+  linkId,
+  type,
+  embeddedLinks,
 }: {
-  pageNumber: number;
-  numPages: number;
+  pageNumber?: number;
+  numPages?: number;
   allowDownload?: boolean;
   assistantEnabled?: boolean;
-  file?: { name: string; url: string };
+  brand?: Brand;
+  embeddedLinks?: string[];
+  viewId?: string;
+  linkId?: string;
+  type?: "pdf" | "notion";
 }) {
-  const router = useRouter();
-  const { linkId } = router.query as { linkId: string };
-
-  async function downloadFile(e: React.MouseEvent<HTMLButtonElement>) {
-    if (!allowDownload || !file) return;
+  const downloadFile = async () => {
+    if (!allowDownload || type === "notion") return;
     try {
-      //get file data
-      const response = await fetch(file.url);
-      const fileData = await response.blob();
+      const response = await fetch(`/api/links/download`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ linkId, viewId }),
+      });
 
-      //create <a/> to download the file
-      const a = document.createElement("a");
-      a.href = window.URL.createObjectURL(fileData);
-      a.download = file.name;
-      document.body.appendChild(a);
-      a.click();
+      if (!response.ok) {
+        toast.error("Error downloading file");
+        return;
+      }
 
-      //clean up used resources
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(a.href);
+      const { downloadUrl } = await response.json();
+      window.open(downloadUrl, "_blank");
     } catch (error) {
       console.error("Error downloading file:", error);
     }
-  }
+  };
 
   return (
-    <nav className="bg-black">
+    <nav
+      className="bg-black"
+      style={{
+        backgroundColor: brand && brand.brandColor ? brand.brandColor : "black",
+      }}
+    >
       <div className="mx-auto px-2 sm:px-6 lg:px-8">
         <div className="relative flex h-16 items-center justify-between">
           <div className="flex flex-1 items-stretch justify-start">
-            <div className="flex flex-shrink-0 items-center">
-              <p className="text-2xl font-bold tracking-tighter text-white">
-                Papermark
-              </p>
+            <div className="flex flex-shrink-0 items-center relative h-8 w-36">
+              {brand && brand.logo ? (
+                <Image
+                  className="object-contain"
+                  src={brand.logo}
+                  alt="Logo"
+                  fill
+                  quality={100}
+                  priority
+                />
+              ) : (
+                <Link
+                  href="https://www.papermark.io"
+                  target="_blank"
+                  className="text-2xl font-bold tracking-tighter text-white"
+                >
+                  Papermark
+                </Link>
+              )}
             </div>
           </div>
-          <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0 space-x-2">
+          <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0 space-x-4">
+            {embeddedLinks && embeddedLinks.length > 0 ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger>
+                  <Button className="text-sm font-medium text-white bg-gray-900 hover:bg-gray-900/80">
+                    Links on Page
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="space-y-2" align="end">
+                  <DropdownMenuLabel>Links on current page</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {embeddedLinks.map((link, index) => (
+                    <Link
+                      href={link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      key={index}
+                    >
+                      <DropdownMenuItem className="group h-10">
+                        <span className="w-[200px] truncate group-focus:text-clip group-focus:overflow-x-auto">
+                          {link}
+                        </span>
+                        <DropdownMenuShortcut className="pl-2 opacity-0 group-hover:opacity-60 group-focus:opacity-60">
+                          <ArrowUpRight />
+                        </DropdownMenuShortcut>
+                      </DropdownMenuItem>
+                    </Link>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : null}
             {assistantEnabled ? (
               <Link href={`/view/${linkId}/chat`}>
                 <Button
@@ -69,16 +136,21 @@ export default function Nav({
               </Link>
             ) : null}
             {allowDownload ? (
-              <div className="bg-gray-900 text-white rounded-md px-2 py-1 text-sm  m-1">
-                <Button onClick={downloadFile} size="icon">
-                  <Download className="w-6 h-6" />
-                </Button>
+              <Button
+                onClick={downloadFile}
+                className="text-white bg-gray-900 hover:bg-gray-900/80 m-1"
+                size="icon"
+                title="Download document"
+              >
+                <Download className="w-5 h-5" />
+              </Button>
+            ) : null}
+            {pageNumber && numPages ? (
+              <div className="bg-gray-900 text-white rounded-md h-10 px-4 py-2 items-center flex text-sm font-medium">
+                <span>{pageNumber}</span>
+                <span className="text-gray-400"> / {numPages}</span>
               </div>
             ) : null}
-            <div className="bg-gray-900 text-white rounded-md h-10 px-4 py-2 items-center flex text-sm font-medium">
-              <span>{pageNumber}</span>
-              <span className="text-gray-400"> / {numPages}</span>
-            </div>
           </div>
         </div>
       </div>

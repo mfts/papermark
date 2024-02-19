@@ -2,7 +2,6 @@ import { useEffect } from "react";
 import PasswordSection from "./password-section";
 import EmailSection from "./email-section";
 import { Button } from "@/components/ui/button";
-import Toolbar from "../toolbar";
 
 export const DEFAULT_ACCESS_FORM_DATA = {
   email: null,

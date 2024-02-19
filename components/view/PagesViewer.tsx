@@ -1,10 +1,11 @@
-import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/20/solid";
+import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import LoadingSpinner from "../ui/loading-spinner";
 import BlankImg from "@/public/_static/blank.gif";
 import Nav from "./nav";
 import Toolbar from "./toolbar";
+import { Brand } from "@prisma/client";
 
 const DEFAULT_PRELOADED_IMAGES_NUM = 10;
 
@@ -14,16 +15,20 @@ export default function PagesViewer({
   documentId,
   viewId,
   assistantEnabled,
+  allowDownload,
   feedbackEnabled,
   versionNumber,
+  brand,
 }: {
-  pages: { file: string; pageNumber: string }[];
+  pages: { file: string; pageNumber: string; embeddedLinks: string[] }[];
   linkId: string;
   documentId: string;
   viewId: string;
   assistantEnabled: boolean;
+  allowDownload: boolean;
   feedbackEnabled: boolean;
   versionNumber: number;
+  brand?: Brand;
 }) {
   const numPages = pages.length;
   const [pageNumber, setPageNumber] = useState<number>(1); // start on first page
@@ -145,6 +150,11 @@ export default function PagesViewer({
         pageNumber={pageNumber}
         numPages={numPages}
         assistantEnabled={assistantEnabled}
+        allowDownload={allowDownload}
+        brand={brand}
+        viewId={viewId}
+        linkId={linkId}
+        embeddedLinks={pages[pageNumber - 1].embeddedLinks}
       />
       <div
         style={{ height: "calc(100vh - 64px)" }}

@@ -43,39 +43,39 @@ export const PLANS = [
     slug: "pro",
     price: {
       monthly: {
-        amount: 30,
+        amount: 29,
         priceIds: {
-          test: "price_1OJFd8FJyGSZ96lh3v4jW7Bf",
-          production: "price_1OJTUNFJyGSZ96lhOqTkCxkY",
+          test: "price_1NmHGzFJyGSZ96lhp946ODFI",
+          production: "price_1NmMZ7FJyGSZ96lhyad2LW90",
         },
       },
       yearly: {
-        amount: 300,
+        amount: 24,
         priceIds: {
-          test: "price_1OJFd8FJyGSZ96lhVmparJSc",
-          production: "price_1OJTUNFJyGSZ96lhDxXgXm1e",
+          test: "price_1NmHHaFJyGSZ96lhXxg2fTr7",
+          production: "price_1NmMZ7FJyGSZ96lhqZEkh50e",
         },
       },
     },
   },
-  {
-    name: "Starter",
-    slug: "starter",
-    price: {
-      monthly: {
-        amount: 15,
-        priceIds: {
-          test: "price_1OIsDmFJyGSZ96lh2aIhaerk",
-          production: "price_1OJTUWFJyGSZ96lhTcJPVBgS",
-        },
-      },
-      yearly: {
-        amount: 150,
-        priceIds: {
-          test: "price_1OIsDmFJyGSZ96lhVOYVN8PN",
-          production: "price_1OJTUWFJyGSZ96lhGnKb3E9F",
-        },
-      },
-    },
-  },
+  // {
+  //   name: "Starter",
+  //   slug: "starter",
+  //   price: {
+  //     monthly: {
+  //       amount: 15,
+  //       priceIds: {
+  //         test: "price_1OIsDmFJyGSZ96lh2aIhaerk",
+  //         production: "price_1OJTUWFJyGSZ96lhTcJPVBgS",
+  //       },
+  //     },
+  //     yearly: {
+  //       amount: 150,
+  //       priceIds: {
+  //         test: "price_1OIsDmFJyGSZ96lhVOYVN8PN",
+  //         production: "price_1OJTUWFJyGSZ96lhGnKb3E9F",
+  //       },
+  //     },
+  //   },
+  // },
 ];

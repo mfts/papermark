@@ -15,6 +15,7 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
+  // POST /api/links
   if (req.method === "POST") {
     const session = await getServerSession(req, res, authOptions);
     if (!session) {
@@ -68,8 +69,6 @@ export default async function handler(
           return res.status(400).json({ error: "Domain not found." });
         }
 
-        // console.log(domainObj);
-
         const existingLink = await prisma.link.findUnique({
           where: {
             domainSlug_slug: {
@@ -93,6 +92,7 @@ export default async function handler(
           password: hashedPassword,
           name: linkData.name || null,
           emailProtected: linkData.emailProtected,
+          emailAuthenticated: linkData.emailAuthenticated,
           expiresAt: exat,
           allowDownload: linkData.allowDownload,
           domainId: domainObj?.id || null,
@@ -100,6 +100,12 @@ export default async function handler(
           slug: slug || null,
           enableNotification: linkData.enableNotification,
           enableFeedback: linkData.enableFeedback,
+          enableCustomMetatag: linkData.enableCustomMetatag,
+          metaTitle: linkData.metaTitle || null,
+          metaDescription: linkData.metaDescription || null,
+          metaImage: linkData.metaImage || null,
+          allowList: linkData.allowList,
+          denyList: linkData.denyList,
         },
       });
 

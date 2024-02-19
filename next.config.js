@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  pageExtensions: ["js", "jsx", "ts", "tsx", "mdx"],
   images: {
     minimumCacheTTL: 2592000, // 30 days
     remotePatterns: [
@@ -55,6 +56,7 @@ const nextConfig = {
     outputFileTracingIncludes: {
       "/api/mupdf/*": ["./node_modules/mupdf/lib/*.wasm"],
     },
+    missingSuspenseWithCSRBailout: false,
   },
 };
 

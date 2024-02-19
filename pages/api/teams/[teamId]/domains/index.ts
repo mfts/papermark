@@ -11,7 +11,7 @@ import { getTeamWithDomain } from "@/lib/team/helper";
 
 export default async function handle(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   if (req.method === "GET") {
     // GET /api/teams/:teamId/domains
@@ -73,8 +73,6 @@ export default async function handle(
         return res.status(422).json("Invalid domain");
       }
 
-      // console.log("Valid domain", domain);
-
       const response = await prisma.domain.create({
         data: {
           slug: domain,
@@ -92,7 +90,7 @@ export default async function handle(
 
       return res.status(201).json(response);
     } catch (error) {
-      log(`Failed to add domain. Error: \n\n ${error}`);
+      log({message: `Failed to add domain. \n\n ${error} \n\n*Metadata*: \`{teamId: ${teamId}, userId: ${userId}}\``, type: "error", mention: true});
       errorhandler(error, res);
     }
   } else {

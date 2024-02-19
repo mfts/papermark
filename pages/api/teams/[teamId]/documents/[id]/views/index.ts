@@ -1,6 +1,5 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth/next";
-import prisma from "@/lib/prisma";
 import { log } from "@/lib/utils";
 import { getViewPageDuration } from "@/lib/tinybird";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
@@ -10,7 +9,7 @@ import { errorhandler } from "@/lib/errorHandler";
 
 export default async function handle(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   if (req.method === "GET") {
     // GET /api/teams/:teamId/documents/:id/views
@@ -79,7 +78,7 @@ export default async function handle(
         return duration.data.reduce(
           (totalDuration: number, data: { sum_duration: number }) =>
             totalDuration + data.sum_duration,
-          0
+          0,
         );
       });
 
@@ -98,11 +97,9 @@ export default async function handle(
         };
       });
 
-      // console.log("viewsWithDuration:", viewsWithDuration)
-
       return res.status(200).json(viewsWithDuration);
     } catch (error) {
-      log(`Failed to get views for link ${docId}. Error: \n\n ${error}`);
+      log({message: `Failed to get views for document: _${docId}_. \n\n ${error} \n\n*Metadata*: \`{teamId: ${teamId}, userId: ${userId}}\``, type: "error"});
       errorhandler(error, res);
     }
   } else {

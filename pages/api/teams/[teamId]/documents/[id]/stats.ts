@@ -49,8 +49,6 @@ export default async function handle(
         _count: { type: true },
       });
 
-      console.log("groupedReactions", groupedReactions);
-
       const duration = await getTotalAvgPageDuration({
         documentId: docId,
         since: 0,
