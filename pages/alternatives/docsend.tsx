@@ -433,7 +433,7 @@ export default function DocsendPage() {
                   {" "}
                   <img
                     className="absolute inset-0 object-cover rounded-2xl bg-gray-800  shadow-2xl"
-                    src="http://localhost:3000/_static/testimonials/jaski.jpeg"
+                    src="https://www.papermark.io/_static/testimonials/jaski.jpeg"
                     alt=""
                   />
                 </div>
