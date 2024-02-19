@@ -19,7 +19,11 @@ import { LogoCloud } from "@/components/web/landing-page/logo-cloud";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/web/navbar";
 
-const frequencies = [
+const frequencies: {
+  value: "monthly" | "annually";
+  label: "Monthly" | "Annually";
+  priceSuffix: "/month" | "/year";
+}[] = [
   { value: "monthly", label: "Monthly", priceSuffix: "/month" },
   { value: "annually", label: "Annually", priceSuffix: "/year" },
 ];
@@ -97,7 +101,22 @@ const features = [
 //   },
 // ];
 
-const tiers = [
+const tiers: {
+  name: string;
+  id: string;
+  href: string;
+  price: {
+    monthly: string;
+    annually: string;
+  };
+  description: string;
+  features: string[];
+  bgColor: string;
+  borderColor: string;
+  textColor: string;
+  buttonText: string;
+  mostPopular: boolean;
+}[] = [
   {
     name: "Papermark",
     id: "tier-free",
@@ -111,7 +130,7 @@ const tiers = [
       "Analytics for each page",
       "Document sharing controls",
       "Open Source",
-      "✅Custom domain",
+      "✅ Custom domain",
       "✅ Advanced tracking system",
       "✅ Work as a team",
       "✅ Host by yourself",
