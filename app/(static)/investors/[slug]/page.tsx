@@ -248,7 +248,7 @@ export default async function InvestorPage({
                     {" "}
                     <img
                       className="absolute inset-0 object-cover rounded-2xl bg-gray-800  shadow-2xl"
-                      src="https://www.papermark.io/_static/docsend/jaski.jpeg"
+                      src="https://www.papermark.io/_static/testimonials/jaski.jpeg"
                       alt=""
                     />
                   </div>
