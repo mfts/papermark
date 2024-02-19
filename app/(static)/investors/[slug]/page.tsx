@@ -22,6 +22,15 @@ import { LogoCloud } from "@/components/web/landing-page/logo-cloud";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/web/navbar";
 
+const frequencies: {
+  value: "monthly" | "annually";
+  label: "Monthly" | "Annually";
+  priceSuffix: "/month" | "/year";
+}[] = [
+  { value: "monthly", label: "Monthly", priceSuffix: "/month" },
+  { value: "annually", label: "Annually", priceSuffix: "/year" },
+];
+
 const features = [
   {
     name: "Open Source",
@@ -57,65 +66,6 @@ const features = [
     description:
       "Being an open-source project, Papermark is backed by a community of developers  ",
     icon: ServerIcon,
-  },
-];
-
-const tiers: {
-  name: string;
-  id: string;
-  href: string;
-  price: {
-    monthly: string;
-    annually: string;
-  };
-  description: string;
-  features: string[];
-  bgColor: string;
-  borderColor: string;
-  textColor: string;
-  buttonText: string;
-  mostPopular: boolean;
-}[] = [
-  {
-    name: "Papermark",
-    id: "tier-free",
-    href: "/login",
-    price: { monthly: "$0", annually: "$144" },
-    description: "Papermark plans start from freemium",
-    features: [
-      "Open Source",
-      "Custom domain",
-      "Advanced tracking system",
-      "Work as a team",
-      "Host by yourself",
-      "Pitchdeck analytics",
-    ],
-
-    bgColor: "#fb7a00",
-    borderColor: "#fb7a00",
-    textColor: "#black",
-    buttonText: "Start for free",
-    mostPopular: false,
-  },
-  {
-    name: "Docsend",
-    id: "tier-freelancer",
-    href: "/login",
-    price: { monthly: "$15", annually: "$288" },
-    description: "DocSend has no free plan available",
-    features: [
-      "Custom domain",
-      "Pitchdeck feedback",
-      "Hosting",
-      "AI-recommendations",
-      "Team access",
-      "Hosting",
-    ],
-    bgColor: "bg-gray-100",
-    borderColor: "#bg-gray-800",
-    textColor: "#bg-gray-800",
-    buttonText: "Start with DocSend alternative",
-    mostPopular: false,
   },
 ];
 
@@ -165,6 +115,7 @@ export default async function InvestorPage({
 }) {
   const investor = await getInvestor(params.slug);
   if (!investor) return notFound();
+  const frequency = frequencies[0];
 
   return (
     <>
@@ -192,36 +143,37 @@ export default async function InvestorPage({
         </Head>
 
         {/* Hero section */}
-        <div className="flex flex-1 flex-col bg-white text-black justify-center ">
-          <div className="max-w-5xl w-full mx-auto px-4 md:px-8 ">
-            <div className="pt-24">
-              <div className=" pb-4">
+        <div className="flex flex-1 flex-col bg-white text-black justify-center">
+          <div className="max-w-5xl w-full mx-auto px-4 md:px-8 text-center">
+            <div className="pt-32">
+              {/* <div className=" pb-4">
                 <img
-                  src="{investor.imageURL}"
+                  src={investor.imageUrl}
                   alt="App screenshot"
-                  className=""
+                  className="mx-auto"
                   width={100}
                   height={50}
                 />
+              </div> */}
+              <div className="relative rounded-full inline-block my-4 ">
+                <span className="px-3 py-1 text-sm leading-6 bg-green-100 text-green-600 border border-green-200 rounded-full text-balance">
+                  Active
+                </span>
               </div>
-              <div className="max-w-xl relative rounded-full px-3 py-1 text-sm leading-6 text-black dark:text-white ring-1 ring-black/10 dark:ring-white/10 hover:ring-white/20">
-                active
-              </div>
-              <h1 className="text-6xl md:text-6xl text-balance ">
-                {investor.name}
-              </h1>
-              <p className="text-2xl mt-8 text-balance max-w-3xl">
+
+              <h1 className="text-6xl text-balance">{investor.name}</h1>
+              <p className="text-xl mt-8 text-balance max-w-3xl  mx-auto md:text-2xl">
                 Venture capital and investor firm
               </p>
               <div className="pt-8 space-x-2">
-                <Link href="/login">
-                  <Button className="text-white bg-gray-800 rounded-3xl hover:bg-gray-600">
+                <Link href={investor.website}>
+                  <Button className="text-white bg-gray-800 rounded-3xl hover:bg-gray-500 justify-center">
                     {investor.name} website link
                   </Button>
                 </Link>
               </div>
             </div>
-            <div className="mt-24 mx-auto w-full">
+            {/* <div className="mt-24 mx-auto w-full">
               <video
                 width="100%"
                 id="video1"
@@ -238,16 +190,153 @@ export default async function InvestorPage({
                   type="video/mp4"
                 />
               </video>
-            </div>
+            </div> */}
+          </div>
 
-            <div className="grid gap-16 md:gap-24 lg:gap-32 mt-20">
-              <div className="mx-auto mt-4 w-full px-0 lg:px-8 xl:p-0">
-                <LogoCloud />
+          {/* Comparison section */}
+          <div className="max-w-5xl w-full mx-auto px-4 md:px-8">
+            {/* <div className="pt-32 pb-2"> */}
+            {/* <h2 className="text-5xl text-balance">
+                Select Free
+                <br />
+                DocSend alternative
+              </h2> */}
+            {/* <p className="text-xl mt-8 text-balance max-w-3xl">
+                AI-powered platform revolutionizing document sharing and
+                collaboration. It enables secure document sharing, tracking, and
+                storage, providing users with real-time analytics.
+              </p> */}
+            {/* </div> */}
+          </div>
+          <div className="bg-white py-16">
+            <div className="mx-auto max-w-5xl px-4 md:px-8">
+              <div className="isolate grid grid-cols-1 md:grid-cols-2 border border-black rounded-xl overflow-hidden">
+                {/* First hardcoded tier */}
+                <div className="border-black border-r-0 md:odd:border-r xl:even:border-r xl:last:!border-r-0 flex flex-col justify-between">
+                  <div>
+                    <div className="border-b border-black p-6 bg-gray-100">
+                      <h3 className="text-balance text-gray-800 text-xl leading-8">
+                        Rounds {investor.name} invests
+                      </h3>
+                    </div>
+                    <div className="p-6">
+                      <p className="mt-4 text-sm leading-6 text-gray-500 text-balance">
+                        Investor stage information
+                      </p>
+                      <p className="mt-6 flex items-baseline gap-x-1">
+                        <span className="text-balance text-4xl font-medium text-gray-800">
+                          {investor.round}
+                        </span>
+                      </p>
+                    </div>
+                  </div>
+                  <a href={investor.website} className="p-6">
+                    <Button
+                      className="rounded-3xl hover:bg-gray-100"
+                      style={{
+                        backgroundColor: "#f3f4f6",
+                        borderColor: "#e5e7eb",
+                        color: "#1f2937",
+                        borderWidth: "1px",
+                      }}
+                    >
+                      Get all details
+                    </Button>
+                  </a>
+                </div>
+
+                {/* Second hardcoded tier */}
+                <div className="border-black flex flex-col justify-between">
+                  <div>
+                    <div className="border-b border-black p-6 bg-gray-100">
+                      <h3 className="text-balance text-gray-800 text-xl leading-8">
+                        Location {investor.name} invests
+                      </h3>
+                    </div>
+                    <div className="p-6">
+                      <p className="mt-4 text-sm leading-6 text-gray-500 text-balance">
+                        Investor primarily location but not limited
+                      </p>
+                      <p className="mt-6 flex items-baseline gap-x-1">
+                        <span className="text-balance text-4xl font-medium text-gray-800">
+                          {investor.location}
+                        </span>
+                      </p>
+                      {/* <ul
+                        role="list"
+                        className="mt-8 space-y-3 text-sm leading-6 text-gray-500"
+                      >
+                        <li className="flex items-center gap-x-3">
+                          <CheckIcon
+                            className="h-6 w-6 text-green-500"
+                            aria-hidden="true"
+                          />
+                          100 GB Storage
+                        </li>
+                        <li className="flex items-center gap-x-3">
+                          <CheckIcon
+                            className="h-6 w-6 text-green-500"
+                            aria-hidden="true"
+                          />
+                          Advanced Analytics
+                        </li>
+                      </ul> */}
+                    </div>
+                  </div>
+                  <a href={investor.website} className="p-6">
+                    <Button
+                      className="rounded-3xl hover:bg-gray-100"
+                      style={{
+                        backgroundColor: "#f3f4f6",
+                        borderColor: "#e5e7eb",
+                        color: "#1f2937",
+                        borderWidth: "1px",
+                      }}
+                    >
+                      Learn about all locations
+                    </Button>
+                  </a>
+                </div>
+              </div>
+
+              <div className="my-8 isolate  border border-black rounded-xl overflow-hidden">
+                <div className="flex flex-col justify-between">
+                  <div>
+                    <div className="border-b border-black p-6 bg-gray-100">
+                      <h3 className="text-balance text-gray-800 text-xl leading-8">
+                        Sector {investor.name} invests
+                      </h3>
+                    </div>
+                    <div className="p-6">
+                      <p className="mt-4 text-sm leading-6 text-gray-500 text-balance">
+                        Sectors primarily invested in
+                      </p>
+                      <p className="mt-6 flex items-baseline gap-x-1">
+                        <span className="text-balance text-4xl font-medium text-gray-800">
+                          {investor.sector}
+                        </span>
+                      </p>
+                    </div>
+                  </div>
+                  <a href={investor.website} className="p-6">
+                    <Button
+                      className="rounded-3xl hover:bg-gray-100"
+                      style={{
+                        backgroundColor: "#f3f4f6",
+                        borderColor: "#e5e7eb",
+                        color: "#1f2937",
+                        borderWidth: "1px",
+                      }}
+                    >
+                      All sectors {investor.name}
+                    </Button>
+                  </a>
+                </div>
               </div>
             </div>
           </div>
-          {/* Comparison section */}
-          <div className="max-w-5xl w-full mx-auto px-4 md:px-8">
+
+          {/* <div className="max-w-5xl w-full mx-auto px-4 md:px-8">
             <div className="pt-32 pb-2">
               <h2 className="text-5xl  text-balance">
                 Select Free
@@ -336,16 +425,15 @@ export default async function InvestorPage({
                         }}
                       >
                         {tier.buttonText} {/* Use custom button text */}
-                      </Button>
+          {/* </Button>
                     </a>
                   </div>
                 ))}
               </div>
             </div>
-          </div>
+          </div>  */}
 
           {/* /* Feature Section*/}
-
           <div
             className="w-full mx-auto max-w-5xl px-4 md:px-8 py-20"
             id="features"
@@ -426,83 +514,10 @@ export default async function InvestorPage({
               </div>
             </div>
           </div>
-          {/* FAQ section */}
-          <div
-            className="w-full mx-auto max-w-5xl px-4 md:px-8 py-32 "
-            id="features"
-          >
-            <h2 className="text-4xl text-balance pt-6  max-w-3xl">
-              FAQ{" "}
-              <span className="text-gray-500">
-                Everything you need to know about Papermark - DocSend
-                alternative
-              </span>
-            </h2>
-            <div className="">
-              <dl className="mt-10 space-y-6 divide-y divide-gray-800/10 ">
-                {faqs.map((faq) => (
-                  <Disclosure as="div" key={faq.question} className="pt-6">
-                    {({ open }) => (
-                      <>
-                        <dt>
-                          <Disclosure.Button className="flex w-full items-start justify-between text-left text-gray-800">
-                            <span className="text-balance  font-medium leading-7">
-                              {faq.question}
-                            </span>
-                            <span className="ml-6 flex h-7 items-center">
-                              {open ? (
-                                <MinusSmallIcon
-                                  className="h-6 w-6"
-                                  aria-hidden="true"
-                                />
-                              ) : (
-                                <PlusSmallIcon
-                                  className="h-6 w-6"
-                                  aria-hidden="true"
-                                />
-                              )}
-                            </span>
-                          </Disclosure.Button>
-                        </dt>
-                        <Disclosure.Panel as="dd" className="mt-2 pr-12">
-                          <p className="text-balance leading-7 text-gray-500">
-                            {faq.answer}
-                          </p>
-                        </Disclosure.Panel>
-                      </>
-                    )}
-                  </Disclosure>
-                ))}
-              </dl>
-            </div>
-          </div>
-          {/* CTA */}
-          <div className="bg-[#fb7a00]">
-            <div className="w-full mx-auto max-w-5xl py-32 px-4 md:px-8">
-              <h2 className="text-4xl text-balance  ">
-                Free and open source DocSend alternative.
-              </h2>
-
-              <div className="pt-8 space-x-2">
-                <Link
-                  href="https://cal.com/marcseitz/papermark"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <Button
-                    variant="outline"
-                    className="text-balance rounded-3xl bg-transparent border-black"
-                  >
-                    Book a demo
-                  </Button>
-                </Link>
-                <Link href="/login">
-                  <Button className="text-balance rounded-3xl">
-                    Start for free
-                  </Button>
-                </Link>
-              </div>
-            </div>
+        </div>
+        <div className="grid gap-16 md:gap-24 lg:gap-32 mt-20">
+          <div className="mx-auto mt-4 w-full px-0 lg:px-8 xl:p-0">
+            <LogoCloud />
           </div>
         </div>
       </div>
