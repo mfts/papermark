@@ -12,11 +12,11 @@ export default async function HomePage() {
         <div className="max-w-6xl mx-auto px-4 md:px-8 sm:pt-16 pt-8 text-gray-600">
           <div className="space-y-5 max-w-4xl mx-auto text-center mb-10">
             <h1 className="text-3xl text-gray-800 font-extrabold mx-auto sm:text-6xl max-w-3xl tracking-tighter">
-              Open Investor Database
+              Investors Database
             </h1>
             <p>
-              Find investors based on stage, sector, or location. <br />
-              Powered by Papermark.
+              List of investors where you can search by stage, sector, or
+              location.
             </p>
           </div>
         </div>

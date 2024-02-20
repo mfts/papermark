@@ -35,3 +35,11 @@ export const REACTIONS = [
     label: "down",
   },
 ];
+
+// growing list of blocked pathnames that lead to 404s
+export const BLOCKED_PATHNAMES = [
+  "/phpmyadmin",
+  "/server-status",
+  "/wordpress",
+  "/_all_dbs",
+];
