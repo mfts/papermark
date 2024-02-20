@@ -112,7 +112,7 @@ export default async function InvestorPage({
                       </p>
                     </div>
                   </div>
-                  <a href={investor.website} className="p-6">
+                  <a href={investor.website || "/investors"} className="p-6">
                     <Button
                       className="rounded-3xl hover:bg-gray-100"
                       style={{
@@ -146,7 +146,7 @@ export default async function InvestorPage({
                       </p>
                     </div>
                   </div>
-                  <a href={investor.website} className="p-6">
+                  <a href={investor.website || "/investors"} className="p-6">
                     <Button
                       className="rounded-3xl hover:bg-gray-100"
                       style={{
@@ -181,7 +181,7 @@ export default async function InvestorPage({
                       </p>
                     </div>
                   </div>
-                  <a href={investor.website} className="p-6">
+                  <a href={investor.website || "/investors"} className="p-6">
                     <Button
                       className="rounded-3xl hover:bg-gray-100"
                       style={{
