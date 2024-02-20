@@ -1,4 +1,4 @@
-import { getPosts, getPost } from "@/lib//content/blog";
+import { getPosts, getPost } from "@/lib/content/blog";
 import { ContentBody } from "@/components/mdx/post-body";
 import { notFound } from "next/navigation";
 import Link from "next/link";
@@ -7,22 +7,28 @@ import { constructMetadata, formatDate } from "@/lib/utils";
 import { Metadata } from "next";
 
 export async function generateStaticParams() {
-  const posts = await getPosts()
-  return posts.map((post) => ({ slug: post?.data.slug }))
+  const posts = await getPosts();
+  return posts.map((post) => ({ slug: post?.data.slug }));
 }
 
 export const generateMetadata = async ({
   params,
 }: {
   params: {
-    slug: string
-  }
+    slug: string;
+  };
 }): Promise<Metadata> => {
-  const post = (await getPosts()).find((post) => post?.data.slug === params.slug)
-  const { title, summary: description, image } = post?.data || {} 
-  
-  return constructMetadata({ title: `${title} - Papermark`, description, image })
-}
+  const post = (await getPosts()).find(
+    (post) => post?.data.slug === params.slug,
+  );
+  const { title, summary: description, image } = post?.data || {};
+
+  return constructMetadata({
+    title: `${title} - Papermark`,
+    description,
+    image,
+  });
+};
 
 export default async function BlogPage({
   params,

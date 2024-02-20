@@ -1,6 +1,7 @@
 "use client";
 
 import Fuse from "fuse.js";
+
 import { useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { GlobeIcon, SearchIcon } from "lucide-react";
@@ -9,6 +10,7 @@ import Link from "next/link";
 import Image from "next/image";
 import PlaceholderImg from "@/public/_static/placeholder.png";
 import PapermarkPImg from "@/public/_static/papermark-p.svg";
+import { Button } from "@/components/ui/button";
 
 const searchOptions = {
   threshold: 0.3,
@@ -182,13 +184,22 @@ export default function Dashboard({ data }: any) {
                     >
                       Sector
                     </th>
+                    <th
+                      scope="col"
+                      className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
+                    >
+                      Fund details
+                    </th>
                   </tr>
                 </thead>
+
                 <tbody className="md:divide-y divide-gray-200 md:bg-white grid grid-cols-1 gap-3 sm:grid-cols-2 md:table-row-group">
                   {paginatedInvestors.map((investor: any) => (
+                    // Assuming you have a slug or some unique identifier for each investor
+
                     <tr
                       key={investor.id}
-                      className="group grid grid-cols-3 gap-1 md:table-row bg-white rounded-lg md:rounded-none md:bg-transparent shadow md:shadow-none border border-gray-200 md:border-x-0 py-3 px-2 md:p-0"
+                      className="hover:bg-gray-100 group grid grid-cols-3 gap-1 md:table-row bg-white rounded-lg md:rounded-none md:bg-transparent shadow md:shadow-none border border-gray-200 md:border-x-0 py-3 px-2 md:p-0"
                     >
                       <td className="col-span-3 whitespace-nowrap pl-3 md:py-2 md:pl-6 text-sm sm:pl-6 md:h-24">
                         <div className="flex items-center space-x-2">
@@ -254,6 +265,15 @@ export default function Dashboard({ data }: any) {
                       </td>
                       <td className="col-span-3 md:max-w-xs px-3 md:px-2 md:py-3 text-sm text-gray-500 truncate w-40">
                         {investor.sector ? investor.sector : "Unknown"}
+                      </td>
+                      <td className="col-span-3 md:max-w-xs px-3 md:px-2 md:py-3 text-sm text-gray-500 truncate w-40">
+                        <a
+                          href={`/investors/${encodeURIComponent(investor.slug)}`}
+                        >
+                          <Button className="rounded-3xl bg-gray-200 text-xs text-gray-800 hover:bg-[#fb7a00]]">
+                            Learn more
+                          </Button>
+                        </a>
                       </td>
                     </tr>
                   ))}
