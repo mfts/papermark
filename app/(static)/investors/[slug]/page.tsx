@@ -79,7 +79,7 @@ export default async function InvestorPage({
                 Venture capital and investor firm
               </p>
               <div className="pt-8 space-x-2">
-                <Link href={investor.website}>
+                <Link href={investor.website || "/investors"}>
                   <Button className="text-white bg-gray-800 rounded-3xl hover:bg-gray-500 justify-center">
                     {investor.name} website link
                   </Button>
