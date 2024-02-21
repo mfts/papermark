@@ -17,6 +17,9 @@
     "stripe:webhook": "pkgx stripe listen --forward-to localhost:3000/api/stripe/webhook"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.515.0",
+    "@aws-sdk/cloudfront-signer": "^3.496.0",
+    "@aws-sdk/s3-request-presigner": "^3.515.0",
     "@chronark/zod-bird": "^0.3.3",
     "@github/webauthn-json": "^2.1.1",
     "@headlessui/react": "^1.7.18",
@@ -42,6 +45,7 @@
     "@radix-ui/react-switch": "^1.0.3",
     "@radix-ui/react-tabs": "^1.0.4",
     "@react-email/components": "^0.0.14",
+    "@sindresorhus/slugify": "^2.2.1",
     "@stripe/stripe-js": "^2.1.7",
     "@tailwindcss/typography": "^0.5.10",
     "@teamhanko/passkeys-next-auth-provider": "^0.2.5",
@@ -108,6 +112,7 @@
     "tailwind-merge": "^2.2.1",
     "tailwindcss": "^3.4.1",
     "tailwindcss-animate": "^1.0.7",
+    "ts-pattern": "^5.0.8",
     "typescript": "^5.3.3",
     "ua-parser-js": "^1.0.37",
     "zod": "^3.22.4"
