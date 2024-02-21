@@ -57,16 +57,18 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
 
     var pngBuffer = pixmap.asPNG(); // as PNG
 
+    const buffer = Buffer.from(pngBuffer);
+
     // get docId from url with starts with "doc_" with regex
     const match = url.match(/(doc_[^\/]+)\//);
     const docId = match ? match[1] : undefined;
 
-    const constructedFile = new File([pngBuffer], `page-${pageNumber}.png`, {
-      type: "image/png",
-    });
-
     const { type, data } = await putFileServer({
-      file: constructedFile,
+      file: {
+        name: `page-${pageNumber}.png`,
+        type: "image/png",
+        buffer: buffer,
+      },
       teamId: teamId,
       docId: docId,
     });

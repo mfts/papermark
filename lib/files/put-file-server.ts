@@ -8,6 +8,13 @@ import { getS3Client } from "./aws-client";
 import slugify from "@sindresorhus/slugify";
 import path from "node:path";
 
+// `File` is a web API type and not available server-side, so we need to define our own type
+type File = {
+  name: string;
+  type: string;
+  buffer: Buffer;
+};
+
 export const putFileServer = async ({
   file,
   teamId,
@@ -34,7 +41,7 @@ export const putFileServer = async ({
 };
 
 const putFileInVercelServer = async (file: File) => {
-  const contents = await file.arrayBuffer();
+  const contents = file.buffer;
 
   const blob = await put(file.name, contents, {
     access: "public",
@@ -66,8 +73,7 @@ const putFileInS3Server = async ({
 
   const key = `${teamId}/${docId}/${slugify(name)}${ext}`;
 
-  const arrayBuffer = await file.arrayBuffer();
-  const buffer = Buffer.from(arrayBuffer);
+  const buffer = file.buffer;
 
   const params = {
     Bucket: process.env.NEXT_PRIVATE_UPLOAD_BUCKET,
