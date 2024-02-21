@@ -2,6 +2,7 @@ import { client } from "@/trigger";
 import { eventTrigger, retry } from "@trigger.dev/sdk";
 import { z } from "zod";
 import prisma from "@/lib/prisma";
+import { getFile } from "@/lib/files/upload/get-file";
 
 client.defineJob({
   id: "convert-pdf-to-image",
@@ -13,12 +14,13 @@ client.defineJob({
       documentVersionId: z.string(),
       versionNumber: z.number().int().optional(),
       documentId: z.string().optional(),
+      teamId: z.string().optional(),
     }),
   }),
   run: async (payload, io, ctx) => {
     const { documentVersionId } = payload;
 
-    // get file url from document version
+    // 1. get file url from document version
     const documentUrl = await io.runTask("get-document-url", async () => {
       return prisma.documentVersion.findUnique({
         where: {
@@ -26,6 +28,8 @@ client.defineJob({
         },
         select: {
           file: true,
+          storageType: true,
+          numPages: true,
         },
       });
     });
@@ -36,32 +40,52 @@ client.defineJob({
       return;
     }
 
-    // send file to api/convert endpoint in a task and get back number of pages
-    const muDocument = await io.runTask("get-number-of-pages", async () => {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/mupdf/get-pages`,
-        {
-          method: "POST",
-          body: JSON.stringify({ url: documentUrl.file }),
-          headers: {
-            "Content-Type": "application/json",
-          },
-        },
-      );
-      await io.logger.info("log response", { response });
+    let numPages = documentUrl.numPages;
 
-      const { numPages } = (await response.json()) as { numPages: number };
-      return { numPages };
+    // skip if the numPages are already defined
+    if (!numPages) {
+      // 2. send file to api/convert endpoint in a task and get back number of pages
+      const muDocument = await io.runTask("get-number-of-pages", async () => {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/mupdf/get-pages`,
+          {
+            method: "POST",
+            body: JSON.stringify({ url: documentUrl.file }),
+            headers: {
+              "Content-Type": "application/json",
+            },
+          },
+        );
+        await io.logger.info("log response", { response });
+
+        const { numPages } = (await response.json()) as { numPages: number };
+        return { numPages };
+      });
+
+      if (!muDocument || muDocument.numPages < 1) {
+        await io.logger.error("Failed to get number of pages", { payload });
+        return;
+      }
+
+      numPages = muDocument.numPages;
+    }
+
+    // 3. get signed url from file
+    const signedUrl = await io.runTask("get-signed-url", async () => {
+      return await getFile({
+        type: documentUrl.storageType,
+        data: documentUrl.file,
+      });
     });
 
-    if (!muDocument || muDocument.numPages < 1) {
-      await io.logger.error("Failed to get number of pages", { payload });
+    if (!signedUrl) {
+      await io.logger.error("Failed to get signed url", { payload });
       return;
     }
 
-    // iterate through pages and upload to blob in a task
+    // 4. iterate through pages and upload to blob in a task
     let currentPage = 0;
-    for (var i = 0; i < muDocument.numPages; ++i) {
+    for (var i = 0; i < numPages; ++i) {
       currentPage = i + 1;
       await io.runTask(
         `upload-page-${currentPage}`,
@@ -74,10 +98,12 @@ client.defineJob({
               body: JSON.stringify({
                 documentVersionId: documentVersionId,
                 pageNumber: currentPage,
-                url: documentUrl.file,
+                url: signedUrl,
+                teamId: payload.teamId,
               }),
               headers: {
                 "Content-Type": "application/json",
+                Authorization: `Bearer ${process.env.INTERNAL_API_KEY}`,
               },
             },
           );
@@ -104,7 +130,7 @@ client.defineJob({
       );
     }
 
-    // after all pages are uploaded, update document version to hasPages = true
+    // 5. after all pages are uploaded, update document version to hasPages = true
     await io.runTask("enable-pages", async () => {
       return prisma.documentVersion.update({
         where: {
