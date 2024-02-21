@@ -74,10 +74,10 @@ export default function DomainSection({
             name="key"
             required
             value={data.slug || ""}
-            pattern="[\p{L}\p{N}\p{Pd}\/]+"
+            pattern="[\p{L}\p{N}\p{Pd}]+"
             onInvalid={(e) => {
               e.currentTarget.setCustomValidity(
-                "Only letters, numbers, '-', and '/' are allowed.",
+                "Only letters, numbers, and '-' are allowed.",
               );
             }}
             autoComplete="off"
