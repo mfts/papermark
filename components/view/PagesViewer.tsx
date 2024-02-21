@@ -191,20 +191,41 @@ export default function PagesViewer({
 
         <div className="flex justify-center mx-auto relative h-full w-full">
           {pages && loadedImages[pageNumber - 1] ? (
-            pages.map((page, index) => (
-              <Image
-                key={index}
-                className={`object-contain mx-auto ${
-                  pageNumber - 1 === index ? "block" : "hidden"
-                }`}
-                src={loadedImages[index] ? page.file : BlankImg}
-                alt={`Page ${index + 1}`}
-                priority={loadedImages[index] ? true : false}
-                fill
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 75vw, 50vw"
-                quality={100}
-              />
-            ))
+            pages.map((page, index) => {
+              // contains cloudfront.net in the file path, then use img tag otherwise use next/image
+              if (page.file.toLowerCase().includes("cloudfront.net")) {
+                return (
+                  <img
+                    key={index}
+                    className={`object-contain mx-auto ${
+                      pageNumber - 1 === index ? "block" : "hidden"
+                    }`}
+                    src={
+                      loadedImages[index]
+                        ? page.file
+                        : "https://www.papermark.io/_static/blank.gif"
+                    }
+                    alt={`Page ${index + 1}`}
+                    fetchPriority={loadedImages[index] ? "high" : "auto"}
+                  />
+                );
+              }
+
+              return (
+                <Image
+                  key={index}
+                  className={`object-contain mx-auto ${
+                    pageNumber - 1 === index ? "block" : "hidden"
+                  }`}
+                  src={loadedImages[index] ? page.file : BlankImg}
+                  alt={`Page ${index + 1}`}
+                  priority={loadedImages[index] ? true : false}
+                  fill
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 75vw, 50vw"
+                  quality={100}
+                />
+              );
+            })
           ) : (
             <LoadingSpinner className="h-20 w-20 text-foreground" />
           )}
