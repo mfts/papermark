@@ -25,16 +25,12 @@ export default async function handler(
         `${process.env.NEXT_PRIVATE_UPLOAD_DISTRIBUTION_DOMAIN}`,
       );
 
-      console.log("distribution url", distributionUrl.toString());
-
       const url = getCloudfrontSignedUrl({
         url: distributionUrl.toString(),
         keyPairId: `${process.env.NEXT_PRIVATE_UPLOAD_DISTRIBUTION_KEY_ID}`,
         privateKey: `${process.env.NEXT_PRIVATE_UPLOAD_DISTRIBUTION_KEY_CONTENTS}`,
         dateLessThan: new Date(Date.now() + ONE_HOUR).toISOString(),
       });
-
-      console.log("cloudfront signed url", url);
 
       return res.status(200).json({ url });
     }

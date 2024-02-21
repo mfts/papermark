@@ -37,13 +37,13 @@ export const putFile = async ({
 };
 
 const putFileInVercel = async (file: File) => {
-  const contents = await file.arrayBuffer();
-  const numPages = await getPagesCount(contents);
-
   const newBlob = await upload(file.name, file, {
     access: "public",
     handleUploadUrl: "/api/file/browser-upload",
   });
+
+  const contents = await file.arrayBuffer();
+  const numPages = await getPagesCount(contents);
 
   return {
     type: DocumentStorageType.VERCEL_BLOB,
@@ -91,12 +91,6 @@ const putFileInS3 = async ({
     key: string;
   };
 
-  const body = await file.arrayBuffer();
-
-  const numPages = await getPagesCount(body);
-
-  // const constructedFile = new File([body], file.name, { type: file.type });
-
   const response = await fetch(url, {
     method: "PUT",
     headers: {
@@ -105,13 +99,14 @@ const putFileInS3 = async ({
     body: file,
   });
 
-  console.log("response", response);
-
   if (!response.ok) {
     throw new Error(
       `Failed to upload file "${file.name}", failed with status code ${response.status}`,
     );
   }
+
+  const body = await file.arrayBuffer();
+  const numPages = await getPagesCount(body);
 
   return {
     type: DocumentStorageType.S3_PATH,
