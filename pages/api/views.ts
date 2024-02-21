@@ -194,6 +194,7 @@ export default async function handle(
         select: {
           file: true,
           pageNumber: true,
+          embeddedLinks: true,
         },
       });
       console.timeEnd("get-pages");
@@ -247,7 +248,7 @@ export default async function handle(
 
     return res.status(200).json(returnObject);
   } catch (error) {
-    log(`Failed to record view for ${linkId}. Error: \n\n ${error}`);
+    log({message: `Failed to record view for ${linkId}. \n\n ${error}`, type: "error", mention: true});
     return res.status(500).json({ message: (error as Error).message });
   }
 }

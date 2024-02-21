@@ -155,13 +155,14 @@ model DocumentVersion {
 }
 
 model DocumentPage {
-  id         String          @id @default(cuid())
-  version    DocumentVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
-  versionId  String
-  pageNumber Int // e.g., 1, 2, 3 for 
-  file       String // This should be a reference to where the file / page is stored (S3, Google Cloud Storage, etc.)
-  createdAt  DateTime        @default(now())
-  updatedAt  DateTime        @updatedAt
+  id            String          @id @default(cuid())
+  version       DocumentVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  versionId     String
+  pageNumber    Int // e.g., 1, 2, 3 for 
+  embeddedLinks String[]
+  file          String // This should be a reference to where the file / page is stored (S3, Google Cloud Storage, etc.)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
 
   @@unique([pageNumber, versionId])
   @@index([versionId])

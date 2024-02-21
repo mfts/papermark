@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useTeam } from "@/context/team-context";
 import { useBilling } from "@/lib/swr/use-billing";
-import { cn, formattedDate, getFirstAndLastDay } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";

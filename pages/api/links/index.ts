@@ -15,6 +15,7 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
+  // POST /api/links
   if (req.method === "POST") {
     const session = await getServerSession(req, res, authOptions);
     if (!session) {

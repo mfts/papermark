@@ -10,6 +10,8 @@ import {
   Presentation as PresentationChartBarIcon,
   Image as PhotoIcon,
 } from "lucide-react";
+import { useTeam } from "@/context/team-context";
+import { usePlan } from "@/lib/swr/use-billing";
 
 function fileIcon(fileType: string) {
   switch (fileType) {
@@ -37,12 +39,14 @@ export default function DocumentUpload({
   currentFile: File | null;
   setCurrentFile: React.Dispatch<React.SetStateAction<File | null>>;
 }) {
+  const { plan, loading } = usePlan();
+  const maxSize = plan?.plan === "pro" ? 100 : 30;
   const { getRootProps, getInputProps } = useDropzone({
     accept: {
       "application/pdf": [], // ".pdf"
     },
     multiple: false,
-    maxSize: 30 * 1024 * 1024, // 30 MB
+    maxSize: maxSize * 1024 * 1024, // 30 MB
     onDropAccepted: (acceptedFiles) => {
       setCurrentFile(acceptedFiles[0]);
     },
@@ -50,7 +54,7 @@ export default function DocumentUpload({
       const { errors } = fileRejections[0];
       let message;
       if (errors[0].code === "file-too-large") {
-        message = "File size too big (max. 30 MB)";
+        message = `File size too big (max. ${maxSize} MB)`;
       } else if (errors[0].code === "file-invalid-type") {
         message = "File type not supported (.pdf only)";
       } else {
@@ -103,7 +107,9 @@ export default function DocumentUpload({
               </span>
             </div>
             <p className="text-xs leading-5 text-gray-500">
-              {currentFile ? "Replace file?" : "Only *.pdf & 30 MB limit"}
+              {currentFile
+                ? "Replace file?"
+                : `Only *.pdf & ${maxSize} MB limit`}
             </p>
           </div>
         </div>
