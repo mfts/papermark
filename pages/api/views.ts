@@ -5,7 +5,7 @@ import { trackAnalytics } from "@/lib/analytics";
 import { client } from "@/trigger";
 import { newId } from "@/lib/id-helper";
 import { sendVerificationEmail } from "@/lib/emails/send-email-verification";
-import { getFile } from "@/lib/files/upload/get-file";
+import { getFile } from "@/lib/files/get-file";
 
 export default async function handle(
   req: NextApiRequest,

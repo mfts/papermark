@@ -2,7 +2,7 @@ import { client } from "@/trigger";
 import { eventTrigger, retry } from "@trigger.dev/sdk";
 import { z } from "zod";
 import prisma from "@/lib/prisma";
-import { getFile } from "@/lib/files/upload/get-file";
+import { getFile } from "@/lib/files/get-file";
 
 client.defineJob({
   id: "convert-pdf-to-image",

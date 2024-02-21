@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 // @ts-ignore
 import mupdf from "mupdf";
 import prisma from "@/lib/prisma";
-import { putFileServer } from "@/lib/files/upload/put-file-server";
+import { putFileServer } from "@/lib/files/put-file-server";
 
 // This function can run for a maximum of 60 seconds
 export const config = {
