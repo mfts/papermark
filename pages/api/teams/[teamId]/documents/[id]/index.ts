@@ -3,9 +3,9 @@ import { getServerSession } from "next-auth/next";
 import prisma from "@/lib/prisma";
 import { authOptions } from "../../../../auth/[...nextauth]";
 import { CustomUser } from "@/lib/types";
-import { del } from "@vercel/blob";
 import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
 import { errorhandler } from "@/lib/errorHandler";
+import { deleteFile } from "@/lib/files/delete-file-server";
 
 export default async function handle(
   req: NextApiRequest,
@@ -61,25 +61,41 @@ export default async function handle(
     const userId = (session.user as CustomUser).id;
 
     try {
-      const { document } = await getTeamWithUsersAndDocument({
-        teamId,
-        userId,
-        docId,
-        checkOwner: true,
-        options: {
-          select: {
-            id: true,
-            ownerId: true,
-            file: true,
-            type: true,
+      const documentVersions = await prisma.document.findUnique({
+        where: {
+          id: docId,
+          teamId: teamId,
+          team: {
+            users: {
+              some: {
+                role: "ADMIN",
+                userId: userId,
+              },
+            },
+          },
+        },
+        include: {
+          versions: {
+            select: {
+              id: true,
+              file: true,
+              type: true,
+              storageType: true,
+            },
           },
         },
       });
 
-      //if it is not notion document then only delete the document from vercel blob
-      if (document?.type !== "notion") {
-        // delete the document from vercel blob
-        await del(document!.file);
+      if (!documentVersions) {
+        return res.status(404).end("Document not found");
+      }
+
+      //if it is not notion document then only delete the document from storage
+      if (documentVersions.type !== "notion") {
+        // delete the files from storage
+        for (const version of documentVersions.versions) {
+          await deleteFile({ type: version.storageType, data: version.file });
+        }
       }
 
       // delete the document from database

@@ -106,22 +106,20 @@ export default function DocumentPage() {
       return;
     }
 
-    const response = await fetch(
-      `/api/teams/${teamInfo?.currentTeam?.id}/documents/${documentId}`,
-      {
+    toast.promise(
+      fetch(`/api/teams/${teamInfo?.currentTeam?.id}/documents/${documentId}`, {
         method: "DELETE",
+      }).then(() => {
+        setIsFirstClick(false);
+        setMenuOpen(false);
+        router.push("/documents");
+      }),
+      {
+        loading: "Deleting document...",
+        success: "Document deleted successfully.",
+        error: "Failed to delete document. Try again.",
       },
     );
-
-    if (response.ok) {
-      setIsFirstClick(false);
-      setMenuOpen(false);
-      router.push("/documents");
-      toast.success("Document deleted successfully.");
-    } else {
-      const { message } = await response.json();
-      toast.error(message);
-    }
   };
 
   const handleMenuStateChange = (open: boolean) => {
