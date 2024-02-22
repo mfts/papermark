@@ -2,24 +2,8 @@ import Image from "next/image";
 import TwitterIcon from "@/components/shared/icons/twitter";
 import WebsiteIcon from "@/components/shared/icons/globe";
 import { cn } from "@/lib/utils";
+import { type Investor } from "@/app/(static)/open-source-investors/page";
 
-interface Investor {
-  id: string;
-  createdTime: string;
-  fields: Fields;
-}
-
-interface Fields {
-  name: string;
-  type: string;
-  title: string;
-  company: string;
-  twitterUrl: string;
-  websiteUrl: string;
-  twitterImageUrl: string;
-  openSourceInvestments: string;
-  checkSize: "Unknown" | "$5k - $50k" | "$50k+" | "$100k+" | "$250k+";
-}
 
 export default function Table({ investors }: { investors: Investor[] }) {
   return (

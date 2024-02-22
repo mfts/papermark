@@ -13,7 +13,7 @@ export default function EmailProtectionSection(
     setData: Dispatch<SetStateAction<any>>
   }) {
   const { emailProtected } = data;
-  const [enabled, setEnabled] = useState<boolean>(true);
+  const [enabled, setEnabled] = useState<boolean>(emailProtected);
 
   useEffect(() => {
     setEnabled(emailProtected);

@@ -153,6 +153,8 @@ export default async function handle(
         emailProtected: linkData.emailProtected,
         emailAuthenticated: linkData.emailAuthenticated,
         allowDownload: linkData.allowDownload,
+        allowList: linkData.allowList,
+        denyList: linkData.denyList,
         expiresAt: exat,
         domainId: domainObj?.id || null,
         domainSlug: domain || null,

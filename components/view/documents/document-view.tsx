@@ -16,7 +16,7 @@ import { useRouter } from "next/router";
 export type DEFAULT_DOCUMENT_VIEW_TYPE = {
   viewId: string;
   file: string | null;
-  pages: { file: string; pageNumber: string }[] | null;
+  pages: { file: string; pageNumber: string; embeddedLinks: string[] }[] | null;
 };
 
 export default function DocumentView({

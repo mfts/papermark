@@ -10,18 +10,19 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/router";
-import { type PutBlobResult } from "@vercel/blob";
-import { upload } from "@vercel/blob/client";
 import DocumentUpload from "@/components/document-upload";
-import { pdfjs } from "react-pdf";
-import { copyToClipboard, getExtension } from "@/lib/utils";
+import { copyToClipboard } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { usePlausible } from "next-plausible";
 import { toast } from "sonner";
 import { useTeam } from "@/context/team-context";
 import { parsePageId } from "notion-utils";
-
-pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
+import { putFile } from "@/lib/files/put-file";
+import {
+  DocumentData,
+  createDocument,
+  createNewDocumentVersion,
+} from "@/lib/documents/create-document";
 
 export function AddDocumentModal({
   newVersion,
@@ -37,7 +38,9 @@ export function AddDocumentModal({
   const [notionLink, setNotionLink] = useState<string | null>(null);
   const teamInfo = useTeam();
 
-  const handleBrowserUpload = async (
+  const teamId = teamInfo?.currentTeam?.id as string;
+
+  const handleFileUpload = async (
     event: FormEvent<HTMLFormElement>,
   ): Promise<void> => {
     event.preventDefault();
@@ -50,28 +53,31 @@ export function AddDocumentModal({
 
     try {
       setUploading(true);
-      const newBlob = await upload(currentFile.name, currentFile, {
-        access: "public",
-        handleUploadUrl: "/api/file/browser-upload",
+
+      const { type, data, numPages } = await putFile({
+        file: currentFile,
+        teamId,
       });
 
+      const documentData: DocumentData = {
+        name: currentFile.name,
+        key: data!,
+        storageType: type!,
+      };
       let response: Response | undefined;
-      let numPages: number | undefined;
-      // create a document or new version in the database if the document is a pdf
-      if (getExtension(newBlob.pathname).includes("pdf")) {
-        numPages = await getTotalPages(newBlob.url);
-        if (!newVersion) {
-          // create a document in the database
-          response = await saveDocumentToDatabase(newBlob, numPages);
-        } else {
-          // create a new version for existing document in the database
-          const documentId = router.query.id;
-          response = await saveNewVersionToDatabase(
-            newBlob,
-            documentId as string,
-            numPages,
-          );
-        }
+      // create a document or new version in the database
+      if (!newVersion) {
+        // create a document in the database
+        response = await createDocument({ documentData, teamId, numPages });
+      } else {
+        // create a new version for existing document in the database
+        const documentId = router.query.id as string;
+        response = await createNewDocumentVersion({
+          documentData,
+          documentId,
+          numPages,
+          teamId,
+        });
       }
 
       if (response) {
@@ -112,67 +118,6 @@ export function AddDocumentModal({
       setUploading(false);
     }
   };
-
-  async function saveDocumentToDatabase(
-    blob: PutBlobResult,
-    numPages?: number,
-  ) {
-    // create a document in the database with the blob url
-    const response = await fetch(
-      `/api/teams/${teamInfo?.currentTeam?.id}/documents`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: blob.pathname,
-          url: blob.url,
-          numPages: numPages,
-        }),
-      },
-    );
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    return response;
-  }
-
-  // create a new version in the database
-  async function saveNewVersionToDatabase(
-    blob: PutBlobResult,
-    documentId: string,
-    numPages?: number,
-  ) {
-    const response = await fetch(
-      `/api/teams/${teamInfo?.currentTeam?.id}/documents/${documentId}/versions`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          url: blob.url,
-          numPages: numPages,
-          type: "pdf",
-        }),
-      },
-    );
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    return response;
-  }
-
-  // get the number of pages in the pdf
-  async function getTotalPages(url: string): Promise<number> {
-    const pdf = await pdfjs.getDocument(url).promise;
-    return pdf.numPages;
-  }
 
   const createNotionFileName = () => {
     // Extract Notion file name from the URL
@@ -290,7 +235,7 @@ export function AddDocumentModal({
               <CardContent className="space-y-2">
                 <form
                   encType="multipart/form-data"
-                  onSubmit={handleBrowserUpload}
+                  onSubmit={handleFileUpload}
                   className="flex flex-col"
                 >
                   <div className="space-y-1">

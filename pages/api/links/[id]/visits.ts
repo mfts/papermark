@@ -22,6 +22,8 @@ export default async function handle(
     // get link id from query params
     const { id } = req.query as { id: string };
 
+    const userId = (session.user as CustomUser).id;
+
     try {
       // get the numPages from document
       const result = await prisma.link.findUnique({
@@ -45,7 +47,7 @@ export default async function handle(
       });
 
       const docId = result?.document.id!;
-      const userId = (session.user as CustomUser).id;
+      
       // check if the the team that own the document has the current user
       await getDocumentWithTeamAndUser({
         docId,
@@ -114,7 +116,7 @@ export default async function handle(
 
       return res.status(200).json(viewsWithDuration);
     } catch (error) {
-      log(`Failed to get views for link ${id}. Error: \n\n ${error}`);
+      log({message: `Failed to get views for link: _${id}_. \n\n ${error} \n\n*Metadata*: \`{userId: ${userId}}\``, type: "error"});
       errorHandler(error, res);
     }
   } else {

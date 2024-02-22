@@ -64,7 +64,7 @@ export default async function handle(
 
       return res.status(200).json(teams);
     } catch (error) {
-      log(`Failed to find team for user: ${user.id} \n\n ${error}`);
+      log({message: `Failed to find team for user: _${user.id}_ \n\n ${error}`, type: "error"});
       errorHandler(error, res);
     }
   } else if (req.method === "POST") {
@@ -96,8 +96,13 @@ export default async function handle(
 
       return res.status(201).json(newTeam);
     } catch (error) {
+<<<<<<< HEAD
       log(`Failed to create team "${team}" for user: ${user.id}. Error: \n\n ${error}`);
       errorHandler(error, res);
+=======
+      log({message: `Failed to create team "${team}" for user: _${user.id}_. \n\n*Error*: \n\n ${error}`, type: "error"});
+      errorhandler(error, res);
+>>>>>>> 2fdd60bf152e5fba4ac4798bb76248e71dd93253
     }
   } else {
     res.setHeader("Allow", ["GET", "POST"]);

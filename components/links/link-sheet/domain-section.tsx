@@ -49,7 +49,7 @@ export default function DomainSection({
           onChange={handleDomainChange}
           onFocus={handleSelectFocus}
           className={cn(
-            "w-48 rounded-l-md border border-r-0 border-border bg-secondary px-5 text-sm text-secondary-foreground focus:border-border focus:outline-none focus:ring-0",
+            "w-full rounded-l-md border border-r-0 border-border bg-secondary px-5 text-sm text-secondary-foreground focus:border-border focus:outline-none focus:ring-0",
             data.domain && data.domain !== "papermark.io"
               ? ""
               : "rounded-r-md border-r-1",
@@ -74,10 +74,10 @@ export default function DomainSection({
             name="key"
             required
             value={data.slug || ""}
-            pattern="[\p{L}\p{N}\p{Pd}\/]+"
+            pattern="[\p{L}\p{N}\p{Pd}]+"
             onInvalid={(e) => {
               e.currentTarget.setCustomValidity(
-                "Only letters, numbers, '-', and '/' are allowed.",
+                "Only letters, numbers, and '-' are allowed.",
               );
             }}
             autoComplete="off"

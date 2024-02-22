@@ -83,9 +83,10 @@ export async function POST(req: Request) {
           );
           if (!sentFirstTrialEndReminderEmail) {
             return await Promise.allSettled([
-              log(
-                `Trial End Reminder for team: *${id}* is expiring in ${teamDaysLeft} days, email sent.`,
-              ),
+              log({
+                message: `Trial End Reminder for team: *${id}* is expiring in ${teamDaysLeft} days, email sent.`,
+                type: "cron"
+              }),
               limiter.schedule(() =>
                 sendTrialEndReminderEmail(userEmail, userName),
               ),
@@ -107,9 +108,10 @@ export async function POST(req: Request) {
           );
           if (!sentFinalTrialEndReminderEmail) {
             return await Promise.allSettled([
-              log(
-                `Final Trial End Reminder for team: *${id}* is expiring in ${teamDaysLeft} days, email sent.`,
-              ),
+              log({
+                message: `Final Trial End Reminder for team: *${id}* is expiring in ${teamDaysLeft} days, email sent.`,
+                type: "cron"
+              }),
               limiter.schedule(() =>
                 sendTrialEndFinalReminderEmail(userEmail, userName),
               ),
@@ -127,9 +129,10 @@ export async function POST(req: Request) {
         // downgrade the user to free if team has 0 day left on trial
         if (teamDaysLeft <= 0) {
           return await Promise.allSettled([
-            log(
-              `Downgrade to free for user: *${id}* is expiring in ${teamDaysLeft} days, downgraded.`,
-            ),
+            log({
+              message: `Downgrade to free for user: *${id}* is expiring in ${teamDaysLeft} days, downgraded.`,
+              type: "cron"
+            }),
             prisma.user.update({
               where: { email: userEmail },
               data: { plan: "free" },
@@ -144,10 +147,11 @@ export async function POST(req: Request) {
     );
     return NextResponse.json(results);
   } catch (error) {
-    await log(
-      `Trial end reminder cron failed. Error: " + ${(error as Error).message}`,
-      true,
-    );
+    await log({
+      message:`Trial end reminder cron failed. Error: " + ${(error as Error).message}`,
+      type: "cron",
+      mention: true,
+    });
     return NextResponse.json({ error: (error as Error).message });
   }
 }

@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  pageExtensions: ["js", "jsx", "ts", "tsx", "mdx"],
   images: {
     minimumCacheTTL: 2592000, // 30 days
     remotePatterns: [
@@ -48,6 +49,16 @@ const nextConfig = {
         // production img
         protocol: "https",
         hostname: "yoywvlh29jppecbh.public.blob.vercel-storage.com",
+      },
+      {
+        // development / staging hosted user img
+        protocol: "https",
+        hostname: "d16lliwzxm242j.cloudfront.net",
+      },
+      {
+        // production hosted user img
+        protocol: "https",
+        hostname: "d1ff41ind5a7r1.cloudfront.net",
       },
     ],
   },

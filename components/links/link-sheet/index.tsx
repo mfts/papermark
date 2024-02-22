@@ -27,6 +27,9 @@ import AllowNotificationSection from "./allow-notification-section";
 import FeedbackSection from "./feedback-section";
 import OGSection from "./og-section";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import AllowListSection from "./allow-list-section";
+import DenyListSection from "./deny-list-section";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 export const DEFAULT_LINK_PROPS = {
   id: null,
@@ -38,6 +41,8 @@ export const DEFAULT_LINK_PROPS = {
   emailProtected: true,
   emailAuthenticated: false,
   allowDownload: false,
+  allowList: [],
+  denyList: [],
   enableNotification: true,
   enableFeedback: true,
   enableCustomMetatag: false,
@@ -56,6 +61,8 @@ export type DEFAULT_LINK_TYPE = {
   emailProtected: boolean;
   emailAuthenticated: boolean;
   allowDownload: boolean;
+  allowList: string[];
+  denyList: string[];
   enableNotification: boolean;
   enableFeedback: boolean;
   enableCustomMetatag: boolean; // metatags
@@ -167,8 +174,8 @@ export default function LinkSheet({
 
   return (
     <Sheet open={isOpen} onOpenChange={(open: boolean) => setIsOpen(open)}>
-      <SheetContent className="bg-background text-foreground flex flex-col justify-between">
-        <SheetHeader>
+      <SheetContent className="bg-background text-foreground flex flex-col justify-between px-4 md:px-5 w-[90%] sm:w-[450px]">
+        <SheetHeader className="text-start">
           <SheetTitle>
             {currentLink ? "Edit link" : "Create a new link"}
           </SheetTitle>
@@ -209,20 +216,34 @@ export default function LinkSheet({
                       <Separator className="bg-muted-foreground absolute" />
                       <div className="relative mx-auto">
                         <span className="px-2 bg-background text-muted-foreground text-sm">
-                          Optional
+                          Link Options
                         </span>
                       </div>
                     </div>
 
                     <div>
                       <EmailProtectionSection {...{ data, setData }} />
-                      <EmailAuthenticationSection {...{ data, setData }} />
-                      <AllowDownloadSection {...{ data, setData }} />
-                      <PasswordSection {...{ data, setData }} />
-                      <ExpirationSection {...{ data, setData }} />
-                      <OGSection {...{ data, setData }} />
                       <AllowNotificationSection {...{ data, setData }} />
-                      <FeedbackSection {...{ data, setData }} />
+                      <AllowDownloadSection {...{ data, setData }} />
+                      <ExpirationSection {...{ data, setData }} />
+
+                      <Accordion type="single" collapsible>
+                        <AccordionItem value="item-1" className="border-none">
+                          <AccordionTrigger className="py-0 rounded-lg space-x-2">
+                            <span className="text-sm font-medium leading-6 text-foreground">
+                              Advanced Link Access Options
+                            </span>
+                          </AccordionTrigger>
+                          <AccordionContent className="first:pt-5">
+                            <EmailAuthenticationSection {...{ data, setData }} />
+                            <AllowListSection {...{ data, setData }} />
+                            <DenyListSection {...{ data, setData }} />
+                            <PasswordSection {...{ data, setData }} />
+                            <OGSection {...{ data, setData }} />
+                            <FeedbackSection {...{ data, setData }} />
+                          </AccordionContent>
+                        </AccordionItem>
+                      </Accordion>
                     </div>
                   </div>
                 </div>

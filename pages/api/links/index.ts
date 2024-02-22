@@ -15,6 +15,7 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
+  // POST /api/links
   if (req.method === "POST") {
     const session = await getServerSession(req, res, authOptions);
     if (!session) {
@@ -103,6 +104,8 @@ export default async function handler(
           metaTitle: linkData.metaTitle || null,
           metaDescription: linkData.metaDescription || null,
           metaImage: linkData.metaImage || null,
+          allowList: linkData.allowList,
+          denyList: linkData.denyList,
         },
       });
 
