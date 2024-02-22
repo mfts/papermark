@@ -67,41 +67,6 @@ const features = [
   },
 ];
 
-// const tiers = [
-//   {
-//     // name: "Hobby",
-//     id: "tier-hobby",
-//     href: "#",
-//     priceMonthly: "DocSend",
-//     description: "Free version is not available",
-//     features: [
-//       "❌ Custom domain",
-//       "❌ Pitchdeck feedback",
-//       "❌ Hosting",
-//       "❌ AI-recommendations",
-//       "❌ Team access",
-//       "❌ Hosting",
-//     ],
-//     featured: false,
-//   },
-//   {
-//     // name: "Enterprise",
-//     id: "tier-enterprise",
-//     href: "#",
-//     priceMonthly: "Papermark",
-//     description: "Free plan ",
-//     features: [
-//       "✅ Open Source",
-//       "✅ Custom domain",
-//       "✅ Advanced tracking system",
-//       "✅ Work as a team",
-//       "✅ Host by yourself",
-//       "✅ Pitchdeck analytics",
-//     ],
-//     featured: true,
-//   },
-// ];
-
 const tiers: {
   name: string;
   id: string;
