@@ -50,7 +50,9 @@ const navigation = {
     {
       name: "LinkedIn",
       href: "https://www.linkedin.com/company/papermarkio",
-      icon: () => <LinkedinIcon className="h-5 w-5" aria-hidden="true" />,
+      icon: () => (
+        <LinkedinIcon className="h-5 w-5" color={false} aria-hidden="true" />
+      ),
     },
   ],
 };
