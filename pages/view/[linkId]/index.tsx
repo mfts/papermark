@@ -109,7 +109,6 @@ export default function ViewPage({
     email: string;
   };
   const { data: session, status } = useSession();
-  const { authenticationCode } = router.query as { authenticationCode: string };
 
   if (!link || status === "loading" || router.isFallback) {
     return (
