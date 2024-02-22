@@ -13,18 +13,11 @@ import { CustomUser } from "@/lib/types";
 
 export default function DataroomCard({
   dataroom,
-  setDatarooms,
-  setLoading,
 }: {
   dataroom: DataroomWithFilesFoldersAndFilesCount;
-  setDatarooms: Dispatch<
-    SetStateAction<DataroomWithFilesFoldersAndFilesCount[] | undefined>
-  >;
-  setLoading: Dispatch<SetStateAction<boolean>>;
 }) {
   const [isFirstClick, setIsFirstClick] = useState<boolean>(false);
   const session = useSession();
-  const teamInfo = useTeam();
 
   function handleCopyToClipboard() {
     const type = dataroom.type;
@@ -38,12 +31,6 @@ export default function DataroomCard({
   const handleButtonClick = (event: any) => {
     event.preventDefault();
     if (isFirstClick) {
-      setDatarooms(
-        (currentDatarooms) =>
-          currentDatarooms?.filter(
-            (currentDataroom) => !(currentDataroom === dataroom),
-          ),
-      );
       deleteDataroomFromDatabase(dataroom.id);
     } else {
       setIsFirstClick(true);

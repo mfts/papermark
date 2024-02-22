@@ -9,6 +9,7 @@ import LoadingSpinner from "@/components/ui/loading-spinner";
 import SelectDataroomTypeModal from "@/components/datarooms/select-dataroom-type-modal";
 import { DataroomWithFilesAndFolders } from "@/lib/types";
 import { useTeam } from "@/context/team-context";
+import useDatarooms from "@/lib/swr/use-datarooms";
 
 export interface DataroomWithFilesFoldersAndFilesCount
   extends DataroomWithFilesAndFolders {
@@ -18,95 +19,59 @@ export interface DataroomWithFilesFoldersAndFilesCount
 }
 
 export default function Datarooms() {
-  const [datarooms, setDatarooms] = useState<
-    DataroomWithFilesFoldersAndFilesCount[] | undefined
-  >(undefined);
-  const [loading, setLoading] = useState<boolean>(false);
-  const teamInfo = useTeam();
-
-  //Fetch datarooms from backend
-  useEffect(() => {
-    (async () => {
-      if (teamInfo) {
-        const response = await fetch(
-          `/api/datarooms?teamId=${teamInfo?.currentTeam?.id}`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          },
-        );
-
-        if (!response.ok) {
-          return;
-        }
-
-        const data = await response.json();
-        setDatarooms(data.datarooms);
-      }
-    })();
-  }, [teamInfo]);
+  const { datarooms } = useDatarooms();
 
   return (
     <AppLayout>
-      {loading ? (
-        <div className="h-screen flex items-center justify-center">
-          <LoadingSpinner className="h-20 w-20" />
-        </div>
-      ) : (
-        <div className="p-4 sm:p-4 sm:m-4">
-          <div className="flex items-center justify-between mb-4 md:mb-8 lg:mb-12">
-            <div className="space-y-1">
-              <h2 className="text-2xl text-foreground font-semibold tracking-tight">
-                Datarooms
-              </h2>
-              <p className="text-sm text-muted-foreground">
-                Manage your datarooms
-              </p>
-            </div>
-            <ul className="flex items-center justify-between gap-4">
-              <SelectDataroomTypeModal>
-                <Button>Add New Dataroom</Button>
-              </SelectDataroomTypeModal>
-            </ul>
+      <div className="p-4 sm:p-4 sm:m-4">
+        <div className="flex items-center justify-between mb-4 md:mb-8 lg:mb-12">
+          <div className="space-y-1">
+            <h2 className="text-2xl text-foreground font-semibold tracking-tight">
+              Datarooms
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              Manage your datarooms
+            </p>
           </div>
-
-          <Separator className="my-6 bg-gray-200 dark:bg-gray-800" />
-
-          {datarooms && datarooms.length === 0 && (
-            <div className="flex items-center justify-center h-96">
-              <EmptyDataRooms />
-            </div>
-          )}
-
-          {/* Datarooms list */}
-          <ul role="list" className="space-y-4">
-            {!datarooms &&
-              Array.from({ length: 3 }).map((_, i) => (
-                <li
-                  key={i}
-                  className="flex flex-col space-y-4 px-4 py-4 sm:px-6 lg:px-8"
-                >
-                  <Skeleton key={i} className="h-5 w-20" />
-                  <Skeleton key={i} className="mt-3 h-3 w-10" />
-                </li>
-              ))}
-
-            {datarooms &&
-              datarooms.map((dataroom) => {
-                return (
-                  <DataroomCard
-                    key={dataroom.id}
-                    dataroom={dataroom}
-                    setDatarooms={setDatarooms}
-                    setLoading={setLoading}
-                  />
-                );
-              })}
+          <ul className="flex items-center justify-between gap-4">
+            <SelectDataroomTypeModal>
+              <Button>Add New Dataroom</Button>
+            </SelectDataroomTypeModal>
           </ul>
         </div>
-      )}
+
+        <Separator className="my-6 bg-gray-200 dark:bg-gray-800" />
+
+        {datarooms && datarooms.length === 0 && (
+          <div className="flex items-center justify-center h-96">
+            <EmptyDataRooms />
+          </div>
+        )}
+
+        {/* Datarooms list */}
+        <ul role="list" className="space-y-4">
+          {!datarooms &&
+            Array.from({ length: 3 }).map((_, i) => (
+              <li
+                key={i}
+                className="flex flex-col space-y-4 px-4 py-4 sm:px-6 lg:px-8"
+              >
+                <Skeleton key={i} className="h-5 w-20" />
+                <Skeleton key={i} className="mt-3 h-3 w-10" />
+              </li>
+            ))}
+
+          {datarooms &&
+            datarooms.map((dataroom) => {
+              return (
+                <DataroomCard
+                  key={dataroom.id}
+                  dataroom={dataroom}
+                />
+              );
+            })}
+        </ul>
+      </div>
     </AppLayout>
   );
 }
