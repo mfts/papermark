@@ -4,20 +4,38 @@ import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import Skeleton from "../Skeleton";
 import { STAGGER_CHILD_VARIANTS } from "@/lib/constants";
-import { copyToClipboard } from "@/lib/utils";
-import { Button } from "../ui/button";
+import {
+  convertDataUrlToFile,
+  copyToClipboard,
+  uploadImage,
+} from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import { usePlausible } from "next-plausible";
 import { useTeam } from "@/context/team-context";
-import { Label } from "../ui/label";
+import { Label } from "@/components/ui/label";
 import { parsePageId } from "notion-utils";
+import { LinkOptions } from "@/components/links/link-sheet/link-options";
+import {
+  DEFAULT_LINK_PROPS,
+  DEFAULT_LINK_TYPE,
+} from "@/components/links/link-sheet";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 export default function NotionForm() {
   const router = useRouter();
   const plausible = usePlausible();
   const [uploading, setUploading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [currentLinkId, setCurrentLinkId] = useState<string | null>(null);
   const [currentDocId, setCurrentDocId] = useState<string | null>(null);
   const [notionLink, setNotionLink] = useState<string | null>(null);
+  const [linkData, setLinkData] =
+    useState<DEFAULT_LINK_TYPE>(DEFAULT_LINK_PROPS);
   const teamInfo = useTeam();
 
   const createNotionFileName = () => {
@@ -98,15 +116,51 @@ export default function NotionForm() {
     }
   };
 
-  const handleContinue = (id: string) => {
+  const handleSubmit = async (event: any) => {
+    event.preventDefault();
+
+    setIsLoading(true);
+
+    // Upload the image if it's a data URL
+    let blobUrl: string | null =
+      linkData.metaImage && linkData.metaImage.startsWith("data:")
+        ? null
+        : linkData.metaImage;
+    if (linkData.metaImage && linkData.metaImage.startsWith("data:")) {
+      // Convert the data URL to a blob
+      const blob = convertDataUrlToFile({ dataUrl: linkData.metaImage });
+      // Upload the blob to vercel storage
+      blobUrl = await uploadImage(blob);
+      setLinkData({ ...linkData, metaImage: blobUrl });
+    }
+
+    const response = await fetch(`/api/links/${currentLinkId}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        ...linkData,
+        metaImage: blobUrl,
+        documentId: currentDocId,
+      }),
+    });
+
+    if (!response.ok) {
+      // handle error with toast message
+      const { error } = await response.json();
+      toast.error(error);
+      setIsLoading(false);
+      return;
+    }
+
     copyToClipboard(
-      `${process.env.NEXT_PUBLIC_BASE_URL}/view/${id}`,
+      `${process.env.NEXT_PUBLIC_BASE_URL}/view/${currentLinkId}`,
       "Link copied to clipboard. Redirecting to document page...",
     );
-    setTimeout(() => {
-      router.push(`/documents/${currentDocId}`);
-      setUploading(false);
-    }, 2000);
+
+    router.push(`/documents/${currentDocId}`);
+    setIsLoading(false);
   };
 
   return (
@@ -226,12 +280,23 @@ export default function NotionForm() {
                       </div>
                     </div>
                   </div>
+                  <div className="w-full max-w-xs sm:max-w-lg pb-8">
+                    <Accordion type="single" collapsible>
+                      <AccordionItem value="item-1" className="border-none">
+                        <AccordionTrigger className="py-0 rounded-lg space-x-2">
+                          <span className="text-sm font-medium leading-6 text-foreground">
+                            Configure Link Options
+                          </span>
+                        </AccordionTrigger>
+                        <AccordionContent className="first:pt-5">
+                          <LinkOptions data={linkData} setData={setLinkData} />
+                        </AccordionContent>
+                      </AccordionItem>
+                    </Accordion>
+                  </div>
                   <div className="flex items-center justify-center mb-4">
-                    <Button
-                      onClick={() => handleContinue(currentLinkId)}
-                      type="submit"
-                    >
-                      {"Share Document"}
+                    <Button loading={isLoading} onClick={handleSubmit}>
+                      Share document link
                     </Button>
                   </div>
                 </div>
