@@ -9,6 +9,7 @@ import { Button } from "../ui/button";
 import { usePlausible } from "next-plausible";
 import { useTeam } from "@/context/team-context";
 import { Label } from "../ui/label";
+import { parsePageId } from "notion-utils";
 
 export default function NotionForm() {
   const router = useRouter();
@@ -19,15 +20,33 @@ export default function NotionForm() {
   const [notionLink, setNotionLink] = useState<string | null>(null);
   const teamInfo = useTeam();
 
+  const createNotionFileName = () => {
+    // Extract Notion file name from the URL
+    const urlSegments = (notionLink as string).split("/")[3];
+    // Remove the last hyphen along with the Notion ID
+    const extractName = urlSegments.replace(/-([^/-]+)$/, "");
+    const notionFileName = extractName.replaceAll("-", " ") || "Notion Link";
+
+    return notionFileName;
+  };
+
   const handleNotionUpload = async (
     event: FormEvent<HTMLFormElement>,
   ): Promise<void> => {
     event.preventDefault();
+    const validateNotionPageURL = parsePageId(notionLink);
+    // Check if it's a valid URL or not by Regx
+    const isValidURL =
+      /^(https?:\/\/)?([a-zA-Z0-9-]+\.){1,}[a-zA-Z]{2,}([a-zA-Z0-9-._~:/?#[\]@!$&'()*+,;=]+)?$/;
 
-    // Check if the file is chosen
+    // Check if the field is empty or not
     if (!notionLink) {
       toast.error("Please enter a Notion link to proceed.");
       return; // prevent form from submitting
+    }
+    if (validateNotionPageURL === null || !isValidURL.test(notionLink)) {
+      toast.error("Please enter a valid Notion link to proceed.");
+      return;
     }
 
     try {
@@ -41,7 +60,7 @@ export default function NotionForm() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            name: "Notion Link", // TODO: get the title of the notion page
+            name: createNotionFileName(),
             url: notionLink,
             numPages: 1,
             type: "notion",
@@ -65,10 +84,15 @@ export default function NotionForm() {
         }, 2000);
       }
     } catch (error) {
+      setUploading(false);
+      toast.error(
+        "Oops! Can't access the Notion page. Please double-check it's set to 'Public'.",
+      );
       console.error(
         "An error occurred while processing the Notion link: ",
         error,
       );
+    } finally {
       setNotionLink(null);
       setUploading(false);
     }
