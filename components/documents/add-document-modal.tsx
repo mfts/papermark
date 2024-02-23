@@ -215,10 +215,16 @@ export function AddDocumentModal({
         isDocumentDialog
       >
         <Tabs defaultValue="document">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="document">Document</TabsTrigger>
-            <TabsTrigger value="notion">Notion Page</TabsTrigger>
-          </TabsList>
+          {!newVersion ? (
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="document">Document</TabsTrigger>
+              <TabsTrigger value="notion">Notion Page</TabsTrigger>
+            </TabsList>
+          ) : (
+            <TabsList className="grid w-full grid-cols-1">
+              <TabsTrigger value="document">Document</TabsTrigger>
+            </TabsList>
+          )}
           <TabsContent value="document">
             <Card>
               <CardHeader className="space-y-3">
@@ -263,53 +269,55 @@ export function AddDocumentModal({
               </CardContent>
             </Card>
           </TabsContent>
-          <TabsContent value="notion">
-            <Card>
-              <CardHeader className="space-y-3">
-                <CardTitle>Share a Notion Page</CardTitle>
-                <CardDescription>
-                  After you submit the Notion link, a shareable link will be
-                  generated and copied to your clipboard. Just like with a PDF
-                  document.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <form
-                  encType="multipart/form-data"
-                  onSubmit={handleNotionUpload}
-                  className="flex flex-col"
-                >
-                  <div className="space-y-1 pb-8">
-                    <Label htmlFor="notion-link">Notion Page Link</Label>
-                    <div className="mt-2">
-                      <input
-                        type="text"
-                        name="notion-link"
-                        id="notion-link"
-                        placeholder="notion.site/..."
-                        className="flex w-full rounded-md border-0 py-1.5 text-foreground bg-background shadow-sm ring-1 ring-inset ring-input placeholder:text-muted-foreground focus:ring-2 focus:ring-inset focus:ring-gray-400 sm:text-sm sm:leading-6"
-                        value={notionLink || ""}
-                        onChange={(e) => setNotionLink(e.target.value)}
-                      />
+          {!newVersion && (
+            <TabsContent value="notion">
+              <Card>
+                <CardHeader className="space-y-3">
+                  <CardTitle>Share a Notion Page</CardTitle>
+                  <CardDescription>
+                    After you submit the Notion link, a shareable link will be
+                    generated and copied to your clipboard. Just like with a PDF
+                    document.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <form
+                    encType="multipart/form-data"
+                    onSubmit={handleNotionUpload}
+                    className="flex flex-col"
+                  >
+                    <div className="space-y-1 pb-8">
+                      <Label htmlFor="notion-link">Notion Page Link</Label>
+                      <div className="mt-2">
+                        <input
+                          type="text"
+                          name="notion-link"
+                          id="notion-link"
+                          placeholder="notion.site/..."
+                          className="flex w-full rounded-md border-0 py-1.5 text-foreground bg-background shadow-sm ring-1 ring-inset ring-input placeholder:text-muted-foreground focus:ring-2 focus:ring-inset focus:ring-gray-400 sm:text-sm sm:leading-6"
+                          value={notionLink || ""}
+                          onChange={(e) => setNotionLink(e.target.value)}
+                        />
+                      </div>
+                      <small className="text-xs text-muted-foreground">
+                        Your Notion page needs to be shared publicly.
+                      </small>
                     </div>
-                    <small className="text-xs text-muted-foreground">
-                      Your Notion page needs to be shared publicly.
-                    </small>
-                  </div>
-                  <div className="flex justify-center">
-                    <Button
-                      type="submit"
-                      className="w-full lg:w-1/2"
-                      disabled={uploading || !notionLink}
-                      loading={uploading}
-                    >
-                      {uploading ? "Saving..." : "Save Notion Link"}
-                    </Button>
-                  </div>
-                </form>
-              </CardContent>
-            </Card>
-          </TabsContent>
+                    <div className="flex justify-center">
+                      <Button
+                        type="submit"
+                        className="w-full lg:w-1/2"
+                        disabled={uploading || !notionLink}
+                        loading={uploading}
+                      >
+                        {uploading ? "Saving..." : "Save Notion Link"}
+                      </Button>
+                    </div>
+                  </form>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          )}
         </Tabs>
       </DialogContent>
     </Dialog>
