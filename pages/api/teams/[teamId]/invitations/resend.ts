@@ -5,7 +5,7 @@ import { CustomUser } from "@/lib/types";
 import { errorhandler } from "@/lib/errorHandler";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { sendTeammateInviteEmail } from "@/lib/emails/send-teammate-invite";
-import { newId } from "@/lib/id-helper";
+import { hashToken } from "@/lib/api/auth/token";
 
 export default async function handle(
   req: NextApiRequest,
@@ -72,16 +72,46 @@ export default async function handle(
         },
       });
 
+      const verificationTokenRecord = await prisma.verificationToken.findUnique(
+        {
+          where: { token: hashToken(invitation.token) },
+        },
+      );
+
+      if (!verificationTokenRecord) {
+        await prisma.verificationToken.create({
+          data: {
+            expires: expiresAt,
+            token: hashToken(invitation.token),
+            identifier: email,
+          },
+        });
+      } else {
+        await prisma.verificationToken.update({
+          where: { token: hashToken(invitation.token) },
+          data: {
+            expires: expiresAt,
+          },
+        });
+      }
+
       // send invite email
       const sender = session.user as CustomUser;
+
+      const params = new URLSearchParams({
+        callbackUrl: `${process.env.NEXTAUTH_URL}/api/teams/${teamId}/invitations/accept`,
+        email,
+        token: invitation.token,
+      });
+
+      const url = `${process.env.NEXTAUTH_URL}/api/auth/callback/email?${params}`;
 
       sendTeammateInviteEmail({
         senderName: sender.name || "",
         senderEmail: sender.email || "",
         teamName: team?.name || "",
-        teamId: teamId || "",
-        token: invitation?.token || "",
         to: email,
+        url: url,
       });
 
       res.status(200).json("Invitation sent again!");
