@@ -23,6 +23,7 @@ import {
   createDocument,
   createNewDocumentVersion,
 } from "@/lib/documents/create-document";
+import { set } from "ts-pattern/dist/patterns";
 
 export function AddDocumentModal({
   newVersion,
@@ -34,6 +35,7 @@ export function AddDocumentModal({
   const router = useRouter();
   const plausible = usePlausible();
   const [uploading, setUploading] = useState<boolean>(false);
+  const [isOpen, setIsOpen] = useState<boolean | undefined>(undefined);
   const [currentFile, setCurrentFile] = useState<File | null>(null);
   const [notionLink, setNotionLink] = useState<string | null>(null);
   const teamInfo = useTeam();
@@ -94,20 +96,14 @@ export function AddDocumentModal({
           plausible("documentUploaded");
 
           // redirect to the document page
-          setTimeout(() => {
-            router.push("/documents/" + document.id);
-            setUploading(false);
-          }, 2000);
+          router.push("/documents/" + document.id);
         } else {
           // track the event
           plausible("documentVersionUploaded");
           toast.success("New document version uploaded.");
 
           // reload to the document page
-          setTimeout(() => {
-            router.reload();
-            setUploading(false);
-          }, 2000);
+          router.reload();
         }
       }
     } catch (error) {
@@ -116,6 +112,7 @@ export function AddDocumentModal({
       console.error("An error occurred while uploading the file: ", error);
     } finally {
       setUploading(false);
+      setIsOpen(false);
     }
   };
 
@@ -182,10 +179,7 @@ export function AddDocumentModal({
           plausible("notionDocumentUploaded");
 
           // redirect to the document page
-          setTimeout(() => {
-            router.push("/documents/" + document.id);
-            setUploading(false);
-          }, 2000);
+          router.push("/documents/" + document.id);
         }
       }
     } catch (error) {
@@ -199,6 +193,7 @@ export function AddDocumentModal({
       );
     } finally {
       setUploading(false);
+      setIsOpen(false);
     }
   };
 
@@ -208,7 +203,7 @@ export function AddDocumentModal({
   };
 
   return (
-    <Dialog onOpenChange={clearModelStates}>
+    <Dialog open={isOpen} onOpenChange={clearModelStates}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent
         className="text-foreground bg-transparent border-none shadow-none"
