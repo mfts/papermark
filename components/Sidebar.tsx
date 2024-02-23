@@ -85,13 +85,13 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
       current: router.pathname.includes("documents"),
       disabled: false,
     },
-    {
-      name: "Analytics",
-      href: "/analytics",
-      icon: PieChartIcon,
-      current: router.pathname.includes("analytics"),
-      disabled: true,
-    },
+    // {
+    //   name: "Analytics",
+    //   href: "/analytics",
+    //   icon: PieChartIcon,
+    //   current: router.pathname.includes("analytics"),
+    //   disabled: true,
+    // },
     {
       name: "Settings",
       href: "/settings/general",
