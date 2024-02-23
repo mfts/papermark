@@ -225,6 +225,21 @@ export default function NotionForm() {
                 </Button>
               </div>
             </form>
+
+            <div className="text-center text-xs text-muted-foreground">
+              <span>Use our</span>{" "}
+              <Button
+                variant="link"
+                className="text-xs font-normal px-0 underline text-muted-foreground hover:text-gray-700"
+                onClick={async () => {
+                  setNotionLink(
+                    "https://mfts.notion.site/Papermark-7b582345016b42b6951396f6ee626121",
+                  );
+                }}
+              >
+                sample Notion link
+              </Button>
+            </div>
           </motion.div>
         </motion.div>
       )}
