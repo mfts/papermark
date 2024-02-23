@@ -236,11 +236,12 @@ export default function DocumentsCard({
         <DropdownMenu open={menuOpen} onOpenChange={handleMenuStateChange}>
           <DropdownMenuTrigger asChild>
             <Button
-              size="icon"
-              variant="ghost"
-              className="w-6 sm:w-7 h-6 sm:h-7 z-10"
+              // size="icon"
+              variant="outline"
+              className="h-8 lg:h-9 w-8 lg:w-9 p-0 z-10 bg-transparent border-gray-200 dark:border-gray-700 hover:bg-gray-200 hover:dark:bg-gray-700"
             >
-              <MoreVertical className="w-4 h-4 text-muted-foreground" />
+              <span className="sr-only">Open menu</span>
+              <MoreVertical className="w-4 h-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" ref={dropdownRef}>
