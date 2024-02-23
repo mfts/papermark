@@ -5,16 +5,14 @@ export const sendTeammateInviteEmail = async ({
   senderName,
   senderEmail,
   teamName,
-  teamId,
-  token,
   to,
+  url,
 }: {
   senderName: string;
   senderEmail: string;
   teamName: string;
-  teamId: string;
-  token: string;
   to: string;
+  url: string;
 }) => {
   await sendEmail({
     to: to,
@@ -23,8 +21,7 @@ export const sendTeammateInviteEmail = async ({
       senderName,
       senderEmail,
       teamName,
-      teamId,
-      token,
+      url,
     }),
     test: process.env.NODE_ENV === "development",
     system: true,

@@ -51,6 +51,7 @@ export const authOptions: NextAuthOptions = {
     EmailProvider({
       async sendVerificationRequest({ identifier, url }) {
         if (process.env.NODE_ENV === "development") {
+          console.log("[Login URL]", url);
           return;
         } else {
           await sendVerificationRequestEmail({
