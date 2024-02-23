@@ -400,6 +400,7 @@ export default function DocumentPage() {
               />
             )}
 
+            {/* Stats Card */}
             <StatsCard />
 
             {/* Links */}
