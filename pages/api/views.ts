@@ -5,6 +5,7 @@ import { trackAnalytics } from "@/lib/analytics";
 import { client } from "@/trigger";
 import { newId } from "@/lib/id-helper";
 import { sendVerificationEmail } from "@/lib/emails/send-email-verification";
+import { getFile } from "@/lib/files/get-file";
 
 export default async function handle(
   req: NextApiRequest,
@@ -88,7 +89,10 @@ export default async function handle(
 
     // Determine if the email or its domain is allowed
     const isAllowed = link.allowList.some((allowed) => {
-      return allowed === email || (allowed.startsWith("@") && emailDomain === allowed);
+      return (
+        allowed === email ||
+        (allowed.startsWith("@") && emailDomain === allowed)
+      );
     });
 
     // Deny access if the email is not allowed
@@ -105,7 +109,9 @@ export default async function handle(
 
     // Determine if the email or its domain is denied
     const isDenied = link.denyList.some((denied) => {
-      return denied === email || (denied.startsWith("@") && emailDomain === denied);
+      return (
+        denied === email || (denied.startsWith("@") && emailDomain === denied)
+      );
     });
 
     // Deny access if the email is denied
@@ -193,9 +199,22 @@ export default async function handle(
         orderBy: { pageNumber: "asc" },
         select: {
           file: true,
+          storageType: true,
           pageNumber: true,
+          embeddedLinks: true,
         },
       });
+
+      documentPages = await Promise.all(
+        documentPages.map(async (page) => {
+          const { storageType, ...otherPage } = page;
+          return {
+            ...otherPage,
+            file: await getFile({ data: page.file, type: storageType }),
+          };
+        }),
+      );
+
       console.timeEnd("get-pages");
     } else {
       // get file from document version
@@ -204,16 +223,21 @@ export default async function handle(
         where: { id: documentVersionId },
         select: {
           file: true,
+          storageType: true,
         },
+      });
+
+      if (!documentVersion) {
+        res.status(404).json({ message: "Document version not found." });
+        return;
+      }
+
+      documentVersion.file = await getFile({
+        data: documentVersion.file,
+        type: documentVersion.storageType,
       });
       console.timeEnd("get-file");
     }
-
-    // const [newView, documentPages, documentVersion] = await Promise.all([
-    //   newViewPromise,
-    //   documentPagesPromise,
-    //   documentVersionPromise,
-    // ]);
 
     // TODO: cannot identify user because session is not available
     // await identifyUser((session.user as CustomUser).id);
@@ -247,7 +271,11 @@ export default async function handle(
 
     return res.status(200).json(returnObject);
   } catch (error) {
-    log({message: `Failed to record view for ${linkId}. \n\n ${error}`, type: "error", mention: true});
+    log({
+      message: `Failed to record view for ${linkId}. \n\n ${error}`,
+      type: "error",
+      mention: true,
+    });
     return res.status(500).json({ message: (error as Error).message });
   }
 }

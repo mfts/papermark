@@ -2,6 +2,7 @@ import { useStats } from "@/lib/swr/use-stats";
 import ErrorPage from "next/error";
 import BarChartComponent from "../charts/bar-chart";
 import StatsChartSkeleton from "./stats-chart-skeleton";
+import StatsChartDummy from "./stats-chart-dummy";
 
 export default function StatsChart({
   documentId,
@@ -80,5 +81,7 @@ export default function StatsChart({
     <div className="pl-0.5 md:pl-1 pb-0.5 md:pb-1 border-l border-b rounded-bl-lg">
       <BarChartComponent data={durationData} />
     </div>
-  ) : null;
+  ) : (
+    <StatsChartDummy totalPagesMax={totalPagesMax} />
+  );
 }

@@ -1,8 +1,8 @@
 import { NextApiRequest, NextApiResponse } from "next";
 // @ts-ignore
 import mupdf from "mupdf";
-import { put } from "@vercel/blob";
 import prisma from "@/lib/prisma";
+import { putFileServer } from "@/lib/files/put-file-server";
 
 // This function can run for a maximum of 60 seconds
 export const config = {
@@ -16,11 +16,22 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     return;
   }
 
+  // Extract the API Key from the Authorization header
+  const authHeader = req.headers.authorization;
+  const token = authHeader?.split(" ")[1]; // Assuming the format is "Bearer [token]"
+
+  // Check if the API Key matches
+  if (token !== process.env.INTERNAL_API_KEY) {
+    res.status(401).json({ message: "Unauthorized" });
+    return;
+  }
+
   try {
-    const { documentVersionId, pageNumber, url } = req.body as {
+    const { documentVersionId, pageNumber, url, teamId } = req.body as {
       documentVersionId: string;
       pageNumber: number;
       url: string;
+      teamId: string;
     };
 
     // Fetch the PDF data
@@ -31,17 +42,38 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     var doc = mupdf.Document.openDocument(pdfData, "application/pdf");
 
     var page = doc.loadPage(pageNumber - 1); // 0-based page index
+
+    // get links
+    const links = page.getLinks();
+    const embeddedLinks = links.map((link: any) => link.getURI());
+
     var pixmap = page.toPixmap(
       // mupdf.Matrix.identity,
-      [3, 0, 0, 3, 0, 0], // scale 3x
+      [3, 0, 0, 3, 0, 0], // scale 3x // to 300 DPI
       mupdf.ColorSpace.DeviceRGB,
     );
-    var pngBuffer = pixmap.asPNG();
-    const blob = await put(`page-${pageNumber}.png`, pngBuffer, {
-      access: "public",
+
+    pixmap.setResolution(300, 300); // increase resolution to 300 DPI
+
+    var pngBuffer = pixmap.asPNG(); // as PNG
+
+    const buffer = Buffer.from(pngBuffer);
+
+    // get docId from url with starts with "doc_" with regex
+    const match = url.match(/(doc_[^\/]+)\//);
+    const docId = match ? match[1] : undefined;
+
+    const { type, data } = await putFileServer({
+      file: {
+        name: `page-${pageNumber}.png`,
+        type: "image/png",
+        buffer: buffer,
+      },
+      teamId: teamId,
+      docId: docId,
     });
 
-    if (!blob) {
+    if (!data || !type) {
       res
         .status(500)
         .json({ error: `Failed to upload document page ${pageNumber}` });
@@ -52,7 +84,9 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
       data: {
         versionId: documentVersionId,
         pageNumber: pageNumber,
-        file: blob.url,
+        file: data,
+        storageType: type,
+        embeddedLinks: embeddedLinks,
       },
     });
 

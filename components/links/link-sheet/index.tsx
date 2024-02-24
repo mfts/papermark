@@ -8,9 +8,6 @@ import {
 } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
-import PasswordSection from "./password-section";
-import ExpirationSection from "./expiration-section";
-import EmailProtectionSection from "./email-protection-section";
 import { useRouter } from "next/router";
 import { useDocumentLinks } from "@/lib/swr/use-document";
 import { useDomains } from "@/lib/swr/use-domains";
@@ -20,16 +17,9 @@ import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
 import { convertDataUrlToFile, uploadImage } from "@/lib/utils";
 import DomainSection from "./domain-section";
-import AllowDownloadSection from "./allow-download-section";
 import { useTeam } from "@/context/team-context";
-import EmailAuthenticationSection from "./email-authentication-section";
-import AllowNotificationSection from "./allow-notification-section";
-import FeedbackSection from "./feedback-section";
-import OGSection from "./og-section";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import AllowListSection from "./allow-list-section";
-import DenyListSection from "./deny-list-section";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { LinkOptions } from "./link-options";
 
 export const DEFAULT_LINK_PROPS = {
   id: null,
@@ -221,30 +211,7 @@ export default function LinkSheet({
                       </div>
                     </div>
 
-                    <div>
-                      <EmailProtectionSection {...{ data, setData }} />
-                      <AllowNotificationSection {...{ data, setData }} />
-                      <AllowDownloadSection {...{ data, setData }} />
-                      <ExpirationSection {...{ data, setData }} />
-
-                      <Accordion type="single" collapsible>
-                        <AccordionItem value="item-1" className="border-none">
-                          <AccordionTrigger className="py-0 rounded-lg space-x-2">
-                            <span className="text-sm font-medium leading-6 text-foreground">
-                              Advanced Link Access Options
-                            </span>
-                          </AccordionTrigger>
-                          <AccordionContent className="first:pt-5">
-                            <EmailAuthenticationSection {...{ data, setData }} />
-                            <AllowListSection {...{ data, setData }} />
-                            <DenyListSection {...{ data, setData }} />
-                            <PasswordSection {...{ data, setData }} />
-                            <OGSection {...{ data, setData }} />
-                            <FeedbackSection {...{ data, setData }} />
-                          </AccordionContent>
-                        </AccordionItem>
-                      </Accordion>
-                    </div>
+                    <LinkOptions data={data} setData={setData} />
                   </div>
                 </div>
               </div>

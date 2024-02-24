@@ -14,6 +14,9 @@ import SelectTeam from "./teams/select-team";
 import { TeamContextType, initialState, useTeam } from "@/context/team-context";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import ProfileMenu from "./profile-menu";
+import { AddDocumentModal } from "./documents/add-document-modal";
+import { Button } from "./ui/button";
+import { PlusIcon } from "lucide-react";
 
 export default function Sidebar() {
   return (
@@ -82,13 +85,13 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
       current: router.pathname.includes("documents"),
       disabled: false,
     },
-    {
-      name: "Analytics",
-      href: "/analytics",
-      icon: PieChartIcon,
-      current: router.pathname.includes("analytics"),
-      disabled: true,
-    },
+    // {
+    //   name: "Analytics",
+    //   href: "/analytics",
+    //   icon: PieChartIcon,
+    //   current: router.pathname.includes("analytics"),
+    //   disabled: true,
+    // },
     {
       name: "Settings",
       href: "/settings/general",
@@ -101,7 +104,7 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
   return (
     <aside
       className={cn(
-        "w-full h-screen lg:w-72 flex-shrink-0 flex-col justify-between gap-y-4 bg-gray-50 dark:bg-black px-4 lg:px-6 pt-4 lg:pt-6",
+        "w-full h-screen lg:w-72 flex-shrink-0 flex-col justify-between gap-y-6 bg-gray-50 dark:bg-black px-4 lg:px-6 pt-4 lg:pt-6",
         className,
       )}
     >
@@ -125,7 +128,17 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
         setCurrentTeam={() => {}}
       />
 
-      <section className="flex flex-1 flex-col gap-y-7">
+      <AddDocumentModal>
+        <Button
+          className="w-full text-left group flex gap-x-3 items-center justify-start px-3"
+          title="Add New Document"
+        >
+          <PlusIcon className="h-5 w-5 shrink-0" aria-hidden="true" />
+          <span>Add New Document</span>
+        </Button>
+      </AddDocumentModal>
+
+      <section className="flex flex-1 flex-col gap-y-6">
         <div className="space-y-2">
           {navigation.map((item) => (
             <button

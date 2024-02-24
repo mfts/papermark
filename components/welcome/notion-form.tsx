@@ -4,30 +4,67 @@ import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import Skeleton from "../Skeleton";
 import { STAGGER_CHILD_VARIANTS } from "@/lib/constants";
-import { copyToClipboard } from "@/lib/utils";
-import { Button } from "../ui/button";
+import {
+  convertDataUrlToFile,
+  copyToClipboard,
+  uploadImage,
+} from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import { usePlausible } from "next-plausible";
 import { useTeam } from "@/context/team-context";
-import { Label } from "../ui/label";
+import { Label } from "@/components/ui/label";
+import { parsePageId } from "notion-utils";
+import { LinkOptions } from "@/components/links/link-sheet/link-options";
+import {
+  DEFAULT_LINK_PROPS,
+  DEFAULT_LINK_TYPE,
+} from "@/components/links/link-sheet";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 export default function NotionForm() {
   const router = useRouter();
   const plausible = usePlausible();
   const [uploading, setUploading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [currentLinkId, setCurrentLinkId] = useState<string | null>(null);
   const [currentDocId, setCurrentDocId] = useState<string | null>(null);
   const [notionLink, setNotionLink] = useState<string | null>(null);
+  const [linkData, setLinkData] =
+    useState<DEFAULT_LINK_TYPE>(DEFAULT_LINK_PROPS);
   const teamInfo = useTeam();
+
+  const createNotionFileName = () => {
+    // Extract Notion file name from the URL
+    const urlSegments = (notionLink as string).split("/")[3];
+    // Remove the last hyphen along with the Notion ID
+    const extractName = urlSegments.replace(/-([^/-]+)$/, "");
+    const notionFileName = extractName.replaceAll("-", " ") || "Notion Link";
+
+    return notionFileName;
+  };
 
   const handleNotionUpload = async (
     event: FormEvent<HTMLFormElement>,
   ): Promise<void> => {
     event.preventDefault();
+    const validateNotionPageURL = parsePageId(notionLink);
+    // Check if it's a valid URL or not by Regx
+    const isValidURL =
+      /^(https?:\/\/)?([a-zA-Z0-9-]+\.){1,}[a-zA-Z]{2,}([a-zA-Z0-9-._~:/?#[\]@!$&'()*+,;=]+)?$/;
 
-    // Check if the file is chosen
+    // Check if the field is empty or not
     if (!notionLink) {
       toast.error("Please enter a Notion link to proceed.");
       return; // prevent form from submitting
+    }
+    if (validateNotionPageURL === null || !isValidURL.test(notionLink)) {
+      toast.error("Please enter a valid Notion link to proceed.");
+      return;
     }
 
     try {
@@ -41,7 +78,7 @@ export default function NotionForm() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            name: "Notion Link", // TODO: get the title of the notion page
+            name: createNotionFileName(),
             url: notionLink,
             numPages: 1,
             type: "notion",
@@ -65,24 +102,65 @@ export default function NotionForm() {
         }, 2000);
       }
     } catch (error) {
+      setUploading(false);
+      toast.error(
+        "Oops! Can't access the Notion page. Please double-check it's set to 'Public'.",
+      );
       console.error(
         "An error occurred while processing the Notion link: ",
         error,
       );
+    } finally {
       setNotionLink(null);
       setUploading(false);
     }
   };
 
-  const handleContinue = (id: string) => {
+  const handleSubmit = async (event: any) => {
+    event.preventDefault();
+
+    setIsLoading(true);
+
+    // Upload the image if it's a data URL
+    let blobUrl: string | null =
+      linkData.metaImage && linkData.metaImage.startsWith("data:")
+        ? null
+        : linkData.metaImage;
+    if (linkData.metaImage && linkData.metaImage.startsWith("data:")) {
+      // Convert the data URL to a blob
+      const blob = convertDataUrlToFile({ dataUrl: linkData.metaImage });
+      // Upload the blob to vercel storage
+      blobUrl = await uploadImage(blob);
+      setLinkData({ ...linkData, metaImage: blobUrl });
+    }
+
+    const response = await fetch(`/api/links/${currentLinkId}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        ...linkData,
+        metaImage: blobUrl,
+        documentId: currentDocId,
+      }),
+    });
+
+    if (!response.ok) {
+      // handle error with toast message
+      const { error } = await response.json();
+      toast.error(error);
+      setIsLoading(false);
+      return;
+    }
+
     copyToClipboard(
-      `${process.env.NEXT_PUBLIC_BASE_URL}/view/${id}`,
+      `${process.env.NEXT_PUBLIC_BASE_URL}/view/${currentLinkId}`,
       "Link copied to clipboard. Redirecting to document page...",
     );
-    setTimeout(() => {
-      router.push(`/documents/${currentDocId}`);
-      setUploading(false);
-    }, 2000);
+
+    router.push(`/documents/${currentDocId}`);
+    setIsLoading(false);
   };
 
   return (
@@ -147,6 +225,21 @@ export default function NotionForm() {
                 </Button>
               </div>
             </form>
+
+            <div className="text-center text-xs text-muted-foreground">
+              <span>Use our</span>{" "}
+              <Button
+                variant="link"
+                className="text-xs font-normal px-0 underline text-muted-foreground hover:text-gray-700"
+                onClick={async () => {
+                  setNotionLink(
+                    "https://mfts.notion.site/Papermark-7b582345016b42b6951396f6ee626121",
+                  );
+                }}
+              >
+                sample Notion link
+              </Button>
+            </div>
           </motion.div>
         </motion.div>
       )}
@@ -202,12 +295,23 @@ export default function NotionForm() {
                       </div>
                     </div>
                   </div>
+                  <div className="w-full max-w-xs sm:max-w-lg pb-8">
+                    <Accordion type="single" collapsible>
+                      <AccordionItem value="item-1" className="border-none">
+                        <AccordionTrigger className="py-0 rounded-lg space-x-2">
+                          <span className="text-sm font-medium leading-6 text-foreground">
+                            Configure Link Options
+                          </span>
+                        </AccordionTrigger>
+                        <AccordionContent className="first:pt-5">
+                          <LinkOptions data={linkData} setData={setLinkData} />
+                        </AccordionContent>
+                      </AccordionItem>
+                    </Accordion>
+                  </div>
                   <div className="flex items-center justify-center mb-4">
-                    <Button
-                      onClick={() => handleContinue(currentLinkId)}
-                      type="submit"
-                    >
-                      {"Share Document"}
+                    <Button loading={isLoading} onClick={handleSubmit}>
+                      Share document link
                     </Button>
                   </div>
                 </div>

@@ -83,9 +83,7 @@ export default function Home() {
                 </Button>
               </Link>
               <Link href="/login">
-                <Button className="text-base rounded-3xl">
-                  Start for free
-                </Button>
+                <Button className="text-base rounded-3xl">Send document</Button>
               </Link>
             </div>
             <div className="mt-24 mx-auto w-full">

@@ -108,22 +108,20 @@ export default function DocumentPage() {
       return;
     }
 
-    const response = await fetch(
-      `/api/teams/${teamInfo?.currentTeam?.id}/documents/${documentId}`,
-      {
+    toast.promise(
+      fetch(`/api/teams/${teamInfo?.currentTeam?.id}/documents/${documentId}`, {
         method: "DELETE",
+      }).then(() => {
+        setIsFirstClick(false);
+        setMenuOpen(false);
+        router.push("/documents");
+      }),
+      {
+        loading: "Deleting document...",
+        success: "Document deleted successfully.",
+        error: "Failed to delete document. Try again.",
       },
     );
-
-    if (response.ok) {
-      setIsFirstClick(false);
-      setMenuOpen(false);
-      router.push("/documents");
-      toast.success("Document deleted successfully.");
-    } else {
-      const { message } = await response.json();
-      toast.error(message);
-    }
   };
 
   const handleMenuStateChange = (open: boolean) => {
@@ -273,26 +271,33 @@ export default function DocumentPage() {
               <div className="flex items-center gap-x-4 md:gap-x-2 lg:gap-x-4">
                 {primaryVersion.type !== "notion" && (
                   <AddDocumentModal newVersion>
-                    <button title="Upload a new version">
+                    <button
+                      title="Upload a new version"
+                      className="hidden md:flex"
+                    >
                       <FileUp className="w-6 h-6" />
                     </button>
                   </AddDocumentModal>
                 )}
 
-                {prismaDocument.type !== "notion" && (
-                  <Button
-                    className="group hidden md:flex h-8 lg:h-9 space-x-1 text-xs lg:text-sm whitespace-nowrap bg-gradient-to-r from-[#16222A] via-emerald-500 to-[#16222A] duration-200 ease-linear hover:bg-right"
-                    variant={"special"}
-                    style={{ backgroundSize: "200% auto" }}
-                    onClick={() => activateOrRedirectAssistant(prismaDocument)}
-                  >
-                    <PapermarkSparkle className="h-5 w-5 animate-pulse group-hover:animate-none" />{" "}
-                    <span>AI Assistant</span>
-                  </Button>
-                )}
+                {prismaDocument.type !== "notion" &&
+                  prismaDocument.assistantEnabled && (
+                    <Button
+                      className="group hidden md:flex h-8 lg:h-9 space-x-1 text-xs lg:text-sm whitespace-nowrap bg-gradient-to-r from-[#16222A] via-emerald-500 to-[#16222A] duration-200 ease-linear hover:bg-right"
+                      variant={"special"}
+                      size={"icon"}
+                      style={{ backgroundSize: "200% auto" }}
+                      onClick={() =>
+                        activateOrRedirectAssistant(prismaDocument)
+                      }
+                      title="Open AI Assistant"
+                    >
+                      <PapermarkSparkle className="h-5 w-5" />
+                    </Button>
+                  )}
 
                 <Button
-                  className="hidden md:flex h-8 lg:h-9 text-xs lg:text-sm whitespace-nowrap"
+                  className="flex h-8 lg:h-9 text-xs lg:text-sm whitespace-nowrap"
                   onClick={() => setIsLinkSheetOpen(true)}
                 >
                   Create Link
@@ -318,23 +323,29 @@ export default function DocumentPage() {
                   >
                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
                     <DropdownMenuGroup className="block md:hidden">
+                      <DropdownMenuItem
+                        onClick={() => setIsLinkSheetOpen(true)}
+                      >
+                        <AddDocumentModal newVersion>
+                          <button
+                            title="Add a new version"
+                            className="flex items-center"
+                          >
+                            <FileUp className="w-4 h-4 mr-2" /> Add new version
+                          </button>
+                        </AddDocumentModal>
+                      </DropdownMenuItem>
+
                       {prismaDocument.type !== "notion" && (
                         <DropdownMenuItem
                           onClick={() =>
                             activateOrRedirectAssistant(prismaDocument)
                           }
                         >
-                          <PapermarkSparkle className="h-4 w-4 animate-pulse group-hover:animate-none mr-2" />
-                          AI Assistant
+                          <PapermarkSparkle className="h-4 w-4 mr-2" />
+                          Open AI Assistant
                         </DropdownMenuItem>
                       )}
-
-                      <DropdownMenuItem
-                        onClick={() => setIsLinkSheetOpen(true)}
-                      >
-                        <LinkIcon className="h-4 w-4 animate-pulse group-hover:animate-none mr-2" />
-                        Create Link
-                      </DropdownMenuItem>
 
                       <DropdownMenuSeparator />
                     </DropdownMenuGroup>
@@ -397,6 +408,7 @@ export default function DocumentPage() {
               />
             )}
 
+            {/* Stats Card */}
             <StatsCard />
 
             {/* Links */}
