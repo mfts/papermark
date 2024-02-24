@@ -22,14 +22,15 @@ export default async function middleware(req: NextRequest, ev: NextFetchEvent) {
   const host = req.headers.get("host");
 
   if (
-    (process.env.NODE_ENV === "development" && host?.includes("papermark-dev.local")) || 
+    (process.env.NODE_ENV === "development" &&
+      host?.includes("papermark-dev.local")) ||
     (process.env.NODE_ENV !== "development" &&
-    !(
-      host?.includes("localhost") ||
-      host?.includes("papermark.io") ||
-      host?.endsWith(".vercel.app")
-    )
-  )) {
+      !(
+        host?.includes("localhost") ||
+        host?.includes("papermark.io") ||
+        host?.endsWith(".vercel.app")
+      ))
+  ) {
     return DomainMiddleware(req);
   }
 
@@ -46,7 +47,8 @@ export default async function middleware(req: NextRequest, ev: NextFetchEvent) {
     path !== "/investors" &&
     path !== "/ai" &&
     path !== "/share-notion-page" &&
-    !path.startsWith("/alternatives/") &&
+    !path.startsWith("/alternatives") &&
+    !path.startsWith("/investors") &&
     !path.startsWith("/blog/") &&
     !path.startsWith("/view/")
   ) {

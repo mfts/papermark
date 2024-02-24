@@ -7,7 +7,7 @@ import { AddDocumentModal } from "@/components/documents/add-document-modal";
 import { Separator } from "@/components/ui/separator";
 import AppLayout from "@/components/layouts/app";
 import { Button } from "@/components/ui/button";
-import { Files } from "lucide-react";
+import Folder from "@/components/shared/icons/folder";
 
 export default function Documents() {
   const { documents } = useDocuments();
@@ -29,7 +29,7 @@ export default function Documents() {
             <AddDocumentModal>
               <Button
                 size="icon"
-                className="fixed bottom-6 right-5 z-30 sm:bottom-0 sm:right-0 sm:relative w-10 sm:w-44 h-10 sm:h-10"
+                className="fixed bottom-6 right-5 z-30 lg:hidden sm:bottom-0 sm:right-0 sm:relative w-10 sm:w-44 h-10 sm:h-10"
               >
                 <span className="hidden sm:block">Add New Document</span>
                 <span className="block sm:hidden">
@@ -42,7 +42,7 @@ export default function Documents() {
 
         {documents && documents.length > 0 ? (
           <p className="text-sm text-gray-400 mt-8 sm:mt-5 mb-2 flex items-center">
-            <Files className="w-[16px] h-[16px] mr-1" /> Total documents{" "}
+            <Folder className="w-[16px] h-[16px] mr-1" /> Total documents{" "}
             {documents.length}
           </p>
         ) : null}

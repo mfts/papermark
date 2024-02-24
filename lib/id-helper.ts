@@ -36,4 +36,6 @@ export const newId = new IdGenerator({
   view: "view",
   inv: "inv",
   email: "email",
+  doc: "doc",
+  page: "page",
 }).id;

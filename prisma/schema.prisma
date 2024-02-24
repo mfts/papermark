@@ -113,19 +113,20 @@ model VerificationToken {
 }
 
 model Document {
-  id               String            @id @default(cuid())
+  id               String              @id @default(cuid())
   name             String
   description      String?
   file             String // This should be a reference to where the file is stored (S3, Google Cloud Storage, etc.)
   type             String? // This should be a reference to the file type (pdf, docx, etc.)
+  storageType      DocumentStorageType @default(VERCEL_BLOB)
   numPages         Int? // This should be a reference to the number of pages in the document
-  owner            User              @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  owner            User                @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   teamId           String?
-  team             Team?             @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  team             Team?               @relation(fields: [teamId], references: [id], onDelete: SetNull)
   ownerId          String // This field holds the foreign key.
-  assistantEnabled Boolean           @default(false) // This indicates if assistant is enabled for this document
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
+  assistantEnabled Boolean             @default(false) // This indicates if assistant is enabled for this document
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
   links            Link[]
   views            View[]
   versions         DocumentVersion[]
@@ -137,36 +138,43 @@ model Document {
 }
 
 model DocumentVersion {
-  id            String         @id @default(cuid())
+  id            String              @id @default(cuid())
   versionNumber Int // e.g., 1, 2, 3 for version control
-  document      Document       @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  document      Document            @relation(fields: [documentId], references: [id], onDelete: Cascade)
   documentId    String
   file          String // This should be a reference to where the file is stored (S3, Google Cloud Storage, etc.)
   type          String? // This should be a reference to the file type (pdf, docx, etc.)
+  storageType   DocumentStorageType @default(VERCEL_BLOB)
   numPages      Int? // This should be a reference to the number of pages in the document
-  isPrimary     Boolean        @default(false) // Indicates if this is the primary version
+  isPrimary     Boolean             @default(false) // Indicates if this is the primary version
   fileId        String? // This is the file ID of the OpenAI File API
   pages         DocumentPage[]
-  hasPages      Boolean        @default(false) // Indicates if the document has pages
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  hasPages      Boolean             @default(false) // Indicates if the document has pages
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
 
   @@unique([versionNumber, documentId])
   @@index([documentId])
 }
 
 model DocumentPage {
-  id            String          @id @default(cuid())
-  version       DocumentVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  id            String              @id @default(cuid())
+  version       DocumentVersion     @relation(fields: [versionId], references: [id], onDelete: Cascade)
   versionId     String
   pageNumber    Int // e.g., 1, 2, 3 for 
   embeddedLinks String[]
   file          String // This should be a reference to where the file / page is stored (S3, Google Cloud Storage, etc.)
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
+  storageType   DocumentStorageType @default(VERCEL_BLOB)
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
 
   @@unique([pageNumber, versionId])
   @@index([versionId])
+}
+
+enum DocumentStorageType {
+  S3_PATH
+  VERCEL_BLOB
 }
 
 model Link {

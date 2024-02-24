@@ -6,6 +6,7 @@ import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { CustomUser } from "@/lib/types";
 import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
 import { client } from "@/trigger";
+import { DocumentStorageType } from "@prisma/client";
 
 export default async function handle(
   req: NextApiRequest,
@@ -23,10 +24,11 @@ export default async function handle(
       teamId: string;
       id: string;
     };
-    const { url, type, numPages } = req.body as {
+    const { url, type, numPages, storageType } = req.body as {
       url: string;
       type: string;
       numPages: number;
+      storageType: DocumentStorageType;
     };
 
     const userId = (session.user as CustomUser).id;
@@ -72,6 +74,7 @@ export default async function handle(
           documentId: documentId,
           file: url,
           type: type,
+          storageType,
           numPages: numPages,
           isPrimary: true,
           versionNumber: currentVersionNumber + 1,
@@ -85,6 +88,7 @@ export default async function handle(
           documentVersionId: version.id,
           versionNumber: version.versionNumber,
           documentId: documentId,
+          teamId: teamId,
         },
       });
 

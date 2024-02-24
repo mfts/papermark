@@ -1,23 +1,7 @@
 import { Suspense } from "react";
 import Dashboard from "./ClientPage";
 import { FallbackInvestors } from "./Fallback";
-
-export const revalidate = 3600; // revalidate the data at most every 24 hours
-
-const getInvestors = async () => {
-  const response = await fetch(`https://investors.papermark.io/api/investors`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${process.env.INVESTORS_API_KEY}`,
-    },
-  });
-  if (!response.ok) {
-    throw new Error("Network response was not ok " + response.statusText);
-  }
-  const data = await response.json();
-  return data;
-};
+import { getInvestors } from "@/lib/content/investor";
 
 export default async function HomePage() {
   const allInvestors = await getInvestors();

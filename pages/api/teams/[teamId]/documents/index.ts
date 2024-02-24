@@ -10,6 +10,7 @@ import { errorhandler } from "@/lib/errorHandler";
 import { client } from "@/trigger";
 import notion from "@/lib/notion";
 import { parsePageId } from "notion-utils";
+import { DocumentStorageType } from "@prisma/client";
 
 export default async function handle(
   req: NextApiRequest,
@@ -70,11 +71,13 @@ export default async function handle(
       url: fileUrl,
       numPages,
       type: fileType,
+      storageType,
     } = req.body as {
       name: string;
       url: string;
       numPages: number;
       type?: string;
+      storageType: DocumentStorageType;
     };
 
     try {
@@ -106,6 +109,7 @@ export default async function handle(
           numPages: numPages,
           file: fileUrl,
           type: type,
+          storageType,
           ownerId: (session.user as CustomUser).id,
           teamId: teamId,
           pinned: false,
@@ -116,6 +120,7 @@ export default async function handle(
             create: {
               file: fileUrl,
               type: type,
+              storageType,
               numPages: numPages,
               isPrimary: true,
               versionNumber: 1,
@@ -156,7 +161,10 @@ export default async function handle(
         // trigger document uploaded event to trigger convert-pdf-to-image job
         await client.sendEvent({
           name: "document.uploaded",
-          payload: { documentVersionId: document.versions[0].id },
+          payload: {
+            documentVersionId: document.versions[0].id,
+            teamId: teamId,
+          },
         });
       }
 
