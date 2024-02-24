@@ -41,7 +41,8 @@ type Color =
   | "purple"
   | "fuchsia"
   | "pink"
-  | "rose";
+  | "rose"
+  | "gray-300";
 
 const timeFormatter = (number: number) => {
   const totalSeconds = Math.floor(number / 1000);
@@ -63,6 +64,19 @@ const timeFormatter = (number: number) => {
 //     };
 //   });
 // };
+
+const renameDummyDurationKey = (data: Data[]): TransformedData[] => {
+  return data.reduce((acc, { pageNumber, data }) => {
+    const transformedItem: Partial<TransformedData> = { pageNumber };
+
+    data.forEach(({ versionNumber, avg_duration }) => {
+      transformedItem[`Example time spent per page`] = avg_duration;
+    });
+
+    acc.push(transformedItem as TransformedData);
+    return acc;
+  }, [] as TransformedData[]);
+};
 
 const renameSumDurationKey = (data: SumData[]) => {
   return data.map((item) => {
@@ -131,9 +145,11 @@ const getColors = (versionNumbers: string[]): Color[] => {
 export default function BarChartComponent({
   data,
   isSum = false,
+  isDummy = false,
 }: {
   data: any;
   isSum?: boolean;
+  isDummy?: boolean;
 }) {
   const [, setValue] = useState<any>(null);
 
@@ -155,9 +171,15 @@ export default function BarChartComponent({
     );
   }
 
-  const renamedData = transformData(data);
-  const versionNumbers = getVersionNumbers(renamedData);
-  const colors = getColors(versionNumbers);
+  let renamedData = transformData(data);
+  let versionNumbers = getVersionNumbers(renamedData);
+  let colors = getColors(versionNumbers);
+
+  if (isDummy) {
+    colors = ["gray-300"];
+    renamedData = renameDummyDurationKey(data);
+    versionNumbers = getVersionNumbers(renamedData);
+  }
 
   return (
     <BarChart

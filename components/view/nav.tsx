@@ -1,10 +1,19 @@
 import Link from "next/link";
 import { Button } from "../ui/button";
 import PapermarkSparkle from "../shared/icons/papermark-sparkle";
-import { Download } from "lucide-react";
+import { ArrowUpRight, Download } from "lucide-react";
 import { Brand } from "@prisma/client";
 import Image from "next/image";
 import { toast } from "sonner";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuShortcut,
+} from "@/components/ui/dropdown-menu";
 
 export default function Nav({
   pageNumber,
@@ -15,12 +24,14 @@ export default function Nav({
   viewId,
   linkId,
   type,
+  embeddedLinks,
 }: {
   pageNumber?: number;
   numPages?: number;
   allowDownload?: boolean;
   assistantEnabled?: boolean;
   brand?: Brand;
+  embeddedLinks?: string[];
   viewId?: string;
   linkId?: string;
   type?: "pdf" | "notion";
@@ -79,18 +90,49 @@ export default function Nav({
               )}
             </div>
           </div>
-          <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0 space-x-2">
+          <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0 space-x-4">
+            {embeddedLinks && embeddedLinks.length > 0 ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger>
+                  <Button className="text-sm font-medium text-white bg-gray-900 hover:bg-gray-900/80">
+                    Links on Page
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="space-y-2" align="end">
+                  <DropdownMenuLabel>Links on current page</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {embeddedLinks.map((link, index) => (
+                    <Link
+                      href={link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      key={index}
+                    >
+                      <DropdownMenuItem className="group h-10">
+                        <span className="w-[200px] truncate group-focus:text-clip group-focus:overflow-x-auto">
+                          {link}
+                        </span>
+                        <DropdownMenuShortcut className="pl-2 opacity-0 group-hover:opacity-60 group-focus:opacity-60">
+                          <ArrowUpRight />
+                        </DropdownMenuShortcut>
+                      </DropdownMenuItem>
+                    </Link>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : null}
             {assistantEnabled ? (
               <Link href={`/view/${linkId}/chat`}>
                 <Button
-                  className="group space-x-1 bg-gradient-to-r from-[#16222A] via-emerald-500 to-[#16222A] duration-200 ease-linear hover:bg-right"
+                  className="text-white bg-gray-900 hover:bg-gray-900/80 m-1"
                   variant={"special"}
+                  size={"icon"}
                   style={{
                     backgroundSize: "200% auto",
                   }}
+                  title="Open AI Document Assistant"
                 >
-                  <PapermarkSparkle className="h-5 w-5 animate-pulse group-hover:animate-none" />{" "}
-                  <span>AI Assistant</span>
+                  <PapermarkSparkle className="h-5 w-5" />
                 </Button>
               </Link>
             ) : null}

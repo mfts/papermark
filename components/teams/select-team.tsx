@@ -25,13 +25,13 @@ const SelectTeam = ({ teams, currentTeam, isLoading }: TeamContextType) => {
   return (
     <>
       {isLoading ? (
-        <div className="flex items-center gap-2 mb-6 text-sm">
+        <div className="flex items-center gap-2 text-sm">
           <Loader className="animate-spin h-5 w-5" /> Loading teams...
         </div>
       ) : (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <div className="w-full py-2 px-[10px] border rounded-md flex opacity-90 items-center justify-between mb-5 cursor-pointer hover:bg-muted duration-200">
+            <div className="w-full py-2 px-[10px] border rounded-md flex opacity-90 items-center justify-between cursor-pointer hover:bg-muted duration-200">
               <div className="flex items-center space-x-2">
                 <Avatar className="w-[25px] h-[25px] text-[10px]">
                   <AvatarFallback>

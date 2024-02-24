@@ -40,6 +40,7 @@ import { useRouter } from "next/router";
 import { usePlan } from "@/lib/swr/use-billing";
 import { useTeam } from "@/context/team-context";
 import ProcessStatusBar from "../documents/process-status-bar";
+import { Settings2Icon } from "lucide-react";
 
 export default function LinksTable({
   primaryVersion,
@@ -63,7 +64,7 @@ export default function LinksTable({
   const handleEditLink = (link: LinkWithViews) => {
     setSelectedLink({
       id: link.id,
-      name: link.name,
+      name: link.name || `Link #${link.id.slice(-5)}`,
       domain: link.domainSlug,
       slug: link.slug,
       expiresAt: link.expiresAt,
@@ -165,14 +166,14 @@ export default function LinksTable({
                       <>
                         <TableRow key={link.id} className="group/row">
                           <TableCell className="font-medium truncate w-[220px]">
-                            {link.name || "No link name"}{" "}
+                            {link.name || `Link #${link.id.slice(-5)}`}{" "}
                             {link.domainId && hasFreePlan ? (
                               <span className="text-foreground bg-destructive ring-1 ring-destructive rounded-full px-2.5 py-0.5 text-xs ml-2">
                                 Inactive
                               </span>
                             ) : null}
                           </TableCell>
-                          <TableCell className="max-w-[250px] sm:min-w-[300px] md:min-w-[400px] lg:min-w-[450px]">
+                          <TableCell className="max-w-[250px] sm:min-w-[300px] md:min-w-[400px] lg:min-w-[450px] flex items-center gap-x-2">
                             <div
                               className={cn(
                                 `group/cell relative w-full overflow-hidden flex items-center gap-x-4 rounded-sm text-secondary-foreground text-center px-3 py-1.5 md:py-1 group-hover/row:ring-1 group-hover/row:ring-gray-400 group-hover/row:dark:ring-gray-100 transition-all truncate`,
@@ -222,6 +223,16 @@ export default function LinksTable({
                                 </button>
                               )}
                             </div>
+                            <Button
+                              variant="link"
+                              size="icon"
+                              className="group h-7 w-8"
+                              onClick={() => handleEditLink(link)}
+                              title="Edit link"
+                            >
+                              <span className="sr-only">Edit link</span>
+                              <Settings2Icon className="h-5 w-5 text-gray-400 group-hover:text-gray-500" />
+                            </Button>
                           </TableCell>
                           <TableCell>
                             <CollapsibleTrigger
@@ -237,7 +248,9 @@ export default function LinksTable({
                                     views
                                   </span>
                                 </p>
-                                <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0 transition-transform duration-200 chevron" />
+                                {Number(nFormatter(link._count.views)) > 0 ? (
+                                  <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0 transition-transform duration-200 chevron" />
+                                ) : null}
                               </div>
                             </CollapsibleTrigger>
                           </TableCell>
