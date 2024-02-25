@@ -6,6 +6,7 @@ import BlankImg from "@/public/_static/blank.gif";
 import Nav from "./nav";
 import Toolbar from "./toolbar";
 import { Brand } from "@prisma/client";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 
 const DEFAULT_PRELOADED_IMAGES_NUM = 10;
 
@@ -38,6 +39,9 @@ export default function PagesViewer({
 
   const startTimeRef = useRef(Date.now());
   const pageNumberRef = useRef<number>(pageNumber);
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
 
   // Update the previous page number after the effect hook has run
   useEffect(() => {
@@ -78,6 +82,17 @@ export default function PagesViewer({
     );
   }, []);
 
+  useEffect(() => {
+    if (numPages === 1) return;
+    const getPageNumberFromUrl = Number(searchParams?.get("p"));
+    
+    if (searchParams?.has("p") && getPageNumberFromUrl <= numPages) {
+      setPageNumber(getPageNumberFromUrl);
+    } else {
+      updatePageNumberInUrl(1);
+    }
+  }, []);
+
   const handleKeyDown = (event: KeyboardEvent) => {
     switch (event.key) {
       case "ArrowRight":
@@ -107,14 +122,20 @@ export default function PagesViewer({
   // Navigate to previous page
   const goToPreviousPage = () => {
     if (pageNumber <= 1) return;
+    updatePageNumberInUrl(pageNumber - 1);
     setPageNumber(pageNumber - 1);
   };
 
   // Navigate to next page and preload next image
   const goToNextPage = () => {
     if (pageNumber >= numPages) return;
+    updatePageNumberInUrl(pageNumber + 1);
     preloadImage(DEFAULT_PRELOADED_IMAGES_NUM - 1 + pageNumber); // Preload the next image
     setPageNumber(pageNumber + 1);
+  };
+
+  const updatePageNumberInUrl = (pageNum: number) => {
+    router.push(`${pathname}?p=${pageNum}`);
   };
 
   async function trackPageView(duration: number = 0) {
@@ -154,7 +175,7 @@ export default function PagesViewer({
         brand={brand}
         viewId={viewId}
         linkId={linkId}
-        embeddedLinks={pages[pageNumber - 1].embeddedLinks}
+        embeddedLinks={pages[pageNumber - 1]?.embeddedLinks}
       />
       <div
         style={{ height: "calc(100vh - 64px)" }}
