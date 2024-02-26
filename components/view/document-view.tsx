@@ -153,7 +153,13 @@ export default function DocumentView({
     );
   }
   return (
-    <div className="bg-gray-950">
+    <div
+      className="bg-gray-950"
+      style={{
+        backgroundColor:
+          brand && brand.accentColor ? brand.accentColor : "rgb(3, 7, 18)",
+      }}
+    >
       {submitted ? (
         <ViewData
           link={link}

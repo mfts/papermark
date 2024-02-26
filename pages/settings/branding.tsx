@@ -20,6 +20,7 @@ import { convertDataUrlToFile, uploadImage } from "@/lib/utils";
 import { useRouter } from "next/router";
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { usePlan } from "@/lib/swr/use-billing";
+import { Tabs, TabsList, TabsContent, TabsTrigger } from "@/components/ui/tabs";
 
 export default function Branding() {
   const { brand } = useBrand();
@@ -28,6 +29,7 @@ export default function Branding() {
   const { plan } = usePlan();
 
   const [brandColor, setBrandColor] = useState<string>("#000000");
+  const [accentColor, setAccentColor] = useState<string>("#030712");
   const [logo, setLogo] = useState<string | null>(null);
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -58,6 +60,7 @@ export default function Branding() {
   useEffect(() => {
     if (brand) {
       setBrandColor(brand.brandColor || "#000000");
+      setAccentColor(brand.accentColor || "#030712");
       setLogo(brand.logo || null);
     }
   }, [brand]);
@@ -79,6 +82,7 @@ export default function Branding() {
 
     const data = {
       brandColor: brandColor,
+      accentColor: accentColor,
       logo: blobUrl,
     };
 
@@ -114,6 +118,7 @@ export default function Branding() {
     if (res.ok) {
       setLogo(null);
       setBrandColor("#000000");
+      setAccentColor("#030712");
       setIsLoading(false);
       toast.success("Branding reset successfully");
       router.reload();
@@ -135,8 +140,8 @@ export default function Branding() {
             </p>
           </div>
         </div>
-        <div>
-          <Card className="dark:bg-secondary">
+        <div className="flex flex-col md:flex-row justify-between gap-y-4 md:gap-y-0 md:gap-x-4 w-full">
+          <Card className="dark:bg-secondary min-w-max">
             <CardContent className="pt-6">
               <div className="grid gap-6">
                 <div className="flex flex-col gap-2">
@@ -266,6 +271,35 @@ export default function Branding() {
                     />
                   </div>
                 </div>
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="accent-color">Background Color</Label>
+                  <div className="flex space-x-1">
+                    <div
+                      className="w-9 h-9 rounded-md cursor-pointer ring-1 ring-muted-foreground shadow-sm hover:ring-1 hover:ring-gray-300 bg-white"
+                      onClick={() => setAccentColor("#ffffff")}
+                    />
+                    <div
+                      className="w-9 h-9 rounded-md cursor-pointer ring-1 ring-muted-foreground shadow-sm hover:ring-1 hover:ring-gray-300 bg-gray-50"
+                      onClick={() => setAccentColor("#f9fafb")}
+                    />
+                    <div
+                      className="w-9 h-9 rounded-md cursor-pointer ring-1 ring-muted-foreground shadow-sm hover:ring-1 hover:ring-gray-300 bg-gray-200"
+                      onClick={() => setAccentColor("#e5e7eb")}
+                    />
+                    <div
+                      className="w-9 h-9 rounded-md cursor-pointer ring-1 ring-muted-foreground shadow-sm hover:ring-1 hover:ring-gray-300 bg-gray-400"
+                      onClick={() => setAccentColor("#9ca3af")}
+                    />
+                    <div
+                      className="w-9 h-9 rounded-md cursor-pointer ring-1 ring-muted-foreground shadow-sm hover:ring-1 hover:ring-gray-300 bg-gray-800"
+                      onClick={() => setAccentColor("#1f2937")}
+                    />
+                    <div
+                      className="w-9 h-9 rounded-md cursor-pointer ring-1 ring-muted-foreground shadow-sm hover:ring-1 hover:ring-gray-300 bg-gray-950"
+                      onClick={() => setAccentColor("#030712")}
+                    />
+                  </div>
+                </div>
               </div>
             </CardContent>
             <CardFooter className="border-t p-6">
@@ -284,6 +318,89 @@ export default function Branding() {
               </Button>
             </CardFooter>
           </Card>
+          <Tabs defaultValue="account" className="w-full">
+            <TabsList className="grid w-full grid-cols-2 ">
+              <TabsTrigger value="account">Links</TabsTrigger>
+              <TabsTrigger value="password">Emails</TabsTrigger>
+            </TabsList>
+            <TabsContent value="account">
+              <div className="flex justify-center">
+                <div className="relative w-[698px] h-[450px] p-1 rounded-lg bg-gray-200 shadow-lg">
+                  <div className="rounded-lg overflow-hidden bg-gray-100 h-[442px] relative">
+                    <div className="mx-auto flex items-center justify-center h-7">
+                      <div className="pointer-events-none absolute left-3">
+                        <div className="flex flex-row justify-start flex-nowrap">
+                          <div className="pointer-events-auto">
+                            <div className="inline-block size-2 mr-1 rounded-full bg-gray-300"></div>
+                          </div>
+                          <div className="pointer-events-auto">
+                            <div className="inline-block size-2 mr-1 rounded-full bg-gray-300"></div>
+                          </div>
+                          <div className="pointer-events-auto">
+                            <div className="inline-block size-2 mr-1 rounded-full bg-gray-300"></div>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-center rounded-xl opacity-70 w-[70%] p-1 bg-white">
+                        <div
+                          aria-hidden="true"
+                          className="flex mt-0.5 mr-1 text-muted-foreground"
+                        >
+                          <svg
+                            aria-hidden="true"
+                            height="8"
+                            width="8"
+                            viewBox="0 0 16 16"
+                            fill="currentColor"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path d="M8.75 11.25a1.25 1.25 0 1 0-1.5 0v1a.75.75 0 0 0 1.5 0v-1Z"></path>
+                            <path
+                              fillRule="evenodd"
+                              clipRule="evenodd"
+                              d="M3.5 4v2h-1a1 1 0 0 0-1 1v6a3 3 0 0 0 3 3h7a3 3 0 0 0 3-3V7a1 1 0 0 0-1-1h-1V4a4 4 0 0 0-4-4h-1a4 4 0 0 0-4 4ZM11 6V4a2.5 2.5 0 0 0-2.5-2.5h-1A2.5 2.5 0 0 0 5 4v2h6Zm-8 7V7.5h10V13a1.5 1.5 0 0 1-1.5 1.5h-7A1.5 1.5 0 0 1 3 13Z"
+                            ></path>
+                          </svg>
+                        </div>
+                        <span className="whitespace-normal text-xs text-muted-foreground">
+                          papermark.io/view/...
+                        </span>
+                      </div>
+                    </div>
+                    <iframe
+                      key={`branding-${brandColor}-${accentColor}`}
+                      name="checkout-demo"
+                      id="checkout-demo"
+                      src={`/ppreview_demo?brandColor=${encodeURIComponent(brandColor)}&accentColor=${encodeURIComponent(accentColor)}&brandLogo=${logo ? encodeURIComponent(logo) : ""}`}
+                      style={{
+                        width: "1390px",
+                        height: "831px",
+                        transform: "scale(0.497)",
+                        transformOrigin: "left top",
+                        background: "rgb(255, 255, 255)",
+                        position: "absolute",
+                        top: "0px",
+                        left: "0px",
+                        borderTop: "none",
+                        borderRight: "0px",
+                        borderBottom: "0px",
+                        borderLeft: "0px",
+                        borderImage: "initial",
+                        overflow: "hidden",
+                        pointerEvents: "none",
+                        borderBottomLeftRadius: "8px",
+                        borderBottomRightRadius: "8px",
+                        marginTop: "29px",
+                      }}
+                    ></iframe>
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+            <TabsContent value="password">
+              Change your password here.
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     </AppLayout>
