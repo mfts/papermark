@@ -120,11 +120,7 @@ export const NotionPage = ({
         <Nav brand={brand} type="notion" />
 
         {watermark && (
-          <Watermark
-            email={viewerEmail}
-            className="fixed !mt-16 m-2"
-            moveable={false}
-          />
+          <Watermark email={viewerEmail} className="fixed !mt-16 m-2" />
         )}
 
         <div>

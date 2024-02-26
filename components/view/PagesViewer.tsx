@@ -194,7 +194,7 @@ export default function PagesViewer({
           </button>
         </div>
 
-        <div className="fixed top-[20%] min-[450px]:top-[10%] sm:top-16 bottom-[15%] min-[450px]:bottom-[5%] sm:bottom-0 left-1/2 z-10 w-full sm:w-[90%] md:w-[630px] transform -translate-x-[50%]">
+        <div className="fixed top-[20%] min-[450px]:top-[10%] sm:top-16 bottom-[11%] min-[450px]:bottom-[5%] sm:bottom-0 left-1/2 z-10 w-full sm:w-[90%] md:w-[630px] transform -translate-x-[50%]">
           {watermark && <Watermark email={viewerEmail} />}
         </div>
 
