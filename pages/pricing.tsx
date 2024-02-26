@@ -239,7 +239,7 @@ export default function PricingPage() {
               <h2 className="text-3xl text-nowrap">Looking to self-host?</h2>
               <div className="space-x-2 flex items-center">
                 <Link
-                  href="https://cal.com/marcseitz/papermark"
+                  href="https://github.com/mfts/papermark"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
