@@ -160,34 +160,32 @@ export default function PagesViewer({
         style={{ height: "calc(100vh - 64px)" }}
         className="flex items-center relative"
       >
-        <div className="flex items-center justify-between w-full absolute z-10 px-2">
-          <button
-            onClick={goToPreviousPage}
-            disabled={pageNumber == 1}
-            className="relative h-[calc(100vh - 64px)] px-2 py-24  focus:z-20 "
-          >
-            <span className="sr-only">Previous</span>
-            <div className="bg-gray-950/50 hover:bg-gray-950/75 rounded-full relative flex items-center justify-center p-1">
-              <ChevronLeftIcon
-                className="h-10 w-10 text-white"
-                aria-hidden="true"
-              />
-            </div>
-          </button>
-          <button
-            onClick={goToNextPage}
-            disabled={pageNumber >= numPages}
-            className="relative h-[calc(100vh - 64px)] px-2 py-24  focus:z-20"
-          >
-            <span className="sr-only">Next</span>
-            <div className="bg-gray-950/50 hover:bg-gray-950/75 rounded-full relative flex items-center justify-center p-1">
-              <ChevronRightIcon
-                className="h-10 w-10 text-white"
-                aria-hidden="true"
-              />
-            </div>
-          </button>
-        </div>
+        <button
+          onClick={goToPreviousPage}
+          disabled={pageNumber == 1}
+          className="absolute left-0 h-[calc(100vh - 64px)] px-2 py-24 z-20 "
+        >
+          <span className="sr-only">Previous</span>
+          <div className="bg-gray-950/50 hover:bg-gray-950/75 rounded-full relative flex items-center justify-center p-1">
+            <ChevronLeftIcon
+              className="h-10 w-10 text-white"
+              aria-hidden="true"
+            />
+          </div>
+        </button>
+        <button
+          onClick={goToNextPage}
+          disabled={pageNumber >= numPages}
+          className="absolute right-0 h-[calc(100vh - 64px)] px-2 py-24 z-20"
+        >
+          <span className="sr-only">Next</span>
+          <div className="bg-gray-950/50 hover:bg-gray-950/75 rounded-full relative flex items-center justify-center p-1">
+            <ChevronRightIcon
+              className="h-10 w-10 text-white"
+              aria-hidden="true"
+            />
+          </div>
+        </button>
 
         <div className="flex justify-center mx-auto relative h-full w-full">
           {pages && loadedImages[pageNumber - 1] ? (
