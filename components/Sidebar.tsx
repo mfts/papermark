@@ -16,7 +16,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import ProfileMenu from "./profile-menu";
 import { AddDocumentModal } from "./documents/add-document-modal";
 import { Button } from "./ui/button";
-import { PlusIcon } from "lucide-react";
+import { PaletteIcon, PlusIcon } from "lucide-react";
 
 export default function Sidebar() {
   return (
@@ -85,18 +85,20 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
       current: router.pathname.includes("documents"),
       disabled: false,
     },
-    // {
-    //   name: "Analytics",
-    //   href: "/analytics",
-    //   icon: PieChartIcon,
-    //   current: router.pathname.includes("analytics"),
-    //   disabled: true,
-    // },
+    {
+      name: "Branding",
+      href: "/settings/branding",
+      icon: PaletteIcon,
+      current: router.pathname.includes("branding"),
+      disabled: false,
+    },
     {
       name: "Settings",
       href: "/settings/general",
       icon: SettingsIcon,
-      current: router.pathname.includes("settings"),
+      current:
+        router.pathname.includes("settings") &&
+        !router.pathname.includes("branding"),
       disabled: false,
     },
   ];
