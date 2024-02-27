@@ -6,7 +6,7 @@ import BlankImg from "@/public/_static/blank.gif";
 import Nav from "./nav";
 import Toolbar from "./toolbar";
 import { Brand } from "@prisma/client";
-import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import { useRouter } from "next/router";
 
 const DEFAULT_PRELOADED_IMAGES_NUM = 10;
 
@@ -31,17 +31,20 @@ export default function PagesViewer({
   versionNumber: number;
   brand?: Brand;
 }) {
+  const router = useRouter();
   const numPages = pages.length;
-  const [pageNumber, setPageNumber] = useState<number>(1); // start on first page
+  const pageQuery = router.query.p ? Number(router.query.p) : 1;
+
+  const [pageNumber, setPageNumber] = useState<number>(() =>
+    pageQuery <= numPages ? pageQuery : 1,
+  ); // start on first page
+
   const [loadedImages, setLoadedImages] = useState<boolean[]>(
     new Array(numPages).fill(false),
   );
 
   const startTimeRef = useRef(Date.now());
   const pageNumberRef = useRef<number>(pageNumber);
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const pathname = usePathname();
 
   // Update the previous page number after the effect hook has run
   useEffect(() => {
@@ -80,17 +83,6 @@ export default function PagesViewer({
         index < DEFAULT_PRELOADED_IMAGES_NUM ? true : loaded,
       ),
     );
-  }, []);
-
-  useEffect(() => {
-    if (numPages === 1) return;
-    const getPageNumberFromUrl = Number(searchParams?.get("p"));
-    
-    if (searchParams?.has("p") && getPageNumberFromUrl <= numPages) {
-      setPageNumber(getPageNumberFromUrl);
-    } else {
-      updatePageNumberInUrl(1);
-    }
   }, []);
 
   const handleKeyDown = (event: KeyboardEvent) => {
@@ -135,7 +127,14 @@ export default function PagesViewer({
   };
 
   const updatePageNumberInUrl = (pageNum: number) => {
-    router.push(`${pathname}?p=${pageNum}`);
+    router.push(
+      {
+        pathname: window.location.pathname,
+        query: `p=${pageNum}`,
+      },
+      undefined,
+      { shallow: true },
+    );
   };
 
   async function trackPageView(duration: number = 0) {
