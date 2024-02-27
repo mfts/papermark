@@ -59,7 +59,7 @@ export default function App({
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <SessionProvider session={session}>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
           <PlausibleProvider
             domain="papermark.io"
             enabled={process.env.NEXT_PUBLIC_VERCEL_ENV === "production"}
