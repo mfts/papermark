@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import FolderIcon from "@/components/shared/icons/folder";
-import PieChartIcon from "@/components/shared/icons/pie-chart";
 import SettingsIcon from "@/components/shared/icons/settings";
 import MenuIcon from "@/components/shared/icons/menu";
 import { cn } from "@/lib/utils";
