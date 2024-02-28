@@ -81,7 +81,7 @@ cp .env.example .env
 
 ```shell
 npx prisma generate
-npx prisma db deploy
+npx prisma migrate deploy
 ```
 
 ### 5. Run the dev server

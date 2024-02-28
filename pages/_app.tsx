@@ -9,6 +9,7 @@ import { Analytics } from "@vercel/analytics/react";
 import PlausibleProvider from "next-plausible";
 import { ThemeProvider } from "@/components/theme-provider";
 import { TeamProvider } from "@/context/team-context";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -66,9 +67,11 @@ export default function App({
           >
             <main className={inter.className}>
               <Toaster closeButton richColors />
-              <TeamProvider>
-                <Component {...pageProps} />
-              </TeamProvider>
+              <TooltipProvider delayDuration={100}>
+                <TeamProvider>
+                  <Component {...pageProps} />
+                </TeamProvider>
+              </TooltipProvider>
             </main>
           </PlausibleProvider>
         </ThemeProvider>
