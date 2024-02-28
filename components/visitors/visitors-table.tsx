@@ -20,6 +20,7 @@ import ChevronDown from "@/components/shared/icons/chevron-down";
 import VisitorChart from "./visitor-chart";
 import { VisitorAvatar } from "./visitor-avatar";
 import BadgeCheck from "../shared/icons/badge-check";
+import { BadgeInfoIcon } from "lucide-react";
 
 export default function VisitorsTable({ numPages }: { numPages: number }) {
   const { views } = useDocumentVisits();
@@ -67,6 +68,9 @@ export default function VisitorsTable({ numPages }: { numPages: number }) {
                                     {view.viewerEmail}{" "}
                                     {view.verified && (
                                       <BadgeCheck className="h-4 w-4 text-emerald-500" />
+                                    )}
+                                    {view.internal && (
+                                      <BadgeInfoIcon className="h-4 w-4 text-blue-500" />
                                     )}
                                   </>
                                 ) : (
