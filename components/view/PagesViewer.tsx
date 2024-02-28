@@ -36,7 +36,7 @@ export default function PagesViewer({
   const pageQuery = router.query.p ? Number(router.query.p) : 1;
 
   const [pageNumber, setPageNumber] = useState<number>(() =>
-    pageQuery <= numPages ? pageQuery : 1,
+    pageQuery >= 1 && pageQuery <= numPages ? pageQuery : 1,
   ); // start on first page
 
   const [loadedImages, setLoadedImages] = useState<boolean[]>(
@@ -114,27 +114,14 @@ export default function PagesViewer({
   // Navigate to previous page
   const goToPreviousPage = () => {
     if (pageNumber <= 1) return;
-    updatePageNumberInUrl(pageNumber - 1);
     setPageNumber(pageNumber - 1);
   };
 
   // Navigate to next page and preload next image
   const goToNextPage = () => {
     if (pageNumber >= numPages) return;
-    updatePageNumberInUrl(pageNumber + 1);
     preloadImage(DEFAULT_PRELOADED_IMAGES_NUM - 1 + pageNumber); // Preload the next image
     setPageNumber(pageNumber + 1);
-  };
-
-  const updatePageNumberInUrl = (pageNum: number) => {
-    router.push(
-      {
-        pathname: window.location.pathname,
-        query: `p=${pageNum}`,
-      },
-      undefined,
-      { shallow: true },
-    );
   };
 
   async function trackPageView(duration: number = 0) {
