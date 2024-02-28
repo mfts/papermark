@@ -19,7 +19,15 @@ export default async function handle(
       return res.status(401).end("Unauthorized");
     }
 
-    const { teamId, id: docId } = req.query as { teamId: string; id: string };
+    const {
+      teamId,
+      id: docId,
+      excludeTeamMembers,
+    } = req.query as {
+      teamId: string;
+      id: string;
+      excludeTeamMembers?: string;
+    };
 
     const userId = (session.user as CustomUser).id;
 
@@ -63,9 +71,11 @@ export default async function handle(
 
       // exclude views from the team's members
       let excludedViews: View[] = [];
+      if (excludeTeamMembers) {
         excludedViews = views.filter((view) => {
           return users.some((user) => user.email === view.viewerEmail);
         });
+      }
 
       const filteredViews = views.filter(
         (view) => !excludedViews.map((view) => view.id).includes(view.id),

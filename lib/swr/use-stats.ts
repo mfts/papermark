@@ -13,7 +13,9 @@ export type TStatsData = {
   total_duration: number;
 };
 
-export function useStats() {
+export function useStats({
+  excludeTeamMembers,
+}: { excludeTeamMembers?: boolean } = {}) {
   // this gets the data for a document's graph of all views
   const router = useRouter();
   const teamInfo = useTeam();
@@ -26,7 +28,7 @@ export function useStats() {
     id &&
       `/api/teams/${teamInfo?.currentTeam?.id}/documents/${encodeURIComponent(
         id,
-      )}/stats`,
+      )}/stats${excludeTeamMembers ? "?excludeTeamMembers=true" : ""}`,
     fetcher,
     {
       dedupingInterval: 10000,
