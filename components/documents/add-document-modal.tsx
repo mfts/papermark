@@ -23,6 +23,7 @@ import {
   createDocument,
   createNewDocumentVersion,
 } from "@/lib/documents/create-document";
+import { set } from "ts-pattern/dist/patterns";
 
 export function AddDocumentModal({
   newVersion,
@@ -34,6 +35,7 @@ export function AddDocumentModal({
   const router = useRouter();
   const plausible = usePlausible();
   const [uploading, setUploading] = useState<boolean>(false);
+  const [isOpen, setIsOpen] = useState<boolean | undefined>(undefined);
   const [currentFile, setCurrentFile] = useState<File | null>(null);
   const [notionLink, setNotionLink] = useState<string | null>(null);
   const teamInfo = useTeam();
@@ -94,20 +96,14 @@ export function AddDocumentModal({
           plausible("documentUploaded");
 
           // redirect to the document page
-          setTimeout(() => {
-            router.push("/documents/" + document.id);
-            setUploading(false);
-          }, 2000);
+          router.push("/documents/" + document.id);
         } else {
           // track the event
           plausible("documentVersionUploaded");
           toast.success("New document version uploaded.");
 
           // reload to the document page
-          setTimeout(() => {
-            router.reload();
-            setUploading(false);
-          }, 2000);
+          router.reload();
         }
       }
     } catch (error) {
@@ -116,6 +112,7 @@ export function AddDocumentModal({
       console.error("An error occurred while uploading the file: ", error);
     } finally {
       setUploading(false);
+      setIsOpen(false);
     }
   };
 
@@ -182,10 +179,7 @@ export function AddDocumentModal({
           plausible("notionDocumentUploaded");
 
           // redirect to the document page
-          setTimeout(() => {
-            router.push("/documents/" + document.id);
-            setUploading(false);
-          }, 2000);
+          router.push("/documents/" + document.id);
         }
       }
     } catch (error) {
@@ -199,6 +193,7 @@ export function AddDocumentModal({
       );
     } finally {
       setUploading(false);
+      setIsOpen(false);
     }
   };
 
@@ -208,17 +203,23 @@ export function AddDocumentModal({
   };
 
   return (
-    <Dialog onOpenChange={clearModelStates}>
+    <Dialog open={isOpen} onOpenChange={clearModelStates}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent
         className="text-foreground bg-transparent border-none shadow-none"
         isDocumentDialog
       >
         <Tabs defaultValue="document">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="document">Document</TabsTrigger>
-            <TabsTrigger value="notion">Notion Page</TabsTrigger>
-          </TabsList>
+          {!newVersion ? (
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="document">Document</TabsTrigger>
+              <TabsTrigger value="notion">Notion Page</TabsTrigger>
+            </TabsList>
+          ) : (
+            <TabsList className="grid w-full grid-cols-1">
+              <TabsTrigger value="document">Document</TabsTrigger>
+            </TabsList>
+          )}
           <TabsContent value="document">
             <Card>
               <CardHeader className="space-y-3">
@@ -263,53 +264,55 @@ export function AddDocumentModal({
               </CardContent>
             </Card>
           </TabsContent>
-          <TabsContent value="notion">
-            <Card>
-              <CardHeader className="space-y-3">
-                <CardTitle>Share a Notion Page</CardTitle>
-                <CardDescription>
-                  After you submit the Notion link, a shareable link will be
-                  generated and copied to your clipboard. Just like with a PDF
-                  document.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <form
-                  encType="multipart/form-data"
-                  onSubmit={handleNotionUpload}
-                  className="flex flex-col"
-                >
-                  <div className="space-y-1 pb-8">
-                    <Label htmlFor="notion-link">Notion Page Link</Label>
-                    <div className="mt-2">
-                      <input
-                        type="text"
-                        name="notion-link"
-                        id="notion-link"
-                        placeholder="notion.site/..."
-                        className="flex w-full rounded-md border-0 py-1.5 text-foreground bg-background shadow-sm ring-1 ring-inset ring-input placeholder:text-muted-foreground focus:ring-2 focus:ring-inset focus:ring-gray-400 sm:text-sm sm:leading-6"
-                        value={notionLink || ""}
-                        onChange={(e) => setNotionLink(e.target.value)}
-                      />
+          {!newVersion && (
+            <TabsContent value="notion">
+              <Card>
+                <CardHeader className="space-y-3">
+                  <CardTitle>Share a Notion Page</CardTitle>
+                  <CardDescription>
+                    After you submit the Notion link, a shareable link will be
+                    generated and copied to your clipboard. Just like with a PDF
+                    document.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <form
+                    encType="multipart/form-data"
+                    onSubmit={handleNotionUpload}
+                    className="flex flex-col"
+                  >
+                    <div className="space-y-1 pb-8">
+                      <Label htmlFor="notion-link">Notion Page Link</Label>
+                      <div className="mt-2">
+                        <input
+                          type="text"
+                          name="notion-link"
+                          id="notion-link"
+                          placeholder="notion.site/..."
+                          className="flex w-full rounded-md border-0 py-1.5 text-foreground bg-background shadow-sm ring-1 ring-inset ring-input placeholder:text-muted-foreground focus:ring-2 focus:ring-inset focus:ring-gray-400 sm:text-sm sm:leading-6"
+                          value={notionLink || ""}
+                          onChange={(e) => setNotionLink(e.target.value)}
+                        />
+                      </div>
+                      <small className="text-xs text-muted-foreground">
+                        Your Notion page needs to be shared publicly.
+                      </small>
                     </div>
-                    <small className="text-xs text-muted-foreground">
-                      Your Notion page needs to be shared publicly.
-                    </small>
-                  </div>
-                  <div className="flex justify-center">
-                    <Button
-                      type="submit"
-                      className="w-full lg:w-1/2"
-                      disabled={uploading || !notionLink}
-                      loading={uploading}
-                    >
-                      {uploading ? "Saving..." : "Save Notion Link"}
-                    </Button>
-                  </div>
-                </form>
-              </CardContent>
-            </Card>
-          </TabsContent>
+                    <div className="flex justify-center">
+                      <Button
+                        type="submit"
+                        className="w-full lg:w-1/2"
+                        disabled={uploading || !notionLink}
+                        loading={uploading}
+                      >
+                        {uploading ? "Saving..." : "Save Notion Link"}
+                      </Button>
+                    </div>
+                  </form>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          )}
         </Tabs>
       </DialogContent>
     </Dialog>

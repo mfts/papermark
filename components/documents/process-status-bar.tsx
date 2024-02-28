@@ -41,6 +41,10 @@ export default function ProcessStatusBar({
     );
   }
 
+  if (status && status.hasPages) {
+    return null;
+  }
+
   return (
     <Progress
       value={progress}

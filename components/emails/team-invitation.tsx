@@ -16,14 +16,12 @@ export default function TeamInvitation({
   senderName,
   senderEmail,
   teamName,
-  teamId,
-  token,
+  url,
 }: {
   senderName: string;
   senderEmail: string;
   teamName: string;
-  teamId: string;
-  token: string;
+  url: string;
 }) {
   return (
     <Html>
@@ -48,7 +46,7 @@ export default function TeamInvitation({
             <Section className="text-center mt-[32px] mb-[32px]">
               <Button
                 className="bg-black rounded text-white text-xs font-semibold no-underline text-center"
-                href={`${process.env.NEXT_PUBLIC_BASE_URL}/api/teams/${teamId}/invite?token=${token}`}
+                href={`${url}`}
                 style={{ padding: "12px 20px" }}
               >
                 Join the team
@@ -56,7 +54,7 @@ export default function TeamInvitation({
             </Section>
             <Text className="text-sm text-black">
               or copy and paste this URL into your browser: <br />
-              {`${process.env.NEXT_PUBLIC_BASE_URL}/api/teams/${teamId}/invite?token=${token}`}
+              {`${url}`}
             </Text>
             <Text className="text-sm text-gray-400">Marc from Papermark</Text>
             <Hr />

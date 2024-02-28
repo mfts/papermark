@@ -124,14 +124,15 @@ export default function Nav({
             {assistantEnabled ? (
               <Link href={`/view/${linkId}/chat`}>
                 <Button
-                  className="group space-x-1 bg-gradient-to-r from-[#16222A] via-emerald-500 to-[#16222A] duration-200 ease-linear hover:bg-right"
+                  className="text-white bg-gray-900 hover:bg-gray-900/80 m-1"
                   variant={"special"}
+                  size={"icon"}
                   style={{
                     backgroundSize: "200% auto",
                   }}
+                  title="Open AI Document Assistant"
                 >
-                  <PapermarkSparkle className="h-5 w-5 animate-pulse group-hover:animate-none" />{" "}
-                  <span>AI Assistant</span>
+                  <PapermarkSparkle className="h-5 w-5" />
                 </Button>
               </Link>
             ) : null}
