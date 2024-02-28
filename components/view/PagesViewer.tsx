@@ -163,7 +163,7 @@ export default function PagesViewer({
         <button
           onClick={goToPreviousPage}
           disabled={pageNumber == 1}
-          className="absolute left-0 h-[calc(100vh - 64px)] px-2 py-24 z-20 "
+          className="absolute left-0 h-[calc(100vh - 64px)] px-2 py-24 z-20"
         >
           <span className="sr-only">Previous</span>
           <div className="bg-gray-950/50 hover:bg-gray-950/75 rounded-full relative flex items-center justify-center p-1">
