@@ -1,8 +1,6 @@
 import { getExtension } from "@/lib/utils";
 import { useDocument } from "@/lib/swr/use-document";
 import ErrorPage from "next/error";
-import StatsCard from "@/components/documents/stats-card";
-import StatsChart from "@/components/documents/stats-chart";
 import AppLayout from "@/components/layouts/app";
 import LinkSheet from "@/components/links/link-sheet";
 import Image from "next/image";
@@ -31,7 +29,10 @@ import PapermarkSparkle from "@/components/shared/icons/papermark-sparkle";
 import { Document } from "@prisma/client";
 import { usePlausible } from "next-plausible";
 import { mutate } from "swr";
-import { TrashIcon, Sparkles, LinkIcon } from "lucide-react";
+import { TrashIcon, Sparkles } from "lucide-react";
+import { StatsComponent } from "@/components/documents/stats";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 export default function DocumentPage() {
   const { document: prismaDocument, primaryVersion, error } = useDocument();
@@ -41,6 +42,7 @@ export default function DocumentPage() {
   const [isEditingName, setIsEditingName] = useState<boolean>(false);
   const [isFirstClick, setIsFirstClick] = useState<boolean>(false);
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
+  const [excludeTeamMembers, setExcludeTeamMembers] = useState<boolean>(false);
 
   const nameRef = useRef<HTMLHeadingElement>(null);
   const enterPressedRef = useRef<boolean>(false);
@@ -393,15 +395,10 @@ export default function DocumentPage() {
             </header>
 
             {/* Stats */}
-            {prismaDocument.numPages !== null && (
-              <StatsChart
-                documentId={prismaDocument.id}
-                totalPagesMax={primaryVersion.numPages!}
-              />
-            )}
-
-            {/* Stats Card */}
-            <StatsCard />
+            <StatsComponent
+              documentId={prismaDocument.id}
+              numPages={primaryVersion.numPages!}
+            />
 
             {/* Links */}
             <LinksTable primaryVersion={primaryVersion} />
