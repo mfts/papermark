@@ -129,12 +129,13 @@ export function UpgradePlanModal({
               </motion.div>
             </div>
             <Button
-              disabled={clicked}
+              loading={clicked}
               onClick={() => {
                 setClicked(true);
                 fetch(
-                  `/api/teams/${teamInfo?.currentTeam
-                    ?.id}/billing/upgrade?priceId=${
+                  `/api/teams/${
+                    teamInfo?.currentTeam?.id
+                  }/billing/upgrade?priceId=${
                     PLANS.find((p) => p.name === plan)!.price[period].priceIds[
                       process.env.NEXT_PUBLIC_VERCEL_ENV === "production"
                         ? "production"

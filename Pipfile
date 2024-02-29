@@ -4,7 +4,7 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-tinybird-cli = "*"
+tinybird-cli = "3.3.0"
 
 [dev-packages]
 

@@ -6,6 +6,7 @@ import { getTotalAvgPageDuration } from "@/lib/tinybird";
 import { CustomUser } from "@/lib/types";
 import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
 import { errorhandler } from "@/lib/errorHandler";
+import { View } from "@prisma/client";
 
 export default async function handle(
   req: NextApiRequest,
@@ -18,7 +19,15 @@ export default async function handle(
       return res.status(401).end("Unauthorized");
     }
 
-    const { teamId, id: docId } = req.query as { teamId: string; id: string };
+    const {
+      teamId,
+      id: docId,
+      excludeTeamMembers,
+    } = req.query as {
+      teamId: string;
+      id: string;
+      excludeTeamMembers?: string;
+    };
 
     const userId = (session.user as CustomUser).id;
 
@@ -35,22 +44,58 @@ export default async function handle(
         },
       });
 
+      const users = await prisma.user.findMany({
+        where: {
+          teams: {
+            some: {
+              teamId: teamId,
+            },
+          },
+        },
+        select: {
+          email: true,
+        },
+      });
+
       const views = document?.views;
 
-      const groupedViews = await prisma.view.groupBy({
-        by: ["viewerEmail"],
-        where: { documentId: docId },
-        _count: { id: true },
-      });
+      // if there are no views, return an empty array
+      if (!views) {
+        return res.status(200).json({
+          views: [],
+          duration: { data: [] },
+          total_duration: 0,
+          groupedReactions: [],
+        });
+      }
+
+      // exclude views from the team's members
+      let excludedViews: View[] = [];
+      if (excludeTeamMembers) {
+        excludedViews = views.filter((view) => {
+          return users.some((user) => user.email === view.viewerEmail);
+        });
+      }
+
+      const filteredViews = views.filter(
+        (view) => !excludedViews.map((view) => view.id).includes(view.id),
+      );
 
       const groupedReactions = await prisma.reaction.groupBy({
         by: ["type"],
-        where: { view: { documentId: docId } },
+        where: {
+          view: {
+            documentId: docId,
+            id: { notIn: excludedViews.map((view) => view.id) },
+          },
+        },
         _count: { type: true },
       });
 
       const duration = await getTotalAvgPageDuration({
         documentId: docId,
+        excludedLinkIds: [],
+        excludedViewIds: excludedViews.map((view) => view.id),
         since: 0,
       });
 
@@ -60,8 +105,7 @@ export default async function handle(
       );
 
       const stats = {
-        views,
-        groupedViews,
+        views: filteredViews,
         duration,
         total_duration,
         groupedReactions,

@@ -1,4 +1,10 @@
-import { Dispatch, SetStateAction, useState, useEffect, ChangeEvent } from "react";
+import {
+  Dispatch,
+  SetStateAction,
+  useState,
+  useEffect,
+  ChangeEvent,
+} from "react";
 import { Switch } from "@/components/ui/switch";
 import { motion } from "framer-motion";
 import { FADE_IN_ANIMATION_SETTINGS } from "@/lib/constants";
@@ -8,15 +14,22 @@ import { DEFAULT_LINK_TYPE } from ".";
 export default function DenyListSection({
   data,
   setData,
+  hasFreePlan,
+  setOpenUpgradeModal,
 }: {
   data: DEFAULT_LINK_TYPE;
   setData: Dispatch<SetStateAction<DEFAULT_LINK_TYPE>>;
+  hasFreePlan: boolean;
+  setOpenUpgradeModal: Dispatch<SetStateAction<boolean>>;
 }) {
   const { emailAuthenticated, denyList } = data;
   // Initialize enabled state based on whether denyList is not null and not empty
-  const [enabled, setEnabled] = useState<boolean>(!!denyList && denyList.length > 0);
-  const [denyListInput, setDenyListInput] = useState<string>(denyList?.join("\n") || "");
-
+  const [enabled, setEnabled] = useState<boolean>(
+    !!denyList && denyList.length > 0,
+  );
+  const [denyListInput, setDenyListInput] = useState<string>(
+    denyList?.join("\n") || "",
+  );
 
   useEffect(() => {
     // Update the denyList in the data state when their inputs change
@@ -37,7 +50,7 @@ export default function DenyListSection({
         ...prevData,
         denyList: updatedEnabled ? sanitizeAllowDenyList(denyListInput) : [],
         emailAuthenticated: true, // Turn on email authentication
-        emailProtected: true // Turn on email protection
+        emailProtected: true, // Turn on email protection
       }));
     } else {
       setData((prevData) => ({
@@ -51,7 +64,6 @@ export default function DenyListSection({
     setDenyListInput(event.target.value);
   };
 
-
   return (
     <div className="pb-5">
       <div className="flex flex-col space-y-4">
@@ -60,13 +72,22 @@ export default function DenyListSection({
             className={cn(
               "text-sm font-medium leading-6",
               enabled ? "text-foreground" : "text-muted-foreground",
+              hasFreePlan ? "cursor-pointer" : undefined,
             )}
+            onClick={hasFreePlan ? () => setOpenUpgradeModal(true) : undefined}
           >
             Block specified viewers
+            {hasFreePlan && (
+              <span className="bg-background text-foreground ring-1 ring-gray-800 dark:ring-gray-500 rounded-full px-2 py-0.5 text-xs ml-2">
+                Pro
+              </span>
+            )}
           </h2>
           <Switch
             checked={enabled}
-            onCheckedChange={handleEnableDenyList}
+            onClick={hasFreePlan ? () => setOpenUpgradeModal(true) : undefined}
+            className={hasFreePlan ? "opacity-50" : undefined}
+            onCheckedChange={hasFreePlan ? undefined : handleEnableDenyList}
           />
         </div>
         {enabled && (
