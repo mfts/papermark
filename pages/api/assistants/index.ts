@@ -4,6 +4,7 @@ import prisma from "@/lib/prisma";
 import { authOptions } from "../auth/[...nextauth]";
 import { errorHandler } from "@/lib/errorHandler";
 import { openai } from "@/lib/openai";
+import { getFile } from "@/lib/files/get-file";
 
 export default async function handle(
   req: NextApiRequest,
@@ -32,6 +33,7 @@ export default async function handle(
               id: true,
               fileId: true,
               file: true,
+              storageType: true,
             },
           },
         },
@@ -50,7 +52,12 @@ export default async function handle(
       // Upload the file to OpenAI
       const fileId = (
         await openai.files.create({
-          file: await fetch(document.versions[0].file),
+          file: await fetch(
+            await getFile({
+              type: document.versions[0].storageType,
+              data: document.versions[0].file,
+            }),
+          ),
           purpose: "assistants",
         })
       ).id;

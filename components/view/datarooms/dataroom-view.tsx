@@ -192,7 +192,6 @@ export default function DataroomView({
 
   // If link is not submitted and does not have email / password protection, show the access form
   if (!submitted && isProtected) {
-    console.log("calling access form");
     return (
       <AccessForm
         data={data}

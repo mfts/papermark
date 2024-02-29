@@ -20,7 +20,7 @@ export default function useDatarooms() {
     fetcher,
     {
       revalidateOnFocus: false,
-      dedupingInterval: 10000,
+      dedupingInterval: 30000,
     },
   );
 

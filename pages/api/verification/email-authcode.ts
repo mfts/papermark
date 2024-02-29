@@ -142,7 +142,6 @@ export default async function handle(
         ? `${process.env.NEXT_PUBLIC_BASE_URL}/view/${identifier}?authenticationCode=${authenticationCode}`
         : `${process.env.NEXT_PUBLIC_BASE_URL}/view/dataroom/${identifier}?authenticationCode=${authenticationCode}`
 
-    console.log(URL);
     //Send email only if emailProtected
     if (emailProtected) {
       await sendVerificationEmail(email, URL);

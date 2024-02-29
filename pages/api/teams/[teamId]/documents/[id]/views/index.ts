@@ -6,6 +6,7 @@ import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { CustomUser } from "@/lib/types";
 import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
 import { errorHandler } from "@/lib/errorHandler";
+import prisma from "@/lib/prisma";
 
 export default async function handle(
   req: NextApiRequest,
@@ -57,6 +58,19 @@ export default async function handle(
         },
       });
 
+      const users = await prisma.user.findMany({
+        where: {
+          teams: {
+            some: {
+              teamId: teamId,
+            },
+          },
+        },
+        select: {
+          email: true,
+        },
+      });
+
       // get the numPages from document
       const numPages =
         document?.versions?.[0]?.numPages || document?.numPages || 0;
@@ -91,6 +105,7 @@ export default async function handle(
 
         return {
           ...view,
+          internal: users.some((user) => user.email === view.viewerEmail), // set internal to true if view.viewerEmail is in the users list
           duration: durations[index],
           totalDuration: summedDurations[index],
           completionRate: completionRate.toFixed(),
@@ -99,7 +114,10 @@ export default async function handle(
 
       return res.status(200).json(viewsWithDuration);
     } catch (error) {
-      log({message: `Failed to get views for document: _${docId}_. \n\n ${error} \n\n*Metadata*: \`{teamId: ${teamId}, userId: ${userId}}\``, type: "error"});
+      log({
+        message: `Failed to get views for document: _${docId}_. \n\n ${error} \n\n*Metadata*: \`{teamId: ${teamId}, userId: ${userId}}\``,
+        type: "error",
+      });
       errorHandler(error, res);
     }
   } else {

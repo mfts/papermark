@@ -41,13 +41,22 @@ export function EmptyScreen({
       <div className="mx-auto w-1/2 md:w-1/3">
         <div className="flex items-center justify-center">
           {firstPage ? (
-            <Image
-              src={firstPage}
-              width={768}
-              height={100}
-              className="object-contain rounded-md ring-1 ring-gray-700"
-              alt="First page of the document"
-            />
+            firstPage.includes("cloudfront.net") ? (
+              <img
+                className="object-contain rounded-md ring-1 ring-gray-700"
+                src={firstPage}
+                alt={`Page 1`}
+                fetchPriority="high"
+              />
+            ) : (
+              <Image
+                src={firstPage}
+                width={768}
+                height={100}
+                className="object-contain rounded-md ring-1 ring-gray-700"
+                alt="First page of the document"
+              />
+            )
           ) : (
             <div className="flex items-center justify-center rounded-md w-full">
               <p className="text-2xl text-center">

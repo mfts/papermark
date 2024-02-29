@@ -9,7 +9,7 @@ import { errorHandler } from "@/lib/errorHandler";
 
 export default async function handle(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   if (req.method === "GET") {
     // GET /api/teams/:teamId/documents/:id/views/:viewId/stats
@@ -52,7 +52,7 @@ export default async function handle(
 
       const total_duration = duration.data.reduce(
         (totalDuration, data) => totalDuration + data.sum_duration,
-        0
+        0,
       );
 
       const stats = { duration, total_duration };

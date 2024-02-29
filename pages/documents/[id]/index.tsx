@@ -1,8 +1,6 @@
 import { getExtension } from "@/lib/utils";
 import { useDocument } from "@/lib/swr/use-document";
 import ErrorPage from "next/error";
-import StatsCard from "@/components/documents/stats-card";
-import StatsChart from "@/components/documents/stats-chart";
 import AppLayout from "@/components/layouts/app";
 import LinkSheet from "@/components/links/link-sheet";
 import Image from "next/image";
@@ -31,16 +29,25 @@ import PapermarkSparkle from "@/components/shared/icons/papermark-sparkle";
 import { Document } from "@prisma/client";
 import { usePlausible } from "next-plausible";
 import { mutate } from "swr";
-import { TrashIcon, Sparkles, LinkIcon } from "lucide-react";
+import { TrashIcon, Sparkles } from "lucide-react";
+import { StatsComponent } from "@/components/documents/stats";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { useTheme } from "next-themes";
 
 export default function DocumentPage() {
   const { document: prismaDocument, primaryVersion, error } = useDocument();
+  const { theme, systemTheme } = useTheme();
+  const isLight =
+    theme === "light" || (theme === "system" && systemTheme === "light");
+
   const router = useRouter();
 
   const [isLinkSheetOpen, setIsLinkSheetOpen] = useState<boolean>(false);
   const [isEditingName, setIsEditingName] = useState<boolean>(false);
   const [isFirstClick, setIsFirstClick] = useState<boolean>(false);
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
+  const [excludeTeamMembers, setExcludeTeamMembers] = useState<boolean>(false);
 
   const nameRef = useRef<HTMLHeadingElement>(null);
   const enterPressedRef = useRef<boolean>(false);
@@ -239,7 +246,7 @@ export default function DocumentPage() {
                 ) : (
                   <div className="w-[25px] lg:w-[32px] h-[25px] lg:h-[32px]">
                     <Image
-                      src={`/_icons/${getExtension(primaryVersion.file)}.svg`}
+                      src={`/_icons/${getExtension(primaryVersion.file)}${isLight ? "-light" : ""}.svg`}
                       alt="File icon"
                       width={50}
                       height={50}
@@ -269,26 +276,33 @@ export default function DocumentPage() {
               <div className="flex items-center gap-x-4 md:gap-x-2 lg:gap-x-4">
                 {primaryVersion.type !== "notion" && (
                   <AddDocumentModal newVersion>
-                    <button title="Upload a new version">
+                    <button
+                      title="Upload a new version"
+                      className="hidden md:flex"
+                    >
                       <FileUp className="w-6 h-6" />
                     </button>
                   </AddDocumentModal>
                 )}
 
-                {prismaDocument.type !== "notion" && (
-                  <Button
-                    className="group hidden md:flex h-8 lg:h-9 space-x-1 text-xs lg:text-sm whitespace-nowrap bg-gradient-to-r from-[#16222A] via-emerald-500 to-[#16222A] duration-200 ease-linear hover:bg-right"
-                    variant={"special"}
-                    style={{ backgroundSize: "200% auto" }}
-                    onClick={() => activateOrRedirectAssistant(prismaDocument)}
-                  >
-                    <PapermarkSparkle className="h-5 w-5 animate-pulse group-hover:animate-none" />{" "}
-                    <span>AI Assistant</span>
-                  </Button>
-                )}
+                {prismaDocument.type !== "notion" &&
+                  prismaDocument.assistantEnabled && (
+                    <Button
+                      className="group hidden md:flex h-8 lg:h-9 space-x-1 text-xs lg:text-sm whitespace-nowrap bg-gradient-to-r from-[#16222A] via-emerald-500 to-[#16222A] duration-200 ease-linear hover:bg-right"
+                      variant={"special"}
+                      size={"icon"}
+                      style={{ backgroundSize: "200% auto" }}
+                      onClick={() =>
+                        activateOrRedirectAssistant(prismaDocument)
+                      }
+                      title="Open AI Assistant"
+                    >
+                      <PapermarkSparkle className="h-5 w-5" />
+                    </Button>
+                  )}
 
                 <Button
-                  className="hidden md:flex h-8 lg:h-9 text-xs lg:text-sm whitespace-nowrap"
+                  className="flex h-8 lg:h-9 text-xs lg:text-sm whitespace-nowrap"
                   onClick={() => setIsLinkSheetOpen(true)}
                 >
                   Create Link
@@ -314,23 +328,29 @@ export default function DocumentPage() {
                   >
                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
                     <DropdownMenuGroup className="block md:hidden">
+                      <DropdownMenuItem
+                        onClick={() => setIsLinkSheetOpen(true)}
+                      >
+                        <AddDocumentModal newVersion>
+                          <button
+                            title="Add a new version"
+                            className="flex items-center"
+                          >
+                            <FileUp className="w-4 h-4 mr-2" /> Add new version
+                          </button>
+                        </AddDocumentModal>
+                      </DropdownMenuItem>
+
                       {prismaDocument.type !== "notion" && (
                         <DropdownMenuItem
                           onClick={() =>
                             activateOrRedirectAssistant(prismaDocument)
                           }
                         >
-                          <PapermarkSparkle className="h-4 w-4 animate-pulse group-hover:animate-none mr-2" />
-                          AI Assistant
+                          <PapermarkSparkle className="h-4 w-4 mr-2" />
+                          Open AI Assistant
                         </DropdownMenuItem>
                       )}
-
-                      <DropdownMenuItem
-                        onClick={() => setIsLinkSheetOpen(true)}
-                      >
-                        <LinkIcon className="h-4 w-4 animate-pulse group-hover:animate-none mr-2" />
-                        Create Link
-                      </DropdownMenuItem>
 
                       <DropdownMenuSeparator />
                     </DropdownMenuGroup>
@@ -380,14 +400,10 @@ export default function DocumentPage() {
             </header>
 
             {/* Stats */}
-            {prismaDocument.numPages !== null && (
-              <StatsChart
-                documentId={prismaDocument.id}
-                totalPagesMax={primaryVersion.numPages!}
-              />
-            )}
-
-            <StatsCard />
+            <StatsComponent
+              documentId={prismaDocument.id}
+              numPages={primaryVersion.numPages!}
+            />
 
             {/* Links */}
             <LinksTable primaryVersion={primaryVersion} />

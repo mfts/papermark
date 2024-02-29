@@ -16,7 +16,7 @@ export function usePagedDataroom() {
     dataroomId && `/api/datarooms/paged?id=${encodeURIComponent(dataroomId)}`,
     fetcher,
     {
-      dedupingInterval: 10000,
+      dedupingInterval: 30000,
     },
   );
 

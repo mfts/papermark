@@ -8,10 +8,23 @@ import { toast } from "sonner";
 import Skeleton from "../Skeleton";
 import { STAGGER_CHILD_VARIANTS } from "@/lib/constants";
 import { pdfjs } from "react-pdf";
-import { copyToClipboard, getExtension } from "@/lib/utils";
+import {
+  convertDataUrlToFile,
+  copyToClipboard,
+  getExtension,
+  uploadImage,
+} from "@/lib/utils";
 import { Button } from "../ui/button";
 import { usePlausible } from "next-plausible";
 import { useTeam } from "@/context/team-context";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "../ui/accordion";
+import { LinkOptions } from "../links/link-sheet/link-options";
+import { DEFAULT_LINK_PROPS, DEFAULT_LINK_TYPE } from "../links/link-sheet";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
 
@@ -19,10 +32,13 @@ export default function Upload() {
   const router = useRouter();
   const plausible = usePlausible();
   const [uploading, setUploading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [currentFile, setCurrentFile] = useState<File | null>(null);
   const [currentBlob, setCurrentBlob] = useState<boolean>(false);
   const [currentLinkId, setCurrentLinkId] = useState<string | null>(null);
   const [currentDocId, setCurrentDocId] = useState<string | null>(null);
+  const [linkData, setLinkData] =
+    useState<DEFAULT_LINK_TYPE>(DEFAULT_LINK_PROPS);
   const teamInfo = useTeam();
 
   const handleBrowserUpload = async (event: any) => {
@@ -119,6 +135,53 @@ export default function Upload() {
     }, 2000);
   };
 
+  const handleSubmit = async (event: any) => {
+    event.preventDefault();
+
+    setIsLoading(true);
+
+    // Upload the image if it's a data URL
+    let blobUrl: string | null =
+      linkData.metaImage && linkData.metaImage.startsWith("data:")
+        ? null
+        : linkData.metaImage;
+    if (linkData.metaImage && linkData.metaImage.startsWith("data:")) {
+      // Convert the data URL to a blob
+      const blob = convertDataUrlToFile({ dataUrl: linkData.metaImage });
+      // Upload the blob to vercel storage
+      blobUrl = await uploadImage(blob);
+      setLinkData({ ...linkData, metaImage: blobUrl });
+    }
+
+    const response = await fetch(`/api/links/${currentLinkId}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        ...linkData,
+        metaImage: blobUrl,
+        documentId: currentDocId,
+      }),
+    });
+
+    if (!response.ok) {
+      // handle error with toast message
+      const { error } = await response.json();
+      toast.error(error);
+      setIsLoading(false);
+      return;
+    }
+
+    copyToClipboard(
+      `${process.env.NEXT_PUBLIC_BASE_URL}/view/${currentLinkId}`,
+      "Link copied to clipboard. Redirecting to document page...",
+    );
+
+    router.push(`/documents/${currentDocId}`);
+    setIsLoading(false);
+  };
+
   return (
     <>
       {!currentBlob && (
@@ -169,12 +232,37 @@ export default function Upload() {
                   <Button
                     type="submit"
                     className="w-full"
-                    disabled={uploading || !currentFile}
+                    loading={uploading}
+                    disabled={!currentFile}
                   >
                     {uploading ? "Uploading..." : "Upload Document"}
                   </Button>
                 </div>
               </form>
+
+              <div className="text-xs text-muted-foreground">
+                <span>Use our</span>{" "}
+                <Button
+                  variant="link"
+                  className="text-xs font-normal px-0 underline text-muted-foreground hover:text-gray-700"
+                  onClick={async () => {
+                    const response = await fetch(
+                      "/_example/papermark-example-document.pdf",
+                    );
+                    const blob = await response.blob();
+                    const file = new File(
+                      [blob],
+                      "papermark-example-document.pdf",
+                      {
+                        type: "application/pdf",
+                      },
+                    );
+                    setCurrentFile(file);
+                  }}
+                >
+                  sample document
+                </Button>
+              </div>
             </main>
           </motion.div>
         </motion.div>
@@ -229,27 +317,25 @@ export default function Upload() {
                           {`${process.env.NEXT_PUBLIC_BASE_URL}/view/${currentLinkId}`}
                         </p>
                       </div>
-                      {/* <button
-                        type="button"
-                        className="relative -ml-px inline-flex items-center rounded-r-md px-3 py-2 text-sm font-semibold bg-accent ring-1 ring-inset ring-accent hover:ring-gray-400 animate-pulse"
-                        title="Copy link"
-                        onClick={() => handleCopyToClipboard(currentLinkId)}
-                      >
-                        <DocumentDuplicateIcon
-                          className="h-5 w-5 text-accent-foreground"
-                          aria-hidden="true"
-                        />
-                      </button> */}
                     </div>
                   </div>
+                  <div className="w-full max-w-xs sm:max-w-lg pb-8">
+                    <Accordion type="single" collapsible>
+                      <AccordionItem value="item-1" className="border-none">
+                        <AccordionTrigger className="py-0 rounded-lg space-x-2">
+                          <span className="text-sm font-medium leading-6 text-foreground">
+                            Configure Link Options
+                          </span>
+                        </AccordionTrigger>
+                        <AccordionContent className="first:pt-5">
+                          <LinkOptions data={linkData} setData={setLinkData} />
+                        </AccordionContent>
+                      </AccordionItem>
+                    </Accordion>
+                  </div>
                   <div className="flex items-center justify-center mb-4">
-                    <Button
-                      onClick={() => handleContinue(currentLinkId)}
-                      type="submit"
-                      // disabled={!copiedLink}
-                    >
-                      {"Share Document"}
-                      {/* <ArrowRightIcon className="h-4 w-4 ml-2" /> */}
+                    <Button onClick={handleSubmit} loading={isLoading}>
+                      Share Document
                     </Button>
                   </div>
                 </div>

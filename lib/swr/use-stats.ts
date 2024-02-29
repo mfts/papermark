@@ -4,22 +4,18 @@ import { fetcher } from "@/lib/utils";
 import { View } from "@prisma/client";
 import { useTeam } from "@/context/team-context";
 
-interface GroupedView {
-  viewerEmail: string;
-  _count: { id: number };
-}
-
-interface StatsData {
+export type TStatsData = {
   views: View[];
-  groupedViews: GroupedView[];
   groupedReactions: { type: string; _count: { type: number } }[];
   duration: {
     data: { versionNumber: number; pageNumber: string; avg_duration: number }[];
   };
   total_duration: number;
-}
+};
 
-export function useStats() {
+export function useStats({
+  excludeTeamMembers,
+}: { excludeTeamMembers?: boolean } = {}) {
   // this gets the data for a document's graph of all views
   const router = useRouter();
   const teamInfo = useTeam();
@@ -28,11 +24,11 @@ export function useStats() {
     id: string;
   };
 
-  const { data: stats, error } = useSWR<StatsData>(
+  const { data: stats, error } = useSWR<TStatsData>(
     id &&
       `/api/teams/${teamInfo?.currentTeam?.id}/documents/${encodeURIComponent(
         id,
-      )}/stats`,
+      )}/stats${excludeTeamMembers ? "?excludeTeamMembers=true" : ""}`,
     fetcher,
     {
       dedupingInterval: 10000,

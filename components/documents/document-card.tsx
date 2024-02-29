@@ -5,10 +5,8 @@ import { TeamContextType } from "@/context/team-context";
 import BarChart from "@/components/shared/icons/bar-chart";
 import Image from "next/image";
 import NotionIcon from "@/components/shared/icons/notion";
-import PapermarkSparkle from "../shared/icons/papermark-sparkle";
 import { toast } from "sonner";
-import { useRouter } from "next/router";
-import { Button } from "../ui/button";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,9 +18,10 @@ import {
 import { TrashIcon, MoreVertical } from "lucide-react";
 import { mutate } from "swr";
 import { useCopyToClipboard } from "@/lib/utils/use-copy-to-clipboard";
-import Check from "../shared/icons/check";
-import Copy from "../shared/icons/copy";
+import Check from "@/components/shared/icons/check";
+import Copy from "@/components/shared/icons/copy";
 import { useEffect, useRef, useState } from "react";
+import { useTheme } from "next-themes";
 
 type DocumentsCardProps = {
   document: DocumentWithLinksAndLinkCountAndViewCount;
@@ -32,7 +31,10 @@ export default function DocumentsCard({
   document: prismaDocument,
   teamInfo,
 }: DocumentsCardProps) {
-  const router = useRouter();
+  const { theme, systemTheme } = useTheme();
+  const isLight =
+    theme === "light" || (theme === "system" && systemTheme === "light");
+
   const { isCopied, copyToClipboard } = useCopyToClipboard({});
   const [isFirstClick, setIsFirstClick] = useState<boolean>(false);
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
@@ -69,32 +71,6 @@ export default function DocumentsCard({
       setMenuOpen(false); // Close the dropdown after deleting
     } else {
       setIsFirstClick(true);
-    }
-  };
-
-  const activateOrRedirectAssistant = async () => {
-    if (prismaDocument.assistantEnabled) {
-      router.push(`/documents/${prismaDocument.id}/chat`);
-    } else {
-      toast.promise(
-        fetch("/api/assistants", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            documentId: prismaDocument.id,
-          }),
-        }).then(() => {
-          // Once the assistant is activated, redirect to the chat
-          router.push(`/documents/${prismaDocument.id}/chat`);
-        }),
-        {
-          loading: "Activating Assistant...",
-          success: "Papermark Assistant successfully activated.",
-          error: "Activation failed. Please try again.",
-        },
-      );
     }
   };
 
@@ -150,11 +126,10 @@ export default function DocumentsCard({
             <NotionIcon className="w-8 h-8" />
           ) : (
             <Image
-              src={`/_icons/${prismaDocument.type}.svg`}
+              src={`/_icons/${prismaDocument.type}${isLight ? "-light" : ""}.svg`}
               alt="File icon"
               width={50}
               height={50}
-              className=""
             />
           )}
         </div>
@@ -204,21 +179,6 @@ export default function DocumentsCard({
       </div>
 
       <div className="flex flex-row space-x-2">
-        {prismaDocument.type !== "notion" ? (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              activateOrRedirectAssistant();
-            }}
-            className="group/button flex items-center z-10 space-x-1 rounded-md ring-1 ring-gray-200 dark:ring-gray-700 px-1 sm:px-2 py-0.5 transition-all duration-75 hover:scale-105 active:scale-95"
-          >
-            <PapermarkSparkle className="h-4 w-4 text-gray-400 group-hover/row:text-foreground group-hover/row:animate-pulse group-hover/button:text-foreground group-hover/button:animate-none" />
-            <span className="whitespace-nowrap text-sm ml-1 hidden sm:inline-block text-gray-400 group-hover/button:text-foreground">
-              AI Assistant
-            </span>
-          </button>
-        ) : null}
-
         <Link
           onClick={(e) => {
             e.stopPropagation();
@@ -236,11 +196,12 @@ export default function DocumentsCard({
         <DropdownMenu open={menuOpen} onOpenChange={handleMenuStateChange}>
           <DropdownMenuTrigger asChild>
             <Button
-              size="icon"
-              variant="ghost"
-              className="w-6 sm:w-7 h-6 sm:h-7 z-10"
+              // size="icon"
+              variant="outline"
+              className="h-8 lg:h-9 w-8 lg:w-9 p-0 z-10 bg-transparent border-gray-200 dark:border-gray-700 hover:bg-gray-200 hover:dark:bg-gray-700"
             >
-              <MoreVertical className="w-4 h-4 text-muted-foreground" />
+              <span className="sr-only">Open menu</span>
+              <MoreVertical className="w-4 h-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" ref={dropdownRef}>

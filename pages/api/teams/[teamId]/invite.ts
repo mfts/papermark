@@ -6,6 +6,7 @@ import { CustomUser } from "@/lib/types";
 import { errorHandler } from "@/lib/errorHandler";
 import { sendTeammateInviteEmail } from "@/lib/emails/send-teammate-invite";
 import { newId } from "@/lib/id-helper";
+import { hashToken } from "@/lib/api/auth/token";
 
 export default async function handle(
   req: NextApiRequest,
@@ -97,91 +98,34 @@ export default async function handle(
         },
       });
 
+      await prisma.verificationToken.create({
+        data: {
+          token: hashToken(token),
+          identifier: email,
+          expires: expiresAt,
+        },
+      });
+
       // send invite email
       const sender = session.user as CustomUser;
+
+      const params = new URLSearchParams({
+        callbackUrl: `${process.env.NEXTAUTH_URL}/api/teams/${teamId}/invitations/accept`,
+        email,
+        token,
+      });
+
+      const url = `${process.env.NEXTAUTH_URL}/api/auth/callback/email?${params}`;
 
       sendTeammateInviteEmail({
         senderName: sender.name || "",
         senderEmail: sender.email || "",
         teamName: team?.name || "",
-        teamId: team?.id || "",
-        token,
         to: email,
+        url: url,
       });
 
       return res.status(200).json("Invitation sent!");
-    } catch (error) {
-      errorHandler(error, res);
-    }
-  } else if (req.method === "GET") {
-    // GET /api/teams/:teamId/invite
-    const session = await getServerSession(req, res, authOptions);
-
-    const { token, teamId } = req.query as {
-      token: string;
-      teamId: string;
-    };
-
-    if (!session) {
-      res.redirect(`/login?next=/api/teams/${teamId}/invite?token=${token}`);
-      return;
-    }
-
-    const userId = (session.user as CustomUser).id;
-
-    try {
-      const userTeam = await prisma.userTeam.findFirst({
-        where: {
-          teamId,
-          userId,
-        },
-      });
-
-      if (userTeam) {
-        // User is already in the team
-        return res.redirect(`/documents`);
-      }
-
-      const invitation = await prisma.invitation.findUnique({
-        where: {
-          token,
-        },
-      });
-
-      if (!invitation) {
-        return res.status(400).json("Invalid invitation token");
-      }
-
-      if (invitation.email !== (session?.user as CustomUser).email) {
-        return res.status(403).json("You are not invited to this team");
-      }
-
-      const currentTime = new Date();
-      if (currentTime > invitation.expires) {
-        return res.status(400).json("Invitation link has expired");
-      }
-
-      await prisma.team.update({
-        where: {
-          id: teamId,
-        },
-        data: {
-          users: {
-            create: {
-              userId,
-            },
-          },
-        },
-      });
-
-      // delete the invitation record after user is successfully added to the team
-      await prisma.invitation.delete({
-        where: {
-          token,
-        },
-      });
-
-      return res.redirect("/documents");
     } catch (error) {
       errorHandler(error, res);
     }
