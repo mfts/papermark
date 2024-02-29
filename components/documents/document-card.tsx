@@ -125,7 +125,7 @@ export default function DocumentsCard({
               alt="File icon"
               width={50}
               height={50}
-              className=""
+              className={`${prismaDocument.type === 'pdf' && "bg-black dark:bg-transparent"}`}
             />
           )}
         </div>
