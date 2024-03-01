@@ -21,6 +21,7 @@ import { useCopyToClipboard } from "@/lib/utils/use-copy-to-clipboard";
 import Check from "@/components/shared/icons/check";
 import Copy from "@/components/shared/icons/copy";
 import { useEffect, useRef, useState } from "react";
+import { useTheme } from "next-themes";
 
 type DocumentsCardProps = {
   document: DocumentWithLinksAndLinkCountAndViewCount;
@@ -30,6 +31,10 @@ export default function DocumentsCard({
   document: prismaDocument,
   teamInfo,
 }: DocumentsCardProps) {
+  const { theme, systemTheme } = useTheme();
+  const isLight =
+    theme === "light" || (theme === "system" && systemTheme === "light");
+
   const { isCopied, copyToClipboard } = useCopyToClipboard({});
   const [isFirstClick, setIsFirstClick] = useState<boolean>(false);
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
@@ -121,11 +126,10 @@ export default function DocumentsCard({
             <NotionIcon className="w-8 h-8" />
           ) : (
             <Image
-              src={`/_icons/${prismaDocument.type}.svg`}
+              src={`/_icons/${prismaDocument.type}${isLight ? "-light" : ""}.svg`}
               alt="File icon"
               width={50}
               height={50}
-              className=""
             />
           )}
         </div>

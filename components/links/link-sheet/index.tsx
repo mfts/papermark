@@ -39,7 +39,7 @@ export const DEFAULT_LINK_PROPS = {
   metaTitle: null,
   metaDescription: null,
   metaImage: null,
-  watermark: true,
+  watermark: false,
 };
 
 export type DEFAULT_LINK_TYPE = {

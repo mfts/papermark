@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction } from "react";
+import { Dispatch, SetStateAction, useState } from "react";
 import { DEFAULT_LINK_TYPE } from "@/components/links/link-sheet";
 
 import EmailProtectionSection from "@/components/links/link-sheet/email-protection-section";
@@ -18,6 +18,8 @@ import PasswordSection from "@/components/links/link-sheet/password-section";
 import OGSection from "@/components/links/link-sheet/og-section";
 import FeedbackSection from "@/components/links/link-sheet/feedback-section";
 import AddWatermarkSection from "./add-watermark-section";
+import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
+import { usePlan } from "@/lib/swr/use-billing";
 
 export const LinkOptions = ({
   data,
@@ -26,12 +28,22 @@ export const LinkOptions = ({
   data: DEFAULT_LINK_TYPE;
   setData: Dispatch<SetStateAction<DEFAULT_LINK_TYPE>>;
 }) => {
+  const { plan } = usePlan();
+  const hasFreePlan = plan?.plan === "free";
+
+  const [openUpgradeModal, setOpenUpgradeModal] = useState<boolean>(false);
+
   return (
     <div>
       <EmailProtectionSection {...{ data, setData }} />
       <AllowNotificationSection {...{ data, setData }} />
       <AllowDownloadSection {...{ data, setData }} />
       <ExpirationSection {...{ data, setData }} />
+      <OGSection
+        {...{ data, setData }}
+        hasFreePlan={hasFreePlan}
+        setOpenUpgradeModal={setOpenUpgradeModal}
+      />
 
       <Accordion type="single" collapsible>
         <AccordionItem value="item-1" className="border-none">
@@ -41,16 +53,38 @@ export const LinkOptions = ({
             </span>
           </AccordionTrigger>
           <AccordionContent className="first:pt-5">
-            <EmailAuthenticationSection {...{ data, setData }} />
-            <AllowListSection {...{ data, setData }} />
-            <DenyListSection {...{ data, setData }} />
+            <EmailAuthenticationSection
+              {...{ data, setData }}
+              hasFreePlan={hasFreePlan}
+              setOpenUpgradeModal={setOpenUpgradeModal}
+            />
+            <AllowListSection
+              {...{ data, setData }}
+              hasFreePlan={hasFreePlan}
+              setOpenUpgradeModal={setOpenUpgradeModal}
+            />
+            <DenyListSection
+              {...{ data, setData }}
+              hasFreePlan={hasFreePlan}
+              setOpenUpgradeModal={setOpenUpgradeModal}
+            />
+            <AddWatermarkSection
+              {...{ data, setData }}
+              hasFreePlan={hasFreePlan}
+              setOpenUpgradeModal={setOpenUpgradeModal}
+            />
             <PasswordSection {...{ data, setData }} />
-            <AddWatermarkSection {...{ data, setData }} />
-            <OGSection {...{ data, setData }} />
             <FeedbackSection {...{ data, setData }} />
           </AccordionContent>
         </AccordionItem>
       </Accordion>
+      {hasFreePlan ? (
+        <UpgradePlanModal
+          clickedPlan="Pro"
+          open={openUpgradeModal}
+          setOpen={setOpenUpgradeModal}
+        />
+      ) : null}
     </div>
   );
 };

@@ -57,7 +57,15 @@ export default function AccessForm({
             ) : null}
 
             <div className="flex justify-center">
-              <Button type="submit" className="w-1/3" loading={isLoading}>
+              <Button
+                type="submit"
+                disabled={
+                  (requireEmail && !data.email) ||
+                  (requirePassword && !data.password)
+                }
+                className="w-1/3 bg-white text-gray-950 hover:bg-white/90"
+                loading={isLoading}
+              >
                 Continue
               </Button>
             </div>

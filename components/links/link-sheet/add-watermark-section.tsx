@@ -6,9 +6,13 @@ import { DEFAULT_LINK_TYPE } from ".";
 const AddWatermarkSection = ({
   data,
   setData,
+  hasFreePlan,
+  setOpenUpgradeModal,
 }: {
   data: DEFAULT_LINK_TYPE;
   setData: Dispatch<SetStateAction<DEFAULT_LINK_TYPE>>;
+  hasFreePlan: boolean;
+  setOpenUpgradeModal: Dispatch<SetStateAction<boolean>>;
 }) => {
   const { watermark } = data;
   const [enabled, setEnabled] = useState<boolean>(false);
@@ -34,12 +38,24 @@ const AddWatermarkSection = ({
             className={cn(
               "text-sm font-medium leading-6",
               enabled ? "text-foreground" : "text-muted-foreground",
+              hasFreePlan && "cursor-pointer",
             )}
+            onClick={hasFreePlan ? () => setOpenUpgradeModal(true) : undefined}
           >
             Add Watermark
+            {hasFreePlan && (
+              <span className="bg-background text-foreground ring-1 ring-gray-800 dark:ring-gray-500 rounded-full px-2 py-0.5 text-xs ml-2">
+                Pro
+              </span>
+            )}
           </h2>
         </div>
-        <Switch checked={enabled} onCheckedChange={handleEnableWatermark} />
+        <Switch
+          checked={enabled}
+          onClick={hasFreePlan ? () => setOpenUpgradeModal(true) : undefined}
+          className={hasFreePlan ? "opacity-50" : undefined}
+          onCheckedChange={hasFreePlan ? undefined : handleEnableWatermark}
+        />
       </div>
     </section>
   );

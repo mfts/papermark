@@ -199,7 +199,7 @@ model Link {
   updatedAt          DateTime  @updatedAt
   enableNotification Boolean?  @default(true) // Optional give user a option to pause/resume the notifications
   enableFeedback     Boolean?  @default(true) // Optional give user a option to enable the feedback toolbar
-  watermark          Boolean?  @default(true)
+  watermark          Boolean?  @default(false)
 
   // custom metatags
   metaTitle           String? // This will be the meta title of the link
