@@ -1,5 +1,5 @@
 import LoadingSpinner from "@/components/ui/loading-spinner";
-import DocumentView from "@/components/view/document-view";
+import DocumentView from "@/components/view/documents/document-view";
 import { useDomainLink } from "@/lib/swr/use-link";
 import { CustomUser, LinkWithDocument } from "@/lib/types";
 import NotFound from "@/pages/404";
@@ -14,7 +14,10 @@ import CustomMetatag from "@/components/view/custom-metatag";
 import { log } from "@/lib/utils";
 
 export const getStaticProps = async (context: GetStaticPropsContext) => {
-  const { domain, slug } = context.params as { domain: string; slug: string };
+  const { domain, slug } = context.params as {
+    domain: string;
+    slug: string;
+  };
 
   // Fetch the link
   const res = await fetch(

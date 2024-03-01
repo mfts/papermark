@@ -47,6 +47,7 @@ model User {
   accounts       Account[]
   sessions       Session[]
   documents      Document[]
+  datarooms      Dataroom[]
   teams          UserTeam[]
   domains        Domain[]
   conversations  Conversation[]
@@ -62,6 +63,7 @@ model Team {
   name           String
   users          UserTeam[]
   documents      Document[]
+  datarooms      Dataroom[]
   domains        Domain[]
   invitations    Invitation[]
   sentEmails     SentEmail[]
@@ -105,9 +107,9 @@ model UserTeam {
 }
 
 model VerificationToken {
-  identifier String
-  token      String   @unique
-  expires    DateTime
+  identifier  String   //DataroomId if dataroom else documentId
+  token       String   @unique
+  expiresAt   DateTime
 
   @@unique([identifier, token])
 }
@@ -241,6 +243,58 @@ model View {
 
   @@index([linkId])
   @@index([documentId])
+}
+
+enum DataroomType {
+  PAGED
+}
+
+model Dataroom {
+  id               String            @id @default(cuid())
+  name             String
+  type             DataroomType
+  description      String?
+  emailProtected   Boolean           @default(true) // Optional email protection
+  password         String? // Optional password for link protection
+  isArchived       Boolean           @default(false) // Indicates if the dataroom is archived
+  owner            User              @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerId          String // This field holds the foreign key.
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  files            DataroomFile[]
+  folders          DataroomFolder[]
+  dataroomView     DataroomView[]
+  team             Team              @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId           String
+}
+
+model DataroomView {
+  id                      String                @id @default(cuid())
+  dataroom                Dataroom              @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
+  dataroomId              String
+  viewerEmail             String?               // Email of the viewer if known
+  viewedAt                DateTime              @default(now())
+}
+
+model DataroomFolder {
+  id               String            @id @default(cuid())
+  name             String
+  parentFolder     DataroomFolder?   @relation(name: "nestedFolders", fields: [parentFolderId], references: [id],onDelete: Cascade)
+  subfolders       DataroomFolder[]  @relation(name: "nestedFolders")
+  parentFolderId   String?           
+  dataroom         Dataroom          @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
+  dataroomId       String
+  files            DataroomFile[]
+}
+
+model DataroomFile {
+  id                           String                 @id @default(cuid())
+  name                         String
+  url                          String
+  parentFolder                 DataroomFolder?        @relation(fields: [parentFolderId], references: [id], onDelete: Cascade)
+  parentFolderId               String?
+  dataroom                     Dataroom               @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
+  dataroomId                   String
 }
 
 model Reaction {

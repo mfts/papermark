@@ -220,7 +220,7 @@ export default function LinkSheet({
 
           <SheetFooter>
             <div className="flex items-center">
-              <Button type="submit" loading={isLoading}>
+              <Button type="submit" disabled={isLoading} loading={isLoading}>
                 {currentLink ? "Update Link" : "Save Link"}
               </Button>
             </div>

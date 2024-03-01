@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import FolderIcon from "@/components/shared/icons/folder";
+import DataRoomIcon from "@/components/shared/icons/data-room";
+import PieChartIcon from "@/components/shared/icons/pie-chart";
 import SettingsIcon from "@/components/shared/icons/settings";
 import MenuIcon from "@/components/shared/icons/menu";
 import { cn } from "@/lib/utils";
@@ -84,6 +86,20 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
       current: router.pathname.includes("documents"),
       disabled: false,
     },
+    {
+      name: "Datarooms",
+      href: "/datarooms",
+      icon: DataRoomIcon,
+      current: router.pathname.includes("datarooms"),
+      disabled: false,
+    },
+    {
+      name: "Analytics",
+      href: "/analytics",
+      icon: PieChartIcon,
+      current: router.pathname.includes("analytics"),
+      disabled: true,
+    }, 
     {
       name: "Branding",
       href: "/settings/branding",

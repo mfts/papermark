@@ -6,7 +6,7 @@ import { CustomUser } from "@/lib/types";
 import { getExtension, log } from "@/lib/utils";
 import { identifyUser, trackAnalytics } from "@/lib/analytics";
 import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
-import { errorhandler } from "@/lib/errorHandler";
+import { errorHandler } from "@/lib/errorHandler";
 import { client } from "@/trigger";
 import notion from "@/lib/notion";
 import { parsePageId } from "notion-utils";
@@ -51,7 +51,7 @@ export default async function handle(
 
       return res.status(200).json(documents);
     } catch (error) {
-      errorhandler(error, res);
+      errorHandler(error, res);
     }
   } else if (req.method === "POST") {
     // POST /api/teams/:teamId/documents
@@ -130,7 +130,7 @@ export default async function handle(
           links: true,
           versions: true,
         },
-      });
+      });      
 
       // calculate the path of the page where the document was added
       const referer = req.headers.referer;
@@ -173,7 +173,7 @@ export default async function handle(
         message: `Failed to create document. \n\n*teamId*: _${teamId}_, \n\n*file*: ${fileUrl} \n\n ${error}`,
         type: "error",
       });
-      errorhandler(error, res);
+      errorHandler(error, res);
     }
   } else {
     // We only allow GET and POST requests

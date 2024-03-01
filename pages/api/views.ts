@@ -68,7 +68,6 @@ export default async function handle(
     }
   }
 
-  // Check if password is required for visiting the link
   if (link.password) {
     if (!password || password.trim() === "") {
       res.status(400).json({ message: "Password is required." });

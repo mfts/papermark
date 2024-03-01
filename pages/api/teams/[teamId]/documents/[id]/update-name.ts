@@ -4,7 +4,7 @@ import prisma from "@/lib/prisma";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { CustomUser } from "@/lib/types";
 import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
-import { errorhandler } from "@/lib/errorHandler";
+import { errorHandler } from "@/lib/errorHandler";
 
 export default async function handle(
   req: NextApiRequest,
@@ -46,7 +46,7 @@ export default async function handle(
 
       return res.status(200).json({ message: "Document name updated!" });
     } catch (error) {
-      errorhandler(error, res);
+      errorHandler(error, res);
     }
   } else {
     // We only allow POST requests

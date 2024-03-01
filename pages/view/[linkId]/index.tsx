@@ -1,5 +1,5 @@
 import LoadingSpinner from "@/components/ui/loading-spinner";
-import DocumentView from "@/components/view/document-view";
+import DocumentView from "@/components/view/documents/document-view";
 import NotFound from "@/pages/404";
 import { useSession } from "next-auth/react";
 
@@ -13,7 +13,9 @@ import { Brand } from "@prisma/client";
 import CustomMetatag from "@/components/view/custom-metatag";
 
 export const getStaticProps = async (context: GetStaticPropsContext) => {
-  const { linkId } = context.params as { linkId: string };
+  const { linkId } = context.params as {
+    linkId: string;
+  };
 
   // Fetch the link
   const res = await fetch(`${process.env.NEXTAUTH_URL}/api/links/${linkId}`);

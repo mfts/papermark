@@ -4,7 +4,7 @@ import { authOptions } from "../../../../auth/[...nextauth]";
 import { log } from "@/lib/utils";
 import { CustomUser } from "@/lib/types";
 import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
-import { errorhandler } from "@/lib/errorHandler";
+import { errorHandler } from "@/lib/errorHandler";
 
 export default async function handle(
   req: NextApiRequest,
@@ -57,7 +57,7 @@ export default async function handle(
         message: `Failed to get links for document: _${docId}_. \n\n ${error} \n\n*Metadata*: \`{teamId: ${teamId}, userId: ${userId}}\``,
         type: "error",
       });
-      errorhandler(error, res);
+      errorHandler(error, res);
     }
   } else {
     // We only allow GET requests

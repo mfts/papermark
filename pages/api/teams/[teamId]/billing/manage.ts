@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "../../../auth/[...nextauth]";
 import { stripe } from "@/lib/stripe";
 import prisma from "@/lib/prisma";
-import { errorhandler } from "@/lib/errorHandler";
+import { errorHandler } from "@/lib/errorHandler";
 
 export default async function handle(
   req: NextApiRequest,
@@ -41,7 +41,7 @@ export default async function handle(
       });
       return res.status(200).json(url);
     } catch (error) {
-      errorhandler(error, res);
+      errorHandler(error, res);
     }
   } else {
     res.setHeader("Allow", ["POST"]);

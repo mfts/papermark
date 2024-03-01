@@ -5,7 +5,7 @@ import { getViewPageDuration } from "@/lib/tinybird";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { CustomUser } from "@/lib/types";
 import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
-import { errorhandler } from "@/lib/errorHandler";
+import { errorHandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
 
 export default async function handle(
@@ -118,7 +118,7 @@ export default async function handle(
         message: `Failed to get views for document: _${docId}_. \n\n ${error} \n\n*Metadata*: \`{teamId: ${teamId}, userId: ${userId}}\``,
         type: "error",
       });
-      errorhandler(error, res);
+      errorHandler(error, res);
     }
   } else {
     // We only allow GET requests

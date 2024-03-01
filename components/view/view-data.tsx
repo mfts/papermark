@@ -1,4 +1,4 @@
-import { DEFAULT_DOCUMENT_VIEW_TYPE } from "./document-view";
+import { DEFAULT_DOCUMENT_VIEW_TYPE } from "./documents/document-view";
 import { LinkWithDocument } from "@/lib/types";
 import PagesViewer from "@/components/view/PagesViewer";
 import PDFViewer from "@/components/view/PDFViewer";

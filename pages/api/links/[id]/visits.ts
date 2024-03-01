@@ -6,7 +6,7 @@ import { log } from "@/lib/utils";
 import { getViewPageDuration } from "@/lib/tinybird";
 import { getDocumentWithTeamAndUser } from "@/lib/team/helper";
 import { CustomUser } from "@/lib/types";
-import { errorhandler } from "@/lib/errorHandler";
+import { errorHandler } from "@/lib/errorHandler";
 
 export default async function handle(
   req: NextApiRequest,
@@ -117,7 +117,7 @@ export default async function handle(
       return res.status(200).json(viewsWithDuration);
     } catch (error) {
       log({message: `Failed to get views for link: _${id}_. \n\n ${error} \n\n*Metadata*: \`{userId: ${userId}}\``, type: "error"});
-      errorhandler(error, res);
+      errorHandler(error, res);
     }
   } else {
     // We only allow GET requests

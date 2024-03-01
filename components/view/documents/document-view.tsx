@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { LinkWithDocument } from "@/lib/types";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import { ExtendedRecordMap } from "notion-types";
-import EmailVerificationMessage from "./email-verification-form";
+import EmailVerificationMessage from "../email-verification-form";
 import ViewData from "./view-data";
 import { Brand } from "@prisma/client";
 import { useRouter } from "next/router";

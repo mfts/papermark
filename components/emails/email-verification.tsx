@@ -16,7 +16,7 @@ import {
 export default function EmailVerification({
   verificationURL = "papermark.io",
   email = "test@test.com",
-}: {
+} : {
   verificationURL: string;
   email: string;
 }) {
