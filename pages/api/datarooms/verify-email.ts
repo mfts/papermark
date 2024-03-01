@@ -4,11 +4,11 @@ import prisma from "@/lib/prisma";
 import z, { ZodError } from "zod";
 import { generateAuthenticationCode } from "@/lib/api/authentication";
 import { checkPassword } from "@/lib/utils";
+import { errorHandler } from "@/lib/errorHandler";
 
 const bodySchema = z.object({
   email: z.string().email(),
   identifier: z.string(), //linkId if link, dataroomId if dataroom
-  type: z.enum(["DOCUMENT", "PAGED DATAROOM"]),
   password: z.string().nullable(),
   emailProtected: z.boolean(),
 });
@@ -18,7 +18,7 @@ export default async function handle(
   res: NextApiResponse,
 ) {
   if (req.method === "GET") {
-    // GET /api/verification/email-authcode
+    // GET /api/dataroom/verify-email
     // Verify authcode
     try {
       const authenticationToken: string =
@@ -59,29 +59,19 @@ export default async function handle(
         });
         return res.status(401).json({ message: "Verification code expired" });
       }
-      res.status(200).json({ message: "Verification successful" });
+      return res.status(200).json({ message: "Verification successful" });
     } catch (error) {
-      if (error instanceof ZodError) {
-        return res.status(403).json({
-          message: "Invalid inputs",
-          error: (error as Error).message,
-        });
-      }
-      return res.status(500).json({
-        message: "Internal Server Error",
-        error: (error as Error).message,
-      });
+      errorHandler(error, res);
     }
   } else if (req.method === "POST") {
-    // POST /api/verification/email-authcode
+    // POST /api/dataroom/verify-email
     // Input validation
     let email: string;
     let identifier: string;
-    let type: "DOCUMENT" | "PAGED DATAROOM";
     let password: string | null;
     let emailProtected: boolean;
     try {
-      ({ email, identifier, type, password, emailProtected } = bodySchema.parse(
+      ({ email, identifier, password, emailProtected } = bodySchema.parse(
         req.body,
       ));
     } catch (error) {
@@ -95,28 +85,6 @@ export default async function handle(
           id: identifier,
         },
       });
-      if (!dataroom) {
-        const link = await prisma.link.findFirst({
-          where: {
-            id: identifier,
-          },
-        });
-
-        if (!link) {
-          res.status(404).json({ message: "Object not found" });
-          return;
-        }
-
-        const isPasswordValid = await checkPassword(
-          password,
-          link.password || "",
-        );
-
-        if (!isPasswordValid) {
-          res.status(401).json({ message: "Incorrect password" });
-          return;
-        }
-      }
 
       const isPasswordValid = await checkPassword(
         password,
@@ -129,24 +97,19 @@ export default async function handle(
       }
     }
 
-    let homeFolderId: string = "";
-
     // Generate authcode
     const authenticationCode = await generateAuthenticationCode(
       12,
       identifier,
       "ONE-TIME",
     );
-    const URL =
-      type === "DOCUMENT"
-        ? `${process.env.NEXT_PUBLIC_BASE_URL}/view/${identifier}?authenticationCode=${authenticationCode}`
-        : `${process.env.NEXT_PUBLIC_BASE_URL}/view/dataroom/${identifier}?authenticationCode=${authenticationCode}`
+    const URL = `${process.env.NEXT_PUBLIC_BASE_URL}/view/dataroom/${identifier}?authenticationCode=${authenticationCode}`;
 
     //Send email only if emailProtected
     if (emailProtected) {
       await sendVerificationEmail(email, URL);
     }
-    res.status(200).json({ authenticationCode, URL });
+    return res.status(200).json({ authenticationCode, URL });
   } else {
     // We only allow GET and POST requests
     res.setHeader("Allow", ["GET", "POST"]);

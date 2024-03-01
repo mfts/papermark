@@ -89,7 +89,8 @@ export default function DataroomView({
   //Generates verification link from backend
   const handleEmailVerification = async () => {
     setIsLoading(true);
-    const URL = `/api/verification/email-authcode`;
+    const URL = `/api/dataroom/verify-email`;
+
     const response = await fetch(URL, {
       method: "POST",
       headers: {
@@ -126,7 +127,8 @@ export default function DataroomView({
   //Verifies authentication code
   const handleAuthCodeVerification = async () => {
     setIsLoading(true);
-    const URL = `/api/verification/email-authcode?authenticationCode=${authenticationCode}&identifier=${dataroom.id}`;
+    const URL = `/api/dataroom/verify-email?authenticationCode=${authenticationCode}&identifier=${dataroom.id}`;
+
     const response = await fetch(URL, {
       method: "GET",
       headers: {
