@@ -1,6 +1,4 @@
 import matter from "gray-matter";
-import path from "path";
-import fs from "fs/promises";
 import { cache } from "react";
 
 type Post = {
@@ -16,31 +14,40 @@ type Post = {
   body: string;
 };
 
-// `cache` is a React 18 feature that allows you to cache a function for the lifetime of a request.
-// this means getPosts() will only be called once per page build, even though we may call it multiple times
-// when rendering the page.
-export const getPosts = cache(async () => {
-  const postsDir = path.join(process.cwd(), 'content/blog/')
-  const posts = await fs.readdir(postsDir);
+const GITHUB_CONTENT_TOKEN = process.env.GITHUB_CONTENT_TOKEN;
+const GITHUB_CONTENT_REPO = process.env.GITHUB_CONTENT_REPO;
+
+export const getPostsRemote = cache(async () => {
+  const apiUrl = `https://api.github.com/repos/${GITHUB_CONTENT_REPO}/contents/content/blog`;
+  const headers = {
+    Authorization: `Bearer ${GITHUB_CONTENT_TOKEN}`,
+    Accept: "application/vnd.github+json",
+    "X-GitHub-Api-Version": "2022-11-28",
+  };
+
+  const response = await fetch(apiUrl, { headers });
+  const data = await response.json();
 
   return Promise.all(
-    posts
-      .filter((file) => path.extname(file) === ".mdx")
-      .map(async (file) => {
-        const filePath = path.join(process.cwd(), `content/blog/${file}`)
-        const postContent = await fs.readFile(filePath, "utf8");
-        const { data, content } = matter(postContent);
+    data
+      .filter((file: any) => file.name.endsWith(".mdx"))
+      .map(async (file: any) => {
+        const contentResponse = await fetch(file.url, { headers });
+        const fileDetails = await contentResponse.json();
+        const content = fileDetails.content; // Getting the base64 encoded content
+        const decodedContent = Buffer.from(content, "base64").toString("utf8"); // Decoding the base64 content
+        const { data, content: fileContent } = matter(decodedContent);
 
         if (data.published === false) {
           return null;
         }
 
-        return { data, body: content } as Post;
+        return { data, body: fileContent } as Post;
       }),
   );
 });
 
 export async function getPost(slug: string) {
-  const posts = await getPosts();
-  return posts.find((post) => post?.data.slug === slug);
+  const postsRemote = await getPostsRemote();
+  return postsRemote.find((post) => post?.data.slug === slug);
 }
