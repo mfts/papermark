@@ -19,7 +19,6 @@ export function useAnalytics() {
     }
 
     posthog.capture(event, properties);
-    console.log("tracked pageview", event, properties);
   };
 
   const identify = (
@@ -31,7 +30,6 @@ export function useAnalytics() {
     }
 
     posthog.identify(distinctId, properties);
-    console.log("identified user", distinctId, properties);
   };
 
   return {
@@ -53,7 +51,6 @@ export function useAnalyticsServer() {
     }
 
     postHogClient.capture({ distinctId, event, properties });
-    console.log("tracked pageview", distinctId, event, properties);
   };
 
   const identify = (
