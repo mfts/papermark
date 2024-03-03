@@ -43,11 +43,7 @@ export default async function handle(
           select: {
             id: true,
             name: true,
-            owner: {
-              select: {
-                email: true,
-              },
-            },
+            ownerId: true,
           },
         },
       },
@@ -60,7 +56,7 @@ export default async function handle(
 
     // send email to document owner that document
     await sendViewedDocumentEmail({
-      email: view.document.owner.email as string,
+      ownerId: view.document.ownerId,
       documentId: view.document.id,
       documentName: view.document.name,
       viewerEmail: view.viewerEmail,

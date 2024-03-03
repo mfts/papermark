@@ -14,16 +14,20 @@ export const sendTeammateInviteEmail = async ({
   to: string;
   url: string;
 }) => {
-  await sendEmail({
-    to: to,
-    subject: `You are invited to join a ${senderName}'s team`,
-    react: TeamInvitation({
-      senderName,
-      senderEmail,
-      teamName,
-      url,
-    }),
-    test: process.env.NODE_ENV === "development",
-    system: true,
-  });
+  try {
+    await sendEmail({
+      to: to,
+      subject: `You are invited to join a ${senderName}'s team`,
+      react: TeamInvitation({
+        senderName,
+        senderEmail,
+        teamName,
+        url,
+      }),
+      test: process.env.NODE_ENV === "development",
+      system: true,
+    });
+  } catch (e) {
+    console.error(e);
+  }
 };
