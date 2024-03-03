@@ -82,15 +82,13 @@ export default async function handle(
       });
       await addDomainToVercel(domain);
 
-      await identifyUser(userId);
-      await trackAnalytics({
-        event: "Domain Added",
-        slug: domain,
-      });
-
       return res.status(201).json(response);
     } catch (error) {
-      log({message: `Failed to add domain. \n\n ${error} \n\n*Metadata*: \`{teamId: ${teamId}, userId: ${userId}}\``, type: "error", mention: true});
+      log({
+        message: `Failed to add domain. \n\n ${error} \n\n*Metadata*: \`{teamId: ${teamId}, userId: ${userId}}\``,
+        type: "error",
+        mention: true,
+      });
       errorhandler(error, res);
     }
   } else {

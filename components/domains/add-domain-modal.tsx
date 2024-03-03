@@ -15,6 +15,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
 import { usePlan } from "@/lib/swr/use-billing";
+import { useAnalytics } from "@/lib/analytics";
 
 export function AddDomainModal({
   open,
@@ -32,6 +33,7 @@ export function AddDomainModal({
 
   const teamInfo = useTeam();
   const { plan } = usePlan();
+  const analytics = useAnalytics();
 
   const handleSubmit = async (event: any) => {
     event.preventDefault();
@@ -63,6 +65,7 @@ export function AddDomainModal({
 
     const newDomain = await response.json();
 
+    analytics.capture("Domain Added", { slug: domain });
     toast.success("Domain added successfully! 🎉");
 
     // Update local data with the new link
