@@ -7,10 +7,14 @@ export const sendVerificationRequestEmail = async (params: {
 }) => {
   const { url, email } = params;
   const emailTemplate = LoginLink({ url });
-  await sendEmail({
-    to: email as string,
-    subject: "Welcome to Papermark!",
-    react: emailTemplate,
-    test: process.env.NODE_ENV === "development",
-  });
+  try {
+    await sendEmail({
+      to: email as string,
+      subject: "Welcome to Papermark!",
+      react: emailTemplate,
+      test: process.env.NODE_ENV === "development",
+    });
+  } catch (e) {
+    console.error(e);
+  }
 };

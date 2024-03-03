@@ -17,11 +17,18 @@ export const sendViewedDocumentEmail = async ({
     documentName,
     viewerEmail,
   });
-  await sendEmail({
-    to: email,
-    subject: `Your document has been viewed: ${documentName}`,
-    react: emailTemplate,
-    test: process.env.NODE_ENV === "development",
-    system: true,
-  });
+  try {
+    const data = await sendEmail({
+      to: email,
+      subject: `Your document has been viewed: ${documentName}`,
+      react: emailTemplate,
+      test: process.env.NODE_ENV === "development",
+      system: true,
+    });
+
+    // If sendEmail is successful, return the data
+    return { success: true, data };
+  } catch (error) {
+    return { success: false, error };
+  }
 };
