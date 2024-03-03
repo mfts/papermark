@@ -24,6 +24,7 @@ import {
   createNewDocumentVersion,
 } from "@/lib/documents/create-document";
 import { set } from "ts-pattern/dist/patterns";
+import { useAnalytics } from "@/lib/analytics";
 
 export function AddDocumentModal({
   newVersion,
@@ -34,6 +35,7 @@ export function AddDocumentModal({
 }) {
   const router = useRouter();
   const plausible = usePlausible();
+  const analytics = useAnalytics();
   const [uploading, setUploading] = useState<boolean>(false);
   const [isOpen, setIsOpen] = useState<boolean | undefined>(undefined);
   const [currentFile, setCurrentFile] = useState<File | null>(null);
@@ -94,12 +96,35 @@ export function AddDocumentModal({
 
           // track the event
           plausible("documentUploaded");
+          analytics.capture("Document Added", {
+            documentId: document.id,
+            name: document.name,
+            numPages: document.numPages,
+            path: router.asPath,
+            type: "pdf",
+            teamId: teamId,
+          });
+          analytics.capture("Link Added", {
+            linkId: document.links[0].id,
+            documentId: document.id,
+            customDomain: null,
+            teamId: teamId,
+          });
 
           // redirect to the document page
           router.push("/documents/" + document.id);
         } else {
           // track the event
           plausible("documentVersionUploaded");
+          analytics.capture("Document Added", {
+            documentId: document.id,
+            name: document.name,
+            numPages: document.numPages,
+            path: router.asPath,
+            type: "pdf",
+            newVersion: true,
+            teamId: teamId,
+          });
           toast.success("New document version uploaded.");
 
           // reload to the document page
@@ -177,6 +202,20 @@ export function AddDocumentModal({
           // track the event
           plausible("documentUploaded");
           plausible("notionDocumentUploaded");
+          analytics.capture("Document Added", {
+            documentId: document.id,
+            name: document.name,
+            fileSize: null,
+            path: router.asPath,
+            type: "notion",
+            teamId: teamId,
+          });
+          analytics.capture("Link Added", {
+            linkId: document.links[0].id,
+            documentId: document.id,
+            customDomain: null,
+            teamId: teamId,
+          });
 
           // redirect to the document page
           router.push("/documents/" + document.id);

@@ -25,12 +25,14 @@ import {
 } from "../ui/accordion";
 import { LinkOptions } from "../links/link-sheet/link-options";
 import { DEFAULT_LINK_PROPS, DEFAULT_LINK_TYPE } from "../links/link-sheet";
+import { useAnalytics } from "@/lib/analytics";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
 
 export default function Upload() {
   const router = useRouter();
   const plausible = usePlausible();
+  const analytics = useAnalytics();
   const [uploading, setUploading] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [currentFile, setCurrentFile] = useState<File | null>(null);
@@ -77,6 +79,20 @@ export default function Upload() {
 
         // track the event
         plausible("documentUploaded");
+        analytics.capture("Document Added", {
+          documentId: document.id,
+          name: document.name,
+          numPages: document.numPages,
+          path: router.asPath,
+          type: "pdf",
+          teamId: teamInfo?.currentTeam?.id,
+        });
+        analytics.capture("Link Added", {
+          linkId: document.links[0].id,
+          documentId: document.id,
+          customDomain: null,
+          teamId: teamInfo?.currentTeam?.id,
+        });
 
         setTimeout(() => {
           setCurrentDocId(document.id);

@@ -1,6 +1,6 @@
 import { useRouter } from "next/router";
 import { motion } from "framer-motion";
-import { useState, type FormEvent } from "react";
+import { use, useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import Skeleton from "../Skeleton";
 import { STAGGER_CHILD_VARIANTS } from "@/lib/constants";
@@ -25,10 +25,12 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { useAnalytics } from "@/lib/analytics";
 
 export default function NotionForm() {
   const router = useRouter();
   const plausible = usePlausible();
+  const analytics = useAnalytics();
   const [uploading, setUploading] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [currentLinkId, setCurrentLinkId] = useState<string | null>(null);
@@ -93,6 +95,20 @@ export default function NotionForm() {
         // track the event
         plausible("documentUploaded");
         plausible("notionDocumentUploaded");
+        analytics.capture("Document Added", {
+          documentId: document.id,
+          name: document.name,
+          fileSize: null,
+          path: router.asPath,
+          type: "notion",
+          teamId: teamInfo?.currentTeam?.id,
+        });
+        analytics.capture("Link Added", {
+          linkId: document.links[0].id,
+          documentId: document.id,
+          customDomain: null,
+          teamId: teamInfo?.currentTeam?.id,
+        });
 
         // redirect to the document page
         setTimeout(() => {
