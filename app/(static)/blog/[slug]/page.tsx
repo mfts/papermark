@@ -1,4 +1,4 @@
-import { getPosts, getPost } from "@/lib/content/blog";
+import { getPostsRemote as getPosts, getPost } from "@/lib/content/blog";
 import { ContentBody } from "@/components/mdx/post-body";
 import { notFound } from "next/navigation";
 import Link from "next/link";
