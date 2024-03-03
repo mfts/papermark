@@ -42,6 +42,8 @@ export default async function handle(
           document: {
             select: {
               id: true,
+              name: true,
+              ownerId: true,
               team: { select: { id: true, plan: true } },
               versions: {
                 where: { isPrimary: true },
@@ -61,7 +63,11 @@ export default async function handle(
 
       // if link not found, return 404
       if (!link || !link.document.team) {
-        log({message: `Link not found for custom domain _${domain}/${slug}_`, type: "error", mention: true})
+        log({
+          message: `Link not found for custom domain _${domain}/${slug}_`,
+          type: "error",
+          mention: true,
+        });
         return res.status(404).json({
           error: "Link not found",
           message: `no link found, team ${link?.document.team}`,
@@ -70,7 +76,11 @@ export default async function handle(
 
       // if owner of document is on free plan, return 404
       if (link.document.team.plan === "free") {
-        log({message: `Link is from a free team _${link.document.team.id}_ for custom domain _${domain}/${slug}_`, type: "info", mention: true})
+        log({
+          message: `Link is from a free team _${link.document.team.id}_ for custom domain _${domain}/${slug}_`,
+          type: "info",
+          mention: true,
+        });
         return res.status(404).json({
           error: "Link not found",
           message: `link found, team ${link.document.team.plan}`,
@@ -93,7 +103,11 @@ export default async function handle(
 
       res.status(200).json({ link, brand });
     } catch (error) {
-      log({message: `Cannot get link for custom domain _${domainSlug}_ \n\n${error}`, type: "error", mention: true})
+      log({
+        message: `Cannot get link for custom domain _${domainSlug}_ \n\n${error}`,
+        type: "error",
+        mention: true,
+      });
       return res.status(500).json({
         message: "Internal Server Error",
         error: (error as Error).message,

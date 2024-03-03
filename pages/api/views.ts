@@ -22,8 +22,10 @@ export default async function handle(
     documentId,
     userId,
     documentVersionId,
+    documentName,
     hasPages,
     token,
+    ownerId,
     verifiedEmail,
     ...data
   } = req.body as {
@@ -31,8 +33,10 @@ export default async function handle(
     documentId: string;
     userId: string | null;
     documentVersionId: string;
+    documentName: string;
     hasPages: boolean;
     token: string | null;
+    ownerId: string;
     verifiedEmail: string | null;
   };
 

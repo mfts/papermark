@@ -35,8 +35,10 @@ export default async function handle(
           document: {
             select: {
               id: true,
+              name: true,
               assistantEnabled: true,
               teamId: true,
+              ownerId: true,
               versions: {
                 where: { isPrimary: true },
                 select: {

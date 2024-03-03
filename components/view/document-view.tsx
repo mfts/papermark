@@ -72,6 +72,8 @@ export default function DocumentView({
         email: data.email || verifiedEmail || userEmail,
         linkId: link.id,
         documentId: document.id,
+        documentName: document.name,
+        ownerId: document.ownerId,
         userId: userId || null,
         documentVersionId: document.versions[0].id,
         hasPages: document.versions[0].hasPages,
