@@ -28,7 +28,7 @@ export const getPostsRemote = cache(async () => {
   const response = await fetch(apiUrl, { headers });
   const data = await response.json();
 
-  return Promise.all(
+  const posts = await Promise.all(
     data
       .filter((file: any) => file.name.endsWith(".mdx"))
       .map(async (file: any) => {
@@ -45,6 +45,9 @@ export const getPostsRemote = cache(async () => {
         return { data, body: fileContent } as Post;
       }),
   );
+
+  const filteredPosts = posts.filter((post: Post) => post !== null) as Post[];
+  return filteredPosts;
 });
 
 export async function getPost(slug: string) {

@@ -1,10 +1,10 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/lib/prisma";
 import { checkPassword, log } from "@/lib/utils";
-import { client } from "@/trigger";
 import { newId } from "@/lib/id-helper";
 import { sendVerificationEmail } from "@/lib/emails/send-email-verification";
 import { getFile } from "@/lib/files/get-file";
+import { sendViewedDocumentEmail } from "@/lib/emails/send-viewed-document";
 
 export default async function handle(
   req: NextApiRequest,
@@ -21,8 +21,10 @@ export default async function handle(
     documentId,
     userId,
     documentVersionId,
+    documentName,
     hasPages,
     token,
+    ownerId,
     verifiedEmail,
     ...data
   } = req.body as {
@@ -30,8 +32,10 @@ export default async function handle(
     documentId: string;
     userId: string | null;
     documentVersionId: string;
+    documentName: string;
     hasPages: boolean;
     token: string | null;
+    ownerId: string;
     verifiedEmail: string | null;
   };
 
@@ -239,12 +243,31 @@ export default async function handle(
     }
 
     if (link.enableNotification) {
-      // trigger link viewed event to trigger send-notification job
       console.time("sendemail");
-      await client.sendEvent({
-        name: "link.viewed",
-        payload: { viewId: newView.id },
-      });
+      sendViewedDocumentEmail({
+        ownerId: ownerId,
+        documentId,
+        documentName: documentName,
+        viewerEmail: email,
+      })
+        .then((res) => {
+          if (!res.success) {
+            log({
+              message: `Failed to send email in _/api/views_ route for linkId: ${linkId}. \n\n Error: ${res.error} \n\n*Metadata*: \`{ownerId: ${ownerId}, viewId: ${newView.id}}\``,
+              type: "error",
+              mention: true,
+            });
+          }
+        })
+        .catch((error) => {
+          // This catch block will only be triggered if there's an uncaught exception in sendViewedDocumentEmail.
+          // Given the refactored design, it's less likely to be used, but it's good practice to keep it for catching unexpected errors.
+          log({
+            message: `Unexpected error in _/api/views_ route for ${linkId}. \n\n Error: ${error} \n\n*Metadata*: \`{ownerId: ${ownerId}, viewId: ${newView.id}}\``,
+            type: "error",
+            mention: true,
+          });
+        });
       console.timeEnd("sendemail");
     }
 
