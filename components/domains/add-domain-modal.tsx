@@ -15,6 +15,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
 import { usePlan } from "@/lib/swr/use-billing";
+import { useAnalytics } from "@/lib/analytics";
 
 export function AddDomainModal({
   open,
@@ -32,6 +33,7 @@ export function AddDomainModal({
 
   const teamInfo = useTeam();
   const { plan } = usePlan();
+  const analytics = useAnalytics();
 
   const handleSubmit = async (event: any) => {
     event.preventDefault();
@@ -63,6 +65,7 @@ export function AddDomainModal({
 
     const newDomain = await response.json();
 
+    analytics.capture("Domain Added", { slug: domain });
     toast.success("Domain added successfully! 🎉");
 
     // Update local data with the new link
@@ -79,13 +82,18 @@ export function AddDomainModal({
   if (plan && plan.plan === "free") {
     if (children) {
       return (
-        <UpgradePlanModal clickedPlan="Pro">
+        <UpgradePlanModal clickedPlan="Pro" trigger={"add_domain_overview"}>
           <Button>Upgrade to Add Domain</Button>
         </UpgradePlanModal>
       );
     } else {
       return (
-        <UpgradePlanModal clickedPlan="Pro" open={open} setOpen={setOpen} />
+        <UpgradePlanModal
+          clickedPlan="Pro"
+          open={open}
+          setOpen={setOpen}
+          trigger={"add_domain_link_sheet"}
+        />
       );
     }
   }

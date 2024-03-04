@@ -19,12 +19,12 @@ export default function OGSection({
   data,
   setData,
   hasFreePlan,
-  setOpenUpgradeModal,
+  handleUpgradeStateChange,
 }: {
   data: DEFAULT_LINK_TYPE;
   setData: Dispatch<SetStateAction<DEFAULT_LINK_TYPE>>;
   hasFreePlan: boolean;
-  setOpenUpgradeModal: Dispatch<SetStateAction<boolean>>;
+  handleUpgradeStateChange: (state: boolean, trigger: string) => void;
 }) {
   const { enableCustomMetatag, metaTitle, metaDescription, metaImage } = data;
   const [enabled, setEnabled] = useState<boolean>(false);
@@ -77,7 +77,11 @@ export default function OGSection({
               enabled ? "text-foreground" : "text-muted-foreground",
               hasFreePlan ? "cursor-pointer" : undefined,
             )}
-            onClick={hasFreePlan ? () => setOpenUpgradeModal(true) : undefined}
+            onClick={
+              hasFreePlan
+                ? () => handleUpgradeStateChange(true, "link_sheet_og_section")
+                : undefined
+            }
           >
             Custom social media cards
             {hasFreePlan && (
@@ -89,7 +93,11 @@ export default function OGSection({
         </div>
         <Switch
           checked={enabled}
-          onClick={hasFreePlan ? () => setOpenUpgradeModal(true) : undefined}
+          onClick={
+            hasFreePlan
+              ? () => handleUpgradeStateChange(true, "link_sheet_og_section")
+              : undefined
+          }
           className={hasFreePlan ? "opacity-50" : undefined}
           onCheckedChange={hasFreePlan ? undefined : handleCustomMetatag}
         />

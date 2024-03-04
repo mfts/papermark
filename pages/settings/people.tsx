@@ -24,6 +24,8 @@ import { useTeams } from "@/lib/swr/use-teams";
 import Link from "next/link";
 import { usePlan } from "@/lib/swr/use-billing";
 import { useInvitations } from "@/lib/swr/use-invitations";
+import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
+import { useAnalytics } from "@/lib/analytics";
 
 export default function Billing() {
   const [isTeamMemberInviteModalOpen, setTeamMemberInviteModalOpen] =
@@ -35,6 +37,7 @@ export default function Billing() {
   const teamInfo = useTeam();
   const { plan: userPlan } = usePlan();
   const { teams } = useTeams();
+  const analytics = useAnalytics();
 
   const { invitations } = useInvitations();
 
@@ -92,6 +95,11 @@ export default function Billing() {
       return;
     }
 
+    analytics.capture("Team Member Removed", {
+      userId: userId,
+      teamId: teamInfo?.currentTeam?.id,
+    });
+
     toast.success("Teammate removed successfully!");
   };
 
@@ -116,6 +124,11 @@ export default function Billing() {
       return;
     }
 
+    analytics.capture("Team Member Invitation Resent", {
+      email: invitation.email as string,
+      teamId: teamInfo?.currentTeam?.id,
+    });
+
     toast.success("Invitation resent successfully!");
   };
 
@@ -139,6 +152,11 @@ export default function Billing() {
       toast.error(error);
       return;
     }
+
+    analytics.capture("Team Member Invitation Revoked", {
+      email: invitation.email as string,
+      teamId: teamInfo?.currentTeam?.id,
+    });
 
     mutate(`/api/teams/${teamInfo?.currentTeam?.id}/invitations`);
 
@@ -175,9 +193,12 @@ export default function Billing() {
                 <Button>Invite</Button>
               </AddTeamMembers>
             ) : (
-              <Button>
-                <Link href="/settings/billing">Upgrade to invite members</Link>
-              </Button>
+              <UpgradePlanModal
+                clickedPlan={"Pro"}
+                trigger={"invite_team_members"}
+              >
+                <Button>Upgrade to invite members</Button>
+              </UpgradePlanModal>
             )}
           </div>
         </div>

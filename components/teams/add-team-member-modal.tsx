@@ -11,6 +11,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useTeam } from "@/context/team-context";
+import { useAnalytics } from "@/lib/analytics";
 import { useRouter } from "next/router";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -28,6 +29,7 @@ export function AddTeamMembers({
   const [email, setEmail] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const teamInfo = useTeam();
+  const analytics = useAnalytics();
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -56,6 +58,11 @@ export function AddTeamMembers({
       toast.error(error);
       return;
     }
+
+    analytics.capture("Team Member Invitation Sent", {
+      email: email,
+      teamId: teamInfo?.currentTeam?.id,
+    });
 
     mutate(`/api/teams/${teamInfo?.currentTeam?.id}/invitations`);
 

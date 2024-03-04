@@ -1,7 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/lib/prisma";
 import { checkPassword, log } from "@/lib/utils";
-import { trackAnalytics } from "@/lib/analytics";
 import { newId } from "@/lib/id-helper";
 import { sendVerificationEmail } from "@/lib/emails/send-email-verification";
 import { getFile } from "@/lib/files/get-file";
@@ -242,19 +241,6 @@ export default async function handle(
       });
       console.timeEnd("get-file");
     }
-
-    // TODO: cannot identify user because session is not available
-    // await identifyUser((session.user as CustomUser).id);
-    // await analytics.identify();
-    console.time("track-analytics");
-    await trackAnalytics({
-      event: "Link Viewed",
-      linkId: linkId,
-      documentId: documentId,
-      viewerId: newView.id,
-      viewerEmail: email,
-    });
-    console.timeEnd("track-analytics");
 
     if (link.enableNotification) {
       console.time("sendemail");

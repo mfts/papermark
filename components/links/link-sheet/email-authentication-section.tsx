@@ -7,12 +7,12 @@ export default function EmailAuthenticationSection({
   data,
   setData,
   hasFreePlan,
-  setOpenUpgradeModal,
+  handleUpgradeStateChange,
 }: {
   data: DEFAULT_LINK_TYPE;
   setData: Dispatch<SetStateAction<DEFAULT_LINK_TYPE>>;
   hasFreePlan: boolean;
-  setOpenUpgradeModal: Dispatch<SetStateAction<boolean>>;
+  handleUpgradeStateChange: (state: boolean, trigger: string) => void;
 }) {
   const { emailProtected, emailAuthenticated } = data;
   const [enabled, setEnabled] = useState<boolean>(emailAuthenticated);
@@ -43,7 +43,15 @@ export default function EmailAuthenticationSection({
               enabled ? "text-foreground" : "text-muted-foreground",
               hasFreePlan ? "cursor-pointer" : undefined,
             )}
-            onClick={hasFreePlan ? () => setOpenUpgradeModal(true) : undefined}
+            onClick={
+              hasFreePlan
+                ? () =>
+                    handleUpgradeStateChange(
+                      true,
+                      "link_sheet_email_auth_section",
+                    )
+                : undefined
+            }
           >
             Require email verification
             {hasFreePlan && (
@@ -55,7 +63,15 @@ export default function EmailAuthenticationSection({
         </div>
         <Switch
           checked={enabled}
-          onClick={hasFreePlan ? () => setOpenUpgradeModal(true) : undefined}
+          onClick={
+            hasFreePlan
+              ? () =>
+                  handleUpgradeStateChange(
+                    true,
+                    "link_sheet_email_auth_section",
+                  )
+              : undefined
+          }
           className={hasFreePlan ? "opacity-50" : undefined}
           onCheckedChange={hasFreePlan ? undefined : handleEnableAuthentication}
         />
