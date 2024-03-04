@@ -270,7 +270,7 @@ export default function Branding() {
             </CardContent>
             <CardFooter className="border-t p-6">
               {plan && plan.plan === "free" ? (
-                <UpgradePlanModal clickedPlan="Pro">
+                <UpgradePlanModal clickedPlan="Pro" trigger={"branding_page"}>
                   <Button>Upgrade to Save Branding</Button>
                 </UpgradePlanModal>
               ) : (

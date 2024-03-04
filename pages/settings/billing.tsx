@@ -195,7 +195,10 @@ export default function Billing() {
                           Manage Subscription
                         </Button>
                       ) : (
-                        <UpgradePlanModal clickedPlan={"Pro"}>
+                        <UpgradePlanModal
+                          clickedPlan={"Pro"}
+                          trigger={"billing_page"}
+                        >
                           <Button>Upgrade to Pro</Button>
                         </UpgradePlanModal>
                       )

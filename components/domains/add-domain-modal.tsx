@@ -82,13 +82,18 @@ export function AddDomainModal({
   if (plan && plan.plan === "free") {
     if (children) {
       return (
-        <UpgradePlanModal clickedPlan="Pro">
+        <UpgradePlanModal clickedPlan="Pro" trigger={"add_domain_overview"}>
           <Button>Upgrade to Add Domain</Button>
         </UpgradePlanModal>
       );
     } else {
       return (
-        <UpgradePlanModal clickedPlan="Pro" open={open} setOpen={setOpen} />
+        <UpgradePlanModal
+          clickedPlan="Pro"
+          open={open}
+          setOpen={setOpen}
+          trigger={"add_domain_link_sheet"}
+        />
       );
     }
   }

@@ -24,6 +24,8 @@ import { useTeams } from "@/lib/swr/use-teams";
 import Link from "next/link";
 import { usePlan } from "@/lib/swr/use-billing";
 import { useInvitations } from "@/lib/swr/use-invitations";
+import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
+import { useAnalytics } from "@/lib/analytics";
 
 export default function Billing() {
   const [isTeamMemberInviteModalOpen, setTeamMemberInviteModalOpen] =
@@ -35,6 +37,7 @@ export default function Billing() {
   const teamInfo = useTeam();
   const { plan: userPlan } = usePlan();
   const { teams } = useTeams();
+  const analytics = useAnalytics();
 
   const { invitations } = useInvitations();
 
@@ -175,9 +178,12 @@ export default function Billing() {
                 <Button>Invite</Button>
               </AddTeamMembers>
             ) : (
-              <Button>
-                <Link href="/settings/billing">Upgrade to invite members</Link>
-              </Button>
+              <UpgradePlanModal
+                clickedPlan={"Pro"}
+                trigger={"invite_team_members"}
+              >
+                <Button>Upgrade to invite members</Button>
+              </UpgradePlanModal>
             )}
           </div>
         </div>

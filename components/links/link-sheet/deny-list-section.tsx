@@ -15,12 +15,12 @@ export default function DenyListSection({
   data,
   setData,
   hasFreePlan,
-  setOpenUpgradeModal,
+  handleUpgradeStateChange,
 }: {
   data: DEFAULT_LINK_TYPE;
   setData: Dispatch<SetStateAction<DEFAULT_LINK_TYPE>>;
   hasFreePlan: boolean;
-  setOpenUpgradeModal: Dispatch<SetStateAction<boolean>>;
+  handleUpgradeStateChange: (state: boolean, trigger: string) => void;
 }) {
   const { emailAuthenticated, denyList } = data;
   // Initialize enabled state based on whether denyList is not null and not empty
@@ -74,7 +74,15 @@ export default function DenyListSection({
               enabled ? "text-foreground" : "text-muted-foreground",
               hasFreePlan ? "cursor-pointer" : undefined,
             )}
-            onClick={hasFreePlan ? () => setOpenUpgradeModal(true) : undefined}
+            onClick={
+              hasFreePlan
+                ? () =>
+                    handleUpgradeStateChange(
+                      true,
+                      "link_sheet_denylist_section",
+                    )
+                : undefined
+            }
           >
             Block specified viewers
             {hasFreePlan && (
@@ -85,7 +93,15 @@ export default function DenyListSection({
           </h2>
           <Switch
             checked={enabled}
-            onClick={hasFreePlan ? () => setOpenUpgradeModal(true) : undefined}
+            onClick={
+              hasFreePlan
+                ? () =>
+                    handleUpgradeStateChange(
+                      true,
+                      "link_sheet_denylist_section",
+                    )
+                : undefined
+            }
             className={hasFreePlan ? "opacity-50" : undefined}
             onCheckedChange={hasFreePlan ? undefined : handleEnableDenyList}
           />

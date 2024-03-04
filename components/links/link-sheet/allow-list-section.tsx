@@ -15,12 +15,12 @@ export default function AllowListSection({
   data,
   setData,
   hasFreePlan,
-  setOpenUpgradeModal,
+  handleUpgradeStateChange,
 }: {
   data: DEFAULT_LINK_TYPE;
   setData: Dispatch<SetStateAction<DEFAULT_LINK_TYPE>>;
   hasFreePlan: boolean;
-  setOpenUpgradeModal: Dispatch<SetStateAction<boolean>>;
+  handleUpgradeStateChange: (state: boolean, trigger: string) => void;
 }) {
   const { emailAuthenticated, allowList } = data;
 
@@ -75,7 +75,15 @@ export default function AllowListSection({
               enabled ? "text-foreground" : "text-muted-foreground",
               hasFreePlan ? "cursor-pointer" : undefined,
             )}
-            onClick={hasFreePlan ? () => setOpenUpgradeModal(true) : undefined}
+            onClick={
+              hasFreePlan
+                ? () =>
+                    handleUpgradeStateChange(
+                      true,
+                      "link_sheet_allowlist_section",
+                    )
+                : undefined
+            }
           >
             Allow specified viewers
             {hasFreePlan && (
@@ -86,7 +94,15 @@ export default function AllowListSection({
           </h2>
           <Switch
             checked={enabled}
-            onClick={hasFreePlan ? () => setOpenUpgradeModal(true) : undefined}
+            onClick={
+              hasFreePlan
+                ? () =>
+                    handleUpgradeStateChange(
+                      true,
+                      "link_sheet_allowlist_section",
+                    )
+                : undefined
+            }
             className={hasFreePlan ? "opacity-50" : undefined}
             onCheckedChange={hasFreePlan ? undefined : handleEnableAllowList}
           />

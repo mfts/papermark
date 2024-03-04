@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
@@ -9,14 +9,19 @@ import { PLANS } from "@/lib/stripe/utils";
 import { getStripe } from "@/lib/stripe/client";
 import { Badge } from "../ui/badge";
 import { useTeam } from "@/context/team-context";
+import { useAnalytics } from "@/lib/analytics";
+import { set } from "ts-pattern/dist/patterns";
+import React from "react";
 
 export function UpgradePlanModal({
   clickedPlan,
+  trigger,
   open,
   setOpen,
   children,
 }: {
   clickedPlan: "Enterprise" | "Pro";
+  trigger?: string;
   open?: boolean;
   setOpen?: React.Dispatch<React.SetStateAction<boolean>>;
   children?: React.ReactNode;
@@ -25,6 +30,7 @@ export function UpgradePlanModal({
   const [period, setPeriod] = useState<"monthly" | "yearly">("monthly");
   const [clicked, setClicked] = useState<boolean>(false);
   const teamInfo = useTeam();
+  const analytics = useAnalytics();
 
   const features = useMemo(() => {
     return [
@@ -39,9 +45,34 @@ export function UpgradePlanModal({
     ];
   }, [plan]);
 
+  // Track analytics event when modal is opened
+  useEffect(() => {
+    if (open) {
+      analytics.capture("Clicked Upgrade Button", {
+        trigger: trigger,
+        teamId: teamInfo?.currentTeam?.id,
+      });
+    }
+  }, [open, trigger]);
+
+  // Track analytics event when child button is present
+  const handleUpgradeClick = () => {
+    analytics.capture("Clicked Upgrade Button", {
+      trigger: trigger,
+      teamId: teamInfo?.currentTeam?.id,
+    });
+  };
+
+  // If button is present, clone it and add onClick handler
+  const buttonChild = React.isValidElement<{
+    onClick?: React.MouseEventHandler<HTMLButtonElement>;
+  }>(children)
+    ? React.cloneElement(children, { onClick: handleUpgradeClick })
+    : children;
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
+      <DialogTrigger asChild>{buttonChild}</DialogTrigger>
       <DialogContent className="text-foreground bg-background">
         <motion.div
           variants={{

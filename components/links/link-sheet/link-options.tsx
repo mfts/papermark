@@ -31,6 +31,12 @@ export const LinkOptions = ({
   const hasFreePlan = plan?.plan === "free";
 
   const [openUpgradeModal, setOpenUpgradeModal] = useState<boolean>(false);
+  const [trigger, setTrigger] = useState<string>("");
+
+  const handleUpgradeStateChange = (state: boolean, trigger: string) => {
+    setOpenUpgradeModal(state);
+    setTrigger(trigger);
+  };
 
   return (
     <div>
@@ -41,7 +47,7 @@ export const LinkOptions = ({
       <OGSection
         {...{ data, setData }}
         hasFreePlan={hasFreePlan}
-        setOpenUpgradeModal={setOpenUpgradeModal}
+        handleUpgradeStateChange={handleUpgradeStateChange}
       />
 
       <Accordion type="single" collapsible>
@@ -55,17 +61,17 @@ export const LinkOptions = ({
             <EmailAuthenticationSection
               {...{ data, setData }}
               hasFreePlan={hasFreePlan}
-              setOpenUpgradeModal={setOpenUpgradeModal}
+              handleUpgradeStateChange={handleUpgradeStateChange}
             />
             <AllowListSection
               {...{ data, setData }}
               hasFreePlan={hasFreePlan}
-              setOpenUpgradeModal={setOpenUpgradeModal}
+              handleUpgradeStateChange={handleUpgradeStateChange}
             />
             <DenyListSection
               {...{ data, setData }}
               hasFreePlan={hasFreePlan}
-              setOpenUpgradeModal={setOpenUpgradeModal}
+              handleUpgradeStateChange={handleUpgradeStateChange}
             />
             <PasswordSection {...{ data, setData }} />
             <FeedbackSection {...{ data, setData }} />
@@ -77,6 +83,7 @@ export const LinkOptions = ({
           clickedPlan="Pro"
           open={openUpgradeModal}
           setOpen={setOpenUpgradeModal}
+          trigger={trigger}
         />
       ) : null}
     </div>
