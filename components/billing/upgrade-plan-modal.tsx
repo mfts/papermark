@@ -10,7 +10,6 @@ import { getStripe } from "@/lib/stripe/client";
 import { Badge } from "../ui/badge";
 import { useTeam } from "@/context/team-context";
 import { useAnalytics } from "@/lib/analytics";
-import { set } from "ts-pattern/dist/patterns";
 import React from "react";
 
 export function UpgradePlanModal({
@@ -181,6 +180,12 @@ export function UpgradePlanModal({
                     const data = await res.json();
                     const { id: sessionId } = data;
                     const stripe = await getStripe();
+                    analytics.capture("Stripe Checkout Clicked", {
+                      plan: plan,
+                      period: period,
+                      trigger: trigger,
+                      teamId: teamInfo?.currentTeam?.id,
+                    });
                     stripe?.redirectToCheckout({ sessionId });
                   })
                   .catch((err) => {
