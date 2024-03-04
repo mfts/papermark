@@ -38,6 +38,7 @@ export default async function handle(
       id: string;
       name: string;
       owner: {
+        id: string;
         email: string | null;
       };
     };
@@ -58,6 +59,7 @@ export default async function handle(
             name: true,
             owner: {
               select: {
+                id: true,
                 email: true,
               },
             },
@@ -94,7 +96,7 @@ export default async function handle(
     return;
   } catch (error) {
     log({
-      message: `Failed to send email in _/api/views_ route for linkId: ${view.linkId}. \n\n Error: ${error} \n\n*Metadata*: \`{ownerId: ${view.document.ownerId}, viewId: ${viewId}}\``,
+      message: `Failed to send email in _/api/views_ route for linkId: ${view.linkId}. \n\n Error: ${error} \n\n*Metadata*: \`{ownerId: ${view.document.owner.id}, viewId: ${viewId}}\``,
       type: "error",
       mention: true,
     });
