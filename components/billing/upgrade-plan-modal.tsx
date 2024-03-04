@@ -48,7 +48,7 @@ export function UpgradePlanModal({
   // Track analytics event when modal is opened
   useEffect(() => {
     if (open) {
-      analytics.capture("Clicked Upgrade Button", {
+      analytics.capture("Upgrade Button Clicked", {
         trigger: trigger,
         teamId: teamInfo?.currentTeam?.id,
       });
@@ -57,7 +57,7 @@ export function UpgradePlanModal({
 
   // Track analytics event when child button is present
   const handleUpgradeClick = () => {
-    analytics.capture("Clicked Upgrade Button", {
+    analytics.capture("Upgrade Button Clicked", {
       trigger: trigger,
       teamId: teamInfo?.currentTeam?.id,
     });
