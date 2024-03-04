@@ -1,14 +1,13 @@
 import { sendEmail } from "@/lib/resend";
 import ViewedDocumentEmail from "@/components/emails/viewed-document";
-import prisma from "@/lib/prisma";
 
 export const sendViewedDocumentEmail = async ({
-  ownerId,
+  ownerEmail,
   documentId,
   documentName,
   viewerEmail,
 }: {
-  ownerId: string;
+  ownerEmail: string | null;
   documentId: string;
   documentName: string;
   viewerEmail: string | null;
@@ -19,17 +18,12 @@ export const sendViewedDocumentEmail = async ({
     viewerEmail,
   });
   try {
-    const owner = await prisma.user.findUnique({
-      where: { id: ownerId },
-      select: { email: true },
-    });
-
-    if (!owner || !owner.email) {
+    if (!ownerEmail) {
       throw new Error("Document Owner not found");
     }
 
     const data = await sendEmail({
-      to: owner.email,
+      to: ownerEmail,
       subject: `Your document has been viewed: ${documentName}`,
       react: emailTemplate,
       test: process.env.NODE_ENV === "development",

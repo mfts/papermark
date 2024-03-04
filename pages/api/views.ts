@@ -244,30 +244,15 @@ export default async function handle(
 
     if (link.enableNotification) {
       console.time("sendemail");
-      sendViewedDocumentEmail({
-        ownerId: ownerId,
-        documentId,
-        documentName: documentName,
-        viewerEmail: email,
-      })
-        .then((res) => {
-          if (!res.success) {
-            log({
-              message: `Failed to send email in _/api/views_ route for linkId: ${linkId}. \n\n Error: ${res.error} \n\n*Metadata*: \`{ownerId: ${ownerId}, viewId: ${newView.id}}\``,
-              type: "error",
-              mention: true,
-            });
-          }
-        })
-        .catch((error) => {
-          // This catch block will only be triggered if there's an uncaught exception in sendViewedDocumentEmail.
-          // Given the refactored design, it's less likely to be used, but it's good practice to keep it for catching unexpected errors.
-          log({
-            message: `Unexpected error in _/api/views_ route for ${linkId}. \n\n Error: ${error} \n\n*Metadata*: \`{ownerId: ${ownerId}, viewId: ${newView.id}}\``,
-            type: "error",
-            mention: true,
-          });
-        });
+      fetch(`${process.env.NEXTAUTH_URL}/api/jobs/send-notification`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${process.env.INTERNAL_API_KEY}`,
+        },
+        body: JSON.stringify({ viewId: newView.id }),
+      });
+
       console.timeEnd("sendemail");
     }
 

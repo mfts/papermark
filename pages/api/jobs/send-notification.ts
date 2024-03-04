@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/lib/prisma";
 import { sendViewedDocumentEmail } from "@/lib/emails/send-viewed-document";
+import { log } from "@/lib/utils";
 
 export const config = {
   maxDuration: 60,
@@ -26,24 +27,40 @@ export default async function handle(
     return;
   }
 
-  // POST /api/jobs/send-notification
-  try {
-    const { viewId } = req.body as {
-      viewId: string;
-    };
+  const { viewId } = req.body as {
+    viewId: string;
+  };
 
+  let view: {
+    viewerEmail: string | null;
+    linkId: string;
+    document: {
+      id: string;
+      name: string;
+      owner: {
+        email: string | null;
+      };
+    };
+  } | null;
+
+  try {
     // Fetch the link to verify the settings
-    const view = await prisma.view.findUnique({
+    view = await prisma.view.findUnique({
       where: {
         id: viewId,
       },
       select: {
         viewerEmail: true,
+        linkId: true,
         document: {
           select: {
             id: true,
             name: true,
-            ownerId: true,
+            owner: {
+              select: {
+                email: true,
+              },
+            },
           },
         },
       },
@@ -53,10 +70,21 @@ export default async function handle(
       res.status(404).json({ message: "View / Document not found." });
       return;
     }
+  } catch (error) {
+    log({
+      message: `Failed to find view for viewId: ${viewId}. \n\n Error: ${error}`,
+      type: "error",
+      mention: true,
+    });
+    res.status(500).json({ message: (error as Error).message });
+    return;
+  }
 
+  // POST /api/jobs/send-notification
+  try {
     // send email to document owner that document
     await sendViewedDocumentEmail({
-      ownerId: view.document.ownerId,
+      ownerEmail: view.document.owner.email,
       documentId: view.document.id,
       documentName: view.document.name,
       viewerEmail: view.viewerEmail,
@@ -65,6 +93,11 @@ export default async function handle(
     res.status(200).json({ message: "Successfully sent notification", viewId });
     return;
   } catch (error) {
+    log({
+      message: `Failed to send email in _/api/views_ route for linkId: ${view.linkId}. \n\n Error: ${error} \n\n*Metadata*: \`{ownerId: ${view.document.ownerId}, viewId: ${viewId}}\``,
+      type: "error",
+      mention: true,
+    });
     return res.status(500).json({ message: (error as Error).message });
   }
 }
