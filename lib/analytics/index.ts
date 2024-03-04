@@ -38,7 +38,7 @@ export function useAnalytics() {
   };
 }
 
-export function useAnalyticsServer() {
+export function getAnalyticsServer() {
   const postHogClient = getPostHogServerClient();
 
   const capture = (

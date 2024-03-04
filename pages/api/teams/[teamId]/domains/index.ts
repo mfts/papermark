@@ -5,7 +5,6 @@ import { authOptions } from "../../../auth/[...nextauth]";
 import { CustomUser } from "@/lib/types";
 import { log } from "@/lib/utils";
 import { addDomainToVercel, validDomainRegex } from "@/lib/domains";
-import { identifyUser, trackAnalytics } from "@/lib/analytics";
 import { errorhandler } from "@/lib/errorHandler";
 import { getTeamWithDomain } from "@/lib/team/helper";
 

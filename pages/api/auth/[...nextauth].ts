@@ -7,7 +7,7 @@ import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import prisma from "@/lib/prisma";
 import { CreateUserEmailProps, CustomUser } from "@/lib/types";
 import { sendWelcomeEmail } from "@/lib/emails/send-welcome";
-import { useAnalyticsServer } from "@/lib/analytics";
+import { getAnalyticsServer } from "@/lib/analytics";
 import { sendVerificationRequestEmail } from "@/lib/emails/send-verification-request";
 import hanko from "@/lib/hanko";
 
@@ -18,7 +18,7 @@ export const config = {
   maxDuration: 180,
 };
 
-const analytics = useAnalyticsServer();
+const analytics = getAnalyticsServer();
 
 export const authOptions: NextAuthOptions = {
   pages: {

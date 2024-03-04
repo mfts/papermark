@@ -6,7 +6,7 @@ import { stripe } from "@/lib/stripe";
 import { getPlanFromPriceId, isNewCustomer } from "@/lib/stripe/utils";
 import { log } from "@/lib/utils";
 import { sendUpgradePlanEmail } from "@/lib/emails/send-upgrade-plan";
-import { useAnalyticsServer } from "@/lib/analytics";
+import { getAnalyticsServer } from "@/lib/analytics";
 
 // Stripe requires the raw body to construct the event.
 export const config = {
@@ -43,7 +43,7 @@ interface SubscriptionInfo {
 
 const pendingSubscriptionUpdates = new Map<string, SubscriptionInfo>();
 
-const analytics = useAnalyticsServer();
+const analytics = getAnalyticsServer();
 
 export default async function webhookHandler(
   req: NextApiRequest,
