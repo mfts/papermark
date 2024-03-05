@@ -180,12 +180,6 @@ export function UpgradePlanModal({
                     const data = await res.json();
                     const { id: sessionId } = data;
                     const stripe = await getStripe();
-                    analytics.capture("Stripe Checkout Clicked", {
-                      plan: plan,
-                      period: period,
-                      trigger: trigger,
-                      teamId: teamInfo?.currentTeam?.id,
-                    });
                     stripe?.redirectToCheckout({ sessionId });
                   })
                   .catch((err) => {

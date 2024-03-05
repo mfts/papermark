@@ -4,6 +4,7 @@ import { authOptions } from "../../../auth/[...nextauth]";
 import { CustomUser } from "@/lib/types";
 import { stripe } from "@/lib/stripe";
 import prisma from "@/lib/prisma";
+import { identifyUser, trackAnalytics } from "@/lib/analytics";
 
 export default async function handle(
   req: NextApiRequest,
@@ -81,6 +82,13 @@ export default async function handle(
         client_reference_id: teamId,
       });
     }
+
+    await identifyUser(userEmail ?? userId);
+    await trackAnalytics({
+      event: "Stripe Checkout Clicked",
+      teamId,
+      priceId: priceId,
+    });
 
     return res.status(200).json(stripeSession);
   } else {
