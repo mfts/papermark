@@ -114,7 +114,7 @@ export const authOptions: NextAuthOptions = {
       };
 
       const analytics = getAnalyticsServer();
-      analytics.capture(
+      await analytics.capture(
         message.user.email ?? message.user.id,
         "User Signed Up",
       );
@@ -123,7 +123,7 @@ export const authOptions: NextAuthOptions = {
     },
     async signIn(message) {
       const analytics = getAnalyticsServer();
-      analytics.capture(
+      await analytics.capture(
         message.user.email ?? message.user.id,
         "User Signed In",
       );
