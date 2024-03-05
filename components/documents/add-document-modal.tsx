@@ -23,7 +23,6 @@ import {
   createDocument,
   createNewDocumentVersion,
 } from "@/lib/documents/create-document";
-import { set } from "ts-pattern/dist/patterns";
 import { useAnalytics } from "@/lib/analytics";
 
 export function AddDocumentModal({
