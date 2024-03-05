@@ -3,6 +3,7 @@ import { AnalyticsEvents } from "@/lib/types";
 import prisma from "@/lib/prisma";
 import { getPostHogConfig, getPostHogServerClient } from "@/lib/posthog";
 import { posthog } from "posthog-js";
+import { log } from "../utils";
 
 export function useAnalytics() {
   const isPostHogEnabled = getPostHogConfig();
@@ -47,26 +48,25 @@ export function getAnalyticsServer() {
     properties?: Record<string, unknown>,
   ) => {
     if (!postHogClient) {
+      log({
+        message: `Posthog client not enabled for server event: *${event}*`,
+        type: "error",
+      });
       return;
     }
 
-    postHogClient.capture({ distinctId, event, properties });
-  };
-
-  const identify = (
-    distinctId: string, // email or user id
-    properties?: Record<string, unknown>,
-  ) => {
-    if (!postHogClient) {
-      return;
+    try {
+      postHogClient.capture({ distinctId, event, properties });
+    } catch (e) {
+      log({
+        message: `Failed to record posthog for event: *${event}*`,
+        type: "error",
+      });
     }
-
-    postHogClient.identify({ distinctId, properties });
   };
 
   return {
     capture,
-    identify,
   };
 }
 

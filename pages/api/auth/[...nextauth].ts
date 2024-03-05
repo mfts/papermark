@@ -18,8 +18,6 @@ export const config = {
   maxDuration: 180,
 };
 
-const analytics = getAnalyticsServer();
-
 export const authOptions: NextAuthOptions = {
   pages: {
     error: "/login",
@@ -115,6 +113,7 @@ export const authOptions: NextAuthOptions = {
         },
       };
 
+      const analytics = getAnalyticsServer();
       analytics.capture(
         message.user.email ?? message.user.id,
         "User Signed Up",
@@ -123,6 +122,7 @@ export const authOptions: NextAuthOptions = {
       await sendWelcomeEmail(params);
     },
     async signIn(message) {
+      const analytics = getAnalyticsServer();
       analytics.capture(
         message.user.email ?? message.user.id,
         "User Signed In",
