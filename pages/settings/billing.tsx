@@ -4,6 +4,7 @@ import Navbar from "@/components/settings/navbar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useTeam } from "@/context/team-context";
+import { useAnalytics } from "@/lib/analytics";
 import { useBilling } from "@/lib/swr/use-billing";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
@@ -24,6 +25,7 @@ interface Tier {
 
 export default function Billing() {
   const router = useRouter();
+  const analytics = useAnalytics();
   const { plan, startsAt, endsAt } = useBilling();
   const [clicked, setClicked] = useState<boolean>(false);
 
@@ -32,15 +34,20 @@ export default function Billing() {
   useEffect(() => {
     if (router.query.success) {
       toast.success("Upgrade success!");
-      // setTimeout(() => {
-      //   mutate(`/api/projects/${slug}`);
-      //   // track upgrade to pro event
-      //   va.track("Upgraded Plan", {
-      //     plan: "pro",
-      //   });
-      // }, 1000);
+      analytics.capture("User Upgraded", {
+        plan: plan,
+        teamId: teamInfo?.currentTeam?.id,
+        $set: { teamId: teamInfo?.currentTeam?.id, teamPlan: plan },
+      });
     }
-  }, [router.query.success]);
+
+    if (router.query.cancel) {
+      console.log("Stripe Checkout Cancelled");
+      analytics.capture("Stripe Checkout Cancelled", {
+        teamId: teamInfo?.currentTeam?.id,
+      });
+    }
+  }, [router.query]);
 
   const tiers: Tier[] = [
     {

@@ -50,7 +50,7 @@ export default async function handle(
         customer_update: { name: "auto" },
         billing_address_collection: "required",
         success_url: `${process.env.NEXTAUTH_URL}/settings/billing?success=true`,
-        cancel_url: `${process.env.NEXTAUTH_URL}/settings/billing`,
+        cancel_url: `${process.env.NEXTAUTH_URL}/settings/billing?cancel=true`,
         line_items: [{ price: priceId, quantity: 1 }],
         automatic_tax: {
           enabled: true,
@@ -68,7 +68,7 @@ export default async function handle(
         customer_email: userEmail ?? undefined,
         billing_address_collection: "required",
         success_url: `${process.env.NEXTAUTH_URL}/settings/billing?success=true`,
-        cancel_url: `${process.env.NEXTAUTH_URL}/settings/billing`,
+        cancel_url: `${process.env.NEXTAUTH_URL}/settings/billing?cancel=true`,
         line_items: [{ price: priceId, quantity: 1 }],
         automatic_tax: {
           enabled: true,

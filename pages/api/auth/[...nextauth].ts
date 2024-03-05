@@ -7,7 +7,7 @@ import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import prisma from "@/lib/prisma";
 import { CreateUserEmailProps, CustomUser } from "@/lib/types";
 import { sendWelcomeEmail } from "@/lib/emails/send-welcome";
-import { getAnalyticsServer } from "@/lib/analytics";
+import { identifyUser, trackAnalytics } from "@/lib/analytics";
 import { sendVerificationRequestEmail } from "@/lib/emails/send-verification-request";
 import hanko from "@/lib/hanko";
 
@@ -113,20 +113,21 @@ export const authOptions: NextAuthOptions = {
         },
       };
 
-      const analytics = getAnalyticsServer();
-      await analytics.capture(
-        message.user.email ?? message.user.id,
-        "User Signed Up",
-      );
+      await identifyUser(message.user.email ?? message.user.id);
+      await trackAnalytics({
+        event: "User Signed Up",
+        email: message.user.email,
+        userId: message.user.id,
+      });
 
       await sendWelcomeEmail(params);
     },
     async signIn(message) {
-      const analytics = getAnalyticsServer();
-      await analytics.capture(
-        message.user.email ?? message.user.id,
-        "User Signed In",
-      );
+      await identifyUser(message.user.email ?? message.user.id);
+      await trackAnalytics({
+        event: "User Signed In",
+        email: message.user.email,
+      });
     },
   },
 };
