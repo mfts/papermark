@@ -26,7 +26,8 @@ export function useStats({
 
   const { data: stats, error } = useSWR<TStatsData>(
     id &&
-      `/api/teams/${teamInfo?.currentTeam?.id}/documents/${encodeURIComponent(
+      teamInfo?.currentTeam &&
+      `/api/teams/${teamInfo.currentTeam.id}/documents/${encodeURIComponent(
         id,
       )}/stats${excludeTeamMembers ? "?excludeTeamMembers=true" : ""}`,
     fetcher,
