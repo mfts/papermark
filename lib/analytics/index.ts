@@ -42,7 +42,7 @@ export function useAnalytics() {
 export function getAnalyticsServer() {
   const postHogClient = getPostHogServerClient();
 
-  const capture = (
+  const capture = async (
     distinctId: string, // email or user id
     event: string,
     properties?: Record<string, unknown>,
@@ -57,6 +57,7 @@ export function getAnalyticsServer() {
 
     try {
       postHogClient.capture({ distinctId, event, properties });
+      await postHogClient.shutdownAsync();
     } catch (e) {
       log({
         message: `Failed to record posthog for event: *${event}*`,
