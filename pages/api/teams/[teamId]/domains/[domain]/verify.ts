@@ -6,7 +6,7 @@ import {
 } from "@/lib/domains";
 import { DomainVerificationStatusProps } from "@/lib/types";
 import prisma from "@/lib/prisma";
-import { getAnalyticsServer } from "@/lib/analytics";
+import { identifyUser, trackAnalytics } from "@/lib/analytics";
 
 export default async function handle(
   req: NextApiRequest,
@@ -76,10 +76,8 @@ export default async function handle(
       });
 
       if (!currentDomain!.verified && updatedDomain.verified) {
-        const analytics = getAnalyticsServer();
-        analytics.capture(updatedDomain.userId, "Domain Verified", {
-          slug: domain,
-        });
+        await identifyUser(updatedDomain.userId);
+        await trackAnalytics({ event: "Domain Verified", slug: domain });
       }
     }
 

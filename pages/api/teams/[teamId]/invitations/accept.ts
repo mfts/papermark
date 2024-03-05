@@ -4,7 +4,7 @@ import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 import { errorhandler } from "@/lib/errorHandler";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import { getAnalyticsServer } from "@/lib/analytics";
+import { identifyUser, trackAnalytics } from "@/lib/analytics";
 
 export default async function handle(
   req: NextApiRequest,
@@ -71,8 +71,9 @@ export default async function handle(
         },
       });
 
-      const analytics = getAnalyticsServer();
-      analytics.capture(invitation.email, "Team Member Invitation Accepted", {
+      await identifyUser(invitation.email);
+      await trackAnalytics({
+        event: "Team Member Invitation Accepted",
         teamId: teamId,
       });
 

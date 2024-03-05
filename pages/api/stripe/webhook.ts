@@ -6,7 +6,6 @@ import { stripe } from "@/lib/stripe";
 import { getPlanFromPriceId, isNewCustomer } from "@/lib/stripe/utils";
 import { log } from "@/lib/utils";
 import { sendUpgradePlanEmail } from "@/lib/emails/send-upgrade-plan";
-import { getAnalyticsServer } from "@/lib/analytics";
 
 // Stripe requires the raw body to construct the event.
 export const config = {
@@ -42,8 +41,6 @@ interface SubscriptionInfo {
 }
 
 const pendingSubscriptionUpdates = new Map<string, SubscriptionInfo>();
-
-const analytics = getAnalyticsServer();
 
 export default async function webhookHandler(
   req: NextApiRequest,
@@ -119,16 +116,6 @@ export default async function webhookHandler(
                 },
               });
             }
-
-            analytics.capture(
-              team.users[0].user.email ?? team.users[0].user.id,
-              "User Upgraded",
-              {
-                teamId: team.id,
-                teamPlan: plan.slug,
-                $set: { teamId: team.id, teamPlan: plan.slug },
-              },
-            );
 
             // Remove the pending update from the store
             pendingSubscriptionUpdates.delete(stripeId);
