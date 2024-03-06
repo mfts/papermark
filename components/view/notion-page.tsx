@@ -3,7 +3,7 @@ import { ExtendedRecordMap } from "notion-types";
 import { NotionRenderer } from "react-notion-x";
 // core styles shared by all of react-notion-x (required)
 import "react-notion-x/src/styles.css";
-import Nav from "./view/nav";
+import Nav from "./nav";
 import { Brand } from "@prisma/client";
 
 export const NotionPage = ({

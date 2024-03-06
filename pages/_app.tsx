@@ -7,10 +7,10 @@ import { Toaster } from "@/components/ui/sonner";
 import Head from "next/head";
 import { Analytics } from "@vercel/analytics/react";
 import PlausibleProvider from "next-plausible";
-import { ThemeProvider } from "@/components/theme-provider";
+import { ThemeProvider } from "@/lib/providers/theme-provider";
 import { TeamProvider } from "@/context/team-context";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { PostHogCustomProvider } from "@/components/providers/posthog-provider";
+import { PostHogCustomProvider } from "@/lib/providers/posthog-provider";
 
 const inter = Inter({ subsets: ["latin"] });
 

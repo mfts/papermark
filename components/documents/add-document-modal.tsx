@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/router";
-import DocumentUpload from "@/components/document-upload";
+import DocumentUpload from "./document-upload";
 import { copyToClipboard } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { usePlausible } from "next-plausible";
