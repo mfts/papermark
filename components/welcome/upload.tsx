@@ -1,7 +1,7 @@
 import { useRouter } from "next/router";
 import { motion } from "framer-motion";
 import { useState } from "react";
-import DocumentUpload from "@/components/document-upload";
+import DocumentUpload from "@/components/documents/document-upload";
 import { toast } from "sonner";
 import Skeleton from "../Skeleton";
 import { STAGGER_CHILD_VARIANTS } from "@/lib/constants";

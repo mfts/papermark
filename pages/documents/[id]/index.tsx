@@ -30,7 +30,7 @@ import { Document } from "@prisma/client";
 import { usePlausible } from "next-plausible";
 import { mutate } from "swr";
 import { TrashIcon, Sparkles } from "lucide-react";
-import { StatsComponent } from "@/components/documents/stats";
+import { StatsComponent } from "@/components/stats/stats";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useTheme } from "next-themes";
