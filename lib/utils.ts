@@ -38,8 +38,22 @@ export async function fetcher<JSON = any>(
   return res.json();
 }
 
-export const log = async (message: string, mention?: boolean) => {
-  /* Log a message to the console */
+export const log = async ({
+  message,
+  type,
+  mention = false,
+}: {
+  message: string;
+  type: "info" | "cron" | "links" | "error";
+  mention?: boolean;
+}) => {
+  /* If in development or env variable not set, log to the console */
+  if (process.env.NODE_ENV === "development" || !process.env.PPMK_SLACK_WEBHOOK_URL) {
+    console.log(message);
+    return;
+  }
+
+  /* Log a message to channel */
   try {
     return await fetch(`${process.env.PPMK_SLACK_WEBHOOK_URL}`, {
       method: "POST",
@@ -52,7 +66,8 @@ export const log = async (message: string, mention?: boolean) => {
             type: "section",
             text: {
               type: "mrkdwn",
-              text: `${mention ? "<@U05BTDUKPLZ> " : ""}${message}`,
+              // prettier-ignore
+              text: `${mention ? "<@U05BTDUKPLZ> " : ""}${type === "error" ? ":rotating_light: " : ""}${message}`,
             },
           },
         ],
@@ -212,11 +227,12 @@ export const getFirstAndLastDay = (day: number) => {
   }
 };
 
-export const formattedDate = (date: Date) => {
-  return new Date(date).toLocaleDateString("en-US", {
-    month: "short",
-    day: "2-digit",
+export const formatDate = (dateString: string) => {
+  return new Date(dateString).toLocaleDateString("en-US", {
+    day: "numeric",
+    month: "long",
     year: "numeric",
+    timeZone: "UTC",
   });
 };
 
@@ -396,3 +412,14 @@ export const generateGravatarHash = (email: string | null): string => {
 
   return hash;
 };
+
+export const sanitizeAllowDenyList = (list: string): string[] => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const domainRegex = /^@[^\s@]+\.[^\s@]+$/;
+
+    return list
+      .split("\n")
+      .map(item => item.trim().replace(/,$/, '')) // Trim whitespace and remove trailing commas
+      .filter(item => item !== "") // Remove empty items
+      .filter(item => emailRegex.test(item) || domainRegex.test(item)); // Remove items that don't match email or domain regex
+  };

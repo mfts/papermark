@@ -15,22 +15,22 @@ export default function StatsElement({ stat, statIdx }: StatsElementProps) {
   return (
     <div
       key={statIdx}
-      className={cn(
-        statIdx % 2 === 1 ? "sm:border-l" : statIdx === 2 ? "lg:border-l" : "",
-        "border-t border-foreground/5 py-6 px-4 sm:px-6 lg:px-8",
-      )}
+      className="border border-foreground/5 py-6 px-6 xl:px-8 rounded-lg overflow-hidden"
     >
-      <p
+      <div
         className={cn(
+          "flex sm:flex-col lg:flex-row items-center sm:items-start lg:items-center space-x-2 sm:space-x-0 sm:space-y-2 lg:space-y-0 lg:space-x-2",
           !stat.active
             ? "text-gray-300 dark:text-gray-700"
             : "text-muted-foreground",
-          "text-sm font-medium leading-6",
         )}
       >
-        {stat.name}
-      </p>
-      <p className="mt-2 flex items-baseline gap-x-2">
+        <p className="text-sm font-medium leading-6 whitespace-nowrap capitalize">
+          {stat.name}
+        </p>
+      </div>
+
+      <p className="mt-3 flex items-baseline gap-x-2">
         <span
           className={cn(
             !stat.active

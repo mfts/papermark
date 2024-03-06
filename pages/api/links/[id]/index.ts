@@ -35,8 +35,10 @@ export default async function handle(
           document: {
             select: {
               id: true,
+              name: true,
               assistantEnabled: true,
               teamId: true,
+              ownerId: true,
               versions: {
                 where: { isPrimary: true },
                 select: {
@@ -153,6 +155,8 @@ export default async function handle(
         emailProtected: linkData.emailProtected,
         emailAuthenticated: linkData.emailAuthenticated,
         allowDownload: linkData.allowDownload,
+        allowList: linkData.allowList,
+        denyList: linkData.denyList,
         expiresAt: exat,
         domainId: domainObj?.id || null,
         domainSlug: domain || null,

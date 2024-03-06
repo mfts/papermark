@@ -3,7 +3,6 @@ import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]";
 import { hashPassword } from "@/lib/utils";
-import { identifyUser, trackAnalytics } from "@/lib/analytics";
 import { CustomUser } from "@/lib/types";
 import { errorhandler } from "@/lib/errorHandler";
 import {
@@ -15,6 +14,7 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
+  // POST /api/links
   if (req.method === "POST") {
     const session = await getServerSession(req, res, authOptions);
     if (!session) {
@@ -103,6 +103,8 @@ export default async function handler(
           metaTitle: linkData.metaTitle || null,
           metaDescription: linkData.metaDescription || null,
           metaImage: linkData.metaImage || null,
+          allowList: linkData.allowList,
+          denyList: linkData.denyList,
         },
       });
 
@@ -115,14 +117,6 @@ export default async function handler(
       if (!linkWithView) {
         return res.status(404).json({ error: "Link not found" });
       }
-
-      await identifyUser((session.user as CustomUser).id);
-      await trackAnalytics({
-        event: "Link Added",
-        linkId: linkWithView.id,
-        documentId: linkWithView.documentId,
-        customDomain: linkWithView.domainSlug,
-      });
 
       return res.status(200).json(linkWithView);
     } catch (error) {

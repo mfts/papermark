@@ -112,7 +112,7 @@ export const NotionPage = ({
   return (
     <>
       <div className="bg-white">
-        <Nav brand={brand} />
+        <Nav brand={brand} type="notion" />
 
         <div>
           <NotionRenderer

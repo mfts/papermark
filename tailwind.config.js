@@ -169,11 +169,21 @@ module.exports = {
             opacity: "0",
           },
         },
+        "accordion-down": {
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
+        },
+        "accordion-up": {
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
+        },
       },
       animation: {
         gauge_fadeIn: "gauge_fadeIn 1s ease forwards",
         gauge_fill: "gauge_fill 1s ease forwards",
         flyEmoji: "flyEmoji 1s forwards",
+        "accordion-down": "accordion-down 0.2s ease-out",
+        "accordion-up": "accordion-up 0.2s ease-out",
       },
     },
   },

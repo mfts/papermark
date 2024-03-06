@@ -6,7 +6,6 @@ import { stripe } from "@/lib/stripe";
 import { getPlanFromPriceId, isNewCustomer } from "@/lib/stripe/utils";
 import { log } from "@/lib/utils";
 import { sendUpgradePlanEmail } from "@/lib/emails/send-upgrade-plan";
-import { identifyUser, trackAnalytics } from "@/lib/analytics";
 
 // Stripe requires the raw body to construct the event.
 export const config = {
@@ -69,7 +68,10 @@ export default async function webhookHandler(
             checkoutSession.client_reference_id === null ||
             checkoutSession.customer === null
           ) {
-            await log("Missing items in Stripe webhook callback");
+            await log({
+              message: "Missing items in Stripe webhook callback",
+              type: "error",
+            });
             return;
           }
 
@@ -114,12 +116,6 @@ export default async function webhookHandler(
                 },
               });
             }
-
-            await identifyUser(team.users[0].user.id);
-            await trackAnalytics({
-              event: "User Upgraded",
-              email: team.users[0].user.email,
-            });
 
             // Remove the pending update from the store
             pendingSubscriptionUpdates.delete(stripeId);
@@ -171,26 +167,32 @@ export default async function webhookHandler(
           });
 
           if (!team) {
-            await log(
-              "Team with stripeId: `" +
+            await log({
+              message:
+                "Team with stripeId: `" +
                 stripeId +
                 "`not found in Stripe webhook `customer.subscription.deleted` callback",
-            );
+              type: "error",
+            });
             return;
           }
 
-          await log(
-            ":cry: Team *`" + team.id + "`* deleted their subscription",
-          );
+          await log({
+            message:
+              ":cry: Team *`" + team.id + "`* deleted their subscription",
+            type: "info",
+          });
         } else {
           throw new Error("Unhandled relevant event!");
         }
       } catch (error) {
-        await log(
-          `Stripe webook failed for Event: *${event.type}* (_${
+        await log({
+          message: `Stripe webook failed for Event: *${event.type}* ([_${
             event.id
-          }_) \n\n Error: ${(error as Error).message}`,
-        );
+          }_](https://dashboard.stripe.com/events/${event.id})) \n\n Error: ${(error as Error).message}`,
+          type: "error",
+          mention: true,
+        });
         return;
       }
     } else {

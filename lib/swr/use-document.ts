@@ -61,6 +61,7 @@ export function useDocumentLinks() {
 }
 
 interface ViewWithDuration extends View {
+  internal: boolean;
   duration: {
     data: { pageNumber: string; sum_duration: number }[];
   };

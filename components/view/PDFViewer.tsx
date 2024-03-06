@@ -165,7 +165,8 @@ export default function PDFViewer(props: any) {
         numPages={numPages}
         allowDownload={props.allowDownload}
         assistantEnabled={props.assistantEnabled}
-        file={{ name: props.name, url: props.file }}
+        viewId={props.viewId}
+        linkId={props.linkId}
       />
       <div
         hidden={loading}

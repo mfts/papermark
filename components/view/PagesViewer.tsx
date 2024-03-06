@@ -6,6 +6,7 @@ import BlankImg from "@/public/_static/blank.gif";
 import Nav from "./nav";
 import Toolbar from "./toolbar";
 import { Brand } from "@prisma/client";
+import { useRouter } from "next/router";
 
 const DEFAULT_PRELOADED_IMAGES_NUM = 10;
 
@@ -15,21 +16,29 @@ export default function PagesViewer({
   documentId,
   viewId,
   assistantEnabled,
+  allowDownload,
   feedbackEnabled,
   versionNumber,
   brand,
 }: {
-  pages: { file: string; pageNumber: string }[];
+  pages: { file: string; pageNumber: string; embeddedLinks: string[] }[];
   linkId: string;
   documentId: string;
   viewId: string;
   assistantEnabled: boolean;
+  allowDownload: boolean;
   feedbackEnabled: boolean;
   versionNumber: number;
   brand?: Brand;
 }) {
+  const router = useRouter();
   const numPages = pages.length;
-  const [pageNumber, setPageNumber] = useState<number>(1); // start on first page
+  const pageQuery = router.query.p ? Number(router.query.p) : 1;
+
+  const [pageNumber, setPageNumber] = useState<number>(() =>
+    pageQuery >= 1 && pageQuery <= numPages ? pageQuery : 1,
+  ); // start on first page
+
   const [loadedImages, setLoadedImages] = useState<boolean[]>(
     new Array(numPages).fill(false),
   );
@@ -148,57 +157,80 @@ export default function PagesViewer({
         pageNumber={pageNumber}
         numPages={numPages}
         assistantEnabled={assistantEnabled}
+        allowDownload={allowDownload}
         brand={brand}
+        viewId={viewId}
+        linkId={linkId}
+        embeddedLinks={pages[pageNumber - 1]?.embeddedLinks}
       />
       <div
         style={{ height: "calc(100vh - 64px)" }}
         className="flex items-center relative"
       >
-        <div className="flex items-center justify-between w-full absolute z-10 px-2">
-          <button
-            onClick={goToPreviousPage}
-            disabled={pageNumber == 1}
-            className="relative h-[calc(100vh - 64px)] px-2 py-24  focus:z-20 "
-          >
-            <span className="sr-only">Previous</span>
-            <div className="bg-gray-950/50 hover:bg-gray-950/75 rounded-full relative flex items-center justify-center p-1">
-              <ChevronLeftIcon
-                className="h-10 w-10 text-white"
-                aria-hidden="true"
-              />
-            </div>
-          </button>
-          <button
-            onClick={goToNextPage}
-            disabled={pageNumber >= numPages}
-            className="relative h-[calc(100vh - 64px)] px-2 py-24  focus:z-20"
-          >
-            <span className="sr-only">Next</span>
-            <div className="bg-gray-950/50 hover:bg-gray-950/75 rounded-full relative flex items-center justify-center p-1">
-              <ChevronRightIcon
-                className="h-10 w-10 text-white"
-                aria-hidden="true"
-              />
-            </div>
-          </button>
-        </div>
+        <button
+          onClick={goToPreviousPage}
+          disabled={pageNumber == 1}
+          className="absolute left-0 h-[calc(100vh - 64px)] px-2 py-24 z-20"
+        >
+          <span className="sr-only">Previous</span>
+          <div className="bg-gray-950/50 hover:bg-gray-950/75 rounded-full relative flex items-center justify-center p-1">
+            <ChevronLeftIcon
+              className="h-10 w-10 text-white"
+              aria-hidden="true"
+            />
+          </div>
+        </button>
+        <button
+          onClick={goToNextPage}
+          disabled={pageNumber >= numPages}
+          className="absolute right-0 h-[calc(100vh - 64px)] px-2 py-24 z-20"
+        >
+          <span className="sr-only">Next</span>
+          <div className="bg-gray-950/50 hover:bg-gray-950/75 rounded-full relative flex items-center justify-center p-1">
+            <ChevronRightIcon
+              className="h-10 w-10 text-white"
+              aria-hidden="true"
+            />
+          </div>
+        </button>
 
         <div className="flex justify-center mx-auto relative h-full w-full">
           {pages && loadedImages[pageNumber - 1] ? (
-            pages.map((page, index) => (
-              <Image
-                key={index}
-                className={`object-contain mx-auto ${
-                  pageNumber - 1 === index ? "block" : "hidden"
-                }`}
-                src={loadedImages[index] ? page.file : BlankImg}
-                alt={`Page ${index + 1}`}
-                priority={loadedImages[index] ? true : false}
-                fill
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 75vw, 50vw"
-                quality={100}
-              />
-            ))
+            pages.map((page, index) => {
+              // contains cloudfront.net in the file path, then use img tag otherwise use next/image
+              if (page.file.toLowerCase().includes("cloudfront.net")) {
+                return (
+                  <img
+                    key={index}
+                    className={`object-contain mx-auto ${
+                      pageNumber - 1 === index ? "block" : "hidden"
+                    }`}
+                    src={
+                      loadedImages[index]
+                        ? page.file
+                        : "https://www.papermark.io/_static/blank.gif"
+                    }
+                    alt={`Page ${index + 1}`}
+                    fetchPriority={loadedImages[index] ? "high" : "auto"}
+                  />
+                );
+              }
+
+              return (
+                <Image
+                  key={index}
+                  className={`object-contain mx-auto ${
+                    pageNumber - 1 === index ? "block" : "hidden"
+                  }`}
+                  src={loadedImages[index] ? page.file : BlankImg}
+                  alt={`Page ${index + 1}`}
+                  priority={loadedImages[index] ? true : false}
+                  fill
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 75vw, 50vw"
+                  quality={100}
+                />
+              );
+            })
           ) : (
             <LoadingSpinner className="h-20 w-20 text-foreground" />
           )}

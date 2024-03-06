@@ -12,7 +12,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <Head>
         <title>Papermark | The Open Source DocSend Alternative</title>
       </Head>
-      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+      <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
         <main className={inter.className}>
           <Toaster closeButton richColors theme={"system"} />
 

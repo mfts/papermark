@@ -1,22 +1,26 @@
-import { useStats } from "@/lib/swr/use-stats";
+import { TStatsData } from "@/lib/swr/use-stats";
 import ErrorPage from "next/error";
 import BarChartComponent from "../charts/bar-chart";
+import StatsChartSkeleton from "./stats-chart-skeleton";
+import StatsChartDummy from "./stats-chart-dummy";
 
 export default function StatsChart({
   documentId,
+  statsData,
   totalPagesMax = 0,
 }: {
   documentId: string;
+  statsData: { stats: TStatsData | undefined; loading: boolean; error: any };
   totalPagesMax?: number;
 }) {
-  const { stats, loading, error } = useStats();
+  const { stats, loading, error } = statsData;
 
   if (error && error.status === 404) {
     return <ErrorPage statusCode={404} />;
   }
 
   if (loading) {
-    return <div>No data</div>;
+    return <StatsChartSkeleton className="my-8" />;
   }
 
   let durationData = Array.from({ length: totalPagesMax }, (_, i) => ({
@@ -76,8 +80,10 @@ export default function StatsChart({
   }
 
   return stats && stats.views.length > 0 ? (
-    <div className="p-5">
+    <div className="pl-0.5 md:pl-1 pb-0.5 md:pb-1 border-l border-b rounded-bl-lg">
       <BarChartComponent data={durationData} />
     </div>
-  ) : null;
+  ) : (
+    <StatsChartDummy totalPagesMax={totalPagesMax} />
+  );
 }

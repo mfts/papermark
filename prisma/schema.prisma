@@ -6,7 +6,7 @@ datasource db {
 }
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
   previewFeatures = ["relationJoins"]
 }
 
@@ -76,15 +76,15 @@ model Team {
 }
 
 model Brand {
-  id          String   @id @default(cuid())
+  id          String  @id @default(cuid())
   logo        String? // This should be a reference to where the file is stored (S3, Google Cloud Storage, etc.)
   brandColor  String? // This should be a reference to the brand color
   accentColor String? // This should be a reference to the accent color
-  teamId      String   @unique
-  team        Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId      String  @unique
+  team        Team    @relation(fields: [teamId], references: [id], onDelete: Cascade)
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 enum Role {
@@ -113,19 +113,20 @@ model VerificationToken {
 }
 
 model Document {
-  id               String            @id @default(cuid())
+  id               String              @id @default(cuid())
   name             String
   description      String?
   file             String // This should be a reference to where the file is stored (S3, Google Cloud Storage, etc.)
   type             String? // This should be a reference to the file type (pdf, docx, etc.)
+  storageType      DocumentStorageType @default(VERCEL_BLOB)
   numPages         Int? // This should be a reference to the number of pages in the document
-  owner            User              @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  owner            User                @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   teamId           String?
-  team             Team?             @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  team             Team?               @relation(fields: [teamId], references: [id], onDelete: SetNull)
   ownerId          String // This field holds the foreign key.
-  assistantEnabled Boolean           @default(false) // This indicates if assistant is enabled for this document
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
+  assistantEnabled Boolean             @default(false) // This indicates if assistant is enabled for this document
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
   links            Link[]
   views            View[]
   versions         DocumentVersion[]
@@ -136,35 +137,43 @@ model Document {
 }
 
 model DocumentVersion {
-  id            String         @id @default(cuid())
+  id            String              @id @default(cuid())
   versionNumber Int // e.g., 1, 2, 3 for version control
-  document      Document       @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  document      Document            @relation(fields: [documentId], references: [id], onDelete: Cascade)
   documentId    String
   file          String // This should be a reference to where the file is stored (S3, Google Cloud Storage, etc.)
   type          String? // This should be a reference to the file type (pdf, docx, etc.)
+  storageType   DocumentStorageType @default(VERCEL_BLOB)
   numPages      Int? // This should be a reference to the number of pages in the document
-  isPrimary     Boolean        @default(false) // Indicates if this is the primary version
+  isPrimary     Boolean             @default(false) // Indicates if this is the primary version
   fileId        String? // This is the file ID of the OpenAI File API
   pages         DocumentPage[]
-  hasPages      Boolean        @default(false) // Indicates if the document has pages
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  hasPages      Boolean             @default(false) // Indicates if the document has pages
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
 
   @@unique([versionNumber, documentId])
   @@index([documentId])
 }
 
 model DocumentPage {
-  id         String          @id @default(cuid())
-  version    DocumentVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
-  versionId  String
-  pageNumber Int // e.g., 1, 2, 3 for 
-  file       String // This should be a reference to where the file / page is stored (S3, Google Cloud Storage, etc.)
-  createdAt  DateTime        @default(now())
-  updatedAt  DateTime        @updatedAt
+  id            String              @id @default(cuid())
+  version       DocumentVersion     @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  versionId     String
+  pageNumber    Int // e.g., 1, 2, 3 for 
+  embeddedLinks String[]
+  file          String // This should be a reference to where the file / page is stored (S3, Google Cloud Storage, etc.)
+  storageType   DocumentStorageType @default(VERCEL_BLOB)
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
 
   @@unique([pageNumber, versionId])
   @@index([versionId])
+}
+
+enum DocumentStorageType {
+  S3_PATH
+  VERCEL_BLOB
 }
 
 model Link {
@@ -176,7 +185,8 @@ model Link {
   slug               String? // Link slug for pretty URLs
   expiresAt          DateTime? // Optional expiration date
   password           String? // Optional password for link protection
-  allowedEmails      String[] // Array of emails allowed to view the document
+  allowList          String[] // Array of emails and domains allowed to view the document
+  denyList           String[] // Array of emails and domains denied to view the document
   emailProtected     Boolean   @default(true) // Optional email protection
   emailAuthenticated Boolean   @default(false) // Optional email authentication flag
   allowDownload      Boolean?  @default(false) // Optional give user a option to allow to download the document
@@ -191,9 +201,9 @@ model Link {
   enableFeedback     Boolean?  @default(true) // Optional give user a option to enable the feedback toolbar
 
   // custom metatags
-  metaTitle String? // This will be the meta title of the link
-  metaDescription String? // This will be the meta description of the link
-  metaImage String? // This will be the meta image of the link
+  metaTitle           String? // This will be the meta title of the link
+  metaDescription     String? // This will be the meta description of the link
+  metaImage           String? // This will be the meta image of the link
   enableCustomMetatag Boolean? @default(false) // Optional give user a option to enable the custom metatag
 
   @@unique([domainSlug, slug])
@@ -218,15 +228,16 @@ model Domain {
 }
 
 model View {
-  id          String     @id @default(cuid())
-  link        Link       @relation(fields: [linkId], references: [id])
-  linkId      String
-  document    Document   @relation(fields: [documentId], references: [id], onDelete: Cascade)
-  documentId  String
-  viewerEmail String? // Email of the viewer if known
-  verified    Boolean    @default(false) // Whether the viewer email has been verified
-  viewedAt    DateTime   @default(now())
-  reactions   Reaction[]
+  id           String     @id @default(cuid())
+  link         Link       @relation(fields: [linkId], references: [id])
+  linkId       String
+  document     Document   @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  documentId   String
+  viewerEmail  String? // Email of the viewer if known
+  verified     Boolean    @default(false) // Whether the viewer email has been verified
+  viewedAt     DateTime   @default(now())
+  downloadedAt DateTime? // This is the time the document was downloaded
+  reactions    Reaction[]
 
   @@index([linkId])
   @@index([documentId])

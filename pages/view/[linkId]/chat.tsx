@@ -10,6 +10,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { usePlausible } from "next-plausible";
 import { useEffect } from "react";
+import { getFile } from "@/lib/files/get-file";
 
 export const getServerSideProps = async (context: any) => {
   const { linkId } = context.params;
@@ -38,6 +39,7 @@ export const getServerSideProps = async (context: any) => {
                 where: { pageNumber: 1 },
                 select: {
                   file: true,
+                  storageType: true,
                 },
               },
             },
@@ -84,11 +86,18 @@ export const getServerSideProps = async (context: any) => {
 
   const { threadId, messages } = await res.json();
 
+  const firstPage = link.document.versions[0].pages[0]
+    ? await getFile({
+        type: link.document.versions[0].pages[0].storageType,
+        data: link.document.versions[0].pages[0].file,
+      })
+    : "";
+
   return {
     props: {
       threadId,
       messages: messages || [],
-      firstPage: link.document.versions[0].pages[0]?.file || "",
+      firstPage,
       userId: userId,
       linkId: linkId,
     },

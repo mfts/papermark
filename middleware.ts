@@ -8,12 +8,12 @@ export const config = {
      * Match all paths except for:
      * 1. /api/ routes
      * 2. /_next/ (Next.js internals)
-     * 3. /_proxy/, /_auth/ (special pages for OG tags proxying and password protection)
-     * 4. /_static (inside /public)
-     * 5. /_vercel (Vercel internals)
-     * 6. /favicon.ico, /sitemap.xml (static files)
+     * 3. /_static (inside /public)
+     * 4. /_vercel (Vercel internals)
+     * 5. /favicon.ico, /sitemap.xml (static files)
+     * 6. ingest (analytics)
      */
-    "/((?!api/|_next/|_proxy/|_auth/|_static|_vercel|favicon.ico|sitemap.xml).*)",
+    "/((?!api/|_next/|_static|_vercel|ingest|favicon.ico|sitemap.xml).*)",
   ],
 };
 
@@ -22,18 +22,21 @@ export default async function middleware(req: NextRequest, ev: NextFetchEvent) {
   const host = req.headers.get("host");
 
   if (
-    process.env.NODE_ENV !== "development" &&
-    !(
-      host?.includes("localhost") ||
-      host?.includes("papermark.io") ||
-      host?.endsWith(".vercel.app")
-    )
+    (process.env.NODE_ENV === "development" &&
+      host?.includes("papermark-dev.local")) ||
+    (process.env.NODE_ENV !== "development" &&
+      !(
+        host?.includes("localhost") ||
+        host?.includes("papermark.io") ||
+        host?.endsWith(".vercel.app")
+      ))
   ) {
     return DomainMiddleware(req);
   }
 
   if (
     path !== "/" &&
+    path !== "/v1" &&
     path !== "/register" &&
     path !== "/privacy" &&
     path !== "/oss-friends" &&
@@ -44,7 +47,8 @@ export default async function middleware(req: NextRequest, ev: NextFetchEvent) {
     path !== "/investors" &&
     path !== "/ai" &&
     path !== "/share-notion-page" &&
-    !path.startsWith("/alternatives/") &&
+    !path.startsWith("/alternatives") &&
+    !path.startsWith("/investors") &&
     !path.startsWith("/blog/") &&
     !path.startsWith("/view/")
   ) {

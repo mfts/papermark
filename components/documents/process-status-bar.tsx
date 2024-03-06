@@ -2,11 +2,14 @@ import { Progress } from "@/components/ui/progress";
 import ErrorPage from "next/error";
 import { useDocumentProcessingStatus } from "@/lib/swr/use-document";
 import { useEffect, useState } from "react";
+import { cn } from "@/lib/utils";
 
 export default function ProcessStatusBar({
   documentVersionId,
+  className,
 }: {
   documentVersionId: string;
+  className?: string;
 }) {
   const { status, loading, error } =
     useDocumentProcessingStatus(documentVersionId);
@@ -33,8 +36,23 @@ export default function ProcessStatusBar({
   }
 
   if (loading) {
-    return <Progress value={0} />;
+    return (
+      <Progress value={0} className={cn("w-full rounded-none", className)} />
+    );
   }
 
-  return <Progress value={progress} text={text} className="w-[60%]" />;
+  if (status && status.hasPages) {
+    return null;
+  }
+
+  return (
+    <Progress
+      value={progress}
+      text={text}
+      className={cn(
+        "w-full text-[8px] font-semibold capitalize rounded-none",
+        className,
+      )}
+    />
+  );
 }

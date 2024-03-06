@@ -9,6 +9,8 @@ import { Analytics } from "@vercel/analytics/react";
 import PlausibleProvider from "next-plausible";
 import { ThemeProvider } from "@/components/theme-provider";
 import { TeamProvider } from "@/context/team-context";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { PostHogCustomProvider } from "@/components/providers/posthog-provider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -59,19 +61,23 @@ export default function App({
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <SessionProvider session={session}>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <PlausibleProvider
-            domain="papermark.io"
-            enabled={process.env.NEXT_PUBLIC_VERCEL_ENV === "production"}
-          >
-            <main className={inter.className}>
-              <Toaster closeButton richColors />
-              <TeamProvider>
-                <Component {...pageProps} />
-              </TeamProvider>
-            </main>
-          </PlausibleProvider>
-        </ThemeProvider>
+        <PostHogCustomProvider>
+          <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+            <PlausibleProvider
+              domain="papermark.io"
+              enabled={process.env.NEXT_PUBLIC_VERCEL_ENV === "production"}
+            >
+              <main className={inter.className}>
+                <Toaster closeButton richColors />
+                <TooltipProvider delayDuration={100}>
+                  <TeamProvider>
+                    <Component {...pageProps} />
+                  </TeamProvider>
+                </TooltipProvider>
+              </main>
+            </PlausibleProvider>
+          </ThemeProvider>
+        </PostHogCustomProvider>
         <Analytics />
       </SessionProvider>
     </>

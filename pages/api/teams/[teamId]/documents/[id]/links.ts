@@ -1,6 +1,5 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth/next";
-import prisma from "@/lib/prisma";
 import { authOptions } from "../../../../auth/[...nextauth]";
 import { log } from "@/lib/utils";
 import { CustomUser } from "@/lib/types";
@@ -9,7 +8,7 @@ import { errorhandler } from "@/lib/errorHandler";
 
 export default async function handle(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   if (req.method === "GET") {
     // GET /api/teams/:teamId/documents/:id/links
@@ -54,7 +53,10 @@ export default async function handle(
       const links = document!.links;
       return res.status(200).json(links);
     } catch (error) {
-      log(`Failed to get links for document ${docId}. Error: \n\n ${error}`);
+      log({
+        message: `Failed to get links for document: _${docId}_. \n\n ${error} \n\n*Metadata*: \`{teamId: ${teamId}, userId: ${userId}}\``,
+        type: "error",
+      });
       errorhandler(error, res);
     }
   } else {

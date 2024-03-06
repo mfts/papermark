@@ -1,10 +1,14 @@
-import { useStats } from "@/lib/swr/use-stats";
+import { TStatsData } from "@/lib/swr/use-stats";
 import ErrorPage from "next/error";
 import StatsElement from "./stats-element";
-import StatsElementPlaceholder from "./stats-element-placeholder";
+import { Skeleton } from "@/components/ui/skeleton";
 
-export default function StatsCard() {
-  const { stats, loading, error } = useStats();
+export default function StatsCard({
+  statsData,
+}: {
+  statsData: { stats: TStatsData | undefined; loading: boolean; error: any };
+}) {
+  const { stats, loading, error } = statsData;
 
   if (error && error.status === 404) {
     return <ErrorPage statusCode={404} />;
@@ -12,9 +16,15 @@ export default function StatsCard() {
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-3 border-b border-foreground/5">
+      <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-3 border-foreground/5 space-y-2 sm:space-y-0 sm:space-x-2 lg:space-x-3">
         {Array.from({ length: 3 }).map((_, i) => (
-          <StatsElementPlaceholder key={i} statIdx={i} />
+          <div
+            className="border border-foreground/5 py-6 px-4 sm:px-6 lg:px-8 rounded-lg"
+            key={i}
+          >
+            <Skeleton className="h-6 w-[80%] rounded-sm" />
+            <Skeleton className="mt-4 h-8 w-9" />
+          </div>
         ))}
       </div>
     );
@@ -56,7 +66,7 @@ export default function StatsCard() {
   ];
 
   return stats && stats.views.length > 0 ? (
-    <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-3 border-b border-foreground/5">
+    <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-3 border-foreground/5 space-y-2 sm:space-y-0 sm:space-x-2 lg:space-x-3">
       {statistics.map((stat, statIdx) => (
         <StatsElement key={statIdx} stat={stat} statIdx={statIdx} />
       ))}

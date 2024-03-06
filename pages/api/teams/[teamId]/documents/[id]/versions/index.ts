@@ -6,6 +6,7 @@ import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { CustomUser } from "@/lib/types";
 import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
 import { client } from "@/trigger";
+import { DocumentStorageType } from "@prisma/client";
 
 export default async function handle(
   req: NextApiRequest,
@@ -23,10 +24,11 @@ export default async function handle(
       teamId: string;
       id: string;
     };
-    const { url, type, numPages } = req.body as {
+    const { url, type, numPages, storageType } = req.body as {
       url: string;
       type: string;
       numPages: number;
+      storageType: DocumentStorageType;
     };
 
     const userId = (session.user as CustomUser).id;
@@ -72,6 +74,7 @@ export default async function handle(
           documentId: documentId,
           file: url,
           type: type,
+          storageType,
           numPages: numPages,
           isPrimary: true,
           versionNumber: currentVersionNumber + 1,
@@ -85,14 +88,16 @@ export default async function handle(
           documentVersionId: version.id,
           versionNumber: version.versionNumber,
           documentId: documentId,
+          teamId: teamId,
         },
       });
 
       res.status(200).json({ id: documentId });
     } catch (error) {
-      log(
-        `Failed to create new version for document ${documentId}. Error: \n\n ${error}`,
-      );
+      log({
+        message: `Failed to create new version for document: _${documentId}_. \n\n ${error} \n\n*Metadata*: \`{teamId: ${teamId}, userId: ${userId}}\``,
+        type: "error",
+      });
       return res.status(500).json({
         message: "Internal Server Error",
         error: (error as Error).message,

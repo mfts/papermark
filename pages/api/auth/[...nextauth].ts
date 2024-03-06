@@ -7,15 +7,15 @@ import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import prisma from "@/lib/prisma";
 import { CreateUserEmailProps, CustomUser } from "@/lib/types";
 import { sendWelcomeEmail } from "@/lib/emails/send-welcome";
-import { analytics, identifyUser, trackAnalytics } from "@/lib/analytics";
+import { identifyUser, trackAnalytics } from "@/lib/analytics";
 import { sendVerificationRequestEmail } from "@/lib/emails/send-verification-request";
 import hanko from "@/lib/hanko";
 
 const VERCEL_DEPLOYMENT = !!process.env.VERCEL_URL;
 
-// This function can run for a maximum of 60 seconds
+// This function can run for a maximum of 180 seconds
 export const config = {
-  maxDuration: 120,
+  maxDuration: 180,
 };
 
 export const authOptions: NextAuthOptions = {
@@ -51,6 +51,7 @@ export const authOptions: NextAuthOptions = {
     EmailProvider({
       async sendVerificationRequest({ identifier, url }) {
         if (process.env.NODE_ENV === "development") {
+          console.log("[Login URL]", url);
           return;
         } else {
           await sendVerificationRequestEmail({
@@ -111,19 +112,18 @@ export const authOptions: NextAuthOptions = {
           email: message.user.email,
         },
       };
-      await analytics.identify(message.user.id, {
-        userId: message.user.id,
-        email: message.user.email,
-      });
+
+      await identifyUser(message.user.email ?? message.user.id);
       await trackAnalytics({
         event: "User Signed Up",
         email: message.user.email,
         userId: message.user.id,
       });
+
       await sendWelcomeEmail(params);
     },
     async signIn(message) {
-      await identifyUser(message.user.id);
+      await identifyUser(message.user.email ?? message.user.id);
       await trackAnalytics({
         event: "User Signed In",
         email: message.user.email,

@@ -58,7 +58,7 @@ const UpgradePlanEmail = ({ name }: UpgradePlanEmailProps) => {
               On the Pro plan, you now have access to:
             </Text>
             <Text className="ml-1 text-sm leading-4 text-black">
-              ◆ Custom domains
+              ◆ Custom domains and white-label branding
             </Text>
             <Text className="ml-1 text-sm leading-4 text-black">
               ◆ Unlimited link views
@@ -67,7 +67,7 @@ const UpgradePlanEmail = ({ name }: UpgradePlanEmailProps) => {
               ◆ Unlimited document uploads
             </Text>
             <Text className="ml-1 text-sm leading-4 text-black">
-              ◆ Unlimited team members (coming soon)
+              ◆ Invite your team members
             </Text>
             <Section className="text-center mt-[32px] mb-[32px]">
               <Button

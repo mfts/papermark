@@ -8,9 +8,6 @@ import {
 } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
-import PasswordSection from "./password-section";
-import ExpirationSection from "./expiration-section";
-import EmailProtectionSection from "./email-protection-section";
 import { useRouter } from "next/router";
 import { useDocumentLinks } from "@/lib/swr/use-document";
 import { useDomains } from "@/lib/swr/use-domains";
@@ -20,13 +17,10 @@ import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
 import { convertDataUrlToFile, uploadImage } from "@/lib/utils";
 import DomainSection from "./domain-section";
-import AllowDownloadSection from "./allow-download-section";
 import { useTeam } from "@/context/team-context";
-import EmailAuthenticationSection from "./email-authentication-section";
-import AllowNotificationSection from "./allow-notification-section";
-import FeedbackSection from "./feedback-section";
-import OGSection from "./og-section";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { LinkOptions } from "./link-options";
+import { useAnalytics } from "@/lib/analytics";
 
 export const DEFAULT_LINK_PROPS = {
   id: null,
@@ -38,6 +32,8 @@ export const DEFAULT_LINK_PROPS = {
   emailProtected: true,
   emailAuthenticated: false,
   allowDownload: false,
+  allowList: [],
+  denyList: [],
   enableNotification: true,
   enableFeedback: true,
   enableCustomMetatag: false,
@@ -56,6 +52,8 @@ export type DEFAULT_LINK_TYPE = {
   emailProtected: boolean;
   emailAuthenticated: boolean;
   allowDownload: boolean;
+  allowList: string[];
+  denyList: string[];
   enableNotification: boolean;
   enableFeedback: boolean;
   enableCustomMetatag: boolean; // metatags
@@ -76,6 +74,7 @@ export default function LinkSheet({
   const { links } = useDocumentLinks();
   const { domains } = useDomains();
   const teamInfo = useTeam();
+  const analytics = useAnalytics();
   const [data, setData] = useState<DEFAULT_LINK_TYPE>(DEFAULT_LINK_PROPS);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
@@ -158,6 +157,13 @@ export default function LinkSheet({
         [...(links || []), returnedLink],
         false,
       );
+
+      analytics.capture("Link Added", {
+        linkId: returnedLink.id,
+        documentId,
+        customDomain: returnedLink.domainSlug,
+      });
+
       toast.success("Link created successfully");
     }
 
@@ -167,8 +173,8 @@ export default function LinkSheet({
 
   return (
     <Sheet open={isOpen} onOpenChange={(open: boolean) => setIsOpen(open)}>
-      <SheetContent className="bg-background text-foreground flex flex-col justify-between">
-        <SheetHeader>
+      <SheetContent className="bg-background text-foreground flex flex-col justify-between px-4 md:px-5 w-[90%] sm:w-[450px]">
+        <SheetHeader className="text-start">
           <SheetTitle>
             {currentLink ? "Edit link" : "Create a new link"}
           </SheetTitle>
@@ -209,21 +215,12 @@ export default function LinkSheet({
                       <Separator className="bg-muted-foreground absolute" />
                       <div className="relative mx-auto">
                         <span className="px-2 bg-background text-muted-foreground text-sm">
-                          Optional
+                          Link Options
                         </span>
                       </div>
                     </div>
 
-                    <div>
-                      <EmailProtectionSection {...{ data, setData }} />
-                      <EmailAuthenticationSection {...{ data, setData }} />
-                      <AllowDownloadSection {...{ data, setData }} />
-                      <PasswordSection {...{ data, setData }} />
-                      <ExpirationSection {...{ data, setData }} />
-                      <OGSection {...{ data, setData }} />
-                      <AllowNotificationSection {...{ data, setData }} />
-                      <FeedbackSection {...{ data, setData }} />
-                    </div>
+                    <LinkOptions data={data} setData={setData} />
                   </div>
                 </div>
               </div>

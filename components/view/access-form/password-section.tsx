@@ -27,6 +27,8 @@ export default function PasswordSection({
             name="password"
             id="password"
             type={showPassword ? "text" : "password"}
+            autoCorrect="off"
+            autoComplete="off"
             className="flex w-full rounded-md border-0 py-1.5 text-white bg-black shadow-sm ring-1 ring-inset ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-gray-300 sm:text-sm sm:leading-6"
             value={password || ""}
             placeholder="Enter passcode"
@@ -34,6 +36,7 @@ export default function PasswordSection({
               setData({ ...data, password: e.target.value });
             }}
             aria-invalid="true"
+            data-1p-ignore
           />
           <button
             type="button"
