@@ -1,7 +1,7 @@
 import { DEFAULT_DOCUMENT_VIEW_TYPE } from "./document-view";
 import { LinkWithDocument } from "@/lib/types";
-import PagesViewer from "@/components/view/PagesViewer";
-import PDFViewer from "@/components/view/PDFViewer";
+import PagesViewer from "@/components/view/pages-viewer";
+import PDFViewer from "@/components/view/pdf-viewer";
 import { NotionPage } from "./notion-page";
 import { ExtendedRecordMap } from "notion-types";
 import { Brand } from "@prisma/client";
