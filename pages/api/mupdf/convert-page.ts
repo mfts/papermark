@@ -3,6 +3,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import mupdf from "mupdf";
 import prisma from "@/lib/prisma";
 import { putFileServer } from "@/lib/files/put-file-server";
+import { log } from "@/lib/utils";
 
 // This function can run for a maximum of 60 seconds
 export const config = {
@@ -26,16 +27,29 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     return;
   }
 
-  try {
-    const { documentVersionId, pageNumber, url, teamId } = req.body as {
-      documentVersionId: string;
-      pageNumber: number;
-      url: string;
-      teamId: string;
-    };
+  const { documentVersionId, pageNumber, url, teamId } = req.body as {
+    documentVersionId: string;
+    pageNumber: number;
+    url: string;
+    teamId: string;
+  };
 
+  try {
     // Fetch the PDF data
-    const response = await fetch(url);
+    let response: Response;
+    try {
+      response = await fetch(url);
+    } catch (error) {
+      log({
+        message: `Failed to fetch PDF in conversion process with error: \n\n Error: ${error} \n\n \`Metadata: {teamId: ${teamId}, documentVersionId: ${documentVersionId}, pageNumber: ${pageNumber}}\``,
+        type: "error",
+        mention: true,
+      });
+      return res
+        .status(500)
+        .json({ error: `Failed to upload document page ${pageNumber}` });
+    }
+
     // Convert the response to an ArrayBuffer
     const pdfData = await response.arrayBuffer();
     // Create a MuPDF instance
@@ -98,7 +112,11 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     // Send the images as a response
     res.status(200).json({ documentPageId: documentPage.id });
   } catch (error) {
-    console.error("Error:", error);
+    log({
+      message: `Failed to convert page with error: \n\n Error: ${error} \n\n \`Metadata: {teamId: ${teamId}, documentVersionId: ${documentVersionId}, pageNumber: ${pageNumber}}\``,
+      type: "error",
+      mention: true,
+    });
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
