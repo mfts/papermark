@@ -12,7 +12,7 @@ export default async function DomainMiddleware(req: NextRequest) {
   if (path !== "/") {
     if (BLOCKED_PATHNAMES.includes(path) || path.includes(".")) {
       url.pathname = "/404";
-      return NextResponse.rewrite(url);
+      return NextResponse.rewrite(url, { status: 404 });
     }
     // Subdomain available, rewriting
     // >>> Rewriting: ${path} to /view/domains/${host}${path}`
