@@ -160,7 +160,7 @@ client.defineJob({
                 state: "failure",
                 data: {
                   text: `Error processing page ${currentPage} of ${numPages}`,
-                  progress: currentPage / numPages,
+                  progress: currentPage / numPages!,
                   currentPage: currentPage,
                   numPages: numPages,
                 },
@@ -194,7 +194,7 @@ client.defineJob({
         //set data, this overrides the previous value
         data: {
           text: `${currentPage} / ${numPages} pages processed`,
-          progress: currentPage / numPages,
+          progress: currentPage / numPages!,
           currentPage: currentPage,
           numPages: numPages,
         },
@@ -209,7 +209,7 @@ client.defineJob({
         state: "failure",
         data: {
           text: `Error processing page ${currentPage} of ${numPages}`,
-          progress: currentPage / numPages,
+          progress: currentPage / numPages!,
           currentPage: currentPage,
           numPages: numPages,
         },
