@@ -51,11 +51,12 @@ export default async function handle(
       return;
     }
 
+    const userId = (session.user as CustomUser).id;
     const { teamId } = req.query as { teamId: string };
 
-    const userId = (session.user as CustomUser).id;
-
-    // You could perform some validation here
+    if (!teamId) {
+      return res.status(401).json("Unauthorized");
+    }
 
     try {
       await getTeamWithDomain({
