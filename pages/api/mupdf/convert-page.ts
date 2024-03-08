@@ -8,6 +8,7 @@ import { log } from "@/lib/utils";
 // This function can run for a maximum of 60 seconds
 export const config = {
   maxDuration: 120,
+  memory: 2048,
 };
 
 export default async (req: NextApiRequest, res: NextApiResponse) => {
@@ -45,9 +46,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
         type: "error",
         mention: true,
       });
-      return res
-        .status(500)
-        .json({ error: `Failed to upload document page ${pageNumber}` });
+      throw new Error(`Failed to fetch pdf on document page ${pageNumber}`);
     }
 
     // Convert the response to an ArrayBuffer
@@ -88,10 +87,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     });
 
     if (!data || !type) {
-      res
-        .status(500)
-        .json({ error: `Failed to upload document page ${pageNumber}` });
-      return;
+      throw new Error(`Failed to upload document page ${pageNumber}`);
     }
 
     const documentPage = await prisma.documentPage.create({
@@ -111,12 +107,13 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
 
     // Send the images as a response
     res.status(200).json({ documentPageId: documentPage.id });
+    return;
   } catch (error) {
     log({
       message: `Failed to convert page with error: \n\n Error: ${error} \n\n \`Metadata: {teamId: ${teamId}, documentVersionId: ${documentVersionId}, pageNumber: ${pageNumber}}\``,
       type: "error",
       mention: true,
     });
-    res.status(500).json({ error: "Internal Server Error" });
+    throw error;
   }
 };
