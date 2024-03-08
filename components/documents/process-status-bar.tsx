@@ -3,6 +3,7 @@ import ErrorPage from "next/error";
 import { useDocumentProcessingStatus } from "@/lib/swr/use-document";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
+import { useEventRunStatuses } from "@trigger.dev/react";
 
 export default function ProcessStatusBar({
   documentVersionId,
@@ -11,39 +12,63 @@ export default function ProcessStatusBar({
   documentVersionId: string;
   className?: string;
 }) {
-  const { status, loading, error } =
-    useDocumentProcessingStatus(documentVersionId);
+  const { fetchStatus, error, statuses, run } =
+    useEventRunStatuses(documentVersionId);
 
-  const [progress, setProgress] = useState<number>(0);
-  const [text, setText] = useState<string>("");
+  // const { status, loading, error: DocError } =
+  //   useDocumentProcessingStatus(documentVersionId);
 
-  useEffect(() => {
-    if (status) {
-      const progress = (status.currentPageCount / status.totalPages) * 100;
-      setProgress(progress);
-      if (progress === 100) {
-        setText("Processing complete");
-      } else {
-        setText(
-          `${status.currentPageCount} / ${status.totalPages} pages processed`,
-        );
-      }
-    }
-  }, [status]);
+  // const [progress, setProgress] = useState<number>(0);
+  // const [text, setText] = useState<string>("");
 
-  if (error && error.status === 404) {
-    return <ErrorPage statusCode={404} />;
-  }
+  // useEffect(() => {
+  //   if (status) {
+  //     const progress = (status.currentPageCount / status.totalPages) * 100;
+  //     setProgress(progress);
+  //     if (progress === 100) {
+  //       setText("Processing complete");
+  //     } else {
+  //       setText(
+  //         `${status.currentPageCount} / ${status.totalPages} pages processed`,
+  //       );
+  //     }
+  //   }
+  // }, [status]);
 
-  if (loading) {
+  // if (error && error.status === 404) {
+  //   return <ErrorPage statusCode={404} />;
+  // }
+
+  if (fetchStatus === "loading") {
     return (
       <Progress value={0} className={cn("w-full rounded-none", className)} />
     );
   }
 
-  if (status && status.hasPages) {
+  if (fetchStatus === "error") {
+    return (
+      <Progress
+        value={0}
+        text={error.message}
+        className={cn("w-full rounded-none", className)}
+      />
+    );
+  }
+
+  if (run.status === "SUCCESS") {
     return null;
   }
+
+  console.log("statuses", statuses);
+
+  console.log(
+    "status",
+    statuses[0].key,
+    statuses[0].data?.progress,
+    statuses[0].data?.text,
+  );
+  const progress = Number(statuses[0].data?.progress) * 100 || 0;
+  const text = String(statuses[0].data?.text) || "";
 
   return (
     <Progress

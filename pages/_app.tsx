@@ -12,6 +12,7 @@ import { TeamProvider } from "@/context/team-context";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { PostHogCustomProvider } from "@/components/providers/posthog-provider";
 import { EXCLUDED_PATHS } from "@/lib/constants";
+import { TriggerCustomProvider } from "@/components/providers/trigger-provider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -76,7 +77,9 @@ export default function App({
                     <Component {...pageProps} />
                   ) : (
                     <TeamProvider>
-                      <Component {...pageProps} />
+                      <TriggerCustomProvider>
+                        <Component {...pageProps} />
+                      </TriggerCustomProvider>
                     </TeamProvider>
                   )}
                 </TooltipProvider>
