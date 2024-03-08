@@ -3,7 +3,6 @@ import { eventTrigger, retry } from "@trigger.dev/sdk";
 import { z } from "zod";
 import prisma from "@/lib/prisma";
 import { getFile } from "@/lib/files/get-file";
-import { error } from "console";
 
 client.defineJob({
   id: "convert-pdf-to-image",
@@ -20,6 +19,24 @@ client.defineJob({
   }),
   run: async (payload, io, ctx) => {
     const { documentVersionId } = payload;
+
+    // STATUS: initialized status
+    const processingDocumentStatus = await io.createStatus(
+      "processing-document",
+      {
+        //the label is compulsory on this first call
+        label: "Processing document",
+        //state is optional
+        state: "loading",
+        //data is an optional object. the values can be any type that is JSON serializable
+        data: {
+          text: "Processing document...",
+          progress: 0,
+          currentPage: 0,
+          numPages: undefined,
+        },
+      },
+    );
 
     // 1. get file url from document version
     const documentUrl = await io.runTask("get-document-url", async () => {
@@ -38,6 +55,16 @@ client.defineJob({
     // if documentUrl is null, log error and return
     if (!documentUrl) {
       await io.logger.error("File not found", { payload });
+      await processingDocumentStatus.update("error", {
+        //set data, this overrides the previous value
+        state: "failure",
+        data: {
+          text: "Document not found",
+          progress: 0,
+          currentPage: 0,
+          numPages: 0,
+        },
+      });
       return;
     }
 
@@ -51,6 +78,16 @@ client.defineJob({
 
     if (!signedUrl) {
       await io.logger.error("Failed to get signed url", { payload });
+      await processingDocumentStatus.update("error-signed-url", {
+        //set data, this overrides the previous value
+        state: "failure",
+        data: {
+          text: "Failed to retrieve document",
+          progress: 0,
+          currentPage: 0,
+          numPages: 0,
+        },
+      });
       return;
     }
 
@@ -88,10 +125,12 @@ client.defineJob({
     let currentPage = 0;
     let conversionWithoutError = true;
     for (var i = 0; i < numPages; ++i) {
-      currentPage = i + 1;
       if (!conversionWithoutError) {
         break;
       }
+
+      // increment currentPage
+      currentPage = i + 1;
       await io.runTask(
         `upload-page-${currentPage}`,
         async () => {
@@ -114,8 +153,20 @@ client.defineJob({
           );
 
           if (!response.ok) {
-            await io.logger.error("Failed to upload page", { payload });
-            return;
+            await processingDocumentStatus.update(
+              `error-processing-page-${currentPage}`,
+              {
+                //set data, this overrides the previous value
+                state: "failure",
+                data: {
+                  text: `Error processing page ${currentPage} of ${numPages}`,
+                  progress: currentPage / numPages!,
+                  currentPage: currentPage,
+                  numPages: numPages,
+                },
+              },
+            );
+            throw new Error("Failed to convert page");
           }
 
           const { documentPageId } = (await response.json()) as {
@@ -137,11 +188,33 @@ client.defineJob({
           return { error: error as Error };
         },
       );
+
+      // STATUS: retrieved-url
+      await processingDocumentStatus.update(`processing-page-${currentPage}`, {
+        //set data, this overrides the previous value
+        data: {
+          text: `${currentPage} / ${numPages} pages processed`,
+          progress: currentPage / numPages!,
+          currentPage: currentPage,
+          numPages: numPages,
+        },
+      });
     }
 
     if (!conversionWithoutError) {
       await io.logger.error("Failed to process pages", { payload });
-      return { success: false, message: "Failed to process pages" };
+      // STATUS: error with processing document
+      await processingDocumentStatus.update("error-processing-pages", {
+        //set data, this overrides the previous value
+        state: "failure",
+        data: {
+          text: `Error processing page ${currentPage} of ${numPages}`,
+          progress: currentPage / numPages!,
+          currentPage: currentPage,
+          numPages: numPages,
+        },
+      });
+      return;
     }
 
     // 5. after all pages are uploaded, update document version to hasPages = true
@@ -160,6 +233,16 @@ client.defineJob({
           isPrimary: true,
         },
       });
+    });
+
+    // STATUS: enabled-pages
+    await processingDocumentStatus.update("enabled-pages", {
+      //set data, this overrides the previous value
+      state: "loading",
+      data: {
+        text: "Enabling pages...",
+        progress: 1,
+      },
     });
 
     if (payload.versionNumber) {
@@ -185,6 +268,14 @@ client.defineJob({
         );
       });
     }
+
+    // STATUS: success
+    await processingDocumentStatus.update("success", {
+      state: "success",
+      data: {
+        text: "Processing complete",
+      },
+    });
 
     return {
       success: true,
