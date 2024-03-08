@@ -3,6 +3,7 @@ import { eventTrigger, retry } from "@trigger.dev/sdk";
 import { z } from "zod";
 import prisma from "@/lib/prisma";
 import { getFile } from "@/lib/files/get-file";
+import { error } from "console";
 
 client.defineJob({
   id: "convert-pdf-to-image",
@@ -40,11 +41,24 @@ client.defineJob({
       return;
     }
 
+    // 2. get signed url from file
+    const signedUrl = await io.runTask("get-signed-url", async () => {
+      return await getFile({
+        type: documentUrl.storageType,
+        data: documentUrl.file,
+      });
+    });
+
+    if (!signedUrl) {
+      await io.logger.error("Failed to get signed url", { payload });
+      return;
+    }
+
     let numPages = documentUrl.numPages;
 
     // skip if the numPages are already defined
     if (!numPages) {
-      // 2. send file to api/convert endpoint in a task and get back number of pages
+      // 3. send file to api/convert endpoint in a task and get back number of pages
       const muDocument = await io.runTask("get-number-of-pages", async () => {
         const response = await fetch(
           `${process.env.NEXT_PUBLIC_BASE_URL}/api/mupdf/get-pages`,
@@ -70,23 +84,14 @@ client.defineJob({
       numPages = muDocument.numPages;
     }
 
-    // 3. get signed url from file
-    const signedUrl = await io.runTask("get-signed-url", async () => {
-      return await getFile({
-        type: documentUrl.storageType,
-        data: documentUrl.file,
-      });
-    });
-
-    if (!signedUrl) {
-      await io.logger.error("Failed to get signed url", { payload });
-      return;
-    }
-
     // 4. iterate through pages and upload to blob in a task
     let currentPage = 0;
+    let conversionWithoutError = true;
     for (var i = 0; i < numPages; ++i) {
       currentPage = i + 1;
+      if (!conversionWithoutError) {
+        break;
+      }
       await io.runTask(
         `upload-page-${currentPage}`,
         async () => {
@@ -127,7 +132,16 @@ client.defineJob({
           return { documentPageId, payload };
         },
         { retry: retry.standardBackoff },
+        (error) => {
+          conversionWithoutError = false;
+          return { error: error as Error };
+        },
       );
+    }
+
+    if (!conversionWithoutError) {
+      await io.logger.error("Failed to process pages", { payload });
+      return { success: false, message: "Failed to process pages" };
     }
 
     // 5. after all pages are uploaded, update document version to hasPages = true
