@@ -12,6 +12,7 @@ import EmailVerificationMessage from "./email-verification-form";
 import ViewData from "./view-data";
 import { Brand } from "@prisma/client";
 import { useRouter } from "next/router";
+import { useAnalytics } from "@/lib/analytics";
 
 export type DEFAULT_DOCUMENT_VIEW_TYPE = {
   viewId: string;
@@ -44,6 +45,7 @@ export default function DocumentView({
   const { document, emailProtected, password: linkPassword } = link;
 
   const plausible = usePlausible();
+  const analytics = useAnalytics();
   const router = useRouter();
 
   const didMount = useRef<boolean>(false);
@@ -72,6 +74,8 @@ export default function DocumentView({
         email: data.email || verifiedEmail || userEmail,
         linkId: link.id,
         documentId: document.id,
+        documentName: document.name,
+        ownerId: document.ownerId,
         userId: userId || null,
         documentVersionId: document.versions[0].id,
         hasPages: document.versions[0].hasPages,
@@ -81,14 +85,23 @@ export default function DocumentView({
     });
 
     if (response.ok) {
-      const data = await response.json();
+      const fetchData = await response.json();
 
-      if (data.type === "email-verification") {
+      if (fetchData.type === "email-verification") {
         setVerificationRequested(true);
         setIsLoading(false);
       } else {
-        const { viewId, file, pages } = data as DEFAULT_DOCUMENT_VIEW_TYPE;
+        const { viewId, file, pages } = fetchData as DEFAULT_DOCUMENT_VIEW_TYPE;
         plausible("documentViewed"); // track the event
+        analytics.identify(
+          userEmail ?? verifiedEmail ?? data.email ?? undefined,
+        );
+        analytics.capture("Link Viewed", {
+          linkId: link.id,
+          documentId: document.id,
+          viewerId: viewId,
+          viewerEmail: data.email || verifiedEmail || userEmail,
+        });
         setViewData({ viewId, file, pages });
         setSubmitted(true);
         setVerificationRequested(false);

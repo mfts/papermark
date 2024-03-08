@@ -33,9 +33,14 @@ import { TrashIcon, Sparkles } from "lucide-react";
 import { StatsComponent } from "@/components/documents/stats";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { useTheme } from "next-themes";
 
 export default function DocumentPage() {
   const { document: prismaDocument, primaryVersion, error } = useDocument();
+  const { theme, systemTheme } = useTheme();
+  const isLight =
+    theme === "light" || (theme === "system" && systemTheme === "light");
+
   const router = useRouter();
 
   const [isLinkSheetOpen, setIsLinkSheetOpen] = useState<boolean>(false);
@@ -241,7 +246,7 @@ export default function DocumentPage() {
                 ) : (
                   <div className="w-[25px] lg:w-[32px] h-[25px] lg:h-[32px]">
                     <Image
-                      src={`/_icons/${getExtension(primaryVersion.file)}.svg`}
+                      src={`/_icons/${getExtension(primaryVersion.file)}${isLight ? "-light" : ""}.svg`}
                       alt="File icon"
                       width={50}
                       height={50}

@@ -1,11 +1,10 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/lib/prisma";
 import { checkPassword, log } from "@/lib/utils";
-import { trackAnalytics } from "@/lib/analytics";
-import { client } from "@/trigger";
 import { newId } from "@/lib/id-helper";
 import { sendVerificationEmail } from "@/lib/emails/send-email-verification";
 import { getFile } from "@/lib/files/get-file";
+import { sendViewedDocumentEmail } from "@/lib/emails/send-viewed-document";
 
 export default async function handle(
   req: NextApiRequest,
@@ -22,8 +21,10 @@ export default async function handle(
     documentId,
     userId,
     documentVersionId,
+    documentName,
     hasPages,
     token,
+    ownerId,
     verifiedEmail,
     ...data
   } = req.body as {
@@ -31,8 +32,10 @@ export default async function handle(
     documentId: string;
     userId: string | null;
     documentVersionId: string;
+    documentName: string;
     hasPages: boolean;
     token: string | null;
+    ownerId: string;
     verifiedEmail: string | null;
   };
 
@@ -239,26 +242,17 @@ export default async function handle(
       console.timeEnd("get-file");
     }
 
-    // TODO: cannot identify user because session is not available
-    // await identifyUser((session.user as CustomUser).id);
-    // await analytics.identify();
-    console.time("track-analytics");
-    await trackAnalytics({
-      event: "Link Viewed",
-      linkId: linkId,
-      documentId: documentId,
-      viewerId: newView.id,
-      viewerEmail: email,
-    });
-    console.timeEnd("track-analytics");
-
     if (link.enableNotification) {
-      // trigger link viewed event to trigger send-notification job
       console.time("sendemail");
-      await client.sendEvent({
-        name: "link.viewed",
-        payload: { viewId: newView.id },
+      fetch(`${process.env.NEXTAUTH_URL}/api/jobs/send-notification`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${process.env.INTERNAL_API_KEY}`,
+        },
+        body: JSON.stringify({ viewId: newView.id }),
       });
+
       console.timeEnd("sendemail");
     }
 

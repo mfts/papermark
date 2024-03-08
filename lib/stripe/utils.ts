@@ -46,36 +46,18 @@ export const PLANS = [
         amount: 29,
         priceIds: {
           test: "price_1NmHGzFJyGSZ96lhp946ODFI",
-          production: "price_1NmMZ7FJyGSZ96lhyad2LW90",
+          production: "price_1Op0Q3FJyGSZ96lhtEUxLSGs", // new price
+          // production: "price_1NmMZ7FJyGSZ96lhyad2LW90", // old price
         },
       },
       yearly: {
         amount: 24,
         priceIds: {
           test: "price_1NmHHaFJyGSZ96lhXxg2fTr7",
-          production: "price_1NmMZ7FJyGSZ96lhqZEkh50e",
+          production: "price_1Op0fFFJyGSZ96lhPVrvzz5a", // new price
+          // production: "price_1NmMZ7FJyGSZ96lhqZEkh50e", // old price
         },
       },
     },
   },
-  // {
-  //   name: "Starter",
-  //   slug: "starter",
-  //   price: {
-  //     monthly: {
-  //       amount: 15,
-  //       priceIds: {
-  //         test: "price_1OIsDmFJyGSZ96lh2aIhaerk",
-  //         production: "price_1OJTUWFJyGSZ96lhTcJPVBgS",
-  //       },
-  //     },
-  //     yearly: {
-  //       amount: 150,
-  //       priceIds: {
-  //         test: "price_1OIsDmFJyGSZ96lhVOYVN8PN",
-  //         production: "price_1OJTUWFJyGSZ96lhGnKb3E9F",
-  //       },
-  //     },
-  //   },
-  // },
 ];

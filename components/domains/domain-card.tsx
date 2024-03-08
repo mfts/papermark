@@ -10,6 +10,7 @@ import ExternalLink from "../shared/icons/external-link";
 import { Button } from "../ui/button";
 import { useState } from "react";
 import { useTeam } from "@/context/team-context";
+import { useAnalytics } from "@/lib/analytics";
 
 export default function DomainCard({
   domain,
@@ -21,6 +22,7 @@ export default function DomainCard({
   const { status, loading } = useDomainStatus({ domain });
   const [deleting, setDeleting] = useState<boolean>(false);
   const teamInfo = useTeam();
+  const analytics = useAnalytics();
 
   const handleDelete = async () => {
     setDeleting(true);
@@ -34,6 +36,11 @@ export default function DomainCard({
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
+
+    analytics.capture("Domain Deleted", {
+      slug: domain,
+      teamId: teamInfo?.currentTeam?.id,
+    });
 
     // Update local data by filtering out the deleted domain
     onDelete(domain);

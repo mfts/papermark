@@ -6,11 +6,15 @@ export const sendTrialEndFinalReminderEmail = async (
   name: string | null,
 ) => {
   const emailTemplate = TrialEndFinalReminderEmail({ name });
-  await sendEmail({
-    to: email,
-    subject: `Your pro trial expires in 24 hours`,
-    react: emailTemplate,
-    test: process.env.NODE_ENV === "development",
-    system: true,
-  });
+  try {
+    await sendEmail({
+      to: email,
+      subject: `Your pro trial expires in 24 hours`,
+      react: emailTemplate,
+      test: process.env.NODE_ENV === "development",
+      system: true,
+    });
+  } catch (e) {
+    console.error(e);
+  }
 };

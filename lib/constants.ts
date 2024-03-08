@@ -49,4 +49,5 @@ export const BLOCKED_PATHNAMES = [
   "/server-status",
   "/wordpress",
   "/_all_dbs",
+  "/wp-json",
 ];

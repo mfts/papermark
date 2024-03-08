@@ -6,6 +6,7 @@ import BlankImg from "@/public/_static/blank.gif";
 import Nav from "./nav";
 import Toolbar from "./toolbar";
 import { Brand } from "@prisma/client";
+import { useRouter } from "next/router";
 
 const DEFAULT_PRELOADED_IMAGES_NUM = 10;
 
@@ -30,8 +31,14 @@ export default function PagesViewer({
   versionNumber: number;
   brand?: Brand;
 }) {
+  const router = useRouter();
   const numPages = pages.length;
-  const [pageNumber, setPageNumber] = useState<number>(1); // start on first page
+  const pageQuery = router.query.p ? Number(router.query.p) : 1;
+
+  const [pageNumber, setPageNumber] = useState<number>(() =>
+    pageQuery >= 1 && pageQuery <= numPages ? pageQuery : 1,
+  ); // start on first page
+
   const [loadedImages, setLoadedImages] = useState<boolean[]>(
     new Array(numPages).fill(false),
   );
@@ -154,7 +161,7 @@ export default function PagesViewer({
         brand={brand}
         viewId={viewId}
         linkId={linkId}
-        embeddedLinks={pages[pageNumber - 1].embeddedLinks}
+        embeddedLinks={pages[pageNumber - 1]?.embeddedLinks}
       />
       <div
         style={{ height: "calc(100vh - 64px)" }}
