@@ -251,7 +251,15 @@ export default async function handle(
           Authorization: `Bearer ${process.env.INTERNAL_API_KEY}`,
         },
         body: JSON.stringify({ viewId: newView.id }),
-      });
+      })
+        .then(() => {})
+        .catch((error) => {
+          log({
+            message: `Failed to fetch notifications job in _/api/views_ route for linkId: ${linkId}. \n\n Error: ${error} \n\n*Metadata*: \`{viewId: ${newView.id}}\``,
+            type: "error",
+            mention: true,
+          });
+        });
 
       console.timeEnd("sendemail");
     }
