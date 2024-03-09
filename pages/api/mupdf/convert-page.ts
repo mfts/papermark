@@ -4,6 +4,7 @@ import mupdf from "mupdf";
 import prisma from "@/lib/prisma";
 import { putFileServer } from "@/lib/files/put-file-server";
 import { log } from "@/lib/utils";
+import { Readable } from "stream";
 
 // This function can run for a maximum of 60 seconds
 export const config = {
@@ -69,7 +70,10 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
 
     var pngBuffer = pixmap.asPNG(); // as PNG
 
-    const buffer = Buffer.from(pngBuffer);
+    // let buffer = Buffer.from(pngBuffer);
+
+    // Assuming `pngBuffer` is your buffer from the MuPDF conversion
+    const pngStream = Readable.from(pngBuffer);
 
     // get docId from url with starts with "doc_" with regex
     const match = url.match(/(doc_[^\/]+)\//);
@@ -79,11 +83,14 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
       file: {
         name: `page-${pageNumber}.png`,
         type: "image/png",
-        buffer: buffer,
+        // buffer: buffer,
+        stream: pngStream,
       },
       teamId: teamId,
       docId: docId,
     });
+
+    // buffer = Buffer.alloc(0);
 
     if (!data || !type) {
       throw new Error(`Failed to upload document page ${pageNumber}`);
