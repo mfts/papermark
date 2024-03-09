@@ -8,7 +8,6 @@ import { log } from "@/lib/utils";
 // This function can run for a maximum of 60 seconds
 export const config = {
   maxDuration: 120,
-  memory: 2048,
 };
 
 export default async (req: NextApiRequest, res: NextApiResponse) => {

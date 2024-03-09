@@ -17,7 +17,10 @@ export default function ProcessStatusBar({
       <Progress
         value={0}
         text="Processing document..."
-        className={cn("w-full rounded-none", className)}
+        className={cn(
+          "w-full text-[8px] font-semibold rounded-none",
+          className,
+        )}
       />
     );
   }
