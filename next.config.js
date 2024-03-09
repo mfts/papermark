@@ -63,11 +63,6 @@ const nextConfig = {
     ],
   },
   transpilePackages: ["@trigger.dev/react"],
-  functions: {
-    "api/mupdf/convert-page.ts": {
-      memory: 2048,
-    },
-  },
   async rewrites() {
     return [
       {

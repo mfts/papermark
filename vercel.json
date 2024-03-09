@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "api/mupdf/convert-page": {
+      "memory": 2048
+    }
+  }
+}
