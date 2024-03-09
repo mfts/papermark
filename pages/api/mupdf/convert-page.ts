@@ -69,7 +69,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
 
     var pngBuffer = pixmap.asPNG(); // as PNG
 
-    const buffer = Buffer.from(pngBuffer);
+    let buffer = Buffer.from(pngBuffer);
 
     // get docId from url with starts with "doc_" with regex
     const match = url.match(/(doc_[^\/]+)\//);
@@ -84,6 +84,8 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
       teamId: teamId,
       docId: docId,
     });
+
+    buffer = Buffer.alloc(0);
 
     if (!data || !type) {
       throw new Error(`Failed to upload document page ${pageNumber}`);
