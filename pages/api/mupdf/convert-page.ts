@@ -86,6 +86,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     });
 
     buffer = Buffer.alloc(0);
+    page = null;
 
     if (!data || !type) {
       throw new Error(`Failed to upload document page ${pageNumber}`);
