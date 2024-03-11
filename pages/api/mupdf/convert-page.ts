@@ -53,21 +53,25 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     // Create a MuPDF instance
     var doc = mupdf.Document.openDocument(pdfData, "application/pdf");
 
-    var page = doc.loadPage(pageNumber - 1); // 0-based page index
+    // Scale the document to 300 DPI
+    const doc_to_screen = mupdf.Matrix.scale(300 / 72, 300 / 72); // scale 3x // to 300 DPI
+
+    let page = doc.loadPage(pageNumber - 1); // 0-based page index
 
     // get links
     const links = page.getLinks();
     const embeddedLinks = links.map((link: any) => link.getURI());
 
-    var pixmap = page.toPixmap(
-      // mupdf.Matrix.identity,
-      [3, 0, 0, 3, 0, 0], // scale 3x // to 300 DPI
+    const pixmap = page.toPixmap(
+      // [3, 0, 0, 3, 0, 0], // scale 3x // to 300 DPI
+      doc_to_screen,
       mupdf.ColorSpace.DeviceRGB,
+      false,
+      true,
     );
 
-    pixmap.setResolution(300, 300); // increase resolution to 300 DPI
-
-    var pngBuffer = pixmap.asPNG(); // as PNG
+    const pngBuffer = pixmap.asPNG(); // as PNG
+    pixmap.destroy(); // free memory
 
     let buffer = Buffer.from(pngBuffer);
 
@@ -84,9 +88,6 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
       teamId: teamId,
       docId: docId,
     });
-
-    buffer = Buffer.alloc(0);
-    page = null;
 
     if (!data || !type) {
       throw new Error(`Failed to upload document page ${pageNumber}`);
