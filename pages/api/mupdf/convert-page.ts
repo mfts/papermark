@@ -89,26 +89,15 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
       docId: docId,
     });
 
-    console.log("buffer before free memory", buffer.length);
-    console.log("pixmap before free memory", pixmap);
-    console.log("page before free memory", page);
-
     buffer = Buffer.alloc(0); // free memory
     pixmap.destroy(); // free memory
     page.destroy(); // free memory
-
-    console.log("buffer after free memory", buffer.length);
-    console.log("pixmap after free memory", pixmap);
-    console.log("page after free memory", page);
 
     if (!data || !type) {
       throw new Error(`Failed to upload document page ${pageNumber}`);
     }
 
     let documentPage: DocumentPage | null = null;
-
-    console.log("pageNumber", pageNumber);
-    console.log("documentVersionId", documentVersionId);
 
     // Check if a documentPage with the same pageNumber and versionId already exists
     const existingPage = await prisma.documentPage.findUnique({
