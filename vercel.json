@@ -1,7 +1,7 @@
 {
   "functions": {
     "pages/api/mupdf/convert-page.ts": {
-      "memory": 2048
+      "memory": 1024
     }
   }
 }
