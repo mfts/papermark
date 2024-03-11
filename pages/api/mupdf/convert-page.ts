@@ -48,13 +48,13 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
       throw new Error(`Failed to fetch pdf on document page ${pageNumber}`);
     }
 
-    // Convert the response to an ArrayBuffer
+    // Convert the response to a buffer
     const pdfData = await response.arrayBuffer();
     // Create a MuPDF instance
     var doc = mupdf.Document.openDocument(pdfData, "application/pdf");
 
     // Scale the document to 300 DPI
-    const doc_to_screen = mupdf.Matrix.scale(300 / 72, 300 / 72); // scale 3x // to 300 DPI
+    const doc_to_screen = mupdf.Matrix.scale(216 / 72, 216 / 72); // scale 3x // to 216 DPI
 
     let page = doc.loadPage(pageNumber - 1); // 0-based page index
 
@@ -88,8 +88,17 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
       docId: docId,
     });
 
+    console.log("buffer before free memory", buffer.length);
+    console.log("pixmap before free memory", pixmap);
+    console.log("page before free memory", page);
+
     buffer = Buffer.alloc(0); // free memory
     pixmap.destroy(); // free memory
+    page.destroy(); // free memory
+
+    console.log("buffer after free memory", buffer.length);
+    console.log("pixmap after free memory", pixmap);
+    console.log("page after free memory", page);
 
     if (!data || !type) {
       throw new Error(`Failed to upload document page ${pageNumber}`);
