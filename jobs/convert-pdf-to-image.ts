@@ -153,19 +153,6 @@ client.defineJob({
           );
 
           if (!response.ok) {
-            // await processingDocumentStatus.update(
-            //   `error-processing-page-${currentPage}`,
-            //   {
-            //     //set data, this overrides the previous value
-            //     state: "failure",
-            //     data: {
-            //       text: `Error processing page ${currentPage} of ${numPages}`,
-            //       progress: currentPage / numPages!,
-            //       currentPage: currentPage,
-            //       numPages: numPages,
-            //     },
-            //   },
-            // );
             throw new Error("Failed to convert page");
           }
 
@@ -185,6 +172,7 @@ client.defineJob({
         // { retry: retry.standardBackoff },
         {},
         (error) => {
+          console.log("error in error callback:", error);
           conversionWithoutError = false;
           return { error: error as Error };
         },

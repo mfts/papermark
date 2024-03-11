@@ -4,6 +4,7 @@ import mupdf from "mupdf";
 import prisma from "@/lib/prisma";
 import { putFileServer } from "@/lib/files/put-file-server";
 import { log } from "@/lib/utils";
+import { DocumentPage } from "@prisma/client";
 
 // This function can run for a maximum of 60 seconds
 export const config = {
@@ -104,19 +105,34 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
       throw new Error(`Failed to upload document page ${pageNumber}`);
     }
 
-    const documentPage = await prisma.documentPage.create({
-      data: {
-        versionId: documentVersionId,
-        pageNumber: pageNumber,
-        file: data,
-        storageType: type,
-        embeddedLinks: embeddedLinks,
+    let documentPage: DocumentPage | null = null;
+
+    console.log("pageNumber", pageNumber);
+    console.log("documentVersionId", documentVersionId);
+
+    // Check if a documentPage with the same pageNumber and versionId already exists
+    const existingPage = await prisma.documentPage.findUnique({
+      where: {
+        pageNumber_versionId: {
+          pageNumber: pageNumber,
+          versionId: documentVersionId,
+        },
       },
     });
 
-    if (!documentPage) {
-      res.status(500).json({ error: "Failed to create document page" });
-      return;
+    if (!existingPage) {
+      // Only create a new documentPage if it doesn't already exist
+      documentPage = await prisma.documentPage.create({
+        data: {
+          versionId: documentVersionId,
+          pageNumber: pageNumber,
+          file: data,
+          storageType: type,
+          embeddedLinks: embeddedLinks,
+        },
+      });
+    } else {
+      documentPage = existingPage;
     }
 
     // Send the images as a response
