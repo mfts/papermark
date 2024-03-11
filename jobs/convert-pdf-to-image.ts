@@ -20,6 +20,24 @@ client.defineJob({
   run: async (payload, io, ctx) => {
     const { documentVersionId } = payload;
 
+    // STATUS: initialized status
+    const processingDocumentStatus = await io.createStatus(
+      "processing-document",
+      {
+        //the label is compulsory on this first call
+        label: "Processing document",
+        //state is optional
+        state: "loading",
+        //data is an optional object. the values can be any type that is JSON serializable
+        data: {
+          text: "Processing document...",
+          progress: 0,
+          currentPage: 0,
+          numPages: undefined,
+        },
+      },
+    );
+
     // 1. get file url from document version
     const documentUrl = await io.runTask("get-document-url", async () => {
       return prisma.documentVersion.findUnique({
@@ -37,6 +55,39 @@ client.defineJob({
     // if documentUrl is null, log error and return
     if (!documentUrl) {
       await io.logger.error("File not found", { payload });
+      await processingDocumentStatus.update("error", {
+        //set data, this overrides the previous value
+        state: "failure",
+        data: {
+          text: "Document not found",
+          progress: 0,
+          currentPage: 0,
+          numPages: 0,
+        },
+      });
+      return;
+    }
+
+    // 2. get signed url from file
+    const signedUrl = await io.runTask("get-signed-url", async () => {
+      return await getFile({
+        type: documentUrl.storageType,
+        data: documentUrl.file,
+      });
+    });
+
+    if (!signedUrl) {
+      await io.logger.error("Failed to get signed url", { payload });
+      await processingDocumentStatus.update("error-signed-url", {
+        //set data, this overrides the previous value
+        state: "failure",
+        data: {
+          text: "Failed to retrieve document",
+          progress: 0,
+          currentPage: 0,
+          numPages: 0,
+        },
+      });
       return;
     }
 
@@ -44,7 +95,7 @@ client.defineJob({
 
     // skip if the numPages are already defined
     if (!numPages) {
-      // 2. send file to api/convert endpoint in a task and get back number of pages
+      // 3. send file to api/convert endpoint in a task and get back number of pages
       const muDocument = await io.runTask("get-number-of-pages", async () => {
         const response = await fetch(
           `${process.env.NEXT_PUBLIC_BASE_URL}/api/mupdf/get-pages`,
@@ -70,22 +121,15 @@ client.defineJob({
       numPages = muDocument.numPages;
     }
 
-    // 3. get signed url from file
-    const signedUrl = await io.runTask("get-signed-url", async () => {
-      return await getFile({
-        type: documentUrl.storageType,
-        data: documentUrl.file,
-      });
-    });
-
-    if (!signedUrl) {
-      await io.logger.error("Failed to get signed url", { payload });
-      return;
-    }
-
     // 4. iterate through pages and upload to blob in a task
     let currentPage = 0;
+    let conversionWithoutError = true;
     for (var i = 0; i < numPages; ++i) {
+      if (!conversionWithoutError) {
+        break;
+      }
+
+      // increment currentPage
       currentPage = i + 1;
       await io.runTask(
         `upload-page-${currentPage}`,
@@ -109,8 +153,7 @@ client.defineJob({
           );
 
           if (!response.ok) {
-            await io.logger.error("Failed to upload page", { payload });
-            return;
+            throw new Error("Failed to convert page");
           }
 
           const { documentPageId } = (await response.json()) as {
@@ -126,8 +169,40 @@ client.defineJob({
           );
           return { documentPageId, payload };
         },
-        { retry: retry.standardBackoff },
+        // { retry: retry.standardBackoff },
+        {},
+        (error) => {
+          conversionWithoutError = false;
+          return { error: error as Error };
+        },
       );
+
+      // STATUS: retrieved-url
+      await processingDocumentStatus.update(`processing-page-${currentPage}`, {
+        //set data, this overrides the previous value
+        data: {
+          text: `${currentPage} / ${numPages} pages processed`,
+          progress: currentPage / numPages!,
+          currentPage: currentPage,
+          numPages: numPages,
+        },
+      });
+    }
+
+    if (!conversionWithoutError) {
+      await io.logger.error("Failed to process pages", { payload });
+      // STATUS: error with processing document
+      await processingDocumentStatus.update("error-processing-pages", {
+        //set data, this overrides the previous value
+        state: "failure",
+        data: {
+          text: `Error processing page ${currentPage} of ${numPages}`,
+          progress: currentPage / numPages!,
+          currentPage: currentPage,
+          numPages: numPages,
+        },
+      });
+      return;
     }
 
     // 5. after all pages are uploaded, update document version to hasPages = true
@@ -146,6 +221,16 @@ client.defineJob({
           isPrimary: true,
         },
       });
+    });
+
+    // STATUS: enabled-pages
+    await processingDocumentStatus.update("enabled-pages", {
+      //set data, this overrides the previous value
+      state: "loading",
+      data: {
+        text: "Enabling pages...",
+        progress: 1,
+      },
     });
 
     if (payload.versionNumber) {
@@ -171,6 +256,14 @@ client.defineJob({
         );
       });
     }
+
+    // STATUS: success
+    await processingDocumentStatus.update("success", {
+      state: "success",
+      data: {
+        text: "Processing complete",
+      },
+    });
 
     return {
       success: true,

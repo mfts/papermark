@@ -83,6 +83,7 @@ export default async function handle(
 
       // trigger document uploaded event to trigger convert-pdf-to-image job
       await client.sendEvent({
+        id: version.id,
         name: "document.uploaded",
         payload: {
           documentVersionId: version.id,

@@ -1,6 +1,7 @@
 import { NextFetchEvent, NextRequest, NextResponse } from "next/server";
 import AppMiddleware from "@/lib/middleware/app";
 import DomainMiddleware from "@/lib/middleware/domain";
+import { BLOCKED_PATHNAMES } from "./lib/constants";
 
 export const config = {
   matcher: [
@@ -53,6 +54,17 @@ export default async function middleware(req: NextRequest, ev: NextFetchEvent) {
     !path.startsWith("/view/")
   ) {
     return AppMiddleware(req);
+  }
+
+  const url = req.nextUrl.clone();
+
+  if (
+    path.startsWith("/view/") &&
+    (BLOCKED_PATHNAMES.some((blockedPath) => path.includes(blockedPath)) ||
+      path.includes("."))
+  ) {
+    url.pathname = "/404";
+    return NextResponse.rewrite(url, { status: 404 });
   }
 
   return NextResponse.next();

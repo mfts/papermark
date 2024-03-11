@@ -62,6 +62,7 @@ const nextConfig = {
       },
     ],
   },
+  transpilePackages: ["@trigger.dev/react"],
   async rewrites() {
     return [
       {

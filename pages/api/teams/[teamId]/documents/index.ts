@@ -135,6 +135,7 @@ export default async function handle(
       if (type !== "notion") {
         // trigger document uploaded event to trigger convert-pdf-to-image job
         await client.sendEvent({
+          id: document.versions[0].id, // unique eventId for the run
           name: "document.uploaded",
           payload: {
             documentVersionId: document.versions[0].id,

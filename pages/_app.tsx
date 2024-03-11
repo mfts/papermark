@@ -11,12 +11,15 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { TeamProvider } from "@/context/team-context";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { PostHogCustomProvider } from "@/components/providers/posthog-provider";
+import { EXCLUDED_PATHS } from "@/lib/constants";
+import { TriggerCustomProvider } from "@/components/providers/trigger-provider";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export default function App({
   Component,
   pageProps: { session, ...pageProps },
+  router,
 }: AppProps<{ session: Session }>) {
   return (
     <>
@@ -70,9 +73,15 @@ export default function App({
               <main className={inter.className}>
                 <Toaster closeButton richColors />
                 <TooltipProvider delayDuration={100}>
-                  <TeamProvider>
+                  {EXCLUDED_PATHS.includes(router.pathname) ? (
                     <Component {...pageProps} />
-                  </TeamProvider>
+                  ) : (
+                    <TeamProvider>
+                      <TriggerCustomProvider>
+                        <Component {...pageProps} />
+                      </TriggerCustomProvider>
+                    </TeamProvider>
+                  )}
                 </TooltipProvider>
               </main>
             </PlausibleProvider>
