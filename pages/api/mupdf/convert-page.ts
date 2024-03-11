@@ -62,7 +62,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     const links = page.getLinks();
     const embeddedLinks = links.map((link: any) => link.getURI());
 
-    const pixmap = page.toPixmap(
+    let pixmap = page.toPixmap(
       // [3, 0, 0, 3, 0, 0], // scale 3x // to 300 DPI
       doc_to_screen,
       mupdf.ColorSpace.DeviceRGB,
@@ -71,9 +71,8 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     );
 
     const pngBuffer = pixmap.asPNG(); // as PNG
-    pixmap.destroy(); // free memory
 
-    let buffer = Buffer.from(pngBuffer);
+    let buffer = Buffer.from(pngBuffer, "binary");
 
     // get docId from url with starts with "doc_" with regex
     const match = url.match(/(doc_[^\/]+)\//);
@@ -88,6 +87,9 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
       teamId: teamId,
       docId: docId,
     });
+
+    buffer = Buffer.alloc(0); // free memory
+    pixmap.destroy(); // free memory
 
     if (!data || !type) {
       throw new Error(`Failed to upload document page ${pageNumber}`);
