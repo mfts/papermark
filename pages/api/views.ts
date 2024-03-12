@@ -4,7 +4,7 @@ import { checkPassword, log } from "@/lib/utils";
 import { newId } from "@/lib/id-helper";
 import { sendVerificationEmail } from "@/lib/emails/send-email-verification";
 import { getFile } from "@/lib/files/get-file";
-import { sendViewedDocumentEmail } from "@/lib/emails/send-viewed-document";
+import sendNotification from "@/lib/api/notification-helper";
 
 export default async function handle(
   req: NextApiRequest,
@@ -244,23 +244,7 @@ export default async function handle(
 
     if (link.enableNotification) {
       console.time("sendemail");
-      fetch(`${process.env.NEXTAUTH_URL}/api/jobs/send-notification`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${process.env.INTERNAL_API_KEY}`,
-        },
-        body: JSON.stringify({ viewId: newView.id }),
-      })
-        .then(() => {})
-        .catch((error) => {
-          log({
-            message: `Failed to fetch notifications job in _/api/views_ route for linkId: ${linkId}. \n\n Error: ${error} \n\n*Metadata*: \`{viewId: ${newView.id}}\``,
-            type: "error",
-            mention: true,
-          });
-        });
-
+      await sendNotification({ viewId: newView.id });
       console.timeEnd("sendemail");
     }
 
