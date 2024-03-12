@@ -5,7 +5,9 @@ import LinkedinIcon from "@/components/shared/icons/linkedin";
 const navigation = {
   product: [
     { name: "AI Document Assistant", href: "/ai" },
-    { name: "Notion", href: "/share-notion-page" },
+    { name: "Share Notion Page", href: "/share-notion-page" },
+    { name: "Roadmap", href: "https://github.com/mfts/papermark" },
+    { name: "Feature Request", href: "https://feedback.papermark.io/feedback" },
     { name: "Pricing", href: "/pricing" },
   ],
   resources: [
@@ -13,9 +15,9 @@ const navigation = {
     { name: "Launch Week", href: "/launch-week" },
   ],
   tools: [
+    { name: "Investor Database", href: "/investors" },
     { name: "Open Source Friends", href: "/oss-friends" },
     { name: "Open Source Investors", href: "/open-source-investors" },
-    { name: "Investor Database", href: "/investors" },
     {
       name: "YC Application GPT",
       href: "https://chat.openai.com/g/g-LYDRCiZB9-yc-application-gpt",

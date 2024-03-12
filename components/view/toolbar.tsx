@@ -96,7 +96,7 @@ export default function Toolbar({
                       label={reaction.label}
                     />
                   ))}
-                  <GripVertical className="h-6 w-6 text-gray-100 active:text-gray-300 moveable-icon" />
+                  <GripVertical className="h-4 w-4 text-gray-100 active:text-gray-300 moveable-icon" />
                 </div>
               </div>
             </div>

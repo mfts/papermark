@@ -4,6 +4,18 @@ import TwitterIcon from "@/components/shared/icons/twitter";
 
 const testimonials = [
   {
+    body: "We self-host Papermark at Rubric Labs for doc-sharing. Brilliantly-simple alternative to Docsend. Features are well-executed, so I can't wait to try new stuff!",
+    author: {
+      name: "Ted Spare",
+      handle: "TedSpare",
+      imageUrl:
+        "https://pbs.twimg.com/profile_images/1696951746587656192/xtLP8mHs_400x400.jpg",
+      link: "https://www.producthunt.com/products/papermark-2#papermark-3",
+    },
+    producthunt: true,
+  },
+
+  {
     body: "best thing is that all the save DocSend to PDF plugins that VCs use probably won't work 😁",
     author: {
       name: "Jonathan Reimer",
@@ -11,6 +23,18 @@ const testimonials = [
       imageUrl:
         "https://pbs.twimg.com/profile_images/1704777684046209024/_JdBcXWp_400x400.jpg",
       link: "https://twitter.com/jonathimer/status/1663651278872891395",
+    },
+    producthunt: false,
+  },
+
+  {
+    body: "True builders listen to their users and build what they need. Thanks @papermarkio for solving a big pain point. DocSend monopoly will end soon!",
+    author: {
+      name: "Jaski",
+      handle: "Jas_Jaski",
+      imageUrl:
+        "https://pbs.twimg.com/profile_images/1681327970735251459/xYzLMVZ7_400x400.jpg",
+      link: "https://twitter.com/Jas_Jaski/status/1731957497487868390",
     },
     producthunt: false,
   },
@@ -25,6 +49,7 @@ const testimonials = [
     },
     producthunt: false,
   },
+
   {
     body: "looks so good! gonna have to steal that upload component 😍 congrats & thanks for the great idea 😄",
     author: {
@@ -47,28 +72,7 @@ const testimonials = [
     },
     producthunt: false,
   },
-  {
-    body: "We self-host Papermark at Rubric Labs for doc-sharing. Brilliantly-simple alternative to Docsend. Features are well-executed, so I can't wait to try new stuff!",
-    author: {
-      name: "Ted Spare",
-      handle: "TedSpare",
-      imageUrl:
-        "https://pbs.twimg.com/profile_images/1696951746587656192/xtLP8mHs_400x400.jpg",
-      link: "https://www.producthunt.com/products/papermark-2#papermark-3",
-    },
-    producthunt: true,
-  },
-  {
-    body: "True builders listen to their users and build what they need. Thanks @papermarkio for solving a big pain point. DocSend monopoly will end soon!",
-    author: {
-      name: "Jaski",
-      handle: "Jas_Jaski",
-      imageUrl:
-        "https://pbs.twimg.com/profile_images/1681327970735251459/xYzLMVZ7_400x400.jpg",
-      link: "https://twitter.com/Jas_Jaski/status/1731957497487868390",
-    },
-    producthunt: false,
-  },
+
   // More testimonials...
 ];
 
