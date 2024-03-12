@@ -9,14 +9,17 @@ const CustomTooltip = ({
   payload: any;
   active: boolean | undefined;
 }) => {
-  if (!active || !payload) return null;
+  const router = useRouter(); // Call useRouter at the top level
+  const documentId = router.query.id as string;
 
-  const router = useRouter();
-  const { id: documentId } = router.query as { id: string };
-  const pageNumber = parseInt(payload[0].payload.pageNumber);
+  // Default pageNumber to 0 or a sensible default if payload is not available
+  const pageNumber =
+    payload && payload.length > 0 ? parseInt(payload[0].payload.pageNumber) : 0;
   const { data, error } = useDocumentThumbnail(pageNumber, documentId);
 
-  const imageUrl = data && !error ? data.imageUrl : null;
+  const imageUrl = data && !error ? data.imageUrl : null; // Always called, regardless of `active` or `payload`
+
+  if (!active || !payload || payload.length === 0) return null;
 
   return (
     <>
