@@ -19,7 +19,6 @@ export const mdxComponents: MDXComponents = {
     }
 
     return (
-      // @ts-expect-error legacy refs
       <Link
         {...props}
         className={cn(
