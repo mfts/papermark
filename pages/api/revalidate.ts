@@ -32,8 +32,13 @@ export default async function handler(
         if (!link) {
           throw new Error("Link not found");
         }
+        console.log(
+          "revalidating",
+          `/view/domains/${link.domainSlug}/${link.slug}`,
+        );
         await res.revalidate(`/view/domains/${link.domainSlug}/${link.slug}`);
       } else {
+        console.log("revalidating", `/view/${linkId}`);
         // revalidate a regular papermark link
         await res.revalidate(`/view/${linkId}`);
       }
