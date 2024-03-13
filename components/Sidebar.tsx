@@ -16,6 +16,8 @@ import ProfileMenu from "./profile-menu";
 import { AddDocumentModal } from "./documents/add-document-modal";
 import { Button } from "./ui/button";
 import { PaletteIcon, PlusIcon } from "lucide-react";
+import { FileTree } from "./ui/nextra-filetree";
+import SiderbarFolders from "./sidebar-folders";
 
 export default function Sidebar() {
   return (
@@ -66,6 +68,10 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
       setShowProBanner(false);
     }
   }, []);
+
+  const createFolder = () => {
+    console.log("clicked");
+  };
 
   const userPlan = plan && plan.plan;
 
@@ -141,22 +147,35 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
 
       <section className="flex flex-1 flex-col gap-y-6">
         <div className="space-y-2">
-          {navigation.map((item) => (
-            <button
-              key={item.name}
-              onClick={() => router.push(item.href)}
-              disabled={item.disabled}
-              className={cn(
-                item.current
-                  ? "bg-gray-200 dark:bg-secondary text-secondary-foreground font-semibold"
-                  : "text-muted-foreground hover:text-foreground hover:bg-gray-200 hover:dark:bg-muted duration-200",
-                "group flex gap-x-3 items-center rounded-md px-3 py-2 text-sm leading-6 w-full disabled:hover:bg-transparent disabled:text-muted-foreground disabled:cursor-default",
-              )}
-            >
-              <item.icon className="h-5 w-5 shrink-0" aria-hidden="true" />
-              {item.name}
-            </button>
-          ))}
+          {navigation.map((item) => {
+            return (
+              <>
+                <button
+                  key={item.name}
+                  onClick={() => router.push(item.href)}
+                  disabled={item.disabled}
+                  className={cn(
+                    item.current
+                      ? "bg-gray-200 dark:bg-secondary text-secondary-foreground font-semibold"
+                      : "text-muted-foreground hover:text-foreground hover:bg-gray-200 hover:dark:bg-muted duration-200",
+                    "group flex gap-x-3 items-center rounded-md px-3 py-2 text-sm leading-6 w-full disabled:hover:bg-transparent disabled:text-muted-foreground disabled:cursor-default",
+                  )}
+                >
+                  <item.icon className="h-5 w-5 shrink-0" aria-hidden="true" />
+                  {item.name}
+                  {item.name === "Documents" ? (
+                    <span
+                      className="ml-auto text-xs bg-primary text-white rounded-full px-2 py-1"
+                      onClick={() => createFolder()}
+                    >
+                      addfolder
+                    </span>
+                  ) : null}
+                </button>
+                {item.name === "Documents" ? <SiderbarFolders /> : null}
+              </>
+            );
+          })}
         </div>
       </section>
       <div className="mb-4">
