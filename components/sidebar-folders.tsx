@@ -55,7 +55,7 @@ const FolderComponent = memo(({ folder }: { folder: FolderWithDocuments }) => {
     <FileTree.Folder
       name={folder.name}
       key={folder.id}
-      active={folder.path === "/" + (router.query.name as string[]).join("/")}
+      active={folder.path === "/" + (router.query.name as string[])?.join("/")}
       childActive={router.query.name?.includes(folder.name)}
       onToggle={() => router.push(`/documents/tree${folder.path}`)}
     >
