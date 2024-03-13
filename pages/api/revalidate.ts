@@ -14,16 +14,29 @@ export default async function handler(
     return res.status(401).json({ message: "Invalid token" });
   }
 
-  const { linkId, documentId, teamId } = req.query as {
+  const { linkId, documentId, teamId, hasDomain } = req.query as {
     linkId: string;
     documentId: string;
     teamId: string;
+    hasDomain: string;
   };
 
   try {
     if (linkId) {
-      // revalidate this link
-      await res.revalidate(`/view/${linkId}`);
+      if (hasDomain === "true") {
+        // revalidate a custom domain link
+        const link = await prisma.link.findUnique({
+          where: { id: linkId },
+          select: { domainSlug: true, slug: true },
+        });
+        if (!link) {
+          throw new Error("Link not found");
+        }
+        await res.revalidate(`/view/domains/${link.domainSlug}/${link.slug}`);
+      } else {
+        // revalidate a regular papermark link
+        await res.revalidate(`/view/${linkId}`);
+      }
     }
 
     if (documentId) {
