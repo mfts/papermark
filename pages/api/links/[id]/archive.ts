@@ -6,7 +6,7 @@ import { errorhandler } from "@/lib/errorHandler";
 
 export default async function handle(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   if (req.method === "PUT") {
     // PUT /api/links/:id/archive
@@ -41,6 +41,10 @@ export default async function handle(
       if (!updatedLink) {
         return res.status(404).json({ error: "Link not found" });
       }
+
+      await fetch(
+        `${process.env.NEXTAUTH_URL}/api/revalidate?secret=${process.env.REVALIDATE_TOKEN}&linkId=${id}`,
+      );
 
       return res.status(200).json(updatedLink);
     } catch (error) {
