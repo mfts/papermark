@@ -1,3 +1,5 @@
+"use client";
+
 import { Plus as PlusSmallIcon, Minus as MinusSmallIcon } from "lucide-react";
 import { Disclosure } from "@headlessui/react";
 
