@@ -111,6 +111,7 @@ export default async function handle(
           storageType,
           ownerId: (session.user as CustomUser).id,
           teamId: teamId,
+          pinned: false,
           links: {
             create: {},
           },

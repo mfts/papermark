@@ -58,15 +58,17 @@ export default function Documents() {
         {/* Documents list */}
         <ul role="list" className="space-y-4">
           {documents
-            ? documents.map((document) => {
-                return (
-                  <DocumentCard
-                    key={document.id}
-                    document={document}
-                    teamInfo={teamInfo}
-                  />
-                );
-              })
+            ? documents
+                .sort((a, b) => (a.pinned === b.pinned ? 0 : a.pinned ? -1 : 1))
+                .map((document) => {
+                  return (
+                    <DocumentCard
+                      key={document.id}
+                      document={document}
+                      teamInfo={teamInfo}
+                    />
+                  );
+                })
             : Array.from({ length: 3 }).map((_, i) => (
                 <li
                   key={i}
