@@ -6,6 +6,9 @@ export default async function handle(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
+  // Immediately set the Cache-Control header to prevent any form of caching
+  res.setHeader("Cache-Control", "no-store, max-age=0, must-revalidate");
+
   if (req.method === "GET") {
     // GET /api/links/domains/:domain/:slug
     const { domainSlug } = req.query as { domainSlug: string[] };
