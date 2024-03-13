@@ -1,7 +1,7 @@
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import LoadingSpinner from "../ui/loading-spinner";
+import LoadingSpinner from "@/components/ui/loading-spinner";
 import BlankImg from "@/public/_static/blank.gif";
 import Nav from "./nav";
 import Toolbar from "./toolbar";
@@ -45,6 +45,7 @@ export default function PagesViewer({
 
   const startTimeRef = useRef(Date.now());
   const pageNumberRef = useRef<number>(pageNumber);
+  const visibilityRef = useRef<boolean>(true);
 
   // Update the previous page number after the effect hook has run
   useEffect(() => {
@@ -52,30 +53,35 @@ export default function PagesViewer({
   }, [pageNumber]);
 
   useEffect(() => {
-    startTimeRef.current = Date.now(); // update the start time for the new page
-
-    // when component unmounts, calculate duration and track page view
-    return () => {
-      const endTime = Date.now();
-      const duration = Math.round(endTime - startTimeRef.current);
-      trackPageView(duration);
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        visibilityRef.current = true;
+        startTimeRef.current = Date.now(); // Reset start time when the page becomes visible again
+      } else {
+        visibilityRef.current = false;
+        const duration = Date.now() - startTimeRef.current;
+        trackPageView(duration);
+      }
     };
-  }, [pageNumber]); // monitor pageNumber for changes
 
-  // Send the last page view when the user leaves the page
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, []); // track page view when the page becomes visible or hidden on mount and unmount
+
   useEffect(() => {
-    const handleBeforeUnload = () => {
-      const endTime = Date.now();
-      const duration = Math.round(endTime - startTimeRef.current);
-      trackPageView(duration);
-    };
-
-    window.addEventListener("beforeunload", handleBeforeUnload);
+    startTimeRef.current = Date.now();
 
     return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload);
+      if (visibilityRef.current) {
+        // Only track the page view if the page is visible
+        const duration = Date.now() - startTimeRef.current;
+        trackPageView(duration);
+      }
     };
-  }, []);
+  }, [pageNumber]); // Track page view when the page number changes
 
   useEffect(() => {
     setLoadedImages((prev) =>
