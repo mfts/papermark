@@ -16,13 +16,16 @@ type Investor = {
 // this means getPosts() will only be called once per page build, even though we may call it multiple times
 // when rendering the page.
 export const getInvestors = cache(async () => {
-  const response = await fetch(`https://investors.papermark.io/api/investors`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${process.env.INVESTORS_API_KEY}`,
+  const response = await fetch(
+    `${process.env.CONTENT_BASE_URL}/api/investors`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${process.env.INVESTORS_API_KEY}`,
+      },
     },
-  });
+  );
   if (!response.ok) {
     throw new Error("Network response was not ok " + response.statusText);
   }
