@@ -87,6 +87,13 @@ export default async function handle(
         });
       }
 
+      if (link.isArchived) {
+        return res.status(404).json({
+          error: "Link is archived",
+          message: "link is archived",
+        });
+      }
+
       let brand = await prisma.brand.findFirst({
         where: {
           teamId: link.document.team.id,
