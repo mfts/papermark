@@ -134,7 +134,7 @@ export default async function handle(
   if (link.emailAuthenticated && !token) {
     const token = newId("email");
     const expiresAt = new Date();
-    expiresAt.setHours(expiresAt.getHours() + 24); // token expires in 24 hour
+    expiresAt.setHours(expiresAt.getHours() + 1); // token expires in 1 hour
 
     await prisma.verificationToken.create({
       data: {
