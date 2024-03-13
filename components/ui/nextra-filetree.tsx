@@ -22,6 +22,7 @@ interface FolderProps {
   open?: boolean;
   defaultOpen?: boolean;
   active?: boolean;
+  childActive?: boolean;
   onToggle?: (open: boolean) => void;
   children: ReactNode;
 }
@@ -30,6 +31,7 @@ interface FileProps {
   name: string;
   label?: ReactElement;
   active?: boolean;
+  onToggle?: (active: boolean) => void;
 }
 
 function Tree({ children }: { children: ReactNode }): ReactElement {
@@ -52,9 +54,18 @@ function Ident(): ReactElement {
 }
 
 const Folder = memo<FolderProps>(
-  ({ label, name, open, children, active, defaultOpen = false, onToggle }) => {
+  ({
+    label,
+    name,
+    open,
+    children,
+    active,
+    childActive,
+    defaultOpen = false,
+    onToggle,
+  }) => {
     const indent = useIndent();
-    const [isOpen, setIsOpen] = useState(defaultOpen);
+    const [isOpen, setIsOpen] = useState(defaultOpen || active || childActive);
 
     const toggle = useCallback(() => {
       onToggle?.(!isOpen);
@@ -120,18 +131,26 @@ const Folder = memo<FolderProps>(
 );
 Folder.displayName = "Folder";
 
-const File = memo<FileProps>(({ label, name, active }) => (
-  <li
-    className={cn(
-      "flex list-none",
-      active && "text-primary-600 contrast-more:underline",
-      "text-foreground hover:bg-gray-200 hover:dark:bg-muted duration-100 rounded-md",
-      "px-3",
-    )}
-  >
-    <span className="inline-flex cursor-default items-center py-1">
-      <Ident />
-      {/* <svg width="1em" height="1em" viewBox="0 0 24 24">
+const File = memo<FileProps>(({ label, name, active, onToggle }) => {
+  const toggle = useCallback(() => {
+    onToggle?.(!active);
+  }, [onToggle]);
+
+  return (
+    <li
+      className={cn(
+        "flex list-none",
+        "text-foreground hover:bg-gray-200 hover:dark:bg-muted duration-100 rounded-md",
+        "px-3",
+        active && "bg-gray-200 dark:bg-muted font-semibold",
+      )}
+    >
+      <span
+        className="inline-flex cursor-default items-center py-1"
+        onClick={toggle}
+      >
+        <Ident />
+        {/* <svg width="1em" height="1em" viewBox="0 0 24 24">
         <path
           fill="none"
           stroke="currentColor"
@@ -141,11 +160,12 @@ const File = memo<FileProps>(({ label, name, active }) => (
           d="M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2Z"
         />
       </svg> */}
-      <FileIcon className="h-4 w-4 shrink-0" aria-hidden="true" />
-      <span className="ml-2">{label ?? name}</span>
-    </span>
-  </li>
-));
+        <FileIcon className="h-4 w-4 shrink-0" aria-hidden="true" />
+        <span className="ml-2">{label ?? name}</span>
+      </span>
+    </li>
+  );
+});
 File.displayName = "File";
 
 export const FileTree = Object.assign(Tree, { Folder, File });

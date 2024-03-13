@@ -24,3 +24,32 @@ export default function useDocuments() {
     error,
   };
 }
+
+export type FolderWithDocuments = Folder & {
+  childFolders: FolderWithDocuments[];
+  documents: {
+    id: string;
+    name: string;
+    folderId: string;
+  }[];
+};
+
+export function useFolders() {
+  const teamInfo = useTeam();
+
+  const { data: folders, error } = useSWR<FolderWithDocuments[]>(
+    teamInfo?.currentTeam?.id &&
+      `/api/teams/${teamInfo?.currentTeam?.id}/folders`,
+    fetcher,
+    {
+      revalidateOnFocus: false,
+      dedupingInterval: 30000,
+    },
+  );
+
+  return {
+    folders,
+    loading: !folders && !error,
+    error,
+  };
+}
