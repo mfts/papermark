@@ -65,7 +65,7 @@ export default async function handle(
   }
 
   if (link.isArchived) {
-    res.status(404).json({ message: "Link is archived." });
+    res.status(404).json({ message: "Link is no longer available." });
     return;
   }
 
