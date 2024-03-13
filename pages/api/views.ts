@@ -52,6 +52,7 @@ export default async function handle(
       emailAuthenticated: true,
       password: true,
       domainSlug: true,
+      isArchived: true,
       slug: true,
       allowList: true,
       denyList: true,
@@ -60,6 +61,11 @@ export default async function handle(
 
   if (!link) {
     res.status(404).json({ message: "Link not found." });
+    return;
+  }
+
+  if (link.isArchived) {
+    res.status(404).json({ message: "Link is archived." });
     return;
   }
 
