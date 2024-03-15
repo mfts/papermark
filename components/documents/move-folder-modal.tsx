@@ -6,53 +6,33 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useTeam } from "@/context/team-context";
 import { useState } from "react";
 import { toast } from "sonner";
-import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
 import { usePlan } from "@/lib/swr/use-billing";
 import { useAnalytics } from "@/lib/analytics";
 import { mutate } from "swr";
-import { Folder } from "@prisma/client";
 import { useFolders } from "@/lib/swr/use-documents";
-import { string } from "zod";
-import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
-import { as } from "@upstash/redis/zmscore-5d82e632";
-import SidebarFolderTree, {
-  SidebarFolderTreeSelection,
-} from "../sidebar-folders";
+import { SidebarFolderTreeSelection } from "@/components/sidebar-folders";
 import { useRouter } from "next/router";
 
 export function MoveToFolderModal({
   open,
   setOpen,
-  folderPath,
   documentId,
   documentName,
-  onAddition,
-  children,
 }: {
   open: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  folderPath?: string;
   documentId?: string;
   documentName?: string;
-  onAddition?: (folderName: string) => void;
-  children?: React.ReactNode;
 }) {
   const router = useRouter();
-  const [folderName, setFolderName] = useState<string>("");
   const [folderId, setFolderId] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
-  const { folders } = useFolders();
 
   const teamInfo = useTeam();
-  const { plan } = usePlan();
-  const analytics = useAnalytics();
 
   const currentPath = router.query.name
     ? (router.query.name as string[]).join("/")

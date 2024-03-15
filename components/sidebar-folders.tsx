@@ -1,8 +1,7 @@
 import { useRouter } from "next/router";
-import { FileTree } from "./ui/nextra-filetree";
+import { FileTree } from "@/components/ui/nextra-filetree";
 import { FolderWithDocuments, useFolders } from "@/lib/swr/use-documents";
 import { memo, useMemo } from "react";
-import { set } from "ts-pattern/dist/patterns";
 
 // Helper function to build nested folder structure
 const buildNestedFolderStructure = (folders: FolderWithDocuments[]) => {
@@ -65,6 +64,7 @@ const FolderComponent = memo(({ folder }: { folder: FolderWithDocuments }) => {
     </FileTree.Folder>
   );
 });
+FolderComponent.displayName = "FolderComponent";
 
 const FolderComponentSelection = memo(
   ({
@@ -76,8 +76,6 @@ const FolderComponentSelection = memo(
     selectedFolderId: string;
     setFolderId: React.Dispatch<React.SetStateAction<string>>;
   }) => {
-    // const router = useRouter();
-
     // Recursively render child folders if they exist
     const childFolders = useMemo(
       () =>
@@ -111,6 +109,7 @@ const FolderComponentSelection = memo(
     );
   },
 );
+FolderComponentSelection.displayName = "FolderComponentSelection";
 
 const SidebarFolders = ({ folders }: { folders: FolderWithDocuments[] }) => {
   const nestedFolders = useMemo(() => {
@@ -137,23 +136,21 @@ export default function SidebarFolderTree() {
   return <SidebarFolders folders={folders} />;
 }
 
-export function SidebarFolderTreeSelection({
+const SidebarFoldersSelectipon = ({
+  folders,
   selectedFolderId,
   setFolderId,
 }: {
+  folders: FolderWithDocuments[];
   selectedFolderId: string;
   setFolderId: React.Dispatch<React.SetStateAction<string>>;
-}) {
-  const { folders, error } = useFolders();
-
-  if (!folders || error) return null;
-
+}) => {
   const nestedFolders = useMemo(() => {
     if (folders) {
       return buildNestedFolderStructure(folders);
     }
     return [];
-  }, [folders, selectedFolderId, setFolderId]);
+  }, [folders]);
 
   return (
     <FileTree>
@@ -166,5 +163,25 @@ export function SidebarFolderTreeSelection({
         />
       ))}
     </FileTree>
+  );
+};
+
+export function SidebarFolderTreeSelection({
+  selectedFolderId,
+  setFolderId,
+}: {
+  selectedFolderId: string;
+  setFolderId: React.Dispatch<React.SetStateAction<string>>;
+}) {
+  const { folders, error } = useFolders();
+
+  if (!folders || error) return null;
+
+  return (
+    <SidebarFoldersSelectipon
+      folders={folders}
+      selectedFolderId={selectedFolderId}
+      setFolderId={setFolderId}
+    />
   );
 }
