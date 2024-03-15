@@ -60,6 +60,11 @@ const nextConfig = {
         protocol: "https",
         hostname: "d1ff41ind5a7r1.cloudfront.net",
       },
+      {
+        // blog images
+        protocol: "https",
+        hostname: "aicontentfy-customer-images.s3.eu-central-1.amazonaws.com",
+      },
     ],
   },
   transpilePackages: ["@trigger.dev/react"],
@@ -79,4 +84,4 @@ const nextConfig = {
   },
 };
 
-module.exports = nextConfig;
+export default nextConfig;

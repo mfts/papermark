@@ -1,5 +1,6 @@
 import { useRouter } from "next/router";
 import useSWR from "swr";
+import useSWRImmutable from "swr/immutable";
 import { fetcher } from "@/lib/utils";
 import { DocumentWithVersion, LinkWithViews } from "@/lib/types";
 import { Document, View } from "@prisma/client";
@@ -120,5 +121,25 @@ export function useDocumentProcessingStatus(documentVersionId: string) {
     status: status,
     loading: !error && !status,
     error: error,
+  };
+}
+
+export function useDocumentThumbnail(pageNumber: number, documentId: string) {
+  const { data, error } = useSWR<{ imageUrl: string }>(
+    `/api/jobs/get-thumbnail?documentId=${documentId}&pageNumber=${pageNumber}`,
+    fetcher,
+    {
+      dedupingInterval: 1200000,
+      revalidateOnFocus: false,
+      // revalidateOnMount: false,
+      revalidateIfStale: false,
+      refreshInterval: 0,
+    },
+  );
+
+  return {
+    data,
+    loading: !error && !data,
+    error,
   };
 }

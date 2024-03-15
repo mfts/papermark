@@ -6,6 +6,9 @@ export default async function handle(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
+  // Immediately set the Cache-Control header to prevent any form of caching
+  res.setHeader("Cache-Control", "no-store, max-age=0, must-revalidate");
+
   if (req.method === "GET") {
     // GET /api/links/domains/:domain/:slug
     const { domainSlug } = req.query as { domainSlug: string[] };
@@ -84,6 +87,13 @@ export default async function handle(
         return res.status(404).json({
           error: "Link not found",
           message: `link found, team ${link.document.team.plan}`,
+        });
+      }
+
+      if (link.isArchived) {
+        return res.status(404).json({
+          error: "Link is archived",
+          message: "link is archived",
         });
       }
 

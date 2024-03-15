@@ -172,7 +172,6 @@ client.defineJob({
         // { retry: retry.standardBackoff },
         {},
         (error) => {
-          console.log("error in error callback:", error);
           conversionWithoutError = false;
           return { error: error as Error };
         },
