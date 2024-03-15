@@ -97,6 +97,12 @@ export default async function handle(
     const { teamId } = req.query as { teamId: string };
     const { name, path } = req.body as { name: string; path: string };
 
+    const childFolderPath = path
+      ? "/" + path + "/" + slugify(name)
+      : "/" + slugify(name);
+
+    const parentFolderPath = path ? "/" + path : "/";
+
     try {
       // Check if the user is part of the team
       const team = await prisma.team.findUnique({
@@ -118,7 +124,7 @@ export default async function handle(
         where: {
           teamId_path: {
             teamId: teamId,
-            path: "/" + path,
+            path: parentFolderPath,
           },
         },
         select: {
@@ -131,7 +137,7 @@ export default async function handle(
       const folder = await prisma.folder.create({
         data: {
           name: name,
-          path: "/" + path + "/" + slugify(name),
+          path: childFolderPath,
           parentId: parentFolder?.id ?? null,
           teamId: teamId,
         },
@@ -141,6 +147,7 @@ export default async function handle(
         ...folder,
         documents: [],
         childFolders: [],
+        parentFolderPath: parentFolderPath,
       };
 
       res.status(201).json(folderWithDocs);

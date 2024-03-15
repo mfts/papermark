@@ -18,20 +18,20 @@ import { usePlan } from "@/lib/swr/use-billing";
 import { useAnalytics } from "@/lib/analytics";
 import { mutate } from "swr";
 import { Folder } from "@prisma/client";
+import { useRouter } from "next/router";
 
 export function AddFolderModal({
   // open,
   // setOpen,
-  path,
   onAddition,
   children,
 }: {
   // open?: boolean;
   // setOpen?: React.Dispatch<React.SetStateAction<boolean>>;
-  path?: string;
   onAddition?: (folderName: string) => void;
   children?: React.ReactNode;
 }) {
+  const router = useRouter();
   const [folderName, setFolderName] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const [open, setOpen] = useState<boolean>(false);
@@ -39,6 +39,9 @@ export function AddFolderModal({
   const teamInfo = useTeam();
   const { plan } = usePlan();
   const analytics = useAnalytics();
+
+  /** current folder name */
+  const currentFolderPath = router.query.name as string[] | undefined;
 
   const handleSubmit = async (event: any) => {
     event.preventDefault();
@@ -58,7 +61,7 @@ export function AddFolderModal({
           },
           body: JSON.stringify({
             name: folderName,
-            path: path || "/",
+            path: currentFolderPath?.join("/"),
           }),
         },
       );
@@ -70,11 +73,15 @@ export function AddFolderModal({
         return;
       }
 
+      const { parentFolderPath } = await response.json();
+
       analytics.capture("Folder Added", { folderName: folderName });
       toast.success("Folder added successfully! 🎉");
 
       mutate(`/api/teams/${teamInfo?.currentTeam?.id}/folders`);
-      mutate(`/api/teams/${teamInfo?.currentTeam?.id}/folders/${path}`);
+      mutate(
+        `/api/teams/${teamInfo?.currentTeam?.id}/folders${parentFolderPath}`,
+      );
     } catch (error) {
       setLoading(false);
       toast.error("Error adding folder. Please try again.");

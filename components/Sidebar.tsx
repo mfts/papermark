@@ -155,7 +155,7 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
               <span>Add New Document</span>
             </Button>
           </AddDocumentModal>
-          <AddFolderModal path={(router.query.name as string[])?.join("/")}>
+          <AddFolderModal>
             <Button
               size="icon"
               variant="outline"
