@@ -22,10 +22,10 @@ export default function FolderCard({ folder, teamInfo }: FolderCardProps) {
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
   return (
-    <li className="group/row relative rounded-lg p-3 border-0  dark:bg-secondary ring-2 ring-gray-400 dark:ring-gray-500 transition-all hover:ring-gray-500 hover:dark:ring-gray-400 hover:bg-secondary sm:p-4 flex justify-between items-center">
+    <li className="group/row relative rounded-lg p-3 border-0 dark:bg-secondary ring-1 ring-gray-400 dark:ring-gray-500 transition-all hover:ring-gray-500 hover:dark:ring-gray-400 hover:bg-secondary sm:p-4 flex justify-between items-center">
       <div className="min-w-0 flex shrink items-center space-x-2 sm:space-x-4">
         <div className="w-8 mx-0.5 sm:mx-1 text-center flex justify-center items-center">
-          <FolderIcon className="w-8 h-8" />
+          <FolderIcon className="w-8 h-8 " strokeWidth={1} />
         </div>
 
         <div className="flex-col">

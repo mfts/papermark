@@ -31,6 +31,9 @@ export default async function handle(
         teamId,
         userId,
         options: {
+          where: {
+            folderId: null,
+          },
           orderBy: {
             createdAt: "desc",
           },
@@ -68,15 +71,17 @@ export default async function handle(
     const {
       name,
       url: fileUrl,
+      storageType,
       numPages,
       type: fileType,
-      storageType,
+      folderPathName,
     } = req.body as {
       name: string;
       url: string;
-      numPages: number;
-      type?: string;
       storageType: DocumentStorageType;
+      numPages?: number;
+      type?: string;
+      folderPathName?: string;
     };
 
     try {
@@ -101,6 +106,18 @@ export default async function handle(
         }
       }
 
+      const folder = await prisma.folder.findUnique({
+        where: {
+          teamId_path: {
+            teamId,
+            path: "/" + folderPathName,
+          },
+        },
+        select: {
+          id: true,
+        },
+      });
+
       // Save data to the database
       const document = await prisma.document.create({
         data: {
@@ -124,6 +141,7 @@ export default async function handle(
               versionNumber: 1,
             },
           },
+          folderId: folder?.id ? folder.id : null,
         },
         include: {
           links: true,

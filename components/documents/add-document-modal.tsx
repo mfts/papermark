@@ -43,6 +43,9 @@ export function AddDocumentModal({
 
   const teamId = teamInfo?.currentTeam?.id as string;
 
+  /** current folder name */
+  const currentFolderPath = router.query.name as string[] | undefined;
+
   const handleFileUpload = async (
     event: FormEvent<HTMLFormElement>,
   ): Promise<void> => {
@@ -71,7 +74,12 @@ export function AddDocumentModal({
       // create a document or new version in the database
       if (!newVersion) {
         // create a document in the database
-        response = await createDocument({ documentData, teamId, numPages });
+        response = await createDocument({
+          documentData,
+          teamId,
+          numPages,
+          folderPathName: currentFolderPath?.join("/"),
+        });
       } else {
         // create a new version for existing document in the database
         const documentId = router.query.id as string;

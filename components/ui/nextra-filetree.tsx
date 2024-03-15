@@ -1,3 +1,9 @@
+/**
+ * This component is based on the nextra's filetree component from @shuding
+ * https://github.com/shuding/nextra/blob/main/packages/nextra/src/components/file-tree.tsx
+ *
+ */
+
 import { cn } from "@/lib/utils";
 import { createContext, memo, useCallback, useContext, useState } from "react";
 import type { ReactElement, ReactNode } from "react";
@@ -36,7 +42,7 @@ interface FileProps {
 
 function Tree({ children }: { children: ReactNode }): ReactElement {
   return (
-    <div className={cn("nextra-filetree w-full select-none text-sm")}>
+    <div className={cn("nextra-filetree w-full select-none text-sm !mt-0")}>
       <div className="block rounded-lg">{children}</div>
     </div>
   );
@@ -80,9 +86,9 @@ const Folder = memo<FolderProps>(
           onClick={toggle}
           title={name}
           className={cn(
-            "inline-flex cursor-pointer items-center py-1 w-full",
+            "inline-flex cursor-pointer items-center w-full",
             "text-foreground hover:bg-gray-200 hover:dark:bg-muted duration-100 rounded-md",
-            "px-3",
+            "px-3 py-1.5 leading-6",
             active && "bg-gray-200 dark:bg-muted font-semibold",
           )}
         >
@@ -108,17 +114,16 @@ const Folder = memo<FolderProps>(
             />
           </svg> */}
           {isFolderOpen ? (
-            <FolderOpenIcon
-              className="h-4 w-4 shrink-0 fill-muted-foreground"
-              aria-hidden="true"
-            />
+            <FolderOpenIcon className="h-5 w-5 shrink-0" aria-hidden="true" />
           ) : (
-            <FolderIcon
-              className="h-4 w-4 shrink-0 fill-muted-foreground"
-              aria-hidden="true"
-            />
+            <FolderIcon className="h-5 w-5 shrink-0" aria-hidden="true" />
           )}
-          <span className="ml-2">{label ?? name}</span>
+          <span
+            className="ml-2 w-fit truncate"
+            title={(label ?? name) as string}
+          >
+            {label ?? name}
+          </span>
         </button>
         {isFolderOpen && (
           <ul>
@@ -141,12 +146,12 @@ const File = memo<FileProps>(({ label, name, active, onToggle }) => {
       className={cn(
         "flex list-none",
         "text-foreground hover:bg-gray-200 hover:dark:bg-muted duration-100 rounded-md",
-        "px-3",
+        "px-3 py-1.5 leading-6",
         active && "bg-gray-200 dark:bg-muted font-semibold",
       )}
     >
       <span
-        className="inline-flex cursor-default items-center py-1"
+        className="inline-flex cursor-default items-center ml-5"
         onClick={toggle}
       >
         <Ident />
@@ -160,8 +165,10 @@ const File = memo<FileProps>(({ label, name, active, onToggle }) => {
           d="M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2Z"
         />
       </svg> */}
-        <FileIcon className="h-4 w-4 shrink-0" aria-hidden="true" />
-        <span className="ml-2">{label ?? name}</span>
+        <FileIcon className="h-5 w-5 shrink-0" aria-hidden="true" />
+        <span className="ml-2 w-fit truncate" title={(label ?? name) as string}>
+          {label ?? name}
+        </span>
       </span>
     </li>
   );

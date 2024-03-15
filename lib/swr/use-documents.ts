@@ -105,3 +105,23 @@ export function useFolders() {
     error,
   };
 }
+
+export function useRootFolders() {
+  const teamInfo = useTeam();
+
+  const { data: folders, error } = useSWR<FolderWithCount[]>(
+    teamInfo?.currentTeam?.id &&
+      `/api/teams/${teamInfo?.currentTeam?.id}/folders?root=true`,
+    fetcher,
+    {
+      revalidateOnFocus: false,
+      dedupingInterval: 30000,
+    },
+  );
+
+  return {
+    folders,
+    loading: !folders && !error,
+    error,
+  };
+}

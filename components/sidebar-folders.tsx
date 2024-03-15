@@ -2,6 +2,7 @@ import { useRouter } from "next/router";
 import { FileTree } from "./ui/nextra-filetree";
 import { FolderWithDocuments, useFolders } from "@/lib/swr/use-documents";
 import { memo, useMemo } from "react";
+import { set } from "ts-pattern/dist/patterns";
 
 // Helper function to build nested folder structure
 const buildNestedFolderStructure = (folders: FolderWithDocuments[]) => {
@@ -65,6 +66,52 @@ const FolderComponent = memo(({ folder }: { folder: FolderWithDocuments }) => {
   );
 });
 
+const FolderComponentSelection = memo(
+  ({
+    folder,
+    selectedFolderId,
+    setFolderId,
+  }: {
+    folder: FolderWithDocuments;
+    selectedFolderId: string;
+    setFolderId: React.Dispatch<React.SetStateAction<string>>;
+  }) => {
+    // const router = useRouter();
+
+    // Recursively render child folders if they exist
+    const childFolders = useMemo(
+      () =>
+        folder.childFolders.map((childFolder) => (
+          <FolderComponentSelection
+            key={childFolder.id}
+            folder={childFolder}
+            selectedFolderId={selectedFolderId}
+            setFolderId={setFolderId}
+          />
+        )),
+      [folder.childFolders, selectedFolderId, setFolderId],
+    );
+
+    return (
+      <div
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setFolderId(folder.id);
+        }}
+      >
+        <FileTree.Folder
+          name={folder.name}
+          key={folder.id}
+          active={folder.id === selectedFolderId}
+        >
+          {childFolders}
+        </FileTree.Folder>
+      </div>
+    );
+  },
+);
+
 const SidebarFolders = ({ folders }: { folders: FolderWithDocuments[] }) => {
   const nestedFolders = useMemo(() => {
     if (folders) {
@@ -88,4 +135,36 @@ export default function SidebarFolderTree() {
   if (!folders || error) return null;
 
   return <SidebarFolders folders={folders} />;
+}
+
+export function SidebarFolderTreeSelection({
+  selectedFolderId,
+  setFolderId,
+}: {
+  selectedFolderId: string;
+  setFolderId: React.Dispatch<React.SetStateAction<string>>;
+}) {
+  const { folders, error } = useFolders();
+
+  if (!folders || error) return null;
+
+  const nestedFolders = useMemo(() => {
+    if (folders) {
+      return buildNestedFolderStructure(folders);
+    }
+    return [];
+  }, [folders, selectedFolderId, setFolderId]);
+
+  return (
+    <FileTree>
+      {nestedFolders.map((folder) => (
+        <FolderComponentSelection
+          key={folder.id}
+          folder={folder}
+          selectedFolderId={selectedFolderId}
+          setFolderId={setFolderId}
+        />
+      ))}
+    </FileTree>
+  );
 }

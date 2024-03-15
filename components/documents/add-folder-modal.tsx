@@ -1,0 +1,126 @@
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useTeam } from "@/context/team-context";
+import { useState } from "react";
+import { toast } from "sonner";
+import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
+import { usePlan } from "@/lib/swr/use-billing";
+import { useAnalytics } from "@/lib/analytics";
+import { mutate } from "swr";
+import { Folder } from "@prisma/client";
+
+export function AddFolderModal({
+  // open,
+  // setOpen,
+  path,
+  onAddition,
+  children,
+}: {
+  // open?: boolean;
+  // setOpen?: React.Dispatch<React.SetStateAction<boolean>>;
+  path?: string;
+  onAddition?: (folderName: string) => void;
+  children?: React.ReactNode;
+}) {
+  const [folderName, setFolderName] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
+  const [open, setOpen] = useState<boolean>(false);
+
+  const teamInfo = useTeam();
+  const { plan } = usePlan();
+  const analytics = useAnalytics();
+
+  const handleSubmit = async (event: any) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (folderName == "") return;
+
+    setLoading(true);
+
+    try {
+      const response = await fetch(
+        `/api/teams/${teamInfo?.currentTeam?.id}/folders`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: folderName,
+            path: path || "/",
+          }),
+        },
+      );
+
+      if (!response.ok) {
+        const { message } = await response.json();
+        setLoading(false);
+        toast.error(message);
+        return;
+      }
+
+      analytics.capture("Folder Added", { folderName: folderName });
+      toast.success("Folder added successfully! 🎉");
+
+      mutate(`/api/teams/${teamInfo?.currentTeam?.id}/folders`);
+      mutate(`/api/teams/${teamInfo?.currentTeam?.id}/folders/${path}`);
+    } catch (error) {
+      setLoading(false);
+      toast.error("Error adding folder. Please try again.");
+      return;
+    } finally {
+      setLoading(false);
+      setOpen(false);
+    }
+  };
+
+  // If the team is on a free plan, show the upgrade modal
+  if (plan && plan.plan === "free") {
+    if (children) {
+      return (
+        <UpgradePlanModal clickedPlan="Pro" trigger={"add_domain_overview"}>
+          {children}
+        </UpgradePlanModal>
+      );
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>{children}</DialogTrigger>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader className="text-start">
+          <DialogTitle>Add Folder</DialogTitle>
+          <DialogDescription>You can easily add a folder.</DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit}>
+          <Label htmlFor="folder-name" className="opacity-80">
+            Folder Name
+          </Label>
+          <Input
+            id="folder-name"
+            placeholder="folder-123"
+            className="w-full mt-1 mb-4"
+            onChange={(e) => setFolderName(e.target.value)}
+          />
+          <DialogFooter>
+            <Button type="submit" className="w-full h-9">
+              Add new folder
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}

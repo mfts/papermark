@@ -1,5 +1,6 @@
 import { AddDocumentModal } from "@/components/documents/add-document-modal";
 import DocumentCard from "@/components/documents/document-card";
+import { EmptyDocuments } from "@/components/documents/empty-document";
 import FolderCard from "@/components/documents/folder-card";
 import AppLayout from "@/components/layouts/app";
 import {
@@ -15,7 +16,7 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTeam } from "@/context/team-context";
 import { useFolderDocuments, useFolder } from "@/lib/swr/use-documents";
-import { PlusIcon } from "lucide-react";
+import { FileIcon, FolderIcon, PlusIcon } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 
@@ -90,67 +91,90 @@ export default function DocumentTreePage() {
           </div>
         </section>
 
+        <section className="flex items-center gap-x-2 mb-2">
+          {folders && folders.length > 0 ? (
+            <p className="text-sm text-gray-400 flex items-center gap-x-1">
+              <FolderIcon className="w-4 h-4" />
+              <span>{folders.length} folders</span>
+            </p>
+          ) : null}
+          {documents && documents.length > 0 ? (
+            <p className="text-sm text-gray-400 flex items-center gap-x-1">
+              <FileIcon className="w-4 h-4" />
+              <span>{documents.length} documents</span>
+            </p>
+          ) : null}
+        </section>
+
         <Separator className="mb-5 bg-gray-200 dark:bg-gray-800" />
 
-        {/* Folders list */}
-        <ul role="list" className="space-y-4">
-          {folders && folders.length > 0
-            ? folders.map((folder) => {
-                return (
-                  <FolderCard
-                    key={folder.id}
-                    folder={folder}
-                    teamInfo={teamInfo}
-                  />
-                );
-              })
-            : Array.from({ length: 3 }).map((_, i) => (
-                <li
-                  key={i}
-                  className="relative w-full py-5 px-4 border rounded-lg flex items-center space-x-3 sm:px-6 lg:px-6"
-                >
-                  <Skeleton key={i} className="h-9 w-9" />
-                  <div>
-                    <Skeleton key={i} className="h-4 w-32" />
-                    <Skeleton key={i + 1} className="mt-2 h-3 w-12" />
-                  </div>
-                  <Skeleton
-                    key={i + 1}
-                    className="h-5 w-20 absolute top-[50%] transform -translate-y-[50%] right-5"
-                  />
-                </li>
-              ))}
-        </ul>
+        <div className="space-y-4">
+          {/* Folders list */}
+          <ul role="list" className="space-y-4">
+            {folders
+              ? folders.map((folder) => {
+                  return (
+                    <FolderCard
+                      key={folder.id}
+                      folder={folder}
+                      teamInfo={teamInfo}
+                    />
+                  );
+                })
+              : Array.from({ length: 3 }).map((_, i) => (
+                  <li
+                    key={i}
+                    className="relative w-full py-5 px-4 border rounded-lg flex items-center space-x-3 sm:px-6 lg:px-6"
+                  >
+                    <Skeleton key={i} className="h-9 w-9" />
+                    <div>
+                      <Skeleton key={i} className="h-4 w-32" />
+                      <Skeleton key={i + 1} className="mt-2 h-3 w-12" />
+                    </div>
+                    <Skeleton
+                      key={i + 1}
+                      className="h-5 w-20 absolute top-[50%] transform -translate-y-[50%] right-5"
+                    />
+                  </li>
+                ))}
+          </ul>
 
-        {/* Documents list */}
-        <ul role="list" className="space-y-4">
-          {documents
-            ? documents.map((document) => {
-                return (
-                  <DocumentCard
-                    key={document.id}
-                    document={document}
-                    teamInfo={teamInfo}
-                  />
-                );
-              })
-            : Array.from({ length: 3 }).map((_, i) => (
-                <li
-                  key={i}
-                  className="relative w-full py-5 px-4 border rounded-lg flex items-center space-x-3 sm:px-6 lg:px-6"
-                >
-                  <Skeleton key={i} className="h-9 w-9" />
-                  <div>
-                    <Skeleton key={i} className="h-4 w-32" />
-                    <Skeleton key={i + 1} className="mt-2 h-3 w-12" />
-                  </div>
-                  <Skeleton
-                    key={i + 1}
-                    className="h-5 w-20 absolute top-[50%] transform -translate-y-[50%] right-5"
-                  />
-                </li>
-              ))}
-        </ul>
+          {/* Documents list */}
+          <ul role="list" className="space-y-4">
+            {documents
+              ? documents.map((document) => {
+                  return (
+                    <DocumentCard
+                      key={document.id}
+                      document={document}
+                      teamInfo={teamInfo}
+                    />
+                  );
+                })
+              : Array.from({ length: 3 }).map((_, i) => (
+                  <li
+                    key={i}
+                    className="relative w-full py-5 px-4 border rounded-lg flex items-center space-x-3 sm:px-6 lg:px-6"
+                  >
+                    <Skeleton key={i} className="h-9 w-9" />
+                    <div>
+                      <Skeleton key={i} className="h-4 w-32" />
+                      <Skeleton key={i + 1} className="mt-2 h-3 w-12" />
+                    </div>
+                    <Skeleton
+                      key={i + 1}
+                      className="h-5 w-20 absolute top-[50%] transform -translate-y-[50%] right-5"
+                    />
+                  </li>
+                ))}
+          </ul>
+
+          {documents && documents.length === 0 && (
+            <div className="flex items-center justify-center h-96">
+              <EmptyDocuments />
+            </div>
+          )}
+        </div>
       </main>
     </AppLayout>
   );
