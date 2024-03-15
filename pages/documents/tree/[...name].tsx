@@ -1,25 +1,73 @@
-import useDocuments, { useRootFolders } from "@/lib/swr/use-documents";
-import { useTeam } from "@/context/team-context";
-import DocumentCard from "@/components/documents/document-card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { FileIcon, FolderIcon, PlusIcon } from "lucide-react";
 import { AddDocumentModal } from "@/components/documents/add-document-modal";
-import { Separator } from "@/components/ui/separator";
-import AppLayout from "@/components/layouts/app";
-import { Button } from "@/components/ui/button";
-import Folder from "@/components/shared/icons/folder";
-import FolderCard from "@/components/documents/folder-card";
+import DocumentCard from "@/components/documents/document-card";
 import { EmptyDocuments } from "@/components/documents/empty-document";
+import FolderCard from "@/components/documents/folder-card";
+import AppLayout from "@/components/layouts/app";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useTeam } from "@/context/team-context";
+import { useFolderDocuments, useFolder } from "@/lib/swr/use-documents";
+import { FileIcon, FolderIcon, PlusIcon } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/router";
 
-export default function Documents() {
-  const { documents } = useDocuments();
-  const { folders } = useRootFolders();
+export default function DocumentTreePage() {
+  const router = useRouter();
+  const { name } = router.query as { name: string[] };
+
+  const { folders } = useFolder({ name });
+  const { documents } = useFolderDocuments({ name });
   const teamInfo = useTeam();
 
   return (
     <AppLayout>
       <main className="p-4 sm:py-4 sm:px-4 sm:m-4">
-        <section className="flex items-center justify-between mb-4 md:mb-8 lg:mb-12">
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem key={"root"}>
+              <BreadcrumbLink asChild>
+                <Link href="/documents">Documents</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            {name &&
+              name.map((item: string, index: number, array: string[]) => {
+                return (
+                  <>
+                    <BreadcrumbSeparator />
+                    {index === array.length - 1 ? (
+                      <BreadcrumbItem key={index}>
+                        <BreadcrumbPage className="capitalize">
+                          {item}
+                        </BreadcrumbPage>
+                      </BreadcrumbItem>
+                    ) : (
+                      <BreadcrumbItem key={index}>
+                        <BreadcrumbLink asChild>
+                          <Link
+                            href={`/documents/tree/${array.slice(0, index + 1).join("/")}`}
+                            className="capitalize"
+                          >
+                            {item}
+                          </Link>
+                        </BreadcrumbLink>
+                      </BreadcrumbItem>
+                    )}
+                  </>
+                );
+              })}
+          </BreadcrumbList>
+        </Breadcrumb>
+
+        <section className="flex items-center justify-between mb-4 md:mb-8 lg:mb-12 mt-4">
           <div className="space-y-1">
             <h2 className="text-xl sm:text-2xl text-foreground font-semibold tracking-tight">
               All Documents
@@ -122,7 +170,7 @@ export default function Documents() {
           </ul>
 
           {documents && documents.length === 0 && (
-            <div className="flex items-center justify-center">
+            <div className="flex items-center justify-center h-96">
               <EmptyDocuments />
             </div>
           )}

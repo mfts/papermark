@@ -58,21 +58,24 @@ model User {
 }
 
 model Team {
-  id             String       @id @default(cuid())
-  name           String
-  users          UserTeam[]
-  documents      Document[]
-  domains        Domain[]
-  invitations    Invitation[]
-  sentEmails     SentEmail[]
-  brand          Brand?
-  plan           String       @default("free")
-  stripeId       String?      @unique // Stripe subscription / customer ID
-  subscriptionId String?      @unique // Stripe subscription ID
+  id          String       @id @default(cuid())
+  name        String
+  users       UserTeam[]
+  documents   Document[]
+  folders     Folder[]
+  domains     Domain[]
+  invitations Invitation[]
+  sentEmails  SentEmail[]
+  brand       Brand?
+
+  plan           String    @default("free")
+  stripeId       String?   @unique // Stripe subscription / customer ID
+  subscriptionId String?   @unique // Stripe subscription ID
   startsAt       DateTime? // Stripe subscription start date
   endsAt         DateTime? // Stripe subscription end date
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Brand {
@@ -132,8 +135,12 @@ model Document {
   versions         DocumentVersion[]
   conversations    Conversation[]
 
+  folderId String? // Optional Folder ID for documents in folders
+  folder   Folder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
+
   @@index([ownerId])
   @@index([teamId])
+  @@index([folderId])
 }
 
 model DocumentVersion {
@@ -299,4 +306,22 @@ model Conversation {
   @@unique([userId, documentId])
   @@unique([threadId, documentId])
   @@index([threadId])
+}
+
+model Folder {
+  id           String     @id @default(cuid())
+  name         String
+  path         String // the materialized path to the folder; starts always with "/"
+  parentId     String?
+  documents    Document[]
+  childFolders Folder[]   @relation("SubFolders")
+  parentFolder Folder?    @relation("SubFolders", fields: [parentId], references: [id], onDelete: SetNull)
+  teamId       String
+  team         Team       @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([parentId])
+  @@unique([teamId, path])
 }
