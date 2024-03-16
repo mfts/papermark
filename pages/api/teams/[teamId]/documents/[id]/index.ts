@@ -48,6 +48,54 @@ export default async function handle(
     } catch (error) {
       errorhandler(error, res);
     }
+  } else if (req.method === "PUT") {
+    // PUT /api/teams/:teamId/document/:id
+    const session = await getServerSession(req, res, authOptions);
+    if (!session) {
+      res.status(401).end("Unauthorized");
+      return;
+    }
+    const userId = (session.user as CustomUser).id;
+    const { teamId, id: docId } = req.query as { teamId: string; id: string };
+    const { folderId, currentPathName } = req.body as {
+      folderId: string;
+      currentPathName: string;
+    };
+
+    const document = await prisma.document.update({
+      where: {
+        id: docId,
+        teamId: teamId,
+        team: {
+          users: {
+            some: {
+              role: "ADMIN",
+              userId: userId,
+            },
+          },
+        },
+      },
+      data: {
+        folderId: folderId,
+      },
+      select: {
+        folder: {
+          select: {
+            path: true,
+          },
+        },
+      },
+    });
+
+    if (!document) {
+      return res.status(404).end("Document not found");
+    }
+
+    return res.status(200).json({
+      message: "Document moved successfully",
+      newPath: document.folder?.path,
+      oldPath: currentPathName,
+    });
   } else if (req.method === "DELETE") {
     // DELETE /api/teams/:teamId/document/:id
     const session = await getServerSession(req, res, authOptions);
@@ -110,8 +158,8 @@ export default async function handle(
       errorhandler(error, res);
     }
   } else {
-    // We only allow GET and DELETE requests
-    res.setHeader("Allow", ["GET", "DELETE"]);
+    // We only allow GET, PUT and DELETE requests
+    res.setHeader("Allow", ["GET", "PUT", "DELETE"]);
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 }
