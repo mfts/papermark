@@ -47,26 +47,26 @@ export default async function AlternativePage({
     <div className="flex flex-1 flex-col bg-white text-black justify-center">
       <div className="max-w-5xl w-full mx-auto px-4 md:px-8 text-center">
         <div className="pt-32">
-          {/* <div className=" pb-4">
-                <img
-                  src={alternative.imageUrl}
-                  alt="App screenshot"
-                  className="mx-auto"
-                  width={150}
-                  height={50}
-                />
-              </div> */}
+          <div className=" pb-4">
+            <img
+              src={alternative.imageUrl!}
+              alt="App screenshot"
+              className="mx-auto"
+              width={150}
+              height={50}
+            />
+          </div>
           {/* <div className="relative rounded-full px-3 py-1 text-sm leading-6 text-black ring-black/10  hover:ring-white/20">
-                Free DocSend alternative
-              </div> */}
+            Free {alternative.name} alternative
+          </div> */}
           <h1 className="text-6xl text-balance">{alternative.title}</h1>
           <p className="text-xl mt-8 text-balance max-w-3xl  mx-auto md:text-2xl">
             {alternative.description}
           </p>
           <div className="pt-8 space-x-2">
             <Link href="/login">
-              <Button className="text-white bg-blue-800 rounded-3xl hover:bg-gray-500 justify-center">
-                Create Linkedin Post
+              <Button className="text-white bg-gray-900 rounded-3xl hover:bg-gray-500 justify-center">
+                Send Document
               </Button>
             </Link>
           </div>
@@ -102,18 +102,23 @@ export default async function AlternativePage({
         </div>
         <div className="bg-white py-16">
           <div className="mx-auto max-w-5xl ">
-            <div className="grid grid-cols-1 md:grid-cols-2 border border-black rounded-xl overflow-hidden">
+            <div className="isolate grid  grid-cols-1  md:grid-cols-2  border border-black rounded-xl overflow-hidden">
               {/* Column 1 - Papermark */}
-              <div className="flex flex-col justify-between border-black border-r-0 md:odd:border-r xl:even:border-r xl:last:!border-r-0">
+              <div className="border-black border-r-0 md:odd:border-r xl:even:border-r xl:last:!border-r-0 flex flex-col justify-between">
                 <div>
                   <div className="border-b border-black p-6 bg-gray-100">
-                    <h3 className="text-xl leading-8 text-gray-800">
+                    <h3 className="text-balance text-gray-800 text-xl leading-8">
                       Papermark
                     </h3>
                   </div>
                   <div className="p-6">
-                    <p className="mt-4 text-sm leading-6 text-gray-500">
+                    <p className="mt-4 text-sm leading-6 text-gray-500 text-balance">
                       Papermark plans start from freemium
+                    </p>
+                    <div className="flex flex-col justify-between"></div>
+
+                    <p className="mt-4 text-2xl text-balance font-semibold leading-6 text-gray-900">
+                      $0
                     </p>
                     <ul className="mt-8 space-y-3 text-sm leading-6 text-gray-500">
                       <li className="flex items-center gap-x-3">
@@ -121,20 +126,57 @@ export default async function AlternativePage({
                           className="h-6 w-6 text-green-500"
                           aria-hidden="true"
                         />
-                        Open Source
+                        Open Source & Self-hosted
                       </li>
+                      <li className="flex items-center gap-x-3">
+                        <CheckIcon
+                          className="h-6 w-6 text-green-500"
+                          aria-hidden="true"
+                        />
+                        Analytics for each page
+                      </li>
+                      <li className="flex items-center gap-x-3">
+                        <CheckIcon
+                          className="h-6 w-6 text-green-500"
+                          aria-hidden="true"
+                        />
+                        Custom branding
+                      </li>
+                      <li className="flex items-center gap-x-3">
+                        <CheckIcon
+                          className="h-6 w-6 text-green-500"
+                          aria-hidden="true"
+                        />
+                        Custom domain
+                      </li>
+                      <li className="flex items-center gap-x-3">
+                        <CheckIcon
+                          className="h-6 w-6 text-green-500"
+                          aria-hidden="true"
+                        />
+                        Team access
+                      </li>
+                      <li className="flex items-center gap-x-3">
+                        <CheckIcon
+                          className="h-6 w-6 text-green-500"
+                          aria-hidden="true"
+                        />
+                        Data Room
+                      </li>
+
                       {/* Add additional features here */}
                     </ul>
                   </div>
                 </div>
                 <Link
-                  href="https://cal.com/marcseitz/papermark"
+                  href="/login"
                   target="_blank"
                   rel="noopener noreferrer"
+                  className="p-6"
                 >
                   <Button
                     variant="outline"
-                    className="text-balance rounded-3xl bg-transparent border-black"
+                    className="text-balance rounded-3xl bg-transparent bg-[#fb7a00] hover:bg-gray-500"
                   >
                     Start for free
                   </Button>
@@ -151,9 +193,9 @@ export default async function AlternativePage({
                   </div>
                   <div className="p-6">
                     <p className="mt-4 text-sm leading-6 text-gray-500">
-                      {alternative.title}
+                      {`${alternative.name} feature description`}
                     </p>
-                    <p className="mt-4 text-xl font-bold leading-6 text-gray-500">
+                    <p className="mt-4 text-2xl text-balance font-semibold leading-6 text-gray-900">
                       {alternative.price}
                     </p>
                     <ul className="mt-8 space-y-3 text-sm leading-6 text-gray-500">
@@ -205,15 +247,16 @@ export default async function AlternativePage({
                 </div>
 
                 <Link
-                  href="https://cal.com/marcseitz/papermark"
+                  href="/login"
                   target="_blank"
                   rel="noopener noreferrer"
+                  className="p-6"
                 >
                   <Button
                     variant="outline"
                     className="text-balance rounded-3xl bg-transparent border-black"
                   >
-                    {`Start with ${alternative.name}`}
+                    {`Start with ${alternative.name} alternative`}
                   </Button>
                 </Link>
               </div>
@@ -228,7 +271,7 @@ export default async function AlternativePage({
         id="features"
       >
         <h2 className="text-4xl text-balance pt-12 pb-20 max-w-3xl">
-          {alternative.subtitlefeatures}
+          {alternative.subtitlefeatures}{" "}
           <span className="text-gray-500">
             {alternative.descriptionfeatures}
           </span>
@@ -258,7 +301,7 @@ export default async function AlternativePage({
           <div className="pt-8 space-x-2">
             <Link href="/login">
               <Button className="text-balance rounded-3xl">
-                Start for free
+                Start sending documents for free
               </Button>
             </Link>
           </div>
