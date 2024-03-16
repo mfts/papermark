@@ -17,7 +17,6 @@ import {
   HardDrive as ServerIcon,
 } from "lucide-react";
 import Link from "next/link";
-import { classNames } from "@/lib/utils";
 import { LogoCloud } from "@/components/web/landing-page/logo-cloud";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/web/navbar";
