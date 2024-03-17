@@ -1,36 +1,26 @@
-import { getPostsRemote as getPosts } from "@/lib/content/blog";
+import { getPosts, getAlternatives, getPages } from "@/lib/content";
 import { MetadataRoute } from "next";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const posts = await getPosts();
-  const blogs = posts.map((post) => ({
+  const solutions = await getPages();
+  const alternatives = await getAlternatives();
+  const blogLinks = posts.map((post) => ({
     url: `https://www.papermark.io/blog/${post?.data.slug}`,
+    lastModified: new Date().toISOString().split("T")[0],
+  }));
+  const solutionLinks = solutions.map((solution) => ({
+    url: `https://www.papermark.io/solutions/${solution?.slug}`,
+    lastModified: new Date().toISOString().split("T")[0],
+  }));
+  const alternativeLinks = alternatives.map((alternative) => ({
+    url: `https://www.papermark.io/alternatives/${alternative?.slug}`,
     lastModified: new Date().toISOString().split("T")[0],
   }));
 
   return [
     {
       url: "https://www.papermark.io",
-      lastModified: new Date().toISOString().split("T")[0],
-    },
-    {
-      url: "https://www.papermark.io/alternatives/docsend",
-      lastModified: new Date().toISOString().split("T")[0],
-    },
-    {
-      url: "https://www.papermark.io/alternatives/brieflink",
-      lastModified: new Date().toISOString().split("T")[0],
-    },
-    {
-      url: "https://www.papermark.io/alternatives/pandadoc",
-      lastModified: new Date().toISOString().split("T")[0],
-    },
-    {
-      url: "https://www.papermark.io/alternatives/google-drive",
-      lastModified: new Date().toISOString().split("T")[0],
-    },
-    {
-      url: "https://www.papermark.io/alternatives/pitch",
       lastModified: new Date().toISOString().split("T")[0],
     },
     {
@@ -57,6 +47,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url: "https://www.papermark.io/investors",
       lastModified: new Date().toISOString().split("T")[0],
     },
-    ...blogs,
+    {
+      url: "https://www.papermark.io/blog",
+      lastModified: new Date().toISOString().split("T")[0],
+    },
+    ...blogLinks,
+    ...solutionLinks,
+    ...alternativeLinks,
   ];
 }
