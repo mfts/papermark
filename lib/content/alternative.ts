@@ -1,4 +1,4 @@
-import { cache } from "react";
+// import { cache } from "react";
 
 type Alternative = {
   id: number;
@@ -27,7 +27,7 @@ type Alternative = {
 // `cache` is a React 18 feature that allows you to cache a function for the lifetime of a request.
 // this means getPosts() will only be called once per page build, even though we may call it multiple times
 // when rendering the page.
-export const getAlternatives = cache(async () => {
+export const getAlternatives = async () => {
   const response = await fetch(
     `${process.env.CONTENT_BASE_URL}/api/alternatives`,
     {
@@ -43,7 +43,7 @@ export const getAlternatives = cache(async () => {
   }
   const data = (await response.json()) as Alternative[];
   return data;
-});
+};
 
 export const getAlternative = async (slug: string) => {
   const alternatives = await getAlternatives();

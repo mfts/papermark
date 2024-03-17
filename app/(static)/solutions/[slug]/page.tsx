@@ -65,7 +65,7 @@ export default async function PagePage({
             </Link>
           </div>
         </div>
-        <div className="mt-24 mx-auto w-full">
+        {/* <div className="mt-24 mx-auto w-full">
           <video
             width="100%"
             id="video1"
@@ -79,7 +79,7 @@ export default async function PagePage({
           >
             <source src={page.imageUrl} type="video/mp4" />
           </video>
-        </div>
+        </div> */}
       </div>
 
       <div className="overflow-hidden bg-white py-24 sm:py-32">
@@ -103,7 +103,10 @@ export default async function PagePage({
                 />
                 <div className="mx-auto max-w-2xl sm:mx-0 sm:max-w-none">
                   <img
-                    src={page.image1}
+                    src={
+                      page.image1 ??
+                      "https://aicontentfy-customer-images.s3.eu-central-1.amazonaws.com/a0ebbbe4-55f2-4f4a-b7f8-f251d3880386.png"
+                    }
                     alt="Product screenshot"
                     width={2432}
                     height={1442}
@@ -131,7 +134,10 @@ export default async function PagePage({
                 />
                 <div className="mx-auto max-w-2xl sm:mx-0 sm:max-w-none">
                   <img
-                    src={page.image2}
+                    src={
+                      page.image2 ??
+                      "https://aicontentfy-customer-images.s3.eu-central-1.amazonaws.com/f30a8c8a-3fee-414e-bb4b-51f6910f406c.png"
+                    }
                     alt="Product screenshot"
                     width={2432}
                     height={1442}
