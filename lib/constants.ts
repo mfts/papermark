@@ -49,4 +49,24 @@ export const BLOCKED_PATHNAMES = [
   "/server-status",
   "/wordpress",
   "/_all_dbs",
+  "/wp-json",
+];
+
+// list of paths that should be excluded from team checks
+export const EXCLUDED_PATHS = [
+  "/",
+  "/register",
+  "/privacy",
+  "/oss-friends",
+  "/pricing",
+  "/docsend-alternatives",
+  "/launch-week",
+  "/open-source-investors",
+  "/investors",
+  "/ai",
+  "/share-notion-page",
+  "/alternatives",
+  "/investors",
+  "/blog",
+  "/view",
 ];

@@ -1,8 +1,5 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/lib/prisma";
-import { checkPassword, log } from "@/lib/utils";
-import { trackAnalytics } from "@/lib/analytics";
-import { client } from "@/trigger";
 
 export default async function handle(
   req: NextApiRequest,

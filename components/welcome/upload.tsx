@@ -1,20 +1,16 @@
 import { useRouter } from "next/router";
 import { motion } from "framer-motion";
 import { useState } from "react";
-import { type PutBlobResult } from "@vercel/blob";
-import { upload } from "@vercel/blob/client";
 import DocumentUpload from "@/components/document-upload";
 import { toast } from "sonner";
 import Skeleton from "../Skeleton";
 import { STAGGER_CHILD_VARIANTS } from "@/lib/constants";
-import { pdfjs } from "react-pdf";
 import {
   convertDataUrlToFile,
   copyToClipboard,
-  getExtension,
   uploadImage,
 } from "@/lib/utils";
-import { Button } from "../ui/button";
+import { Button } from "@/components/ui/button";
 import { usePlausible } from "next-plausible";
 import { useTeam } from "@/context/team-context";
 import {
@@ -22,15 +18,17 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "../ui/accordion";
+} from "@/components/ui/accordion";
 import { LinkOptions } from "../links/link-sheet/link-options";
 import { DEFAULT_LINK_PROPS, DEFAULT_LINK_TYPE } from "../links/link-sheet";
-
-pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
+import { useAnalytics } from "@/lib/analytics";
+import { putFile } from "@/lib/files/put-file";
+import { DocumentData, createDocument } from "@/lib/documents/create-document";
 
 export default function Upload() {
   const router = useRouter();
   const plausible = usePlausible();
+  const analytics = useAnalytics();
   const [uploading, setUploading] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [currentFile, setCurrentFile] = useState<File | null>(null);
@@ -40,6 +38,8 @@ export default function Upload() {
   const [linkData, setLinkData] =
     useState<DEFAULT_LINK_TYPE>(DEFAULT_LINK_PROPS);
   const teamInfo = useTeam();
+
+  const teamId = teamInfo?.currentTeam?.id as string;
 
   const handleBrowserUpload = async (event: any) => {
     event.preventDefault();
@@ -53,23 +53,21 @@ export default function Upload() {
     try {
       setUploading(true);
 
-      const newBlob = await upload(currentFile.name, currentFile, {
-        access: "public",
-        handleUploadUrl: "/api/file/browser-upload",
+      const { type, data, numPages } = await putFile({
+        file: currentFile,
+        teamId,
       });
 
       setCurrentFile(null);
       setCurrentBlob(true);
 
-      let response: Response | undefined;
-      let numPages: number | undefined;
-      // create a document in the database if the document is a pdf
-      if (getExtension(newBlob.pathname).includes("pdf")) {
-        numPages = await getTotalPages(newBlob.url);
-        response = await saveDocumentToDatabase(newBlob, numPages);
-      } else {
-        response = await saveDocumentToDatabase(newBlob);
-      }
+      const documentData: DocumentData = {
+        name: currentFile.name,
+        key: data!,
+        storageType: type!,
+      };
+      // create a document in the database
+      const response = await createDocument({ documentData, teamId, numPages });
 
       if (response) {
         const document = await response.json();
@@ -77,6 +75,20 @@ export default function Upload() {
 
         // track the event
         plausible("documentUploaded");
+        analytics.capture("Document Added", {
+          documentId: document.id,
+          name: document.name,
+          numPages: document.numPages,
+          path: router.asPath,
+          type: "pdf",
+          teamId: teamInfo?.currentTeam?.id,
+        });
+        analytics.capture("Link Added", {
+          linkId: document.links[0].id,
+          documentId: document.id,
+          customDomain: null,
+          teamId: teamInfo?.currentTeam?.id,
+        });
 
         setTimeout(() => {
           setCurrentDocId(document.id);
@@ -89,50 +101,6 @@ export default function Upload() {
       setCurrentFile(null);
       setUploading(false);
     }
-  };
-
-  const saveDocumentToDatabase = async (
-    blob: PutBlobResult,
-    numPages?: number,
-  ) => {
-    // create a document in the database with the blob url
-    const response = await fetch(
-      `/api/teams/${teamInfo?.currentTeam?.id}/documents`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: blob.pathname,
-          url: blob.url,
-          numPages: numPages,
-        }),
-      },
-    );
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    return response;
-  };
-
-  // get the number of pages in the pdf
-  async function getTotalPages(url: string): Promise<number> {
-    const pdf = await pdfjs.getDocument(url).promise;
-    return pdf.numPages;
-  }
-
-  const handleContinue = (id: string) => {
-    copyToClipboard(
-      `${process.env.NEXT_PUBLIC_BASE_URL}/view/${id}`,
-      "Link copied to clipboard. Redirecting to document page...",
-    );
-    setTimeout(() => {
-      router.push(`/documents/${currentDocId}`);
-      setUploading(false);
-    }, 2000);
   };
 
   const handleSubmit = async (event: any) => {

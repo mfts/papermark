@@ -4,6 +4,7 @@ import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 import { errorhandler } from "@/lib/errorHandler";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
+import { identifyUser, trackAnalytics } from "@/lib/analytics";
 
 export default async function handle(
   req: NextApiRequest,
@@ -68,6 +69,12 @@ export default async function handle(
             },
           },
         },
+      });
+
+      await identifyUser(invitation.email);
+      await trackAnalytics({
+        event: "Team Member Invitation Accepted",
+        teamId: teamId,
       });
 
       // delete the invitation record after user is successfully added to the team

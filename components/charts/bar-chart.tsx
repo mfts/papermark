@@ -1,69 +1,13 @@
 import { BarChart } from "@tremor/react";
 import { useState } from "react";
-
-type Data = {
-  pageNumber: string;
-  data: {
-    versionNumber: number;
-    avg_duration: number;
-  }[];
-};
-
-type SumData = {
-  pageNumber: string;
-  sum_duration: number;
-};
-
-type TransformedData = {
-  pageNumber: string;
-  [key: string]: number | string; // Adjusted type to accommodate version keys
-};
-
-type Color =
-  | "neutral"
-  | "emerald"
-  | "gray"
-  | "slate"
-  | "zinc"
-  | "stone"
-  | "red"
-  | "orange"
-  | "amber"
-  | "yellow"
-  | "lime"
-  | "green"
-  | "teal"
-  | "cyan"
-  | "sky"
-  | "blue"
-  | "indigo"
-  | "violet"
-  | "purple"
-  | "fuchsia"
-  | "pink"
-  | "rose"
-  | "gray-300";
-
-const timeFormatter = (number: number) => {
-  const totalSeconds = Math.floor(number / 1000);
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = Math.round(totalSeconds % 60);
-
-  // Adding zero padding if seconds less than 10
-  const secondsFormatted = seconds < 10 ? `0${seconds}` : `${seconds}`;
-
-  return `${minutes}:${secondsFormatted}`;
-};
-
-// const renameAvgDurationKey = (data: any[]) => {
-//   return data.map((item) => {
-//     return {
-//       ...item,
-//       "Time spent per page": item.avg_duration,
-//       avg_duration: undefined,
-//     };
-//   });
-// };
+import {
+  type Data,
+  type SumData,
+  type TransformedData,
+  getColors,
+  timeFormatter,
+} from "./utils";
+import CustomTooltip from "./bar-chart-tooltip";
 
 const renameDummyDurationKey = (data: Data[]): TransformedData[] => {
   return data.reduce((acc, { pageNumber, data }) => {
@@ -110,36 +54,6 @@ const getVersionNumbers = (data: TransformedData[]) => {
       ),
     ),
   ];
-};
-
-const getColors = (versionNumbers: string[]): Color[] => {
-  const colorArray = [
-    "emerald",
-    "teal",
-    "gray",
-    "orange",
-    "zinc",
-    "neutral",
-    "stone",
-    "red",
-    "amber",
-    "yellow",
-    "lime",
-    "green",
-    "cyan",
-    "sky",
-    "blue",
-    "indigo",
-    "violet",
-    "purple",
-    "fuchsia",
-    "pink",
-    "rose",
-  ];
-  return versionNumbers.map((versionNumber: string) => {
-    const versionIndex = parseInt(versionNumber.split(" ")[1]) - 1;
-    return colorArray[versionIndex % colorArray.length] as Color;
-  });
 };
 
 export default function BarChartComponent({
@@ -192,6 +106,7 @@ export default function BarChartComponent({
       yAxisWidth={50}
       showGridLines={false}
       onValueChange={(v) => setValue(v)}
+      customTooltip={isDummy ? undefined : CustomTooltip}
     />
   );
 }

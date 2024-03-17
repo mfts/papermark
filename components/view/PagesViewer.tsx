@@ -1,11 +1,12 @@
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import LoadingSpinner from "../ui/loading-spinner";
+import LoadingSpinner from "@/components/ui/loading-spinner";
 import BlankImg from "@/public/_static/blank.gif";
 import Nav from "./nav";
 import Toolbar from "./toolbar";
 import { Brand } from "@prisma/client";
+import { useRouter } from "next/router";
 
 const DEFAULT_PRELOADED_IMAGES_NUM = 10;
 
@@ -30,14 +31,21 @@ export default function PagesViewer({
   versionNumber: number;
   brand?: Brand;
 }) {
+  const router = useRouter();
   const numPages = pages.length;
-  const [pageNumber, setPageNumber] = useState<number>(1); // start on first page
+  const pageQuery = router.query.p ? Number(router.query.p) : 1;
+
+  const [pageNumber, setPageNumber] = useState<number>(() =>
+    pageQuery >= 1 && pageQuery <= numPages ? pageQuery : 1,
+  ); // start on first page
+
   const [loadedImages, setLoadedImages] = useState<boolean[]>(
     new Array(numPages).fill(false),
   );
 
   const startTimeRef = useRef(Date.now());
   const pageNumberRef = useRef<number>(pageNumber);
+  const visibilityRef = useRef<boolean>(true);
 
   // Update the previous page number after the effect hook has run
   useEffect(() => {
@@ -45,30 +53,35 @@ export default function PagesViewer({
   }, [pageNumber]);
 
   useEffect(() => {
-    startTimeRef.current = Date.now(); // update the start time for the new page
-
-    // when component unmounts, calculate duration and track page view
-    return () => {
-      const endTime = Date.now();
-      const duration = Math.round(endTime - startTimeRef.current);
-      trackPageView(duration);
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        visibilityRef.current = true;
+        startTimeRef.current = Date.now(); // Reset start time when the page becomes visible again
+      } else {
+        visibilityRef.current = false;
+        const duration = Date.now() - startTimeRef.current;
+        trackPageView(duration);
+      }
     };
-  }, [pageNumber]); // monitor pageNumber for changes
 
-  // Send the last page view when the user leaves the page
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, []); // track page view when the page becomes visible or hidden on mount and unmount
+
   useEffect(() => {
-    const handleBeforeUnload = () => {
-      const endTime = Date.now();
-      const duration = Math.round(endTime - startTimeRef.current);
-      trackPageView(duration);
-    };
-
-    window.addEventListener("beforeunload", handleBeforeUnload);
+    startTimeRef.current = Date.now();
 
     return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload);
+      if (visibilityRef.current) {
+        // Only track the page view if the page is visible
+        const duration = Date.now() - startTimeRef.current;
+        trackPageView(duration);
+      }
     };
-  }, []);
+  }, [pageNumber]); // Track page view when the page number changes
 
   useEffect(() => {
     setLoadedImages((prev) =>
@@ -154,40 +167,38 @@ export default function PagesViewer({
         brand={brand}
         viewId={viewId}
         linkId={linkId}
-        embeddedLinks={pages[pageNumber - 1].embeddedLinks}
+        embeddedLinks={pages[pageNumber - 1]?.embeddedLinks}
       />
       <div
         style={{ height: "calc(100vh - 64px)" }}
         className="flex items-center relative"
       >
-        <div className="flex items-center justify-between w-full absolute z-10 px-2">
-          <button
-            onClick={goToPreviousPage}
-            disabled={pageNumber == 1}
-            className="relative h-[calc(100vh - 64px)] px-2 py-24  focus:z-20 "
-          >
-            <span className="sr-only">Previous</span>
-            <div className="bg-gray-950/50 hover:bg-gray-950/75 rounded-full relative flex items-center justify-center p-1">
-              <ChevronLeftIcon
-                className="h-10 w-10 text-white"
-                aria-hidden="true"
-              />
-            </div>
-          </button>
-          <button
-            onClick={goToNextPage}
-            disabled={pageNumber >= numPages}
-            className="relative h-[calc(100vh - 64px)] px-2 py-24  focus:z-20"
-          >
-            <span className="sr-only">Next</span>
-            <div className="bg-gray-950/50 hover:bg-gray-950/75 rounded-full relative flex items-center justify-center p-1">
-              <ChevronRightIcon
-                className="h-10 w-10 text-white"
-                aria-hidden="true"
-              />
-            </div>
-          </button>
-        </div>
+        <button
+          onClick={goToPreviousPage}
+          disabled={pageNumber == 1}
+          className="absolute left-0 h-[calc(100vh - 64px)] px-2 py-24 z-20"
+        >
+          <span className="sr-only">Previous</span>
+          <div className="bg-gray-950/50 hover:bg-gray-950/75 rounded-full relative flex items-center justify-center p-1">
+            <ChevronLeftIcon
+              className="h-10 w-10 text-white"
+              aria-hidden="true"
+            />
+          </div>
+        </button>
+        <button
+          onClick={goToNextPage}
+          disabled={pageNumber >= numPages}
+          className="absolute right-0 h-[calc(100vh - 64px)] px-2 py-24 z-20"
+        >
+          <span className="sr-only">Next</span>
+          <div className="bg-gray-950/50 hover:bg-gray-950/75 rounded-full relative flex items-center justify-center p-1">
+            <ChevronRightIcon
+              className="h-10 w-10 text-white"
+              aria-hidden="true"
+            />
+          </div>
+        </button>
 
         <div className="flex justify-center mx-auto relative h-full w-full">
           {pages && loadedImages[pageNumber - 1] ? (

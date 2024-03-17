@@ -24,6 +24,7 @@ const tiers: {
     annually: string;
   };
   description: string;
+  featureIntro: string;
   features: string[];
   bgColor: string;
   borderColor: string;
@@ -35,12 +36,14 @@ const tiers: {
     name: "Free",
     id: "tier-free",
     href: "/login",
-    price: { monthly: "€0", annually: "$0" },
+    price: { monthly: "€0", annually: "€0" },
     description: "The essentials to start sharing documents securely.",
+    featureIntro: "What's included:",
     features: [
       "1 user",
       "Unlimited links",
-      "Analytics for each page",
+      "Page-by-page analytics",
+      "30-day analytics retention",
       "Document sharing controls",
     ],
 
@@ -52,15 +55,16 @@ const tiers: {
   },
   {
     name: "Pro",
-    id: "tier-freelancer",
+    id: "tier-pro",
     href: "/login",
-    price: { monthly: "€29", annually: "$290" },
-    description:
-      "The essentials to provide a branded experience for your documents.",
+    price: { monthly: "€29", annually: "€290" },
+    description: "The branded experience for your documents.",
+    featureIntro: "Everything in Free, plus:",
     features: [
-      "Everything in Free, plus:",
-      "Up to 3 active users",
+      "3 users",
       "Custom domain",
+      "Custom branding",
+      "1-year analytics retention",
       "Advanced access controls",
       "Papermark AI",
     ],
@@ -72,16 +76,18 @@ const tiers: {
   },
   {
     name: "Business",
-    id: "tier-startup",
+    id: "tier-business",
     href: "/login",
-    price: { monthly: "€79", annually: "$790" },
+    price: { monthly: "€79", annually: "€790" },
     description: "A plan that scales with your rapidly growing business.",
+    featureIntro: "Everything in Pro, plus:",
     features: [
-      "Everything in Pro, plus:",
-      "Up to 10 active users",
-      "Data room",
+      "10 users",
+      "Unlimited documents",
+      "Unlimited subfolder levels",
       "Large file uploads",
-      "Custom Branding",
+      "Data rooms (coming soon)",
+      "Shareable folders (coming soon)",
       "24h Priority Support",
     ],
     bgColor: "#fb7a00",
@@ -94,12 +100,14 @@ const tiers: {
     name: "Enterprise",
     id: "tier-enterprise",
     href: "https://cal.com/marcseitz/papermark",
-    price: { monthly: "Custom", annually: "$" },
+    price: { monthly: "Custom", annually: "Custom" },
     description: "Self-hosted and advanced infrastructure for your company.",
+    featureIntro: "Tailored solutions:",
     features: [
-      "Self-Hosted version",
+      "Self-hosted version",
       "Unlimited users",
       "Unlimited documents",
+      "Unlimited folders and subfolders",
       "Different file types",
       "Up to 5TB file uploads",
       "Dedicated support",
@@ -193,6 +201,7 @@ export default function PricingPage() {
                         role="list"
                         className="mt-8 space-y-3 text-sm leading-6 text-gray-600"
                       >
+                        <li>{tier.featureIntro}</li>
                         {tier.features.map((feature) => (
                           <li key={feature} className="flex gap-x-3">
                             <CheckIcon
@@ -214,17 +223,18 @@ export default function PricingPage() {
                         });
                       }}
                     >
-                      <Button
-                        className="rounded-3xl hover:bg-gray-100"
-                        style={{
-                          backgroundColor: tier.bgColor,
-                          borderColor: tier.borderColor,
-                          color: tier.textColor,
-                          borderWidth: "1px",
-                        }}
-                      >
-                        {tier.buttonText}
-                      </Button>
+                      {tier.id === "tier-business" ? (
+                        <Button
+                          className="rounded-3xl text-base"
+                          variant="orange"
+                        >
+                          {tier.buttonText}
+                        </Button>
+                      ) : (
+                        <Button className="rounded-3xl text-base text-gray-200 bg-black hover:bg-gray-900">
+                          {tier.buttonText}
+                        </Button>
+                      )}
                     </Link>
                   </div>
                 </div>
@@ -234,7 +244,7 @@ export default function PricingPage() {
         </div>
 
         <div className="w-full max-w-7xl px-4 md:px-8 mx-auto ">
-          <div className="py-12 bg-[#fb7a00] rounded-3xl mx-auto px-6">
+          <div className="py-12 bg-[#fb7a00] rounded-xl mx-auto px-6">
             <div className="flex lg:flex-row flex-col item-center justify-between space-y-10 lg:space-y-0">
               <h2 className="text-3xl text-nowrap">Looking to self-host?</h2>
               <div className="space-x-2 flex items-center">

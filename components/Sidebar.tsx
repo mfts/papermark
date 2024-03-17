@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import FolderIcon from "@/components/shared/icons/folder";
-import PieChartIcon from "@/components/shared/icons/pie-chart";
 import SettingsIcon from "@/components/shared/icons/settings";
 import MenuIcon from "@/components/shared/icons/menu";
 import { cn } from "@/lib/utils";
@@ -16,7 +14,16 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import ProfileMenu from "./profile-menu";
 import { AddDocumentModal } from "./documents/add-document-modal";
 import { Button } from "./ui/button";
-import { PlusIcon } from "lucide-react";
+import {
+  FolderPlusIcon,
+  PaletteIcon,
+  PlusIcon,
+  FolderIcon as FolderLucideIcon,
+  FolderOpenIcon,
+} from "lucide-react";
+import SiderbarFolders from "./sidebar-folders";
+import { AddFolderModal } from "./documents/add-folder-modal";
+import { ScrollArea } from "./ui/scroll-area";
 
 export default function Sidebar() {
   return (
@@ -81,98 +88,157 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
     {
       name: "Documents",
       href: "/documents",
-      icon: FolderIcon,
-      current: router.pathname.includes("documents"),
+      icon: router.pathname.includes("documents")
+        ? FolderOpenIcon
+        : FolderLucideIcon,
+      current:
+        router.pathname.includes("documents") &&
+        !router.pathname.includes("tree"),
+      active: router.pathname.includes("documents"),
       disabled: false,
     },
-    // {
-    //   name: "Analytics",
-    //   href: "/analytics",
-    //   icon: PieChartIcon,
-    //   current: router.pathname.includes("analytics"),
-    //   disabled: true,
-    // },
+    {
+      name: "Branding",
+      href: "/settings/branding",
+      icon: PaletteIcon,
+      current: router.pathname.includes("branding"),
+      active: false,
+      disabled: false,
+    },
     {
       name: "Settings",
       href: "/settings/general",
       icon: SettingsIcon,
-      current: router.pathname.includes("settings"),
+      current:
+        router.pathname.includes("settings") &&
+        !router.pathname.includes("branding"),
+      active: false,
       disabled: false,
     },
   ];
 
   return (
-    <aside
-      className={cn(
-        "w-full h-screen lg:w-72 flex-shrink-0 flex-col justify-between gap-y-6 bg-gray-50 dark:bg-black px-4 lg:px-6 pt-4 lg:pt-6",
-        className,
-      )}
-    >
-      {/* Sidebar component, swap this element with another sidebar if you like */}
+    <div>
+      <aside
+        className={cn(
+          "w-full h-screen lg:w-72 flex-shrink-0 flex-col justify-between gap-y-6 bg-gray-50 dark:bg-black px-4 lg:px-6 pt-4 lg:pt-6",
+          className,
+        )}
+      >
+        {/* Sidebar component, swap this element with another sidebar if you like */}
 
-      <div className="flex h-16 shrink-0 items-center space-x-3">
-        <p className="text-2xl font-bold tracking-tighter text-black dark:text-white flex items-center">
-          Papermark{" "}
-          {userPlan == "pro" ? (
-            <span className="bg-background text-foreground ring-1 ring-gray-800 rounded-full px-2.5 py-1 text-xs ml-4">
-              Pro
-            </span>
-          ) : null}
-        </p>
-      </div>
+        <div className="flex h-16 shrink-0 items-center space-x-3">
+          <p className="text-2xl font-bold tracking-tighter text-black dark:text-white flex items-center">
+            Papermark{" "}
+            {userPlan == "pro" ? (
+              <span className="bg-background text-foreground ring-1 ring-gray-800 rounded-full px-2.5 py-1 text-xs ml-4">
+                Pro
+              </span>
+            ) : null}
+          </p>
+        </div>
 
-      <SelectTeam
-        currentTeam={currentTeam}
-        teams={teams}
-        isLoading={isLoading}
-        setCurrentTeam={() => {}}
-      />
+        <SelectTeam
+          currentTeam={currentTeam}
+          teams={teams}
+          isLoading={isLoading}
+          setCurrentTeam={() => {}}
+        />
 
-      <AddDocumentModal>
-        <Button
-          className="w-full text-left group flex gap-x-3 items-center justify-start px-3"
-          title="Add New Document"
-        >
-          <PlusIcon className="h-5 w-5 shrink-0" aria-hidden="true" />
-          <span>Add New Document</span>
-        </Button>
-      </AddDocumentModal>
-
-      <section className="flex flex-1 flex-col gap-y-6">
-        <div className="space-y-2">
-          {navigation.map((item) => (
-            <button
-              key={item.name}
-              onClick={() => router.push(item.href)}
-              disabled={item.disabled}
-              className={cn(
-                item.current
-                  ? "bg-gray-200 dark:bg-secondary text-secondary-foreground font-semibold"
-                  : "text-muted-foreground hover:text-foreground hover:bg-gray-200 hover:dark:bg-muted duration-200",
-                "group flex gap-x-3 items-center rounded-md px-3 py-2 text-sm leading-6 w-full disabled:hover:bg-transparent disabled:text-muted-foreground disabled:cursor-default",
-              )}
+        <div className="flex items-center gap-x-1">
+          <AddDocumentModal>
+            <Button
+              className="flex-1 text-left group flex gap-x-3 items-center justify-start px-3"
+              title="Add New Document"
             >
-              <item.icon className="h-5 w-5 shrink-0" aria-hidden="true" />
-              {item.name}
-            </button>
-          ))}
+              <PlusIcon className="h-5 w-5 shrink-0" aria-hidden="true" />
+              <span>Add New Document</span>
+            </Button>
+          </AddDocumentModal>
+          <AddFolderModal>
+            <Button
+              size="icon"
+              variant="outline"
+              className="bg-gray-50 dark:bg-black border-gray-500 hover:bg-gray-200 hover:dark:bg-muted"
+            >
+              <FolderPlusIcon className="w-5 h-5 shrink-0" aria-hidden="true" />
+            </Button>
+          </AddFolderModal>
         </div>
-      </section>
-      <div className="mb-4">
-        {/* if user is on trial show banner,
-         * if user is pro show nothing,
-         * if user is free and showProBanner is true show pro banner
-         */}
-        {userPlan === "trial" && session ? <Banner session={session} /> : null}
-        {userPlan === "pro" && null}
-        {userPlan === "free" && showProBanner ? (
-          <ProBanner setShowProBanner={setShowProBanner} />
-        ) : null}
 
-        <div className="w-full hidden lg:block">
-          <ProfileMenu size="large" />
+        <ScrollArea className="flex-grow" showScrollbar>
+          <section className="flex flex-1 flex-col gap-y-6">
+            <div className="space-y-2">
+              {navigation.map((item) => {
+                if (item.name === "Documents") {
+                  return (
+                    <>
+                      <button
+                        key={item.name}
+                        onClick={() => router.push(item.href)}
+                        disabled={item.disabled}
+                        className={cn(
+                          item.current
+                            ? "bg-gray-200 dark:bg-secondary text-secondary-foreground font-semibold"
+                            : "text-muted-foreground hover:text-foreground hover:bg-gray-200 hover:dark:bg-muted duration-200",
+                          router.pathname.includes("documents") &&
+                            "text-foreground",
+                          "group flex gap-x-2 items-center rounded-md px-3 py-2 text-sm leading-6 w-full disabled:hover:bg-transparent disabled:text-muted-foreground disabled:cursor-default",
+                        )}
+                      >
+                        <item.icon
+                          className="h-5 w-5 shrink-0"
+                          aria-hidden="true"
+                        />
+                        {item.name}
+                      </button>
+                      {item.active ? <SiderbarFolders /> : null}
+                    </>
+                  );
+                }
+                return (
+                  <button
+                    key={item.name}
+                    onClick={() => router.push(item.href)}
+                    disabled={item.disabled}
+                    className={cn(
+                      item.current
+                        ? "bg-gray-200 dark:bg-secondary text-secondary-foreground font-semibold"
+                        : "text-muted-foreground hover:text-foreground hover:bg-gray-200 hover:dark:bg-muted duration-200",
+                      router.pathname.includes("documents") &&
+                        "text-foreground",
+                      "group flex gap-x-2 items-center rounded-md px-3 py-2 text-sm leading-6 w-full disabled:hover:bg-transparent disabled:text-muted-foreground disabled:cursor-default",
+                    )}
+                  >
+                    <item.icon
+                      className="h-5 w-5 shrink-0"
+                      aria-hidden="true"
+                    />
+                    {item.name}
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+        </ScrollArea>
+        <div className="mb-4">
+          {/* if user is on trial show banner,
+           * if user is pro show nothing,
+           * if user is free and showProBanner is true show pro banner
+           */}
+          {userPlan === "trial" && session ? (
+            <Banner session={session} />
+          ) : null}
+          {userPlan === "pro" && null}
+          {userPlan === "free" && showProBanner ? (
+            <ProBanner setShowProBanner={setShowProBanner} />
+          ) : null}
+
+          <div className="w-full hidden lg:block">
+            <ProfileMenu size="large" />
+          </div>
         </div>
-      </div>
-    </aside>
+      </aside>
+    </div>
   );
 };

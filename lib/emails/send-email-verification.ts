@@ -6,11 +6,15 @@ export const sendVerificationEmail = async (
   verificationURL: string,
 ) => {
   const emailTemplate = EmailVerification({ verificationURL, email });
-  await sendEmail({
-    to: email,
-    subject: "Verify your email address",
-    react: emailTemplate,
-    test: process.env.NODE_ENV === "development",
-    system: true,
-  });
+  try {
+    await sendEmail({
+      to: email,
+      subject: "Verify your email address",
+      react: emailTemplate,
+      test: process.env.NODE_ENV === "development",
+      system: true,
+    });
+  } catch (e) {
+    console.error(e);
+  }
 };

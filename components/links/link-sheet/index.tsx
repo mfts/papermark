@@ -20,6 +20,7 @@ import DomainSection from "./domain-section";
 import { useTeam } from "@/context/team-context";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { LinkOptions } from "./link-options";
+import { useAnalytics } from "@/lib/analytics";
 
 export const DEFAULT_LINK_PROPS = {
   id: null,
@@ -73,6 +74,7 @@ export default function LinkSheet({
   const { links } = useDocumentLinks();
   const { domains } = useDomains();
   const teamInfo = useTeam();
+  const analytics = useAnalytics();
   const [data, setData] = useState<DEFAULT_LINK_TYPE>(DEFAULT_LINK_PROPS);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
@@ -155,6 +157,13 @@ export default function LinkSheet({
         [...(links || []), returnedLink],
         false,
       );
+
+      analytics.capture("Link Added", {
+        linkId: returnedLink.id,
+        documentId,
+        customDomain: returnedLink.domainSlug,
+      });
+
       toast.success("Link created successfully");
     }
 

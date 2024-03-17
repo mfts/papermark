@@ -1,11 +1,10 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/lib/prisma";
 import { checkPassword, log } from "@/lib/utils";
-import { trackAnalytics } from "@/lib/analytics";
-import { client } from "@/trigger";
 import { newId } from "@/lib/id-helper";
 import { sendVerificationEmail } from "@/lib/emails/send-email-verification";
 import { getFile } from "@/lib/files/get-file";
+import sendNotification from "@/lib/api/notification-helper";
 
 export default async function handle(
   req: NextApiRequest,
@@ -22,8 +21,10 @@ export default async function handle(
     documentId,
     userId,
     documentVersionId,
+    documentName,
     hasPages,
     token,
+    ownerId,
     verifiedEmail,
     ...data
   } = req.body as {
@@ -31,8 +32,10 @@ export default async function handle(
     documentId: string;
     userId: string | null;
     documentVersionId: string;
+    documentName: string;
     hasPages: boolean;
     token: string | null;
+    ownerId: string;
     verifiedEmail: string | null;
   };
 
@@ -49,6 +52,7 @@ export default async function handle(
       emailAuthenticated: true,
       password: true,
       domainSlug: true,
+      isArchived: true,
       slug: true,
       allowList: true,
       denyList: true,
@@ -57,6 +61,11 @@ export default async function handle(
 
   if (!link) {
     res.status(404).json({ message: "Link not found." });
+    return;
+  }
+
+  if (link.isArchived) {
+    res.status(404).json({ message: "Link is no longer available." });
     return;
   }
 
@@ -125,7 +134,7 @@ export default async function handle(
   if (link.emailAuthenticated && !token) {
     const token = newId("email");
     const expiresAt = new Date();
-    expiresAt.setHours(expiresAt.getHours() + 24); // token expires in 24 hour
+    expiresAt.setHours(expiresAt.getHours() + 1); // token expires in 1 hour
 
     await prisma.verificationToken.create({
       data: {
@@ -239,26 +248,9 @@ export default async function handle(
       console.timeEnd("get-file");
     }
 
-    // TODO: cannot identify user because session is not available
-    // await identifyUser((session.user as CustomUser).id);
-    // await analytics.identify();
-    console.time("track-analytics");
-    await trackAnalytics({
-      event: "Link Viewed",
-      linkId: linkId,
-      documentId: documentId,
-      viewerId: newView.id,
-      viewerEmail: email,
-    });
-    console.timeEnd("track-analytics");
-
     if (link.enableNotification) {
-      // trigger link viewed event to trigger send-notification job
       console.time("sendemail");
-      await client.sendEvent({
-        name: "link.viewed",
-        payload: { viewId: newView.id },
-      });
+      await sendNotification({ viewId: newView.id });
       console.timeEnd("sendemail");
     }
 

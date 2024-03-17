@@ -18,9 +18,13 @@ import { Textarea } from "@/components/ui/textarea";
 export default function OGSection({
   data,
   setData,
+  hasFreePlan,
+  handleUpgradeStateChange,
 }: {
   data: DEFAULT_LINK_TYPE;
   setData: Dispatch<SetStateAction<DEFAULT_LINK_TYPE>>;
+  hasFreePlan: boolean;
+  handleUpgradeStateChange: (state: boolean, trigger: string) => void;
 }) {
   const { enableCustomMetatag, metaTitle, metaDescription, metaImage } = data;
   const [enabled, setEnabled] = useState<boolean>(false);
@@ -71,12 +75,32 @@ export default function OGSection({
             className={cn(
               "text-sm font-medium leading-6",
               enabled ? "text-foreground" : "text-muted-foreground",
+              hasFreePlan ? "cursor-pointer" : undefined,
             )}
+            onClick={
+              hasFreePlan
+                ? () => handleUpgradeStateChange(true, "link_sheet_og_section")
+                : undefined
+            }
           >
             Custom social media cards
+            {hasFreePlan && (
+              <span className="bg-background text-foreground ring-1 ring-gray-800 dark:ring-gray-500 rounded-full px-2 py-0.5 text-xs ml-2">
+                Pro
+              </span>
+            )}
           </h2>
         </div>
-        <Switch checked={enabled} onCheckedChange={handleCustomMetatag} />
+        <Switch
+          checked={enabled}
+          onClick={
+            hasFreePlan
+              ? () => handleUpgradeStateChange(true, "link_sheet_og_section")
+              : undefined
+          }
+          className={hasFreePlan ? "opacity-50" : undefined}
+          onCheckedChange={hasFreePlan ? undefined : handleCustomMetatag}
+        />
       </div>
 
       {enabled && (

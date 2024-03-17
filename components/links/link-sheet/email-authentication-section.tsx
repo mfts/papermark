@@ -6,9 +6,13 @@ import { DEFAULT_LINK_TYPE } from ".";
 export default function EmailAuthenticationSection({
   data,
   setData,
+  hasFreePlan,
+  handleUpgradeStateChange,
 }: {
   data: DEFAULT_LINK_TYPE;
   setData: Dispatch<SetStateAction<DEFAULT_LINK_TYPE>>;
+  hasFreePlan: boolean;
+  handleUpgradeStateChange: (state: boolean, trigger: string) => void;
 }) {
   const { emailProtected, emailAuthenticated } = data;
   const [enabled, setEnabled] = useState<boolean>(emailAuthenticated);
@@ -37,14 +41,39 @@ export default function EmailAuthenticationSection({
             className={cn(
               "text-sm font-medium leading-6",
               enabled ? "text-foreground" : "text-muted-foreground",
+              hasFreePlan ? "cursor-pointer" : undefined,
             )}
+            onClick={
+              hasFreePlan
+                ? () =>
+                    handleUpgradeStateChange(
+                      true,
+                      "link_sheet_email_auth_section",
+                    )
+                : undefined
+            }
           >
             Require email verification
+            {hasFreePlan && (
+              <span className="bg-background text-foreground ring-1 ring-gray-800 dark:ring-gray-500 rounded-full px-2 py-0.5 text-xs ml-2">
+                Pro
+              </span>
+            )}
           </h2>
         </div>
         <Switch
           checked={enabled}
-          onCheckedChange={handleEnableAuthentication}
+          onClick={
+            hasFreePlan
+              ? () =>
+                  handleUpgradeStateChange(
+                    true,
+                    "link_sheet_email_auth_section",
+                  )
+              : undefined
+          }
+          className={hasFreePlan ? "opacity-50" : undefined}
+          onCheckedChange={hasFreePlan ? undefined : handleEnableAuthentication}
         />
       </div>
     </div>

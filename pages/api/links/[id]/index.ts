@@ -35,8 +35,10 @@ export default async function handle(
           document: {
             select: {
               id: true,
+              name: true,
               assistantEnabled: true,
               teamId: true,
+              ownerId: true,
               versions: {
                 where: { isPrimary: true },
                 select: {
@@ -57,6 +59,10 @@ export default async function handle(
 
       if (!link) {
         return res.status(404).json({ error: "Link not found" });
+      }
+
+      if (link.isArchived) {
+        return res.status(404).json({ error: "Link is archived" });
       }
 
       let brand = await prisma.brand.findFirst({
@@ -184,7 +190,7 @@ export default async function handle(
     }
 
     await fetch(
-      `${process.env.NEXTAUTH_URL}/api/revalidate?secret=${process.env.REVALIDATE_TOKEN}&linkId=${id}`,
+      `${process.env.NEXTAUTH_URL}/api/revalidate?secret=${process.env.REVALIDATE_TOKEN}&linkId=${id}&hasDomain=${updatedLink.domainId ? "true" : "false"}`,
     );
 
     return res.status(200).json(updatedLink);

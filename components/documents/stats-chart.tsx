@@ -1,4 +1,4 @@
-import { useStats } from "@/lib/swr/use-stats";
+import { TStatsData } from "@/lib/swr/use-stats";
 import ErrorPage from "next/error";
 import BarChartComponent from "../charts/bar-chart";
 import StatsChartSkeleton from "./stats-chart-skeleton";
@@ -6,12 +6,14 @@ import StatsChartDummy from "./stats-chart-dummy";
 
 export default function StatsChart({
   documentId,
+  statsData,
   totalPagesMax = 0,
 }: {
   documentId: string;
+  statsData: { stats: TStatsData | undefined; loading: boolean; error: any };
   totalPagesMax?: number;
 }) {
-  const { stats, loading, error } = useStats();
+  const { stats, loading, error } = statsData;
 
   if (error && error.status === 404) {
     return <ErrorPage statusCode={404} />;

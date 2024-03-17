@@ -58,7 +58,7 @@ export default function Toolbar({
   const Emoji = ({ label, emoji }: { label: string; emoji: string }) => (
     <div className="relative w-fit">
       <button
-        className="font-emoji text-2xl leading-6 bg-transparent p-1 relative transition-bg-color duration-600 inline-flex justify-center items-center align-middle rounded-full ease-in-out hover:bg-gray-200 active:bg-gray-400 active:duration-0"
+        className="font-emoji text-xl leading-6 bg-transparent py-1 px-1.5 relative transition-bg-color duration-600 inline-flex justify-center items-center align-middle rounded-full ease-in-out hover:bg-gray-200 active:bg-gray-400 active:duration-0"
         role="img"
         aria-label={label ? label : ""}
         aria-hidden={label ? "false" : "true"}
@@ -79,15 +79,14 @@ export default function Toolbar({
 
   return (
     <>
-      <Draggable
-        bounds="parent"
-        handle=".moveable-icon"
-        defaultClassName="mt-12"
+      <div
+        className="fixed top-16 left-0 w-dvw justify-center items-end flex z-10"
+        style={{ height: "calc(100vh - 64px)" }}
       >
-        <div className="fixed bottom-10 left-1/2 flex z-10">
-          <div className="bg-gray-950/50 border border-gray-900 rounded-full mx-auto mt-4 mb-4">
+        <Draggable bounds="parent" handle=".moveable-icon">
+          <div className="bg-gray-950/40 rounded-full w-max mt-4 mb-4">
             <div className="grid items-center justify-start">
-              <div className="p-2">
+              <div className="px-2 py-1">
                 <div className="grid items-center justify-start grid-flow-col">
                   {REACTIONS.map((reaction) => (
                     <Emoji
@@ -96,13 +95,13 @@ export default function Toolbar({
                       label={reaction.label}
                     />
                   ))}
-                  <GripVertical className="h-6 w-6 text-gray-100 active:text-gray-300 moveable-icon" />
+                  <GripVertical className="h-5 w-5 text-gray-100 active:text-gray-300 moveable-icon" />
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      </Draggable>
+        </Draggable>
+      </div>
     </>
   );
 }

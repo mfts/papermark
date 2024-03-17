@@ -4,7 +4,6 @@ import prisma from "@/lib/prisma";
 import { authOptions } from "../../../auth/[...nextauth]";
 import { CustomUser } from "@/lib/types";
 import { getExtension, log } from "@/lib/utils";
-import { identifyUser, trackAnalytics } from "@/lib/analytics";
 import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
 import { errorhandler } from "@/lib/errorHandler";
 import { client } from "@/trigger";
@@ -32,6 +31,9 @@ export default async function handle(
         teamId,
         userId,
         options: {
+          where: {
+            folderId: null,
+          },
           orderBy: {
             createdAt: "desc",
           },
@@ -69,15 +71,17 @@ export default async function handle(
     const {
       name,
       url: fileUrl,
+      storageType,
       numPages,
       type: fileType,
-      storageType,
+      folderPathName,
     } = req.body as {
       name: string;
       url: string;
-      numPages: number;
-      type?: string;
       storageType: DocumentStorageType;
+      numPages?: number;
+      type?: string;
+      folderPathName?: string;
     };
 
     try {
@@ -102,6 +106,18 @@ export default async function handle(
         }
       }
 
+      const folder = await prisma.folder.findUnique({
+        where: {
+          teamId_path: {
+            teamId,
+            path: "/" + folderPathName,
+          },
+        },
+        select: {
+          id: true,
+        },
+      });
+
       // Save data to the database
       const document = await prisma.document.create({
         data: {
@@ -125,6 +141,7 @@ export default async function handle(
               versionNumber: 1,
             },
           },
+          folderId: folder?.id ? folder.id : null,
         },
         include: {
           links: true,
@@ -132,33 +149,11 @@ export default async function handle(
         },
       });
 
-      // calculate the path of the page where the document was added
-      const referer = req.headers.referer;
-      let pathWithQuery = null;
-      if (referer) {
-        const url = new URL(referer);
-        pathWithQuery = url.pathname + url.search;
-      }
-
-      await identifyUser((session.user as CustomUser).id);
-      await trackAnalytics({
-        event: "Document Added",
-        documentId: document.id,
-        name: document.name,
-        fileSize: null,
-        path: pathWithQuery,
-      });
-      await trackAnalytics({
-        event: "Link Added",
-        linkId: document.links[0].id,
-        documentId: document.id,
-        customDomain: null,
-      });
-
       // skip triggering convert-pdf-to-image job for "notion" documents
       if (type !== "notion") {
         // trigger document uploaded event to trigger convert-pdf-to-image job
         await client.sendEvent({
+          id: document.versions[0].id, // unique eventId for the run
           name: "document.uploaded",
           payload: {
             documentVersionId: document.versions[0].id,

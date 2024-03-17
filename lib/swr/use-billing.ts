@@ -19,7 +19,7 @@ export function useBilling() {
   const teamInfo = useTeam();
 
   const { data, error } = useSWR<BillingProps>(
-    `/api/teams/${teamInfo?.currentTeam?.id}/billing`,
+    teamInfo?.currentTeam && `/api/teams/${teamInfo.currentTeam.id}/billing`,
     fetcher,
     {
       dedupingInterval: 30000,
