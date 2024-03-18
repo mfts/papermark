@@ -1,24 +1,16 @@
 import { AddDocumentModal } from "@/components/documents/add-document-modal";
 import { AddFolderModal } from "@/components/documents/add-folder-modal";
+import { BreadcrumbComponent } from "@/components/documents/breadcrumb";
 import DocumentCard from "@/components/documents/document-card";
 import { EmptyDocuments } from "@/components/documents/empty-document";
 import FolderCard from "@/components/documents/folder-card";
 import AppLayout from "@/components/layouts/app";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTeam } from "@/context/team-context";
 import { useFolderDocuments, useFolder } from "@/lib/swr/use-documents";
 import { FileIcon, FolderIcon, FolderPlusIcon, PlusIcon } from "lucide-react";
-import Link from "next/link";
 import { useRouter } from "next/router";
 
 export default function DocumentTreePage() {
@@ -32,41 +24,7 @@ export default function DocumentTreePage() {
   return (
     <AppLayout>
       <main className="p-4 sm:py-4 sm:px-4 sm:m-4">
-        <Breadcrumb>
-          <BreadcrumbList>
-            <BreadcrumbItem key={"root"}>
-              <BreadcrumbLink asChild>
-                <Link href="/documents">Documents</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            {name &&
-              name.map((item: string, index: number, array: string[]) => {
-                return (
-                  <>
-                    <BreadcrumbSeparator />
-                    {index === array.length - 1 ? (
-                      <BreadcrumbItem key={index}>
-                        <BreadcrumbPage className="capitalize">
-                          {item}
-                        </BreadcrumbPage>
-                      </BreadcrumbItem>
-                    ) : (
-                      <BreadcrumbItem key={index}>
-                        <BreadcrumbLink asChild>
-                          <Link
-                            href={`/documents/tree/${array.slice(0, index + 1).join("/")}`}
-                            className="capitalize"
-                          >
-                            {item}
-                          </Link>
-                        </BreadcrumbLink>
-                      </BreadcrumbItem>
-                    )}
-                  </>
-                );
-              })}
-          </BreadcrumbList>
-        </Breadcrumb>
+        <BreadcrumbComponent />
 
         <section className="flex items-center justify-between mb-4 md:mb-8 lg:mb-12 mt-4">
           <div className="space-y-1">
