@@ -59,9 +59,16 @@ export default async function handle(
           teamId: teamId,
           folderId: folder.id,
         },
+        orderBy: {
+          createdAt: "desc",
+        },
         include: {
           _count: {
             select: { links: true, views: true, versions: true },
+          },
+          links: {
+            take: 1,
+            select: { id: true },
           },
         },
       });
