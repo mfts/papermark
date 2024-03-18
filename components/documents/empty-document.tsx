@@ -9,11 +9,13 @@ export function EmptyDocuments() {
         className="mx-auto h-12 w-12 text-muted-foreground"
         strokeWidth={1}
       />
-      <h3 className="mt-2 text-sm font-medium text-foreground">No documents</h3>
+      <h3 className="mt-2 text-sm font-medium text-foreground">
+        No documents here
+      </h3>
       <p className="mt-1 text-sm text-muted-foreground">
         Get started by uploading a new document.
       </p>
-      <div className="mt-6">
+      {/* <div className="mt-6">
         <AddDocumentModal>
           <Button
             className="w-full flex gap-x-3 items-center justify-center px-3"
@@ -23,7 +25,7 @@ export function EmptyDocuments() {
             <span>Add Document</span>
           </Button>
         </AddDocumentModal>
-      </div>
+      </div> */}
     </div>
   );
 }

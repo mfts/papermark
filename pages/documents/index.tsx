@@ -2,7 +2,7 @@ import useDocuments, { useRootFolders } from "@/lib/swr/use-documents";
 import { useTeam } from "@/context/team-context";
 import DocumentCard from "@/components/documents/document-card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { FileIcon, FolderIcon, PlusIcon } from "lucide-react";
+import { FileIcon, FolderIcon, FolderPlusIcon, PlusIcon } from "lucide-react";
 import { AddDocumentModal } from "@/components/documents/add-document-modal";
 import { Separator } from "@/components/ui/separator";
 import AppLayout from "@/components/layouts/app";
@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import Folder from "@/components/shared/icons/folder";
 import FolderCard from "@/components/documents/folder-card";
 import { EmptyDocuments } from "@/components/documents/empty-document";
+import { AddFolderModal } from "@/components/documents/add-folder-modal";
 
 export default function Documents() {
   const { documents } = useDocuments();
@@ -28,8 +29,8 @@ export default function Documents() {
               Manage all your documents in one place.
             </p>
           </div>
-          <div className="flex items-center justify-between gap-4">
-            <AddDocumentModal>
+          {/* <div className="flex items-center justify-between gap-4"> */}
+          {/* <AddDocumentModal>
               <Button
                 size="icon"
                 className="fixed bottom-6 right-5 z-30 lg:hidden sm:bottom-0 sm:right-0 sm:relative w-10 sm:w-44 h-10 sm:h-10"
@@ -39,8 +40,31 @@ export default function Documents() {
                   <PlusIcon className="w-6 h-6" />
                 </span>
               </Button>
+            </AddDocumentModal> */}
+          <div className="flex items-center gap-x-1">
+            <AddDocumentModal>
+              <Button
+                className="flex-1 text-left group flex gap-x-3 items-center justify-start px-3"
+                title="Add New Document"
+              >
+                <PlusIcon className="h-5 w-5 shrink-0" aria-hidden="true" />
+                <span>Add New Document</span>
+              </Button>
             </AddDocumentModal>
+            <AddFolderModal>
+              <Button
+                size="icon"
+                variant="outline"
+                className="bg-gray-50 dark:bg-black border-gray-500 hover:bg-gray-200 hover:dark:bg-muted"
+              >
+                <FolderPlusIcon
+                  className="w-5 h-5 shrink-0"
+                  aria-hidden="true"
+                />
+              </Button>
+            </AddFolderModal>
           </div>
+          {/* </div> */}
         </section>
 
         <section className="flex items-center gap-x-2 mb-2">
