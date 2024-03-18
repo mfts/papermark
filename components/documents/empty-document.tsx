@@ -13,7 +13,7 @@ export function EmptyDocuments() {
       <p className="mt-1 text-sm text-muted-foreground">
         Get started by uploading a new document.
       </p>
-      <div className="mt-6">
+      {/* <div className="mt-6">
         <AddDocumentModal>
           <Button
             className="w-full flex gap-x-3 items-center justify-center px-3"
@@ -23,7 +23,7 @@ export function EmptyDocuments() {
             <span>Add Document</span>
           </Button>
         </AddDocumentModal>
-      </div>
+      </div> */}
     </div>
   );
 }
