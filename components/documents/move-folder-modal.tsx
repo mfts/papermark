@@ -10,10 +10,7 @@ import {
 import { useTeam } from "@/context/team-context";
 import { useState } from "react";
 import { toast } from "sonner";
-import { usePlan } from "@/lib/swr/use-billing";
-import { useAnalytics } from "@/lib/analytics";
 import { mutate } from "swr";
-import { useFolders } from "@/lib/swr/use-documents";
 import { SidebarFolderTreeSelection } from "@/components/sidebar-folders";
 import { useRouter } from "next/router";
 
@@ -100,10 +97,12 @@ export function MoveToFolderModal({
           <DialogDescription>Move your document to a folder.</DialogDescription>
         </DialogHeader>
         <form>
-          <SidebarFolderTreeSelection
-            selectedFolderId={folderId}
-            setFolderId={setFolderId}
-          />
+          <div className="mb-2">
+            <SidebarFolderTreeSelection
+              selectedFolderId={folderId}
+              setFolderId={setFolderId}
+            />
+          </div>
 
           <DialogFooter>
             <Button onClick={handleSubmit} className="w-full h-9">
