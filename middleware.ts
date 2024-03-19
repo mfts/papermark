@@ -23,8 +23,7 @@ export default async function middleware(req: NextRequest, ev: NextFetchEvent) {
   const host = req.headers.get("host");
 
   if (
-    (process.env.NODE_ENV === "development" &&
-      host?.includes("papermark-dev.local")) ||
+    (process.env.NODE_ENV === "development" && host?.includes(".local")) ||
     (process.env.NODE_ENV !== "development" &&
       !(
         host?.includes("localhost") ||
