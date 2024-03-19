@@ -11,6 +11,7 @@ import { GetStaticPropsContext } from "next";
 import { useRouter } from "next/router";
 import { Brand } from "@prisma/client";
 import CustomMetatag from "@/components/view/custom-metatag";
+import Head from "next/head";
 
 export const getStaticProps = async (context: GetStaticPropsContext) => {
   const { linkId } = context.params as { linkId: string };
@@ -111,6 +112,13 @@ export default function ViewPage({
   if (!link || status === "loading" || router.isFallback) {
     return (
       <>
+        <Head>
+          <meta
+            property="og:url"
+            key="og-url"
+            content={`https://www.papermark.io/view/${router.query.linkId}`}
+          />
+        </Head>
         {meta && meta.enableCustomMetatag ? (
           <CustomMetatag
             title={meta.metaTitle}
@@ -153,6 +161,13 @@ export default function ViewPage({
   if (emailProtected || linkPassword) {
     return (
       <>
+        <Head>
+          <meta
+            property="og:url"
+            key="og-url"
+            content={`https://www.papermark.io/view/${link.id}`}
+          />
+        </Head>
         {enableCustomMetatag ? (
           <CustomMetatag
             title={metaTitle}
@@ -176,6 +191,13 @@ export default function ViewPage({
 
   return (
     <>
+      <Head>
+        <meta
+          property="og:url"
+          key="og-url"
+          content={`https://www.papermark.io/view/${link.id}`}
+        />
+      </Head>
       {enableCustomMetatag ? (
         <CustomMetatag
           title={metaTitle}

@@ -46,7 +46,12 @@ export default function App({
           content="https://www.papermark.io/_static/meta-image.png"
           key="og-image"
         />
-        <meta property="og:url" content="https://www.papermark.io" />
+        <meta
+          property="og:url"
+          content="https://www.papermark.io"
+          key="og-url"
+        />
+        <meta property="og:type" content="website" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:site" content="@papermarkio" />
         <meta name="twitter:creator" content="@papermarkio" />
