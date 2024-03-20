@@ -50,22 +50,22 @@ export default async function PagePage({
                   height={50}
                 />
               </div> */}
-          <div className="relative rounded-full px-3 py-1 text-sm leading-6 text-black ring-black/10  hover:ring-white/20 text-balance">
-            Use first Linkedin management platform
-          </div>
+          {/* <div className="relative rounded-full px-3 py-1 text-sm leading-6 text-black ring-black/10  hover:ring-white/20 text-balance">
+            Join 1000s happy users
+          </div> */}
           <h1 className="text-6xl text-balance">{page.title}</h1>
           <p className="text-xl mt-8 text-balance max-w-3xl mx-auto md:text-2xl">
             {page.description}
           </p>
           <div className="pt-8 space-x-2">
             <Link href="/login">
-              <Button className="text-white bg-blue-800 rounded-3xl hover:bg-gray-500 justify-center text-balance">
+              <Button className="text-white text-balance bg-gray-900 rounded-3xl hover:bg-gray-800 justify-center text-balance">
                 {page.button}
               </Button>
             </Link>
           </div>
         </div>
-        {/* <div className="mt-24 mx-auto w-full">
+        <div className="mt-24 mx-auto w-full">
           <video
             width="100%"
             id="video1"
@@ -77,9 +77,12 @@ export default async function PagePage({
             loop
             controls
           >
-            <source src={page.imageUrl} type="video/mp4" />
+            <source
+              src="https://dknlay9ljaq1f.cloudfront.net/short-video.mp4"
+              type="video/mp4"
+            />
           </video>
-        </div> */}
+        </div>
       </div>
 
       <div className="overflow-hidden bg-white py-24 sm:py-32">
@@ -94,9 +97,16 @@ export default async function PagePage({
                   {page.description1}
                 </p>
               </div>
+              <div className="pt-8 space-x-2">
+                <Link href="/login">
+                  <Button className="text-white text-balance bg-gray-900 rounded-3xl hover:bg-gray-800 justify-center text-balance">
+                    {page.button}
+                  </Button>
+                </Link>
+              </div>
             </div>
             <div className="sm:px-6 lg:px-0">
-              <div className="relative isolate overflow-hidden bg-orange-500 px-6 pt-8 sm:mx-auto sm:max-w-2xl sm:rounded-3xl sm:pl-16 sm:pr-0 sm:pt-16 lg:mx-0 lg:max-w-none">
+              <div className="relative isolate overflow-hidden bg-gray-900 px-6 pt-8 sm:mx-auto sm:max-w-2xl sm:rounded-3xl sm:pl-16 sm:pr-0 sm:pt-16 lg:mx-0 lg:max-w-none">
                 <div
                   className="absolute -inset-y-px -left-3 -z-10 w-full origin-bottom-left skew-x-[-30deg] bg-orange-200 opacity-20 ring-1 ring-inset ring-white"
                   aria-hidden="true"
@@ -127,7 +137,7 @@ export default async function PagePage({
         <div className="mx-auto max-w-7xl md:px-6 lg:px-8">
           <div className="grid grid-cols-1 gap-x-8 gap-y-16 sm:gap-y-20 lg:grid-cols-2 lg:items-start">
             <div className="sm:px-6 lg:px-0">
-              <div className="relative isolate overflow-hidden bg-orange-500 px-6 pt-8 sm:mx-auto sm:max-w-2xl sm:rounded-3xl sm:pl-16 sm:pr-0 sm:pt-16 lg:mx-0 lg:max-w-none">
+              <div className="relative isolate overflow-hidden bg-gray-900 px-6 pt-8 sm:mx-auto sm:max-w-2xl sm:rounded-3xl sm:pl-16 sm:pr-0 sm:pt-16 lg:mx-0 lg:max-w-none">
                 <div
                   className="absolute -inset-y-px -left-3 -z-10 w-full origin-bottom-left skew-x-[-30deg] bg-orange-200 opacity-20 ring-1 ring-inset ring-white"
                   aria-hidden="true"
@@ -158,6 +168,13 @@ export default async function PagePage({
                 <p className="mt-6 text-lg leading-8 text-gray-600 text-balance">
                   {page.description2}
                 </p>
+              </div>
+              <div className="pt-8 space-x-2">
+                <Link href="/login">
+                  <Button className="text-white text-balance bg-gray-900 rounded-3xl hover:bg-gray-800 justify-center text-balance">
+                    {page.button}
+                  </Button>
+                </Link>
               </div>
             </div>
           </div>

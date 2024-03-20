@@ -52,7 +52,7 @@ export default async function AlternativePage({
               src={alternative.imageUrl!}
               alt="App screenshot"
               className="mx-auto"
-              width={150}
+              width={100}
               height={50}
             />
           </div>
