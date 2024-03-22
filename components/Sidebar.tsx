@@ -172,9 +172,8 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
               {navigation.map((item) => {
                 if (item.name === "Documents") {
                   return (
-                    <>
+                    <div key={item.name}>
                       <button
-                        key={item.name}
                         onClick={() => router.push(item.href)}
                         disabled={item.disabled}
                         className={cn(
@@ -193,7 +192,7 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
                         {item.name}
                       </button>
                       {item.active ? <SiderbarFolders /> : null}
-                    </>
+                    </div>
                   );
                 }
                 return (
