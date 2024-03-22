@@ -19,7 +19,7 @@ import { durationFormat, timeAgo } from "@/lib/utils";
 import ChevronDown from "@/components/shared/icons/chevron-down";
 import VisitorChart from "./visitor-chart";
 import { VisitorAvatar } from "./visitor-avatar";
-import { BadgeCheckIcon, BadgeInfoIcon } from "lucide-react";
+import { BadgeCheckIcon, BadgeInfoIcon, DownloadCloudIcon } from "lucide-react";
 import { BadgeTooltip } from "@/components/ui/tooltip";
 
 export default function VisitorsTable({ numPages }: { numPages: number }) {
@@ -80,6 +80,14 @@ export default function VisitorsTable({ numPages }: { numPages: number }) {
                                         key="internal"
                                       >
                                         <BadgeInfoIcon className="h-4 w-4 text-blue-500 hover:text-blue-600" />
+                                      </BadgeTooltip>
+                                    )}
+                                    {view.downloadedAt && (
+                                      <BadgeTooltip
+                                        content={`Downloaded ${timeAgo(view.downloadedAt)}`}
+                                        key="download"
+                                      >
+                                        <DownloadCloudIcon className="h-4 w-4 text-cyan-500 hover:text-cyan-600" />
                                       </BadgeTooltip>
                                     )}
                                   </>
