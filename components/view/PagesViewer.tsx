@@ -204,7 +204,7 @@ export default function PagesViewer({
           {pages && loadedImages[pageNumber - 1] ? (
             pages.map((page, index) => {
               // contains cloudfront.net in the file path, then use img tag otherwise use next/image
-              if (page.file.toLowerCase().includes("cloudfront.net")) {
+              if (page.file.toLowerCase().includes("files.papermark.io")) {
                 return (
                   <img
                     key={index}

@@ -11,13 +11,9 @@ const nextConfig = {
         hostname: "assets.papermark.io",
       },
       {
-        // special document pages
+        // user-shared documents and files
         protocol: "https",
-        hostname: "d36r2enbzam0iu.cloudfront.net",
-      },
-      {
-        protocol: "https",
-        hostname: "dev-to-uploads.s3.amazonaws.com",
+        hostname: process.env.NEXT_PRIVATE_UPLOAD_DISTRIBUTION_HOST,
       },
       {
         // twitter img
@@ -41,29 +37,29 @@ const nextConfig = {
         port: "3000",
       },
       {
-        // staging img
+        // special document pages
+        protocol: "https",
+        hostname: "d36r2enbzam0iu.cloudfront.net",
+      },
+      {
+        // staging vercel blob
         protocol: "https",
         hostname: "36so9a8uzykxknsu.public.blob.vercel-storage.com",
       },
       {
-        // production img
+        // production vercel blob
         protocol: "https",
         hostname: "yoywvlh29jppecbh.public.blob.vercel-storage.com",
-      },
-      {
-        // development / staging hosted user img
-        protocol: "https",
-        hostname: "d16lliwzxm242j.cloudfront.net",
-      },
-      {
-        // production hosted user img
-        protocol: "https",
-        hostname: "d1ff41ind5a7r1.cloudfront.net",
       },
       {
         // blog images
         protocol: "https",
         hostname: "aicontentfy-customer-images.s3.eu-central-1.amazonaws.com",
+      },
+      {
+        // also blog images
+        protocol: "https",
+        hostname: "dev-to-uploads.s3.amazonaws.com",
       },
     ],
   },
