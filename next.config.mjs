@@ -8,7 +8,7 @@ const nextConfig = {
       {
         // static images and videos
         protocol: "https",
-        hostname: "dknlay9ljaq1f.cloudfront.net",
+        hostname: "assets.papermark.io",
       },
       {
         // special document pages

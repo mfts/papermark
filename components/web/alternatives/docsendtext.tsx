@@ -58,7 +58,7 @@ const DocSendAlternatives = () => {
                 focuses primarily on enterprise clients.
               </p>
               <img
-                src="https://dknlay9ljaq1f.cloudfront.net/alterantives/bqyxrz1jry4mjnk1kimo-1.png"
+                src="https://assets.papermark.io/alterantives/bqyxrz1jry4mjnk1kimo-1.png"
                 alt="DocSend Product"
                 className="my-4"
               />
@@ -85,7 +85,7 @@ const DocSendAlternatives = () => {
                 cheap for essential features.
               </p>
               <img
-                src="https://dknlay9ljaq1f.cloudfront.net/alterantives/znexk7slb43uv0cmeqzw-2.png"
+                src="https://assets.papermark.io/alterantives/znexk7slb43uv0cmeqzw-2.png"
                 alt="DocSend Review #1"
                 className="my-4"
               />
@@ -102,7 +102,7 @@ const DocSendAlternatives = () => {
               <h3 className="text-1xl font-bold mb-4">Confusing UI</h3>
               <p> Customers find the Docsend UI confusing and outdated.</p>
               <img
-                src="https://dknlay9ljaq1f.cloudfront.net/alterantives/n0id8nfbhq0geo7feqqu-3.png"
+                src="https://assets.papermark.io/alterantives/n0id8nfbhq0geo7feqqu-3.png"
                 alt="DocSend Review #2"
                 className="my-4"
               />
@@ -112,7 +112,7 @@ const DocSendAlternatives = () => {
                 support with waiting time over two weeks.
               </p>
               <img
-                src="https://dknlay9ljaq1f.cloudfront.net/alterantives/9rg8uwwz7t3vpkz55qfc-4.png"
+                src="https://assets.papermark.io/alterantives/9rg8uwwz7t3vpkz55qfc-4.png"
                 alt="DocSend Review #3"
                 className="my-4"
               />
@@ -121,7 +121,7 @@ const DocSendAlternatives = () => {
                 DocSend Plans and Pricing
               </h2>
               <img
-                src="https://dknlay9ljaq1f.cloudfront.net/alterantives/1afc866si8948vjbhhye-5.png"
+                src="https://assets.papermark.io/alterantives/1afc866si8948vjbhhye-5.png"
                 alt="DocSend Pricing"
                 className="my-4"
               />
@@ -171,7 +171,7 @@ const DocSendAlternatives = () => {
                 Users love our customer support
               </h3>
               <img
-                src="https://dknlay9ljaq1f.cloudfront.net/alterantives/ptam9dpuu627c1hmsttz.png"
+                src="https://assets.papermark.io/alterantives/ptam9dpuu627c1hmsttz.png"
                 alt="Papermark reviews"
                 className="my-4"
               />
@@ -179,7 +179,7 @@ const DocSendAlternatives = () => {
                 Papermark focuses on UI and core features
               </h3>
               <img
-                src="https://dknlay9ljaq1f.cloudfront.net/alterantives/rukw13d22o50hfrdqa1y.png"
+                src="https://assets.papermark.io/alterantives/rukw13d22o50hfrdqa1y.png"
                 alt="Papermark reviews"
                 className="my-4"
               />
@@ -187,7 +187,7 @@ const DocSendAlternatives = () => {
                 Actively used by founders, VC funds and developers
               </h3>
               <img
-                src="https://dknlay9ljaq1f.cloudfront.net/alterantives/6gsr6kfo84srtzgu6nhe.png"
+                src="https://assets.papermark.io/alterantives/6gsr6kfo84srtzgu6nhe.png"
                 alt="Papermark reviews"
                 className="my-4"
               />
@@ -203,7 +203,7 @@ const DocSendAlternatives = () => {
               </p>
 
               <img
-                src="https://dknlay9ljaq1f.cloudfront.net/alterantives/fibyns1yrayocc2pkydk.png"
+                src="https://assets.papermark.io/alterantives/fibyns1yrayocc2pkydk.png"
                 alt="Papermark plans and pricing"
                 className="my-4"
               />
