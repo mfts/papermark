@@ -457,7 +457,7 @@ export default function Home() {
                 loop
               >
                 <source
-                  src="https://dknlay9ljaq1f.cloudfront.net/papermark-ai-video.mp4"
+                  src="https://assets.papermark.io/papermark-ai-video.mp4"
                   type="video/mp4"
                 />
               </video>
