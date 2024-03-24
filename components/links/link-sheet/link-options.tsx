@@ -17,6 +17,7 @@ import DenyListSection from "@/components/links/link-sheet/deny-list-section";
 import PasswordSection from "@/components/links/link-sheet/password-section";
 import OGSection from "@/components/links/link-sheet/og-section";
 import FeedbackSection from "@/components/links/link-sheet/feedback-section";
+import AddWatermarkSection from "./add-watermark-section";
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { usePlan } from "@/lib/swr/use-billing";
 
@@ -72,6 +73,11 @@ export const LinkOptions = ({
               {...{ data, setData }}
               hasFreePlan={hasFreePlan}
               handleUpgradeStateChange={handleUpgradeStateChange}
+            />
+            <AddWatermarkSection
+              {...{ data, setData }}
+              hasFreePlan={hasFreePlan}
+              setOpenUpgradeModal={setOpenUpgradeModal}
             />
             <PasswordSection {...{ data, setData }} />
             <FeedbackSection {...{ data, setData }} />

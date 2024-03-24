@@ -5,6 +5,7 @@ import LoadingSpinner from "@/components/ui/loading-spinner";
 import BlankImg from "@/public/_static/blank.gif";
 import Nav from "./nav";
 import Toolbar from "./toolbar";
+import Watermark from "./watermark";
 import { Brand } from "@prisma/client";
 import { useRouter } from "next/router";
 
@@ -20,6 +21,8 @@ export default function PagesViewer({
   feedbackEnabled,
   versionNumber,
   brand,
+  watermark,
+  viewerEmail,
 }: {
   pages: { file: string; pageNumber: string; embeddedLinks: string[] }[];
   linkId: string;
@@ -30,6 +33,8 @@ export default function PagesViewer({
   feedbackEnabled: boolean;
   versionNumber: number;
   brand?: Brand;
+  watermark?: boolean;
+  viewerEmail?: string;
 }) {
   const router = useRouter();
   const numPages = pages.length;
@@ -199,6 +204,10 @@ export default function PagesViewer({
             />
           </div>
         </button>
+
+        <div className="fixed top-[20%] min-[450px]:top-[10%] sm:top-16 bottom-[11%] min-[450px]:bottom-[5%] sm:bottom-0 left-1/2 z-10 w-full sm:w-[90%] md:w-[630px] transform -translate-x-[50%]">
+          {watermark && <Watermark email={viewerEmail as string} />}
+        </div>
 
         <div className="flex justify-center mx-auto relative h-full w-full">
           {pages && loadedImages[pageNumber - 1] ? (

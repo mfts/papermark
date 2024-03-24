@@ -40,6 +40,7 @@ export const DEFAULT_LINK_PROPS = {
   metaTitle: null,
   metaDescription: null,
   metaImage: null,
+  watermark: false,
 };
 
 export type DEFAULT_LINK_TYPE = {
@@ -60,6 +61,7 @@ export type DEFAULT_LINK_TYPE = {
   metaTitle: string | null; // metatags
   metaDescription: string | null; // metatags
   metaImage: string | null; // metatags
+  watermark: boolean;
 };
 
 export default function LinkSheet({

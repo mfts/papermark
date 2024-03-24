@@ -43,6 +43,7 @@ export default async function handle(
           metaTitle: true,
           metaDescription: true,
           metaImage: true,
+          watermark: true,
           document: {
             select: {
               id: true,
