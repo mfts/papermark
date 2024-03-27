@@ -13,13 +13,26 @@ import {
 import { MoreVertical, FolderIcon } from "lucide-react";
 import { useRef } from "react";
 import { FolderWithCount } from "@/lib/swr/use-documents";
+import { DataroomFolderWithCount } from "@/lib/swr/use-dataroom";
 
 type FolderCardProps = {
-  folder: FolderWithCount;
+  folder: FolderWithCount | DataroomFolderWithCount;
   teamInfo: TeamContextType | null;
+  isDataroom?: boolean;
+  dataroomId?: string;
 };
-export default function FolderCard({ folder, teamInfo }: FolderCardProps) {
+export default function FolderCard({
+  folder,
+  teamInfo,
+  isDataroom,
+  dataroomId,
+}: FolderCardProps) {
   const dropdownRef = useRef<HTMLDivElement | null>(null);
+
+  const folderPath =
+    isDataroom && dataroomId
+      ? `/datarooms/${dataroomId}/documents${folder.path}`
+      : `/documents/tree${folder.path}`;
 
   return (
     <li className="group/row relative rounded-lg p-3 border-0 dark:bg-secondary ring-1 ring-gray-400 dark:ring-gray-500 transition-all hover:ring-gray-500 hover:dark:ring-gray-400 hover:bg-secondary sm:p-4 flex justify-between items-center">
@@ -31,10 +44,7 @@ export default function FolderCard({ folder, teamInfo }: FolderCardProps) {
         <div className="flex-col">
           <div className="flex items-center">
             <h2 className="min-w-0 text-sm font-semibold leading-6 text-foreground truncate max-w-[150px] sm:max-w-md">
-              <Link
-                href={`/documents/tree${folder.path}`}
-                className="truncate w-full"
-              >
+              <Link href={`${folderPath}`} className="truncate w-full">
                 <span>{folder.name}</span>
                 <span className="absolute inset-0" />
               </Link>

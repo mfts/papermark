@@ -67,6 +67,7 @@ model Team {
   invitations Invitation[]
   sentEmails  SentEmail[]
   brand       Brand?
+  datarooms   Dataroom[]
 
   plan           String    @default("free")
   stripeId       String?   @unique // Stripe subscription / customer ID
@@ -138,6 +139,8 @@ model Document {
   folderId String? // Optional Folder ID for documents in folders
   folder   Folder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
 
+  datarooms DataroomDocument[] // Datarooms associated with this document
+
   @@index([ownerId])
   @@index([teamId])
   @@index([folderId])
@@ -183,10 +186,18 @@ enum DocumentStorageType {
   VERCEL_BLOB
 }
 
+enum LinkType {
+  DOCUMENT_LINK
+  DATAROOM_LINK
+}
+
 model Link {
   id                 String    @id @default(cuid())
-  document           Document  @relation(fields: [documentId], references: [id], onDelete: Cascade)
-  documentId         String
+  document           Document? @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  documentId         String? // This can be nullable, representing links without documents
+  dataroom           Dataroom? @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
+  dataroomId         String? // This can be nullable, representing links without datarooms
+  linkType           LinkType  @default(DOCUMENT_LINK)
   url                String?   @unique
   name               String? // Link name
   slug               String? // Link slug for pretty URLs
@@ -235,16 +246,19 @@ model Domain {
 }
 
 model View {
-  id           String     @id @default(cuid())
-  link         Link       @relation(fields: [linkId], references: [id])
-  linkId       String
-  document     Document   @relation(fields: [documentId], references: [id], onDelete: Cascade)
-  documentId   String
-  viewerEmail  String? // Email of the viewer if known
-  verified     Boolean    @default(false) // Whether the viewer email has been verified
-  viewedAt     DateTime   @default(now())
-  downloadedAt DateTime? // This is the time the document was downloaded
-  reactions    Reaction[]
+  id             String     @id @default(cuid())
+  link           Link       @relation(fields: [linkId], references: [id])
+  linkId         String
+  document       Document?  @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  documentId     String?
+  dataroom       Dataroom?  @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
+  dataroomId     String?
+  dataroomViewId String? // This is the view ID from the dataroom
+  viewerEmail    String? // Email of the viewer if known
+  verified       Boolean    @default(false) // Whether the viewer email has been verified
+  viewedAt       DateTime   @default(now())
+  downloadedAt   DateTime? // This is the time the document was downloaded
+  reactions      Reaction[]
 
   @@index([linkId])
   @@index([documentId])
@@ -322,6 +336,57 @@ model Folder {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([parentId])
   @@unique([teamId, path])
+  @@index([parentId])
+}
+
+model Dataroom {
+  id        String             @id @default(cuid())
+  pId       String             @unique // This is the generated public ID for the dataroom dr_1234
+  name      String
+  teamId    String
+  team      Team               @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  documents DataroomDocument[]
+  folders   DataroomFolder[]
+  links     Link[]
+  views     View[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([teamId])
+}
+
+model DataroomDocument {
+  id         String          @id @default(cuid())
+  dataroomId String
+  dataroom   Dataroom        @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
+  documentId String
+  document   Document        @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  folderId   String?
+  folder     DataroomFolder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([dataroomId, documentId])
+  @@index([folderId])
+}
+
+model DataroomFolder {
+  id           String             @id @default(cuid())
+  name         String
+  path         String // the materialized path to the folder; starts always with "/"
+  parentId     String?
+  documents    DataroomDocument[]
+  childFolders DataroomFolder[]   @relation("SubFolders")
+  parentFolder DataroomFolder?    @relation("SubFolders", fields: [parentId], references: [id], onDelete: SetNull)
+  dataroomId   String
+  dataroom     Dataroom           @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([dataroomId, path])
+  @@index([parentId])
 }

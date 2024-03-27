@@ -25,6 +25,8 @@ export default function Nav({
   linkId,
   type,
   embeddedLinks,
+  isDataroom,
+  setDocumentData,
 }: {
   pageNumber?: number;
   numPages?: number;
@@ -35,6 +37,8 @@ export default function Nav({
   viewId?: string;
   linkId?: string;
   type?: "pdf" | "notion";
+  isDataroom?: boolean;
+  setDocumentData?: (data: any) => void;
 }) {
   const downloadFile = async () => {
     if (!allowDownload || type === "notion") return;
@@ -68,7 +72,7 @@ export default function Nav({
     >
       <div className="mx-auto px-2 sm:px-6 lg:px-8">
         <div className="relative flex h-16 items-center justify-between">
-          <div className="flex flex-1 items-stretch justify-start">
+          <div className="flex flex-1 justify-start items-center">
             <div className="flex flex-shrink-0 items-center relative h-8 w-36">
               {brand && brand.logo ? (
                 <Image
@@ -89,6 +93,17 @@ export default function Nav({
                 </Link>
               )}
             </div>
+            {isDataroom && setDocumentData ? (
+              <div>
+                <Button
+                  onClick={() => setDocumentData(null)}
+                  className="text-white text-sm font-medium"
+                  variant="link"
+                >
+                  Dataroom Home
+                </Button>
+              </div>
+            ) : null}
           </div>
           <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0 space-x-4">
             {embeddedLinks && embeddedLinks.length > 0 ? (

@@ -42,14 +42,14 @@ export default function ProcessStatusBar({
     return null;
   }
 
-  const progress = Number(statuses[0].data?.progress) * 100 || 0;
-  const text = String(statuses[0].data?.text) || "";
+  const progress = Number(statuses[0]?.data?.progress) * 100 || 0;
+  const text = String(statuses[0]?.data?.text) || "";
 
   if (run.status === "FAILURE") {
     return (
       <Progress
         value={progress}
-        text={`Error processing document page ${Number(statuses[0].data?.currentPage)}`}
+        text={`Error processing document page ${Number(statuses[0]?.data?.currentPage)}`}
         error={true}
         className={cn(
           "w-full text-[8px] font-semibold rounded-none",

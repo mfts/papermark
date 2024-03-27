@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import Folder from "@/components/shared/icons/folder";
 import FolderCard from "@/components/documents/folder-card";
 import { EmptyDocuments } from "@/components/documents/empty-document";
-import { AddFolderModal } from "@/components/documents/add-folder-modal";
+import { AddFolderModal } from "@/components/folders/add-folder-modal";
 
 export default function Documents() {
   const { documents } = useDocuments();

@@ -20,16 +20,20 @@ export default function PagesViewer({
   feedbackEnabled,
   versionNumber,
   brand,
+  dataroomId,
+  setDocumentData,
 }: {
   pages: { file: string; pageNumber: string; embeddedLinks: string[] }[];
   linkId: string;
   documentId: string;
   viewId: string;
-  assistantEnabled: boolean;
+  assistantEnabled?: boolean;
   allowDownload: boolean;
   feedbackEnabled: boolean;
   versionNumber: number;
   brand?: Brand;
+  dataroomId?: string;
+  setDocumentData?: (data: any) => void;
 }) {
   const router = useRouter();
   const numPages = pages.length;
@@ -140,6 +144,7 @@ export default function PagesViewer({
         duration: duration,
         pageNumber: pageNumberRef.current,
         versionNumber: versionNumber,
+        dataroomId: dataroomId,
       }),
       headers: {
         "Content-Type": "application/json",
@@ -168,6 +173,8 @@ export default function PagesViewer({
         viewId={viewId}
         linkId={linkId}
         embeddedLinks={pages[pageNumber - 1]?.embeddedLinks}
+        isDataroom={dataroomId ? true : false}
+        setDocumentData={setDocumentData}
       />
       <div
         style={{ height: "calc(100vh - 64px)" }}

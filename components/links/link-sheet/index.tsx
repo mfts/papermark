@@ -21,6 +21,7 @@ import { useTeam } from "@/context/team-context";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { LinkOptions } from "./link-options";
 import { useAnalytics } from "@/lib/analytics";
+import { LinkWithViews } from "@/lib/types";
 
 export const DEFAULT_LINK_PROPS = {
   id: null,
@@ -65,13 +66,16 @@ export type DEFAULT_LINK_TYPE = {
 export default function LinkSheet({
   isOpen,
   setIsOpen,
+  linkType,
   currentLink,
+  existingLinks,
 }: {
   isOpen: boolean;
   setIsOpen: Dispatch<SetStateAction<boolean>>;
+  linkType: "DOCUMENT_LINK" | "DATAROOM_LINK";
   currentLink?: DEFAULT_LINK_TYPE;
+  existingLinks?: LinkWithViews[];
 }) {
-  const { links } = useDocumentLinks();
   const { domains } = useDomains();
   const teamInfo = useTeam();
   const analytics = useAnalytics();
@@ -79,7 +83,7 @@ export default function LinkSheet({
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const router = useRouter();
-  const documentId = router.query.id as string;
+  const targetId = router.query.id as string;
 
   useEffect(() => {
     setData(currentLink || DEFAULT_LINK_PROPS);
@@ -120,7 +124,9 @@ export default function LinkSheet({
       body: JSON.stringify({
         ...data,
         metaImage: blobUrl,
-        documentId: documentId,
+        targetId: targetId,
+        linkType: linkType,
+        teamId: teamInfo?.currentTeam?.id,
       }),
     });
 
@@ -133,15 +139,16 @@ export default function LinkSheet({
     }
 
     const returnedLink = await response.json();
+    const endpointTargetType = `${linkType.replace("_LINK", "").toLowerCase()}s`; // "documents" or "datarooms"
 
     if (currentLink) {
       setIsOpen(false);
       // Update the link in the list of links
       mutate(
-        `/api/teams/${teamInfo?.currentTeam?.id}/documents/${encodeURIComponent(
-          documentId,
+        `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
+          targetId,
         )}/links`,
-        (links || []).map((link) =>
+        (existingLinks || []).map((link) =>
           link.id === currentLink.id ? returnedLink : link,
         ),
         false,
@@ -151,16 +158,17 @@ export default function LinkSheet({
       setIsOpen(false);
       // Add the new link to the list of links
       mutate(
-        `/api/teams/${teamInfo?.currentTeam?.id}/documents/${encodeURIComponent(
-          documentId,
+        `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
+          targetId,
         )}/links`,
-        [...(links || []), returnedLink],
+        [...(existingLinks || []), returnedLink],
         false,
       );
 
       analytics.capture("Link Added", {
         linkId: returnedLink.id,
-        documentId,
+        targetId,
+        linkType,
         customDomain: returnedLink.domainSlug,
       });
 

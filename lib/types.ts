@@ -5,6 +5,9 @@ import {
   View,
   User as PrismaUser,
   DocumentVersion,
+  DataroomDocument,
+  Dataroom,
+  DataroomFolder,
 } from "@prisma/client";
 
 export type CustomUser = NextAuthUser & PrismaUser;

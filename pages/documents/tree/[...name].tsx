@@ -1,5 +1,5 @@
 import { AddDocumentModal } from "@/components/documents/add-document-modal";
-import { AddFolderModal } from "@/components/documents/add-folder-modal";
+import { AddFolderModal } from "@/components/folders/add-folder-modal";
 import { BreadcrumbComponent } from "@/components/documents/breadcrumb";
 import DocumentCard from "@/components/documents/document-card";
 import { EmptyDocuments } from "@/components/documents/empty-document";
