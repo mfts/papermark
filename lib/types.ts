@@ -5,6 +5,9 @@ import {
   View,
   User as PrismaUser,
   DocumentVersion,
+  DataroomDocument,
+  Dataroom,
+  DataroomFolder,
 } from "@prisma/client";
 
 export type CustomUser = NextAuthUser & PrismaUser;
@@ -36,8 +39,8 @@ export interface LinkWithViews extends Link {
   views: View[];
 }
 
-export interface LinkWithDocument extends Link {
-  document: Document & {
+export interface LinkWithDocumentOrDataroom extends Link {
+  document?: Document & {
     versions: {
       id: string;
       versionNumber: number;
@@ -48,6 +51,13 @@ export interface LinkWithDocument extends Link {
       team?: {
         plan: string;
       };
+    };
+  };
+  dataroom?: Dataroom & {
+    documents: DataroomDocument[];
+    folders: DataroomFolder[];
+    team?: {
+      plan: string;
     };
   };
 }
