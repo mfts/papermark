@@ -11,6 +11,7 @@ export const publishPageView = tb.buildIngestEndpoint({
     linkId: z.string(),
     documentId: z.string(),
     viewId: z.string(),
+    folderId: z.string().optional(),
     versionNumber: z.number().int().min(1).max(65535).optional().default(1),
     time: z.number().int(),
     duration: z.number().int(),
