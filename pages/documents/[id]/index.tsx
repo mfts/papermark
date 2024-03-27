@@ -1,5 +1,5 @@
 import { getExtension } from "@/lib/utils";
-import { useDocument } from "@/lib/swr/use-document";
+import { useDocument, useDocumentLinks } from "@/lib/swr/use-document";
 import ErrorPage from "next/error";
 import AppLayout from "@/components/layouts/app";
 import LinkSheet from "@/components/links/link-sheet";
@@ -31,12 +31,11 @@ import { usePlausible } from "next-plausible";
 import { mutate } from "swr";
 import { TrashIcon, Sparkles } from "lucide-react";
 import { StatsComponent } from "@/components/documents/stats";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 import { useTheme } from "next-themes";
 
 export default function DocumentPage() {
   const { document: prismaDocument, primaryVersion, error } = useDocument();
+  const { links } = useDocumentLinks();
   const { theme, systemTheme } = useTheme();
   const isLight =
     theme === "light" || (theme === "system" && systemTheme === "light");
@@ -406,14 +405,20 @@ export default function DocumentPage() {
             />
 
             {/* Links */}
-            <LinksTable primaryVersion={primaryVersion} />
+            <LinksTable
+              links={links}
+              targetType={"DOCUMENT"}
+              primaryVersion={primaryVersion}
+            />
 
             {/* Visitors */}
             <VisitorsTable numPages={primaryVersion.numPages!} />
 
             <LinkSheet
               isOpen={isLinkSheetOpen}
+              linkType="DOCUMENT_LINK"
               setIsOpen={setIsLinkSheetOpen}
+              existingLinks={links}
             />
           </>
         ) : (

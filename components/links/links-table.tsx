@@ -41,13 +41,17 @@ import { usePlan } from "@/lib/swr/use-billing";
 import { useTeam } from "@/context/team-context";
 import ProcessStatusBar from "../documents/process-status-bar";
 import { Settings2Icon } from "lucide-react";
+import { DocumentVersion } from "@prisma/client";
 
 export default function LinksTable({
+  targetType,
+  links,
   primaryVersion,
 }: {
-  primaryVersion: any;
+  targetType: "DOCUMENT" | "DATAROOM";
+  links?: LinkWithViews[];
+  primaryVersion?: DocumentVersion;
 }) {
-  const { links } = useDocumentLinks();
   const router = useRouter();
   const { plan } = usePlan();
   const teamInfo = useTeam();
@@ -93,7 +97,7 @@ export default function LinksTable({
 
   const handleArchiveLink = async (
     linkId: string,
-    documentId: string,
+    targetId: string,
     isArchived: boolean,
   ) => {
     setIsLoading(true);
@@ -113,11 +117,12 @@ export default function LinksTable({
     }
 
     const archivedLink = await response.json();
+    const endpointTargetType = `${targetType.toLowerCase()}s`; // "documents" or "datarooms"
 
     // Update the archived link in the list of links
     mutate(
-      `/api/teams/${teamInfo?.currentTeam?.id}/documents/${encodeURIComponent(
-        documentId,
+      `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
+        targetId,
       )}/links`,
       (links || []).map((link) => (link.id === linkId ? archivedLink : link)),
       false,
@@ -136,6 +141,8 @@ export default function LinksTable({
     : 0;
 
   const hasFreePlan = plan && plan.plan === "free";
+
+  console.log("links", links);
 
   return (
     <>
@@ -182,7 +189,8 @@ export default function LinksTable({
                               )}
                             >
                               {/* Progress bar */}
-                              {primaryVersion.type !== "notion" &&
+                              {primaryVersion &&
+                              primaryVersion.type !== "notion" &&
                               !primaryVersion.hasPages ? (
                                 <ProcessStatusBar
                                   documentVersionId={primaryVersion.id}
@@ -287,7 +295,7 @@ export default function LinksTable({
                                   onClick={() =>
                                     handleArchiveLink(
                                       link.id,
-                                      link.documentId,
+                                      link.documentId ?? link.dataroomId ?? "",
                                       link.isArchived,
                                     )
                                   }
@@ -330,7 +338,9 @@ export default function LinksTable({
         <LinkSheet
           isOpen={isLinkSheetVisible}
           setIsOpen={setIsLinkSheetVisible}
+          linkType={`${targetType}_LINK`}
           currentLink={selectedLink}
+          existingLinks={links}
         />
 
         {archivedLinksCount > 0 && (
@@ -428,7 +438,9 @@ export default function LinksTable({
                                         onClick={() =>
                                           handleArchiveLink(
                                             link.id,
-                                            link.documentId,
+                                            link.documentId ??
+                                              link.dataroomId ??
+                                              "",
                                             link.isArchived,
                                           )
                                         }

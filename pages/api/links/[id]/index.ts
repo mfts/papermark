@@ -94,7 +94,11 @@ export default async function handle(
     }
 
     const { id } = req.query as { id: string };
-    const { documentId, password, expiresAt, ...linkDomainData } = req.body;
+    const { targetId, linkType, password, expiresAt, ...linkDomainData } =
+      req.body;
+
+    const dataroomLink = linkType === "DATAROOM_LINK";
+    const documentLink = linkType === "DOCUMENT_LINK";
 
     const hashedPassword =
       password && password.length > 0 ? await hashPassword(password) : null;
@@ -153,7 +157,8 @@ export default async function handle(
     const updatedLink = await prisma.link.update({
       where: { id: id },
       data: {
-        documentId: documentId,
+        documentId: documentLink ? targetId : null,
+        dataroomId: dataroomLink ? targetId : null,
         password: hashedPassword,
         name: linkData.name || null,
         emailProtected: linkData.emailProtected,

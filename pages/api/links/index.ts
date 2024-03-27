@@ -21,27 +21,53 @@ export default async function handler(
       return res.status(401).end("Unauthorized");
     }
 
-    const { documentId, password, expiresAt, ...linkDomainData } = req.body;
+    const { targetId, linkType, password, expiresAt, ...linkDomainData } =
+      req.body;
 
     const userId = (session.user as CustomUser).id;
 
+    const dataroomLink = linkType === "DATAROOM_LINK";
+    const documentLink = linkType === "DOCUMENT_LINK";
+
     try {
-      // check if the the team that own the document has the current user
-      await getDocumentWithTeamAndUser({
-        docId: documentId,
-        userId,
-        options: {
-          team: {
-            select: {
-              users: {
-                select: {
-                  userId: true,
+      if (documentLink) {
+        // check if the the team that own the document has the current user
+        await getDocumentWithTeamAndUser({
+          docId: targetId,
+          userId,
+          options: {
+            team: {
+              select: {
+                users: {
+                  select: {
+                    userId: true,
+                  },
                 },
               },
             },
           },
-        },
-      });
+        });
+      }
+
+      if (dataroomLink) {
+        const dataroom = await prisma.dataroom.findUnique({
+          where: {
+            id: targetId,
+            team: {
+              users: {
+                some: {
+                  userId: userId,
+                },
+              },
+            },
+          },
+          select: { id: true },
+        });
+
+        if (!dataroom) {
+          return res.status(400).json({ error: "Dataroom not found." });
+        }
+      }
 
       const hashedPassword =
         password && password.length > 0 ? await hashPassword(password) : null;
@@ -87,7 +113,9 @@ export default async function handler(
       // Fetch the link and its related document from the database
       const link = await prisma.link.create({
         data: {
-          documentId: documentId,
+          documentId: documentLink ? targetId : null,
+          dataroomId: dataroomLink ? targetId : null,
+          linkType,
           password: hashedPassword,
           name: linkData.name || null,
           emailProtected: linkData.emailProtected,
