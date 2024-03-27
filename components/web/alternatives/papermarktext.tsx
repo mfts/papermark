@@ -37,7 +37,7 @@ const PapermarkText = () => {
             Users love our customer support
           </h3>
           <img
-            src="https://dknlay9ljaq1f.cloudfront.net/alterantives/ptam9dpuu627c1hmsttz.png"
+            src="https://assets.papermark.io/alterantives/ptam9dpuu627c1hmsttz.png"
             alt="Papermark reviews"
             className="my-4"
           />
@@ -45,7 +45,7 @@ const PapermarkText = () => {
             Papermark focuses on UI and core features
           </h3>
           <img
-            src="https://dknlay9ljaq1f.cloudfront.net/alterantives/rukw13d22o50hfrdqa1y.png"
+            src="https://assets.papermark.io/alterantives/rukw13d22o50hfrdqa1y.png"
             alt="Papermark reviews"
             className="my-4"
           />
@@ -53,7 +53,7 @@ const PapermarkText = () => {
             Actively used by founders, VC funds and developers
           </h3>
           <img
-            src="https://dknlay9ljaq1f.cloudfront.net/alterantives/6gsr6kfo84srtzgu6nhe.png"
+            src="https://assets.papermark.io/alterantives/6gsr6kfo84srtzgu6nhe.png"
             alt="Papermark reviews"
             className="my-4"
           />
@@ -69,7 +69,7 @@ const PapermarkText = () => {
           </p>
 
           <img
-            src="https://dknlay9ljaq1f.cloudfront.net/alterantives/fibyns1yrayocc2pkydk.png"
+            src="https://assets.papermark.io/alterantives/fibyns1yrayocc2pkydk.png"
             alt="Papermark plans and pricing"
             className="my-4"
           />

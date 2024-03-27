@@ -9,7 +9,7 @@ export default async function handle(
   res: NextApiResponse,
 ) {
   if (req.method === "GET") {
-    // GET /api/teams/:teamId/folders/documents/:name
+    // GET /api/teams/:teamId/folders/:name
     const session = await getServerSession(req, res, authOptions);
     if (!session) {
       return res.status(401).end("Unauthorized");
@@ -18,7 +18,7 @@ export default async function handle(
     const userId = (session.user as CustomUser).id;
     const { teamId, name } = req.query as { teamId: string; name: string[] };
 
-    const path = "/" + name.join("/"); // construct the materialized path
+    let folderNames = [];
 
     try {
       // Check if the user is part of the team
@@ -37,50 +37,38 @@ export default async function handle(
         return res.status(401).end("Unauthorized");
       }
 
-      const folder = await prisma.folder.findUnique({
-        where: {
-          teamId_path: {
-            teamId: teamId,
-            path: path,
-          },
-        },
-        select: {
-          id: true,
-          parentId: true,
-        },
-      });
+      for (let i = 0; i < name.length; i++) {
+        const path = "/" + name.slice(0, i + 1).join("/"); // construct the materialized path
 
-      if (!folder) {
-        return res.status(404).end("Folder not found");
+        const folder = await prisma.folder.findUnique({
+          where: {
+            teamId_path: {
+              teamId: teamId,
+              path: path,
+            },
+          },
+          select: {
+            id: true,
+            parentId: true,
+            name: true,
+          },
+        });
+
+        if (!folder) {
+          return res.status(404).end("Parent Folder not found");
+        }
+
+        folderNames.push({ name: folder.name, path: path });
       }
 
-      const documents = await prisma.document.findMany({
-        where: {
-          teamId: teamId,
-          folderId: folder.id,
-        },
-        orderBy: {
-          createdAt: "desc",
-        },
-        include: {
-          _count: {
-            select: { links: true, views: true, versions: true },
-          },
-          links: {
-            take: 1,
-            select: { id: true },
-          },
-        },
-      });
-
-      return res.status(200).json(documents);
+      return res.status(200).json(folderNames);
     } catch (error) {
       console.error("Request error", error);
       return res.status(500).json({ error: "Error fetching folders" });
     }
   } else {
-    // We only allow GET requests
-    res.setHeader("Allow", ["GET"]);
+    // We only allow POST requests
+    res.setHeader("Allow", ["GET", "POST"]);
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 }

@@ -44,9 +44,9 @@ export default function AccessForm({
     <>
       <div className="flex h-screen flex-1 flex-col  px-6 py-12 lg:px-8 bg-black">
         <div className="sm:mx-auto sm:w-full sm:max-w-md">
-          <h2 className="mt-10 text-2xl font-bold leading-9 tracking-tight text-white">
+          <h1 className="mt-10 text-2xl font-bold leading-9 tracking-tight text-white">
             Your action is requested to continue
-          </h2>
+          </h1>
         </div>
 
         <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-md">

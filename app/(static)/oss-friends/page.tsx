@@ -41,7 +41,7 @@ const friends = [
   {
     id: 1,
     name: "Appsmith",
-    imageUrl: "https://dknlay9ljaq1f.cloudfront.net/oss-friends/appsmith.png",
+    imageUrl: "https://assets.papermark.io/oss-friends/appsmith.png",
     description: "Build build custom software on top of your data.",
     buttonText: "Learn more",
     buttonLink: "https://www.appsmith.com",
@@ -49,7 +49,7 @@ const friends = [
   {
     id: 2,
     name: "BoxyHQ",
-    imageUrl: "https://dknlay9ljaq1f.cloudfront.net/oss-friends/boxy.png",
+    imageUrl: "https://assets.papermark.io/oss-friends/boxy.png",
     description:
       "BoxyHQ’s suite of APIs for security and privacy helps engineering teams build and ship compliant cloud applications faster.",
     buttonText: "Learn more",
@@ -58,7 +58,7 @@ const friends = [
   {
     id: 3,
     name: "Cal",
-    imageUrl: "https://dknlay9ljaq1f.cloudfront.net/oss-friends/cal.webp",
+    imageUrl: "https://assets.papermark.io/oss-friends/cal.webp",
     description:
       "Cal.com is a scheduling tool that helps you schedule meetings without the back-and-forth emails.",
     buttonText: "Learn more",
@@ -67,7 +67,7 @@ const friends = [
   {
     id: 3,
     name: "Crowd.dev",
-    imageUrl: "https://dknlay9ljaq1f.cloudfront.net/oss-friends/crowddev.webp",
+    imageUrl: "https://assets.papermark.io/oss-friends/crowddev.webp",
     description:
       "Centralize community, product, and customer data to understand which companies are engaging with your open source project.",
     buttonText: "Learn more",
@@ -76,7 +76,7 @@ const friends = [
   {
     id: 4,
     name: "Documenso",
-    imageUrl: "https://dknlay9ljaq1f.cloudfront.net/oss-friends/documenso.png",
+    imageUrl: "https://assets.papermark.io/oss-friends/documenso.png",
     description:
       "The Open-Source DocuSign Alternative. We aim to earn your trust by enabling you to self-host the platform and examine its inner workings.",
     buttonText: "Learn more",
@@ -85,7 +85,7 @@ const friends = [
   {
     id: 5,
     name: "Dub",
-    imageUrl: "https://dknlay9ljaq1f.cloudfront.net/oss-friends/dub.jpg",
+    imageUrl: "https://assets.papermark.io/oss-friends/dub.jpg",
     description:
       "Dub is an open-source link management tool for modern marketing teams to create, share, and track short links.",
     buttonText: "Learn more",
@@ -94,7 +94,7 @@ const friends = [
   {
     id: 6,
     name: "Formbricks",
-    imageUrl: "https://dknlay9ljaq1f.cloudfront.net/oss-friends/formbricks.jpg",
+    imageUrl: "https://assets.papermark.io/oss-friends/formbricks.jpg",
     description:
       "Survey granular user segments at any point in the user journey. Gather up to 6x more insights with targeted micro-surveys. All open-source.",
     buttonText: "Learn more",
@@ -103,7 +103,7 @@ const friends = [
   {
     id: 7,
     name: "Hanko",
-    imageUrl: "https://dknlay9ljaq1f.cloudfront.net/oss-friends/hanko.png",
+    imageUrl: "https://assets.papermark.io/oss-friends/hanko.png",
     description:
       "Open-source authentication and user management for the passkey era. Integrated in minutes, for web and mobile apps.",
     buttonText: "Learn more",
@@ -112,7 +112,7 @@ const friends = [
   {
     id: 8,
     name: "Infisical",
-    imageUrl: "https://dknlay9ljaq1f.cloudfront.net/oss-friends/infisical.png",
+    imageUrl: "https://assets.papermark.io/oss-friends/infisical.png",
     description:
       "Open source, end-to-end encrypted platform that lets you securely manage secrets and configs across your team, devices, and infrastructure.",
     buttonText: "Learn more",
@@ -121,7 +121,7 @@ const friends = [
   {
     id: 9,
     name: "Novu",
-    imageUrl: "https://dknlay9ljaq1f.cloudfront.net/oss-friends/novu.jpg",
+    imageUrl: "https://assets.papermark.io/oss-friends/novu.jpg",
     description:
       "The open-source notification infrastructure for developers. Simple components and APIs for managing all communication channels in one place.",
     buttonText: "Learn more",
@@ -130,7 +130,7 @@ const friends = [
   {
     id: 10,
     name: "OpenBB",
-    imageUrl: "https://dknlay9ljaq1f.cloudfront.net/oss-friends/openbb.jpg",
+    imageUrl: "https://assets.papermark.io/oss-friends/openbb.jpg",
     description:
       "Democratizing investment research through an open source financial ecosystem. The OpenBB Terminal allows everyone to perform investment research, from everywhere.",
     buttonText: "Learn more",
@@ -139,7 +139,7 @@ const friends = [
   {
     id: 11,
     name: "OpenStatus",
-    imageUrl: "https://dknlay9ljaq1f.cloudfront.net/oss-friends/openstatus.png",
+    imageUrl: "https://assets.papermark.io/oss-friends/openstatus.png",
     description: "Open-source monitoring platform with beautiful status pages.",
     buttonText: "Learn more",
     buttonLink: "https://www.openstatus.dev",
@@ -147,7 +147,7 @@ const friends = [
   {
     id: 12,
     name: "Trigger",
-    imageUrl: "https://dknlay9ljaq1f.cloudfront.net/oss-friends/trigger.jpg",
+    imageUrl: "https://assets.papermark.io/oss-friends/trigger.jpg",
     description:
       "Create long-running Jobs directly in your codebase with features like API integrations, webhooks, scheduling and delays.",
     buttonText: "Learn more",
@@ -156,7 +156,7 @@ const friends = [
   {
     id: 13,
     name: "UnInbox",
-    imageUrl: "https://dknlay9ljaq1f.cloudfront.net/oss-friends/uninbox.png",
+    imageUrl: "https://assets.papermark.io/oss-friends/uninbox.png",
     description: "Open Source Email + Chat communication platform",
     buttonText: "Learn more",
     buttonLink: "https://uninbox.com",
@@ -164,7 +164,7 @@ const friends = [
   {
     id: 14,
     name: "Webstudio",
-    imageUrl: "https://dknlay9ljaq1f.cloudfront.net/oss-friends/webstudio.jpg",
+    imageUrl: "https://assets.papermark.io/oss-friends/webstudio.jpg",
     description:
       "Webstudio visually translates CSS without obscuring it, giving designers superpowers that were exclusive to developers in the past.",
     buttonText: "Learn more",

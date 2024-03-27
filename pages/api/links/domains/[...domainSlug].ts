@@ -39,6 +39,7 @@ export default async function handle(
           password: true,
           isArchived: true,
           enableCustomMetatag: true,
+          enableFeedback: true,
           metaTitle: true,
           metaDescription: true,
           metaImage: true,

@@ -12,14 +12,10 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuPortal,
   DropdownMenuSeparator,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { TrashIcon, MoreVertical, FileIcon } from "lucide-react";
+import { TrashIcon, MoreVertical, FolderInputIcon } from "lucide-react";
 import { mutate } from "swr";
 import { useCopyToClipboard } from "@/lib/utils/use-copy-to-clipboard";
 import Check from "@/components/shared/icons/check";
@@ -214,6 +210,7 @@ export default function DocumentsCard({
             <DropdownMenuContent align="end" ref={dropdownRef}>
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
               <DropdownMenuItem onClick={() => setMoveFolderOpen(true)}>
+                <FolderInputIcon className="w-4 h-4 mr-2" />
                 Move to folder
               </DropdownMenuItem>
               <DropdownMenuSeparator />

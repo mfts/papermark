@@ -233,8 +233,8 @@ client.defineJob({
       },
     });
 
-    if (payload.versionNumber) {
-      const { versionNumber, documentId } = payload;
+    const { versionNumber, documentId } = payload;
+    if (versionNumber) {
       // after all pages are uploaded, update all other versions to be not primary
       await io.runTask("update-version-number", async () => {
         return prisma.documentVersion.updateMany({
@@ -249,13 +249,24 @@ client.defineJob({
           },
         });
       });
-
-      await io.runTask("initiate-link-revalidation", async () => {
-        await fetch(
-          `${process.env.NEXTAUTH_URL}/api/revalidate?secret=${process.env.REVALIDATE_TOKEN}&documentId=${documentId}`,
-        );
-      });
     }
+
+    // STATUS: enabled-pages
+    await processingDocumentStatus.update("revalidate-links", {
+      //set data, this overrides the previous value
+      state: "loading",
+      data: {
+        text: "Revalidating link...",
+        progress: 1,
+      },
+    });
+
+    // initialize link revalidation for all the document's links
+    await io.runTask("initiate-link-revalidation", async () => {
+      await fetch(
+        `${process.env.NEXTAUTH_URL}/api/revalidate?secret=${process.env.REVALIDATE_TOKEN}&documentId=${documentId}`,
+      );
+    });
 
     // STATUS: success
     await processingDocumentStatus.update("success", {

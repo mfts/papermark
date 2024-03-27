@@ -145,7 +145,7 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
           setCurrentTeam={() => {}}
         />
 
-        <div className="flex items-center gap-x-1">
+        {/* <div className="flex items-center gap-x-1">
           <AddDocumentModal>
             <Button
               className="flex-1 text-left group flex gap-x-3 items-center justify-start px-3"
@@ -164,7 +164,7 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
               <FolderPlusIcon className="w-5 h-5 shrink-0" aria-hidden="true" />
             </Button>
           </AddFolderModal>
-        </div>
+        </div> */}
 
         <ScrollArea className="flex-grow" showScrollbar>
           <section className="flex flex-1 flex-col gap-y-6">
@@ -172,9 +172,8 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
               {navigation.map((item) => {
                 if (item.name === "Documents") {
                   return (
-                    <>
+                    <div key={item.name}>
                       <button
-                        key={item.name}
                         onClick={() => router.push(item.href)}
                         disabled={item.disabled}
                         className={cn(
@@ -193,7 +192,7 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
                         {item.name}
                       </button>
                       {item.active ? <SiderbarFolders /> : null}
-                    </>
+                    </div>
                   );
                 }
                 return (

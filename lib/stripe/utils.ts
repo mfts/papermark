@@ -51,11 +51,31 @@ export const PLANS = [
         },
       },
       yearly: {
-        amount: 24,
+        amount: 290,
         priceIds: {
           test: "price_1NmHHaFJyGSZ96lhXxg2fTr7",
           production: "price_1Op0fFFJyGSZ96lhPVrvzz5a", // new price
           // production: "price_1NmMZ7FJyGSZ96lhqZEkh50e", // old price
+        },
+      },
+    },
+  },
+  {
+    name: "Business",
+    slug: "business",
+    price: {
+      monthly: {
+        amount: 79,
+        priceIds: {
+          test: "price_1OuYgCFJyGSZ96lhF2gFs7Rs",
+          production: "price_1OuYeIFJyGSZ96lhwH58Y1kU",
+        },
+      },
+      yearly: {
+        amount: 790,
+        priceIds: {
+          test: "price_1OuYgPFJyGSZ96lhKk6JzTf1",
+          production: "price_1OuYedFJyGSZ96lhTaJx58pG",
         },
       },
     },

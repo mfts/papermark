@@ -1,6 +1,5 @@
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import DocumentView from "@/components/view/document-view";
-import { useDomainLink } from "@/lib/swr/use-link";
 import { CustomUser, LinkWithDocument } from "@/lib/types";
 import NotFound from "@/pages/404";
 import { GetStaticPropsContext } from "next";
@@ -11,7 +10,7 @@ import notion from "@/lib/notion";
 import { parsePageId } from "notion-utils";
 import { Brand } from "@prisma/client";
 import CustomMetatag from "@/components/view/custom-metatag";
-import { log } from "@/lib/utils";
+import Head from "next/head";
 
 export const getStaticProps = async (context: GetStaticPropsContext) => {
   const { domain, slug } = context.params as { domain: string; slug: string };
@@ -68,6 +67,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
         metaTitle: link.metaTitle,
         metaDescription: link.metaDescription,
         metaImage: link.metaImage,
+        metaUrl: `https://${domain}/${slug}`,
       },
       brand, // pass the brand to client
     },
@@ -98,6 +98,7 @@ export default function ViewPage({
     metaTitle: string | null;
     metaDescription: string | null;
     metaImage: string | null;
+    metaUrl: string | null;
   } | null;
   brand?: Brand;
 }) {
@@ -108,9 +109,16 @@ export default function ViewPage({
     email: string;
   };
 
+  console.log("session", session);
+
   if (!link || status === "loading") {
     return (
       <>
+        {meta && meta.metaUrl ? (
+          <Head>
+            <meta property="og:url" key="og-url" content={meta.metaUrl} />
+          </Head>
+        ) : null}
         {meta && meta.enableCustomMetatag ? (
           <CustomMetatag
             title={meta.metaTitle}
@@ -152,6 +160,11 @@ export default function ViewPage({
   if (emailProtected || linkPassword) {
     return (
       <>
+        {meta && meta.metaUrl ? (
+          <Head>
+            <meta property="og:url" key="og-url" content={meta.metaUrl} />
+          </Head>
+        ) : null}
         {enableCustomMetatag ? (
           <CustomMetatag
             title={metaTitle}
@@ -175,6 +188,11 @@ export default function ViewPage({
 
   return (
     <>
+      {meta && meta.metaUrl ? (
+        <Head>
+          <meta property="og:url" key="og-url" content={meta.metaUrl} />
+        </Head>
+      ) : null}
       {enableCustomMetatag ? (
         <CustomMetatag
           title={metaTitle}

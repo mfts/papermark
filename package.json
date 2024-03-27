@@ -82,7 +82,7 @@
     "next-auth": "^4.24.7",
     "next-mdx-remote": "^4.4.1",
     "next-plausible": "^3.12.0",
-    "next-themes": "^0.2.1",
+    "next-themes": "^0.3.0",
     "notion-client": "^6.16.0",
     "notion-utils": "^6.16.0",
     "openai": "^4.20.0",
