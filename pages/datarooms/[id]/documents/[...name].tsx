@@ -40,7 +40,11 @@ export default function Documents() {
             title={dataroom?.name ?? ""}
             description={dataroom?.pId ?? ""}
             actions={[
-              <AddDocumentModal isDataroom={true} dataroomId={dataroom?.id}>
+              <AddDocumentModal
+                isDataroom={true}
+                dataroomId={dataroom?.id}
+                key={1}
+              >
                 <Button
                   className="flex-1 text-left group flex gap-x-3 items-center justify-start px-3"
                   title="Add New Document"
@@ -49,7 +53,11 @@ export default function Documents() {
                   <span>Add New Document</span>
                 </Button>
               </AddDocumentModal>,
-              <AddFolderModal isDataroom={true} dataroomId={dataroom?.id}>
+              <AddFolderModal
+                isDataroom={true}
+                dataroomId={dataroom?.id}
+                key={2}
+              >
                 <Button
                   size="icon"
                   variant="outline"
