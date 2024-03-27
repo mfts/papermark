@@ -1,4 +1,4 @@
-import { type NextRouter, useRouter } from "next/router";
+import { useRouter } from "next/router";
 import useSWR from "swr";
 import { fetcher } from "@/lib/utils";
 import { Dataroom, DataroomDocument, DataroomFolder } from "@prisma/client";
@@ -12,11 +12,7 @@ export type DataroomFolderWithCount = DataroomFolder & {
   };
 };
 
-function getBaseInfo(): {
-  teamId: string | undefined;
-  id: string | undefined;
-  router: NextRouter;
-} {
+export function useDataroom() {
   const router = useRouter();
 
   const { id } = router.query as {
@@ -25,12 +21,6 @@ function getBaseInfo(): {
 
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
-
-  return { teamId, id, router };
-}
-
-export function useDataroom() {
-  const { teamId, id } = getBaseInfo();
 
   const { data: dataroom, error } = useSWR<Dataroom>(
     teamId && id && `/api/teams/${teamId}/datarooms/${id}`,
@@ -46,7 +36,14 @@ export function useDataroom() {
 }
 
 export function useDataroomLinks() {
-  const { teamId, id } = getBaseInfo();
+  const router = useRouter();
+
+  const { id } = router.query as {
+    id: string;
+  };
+
+  const teamInfo = useTeam();
+  const teamId = teamInfo?.currentTeam?.id;
 
   const { data: links, error } = useSWR<LinkWithViews[]>(
     teamId && id && `/api/teams/${teamId}/datarooms/${id}/links`,
@@ -62,7 +59,14 @@ export function useDataroomLinks() {
 }
 
 export function useDataroomDocuments() {
-  const { teamId, id } = getBaseInfo();
+  const router = useRouter();
+
+  const { id } = router.query as {
+    id: string;
+  };
+
+  const teamInfo = useTeam();
+  const teamId = teamInfo?.currentTeam?.id;
 
   const { data: documents, error } = useSWR<DataroomFolderDocument[]>(
     teamId && id && `/api/teams/${teamId}/datarooms/${id}/documents`,
@@ -87,7 +91,14 @@ export function useDataroomFolders({
   root?: boolean;
   name?: string[];
 }) {
-  const { teamId, id } = getBaseInfo();
+  const router = useRouter();
+
+  const { id } = router.query as {
+    id: string;
+  };
+
+  const teamInfo = useTeam();
+  const teamId = teamInfo?.currentTeam?.id;
 
   const { data: folders, error } = useSWR<DataroomFolderWithCount[]>(
     teamId &&
@@ -121,7 +132,8 @@ export type DRFolderWithDocuments = DataroomFolder & {
 };
 
 export function useDataroomFoldersTree({ dataroomId }: { dataroomId: string }) {
-  const { teamId } = getBaseInfo();
+  const teamInfo = useTeam();
+  const teamId = teamInfo?.currentTeam?.id;
 
   const { data: folders, error } = useSWR<DRFolderWithDocuments[]>(
     teamId && `/api/teams/${teamId}/datarooms/${dataroomId}/folders`,
@@ -146,7 +158,8 @@ export function useDataroomFolderWithParents({
   name: string[];
   dataroomId: string;
 }) {
-  const { teamId } = getBaseInfo();
+  const teamInfo = useTeam();
+  const teamId = teamInfo?.currentTeam?.id;
 
   const { data: folders, error } = useSWR<{ name: string; path: string }[]>(
     teamId &&
@@ -179,7 +192,14 @@ export type DataroomFolderDocument = DataroomDocument & {
 };
 
 export function useDataroomFolderDocuments({ name }: { name: string[] }) {
-  const { teamId, id } = getBaseInfo();
+  const router = useRouter();
+
+  const { id } = router.query as {
+    id: string;
+  };
+
+  const teamInfo = useTeam();
+  const teamId = teamInfo?.currentTeam?.id;
 
   const { data: documents, error } = useSWR<DataroomFolderDocument[]>(
     teamId &&
