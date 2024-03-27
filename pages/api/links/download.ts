@@ -63,7 +63,7 @@ export default async function handle(
       }
 
       // if document is a Notion document, we should not allow the download
-      if (view.document.versions[0].type === "notion") {
+      if (view.document!.versions[0].type === "notion") {
         return res.status(403).json({ error: "Error downloading" });
       }
 
@@ -82,8 +82,8 @@ export default async function handle(
       });
 
       const downloadUrl = await getFile({
-        type: view.document.versions[0].storageType,
-        data: view.document.versions[0].file,
+        type: view.document!.versions[0].storageType,
+        data: view.document!.versions[0].file,
         isDownload: true,
       });
 

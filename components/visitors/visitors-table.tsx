@@ -139,7 +139,7 @@ export default function VisitorsTable({ numPages }: { numPages: number }) {
                         <TableRow className="hover:bg-transparent">
                           <TableCell colSpan={5}>
                             <VisitorChart
-                              documentId={view.documentId}
+                              documentId={view.documentId!}
                               viewId={view.id}
                               totalPages={numPages}
                             />

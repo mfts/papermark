@@ -41,7 +41,7 @@ export default async function handle(
         id: string;
         email: string | null;
       };
-    };
+    } | null;
   } | null;
 
   try {
@@ -86,9 +86,9 @@ export default async function handle(
   try {
     // send email to document owner that document
     await sendViewedDocumentEmail({
-      ownerEmail: view.document.owner.email,
-      documentId: view.document.id,
-      documentName: view.document.name,
+      ownerEmail: view.document!.owner.email,
+      documentId: view.document!.id,
+      documentName: view.document!.name,
       viewerEmail: view.viewerEmail,
     });
 
@@ -96,7 +96,7 @@ export default async function handle(
     return;
   } catch (error) {
     log({
-      message: `Failed to send email in _/api/views_ route for linkId: ${view.linkId}. \n\n Error: ${error} \n\n*Metadata*: \`{ownerId: ${view.document.owner.id}, viewId: ${viewId}}\``,
+      message: `Failed to send email in _/api/views_ route for linkId: ${view.linkId}. \n\n Error: ${error} \n\n*Metadata*: \`{ownerId: ${view.document!.owner.id}, viewId: ${viewId}}\``,
       type: "error",
       mention: true,
     });

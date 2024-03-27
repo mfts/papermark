@@ -39,8 +39,8 @@ export interface LinkWithViews extends Link {
   views: View[];
 }
 
-export interface LinkWithDocumentOrDataroom extends Link {
-  document?: Document & {
+export interface LinkWithDocument extends Link {
+  document: Document & {
     versions: {
       id: string;
       versionNumber: number;
@@ -51,13 +51,6 @@ export interface LinkWithDocumentOrDataroom extends Link {
       team?: {
         plan: string;
       };
-    };
-  };
-  dataroom?: Dataroom & {
-    documents: DataroomDocument[];
-    folders: DataroomFolder[];
-    team?: {
-      plan: string;
     };
   };
 }

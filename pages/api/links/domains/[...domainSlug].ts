@@ -66,7 +66,7 @@ export default async function handle(
       });
 
       // if link not found, return 404
-      if (!link || !link.document.team) {
+      if (!link || !link.document!.team) {
         log({
           message: `Link not found for custom domain _${domain}/${slug}_`,
           type: "error",
@@ -74,20 +74,20 @@ export default async function handle(
         });
         return res.status(404).json({
           error: "Link not found",
-          message: `no link found, team ${link?.document.team}`,
+          message: `no link found, team ${link?.document!.team}`,
         });
       }
 
       // if owner of document is on free plan, return 404
-      if (link.document.team.plan === "free") {
+      if (link.document!.team.plan === "free") {
         log({
-          message: `Link is from a free team _${link.document.team.id}_ for custom domain _${domain}/${slug}_`,
+          message: `Link is from a free team _${link.document!.team.id}_ for custom domain _${domain}/${slug}_`,
           type: "info",
           mention: true,
         });
         return res.status(404).json({
           error: "Link not found",
-          message: `link found, team ${link.document.team.plan}`,
+          message: `link found, team ${link.document!.team.plan}`,
         });
       }
 
@@ -100,7 +100,7 @@ export default async function handle(
 
       let brand = await prisma.brand.findFirst({
         where: {
-          teamId: link.document.team.id,
+          teamId: link.document!.team.id,
         },
         select: {
           logo: true,

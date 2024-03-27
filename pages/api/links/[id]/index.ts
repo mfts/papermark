@@ -67,7 +67,7 @@ export default async function handle(
 
       let brand = await prisma.brand.findFirst({
         where: {
-          teamId: link.document.teamId!,
+          teamId: link.document!.teamId!,
         },
         select: {
           logo: true,
@@ -226,7 +226,7 @@ export default async function handle(
       }
 
       if (
-        linkToBeDeleted.document.ownerId !== (session.user as CustomUser).id
+        linkToBeDeleted.document!.ownerId !== (session.user as CustomUser).id
       ) {
         return res.status(401).end("Unauthorized to access the link");
       }
