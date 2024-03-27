@@ -24,11 +24,15 @@ export function AddFolderModal({
   // open,
   // setOpen,
   onAddition,
+  isDataroom,
+  dataroomId,
   children,
 }: {
   // open?: boolean;
   // setOpen?: React.Dispatch<React.SetStateAction<boolean>>;
   onAddition?: (folderName: string) => void;
+  isDataroom?: boolean;
+  dataroomId?: string;
   children?: React.ReactNode;
 }) {
   const router = useRouter();
@@ -50,10 +54,12 @@ export function AddFolderModal({
     if (folderName == "") return;
 
     setLoading(true);
+    const endpointTargetType =
+      isDataroom && dataroomId ? `datarooms/${dataroomId}/folders` : "folders";
 
     try {
       const response = await fetch(
-        `/api/teams/${teamInfo?.currentTeam?.id}/folders`,
+        `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}`,
         {
           method: "POST",
           headers: {
@@ -78,9 +84,9 @@ export function AddFolderModal({
       analytics.capture("Folder Added", { folderName: folderName });
       toast.success("Folder added successfully! 🎉");
 
-      mutate(`/api/teams/${teamInfo?.currentTeam?.id}/folders`);
+      mutate(`/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}`);
       mutate(
-        `/api/teams/${teamInfo?.currentTeam?.id}/folders${parentFolderPath}`,
+        `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}${parentFolderPath}`,
       );
     } catch (error) {
       setLoading(false);
@@ -96,7 +102,7 @@ export function AddFolderModal({
   if (plan && plan.plan === "free") {
     if (children) {
       return (
-        <UpgradePlanModal clickedPlan="Pro" trigger={"add_domain_overview"}>
+        <UpgradePlanModal clickedPlan="Pro" trigger={"add_folder_button"}>
           {children}
         </UpgradePlanModal>
       );

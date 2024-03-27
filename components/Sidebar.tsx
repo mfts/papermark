@@ -20,9 +20,10 @@ import {
   PlusIcon,
   FolderIcon as FolderLucideIcon,
   FolderOpenIcon,
+  ServerIcon,
 } from "lucide-react";
 import SiderbarFolders from "./sidebar-folders";
-import { AddFolderModal } from "./documents/add-folder-modal";
+import { AddFolderModal } from "./folders/add-folder-modal";
 import { ScrollArea } from "./ui/scroll-area";
 
 export default function Sidebar() {
@@ -95,6 +96,14 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
         router.pathname.includes("documents") &&
         !router.pathname.includes("tree"),
       active: router.pathname.includes("documents"),
+      disabled: false,
+    },
+    {
+      name: "Datarooms",
+      href: "/datarooms",
+      icon: ServerIcon,
+      current: router.pathname.includes("datarooms"),
+      active: false,
       disabled: false,
     },
     {
