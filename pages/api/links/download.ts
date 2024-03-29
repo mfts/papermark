@@ -44,27 +44,33 @@ export default async function handle(
 
       // if view does not exist, we should not allow the download
       if (!view) {
-        return res.status(404).json({ error: "Error downloading" });
+        return res
+          .status(404)
+          .json({ error: "Invalid credential: View not found" });
       }
 
       // if link does not allow download, we should not allow the download
       if (!view.link.allowDownload) {
-        return res.status(403).json({ error: "Error downloading" });
+        return res
+          .status(403)
+          .json({ error: "File download is not allowd" });
       }
 
       // if link is archived, we should not allow the download
       if (view.link.isArchived) {
-        return res.status(403).json({ error: "Error downloading" });
+        return res.status(403).json({ error: "This link has been archived" });
       }
 
       // if link is expired, we should not allow the download
       if (view.link.expiresAt && view.link.expiresAt < new Date()) {
-        return res.status(403).json({ error: "Error downloading" });
+        return res.status(403).json({ error: "This link has expired" });
       }
 
       // if document is a Notion document, we should not allow the download
       if (view.document.versions[0].type === "notion") {
-        return res.status(403).json({ error: "Error downloading" });
+        return res
+          .status(403)
+          .json({ error: "Notion documents cannot be downloaded" });
       }
 
       // if viewedAt is longer than 30 mins ago, we should not allow the download
@@ -72,7 +78,9 @@ export default async function handle(
         view.viewedAt &&
         view.viewedAt < new Date(Date.now() - 30 * 60 * 1000)
       ) {
-        return res.status(403).json({ error: "Error downloading" });
+        return res.status(403).json({
+          error: "The link has expired. Please try again later",
+        });
       }
 
       // update the view with the downloadedAt timestamp
