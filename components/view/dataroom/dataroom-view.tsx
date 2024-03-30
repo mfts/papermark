@@ -66,7 +66,9 @@ export default function DataroomView({
     documentVersionNumber: number;
   } | null>(null);
 
-  const [viewType, setViewType] = useState<"DOCUMENT" | "DATAROOM">("DATAROOM");
+  const [viewType, setViewType] = useState<"DOCUMENT_VIEW" | "DATAROOM_VIEW">(
+    "DATAROOM_VIEW",
+  );
 
   const handleSubmission = async (): Promise<void> => {
     setIsLoading(true);
@@ -117,7 +119,7 @@ export default function DataroomView({
         setViewData((prev) => ({
           viewId,
           dataroomViewId:
-            viewType === "DATAROOM" ? viewId : prev.dataroomViewId,
+            viewType === "DATAROOM_VIEW" ? viewId : prev.dataroomViewId,
           file,
           pages,
         }));

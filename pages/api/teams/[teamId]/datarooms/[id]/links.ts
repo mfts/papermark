@@ -52,12 +52,15 @@ export default async function handle(
         },
         include: {
           views: {
+            where: {
+              viewType: "DATAROOM_VIEW",
+            },
             orderBy: {
               viewedAt: "desc",
             },
           },
           _count: {
-            select: { views: true },
+            select: { views: { where: { viewType: "DATAROOM_VIEW" } } },
           },
         },
       });

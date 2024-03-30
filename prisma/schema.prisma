@@ -259,9 +259,17 @@ model View {
   viewedAt       DateTime   @default(now())
   downloadedAt   DateTime? // This is the time the document was downloaded
   reactions      Reaction[]
+  viewType       ViewType   @default(DOCUMENT_VIEW)
 
   @@index([linkId])
   @@index([documentId])
+  @@index([dataroomId])
+  @@index([dataroomViewId])
+}
+
+enum ViewType {
+  DOCUMENT_VIEW
+  DATAROOM_VIEW
 }
 
 model Reaction {

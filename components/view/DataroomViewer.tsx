@@ -18,7 +18,7 @@ import {
 } from "../ui/breadcrumb";
 import Link from "next/link";
 
-type DRDocument = {
+type DataroomDocument = {
   dataroomDocumentId: string;
   folderId: string | null;
   id: string;
@@ -42,7 +42,9 @@ export default function DataroomViewer({
   viewId: string;
   dataroomViewId: string;
   dataroom: any;
-  setViewType: React.Dispatch<React.SetStateAction<"DOCUMENT" | "DATAROOM">>;
+  setViewType: React.Dispatch<
+    React.SetStateAction<"DOCUMENT_VIEW" | "DATAROOM_VIEW">
+  >;
   setDocumentData: React.Dispatch<
     React.SetStateAction<{
       id: string;
@@ -55,7 +57,7 @@ export default function DataroomViewer({
 }) {
   const [folderId, setFolderId] = useState<string | null>(null);
   const { documents, folders } = dataroom as {
-    documents: DRDocument[];
+    documents: DataroomDocument[];
     folders: DataroomFolder[];
   };
   console.log("documents, ", documents);
@@ -104,7 +106,7 @@ export default function DataroomViewer({
                   {documents
                     ? documents
                         .filter((doc) => doc.folderId === folderId)
-                        .map((document: DRDocument) => {
+                        .map((document: DataroomDocument) => {
                           return (
                             <DocumentCard
                               key={document.id}

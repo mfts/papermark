@@ -38,7 +38,7 @@ type DRDocument = {
 
 type DocumentsCardProps = {
   document: DRDocument;
-  setViewType: (type: "DOCUMENT" | "DATAROOM") => void;
+  setViewType: (type: "DOCUMENT_VIEW" | "DATAROOM_VIEW") => void;
   setDocumentData: (data: {
     id: string;
     name: string;
@@ -75,7 +75,7 @@ export default function DocumentCard({
                 <Link
                   href="#"
                   onClick={() => {
-                    setViewType("DOCUMENT");
+                    setViewType("DOCUMENT_VIEW");
                     setDocumentData({
                       id: document.id,
                       name: document.name,
