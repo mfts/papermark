@@ -55,6 +55,16 @@ export default async function handle(
               id: true,
               name: true,
               type: true,
+              _count: {
+                select: {
+                  views: {
+                    where: {
+                      dataroomId: dataroomId,
+                    },
+                  },
+                  versions: true,
+                },
+              },
             },
           },
         },
@@ -62,7 +72,7 @@ export default async function handle(
 
       const documentsWithCount = documents.map((document) => ({
         ...document,
-        document: { ...document.document, _count: { views: 0, versions: 0 } },
+        document: { ...document.document },
       }));
 
       return res.status(200).json(documentsWithCount);

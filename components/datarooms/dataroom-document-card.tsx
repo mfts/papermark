@@ -74,7 +74,6 @@ export default function DataroomDocumentCard({
             </div>
             <div className="mt-1 flex items-center space-x-1 text-xs leading-5 text-muted-foreground">
               <p className="truncate">{timeAgo(document.createdAt)}</p>
-              <p>•</p>
               {document.document._count.versions > 1 ? (
                 <>
                   <p>•</p>
