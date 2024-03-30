@@ -1,4 +1,5 @@
 import { DataroomHeader } from "@/components/datarooms/dataroom-header";
+import StatsCard from "@/components/datarooms/stats-card";
 import AppLayout from "@/components/layouts/app";
 import LinkSheet from "@/components/links/link-sheet";
 import LinksTable from "@/components/links/links-table";
@@ -58,6 +59,9 @@ export default function DataroomPage() {
         </header>
 
         <div className="space-y-4">
+          {/* Stats */}
+          <StatsCard />
+
           {/* Links */}
           <LinksTable links={links} targetType={"DATAROOM"} />
 
