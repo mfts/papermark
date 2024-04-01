@@ -31,6 +31,7 @@ export interface LinkWithDataroom extends Link {
       };
     }[];
     folders: DataroomFolder[];
+    lastUpdatedAt: Date;
   };
 }
 
@@ -45,9 +46,10 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
   if (!res.ok) {
     return { notFound: true };
   }
-  const { link, brand } = (await res.json()) as {
+  const { link, brand, lastUpdatedAt } = (await res.json()) as {
     link: LinkWithDataroom;
     brand: DataroomBrand | null;
+    lastUpdatedAt: Date;
   };
 
   if (!link || !link.dataroom) {
@@ -83,7 +85,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
       // return link without file and type to avoid sending the file to the client
       link: {
         ...link,
-        dataroom: { ...link.dataroom, documents: documents },
+        dataroom: { ...link.dataroom, documents: documents, lastUpdatedAt },
       },
       meta: {
         enableCustomMetatag: link.enableCustomMetatag || false,

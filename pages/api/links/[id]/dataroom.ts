@@ -93,7 +93,14 @@ export default async function handle(
         brand = null;
       }
 
-      return res.status(200).json({ link, brand });
+      const lastUpdatedAt = link.dataroom?.documents.reduce((acc, doc) => {
+        if (doc.updatedAt.getTime() > acc.getTime()) {
+          return doc.updatedAt;
+        }
+        return acc;
+      }, new Date(0));
+
+      return res.status(200).json({ link, brand, lastUpdatedAt });
     } catch (error) {
       return res.status(500).json({
         message: "Internal Server Error",
