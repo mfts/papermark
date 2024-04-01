@@ -3,7 +3,7 @@ import useSWR from "swr";
 import { fetcher } from "@/lib/utils";
 import { useMemo } from "react";
 import { useTeam } from "@/context/team-context";
-import { Brand } from "@prisma/client";
+import { Brand, DataroomBrand } from "@prisma/client";
 
 export function useBrand() {
   const teamInfo = useTeam();
@@ -11,6 +11,25 @@ export function useBrand() {
   const { data: brand, error } = useSWR<Brand>(
     teamInfo?.currentTeam?.id &&
       `/api/teams/${teamInfo?.currentTeam?.id}/branding`,
+    fetcher,
+    {
+      dedupingInterval: 30000,
+    },
+  );
+
+  return {
+    brand,
+    error,
+    loading: !brand && !error,
+  };
+}
+
+export function useDataroomBrand({ dataroomId }: { dataroomId: string }) {
+  const teamInfo = useTeam();
+  const teamId = teamInfo?.currentTeam?.id;
+
+  const { data: brand, error } = useSWR<DataroomBrand>(
+    teamId && `/api/teams/${teamId}/datarooms/${dataroomId}/branding`,
     fetcher,
     {
       dedupingInterval: 30000,

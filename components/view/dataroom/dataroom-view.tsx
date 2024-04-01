@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import EmailVerificationMessage from "../email-verification-form";
 
-import { Brand } from "@prisma/client";
+import { Brand, DataroomBrand } from "@prisma/client";
 import { useRouter } from "next/router";
 import { useAnalytics } from "@/lib/analytics";
 import DataroomViewer from "../DataroomViewer";
@@ -35,7 +35,7 @@ export default function DataroomView({
   userEmail: string | null | undefined;
   userId: string | null | undefined;
   isProtected: boolean;
-  brand?: Brand;
+  brand?: DataroomBrand;
   token?: string;
   verifiedEmail?: string;
 }) {

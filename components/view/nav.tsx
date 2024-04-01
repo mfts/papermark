@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Button } from "../ui/button";
 import PapermarkSparkle from "../shared/icons/papermark-sparkle";
 import { ArrowUpRight, Download } from "lucide-react";
-import { Brand } from "@prisma/client";
+import { Brand, DataroomBrand } from "@prisma/client";
 import Image from "next/image";
 import { toast } from "sonner";
 import {
@@ -32,7 +32,7 @@ export default function Nav({
   numPages?: number;
   allowDownload?: boolean;
   assistantEnabled?: boolean;
-  brand?: Brand;
+  brand?: Brand | DataroomBrand;
   embeddedLinks?: string[];
   viewId?: string;
   linkId?: string;

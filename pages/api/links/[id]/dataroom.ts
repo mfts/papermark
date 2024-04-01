@@ -42,6 +42,7 @@ export default async function handle(
                 select: {
                   id: true,
                   folderId: true,
+                  updatedAt: true,
                   document: {
                     select: {
                       id: true,
@@ -77,12 +78,13 @@ export default async function handle(
         return res.status(404).json({ error: "Link is archived" });
       }
 
-      let brand = await prisma.brand.findFirst({
+      let brand = await prisma.dataroomBrand.findFirst({
         where: {
-          teamId: link.dataroom?.teamId!,
+          dataroomId: link.dataroom?.id!,
         },
         select: {
           logo: true,
+          banner: true,
           brandColor: true,
         },
       });

@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react";
 import { CustomUser } from "@/lib/types";
 import { GetStaticPropsContext } from "next";
 import { useRouter } from "next/router";
-import { Brand, DataroomFolder, Link } from "@prisma/client";
+import { Brand, DataroomBrand, DataroomFolder, Link } from "@prisma/client";
 import CustomMetatag from "@/components/view/custom-metatag";
 import Head from "next/head";
 import DataroomView from "@/components/view/dataroom/dataroom-view";
@@ -47,7 +47,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
   }
   const { link, brand } = (await res.json()) as {
     link: LinkWithDataroom;
-    brand: Brand | null;
+    brand: DataroomBrand | null;
   };
 
   if (!link || !link.dataroom) {
@@ -116,7 +116,7 @@ export default function ViewPage({
     metaDescription: string | null;
     metaImage: string | null;
   } | null;
-  brand?: Brand;
+  brand?: DataroomBrand;
 }) {
   const router = useRouter();
   const { token, email: verifiedEmail } = router.query as {

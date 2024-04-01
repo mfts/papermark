@@ -125,7 +125,8 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
       icon: SettingsIcon,
       current:
         router.pathname.includes("settings") &&
-        !router.pathname.includes("branding"),
+        !router.pathname.includes("branding") &&
+        !router.pathname.includes("datarooms"),
       active: false,
       disabled: false,
     },
