@@ -118,8 +118,8 @@ export function useDataroomFolders({
   };
 }
 
-export type DRFolderWithDocuments = DataroomFolder & {
-  childFolders: DRFolderWithDocuments[];
+export type DataroomFolderWithDocuments = DataroomFolder & {
+  childFolders: DataroomFolderWithDocuments[];
   documents: {
     id: string;
     folderId: string;
@@ -135,7 +135,7 @@ export function useDataroomFoldersTree({ dataroomId }: { dataroomId: string }) {
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
 
-  const { data: folders, error } = useSWR<DRFolderWithDocuments[]>(
+  const { data: folders, error } = useSWR<DataroomFolderWithDocuments[]>(
     teamId && `/api/teams/${teamId}/datarooms/${dataroomId}/folders`,
     fetcher,
     {

@@ -20,6 +20,7 @@ import { DataroomHeader } from "@/components/datarooms/dataroom-header";
 import { NavMenu } from "@/components/navigation-menu";
 import { BreadcrumbComponent } from "@/components/datarooms/dataroom-breadcrumb";
 import DataroomDocumentCard from "@/components/datarooms/dataroom-document-card";
+import { SidebarFolderTree } from "@/components/datarooms/folders";
 
 export default function Documents() {
   const { dataroom } = useDataroom();
@@ -94,7 +95,9 @@ export default function Documents() {
         </header>
 
         <div className="grid md:grid-cols-4 gap-2">
-          <div className="md:col-span-1">Tree</div>
+          <div className="md:col-span-1">
+            <SidebarFolderTree dataroomId={dataroom?.id!} />
+          </div>
           <div className="md:col-span-3 space-y-4">
             <BreadcrumbComponent />
             <section className="flex items-center gap-x-2 mb-2">

@@ -45,6 +45,7 @@ export default async function handle(
       const documents = await prisma.dataroomDocument.findMany({
         where: {
           dataroomId: dataroomId,
+          folderId: null,
         },
         orderBy: {
           createdAt: "desc",

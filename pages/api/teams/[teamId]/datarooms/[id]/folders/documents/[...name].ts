@@ -68,6 +68,7 @@ export default async function handle(
         },
         select: {
           id: true,
+          dataroomId: true,
           folderId: true,
           createdAt: true,
           updatedAt: true,

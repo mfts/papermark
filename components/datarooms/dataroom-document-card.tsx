@@ -24,6 +24,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTheme } from "next-themes";
 import { MoveToFolderModal } from "@/components/documents/move-folder-modal";
 import { type DataroomFolderDocument } from "@/lib/swr/use-dataroom";
+import { MoveToDataroomFolderModal } from "./move-dataroom-folder-modal";
 
 type DocumentsCardProps = {
   document: DataroomFolderDocument;
@@ -135,9 +136,10 @@ export default function DataroomDocumentCard({
         </div>
       </li>
       {moveFolderOpen ? (
-        <MoveToFolderModal
+        <MoveToDataroomFolderModal
           open={moveFolderOpen}
           setOpen={setMoveFolderOpen}
+          dataroomId={document.dataroomId}
           documentId={document.id}
           documentName={document.document.name}
         />
