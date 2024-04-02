@@ -20,9 +20,10 @@ import {
   PlusIcon,
   FolderIcon as FolderLucideIcon,
   FolderOpenIcon,
+  ServerIcon,
 } from "lucide-react";
 import SiderbarFolders from "./sidebar-folders";
-import { AddFolderModal } from "./documents/add-folder-modal";
+import { AddFolderModal } from "./folders/add-folder-modal";
 import { ScrollArea } from "./ui/scroll-area";
 
 export default function Sidebar() {
@@ -88,14 +89,27 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
     {
       name: "Documents",
       href: "/documents",
-      icon: router.pathname.includes("documents")
-        ? FolderOpenIcon
-        : FolderLucideIcon,
+      icon:
+        router.pathname.includes("documents") &&
+        !router.pathname.includes("datarooms")
+          ? FolderOpenIcon
+          : FolderLucideIcon,
       current:
         router.pathname.includes("documents") &&
-        !router.pathname.includes("tree"),
-      active: router.pathname.includes("documents"),
+        !router.pathname.includes("tree") &&
+        !router.pathname.includes("datarooms"),
+      active:
+        router.pathname.includes("documents") &&
+        !router.pathname.includes("datarooms"),
       disabled: false,
+    },
+    {
+      name: "Datarooms",
+      href: "/datarooms",
+      icon: ServerIcon,
+      current: router.pathname.includes("datarooms"),
+      active: false,
+      disabled: userPlan === "business" ? false : true,
     },
     {
       name: "Branding",
@@ -111,7 +125,8 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
       icon: SettingsIcon,
       current:
         router.pathname.includes("settings") &&
-        !router.pathname.includes("branding"),
+        !router.pathname.includes("branding") &&
+        !router.pathname.includes("datarooms"),
       active: false,
       disabled: false,
     },
@@ -178,10 +193,8 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
                         disabled={item.disabled}
                         className={cn(
                           item.current
-                            ? "bg-gray-200 dark:bg-secondary text-secondary-foreground font-semibold"
-                            : "text-muted-foreground hover:text-foreground hover:bg-gray-200 hover:dark:bg-muted duration-200",
-                          router.pathname.includes("documents") &&
-                            "text-foreground",
+                            ? "bg-gray-200 dark:bg-secondary text-foreground font-semibold"
+                            : " hover:bg-gray-200 hover:dark:bg-muted duration-200",
                           "group flex gap-x-2 items-center rounded-md px-3 py-2 text-sm leading-6 w-full disabled:hover:bg-transparent disabled:text-muted-foreground disabled:cursor-default",
                         )}
                       >
@@ -202,10 +215,8 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
                     disabled={item.disabled}
                     className={cn(
                       item.current
-                        ? "bg-gray-200 dark:bg-secondary text-secondary-foreground font-semibold"
-                        : "text-muted-foreground hover:text-foreground hover:bg-gray-200 hover:dark:bg-muted duration-200",
-                      router.pathname.includes("documents") &&
-                        "text-foreground",
+                        ? "bg-gray-200 dark:bg-secondary text-foreground font-semibold"
+                        : " hover:bg-gray-200 hover:dark:bg-muted duration-200",
                       "group flex gap-x-2 items-center rounded-md px-3 py-2 text-sm leading-6 w-full disabled:hover:bg-transparent disabled:text-muted-foreground disabled:cursor-default",
                     )}
                   >
@@ -228,7 +239,7 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
           {userPlan === "trial" && session ? (
             <Banner session={session} />
           ) : null}
-          {userPlan === "pro" && null}
+          {(userPlan === "pro" || userPlan === "business") && null}
           {userPlan === "free" && showProBanner ? (
             <ProBanner setShowProBanner={setShowProBanner} />
           ) : null}

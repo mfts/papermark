@@ -9,7 +9,7 @@ export default async function handle(
   res: NextApiResponse,
 ) {
   if (req.method === "GET") {
-    // GET /api/teams/:teamId/folders/:name
+    // GET /api/teams/:teamId/folders/parents/:name
     const session = await getServerSession(req, res, authOptions);
     if (!session) {
       return res.status(401).end("Unauthorized");
@@ -67,8 +67,8 @@ export default async function handle(
       return res.status(500).json({ error: "Error fetching folders" });
     }
   } else {
-    // We only allow POST requests
-    res.setHeader("Allow", ["GET", "POST"]);
+    // We only allow GET requests
+    res.setHeader("Allow", ["GET"]);
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 }

@@ -46,8 +46,8 @@ export default async function handle(
         },
       });
 
-      const docId = result?.document.id!;
-      
+      const docId = result?.document!.id!;
+
       // check if the the team that own the document has the current user
       await getDocumentWithTeamAndUser({
         docId,
@@ -81,7 +81,7 @@ export default async function handle(
 
       const durationsPromises = views.map((view) => {
         return getViewPageDuration({
-          documentId: view.documentId,
+          documentId: view.documentId!,
           viewId: view.id,
           since: 0,
         });
@@ -116,7 +116,10 @@ export default async function handle(
 
       return res.status(200).json(viewsWithDuration);
     } catch (error) {
-      log({message: `Failed to get views for link: _${id}_. \n\n ${error} \n\n*Metadata*: \`{userId: ${userId}}\``, type: "error"});
+      log({
+        message: `Failed to get views for link: _${id}_. \n\n ${error} \n\n*Metadata*: \`{userId: ${userId}}\``,
+        type: "error",
+      });
       errorhandler(error, res);
     }
   } else {

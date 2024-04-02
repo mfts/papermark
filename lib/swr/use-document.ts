@@ -1,9 +1,8 @@
 import { useRouter } from "next/router";
 import useSWR from "swr";
-import useSWRImmutable from "swr/immutable";
 import { fetcher } from "@/lib/utils";
 import { DocumentWithVersion, LinkWithViews } from "@/lib/types";
-import { Document, View } from "@prisma/client";
+import { View } from "@prisma/client";
 import { useTeam } from "@/context/team-context";
 
 export function useDocument() {

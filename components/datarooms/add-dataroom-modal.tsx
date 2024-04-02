@@ -17,22 +17,9 @@ import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
 import { usePlan } from "@/lib/swr/use-billing";
 import { useAnalytics } from "@/lib/analytics";
 import { mutate } from "swr";
-import { Folder } from "@prisma/client";
-import { useRouter } from "next/router";
 
-export function AddFolderModal({
-  // open,
-  // setOpen,
-  onAddition,
-  children,
-}: {
-  // open?: boolean;
-  // setOpen?: React.Dispatch<React.SetStateAction<boolean>>;
-  onAddition?: (folderName: string) => void;
-  children?: React.ReactNode;
-}) {
-  const router = useRouter();
-  const [folderName, setFolderName] = useState<string>("");
+export function AddDataroomModal({ children }: { children?: React.ReactNode }) {
+  const [dataroomName, setDataroomName] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const [open, setOpen] = useState<boolean>(false);
 
@@ -40,28 +27,24 @@ export function AddFolderModal({
   const { plan } = usePlan();
   const analytics = useAnalytics();
 
-  /** current folder name */
-  const currentFolderPath = router.query.name as string[] | undefined;
-
   const handleSubmit = async (event: any) => {
     event.preventDefault();
     event.stopPropagation();
 
-    if (folderName == "") return;
+    if (dataroomName == "") return;
 
     setLoading(true);
 
     try {
       const response = await fetch(
-        `/api/teams/${teamInfo?.currentTeam?.id}/folders`,
+        `/api/teams/${teamInfo?.currentTeam?.id}/datarooms`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            name: folderName,
-            path: currentFolderPath?.join("/"),
+            name: dataroomName,
           }),
         },
       );
@@ -73,18 +56,13 @@ export function AddFolderModal({
         return;
       }
 
-      const { parentFolderPath } = await response.json();
+      analytics.capture("Dataroom Created", { dataroomName: dataroomName });
+      toast.success("Dataroom successfully created! 🎉");
 
-      analytics.capture("Folder Added", { folderName: folderName });
-      toast.success("Folder added successfully! 🎉");
-
-      mutate(`/api/teams/${teamInfo?.currentTeam?.id}/folders`);
-      mutate(
-        `/api/teams/${teamInfo?.currentTeam?.id}/folders${parentFolderPath}`,
-      );
+      mutate(`/api/teams/${teamInfo?.currentTeam?.id}/datarooms`);
     } catch (error) {
       setLoading(false);
-      toast.error("Error adding folder. Please try again.");
+      toast.error("Error adding dataroom. Please try again.");
       return;
     } finally {
       setLoading(false);
@@ -96,7 +74,7 @@ export function AddFolderModal({
   if (plan && plan.plan === "free") {
     if (children) {
       return (
-        <UpgradePlanModal clickedPlan="Pro" trigger={"add_domain_overview"}>
+        <UpgradePlanModal clickedPlan="Pro" trigger={"add_dataroom_overview"}>
           {children}
         </UpgradePlanModal>
       );
@@ -108,22 +86,24 @@ export function AddFolderModal({
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader className="text-start">
-          <DialogTitle>Add Folder</DialogTitle>
-          <DialogDescription>You can easily add a folder.</DialogDescription>
+          <DialogTitle>Create dataroom</DialogTitle>
+          <DialogDescription>
+            Start creating a dataroom with a name.
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
-          <Label htmlFor="folder-name" className="opacity-80">
-            Folder Name
+          <Label htmlFor="dataroom-name" className="opacity-80">
+            Dataroom Name
           </Label>
           <Input
-            id="folder-name"
-            placeholder="folder-123"
+            id="dataroom-name"
+            placeholder="ACME Aquisition"
             className="w-full mt-1 mb-4"
-            onChange={(e) => setFolderName(e.target.value)}
+            onChange={(e) => setDataroomName(e.target.value)}
           />
           <DialogFooter>
-            <Button type="submit" className="w-full h-9">
-              Add new folder
+            <Button type="submit" className="w-full h-9" loading={loading}>
+              Add new dataroom
             </Button>
           </DialogFooter>
         </form>

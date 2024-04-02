@@ -19,7 +19,12 @@ import { durationFormat, timeAgo } from "@/lib/utils";
 import ChevronDown from "@/components/shared/icons/chevron-down";
 import VisitorChart from "./visitor-chart";
 import { VisitorAvatar } from "./visitor-avatar";
-import { BadgeCheckIcon, BadgeInfoIcon, DownloadCloudIcon } from "lucide-react";
+import {
+  BadgeCheckIcon,
+  BadgeInfoIcon,
+  DownloadCloudIcon,
+  ServerIcon,
+} from "lucide-react";
 import { BadgeTooltip } from "@/components/ui/tooltip";
 
 export default function VisitorsTable({ numPages }: { numPages: number }) {
@@ -90,6 +95,14 @@ export default function VisitorsTable({ numPages }: { numPages: number }) {
                                         <DownloadCloudIcon className="h-4 w-4 text-cyan-500 hover:text-cyan-600" />
                                       </BadgeTooltip>
                                     )}
+                                    {view.dataroomId && (
+                                      <BadgeTooltip
+                                        content={`Dataroom Visitor`}
+                                        key="download"
+                                      >
+                                        <ServerIcon className="h-4 w-4 text-[#fb7a00] hover:text-[#fb7a00]/90" />
+                                      </BadgeTooltip>
+                                    )}
                                   </>
                                 ) : (
                                   "Anonymous"
@@ -139,7 +152,7 @@ export default function VisitorsTable({ numPages }: { numPages: number }) {
                         <TableRow className="hover:bg-transparent">
                           <TableCell colSpan={5}>
                             <VisitorChart
-                              documentId={view.documentId}
+                              documentId={view.documentId!}
                               viewId={view.id}
                               totalPages={numPages}
                             />

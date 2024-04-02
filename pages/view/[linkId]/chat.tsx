@@ -55,7 +55,7 @@ export const getServerSideProps = async (context: any) => {
     };
   }
 
-  if (!link.document.assistantEnabled) {
+  if (!link.document!.assistantEnabled) {
     return {
       notFound: true,
     };
@@ -72,7 +72,7 @@ export const getServerSideProps = async (context: any) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        documentId: link!.document.id,
+        documentId: link!.document!.id,
         userId: userId,
       }),
     },
@@ -86,10 +86,10 @@ export const getServerSideProps = async (context: any) => {
 
   const { threadId, messages } = await res.json();
 
-  const firstPage = link.document.versions[0].pages[0]
+  const firstPage = link.document!.versions[0].pages[0]
     ? await getFile({
-        type: link.document.versions[0].pages[0].storageType,
-        data: link.document.versions[0].pages[0].file,
+        type: link.document!.versions[0].pages[0].storageType,
+        data: link.document!.versions[0].pages[0].file,
       })
     : "";
 

@@ -24,13 +24,18 @@ import {
   createNewDocumentVersion,
 } from "@/lib/documents/create-document";
 import { useAnalytics } from "@/lib/analytics";
+import { mutate } from "swr";
 
 export function AddDocumentModal({
   newVersion,
   children,
+  isDataroom,
+  dataroomId,
 }: {
   newVersion?: boolean;
   children: React.ReactNode;
+  isDataroom?: boolean;
+  dataroomId?: string;
 }) {
   const router = useRouter();
   const plausible = usePlausible();
@@ -94,6 +99,26 @@ export function AddDocumentModal({
       if (response) {
         const document = await response.json();
 
+        if (isDataroom && dataroomId) {
+          await addDocumentToDataroom({
+            documentId: document.id,
+            folderPathName: currentFolderPath?.join("/"),
+          });
+
+          plausible("documentUploaded");
+          analytics.capture("Document Added", {
+            documentId: document.id,
+            name: document.name,
+            numPages: document.numPages,
+            path: router.asPath,
+            type: "pdf",
+            teamId: teamId,
+            dataroomId: dataroomId,
+          });
+
+          return;
+        }
+
         if (!newVersion) {
           // copy the link to the clipboard
           copyToClipboard(
@@ -148,6 +173,51 @@ export function AddDocumentModal({
     }
   };
 
+  const addDocumentToDataroom = async ({
+    documentId,
+    folderPathName,
+  }: {
+    documentId: string;
+    folderPathName?: string;
+  }) => {
+    try {
+      const response = await fetch(
+        `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}/documents`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            documentId: documentId,
+            folderPathName: folderPathName,
+          }),
+        },
+      );
+
+      if (!response.ok) {
+        const { message } = await response.json();
+        toast.error(message);
+        return;
+      }
+
+      mutate(
+        `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}/documents`,
+      );
+      mutate(
+        `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}/folders/documents/${folderPathName}`,
+      );
+
+      toast.success("Document added to dataroom successfully! 🎉");
+    } catch (error) {
+      toast.error("Error adding document to dataroom.");
+      console.error(
+        "An error occurred while adding document to the dataroom: ",
+        error,
+      );
+    }
+  };
+
   const createNotionFileName = () => {
     // Extract Notion file name from the URL
     const urlSegments = (notionLink as string).split("/")[3];
@@ -198,6 +268,27 @@ export function AddDocumentModal({
 
       if (response) {
         const document = await response.json();
+
+        if (isDataroom && dataroomId) {
+          await addDocumentToDataroom({
+            documentId: document.id,
+            folderPathName: currentFolderPath?.join("/"),
+          });
+
+          plausible("documentUploaded");
+          plausible("notionDocumentUploaded");
+          analytics.capture("Document Added", {
+            documentId: document.id,
+            name: document.name,
+            numPages: document.numPages,
+            path: router.asPath,
+            type: "notion",
+            teamId: teamId,
+            dataroomId: dataroomId,
+          });
+
+          return;
+        }
 
         if (!newVersion) {
           // copy the link to the clipboard

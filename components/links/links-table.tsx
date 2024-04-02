@@ -22,7 +22,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
-import { useDocumentLinks } from "@/lib/swr/use-document";
 import BarChart from "../shared/icons/bar-chart";
 import { cn, copyToClipboard, nFormatter, timeAgo } from "@/lib/utils";
 import MoreHorizontal from "../shared/icons/more-horizontal";
@@ -41,13 +40,17 @@ import { usePlan } from "@/lib/swr/use-billing";
 import { useTeam } from "@/context/team-context";
 import ProcessStatusBar from "../documents/process-status-bar";
 import { Settings2Icon } from "lucide-react";
+import { DocumentVersion } from "@prisma/client";
 
 export default function LinksTable({
+  targetType,
+  links,
   primaryVersion,
 }: {
-  primaryVersion: any;
+  targetType: "DOCUMENT" | "DATAROOM";
+  links?: LinkWithViews[];
+  primaryVersion?: DocumentVersion;
 }) {
-  const { links } = useDocumentLinks();
   const router = useRouter();
   const { plan } = usePlan();
   const teamInfo = useTeam();
@@ -93,7 +96,7 @@ export default function LinksTable({
 
   const handleArchiveLink = async (
     linkId: string,
-    documentId: string,
+    targetId: string,
     isArchived: boolean,
   ) => {
     setIsLoading(true);
@@ -113,11 +116,12 @@ export default function LinksTable({
     }
 
     const archivedLink = await response.json();
+    const endpointTargetType = `${targetType.toLowerCase()}s`; // "documents" or "datarooms"
 
     // Update the archived link in the list of links
     mutate(
-      `/api/teams/${teamInfo?.currentTeam?.id}/documents/${encodeURIComponent(
-        documentId,
+      `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
+        targetId,
       )}/links`,
       (links || []).map((link) => (link.id === linkId ? archivedLink : link)),
       false,
@@ -136,6 +140,8 @@ export default function LinksTable({
     : 0;
 
   const hasFreePlan = plan && plan.plan === "free";
+
+  console.log("links", links);
 
   return (
     <>
@@ -182,7 +188,8 @@ export default function LinksTable({
                               )}
                             >
                               {/* Progress bar */}
-                              {primaryVersion.type !== "notion" &&
+                              {primaryVersion &&
+                              primaryVersion.type !== "notion" &&
                               !primaryVersion.hasPages ? (
                                 <ProcessStatusBar
                                   documentVersionId={primaryVersion.id}
@@ -193,7 +200,7 @@ export default function LinksTable({
                               <div className="whitespace-nowrap w-full flex text-xs md:text-sm group-hover/cell:opacity-0">
                                 {link.domainId
                                   ? `https://${link.domainSlug}/${link.slug}`
-                                  : `https://${process.env.NEXT_PUBLIC_ROOT_DOMAIN}/view/${link.id}`}
+                                  : `https://${process.env.NEXT_PUBLIC_ROOT_DOMAIN}/view/${targetType === "DATAROOM" ? `d/` : ``}${link.id}`}
                               </div>
 
                               {link.domainId && hasFreePlan ? (
@@ -213,7 +220,7 @@ export default function LinksTable({
                                     handleCopyToClipboard(
                                       link.domainId
                                         ? `https://${link.domainSlug}/${link.slug}`
-                                        : `https://${process.env.NEXT_PUBLIC_ROOT_DOMAIN}/view/${link.id}`,
+                                        : `https://${process.env.NEXT_PUBLIC_ROOT_DOMAIN}/view/${targetType === "DATAROOM" ? `d/` : ``}${link.id}`,
                                     )
                                   }
                                   title="Copy to clipboard"
@@ -236,7 +243,8 @@ export default function LinksTable({
                           <TableCell>
                             <CollapsibleTrigger
                               disabled={
-                                Number(nFormatter(link._count.views)) === 0
+                                Number(nFormatter(link._count.views)) === 0 ||
+                                targetType === "DATAROOM"
                               }
                             >
                               <div className="flex items-center space-x-1 [&[data-state=open]>svg.chevron]:rotate-180">
@@ -247,7 +255,8 @@ export default function LinksTable({
                                     views
                                   </span>
                                 </p>
-                                {Number(nFormatter(link._count.views)) > 0 ? (
+                                {Number(nFormatter(link._count.views)) > 0 &&
+                                targetType !== "DATAROOM" ? (
                                   <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0 transition-transform duration-200 chevron" />
                                 ) : null}
                               </div>
@@ -287,7 +296,7 @@ export default function LinksTable({
                                   onClick={() =>
                                     handleArchiveLink(
                                       link.id,
-                                      link.documentId,
+                                      link.documentId ?? link.dataroomId ?? "",
                                       link.isArchived,
                                     )
                                   }
@@ -330,7 +339,9 @@ export default function LinksTable({
         <LinkSheet
           isOpen={isLinkSheetVisible}
           setIsOpen={setIsLinkSheetVisible}
+          linkType={`${targetType}_LINK`}
           currentLink={selectedLink}
+          existingLinks={links}
         />
 
         {archivedLinksCount > 0 && (
@@ -428,7 +439,9 @@ export default function LinksTable({
                                         onClick={() =>
                                           handleArchiveLink(
                                             link.id,
-                                            link.documentId,
+                                            link.documentId ??
+                                              link.dataroomId ??
+                                              "",
                                             link.isArchived,
                                           )
                                         }
