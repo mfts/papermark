@@ -5,6 +5,7 @@ import LinkSheet from "@/components/links/link-sheet";
 import LinksTable from "@/components/links/links-table";
 import { NavMenu } from "@/components/navigation-menu";
 import { Button } from "@/components/ui/button";
+import DataroomVisitorsTable from "@/components/visitors/dataroom-visitors-table";
 import { useDataroom, useDataroomLinks } from "@/lib/swr/use-dataroom";
 import { useState } from "react";
 
@@ -66,7 +67,7 @@ export default function DataroomPage() {
           <LinksTable links={links} targetType={"DATAROOM"} />
 
           {/* Visitors */}
-          {/* <VisitorsTable numPages={primaryVersion.numPages!} /> */}
+          <DataroomVisitorsTable dataroomId={dataroom.id} />
 
           <LinkSheet
             linkType={"DATAROOM_LINK"}

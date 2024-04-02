@@ -219,3 +219,51 @@ export function useDataroomFolderDocuments({ name }: { name: string[] }) {
     error,
   };
 }
+
+export function useDataroomVisits({ dataroomId }: { dataroomId: string }) {
+  const teamInfo = useTeam();
+  const teamId = teamInfo?.currentTeam?.id;
+
+  const { data: views, error } = useSWR<any[]>(
+    teamId &&
+      dataroomId &&
+      `/api/teams/${teamId}/datarooms/${dataroomId}/views`,
+    fetcher,
+    {
+      dedupingInterval: 10000,
+    },
+  );
+
+  return {
+    views,
+    loading: !error && !views,
+    error,
+  };
+}
+
+export function useDataroomVisitHistory({
+  viewId,
+  dataroomId,
+}: {
+  viewId: string;
+  dataroomId: string;
+}) {
+  const teamInfo = useTeam();
+  const teamId = teamInfo?.currentTeam?.id;
+
+  const { data: documentViews, error } = useSWR<any[]>(
+    teamId &&
+      dataroomId &&
+      `/api/teams/${teamId}/datarooms/${dataroomId}/views/${viewId}/history`,
+    fetcher,
+    {
+      dedupingInterval: 10000,
+    },
+  );
+
+  return {
+    documentViews,
+    loading: !error && !documentViews,
+    error,
+  };
+}
