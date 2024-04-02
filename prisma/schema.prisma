@@ -259,9 +259,17 @@ model View {
   viewedAt       DateTime   @default(now())
   downloadedAt   DateTime? // This is the time the document was downloaded
   reactions      Reaction[]
+  viewType       ViewType   @default(DOCUMENT_VIEW)
 
   @@index([linkId])
   @@index([documentId])
+  @@index([dataroomId])
+  @@index([dataroomViewId])
+}
+
+enum ViewType {
+  DOCUMENT_VIEW
+  DATAROOM_VIEW
 }
 
 model Reaction {
@@ -350,6 +358,7 @@ model Dataroom {
   folders   DataroomFolder[]
   links     Link[]
   views     View[]
+  brand     DataroomBrand?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -389,4 +398,17 @@ model DataroomFolder {
 
   @@unique([dataroomId, path])
   @@index([parentId])
+}
+
+model DataroomBrand {
+  id          String   @id @default(cuid())
+  logo        String? // This should be a reference to where the file is stored (S3, Google Cloud Storage, etc.)
+  banner      String? // This should be a reference to where the file is stored (S3, Google Cloud Storage, etc.)
+  brandColor  String? // This should be a reference to the brand color
+  accentColor String? // This should be a reference to the accent color
+  dataroomId  String   @unique
+  dataroom    Dataroom @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

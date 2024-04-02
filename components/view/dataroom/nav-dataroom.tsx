@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { Button } from "../ui/button";
-import PapermarkSparkle from "../shared/icons/papermark-sparkle";
+import { Button } from "../../ui/button";
+import PapermarkSparkle from "../../shared/icons/papermark-sparkle";
 import { ArrowUpRight, Download } from "lucide-react";
 import { Brand, DataroomBrand } from "@prisma/client";
 import Image from "next/image";
@@ -14,8 +14,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuShortcut,
 } from "@/components/ui/dropdown-menu";
+import { timeAgo } from "@/lib/utils";
 
-export default function Nav({
+export default function DataroomNav({
   pageNumber,
   numPages,
   allowDownload,
@@ -27,18 +28,20 @@ export default function Nav({
   embeddedLinks,
   isDataroom,
   setDocumentData,
+  dataroom,
 }: {
   pageNumber?: number;
   numPages?: number;
   allowDownload?: boolean;
   assistantEnabled?: boolean;
-  brand?: Brand | DataroomBrand;
+  brand?: DataroomBrand;
   embeddedLinks?: string[];
   viewId?: string;
   linkId?: string;
   type?: "pdf" | "notion";
   isDataroom?: boolean;
   setDocumentData?: (data: any) => void;
+  dataroom?: any;
 }) {
   const downloadFile = async () => {
     if (!allowDownload || type === "notion") return;
@@ -71,9 +74,9 @@ export default function Nav({
       }}
     >
       <div className="mx-auto px-2 sm:px-6 lg:px-8">
-        <div className="relative flex h-16 items-center justify-between">
+        <div className="relative flex h-12 items-center justify-between">
           <div className="flex flex-1 justify-start items-center">
-            <div className="flex flex-shrink-0 items-center relative h-8 w-36">
+            <div className="flex flex-shrink-0 items-center relative h-6 w-36">
               {brand && brand.logo ? (
                 <Image
                   className="object-contain"
@@ -170,6 +173,30 @@ export default function Nav({
           </div>
         </div>
       </div>
+      {brand && brand.banner ? (
+        <div className="relative h-[30vh]">
+          <Image
+            className="object-cover w-full h-[30vh]"
+            src={brand.banner}
+            alt="Banner"
+            width={1920}
+            height={320}
+            quality={100}
+            priority
+          />
+          <div className="absolute bottom-5 w-fit backdrop-blur-md bg-white/30 rounded-r-md">
+            <div className="px-5 sm:px-10 py-2">
+              <div className="text-3xl">{dataroom.name}</div>
+              <time
+                className="text-sm"
+                dateTime={new Date(dataroom.lastUpdatedAt).toISOString()}
+              >
+                {`Last updated ${timeAgo(dataroom.lastUpdatedAt)}`}
+              </time>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </nav>
   );
 }

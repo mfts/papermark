@@ -21,6 +21,8 @@ import { NavMenu } from "@/components/navigation-menu";
 import { BreadcrumbComponent } from "@/components/datarooms/dataroom-breadcrumb";
 import { useRouter } from "next/router";
 import DataroomDocumentCard from "@/components/datarooms/dataroom-document-card";
+import { SidebarFolderTree } from "@/components/datarooms/folders";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 export default function Documents() {
   const router = useRouter();
@@ -84,13 +86,13 @@ export default function Documents() {
                 href: `/datarooms/${dataroom?.id}/documents`,
                 segment: "documents",
               },
+              // {
+              //   label: "Analytics",
+              //   href: `/datarooms/${dataroom.id}/analytics`,
+              //   segment: "analytics",
+              // },
               {
-                label: "Analytics",
-                href: `/datarooms/${dataroom?.id}/analytics`,
-                segment: "analytics",
-              },
-              {
-                label: "Settings",
+                label: "Customization",
                 href: `/datarooms/${dataroom?.id}/settings`,
                 segment: "settings",
               },
@@ -98,8 +100,13 @@ export default function Documents() {
           />
         </header>
 
-        <div className="grid md:grid-cols-4 gap-2">
-          <div className="md:col-span-1">Tree</div>
+        <div className="grid md:grid-cols-4 gap-4 h-full">
+          <div className="md:col-span-1 truncate h-full">
+            <ScrollArea showScrollbar>
+              <SidebarFolderTree dataroomId={dataroom?.id!} />
+              <ScrollBar orientation="horizontal" />
+            </ScrollArea>
+          </div>
           <div className="md:col-span-3 space-y-4">
             <BreadcrumbComponent />
             <section className="flex items-center gap-x-2 mb-2">

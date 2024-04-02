@@ -2,7 +2,7 @@ NODE temp_0
 SQL >
       SELECT * 
       FROM page_views__v2
-      WHERE fromUnixTimestamp64Milli(time) > '2024-03-27 09:59:00.000'
+      WHERE fromUnixTimestamp64Milli(time) > '2024-04-02 07:08:00.000'
 
 TYPE materialized
 DATASOURCE page_views__v3

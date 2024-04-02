@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react";
 import { CustomUser } from "@/lib/types";
 import { GetStaticPropsContext } from "next";
 import { useRouter } from "next/router";
-import { Brand, DataroomFolder, Link } from "@prisma/client";
+import { Brand, DataroomBrand, DataroomFolder, Link } from "@prisma/client";
 import CustomMetatag from "@/components/view/custom-metatag";
 import Head from "next/head";
 import DataroomView from "@/components/view/dataroom/dataroom-view";
@@ -31,6 +31,7 @@ export interface LinkWithDataroom extends Link {
       };
     }[];
     folders: DataroomFolder[];
+    lastUpdatedAt: Date;
   };
 }
 
@@ -45,9 +46,10 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
   if (!res.ok) {
     return { notFound: true };
   }
-  const { link, brand } = (await res.json()) as {
+  const { link, brand, lastUpdatedAt } = (await res.json()) as {
     link: LinkWithDataroom;
-    brand: Brand | null;
+    brand: DataroomBrand | null;
+    lastUpdatedAt: Date;
   };
 
   if (!link || !link.dataroom) {
@@ -83,7 +85,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
       // return link without file and type to avoid sending the file to the client
       link: {
         ...link,
-        dataroom: { ...link.dataroom, documents: documents },
+        dataroom: { ...link.dataroom, documents: documents, lastUpdatedAt },
       },
       meta: {
         enableCustomMetatag: link.enableCustomMetatag || false,
@@ -116,7 +118,7 @@ export default function ViewPage({
     metaDescription: string | null;
     metaImage: string | null;
   } | null;
-  brand?: Brand;
+  brand?: DataroomBrand;
 }) {
   const router = useRouter();
   const { token, email: verifiedEmail } = router.query as {

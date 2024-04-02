@@ -62,7 +62,7 @@ export function AddDataroomModal({ children }: { children?: React.ReactNode }) {
       mutate(`/api/teams/${teamInfo?.currentTeam?.id}/datarooms`);
     } catch (error) {
       setLoading(false);
-      toast.error("Error adding folder. Please try again.");
+      toast.error("Error adding dataroom. Please try again.");
       return;
     } finally {
       setLoading(false);

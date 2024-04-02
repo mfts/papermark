@@ -36,14 +36,13 @@ export default function FolderCard({
         <div className="flex-col">
           <div className="flex items-center">
             <h2 className="min-w-0 text-sm font-semibold leading-6 text-foreground truncate max-w-[150px] sm:max-w-md">
-              <Link
-                href="#"
+              <div
                 onClick={() => setFolderId(folder.id)}
                 className="truncate w-full"
               >
                 <span>{folder.name}</span>
                 <span className="absolute inset-0" />
-              </Link>
+              </div>
             </h2>
           </div>
         </div>

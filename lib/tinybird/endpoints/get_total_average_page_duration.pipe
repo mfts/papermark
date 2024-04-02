@@ -1,4 +1,4 @@
-VERSION 3
+VERSION 4
 
 NODE endpoint
 SQL >
@@ -6,7 +6,7 @@ SQL >
     WITH
         DistinctDurations AS (
             SELECT versionNumber, pageNumber, viewId, SUM(duration) AS distinct_duration
-            FROM page_views__v2
+            FROM page_views__v3
             WHERE
                 documentId = {{ String(documentId, required=true) }}
                 AND time >= {{ Int64(since, required=true) }}

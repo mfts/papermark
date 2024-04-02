@@ -11,24 +11,22 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { Gauge } from "@/components/ui/gauge";
 import { Skeleton } from "@/components/ui/skeleton";
 
-import { useDocumentVisits } from "@/lib/swr/use-document";
 import { durationFormat, timeAgo } from "@/lib/utils";
 import ChevronDown from "@/components/shared/icons/chevron-down";
-import VisitorChart from "./visitor-chart";
 import { VisitorAvatar } from "./visitor-avatar";
-import {
-  BadgeCheckIcon,
-  BadgeInfoIcon,
-  DownloadCloudIcon,
-  ServerIcon,
-} from "lucide-react";
+import { BadgeCheckIcon, BadgeInfoIcon, MailOpenIcon } from "lucide-react";
 import { BadgeTooltip } from "@/components/ui/tooltip";
+import { useDataroomVisits } from "@/lib/swr/use-dataroom";
+import DataroomVisitHistory from "./dataroom-visitors-history";
 
-export default function VisitorsTable({ numPages }: { numPages: number }) {
-  const { views } = useDocumentVisits();
+export default function DataroomVisitorsTable({
+  dataroomId,
+}: {
+  dataroomId: string;
+}) {
+  const { views } = useDataroomVisits({ dataroomId });
 
   return (
     <div className="w-full">
@@ -40,8 +38,8 @@ export default function VisitorsTable({ numPages }: { numPages: number }) {
           <TableHeader>
             <TableRow className="hover:bg-transparent *:font-medium *:whitespace-nowrap">
               <TableHead>Name</TableHead>
-              <TableHead>Visit Duration</TableHead>
-              <TableHead>Visit Completion</TableHead>
+              {/* <TableHead>Visit Duration</TableHead> */}
+              {/* <TableHead>Last Viewed Document</TableHead> */}
               <TableHead>Last Viewed</TableHead>
               <TableHead className="text-center sm:text-right"></TableHead>
             </TableRow>
@@ -87,22 +85,6 @@ export default function VisitorsTable({ numPages }: { numPages: number }) {
                                         <BadgeInfoIcon className="h-4 w-4 text-blue-500 hover:text-blue-600" />
                                       </BadgeTooltip>
                                     )}
-                                    {view.downloadedAt && (
-                                      <BadgeTooltip
-                                        content={`Downloaded ${timeAgo(view.downloadedAt)}`}
-                                        key="download"
-                                      >
-                                        <DownloadCloudIcon className="h-4 w-4 text-cyan-500 hover:text-cyan-600" />
-                                      </BadgeTooltip>
-                                    )}
-                                    {view.dataroomId && (
-                                      <BadgeTooltip
-                                        content={`Dataroom Visitor`}
-                                        key="download"
-                                      >
-                                        <ServerIcon className="h-4 w-4 text-[#fb7a00] hover:text-[#fb7a00]/90" />
-                                      </BadgeTooltip>
-                                    )}
                                   </>
                                 ) : (
                                   "Anonymous"
@@ -116,13 +98,13 @@ export default function VisitorsTable({ numPages }: { numPages: number }) {
                         </div>
                       </TableCell>
                       {/* Duration */}
-                      <TableCell className="">
+                      {/* <TableCell className="">
                         <div className="text-sm text-muted-foreground">
                           {durationFormat(view.totalDuration)}
                         </div>
-                      </TableCell>
+                      </TableCell> */}
                       {/* Completion */}
-                      <TableCell className="flex justify-start">
+                      {/* <TableCell className="flex justify-start">
                         <div className="text-sm text-muted-foreground">
                           <Gauge
                             value={view.completionRate}
@@ -130,7 +112,7 @@ export default function VisitorsTable({ numPages }: { numPages: number }) {
                             showValue={true}
                           />
                         </div>
-                      </TableCell>
+                      </TableCell> */}
                       {/* Last Viewed */}
                       <TableCell className="text-sm text-muted-foreground">
                         <time dateTime={new Date(view.viewedAt).toISOString()}>
@@ -149,15 +131,34 @@ export default function VisitorsTable({ numPages }: { numPages: number }) {
 
                     <CollapsibleContent asChild>
                       <>
-                        <TableRow className="hover:bg-transparent">
-                          <TableCell colSpan={5}>
-                            <VisitorChart
-                              documentId={view.documentId!}
-                              viewId={view.id}
-                              totalPages={numPages}
-                            />
+                        <TableRow key={view.id}>
+                          <TableCell>
+                            <div className="flex items-center gap-x-4 overflow-visible">
+                              <MailOpenIcon className="h-5 w-5 text-[#fb7a00]" />
+                              Accessed {view.dataroomName} dataroom
+                            </div>
                           </TableCell>
+
+                          <TableCell>
+                            <div>
+                              <time
+                                className="truncate text-sm text-muted-foreground"
+                                dateTime={new Date(
+                                  view.viewedAt,
+                                ).toLocaleString()}
+                                title={new Date(view.viewedAt).toLocaleString()}
+                              >
+                                {timeAgo(view.viewedAt)}
+                              </time>
+                            </div>
+                          </TableCell>
+                          <TableCell className="table-cell"></TableCell>
                         </TableRow>
+
+                        <DataroomVisitHistory
+                          viewId={view.id}
+                          dataroomId={dataroomId}
+                        />
                       </>
                     </CollapsibleContent>
                   </>

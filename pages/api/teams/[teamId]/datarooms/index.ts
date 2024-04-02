@@ -71,6 +71,10 @@ export default async function handle(
       const team = await prisma.team.findUnique({
         where: {
           id: teamId,
+          plan: {
+            // exclude all teams not on `business` plan
+            in: ["business"],
+          },
           users: {
             some: {
               userId: userId,

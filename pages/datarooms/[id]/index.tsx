@@ -1,9 +1,11 @@
 import { DataroomHeader } from "@/components/datarooms/dataroom-header";
+import StatsCard from "@/components/datarooms/stats-card";
 import AppLayout from "@/components/layouts/app";
 import LinkSheet from "@/components/links/link-sheet";
 import LinksTable from "@/components/links/links-table";
 import { NavMenu } from "@/components/navigation-menu";
 import { Button } from "@/components/ui/button";
+import DataroomVisitorsTable from "@/components/visitors/dataroom-visitors-table";
 import { useDataroom, useDataroomLinks } from "@/lib/swr/use-dataroom";
 import { useState } from "react";
 
@@ -43,13 +45,13 @@ export default function DataroomPage() {
                 href: `/datarooms/${dataroom.id}/documents`,
                 segment: "documents",
               },
+              // {
+              //   label: "Analytics",
+              //   href: `/datarooms/${dataroom.id}/analytics`,
+              //   segment: "analytics",
+              // },
               {
-                label: "Analytics",
-                href: `/datarooms/${dataroom.id}/analytics`,
-                segment: "analytics",
-              },
-              {
-                label: "Settings",
+                label: "Customization",
                 href: `/datarooms/${dataroom.id}/settings`,
                 segment: "settings",
               },
@@ -58,11 +60,14 @@ export default function DataroomPage() {
         </header>
 
         <div className="space-y-4">
+          {/* Stats */}
+          <StatsCard />
+
           {/* Links */}
           <LinksTable links={links} targetType={"DATAROOM"} />
 
           {/* Visitors */}
-          {/* <VisitorsTable numPages={primaryVersion.numPages!} /> */}
+          <DataroomVisitorsTable dataroomId={dataroom.id} />
 
           <LinkSheet
             linkType={"DATAROOM_LINK"}

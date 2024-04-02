@@ -13,7 +13,7 @@ const bodyValidation = z.object({
   linkId: z.string(),
   documentId: z.string(),
   viewId: z.string(),
-  folderId: z.string().optional(),
+  dataroomId: z.string().optional(),
   versionNumber: z.number().int().optional(),
   time: z.number().int(),
   duration: z.number().int(),

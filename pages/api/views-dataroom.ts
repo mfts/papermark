@@ -44,7 +44,7 @@ export default async function handle(
     verifiedEmail: string | null;
     linkType: string;
     dataroomViewId?: string;
-    viewType: string;
+    viewType: "DATAROOM_VIEW" | "DOCUMENT_VIEW";
   };
 
   const { email, password } = data as { email: string; password: string };
@@ -191,7 +191,7 @@ export default async function handle(
     isEmailVerified = true;
   }
 
-  if (viewType === "DATAROOM") {
+  if (viewType === "DATAROOM_VIEW") {
     try {
       console.time("create-view");
       const newDataroomView = await prisma.view.create({
@@ -200,6 +200,7 @@ export default async function handle(
           viewerEmail: email,
           verified: isEmailVerified,
           dataroomId: dataroomId,
+          viewType: "DATAROOM_VIEW",
         },
         select: { id: true },
       });
@@ -232,6 +233,8 @@ export default async function handle(
         documentId: documentId,
         verified: isEmailVerified,
         dataroomViewId: dataroomViewId,
+        dataroomId: dataroomId,
+        viewType: "DOCUMENT_VIEW",
       },
       select: { id: true },
     });

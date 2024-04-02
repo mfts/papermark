@@ -22,7 +22,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
-import { useDocumentLinks } from "@/lib/swr/use-document";
 import BarChart from "../shared/icons/bar-chart";
 import { cn, copyToClipboard, nFormatter, timeAgo } from "@/lib/utils";
 import MoreHorizontal from "../shared/icons/more-horizontal";
@@ -201,7 +200,7 @@ export default function LinksTable({
                               <div className="whitespace-nowrap w-full flex text-xs md:text-sm group-hover/cell:opacity-0">
                                 {link.domainId
                                   ? `https://${link.domainSlug}/${link.slug}`
-                                  : `https://${process.env.NEXT_PUBLIC_ROOT_DOMAIN}/view/${link.id}`}
+                                  : `https://${process.env.NEXT_PUBLIC_ROOT_DOMAIN}/view/${targetType === "DATAROOM" ? `d/` : ``}${link.id}`}
                               </div>
 
                               {link.domainId && hasFreePlan ? (
@@ -221,7 +220,7 @@ export default function LinksTable({
                                     handleCopyToClipboard(
                                       link.domainId
                                         ? `https://${link.domainSlug}/${link.slug}`
-                                        : `https://${process.env.NEXT_PUBLIC_ROOT_DOMAIN}/view/${link.id}`,
+                                        : `https://${process.env.NEXT_PUBLIC_ROOT_DOMAIN}/view/${targetType === "DATAROOM" ? `d/` : ``}${link.id}`,
                                     )
                                   }
                                   title="Copy to clipboard"
@@ -244,7 +243,8 @@ export default function LinksTable({
                           <TableCell>
                             <CollapsibleTrigger
                               disabled={
-                                Number(nFormatter(link._count.views)) === 0
+                                Number(nFormatter(link._count.views)) === 0 ||
+                                targetType === "DATAROOM"
                               }
                             >
                               <div className="flex items-center space-x-1 [&[data-state=open]>svg.chevron]:rotate-180">
@@ -255,7 +255,8 @@ export default function LinksTable({
                                     views
                                   </span>
                                 </p>
-                                {Number(nFormatter(link._count.views)) > 0 ? (
+                                {Number(nFormatter(link._count.views)) > 0 &&
+                                targetType !== "DATAROOM" ? (
                                   <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0 transition-transform duration-200 chevron" />
                                 ) : null}
                               </div>

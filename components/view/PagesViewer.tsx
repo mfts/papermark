@@ -5,7 +5,7 @@ import LoadingSpinner from "@/components/ui/loading-spinner";
 import BlankImg from "@/public/_static/blank.gif";
 import Nav from "./nav";
 import Toolbar from "./toolbar";
-import { Brand } from "@prisma/client";
+import { Brand, DataroomBrand } from "@prisma/client";
 import { useRouter } from "next/router";
 
 const DEFAULT_PRELOADED_IMAGES_NUM = 10;
@@ -31,7 +31,7 @@ export default function PagesViewer({
   allowDownload: boolean;
   feedbackEnabled: boolean;
   versionNumber: number;
-  brand?: Brand;
+  brand?: Brand | DataroomBrand;
   dataroomId?: string;
   setDocumentData?: (data: any) => void;
 }) {

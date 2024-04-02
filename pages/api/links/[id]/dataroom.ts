@@ -42,6 +42,7 @@ export default async function handle(
                 select: {
                   id: true,
                   folderId: true,
+                  updatedAt: true,
                   document: {
                     select: {
                       id: true,
@@ -77,12 +78,13 @@ export default async function handle(
         return res.status(404).json({ error: "Link is archived" });
       }
 
-      let brand = await prisma.brand.findFirst({
+      let brand = await prisma.dataroomBrand.findFirst({
         where: {
-          teamId: link.dataroom?.teamId!,
+          dataroomId: link.dataroom?.id!,
         },
         select: {
           logo: true,
+          banner: true,
           brandColor: true,
         },
       });
@@ -91,7 +93,14 @@ export default async function handle(
         brand = null;
       }
 
-      return res.status(200).json({ link, brand });
+      const lastUpdatedAt = link.dataroom?.documents.reduce((acc, doc) => {
+        if (doc.updatedAt.getTime() > acc.getTime()) {
+          return doc.updatedAt;
+        }
+        return acc;
+      }, new Date(0));
+
+      return res.status(200).json({ link, brand, lastUpdatedAt });
     } catch (error) {
       return res.status(500).json({
         message: "Internal Server Error",
