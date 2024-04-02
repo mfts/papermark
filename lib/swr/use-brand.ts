@@ -24,12 +24,18 @@ export function useBrand() {
   };
 }
 
-export function useDataroomBrand({ dataroomId }: { dataroomId: string }) {
+export function useDataroomBrand({
+  dataroomId,
+}: {
+  dataroomId: string | undefined;
+}) {
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
 
   const { data: brand, error } = useSWR<DataroomBrand>(
-    teamId && `/api/teams/${teamId}/datarooms/${dataroomId}/branding`,
+    teamId &&
+      dataroomId &&
+      `/api/teams/${teamId}/datarooms/${dataroomId}/branding`,
     fetcher,
     {
       dedupingInterval: 30000,
