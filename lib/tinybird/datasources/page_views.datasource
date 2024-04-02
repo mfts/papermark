@@ -8,7 +8,7 @@ SCHEMA >
   `linkId` String `json:$.linkId`,
   `documentId` String `json:$.documentId`,
   `viewId` String `json:$.viewId`,
-  `dataroomId` String `json:$.dataroomId`,
+  `dataroomId` Nullable(String) `json:$.dataroomId`,
   `versionNumber` UInt16 `json:$.versionNumber`,
   # Unix timestamp
   `time` Int64 `json:$.time`,
