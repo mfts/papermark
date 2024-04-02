@@ -109,7 +109,7 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
       icon: ServerIcon,
       current: router.pathname.includes("datarooms"),
       active: false,
-      disabled: false,
+      disabled: userPlan === "business" ? false : true,
     },
     {
       name: "Branding",
@@ -239,7 +239,7 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
           {userPlan === "trial" && session ? (
             <Banner session={session} />
           ) : null}
-          {userPlan === "pro" && null}
+          {(userPlan === "pro" || userPlan === "business") && null}
           {userPlan === "free" && showProBanner ? (
             <ProBanner setShowProBanner={setShowProBanner} />
           ) : null}

@@ -34,15 +34,15 @@ export function useBilling() {
 }
 
 interface PlanResponse {
-  plan: "free" | "starter" | "pro" | "trial";
+  plan: "free" | "starter" | "pro" | "trial" | "business";
 }
 
 export function usePlan() {
   const teamInfo = useTeam();
+  const teamId = teamInfo?.currentTeam?.id;
 
   const { data: plan, error } = useSWR<PlanResponse>(
-    teamInfo?.currentTeam?.id &&
-      `/api/teams/${teamInfo?.currentTeam?.id}/billing/plan`,
+    teamId && `/api/teams/${teamId}/billing/plan`,
     fetcher,
     {
       dedupingInterval: 60000,
