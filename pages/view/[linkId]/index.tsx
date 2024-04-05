@@ -50,13 +50,16 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
     recordMap = await notion.getPage(pageId);
   }
 
+  const { team, ...linkDocument } = link.document;
+  const teamPlan = team?.plan || "free";
+
   return {
     props: {
       // return link without file and type to avoid sending the file to the client
       link: {
         ...link,
         document: {
-          ...link.document,
+          ...linkDocument,
           versions: [versionWithoutTypeAndFile],
         },
       },
@@ -71,6 +74,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
         metaImage: link.metaImage,
       },
       brand, // pass brand to the client
+      showPoweredByBanner: teamPlan === "free",
     },
     revalidate: brand ? 10 : false,
   };
@@ -88,6 +92,7 @@ export default function ViewPage({
   notionData,
   meta,
   brand,
+  showPoweredByBanner,
 }: {
   link: LinkWithDocument;
   notionData: {
@@ -101,6 +106,7 @@ export default function ViewPage({
     metaImage: string | null;
   } | null;
   brand?: Brand;
+  showPoweredByBanner: boolean;
 }) {
   const router = useRouter();
   const { token, email: verifiedEmail } = router.query as {
@@ -184,6 +190,7 @@ export default function ViewPage({
           brand={brand}
           token={token}
           verifiedEmail={verifiedEmail}
+          showPoweredByBanner={showPoweredByBanner}
         />
       </>
     );
@@ -212,6 +219,7 @@ export default function ViewPage({
         isProtected={false}
         notionData={notionData}
         brand={brand}
+        showPoweredByBanner={showPoweredByBanner}
       />
     </>
   );

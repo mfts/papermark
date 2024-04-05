@@ -47,11 +47,10 @@ export interface LinkWithDocument extends Link {
       type: string;
       hasPages: boolean;
       file: string;
-    }[] & {
-      team?: {
-        plan: string;
-      };
-    };
+    }[];
+    team: {
+      plan: string;
+    } | null;
   };
 }
 

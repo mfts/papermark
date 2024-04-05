@@ -11,6 +11,7 @@ export default function ViewData({
   link,
   notionData,
   brand,
+  showPoweredByBanner,
 }: {
   viewData: DEFAULT_DOCUMENT_VIEW_TYPE;
   link: LinkWithDocument;
@@ -19,6 +20,7 @@ export default function ViewData({
     recordMap: ExtendedRecordMap | null;
   };
   brand?: Brand;
+  showPoweredByBanner?: boolean;
 }) {
   const { document } = link;
   return notionData?.recordMap ? (
@@ -42,6 +44,7 @@ export default function ViewData({
       feedbackEnabled={link.enableFeedback!}
       versionNumber={document.versions[0].versionNumber}
       brand={brand}
+      showPoweredByBanner={showPoweredByBanner}
     />
   ) : (
     <PDFViewer
