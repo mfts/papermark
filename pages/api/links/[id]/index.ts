@@ -39,6 +39,11 @@ export default async function handle(
               assistantEnabled: true,
               teamId: true,
               ownerId: true,
+              team: {
+                select: {
+                  plan: true,
+                },
+              },
               versions: {
                 where: { isPrimary: true },
                 select: {

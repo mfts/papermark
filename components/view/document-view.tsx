@@ -29,6 +29,7 @@ export default function DocumentView({
   brand,
   token,
   verifiedEmail,
+  showPoweredByBanner,
 }: {
   link: LinkWithDocument;
   userEmail: string | null | undefined;
@@ -41,6 +42,7 @@ export default function DocumentView({
   brand?: Brand;
   token?: string;
   verifiedEmail?: string;
+  showPoweredByBanner?: boolean;
 }) {
   const { document, emailProtected, password: linkPassword } = link;
 
@@ -173,6 +175,7 @@ export default function DocumentView({
           viewData={viewData}
           notionData={notionData}
           brand={brand}
+          showPoweredByBanner={showPoweredByBanner}
         />
       ) : (
         <div className="h-screen flex items-center justify-center">

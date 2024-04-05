@@ -7,6 +7,7 @@ import Nav from "./nav";
 import Toolbar from "./toolbar";
 import { Brand, DataroomBrand } from "@prisma/client";
 import { useRouter } from "next/router";
+import { PoweredBy } from "./powered-by";
 
 const DEFAULT_PRELOADED_IMAGES_NUM = 10;
 
@@ -22,6 +23,7 @@ export default function PagesViewer({
   brand,
   dataroomId,
   setDocumentData,
+  showPoweredByBanner,
 }: {
   pages: { file: string; pageNumber: string; embeddedLinks: string[] }[];
   linkId: string;
@@ -34,6 +36,7 @@ export default function PagesViewer({
   brand?: Brand | DataroomBrand;
   dataroomId?: string;
   setDocumentData?: (data: any) => void;
+  showPoweredByBanner?: boolean;
 }) {
   const router = useRouter();
   const numPages = pages.length;
@@ -251,6 +254,7 @@ export default function PagesViewer({
         {feedbackEnabled ? (
           <Toolbar viewId={viewId} pageNumber={pageNumber} />
         ) : null}
+        {showPoweredByBanner ? <PoweredBy linkId={linkId} /> : null}
       </div>
     </>
   );
