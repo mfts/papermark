@@ -3,7 +3,11 @@ import { Readable } from "node:stream";
 import type Stripe from "stripe";
 import prisma from "@/lib/prisma";
 import { stripe } from "@/lib/stripe";
-import { getPlanFromPriceId, isNewCustomer } from "@/lib/stripe/utils";
+import {
+  getPlanFromPriceId,
+  isNewCustomer,
+  isUpgradedCustomer,
+} from "@/lib/stripe/utils";
 import { log } from "@/lib/utils";
 import { sendUpgradePlanEmail } from "@/lib/emails/send-upgrade-plan";
 
@@ -126,6 +130,9 @@ export default async function webhookHandler(
           const subscriptionUpdated = event.data.object as Stripe.Subscription;
           const priceId = subscriptionUpdated.items.data[0].price.id;
           const newCustomer = isNewCustomer(event.data.previous_attributes);
+          const upgradedCustomer = isUpgradedCustomer(
+            event.data.previous_attributes,
+          );
 
           const plan = getPlanFromPriceId(priceId);
           const stripeId = subscriptionUpdated.customer.toString();
@@ -144,6 +151,27 @@ export default async function webhookHandler(
             endsAt,
             newCustomer,
           });
+
+          // if user upgrades from Pro to Business, checkout event won't be fired
+          // so we need to update the user immediately
+          if (upgradedCustomer && !newCustomer) {
+            await prisma.team.update({
+              where: {
+                stripeId: stripeId,
+              },
+              data: {
+                plan: plan.slug,
+                subscriptionId,
+                startsAt,
+                endsAt,
+              },
+              select: {
+                id: true,
+              },
+            });
+
+            pendingSubscriptionUpdates.delete(stripeId);
+          }
 
           // If project cancels their subscription
         } else if (event.type === "customer.subscription.deleted") {
