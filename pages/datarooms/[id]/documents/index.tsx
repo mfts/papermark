@@ -80,11 +80,11 @@ export default function Documents() {
                 href: `/datarooms/${dataroom?.id}/documents`,
                 segment: "documents",
               },
-              // {
-              //   label: "Analytics",
-              //   href: `/datarooms/${dataroom?.id}/analytics`,
-              //   segment: "analytics",
-              // },
+              {
+                label: "Users",
+                href: `/datarooms/${dataroom?.id}/users`,
+                segment: "users",
+              },
               {
                 label: "Customization",
                 href: `/datarooms/${dataroom?.id}/settings`,

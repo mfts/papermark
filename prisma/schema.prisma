@@ -260,6 +260,8 @@ model View {
   downloadedAt   DateTime? // This is the time the document was downloaded
   reactions      Reaction[]
   viewType       ViewType   @default(DOCUMENT_VIEW)
+  viewerId       String? // This is the viewer ID from the dataroom
+  viewer         Viewer?    @relation(fields: [viewerId], references: [id], onDelete: Cascade)
 
   @@index([linkId])
   @@index([documentId])
@@ -270,6 +272,23 @@ model View {
 enum ViewType {
   DOCUMENT_VIEW
   DATAROOM_VIEW
+}
+
+model Viewer {
+  id        String    @id @default(cuid())
+  email     String
+  verified  Boolean   @default(false) // Whether the viewer email has been verified
+  invitedAt DateTime? // This is the time the viewer was invited
+
+  dataroomId String
+  dataroom   Dataroom @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
+  views      View[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([dataroomId, email])
+  @@index([dataroomId])
 }
 
 model Reaction {
@@ -358,6 +377,7 @@ model Dataroom {
   folders   DataroomFolder[]
   links     Link[]
   views     View[]
+  viewers   Viewer[]
   brand     DataroomBrand?
 
   createdAt DateTime @default(now())

@@ -1,3 +1,4 @@
+import { AddViewerModal } from "@/components/datarooms/add-viewer-modal";
 import { DataroomHeader } from "@/components/datarooms/dataroom-header";
 import StatsCard from "@/components/datarooms/stats-card";
 import AppLayout from "@/components/layouts/app";
@@ -5,6 +6,7 @@ import LinkSheet from "@/components/links/link-sheet";
 import LinksTable from "@/components/links/links-table";
 import { NavMenu } from "@/components/navigation-menu";
 import { Button } from "@/components/ui/button";
+import DataroomViewersTable from "@/components/visitors/dataroom-viewers";
 import DataroomVisitorsTable from "@/components/visitors/dataroom-visitors-table";
 import { useDataroom, useDataroomLinks } from "@/lib/swr/use-dataroom";
 import { useState } from "react";
@@ -13,7 +15,7 @@ export default function DataroomPage() {
   const { dataroom } = useDataroom();
   const { links } = useDataroomLinks();
 
-  const [isLinkSheetOpen, setIsLinkSheetOpen] = useState<boolean>(false);
+  const [modalOpen, setModalOpen] = useState<boolean>(false);
 
   if (!dataroom) {
     return <div>Loading...</div>;
@@ -27,8 +29,8 @@ export default function DataroomPage() {
             title={dataroom.name}
             description={dataroom.pId}
             actions={[
-              <Button onClick={() => setIsLinkSheetOpen(true)} key={1}>
-                Create Link
+              <Button onClick={() => setModalOpen(true)} key={1}>
+                Invite users
               </Button>,
             ]}
           />
@@ -60,20 +62,13 @@ export default function DataroomPage() {
         </header>
 
         <div className="space-y-4">
-          {/* Stats */}
-          <StatsCard />
-
-          {/* Links */}
-          <LinksTable links={links} targetType={"DATAROOM"} />
-
           {/* Visitors */}
-          <DataroomVisitorsTable dataroomId={dataroom.id} />
+          <DataroomViewersTable dataroomId={dataroom.id} />
 
-          <LinkSheet
-            linkType={"DATAROOM_LINK"}
-            isOpen={isLinkSheetOpen}
-            setIsOpen={setIsLinkSheetOpen}
-            existingLinks={links}
+          <AddViewerModal
+            dataroomId={dataroom.id}
+            open={modalOpen}
+            setOpen={setModalOpen}
           />
         </div>
       </div>

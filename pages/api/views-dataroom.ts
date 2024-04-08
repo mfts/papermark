@@ -191,6 +191,33 @@ export default async function handle(
     isEmailVerified = true;
   }
 
+  let viewer: { id: string } | null = null;
+  // find or create a viewer
+  console.time("find-viewer");
+  viewer = await prisma.viewer.findUnique({
+    where: {
+      dataroomId_email: {
+        email: email,
+        dataroomId: dataroomId!,
+      },
+    },
+    select: { id: true },
+  });
+  console.timeEnd("find-viewer");
+
+  if (!viewer) {
+    console.time("create-viewer");
+    viewer = await prisma.viewer.create({
+      data: {
+        email: email,
+        dataroomId: dataroomId!,
+        verified: isEmailVerified,
+      },
+      select: { id: true },
+    });
+    console.timeEnd("create-viewer");
+  }
+
   if (viewType === "DATAROOM_VIEW") {
     try {
       console.time("create-view");
@@ -201,6 +228,7 @@ export default async function handle(
           verified: isEmailVerified,
           dataroomId: dataroomId,
           viewType: "DATAROOM_VIEW",
+          viewerId: viewer.id,
         },
         select: { id: true },
       });
@@ -235,6 +263,7 @@ export default async function handle(
         dataroomViewId: dataroomViewId,
         dataroomId: dataroomId,
         viewType: "DOCUMENT_VIEW",
+        viewerId: viewer.id,
       },
       select: { id: true },
     });
