@@ -125,10 +125,7 @@ export default function ViewPage({
     token: string;
     email: string;
   };
-  const { fId: folderId, dId: documentId } = router.query as {
-    fId: string;
-    dId: string;
-  };
+
   const { data: session, status } = useSession();
 
   if (!link || status === "loading" || router.isFallback) {
@@ -199,7 +196,7 @@ export default function ViewPage({
         ) : null}
         <DataroomView
           link={link}
-          userEmail={userEmail}
+          userEmail={verifiedEmail ?? userEmail}
           userId={userId}
           isProtected={true}
           brand={brand}
