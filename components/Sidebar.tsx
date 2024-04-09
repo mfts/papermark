@@ -25,6 +25,7 @@ import {
 import SiderbarFolders from "./sidebar-folders";
 import { AddFolderModal } from "./folders/add-folder-modal";
 import { ScrollArea } from "./ui/scroll-area";
+import { UpgradePlanModal } from "./billing/upgrade-plan-modal";
 
 export default function Sidebar() {
   return (
@@ -206,6 +207,23 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
                       </button>
                       {item.active ? <SiderbarFolders /> : null}
                     </div>
+                  );
+                }
+                if (userPlan !== "business" && item.name === "Datarooms") {
+                  return (
+                    <UpgradePlanModal
+                      key={item.name}
+                      clickedPlan={"Business"}
+                      trigger={"datarooms"}
+                    >
+                      <div className="group flex gap-x-2 items-center rounded-md px-3 py-2 text-sm leading-6 w-full hover:bg-transparent text-muted-foreground">
+                        <item.icon
+                          className="h-5 w-5 shrink-0"
+                          aria-hidden="true"
+                        />
+                        {item.name}
+                      </div>
+                    </UpgradePlanModal>
                   );
                 }
                 return (

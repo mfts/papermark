@@ -54,8 +54,7 @@ export function UpgradePlanModal({
         "Custom domains",
         "Custom branding",
         "Notion documents",
-        "Data room (coming soon)",
-        "Shareable folders (coming soon)",
+        "Data room",
         "AI Document Assistant incl. 2500 credits",
         "Priority Support",
       ];

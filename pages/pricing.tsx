@@ -57,7 +57,7 @@ const tiers: {
     name: "Pro",
     id: "tier-pro",
     href: "/login",
-    price: { monthly: "€29", annually: "€290" },
+    price: { monthly: "€39", annually: "€390" },
     description: "The branded experience for your documents.",
     featureIntro: "Everything in Free, plus:",
     features: [
@@ -83,11 +83,10 @@ const tiers: {
     featureIntro: "Everything in Pro, plus:",
     features: [
       "10 users",
+      "Data rooms",
       "Unlimited documents",
       "Unlimited subfolder levels",
       "Large file uploads",
-      "Data rooms (coming soon)",
-      "Shareable folders (coming soon)",
       "24h Priority Support",
     ],
     bgColor: "#fb7a00",
