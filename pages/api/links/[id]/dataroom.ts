@@ -62,7 +62,11 @@ export default async function handle(
                   },
                 },
               },
-              folders: true,
+              folders: {
+                orderBy: {
+                  name: "asc",
+                },
+              },
             },
           },
         },

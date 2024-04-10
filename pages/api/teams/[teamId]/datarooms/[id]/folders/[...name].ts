@@ -63,6 +63,9 @@ export default async function handle(
           dataroomId,
           parentId: parentFolder.id,
         },
+        orderBy: {
+          name: "asc",
+        },
         include: {
           _count: {
             select: { documents: true, childFolders: true },
