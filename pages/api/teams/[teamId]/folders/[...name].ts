@@ -59,6 +59,9 @@ export default async function handle(
           teamId: teamId,
           parentId: parentFolder.id,
         },
+        orderBy: {
+          name: "asc",
+        },
         include: {
           _count: {
             select: { documents: true, childFolders: true },
