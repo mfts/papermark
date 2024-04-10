@@ -30,8 +30,8 @@ export function EditFolderModal({
   dataroomId,
   children,
 }: {
-  open?: boolean;
-  setOpen?: React.Dispatch<React.SetStateAction<boolean>>;
+  open: boolean;
+  setOpen: React.Dispatch<React.SetStateAction<boolean>>;
   name: string;
   folderId: string;
   onAddition?: (folderName: string) => void;
