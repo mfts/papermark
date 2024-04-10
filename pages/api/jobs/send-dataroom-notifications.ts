@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/lib/prisma";
 import { log } from "@/lib/utils";
-import { sendDataroomViewerInvite } from "@/lib/emails/send-dataroom-viewer-invite";
+import { sendDataroomNotification } from "@/lib/emails/send-dataroom-notification";
 
 export const config = {
   maxDuration: 120,
@@ -27,12 +27,14 @@ export default async function handle(
     return;
   }
 
-  const { linkId, dataroomId, viewerId, senderUserId } = req.body as {
-    linkId: string;
-    dataroomId: string;
-    viewerId: string;
-    senderUserId: string;
-  };
+  const { linkId, dataroomId, dataroomDocumentId, viewerId, senderUserId } =
+    req.body as {
+      linkId: string;
+      dataroomId: string;
+      dataroomDocumentId: string;
+      viewerId: string;
+      senderUserId: string;
+    };
 
   let viewer: { email: string; dataroom: { name: string } } | null = null;
 
@@ -67,8 +69,23 @@ export default async function handle(
     return;
   }
 
-  // POST /api/jobs/send-datarooom-view-invitation
+  // POST /api/jobs/send-datarooom-notification
   try {
+    // Fetch the document to verify the settings
+    const document = await prisma.dataroomDocument.findUnique({
+      where: {
+        id: dataroomDocumentId,
+        dataroomId: dataroomId,
+      },
+      select: {
+        document: {
+          select: {
+            name: true,
+          },
+        },
+      },
+    });
+
     const user = await prisma.user.findUnique({
       where: { id: senderUserId },
       select: { email: true },
@@ -79,17 +96,17 @@ export default async function handle(
       return;
     }
 
-    // send email to document owner that document
-    await sendDataroomViewerInvite({
+    await sendDataroomNotification({
       dataroomName: viewer.dataroom.name,
       senderEmail: user.email!,
+      documentName: document?.document.name,
       to: viewer.email,
       url: `${process.env.NEXTAUTH_URL}/view/d/${linkId}?email=${encodeURIComponent(viewer.email)}`,
     });
 
     res
       .status(200)
-      .json({ message: "Successfully sent view invitation", viewerId });
+      .json({ message: "Successfully sent dataroom notification", viewerId });
     return;
   } catch (error) {
     log({
