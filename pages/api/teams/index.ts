@@ -8,7 +8,7 @@ import { errorhandler } from "@/lib/errorHandler";
 
 export default async function handle(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   if (req.method === "GET") {
     // GET /api/teams
@@ -43,7 +43,9 @@ export default async function handle(
 
       // if no teams then create a default one
       if (teams.length === 0) {
-        const defaultTeamName = user.name ? `${user.name}'s Team` : "Personal Team";
+        const defaultTeamName = user.name
+          ? `${user.name}'s Team`
+          : "Personal Team";
         const defaultTeam = await prisma.team.create({
           data: {
             name: defaultTeamName,
@@ -64,7 +66,10 @@ export default async function handle(
 
       return res.status(200).json(teams);
     } catch (error) {
-      log({message: `Failed to find team for user: _${user.id}_ \n\n ${error}`, type: "error"});
+      log({
+        message: `Failed to find team for user: _${user.id}_ \n\n ${error}`,
+        type: "error",
+      });
       errorhandler(error, res);
     }
   } else if (req.method === "POST") {
@@ -76,7 +81,7 @@ export default async function handle(
 
     const { team } = req.body;
 
-    const user = session.user as CustomUser
+    const user = session.user as CustomUser;
 
     try {
       const newTeam = await prisma.team.create({
@@ -96,7 +101,10 @@ export default async function handle(
 
       return res.status(201).json(newTeam);
     } catch (error) {
-      log({message: `Failed to create team "${team}" for user: _${user.id}_. \n\n*Error*: \n\n ${error}`, type: "error"});
+      log({
+        message: `Failed to create team "${team}" for user: _${user.id}_. \n\n*Error*: \n\n ${error}`,
+        type: "error",
+      });
       errorhandler(error, res);
     }
   } else {

@@ -125,7 +125,9 @@ export function useDocumentProcessingStatus(documentVersionId: string) {
 
 export function useDocumentThumbnail(pageNumber: number, documentId: string) {
   const { data, error } = useSWR<{ imageUrl: string }>(
-    `/api/jobs/get-thumbnail?documentId=${documentId}&pageNumber=${pageNumber}`,
+    pageNumber === 0
+      ? null
+      : `/api/jobs/get-thumbnail?documentId=${documentId}&pageNumber=${pageNumber}`,
     fetcher,
     {
       dedupingInterval: 1200000,
@@ -135,6 +137,14 @@ export function useDocumentThumbnail(pageNumber: number, documentId: string) {
       refreshInterval: 0,
     },
   );
+
+  if (pageNumber === 0) {
+    return {
+      data: null,
+      loading: false,
+      error: null,
+    };
+  }
 
   return {
     data,

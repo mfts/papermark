@@ -64,14 +64,7 @@ const nextConfig = {
     ],
   },
   transpilePackages: ["@trigger.dev/react"],
-  async rewrites() {
-    return [
-      {
-        source: "/ingest/:path*",
-        destination: "https://eu.posthog.com/:path*",
-      },
-    ];
-  },
+  skipTrailingSlashRedirect: true,
   experimental: {
     outputFileTracingIncludes: {
       "/api/mupdf/*": ["./node_modules/mupdf/lib/*.wasm"],
