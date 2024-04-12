@@ -18,6 +18,7 @@ export const PostHogCustomProvider = ({
   if (typeof window !== "undefined" && posthogConfig) {
     posthog.init(posthogConfig.key, {
       api_host: posthogConfig.host,
+      ui_host: "https://eu.posthog.com",
       disable_session_recording: true,
       // Enable debug mode in development
       loaded: (posthog) => {
