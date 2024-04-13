@@ -6,6 +6,7 @@ import Footer from "@/components/web/footer";
 import Link from "next/link";
 import GitHubIcon from "@/components/shared/icons/github";
 import { usePlausible } from "next-plausible";
+import { PricingComparison } from "@/components/web/pricing-component";
 
 const frequencies: {
   value: "monthly" | "annually";
@@ -239,6 +240,12 @@ export default function PricingPage() {
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+
+        <div className="bg-white py-16">
+          <div className="mx-auto max-w-7xl px-4 md:px-8">
+            <PricingComparison />
           </div>
         </div>
 
