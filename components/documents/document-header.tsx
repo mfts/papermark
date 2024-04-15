@@ -313,7 +313,7 @@ export default function DocumentHeader({
           >
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuGroup className="block md:hidden">
-              <DropdownMenuItem onClick={() => setIsLinkSheetOpen(true)}>
+              <DropdownMenuItem>
                 <AddDocumentModal newVersion>
                   <button
                     title="Add a new version"

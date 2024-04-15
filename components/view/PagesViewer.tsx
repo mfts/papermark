@@ -40,7 +40,7 @@ export default function PagesViewer({
   dataroomId?: string;
   setDocumentData?: (data: any) => void;
   showPoweredByBanner?: boolean;
-  feedback: {
+  feedback?: {
     id: string;
     enabled: boolean;
     data: { question: string; type: string };
