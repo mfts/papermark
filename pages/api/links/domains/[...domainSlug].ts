@@ -60,6 +60,13 @@ export default async function handle(
                 },
                 take: 1,
               },
+              feedback: {
+                select: {
+                  id: true,
+                  enabled: true,
+                  data: true,
+                },
+              },
             },
           },
         },

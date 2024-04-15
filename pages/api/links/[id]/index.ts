@@ -44,6 +44,13 @@ export default async function handle(
                   plan: true,
                 },
               },
+              feedback: {
+                select: {
+                  id: true,
+                  enabled: true,
+                  data: true,
+                },
+              },
               versions: {
                 where: { isPrimary: true },
                 select: {

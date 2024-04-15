@@ -51,6 +51,14 @@ export interface LinkWithDocument extends Link {
     team: {
       plan: string;
     } | null;
+    feedback: {
+      id: string;
+      enabled: boolean;
+      data: {
+        question: string;
+        type: string;
+      };
+    } | null;
   };
 }
 
