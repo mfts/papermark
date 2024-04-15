@@ -36,22 +36,13 @@ const featureGroups: {
           enterprise: true,
         },
       },
+
       {
-        name: "Views recorded for each user",
+        name: "Real time feedback",
         id: "feature-user",
         tiers: {
           free: true,
           pro: true,
-          business: true,
-          enterprise: true,
-        },
-      },
-      {
-        name: "Real time feedback on each page",
-        id: "feature-user",
-        tiers: {
-          free: false,
-          pro: false,
           business: true,
           enterprise: true,
         },
@@ -67,7 +58,7 @@ const featureGroups: {
         },
       },
       {
-        name: "Viever location tracking",
+        name: "Viewer location tracking",
         id: "feature-user",
         tiers: {
           free: true,
@@ -90,8 +81,8 @@ const featureGroups: {
         name: "Unlimited view history",
         id: "feature-user",
         tiers: {
-          free: "up to 20",
-          pro: "up to 10",
+          free: "up to 20 last views",
+          pro: "up to 200 last views",
           business: true,
           enterprise: true,
         },
@@ -121,16 +112,7 @@ const featureGroups: {
           enterprise: true,
         },
       },
-      {
-        name: "Allow/block document downloading",
-        id: "feature-user",
-        tiers: {
-          free: true,
-          pro: true,
-          business: true,
-          enterprise: true,
-        },
-      },
+
       {
         name: "Password protection",
         id: "feature-user",
@@ -152,6 +134,16 @@ const featureGroups: {
         },
       },
       {
+        name: "Allow/block document downloading",
+        id: "feature-user",
+        tiers: {
+          free: true,
+          pro: true,
+          business: true,
+          enterprise: true,
+        },
+      },
+      {
         name: "Email verification",
         id: "feature-user",
         tiers: {
@@ -162,7 +154,7 @@ const featureGroups: {
         },
       },
       {
-        name: "Allow/block specififed users",
+        name: "Allow/block specified users",
         id: "feature-user",
         tiers: {
           free: false,
@@ -175,88 +167,90 @@ const featureGroups: {
   },
 
   {
-    name: "Data Rooms",
+    name: "Data Rooms and Documents",
     features: [
-      {
-        name: "Unlimited data rooms",
-        id: "feature-user",
-        tiers: {
-          free: true,
-          pro: true,
-          business: true,
-          enterprise: true,
-        },
-      },
       {
         name: "Unlimited documents",
         id: "feature-user",
         tiers: {
-          free: true,
-          pro: true,
+          free: "10 documents",
+          pro: "100 documents",
           business: true,
           enterprise: true,
         },
       },
       {
-        name: "Unlimited users",
+        name: "Unlimited folders",
         id: "feature-user",
         tiers: {
-          free: true,
-          pro: true,
+          free: false,
+          pro: "on first level",
           business: true,
           enterprise: true,
         },
       },
       {
-        name: "User groups",
+        name: "Unlimited data rooms",
         id: "feature-user",
         tiers: {
           free: false,
           pro: false,
-          business: false,
+          business: "1 data room (ability to add)",
           enterprise: true,
         },
       },
-      {
-        name: "Folder",
-        id: "feature-user",
-        tiers: {
-          free: true,
-          pro: true,
-          business: true,
-          enterprise: true,
-        },
-      },
-      {
-        name: "File size",
-        id: "feature-user",
-        tiers: {
-          free: true,
-          pro: true,
-          business: true,
-          enterprise: true,
-        },
-      },
-      {
-        name: "Custom branding",
-        id: "feature-user",
-        tiers: {
-          free: true,
-          pro: true,
-          business: true,
-          enterprise: true,
-        },
-      },
-      {
-        name: "Full whitelabelling",
-        id: "feature-user",
-        tiers: {
-          free: false,
-          pro: false,
-          business: false,
-          enterprise: true,
-        },
-      },
+
+      // {
+      //   name: "Unlimited users",
+      //   id: "feature-user",
+      //   tiers: {
+      //     free: "1 user",
+      //     pro: "2 users",
+      //     business: "3 users",
+      //     enterprise: true,
+      //   },
+      // },
+      // {
+      //   name: "Viewer groups",
+      //   id: "feature-user",
+      //   tiers: {
+      //     free: false,
+      //     pro: false,
+      //     business: false,
+      //     enterprise: true,
+      //   },
+      // },
+
+      // {
+      //   name: "File size",
+      //   id: "feature-user",
+      //   tiers: {
+      //     free: true,
+      //     pro: true,
+      //     business: true,
+      //     enterprise: true,
+      //   },
+      // },
+      // {
+      //   name: "Custom branding",
+      //   id: "feature-user",
+      //   tiers: {
+      //     free: false,
+      //     pro: true,
+      //     business: true,
+      //     enterprise: true,
+      //   },
+      // },
+      // {
+      //   name: "Full whitelabelling",
+      //   id: "feature-user",
+      //   tiers: {
+      //     free: false,
+      //     pro: false,
+      //     business: false,
+      //     enterprise: true,
+      //   },
+      // },
       {
         name: "Self-hosted",
         id: "feature-user",
@@ -277,33 +271,14 @@ const featureGroups: {
           enterprise: true,
         },
       },
+
       {
-        name: "Expiration date",
-        id: "feature-user",
-        tiers: {
-          free: true,
-          pro: true,
-          business: true,
-          enterprise: true,
-        },
-      },
-      {
-        name: "Email verification",
-        id: "feature-user",
-        tiers: {
-          free: false,
-          pro: true,
-          business: true,
-          enterprise: true,
-        },
-      },
-      {
-        name: "Allow/block specififed users",
+        name: "Custom dataroom settings",
         id: "feature-user",
         tiers: {
           free: false,
           pro: false,
-          business: true,
+          business: false,
           enterprise: true,
         },
       },
@@ -313,7 +288,7 @@ const featureGroups: {
     name: "Custom branding",
     features: [
       {
-        name: "Subdomain and slug",
+        name: "Custom slug",
         id: "feature-user",
         tiers: {
           free: false,
@@ -327,17 +302,7 @@ const featureGroups: {
         id: "feature-user",
         tiers: {
           free: false,
-          pro: "partial",
-          business: true,
-          enterprise: true,
-        },
-      },
-      {
-        name: "Custom domain",
-        id: "feature-user",
-        tiers: {
-          free: false,
-          pro: "partial",
+          pro: true,
           business: true,
           enterprise: true,
         },
@@ -347,7 +312,7 @@ const featureGroups: {
         id: "feature-user",
         tiers: {
           free: false,
-          pro: "partial",
+          pro: true,
           business: true,
           enterprise: true,
         },
@@ -357,11 +322,22 @@ const featureGroups: {
         id: "feature-user",
         tiers: {
           free: false,
-          pro: "partial",
+          pro: true,
           business: true,
           enterprise: true,
         },
       },
+      {
+        name: "Custom domain",
+        id: "feature-user",
+        tiers: {
+          free: false,
+          pro: false,
+          business: true,
+          enterprise: true,
+        },
+      },
+
       {
         name: "Custom social media cards",
         id: "feature-user",
@@ -373,21 +349,11 @@ const featureGroups: {
         },
       },
       {
-        name: "Custom questions",
+        name: "Custom Q&A page",
         id: "feature-user",
         tiers: {
           free: false,
           pro: false,
-          business: true,
-          enterprise: true,
-        },
-      },
-      {
-        name: "Remove Papermark branding",
-        id: "feature-user",
-        tiers: {
-          free: false,
-          pro: "partial",
           business: true,
           enterprise: true,
         },
@@ -404,7 +370,7 @@ const featureGroups: {
         },
       },
       {
-        name: "Full whitelabelling",
+        name: "Full white-label",
         id: "feature-user",
         tiers: {
           free: false,
@@ -439,10 +405,20 @@ const featureGroups: {
         },
       },
       {
-        name: "AI-Document Assistant",
+        name: "Reactions",
         id: "feature-user",
         tiers: {
           free: true,
+          pro: true,
+          business: true,
+          enterprise: true,
+        },
+      },
+      {
+        name: "AI-Document Assistant",
+        id: "feature-user",
+        tiers: {
+          free: false,
           pro: true,
           business: true,
           enterprise: true,
@@ -452,29 +428,20 @@ const featureGroups: {
         name: "Forms",
         id: "feature-user",
         tiers: {
-          free: true,
-          pro: true,
-          business: true,
-          enterprise: true,
-        },
-      },
-      {
-        name: "Reactions",
-        id: "feature-user",
-        tiers: {
           free: false,
           pro: false,
           business: true,
           enterprise: true,
         },
       },
+
       {
-        name: "Communication within document ",
+        name: "Communication within document",
         id: "feature-user",
         tiers: {
-          free: true,
-          pro: true,
-          business: true,
+          free: false,
+          pro: false,
+          business: false,
           enterprise: true,
         },
       },
@@ -484,27 +451,7 @@ const featureGroups: {
     name: "Support",
     features: [
       {
-        name: "Migration from other document platform ",
-        id: "feature-user",
-        tiers: {
-          free: true,
-          pro: true,
-          business: true,
-          enterprise: true,
-        },
-      },
-      {
         name: "Documentation",
-        id: "feature-user",
-        tiers: {
-          free: true,
-          pro: true,
-          business: true,
-          enterprise: true,
-        },
-      },
-      {
-        name: "48h support",
         id: "feature-user",
         tiers: {
           free: true,
@@ -524,7 +471,7 @@ const featureGroups: {
         },
       },
       {
-        name: "Support with self-hosting",
+        name: "Migration from other document platform ",
         id: "feature-user",
         tiers: {
           free: false,
@@ -533,13 +480,35 @@ const featureGroups: {
           enterprise: true,
         },
       },
+
+      {
+        name: "48h support",
+        id: "feature-user",
+        tiers: {
+          free: false,
+          pro: false,
+          business: true,
+          enterprise: true,
+        },
+      },
+
+      {
+        name: "Support with self-hosting",
+        id: "feature-user",
+        tiers: {
+          free: false,
+          pro: false,
+          business: false,
+          enterprise: true,
+        },
+      },
       {
         name: "Custom features support",
         id: "feature-user",
         tiers: {
-          free: true,
-          pro: true,
-          business: true,
+          free: false,
+          pro: false,
+          business: false,
           enterprise: true,
         },
       },
@@ -578,7 +547,7 @@ export function PricingComparison() {
       </h2>
       <div className="sticky top-[158px] z-40">
         <div className="grid grid-cols-16 border border-black rounded-t-xl overflow-hidden">
-          <ul className="grid col-[span_16_/_span_16] grid-cols-16 overflow-hidden">
+          <ul className="grid col-[span_16_/_span_16] grid-cols-16 overflow-hidden ">
             <li className="col-span-4 bg-white p-5 text-xl leading-8 list-none border-r border-black ">
               Features
             </li>
@@ -619,12 +588,12 @@ export function PricingComparison() {
           <div>
             {featureGroups.map((group) => (
               <>
-                <h3 className="text-base sticky top-[285px] text-white z-30 w-full bg-black m-0 py-3 px-8 font-medium">
+                <h3 className="text-base sticky top-[285px] text-white z-30 w-full bg-black m-0 py-3 px-8 font-normal">
                   {group.name}
                 </h3>
                 {group.features.map((feature) => (
-                  <div className="grid grid-cols-16 w-full relative odd:bg-muted last:rounded-b-xl">
-                    <div className="relative py-7 px-[30px] text-base text-left flex flex-wrap font-medium col-end-[span_4] items-center text-black border-r border-black last:border-r-0">
+                  <div className="grid grid-cols-16 w-full relative odd:bg-gray-100 last:rounded-b-xl">
+                    <div className="relative py-7 px-[30px] text-base text-left flex flex-wrap font-normal col-end-[span_4] items-center text-black border-r border-black last:border-r-0">
                       {feature.name}
                     </div>
                     <div className="relative py-7 px-[30px] text-base text-left flex flex-wrap font-base col-end-[span_3] items-center text-black border-r border-black last:border-r-0">

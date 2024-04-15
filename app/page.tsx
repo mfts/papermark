@@ -6,7 +6,7 @@ import Image from "next/image";
 import Navbar from "@/components/web/navbar";
 import Footer from "@/components/web/footer";
 import { LogoCloud } from "@/components/web/landing-page/logo-cloud";
-import Testimonials from "@/components/web/testimonials";
+import Testimonials from "@/components/web/testimonials2";
 
 import {
   RefreshCw as ArrowPathIcon,
@@ -66,8 +66,8 @@ export default function Home() {
               The Open-Source DocSend Alternative
             </h1>
             <p className="text-2xl mt-8 text-balance max-w-3xl">
-              Papermark is an open-source document sharing infrastructure with
-              built-in page analytics and custom domains.
+              Papermark is a modern document sharing infrastructure with
+              built-in page analytics and full white-labeling
             </p>
             <div className="pt-8 space-x-2">
               <Link

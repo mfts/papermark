@@ -62,12 +62,12 @@ const tiers: {
     description: "The branded experience for your documents.",
     featureIntro: "Everything in Free, plus:",
     features: [
-      "3 users",
-      "Custom domain",
+      "2 users",
+      "Custom slug",
       "Custom branding",
       "1-year analytics retention",
       "Advanced access controls",
-      "Papermark AI",
+      "Folders",
     ],
     bgColor: "bg-gray-200",
     borderColor: "#bg-gray-800",
@@ -83,12 +83,13 @@ const tiers: {
     description: "A plan that scales with your rapidly growing business.",
     featureIntro: "Everything in Pro, plus:",
     features: [
-      "10 users",
-      "Data rooms",
+      "3 users",
+      "One data room",
+      "Custom domain",
       "Unlimited documents",
       "Unlimited subfolder levels",
       "Large file uploads",
-      "24h Priority Support",
+      "48h Priority Support",
     ],
     bgColor: "#fb7a00",
     borderColor: "#fb7a00",
@@ -108,10 +109,11 @@ const tiers: {
       "Unlimited users",
       "Unlimited documents",
       "Unlimited folders and subfolders",
-      "Different file types",
+      "Unlimited data rooms",
+      "Full white-labeling",
       "Up to 5TB file uploads",
       "Dedicated support",
-      "Custom Papermark AI",
+      "Custom Onboarding",
     ],
     bgColor: "bg-gray-200",
     borderColor: "#bg-gray-800",
@@ -243,14 +245,8 @@ export default function PricingPage() {
           </div>
         </div>
 
-        <div className="bg-white py-16">
-          <div className="mx-auto max-w-7xl px-4 md:px-8">
-            <PricingComparison />
-          </div>
-        </div>
-
         <div className="w-full max-w-7xl px-4 md:px-8 mx-auto ">
-          <div className="py-12 bg-[#fb7a00] rounded-xl mx-auto px-6">
+          <div className="py-12 bg-[#fb7a00] rounded-xl mx-auto px-6 my-4">
             <div className="flex lg:flex-row flex-col item-center justify-between space-y-10 lg:space-y-0">
               <h2 className="text-3xl text-nowrap">Looking to self-host?</h2>
               <div className="space-x-2 flex items-center">
@@ -280,7 +276,15 @@ export default function PricingPage() {
             </div>
           </div>
         </div>
-        <Footer />
+
+        <div className="bg-white py-16">
+          <div className="mx-auto max-w-7xl px-4 md:px-8">
+            <PricingComparison />
+          </div>
+        </div>
+        <div>
+          <Footer />
+        </div>
       </div>
     </>
   );
