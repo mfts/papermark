@@ -70,6 +70,13 @@ interface ViewWithDuration extends View {
   link: {
     name: string | null;
   };
+  feedbackResponse: {
+    id: string;
+    data: {
+      question: string;
+      answer: string;
+    };
+  } | null;
 }
 
 export function useDocumentVisits() {

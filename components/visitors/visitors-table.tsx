@@ -24,6 +24,8 @@ import {
   BadgeInfoIcon,
   DownloadCloudIcon,
   ServerIcon,
+  ThumbsDownIcon,
+  ThumbsUpIcon,
 } from "lucide-react";
 import { BadgeTooltip } from "@/components/ui/tooltip";
 
@@ -101,6 +103,19 @@ export default function VisitorsTable({ numPages }: { numPages: number }) {
                                         key="download"
                                       >
                                         <ServerIcon className="h-4 w-4 text-[#fb7a00] hover:text-[#fb7a00]/90" />
+                                      </BadgeTooltip>
+                                    )}
+                                    {view.feedbackResponse && (
+                                      <BadgeTooltip
+                                        content={`${view.feedbackResponse.data.question}: ${view.feedbackResponse.data.answer}`}
+                                        key="feedback"
+                                      >
+                                        {view.feedbackResponse.data.answer ===
+                                        "yes" ? (
+                                          <ThumbsUpIcon className="h-4 w-4 text-gray-500 hover:text-gray-600" />
+                                        ) : (
+                                          <ThumbsDownIcon className="h-4 w-4 text-gray-500 hover:text-gray-600" />
+                                        )}
                                       </BadgeTooltip>
                                     )}
                                   </>
