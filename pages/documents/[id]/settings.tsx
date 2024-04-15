@@ -1,3 +1,4 @@
+import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import DocumentHeader from "@/components/documents/document-header";
 import AppLayout from "@/components/layouts/app";
 import { NavMenu } from "@/components/navigation-menu";
@@ -21,6 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useTeam } from "@/context/team-context";
+import { usePlan } from "@/lib/swr/use-billing";
 import { useDocument } from "@/lib/swr/use-document";
 import { cn, fetcher } from "@/lib/utils";
 import Link from "next/link";
@@ -42,7 +44,7 @@ type Feedback = {
 
 export default function Settings() {
   const { document, primaryVersion } = useDocument();
-
+  const { plan } = usePlan();
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
   const id = document?.id;
@@ -54,6 +56,8 @@ export default function Settings() {
       dedupingInterval: 1000 * 60 * 60,
     },
   );
+
+  const isFree = plan?.plan === "free";
 
   const [loading, setLoading] = useState(false);
   const [loadingStatus, setLoadingStatus] = useState(false);
@@ -152,9 +156,10 @@ export default function Settings() {
                   <form
                     onSubmit={async (e) => {
                       e.preventDefault();
-                      setLoading(true);
 
-                      if (value == "") return null;
+                      if (value == "" || isFree) return null;
+
+                      setLoading(true);
 
                       try {
                         const response = await fetch(
@@ -209,7 +214,7 @@ export default function Settings() {
                             id="question"
                             type="text"
                             name="question"
-                            required
+                            required={!isFree}
                             placeholder="Are you interested?"
                             value={value || ""}
                             onChange={(e) => setValue(e.target.value)}
@@ -218,53 +223,60 @@ export default function Settings() {
                       </div>
                     </CardContent>
                     <CardFooter className="border-t py-3 bg-muted rounded-b-lg justify-end gap-x-2">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        loading={loadingStatus}
-                        onClick={async (e) => {
-                          try {
-                            e.preventDefault();
-                            setLoadingStatus(true);
+                      {feedback ? (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          loading={loadingStatus}
+                          onClick={async (e) => {
+                            try {
+                              e.preventDefault();
+                              setLoadingStatus(true);
 
-                            const response = await fetch(
-                              `/api/teams/${teamId}/documents/${id}/feedback`,
-                              {
-                                method: "PUT",
-                                headers: {
-                                  "Content-Type": "application/json",
-                                },
-                                body: JSON.stringify({
-                                  enabled: !feedback?.enabled,
-                                }),
-                              },
-                            );
-
-                            if (response.status === 200) {
-                              await mutate(
+                              const response = await fetch(
                                 `/api/teams/${teamId}/documents/${id}/feedback`,
+                                {
+                                  method: "PUT",
+                                  headers: {
+                                    "Content-Type": "application/json",
+                                  },
+                                  body: JSON.stringify({
+                                    enabled: !feedback?.enabled,
+                                  }),
+                                },
                               );
-                              toast.success(
-                                `${feedback?.enabled ? "Turned off" : "Turned on"} feedback question`,
-                              );
-                            } else {
-                              const { error } = await response.json();
-                              toast.error(error.message);
+
+                              if (response.status === 200) {
+                                await mutate(
+                                  `/api/teams/${teamId}/documents/${id}/feedback`,
+                                );
+                                toast.success(
+                                  `${feedback?.enabled ? "Turned off" : "Turned on"} feedback question`,
+                                );
+                              } else {
+                                const { error } = await response.json();
+                                toast.error(error.message);
+                              }
+                            } catch (error) {
+                              // Handle any errors that might occur during fetch
+                              toast.error("An error occurred.");
+                              console.error("Fetch error:", error);
+                            } finally {
+                              setLoadingStatus(false);
                             }
-                          } catch (error) {
-                            // Handle any errors that might occur during fetch
-                            toast.error("An error occurred.");
-                            console.error("Fetch error:", error);
-                          } finally {
-                            setLoadingStatus(false);
-                          }
-                        }}
+                          }}
+                        >
+                          {feedback?.enabled ? "Turn off" : "Turn on"}
+                        </Button>
+                      ) : null}
+                      <UpgradePlanModal
+                        clickedPlan={"Business"}
+                        trigger={"feedback_question"}
                       >
-                        {feedback?.enabled ? "Turn off" : "Turn on"}
-                      </Button>
-                      <Button type="submit" loading={loading}>
-                        {feedback ? "Update question" : "Create question"}
-                      </Button>
+                        <Button type="submit" loading={loading}>
+                          {feedback ? "Update question" : "Create question"}
+                        </Button>
+                      </UpgradePlanModal>
                     </CardFooter>
                   </form>
                 </Card>
