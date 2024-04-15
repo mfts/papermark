@@ -35,6 +35,7 @@ export default function DocumentPage() {
               teamId={teamInfo?.currentTeam?.id!}
               actions={[
                 <Button
+                  key={"create-link"}
                   className="flex h-8 lg:h-9 text-xs lg:text-sm whitespace-nowrap"
                   onClick={() => setIsLinkSheetOpen(true)}
                 >
