@@ -18,6 +18,22 @@ export default function Question({
   const [answer, setAnswer] = useState<"yes" | "no" | "">("");
 
   const handleQuestionSubmit = async (answer: string) => {
+    if (answer === "") return;
+
+    const response = await fetch(`/api/feedback`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        answer: answer,
+        feedbackId: feedback.id,
+        viewId: viewId,
+      }),
+    });
+
+    if (response.status === 200) {
+      setAnswer(answer as "yes" | "no");
+      setSubmittedFeedback(true);
+    }
   };
 
   if (submittedFeedback) {
