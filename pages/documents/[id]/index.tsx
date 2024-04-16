@@ -44,7 +44,7 @@ export default function DocumentPage() {
               ]}
             />
 
-            <NavMenu
+            {/* <NavMenu
               navigation={[
                 {
                   label: "Overview",
@@ -57,7 +57,7 @@ export default function DocumentPage() {
                   segment: "settings",
                 },
               ]}
-            />
+            /> */}
 
             {/* Stats */}
             <StatsComponent

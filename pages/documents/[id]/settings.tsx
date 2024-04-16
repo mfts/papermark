@@ -49,23 +49,23 @@ export default function Settings() {
   const teamId = teamInfo?.currentTeam?.id;
   const id = document?.id;
 
-  const { data: feedback } = useSWR<Feedback>(
-    teamId && id && `/api/teams/${teamId}/documents/${id}/feedback`,
-    fetcher,
-    {
-      dedupingInterval: 1000 * 60 * 60,
-    },
-  );
+  // const { data: feedback } = useSWR<Feedback>(
+  //   teamId && id && `/api/teams/${teamId}/documents/${id}/feedback`,
+  //   fetcher,
+  //   {
+  //     dedupingInterval: 1000 * 60 * 60,
+  //   },
+  // );
 
-  const isFree = plan?.plan === "free";
+  const isNotBusiness = plan?.plan !== "business";
 
   const [loading, setLoading] = useState(false);
   const [loadingStatus, setLoadingStatus] = useState(false);
   const [value, setValue] = useState<string>("");
 
-  useEffect(() => {
-    setValue(feedback?.data.question || "");
-  }, [feedback]);
+  // useEffect(() => {
+  //   setValue(feedback?.data.question || "");
+  // }, [feedback]);
 
   return (
     <AppLayout>
@@ -121,7 +121,7 @@ export default function Settings() {
                     <Button>Save</Button>
                   </CardFooter>
                 </Card> */}
-                <Card>
+                {/* <Card>
                   <CardHeader className="relative">
                     <CardTitle>Feedback Question</CardTitle>
                     <CardDescription>
@@ -157,7 +157,7 @@ export default function Settings() {
                     onSubmit={async (e) => {
                       e.preventDefault();
 
-                      if (value == "" || isFree) return null;
+                      if (value == "" || isNotBusiness) return null;
 
                       setLoading(true);
 
@@ -214,7 +214,7 @@ export default function Settings() {
                             id="question"
                             type="text"
                             name="question"
-                            required={!isFree}
+                            required={!isNotBusiness}
                             placeholder="Are you interested?"
                             value={value || ""}
                             onChange={(e) => setValue(e.target.value)}
@@ -269,17 +269,23 @@ export default function Settings() {
                           {feedback?.enabled ? "Turn off" : "Turn on"}
                         </Button>
                       ) : null}
-                      <UpgradePlanModal
-                        clickedPlan={"Business"}
-                        trigger={"feedback_question"}
-                      >
+                      {isNotBusiness ? (
+                        <UpgradePlanModal
+                          clickedPlan={"Business"}
+                          trigger={"feedback_question"}
+                        >
+                          <Button type="submit" loading={loading}>
+                            {feedback ? "Update question" : "Create question"}
+                          </Button>
+                        </UpgradePlanModal>
+                      ) : (
                         <Button type="submit" loading={loading}>
                           {feedback ? "Update question" : "Create question"}
                         </Button>
-                      </UpgradePlanModal>
+                      )}
                     </CardFooter>
                   </form>
-                </Card>
+                </Card> */}
                 {/* <Card className="border-red-500">
                   <CardHeader>
                     <CardTitle>Delete Document</CardTitle>
