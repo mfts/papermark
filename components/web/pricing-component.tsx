@@ -1,4 +1,5 @@
-import { CheckCircle2Icon, MinusIcon } from "lucide-react";
+import { ArrowRightIcon, CheckCircle2Icon, MinusIcon } from "lucide-react";
+import Link from "next/link";
 
 const featureGroups: {
   name: string;
@@ -36,7 +37,6 @@ const featureGroups: {
           enterprise: true,
         },
       },
-
       {
         name: "Real time feedback",
         id: "feature-user",
@@ -547,65 +547,89 @@ export function PricingComparison() {
       </h2>
       <div className="sticky top-[158px] z-40">
         <div className="grid grid-cols-16 border border-black rounded-t-xl overflow-hidden">
-          <ul className="grid col-[span_16_/_span_16] grid-cols-16 overflow-hidden ">
-            <li className="col-span-4 bg-white p-5 text-xl leading-8 list-none border-r border-black ">
+          <ul className="grid col-[span_16_/_span_16] grid-cols-16 overflow-hidden bg-gray-100 text-gray-900">
+            <li className="col-span-4 p-6 text-xl leading-8 list-none border-r border-black ">
               Features
             </li>
-            <li className="col-span-3 bg-white p-5 text-xl leading-8 list-none border-r border-black">
+            <li className="col-span-3 p-6 text-xl leading-8 list-none border-r border-black">
               Free
             </li>
-            <li className="col-span-3 bg-white p-5 text-xl leading-8 list-none border-r border-black">
+            <li className="col-span-3 p-6 text-xl leading-8 list-none border-r border-black">
               Pro
             </li>
-            <li className="col-span-3 bg-white p-5 text-xl leading-8 list-none border-r border-black">
+            <li className="col-span-3 p-6 text-xl leading-8 list-none border-r border-black">
               Business
             </li>
-            <li className="col-span-3 bg-white p-5 text-xl leading-8 list-none border-r-0">
+            <li className="col-span-3 p-6 text-xl leading-8 list-none border-r-0">
               Enterprise
             </li>
           </ul>
         </div>
         <div className="grid grid-cols-16 border-x border-black">
           <ul className="grid col-[span_16_/_span_16] grid-cols-16 overflow-hidden">
-            <li className="col-span-4 bg-white p-5 text-sm list-none border-r border-black "></li>
-            <li className="col-span-3 bg-white p-5 text-sm list-none border-r border-black">
-              Start sharing
+            <li className="col-span-4 bg-white px-6 py-4 text-sm list-none border-r border-black"></li>
+            <li className="col-span-3 bg-white px-6 py-4 text-sm list-none border-r border-black hover:bg-black hover:text-white">
+              <Link href="/login" className="flex items-center gap-x-1 group">
+                Start sharing <ArrowRightIcon className="h-4 w-4" />
+              </Link>
             </li>
-            <li className="col-span-3 bg-white p-5 text-sm list-none border-r border-black">
-              Start a free trial
+            <li className="col-span-3 bg-white px-6 py-4 text-sm list-none border-r border-black hover:bg-black hover:text-white">
+              <Link
+                href="/login?next=/settings/billing"
+                className="flex items-center gap-x-1 group"
+              >
+                Choose Pro <ArrowRightIcon className="h-4 w-4" />
+              </Link>
             </li>
-            <li className="col-span-3 bg-white p-5 text-sm list-none border-r border-black">
-              Start a free trial
+            <li className="col-span-3 bg-white px-6 py-4 text-sm list-none border-r border-black hover:bg-[#fb7a00] ">
+              <Link
+                href="/login?next=/settings/billing"
+                className="flex items-center gap-x-1 group"
+              >
+                Choose Business <ArrowRightIcon className="h-4 w-4" />
+              </Link>
             </li>
-            <li className="col-span-3 bg-white p-5 text-sm list-none border-r-0">
-              Book a demo
+            <li className="col-span-3 bg-white px-6 py-4 text-sm list-none border-r-0 hover:bg-black hover:text-white">
+              <Link
+                href="https://cal.com/marcseitz/papermark"
+                target="_blank"
+                className="flex items-center gap-x-1 group"
+              >
+                Book a demo <ArrowRightIcon className="h-4 w-4" />
+              </Link>
             </li>
           </ul>
         </div>
       </div>
       <div className="relative z-0">
-        <div className="w-full border-collapse overflow-visible bg-none border border-black rounded-b-xl ">
+        <div className="w-full border-collapse overflow-visible bg-none border border-black rounded-b-xl">
           <div>
             {featureGroups.map((group) => (
               <>
-                <h3 className="text-base sticky top-[285px] text-white z-30 w-full bg-black m-0 py-3 px-8 font-normal">
+                <h3
+                  className="text-base sticky top-[292px] text-white z-30 w-full bg-black m-0 py-3 px-6 font-normal"
+                  key={group.name}
+                >
                   {group.name}
                 </h3>
                 {group.features.map((feature) => (
-                  <div className="grid grid-cols-16 w-full relative odd:bg-gray-100 last:rounded-b-xl">
-                    <div className="relative py-7 px-[30px] text-base text-left flex flex-wrap font-normal col-end-[span_4] items-center text-black border-r border-black last:border-r-0">
+                  <div
+                    className="grid grid-cols-16 w-full relative odd:bg-gray-100 last:rounded-b-xl"
+                    key={feature.name}
+                  >
+                    <div className="relative py-7 px-6 text-base text-left flex flex-wrap font-normal col-end-[span_4] items-center text-black border-r border-black last:border-r-0">
                       {feature.name}
                     </div>
-                    <div className="relative py-7 px-[30px] text-base text-left flex flex-wrap font-base col-end-[span_3] items-center text-black border-r border-black last:border-r-0">
+                    <div className="relative py-7 px-6 text-base text-left flex flex-wrap font-base col-end-[span_3] items-center text-black border-r border-black last:border-r-0">
                       {renderFeatureName(feature.tiers.free)}
                     </div>
-                    <div className="relative py-7 px-[30px] text-base text-left flex flex-wrap font-base col-end-[span_3] items-center text-black border-r border-black last:border-r-0">
+                    <div className="relative py-7 px-6 text-base text-left flex flex-wrap font-base col-end-[span_3] items-center text-black border-r border-black last:border-r-0">
                       {renderFeatureName(feature.tiers.pro)}
                     </div>
-                    <div className="relative py-7 px-[30px] text-base text-left flex flex-wrap font-base col-end-[span_3] items-center text-black border-r border-black last:border-r-0">
+                    <div className="relative py-7 px-6 text-base text-left flex flex-wrap font-base col-end-[span_3] items-center text-black border-r border-black last:border-r-0">
                       {renderFeatureName(feature.tiers.business)}
                     </div>
-                    <div className="relative py-7 px-[30px] text-base text-left flex flex-wrap font-base col-end-[span_3] items-center text-black border-r border-black last:border-r-0">
+                    <div className="relative py-7 px-6 text-base text-left flex flex-wrap font-base col-end-[span_3] items-center text-black border-r border-black last:border-r-0">
                       {renderFeatureName(feature.tiers.enterprise)}
                     </div>
                   </div>

@@ -127,8 +127,6 @@ export default function PricingPage() {
   const plausible = usePlausible();
   const frequency = frequencies[0];
 
-  plausible;
-
   return (
     <>
       <div className="flex flex-1 flex-col bg-white text-black">
@@ -167,7 +165,7 @@ export default function PricingPage() {
         </div>
         <div className="bg-white py-16">
           <div className="mx-auto max-w-7xl px-4 md:px-8">
-            <div className="isolate grid  grid-cols-1  md:grid-cols-2  xl:grid-cols-4 border border-black rounded-xl overflow-hidden">
+            <div className="isolate grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 border border-black rounded-xl overflow-hidden">
               {tiers.map((tier) => (
                 <div
                   key={tier.id}
