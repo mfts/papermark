@@ -19,6 +19,7 @@ import OGSection from "@/components/links/link-sheet/og-section";
 import FeedbackSection from "@/components/links/link-sheet/feedback-section";
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { usePlan } from "@/lib/swr/use-billing";
+import QuestionSection from "./question-section";
 
 export const LinkOptions = ({
   data,
@@ -29,6 +30,7 @@ export const LinkOptions = ({
 }) => {
   const { plan } = usePlan();
   const hasFreePlan = plan?.plan === "free";
+  const isNotBusiness = plan?.plan !== "business";
 
   const [openUpgradeModal, setOpenUpgradeModal] = useState<boolean>(false);
   const [trigger, setTrigger] = useState<string>("");
@@ -75,6 +77,11 @@ export const LinkOptions = ({
             />
             <PasswordSection {...{ data, setData }} />
             <FeedbackSection {...{ data, setData }} />
+            <QuestionSection
+              {...{ data, setData }}
+              hasFreePlan={isNotBusiness}
+              handleUpgradeStateChange={handleUpgradeStateChange}
+            />
           </AccordionContent>
         </AccordionItem>
       </Accordion>

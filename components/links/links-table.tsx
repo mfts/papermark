@@ -84,6 +84,9 @@ export default function LinksTable({
       enableCustomMetatag: link.enableCustomMetatag
         ? link.enableCustomMetatag
         : false,
+      enableQuestion: link.enableQuestion ? link.enableQuestion : false,
+      questionText: link.feedback ? link.feedback.data?.question : "",
+      questionType: link.feedback ? link.feedback.data?.type : "",
       metaTitle: link.metaTitle,
       metaDescription: link.metaDescription,
       metaImage: link.metaImage,

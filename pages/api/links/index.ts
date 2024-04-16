@@ -133,6 +133,17 @@ export default async function handler(
           metaImage: linkData.metaImage || null,
           allowList: linkData.allowList,
           denyList: linkData.denyList,
+          ...(linkData.enableQuestion && {
+            enableQuestion: linkData.enableQuestion,
+            feedback: {
+              create: {
+                data: {
+                  question: linkData.questionText,
+                  type: linkData.questionType,
+                },
+              },
+            },
+          }),
         },
       });
 

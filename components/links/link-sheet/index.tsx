@@ -41,6 +41,9 @@ export const DEFAULT_LINK_PROPS = {
   metaTitle: null,
   metaDescription: null,
   metaImage: null,
+  enabledQuestion: false,
+  questionText: null,
+  questionType: null,
 };
 
 export type DEFAULT_LINK_TYPE = {
@@ -61,6 +64,9 @@ export type DEFAULT_LINK_TYPE = {
   metaTitle: string | null; // metatags
   metaDescription: string | null; // metatags
   metaImage: string | null; // metatags
+  enableQuestion?: boolean; // feedback question
+  questionText: string | null;
+  questionType: string | null;
 };
 
 export default function LinkSheet({
