@@ -26,6 +26,7 @@ export default function PagesViewer({
   dataroomId,
   setDocumentData,
   showPoweredByBanner,
+  enableQuestion = false,
   feedback,
 }: {
   pages: { file: string; pageNumber: string; embeddedLinks: string[] }[];
@@ -40,16 +41,16 @@ export default function PagesViewer({
   dataroomId?: string;
   setDocumentData?: (data: any) => void;
   showPoweredByBanner?: boolean;
+  enableQuestion?: boolean | null;
   feedback?: {
     id: string;
-    enabled: boolean;
     data: { question: string; type: string };
   } | null;
 }) {
   const router = useRouter();
   const numPages = pages.length;
   const numPagesWithFeedback =
-    feedback && feedback.enabled ? numPages + 1 : numPages;
+    enableQuestion && feedback ? numPages + 1 : numPages;
   const pageQuery = router.query.p ? Number(router.query.p) : 1;
 
   const [pageNumber, setPageNumber] = useState<number>(() =>
@@ -273,10 +274,8 @@ export default function PagesViewer({
             ) : (
               <LoadingSpinner className="h-20 w-20 text-foreground" />
             ))}
-          {feedback &&
-          feedback.enabled &&
-          pageNumber === numPagesWithFeedback ? (
-            <div className="flex items-center justify-center">
+          {enableQuestion && feedback && pageNumber === numPagesWithFeedback ? (
+            <div className="flex items-center justify-center w-full">
               <Question
                 feedback={feedback}
                 viewId={viewId}

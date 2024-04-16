@@ -69,7 +69,7 @@ export default function Question({
 
   return (
     <motion.div
-      className="z-10 mx-5 flex flex-col items-center space-y-10 text-center sm:mx-auto"
+      className="z-10 flex flex-col items-center space-y-10 text-center w-full"
       variants={{
         hidden: { opacity: 0, scale: 0.95 },
         show: {
@@ -87,7 +87,7 @@ export default function Question({
     >
       <motion.div
         variants={STAGGER_CHILD_VARIANTS}
-        className="flex flex-col items-center space-y-10 text-center"
+        className="flex flex-col items-center space-y-10 text-center w-full"
       >
         <h1 className="font-display max-w-xl text-3xl font-semibold transition-colors sm:text-4xl text-white">
           {feedback.data.question}
@@ -95,7 +95,7 @@ export default function Question({
       </motion.div>
       <motion.div
         variants={STAGGER_CHILD_VARIANTS}
-        className="grid w-full max-w-md grid-cols-1 divide-border text-white rounded-md border border-border md:grid-cols-2 md:divide-x md:divide-y-0 divide-y"
+        className="grid w-full max-w-sm grid-cols-1 divide-border text-white rounded-md border border-border md:grid-cols-2 md:divide-x md:divide-y-0 divide-y"
       >
         <button
           onClick={() => handleQuestionSubmit("yes")}

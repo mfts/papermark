@@ -45,7 +45,8 @@ export default function ViewData({
       versionNumber={document.versions[0].versionNumber}
       brand={brand}
       showPoweredByBanner={showPoweredByBanner}
-      feedback={document.feedback}
+      enableQuestion={link.enableQuestion}
+      feedback={link.feedback}
     />
   ) : (
     <PDFViewer
