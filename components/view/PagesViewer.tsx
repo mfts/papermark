@@ -8,6 +8,8 @@ import Toolbar from "./toolbar";
 import { Brand, DataroomBrand } from "@prisma/client";
 import { useRouter } from "next/router";
 import { PoweredBy } from "./powered-by";
+import Question from "./question";
+import { cn } from "@/lib/utils";
 
 const DEFAULT_PRELOADED_IMAGES_NUM = 10;
 
@@ -24,6 +26,8 @@ export default function PagesViewer({
   dataroomId,
   setDocumentData,
   showPoweredByBanner,
+  enableQuestion = false,
+  feedback,
 }: {
   pages: { file: string; pageNumber: string; embeddedLinks: string[] }[];
   linkId: string;
@@ -37,9 +41,16 @@ export default function PagesViewer({
   dataroomId?: string;
   setDocumentData?: (data: any) => void;
   showPoweredByBanner?: boolean;
+  enableQuestion?: boolean | null;
+  feedback?: {
+    id: string;
+    data: { question: string; type: string };
+  } | null;
 }) {
   const router = useRouter();
   const numPages = pages.length;
+  const numPagesWithFeedback =
+    enableQuestion && feedback ? numPages + 1 : numPages;
   const pageQuery = router.query.p ? Number(router.query.p) : 1;
 
   const [pageNumber, setPageNumber] = useState<number>(() =>
@@ -49,6 +60,8 @@ export default function PagesViewer({
   const [loadedImages, setLoadedImages] = useState<boolean[]>(
     new Array(numPages).fill(false),
   );
+
+  const [submittedFeedback, setSubmittedFeedback] = useState<boolean>(false);
 
   const startTimeRef = useRef(Date.now());
   const pageNumberRef = useRef<number>(pageNumber);
@@ -66,8 +79,10 @@ export default function PagesViewer({
         startTimeRef.current = Date.now(); // Reset start time when the page becomes visible again
       } else {
         visibilityRef.current = false;
-        const duration = Date.now() - startTimeRef.current;
-        trackPageView(duration);
+        if (pageNumber <= numPages) {
+          const duration = Date.now() - startTimeRef.current;
+          trackPageView(duration);
+        }
       }
     };
 
@@ -76,19 +91,19 @@ export default function PagesViewer({
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, []); // track page view when the page becomes visible or hidden on mount and unmount
+  }, [pageNumber, numPages]); // track page view when the page becomes visible or hidden on mount and unmount
 
   useEffect(() => {
     startTimeRef.current = Date.now();
 
     return () => {
-      if (visibilityRef.current) {
+      if (visibilityRef.current && pageNumber <= numPages) {
         // Only track the page view if the page is visible
         const duration = Date.now() - startTimeRef.current;
         trackPageView(duration);
       }
     };
-  }, [pageNumber]); // Track page view when the page number changes
+  }, [pageNumber, numPages]); // Track page view when the page number changes
 
   useEffect(() => {
     setLoadedImages((prev) =>
@@ -127,12 +142,14 @@ export default function PagesViewer({
   // Navigate to previous page
   const goToPreviousPage = () => {
     if (pageNumber <= 1) return;
+    if (pageNumber === numPagesWithFeedback)
+      return setPageNumber(pageNumber - 1);
     setPageNumber(pageNumber - 1);
   };
 
   // Navigate to next page and preload next image
   const goToNextPage = () => {
-    if (pageNumber >= numPages) return;
+    if (pageNumber >= numPagesWithFeedback) return;
     preloadImage(DEFAULT_PRELOADED_IMAGES_NUM - 1 + pageNumber); // Preload the next image
     setPageNumber(pageNumber + 1);
   };
@@ -169,7 +186,7 @@ export default function PagesViewer({
     <>
       <Nav
         pageNumber={pageNumber}
-        numPages={numPages}
+        numPages={numPagesWithFeedback}
         assistantEnabled={assistantEnabled}
         allowDownload={allowDownload}
         brand={brand}
@@ -186,7 +203,10 @@ export default function PagesViewer({
         <button
           onClick={goToPreviousPage}
           disabled={pageNumber == 1}
-          className="absolute left-0 h-[calc(100vh - 64px)] px-2 py-24 z-20"
+          className={cn(
+            "absolute left-0 h-[calc(100vh - 64px)] px-2 py-24 z-20",
+            pageNumber == 1 && "hidden",
+          )}
         >
           <span className="sr-only">Previous</span>
           <div className="bg-gray-950/50 hover:bg-gray-950/75 rounded-full relative flex items-center justify-center p-1">
@@ -198,8 +218,11 @@ export default function PagesViewer({
         </button>
         <button
           onClick={goToNextPage}
-          disabled={pageNumber >= numPages}
-          className="absolute right-0 h-[calc(100vh - 64px)] px-2 py-24 z-20"
+          disabled={pageNumber >= numPagesWithFeedback}
+          className={cn(
+            "absolute right-0 h-[calc(100vh - 64px)] px-2 py-24 z-20",
+            pageNumber >= numPagesWithFeedback && "hidden",
+          )}
         >
           <span className="sr-only">Next</span>
           <div className="bg-gray-950/50 hover:bg-gray-950/75 rounded-full relative flex items-center justify-center p-1">
@@ -211,47 +234,58 @@ export default function PagesViewer({
         </button>
 
         <div className="flex justify-center mx-auto relative h-full w-full">
-          {pages && loadedImages[pageNumber - 1] ? (
-            pages.map((page, index) => {
-              // contains cloudfront.net in the file path, then use img tag otherwise use next/image
-              if (page.file.toLowerCase().includes("files.papermark.io")) {
+          {pageNumber <= numPages &&
+            (pages && loadedImages[pageNumber - 1] ? (
+              pages.map((page, index) => {
+                // contains cloudfront.net in the file path, then use img tag otherwise use next/image
+                if (page.file.toLowerCase().includes("files.papermark.io")) {
+                  return (
+                    <img
+                      key={index}
+                      className={`object-contain mx-auto ${
+                        pageNumber - 1 === index ? "block" : "hidden"
+                      }`}
+                      src={
+                        loadedImages[index]
+                          ? page.file
+                          : "https://www.papermark.io/_static/blank.gif"
+                      }
+                      alt={`Page ${index + 1}`}
+                      fetchPriority={loadedImages[index] ? "high" : "auto"}
+                    />
+                  );
+                }
+
                 return (
-                  <img
+                  <Image
                     key={index}
                     className={`object-contain mx-auto ${
                       pageNumber - 1 === index ? "block" : "hidden"
                     }`}
-                    src={
-                      loadedImages[index]
-                        ? page.file
-                        : "https://www.papermark.io/_static/blank.gif"
-                    }
+                    src={loadedImages[index] ? page.file : BlankImg}
                     alt={`Page ${index + 1}`}
-                    fetchPriority={loadedImages[index] ? "high" : "auto"}
+                    priority={loadedImages[index] ? true : false}
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 75vw, 50vw"
+                    quality={100}
                   />
                 );
-              }
-
-              return (
-                <Image
-                  key={index}
-                  className={`object-contain mx-auto ${
-                    pageNumber - 1 === index ? "block" : "hidden"
-                  }`}
-                  src={loadedImages[index] ? page.file : BlankImg}
-                  alt={`Page ${index + 1}`}
-                  priority={loadedImages[index] ? true : false}
-                  fill
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 75vw, 50vw"
-                  quality={100}
-                />
-              );
-            })
-          ) : (
-            <LoadingSpinner className="h-20 w-20 text-foreground" />
-          )}
+              })
+            ) : (
+              <LoadingSpinner className="h-20 w-20 text-foreground" />
+            ))}
+          {enableQuestion && feedback && pageNumber === numPagesWithFeedback ? (
+            <div className="flex items-center justify-center w-full">
+              <Question
+                feedback={feedback}
+                viewId={viewId}
+                submittedFeedback={submittedFeedback}
+                setSubmittedFeedback={setSubmittedFeedback}
+              />
+            </div>
+          ) : null}
         </div>
-        {feedbackEnabled ? (
+        {feedbackEnabled && pageNumber !== numPagesWithFeedback ? (
           <Toolbar viewId={viewId} pageNumber={pageNumber} />
         ) : null}
         {showPoweredByBanner ? <PoweredBy linkId={linkId} /> : null}

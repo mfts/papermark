@@ -52,6 +52,12 @@ export default async function handle(
                     name: true,
                   },
                 },
+                feedbackResponse: {
+                  select: {
+                    id: true,
+                    data: true,
+                  },
+                },
               },
             },
           },
