@@ -135,7 +135,6 @@ model Document {
   views            View[]
   versions         DocumentVersion[]
   conversations    Conversation[]
-  feedback         Feedback?
 
   folderId String? // Optional Folder ID for documents in folders
   folder   Folder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
@@ -217,7 +216,9 @@ model Link {
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
   enableNotification Boolean?  @default(true) // Optional give user a option to pause/resume the notifications
-  enableFeedback     Boolean?  @default(true) // Optional give user a option to enable the feedback toolbar
+  enableFeedback     Boolean?  @default(true) // Optional give user a option to enable the reactions toolbar
+  enableQuestion     Boolean?  @default(false) // Optional give user a option to enable the question feedback
+  feedback           Feedback?
 
   // custom metatags
   metaTitle           String? // This will be the meta title of the link
@@ -436,18 +437,17 @@ model DataroomBrand {
 }
 
 model Feedback {
-  id         String   @id @default(cuid())
-  documentId String   @unique
-  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
-  enabled    Boolean  @default(false) // This indicates if feedback is enabled for this document
-  data       Json // This will store the feedback question data: {question: "What is the purpose of this document?", type: "yes/no", options: ["Yes", "No"]}
+  id     String @id @default(cuid())
+  linkId String @unique
+  link   Link   @relation(fields: [linkId], references: [id], onDelete: Cascade)
+  data   Json // This will store the feedback question data: {question: "What is the purpose of this document?", type: "yes/no", options: ["Yes", "No"]}
 
   responses FeedbackResponse[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([documentId])
+  @@index([linkId])
 }
 
 model FeedbackResponse {
