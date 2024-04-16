@@ -20,7 +20,7 @@ export default async function handle(
           id: feedbackId,
         },
         select: {
-          documentId: true,
+          linkId: true,
           data: true,
         },
       });
@@ -33,7 +33,7 @@ export default async function handle(
       const view = await prisma.view.findUnique({
         where: {
           id: viewId,
-          documentId: feedback.documentId,
+          linkId: feedback.linkId,
         },
       });
 
