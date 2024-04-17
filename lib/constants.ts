@@ -73,5 +73,5 @@ export const EXCLUDED_PATHS = [
 
 // free limits
 export const LIMITS = {
-  views: 5,
+  views: 20,
 };
