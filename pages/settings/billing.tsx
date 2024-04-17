@@ -16,10 +16,10 @@ import { toast } from "sonner";
 const frequencies: {
   value: "monthly" | "annually";
   label: "Monthly" | "Annually";
-  priceSuffix: "/month" | "/year";
+  priceSuffix: "/month" | "/month";
 }[] = [
   { value: "monthly", label: "Monthly", priceSuffix: "/month" },
-  { value: "annually", label: "Annually", priceSuffix: "/year" },
+  { value: "annually", label: "Annually", priceSuffix: "/month" },
 ];
 
 export default function Billing() {
@@ -76,7 +76,6 @@ export default function Billing() {
       featureIntro: "What's included:",
       features: [
         "1 user",
-        "10 documents",
         "Unlimited links",
         "Page-by-page analytics",
         "30-day analytics retention",
@@ -94,16 +93,16 @@ export default function Billing() {
       id: "tier-pro",
       href: "/login",
       currentPlan: plan && plan == "pro" ? true : false,
-      price: { monthly: "€39", annually: "€390" },
+      price: { monthly: "€29", annually: "€19" },
       description: "The branded experience for your documents.",
       featureIntro: "Everything in Free, plus:",
       features: [
-        "3 users",
-        "Folder structure",
-        "Custom domains",
+        "2 users",
+        "Custom slug",
         "Custom branding",
         "1-year analytics retention",
         "Advanced access controls",
+        "Folders",
       ],
       bgColor: "bg-gray-200",
       borderColor: "#bg-gray-800",
@@ -116,16 +115,17 @@ export default function Billing() {
       id: "tier-business",
       href: "/login",
       currentPlan: plan && plan == "business" ? true : false,
-      price: { monthly: "€79", annually: "€790" },
+      price: { monthly: "€79", annually: "€59" },
       description: "A plan that scales with your rapidly growing business.",
       featureIntro: "Everything in Pro, plus:",
       features: [
-        "10 users",
-        "Data rooms",
+        "3 users",
+        "1 dataroom",
+        "Custom domain",
         "Unlimited documents",
         "Unlimited subfolder levels",
         "Large file uploads",
-        "24h Priority Support",
+        "48h Priority Support",
       ],
       bgColor: "#fb7a00",
       borderColor: "#fb7a00",
@@ -139,10 +139,12 @@ export default function Billing() {
     "Self-hosted version",
     "Unlimited users",
     "Unlimited documents",
-    "Different file types",
+    "Unlimited folders and subfolders",
+    "Unlimited datarooms",
+    "Full white-labeling",
     "Up to 5TB file uploads",
     "Dedicated support",
-    "Custom Papermark AI",
+    "Custom Onboarding",
   ];
 
   return (

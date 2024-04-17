@@ -70,3 +70,8 @@ export const EXCLUDED_PATHS = [
   "/blog",
   "/view",
 ];
+
+// free limits
+export const LIMITS = {
+  views: 5,
+};

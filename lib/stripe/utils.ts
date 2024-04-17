@@ -58,10 +58,10 @@ export const PLANS = [
         },
       },
       yearly: {
-        amount: 390,
+        amount: 25,
         priceIds: {
           test: "price_1P3JlWFJyGSZ96lhddEsPKGg",
-          production: "price_1P3FQPFJyGSZ96lhXPwLPl49",
+          production: "price_1P6VTgFJyGSZ96lhshdgZ1it",
         },
       },
     },
@@ -78,10 +78,10 @@ export const PLANS = [
         },
       },
       yearly: {
-        amount: 790,
+        amount: 59,
         priceIds: {
           test: "price_1OuYgPFJyGSZ96lhKk6JzTf1",
-          production: "price_1OuYedFJyGSZ96lhTaJx58pG",
+          production: "price_1P6VnoFJyGSZ96lhgFscsQ61",
         },
       },
     },

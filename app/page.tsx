@@ -66,8 +66,8 @@ export default function Home() {
               The Open-Source DocSend Alternative
             </h1>
             <p className="text-2xl mt-8 text-balance max-w-3xl">
-              Papermark is an open-source document sharing infrastructure with
-              built-in page analytics and custom domains.
+              Papermark is a modern document sharing infrastructure with
+              built-in page analytics and full white-labeling
             </p>
             <div className="pt-8 space-x-2">
               <Link

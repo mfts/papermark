@@ -7,6 +7,7 @@ import { CustomUser } from "@/lib/types";
 import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
+import { LIMITS } from "@/lib/constants";
 
 export default async function handle(
   req: NextApiRequest,
@@ -77,13 +78,22 @@ export default async function handle(
         },
       });
 
+      const team = await prisma.team.findUnique({
+        where: { id: teamId },
+        select: { plan: true },
+      });
+
       // get the numPages from document
       const numPages =
         document?.versions?.[0]?.numPages || document?.numPages || 0;
 
       const views = document?.views || [];
 
-      const durationsPromises = views?.map((view: { id: string }) => {
+      // filter the last 20 views
+      const limitedViews =
+        team?.plan === "free" ? views.slice(0, LIMITS.views) : views;
+
+      const durationsPromises = limitedViews?.map((view: { id: string }) => {
         return getViewPageDuration({
           documentId: docId,
           viewId: view.id,
@@ -103,22 +113,27 @@ export default async function handle(
       });
 
       // Construct the response combining views and their respective durations
-      const viewsWithDuration = views?.map((view: any, index: number) => {
-        // calculate the completion rate
-        const completionRate = numPages
-          ? (durations[index].data.length / numPages) * 100
-          : 0;
+      const viewsWithDuration = limitedViews?.map(
+        (view: any, index: number) => {
+          // calculate the completion rate
+          const completionRate = numPages
+            ? (durations[index].data.length / numPages) * 100
+            : 0;
 
-        return {
-          ...view,
-          internal: users.some((user) => user.email === view.viewerEmail), // set internal to true if view.viewerEmail is in the users list
-          duration: durations[index],
-          totalDuration: summedDurations[index],
-          completionRate: completionRate.toFixed(),
-        };
+          return {
+            ...view,
+            internal: users.some((user) => user.email === view.viewerEmail), // set internal to true if view.viewerEmail is in the users list
+            duration: durations[index],
+            totalDuration: summedDurations[index],
+            completionRate: completionRate.toFixed(),
+          };
+        },
+      );
+
+      return res.status(200).json({
+        viewsWithDuration,
+        hiddenViewCount: views.length - limitedViews.length,
       });
-
-      return res.status(200).json(viewsWithDuration);
     } catch (error) {
       log({
         message: `Failed to get views for document: _${docId}_. \n\n ${error} \n\n*Metadata*: \`{teamId: ${teamId}, userId: ${userId}}\``,
