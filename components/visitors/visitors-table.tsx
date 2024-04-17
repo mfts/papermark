@@ -20,6 +20,7 @@ import ChevronDown from "@/components/shared/icons/chevron-down";
 import VisitorChart from "./visitor-chart";
 import { VisitorAvatar } from "./visitor-avatar";
 import {
+  AlertTriangleIcon,
   BadgeCheckIcon,
   BadgeInfoIcon,
   DownloadCloudIcon,
@@ -28,14 +29,20 @@ import {
   ThumbsUpIcon,
 } from "lucide-react";
 import { BadgeTooltip } from "@/components/ui/tooltip";
+import { usePlan } from "@/lib/swr/use-billing";
+import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
+import { Button } from "../ui/button";
 
 export default function VisitorsTable({ numPages }: { numPages: number }) {
   const { views } = useDocumentVisits();
 
+  const { plan } = usePlan();
+  const isFreePlan = plan?.plan === "free";
+
   return (
     <div className="w-full">
-      <div>
-        <h2 className="mb-2 md:mb-4">All visitors</h2>
+      <div className="mb-2 md:mb-4">
+        <h2>All visitors</h2>
       </div>
       <div className="rounded-md border">
         <Table>
@@ -49,17 +56,18 @@ export default function VisitorsTable({ numPages }: { numPages: number }) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {views?.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={5}>
-                  <div className="w-full h-40 flex items-center justify-center">
-                    <p>No Data Available</p>
-                  </div>
-                </TableCell>
-              </TableRow>
-            )}
-            {views ? (
-              views.map((view) => (
+            {views?.viewsWithDuration.length === 0 &&
+              views?.hiddenViewCount === 0 && (
+                <TableRow>
+                  <TableCell colSpan={5}>
+                    <div className="w-full h-40 flex items-center justify-center">
+                      <p>No Data Available</p>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              )}
+            {views?.viewsWithDuration ? (
+              views.viewsWithDuration.map((view) => (
                 <Collapsible key={view.id} asChild>
                   <>
                     <TableRow key={view.id} className="group/row">
@@ -194,9 +202,83 @@ export default function VisitorsTable({ numPages }: { numPages: number }) {
                 </TableCell>
               </TableRow>
             )}
+            {views?.hiddenViewCount! > 0 && (
+              <>
+                <TableRow className="">
+                  <TableCell colSpan={5} className="text-left sm:text-center">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-center gap-1">
+                      <span className="flex items-center gap-x-1">
+                        <AlertTriangleIcon className="h-4 w-4 inline-block text-yellow-500" />
+                        Some older visits may not be shown because your document
+                        has more than 20 views.{" "}
+                      </span>
+                      <UpgradePlanModal clickedPlan="Pro" trigger="">
+                        <button className="underline hover:text-gray-800">
+                          Upgrade to see full history
+                        </button>
+                      </UpgradePlanModal>
+                    </div>
+                  </TableCell>
+                </TableRow>
+                {Array.from({ length: views?.hiddenViewCount! }).map((_, i) => (
+                  <VisitorBlurred key={i} />
+                ))}
+              </>
+            )}
           </TableBody>
         </Table>
       </div>
     </div>
   );
 }
+
+// create a component for a blurred view of the visitor
+const VisitorBlurred = () => {
+  return (
+    <TableRow className="blur-sm">
+      <TableCell className="">
+        <div className="flex items-center sm:space-x-3 overflow-visible">
+          <VisitorAvatar viewerEmail={"abc@example.org"} />
+          <div className="min-w-0 flex-1">
+            <div className="focus:outline-none">
+              <p className="text-sm font-medium text-gray-800 dark:text-gray-200 overflow-visible flex items-center gap-x-2">
+                Anonymous
+              </p>
+              <p className="text-xs sm:text-sm text-muted-foreground/60">
+                Demo link
+              </p>
+            </div>
+          </div>
+        </div>
+      </TableCell>
+      {/* Duration */}
+      <TableCell className="">
+        <div className="text-sm text-muted-foreground">
+          {durationFormat(10000)}
+        </div>
+      </TableCell>
+      {/* Completion */}
+      <TableCell className="flex justify-start">
+        <div className="text-sm text-muted-foreground">
+          <Gauge value={90} size={"small"} showValue={true} />
+        </div>
+      </TableCell>
+      {/* Last Viewed */}
+      <TableCell className="text-sm text-muted-foreground">
+        <time
+          dateTime={new Date(
+            new Date().getTime() - 30 * 24 * 60 * 60 * 1000,
+          ).toISOString()}
+        >
+          {timeAgo(new Date(new Date().getTime() - 30 * 24 * 60 * 60 * 1000))}
+        </time>
+      </TableCell>
+      {/* Actions */}
+      <TableCell className="text-center sm:text-right cursor-pointer p-0">
+        <div className="flex justify-end p-5 space-x-1 [&[data-state=open]>svg.chevron]:rotate-180">
+          <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 chevron" />
+        </div>
+      </TableCell>
+    </TableRow>
+  );
+};

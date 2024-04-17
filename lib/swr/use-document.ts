@@ -79,6 +79,11 @@ interface ViewWithDuration extends View {
   } | null;
 }
 
+type TStatsData = {
+  hiddenViewCount: number;
+  viewsWithDuration: ViewWithDuration[];
+};
+
 export function useDocumentVisits() {
   const router = useRouter();
   const teamInfo = useTeam();
@@ -87,7 +92,7 @@ export function useDocumentVisits() {
     id: string;
   };
 
-  const { data: views, error } = useSWR<ViewWithDuration[]>(
+  const { data: views, error } = useSWR<TStatsData>(
     teamInfo?.currentTeam?.id &&
       id &&
       `/api/teams/${teamInfo?.currentTeam?.id}/documents/${encodeURIComponent(

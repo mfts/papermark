@@ -7,6 +7,7 @@ import { CustomUser } from "@/lib/types";
 import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
 import { errorhandler } from "@/lib/errorHandler";
 import { View } from "@prisma/client";
+import { LIMITS } from "@/lib/constants";
 
 export default async function handle(
   req: NextApiRequest,
@@ -32,17 +33,33 @@ export default async function handle(
     const userId = (session.user as CustomUser).id;
 
     try {
-      const { document } = await getTeamWithUsersAndDocument({
-        teamId,
-        userId,
-        docId,
-        checkOwner: true,
-        options: {
-          include: {
-            views: true,
+      const document = await prisma.document.findUnique({
+        where: {
+          id: docId,
+          teamId,
+        },
+        include: {
+          views: true,
+          team: {
+            select: {
+              plan: true,
+            },
           },
         },
       });
+
+      // const { document } = await getTeamWithUsersAndDocument({
+      //   teamId,
+      //   userId,
+      //   docId,
+      //   checkOwner: true,
+      //   options: {
+      //     include: {
+      //       views: true,
+      //       team: true,
+      //     },
+      //   },
+      // });
 
       const users = await prisma.user.findMany({
         where: {
@@ -69,15 +86,19 @@ export default async function handle(
         });
       }
 
+      // limit the number of views to 20 on free plan
+      const limitedViews =
+        document?.team?.plan === "free" ? views.slice(0, LIMITS.views) : views;
+
       // exclude views from the team's members
       let excludedViews: View[] = [];
       if (excludeTeamMembers) {
-        excludedViews = views.filter((view) => {
+        excludedViews = limitedViews.filter((view) => {
           return users.some((user) => user.email === view.viewerEmail);
         });
       }
 
-      const filteredViews = views.filter(
+      const filteredViews = limitedViews.filter(
         (view) => !excludedViews.map((view) => view.id).includes(view.id),
       );
 
