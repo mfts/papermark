@@ -35,39 +35,34 @@ export function UpgradePlanModal({
   const features = useMemo(() => {
     if (plan === "Pro") {
       return [
-        "Folders",
-        "3 team members",
-        "Unlimited link views",
-        "Custom domains",
+        "2 users",
+        "Custom slug",
         "Custom branding",
-        "Notion documents",
-        "AI Document Assistant incl. 1500 credits",
+        "1-year analytics retention",
+        "Advanced access controls",
+        "Folders",
       ];
     }
 
     if (plan === "Business") {
       return [
-        "Unlimited subfolder levels",
-        "10 team members",
+        "3 users",
+        "1 dataroom",
+        "Custom domain",
         "Unlimited documents",
-        "Unlimited link views",
-        "Custom domains",
-        "Custom branding",
-        "Notion documents",
-        "Data room",
-        "AI Document Assistant incl. 2500 credits",
-        "Priority Support",
+        "Unlimited subfolder levels",
+        "Large file uploads",
+        "48h Priority Support",
       ];
     }
 
     return [
-      "Folders",
-      "3 team members",
-      "Unlimited link views",
-      "Custom domains",
+      "2 users",
+      "Custom slug",
       "Custom branding",
-      "Notion documents",
-      "AI Document Assistant incl. 1500 credits",
+      "1-year analytics retention",
+      "Advanced access controls",
+      "Folders",
     ];
   }, [plan]);
 
@@ -110,7 +105,7 @@ export function UpgradePlanModal({
           }}
           initial="hidden"
           animate="show"
-          className="flex flex-col items-center justify-center space-y-3 border-b border-border px-4 py-8 sm:px-16"
+          className="flex flex-col items-center justify-center space-y-3 border-b border-border py-8 sm:px-12"
         >
           <motion.div variants={STAGGER_CHILD_VARIANTS}>
             <p className="text-2xl font-bold tracking-tighter text-foreground">
@@ -131,7 +126,7 @@ export function UpgradePlanModal({
           </motion.p>
         </motion.div>
 
-        <div className="bg-background px-4 pb-8 text-left sm:px-16">
+        <div className="bg-background pb-8 text-left sm:px-12">
           <Tabs className="pb-4" defaultValue={plan}>
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="Pro" onClick={() => setPlan("Pro")}>
@@ -157,9 +152,14 @@ export function UpgradePlanModal({
                   <Badge
                     variant="outline"
                     className="text-sm font-normal normal-case"
-                  >{`€${
-                    PLANS.find((p) => p.name === plan)!.price[period].amount
-                  }/${period.replace("ly", "")}`}</Badge>
+                  >
+                    {`€${
+                      PLANS.find((p) => p.name === plan)!.price[period].amount
+                    }/month`}{" "}
+                    {period === "yearly" ? (
+                      <span className="text-xs ml-1">(billed yearly)</span>
+                    ) : null}
+                  </Badge>
                 </div>
                 <button
                   onClick={() => {
@@ -167,7 +167,7 @@ export function UpgradePlanModal({
                   }}
                   className="text-xs text-muted-foreground underline underline-offset-4 transition-colors hover:text-gray-800 hover:dark:text-muted-foreground/80"
                 >
-                  {period === "monthly" ? "Want 20% off?" : "Switch to monthly"}
+                  {period === "monthly" ? "Want 35% off?" : "Switch to monthly"}
                 </button>
               </div>
               <motion.div

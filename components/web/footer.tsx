@@ -1,6 +1,7 @@
 import GitHubIcon from "@/components/shared/icons/github";
 import TwitterIcon from "@/components/shared/icons/twitter";
 import LinkedinIcon from "@/components/shared/icons/linkedin";
+import { StatusWidget } from "./status-widget";
 
 const navigation = {
   product: [
@@ -88,6 +89,9 @@ export default function Footer() {
                   <item.icon />
                 </a>
               ))}
+            </div>
+            <div className="w-fit">
+              <StatusWidget />
             </div>
           </div>
           <div className="mt-16 grid grid-cols-2 gap-8 xl:col-span-2 xl:mt-0">

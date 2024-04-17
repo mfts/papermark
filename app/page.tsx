@@ -6,7 +6,7 @@ import Image from "next/image";
 import Navbar from "@/components/web/navbar";
 import Footer from "@/components/web/footer";
 import { LogoCloud } from "@/components/web/landing-page/logo-cloud";
-import Testimonials from "@/components/web/testimonials2";
+import Testimonials from "@/components/web/testimonials";
 
 import {
   RefreshCw as ArrowPathIcon,

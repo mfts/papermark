@@ -7,6 +7,7 @@ import { getViewPageDuration } from "@/lib/tinybird";
 import { getDocumentWithTeamAndUser } from "@/lib/team/helper";
 import { CustomUser } from "@/lib/types";
 import { errorhandler } from "@/lib/errorHandler";
+import { LIMITS } from "@/lib/constants";
 
 export default async function handle(
   req: NextApiRequest,
@@ -40,6 +41,12 @@ export default async function handle(
                 orderBy: { createdAt: "desc" },
                 take: 1,
                 select: { numPages: true },
+              },
+              team: {
+                select: {
+                  id: true,
+                  plan: true,
+                },
               },
             },
           },
@@ -79,7 +86,13 @@ export default async function handle(
         },
       });
 
-      const durationsPromises = views.map((view) => {
+      // limit the number of views to 20 on free plan
+      const limitedViews =
+        result?.document?.team?.plan === "free"
+          ? views.slice(0, LIMITS.views)
+          : views;
+
+      const durationsPromises = limitedViews.map((view) => {
         return getViewPageDuration({
           documentId: view.documentId!,
           viewId: view.id,
@@ -98,7 +111,7 @@ export default async function handle(
       });
 
       // Construct the response combining views and their respective durations
-      const viewsWithDuration = views.map((view, index) => {
+      const viewsWithDuration = limitedViews.map((view, index) => {
         // calculate the completion rate
         const completionRate = numPages
           ? (durations[index].data.length / numPages) * 100

@@ -216,7 +216,9 @@ model Link {
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
   enableNotification Boolean?  @default(true) // Optional give user a option to pause/resume the notifications
-  enableFeedback     Boolean?  @default(true) // Optional give user a option to enable the feedback toolbar
+  enableFeedback     Boolean?  @default(true) // Optional give user a option to enable the reactions toolbar
+  enableQuestion     Boolean?  @default(false) // Optional give user a option to enable the question feedback
+  feedback           Feedback?
 
   // custom metatags
   metaTitle           String? // This will be the meta title of the link
@@ -246,22 +248,23 @@ model Domain {
 }
 
 model View {
-  id             String     @id @default(cuid())
-  link           Link       @relation(fields: [linkId], references: [id])
-  linkId         String
-  document       Document?  @relation(fields: [documentId], references: [id], onDelete: Cascade)
-  documentId     String?
-  dataroom       Dataroom?  @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
-  dataroomId     String?
-  dataroomViewId String? // This is the view ID from the dataroom
-  viewerEmail    String? // Email of the viewer if known
-  verified       Boolean    @default(false) // Whether the viewer email has been verified
-  viewedAt       DateTime   @default(now())
-  downloadedAt   DateTime? // This is the time the document was downloaded
-  reactions      Reaction[]
-  viewType       ViewType   @default(DOCUMENT_VIEW)
-  viewerId       String? // This is the viewer ID from the dataroom
-  viewer         Viewer?    @relation(fields: [viewerId], references: [id], onDelete: Cascade)
+  id               String            @id @default(cuid())
+  link             Link              @relation(fields: [linkId], references: [id])
+  linkId           String
+  document         Document?         @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  documentId       String?
+  dataroom         Dataroom?         @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
+  dataroomId       String?
+  dataroomViewId   String? // This is the view ID from the dataroom
+  viewerEmail      String? // Email of the viewer if known
+  verified         Boolean           @default(false) // Whether the viewer email has been verified
+  viewedAt         DateTime          @default(now())
+  downloadedAt     DateTime? // This is the time the document was downloaded
+  reactions        Reaction[]
+  viewType         ViewType          @default(DOCUMENT_VIEW)
+  viewerId         String? // This is the viewer ID from the dataroom
+  viewer           Viewer?           @relation(fields: [viewerId], references: [id], onDelete: Cascade)
+  feedbackResponse FeedbackResponse?
 
   @@index([linkId])
   @@index([documentId])
@@ -431,4 +434,33 @@ model DataroomBrand {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Feedback {
+  id     String @id @default(cuid())
+  linkId String @unique
+  link   Link   @relation(fields: [linkId], references: [id], onDelete: Cascade)
+  data   Json // This will store the feedback question data: {question: "What is the purpose of this document?", type: "yes/no", options: ["Yes", "No"]}
+
+  responses FeedbackResponse[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([linkId])
+}
+
+model FeedbackResponse {
+  id         String   @id @default(cuid())
+  feedbackId String
+  feedback   Feedback @relation(fields: [feedbackId], references: [id], onDelete: Cascade)
+  data       Json // This will store the feedback question data: {question: "What is the purpose of this document?", type: "yes/no", options: ["Yes", "No"], answer: "Yes"}
+  viewId     String   @unique
+  view       View     @relation(fields: [viewId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([feedbackId])
+  @@index([viewId])
 }

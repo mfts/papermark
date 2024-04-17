@@ -13,7 +13,7 @@ const nextConfig = {
       {
         // user-shared documents and files
         protocol: "https",
-        hostname: process.env.NEXT_PRIVATE_UPLOAD_DISTRIBUTION_HOST,
+        hostname: process.env.NEXT_PRIVATE_UPLOAD_DISTRIBUTION_HOST ?? "",
       },
       {
         // twitter img
@@ -32,9 +32,14 @@ const nextConfig = {
       },
       {
         // local img
-        protocol: "https",
+        protocol: "http",
         hostname: "localhost",
         port: "3000",
+      },
+      {
+        // papermark img
+        protocol: "https",
+        hostname: "www.papermark.io",
       },
       {
         // special document pages

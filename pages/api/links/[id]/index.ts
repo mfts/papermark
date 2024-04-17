@@ -32,6 +32,13 @@ export default async function handle(
           metaTitle: true,
           metaDescription: true,
           metaImage: true,
+          enableQuestion: true,
+          feedback: {
+            select: {
+              id: true,
+              data: true,
+            },
+          },
           document: {
             select: {
               id: true,
@@ -181,6 +188,23 @@ export default async function handle(
         metaTitle: linkData.metaTitle || null,
         metaDescription: linkData.metaDescription || null,
         metaImage: linkData.metaImage || null,
+        enableQuestion: linkData.enableQuestion,
+        feedback: {
+          upsert: {
+            create: {
+              data: {
+                question: linkData.questionText,
+                type: linkData.questionType,
+              },
+            },
+            update: {
+              data: {
+                question: linkData.questionText,
+                type: linkData.questionType,
+              },
+            },
+          },
+        },
       },
       include: {
         views: {

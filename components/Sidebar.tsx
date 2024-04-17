@@ -127,7 +127,8 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
       current:
         router.pathname.includes("settings") &&
         !router.pathname.includes("branding") &&
-        !router.pathname.includes("datarooms"),
+        !router.pathname.includes("datarooms") &&
+        !router.pathname.includes("documents"),
       active: false,
       disabled: false,
     },
