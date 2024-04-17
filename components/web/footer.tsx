@@ -4,6 +4,7 @@ import LinkedinIcon from "@/components/shared/icons/linkedin";
 
 const navigation = {
   product: [
+    { name: "Data Room", href: "/data-room" },
     { name: "AI Document Assistant", href: "/ai" },
     { name: "Notion", href: "/share-notion-page" },
     { name: "Pricing", href: "/pricing" },
@@ -25,7 +26,7 @@ const navigation = {
       href: "https://chat.openai.com/g/g-G5orSgI31-findvc",
     },
     {
-      name: "DocSend Alternatives Finder",
+      name: "DocSend Alternatives",
       href: "/docsend-alternatives",
     },
   ],
