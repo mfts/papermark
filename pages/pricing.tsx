@@ -60,7 +60,7 @@ const tiers: {
     name: "Pro",
     id: "tier-pro",
     href: "/login",
-    price: { monthly: "€29", annually: "€19" },
+    price: { monthly: "€39", annually: "€25" },
     description: "The branded experience for your documents.",
     featureIntro: "Everything in Free, plus:",
     features: [
@@ -255,7 +255,7 @@ export default function PricingPage() {
                                     : "hidden",
                                 )}
                               />
-                              30% Saving
+                              35% Saving
                             </div>
                           </div>
                         ) : null}
