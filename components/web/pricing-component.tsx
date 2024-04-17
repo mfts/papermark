@@ -82,7 +82,7 @@ const featureGroups: {
         id: "feature-user",
         tiers: {
           free: "up to 20 last views",
-          pro: "up to 200 last views",
+          pro: "up to 1000 last views",
           business: true,
           enterprise: true,
         },
