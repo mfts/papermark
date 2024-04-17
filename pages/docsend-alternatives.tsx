@@ -131,7 +131,7 @@ Please note that the prices and availability of features may vary, and it is rec
           name="description"
           content="Explore the best Docsend alternatives in 2024 tailored for your needs. Find the right document sharing and tracking solution personalized for your use case."
         />
-        <meta property="og:site_name" content="startupinvestors.vercel.app" />
+
         <meta
           property="og:description"
           content="Looking for Docsend alternatives? Discover best document sharing platforms that cater to your unique business requirements and enhance your operational efficiency."
@@ -150,7 +150,6 @@ Please note that the prices and availability of features may vary, and it is rec
           name="twitter:description"
           content="Uncover personalized Docsend alternatives for your business. Find the best document and pitch deck sharing platforms tailored to fit your specific needs."
         />
-        <meta property="og:image" content="cover.png" />
       </Head>
       <div className="flex flex-1 flex-col bg-white text-black">
         <Navbar />
