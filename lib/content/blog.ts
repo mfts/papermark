@@ -18,6 +18,10 @@ const GITHUB_CONTENT_TOKEN = process.env.GITHUB_CONTENT_TOKEN;
 const GITHUB_CONTENT_REPO = process.env.GITHUB_CONTENT_REPO;
 
 export const getPostsRemote = cache(async () => {
+  if (!GITHUB_CONTENT_REPO || !GITHUB_CONTENT_TOKEN) {
+    return [];
+  }
+
   const apiUrl = `https://api.github.com/repos/${GITHUB_CONTENT_REPO}/contents/content/blog`;
   const headers = {
     Authorization: `Bearer ${GITHUB_CONTENT_TOKEN}`,
