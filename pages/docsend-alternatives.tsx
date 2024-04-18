@@ -190,7 +190,7 @@ Please note that the prices and availability of features may vary, and it is rec
             <div className="max-w-5xl mx-auto px-8 lg:px-28">
               <div className="max-w-5xl mx-auto">
                 <div className="w-full my-1 mx-auto "></div>
-                <h2 className="text-4xl font-bold text-black lg:text-4xl my-8 text-center">
+                <h2 className="text-4xl font-bold text-black  my-8 text-center">
                   Find Docsend alterntive based on your requirements
                 </h2>
                 <p className="text-1xl mt-3 mb-5 text-center text-black font-semibold ">

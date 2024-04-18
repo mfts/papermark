@@ -205,7 +205,7 @@ const DocSendAlternatives = () => {
 
                 <p>
                   {" "}
-                  <a target="_blank" rel="nofollow" href="papermark.io/pricing">
+                  <a target="_blank" rel="nofollow" href="/pricing">
                     All Papermark features
                   </a>
                 </p>
@@ -220,11 +220,7 @@ const DocSendAlternatives = () => {
                   <li>
                     <p>
                       Business: $59/month (
-                      <a
-                        target="_blank"
-                        rel="nofollow"
-                        href="papermark.io/data-room"
-                      >
+                      <a target="_blank" rel="nofollow" href="/data-room">
                         data room
                       </a>{" "}
                       included)
