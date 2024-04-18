@@ -41,6 +41,12 @@ export default async function handle(
                     viewedAt: "desc",
                   },
                 },
+                feedback: {
+                  select: {
+                    id: true,
+                    data: true,
+                  },
+                },
                 _count: {
                   select: { views: true },
                 },

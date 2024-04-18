@@ -335,7 +335,7 @@ const DocSendAlternatives = () => {
                     <p>AI-powered universal search (Dropbox Dash)</p>
                   </li>
                   <li>
-                    <p>Mobile apps with editor's choice awards</p>
+                    <p>Mobile apps with editor&apos;s choice awards</p>
                   </li>
                   <li>
                     <p>Automatic backup for professionals up to 9TB storage</p>
@@ -539,7 +539,7 @@ const DocSendAlternatives = () => {
                   <li>
                     <p>
                       Legal regulations in Europe may require additional steps
-                      for compliance with PandaDoc's service
+                      for compliance with PandaDoc&apos;s service
                     </p>
                   </li>
                 </ul>
@@ -589,7 +589,7 @@ const DocSendAlternatives = () => {
                     alt="notion.so website"
                   />
                   Notion is a tool where you can create documents, take notes,
-                  and build wikis all in one place. It's great for both
+                  and build wikis all in one place. It&apos;s great for both
                   individuals and groups, allowing you to organize your work
                   exactly how you like it.
                 </p>
@@ -1203,7 +1203,7 @@ const DocSendAlternatives = () => {
                   When deciding between ClearSlide and DocSend, it really comes
                   down to personal preference and what works best for you and
                   your team. Both tools have their strengths and weaknesses, so
-                  it's important to consider factors such as ease of use,
+                  it&apos;s important to consider factors such as ease of use,
                   functionality, and cost before making a decision.
                 </p>
                 <ul>
