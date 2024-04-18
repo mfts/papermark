@@ -57,8 +57,8 @@ export default function Gridalternatives() {
   return (
     <div className="bg-gray-100 py-10 sm:py-10 px-6 sm:px-8 lg:px-20 my-20 ">
       <div className="px-6 py-12 sm:px-6 sm:py-20 lg:px-8 pb-20">
-        <div className="mx-auto max-w-2xl text-center">
-          <h2 className="text-3xl font-bold text-base text-gray-900 sm:text-4xl">
+        <div className="mx-auto max-w-5xl text-center">
+          <h2 className="text-4xl font-bold text-balance text-gray-900 ">
             Learn more about Docsend Alternatives in 2024
             <br />
           </h2>
