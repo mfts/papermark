@@ -10,11 +10,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreVertical, FolderIcon } from "lucide-react";
-import { useRef, useState } from "react";
+import { MoreVertical, FolderIcon, TrashIcon } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { FolderWithCount } from "@/lib/swr/use-documents";
 import { DataroomFolderWithCount } from "@/lib/swr/use-dataroom";
 import { EditFolderModal } from "../folders/edit-folder-modal";
+import { toast } from "sonner";
+import { mutate } from "swr";
 
 type FolderCardProps = {
   folder: FolderWithCount | DataroomFolderWithCount;
@@ -29,12 +31,96 @@ export default function FolderCard({
   dataroomId,
 }: FolderCardProps) {
   const [openFolder, setOpenFolder] = useState<boolean>(false);
+  const [isFirstClick, setIsFirstClick] = useState<boolean>(false);
+  const [menuOpen, setMenuOpen] = useState<boolean>(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
   const folderPath =
     isDataroom && dataroomId
       ? `/datarooms/${dataroomId}/documents${folder.path}`
       : `/documents/tree${folder.path}`;
+  const parentFolderPath = folder.path.substring(
+    0,
+    folder.path.lastIndexOf("/"),
+  );
+
+  useEffect(() => {
+    function handleClickOutside(event: { target: any }) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setMenuOpen(false);
+        setIsFirstClick(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const handleButtonClick = (event: any, documentId: string) => {
+    event.stopPropagation();
+    event.preventDefault();
+
+    if (isFirstClick) {
+      handleDeleteFolder(documentId);
+      setIsFirstClick(false);
+      setMenuOpen(false); // Close the dropdown after deleting
+    } else {
+      setIsFirstClick(true);
+    }
+  };
+
+  const handleDeleteFolder = async (folderId: string) => {
+    // Prevent the first click from deleting the document
+    if (!isFirstClick) {
+      setIsFirstClick(true);
+      return;
+    }
+
+    const endpointTargetType =
+      isDataroom && dataroomId ? `datarooms/${dataroomId}/folders` : "folders";
+
+    toast.promise(
+      fetch(
+        `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/manage/${folderId}`,
+        {
+          method: "DELETE",
+        },
+      ),
+      {
+        loading: "Deleting folder...",
+        success: () => {
+          mutate(
+            `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}?root=true`,
+          );
+          mutate(
+            `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}`,
+          );
+          mutate(
+            `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}${parentFolderPath}`,
+          );
+          return "Folder deleted successfully.";
+        },
+        error: "Failed to delete folder. Move documents first.",
+      },
+    );
+  };
+
+  const handleMenuStateChange = (open: boolean) => {
+    if (isFirstClick) {
+      setMenuOpen(true); // Keep the dropdown open on the first click
+      return;
+    }
+
+    // If the menu is closed, reset the isFirstClick state
+    if (!open) {
+      setIsFirstClick(false);
+      setMenuOpen(false); // Ensure the dropdown is closed
+    } else {
+      setMenuOpen(true); // Open the dropdown
+    }
+  };
 
   return (
     <>
@@ -84,7 +170,7 @@ export default function FolderCard({
           </p>
         </Link> */}
 
-          <DropdownMenu>
+          <DropdownMenu open={menuOpen} onOpenChange={handleMenuStateChange}>
             <DropdownMenuTrigger asChild>
               <Button
                 // size="icon"
@@ -102,18 +188,18 @@ export default function FolderCard({
               </DropdownMenuItem>
               <DropdownMenuSeparator />
 
-              {/* <DropdownMenuItem
-              onClick={(event) => handleButtonClick(event, prismaDocument.id)}
-              className="text-destructive focus:bg-destructive focus:text-destructive-foreground duration-200"
-            >
-              {isFirstClick ? (
-                "Really delete?"
-              ) : (
-                <>
-                  <TrashIcon className="w-4 h-4 mr-2" /> Delete document
-                </>
-              )}
-            </DropdownMenuItem> */}
+              <DropdownMenuItem
+                onClick={(event) => handleButtonClick(event, folder.id)}
+                className="text-destructive focus:bg-destructive focus:text-destructive-foreground duration-200"
+              >
+                {isFirstClick ? (
+                  "Really delete?"
+                ) : (
+                  <>
+                    <TrashIcon className="w-4 h-4 mr-2" /> Delete Folder
+                  </>
+                )}
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

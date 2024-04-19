@@ -82,6 +82,9 @@ export function EditFolderModal({
 
       mutate(`/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}`);
       mutate(
+        `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}?root=true`,
+      );
+      mutate(
         `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}${parentFolderPath}`,
       );
     } catch (error) {
