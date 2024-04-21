@@ -32,10 +32,22 @@ import { BadgeTooltip } from "@/components/ui/tooltip";
 import { usePlan } from "@/lib/swr/use-billing";
 import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
 import { Button } from "../ui/button";
+import { useState } from "react";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "../ui/pagination";
 
 export default function VisitorsTable({ numPages }: { numPages: number }) {
-  const { views } = useDocumentVisits();
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const limit = 10; // Set the number of items per page
 
+  const { views, loading, error } = useDocumentVisits(currentPage, limit);
   const { plan } = usePlan();
   const isFreePlan = plan?.plan === "free";
 
@@ -227,6 +239,57 @@ export default function VisitorsTable({ numPages }: { numPages: number }) {
             )}
           </TableBody>
         </Table>
+      </div>
+      {/* Pagination Controls */}
+      <div className="mt-2 w-full flex items-center">
+        <div className="text-sm w-full">
+          Showing <span className="font-semibold">10</span> of{" "}
+          {views?.totalViews} visits
+        </div>
+        <Pagination className="justify-end">
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                onClick={() => setCurrentPage(currentPage - 1)}
+                disabled={currentPage === 1}
+              />
+            </PaginationItem>
+            {currentPage !== 1 ? (
+              <PaginationItem>
+                <PaginationLink onClick={() => setCurrentPage(1)}>
+                  {1}
+                </PaginationLink>
+              </PaginationItem>
+            ) : null}
+
+            <PaginationItem>
+              <PaginationLink isActive>{currentPage}</PaginationLink>
+            </PaginationItem>
+
+            {views?.totalViews &&
+            currentPage !== Math.ceil(views?.totalViews / 10) ? (
+              <PaginationItem>
+                <PaginationLink
+                  onClick={() =>
+                    setCurrentPage(Math.ceil(views?.totalViews / 10))
+                  }
+                >
+                  {Math.ceil(views?.totalViews / 10)}
+                </PaginationLink>
+              </PaginationItem>
+            ) : null}
+            <PaginationItem>
+              <PaginationNext
+                onClick={() => setCurrentPage(currentPage + 1)}
+                disabled={
+                  views?.totalViews
+                    ? currentPage === Math.ceil(views?.totalViews / 10)
+                    : true
+                }
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
       </div>
     </div>
   );
