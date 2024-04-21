@@ -1,5 +1,6 @@
 import { useRouter } from "next/router";
 import useSWR from "swr";
+import useSWRImmutable from "swr/immutable";
 import { fetcher } from "@/lib/utils";
 import { DocumentWithVersion, LinkWithViews } from "@/lib/types";
 import { View } from "@prisma/client";
@@ -82,27 +83,29 @@ interface ViewWithDuration extends View {
 type TStatsData = {
   hiddenViewCount: number;
   viewsWithDuration: ViewWithDuration[];
+  totalViews: number;
 };
 
-export function useDocumentVisits() {
+export function useDocumentVisits(page: number, limit: number) {
   const router = useRouter();
   const teamInfo = useTeam();
+  const teamId = teamInfo?.currentTeam?.id;
 
   const { id } = router.query as {
     id: string;
   };
 
-  const { data: views, error } = useSWR<TStatsData>(
-    teamInfo?.currentTeam?.id &&
-      id &&
-      `/api/teams/${teamInfo?.currentTeam?.id}/documents/${encodeURIComponent(
-        id,
-      )}/views`,
-    fetcher,
-    {
-      dedupingInterval: 10000,
-    },
-  );
+  const cacheKey =
+    teamId && id
+      ? `/api/teams/${teamInfo?.currentTeam?.id}/documents/${encodeURIComponent(
+          id,
+        )}/views?page=${page}&limit=${limit}`
+      : null;
+
+  const { data: views, error } = useSWR<TStatsData>(cacheKey, fetcher, {
+    dedupingInterval: 20000,
+    revalidateOnFocus: false,
+  });
 
   return {
     views,
