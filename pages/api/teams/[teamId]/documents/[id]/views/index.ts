@@ -23,47 +23,80 @@ export default async function handle(
     // get document id and teamId from query params
 
     const { teamId, id: docId } = req.query as { teamId: string; id: string };
+    const page = parseInt((req.query.page as string) || "1", 10);
+    const limit = parseInt((req.query.limit as string) || "10", 10);
+    const offset = (page - 1) * limit;
 
     const userId = (session.user as CustomUser).id;
 
     try {
-      const { document } = await getTeamWithUsersAndDocument({
-        teamId,
-        userId,
-        docId,
-        checkOwner: true,
-        options: {
-          select: {
-            id: true,
-            ownerId: true,
-            numPages: true,
-            versions: {
-              where: { isPrimary: true },
-              orderBy: { createdAt: "desc" },
-              take: 1,
-              select: { numPages: true },
+      const team = await prisma.team.findUnique({
+        where: {
+          id: teamId,
+          users: {
+            some: {
+              userId: userId,
             },
-            views: {
-              orderBy: {
-                viewedAt: "desc",
-              },
-              include: {
-                link: {
-                  select: {
-                    name: true,
-                  },
-                },
-                feedbackResponse: {
-                  select: {
-                    id: true,
-                    data: true,
-                  },
-                },
-              },
+          },
+        },
+        select: { plan: true },
+      });
+
+      if (!team) {
+        return res.status(404).end("Team not found");
+      }
+
+      const document = await prisma.document.findUnique({
+        where: { id: docId, teamId: teamId },
+        select: {
+          id: true,
+          ownerId: true,
+          numPages: true,
+          versions: {
+            where: { isPrimary: true },
+            orderBy: { createdAt: "desc" },
+            take: 1,
+            select: { numPages: true },
+          },
+          _count: {
+            select: {
+              views: true,
             },
           },
         },
       });
+
+      if (!document) {
+        return res.status(404).end("Document not found");
+      }
+
+      const views = await prisma.view.findMany({
+        skip: offset, // Implementing pagination
+        take: limit, // Limit the number of views fetched
+        where: {
+          documentId: docId,
+        },
+        orderBy: {
+          viewedAt: "desc",
+        },
+        include: {
+          link: {
+            select: {
+              name: true,
+            },
+          },
+          feedbackResponse: {
+            select: {
+              id: true,
+              data: true,
+            },
+          },
+        },
+      });
+
+      if (!views) {
+        return res.status(404).end("Document has no views");
+      }
 
       const users = await prisma.user.findMany({
         where: {
@@ -78,20 +111,13 @@ export default async function handle(
         },
       });
 
-      const team = await prisma.team.findUnique({
-        where: { id: teamId },
-        select: { plan: true },
-      });
-
       // get the numPages from document
       const numPages =
-        document?.versions?.[0]?.numPages || document?.numPages || 0;
-
-      const views = document?.views || [];
+        document.versions?.[0]?.numPages || document.numPages || 0;
 
       // filter the last 20 views
       const limitedViews =
-        team?.plan === "free" ? views.slice(0, LIMITS.views) : views;
+        team.plan === "free" ? views.slice(0, LIMITS.views) : views;
 
       const durationsPromises = limitedViews?.map((view: { id: string }) => {
         return getViewPageDuration({
@@ -133,6 +159,7 @@ export default async function handle(
       return res.status(200).json({
         viewsWithDuration,
         hiddenViewCount: views.length - limitedViews.length,
+        totalViews: document._count.views || 0,
       });
     } catch (error) {
       log({
