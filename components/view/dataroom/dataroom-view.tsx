@@ -222,6 +222,7 @@ export default function DataroomView({
           viewId={viewData.viewId}
           linkId={link.id}
           documentId={documentData.id}
+          documentName={documentData.name}
           versionNumber={documentData.documentVersionNumber}
           brand={brand}
           dataroomId={dataroom.id}
@@ -235,6 +236,7 @@ export default function DataroomView({
           viewId={viewData.viewId}
           linkId={link.id}
           documentId={documentData.id}
+          documentName={documentData.name}
           allowDownload={link.allowDownload!}
           feedbackEnabled={link.enableFeedback!}
           versionNumber={documentData.documentVersionNumber}

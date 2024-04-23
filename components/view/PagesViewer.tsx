@@ -23,6 +23,7 @@ export default function PagesViewer({
   feedbackEnabled,
   versionNumber,
   brand,
+  documentName,
   dataroomId,
   setDocumentData,
   showPoweredByBanner,
@@ -38,6 +39,7 @@ export default function PagesViewer({
   feedbackEnabled: boolean;
   versionNumber: number;
   brand?: Brand | DataroomBrand;
+  documentName?: string;
   dataroomId?: string;
   setDocumentData?: (data: any) => void;
   showPoweredByBanner?: boolean;
@@ -192,6 +194,7 @@ export default function PagesViewer({
         brand={brand}
         viewId={viewId}
         linkId={linkId}
+        documentName={documentName}
         embeddedLinks={pages[pageNumber - 1]?.embeddedLinks}
         isDataroom={dataroomId ? true : false}
         setDocumentData={setDocumentData}

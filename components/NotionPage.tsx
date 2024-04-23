@@ -12,6 +12,7 @@ export const NotionPage = ({
   viewId,
   linkId,
   documentId,
+  documentName,
   versionNumber,
   brand,
   dataroomId,
@@ -23,6 +24,7 @@ export const NotionPage = ({
   linkId: string;
   documentId: string;
   versionNumber: number;
+  documentName?: string;
   brand?: Brand | DataroomBrand;
   dataroomId?: string;
   setDocumentData?: (data: any) => void;
@@ -118,6 +120,7 @@ export const NotionPage = ({
       <div className="bg-white">
         <Nav
           brand={brand}
+          documentName={documentName}
           isDataroom={dataroomId ? true : false}
           setDocumentData={setDocumentData}
           type="notion"
