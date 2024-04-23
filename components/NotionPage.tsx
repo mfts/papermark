@@ -4,7 +4,7 @@ import { NotionRenderer } from "react-notion-x";
 // core styles shared by all of react-notion-x (required)
 import "react-notion-x/src/styles.css";
 import Nav from "./view/nav";
-import { Brand } from "@prisma/client";
+import { Brand, DataroomBrand } from "@prisma/client";
 
 export const NotionPage = ({
   recordMap,
@@ -12,8 +12,11 @@ export const NotionPage = ({
   viewId,
   linkId,
   documentId,
+  documentName,
   versionNumber,
   brand,
+  dataroomId,
+  setDocumentData,
 }: {
   recordMap: ExtendedRecordMap;
   rootPageId?: string;
@@ -21,7 +24,10 @@ export const NotionPage = ({
   linkId: string;
   documentId: string;
   versionNumber: number;
-  brand?: Brand;
+  documentName?: string;
+  brand?: Brand | DataroomBrand;
+  dataroomId?: string;
+  setDocumentData?: (data: any) => void;
 }) => {
   const [pageNumber, setPageNumber] = useState<number>(1); // start on first page
   const [maxScrollPercentage, setMaxScrollPercentage] = useState<number>(0);
@@ -112,7 +118,13 @@ export const NotionPage = ({
   return (
     <>
       <div className="bg-white">
-        <Nav brand={brand} type="notion" />
+        <Nav
+          brand={brand}
+          documentName={documentName}
+          isDataroom={dataroomId ? true : false}
+          setDocumentData={setDocumentData}
+          type="notion"
+        />
 
         <div>
           <NotionRenderer
