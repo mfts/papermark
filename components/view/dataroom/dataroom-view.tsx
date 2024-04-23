@@ -104,7 +104,7 @@ export default function DataroomView({
         setIsLoading(false);
       } else {
         const { viewId, file, pages } = fetchData as DEFAULT_DOCUMENT_VIEW_TYPE;
-        plausible("documentViewed"); // track the event
+        plausible("dataroomViewed"); // track the event
         analytics.identify(
           userEmail ?? verifiedEmail ?? data.email ?? undefined,
         );
