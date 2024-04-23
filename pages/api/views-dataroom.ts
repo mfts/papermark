@@ -5,6 +5,9 @@ import { newId } from "@/lib/id-helper";
 import { sendVerificationEmail } from "@/lib/emails/send-email-verification";
 import { getFile } from "@/lib/files/get-file";
 import sendNotification from "@/lib/api/notification-helper";
+import { parsePageId } from "notion-utils";
+import notion from "@/lib/notion";
+import { record } from "zod";
 
 export default async function handle(
   req: NextApiRequest,
@@ -239,12 +242,13 @@ export default async function handle(
         viewId: newDataroomView.id,
         file: null,
         pages: null,
+        notionData: null,
       };
 
       return res.status(200).json(returnObject);
     } catch (error) {
       log({
-        message: `Failed to record view for ${linkId}. \n\n ${error}`,
+        message: `Failed to record view for dataroom link: ${linkId}. \n\n ${error}`,
         type: "error",
         mention: true,
       });
@@ -270,9 +274,10 @@ export default async function handle(
     console.timeEnd("create-view");
 
     // if document version has pages, then return pages
+    // otherwise, check if notion document,
+    // if notion, return recordMap from document version file
     // otherwise, return file from document version
-    let documentPages, documentVersion;
-    // let documentPagesPromise, documentVersionPromise;
+    let documentPages, documentVersion, recordMap;
     if (hasPages) {
       // get pages from document version
       console.time("get-pages");
@@ -306,12 +311,23 @@ export default async function handle(
         select: {
           file: true,
           storageType: true,
+          type: true,
         },
       });
 
       if (!documentVersion) {
         res.status(404).json({ message: "Document version not found." });
         return;
+      }
+
+      if (documentVersion.type === "notion") {
+        let notionPageId = parsePageId(documentVersion.file, { uuid: false });
+        if (!notionPageId) {
+          notionPageId = "";
+        }
+
+        const pageId = notionPageId;
+        recordMap = await notion.getPage(pageId);
       }
 
       documentVersion.file = await getFile({
@@ -324,8 +340,12 @@ export default async function handle(
     const returnObject = {
       message: "View recorded",
       viewId: newView.id,
-      file: documentVersion ? documentVersion.file : null,
+      file:
+        documentVersion && documentVersion.type === "pdf"
+          ? documentVersion.file
+          : null,
       pages: documentPages ? documentPages : null,
+      notionData: recordMap ? { recordMap } : null,
     };
 
     return res.status(200).json(returnObject);

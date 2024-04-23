@@ -67,7 +67,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
   // iterate the link.documents and extract type and file and rest of the props
   let documents = [];
   for (const document of link.dataroom.documents) {
-    const { type, file, ...versionWithoutTypeAndFile } =
+    const { file, ...versionWithoutTypeAndFile } =
       document.document.versions[0];
 
     const newDocument = {
