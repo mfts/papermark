@@ -51,14 +51,10 @@ export default async function handle(
         return res.status(404).json({ message: "Folder not found" });
       }
 
-      console.log("Folder old path", folder.path);
-
       // take the old path and replace the last part with the new name
       const newPath = folder.path.split("/");
       newPath.pop();
       newPath.push(slugify(name));
-
-      console.log("Folder new path", newPath.join("/"));
 
       await prisma.folder.update({
         where: {
@@ -76,64 +72,9 @@ export default async function handle(
     } catch (error) {
       errorhandler(error, res);
     }
-  } else if (req.method === "DELETE") {
-    // DELETE /api/teams/:teamId/folders/manage
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      res.status(401).end("Unauthorized");
-      return;
-    }
-
-    const { teamId } = req.query as { teamId: string };
-    const { folderId } = req.body as { folderId: string };
-
-    const userId = (session.user as CustomUser).id;
-
-    try {
-      const team = await prisma.team.findUnique({
-        where: {
-          id: teamId,
-          users: {
-            some: {
-              userId: userId,
-            },
-          },
-        },
-      });
-
-      if (!team) {
-        return res.status(401).end("Unauthorized");
-      }
-
-      const documents = await prisma.document.findMany({
-        where: {
-          folderId: folderId,
-          teamId: teamId,
-        },
-        select: {
-          id: true,
-        },
-      });
-
-      if (documents.length > 0) {
-        return res
-          .status(400)
-          .json({ message: "Folder contains documents. Move them first" });
-      }
-
-      await prisma.folder.delete({
-        where: {
-          id: folderId,
-        },
-      });
-
-      return res.status(204).end(); // 204 No Content response for successful deletes
-    } catch (error) {
-      errorhandler(error, res);
-    }
   } else {
-    // We only allow GET, PUT and DELETE requests
-    res.setHeader("Allow", ["PUT", "DELETE"]);
+    // We only allow PUT requests
+    res.setHeader("Allow", ["PUT"]);
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 }

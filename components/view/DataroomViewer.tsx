@@ -36,6 +36,7 @@ type DataroomDocument = {
   name: string;
   versions: {
     id: string;
+    type: string;
     versionNumber: number;
     hasPages: boolean;
   }[];
@@ -61,6 +62,7 @@ export default function DataroomViewer({
       id: string;
       name: string;
       hasPages: boolean;
+      documentType: "pdf" | "notion";
       documentVersionId: string;
       documentVersionNumber: number;
     } | null>

@@ -84,6 +84,9 @@ export function AddFolderModal({
       analytics.capture("Folder Added", { folderName: folderName });
       toast.success("Folder added successfully! 🎉");
 
+      mutate(
+        `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}?root=true`,
+      );
       mutate(`/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}`);
       mutate(
         `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}${parentFolderPath}`,

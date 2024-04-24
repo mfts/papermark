@@ -76,7 +76,7 @@ export default async function handle(
     }
   } else {
     // We only allow POST requests
-    res.setHeader("Allow", ["GET", "POST"]);
+    res.setHeader("Allow", ["GET"]);
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 }

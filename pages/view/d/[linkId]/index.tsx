@@ -67,7 +67,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
   // iterate the link.documents and extract type and file and rest of the props
   let documents = [];
   for (const document of link.dataroom.documents) {
-    const { type, file, ...versionWithoutTypeAndFile } =
+    const { file, ...versionWithoutTypeAndFile } =
       document.document.versions[0];
 
     const newDocument = {
@@ -135,7 +135,7 @@ export default function ViewPage({
           <meta
             property="og:url"
             key="og-url"
-            content={`https://www.papermark.io/view/${router.query.linkId}`}
+            content={`https://www.papermark.io/view/d/${router.query.linkId}`}
           />
         </Head>
         {meta && meta.enableCustomMetatag ? (
@@ -184,7 +184,7 @@ export default function ViewPage({
           <meta
             property="og:url"
             key="og-url"
-            content={`https://www.papermark.io/view/${link.id}`}
+            content={`https://www.papermark.io/view/d/${link.id}`}
           />
         </Head>
         {enableCustomMetatag ? (
@@ -213,7 +213,7 @@ export default function ViewPage({
         <meta
           property="og:url"
           key="og-url"
-          content={`https://www.papermark.io/view/${link.id}`}
+          content={`https://www.papermark.io/view/d/${link.id}`}
         />
       </Head>
       {enableCustomMetatag ? (

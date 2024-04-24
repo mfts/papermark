@@ -5,7 +5,7 @@ import { Tinybird } from "@chronark/zod-bird";
 const tb = new Tinybird({ token: process.env.TINYBIRD_TOKEN! });
 
 export const getTotalAvgPageDuration = tb.buildPipe({
-  pipe: "get_total_average_page_duration__v4",
+  pipe: "get_total_average_page_duration__v5",
   parameters: z.object({
     documentId: z.string(),
     excludedLinkIds: z.array(z.string()),
@@ -20,7 +20,7 @@ export const getTotalAvgPageDuration = tb.buildPipe({
 });
 
 export const getViewPageDuration = tb.buildPipe({
-  pipe: "get_page_duration_per_view__v4",
+  pipe: "get_page_duration_per_view__v5",
   parameters: z.object({
     documentId: z.string(),
     viewId: z.string(),
