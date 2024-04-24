@@ -113,10 +113,7 @@ export default function Home() {
                   </div>
                   <div className="pt-8 space-x-2">
                     <Link href="/login">
-                      <Button
-                        variant="outline"
-                        className="text-base text-white rounded-3xl"
-                      >
+                      <Button className="text-base rounded-3xl bg-black text-white hover:bg-black/90">
                         Create Data Room
                       </Button>
                     </Link>
