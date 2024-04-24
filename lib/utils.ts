@@ -53,7 +53,10 @@ export const log = async ({
   mention?: boolean;
 }) => {
   /* If in development or env variable not set, log to the console */
-  if (process.env.NODE_ENV === "development" || !process.env.PPMK_SLACK_WEBHOOK_URL) {
+  if (
+    process.env.NODE_ENV === "development" ||
+    !process.env.PPMK_SLACK_WEBHOOK_URL
+  ) {
     console.log(message);
     return;
   }
@@ -232,11 +235,15 @@ export const getFirstAndLastDay = (day: number) => {
   }
 };
 
-export const formatDate = (dateString: string) => {
+export const formatDate = (dateString: string, updateDate?: boolean) => {
   return new Date(dateString).toLocaleDateString("en-US", {
     day: "numeric",
     month: "long",
-    year: "numeric",
+    year:
+      updateDate &&
+      new Date(dateString).getFullYear() === new Date().getFullYear()
+        ? undefined
+        : "numeric",
     timeZone: "UTC",
   });
 };
@@ -419,12 +426,12 @@ export const generateGravatarHash = (email: string | null): string => {
 };
 
 export const sanitizeAllowDenyList = (list: string): string[] => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const domainRegex = /^@[^\s@]+\.[^\s@]+$/;
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const domainRegex = /^@[^\s@]+\.[^\s@]+$/;
 
-    return list
-      .split("\n")
-      .map(item => item.trim().replace(/,$/, '')) // Trim whitespace and remove trailing commas
-      .filter(item => item !== "") // Remove empty items
-      .filter(item => emailRegex.test(item) || domainRegex.test(item)); // Remove items that don't match email or domain regex
-  };
+  return list
+    .split("\n")
+    .map((item) => item.trim().replace(/,$/, "")) // Trim whitespace and remove trailing commas
+    .filter((item) => item !== "") // Remove empty items
+    .filter((item) => emailRegex.test(item) || domainRegex.test(item)); // Remove items that don't match email or domain regex
+};

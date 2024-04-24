@@ -63,5 +63,23 @@ export const mdxComponents: MDXComponents = {
       </Link>
     );
   },
+  h2: ({ children, ...props }) => (
+    <h2
+      data-mdx-heading
+      className="text-2xl font-semibold text-black"
+      id={props.id}
+    >
+      {children}
+    </h2>
+  ),
+  h3: ({ children, ...props }) => (
+    <h3
+      data-mdx-heading
+      className="text-xl font-semibold text-black"
+      id={props.id}
+    >
+      {children}
+    </h3>
+  ),
   // any other components you want to use in your markdown
 };

@@ -59,7 +59,7 @@ export default async function PagePage({
           </p>
           <div className="pt-8 space-x-2">
             <Link href="/login">
-              <Button className="text-white text-balance bg-gray-900 rounded-3xl hover:bg-gray-800 justify-center text-balance">
+              <Button className="text-white text-balance bg-gray-900 rounded-3xl hover:bg-gray-800 justify-center">
                 {page.button}
               </Button>
             </Link>
@@ -99,7 +99,7 @@ export default async function PagePage({
               </div>
               <div className="pt-8 space-x-2">
                 <Link href="/login">
-                  <Button className="text-white text-balance bg-gray-900 rounded-3xl hover:bg-gray-800 justify-center text-balance">
+                  <Button className="text-white text-balance bg-gray-900 rounded-3xl hover:bg-gray-800 justify-center">
                     {page.button}
                   </Button>
                 </Link>
@@ -171,7 +171,7 @@ export default async function PagePage({
               </div>
               <div className="pt-8 space-x-2">
                 <Link href="/login">
-                  <Button className="text-white text-balance bg-gray-900 rounded-3xl hover:bg-gray-800 justify-center text-balance">
+                  <Button className="text-white text-balance bg-gray-900 rounded-3xl hover:bg-gray-800 justify-center">
                     {page.button}
                   </Button>
                 </Link>

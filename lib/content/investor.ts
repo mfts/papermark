@@ -16,6 +16,10 @@ type Investor = {
 // this means getPosts() will only be called once per page build, even though we may call it multiple times
 // when rendering the page.
 export const getInvestors = cache(async () => {
+  if (!process.env.CONTENT_BASE_URL) {
+    return [];
+  }
+
   const response = await fetch(
     `${process.env.CONTENT_BASE_URL}/api/investors`,
     {
