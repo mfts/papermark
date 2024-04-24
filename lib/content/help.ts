@@ -1,7 +1,7 @@
 import matter from "gray-matter";
 import { cache } from "react";
 
-type Post = {
+type Article = {
   data: {
     title: string;
     summary: string;
@@ -10,14 +10,16 @@ type Post = {
     image: string;
     slug: string;
     published: boolean;
+    categories?: string[];
   };
   body: string;
+  toc: { text: string; level: number }[];
 };
 
 const GITHUB_CONTENT_TOKEN = process.env.GITHUB_CONTENT_TOKEN;
 const GITHUB_CONTENT_REPO = process.env.GITHUB_CONTENT_REPO;
 
-export const getHelpPosts = cache(async () => {
+export const getHelpArticles = cache(async () => {
   const apiUrl = `https://api.github.com/repos/${GITHUB_CONTENT_REPO}/contents/content/help`;
   const headers = {
     Authorization: `Bearer ${GITHUB_CONTENT_TOKEN}`,
@@ -28,7 +30,7 @@ export const getHelpPosts = cache(async () => {
   const response = await fetch(apiUrl, { headers });
   const data = await response.json();
 
-  const posts = await Promise.all(
+  const articles = await Promise.all(
     data
       .filter((file: any) => file.name.endsWith(".mdx"))
       .map(async (file: any) => {
@@ -42,15 +44,40 @@ export const getHelpPosts = cache(async () => {
           return null;
         }
 
-        return { data, body: fileContent } as Post;
+        const headingItems = await getHeadings(fileContent);
+
+        return { data, body: fileContent, toc: headingItems } as Article;
       }),
   );
 
-  const filteredPosts = posts.filter((post: Post) => post !== null) as Post[];
-  return filteredPosts;
+  const filteredArticles = articles.filter(
+    (article: Article) => article !== null,
+  ) as Article[];
+  return filteredArticles;
 });
 
-export async function getHelpPost(slug: string) {
-  const posts = await getHelpPosts();
-  return posts.find((post) => post?.data.slug === slug);
+export async function getHelpArticle(slug: string) {
+  const articles = await getHelpArticles();
+  return articles.find((article) => article?.data.slug === slug);
+}
+
+async function getHeadings(source: string) {
+  // Get each line individually, and filter out anything that
+  // isn't a heading.
+  const headingLines = source.split("\n").filter((line) => {
+    return line.match(/^###*\s/);
+  });
+
+  // Transform the string '## Some text' into an object
+  // with the shape '{ text: 'Some text', level: 2 }'
+  return headingLines.map((raw) => {
+    const text = raw.replace(/^###*\s/, "");
+    // I only care about h2.
+    // If I wanted more levels, I'd need to count the
+    // number of #s.
+    // match only h2
+    const level = raw.slice(0, 3) === "###" ? 3 : 2;
+
+    return { text, level };
+  });
 }
