@@ -40,6 +40,7 @@ export default async function handle(
           isArchived: true,
           enableCustomMetatag: true,
           enableFeedback: true,
+          enableScreenshotProtection: true,
           metaTitle: true,
           metaDescription: true,
           metaImage: true,

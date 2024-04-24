@@ -95,6 +95,7 @@
     "react-draggable": "^4.4.6",
     "react-dropzone": "^14.2.3",
     "react-email": "^2.1.1",
+    "react-hotkeys-hook": "^4.5.0",
     "react-intersection-observer": "^9.8.2",
     "react-notion-x": "^6.16.0",
     "react-pdf": "^7.7.1",

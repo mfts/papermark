@@ -81,6 +81,9 @@ export default function LinksTable({
         ? link.enableNotification
         : false,
       enableFeedback: link.enableFeedback ? link.enableFeedback : false,
+      enableScreenshotProtection: link.enableScreenshotProtection
+        ? link.enableScreenshotProtection
+        : false,
       enableCustomMetatag: link.enableCustomMetatag
         ? link.enableCustomMetatag
         : false,
