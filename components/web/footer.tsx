@@ -12,6 +12,7 @@ const navigation = {
   ],
   resources: [
     { name: "Privacy Policy", href: "/privacy" },
+    { name: "Terms of Service", href: "/terms" },
     { name: "Launch Week", href: "/launch-week" },
   ],
   tools: [

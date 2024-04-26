@@ -53,6 +53,7 @@ export default async function middleware(req: NextRequest, ev: NextFetchEvent) {
     path !== "/v1" &&
     path !== "/register" &&
     path !== "/privacy" &&
+    path !== "/terms" &&
     path !== "/oss-friends" &&
     path !== "/pricing" &&
     path !== "/docsend-alternatives" &&
