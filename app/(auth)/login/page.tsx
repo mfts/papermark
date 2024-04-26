@@ -163,7 +163,7 @@ export default function Login() {
           </div>
           <p className=" mt-10 text-xs text-muted-foreground w-full max-w-md px-4 sm:px-16">
             By clicking continue, you acknowledge that you have read and agree
-            to Papermark's{" "}
+            to Papermark&apos;s{" "}
             <Link href="/terms" className="underline">
               Terms of Service
             </Link>{" "}
