@@ -20,6 +20,7 @@ import FeedbackSection from "@/components/links/link-sheet/feedback-section";
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { usePlan } from "@/lib/swr/use-billing";
 import QuestionSection from "./question-section";
+import ScreenshotProtectionSection from "./screenshot-protection-section";
 
 export const LinkOptions = ({
   data,
@@ -34,10 +35,18 @@ export const LinkOptions = ({
 
   const [openUpgradeModal, setOpenUpgradeModal] = useState<boolean>(false);
   const [trigger, setTrigger] = useState<string>("");
+  const [upgradePlan, setUpgradePlan] = useState<"Pro" | "Business">("Pro");
 
-  const handleUpgradeStateChange = (state: boolean, trigger: string) => {
+  const handleUpgradeStateChange = (
+    state: boolean,
+    trigger: string,
+    plan?: "Pro" | "Business",
+  ) => {
     setOpenUpgradeModal(state);
     setTrigger(trigger);
+    if (plan) {
+      setUpgradePlan(plan);
+    }
   };
 
   return (
@@ -76,6 +85,11 @@ export const LinkOptions = ({
               handleUpgradeStateChange={handleUpgradeStateChange}
             />
             <PasswordSection {...{ data, setData }} />
+            <ScreenshotProtectionSection
+              {...{ data, setData }}
+              hasFreePlan={isNotBusiness}
+              handleUpgradeStateChange={handleUpgradeStateChange}
+            />
             <FeedbackSection {...{ data, setData }} />
             <QuestionSection
               {...{ data, setData }}
@@ -85,9 +99,9 @@ export const LinkOptions = ({
           </AccordionContent>
         </AccordionItem>
       </Accordion>
-      {hasFreePlan ? (
+      {hasFreePlan || isNotBusiness ? (
         <UpgradePlanModal
-          clickedPlan="Pro"
+          clickedPlan={upgradePlan}
           open={openUpgradeModal}
           setOpen={setOpenUpgradeModal}
           trigger={trigger}

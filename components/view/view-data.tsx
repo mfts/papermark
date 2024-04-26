@@ -23,6 +23,7 @@ export default function ViewData({
   showPoweredByBanner?: boolean;
 }) {
   const { document } = link;
+
   return notionData?.recordMap ? (
     <NotionPage
       recordMap={notionData.recordMap}
@@ -42,6 +43,7 @@ export default function ViewData({
       assistantEnabled={document.assistantEnabled}
       allowDownload={link.allowDownload!}
       feedbackEnabled={link.enableFeedback!}
+      screenshotProtectionEnabled={link.enableScreenshotProtection!}
       versionNumber={document.versions[0].versionNumber}
       brand={brand}
       showPoweredByBanner={showPoweredByBanner}

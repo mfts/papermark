@@ -239,6 +239,7 @@ export default function DataroomView({
           documentName={documentData.name}
           allowDownload={link.allowDownload!}
           feedbackEnabled={link.enableFeedback!}
+          screenshotProtectionEnabled={link.enableScreenshotProtection!}
           versionNumber={documentData.documentVersionNumber}
           brand={brand}
           dataroomId={dataroom.id}

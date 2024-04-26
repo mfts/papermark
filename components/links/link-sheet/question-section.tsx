@@ -36,7 +36,11 @@ export default function QuestionSection({
   data: DEFAULT_LINK_TYPE;
   setData: Dispatch<SetStateAction<DEFAULT_LINK_TYPE>>;
   hasFreePlan: boolean;
-  handleUpgradeStateChange: (state: boolean, trigger: string) => void;
+  handleUpgradeStateChange: (
+    state: boolean,
+    trigger: string,
+    plan?: "Pro" | "Business",
+  ) => void;
 }) {
   const { enableQuestion, questionText, questionType } = data;
   const [enabled, setEnabled] = useState<boolean>(false);
@@ -68,14 +72,15 @@ export default function QuestionSection({
                     handleUpgradeStateChange(
                       true,
                       "link_sheet_question_section",
+                      "Business",
                     )
                 : undefined
             }
           >
             Feedback Question
-            <span>
+            {/* <span>
               <HelpCircleIcon className="text-muted-foreground h-4 w-4" />
-            </span>
+            </span> */}
             {hasFreePlan && (
               <span className="bg-background text-foreground ring-1 ring-gray-800 dark:ring-gray-500 rounded-full px-2 py-0.5 text-xs ml-2">
                 Business
@@ -88,7 +93,11 @@ export default function QuestionSection({
           onClick={
             hasFreePlan
               ? () =>
-                  handleUpgradeStateChange(true, "link_sheet_question_section")
+                  handleUpgradeStateChange(
+                    true,
+                    "link_sheet_question_section",
+                    "Business",
+                  )
               : undefined
           }
           className={hasFreePlan ? "opacity-50" : undefined}

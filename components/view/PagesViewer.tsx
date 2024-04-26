@@ -10,6 +10,7 @@ import { useRouter } from "next/router";
 import { PoweredBy } from "./powered-by";
 import Question from "./question";
 import { cn } from "@/lib/utils";
+import { ScreenProtector } from "./ScreenProtection";
 
 const DEFAULT_PRELOADED_IMAGES_NUM = 10;
 
@@ -21,6 +22,7 @@ export default function PagesViewer({
   assistantEnabled,
   allowDownload,
   feedbackEnabled,
+  screenshotProtectionEnabled,
   versionNumber,
   brand,
   documentName,
@@ -37,6 +39,7 @@ export default function PagesViewer({
   assistantEnabled?: boolean;
   allowDownload: boolean;
   feedbackEnabled: boolean;
+  screenshotProtectionEnabled: boolean;
   versionNumber: number;
   brand?: Brand | DataroomBrand;
   documentName?: string;
@@ -240,7 +243,7 @@ export default function PagesViewer({
           {pageNumber <= numPages &&
             (pages && loadedImages[pageNumber - 1] ? (
               pages.map((page, index) => {
-                // contains cloudfront.net in the file path, then use img tag otherwise use next/image
+                // served from cloudfront, then use img tag otherwise use next/image
                 if (page.file.toLowerCase().includes("files.papermark.io")) {
                   return (
                     <img
@@ -291,6 +294,7 @@ export default function PagesViewer({
         {feedbackEnabled && pageNumber !== numPagesWithFeedback ? (
           <Toolbar viewId={viewId} pageNumber={pageNumber} />
         ) : null}
+        {screenshotProtectionEnabled ? <ScreenProtector /> : null}
         {showPoweredByBanner ? <PoweredBy linkId={linkId} /> : null}
       </div>
     </>
