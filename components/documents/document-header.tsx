@@ -23,6 +23,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import MoreVertical from "@/components/shared/icons/more-vertical";
 import { Sparkles, TrashIcon } from "lucide-react";
+import { DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
+import { useTeam } from "@/context/team-context";
 
 export default function DocumentHeader({
   prismaDocument,
@@ -36,6 +38,7 @@ export default function DocumentHeader({
   actions?: React.ReactNode[];
 }) {
   const router = useRouter();
+  const teamInfo = useTeam();
   const { theme, systemTheme } = useTheme();
   const isLight =
     theme === "light" || (theme === "system" && systemTheme === "light");
@@ -185,6 +188,15 @@ export default function DocumentHeader({
       fetch(`/api/teams/${teamId}/documents/${documentId}`, {
         method: "DELETE",
       }).then(() => {
+        mutate(`/api/teams/${teamInfo?.currentTeam?.id}/documents`, null, {
+          populateCache: (_, docs) => {
+            return docs.filter(
+              (doc: DocumentWithLinksAndLinkCountAndViewCount) =>
+                doc.id !== documentId,
+            );
+          },
+          revalidate: false,
+        });
         setIsFirstClick(false);
         setMenuOpen(false);
         router.push("/documents");
