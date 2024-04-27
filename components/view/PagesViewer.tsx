@@ -10,7 +10,7 @@ import { useRouter } from "next/router";
 import { PoweredBy } from "./powered-by";
 import Question from "./question";
 import { cn } from "@/lib/utils";
-import CustomContextMenu, { ScreenProtector } from "./ScreenProtection";
+import { ScreenProtector } from "./ScreenProtection";
 import { toast } from "sonner";
 
 const DEFAULT_PRELOADED_IMAGES_NUM = 10;
