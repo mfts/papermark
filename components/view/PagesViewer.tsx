@@ -10,7 +10,8 @@ import { useRouter } from "next/router";
 import { PoweredBy } from "./powered-by";
 import Question from "./question";
 import { cn } from "@/lib/utils";
-import { ScreenProtector } from "./ScreenProtection";
+import CustomContextMenu, { ScreenProtector } from "./ScreenProtection";
+import { toast } from "sonner";
 
 const DEFAULT_PRELOADED_IMAGES_NUM = 10;
 
@@ -135,6 +136,21 @@ export default function PagesViewer({
     }
   };
 
+  const handleContextMenu = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (!screenshotProtectionEnabled) {
+      return null;
+    }
+
+    event.preventDefault();
+    // Close menu on click anywhere
+    const clickHandler = () => {
+      document.removeEventListener("click", clickHandler);
+    };
+    document.addEventListener("click", clickHandler);
+
+    toast.info("Context menu has been disabled.");
+  };
+
   // Function to preload next image
   const preloadImage = (index: number) => {
     if (index < numPages && !loadedImages[index]) {
@@ -239,7 +255,10 @@ export default function PagesViewer({
           </div>
         </button>
 
-        <div className="flex justify-center mx-auto relative h-full w-full">
+        <div
+          className="flex justify-center mx-auto relative h-full w-full"
+          onContextMenu={handleContextMenu}
+        >
           {pageNumber <= numPages &&
             (pages && loadedImages[pageNumber - 1] ? (
               pages.map((page, index) => {
