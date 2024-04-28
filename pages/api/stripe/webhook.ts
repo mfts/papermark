@@ -178,12 +178,14 @@ export default async function webhookHandler(
           const subscriptionDeleted = event.data.object as Stripe.Subscription;
 
           const stripeId = subscriptionDeleted.customer.toString();
+          const subscriptionId = subscriptionDeleted.id;
 
           // If a project deletes their subscription, reset their usage limit in the database to 1000.
           // Also remove the root domain redirect for all their domains from Redis.
           const team = await prisma.team.update({
             where: {
               stripeId,
+              subscriptionId,
             },
             data: {
               plan: "free",
@@ -199,7 +201,9 @@ export default async function webhookHandler(
               message:
                 "Team with stripeId: `" +
                 stripeId +
-                "`not found in Stripe webhook `customer.subscription.deleted` callback",
+                "` and subscriptionId `" +
+                subscriptionId +
+                "` not found in Stripe webhook `customer.subscription.deleted` callback",
               type: "error",
             });
             return;
