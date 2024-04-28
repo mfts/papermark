@@ -159,7 +159,7 @@ export default async function handle(
         payload: {
           dataroomId: dataroomId,
           dataroomDocumentId: document.id,
-          linkId: document.dataroom.links[0].id,
+          linkId: document.dataroom.links[0].id ?? "",
           senderUserId: userId,
         },
       });
