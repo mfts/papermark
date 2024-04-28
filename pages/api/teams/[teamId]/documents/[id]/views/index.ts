@@ -27,6 +27,8 @@ export default async function handle(
     const limit = parseInt((req.query.limit as string) || "10", 10);
     const offset = (page - 1) * limit;
 
+    console.log("offset", offset);
+
     const userId = (session.user as CustomUser).id;
 
     try {
@@ -117,7 +119,7 @@ export default async function handle(
 
       // filter the last 20 views
       const limitedViews =
-        team.plan === "free" ? views.slice(0, LIMITS.views) : views;
+        team.plan === "free" && offset >= LIMITS.views ? [] : views;
 
       const durationsPromises = limitedViews?.map((view: { id: string }) => {
         return getViewPageDuration({

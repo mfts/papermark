@@ -243,8 +243,13 @@ export default function VisitorsTable({ numPages }: { numPages: number }) {
       {/* Pagination Controls */}
       <div className="mt-2 w-full flex items-center">
         <div className="text-sm w-full">
-          Showing <span className="font-semibold">10</span> of{" "}
-          {views?.totalViews} visits
+          Showing{" "}
+          <span className="font-semibold">
+            {views?.totalViews && views?.totalViews > 10
+              ? 10
+              : views?.totalViews}
+          </span>{" "}
+          of {views?.totalViews} visits
         </div>
         <Pagination className="justify-end">
           <PaginationContent>
