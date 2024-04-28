@@ -10,8 +10,6 @@ export default async function handle(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
-  res.status(200).json({ message: "OK" });
-  return
   // We only allow POST requests
   if (req.method !== "POST") {
     res.status(405).json({ message: "Method Not Allowed" });
