@@ -224,7 +224,10 @@ export default function LinkSheet({
                     </div>
 
                     <div className="space-y-2">
-                      <DomainSection {...{ data, setData, domains }} />
+                      <DomainSection
+                        {...{ data, setData, domains }}
+                        linkType={linkType}
+                      />
                     </div>
 
                     <div className="flex items-center relative">
