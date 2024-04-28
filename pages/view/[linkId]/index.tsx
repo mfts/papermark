@@ -120,7 +120,7 @@ export default function ViewPage({
       <>
         <CustomMetatag
           enableBranding={meta?.enableCustomMetatag ?? false}
-          title={meta?.metaTitle ?? null}
+          title={meta?.metaTitle ?? link?.document?.name ?? 'Papermark Document'}
           description={meta?.metaDescription ?? null}
           imageUrl={meta?.metaImage ?? null}
           url={`https://www.papermark.io/view/${router.query.linkId}`}
