@@ -10,7 +10,7 @@ export const runtime = "edge";
  */
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
-  const title = searchParams.get("title") || "Papermark";
+  const title = searchParams.get("title") || "Papermark Document";
   const Inter = await fetch(
     new URL("@/public/_static/Inter-Bold.ttf", import.meta.url),
   ).then((res) => res.arrayBuffer());
