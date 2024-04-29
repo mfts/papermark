@@ -40,7 +40,7 @@ export function UpgradePlanModal({
         "Custom branding",
         "1-year analytics retention",
         "Advanced access controls",
-        "Folders",
+        "Folder organization",
       ];
     }
 
@@ -48,6 +48,7 @@ export function UpgradePlanModal({
       return [
         "3 users",
         "1 dataroom",
+        "Multi-file sharing",
         "Custom domain",
         "Unlimited documents",
         "Unlimited subfolder levels",
