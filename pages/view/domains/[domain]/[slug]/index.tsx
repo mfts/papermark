@@ -109,23 +109,18 @@ export default function ViewPage({
     email: string;
   };
 
-  console.log("session", session);
-
   if (!link || status === "loading") {
     return (
       <>
-        {meta && meta.metaUrl ? (
-          <Head>
-            <meta property="og:url" key="og-url" content={meta.metaUrl} />
-          </Head>
-        ) : null}
-        {meta && meta.enableCustomMetatag ? (
-          <CustomMetatag
-            title={meta.metaTitle}
-            description={meta.metaDescription}
-            imageUrl={meta.metaImage}
-          />
-        ) : null}
+        <CustomMetatag
+          enableBranding={meta?.enableCustomMetatag ?? false}
+          title={
+            meta?.metaTitle ?? link?.document?.name ?? "Papermark Document"
+          }
+          description={meta?.metaDescription ?? null}
+          imageUrl={meta?.metaImage ?? null}
+          url={meta?.metaUrl ?? ""}
+        />
         <div className="h-screen flex items-center justify-center">
           <LoadingSpinner className="h-20 w-20" />
         </div>
@@ -160,18 +155,13 @@ export default function ViewPage({
   if (emailProtected || linkPassword) {
     return (
       <>
-        {meta && meta.metaUrl ? (
-          <Head>
-            <meta property="og:url" key="og-url" content={meta.metaUrl} />
-          </Head>
-        ) : null}
-        {enableCustomMetatag ? (
-          <CustomMetatag
-            title={metaTitle}
-            description={metaDescription}
-            imageUrl={metaImage}
-          />
-        ) : null}
+        <CustomMetatag
+          enableBranding={enableCustomMetatag ?? false}
+          title={metaTitle}
+          description={metaDescription}
+          imageUrl={metaImage}
+          url={meta?.metaUrl ?? ""}
+        />
         <DocumentView
           link={link}
           userEmail={userEmail}
@@ -188,18 +178,13 @@ export default function ViewPage({
 
   return (
     <>
-      {meta && meta.metaUrl ? (
-        <Head>
-          <meta property="og:url" key="og-url" content={meta.metaUrl} />
-        </Head>
-      ) : null}
-      {enableCustomMetatag ? (
-        <CustomMetatag
-          title={metaTitle}
-          description={metaDescription}
-          imageUrl={metaImage}
-        />
-      ) : null}
+      <CustomMetatag
+        enableBranding={enableCustomMetatag ?? false}
+        title={metaTitle}
+        description={metaDescription}
+        imageUrl={metaImage}
+        url={meta?.metaUrl ?? ""}
+      />
       <DocumentView
         link={link}
         userEmail={userEmail}
