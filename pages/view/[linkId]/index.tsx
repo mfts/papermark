@@ -118,20 +118,15 @@ export default function ViewPage({
   if (!link || status === "loading" || router.isFallback) {
     return (
       <>
-        <Head>
-          <meta
-            property="og:url"
-            key="og-url"
-            content={`https://www.papermark.io/view/${router.query.linkId}`}
-          />
-        </Head>
-        {meta && meta.enableCustomMetatag ? (
-          <CustomMetatag
-            title={meta.metaTitle}
-            description={meta.metaDescription}
-            imageUrl={meta.metaImage}
-          />
-        ) : null}
+        <CustomMetatag
+          enableBranding={meta?.enableCustomMetatag ?? false}
+          title={
+            meta?.metaTitle ?? link?.document?.name ?? "Papermark Document"
+          }
+          description={meta?.metaDescription ?? null}
+          imageUrl={meta?.metaImage ?? null}
+          url={`https://www.papermark.io/view/${router.query.linkId}`}
+        />
         <div className="h-screen flex items-center justify-center">
           <LoadingSpinner className="h-20 w-20" />
         </div>
@@ -167,20 +162,13 @@ export default function ViewPage({
   if (emailProtected || linkPassword) {
     return (
       <>
-        <Head>
-          <meta
-            property="og:url"
-            key="og-url"
-            content={`https://www.papermark.io/view/${link.id}`}
-          />
-        </Head>
-        {enableCustomMetatag ? (
-          <CustomMetatag
-            title={metaTitle}
-            description={metaDescription}
-            imageUrl={metaImage}
-          />
-        ) : null}
+        <CustomMetatag
+          enableBranding={enableCustomMetatag ?? false}
+          title={metaTitle ?? link.document.name}
+          description={metaDescription}
+          imageUrl={metaImage}
+          url={`https://www.papermark.io/view/${router.query.linkId}`}
+        />
         <DocumentView
           link={link}
           userEmail={userEmail}
@@ -198,20 +186,13 @@ export default function ViewPage({
 
   return (
     <>
-      <Head>
-        <meta
-          property="og:url"
-          key="og-url"
-          content={`https://www.papermark.io/view/${link.id}`}
-        />
-      </Head>
-      {enableCustomMetatag ? (
-        <CustomMetatag
-          title={metaTitle}
-          description={metaDescription}
-          imageUrl={metaImage}
-        />
-      ) : null}
+      <CustomMetatag
+        enableBranding={enableCustomMetatag ?? false}
+        title={metaTitle ?? link.document.name}
+        description={metaDescription}
+        imageUrl={metaImage}
+        url={`https://www.papermark.io/view/${router.query.linkId}`}
+      />
       <DocumentView
         link={link}
         userEmail={userEmail}
