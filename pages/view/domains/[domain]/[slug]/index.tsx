@@ -164,7 +164,7 @@ export default function ViewPage({
         />
         <DocumentView
           link={link}
-          userEmail={userEmail}
+          userEmail={verifiedEmail ?? userEmail}
           userId={userId}
           isProtected={true}
           notionData={notionData}
@@ -187,7 +187,7 @@ export default function ViewPage({
       />
       <DocumentView
         link={link}
-        userEmail={userEmail}
+        userEmail={verifiedEmail ?? userEmail}
         userId={userId}
         isProtected={false}
         notionData={notionData}

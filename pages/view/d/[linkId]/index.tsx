@@ -204,7 +204,7 @@ export default function ViewPage({
       />
       <DataroomView
         link={link}
-        userEmail={userEmail}
+        userEmail={verifiedEmail ?? userEmail}
         userId={userId}
         isProtected={false}
         brand={brand}
