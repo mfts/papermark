@@ -109,14 +109,14 @@ export default function ViewPage({
     email: string;
   };
 
-  console.log("session", session);
-
   if (!link || status === "loading") {
     return (
       <>
         <CustomMetatag
           enableBranding={meta?.enableCustomMetatag ?? false}
-          title={meta?.metaTitle ?? link.document.name}
+          title={
+            meta?.metaTitle ?? link?.document?.name ?? "Papermark Document"
+          }
           description={meta?.metaDescription ?? null}
           imageUrl={meta?.metaImage ?? null}
           url={meta?.metaUrl ?? ""}
