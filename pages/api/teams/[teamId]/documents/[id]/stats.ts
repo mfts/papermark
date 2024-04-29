@@ -86,6 +86,8 @@ export default async function handle(
         });
       }
 
+      const totalViews = views.length;
+
       // limit the number of views to 20 on free plan
       const limitedViews =
         document?.team?.plan === "free" ? views.slice(0, LIMITS.views) : views;
@@ -130,6 +132,7 @@ export default async function handle(
         duration,
         total_duration,
         groupedReactions,
+        totalViews,
       };
 
       return res.status(200).json(stats);
