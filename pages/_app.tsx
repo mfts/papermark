@@ -5,7 +5,6 @@ import type { Session } from "next-auth";
 import { SessionProvider } from "next-auth/react";
 import { Toaster } from "@/components/ui/sonner";
 import Head from "next/head";
-import { Analytics } from "@vercel/analytics/react";
 import PlausibleProvider from "next-plausible";
 import { ThemeProvider } from "@/components/theme-provider";
 import { TeamProvider } from "@/context/team-context";
@@ -92,7 +91,6 @@ export default function App({
             </PlausibleProvider>
           </ThemeProvider>
         </PostHogCustomProvider>
-        <Analytics />
       </SessionProvider>
     </>
   );
