@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/lib/prisma";
-import { checkPassword, log } from "@/lib/utils";
+import { checkPassword, decryptEncrpytedPassword, log } from "@/lib/utils";
 import { newId } from "@/lib/id-helper";
 import { sendVerificationEmail } from "@/lib/emails/send-email-verification";
 import { getFile } from "@/lib/files/get-file";
@@ -95,7 +95,15 @@ export default async function handle(
       return;
     }
 
-    const isPasswordValid = await checkPassword(password, link.password);
+    let isPasswordValid: boolean = false;
+    const textParts: string[] = link.password.split(":");
+    if (!textParts || textParts.length !== 2) {
+      isPasswordValid = await checkPassword(password, link.password);
+    } else {
+      const decryptedPassword = decryptEncrpytedPassword(link.password);
+      isPasswordValid = decryptedPassword === password;
+    }
+
     if (!isPasswordValid) {
       res.status(403).json({ message: "Invalid password." });
       return;
