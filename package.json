@@ -73,6 +73,7 @@
     "eventsource-parser": "^1.1.2",
     "framer-motion": "^11.1.7",
     "fuse.js": "^6.6.2",
+    "github-slugger": "^2.0.0",
     "gray-matter": "^4.0.3",
     "js-cookie": "^3.0.5",
     "lucide-react": "^0.320.0",
