@@ -1,9 +1,8 @@
 "use client";
 
-// import useCurrentAnchor from "#/lib/hooks/use-current-anchor";
 import { cn } from "@/lib/utils";
-import slugify from "@sindresorhus/slugify";
 import Link from "next/link";
+import GithubSlugger from "github-slugger";
 
 export default function TableOfContents({
   items,
@@ -14,12 +13,14 @@ export default function TableOfContents({
   }[];
 }) {
   const currentAnchor = useCurrentAnchor();
+  const slugger = new GithubSlugger();
 
   return (
     <div className="grid gap-4 -ml-[2.55rem] pl-10 border-l border-orange-500">
+      <p className="text-sm font-medium">Table of Contents</p>
       {items &&
         items.map((item, idx) => {
-          const itemId = slugify(item.text);
+          const itemId = slugger.slug(item.text);
           return (
             <Link
               key={itemId}
@@ -49,7 +50,7 @@ function useCurrentAnchor() {
 
     if (!mdxContainer) return;
 
-    const offsetTop = 200;
+    const offsetTop = 0;
 
     const observer = new IntersectionObserver(
       (entries) => {
