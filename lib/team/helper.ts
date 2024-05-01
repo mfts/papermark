@@ -1,7 +1,7 @@
 import prisma from "@/lib/prisma";
 import { DocumentError, TeamError } from "../errorHandler";
 import { Document, DocumentVersion, Domain, Link, View } from "@prisma/client";
-
+import { decryptEncrpytedPassword } from "@/lib/utils";
 interface ITeamUserAndDocument {
   teamId: string;
   userId: string;
@@ -71,7 +71,14 @@ export async function getTeamWithUsersAndDocument({
       throw new TeamError("Document doesn't exists in the team");
     }
   }
-
+  if (document && document?.links) {
+    document?.links?.forEach((res: Link) => {
+      if (res?.password != null) {
+        let decryptedPassword: string = decryptEncrpytedPassword(res?.password);
+        res["password"] = decryptedPassword;
+      }
+    });
+  }
   // Check that the user is owner of the document, otherwise return 401
   // if (checkOwner) {
   //   const isUserOwnerOfDocument = document?.ownerId === userId;

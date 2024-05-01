@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth/next";
-import { hashPassword } from "@/lib/utils";
+import { generateEncrpytedPassword } from "@/lib/utils";
 import { CustomUser } from "@/lib/types";
 import { authOptions } from "../../auth/[...nextauth]";
 
@@ -114,7 +114,7 @@ export default async function handle(
     const documentLink = linkType === "DOCUMENT_LINK";
 
     const hashedPassword =
-      password && password.length > 0 ? await hashPassword(password) : null;
+      password && password.length > 0 ? await generateEncrpytedPassword(password) : null;
     const exat = expiresAt ? new Date(expiresAt) : null;
 
     let { domain, slug, ...linkData } = linkDomainData;
