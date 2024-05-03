@@ -20,9 +20,9 @@ export const DataroomHeader = ({
         <h1 className="text-xl sm:text-2xl text-foreground font-semibold tracking-tight">
           {title}
         </h1>
-        <p className="text-xs sm:text-sm text-muted-foreground font-mono">
+        {/* <p className="text-xs sm:text-sm text-muted-foreground font-mono">
           {description}
-        </p>
+        </p> */}
       </div>
       <div className="flex items-center gap-x-1">
         {actionRows.map((row, i) => (

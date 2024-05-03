@@ -41,7 +41,7 @@ export default function DocumentUpload({
   setCurrentFile: React.Dispatch<React.SetStateAction<File | null>>;
 }) {
   const { plan, loading } = usePlan();
-  const maxSize = plan?.plan === "pro" ? 100 : 30;
+  const maxSize = plan === "pro" ? 100 : 30;
   const { getRootProps, getInputProps } = useDropzone({
     accept: {
       "application/pdf": [], // ".pdf"
