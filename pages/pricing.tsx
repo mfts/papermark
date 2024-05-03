@@ -316,14 +316,6 @@ export default function PricingPage() {
                             </div>
                           </div>
                         ) : null}
-                        {/* {tier.id === "tier-enterprise" ? (
-                          <div className="min-h-12">
-                            <div className="flex flex-col text-sm">
-                              <div className="h-6"></div>
-                              <h4>Get in touch</h4>
-                            </div>
-                          </div>
-                        ) : null} */}
                         {tier.id === "tier-datarooms" ? (
                           <div className="min-h-12">
                             <Switch
@@ -386,18 +378,6 @@ export default function PricingPage() {
                                 ? tier.price[frequencyDatarooms.value]
                                 : tier.price[frequency.value]}
                         </span>
-                        {/* <span
-                          className={cn(
-                            "text-sm font-semibold leading-6 text-gray-600",
-                            tier.id === "tier-datarooms" ? "hidden" : "",
-                          )}
-                        >
-                          {tier.id === "tier-pro"
-                            ? frequencyPro.priceSuffix
-                            : tier.id === "tier-business"
-                              ? frequencyBusiness.priceSuffix
-                              : frequency.priceSuffix}
-                        </span> */}
                       </p>
                       <p className="mt-6 text-sm leading-6 text-gray-600 text-balance">
                         {tier.description}

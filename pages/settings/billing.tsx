@@ -167,7 +167,7 @@ export default function Billing() {
       id: "tier-datarooms",
       href: "/login",
       currentPlan: plan && plan == "datarooms" ? true : false,
-      price: { monthly: "€79", annually: "€59" },
+      price: { monthly: "€199", annually: "€149" },
       description:
         "The one for more control, data room, and multi-file sharing.",
       featureIntro: "Everything in Pro, plus:",
@@ -185,7 +185,7 @@ export default function Billing() {
       bgColor: "#fb7a00",
       borderColor: "#fb7a00",
       textColor: "#black",
-      buttonText: "Upgrade to Business",
+      buttonText: "Upgrade to Data Rooms",
       mostPopular: true,
     },
   ];
@@ -220,7 +220,7 @@ export default function Billing() {
 
         <div className="bg-white dark:bg-gray-900">
           <div className="mx-auto space-y-8">
-            <div className="isolate grid grid-cols-1 md:grid-cols-3 border border-black dark:border-muted-foreground rounded-xl overflow-hidden">
+            <div className="isolate grid grid-cols-1 md:grid-cols-4 border border-black dark:border-muted-foreground rounded-xl overflow-hidden">
               {tiers.map((tier) => (
                 <div
                   key={tier.id}
@@ -350,7 +350,7 @@ export default function Billing() {
                               className="h-5 w-10 *:size-4"
                               checked={toggleDataroomsYear}
                               onCheckedChange={() =>
-                                setToggleBusinessYear(!toggleDataroomsYear)
+                                setToggleDataroomsYear(!toggleDataroomsYear)
                               }
                             />
                             <div className="flex items-center gap-x-1 text-sm mb-1">

@@ -226,7 +226,7 @@ const featureGroups: {
           free: false,
           pro: false,
           business: false,
-          enterprise: true,
+          enterprise: "Enterprise",
         },
       },
       {
@@ -246,7 +246,7 @@ const featureGroups: {
           free: "1 user",
           pro: "2 users",
           business: "3 users",
-          enterprise: "Enterprise",
+          enterprise: "5 users",
         },
       },
 
@@ -430,7 +430,7 @@ const featureGroups: {
           free: false,
           pro: false,
           business: false,
-          enterprise: true,
+          enterprise: "Enterprise",
         },
       },
     ],
@@ -464,7 +464,7 @@ const featureGroups: {
         tiers: {
           free: false,
           pro: false,
-          business: true,
+          business: false,
           enterprise: true,
         },
       },
