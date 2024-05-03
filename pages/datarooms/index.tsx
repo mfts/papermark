@@ -1,4 +1,5 @@
 import { AddDataroomModal } from "@/components/datarooms/add-dataroom-modal";
+import { EmptyDataroom } from "@/components/datarooms/empty-dataroom";
 import AppLayout from "@/components/layouts/app";
 import { Button } from "@/components/ui/button";
 import {
@@ -76,6 +77,12 @@ export default function DataroomsPage() {
                 </Link>
               ))}
           </ul>
+
+          {datarooms && datarooms.length === 0 && (
+            <div className="flex items-center justify-center">
+              <EmptyDataroom />
+            </div>
+          )}
         </div>
       </main>
     </AppLayout>
