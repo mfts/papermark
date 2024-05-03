@@ -92,7 +92,7 @@ export default function DataroomsPage() {
                           {dataroom.name}
                         </CardTitle>
                       </div>
-                      <CardDescription>{dataroom.pId}</CardDescription>
+                      {/* <CardDescription>{dataroom.pId}</CardDescription> */}
                     </CardHeader>
                     <CardContent>
                       <dl className="divide-y divide-gray-100 text-sm leading-6 ">
