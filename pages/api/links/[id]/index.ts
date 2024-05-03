@@ -114,7 +114,9 @@ export default async function handle(
     const documentLink = linkType === "DOCUMENT_LINK";
 
     const hashedPassword =
-      password && password.length > 0 ? await generateEncrpytedPassword(password) : null;
+      password && password.length > 0
+        ? await generateEncrpytedPassword(password)
+        : null;
     const exat = expiresAt ? new Date(expiresAt) : null;
 
     let { domain, slug, ...linkData } = linkDomainData;
