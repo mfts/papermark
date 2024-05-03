@@ -106,6 +106,16 @@ export default function DataroomsPage() {
                             </div>
                           </dd>
                         </div>
+                        <div className="flex justify-between gap-x-4 py-3">
+                          <dt className="text-gray-500 dark:text-gray-400">
+                            Views
+                          </dt>
+                          <dd className="flex items-start gap-x-2">
+                            <div className="font-medium text-gray-900 dark:text-gray-200">
+                              {dataroom._count.views ?? 0}
+                            </div>
+                          </dd>
+                        </div>
                       </dl>
                     </CardContent>
                   </Card>
