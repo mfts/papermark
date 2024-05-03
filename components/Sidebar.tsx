@@ -12,18 +12,13 @@ import SelectTeam from "./teams/select-team";
 import { TeamContextType, initialState, useTeam } from "@/context/team-context";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import ProfileMenu from "./profile-menu";
-import { AddDocumentModal } from "./documents/add-document-modal";
-import { Button } from "./ui/button";
 import {
-  FolderPlusIcon,
   PaletteIcon,
-  PlusIcon,
   FolderIcon as FolderLucideIcon,
   FolderOpenIcon,
   ServerIcon,
 } from "lucide-react";
 import SiderbarFolders from "./sidebar-folders";
-import { AddFolderModal } from "./folders/add-folder-modal";
 import { ScrollArea } from "./ui/scroll-area";
 import { UpgradePlanModal } from "./billing/upgrade-plan-modal";
 
