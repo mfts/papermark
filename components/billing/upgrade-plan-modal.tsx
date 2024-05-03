@@ -12,6 +12,7 @@ import { useAnalytics } from "@/lib/analytics";
 import React from "react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CheckIcon } from "lucide-react";
+import { DataroomTrialModal } from "../datarooms/dataroom-trial-modal";
 
 export function UpgradePlanModal({
   clickedPlan,
@@ -229,13 +230,21 @@ export function UpgradePlanModal({
               }}
             >{`Upgrade to ${plan} ${capitalize(period)}`}</Button>
             <div className="flex items-center justify-center space-x-2">
-              <a
-                href="https://cal.com/marcseitz/papermark"
-                target="_blank"
-                className="text-center text-xs text-muted-foreground underline-offset-4 transition-all hover:text-gray-800 hover:dark:text-muted-foreground/80 hover:underline"
-              >
-                Looking for Papermark Enterprise?
-              </a>
+              {plan === "Business" ? (
+                <DataroomTrialModal>
+                  <button className="text-center text-xs text-muted-foreground underline-offset-4 transition-all hover:text-gray-800 hover:dark:text-muted-foreground/80 hover:underline">
+                    Looking for a dataroom trial?
+                  </button>
+                </DataroomTrialModal>
+              ) : (
+                <a
+                  href="https://cal.com/marcseitz/papermark"
+                  target="_blank"
+                  className="text-center text-xs text-muted-foreground underline-offset-4 transition-all hover:text-gray-800 hover:dark:text-muted-foreground/80 hover:underline"
+                >
+                  Looking for Papermark Enterprise?
+                </a>
+              )}
             </div>
           </motion.div>
         </div>

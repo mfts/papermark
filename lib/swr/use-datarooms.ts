@@ -6,6 +6,7 @@ import { Dataroom } from "@prisma/client";
 export type DataroomWithCount = Dataroom & {
   _count: {
     documents: number;
+    views: number;
   };
 };
 

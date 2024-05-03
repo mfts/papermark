@@ -57,7 +57,7 @@ export default function Settings() {
   //   },
   // );
 
-  const isNotBusiness = plan?.plan !== "business";
+  const isNotBusiness = plan !== "business";
 
   const [loading, setLoading] = useState(false);
   const [loadingStatus, setLoadingStatus] = useState(false);
