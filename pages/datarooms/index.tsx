@@ -1,4 +1,6 @@
+import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { AddDataroomModal } from "@/components/datarooms/add-dataroom-modal";
+import { DataroomTrialModal } from "@/components/datarooms/dataroom-trial-modal";
 import { EmptyDataroom } from "@/components/datarooms/empty-dataroom";
 import AppLayout from "@/components/layouts/app";
 import { Button } from "@/components/ui/button";
@@ -10,12 +12,15 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { usePlan } from "@/lib/swr/use-billing";
 import useDatarooms from "@/lib/swr/use-datarooms";
+import { daysLeft } from "@/lib/utils";
 import { PlusIcon } from "lucide-react";
 import Link from "next/link";
 
 export default function DataroomsPage() {
   const { datarooms } = useDatarooms();
+  const { plan, trial } = usePlan();
 
   return (
     <AppLayout>
@@ -30,17 +35,47 @@ export default function DataroomsPage() {
             </p>
           </div>
           <div className="flex items-center gap-x-1">
-            <AddDataroomModal>
-              <Button
-                className="flex-1 text-left group flex gap-x-3 items-center justify-start px-3"
-                title="Add New Document"
-              >
-                <PlusIcon className="h-5 w-5 shrink-0" aria-hidden="true" />
-                <span>Create New Dataroom</span>
-              </Button>
-            </AddDataroomModal>
+            {plan !== "business" && trial !== "drtrial" ? (
+              <DataroomTrialModal>
+                <Button
+                  className="flex-1 text-left group flex gap-x-3 items-center justify-start px-3"
+                  title="Add New Document"
+                >
+                  <span>Start Data Room Trial</span>
+                </Button>
+              </DataroomTrialModal>
+            ) : datarooms && trial === "drtrial" && plan !== "business" ? (
+              <div className="flex items-center gap-x-4">
+                <div className="text-sm text-destructive ">
+                  <span className="">Dataroom Trial:</span>{" "}
+                  <span className="font-medium">
+                    {daysLeft(new Date(datarooms[0].createdAt), 7)} days left
+                  </span>
+                </div>
+                <UpgradePlanModal
+                  clickedPlan={"Business"}
+                  trigger={"datarooms"}
+                >
+                  <Button
+                    className="flex-1 text-left group flex gap-x-3 items-center justify-start px-3"
+                    title="Add New Document"
+                  >
+                    <span>Upgrade to Create Dataroom</span>
+                  </Button>
+                </UpgradePlanModal>
+              </div>
+            ) : (
+              <AddDataroomModal>
+                <Button
+                  className="flex-1 text-left group flex gap-x-3 items-center justify-start px-3"
+                  title="Add New Document"
+                >
+                  <PlusIcon className="h-5 w-5 shrink-0" aria-hidden="true" />
+                  <span>Create New Dataroom</span>
+                </Button>
+              </AddDataroomModal>
+            )}
           </div>
-          {/* </div> */}
         </section>
 
         <Separator className="mb-5 bg-gray-200 dark:bg-gray-800" />
