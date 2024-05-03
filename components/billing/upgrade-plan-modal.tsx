@@ -20,13 +20,15 @@ export function UpgradePlanModal({
   setOpen,
   children,
 }: {
-  clickedPlan: "Business" | "Pro";
+  clickedPlan: "Data Rooms" | "Business" | "Pro";
   trigger?: string;
   open?: boolean;
   setOpen?: React.Dispatch<React.SetStateAction<boolean>>;
   children?: React.ReactNode;
 }) {
-  const [plan, setPlan] = useState<"Pro" | "Business">(clickedPlan);
+  const [plan, setPlan] = useState<"Pro" | "Business" | "Data Rooms">(
+    clickedPlan,
+  );
   const [period, setPeriod] = useState<"monthly" | "yearly">("monthly");
   const [clicked, setClicked] = useState<boolean>(false);
   const teamInfo = useTeam();
@@ -54,6 +56,19 @@ export function UpgradePlanModal({
         "Unlimited subfolder levels",
         "Large file uploads",
         "48h Priority Support",
+      ];
+    }
+    if (plan === "Data Rooms") {
+      return [
+        "5 users included",
+        "Unlimited data rooms",
+        "Custom domain for data rooms",
+        "Unlimited documents",
+        "Unlimited folders and subfolders",
+        "User groups permissions",
+        "Advanced data rooms analytics",
+        "24h Priority Support",
+        "Custom Onboarding",
       ];
     }
 
@@ -135,6 +150,12 @@ export function UpgradePlanModal({
               </TabsTrigger>
               <TabsTrigger value="Business" onClick={() => setPlan("Business")}>
                 Business
+              </TabsTrigger>
+              <TabsTrigger
+                value="Data Rooms"
+                onClick={() => setPlan("Data Rooms")}
+              >
+                Data Rooms
               </TabsTrigger>
             </TabsList>
           </Tabs>
