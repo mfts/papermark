@@ -42,7 +42,7 @@ export default function Nav({
   numPages?: number;
   allowDownload?: boolean;
   assistantEnabled?: boolean;
-  brand?: Brand | DataroomBrand;
+  brand?: Partial<Brand> | Partial<DataroomBrand> | null;
   embeddedLinks?: string[];
   viewId?: string;
   linkId?: string;

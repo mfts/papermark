@@ -34,7 +34,7 @@ export default function DataroomNav({
   numPages?: number;
   allowDownload?: boolean;
   assistantEnabled?: boolean;
-  brand?: DataroomBrand;
+  brand?: Partial<DataroomBrand>;
   embeddedLinks?: string[];
   viewId?: string;
   linkId?: string;

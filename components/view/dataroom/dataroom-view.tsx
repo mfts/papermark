@@ -38,7 +38,7 @@ export default function DataroomView({
   userEmail: string | null | undefined;
   userId: string | null | undefined;
   isProtected: boolean;
-  brand?: DataroomBrand;
+  brand?: Partial<DataroomBrand> | null;
   token?: string;
   verifiedEmail?: string;
 }) {

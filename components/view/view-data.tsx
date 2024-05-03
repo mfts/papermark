@@ -19,7 +19,7 @@ export default function ViewData({
     rootNotionPageId: string | null;
     recordMap: ExtendedRecordMap | null;
   };
-  brand?: Brand;
+  brand?: Partial<Brand> | null;
   showPoweredByBanner?: boolean;
 }) {
   const { document } = link;

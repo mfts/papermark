@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth/next";
 import { generateEncrpytedPassword } from "@/lib/utils";
 import { CustomUser } from "@/lib/types";
 import { authOptions } from "../../auth/[...nextauth]";
+import { Brand, DataroomBrand } from "@prisma/client";
 
 export default async function handle(
   req: NextApiRequest,
@@ -34,35 +35,11 @@ export default async function handle(
           metaDescription: true,
           metaImage: true,
           enableQuestion: true,
+          linkType: true,
           feedback: {
             select: {
               id: true,
               data: true,
-            },
-          },
-          document: {
-            select: {
-              id: true,
-              name: true,
-              assistantEnabled: true,
-              teamId: true,
-              ownerId: true,
-              team: {
-                select: {
-                  plan: true,
-                },
-              },
-              versions: {
-                where: { isPrimary: true },
-                select: {
-                  id: true,
-                  versionNumber: true,
-                  type: true,
-                  hasPages: true,
-                  file: true,
-                },
-                take: 1,
-              },
             },
           },
         },
@@ -78,21 +55,113 @@ export default async function handle(
         return res.status(404).json({ error: "Link is archived" });
       }
 
-      let brand = await prisma.brand.findFirst({
-        where: {
-          teamId: link.document!.teamId!,
-        },
-        select: {
-          logo: true,
-          brandColor: true,
-        },
-      });
+      const linkType = link.linkType;
 
-      if (!brand) {
-        brand = null;
+      let brand: Partial<Brand> | Partial<DataroomBrand> | null = null;
+      let linkData: any;
+
+      if (linkType === "DOCUMENT_LINK") {
+        linkData = await prisma.link.findUnique({
+          where: { id: id },
+          select: {
+            document: {
+              select: {
+                id: true,
+                name: true,
+                assistantEnabled: true,
+                teamId: true,
+                ownerId: true,
+                team: {
+                  select: {
+                    plan: true,
+                  },
+                },
+                versions: {
+                  where: { isPrimary: true },
+                  select: {
+                    id: true,
+                    versionNumber: true,
+                    type: true,
+                    hasPages: true,
+                    file: true,
+                  },
+                  take: 1,
+                },
+              },
+            },
+          },
+        });
+
+        brand = await prisma.brand.findFirst({
+          where: {
+            teamId: linkData.document.teamId,
+          },
+          select: {
+            logo: true,
+            brandColor: true,
+          },
+        });
+      } else if (linkType === "DATAROOM_LINK") {
+        linkData = await prisma.link.findUnique({
+          where: { id: id },
+          select: {
+            dataroom: {
+              select: {
+                id: true,
+                name: true,
+                teamId: true,
+                documents: {
+                  select: {
+                    id: true,
+                    folderId: true,
+                    updatedAt: true,
+                    document: {
+                      select: {
+                        id: true,
+                        name: true,
+                        versions: {
+                          where: { isPrimary: true },
+                          select: {
+                            id: true,
+                            versionNumber: true,
+                            type: true,
+                            hasPages: true,
+                            file: true,
+                          },
+                          take: 1,
+                        },
+                      },
+                    },
+                  },
+                },
+                folders: {
+                  orderBy: {
+                    name: "asc",
+                  },
+                },
+              },
+            },
+          },
+        });
+
+        brand = await prisma.dataroomBrand.findFirst({
+          where: {
+            dataroomId: linkData.dataroom.id,
+          },
+          select: {
+            logo: true,
+            banner: true,
+            brandColor: true,
+          },
+        });
       }
 
-      return res.status(200).json({ link, brand });
+      const returnLink = {
+        ...link,
+        ...linkData,
+      };
+
+      return res.status(200).json({ linkType, link: returnLink, brand });
     } catch (error) {
       return res.status(500).json({
         message: "Internal Server Error",
@@ -114,7 +183,9 @@ export default async function handle(
     const documentLink = linkType === "DOCUMENT_LINK";
 
     const hashedPassword =
-      password && password.length > 0 ? await generateEncrpytedPassword(password) : null;
+      password && password.length > 0
+        ? await generateEncrpytedPassword(password)
+        : null;
     const exat = expiresAt ? new Date(expiresAt) : null;
 
     let { domain, slug, ...linkData } = linkDomainData;
