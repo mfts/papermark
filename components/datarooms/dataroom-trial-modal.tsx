@@ -14,10 +14,8 @@ import { useTeam } from "@/context/team-context";
 import { useState } from "react";
 import { toast } from "sonner";
 import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
-import { usePlan } from "@/lib/swr/use-billing";
 import { useAnalytics } from "@/lib/analytics";
 import { mutate } from "swr";
-import { log } from "@/lib/utils";
 import {
   Select,
   SelectContent,
@@ -27,12 +25,15 @@ import {
 } from "../ui/select";
 import { PhoneInput } from "../ui/phone-input";
 import { E164Number } from "libphonenumber-js/types.cjs";
+import { useRouter } from "next/router";
 
 export function DataroomTrialModal({
   children,
 }: {
   children?: React.ReactNode;
 }) {
+  const router = useRouter();
+
   const [industry, setIndustry] = useState<string>("");
   const [companySize, setCompanySize] = useState<string>("");
   const [name, setName] = useState<string>("");
@@ -56,11 +57,6 @@ export function DataroomTrialModal({
     setLoading(true);
 
     try {
-      await log({
-        message: `Dataroom Trial: ${teamInfo?.currentTeam?.id} \n\nName: ${name} \nCompany Name: ${companyName} \nIndustry: ${industry} \nCompany Size: ${companySize} \nPhone Number: ${phoneNumber}`,
-        type: "info",
-        mention: true,
-      });
       const response = await fetch(
         `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/trial`,
         {
@@ -70,6 +66,11 @@ export function DataroomTrialModal({
           },
           body: JSON.stringify({
             name: "Dataroom Demo Trial",
+            fullName: name,
+            companyName,
+            industry,
+            companySize,
+            phoneNumber,
           }),
         },
       );
@@ -88,7 +89,8 @@ export function DataroomTrialModal({
       });
       toast.success("Dataroom successfully created! 🎉");
 
-      mutate(`/api/teams/${teamInfo?.currentTeam?.id}/datarooms`);
+      await mutate(`/api/teams/${teamInfo?.currentTeam?.id}/datarooms`);
+      router.push("/datarooms");
     } catch (error) {
       setLoading(false);
       toast.error("Error adding dataroom. Please try again.");

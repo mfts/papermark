@@ -4,6 +4,7 @@ import prisma from "@/lib/prisma";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { CustomUser } from "@/lib/types";
 import { newId } from "@/lib/id-helper";
+import { log } from "@/lib/utils";
 
 export default async function handle(
   req: NextApiRequest,
@@ -20,7 +21,15 @@ export default async function handle(
     const userId = (session.user as CustomUser).id;
 
     const { teamId } = req.query as { teamId: string };
-    const { name } = req.body as { name: string };
+    const { name, fullName, companyName, industry, companySize, phoneNumber } =
+      req.body as {
+        name: string;
+        fullName: string;
+        companyName: string;
+        industry: string;
+        companySize: string;
+        phoneNumber: string;
+      };
 
     try {
       const team = await prisma.team.findUnique({
@@ -52,6 +61,12 @@ export default async function handle(
           .status(400)
           .json({ message: "Trial data room already exists" });
       }
+
+      await log({
+        message: `Dataroom Trial: ${teamId} \n\nEmail: ${(session.user as CustomUser).email} \nName: ${fullName} \nCompany Name: ${companyName} \nIndustry: ${industry} \nCompany Size: ${companySize} \nPhone Number: ${phoneNumber}`,
+        type: "trial",
+        mention: true,
+      });
 
       await prisma.team.update({
         where: { id: teamId },

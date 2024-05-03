@@ -1,9 +1,7 @@
 import { useRouter } from "next/router";
 import { motion } from "framer-motion";
-import { File as DocumentIcon, ServerIcon } from "lucide-react";
 import { STAGGER_CHILD_VARIANTS } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
-import { DataroomTrialModal } from "@/components/datarooms/dataroom-trial-modal";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -18,7 +16,6 @@ import { useAnalytics } from "@/lib/analytics";
 import { mutate } from "swr";
 import { toast } from "sonner";
 import { useState } from "react";
-import { log } from "@/lib/utils";
 import { E164Number } from "libphonenumber-js/types.cjs";
 import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
 import { Input } from "../ui/input";
@@ -47,11 +44,6 @@ export default function DataroomTrial() {
     setLoading(true);
 
     try {
-      await log({
-        message: `Dataroom Trial: ${teamInfo?.currentTeam?.id} \n\nName: ${name} \nCompany Name: ${companyName} \nIndustry: ${industry} \nCompany Size: ${companySize} \nPhone Number: ${phoneNumber}`,
-        type: "info",
-        mention: true,
-      });
       const response = await fetch(
         `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/trial`,
         {
@@ -61,6 +53,11 @@ export default function DataroomTrial() {
           },
           body: JSON.stringify({
             name: "Dataroom Demo Trial",
+            fullName: name,
+            companyName,
+            industry,
+            companySize,
+            phoneNumber,
           }),
         },
       );
