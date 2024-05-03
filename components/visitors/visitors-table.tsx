@@ -49,7 +49,7 @@ export default function VisitorsTable({ numPages }: { numPages: number }) {
 
   const { views, loading, error } = useDocumentVisits(currentPage, limit);
   const { plan } = usePlan();
-  const isFreePlan = plan?.plan === "free";
+  const isFreePlan = plan === "free";
 
   return (
     <div className="w-full">

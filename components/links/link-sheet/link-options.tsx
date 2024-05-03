@@ -30,8 +30,8 @@ export const LinkOptions = ({
   setData: Dispatch<SetStateAction<DEFAULT_LINK_TYPE>>;
 }) => {
   const { plan } = usePlan();
-  const hasFreePlan = plan?.plan === "free";
-  const isNotBusiness = plan?.plan !== "business";
+  const hasFreePlan = plan === "free";
+  const isNotBusiness = plan !== "business";
 
   const [openUpgradeModal, setOpenUpgradeModal] = useState<boolean>(false);
   const [trigger, setTrigger] = useState<string>("");

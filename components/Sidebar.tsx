@@ -63,7 +63,7 @@ export default function Sidebar() {
 export const SidebarComponent = ({ className }: { className?: string }) => {
   const [showProBanner, setShowProBanner] = useState<boolean | null>(null);
   const { data: session, status } = useSession();
-  const { plan, loading } = usePlan();
+  const { plan, trial: userTrial, loading } = usePlan();
 
   const router = useRouter();
   const { currentTeam, teams, isLoading }: TeamContextType =
@@ -77,7 +77,7 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
     }
   }, []);
 
-  const userPlan = plan && plan.plan;
+  const userPlan = plan;
 
   const navigation = [
     // {
@@ -110,7 +110,8 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
       icon: ServerIcon,
       current: router.pathname.includes("datarooms"),
       active: false,
-      disabled: userPlan === "business" ? false : true,
+      disabled:
+        userPlan === "business" || userTrial === "drtrial" ? false : true,
     },
     {
       name: "Branding",
@@ -210,7 +211,11 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
                     </div>
                   );
                 }
-                if (userPlan !== "business" && item.name === "Datarooms") {
+                if (
+                  userPlan !== "business" &&
+                  userTrial !== "drtrial" &&
+                  item.name === "Datarooms"
+                ) {
                   return (
                     <UpgradePlanModal
                       key={item.name}

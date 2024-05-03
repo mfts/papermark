@@ -102,7 +102,7 @@ export function AddFolderModal({
   };
 
   // If the team is on a free plan, show the upgrade modal
-  if (plan && plan.plan === "free") {
+  if (plan === "free") {
     if (children) {
       return (
         <UpgradePlanModal clickedPlan="Pro" trigger={"add_folder_button"}>
