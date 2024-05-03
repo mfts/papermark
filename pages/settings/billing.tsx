@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { useTeam } from "@/context/team-context";
 import { useAnalytics } from "@/lib/analytics";
-import { useBilling } from "@/lib/swr/use-billing";
+import { usePlan } from "@/lib/swr/use-billing";
 import { cn } from "@/lib/utils";
 import { CheckIcon } from "lucide-react";
 import Link from "next/link";
@@ -26,7 +26,7 @@ const frequencies: {
 export default function Billing() {
   const router = useRouter();
   const analytics = useAnalytics();
-  const { plan, startsAt, endsAt } = useBilling();
+  const { plan } = usePlan();
   const [clicked, setClicked] = useState<boolean>(false);
   const frequency = frequencies[1];
   const [toggleProYear, setToggleProYear] = useState<boolean>(true);

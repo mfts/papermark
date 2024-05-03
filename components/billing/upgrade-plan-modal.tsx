@@ -145,7 +145,7 @@ export function UpgradePlanModal({
 
         <div className="bg-background pb-8 text-left sm:px-12">
           <Tabs className="pb-4" defaultValue={plan}>
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="Pro" onClick={() => setPlan("Pro")}>
                 Pro
               </TabsTrigger>
