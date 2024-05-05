@@ -86,4 +86,24 @@ export const PLANS = [
       },
     },
   },
+  {
+    name: "Data Rooms",
+    slug: "datarooms",
+    price: {
+      monthly: {
+        amount: 199,
+        priceIds: {
+          test: "price_1PAtTfFJyGSZ96lhbi4XZU2d",
+          production: "price_1PAtQOFJyGSZ96lhJNZO2LHx",
+        },
+      },
+      yearly: {
+        amount: 149,
+        priceIds: {
+          test: "price_1PCNRrFJyGSZ96lhQopJJ5cg",
+          production: "price_1PCL2GFJyGSZ96lhetYPDN05",
+        },
+      },
+    },
+  },
 ];
