@@ -32,12 +32,14 @@ const CustomMetatag = ({
         <>
           <meta
             property="og:image"
-            content={`/api/og?title=${title ?? ""}`}
+            // content={`/api/og?title=${title ?? ""}`}
+            content="https://www.papermark.io/_static/meta-image.png"
             key="og-image"
           />
           <meta
             name="twitter:image"
-            content={`/api/og?title=${title ?? ""}`}
+            // content={`/api/og?title=${title ?? ""}`}
+            content="https://www.papermark.io/_static/meta-image.png"
             key="tw-image"
           />
         </>
