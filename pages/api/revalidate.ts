@@ -54,6 +54,7 @@ export default async function handler(
         select: { id: true },
       });
       for (const link of links) {
+        console.log("revalidating document link", `/view/${link.id}`);
         await res.revalidate(`/view/${link.id}`);
       }
     }
