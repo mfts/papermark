@@ -56,7 +56,7 @@ export function UpgradePlanModal({
         "Unlimited documents",
         "Unlimited subfolder levels",
         "Large file uploads",
-        "48h Priority Support",
+        "48h priority support",
       ];
     }
     if (plan === "Data Rooms") {
@@ -68,7 +68,7 @@ export function UpgradePlanModal({
         "Unlimited folders and subfolders",
         "User groups permissions",
         "Advanced data rooms analytics",
-        "24h Priority Support",
+        "24h priority support",
         "Custom Onboarding",
       ];
     }
