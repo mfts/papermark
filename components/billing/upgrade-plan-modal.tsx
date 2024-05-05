@@ -190,7 +190,11 @@ export function UpgradePlanModal({
                   }}
                   className="text-xs text-muted-foreground underline underline-offset-4 transition-colors hover:text-gray-800 hover:dark:text-muted-foreground/80"
                 >
-                  {period === "monthly" ? "Want 35% off?" : "Switch to monthly"}
+                  {period === "monthly"
+                    ? ["Business", "Data Rooms"].includes(plan)
+                      ? "Want 25% off?"
+                      : "Want 35% off?"
+                    : "Switch to monthly"}
                 </button>
               </div>
               <motion.div
