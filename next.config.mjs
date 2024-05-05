@@ -14,6 +14,15 @@ const nextConfig = {
     },
     missingSuspenseWithCSRBailout: false,
   },
+  async redirects() {
+    return [
+      {
+        source: "/view/d/:path*",
+        destination: "/view/:path*",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 function prepareRemotePatterns() {
