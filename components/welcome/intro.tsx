@@ -35,7 +35,7 @@ export default function Intro() {
           className="max-w-md text-accent-foreground/80 transition-colors sm:text-lg"
           variants={STAGGER_CHILD_VARIANTS}
         >
-          Papermark gives you the power to securely share your document with an
+          Papermark gives you the power to securely share your documents with an
           impression that lasts.
         </motion.p>
         <motion.div
