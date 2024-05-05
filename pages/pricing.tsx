@@ -117,7 +117,7 @@ const tiers: {
       "Advanced data rooms analytics",
       // "Up to 5TB file uploads",
       "24h priority support",
-      "Custom Onboarding",
+      "Custom onboarding",
     ],
     bgColor: "bg-gray-200",
     borderColor: "#bg-gray-800",

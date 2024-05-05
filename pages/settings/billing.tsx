@@ -180,7 +180,7 @@ export default function Billing() {
         "User groups permissions",
         "Advanced data rooms analytics",
         "24h priority support",
-        "Custom Onboarding",
+        "Custom onboarding",
       ],
       bgColor: "#fb7a00",
       borderColor: "#fb7a00",
@@ -199,7 +199,7 @@ export default function Billing() {
     "Full white-labeling",
     "Up to 5TB file uploads",
     "Dedicated support",
-    "Custom Onboarding",
+    "Custom onboarding",
   ];
 
   return (

@@ -69,7 +69,7 @@ export function UpgradePlanModal({
         "User groups permissions",
         "Advanced data rooms analytics",
         "24h priority support",
-        "Custom Onboarding",
+        "Custom onboarding",
       ];
     }
 
