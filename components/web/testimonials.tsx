@@ -63,7 +63,7 @@ const testimonials = [
     author: {
       name: "Jaski",
       handle: "Jas_Jaski",
-      imageUrl: "https://www.papermark.io/testimonials/jaski.jpeg",
+      imageUrl: "https://www.papermark.io/_static/testimonials/jaski.jpeg",
       link: "https://twitter.com/Jas_Jaski/status/1731957497487868390",
     },
     producthunt: false,
