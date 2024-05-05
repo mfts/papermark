@@ -47,6 +47,9 @@ export default async function handle(
             dataroomId,
             parentId: null,
           },
+          orderBy: {
+            name: "asc",
+          },
           include: {
             _count: {
               select: { documents: true, childFolders: true },
@@ -60,6 +63,9 @@ export default async function handle(
       const folders = await prisma.dataroomFolder.findMany({
         where: {
           dataroomId,
+        },
+        orderBy: {
+          name: "asc",
         },
         include: {
           documents: {

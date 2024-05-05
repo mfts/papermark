@@ -53,6 +53,8 @@ export default function PasswordSection({
           <input
             name="password"
             id="password"
+            autoComplete="off"
+            data-1p-ignore
             type={showPassword ? "text" : "password"}
             className="flex w-full rounded-md border-0 py-1.5 text-foreground bg-background shadow-sm ring-1 ring-inset ring-input placeholder:text-muted-foreground focus:ring-2 focus:ring-inset focus:ring-gray-400 sm:text-sm sm:leading-6"
             value={password || ""}

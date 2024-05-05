@@ -11,6 +11,7 @@ export type TStatsData = {
     data: { versionNumber: number; pageNumber: string; avg_duration: number }[];
   };
   total_duration: number;
+  totalViews: number;
 };
 
 export function useStats({

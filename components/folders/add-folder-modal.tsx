@@ -84,6 +84,9 @@ export function AddFolderModal({
       analytics.capture("Folder Added", { folderName: folderName });
       toast.success("Folder added successfully! 🎉");
 
+      mutate(
+        `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}?root=true`,
+      );
       mutate(`/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}`);
       mutate(
         `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}${parentFolderPath}`,
@@ -99,7 +102,7 @@ export function AddFolderModal({
   };
 
   // If the team is on a free plan, show the upgrade modal
-  if (plan && plan.plan === "free") {
+  if (plan === "free") {
     if (children) {
       return (
         <UpgradePlanModal clickedPlan="Pro" trigger={"add_folder_button"}>

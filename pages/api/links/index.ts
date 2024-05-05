@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]";
-import { hashPassword } from "@/lib/utils";
+import { generateEncrpytedPassword} from "@/lib/utils";
 import { CustomUser } from "@/lib/types";
 import { errorhandler } from "@/lib/errorHandler";
 import {
@@ -70,7 +70,7 @@ export default async function handler(
       }
 
       const hashedPassword =
-        password && password.length > 0 ? await hashPassword(password) : null;
+        password && password.length > 0 ? await generateEncrpytedPassword(password) : null;
       const exat = expiresAt ? new Date(expiresAt) : null;
 
       let { domain, slug, ...linkData } = linkDomainData;
@@ -127,12 +127,24 @@ export default async function handler(
           slug: slug || null,
           enableNotification: linkData.enableNotification,
           enableFeedback: linkData.enableFeedback,
+          enableScreenshotProtection: linkData.enableScreenshotProtection,
           enableCustomMetatag: linkData.enableCustomMetatag,
           metaTitle: linkData.metaTitle || null,
           metaDescription: linkData.metaDescription || null,
           metaImage: linkData.metaImage || null,
           allowList: linkData.allowList,
           denyList: linkData.denyList,
+          ...(linkData.enableQuestion && {
+            enableQuestion: linkData.enableQuestion,
+            feedback: {
+              create: {
+                data: {
+                  question: linkData.questionText,
+                  type: linkData.questionType,
+                },
+              },
+            },
+          }),
         },
       });
 

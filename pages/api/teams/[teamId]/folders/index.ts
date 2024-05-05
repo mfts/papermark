@@ -43,6 +43,9 @@ export default async function handle(
             teamId: teamId,
             parentId: null,
           },
+          orderBy: {
+            name: "asc",
+          },
           include: {
             _count: {
               select: { documents: true, childFolders: true },
@@ -56,6 +59,9 @@ export default async function handle(
       const folders = await prisma.folder.findMany({
         where: {
           teamId: teamId,
+        },
+        orderBy: {
+          name: "asc",
         },
         include: {
           documents: {

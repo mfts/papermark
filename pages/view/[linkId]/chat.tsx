@@ -132,7 +132,7 @@ export default function ChatPage({
         threadId={threadId}
         firstPage={firstPage}
         userId={userId}
-        plan={plan?.plan}
+        plan={plan}
       />
     </>
   );

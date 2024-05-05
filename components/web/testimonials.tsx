@@ -63,8 +63,7 @@ const testimonials = [
     author: {
       name: "Jaski",
       handle: "Jas_Jaski",
-      imageUrl:
-        "https://pbs.twimg.com/profile_images/1681327970735251459/xYzLMVZ7_400x400.jpg",
+      imageUrl: "https://www.papermark.io/_static/testimonials/jaski.jpeg",
       link: "https://twitter.com/Jas_Jaski/status/1731957497487868390",
     },
     producthunt: false,
@@ -77,7 +76,7 @@ export default function Testimonials() {
     <div className="bg-white py-24">
       <div className="w-full mx-auto max-w-7xl px-4 md:px-8">
         <h2 className="text-4xl text-balance">
-          Loved by over 3000 users.
+          Loved by over 5000 customers and users.
           <br />
           <span className="text-gray-500">
             Here&apos;s what they have to say about us.

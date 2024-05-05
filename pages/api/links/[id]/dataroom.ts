@@ -29,6 +29,7 @@ export default async function handle(
           password: true,
           isArchived: true,
           enableCustomMetatag: true,
+          enableScreenshotProtection: true,
           metaTitle: true,
           metaDescription: true,
           metaImage: true,
@@ -62,7 +63,11 @@ export default async function handle(
                   },
                 },
               },
-              folders: true,
+              folders: {
+                orderBy: {
+                  name: "asc",
+                },
+              },
             },
           },
         },

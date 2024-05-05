@@ -1,46 +1,78 @@
 import Head from "next/head";
 
 const CustomMetatag = ({
+  enableBranding,
   title,
   description,
   imageUrl,
+  url,
 }: {
+  enableBranding: boolean;
   title: string | null;
   description: string | null;
   imageUrl: string | null;
+  url: string;
 }) => {
   return (
     <Head>
-      {title ? <title>{title}</title> : null}
-      {description ? (
-        <meta name="description" content={description} key="description" />
-      ) : null}
-      {title ? (
-        <meta property="og:title" content={title} key="og-title" />
-      ) : null}
-      {description ? (
-        <meta
-          property="og:description"
-          content={description}
-          key="og-description"
-        />
-      ) : null}
-      {imageUrl ? (
-        <meta property="og:image" content={imageUrl} key="og-image" />
-      ) : null}
-      {title ? (
-        <meta name="twitter:title" content={title} key="tw-title" />
-      ) : null}
-      {description ? (
-        <meta
-          name="twitter:description"
-          content={description}
-          key="tw-description"
-        />
-      ) : null}
-      {imageUrl ? (
-        <meta name="twitter:image" content={imageUrl} key="tw-image" />
-      ) : null}
+      {url && (
+        <>
+          <link rel="canonical" href={url} key="canonical" />
+          <meta property="og:url" content={url} key="og-url" />
+        </>
+      )}
+      {title && (
+        <>
+          <title>{title}</title>
+          <meta property="og:title" content={title} key="og-title" />
+          <meta name="twitter:title" content={title} key="tw-title" />
+        </>
+      )}
+      {!enableBranding && (
+        <>
+          <meta
+            property="og:image"
+            // content={`/api/og?title=${title ?? ""}`}
+            content="https://www.papermark.io/_static/meta-image.png"
+            key="og-image"
+          />
+          <meta
+            name="twitter:image"
+            // content={`/api/og?title=${title ?? ""}`}
+            content="https://www.papermark.io/_static/meta-image.png"
+            key="tw-image"
+          />
+        </>
+      )}
+      {enableBranding && (
+        <>
+          {description ? (
+            <>
+              <meta
+                name="description"
+                content={description}
+                key="description"
+              />
+              <meta
+                property="og:description"
+                content={description}
+                key="og-description"
+              />
+              <meta
+                name="twitter:description"
+                content={description}
+                key="tw-description"
+              />
+            </>
+          ) : null}
+          {imageUrl ? (
+            <>
+              <meta property="og:image" content={imageUrl} key="og-image" />
+              <meta name="twitter:image" content={imageUrl} key="tw-image" />
+            </>
+          ) : null}
+        </>
+      )}
     </Head>
   );
 };

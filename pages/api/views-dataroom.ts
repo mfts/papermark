@@ -1,10 +1,13 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/lib/prisma";
-import { checkPassword, log } from "@/lib/utils";
+import { checkPassword, decryptEncrpytedPassword, log } from "@/lib/utils";
 import { newId } from "@/lib/id-helper";
 import { sendVerificationEmail } from "@/lib/emails/send-email-verification";
 import { getFile } from "@/lib/files/get-file";
 import sendNotification from "@/lib/api/notification-helper";
+import { parsePageId } from "notion-utils";
+import notion from "@/lib/notion";
+import { record } from "zod";
 
 export default async function handle(
   req: NextApiRequest,
@@ -92,7 +95,15 @@ export default async function handle(
       return;
     }
 
-    const isPasswordValid = await checkPassword(password, link.password);
+    let isPasswordValid: boolean = false;
+    const textParts: string[] = link.password.split(":");
+    if (!textParts || textParts.length !== 2) {
+      isPasswordValid = await checkPassword(password, link.password);
+    } else {
+      const decryptedPassword = decryptEncrpytedPassword(link.password);
+      isPasswordValid = decryptedPassword === password;
+    }
+
     if (!isPasswordValid) {
       res.status(403).json({ message: "Invalid password." });
       return;
@@ -153,7 +164,7 @@ export default async function handle(
     });
 
     // set the default verification url
-    let verificationUrl: string = `${process.env.NEXT_PUBLIC_BASE_URL}/view/${linkId}/?token=${token}&email=${encodeURIComponent(email)}`;
+    let verificationUrl: string = `${process.env.NEXT_PUBLIC_BASE_URL}/view/d/${linkId}/?token=${token}&email=${encodeURIComponent(email)}`;
 
     if (link.domainSlug && link.slug) {
       // if custom domain is enabled, use the custom domain
@@ -191,6 +202,33 @@ export default async function handle(
     isEmailVerified = true;
   }
 
+  let viewer: { id: string } | null = null;
+  // find or create a viewer
+  console.time("find-viewer");
+  viewer = await prisma.viewer.findUnique({
+    where: {
+      dataroomId_email: {
+        email: email,
+        dataroomId: dataroomId!,
+      },
+    },
+    select: { id: true },
+  });
+  console.timeEnd("find-viewer");
+
+  if (!viewer) {
+    console.time("create-viewer");
+    viewer = await prisma.viewer.create({
+      data: {
+        email: email,
+        dataroomId: dataroomId!,
+        verified: isEmailVerified,
+      },
+      select: { id: true },
+    });
+    console.timeEnd("create-viewer");
+  }
+
   if (viewType === "DATAROOM_VIEW") {
     try {
       console.time("create-view");
@@ -201,6 +239,7 @@ export default async function handle(
           verified: isEmailVerified,
           dataroomId: dataroomId,
           viewType: "DATAROOM_VIEW",
+          viewerId: viewer.id,
         },
         select: { id: true },
       });
@@ -211,12 +250,13 @@ export default async function handle(
         viewId: newDataroomView.id,
         file: null,
         pages: null,
+        notionData: null,
       };
 
       return res.status(200).json(returnObject);
     } catch (error) {
       log({
-        message: `Failed to record view for ${linkId}. \n\n ${error}`,
+        message: `Failed to record view for dataroom link: ${linkId}. \n\n ${error}`,
         type: "error",
         mention: true,
       });
@@ -235,15 +275,17 @@ export default async function handle(
         dataroomViewId: dataroomViewId,
         dataroomId: dataroomId,
         viewType: "DOCUMENT_VIEW",
+        viewerId: viewer.id,
       },
       select: { id: true },
     });
     console.timeEnd("create-view");
 
     // if document version has pages, then return pages
+    // otherwise, check if notion document,
+    // if notion, return recordMap from document version file
     // otherwise, return file from document version
-    let documentPages, documentVersion;
-    // let documentPagesPromise, documentVersionPromise;
+    let documentPages, documentVersion, recordMap;
     if (hasPages) {
       // get pages from document version
       console.time("get-pages");
@@ -277,12 +319,23 @@ export default async function handle(
         select: {
           file: true,
           storageType: true,
+          type: true,
         },
       });
 
       if (!documentVersion) {
         res.status(404).json({ message: "Document version not found." });
         return;
+      }
+
+      if (documentVersion.type === "notion") {
+        let notionPageId = parsePageId(documentVersion.file, { uuid: false });
+        if (!notionPageId) {
+          notionPageId = "";
+        }
+
+        const pageId = notionPageId;
+        recordMap = await notion.getPage(pageId);
       }
 
       documentVersion.file = await getFile({
@@ -295,8 +348,12 @@ export default async function handle(
     const returnObject = {
       message: "View recorded",
       viewId: newView.id,
-      file: documentVersion ? documentVersion.file : null,
+      file:
+        documentVersion && documentVersion.type === "pdf"
+          ? documentVersion.file
+          : null,
       pages: documentPages ? documentPages : null,
+      notionData: recordMap ? { recordMap } : null,
     };
 
     return res.status(200).json(returnObject);

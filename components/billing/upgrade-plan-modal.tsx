@@ -12,6 +12,7 @@ import { useAnalytics } from "@/lib/analytics";
 import React from "react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CheckIcon } from "lucide-react";
+import { DataroomTrialModal } from "../datarooms/dataroom-trial-modal";
 
 export function UpgradePlanModal({
   clickedPlan,
@@ -20,13 +21,15 @@ export function UpgradePlanModal({
   setOpen,
   children,
 }: {
-  clickedPlan: "Business" | "Pro";
+  clickedPlan: "Data Rooms" | "Business" | "Pro";
   trigger?: string;
   open?: boolean;
   setOpen?: React.Dispatch<React.SetStateAction<boolean>>;
   children?: React.ReactNode;
 }) {
-  const [plan, setPlan] = useState<"Pro" | "Business">(clickedPlan);
+  const [plan, setPlan] = useState<"Pro" | "Business" | "Data Rooms">(
+    clickedPlan,
+  );
   const [period, setPeriod] = useState<"monthly" | "yearly">("monthly");
   const [clicked, setClicked] = useState<boolean>(false);
   const teamInfo = useTeam();
@@ -35,40 +38,48 @@ export function UpgradePlanModal({
   const features = useMemo(() => {
     if (plan === "Pro") {
       return [
-        "Folders",
-        "3 team members",
-        "Unlimited link views",
-        "Custom domains",
+        "2 users",
+        "Custom slug",
         "Custom branding",
-        "Notion documents",
-        "AI Document Assistant incl. 1500 credits",
+        "1-year analytics retention",
+        "Advanced access controls",
+        "Folder organization",
       ];
     }
 
     if (plan === "Business") {
       return [
-        "Unlimited subfolder levels",
-        "10 team members",
+        "3 users",
+        "1 dataroom",
+        "Multi-file sharing",
+        "Custom domain",
         "Unlimited documents",
-        "Unlimited link views",
-        "Custom domains",
-        "Custom branding",
-        "Notion documents",
-        "Data room (coming soon)",
-        "Shareable folders (coming soon)",
-        "AI Document Assistant incl. 2500 credits",
-        "Priority Support",
+        "Unlimited subfolder levels",
+        "Large file uploads",
+        "48h priority support",
+      ];
+    }
+    if (plan === "Data Rooms") {
+      return [
+        "5 users included",
+        "Unlimited data rooms",
+        "Custom domain for data rooms",
+        "Unlimited documents",
+        "Unlimited folders and subfolders",
+        "User groups permissions",
+        "Advanced data rooms analytics",
+        "24h priority support",
+        "Custom onboarding",
       ];
     }
 
     return [
-      "Folders",
-      "3 team members",
-      "Unlimited link views",
-      "Custom domains",
+      "2 users",
+      "Custom slug",
       "Custom branding",
-      "Notion documents",
-      "AI Document Assistant incl. 1500 credits",
+      "1-year analytics retention",
+      "Advanced access controls",
+      "Folders",
     ];
   }, [plan]);
 
@@ -111,7 +122,7 @@ export function UpgradePlanModal({
           }}
           initial="hidden"
           animate="show"
-          className="flex flex-col items-center justify-center space-y-3 border-b border-border px-4 py-8 sm:px-16"
+          className="flex flex-col items-center justify-center space-y-3 border-b border-border py-8 sm:px-12"
         >
           <motion.div variants={STAGGER_CHILD_VARIANTS}>
             <p className="text-2xl font-bold tracking-tighter text-foreground">
@@ -132,14 +143,20 @@ export function UpgradePlanModal({
           </motion.p>
         </motion.div>
 
-        <div className="bg-background px-4 pb-8 text-left sm:px-16">
+        <div className="bg-background pb-8 text-left sm:px-8">
           <Tabs className="pb-4" defaultValue={plan}>
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="Pro" onClick={() => setPlan("Pro")}>
                 Pro
               </TabsTrigger>
               <TabsTrigger value="Business" onClick={() => setPlan("Business")}>
                 Business
+              </TabsTrigger>
+              <TabsTrigger
+                value="Data Rooms"
+                onClick={() => setPlan("Data Rooms")}
+              >
+                Data Rooms
               </TabsTrigger>
             </TabsList>
           </Tabs>
@@ -158,9 +175,14 @@ export function UpgradePlanModal({
                   <Badge
                     variant="outline"
                     className="text-sm font-normal normal-case"
-                  >{`€${
-                    PLANS.find((p) => p.name === plan)!.price[period].amount
-                  }/${period.replace("ly", "")}`}</Badge>
+                  >
+                    {`€${
+                      PLANS.find((p) => p.name === plan)!.price[period].amount
+                    }/month`}{" "}
+                    {period === "yearly" ? (
+                      <span className="text-xs ml-1">(billed yearly)</span>
+                    ) : null}
+                  </Badge>
                 </div>
                 <button
                   onClick={() => {
@@ -168,7 +190,11 @@ export function UpgradePlanModal({
                   }}
                   className="text-xs text-muted-foreground underline underline-offset-4 transition-colors hover:text-gray-800 hover:dark:text-muted-foreground/80"
                 >
-                  {period === "monthly" ? "Want 20% off?" : "Switch to monthly"}
+                  {period === "monthly"
+                    ? ["Business", "Data Rooms"].includes(plan)
+                      ? "Want 25% off?"
+                      : "Want 35% off?"
+                    : "Switch to monthly"}
                 </button>
               </div>
               <motion.div
@@ -229,13 +255,24 @@ export function UpgradePlanModal({
               }}
             >{`Upgrade to ${plan} ${capitalize(period)}`}</Button>
             <div className="flex items-center justify-center space-x-2">
-              <a
-                href="https://cal.com/marcseitz/papermark"
-                target="_blank"
-                className="text-center text-xs text-muted-foreground underline-offset-4 transition-all hover:text-gray-800 hover:dark:text-muted-foreground/80 hover:underline"
-              >
-                Looking for Papermark Enterprise?
-              </a>
+              {plan === "Business" ? (
+                <DataroomTrialModal>
+                  <button
+                    className="text-center text-xs text-muted-foreground underline-offset-4 transition-all hover:text-gray-800 hover:dark:text-muted-foreground/80 hover:underline"
+                    onClick={() => analytics.capture("Dataroom Trial Clicked")}
+                  >
+                    Looking for a dataroom trial?
+                  </button>
+                </DataroomTrialModal>
+              ) : (
+                <a
+                  href="https://cal.com/marcseitz/papermark"
+                  target="_blank"
+                  className="text-center text-xs text-muted-foreground underline-offset-4 transition-all hover:text-gray-800 hover:dark:text-muted-foreground/80 hover:underline"
+                >
+                  Looking for Papermark Enterprise?
+                </a>
+              )}
             </div>
           </motion.div>
         </div>

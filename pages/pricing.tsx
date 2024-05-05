@@ -6,14 +6,17 @@ import Footer from "@/components/web/footer";
 import Link from "next/link";
 import GitHubIcon from "@/components/shared/icons/github";
 import { usePlausible } from "next-plausible";
+import { PricingComparison } from "@/components/web/pricing-component";
+import { useEffect, useState } from "react";
+import { Switch } from "@/components/ui/switch";
 
 const frequencies: {
   value: "monthly" | "annually";
   label: "Monthly" | "Annually";
-  priceSuffix: "/month" | "/year";
+  priceSuffix: "/month" | "/month";
 }[] = [
   { value: "monthly", label: "Monthly", priceSuffix: "/month" },
-  { value: "annually", label: "Annually", priceSuffix: "/year" },
+  { value: "annually", label: "Annually", priceSuffix: "/month" },
 ];
 const tiers: {
   name: string;
@@ -57,16 +60,16 @@ const tiers: {
     name: "Pro",
     id: "tier-pro",
     href: "/login",
-    price: { monthly: "€29", annually: "€290" },
+    price: { monthly: "€39", annually: "€25" },
     description: "The branded experience for your documents.",
     featureIntro: "Everything in Free, plus:",
     features: [
-      "3 users",
-      "Custom domain",
+      "2 users included",
+      "Custom slug",
       "Custom branding",
       "1-year analytics retention",
       "Advanced access controls",
-      "Papermark AI",
+      "Folder organization",
     ],
     bgColor: "bg-gray-200",
     borderColor: "#bg-gray-800",
@@ -78,17 +81,18 @@ const tiers: {
     name: "Business",
     id: "tier-business",
     href: "/login",
-    price: { monthly: "€79", annually: "€790" },
-    description: "A plan that scales with your rapidly growing business.",
+    price: { monthly: "€79", annually: "€59" },
+    description: "The one for more control, data room, and multi-file sharing.",
     featureIntro: "Everything in Pro, plus:",
     features: [
-      "10 users",
+      "3 users included",
+      "1 dataroom",
+      "Custom domain for documents",
+      "Multi-file sharing",
       "Unlimited documents",
       "Unlimited subfolder levels",
       "Large file uploads",
-      "Data rooms (coming soon)",
-      "Shareable folders (coming soon)",
-      "24h Priority Support",
+      "48h priority support",
     ],
     bgColor: "#fb7a00",
     borderColor: "#fb7a00",
@@ -97,35 +101,61 @@ const tiers: {
     mostPopular: true,
   },
   {
-    name: "Enterprise",
-    id: "tier-enterprise",
-    href: "https://cal.com/marcseitz/papermark",
-    price: { monthly: "Custom", annually: "Custom" },
-    description: "Self-hosted and advanced infrastructure for your company.",
-    featureIntro: "Tailored solutions:",
+    name: "Data Rooms",
+    id: "tier-datarooms",
+    href: "/login",
+    price: { monthly: "€199", annually: "€149" },
+    description: "Advanced data rooms infrastructure for your company.",
+    featureIntro: "Everything in Business, plus:",
     features: [
-      "Self-hosted version",
-      "Unlimited users",
+      "5 users included",
+      "Unlimited data rooms",
+      "Custom domain for data rooms",
       "Unlimited documents",
       "Unlimited folders and subfolders",
-      "Different file types",
-      "Up to 5TB file uploads",
-      "Dedicated support",
-      "Custom Papermark AI",
+      "User groups permissions",
+      "Advanced data rooms analytics",
+      // "Up to 5TB file uploads",
+      "24h priority support",
+      "Custom onboarding",
     ],
     bgColor: "bg-gray-200",
     borderColor: "#bg-gray-800",
     textColor: "#bg-gray-800",
-    buttonText: "Book a demo",
-    mostPopular: false,
+    buttonText: "Create Data Rooms",
+    mostPopular: true,
   },
 ];
 
 export default function PricingPage() {
   const plausible = usePlausible();
-  const frequency = frequencies[0];
+  const frequency = frequencies[1];
 
-  plausible;
+  const [toggleProYear, setToggleProYear] = useState<boolean>(true);
+  const [toggleBusinessYear, setToggleBusinessYear] = useState<boolean>(true);
+  const [toggleDataroomsYear, setToggleDataroomsYear] = useState<boolean>(true);
+  const [frequencyPro, setFrequencyPro] = useState(frequencies[0]);
+  const [frequencyBusiness, setFrequencyBusiness] = useState(frequencies[0]);
+  const [frequencyDatarooms, setFrequencyDatarooms] = useState(frequencies[0]);
+
+  useEffect(() => {
+    if (toggleProYear) {
+      setFrequencyPro(frequencies[1]);
+    } else {
+      setFrequencyPro(frequencies[0]);
+    }
+
+    if (toggleBusinessYear) {
+      setFrequencyBusiness(frequencies[1]);
+    } else {
+      setFrequencyBusiness(frequencies[0]);
+    }
+    if (toggleDataroomsYear) {
+      setFrequencyDatarooms(frequencies[1]);
+    } else {
+      setFrequencyDatarooms(frequencies[0]);
+    }
+  }, [toggleProYear, toggleBusinessYear, toggleDataroomsYear]);
 
   return (
     <>
@@ -165,7 +195,7 @@ export default function PricingPage() {
         </div>
         <div className="bg-white py-16">
           <div className="mx-auto max-w-7xl px-4 md:px-8">
-            <div className="isolate grid  grid-cols-1  md:grid-cols-2  xl:grid-cols-4 border border-black rounded-xl overflow-hidden">
+            <div className="isolate grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 border border-black rounded-xl overflow-hidden">
               {tiers.map((tier) => (
                 <div
                   key={tier.id}
@@ -181,21 +211,176 @@ export default function PricingPage() {
                       </h3>
                     </div>
                     <div className="p-6">
-                      <p className="mt-4 text-sm leading-6 text-gray-600 text-balance">
-                        {tier.description}
-                      </p>
+                      <div className="mt-2 min-h-20">
+                        {tier.id === "tier-free" ? (
+                          <div className="min-h-12">
+                            <div className="flex flex-col text-sm">
+                              <div className="h-6"></div>
+                              <h4>No credit card required</h4>
+                            </div>
+                          </div>
+                        ) : null}
+                        {tier.id === "tier-pro" ? (
+                          <div className="min-h-12">
+                            <Switch
+                              className="h-5 w-10 *:size-4"
+                              checked={toggleProYear}
+                              onCheckedChange={() =>
+                                setToggleProYear(!toggleProYear)
+                              }
+                            />
+                            <div className="flex items-center gap-x-1 text-sm mb-1">
+                              <span
+                                className={cn(
+                                  toggleProYear
+                                    ? "text-gray-400"
+                                    : "text-black",
+                                )}
+                              >
+                                Monthly
+                              </span>
+                              <span>|</span>
+                              <span
+                                className={cn(
+                                  toggleProYear
+                                    ? "text-black"
+                                    : "text-gray-400",
+                                )}
+                              >
+                                Annually
+                              </span>
+                            </div>
+                            <div
+                              className={cn(
+                                "relative text-xs w-fit uppercase border border-gray-900 text-gray-900 rounded-3xl px-1.5 py-0.5",
+                                !toggleProYear &&
+                                  "border-gray-400 text-gray-400 opacity-40",
+                              )}
+                            >
+                              <span
+                                className={cn(
+                                  !toggleProYear
+                                    ? "absolute top-1/2 h-px w-[90%] bg-gray-400"
+                                    : "hidden",
+                                )}
+                              />
+                              35% Saving
+                            </div>
+                          </div>
+                        ) : null}
+                        {tier.id === "tier-business" ? (
+                          <div className="min-h-12">
+                            <Switch
+                              className="h-5 w-10 *:size-4"
+                              checked={toggleBusinessYear}
+                              onCheckedChange={() =>
+                                setToggleBusinessYear(!toggleBusinessYear)
+                              }
+                            />
+                            <div className="flex items-center gap-x-1 text-sm mb-1">
+                              <span
+                                className={cn(
+                                  toggleBusinessYear
+                                    ? "text-gray-400"
+                                    : "text-black",
+                                )}
+                              >
+                                Monthly
+                              </span>
+                              <span>|</span>
+                              <span
+                                className={cn(
+                                  toggleBusinessYear
+                                    ? "text-black"
+                                    : "text-gray-400",
+                                )}
+                              >
+                                Annually
+                              </span>
+                            </div>
+                            <div
+                              className={cn(
+                                "relative text-xs w-fit uppercase border border-[#fb7a00] text-[#fb7a00] rounded-3xl px-1.5 py-0.5",
+                                !toggleBusinessYear &&
+                                  "border-gray-400 text-gray-400 opacity-40",
+                              )}
+                            >
+                              <span
+                                className={cn(
+                                  !toggleBusinessYear
+                                    ? "absolute top-1/2 h-px w-[90%] bg-gray-400"
+                                    : "hidden",
+                                )}
+                              />
+                              25% Saving
+                            </div>
+                          </div>
+                        ) : null}
+                        {tier.id === "tier-datarooms" ? (
+                          <div className="min-h-12">
+                            <Switch
+                              className="h-5 w-10 *:size-4"
+                              checked={toggleDataroomsYear}
+                              onCheckedChange={() =>
+                                setToggleDataroomsYear(!toggleDataroomsYear)
+                              }
+                            />
+                            <div className="flex items-center gap-x-1 text-sm mb-1">
+                              <span
+                                className={cn(
+                                  toggleDataroomsYear
+                                    ? "text-gray-400"
+                                    : "text-black",
+                                )}
+                              >
+                                Monthly
+                              </span>
+                              <span>|</span>
+                              <span
+                                className={cn(
+                                  toggleDataroomsYear
+                                    ? "text-black"
+                                    : "text-gray-400",
+                                )}
+                              >
+                                Annually
+                              </span>
+                            </div>
+                            <div
+                              className={cn(
+                                "relative text-xs w-fit uppercase border border-[#fb7a00] text-[#fb7a00] rounded-3xl px-1.5 py-0.5",
+                                !toggleDataroomsYear &&
+                                  "border-gray-400 text-gray-400 opacity-40",
+                              )}
+                            >
+                              <span
+                                className={cn(
+                                  !toggleDataroomsYear
+                                    ? "absolute top-1/2 h-px w-[90%] bg-gray-400"
+                                    : "hidden",
+                                )}
+                              />
+                              25% Saving
+                            </div>
+                          </div>
+                        ) : null}
+                      </div>
                       <p className="mt-6 flex items-baseline gap-x-1">
-                        <span className="text-balance text-4xl font-medium  text-gray-900">
-                          {tier.price[frequency.value]}
-                        </span>
                         <span
-                          className={cn(
-                            "text-sm font-semibold leading-6 text-gray-600",
-                            tier.id === "tier-enterprise" ? "hidden" : "",
-                          )}
+                          className="text-balance text-4xl font-medium text-gray-900"
+                          style={{ fontVariantNumeric: "tabular-nums" }}
                         >
-                          {frequency.priceSuffix}
+                          {tier.id === "tier-pro"
+                            ? tier.price[frequencyPro.value]
+                            : tier.id === "tier-business"
+                              ? tier.price[frequencyBusiness.value]
+                              : tier.id === "tier-datarooms"
+                                ? tier.price[frequencyDatarooms.value]
+                                : tier.price[frequency.value]}
                         </span>
+                      </p>
+                      <p className="mt-6 text-sm leading-6 text-gray-600 text-balance">
+                        {tier.description}
                       </p>
                       <ul
                         role="list"
@@ -244,9 +429,11 @@ export default function PricingPage() {
         </div>
 
         <div className="w-full max-w-7xl px-4 md:px-8 mx-auto ">
-          <div className="py-12 bg-[#fb7a00] rounded-xl mx-auto px-6">
+          <div className="py-12 bg-[#fb7a00] rounded-xl mx-auto px-6 my-4">
             <div className="flex lg:flex-row flex-col item-center justify-between space-y-10 lg:space-y-0">
-              <h2 className="text-3xl text-nowrap">Looking to self-host?</h2>
+              <h2 className="text-3xl text-nowrap">
+                Looking for enterprise plan or self-hosted version?
+              </h2>
               <div className="space-x-2 flex items-center">
                 <Link
                   href="https://github.com/mfts/papermark"
@@ -274,7 +461,15 @@ export default function PricingPage() {
             </div>
           </div>
         </div>
-        <Footer />
+
+        <div className="bg-white py-16">
+          <div className="mx-auto max-w-7xl px-4 md:px-8">
+            <PricingComparison />
+          </div>
+        </div>
+        <div>
+          <Footer />
+        </div>
       </div>
     </>
   );

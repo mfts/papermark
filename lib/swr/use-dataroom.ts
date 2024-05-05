@@ -220,6 +220,27 @@ export function useDataroomFolderDocuments({ name }: { name: string[] }) {
   };
 }
 
+export function useDataroomViewers({ dataroomId }: { dataroomId: string }) {
+  const teamInfo = useTeam();
+  const teamId = teamInfo?.currentTeam?.id;
+
+  const { data: viewers, error } = useSWR<any[]>(
+    teamId &&
+      dataroomId &&
+      `/api/teams/${teamId}/datarooms/${dataroomId}/viewers`,
+    fetcher,
+    {
+      dedupingInterval: 10000,
+    },
+  );
+
+  return {
+    viewers,
+    loading: !error && !viewers,
+    error,
+  };
+}
+
 export function useDataroomVisits({ dataroomId }: { dataroomId: string }) {
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;

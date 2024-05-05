@@ -85,6 +85,22 @@ export default function Next() {
           <p>Notion Page</p>
         </button>
       </motion.div>
+
+      <motion.div variants={STAGGER_CHILD_VARIANTS} className="text-center">
+        <button
+          className="text-center text-sm text-muted-foreground underline-offset-4 transition-all hover:text-gray-800 hover:dark:text-muted-foreground/80 hover:underline"
+          onClick={() =>
+            router.push({
+              pathname: "/welcome",
+              query: {
+                type: "dataroom",
+              },
+            })
+          }
+        >
+          Looking to create and share a full dataroom?
+        </button>
+      </motion.div>
     </motion.div>
   );
 }

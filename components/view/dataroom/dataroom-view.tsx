@@ -7,6 +7,7 @@ import { usePlausible } from "next-plausible";
 import { toast } from "sonner";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import EmailVerificationMessage from "../email-verification-form";
+import { ExtendedRecordMap } from "notion-types";
 
 import { Brand, DataroomBrand } from "@prisma/client";
 import { useRouter } from "next/router";
@@ -14,12 +15,14 @@ import { useAnalytics } from "@/lib/analytics";
 import DataroomViewer from "../DataroomViewer";
 import PagesViewer from "../PagesViewer";
 import { LinkWithDataroom } from "@/pages/view/d/[linkId]";
+import { NotionPage } from "@/components/NotionPage";
 
 export type DEFAULT_DOCUMENT_VIEW_TYPE = {
   viewId: string;
   dataroomViewId?: string;
   file: string | null;
   pages: { file: string; pageNumber: string; embeddedLinks: string[] }[] | null;
+  notionData: { recordMap: ExtendedRecordMap | null } | null;
 };
 
 export default function DataroomView({
@@ -52,6 +55,7 @@ export default function DataroomView({
     viewId: "",
     file: null,
     pages: null,
+    notionData: null,
   });
   const [data, setData] = useState<DEFAULT_ACCESS_FORM_TYPE>(
     DEFAULT_ACCESS_FORM_DATA,
@@ -62,6 +66,7 @@ export default function DataroomView({
     id: string;
     name: string;
     hasPages: boolean;
+    documentType: "pdf" | "notion";
     documentVersionId: string;
     documentVersionNumber: number;
   } | null>(null);
@@ -103,8 +108,9 @@ export default function DataroomView({
         setVerificationRequested(true);
         setIsLoading(false);
       } else {
-        const { viewId, file, pages } = fetchData as DEFAULT_DOCUMENT_VIEW_TYPE;
-        plausible("documentViewed"); // track the event
+        const { viewId, file, pages, notionData } =
+          fetchData as DEFAULT_DOCUMENT_VIEW_TYPE;
+        plausible("dataroomViewed"); // track the event
         analytics.identify(
           userEmail ?? verifiedEmail ?? data.email ?? undefined,
         );
@@ -122,6 +128,7 @@ export default function DataroomView({
             viewType === "DATAROOM_VIEW" ? viewId : prev.dataroomViewId,
           file,
           pages,
+          notionData,
         }));
         setSubmitted(true);
         setVerificationRequested(false);
@@ -168,6 +175,7 @@ export default function DataroomView({
       pages: null,
       file: null,
       viewId: "",
+      notionData: null,
     }));
     // This effect is specifically for handling changes to `documentData` post-mount
   }, [documentData]);
@@ -205,37 +213,62 @@ export default function DataroomView({
       </div>
     );
   }
+
+  if (submitted && documentData) {
+    return viewData.notionData?.recordMap ? (
+      <div className="bg-gray-950">
+        <NotionPage
+          recordMap={viewData.notionData.recordMap}
+          viewId={viewData.viewId}
+          linkId={link.id}
+          documentId={documentData.id}
+          documentName={documentData.name}
+          versionNumber={documentData.documentVersionNumber}
+          brand={brand}
+          dataroomId={dataroom.id}
+          setDocumentData={setDocumentData}
+        />
+      </div>
+    ) : viewData.pages ? (
+      <div className="bg-gray-950">
+        <PagesViewer
+          pages={viewData.pages}
+          viewId={viewData.viewId}
+          linkId={link.id}
+          documentId={documentData.id}
+          documentName={documentData.name}
+          allowDownload={link.allowDownload!}
+          feedbackEnabled={link.enableFeedback!}
+          screenshotProtectionEnabled={link.enableScreenshotProtection!}
+          versionNumber={documentData.documentVersionNumber}
+          brand={brand}
+          dataroomId={dataroom.id}
+          setDocumentData={setDocumentData}
+        />
+      </div>
+    ) : null;
+  }
+
+  if (submitted && !documentData) {
+    return (
+      <div className="bg-gray-950">
+        <DataroomViewer
+          brand={brand!}
+          viewId={viewData.viewId}
+          dataroomViewId={viewData.dataroomViewId!}
+          dataroom={dataroom}
+          setDocumentData={setDocumentData}
+          setViewType={setViewType}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="bg-gray-950">
-      {submitted ? (
-        documentData && viewData.pages ? (
-          <PagesViewer
-            pages={viewData.pages}
-            viewId={viewData.viewId}
-            linkId={link.id}
-            documentId={documentData.id}
-            allowDownload={link.allowDownload!}
-            feedbackEnabled={link.enableFeedback!}
-            versionNumber={documentData.documentVersionNumber}
-            brand={brand}
-            dataroomId={dataroom.id}
-            setDocumentData={setDocumentData}
-          />
-        ) : (
-          <DataroomViewer
-            brand={brand!}
-            viewId={viewData.viewId}
-            dataroomViewId={viewData.dataroomViewId!}
-            dataroom={dataroom}
-            setDocumentData={setDocumentData}
-            setViewType={setViewType}
-          />
-        )
-      ) : (
-        <div className="h-screen flex items-center justify-center">
-          <LoadingSpinner className="h-20 w-20" />
-        </div>
-      )}
+      <div className="h-screen flex items-center justify-center">
+        <LoadingSpinner className="h-20 w-20" />
+      </div>
     </div>
   );
 }

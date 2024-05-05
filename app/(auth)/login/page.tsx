@@ -34,7 +34,7 @@ export default function Login() {
           className="absolute inset-x-0 top-10 -z-10 flex transform-gpu justify-center overflow-hidden blur-3xl"
           aria-hidden="true"
         ></div>
-        <div className="z-10 mt-[calc(20vh)] h-fit w-full mx-5 sm:mx-0 max-w-md overflow-hiddenbg-gray-50 rounded-lg">
+        <div className="z-10 mt-[calc(20vh)] h-fit w-full mx-5 sm:mx-0 max-w-md overflow-hidden rounded-lg">
           <div className="flex flex-col items-center justify-center space-y-3 px-4 py-6 pt-8 text-center sm:px-16">
             <Link href="/">
               <span className=" text-2xl font-semibold text-gray-800 text-balance ">
@@ -161,6 +161,18 @@ export default function Login() {
               <span>Continue with a passkey</span>
             </Button>
           </div>
+          <p className=" mt-10 text-xs text-muted-foreground w-full max-w-md px-4 sm:px-16">
+            By clicking continue, you acknowledge that you have read and agree
+            to Papermark&apos;s{" "}
+            <Link href="/terms" className="underline">
+              Terms of Service
+            </Link>{" "}
+            and{" "}
+            <Link href="/privacy" className="underline">
+              Privacy Policy
+            </Link>
+            .
+          </p>
         </div>
       </div>
       <div className="hidden w-full justify-center bg-gray-800 md:flex md:w-1/2 lg:w-3/5">

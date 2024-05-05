@@ -31,6 +31,7 @@ type DRDocument = {
   name: string;
   versions: {
     id: string;
+    type: string;
     versionNumber: number;
     hasPages: boolean;
   }[];
@@ -43,6 +44,7 @@ type DocumentsCardProps = {
     id: string;
     name: string;
     hasPages: boolean;
+    documentType: "pdf" | "notion";
     documentVersionId: string;
     documentVersionNumber: number;
   }) => void;
@@ -61,12 +63,16 @@ export default function DocumentCard({
       <li className="group/row relative rounded-lg p-3 border-0 dark:bg-secondary ring-1 ring-gray-200 dark:ring-gray-700 transition-all hover:ring-gray-300 hover:dark:ring-gray-500 hover:bg-secondary sm:p-4 flex justify-between items-center">
         <div className="min-w-0 flex shrink items-center space-x-2 sm:space-x-4">
           <div className="w-8 mx-0.5 sm:mx-1 text-center flex justify-center items-center">
-            <Image
-              src={`/_icons/pdf${isLight ? "-light" : ""}.svg`}
-              alt="File icon"
-              width={50}
-              height={50}
-            />
+            {document.versions[0].type === "notion" ? (
+              <NotionIcon className="w-8 h-8" />
+            ) : (
+              <Image
+                src={`/_icons/pdf${isLight ? "-light" : ""}.svg`}
+                alt="File icon"
+                width={50}
+                height={50}
+              />
+            )}
           </div>
 
           <div className="flex-col">
@@ -80,6 +86,9 @@ export default function DocumentCard({
                       id: document.id,
                       name: document.name,
                       hasPages: document.versions[0].hasPages,
+                      documentType: document.versions[0].type as
+                        | "pdf"
+                        | "notion",
                       documentVersionId: document.versions[0].id,
                       documentVersionNumber: document.versions[0].versionNumber,
                     });

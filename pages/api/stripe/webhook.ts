@@ -3,7 +3,11 @@ import { Readable } from "node:stream";
 import type Stripe from "stripe";
 import prisma from "@/lib/prisma";
 import { stripe } from "@/lib/stripe";
-import { getPlanFromPriceId, isNewCustomer } from "@/lib/stripe/utils";
+import {
+  getPlanFromPriceId,
+  isNewCustomer,
+  isUpgradedCustomer,
+} from "@/lib/stripe/utils";
 import { log } from "@/lib/utils";
 import { sendUpgradePlanEmail } from "@/lib/emails/send-upgrade-plan";
 
@@ -126,6 +130,9 @@ export default async function webhookHandler(
           const subscriptionUpdated = event.data.object as Stripe.Subscription;
           const priceId = subscriptionUpdated.items.data[0].price.id;
           const newCustomer = isNewCustomer(event.data.previous_attributes);
+          const upgradedCustomer = isUpgradedCustomer(
+            event.data.previous_attributes,
+          );
 
           const plan = getPlanFromPriceId(priceId);
           const stripeId = subscriptionUpdated.customer.toString();
@@ -145,17 +152,40 @@ export default async function webhookHandler(
             newCustomer,
           });
 
+          // if user upgrades from Pro to Business, checkout event won't be fired
+          // so we need to update the user immediately
+          if (upgradedCustomer && !newCustomer) {
+            await prisma.team.update({
+              where: {
+                stripeId: stripeId,
+              },
+              data: {
+                plan: plan.slug,
+                subscriptionId,
+                startsAt,
+                endsAt,
+              },
+              select: {
+                id: true,
+              },
+            });
+
+            pendingSubscriptionUpdates.delete(stripeId);
+          }
+
           // If project cancels their subscription
         } else if (event.type === "customer.subscription.deleted") {
           const subscriptionDeleted = event.data.object as Stripe.Subscription;
 
           const stripeId = subscriptionDeleted.customer.toString();
+          const subscriptionId = subscriptionDeleted.id;
 
           // If a project deletes their subscription, reset their usage limit in the database to 1000.
           // Also remove the root domain redirect for all their domains from Redis.
           const team = await prisma.team.update({
             where: {
               stripeId,
+              subscriptionId,
             },
             data: {
               plan: "free",
@@ -171,7 +201,9 @@ export default async function webhookHandler(
               message:
                 "Team with stripeId: `" +
                 stripeId +
-                "`not found in Stripe webhook `customer.subscription.deleted` callback",
+                "` and subscriptionId `" +
+                subscriptionId +
+                "` not found in Stripe webhook `customer.subscription.deleted` callback",
               type: "error",
             });
             return;
@@ -193,7 +225,9 @@ export default async function webhookHandler(
           type: "error",
           mention: true,
         });
-        return;
+        return res
+          .status(400)
+          .send(`Error in webhook: ${(error as Error).message}`);
       }
     } else {
       return res.status(400).send(`🤷‍♀️ Unhandled event type: ${event.type}`);

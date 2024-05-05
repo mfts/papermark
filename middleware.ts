@@ -2,6 +2,17 @@ import { NextFetchEvent, NextRequest, NextResponse } from "next/server";
 import AppMiddleware from "@/lib/middleware/app";
 import DomainMiddleware from "@/lib/middleware/domain";
 import { BLOCKED_PATHNAMES } from "./lib/constants";
+import PostHogMiddleware from "./lib/middleware/posthog";
+
+function isAnalyticsPath(path: string) {
+  // Create a regular expression
+  // ^ - asserts position at start of the line
+  // /ingest/ - matches the literal string "/ingest/"
+  // .* - matches any character (except for line terminators) 0 or more times
+  const pattern = /^\/ingest\/.*/;
+
+  return pattern.test(path);
+}
 
 export const config = {
   matcher: [
@@ -12,15 +23,18 @@ export const config = {
      * 3. /_static (inside /public)
      * 4. /_vercel (Vercel internals)
      * 5. /favicon.ico, /sitemap.xml (static files)
-     * 6. ingest (analytics)
      */
-    "/((?!api/|_next/|_static|_vercel|ingest|favicon.ico|sitemap.xml).*)",
+    "/((?!api/|_next/|_static|_vercel|favicon.ico|sitemap.xml).*)",
   ],
 };
 
 export default async function middleware(req: NextRequest, ev: NextFetchEvent) {
   const path = req.nextUrl.pathname;
   const host = req.headers.get("host");
+
+  if (isAnalyticsPath(path)) {
+    return PostHogMiddleware(req);
+  }
 
   if (
     (process.env.NODE_ENV === "development" && host?.includes(".local")) ||
@@ -39,9 +53,11 @@ export default async function middleware(req: NextRequest, ev: NextFetchEvent) {
     path !== "/v1" &&
     path !== "/register" &&
     path !== "/privacy" &&
+    path !== "/terms" &&
     path !== "/oss-friends" &&
     path !== "/pricing" &&
     path !== "/docsend-alternatives" &&
+    path !== "/data-room" &&
     path !== "/launch-week" &&
     path !== "/open-source-investors" &&
     path !== "/investors" &&

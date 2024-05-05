@@ -40,7 +40,7 @@ export default function StatsCard({
   const statistics = [
     {
       name: "Number of visits",
-      value: stats?.views.length.toString() ?? "0",
+      value: stats?.totalViews.toString() ?? "0",
       active: true,
     },
     {

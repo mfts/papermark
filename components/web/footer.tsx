@@ -1,15 +1,18 @@
 import GitHubIcon from "@/components/shared/icons/github";
 import TwitterIcon from "@/components/shared/icons/twitter";
 import LinkedinIcon from "@/components/shared/icons/linkedin";
+import { StatusWidget } from "./status-widget";
 
 const navigation = {
   product: [
+    { name: "Data Room", href: "/data-room" },
     { name: "AI Document Assistant", href: "/ai" },
     { name: "Notion", href: "/share-notion-page" },
     { name: "Pricing", href: "/pricing" },
   ],
   resources: [
     { name: "Privacy Policy", href: "/privacy" },
+    { name: "Terms of Service", href: "/terms" },
     { name: "Launch Week", href: "/launch-week" },
   ],
   tools: [
@@ -25,7 +28,7 @@ const navigation = {
       href: "https://chat.openai.com/g/g-G5orSgI31-findvc",
     },
     {
-      name: "DocSend Alternatives Finder",
+      name: "DocSend Alternatives",
       href: "/docsend-alternatives",
     },
   ],
@@ -87,6 +90,9 @@ export default function Footer() {
                   <item.icon />
                 </a>
               ))}
+            </div>
+            <div className="w-fit">
+              <StatusWidget />
             </div>
           </div>
           <div className="mt-16 grid grid-cols-2 gap-8 xl:col-span-2 xl:mt-0">

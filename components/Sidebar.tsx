@@ -12,19 +12,15 @@ import SelectTeam from "./teams/select-team";
 import { TeamContextType, initialState, useTeam } from "@/context/team-context";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import ProfileMenu from "./profile-menu";
-import { AddDocumentModal } from "./documents/add-document-modal";
-import { Button } from "./ui/button";
 import {
-  FolderPlusIcon,
   PaletteIcon,
-  PlusIcon,
   FolderIcon as FolderLucideIcon,
   FolderOpenIcon,
   ServerIcon,
 } from "lucide-react";
 import SiderbarFolders from "./sidebar-folders";
-import { AddFolderModal } from "./folders/add-folder-modal";
 import { ScrollArea } from "./ui/scroll-area";
+import { UpgradePlanModal } from "./billing/upgrade-plan-modal";
 
 export default function Sidebar() {
   return (
@@ -62,7 +58,7 @@ export default function Sidebar() {
 export const SidebarComponent = ({ className }: { className?: string }) => {
   const [showProBanner, setShowProBanner] = useState<boolean | null>(null);
   const { data: session, status } = useSession();
-  const { plan, loading } = usePlan();
+  const { plan, trial: userTrial, loading } = usePlan();
 
   const router = useRouter();
   const { currentTeam, teams, isLoading }: TeamContextType =
@@ -76,7 +72,7 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
     }
   }, []);
 
-  const userPlan = plan && plan.plan;
+  const userPlan = plan;
 
   const navigation = [
     // {
@@ -109,7 +105,8 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
       icon: ServerIcon,
       current: router.pathname.includes("datarooms"),
       active: false,
-      disabled: userPlan === "business" ? false : true,
+      disabled:
+        userPlan === "business" || userTrial === "drtrial" ? false : true,
     },
     {
       name: "Branding",
@@ -126,7 +123,8 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
       current:
         router.pathname.includes("settings") &&
         !router.pathname.includes("branding") &&
-        !router.pathname.includes("datarooms"),
+        !router.pathname.includes("datarooms") &&
+        !router.pathname.includes("documents"),
       active: false,
       disabled: false,
     },
@@ -206,6 +204,27 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
                       </button>
                       {item.active ? <SiderbarFolders /> : null}
                     </div>
+                  );
+                }
+                if (
+                  userPlan !== "business" &&
+                  userTrial !== "drtrial" &&
+                  item.name === "Datarooms"
+                ) {
+                  return (
+                    <UpgradePlanModal
+                      key={item.name}
+                      clickedPlan={"Business"}
+                      trigger={"datarooms"}
+                    >
+                      <div className="group flex gap-x-2 items-center rounded-md px-3 py-2 text-sm leading-6 w-full hover:bg-transparent text-muted-foreground">
+                        <item.icon
+                          className="h-5 w-5 shrink-0"
+                          aria-hidden="true"
+                        />
+                        {item.name}
+                      </div>
+                    </UpgradePlanModal>
                   );
                 }
                 return (

@@ -40,9 +40,17 @@ export default async function handle(
           isArchived: true,
           enableCustomMetatag: true,
           enableFeedback: true,
+          enableScreenshotProtection: true,
           metaTitle: true,
           metaDescription: true,
           metaImage: true,
+          enableQuestion: true,
+          feedback: {
+            select: {
+              id: true,
+              data: true,
+            },
+          },
           document: {
             select: {
               id: true,

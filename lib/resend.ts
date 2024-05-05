@@ -44,6 +44,11 @@ export const sendEmail = async ({
 
     // Check if the email sending operation returned an error and throw it
     if (error) {
+      log({
+        message: `Resend returned error when sending email: ${error.name} \n\n ${error.message}`,
+        type: "error",
+        mention: true,
+      });
       throw error;
     }
 

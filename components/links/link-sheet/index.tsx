@@ -37,10 +37,14 @@ export const DEFAULT_LINK_PROPS = {
   denyList: [],
   enableNotification: true,
   enableFeedback: true,
+  enableScreenshotProtection: false,
   enableCustomMetatag: false,
   metaTitle: null,
   metaDescription: null,
   metaImage: null,
+  enabledQuestion: false,
+  questionText: null,
+  questionType: null,
 };
 
 export type DEFAULT_LINK_TYPE = {
@@ -57,10 +61,14 @@ export type DEFAULT_LINK_TYPE = {
   denyList: string[];
   enableNotification: boolean;
   enableFeedback: boolean;
+  enableScreenshotProtection: boolean;
   enableCustomMetatag: boolean; // metatags
   metaTitle: string | null; // metatags
   metaDescription: string | null; // metatags
   metaImage: string | null; // metatags
+  enableQuestion?: boolean; // feedback question
+  questionText: string | null;
+  questionType: string | null;
 };
 
 export default function LinkSheet({
@@ -216,7 +224,10 @@ export default function LinkSheet({
                     </div>
 
                     <div className="space-y-2">
-                      <DomainSection {...{ data, setData, domains }} />
+                      <DomainSection
+                        {...{ data, setData, domains }}
+                        linkType={linkType}
+                      />
                     </div>
 
                     <div className="flex items-center relative">

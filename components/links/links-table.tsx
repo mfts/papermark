@@ -81,9 +81,15 @@ export default function LinksTable({
         ? link.enableNotification
         : false,
       enableFeedback: link.enableFeedback ? link.enableFeedback : false,
+      enableScreenshotProtection: link.enableScreenshotProtection
+        ? link.enableScreenshotProtection
+        : false,
       enableCustomMetatag: link.enableCustomMetatag
         ? link.enableCustomMetatag
         : false,
+      enableQuestion: link.enableQuestion ? link.enableQuestion : false,
+      questionText: link.feedback ? link.feedback.data?.question : "",
+      questionType: link.feedback ? link.feedback.data?.type : "",
       metaTitle: link.metaTitle,
       metaDescription: link.metaDescription,
       metaImage: link.metaImage,
@@ -139,7 +145,7 @@ export default function LinksTable({
     ? links.filter((link) => link.isArchived).length
     : 0;
 
-  const hasFreePlan = plan && plan.plan === "free";
+  const hasFreePlan = plan === "free";
 
   console.log("links", links);
 

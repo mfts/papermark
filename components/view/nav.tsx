@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Button } from "../ui/button";
 import PapermarkSparkle from "../shared/icons/papermark-sparkle";
-import { ArrowUpRight, Download } from "lucide-react";
+import { ArrowUpRight, Download, Slash } from "lucide-react";
 import { Brand, DataroomBrand } from "@prisma/client";
 import Image from "next/image";
 import { toast } from "sonner";
@@ -14,6 +14,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuShortcut,
 } from "@/components/ui/dropdown-menu";
+import { determineTextColor } from "@/lib/utils/determine-text-color";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "../ui/breadcrumb";
 
 export default function Nav({
   pageNumber,
@@ -25,6 +34,7 @@ export default function Nav({
   linkId,
   type,
   embeddedLinks,
+  documentName,
   isDataroom,
   setDocumentData,
 }: {
@@ -37,6 +47,7 @@ export default function Nav({
   viewId?: string;
   linkId?: string;
   type?: "pdf" | "notion";
+  documentName?: string;
   isDataroom?: boolean;
   setDocumentData?: (data: any) => void;
 }) {
@@ -85,7 +96,7 @@ export default function Nav({
                 />
               ) : (
                 <Link
-                  href="https://www.papermark.io"
+                  href={`https://www.papermark.io?utm_campaign=navbar&utm_medium=navbar&utm_source=papermark-${linkId}`}
                   target="_blank"
                   className="text-2xl font-bold tracking-tighter text-white"
                 >
@@ -94,15 +105,40 @@ export default function Nav({
               )}
             </div>
             {isDataroom && setDocumentData ? (
-              <div>
-                <Button
-                  onClick={() => setDocumentData(null)}
-                  className="text-white text-sm font-medium"
-                  variant="link"
-                >
-                  Dataroom Home
-                </Button>
-              </div>
+              <Breadcrumb>
+                <BreadcrumbList>
+                  <BreadcrumbItem>
+                    <BreadcrumbLink
+                      className="cursor-pointer underline underline-offset-4 hover:font-medium"
+                      onClick={() => setDocumentData(null)}
+                      style={{
+                        color:
+                          brand && brand.brandColor
+                            ? determineTextColor(brand.brandColor)
+                            : "white",
+                      }}
+                    >
+                      Home
+                    </BreadcrumbLink>
+                  </BreadcrumbItem>
+                  <BreadcrumbSeparator>
+                    <Slash />
+                  </BreadcrumbSeparator>
+                  <BreadcrumbItem>
+                    <BreadcrumbPage
+                      className="font-medium"
+                      style={{
+                        color:
+                          brand && brand.brandColor
+                            ? determineTextColor(brand.brandColor)
+                            : "white",
+                      }}
+                    >
+                      {documentName ?? "Document"}
+                    </BreadcrumbPage>
+                  </BreadcrumbItem>
+                </BreadcrumbList>
+              </Breadcrumb>
             ) : null}
           </div>
           <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0 space-x-4">

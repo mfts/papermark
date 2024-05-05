@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { bytesToSize } from "@/lib/utils";
 import { toast } from "sonner";
@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useTeam } from "@/context/team-context";
 import { usePlan } from "@/lib/swr/use-billing";
+import { getPagesCount } from "@/lib/utils/get-page-number-count";
 
 function fileIcon(fileType: string) {
   switch (fileType) {
@@ -40,7 +41,7 @@ export default function DocumentUpload({
   setCurrentFile: React.Dispatch<React.SetStateAction<File | null>>;
 }) {
   const { plan, loading } = usePlan();
-  const maxSize = plan?.plan === "pro" ? 100 : 30;
+  const maxSize = plan === "pro" ? 100 : 30;
   const { getRootProps, getInputProps } = useDropzone({
     accept: {
       "application/pdf": [], // ".pdf"
@@ -48,7 +49,22 @@ export default function DocumentUpload({
     multiple: false,
     maxSize: maxSize * 1024 * 1024, // 30 MB
     onDropAccepted: (acceptedFiles) => {
-      setCurrentFile(acceptedFiles[0]);
+      const file = acceptedFiles[0];
+      file
+        .arrayBuffer()
+        .then((buffer) => {
+          getPagesCount(buffer).then((numPages) => {
+            if (numPages > 100) {
+              toast.error("File has too many pages (max. 100)");
+            } else {
+              setCurrentFile(file);
+            }
+          });
+        })
+        .catch((error) => {
+          console.error("Error reading file:", error);
+          toast.error("Failed to read the file");
+        });
     },
     onDropRejected: (fileRejections) => {
       const { errors } = fileRejections[0];

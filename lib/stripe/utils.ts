@@ -1,3 +1,5 @@
+import Stripe from "stripe";
+
 export function getPlanFromPriceId(priceId: string) {
   const env =
     process.env.NEXT_PUBLIC_VERCEL_ENV === "production" ? "production" : "test";
@@ -10,18 +12,7 @@ export function getPlanFromPriceId(priceId: string) {
 
 // custom type coercion because Stripe's types are wrong
 export function isNewCustomer(
-  previousAttributes: // Stripe.Event.Data.PreviousAttributes | undefined
-  | {
-        default_payment_method?: string;
-        items?: {
-          data?: {
-            price?: {
-              id?: string;
-            }[];
-          };
-        };
-      }
-    | undefined,
+  previousAttributes: Partial<Stripe.Subscription> | undefined,
 ) {
   let isNewCustomer = false;
   try {
@@ -37,25 +28,40 @@ export function isNewCustomer(
   return isNewCustomer;
 }
 
+export function isUpgradedCustomer(
+  previousAttributes: Partial<Stripe.Subscription> | undefined,
+) {
+  let isUpgradedUser = false;
+  try {
+    if (
+      // if user has items in their subscription
+      previousAttributes?.items !== undefined
+    ) {
+      isUpgradedUser = true;
+    }
+  } catch (error) {
+    console.error("An error occurred:", error);
+  }
+  return isUpgradedUser;
+}
+
 export const PLANS = [
   {
     name: "Pro",
     slug: "pro",
     price: {
       monthly: {
-        amount: 29,
+        amount: 39,
         priceIds: {
-          test: "price_1NmHGzFJyGSZ96lhp946ODFI",
-          production: "price_1Op0Q3FJyGSZ96lhtEUxLSGs", // new price
-          // production: "price_1NmMZ7FJyGSZ96lhyad2LW90", // old price
+          test: "price_1P3JdWFJyGSZ96lhLqX6drHK",
+          production: "price_1P3FK4FJyGSZ96lhD67yF3lj",
         },
       },
       yearly: {
-        amount: 290,
+        amount: 25,
         priceIds: {
-          test: "price_1NmHHaFJyGSZ96lhXxg2fTr7",
-          production: "price_1Op0fFFJyGSZ96lhPVrvzz5a", // new price
-          // production: "price_1NmMZ7FJyGSZ96lhqZEkh50e", // old price
+          test: "price_1P3JlWFJyGSZ96lhddEsPKGg",
+          production: "price_1P6VTgFJyGSZ96lhshdgZ1it",
         },
       },
     },
@@ -72,10 +78,30 @@ export const PLANS = [
         },
       },
       yearly: {
-        amount: 790,
+        amount: 59,
         priceIds: {
           test: "price_1OuYgPFJyGSZ96lhKk6JzTf1",
-          production: "price_1OuYedFJyGSZ96lhTaJx58pG",
+          production: "price_1P6VnoFJyGSZ96lhgFscsQ61",
+        },
+      },
+    },
+  },
+  {
+    name: "Data Rooms",
+    slug: "datarooms",
+    price: {
+      monthly: {
+        amount: 199,
+        priceIds: {
+          test: "price_1PAtTfFJyGSZ96lhbi4XZU2d",
+          production: "price_1PAtQOFJyGSZ96lhJNZO2LHx",
+        },
+      },
+      yearly: {
+        amount: 149,
+        priceIds: {
+          test: "price_1PCNRrFJyGSZ96lhQopJJ5cg",
+          production: "price_1PCL2GFJyGSZ96lhetYPDN05",
         },
       },
     },

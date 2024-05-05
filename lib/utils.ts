@@ -49,17 +49,41 @@ export const log = async ({
   mention = false,
 }: {
   message: string;
-  type: "info" | "cron" | "links" | "error";
+  type: "info" | "cron" | "links" | "error" | "trial";
   mention?: boolean;
 }) => {
   /* If in development or env variable not set, log to the console */
-  if (process.env.NODE_ENV === "development" || !process.env.PPMK_SLACK_WEBHOOK_URL) {
+  if (
+    process.env.NODE_ENV === "development" ||
+    !process.env.PPMK_SLACK_WEBHOOK_URL
+  ) {
     console.log(message);
     return;
   }
 
   /* Log a message to channel */
   try {
+    if (type === "trial" && process.env.PPMK_TRIAL_SLACK_WEBHOOK_URL) {
+      return await fetch(`${process.env.PPMK_TRIAL_SLACK_WEBHOOK_URL}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          blocks: [
+            {
+              type: "section",
+              text: {
+                type: "mrkdwn",
+                // prettier-ignore
+                text: `${mention ? "<@U05BTDUKPLZ> " : ""}${message}`,
+              },
+            },
+          ],
+        }),
+      });
+    }
+
     return await fetch(`${process.env.PPMK_SLACK_WEBHOOK_URL}`, {
       method: "POST",
       headers: {
@@ -232,11 +256,15 @@ export const getFirstAndLastDay = (day: number) => {
   }
 };
 
-export const formatDate = (dateString: string) => {
+export const formatDate = (dateString: string, updateDate?: boolean) => {
   return new Date(dateString).toLocaleDateString("en-US", {
     day: "numeric",
     month: "long",
-    year: "numeric",
+    year:
+      updateDate &&
+      new Date(dateString).getFullYear() === new Date().getFullYear()
+        ? undefined
+        : "numeric",
     timeZone: "UTC",
   });
 };
@@ -418,13 +446,48 @@ export const generateGravatarHash = (email: string | null): string => {
   return hash;
 };
 
-export const sanitizeAllowDenyList = (list: string): string[] => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const domainRegex = /^@[^\s@]+\.[^\s@]+$/;
+export async function generateEncrpytedPassword(
+  password: string,
+): Promise<string> {
+  if (!password) return "";
+  const encryptedKey: string = crypto
+    .createHash("sha256")
+    .update(String(process.env.NEXT_PRIVATE_DOCUMENT_PASSWORD_KEY))
+    .digest("base64")
+    .substring(0, 32);
+  const IV: Buffer = crypto.randomBytes(16);
+  const cipher = crypto.createCipheriv("aes-256-ctr", encryptedKey, IV);
+  let encryptedText: string = cipher.update(password, "utf8", "hex");
+  encryptedText += cipher.final("hex");
+  return IV.toString("hex") + ":" + encryptedText;
+}
 
-    return list
-      .split("\n")
-      .map(item => item.trim().replace(/,$/, '')) // Trim whitespace and remove trailing commas
-      .filter(item => item !== "") // Remove empty items
-      .filter(item => emailRegex.test(item) || domainRegex.test(item)); // Remove items that don't match email or domain regex
-  };
+export function decryptEncrpytedPassword(password: string): string {
+  if (!password) return "";
+  const encryptedKey: string = crypto
+    .createHash("sha256")
+    .update(String(process.env.NEXT_PRIVATE_DOCUMENT_PASSWORD_KEY))
+    .digest("base64")
+    .substring(0, 32);
+  const textParts: string[] = password.split(":");
+  if (!textParts || textParts.length !== 2) {
+    return password;
+  }
+  const IV: Buffer = Buffer.from(textParts[0], "hex");
+  const encryptedText: string = textParts[1];
+  const decipher = crypto.createDecipheriv("aes-256-ctr", encryptedKey, IV);
+  let decrypted: string = decipher.update(encryptedText, "hex", "utf8");
+  decrypted += decipher.final("utf8");
+  return decrypted;
+}
+
+export const sanitizeAllowDenyList = (list: string): string[] => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const domainRegex = /^@[^\s@]+\.[^\s@]+$/;
+
+  return list
+    .split("\n")
+    .map((item) => item.trim().replace(/,$/, "")) // Trim whitespace and remove trailing commas
+    .filter((item) => item !== "") // Remove empty items
+    .filter((item) => emailRegex.test(item) || domainRegex.test(item)); // Remove items that don't match email or domain regex
+};

@@ -67,7 +67,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
   // iterate the link.documents and extract type and file and rest of the props
   let documents = [];
   for (const document of link.dataroom.documents) {
-    const { type, file, ...versionWithoutTypeAndFile } =
+    const { file, ...versionWithoutTypeAndFile } =
       document.document.versions[0];
 
     const newDocument = {
@@ -95,7 +95,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
       },
       brand, // pass brand to the client
     },
-    revalidate: brand ? 10 : false,
+    revalidate: 10,
   };
 };
 
@@ -125,29 +125,19 @@ export default function ViewPage({
     token: string;
     email: string;
   };
-  const { fId: folderId, dId: documentId } = router.query as {
-    fId: string;
-    dId: string;
-  };
+
   const { data: session, status } = useSession();
 
   if (!link || status === "loading" || router.isFallback) {
     return (
       <>
-        <Head>
-          <meta
-            property="og:url"
-            key="og-url"
-            content={`https://www.papermark.io/view/${router.query.linkId}`}
-          />
-        </Head>
-        {meta && meta.enableCustomMetatag ? (
-          <CustomMetatag
-            title={meta.metaTitle}
-            description={meta.metaDescription}
-            imageUrl={meta.metaImage}
-          />
-        ) : null}
+        <CustomMetatag
+          enableBranding={meta?.enableCustomMetatag ?? false}
+          title={meta?.metaTitle ?? link?.dataroom.name ?? "Dataroom"}
+          description={meta?.metaDescription ?? null}
+          imageUrl={meta?.metaImage ?? null}
+          url={`https://www.papermark.io/view/d/${router.query.linkId}`}
+        />
         <div className="h-screen flex items-center justify-center">
           <LoadingSpinner className="h-20 w-20" />
         </div>
@@ -183,23 +173,16 @@ export default function ViewPage({
   if (emailProtected || linkPassword) {
     return (
       <>
-        <Head>
-          <meta
-            property="og:url"
-            key="og-url"
-            content={`https://www.papermark.io/view/${link.id}`}
-          />
-        </Head>
-        {enableCustomMetatag ? (
-          <CustomMetatag
-            title={metaTitle}
-            description={metaDescription}
-            imageUrl={metaImage}
-          />
-        ) : null}
+        <CustomMetatag
+          enableBranding={enableCustomMetatag ?? false}
+          title={metaTitle}
+          description={metaDescription}
+          imageUrl={metaImage}
+          url={`https://www.papermark.io/view/d/${router.query.linkId}`}
+        />
         <DataroomView
           link={link}
-          userEmail={userEmail}
+          userEmail={verifiedEmail ?? userEmail}
           userId={userId}
           isProtected={true}
           brand={brand}
@@ -212,23 +195,16 @@ export default function ViewPage({
 
   return (
     <>
-      <Head>
-        <meta
-          property="og:url"
-          key="og-url"
-          content={`https://www.papermark.io/view/${link.id}`}
-        />
-      </Head>
-      {enableCustomMetatag ? (
-        <CustomMetatag
-          title={metaTitle}
-          description={metaDescription}
-          imageUrl={metaImage}
-        />
-      ) : null}
+      <CustomMetatag
+        enableBranding={enableCustomMetatag ?? false}
+        title={metaTitle}
+        description={metaDescription}
+        imageUrl={metaImage}
+        url={`https://www.papermark.io/view/d/${router.query.linkId}`}
+      />
       <DataroomView
         link={link}
-        userEmail={userEmail}
+        userEmail={verifiedEmail ?? userEmail}
         userId={userId}
         isProtected={false}
         brand={brand}

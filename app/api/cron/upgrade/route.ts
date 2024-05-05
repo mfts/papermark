@@ -31,7 +31,7 @@ export async function POST(req: Request) {
       where: {
         plan: {
           // exclude users who are on pro or free plan
-          notIn: ["pro", "starter", "free"],
+          in: ["trial"],
         },
       },
       select: {
@@ -85,7 +85,7 @@ export async function POST(req: Request) {
             return await Promise.allSettled([
               log({
                 message: `Trial End Reminder for team: *${id}* is expiring in ${teamDaysLeft} days, email sent.`,
-                type: "cron"
+                type: "cron",
               }),
               limiter.schedule(() =>
                 sendTrialEndReminderEmail(userEmail, userName),
@@ -110,7 +110,7 @@ export async function POST(req: Request) {
             return await Promise.allSettled([
               log({
                 message: `Final Trial End Reminder for team: *${id}* is expiring in ${teamDaysLeft} days, email sent.`,
-                type: "cron"
+                type: "cron",
               }),
               limiter.schedule(() =>
                 sendTrialEndFinalReminderEmail(userEmail, userName),
@@ -131,7 +131,7 @@ export async function POST(req: Request) {
           return await Promise.allSettled([
             log({
               message: `Downgrade to free for user: *${id}* is expiring in ${teamDaysLeft} days, downgraded.`,
-              type: "cron"
+              type: "cron",
             }),
             prisma.user.update({
               where: { email: userEmail },
@@ -148,7 +148,7 @@ export async function POST(req: Request) {
     return NextResponse.json(results);
   } catch (error) {
     await log({
-      message:`Trial end reminder cron failed. Error: " + ${(error as Error).message}`,
+      message: `Trial end reminder cron failed. Error: " + ${(error as Error).message}`,
       type: "cron",
       mention: true,
     });

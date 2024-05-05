@@ -123,23 +123,22 @@ Please note that the prices and availability of features may vary, and it is rec
     <>
       <Head>
         <title>
-          Top 7 Docsend Alternatives in 2024 Personalised for Your Business |
-          Discover Your Best Match
+          Top 10 Docsend Alternatives in 2024 | Find Your Best Match
         </title>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
 
         <meta
           name="description"
-          content="Explore the best Docsend alternatives tailored for your needs. Find the right document sharing and tracking solution personalized for your use case."
+          content="Explore the best Docsend alternatives in 2024 tailored for your needs. Find the right document sharing and tracking solution personalized for your use case."
         />
-        <meta property="og:site_name" content="startupinvestors.vercel.app" />
+
         <meta
           property="og:description"
-          content="Seeking Docsend alternatives? Discover best document sharing platforms that cater to your unique business requirements and enhance your operational efficiency."
+          content="Looking for Docsend alternatives? Discover best document sharing platforms that cater to your unique business requirements and enhance your operational efficiency."
         />
         <meta
           property="og:title"
-          content="Best 7 Docsend Alternatives in 2024 Personalised for Your Business"
+          content="Best 10 Docsend Alternatives in 2024 Personalised for Your Business"
         />
 
         <meta name="twitter:card" content="summary_large_image" />
@@ -151,38 +150,49 @@ Please note that the prices and availability of features may vary, and it is rec
           name="twitter:description"
           content="Uncover personalized Docsend alternatives for your business. Find the best document and pitch deck sharing platforms tailored to fit your specific needs."
         />
-        <meta property="og:image" content="cover.png" />
       </Head>
-
       <div className="flex flex-1 flex-col bg-white text-black">
         <Navbar />
-        <main>
-          <section className="pt-24 lg:pt-40 bg-white">
-            <div className="px-4 lg:px-2">
-              <div className="max-w-7xl mx-auto px-4 md:px-8">
-                <div className="w-full ">
-                  <div className="prose prose-h2:mb-2 first:prose-h2:mt-0 prose-h2:mt-10 prose-headings:font-medium sm:max-w-screen-md sm:pr-2 md:pr-0">
-                    <h1 className="text-4xl font-bold  text-black lg:text-6xl my-8 ">
-                      Top 7 Docsend alternatives in 2024
+        <main className="flex flex-col items-center w-full">
+          <section className="pt-24 lg:pt-24 bg-white w-full">
+            <div className="px-4 lg:px-2 w-full">
+              <div className="max-w-7xl mx-auto px-4 md:px-8 w-full">
+                <div className="w-full flex flex-col items-center">
+                  <div className="pb-1">
+                    <img
+                      src="https://media.licdn.com/dms/image/C560BAQF0P4VJimYMZw/company-logo_200_200/0/1630615035618?e=1720656000&v=beta&t=gWnITXssNMEKBqbdPrGev6pbQf9iLywYEr404OFtKV0"
+                      alt="App screenshot"
+                      className="mx-auto"
+                      width={100}
+                      height={50}
+                    />
+                  </div>
+                  <div className="prose prose-h2:mb-2 first:prose-h2:mt-0 prose-h2:mt-10 prose-headings:font-medium sm:max-w-screen-md sm:pr-2 md:pr-0 w-full text-center">
+                    <h1 className="text-5xl font-bold text-black lg:text-7xl my-8">
+                      Top 10 Docsend alternatives in 2024
                     </h1>
-                    {/* <p className=" text-m my-4 tracking-tight text-gray-500 sm:text-xl">
-                      Compare best Docsend alternatives based on core features,
-                      pricing, plans
-                      <br />
-                    </p> */}
+
+                    <p className="text-m my-4 tracking-tight text-gray-500 sm:text-xl">
+                      Compare best Docsend alternatives for sharing documents
+                      and creating data room.
+                    </p>
                   </div>
                 </div>
+                <FeaturesTable />
               </div>
             </div>
 
             <Article />
-            <FeaturesTable />
+
             <PricingTable />
             <UseCaseTable />
             <Grid />
             <div className="max-w-5xl mx-auto px-8 lg:px-28">
               <div className="max-w-5xl mx-auto">
                 <div className="w-full my-1 mx-auto "></div>
+                <h2 className="text-4xl font-bold text-black  my-8 text-center">
+                  Find Docsend alterntive based on your requirements
+                </h2>
                 <p className="text-1xl mt-3 mb-5 text-center text-black font-semibold ">
                   Step 1. Select features you prioritize the most <br />
                 </p>

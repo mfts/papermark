@@ -158,6 +158,7 @@ export default async function handle(
           payload: {
             documentVersionId: document.versions[0].id,
             teamId: teamId,
+            documentId: document.id,
           },
         });
       }

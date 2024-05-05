@@ -52,7 +52,7 @@ export default function ComparisonTable() {
             <br />
           </h2>
           <p className="mx-auto mt-6 max-w-xl text-lg leading-8 text-gray-600">
-            Alternatives which help users to share documents and track the
+            Docsend Alternatives which help users share documents and track the
             progress on each page. So allow to capture email and set other
             setting for sharable links.
           </p>

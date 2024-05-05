@@ -8,6 +8,7 @@ import {
   DataroomDocument,
   Dataroom,
   DataroomFolder,
+  Feedback,
 } from "@prisma/client";
 
 export type CustomUser = NextAuthUser & PrismaUser;
@@ -37,6 +38,7 @@ export interface LinkWithViews extends Link {
     views: number;
   };
   views: View[];
+  feedback: { id: true; data: { question: string; type: string } } | null;
 }
 
 export interface LinkWithDocument extends Link {
@@ -47,12 +49,18 @@ export interface LinkWithDocument extends Link {
       type: string;
       hasPages: boolean;
       file: string;
-    }[] & {
-      team?: {
-        plan: string;
-      };
-    };
+    }[];
+    team: {
+      plan: string;
+    } | null;
   };
+  feedback: {
+    id: string;
+    data: {
+      question: string;
+      type: string;
+    };
+  } | null;
 }
 
 export interface Geo {

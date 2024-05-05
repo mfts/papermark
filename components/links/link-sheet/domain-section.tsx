@@ -13,10 +13,12 @@ export default function DomainSection({
   data,
   setData,
   domains,
+  linkType,
 }: {
   data: DEFAULT_LINK_TYPE;
   setData: Dispatch<SetStateAction<DEFAULT_LINK_TYPE>>;
   domains?: Domain[];
+  linkType: "DOCUMENT_LINK" | "DATAROOM_LINK";
 }) {
   const [isModalOpen, setModalOpen] = useState(false);
   const teamInfo = useTeam();
@@ -59,14 +61,16 @@ export default function DomainSection({
           <option key="papermark.io" value="papermark.io">
             papermark.io
           </option>
-          {domains
-            // ?.filter((domain) => domain.verified)
-            ?.map(({ slug }) => (
-              <option key={slug} value={slug}>
-                {slug}
-              </option>
-            ))}
-          <option value="add_domain">Add a custom domain ✨</option>
+          {linkType === "DOCUMENT_LINK" ? (
+            <>
+              {domains?.map(({ slug }) => (
+                <option key={slug} value={slug}>
+                  {slug}
+                </option>
+              ))}
+              <option value="add_domain">Add a custom domain ✨</option>
+            </>
+          ) : null}
         </select>
 
         {data.domain && data.domain !== "papermark.io" ? (

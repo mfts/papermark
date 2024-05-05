@@ -11,7 +11,6 @@ import { GetStaticPropsContext } from "next";
 import { useRouter } from "next/router";
 import { Brand } from "@prisma/client";
 import CustomMetatag from "@/components/view/custom-metatag";
-import Head from "next/head";
 
 export const getStaticProps = async (context: GetStaticPropsContext) => {
   const { linkId } = context.params as { linkId: string };
@@ -50,13 +49,16 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
     recordMap = await notion.getPage(pageId);
   }
 
+  const { team, ...linkDocument } = link.document;
+  const teamPlan = team?.plan || "free";
+
   return {
     props: {
       // return link without file and type to avoid sending the file to the client
       link: {
         ...link,
         document: {
-          ...link.document,
+          ...linkDocument,
           versions: [versionWithoutTypeAndFile],
         },
       },
@@ -71,6 +73,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
         metaImage: link.metaImage,
       },
       brand, // pass brand to the client
+      showPoweredByBanner: teamPlan === "free",
     },
     revalidate: brand ? 10 : false,
   };
@@ -88,6 +91,7 @@ export default function ViewPage({
   notionData,
   meta,
   brand,
+  showPoweredByBanner,
 }: {
   link: LinkWithDocument;
   notionData: {
@@ -101,6 +105,7 @@ export default function ViewPage({
     metaImage: string | null;
   } | null;
   brand?: Brand;
+  showPoweredByBanner: boolean;
 }) {
   const router = useRouter();
   const { token, email: verifiedEmail } = router.query as {
@@ -112,20 +117,15 @@ export default function ViewPage({
   if (!link || status === "loading" || router.isFallback) {
     return (
       <>
-        <Head>
-          <meta
-            property="og:url"
-            key="og-url"
-            content={`https://www.papermark.io/view/${router.query.linkId}`}
-          />
-        </Head>
-        {meta && meta.enableCustomMetatag ? (
-          <CustomMetatag
-            title={meta.metaTitle}
-            description={meta.metaDescription}
-            imageUrl={meta.metaImage}
-          />
-        ) : null}
+        <CustomMetatag
+          enableBranding={meta?.enableCustomMetatag ?? false}
+          title={
+            meta?.metaTitle ?? link?.document?.name ?? "Papermark Document"
+          }
+          description={meta?.metaDescription ?? null}
+          imageUrl={meta?.metaImage ?? null}
+          url={`https://www.papermark.io/view/${router.query.linkId}`}
+        />
         <div className="h-screen flex items-center justify-center">
           <LoadingSpinner className="h-20 w-20" />
         </div>
@@ -161,29 +161,23 @@ export default function ViewPage({
   if (emailProtected || linkPassword) {
     return (
       <>
-        <Head>
-          <meta
-            property="og:url"
-            key="og-url"
-            content={`https://www.papermark.io/view/${link.id}`}
-          />
-        </Head>
-        {enableCustomMetatag ? (
-          <CustomMetatag
-            title={metaTitle}
-            description={metaDescription}
-            imageUrl={metaImage}
-          />
-        ) : null}
+        <CustomMetatag
+          enableBranding={enableCustomMetatag ?? false}
+          title={metaTitle ?? link.document.name}
+          description={metaDescription}
+          imageUrl={metaImage}
+          url={`https://www.papermark.io/view/${router.query.linkId}`}
+        />
         <DocumentView
           link={link}
-          userEmail={userEmail}
+          userEmail={verifiedEmail ?? userEmail}
           userId={userId}
           isProtected={true}
           notionData={notionData}
           brand={brand}
           token={token}
           verifiedEmail={verifiedEmail}
+          showPoweredByBanner={showPoweredByBanner}
         />
       </>
     );
@@ -191,27 +185,21 @@ export default function ViewPage({
 
   return (
     <>
-      <Head>
-        <meta
-          property="og:url"
-          key="og-url"
-          content={`https://www.papermark.io/view/${link.id}`}
-        />
-      </Head>
-      {enableCustomMetatag ? (
-        <CustomMetatag
-          title={metaTitle}
-          description={metaDescription}
-          imageUrl={metaImage}
-        />
-      ) : null}
+      <CustomMetatag
+        enableBranding={enableCustomMetatag ?? false}
+        title={metaTitle ?? link.document.name}
+        description={metaDescription}
+        imageUrl={metaImage}
+        url={`https://www.papermark.io/view/${router.query.linkId}`}
+      />
       <DocumentView
         link={link}
-        userEmail={userEmail}
+        userEmail={verifiedEmail ?? userEmail}
         userId={userId}
         isProtected={false}
         notionData={notionData}
         brand={brand}
+        showPoweredByBanner={showPoweredByBanner}
       />
     </>
   );
