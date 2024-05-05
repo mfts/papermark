@@ -257,7 +257,10 @@ export function UpgradePlanModal({
             <div className="flex items-center justify-center space-x-2">
               {plan === "Business" ? (
                 <DataroomTrialModal>
-                  <button className="text-center text-xs text-muted-foreground underline-offset-4 transition-all hover:text-gray-800 hover:dark:text-muted-foreground/80 hover:underline">
+                  <button
+                    className="text-center text-xs text-muted-foreground underline-offset-4 transition-all hover:text-gray-800 hover:dark:text-muted-foreground/80 hover:underline"
+                    onClick={() => analytics.capture("Dataroom Trial Clicked")}
+                  >
                     Looking for a dataroom trial?
                   </button>
                 </DataroomTrialModal>
