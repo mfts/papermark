@@ -203,31 +203,38 @@ export default async function handle(
   }
 
   let viewer: { id: string } | null = null;
-  // find or create a viewer
-  console.time("find-viewer");
-  viewer = await prisma.viewer.findUnique({
-    where: {
-      dataroomId_email: {
-        email: email,
-        dataroomId: dataroomId!,
-      },
-    },
-    select: { id: true },
-  });
-  console.timeEnd("find-viewer");
-
-  if (!viewer) {
-    console.time("create-viewer");
-    viewer = await prisma.viewer.create({
-      data: {
-        email: email,
-        dataroomId: dataroomId!,
-        verified: isEmailVerified,
+  if (email) {
+    // find or create a viewer
+    console.time("find-viewer");
+    viewer = await prisma.viewer.findUnique({
+      where: {
+        dataroomId_email: {
+          email: email,
+          dataroomId: dataroomId!,
+        },
       },
       select: { id: true },
     });
-    console.timeEnd("create-viewer");
+    console.timeEnd("find-viewer");
+
+    if (!viewer) {
+      console.time("create-viewer");
+      viewer = await prisma.viewer.create({
+        data: {
+          email: email,
+          dataroomId: dataroomId!,
+          verified: isEmailVerified,
+        },
+        select: { id: true },
+      });
+      console.timeEnd("create-viewer");
+    }
   }
+
+  // what's the difference between || and ?? on the viewer.id assignment?
+  // viewer?.id ?? undefined
+  // viewer?.id || undefined
+  // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Nullish_coalescing_operator
 
   if (viewType === "DATAROOM_VIEW") {
     try {
@@ -239,7 +246,7 @@ export default async function handle(
           verified: isEmailVerified,
           dataroomId: dataroomId,
           viewType: "DATAROOM_VIEW",
-          viewerId: viewer.id,
+          viewerId: viewer?.id ?? undefined,
         },
         select: { id: true },
       });
@@ -275,7 +282,7 @@ export default async function handle(
         dataroomViewId: dataroomViewId,
         dataroomId: dataroomId,
         viewType: "DOCUMENT_VIEW",
-        viewerId: viewer.id,
+        viewerId: viewer?.id ?? undefined,
       },
       select: { id: true },
     });
