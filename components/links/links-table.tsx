@@ -206,7 +206,7 @@ export default function LinksTable({
                               <div className="whitespace-nowrap w-full flex text-xs md:text-sm group-hover/cell:opacity-0">
                                 {link.domainId
                                   ? `https://${link.domainSlug}/${link.slug}`
-                                  : `https://${process.env.NEXT_PUBLIC_ROOT_DOMAIN}/view/${targetType === "DATAROOM" ? `d/` : ``}${link.id}`}
+                                  : `https://${process.env.NEXT_PUBLIC_ROOT_DOMAIN}/view/${link.id}`}
                               </div>
 
                               {link.domainId && hasFreePlan ? (
@@ -226,7 +226,7 @@ export default function LinksTable({
                                     handleCopyToClipboard(
                                       link.domainId
                                         ? `https://${link.domainSlug}/${link.slug}`
-                                        : `https://${process.env.NEXT_PUBLIC_ROOT_DOMAIN}/view/${targetType === "DATAROOM" ? `d/` : ``}${link.id}`,
+                                        : `https://${process.env.NEXT_PUBLIC_ROOT_DOMAIN}/view/${link.id}`,
                                     )
                                   }
                                   title="Copy to clipboard"
