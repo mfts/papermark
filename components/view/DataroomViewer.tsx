@@ -50,7 +50,7 @@ export default function DataroomViewer({
   setViewType,
   setDocumentData,
 }: {
-  brand: DataroomBrand;
+  brand: Partial<DataroomBrand>;
   viewId: string;
   dataroomViewId: string;
   dataroom: any;

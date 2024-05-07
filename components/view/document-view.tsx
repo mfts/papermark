@@ -39,7 +39,7 @@ export default function DocumentView({
     rootNotionPageId: string | null;
     recordMap: ExtendedRecordMap | null;
   };
-  brand?: Brand;
+  brand?: Partial<Brand> | null;
   token?: string;
   verifiedEmail?: string;
   showPoweredByBanner?: boolean;

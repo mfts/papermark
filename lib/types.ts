@@ -63,6 +63,31 @@ export interface LinkWithDocument extends Link {
   } | null;
 }
 
+export interface LinkWithDataroom extends Link {
+  dataroom: {
+    id: string;
+    name: string;
+    teamId: string;
+    documents: {
+      id: string;
+      folderId: string | null;
+      document: {
+        id: string;
+        name: string;
+        versions: {
+          id: string;
+          versionNumber: number;
+          type: string;
+          hasPages: boolean;
+          file: string;
+        }[];
+      };
+    }[];
+    folders: DataroomFolder[];
+    lastUpdatedAt: Date;
+  };
+}
+
 export interface Geo {
   city?: string | undefined;
   country?: string | undefined;

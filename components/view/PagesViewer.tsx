@@ -42,7 +42,7 @@ export default function PagesViewer({
   feedbackEnabled: boolean;
   screenshotProtectionEnabled: boolean;
   versionNumber: number;
-  brand?: Brand | DataroomBrand;
+  brand?: Partial<Brand> | Partial<DataroomBrand> | null;
   documentName?: string;
   dataroomId?: string;
   setDocumentData?: (data: any) => void;

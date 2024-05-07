@@ -61,7 +61,8 @@ export default function DomainSection({
           <option key="papermark.io" value="papermark.io">
             papermark.io
           </option>
-          {linkType === "DOCUMENT_LINK" ? (
+          {(linkType === "DOCUMENT_LINK" ||
+            teamInfo?.currentTeam?.id === "clvnbn2540000t0s6qyaghvyf") && (
             <>
               {domains?.map(({ slug }) => (
                 <option key={slug} value={slug}>
@@ -70,7 +71,7 @@ export default function DomainSection({
               ))}
               <option value="add_domain">Add a custom domain ✨</option>
             </>
-          ) : null}
+          )}
         </select>
 
         {data.domain && data.domain !== "papermark.io" ? (

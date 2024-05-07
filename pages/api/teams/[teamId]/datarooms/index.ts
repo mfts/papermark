@@ -94,6 +94,9 @@ export default async function handle(
           name: name,
           teamId: teamId,
           pId: pId,
+          links: {
+            create: { linkType: "DATAROOM_LINK" },
+          },
         },
       });
 

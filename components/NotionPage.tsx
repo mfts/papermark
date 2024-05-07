@@ -25,7 +25,7 @@ export const NotionPage = ({
   documentId: string;
   versionNumber: number;
   documentName?: string;
-  brand?: Brand | DataroomBrand;
+  brand?: Partial<Brand> | Partial<DataroomBrand> | null;
   dataroomId?: string;
   setDocumentData?: (data: any) => void;
 }) => {
