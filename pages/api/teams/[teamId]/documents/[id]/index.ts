@@ -116,7 +116,7 @@ export default async function handle(
           team: {
             users: {
               some: {
-                role: "ADMIN",
+                // role: "ADMIN", // TODO: add role check when deleting document
                 userId: userId,
               },
             },
