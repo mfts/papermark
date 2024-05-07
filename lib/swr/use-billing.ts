@@ -3,6 +3,7 @@ import useSWR from "swr";
 import { fetcher } from "@/lib/utils";
 import { useMemo } from "react";
 import { useTeam } from "@/context/team-context";
+import { parse } from "path";
 
 interface BillingProps {
   id: string;
@@ -33,8 +34,33 @@ export function useBilling() {
   };
 }
 
-interface PlanResponse {
-  plan: "free" | "starter" | "pro" | "trial" | "business";
+export type BasePlan =
+  | "free"
+  | "starter"
+  | "pro"
+  | "trial"
+  | "business"
+  | "datarooms";
+type PlanWithTrial = `${BasePlan}+drtrial`;
+
+type PlanResponse = {
+  plan: BasePlan | PlanWithTrial;
+};
+
+interface PlanDetails {
+  plan: BasePlan | null;
+  trial: string | null;
+}
+
+function parsePlan(plan: BasePlan | PlanWithTrial): PlanDetails {
+  if (!plan) return { plan: null, trial: null };
+
+  // Split the plan on '+'
+  const parts = plan.split("+");
+  return {
+    plan: parts[0] as BasePlan, // Always the base plan
+    trial: parts.length > 1 ? parts[1] : null, // 'drtrial' if present, otherwise null
+  };
 }
 
 export function usePlan() {
@@ -49,8 +75,12 @@ export function usePlan() {
     },
   );
 
+  // Parse the plan using the parsing function
+  const parsedPlan = plan ? parsePlan(plan.plan) : { plan: null, trial: null };
+
   return {
-    plan,
+    plan: parsedPlan.plan,
+    trial: parsedPlan.trial,
     loading: !plan && !error,
     error,
   };

@@ -163,6 +163,16 @@ const featureGroups: {
           enterprise: true,
         },
       },
+      {
+        name: "Screenshot protection",
+        id: "feature-user",
+        tiers: {
+          free: false,
+          pro: false,
+          business: true,
+          enterprise: true,
+        },
+      },
     ],
   },
 
@@ -199,60 +209,8 @@ const featureGroups: {
           enterprise: true,
         },
       },
-
-      // {
-      //   name: "Unlimited users",
-      //   id: "feature-user",
-      //   tiers: {
-      //     free: "1 user",
-      //     pro: "2 users",
-      //     business: "3 users",
-      //     enterprise: true,
-      //   },
-      // },
-      // {
-      //   name: "Viewer groups",
-      //   id: "feature-user",
-      //   tiers: {
-      //     free: false,
-      //     pro: false,
-      //     business: false,
-      //     enterprise: true,
-      //   },
-      // },
-
-      // {
-      //   name: "File size",
-      //   id: "feature-user",
-      //   tiers: {
-      //     free: true,
-      //     pro: true,
-      //     business: true,
-      //     enterprise: true,
-      //   },
-      // },
-      // {
-      //   name: "Custom branding",
-      //   id: "feature-user",
-      //   tiers: {
-      //     free: false,
-      //     pro: true,
-      //     business: true,
-      //     enterprise: true,
-      //   },
-      // },
-      // {
-      //   name: "Full whitelabelling",
-      //   id: "feature-user",
-      //   tiers: {
-      //     free: false,
-      //     pro: false,
-      //     business: false,
-      //     enterprise: true,
-      //   },
-      // },
       {
-        name: "Self-hosted",
+        name: "Custom domain for Data Rooms",
         id: "feature-user",
         tiers: {
           free: false,
@@ -268,18 +226,38 @@ const featureGroups: {
           free: false,
           pro: false,
           business: false,
-          enterprise: true,
+          enterprise: "Enterprise",
         },
       },
-
       {
-        name: "Custom dataroom settings",
+        name: "User groups permissions",
         id: "feature-user",
         tiers: {
           free: false,
           pro: false,
           business: false,
           enterprise: true,
+        },
+      },
+      {
+        name: "Unlimited users",
+        id: "feature-user",
+        tiers: {
+          free: "1 user",
+          pro: "2 users",
+          business: "3 users",
+          enterprise: "5 users",
+        },
+      },
+
+      {
+        name: "Self-hosted",
+        id: "feature-user",
+        tiers: {
+          free: false,
+          pro: false,
+          business: false,
+          enterprise: "Enterprise",
         },
       },
     ],
@@ -328,7 +306,7 @@ const featureGroups: {
         },
       },
       {
-        name: "Custom domain",
+        name: "Custom domain for documents",
         id: "feature-user",
         tiers: {
           free: false,
@@ -370,7 +348,7 @@ const featureGroups: {
         },
       },
       {
-        name: "Full white-label",
+        name: "Custom domain for data rooms",
         id: "feature-user",
         tiers: {
           free: false,
@@ -380,13 +358,23 @@ const featureGroups: {
         },
       },
       {
+        name: "Full white-label",
+        id: "feature-user",
+        tiers: {
+          free: false,
+          pro: false,
+          business: false,
+          enterprise: "Enterprise",
+        },
+      },
+      {
         name: "SSO",
         id: "feature-user",
         tiers: {
           free: false,
           pro: false,
           business: false,
-          enterprise: true,
+          enterprise: "Enterprise",
         },
       },
     ],
@@ -442,7 +430,7 @@ const featureGroups: {
           free: false,
           pro: false,
           business: false,
-          enterprise: true,
+          enterprise: "Enterprise",
         },
       },
     ],
@@ -476,7 +464,7 @@ const featureGroups: {
         tiers: {
           free: false,
           pro: false,
-          business: true,
+          business: false,
           enterprise: true,
         },
       },
@@ -491,6 +479,16 @@ const featureGroups: {
           enterprise: true,
         },
       },
+      {
+        name: "24h support",
+        id: "feature-user",
+        tiers: {
+          free: false,
+          pro: false,
+          business: false,
+          enterprise: true,
+        },
+      },
 
       {
         name: "Support with self-hosting",
@@ -499,7 +497,7 @@ const featureGroups: {
           free: false,
           pro: false,
           business: false,
-          enterprise: true,
+          enterprise: "Enterprise",
         },
       },
       {
@@ -509,7 +507,7 @@ const featureGroups: {
           free: false,
           pro: false,
           business: false,
-          enterprise: true,
+          enterprise: "Enterprise",
         },
       },
     ],
@@ -561,7 +559,7 @@ export function PricingComparison() {
               Business
             </li>
             <li className="col-span-3 p-6 text-xl leading-8 list-none border-r-0">
-              Enterprise
+              Data Rooms
             </li>
           </ul>
         </div>
@@ -591,11 +589,11 @@ export function PricingComparison() {
             </li>
             <li className="col-span-3 bg-white px-6 py-4 text-sm list-none border-r-0 hover:bg-black hover:text-white">
               <Link
-                href="https://cal.com/marcseitz/papermark"
+                href="/login?next=/settings/billing"
                 target="_blank"
                 className="flex items-center gap-x-1 group"
               >
-                Book a demo <ArrowRightIcon className="h-4 w-4" />
+                Create Data Rooms <ArrowRightIcon className="h-4 w-4" />
               </Link>
             </li>
           </ul>

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { useTeam } from "@/context/team-context";
 import { useAnalytics } from "@/lib/analytics";
-import { useBilling } from "@/lib/swr/use-billing";
+import { usePlan } from "@/lib/swr/use-billing";
 import { cn } from "@/lib/utils";
 import { CheckIcon } from "lucide-react";
 import Link from "next/link";
@@ -26,14 +26,15 @@ const frequencies: {
 export default function Billing() {
   const router = useRouter();
   const analytics = useAnalytics();
-  const { plan, startsAt, endsAt } = useBilling();
+  const { plan } = usePlan();
   const [clicked, setClicked] = useState<boolean>(false);
   const frequency = frequencies[1];
-
   const [toggleProYear, setToggleProYear] = useState<boolean>(true);
   const [toggleBusinessYear, setToggleBusinessYear] = useState<boolean>(true);
+  const [toggleDataroomsYear, setToggleDataroomsYear] = useState<boolean>(true);
   const [frequencyPro, setFrequencyPro] = useState(frequencies[0]);
   const [frequencyBusiness, setFrequencyBusiness] = useState(frequencies[0]);
+  const [frequencyDatarooms, setFrequencyDatarooms] = useState(frequencies[0]);
 
   useEffect(() => {
     if (toggleProYear) {
@@ -47,7 +48,12 @@ export default function Billing() {
     } else {
       setFrequencyBusiness(frequencies[0]);
     }
-  }, [toggleProYear, toggleBusinessYear]);
+    if (toggleDataroomsYear) {
+      setFrequencyDatarooms(frequencies[1]);
+    } else {
+      setFrequencyDatarooms(frequencies[0]);
+    }
+  }, [toggleProYear, toggleBusinessYear, toggleDataroomsYear]);
 
   const teamInfo = useTeam();
 
@@ -147,12 +153,39 @@ export default function Billing() {
         "Unlimited documents",
         "Unlimited subfolder levels",
         "Large file uploads",
-        "48h Priority Support",
+        "48h priority support",
       ],
       bgColor: "#fb7a00",
       borderColor: "#fb7a00",
       textColor: "#black",
       buttonText: "Upgrade to Business",
+      mostPopular: true,
+    },
+
+    {
+      name: "Data Rooms",
+      id: "tier-datarooms",
+      href: "/login",
+      currentPlan: plan && plan == "datarooms" ? true : false,
+      price: { monthly: "€199", annually: "€149" },
+      description:
+        "The one for more control, data room, and multi-file sharing.",
+      featureIntro: "Everything in Pro, plus:",
+      features: [
+        "5 users included",
+        "Unlimited data rooms",
+        "Custom domain for data rooms",
+        "Unlimited documents",
+        "Unlimited folders and subfolders",
+        "User groups permissions",
+        "Advanced data rooms analytics",
+        "24h priority support",
+        "Custom onboarding",
+      ],
+      bgColor: "#fb7a00",
+      borderColor: "#fb7a00",
+      textColor: "#black",
+      buttonText: "Upgrade to Data Rooms",
       mostPopular: true,
     },
   ];
@@ -166,7 +199,7 @@ export default function Billing() {
     "Full white-labeling",
     "Up to 5TB file uploads",
     "Dedicated support",
-    "Custom Onboarding",
+    "Custom onboarding",
   ];
 
   return (
@@ -187,7 +220,7 @@ export default function Billing() {
 
         <div className="bg-white dark:bg-gray-900">
           <div className="mx-auto space-y-8">
-            <div className="isolate grid grid-cols-1 md:grid-cols-3 border border-black dark:border-muted-foreground rounded-xl overflow-hidden">
+            <div className="isolate grid grid-cols-1 md:grid-cols-4 border border-black dark:border-muted-foreground rounded-xl overflow-hidden">
               {tiers.map((tier) => (
                 <div
                   key={tier.id}
@@ -311,6 +344,54 @@ export default function Billing() {
                             </div>
                           </div>
                         ) : null}
+                        {tier.id === "tier-datarooms" ? (
+                          <div className="min-h-12">
+                            <Switch
+                              className="h-5 w-10 *:size-4"
+                              checked={toggleDataroomsYear}
+                              onCheckedChange={() =>
+                                setToggleDataroomsYear(!toggleDataroomsYear)
+                              }
+                            />
+                            <div className="flex items-center gap-x-1 text-sm mb-1">
+                              <span
+                                className={cn(
+                                  toggleDataroomsYear
+                                    ? "text-gray-400"
+                                    : "text-black",
+                                )}
+                              >
+                                Monthly
+                              </span>
+                              <span>|</span>
+                              <span
+                                className={cn(
+                                  toggleDataroomsYear
+                                    ? "text-black"
+                                    : "text-gray-400",
+                                )}
+                              >
+                                Annually
+                              </span>
+                            </div>
+                            <div
+                              className={cn(
+                                "relative text-xs w-fit uppercase border border-[#fb7a00] text-[#fb7a00] rounded-3xl px-1.5 py-0.5",
+                                !toggleDataroomsYear &&
+                                  "border-gray-400 text-gray-400 opacity-40",
+                              )}
+                            >
+                              <span
+                                className={cn(
+                                  !toggleDataroomsYear
+                                    ? "absolute top-1/2 h-px w-[90%] bg-gray-400"
+                                    : "hidden",
+                                )}
+                              />
+                              25% Saving
+                            </div>
+                          </div>
+                        ) : null}
                         {tier.id === "tier-enterprise" ? (
                           <div className="min-h-12">
                             <div className="flex flex-col text-sm">
@@ -329,9 +410,11 @@ export default function Billing() {
                             ? tier.price[frequencyPro.value]
                             : tier.id === "tier-business"
                               ? tier.price[frequencyBusiness.value]
-                              : tier.price[frequency.value]}
+                              : tier.id === "tier-datarooms"
+                                ? tier.price[frequencyDatarooms.value]
+                                : tier.price[frequency.value]}
                         </span>
-                        <span
+                        {/* <span
                           className={cn(
                             "text-sm font-semibold leading-6 text-gray-600",
                             tier.id === "tier-enterprise" ? "hidden" : "",
@@ -342,7 +425,7 @@ export default function Billing() {
                             : tier.id === "tier-business"
                               ? frequencyBusiness.priceSuffix
                               : frequency.priceSuffix}
-                        </span>
+                        </span> */}
                       </p>
                       <p className="mt-4 text-sm leading-6 text-gray-600 dark:text-muted-foreground text-balance">
                         {tier.description}
@@ -419,7 +502,9 @@ export default function Billing() {
                         </Button>
                       ) : (
                         <UpgradePlanModal
-                          clickedPlan={tier.name as "Pro" | "Business"}
+                          clickedPlan={
+                            tier.name as "Pro" | "Business" | "Data Rooms"
+                          }
                           trigger={"billing_page"}
                         >
                           <Button

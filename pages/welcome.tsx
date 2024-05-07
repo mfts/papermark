@@ -6,6 +6,8 @@ import { ArrowLeft as ArrowLeftIcon } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import NotionForm from "@/components/welcome/notion-form";
 import { Button } from "@/components/ui/button";
+import Dataroom from "@/components/welcome/dataroom";
+import DataroomTrial from "@/components/welcome/dataroom-trial";
 
 export default function Welcome() {
   const router = useRouter();
@@ -49,6 +51,10 @@ export default function Welcome() {
         {router.query.type === "pitchdeck" && <Upload key="pitchdeck" />}
         {router.query.type === "document" && <Upload key="document" />}
         {router.query.type === "notion" && <NotionForm key="notion" />}
+        {router.query.type === "dataroom" && <Dataroom key="dataroom" />}
+        {router.query.type === "dataroom-trial" && (
+          <DataroomTrial key="dataroom-trial" />
+        )}
       </AnimatePresence>
     </div>
   );

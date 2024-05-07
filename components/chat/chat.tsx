@@ -12,6 +12,7 @@ import { ChatScrollAnchor } from "./chat-scroll-anchor";
 import { EmptyScreen } from "./empty-screen";
 import { useEffect, useState } from "react";
 import { nanoid } from "nanoid";
+import { BasePlan } from "@/lib/swr/use-billing";
 
 export interface ChatProps extends React.ComponentProps<"div"> {
   initialMessages: Message[];
@@ -19,7 +20,7 @@ export interface ChatProps extends React.ComponentProps<"div"> {
   firstPage?: string;
   isPublic?: boolean;
   userId?: string;
-  plan?: string;
+  plan?: BasePlan | null;
 }
 
 export function Chat({

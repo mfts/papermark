@@ -49,7 +49,7 @@ export const log = async ({
   mention = false,
 }: {
   message: string;
-  type: "info" | "cron" | "links" | "error";
+  type: "info" | "cron" | "links" | "error" | "trial";
   mention?: boolean;
 }) => {
   /* If in development or env variable not set, log to the console */
@@ -63,6 +63,27 @@ export const log = async ({
 
   /* Log a message to channel */
   try {
+    if (type === "trial" && process.env.PPMK_TRIAL_SLACK_WEBHOOK_URL) {
+      return await fetch(`${process.env.PPMK_TRIAL_SLACK_WEBHOOK_URL}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          blocks: [
+            {
+              type: "section",
+              text: {
+                type: "mrkdwn",
+                // prettier-ignore
+                text: `${mention ? "<@U05BTDUKPLZ> " : ""}${message}`,
+              },
+            },
+          ],
+        }),
+      });
+    }
+
     return await fetch(`${process.env.PPMK_SLACK_WEBHOOK_URL}`, {
       method: "POST",
       headers: {

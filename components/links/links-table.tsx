@@ -145,7 +145,7 @@ export default function LinksTable({
     ? links.filter((link) => link.isArchived).length
     : 0;
 
-  const hasFreePlan = plan && plan.plan === "free";
+  const hasFreePlan = plan === "free";
 
   console.log("links", links);
 

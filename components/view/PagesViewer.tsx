@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 import { ScreenProtector } from "./ScreenProtection";
 import { toast } from "sonner";
 
-const DEFAULT_PRELOADED_IMAGES_NUM = 10;
+const DEFAULT_PRELOADED_IMAGES_NUM = 5;
 
 export default function PagesViewer({
   pages,

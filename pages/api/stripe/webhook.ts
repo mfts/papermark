@@ -225,7 +225,9 @@ export default async function webhookHandler(
           type: "error",
           mention: true,
         });
-        return;
+        return res
+          .status(400)
+          .send(`Error in webhook: ${(error as Error).message}`);
       }
     } else {
       return res.status(400).send(`🤷‍♀️ Unhandled event type: ${event.type}`);

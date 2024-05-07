@@ -129,7 +129,8 @@ export default function Upload() {
       body: JSON.stringify({
         ...linkData,
         metaImage: blobUrl,
-        documentId: currentDocId,
+        targetId: currentDocId,
+        linkType: "DOCUMENT_LINK",
       }),
     });
 

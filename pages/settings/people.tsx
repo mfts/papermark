@@ -185,7 +185,7 @@ export default function Billing() {
                 Teammates that have access to this project.
               </p>
             </div>
-            {userPlan && userPlan.plan !== "free" ? (
+            {userPlan !== "free" ? (
               <AddTeamMembers
                 open={isTeamMemberInviteModalOpen}
                 setOpen={setTeamMemberInviteModalOpen}
