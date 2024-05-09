@@ -1,5 +1,7 @@
 import Link from "next/link";
 import GitHubIcon from "@/components/shared/icons/github";
+import PapermarkLogo from "@/public/_static/papermark-logo.svg";
+import Image from "next/image";
 
 export default function Navbar() {
   return (
@@ -14,9 +16,12 @@ export default function Navbar() {
                 href="/"
               >
                 <div className="flex items-center space-x-2">
-                  <span className="text-2xl font-bold tracking-tighter text-black">
-                    Papermark
-                  </span>
+                  <Image
+                    src={PapermarkLogo}
+                    width={119}
+                    height={32}
+                    alt="Papermark Logo"
+                  />
                 </div>
               </Link>
               <div className="hidden items-center gap-2 md:flex">

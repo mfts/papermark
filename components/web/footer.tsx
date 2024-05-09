@@ -2,6 +2,8 @@ import GitHubIcon from "@/components/shared/icons/github";
 import TwitterIcon from "@/components/shared/icons/twitter";
 import LinkedinIcon from "@/components/shared/icons/linkedin";
 import { StatusWidget } from "./status-widget";
+import PapermarkLogo from "@/public/_static/papermark-logo.svg";
+import Image from "next/image";
 
 const navigation = {
   product: [
@@ -71,9 +73,12 @@ export default function Footer() {
         {/* px-6 pb-8 pt-16 sm:pt-24 lg:px-8 lg:pt-32 */}
         <div className="xl:grid xl:grid-cols-3 xl:gap-8">
           <div className="space-y-4">
-            <span className="text-2xl font-bold tracking-tighter text-black">
-              Papermark
-            </span>
+            <Image
+              src={PapermarkLogo}
+              width={119}
+              height={32}
+              alt="Papermark Logo"
+            />
             <p className="leading-6 text-gray-500">
               Sharing documents, securely and on brand.
             </p>
