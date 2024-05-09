@@ -21,10 +21,6 @@ import {
 import SiderbarFolders from "./sidebar-folders";
 import { ScrollArea } from "./ui/scroll-area";
 import { UpgradePlanModal } from "./billing/upgrade-plan-modal";
-import PapermarkLogo from "@/public/_static/papermark-logo.svg";
-import PapermarkLightLogo from "@/public/_static/papermark-logo-light.svg";
-import Image from "next/image";
-import { useTheme } from "next-themes";
 
 export default function Sidebar() {
   return (
@@ -63,9 +59,6 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
   const [showProBanner, setShowProBanner] = useState<boolean | null>(null);
   const { data: session, status } = useSession();
   const { plan, trial: userTrial, loading } = usePlan();
-  const { theme, systemTheme } = useTheme();
-  const isLight =
-    theme === "light" || (theme === "system" && systemTheme === "light");
 
   const router = useRouter();
   const { currentTeam, teams, isLoading }: TeamContextType =
@@ -148,24 +141,10 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
         {/* Sidebar component, swap this element with another sidebar if you like */}
 
         <div className="flex h-16 shrink-0 items-center space-x-3">
-          <p className="text-2xl font-bold text-black dark:text-white flex items-center">
-            {isLight ? (
-              <Image
-                src={PapermarkLogo}
-                width={119}
-                height={32}
-                alt="Papermark Logo"
-              />
-            ) : (
-              <Image
-                src={PapermarkLightLogo}
-                width={119}
-                height={32}
-                alt="Papermark Logo"
-              />
-            )}
+          <p className="text-2xl font-bold text-black dark:text-white  tracking-tighter flex items-center">
+            Papermark{" "}
             {userPlan && userPlan != "free" ? (
-              <span className="bg-background text-foreground ring-1 ring-gray-800 rounded-full px-2.5 py-1 text-xs ml-4">
+              <span className="bg-background text-foreground ring-1 ring-gray-800 tracking-normal rounded-full px-2.5 py-1 text-xs ml-4">
                 {userPlan.charAt(0).toUpperCase() + userPlan.slice(1)}
               </span>
             ) : null}
