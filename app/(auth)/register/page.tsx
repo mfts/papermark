@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { toast } from "sonner";
 import LinkedIn from "@/components/shared/icons/linkedin";
+import PapermarkLogo from "@/public/_static/papermark-logo.svg";
+import Image from "next/image";
 
 export default function Register() {
   const { next } = useParams as { next?: string };
@@ -31,9 +33,12 @@ export default function Register() {
       <div className="z-10 mt-[calc(20vh)] h-fit w-full mx-5 sm:mx-0 max-w-md overflow-hidden border border-border bg-gray-50 dark:bg-gray-900 rounded-lg sm:shadow-xl">
         <div className="flex flex-col items-center justify-center space-y-3 px-4 py-6 pt-8 text-center sm:px-16">
           <Link href="/">
-            <span className="text-xl font-bold tracking-tighter text-foreground">
-              Papermark
-            </span>
+            <Image
+              src={PapermarkLogo}
+              width={119}
+              height={32}
+              alt="Papermark Logo"
+            />
           </Link>
           <h3 className="text-2xl text-foreground font-medium">
             Start sharing documents
