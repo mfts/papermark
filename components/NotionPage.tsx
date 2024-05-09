@@ -34,30 +34,30 @@ export const NotionPage = ({
 
   const startTimeRef = useRef(Date.now());
   const pageNumberRef = useRef<number>(pageNumber);
+  const visibilityRef = useRef<boolean>(true);
 
   useEffect(() => {
-    startTimeRef.current = Date.now(); // update the start time for the new page
-
-    // when component unmounts, calculate duration and track page view
-    return () => {
-      const endTime = Date.now();
-      const duration = Math.round(endTime - startTimeRef.current);
-      trackPageView(duration);
-    };
-  }, [pageNumber]); // monitor pageNumber for changes
-
-  // Send the last page view when the user leaves the page
-  useEffect(() => {
-    const handleBeforeUnload = () => {
-      const endTime = Date.now();
-      const duration = Math.round(endTime - startTimeRef.current);
-      trackPageView(duration);
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        visibilityRef.current = true;
+        startTimeRef.current = Date.now(); // Reset start time when page becomes visible
+      } else {
+        visibilityRef.current = false;
+        const duration = Date.now() - startTimeRef.current;
+        if (duration > 0) {
+          trackPageView(duration);
+        }
+      }
     };
 
-    window.addEventListener("beforeunload", handleBeforeUnload);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload);
+      if (visibilityRef.current) {
+        const duration = Date.now() - startTimeRef.current;
+        trackPageView(duration); // Also capture duration if component unmounts while visible
+      }
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, []);
 
