@@ -64,6 +64,11 @@ const putFileInS3 = async ({
   if (!docId) {
     docId = newId("doc");
   }
+
+  if (file.type !== "application/pdf") {
+    throw new Error("Only PDF files are supported");
+  }
+
   const presignedResponse = await fetch(
     `${process.env.NEXT_PUBLIC_BASE_URL}/api/file/s3/get-presigned-post-url`,
     {
