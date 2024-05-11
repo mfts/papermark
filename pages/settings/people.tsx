@@ -26,6 +26,7 @@ import { usePlan } from "@/lib/swr/use-billing";
 import { useInvitations } from "@/lib/swr/use-invitations";
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { useAnalytics } from "@/lib/analytics";
+import useLimits from "@/lib/swr/use-limits";
 
 export default function Billing() {
   const [isTeamMemberInviteModalOpen, setTeamMemberInviteModalOpen] =
@@ -36,12 +37,15 @@ export default function Billing() {
   const { team, loading } = useGetTeam()!;
   const teamInfo = useTeam();
   const { plan: userPlan } = usePlan();
+  const { limits } = useLimits();
   const { teams } = useTeams();
   const analytics = useAnalytics();
 
   const { invitations } = useInvitations();
 
   const router = useRouter();
+
+  const numUsers = (team && team.users.length) ?? 1;
 
   const getUserDocumentCount = (userId: string) => {
     const documents = team?.documents.filter(
@@ -185,7 +189,8 @@ export default function Billing() {
                 Teammates that have access to this project.
               </p>
             </div>
-            {userPlan !== "free" ? (
+            {userPlan !== "free" &&
+            (limits === null || (limits && limits.users >= numUsers)) ? (
               <AddTeamMembers
                 open={isTeamMemberInviteModalOpen}
                 setOpen={setTeamMemberInviteModalOpen}
