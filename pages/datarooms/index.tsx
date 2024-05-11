@@ -14,6 +14,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { usePlan } from "@/lib/swr/use-billing";
 import useDatarooms from "@/lib/swr/use-datarooms";
+import useLimits from "@/lib/swr/use-limits";
 import { daysLeft } from "@/lib/utils";
 import { PlusIcon } from "lucide-react";
 import Link from "next/link";
@@ -21,6 +22,16 @@ import Link from "next/link";
 export default function DataroomsPage() {
   const { datarooms } = useDatarooms();
   const { plan, trial } = usePlan();
+  const { limits } = useLimits();
+
+  const numDatarooms = datarooms?.length ?? 1;
+  const limitDatarooms = limits?.datarooms ?? 0;
+
+  const isBusiness = plan === "business";
+  const isDatarooms = plan === "datarooms";
+  const isTrialDatarooms = trial === "drtrial";
+  const canCreateUnlimitedDatarooms =
+    isDatarooms || (isBusiness && numDatarooms < limitDatarooms);
 
   return (
     <AppLayout>
@@ -35,32 +46,24 @@ export default function DataroomsPage() {
             </p>
           </div>
           <div className="flex items-center gap-x-1">
-            {plan !== "business" &&
-            plan !== "datarooms" &&
-            trial !== "drtrial" ? (
-              <DataroomTrialModal>
+            {isBusiness && !canCreateUnlimitedDatarooms ? (
+              <UpgradePlanModal clickedPlan="Data Rooms" trigger="datarooms">
                 <Button
                   className="flex-1 text-left group flex gap-x-3 items-center justify-start px-3"
                   title="Add New Document"
                 >
-                  <span>Start Data Room Trial</span>
+                  <span>Upgrade to Create Dataroom</span>
                 </Button>
-              </DataroomTrialModal>
-            ) : datarooms &&
-              trial === "drtrial" &&
-              plan !== "business" &&
-              plan !== "datarooms" ? (
+              </UpgradePlanModal>
+            ) : isTrialDatarooms && datarooms && !isBusiness && !isDatarooms ? (
               <div className="flex items-center gap-x-4">
-                <div className="text-sm text-destructive ">
-                  <span className="">Dataroom Trial:</span>{" "}
+                <div className="text-sm text-destructive">
+                  <span>Dataroom Trial: </span>
                   <span className="font-medium">
                     {daysLeft(new Date(datarooms[0].createdAt), 7)} days left
                   </span>
                 </div>
-                <UpgradePlanModal
-                  clickedPlan={"Business"}
-                  trigger={"datarooms"}
-                >
+                <UpgradePlanModal clickedPlan="Business" trigger="datarooms">
                   <Button
                     className="flex-1 text-left group flex gap-x-3 items-center justify-start px-3"
                     title="Add New Document"
@@ -69,7 +72,7 @@ export default function DataroomsPage() {
                   </Button>
                 </UpgradePlanModal>
               </div>
-            ) : (
+            ) : isBusiness || isDatarooms ? (
               <AddDataroomModal>
                 <Button
                   className="flex-1 text-left group flex gap-x-3 items-center justify-start px-3"
@@ -79,6 +82,15 @@ export default function DataroomsPage() {
                   <span>Create New Dataroom</span>
                 </Button>
               </AddDataroomModal>
+            ) : (
+              <DataroomTrialModal>
+                <Button
+                  className="flex-1 text-left group flex gap-x-3 items-center justify-start px-3"
+                  title="Add New Document"
+                >
+                  <span>Start Data Room Trial</span>
+                </Button>
+              </DataroomTrialModal>
             )}
           </div>
         </section>
