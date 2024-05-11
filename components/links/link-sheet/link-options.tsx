@@ -102,14 +102,13 @@ export const LinkOptions = ({
           </AccordionContent>
         </AccordionItem>
       </Accordion>
-      {hasFreePlan || isNotBusiness || isNotDatarooms ? (
-        <UpgradePlanModal
-          clickedPlan={upgradePlan}
-          open={openUpgradeModal}
-          setOpen={setOpenUpgradeModal}
-          trigger={trigger}
-        />
-      ) : null}
+
+      <UpgradePlanModal
+        clickedPlan={upgradePlan}
+        open={openUpgradeModal}
+        setOpen={setOpenUpgradeModal}
+        trigger={trigger}
+      />
     </div>
   );
 };
