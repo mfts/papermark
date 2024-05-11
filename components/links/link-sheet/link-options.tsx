@@ -90,13 +90,13 @@ export const LinkOptions = ({
             <PasswordSection {...{ data, setData }} />
             <ScreenshotProtectionSection
               {...{ data, setData }}
-              hasFreePlan={isNotBusiness || isNotDatarooms}
+              hasFreePlan={isNotBusiness && isNotDatarooms}
               handleUpgradeStateChange={handleUpgradeStateChange}
             />
             <FeedbackSection {...{ data, setData }} />
             <QuestionSection
               {...{ data, setData }}
-              hasFreePlan={isNotBusiness || isNotDatarooms}
+              hasFreePlan={isNotBusiness && isNotDatarooms}
               handleUpgradeStateChange={handleUpgradeStateChange}
             />
           </AccordionContent>
