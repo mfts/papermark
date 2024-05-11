@@ -106,7 +106,11 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
       current: router.pathname.includes("datarooms"),
       active: false,
       disabled:
-        userPlan === "business" || userTrial === "drtrial" ? false : true,
+        userPlan === "business" ||
+        userPlan === "datarooms" ||
+        userTrial === "drtrial"
+          ? false
+          : true,
     },
     {
       name: "Branding",
@@ -208,6 +212,7 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
                 }
                 if (
                   userPlan !== "business" &&
+                  userPlan !== "datarooms" &&
                   userTrial !== "drtrial" &&
                   item.name === "Datarooms"
                 ) {
@@ -258,7 +263,10 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
           {userPlan === "trial" && session ? (
             <Banner session={session} />
           ) : null}
-          {(userPlan === "pro" || userPlan === "business") && null}
+          {(userPlan === "pro" ||
+            userPlan === "business" ||
+            userPlan === "datarooms") &&
+            null}
           {userPlan === "free" && showProBanner ? (
             <ProBanner setShowProBanner={setShowProBanner} />
           ) : null}

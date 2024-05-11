@@ -35,7 +35,9 @@ export default function DataroomsPage() {
             </p>
           </div>
           <div className="flex items-center gap-x-1">
-            {plan !== "business" && trial !== "drtrial" ? (
+            {plan !== "business" &&
+            plan !== "datarooms" &&
+            trial !== "drtrial" ? (
               <DataroomTrialModal>
                 <Button
                   className="flex-1 text-left group flex gap-x-3 items-center justify-start px-3"
@@ -44,7 +46,10 @@ export default function DataroomsPage() {
                   <span>Start Data Room Trial</span>
                 </Button>
               </DataroomTrialModal>
-            ) : datarooms && trial === "drtrial" && plan !== "business" ? (
+            ) : datarooms &&
+              trial === "drtrial" &&
+              plan !== "business" &&
+              plan !== "datarooms" ? (
               <div className="flex items-center gap-x-4">
                 <div className="text-sm text-destructive ">
                   <span className="">Dataroom Trial:</span>{" "}

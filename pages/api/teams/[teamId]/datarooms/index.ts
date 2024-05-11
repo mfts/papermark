@@ -72,8 +72,8 @@ export default async function handle(
         where: {
           id: teamId,
           plan: {
-            // exclude all teams not on `business` plan
-            in: ["business"],
+            // exclude all teams not on `business`, `datarooms` plan
+            in: ["business", "datarooms"],
           },
           users: {
             some: {

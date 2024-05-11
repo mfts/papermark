@@ -22,6 +22,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { LinkOptions } from "./link-options";
 import { useAnalytics } from "@/lib/analytics";
 import { LinkWithViews } from "@/lib/types";
+import { usePlan } from "@/lib/swr/use-billing";
 
 export const DEFAULT_LINK_PROPS = {
   id: null,
@@ -86,6 +87,7 @@ export default function LinkSheet({
 }) {
   const { domains } = useDomains();
   const teamInfo = useTeam();
+  const { plan } = usePlan();
   const analytics = useAnalytics();
   const [data, setData] = useState<DEFAULT_LINK_TYPE>(DEFAULT_LINK_PROPS);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -226,6 +228,7 @@ export default function LinkSheet({
                     <div className="space-y-2">
                       <DomainSection
                         {...{ data, setData, domains }}
+                        plan={plan}
                         linkType={linkType}
                       />
                     </div>

@@ -8,16 +8,19 @@ import { mutate } from "swr";
 import Link from "next/link";
 import { useTeam } from "@/context/team-context";
 import { BLOCKED_PATHNAMES } from "@/lib/constants";
+import { BasePlan } from "@/lib/swr/use-billing";
 
 export default function DomainSection({
   data,
   setData,
   domains,
+  plan,
   linkType,
 }: {
   data: DEFAULT_LINK_TYPE;
   setData: Dispatch<SetStateAction<DEFAULT_LINK_TYPE>>;
   domains?: Domain[];
+  plan?: BasePlan | null;
   linkType: "DOCUMENT_LINK" | "DATAROOM_LINK";
 }) {
   const [isModalOpen, setModalOpen] = useState(false);
@@ -62,6 +65,7 @@ export default function DomainSection({
             papermark.io
           </option>
           {(linkType === "DOCUMENT_LINK" ||
+            (plan && plan === "datarooms") ||
             teamInfo?.currentTeam?.id === "clvnbn2540000t0s6qyaghvyf") && (
             <>
               {domains?.map(({ slug }) => (

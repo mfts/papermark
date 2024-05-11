@@ -32,15 +32,18 @@ export const LinkOptions = ({
   const { plan } = usePlan();
   const hasFreePlan = plan === "free";
   const isNotBusiness = plan !== "business";
+  const isNotDatarooms = plan !== "datarooms";
 
   const [openUpgradeModal, setOpenUpgradeModal] = useState<boolean>(false);
   const [trigger, setTrigger] = useState<string>("");
-  const [upgradePlan, setUpgradePlan] = useState<"Pro" | "Business">("Pro");
+  const [upgradePlan, setUpgradePlan] = useState<
+    "Pro" | "Business" | "Data Rooms"
+  >("Pro");
 
   const handleUpgradeStateChange = (
     state: boolean,
     trigger: string,
-    plan?: "Pro" | "Business",
+    plan?: "Pro" | "Business" | "Data Rooms",
   ) => {
     setOpenUpgradeModal(state);
     setTrigger(trigger);
@@ -87,19 +90,19 @@ export const LinkOptions = ({
             <PasswordSection {...{ data, setData }} />
             <ScreenshotProtectionSection
               {...{ data, setData }}
-              hasFreePlan={isNotBusiness}
+              hasFreePlan={isNotBusiness || isNotDatarooms}
               handleUpgradeStateChange={handleUpgradeStateChange}
             />
             <FeedbackSection {...{ data, setData }} />
             <QuestionSection
               {...{ data, setData }}
-              hasFreePlan={isNotBusiness}
+              hasFreePlan={isNotBusiness || isNotDatarooms}
               handleUpgradeStateChange={handleUpgradeStateChange}
             />
           </AccordionContent>
         </AccordionItem>
       </Accordion>
-      {hasFreePlan || isNotBusiness ? (
+      {hasFreePlan || isNotBusiness || isNotDatarooms ? (
         <UpgradePlanModal
           clickedPlan={upgradePlan}
           open={openUpgradeModal}

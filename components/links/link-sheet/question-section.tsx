@@ -39,7 +39,7 @@ export default function QuestionSection({
   handleUpgradeStateChange: (
     state: boolean,
     trigger: string,
-    plan?: "Pro" | "Business",
+    plan?: "Pro" | "Business" | "Data Rooms",
   ) => void;
 }) {
   const { enableQuestion, questionText, questionType } = data;
