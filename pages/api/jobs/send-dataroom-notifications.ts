@@ -101,7 +101,7 @@ export default async function handle(
       senderEmail: user.email!,
       documentName: document?.document.name,
       to: viewer.email,
-      url: `${process.env.NEXTAUTH_URL}/view/d/${linkId}?email=${encodeURIComponent(viewer.email)}`,
+      url: `${process.env.NEXTAUTH_URL}/view/${linkId}?email=${encodeURIComponent(viewer.email)}`,
     });
 
     res
