@@ -111,6 +111,22 @@ export default function PagesViewer({
     };
   }, [pageNumber, numPages]); // Track page view when the page number changes
 
+  // Send the last page view when the user leaves the page
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (pageNumber <= numPages && visibilityRef.current) {
+        const duration = Date.now() - startTimeRef.current;
+        trackPageView(duration);
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [pageNumber, numPages]);
+
   useEffect(() => {
     setLoadedImages((prev) =>
       prev.map((loaded, index) =>
