@@ -70,10 +70,12 @@ model Team {
   datarooms   Dataroom[]
 
   plan           String    @default("free")
-  stripeId       String?   @unique // Stripe subscription / customer ID
+  stripeId       String?   @unique // Stripe customer ID
   subscriptionId String?   @unique // Stripe subscription ID
   startsAt       DateTime? // Stripe subscription start date
   endsAt         DateTime? // Stripe subscription end date
+
+  limits Json? // Plan limits // {datarooms: 1, users: 1, domains: 1, customDomainOnPro: boolean, customDomainInDataroom: boolean}
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

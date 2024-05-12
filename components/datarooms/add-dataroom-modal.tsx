@@ -71,10 +71,13 @@ export function AddDataroomModal({ children }: { children?: React.ReactNode }) {
   };
 
   // If the team is on a free plan, show the upgrade modal
-  if (plan === "free") {
+  if (plan === "free" || plan === "pro") {
     if (children) {
       return (
-        <UpgradePlanModal clickedPlan="Pro" trigger={"add_dataroom_overview"}>
+        <UpgradePlanModal
+          clickedPlan="Data Rooms"
+          trigger={"add_dataroom_overview"}
+        >
           {children}
         </UpgradePlanModal>
       );
