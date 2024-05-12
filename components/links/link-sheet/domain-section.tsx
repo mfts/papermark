@@ -69,8 +69,7 @@ export default function DomainSection({
             papermark.io
           </option>
           {linkType === "DOCUMENT_LINK" &&
-            limits &&
-            limits.customDomainOnPro && (
+            (plan === "business" || (limits && limits.customDomainOnPro)) && (
               <>
                 {domains?.map(({ slug }) => (
                   <option key={slug} value={slug}>
@@ -80,8 +79,8 @@ export default function DomainSection({
               </>
             )}
           {linkType === "DATAROOM_LINK" &&
-            limits &&
-            limits.customDomainInDataroom && (
+            (plan === "datarooms" ||
+              (limits && limits.customDomainInDataroom)) && (
               <>
                 {domains?.map(({ slug }) => (
                   <option key={slug} value={slug}>
