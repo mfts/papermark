@@ -16,7 +16,7 @@ export default function StatsChartDummy({
   }));
 
   return (
-    <div className="pl-0.5 md:pl-1 pb-0.5 md:pb-1 border-l border-b rounded-bl-lg">
+    <div className="rounded-bl-lg border-b border-l pb-0.5 pl-0.5 md:pb-1 md:pl-1">
       <BarChartComponent data={durationData} isDummy />
     </div>
   );

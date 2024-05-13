@@ -1,8 +1,16 @@
 import { useRouter } from "next/router";
+
+import { useState } from "react";
+
+import { useTeam } from "@/context/team-context";
 import { motion } from "framer-motion";
-import { STAGGER_CHILD_VARIANTS } from "@/lib/constants";
+import { E164Number } from "libphonenumber-js/types.cjs";
+import { toast } from "sonner";
+import { mutate } from "swr";
+
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { PhoneInput } from "@/components/ui/phone-input";
 import {
   Select,
   SelectContent,
@@ -10,13 +18,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { PhoneInput } from "@/components/ui/phone-input";
-import { useTeam } from "@/context/team-context";
+
 import { useAnalytics } from "@/lib/analytics";
-import { mutate } from "swr";
-import { toast } from "sonner";
-import { useState } from "react";
-import { E164Number } from "libphonenumber-js/types.cjs";
+import { STAGGER_CHILD_VARIANTS } from "@/lib/constants";
+
 import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
 import { Input } from "../ui/input";
 
@@ -118,7 +123,7 @@ export default function DataroomTrial() {
       </motion.div>
       <motion.div
         variants={STAGGER_CHILD_VARIANTS}
-        className="mt-24 mx-auto max-w-md w-full text-left"
+        className="mx-auto mt-24 w-full max-w-md text-left"
       >
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1">
@@ -131,7 +136,7 @@ export default function DataroomTrial() {
               autoComplete="off"
               data-1p-ignore
               placeholder="John Doe"
-              className="w-full mt-1 mb-4"
+              className="mb-4 mt-1 w-full"
               onChange={(e) => setName(e.target.value)}
             />
           </div>
@@ -145,7 +150,7 @@ export default function DataroomTrial() {
               autoComplete="off"
               data-1p-ignore
               placeholder="ACME Inc."
-              className="w-full mt-1 mb-4"
+              className="mb-4 mt-1 w-full"
               onChange={(e) => setCompanyName(e.target.value)}
             />
           </div>
@@ -209,10 +214,10 @@ export default function DataroomTrial() {
             />
           </div>
 
-          <div className="text-center space-y-4">
+          <div className="space-y-4 text-center">
             <Button
               type="submit"
-              className="w-full h-9"
+              className="h-9 w-full"
               disabled={
                 !phoneNumber ||
                 !companySize ||

@@ -1,3 +1,12 @@
+import { useRouter } from "next/router";
+
+import { useState } from "react";
+
+import { useTeam } from "@/context/team-context";
+import { E164Number } from "libphonenumber-js/types.cjs";
+import { toast } from "sonner";
+import { mutate } from "swr";
+
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -10,12 +19,11 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useTeam } from "@/context/team-context";
-import { useState } from "react";
-import { toast } from "sonner";
-import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
+
 import { useAnalytics } from "@/lib/analytics";
-import { mutate } from "swr";
+
+import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
+import { PhoneInput } from "../ui/phone-input";
 import {
   Select,
   SelectContent,
@@ -23,9 +31,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import { PhoneInput } from "../ui/phone-input";
-import { E164Number } from "libphonenumber-js/types.cjs";
-import { useRouter } from "next/router";
 
 export function DataroomTrialModal({
   children,
@@ -120,7 +125,7 @@ export function DataroomTrialModal({
               autoComplete="off"
               data-1p-ignore
               placeholder="John Doe"
-              className="w-full mt-1 mb-4"
+              className="mb-4 mt-1 w-full"
               onChange={(e) => setName(e.target.value)}
             />
           </div>
@@ -134,7 +139,7 @@ export function DataroomTrialModal({
               autoComplete="off"
               data-1p-ignore
               placeholder="ACME Inc."
-              className="w-full mt-1 mb-4"
+              className="mb-4 mt-1 w-full"
               onChange={(e) => setCompanyName(e.target.value)}
             />
           </div>
@@ -202,7 +207,7 @@ export function DataroomTrialModal({
             <div className="flex flex-col space-y-4">
               <Button
                 type="submit"
-                className="w-full h-9"
+                className="h-9 w-full"
                 disabled={
                   !phoneNumber ||
                   !companySize ||

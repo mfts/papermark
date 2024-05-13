@@ -1,7 +1,8 @@
 import { NextApiRequest, NextApiResponse } from "next";
+
+import { sendDataroomNotification } from "@/lib/emails/send-dataroom-notification";
 import prisma from "@/lib/prisma";
 import { log } from "@/lib/utils";
-import { sendDataroomNotification } from "@/lib/emails/send-dataroom-notification";
 
 export const config = {
   maxDuration: 120,

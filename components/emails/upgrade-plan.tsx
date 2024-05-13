@@ -1,17 +1,18 @@
 import React from "react";
+
 import {
   Body,
   Button,
   Container,
   Head,
   Heading,
+  Hr,
   Html,
+  Link,
   Preview,
   Section,
-  Text,
   Tailwind,
-  Link,
-  Hr,
+  Text,
 } from "@react-email/components";
 
 interface UpgradePlanEmailProps {
@@ -26,12 +27,12 @@ const UpgradePlanEmail = ({ name }: UpgradePlanEmailProps) => {
       <Head />
       <Preview>{previewText}</Preview>
       <Tailwind>
-        <Body className="bg-white my-auto mx-auto font-sans">
-          <Container className="my-10 mx-auto p-5 w-[465px]">
-            <Heading className="text-2xl font-normal text-center p-0 mt-4 mb-8 mx-0">
+        <Body className="mx-auto my-auto bg-white font-sans">
+          <Container className="mx-auto my-10 w-[465px] p-5">
+            <Heading className="mx-0 mb-8 mt-4 p-0 text-center text-2xl font-normal">
               <span className="font-bold tracking-tighter">Papermark</span>
             </Heading>
-            <Heading className="text-xl font-seminbold text-center p-0 mt-4 mb-8 mx-0">
+            <Heading className="font-seminbold mx-0 mb-8 mt-4 p-0 text-center text-xl">
               Thanks for for upgrading to Papermark Pro!
             </Heading>
             <Text className="text-sm leading-6 text-black">
@@ -69,9 +70,9 @@ const UpgradePlanEmail = ({ name }: UpgradePlanEmailProps) => {
             <Text className="ml-1 text-sm leading-4 text-black">
               ◆ Invite your team members
             </Text>
-            <Section className="text-center mt-[32px] mb-[32px]">
+            <Section className="mb-[32px] mt-[32px] text-center">
               <Button
-                className="bg-black rounded text-white text-xs font-semibold no-underline text-center"
+                className="rounded bg-black text-center text-xs font-semibold text-white no-underline"
                 href={`${process.env.NEXT_PUBLIC_BASE_URL}/settings/domains`}
                 style={{ padding: "12px 20px" }}
               >
@@ -91,7 +92,7 @@ const UpgradePlanEmail = ({ name }: UpgradePlanEmailProps) => {
                 © {new Date().getFullYear()}{" "}
                 <a
                   href="https://www.papermark.io"
-                  className="no-underline text-gray-400 hover:text-gray-400 visited:text-gray-400"
+                  className="text-gray-400 no-underline visited:text-gray-400 hover:text-gray-400"
                   target="_blank"
                 >
                   papermark.io

@@ -1,6 +1,7 @@
 import { client } from "@/trigger";
 import { eventTrigger } from "@trigger.dev/sdk";
 import { z } from "zod";
+
 import prisma from "@/lib/prisma";
 
 client.defineJob({

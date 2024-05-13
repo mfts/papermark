@@ -1,13 +1,16 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "../../auth/[...nextauth]";
 import { NextApiRequest, NextApiResponse } from "next";
+
+import { getLimits } from "@/ee/limits/server";
+import { getServerSession } from "next-auth";
+
+import { hashToken } from "@/lib/api/auth/token";
+import { sendTeammateInviteEmail } from "@/lib/emails/send-teammate-invite";
+import { errorhandler } from "@/lib/errorHandler";
+import { newId } from "@/lib/id-helper";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
-import { errorhandler } from "@/lib/errorHandler";
-import { sendTeammateInviteEmail } from "@/lib/emails/send-teammate-invite";
-import { newId } from "@/lib/id-helper";
-import { hashToken } from "@/lib/api/auth/token";
-import { getLimits } from "@/ee/limits/server";
+
+import { authOptions } from "../../auth/[...nextauth]";
 
 export default async function handle(
   req: NextApiRequest,

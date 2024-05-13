@@ -1,10 +1,13 @@
-import { timeAgo } from "@/lib/utils";
-import { TableCell, TableRow } from "@/components/ui/table";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useDataroomVisitHistory } from "@/lib/swr/use-dataroom";
 import Link from "next/link";
+
 import { FileCheckIcon } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { TableCell, TableRow } from "@/components/ui/table";
+
+import { useDataroomVisitHistory } from "@/lib/swr/use-dataroom";
+import { timeAgo } from "@/lib/utils";
 
 export default function DataroomVisitHistory({
   viewId,

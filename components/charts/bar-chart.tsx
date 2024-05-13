@@ -1,5 +1,8 @@
-import { BarChart } from "@tremor/react";
 import { useState } from "react";
+
+import { BarChart } from "@tremor/react";
+
+import CustomTooltip from "./bar-chart-tooltip";
 import {
   type Data,
   type SumData,
@@ -7,7 +10,6 @@ import {
   getColors,
   timeFormatter,
 } from "./utils";
-import CustomTooltip from "./bar-chart-tooltip";
 
 const renameDummyDurationKey = (data: Data[]): TransformedData[] => {
   return data.reduce((acc, { pageNumber, data }) => {

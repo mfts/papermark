@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from "react";
+
+import { Brand, DataroomBrand } from "@prisma/client";
 import { ExtendedRecordMap } from "notion-types";
 import { NotionRenderer } from "react-notion-x";
 // core styles shared by all of react-notion-x (required)
 import "react-notion-x/src/styles.css";
+
 import Nav from "./view/nav";
-import { Brand, DataroomBrand } from "@prisma/client";
 
 export const NotionPage = ({
   recordMap,

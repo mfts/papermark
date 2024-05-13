@@ -1,25 +1,29 @@
+import { useRouter } from "next/router";
+
+import { useCallback, useEffect, useState } from "react";
+
+import { useTeam } from "@/context/team-context";
+import { PlusIcon } from "lucide-react";
+import { HexColorInput, HexColorPicker } from "react-colorful";
+import { toast } from "sonner";
+import { mutate } from "swr";
+
+import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import AppLayout from "@/components/layouts/app";
 import Navbar from "@/components/settings/navbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import LoadingSpinner from "@/components/ui/loading-spinner";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Label } from "@/components/ui/label";
-import { useTeam } from "@/context/team-context";
-import { useCallback, useEffect, useState } from "react";
-import { mutate } from "swr";
-import { HexColorInput, HexColorPicker } from "react-colorful";
-import LoadingSpinner from "@/components/ui/loading-spinner";
-import { PlusIcon } from "lucide-react";
-import { useBrand } from "@/lib/swr/use-brand";
-import { toast } from "sonner";
-import { convertDataUrlToFile, uploadImage } from "@/lib/utils";
-import { useRouter } from "next/router";
-import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
+
 import { usePlan } from "@/lib/swr/use-billing";
+import { useBrand } from "@/lib/swr/use-brand";
+import { convertDataUrlToFile, uploadImage } from "@/lib/utils";
 
 export default function Branding() {
   const { brand } = useBrand();
@@ -123,10 +127,10 @@ export default function Branding() {
   return (
     <AppLayout>
       <Navbar current="Branding" />
-      <div className="p-4 sm:p-4 sm:m-4">
-        <div className="flex items-center justify-between mb-4 md:mb-8 lg:mb-12">
+      <div className="p-4 sm:m-4 sm:p-4">
+        <div className="mb-4 flex items-center justify-between md:mb-8 lg:mb-12">
           <div className="space-y-1">
-            <h3 className="text-2xl text-foreground font-semibold tracking-tight">
+            <h3 className="text-2xl font-semibold tracking-tight text-foreground">
               Branding
             </h3>
             <p className="text-sm text-muted-foreground">
@@ -143,7 +147,7 @@ export default function Branding() {
                   <div className="flex items-center justify-between">
                     <Label htmlFor="logo">
                       Logo{" "}
-                      <span className="italic text-muted-foreground text-sm">
+                      <span className="text-sm italic text-muted-foreground">
                         (max 2 MB)
                       </span>
                     </Label>
@@ -247,7 +251,7 @@ export default function Branding() {
                     <Popover>
                       <PopoverTrigger>
                         <div
-                          className="w-9 h-9 rounded-md cursor-pointer ring-1 ring-muted-foreground shadow-sm hover:ring-1 hover:ring-gray-300"
+                          className="h-9 w-9 cursor-pointer rounded-md shadow-sm ring-1 ring-muted-foreground hover:ring-1 hover:ring-gray-300"
                           style={{ backgroundColor: brandColor }}
                         />
                       </PopoverTrigger>
@@ -259,7 +263,7 @@ export default function Branding() {
                       </PopoverContent>
                     </Popover>
                     <HexColorInput
-                      className="flex h-9 w-full rounded-md border-0 bg-background px-3 py-2 text-sm ring-1 ring-muted-foreground shadow-sm placeholder:text-muted-foreground focus:ring-1 focus:ring-gray-300 focus:border-0"
+                      className="flex h-9 w-full rounded-md border-0 bg-background px-3 py-2 text-sm shadow-sm ring-1 ring-muted-foreground placeholder:text-muted-foreground focus:border-0 focus:ring-1 focus:ring-gray-300"
                       color={brandColor}
                       onChange={setBrandColor}
                       prefixed

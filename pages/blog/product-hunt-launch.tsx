@@ -1,6 +1,7 @@
+import Head from "next/head";
+
 import Footer from "@/components/web/footer";
 import Navbar from "@/components/web/navbar";
-import Head from "next/head";
 
 function BlogPost() {
   return (
@@ -30,8 +31,8 @@ function BlogPost() {
       </Head>
       <Navbar />
 
-      <div className="bg-gray-100 p-8 mt-16">
-        <div className="max-w-3xl mx-auto space-y-6 bg-white text-black p-6 rounded-lg shadow-md">
+      <div className="mt-16 bg-gray-100 p-8">
+        <div className="mx-auto max-w-3xl space-y-6 rounded-lg bg-white p-6 text-black shadow-md">
           <h1 className="text-4xl font-bold ">
             How to launch Open Source project on Product Hunt?
           </h1>
@@ -58,10 +59,10 @@ function BlogPost() {
             alt="How to launch on PH"
             className="my-4"
           />
-          <h2 className="text-2xl font-bold mb-4">
+          <h2 className="mb-4 text-2xl font-bold">
             In this article you will find:
           </h2>
-          <ul className="list-disc list-inside mb-4">
+          <ul className="mb-4 list-inside list-disc">
             <li className="font-bold">Before launch preparation</li>
             <li className="font-bold">Launch Day</li>
             <li className="font-bold">Special to Open Source launch</li>
@@ -69,15 +70,15 @@ function BlogPost() {
             <li className="font-bold">Results and Stats</li>
           </ul>
           <p>Plus: Happy to share my launch checklist</p>
-          <h2 className="text-2xl font-bold mb-4">Before the launch</h2>
+          <h2 className="mb-4 text-2xl font-bold">Before the launch</h2>
           {/* 1. Draft the messaging */}
-          <h3 className="text-xl font-semibold mb-2">1. Draft the messaging</h3>
+          <h3 className="mb-2 text-xl font-semibold">1. Draft the messaging</h3>
           <p>One liners and message for groups or social.</p>
           <p>
             I like to have 2-4 versions of it, so I can select best for
             different places.
           </p>
-          <blockquote className="border-l-4 border-gray-500 pl-4 my-4">
+          <blockquote className="my-4 border-l-4 border-gray-500 pl-4">
             <p>Because launch is a test.</p>
             <p>
               So I use the opportunity to test messaging in different groups.
@@ -103,7 +104,7 @@ function BlogPost() {
             alt="Draft messages"
           />
           {/* 2. Warm up your audience */}
-          <h3 className="text-xl font-semibold mb-2">
+          <h3 className="mb-2 text-xl font-semibold">
             2. Warm up your audience
           </h3>
           <p>
@@ -116,7 +117,7 @@ function BlogPost() {
             page for people to follow, but we did not.
           </p>
           {/* 3. Create list of your supporters */}
-          <h3 className="text-xl font-semibold mb-2">
+          <h3 className="mb-2 text-xl font-semibold">
             3. Create list of your supporters
           </h3>
           <p>
@@ -124,7 +125,7 @@ function BlogPost() {
             my friends in twitter and linkedin who could be interested in the
             launch.
           </p>
-          <blockquote className="border-l-4 border-gray-500 pl-4 my-4">
+          <blockquote className="my-4 border-l-4 border-gray-500 pl-4">
             <p>Quality over quantity</p>
           </blockquote>
           <p>
@@ -132,7 +133,7 @@ function BlogPost() {
             reach outs and asking for the vote:)
           </p>
           {/* 4. Create the list of places where to post */}
-          <h3 className="text-xl font-semibold mb-2">
+          <h3 className="mb-2 text-xl font-semibold">
             4. Create the list of places where to post
           </h3>
           <p>
@@ -151,7 +152,7 @@ function BlogPost() {
             <li>- Building in public/indihacker places</li>
             <li>- Places for open source</li>
           </ol>
-          <h3 className="text-xl font-semibold mb-2">
+          <h3 className="mb-2 text-xl font-semibold">
             5. Prepare visuals: video, images, gif
           </h3>
           <p>
@@ -170,7 +171,7 @@ function BlogPost() {
             src="https://dev-to-uploads.s3.amazonaws.com/uploads/articles/uq71oh23os3t9nq1zksy.png"
             alt="Papermakr banner"
           />
-          <h3 className="text-xl font-semibold mb-2">
+          <h3 className="mb-2 text-xl font-semibold">
             6. Reach 10-20 people in advance for feedback
           </h3>
           <p>
@@ -185,19 +186,19 @@ function BlogPost() {
           <p>
             We started preparing <strong>1 week</strong> before launch.
           </p>
-          <h2 className="text-2xl font-bold mb-4 pt-6">
+          <h2 className="mb-4 pt-6 text-2xl font-bold">
             During the launch day
           </h2>
           <p>
             Launch day is mostly about <strong>sharing</strong> that you launch
             on social and then continuously <strong>engaging</strong>.
           </p>
-          <h3 className="text-xl font-semibold mb-2">1. Launch your tweet</h3>
+          <h3 className="mb-2 text-xl font-semibold">1. Launch your tweet</h3>
           <img
             src="https://dev-to-uploads.s3.amazonaws.com/uploads/articles/4ri6ggskhpwzm2xjrmxa.gif"
             alt="Pareto principle"
           />
-          <blockquote className="border-l-4 border-gray-500 pl-4 my-4">
+          <blockquote className="my-4 border-l-4 border-gray-500 pl-4">
             <p>20% of efforts bring 80% of result. Pareto also works here</p>
           </blockquote>
           <p>
@@ -216,7 +217,7 @@ function BlogPost() {
             Even if you don&apos;t have a community and a big following on
             Twitter, I would aim to make the tweet interesting and focus on it.
           </p>
-          <h3 className="text-xl font-semibold mb-2">
+          <h3 className="mb-2 text-xl font-semibold">
             2. Post on other social platforms: LinkedIn, Devto
           </h3>
           <p>
@@ -226,7 +227,7 @@ function BlogPost() {
           <blockquote>
             First, do something which can be done quickly.
           </blockquote>
-          <h3 className="text-xl font-semibold mb-2">
+          <h3 className="mb-2 text-xl font-semibold">
             3. Engage in PH comments
           </h3>
           <p>
@@ -242,7 +243,7 @@ function BlogPost() {
             I don&apos;t know how currently PH count it, I think they are
             looking only at upvotes but I still find that important.
           </p>
-          <h3 className="text-xl font-semibold mb-2">
+          <h3 className="mb-2 text-xl font-semibold">
             4. Send email to your users
           </h3>
           <p>Make it clean with one call to action.</p>
@@ -250,7 +251,7 @@ function BlogPost() {
             src="https://dev-to-uploads.s3.amazonaws.com/uploads/articles/ql9tyzttu2x74ds20ucy.png"
             alt="Email"
           />
-          <h3 className="text-xl font-semibold mb-2">6. Add launch branding</h3>
+          <h3 className="mb-2 text-xl font-semibold">6. Add launch branding</h3>
           <p>
             Your and your company profiles are styled and linked to the PH
             launch. Banner, link leading to launch, embeds on the website.
@@ -263,7 +264,7 @@ function BlogPost() {
               Here are my 10 tips from other launches
             </a>
           </p>
-          <h2 className="text-2xl font-bold mb-4 pt-8">
+          <h2 className="mb-4 pt-8 text-2xl font-bold">
             Open source projects launch tips ⭐️
           </h2>
           <p>If your product is open source, where to look for support?</p>
@@ -302,7 +303,7 @@ function BlogPost() {
           <p>
             <strong>Go Open Source</strong>🚀🚀🚀
           </p>
-          <h2 className="text-2xl font-bold mb-4 pt-8">
+          <h2 className="mb-4 pt-8 text-2xl font-bold">
             Top 🥇 Open Source launches in 2022-23
           </h2>
           <p>
@@ -426,7 +427,7 @@ function BlogPost() {
               </a>
             </li>
           </ol>
-          <h2 className="text-2xl font-bold pt-6">
+          <h2 className="pt-6 text-2xl font-bold">
             Results from our launch 📈
           </h2>
           <ul>
@@ -447,7 +448,7 @@ function BlogPost() {
             src="https://dev-to-uploads.s3.amazonaws.com/uploads/articles/vx2966hpmjmi17k58rhz.png"
             alt="Sources of visitors"
           />
-          <h3 className="text-xl font-semibold mb-2 pt-8">
+          <h3 className="mb-2 pt-8 text-xl font-semibold">
             Amount of impressions on other platforms:
           </h3>
           <ul>
@@ -464,7 +465,7 @@ function BlogPost() {
             I think it is best if you connect with people in advance and build
             meaningful connections.
           </p>
-          <h3 className="text-xl font-semibold mb-2 pt-8">
+          <h3 className="mb-2 pt-8 text-xl font-semibold">
             My guesses on how votes distributed:
           </h3>
           <ul>
@@ -474,21 +475,21 @@ function BlogPost() {
             <li>30% building in public community</li>
             <li>20% product hunt community community</li>
           </ul>
-          <h2 className="text-2xl font-bold mb-4">
+          <h2 className="mb-4 text-2xl font-bold">
             Q&A Have some questions? ❓
           </h2>
           <p>
             Some questions I kind of ask myself and maybe will be interesting to
             anyone who is reading this:
           </p>
-          <h3 className="text-xl font-semibold mb-2">
+          <h3 className="mb-2 text-xl font-semibold">
             Can you reengineer a successful launch?
           </h3>
           <p>
             No, I think no. It is similar to re-engineering a viral post. There
             is always a combination of different factors.
           </p>
-          <h3 className="text-xl font-semibold mb-2">
+          <h3 className="mb-2 text-xl font-semibold">
             Can someone guarantee you success?
           </h3>
           <p>
@@ -503,7 +504,7 @@ function BlogPost() {
             <li>You will not see your real supporters and community around</li>
             <li>Fewer people will hear about your brand</li>
           </ol>
-          <h3 className="text-xl font-semibold mb-2">
+          <h3 className="mb-2 text-xl font-semibold">
             Is building in public helping me launch?
           </h3>
           <p>
@@ -511,7 +512,7 @@ function BlogPost() {
             your project no matter if it&apos;s open-source or not is a
             long-term game.
           </p>
-          <h3 className="text-xl font-semibold mb-2">Can my launch fail?</h3>
+          <h3 className="mb-2 text-xl font-semibold">Can my launch fail?</h3>
           <p>
             To me, no. I will give you an example. I missed the launch of
             another product I built. I scheduled it and forgot, just was doing

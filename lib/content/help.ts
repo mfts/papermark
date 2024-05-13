@@ -1,5 +1,7 @@
-import matter from "gray-matter";
 import { cache } from "react";
+
+import matter from "gray-matter";
+
 import { getHeadings } from "./utils";
 
 type Article = {

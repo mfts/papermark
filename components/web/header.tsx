@@ -1,5 +1,7 @@
 import Link from "next/link";
+
 import GitHubIcon from "@/components/shared/icons/github";
+
 import { Button } from "../ui/button";
 
 export default function Header() {
@@ -32,7 +34,7 @@ export default function Header() {
             <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
               The Open-Source DocSend Alternative
             </h1>
-            <p className="mt-6 max-w-xl mx-auto text-lg leading-8 text-gray-600">
+            <p className="mx-auto mt-6 max-w-xl text-lg leading-8 text-gray-600">
               Share pitch decks, sales proposals and other docs securely with
               real-time analytics and white-labeling options.
             </p>
@@ -47,7 +49,7 @@ export default function Header() {
                 href="https://github.com/mfts/papermark"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-sm font-semibold leading-6 text-gray-900 flex items-center"
+                className="flex items-center text-sm font-semibold leading-6 text-gray-900"
               >
                 <GitHubIcon className="mr-2 h-5 w-5" /> Star on GitHub
               </Link>

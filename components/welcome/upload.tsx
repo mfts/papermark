@@ -1,29 +1,34 @@
 import { useRouter } from "next/router";
-import { motion } from "framer-motion";
+
 import { useState } from "react";
-import DocumentUpload from "@/components/document-upload";
-import { toast } from "sonner";
-import Skeleton from "../Skeleton";
-import { STAGGER_CHILD_VARIANTS } from "@/lib/constants";
-import {
-  convertDataUrlToFile,
-  copyToClipboard,
-  uploadImage,
-} from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { usePlausible } from "next-plausible";
+
 import { useTeam } from "@/context/team-context";
+import { motion } from "framer-motion";
+import { usePlausible } from "next-plausible";
+import { toast } from "sonner";
+
+import DocumentUpload from "@/components/document-upload";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { LinkOptions } from "../links/link-sheet/link-options";
-import { DEFAULT_LINK_PROPS, DEFAULT_LINK_TYPE } from "../links/link-sheet";
+import { Button } from "@/components/ui/button";
+
 import { useAnalytics } from "@/lib/analytics";
-import { putFile } from "@/lib/files/put-file";
+import { STAGGER_CHILD_VARIANTS } from "@/lib/constants";
 import { DocumentData, createDocument } from "@/lib/documents/create-document";
+import { putFile } from "@/lib/files/put-file";
+import {
+  convertDataUrlToFile,
+  copyToClipboard,
+  uploadImage,
+} from "@/lib/utils";
+
+import Skeleton from "../Skeleton";
+import { DEFAULT_LINK_PROPS, DEFAULT_LINK_TYPE } from "../links/link-sheet";
+import { LinkOptions } from "../links/link-sheet/link-options";
 
 export default function Upload() {
   const router = useRouter();
@@ -213,7 +218,7 @@ export default function Upload() {
                 <span>Use our</span>{" "}
                 <Button
                   variant="link"
-                  className="text-xs font-normal px-0 underline text-muted-foreground hover:text-gray-700"
+                  className="px-0 text-xs font-normal text-muted-foreground underline hover:text-gray-700"
                   onClick={async () => {
                     const response = await fetch(
                       "/_example/papermark-example-document.pdf",
@@ -281,17 +286,17 @@ export default function Upload() {
                 <div className="flex flex-col justify-center">
                   <div className="relative">
                     <div className="flex py-8">
-                      <div className="flex w-full max-w-xs sm:max-w-lg focus-within:z-10">
-                        <p className="block w-full md:min-w-[500px] rounded-md px-4 text-left border-0 py-1.5 text-secondary-foreground bg-secondary leading-6 overflow-y-scroll">
+                      <div className="flex w-full max-w-xs focus-within:z-10 sm:max-w-lg">
+                        <p className="block w-full overflow-y-scroll rounded-md border-0 bg-secondary px-4 py-1.5 text-left leading-6 text-secondary-foreground md:min-w-[500px]">
                           {`${process.env.NEXT_PUBLIC_BASE_URL}/view/${currentLinkId}`}
                         </p>
                       </div>
                     </div>
                   </div>
-                  <div className="w-full max-w-xs sm:max-w-lg pb-8">
+                  <div className="w-full max-w-xs pb-8 sm:max-w-lg">
                     <Accordion type="single" collapsible>
                       <AccordionItem value="item-1" className="border-none">
-                        <AccordionTrigger className="py-0 rounded-lg space-x-2">
+                        <AccordionTrigger className="space-x-2 rounded-lg py-0">
                           <span className="text-sm font-medium leading-6 text-foreground">
                             Configure Link Options
                           </span>
@@ -302,7 +307,7 @@ export default function Upload() {
                       </AccordionItem>
                     </Accordion>
                   </div>
-                  <div className="flex items-center justify-center mb-4">
+                  <div className="mb-4 flex items-center justify-center">
                     <Button onClick={handleSubmit} loading={isLoading}>
                       Share Document
                     </Button>

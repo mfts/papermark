@@ -1,9 +1,11 @@
 import { useRouter } from "next/router";
-import useSWR from "swr";
-import { fetcher } from "@/lib/utils";
-import { Dataroom, DataroomDocument, DataroomFolder } from "@prisma/client";
+
 import { useTeam } from "@/context/team-context";
+import { Dataroom, DataroomDocument, DataroomFolder } from "@prisma/client";
+import useSWR from "swr";
+
 import { LinkWithViews } from "@/lib/types";
+import { fetcher } from "@/lib/utils";
 
 export type DataroomFolderWithCount = DataroomFolder & {
   _count: {

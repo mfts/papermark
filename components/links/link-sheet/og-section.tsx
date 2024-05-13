@@ -1,19 +1,23 @@
 import {
   Dispatch,
   SetStateAction,
-  useState,
-  useEffect,
   useCallback,
+  useEffect,
+  useState,
 } from "react";
-import { Switch } from "@/components/ui/switch";
-import { cn } from "@/lib/utils";
-import { DEFAULT_LINK_TYPE } from ".";
+
 import { motion } from "framer-motion";
-import { FADE_IN_ANIMATION_SETTINGS } from "@/lib/constants";
-import LoadingSpinner from "@/components/ui/loading-spinner";
 import { Upload as ArrowUpTrayIcon } from "lucide-react";
+
 import { Input } from "@/components/ui/input";
+import LoadingSpinner from "@/components/ui/loading-spinner";
+import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+
+import { FADE_IN_ANIMATION_SETTINGS } from "@/lib/constants";
+import { cn } from "@/lib/utils";
+
+import { DEFAULT_LINK_TYPE } from ".";
 
 export default function OGSection({
   data,
@@ -85,7 +89,7 @@ export default function OGSection({
           >
             Custom social media cards
             {hasFreePlan && (
-              <span className="bg-background text-foreground ring-1 ring-gray-800 dark:ring-gray-500 rounded-full px-2 py-0.5 text-xs ml-2">
+              <span className="ml-2 rounded-full bg-background px-2 py-0.5 text-xs text-foreground ring-1 ring-gray-800 dark:ring-gray-500">
                 Pro
               </span>
             )}
@@ -105,7 +109,7 @@ export default function OGSection({
 
       {enabled && (
         <motion.div
-          className="relative mt-4 rounded-md shadow-sm space-y-3"
+          className="relative mt-4 space-y-3 rounded-md shadow-sm"
           {...FADE_IN_ANIMATION_SETTINGS}
         >
           <div>
@@ -231,7 +235,7 @@ export default function OGSection({
                 name="title"
                 id="title"
                 maxLength={120}
-                className="flex w-full rounded-md border-0 py-1.5 text-foreground bg-background shadow-sm ring-1 ring-inset ring-input placeholder:text-muted-foreground focus:ring-2 focus:ring-inset focus:ring-gray-400 sm:text-sm sm:leading-6"
+                className="flex w-full rounded-md border-0 bg-background py-1.5 text-foreground shadow-sm ring-1 ring-inset ring-input placeholder:text-muted-foreground focus:ring-2 focus:ring-inset focus:ring-gray-400 sm:text-sm sm:leading-6"
                 placeholder={`Papermark - open-source document sharing infrastructure.`}
                 value={metaTitle || ""}
                 onChange={(e) => {
@@ -262,7 +266,7 @@ export default function OGSection({
                 id="description"
                 rows={3}
                 maxLength={240}
-                className="flex w-full rounded-md border-0 py-1.5 text-foreground bg-background shadow-sm ring-1 ring-inset ring-input placeholder:text-muted-foreground focus:ring-2 focus:ring-inset focus:ring-gray-400 sm:text-sm sm:leading-6"
+                className="flex w-full rounded-md border-0 bg-background py-1.5 text-foreground shadow-sm ring-1 ring-inset ring-input placeholder:text-muted-foreground focus:ring-2 focus:ring-inset focus:ring-gray-400 sm:text-sm sm:leading-6"
                 placeholder={`Papermark is an open-source document sharing infrastructure for modern teams.`}
                 value={metaDescription || ""}
                 onChange={(e) => {

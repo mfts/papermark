@@ -1,4 +1,5 @@
 import { Dispatch, SetStateAction } from "react";
+
 import SearchIcon from "@/components/shared/icons/search";
 
 export default function SearchBar({
@@ -11,7 +12,7 @@ export default function SearchBar({
   return (
     <div className="relative mt-5">
       <SearchIcon
-        className="h-5 w-5 absolute z-20 left-3 bottom-2"
+        className="absolute bottom-2 left-3 z-20 h-5 w-5"
         aria-hidden="true"
       />
       <input
@@ -20,7 +21,7 @@ export default function SearchBar({
         name="search"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        className="w-full rounded-xl shadow-sm inline-flex relative items-center border border-gray-300 px-4 py-2 text-sm text-gray-700 placeholder:text-gray-400 focus:z-10 focus:outline-none focus:ring-gray-500 md:w-72 pl-10 xs:pl-12"
+        className="xs:pl-12 relative inline-flex w-full items-center rounded-xl border border-gray-300 px-4 py-2 pl-10 text-sm text-gray-700 shadow-sm placeholder:text-gray-400 focus:z-10 focus:outline-none focus:ring-gray-500 md:w-72"
         placeholder="Search by name"
       />
     </div>

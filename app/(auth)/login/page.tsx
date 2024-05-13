@@ -1,17 +1,20 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { signIn } from "next-auth/react";
-import { signInWithPasskey } from "@teamhanko/passkeys-next-auth-provider/client";
 import Link from "next/link";
-import { Input } from "@/components/ui/input";
 import { useParams } from "next/navigation";
-import Passkey from "@/components/shared/icons/passkey";
+
 import { useState } from "react";
-import { toast } from "sonner";
-import LinkedIn from "@/components/shared/icons/linkedin";
+
+import { signInWithPasskey } from "@teamhanko/passkeys-next-auth-provider/client";
 import { Loader } from "lucide-react";
+import { signIn } from "next-auth/react";
+import { toast } from "sonner";
+
 import Google from "@/components/shared/icons/google";
+import LinkedIn from "@/components/shared/icons/linkedin";
+import Passkey from "@/components/shared/icons/passkey";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export default function Login() {
@@ -34,19 +37,19 @@ export default function Login() {
           className="absolute inset-x-0 top-10 -z-10 flex transform-gpu justify-center overflow-hidden blur-3xl"
           aria-hidden="true"
         ></div>
-        <div className="z-10 mt-[calc(20vh)] h-fit w-full mx-5 sm:mx-0 max-w-md overflow-hidden rounded-lg">
+        <div className="z-10 mx-5 mt-[calc(20vh)] h-fit w-full max-w-md overflow-hidden rounded-lg sm:mx-0">
           <div className="flex flex-col items-center justify-center space-y-3 px-4 py-6 pt-8 text-center sm:px-16">
             <Link href="/">
-              <span className=" text-2xl font-semibold text-gray-800 text-balance ">
+              <span className=" text-balance text-2xl font-semibold text-gray-800 ">
                 Welcome to Papermark
               </span>
             </Link>
-            <h3 className="text-sm text-gray-800 text-balance ">
+            <h3 className="text-balance text-sm text-gray-800 ">
               Share documents. Not attachments.
             </h3>
           </div>
           <form
-            className="flex flex-col px-4 pt-8 sm:px-16 gap-4"
+            className="flex flex-col gap-4 px-4 pt-8 sm:px-16"
             onSubmit={(e) => {
               e.preventDefault();
               setIsLoginWithEmail(true);
@@ -86,7 +89,7 @@ export default function Login() {
               disabled={isLoginWithEmail}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="flex h-10 w-full rounded-md border-0 ring-1 ring-gray-200 bg-background px-3 py-2 text-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 bg-white text-gray-900"
+              className="flex h-10 w-full rounded-md border-0 bg-background bg-white px-3 py-2 text-sm text-gray-900 ring-1 ring-gray-200 transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
             />
             {/* <Button type="submit" disabled={isLoginWithEmail}>
               {isLoginWithEmail && (
@@ -99,13 +102,13 @@ export default function Login() {
               loading={isLoginWithEmail}
               className={`${
                 isLoginWithEmail ? "bg-black" : "bg-gray-800 hover:bg-gray-900 "
-              } text-white py-2 px-4 rounded focus:outline-none focus:shadow-outline transform transition-colors duration-300 ease-in-out`}
+              } focus:shadow-outline transform rounded px-4 py-2 text-white transition-colors duration-300 ease-in-out focus:outline-none`}
             >
               {emailButtonText}
             </Button>
           </form>
-          <p className="text-center py-4">or</p>
-          <div className="flex flex-col px-4 sm:px-16 space-y-2">
+          <p className="py-4 text-center">or</p>
+          <div className="flex flex-col space-y-2 px-4 sm:px-16">
             <Button
               onClick={() => {
                 setIsLoginWithGoogle(true);
@@ -118,12 +121,12 @@ export default function Login() {
                 });
               }}
               disabled={isLoginWithGoogle}
-              className="flex justify-center items-center space-x-2  font-normal bg-gray-100 text-gray-900 border border-gray-200 hover:bg-gray-200 "
+              className="flex items-center justify-center space-x-2  border border-gray-200 bg-gray-100 font-normal text-gray-900 hover:bg-gray-200 "
             >
               {isLoginWithGoogle ? (
-                <Loader className="w-5 h-5 mr-2 animate-spin" />
+                <Loader className="mr-2 h-5 w-5 animate-spin" />
               ) : (
-                <Google className="w-5 h-5" />
+                <Google className="h-5 w-5" />
               )}
               <span>Continue with Google</span>
             </Button>
@@ -139,10 +142,10 @@ export default function Login() {
                 });
               }}
               disabled={isLoginWithLinkedIn}
-              className="flex justify-center items-center space-x-2 font-normal bg-gray-100 text-gray-900 border border-gray-200 hover:bg-gray-200"
+              className="flex items-center justify-center space-x-2 border border-gray-200 bg-gray-100 font-normal text-gray-900 hover:bg-gray-200"
             >
               {isLoginWithLinkedIn ? (
-                <Loader className="w-5 h-5 mr-2 animate-spin " />
+                <Loader className="mr-2 h-5 w-5 animate-spin " />
               ) : (
                 <LinkedIn />
               )}
@@ -155,13 +158,13 @@ export default function Login() {
                 })
               }
               variant="outline"
-              className="flex justify-center items-center space-x-2 border border-gray-200 hover:bg-gray-200  font-normal bg-gray-100 text-gray-900 hover:text-gray-900"
+              className="flex items-center justify-center space-x-2 border border-gray-200 bg-gray-100  font-normal text-gray-900 hover:bg-gray-200 hover:text-gray-900"
             >
-              <Passkey className="w-4 h-4 " />
+              <Passkey className="h-4 w-4 " />
               <span>Continue with a passkey</span>
             </Button>
           </div>
-          <p className=" mt-10 text-xs text-muted-foreground w-full max-w-md px-4 sm:px-16">
+          <p className=" mt-10 w-full max-w-md px-4 text-xs text-muted-foreground sm:px-16">
             By clicking continue, you acknowledge that you have read and agree
             to Papermark&apos;s{" "}
             <Link href="/terms" className="underline">
@@ -176,23 +179,23 @@ export default function Login() {
         </div>
       </div>
       <div className="hidden w-full justify-center bg-gray-800 md:flex md:w-1/2 lg:w-3/5">
-        <div className="flex w-full max-w-5xl px-4 md:px-8 py-20">
+        <div className="flex w-full max-w-5xl px-4 py-20 md:px-8">
           <div
-            className="flex w-full mx-auto max-w-5xl px-4 md:px-8 py-20 bg-gray-800 rounded-3xl  justify-center"
+            className="mx-auto flex w-full max-w-5xl justify-center rounded-3xl bg-gray-800 px-4 py-20  md:px-8"
             id="features"
           >
             <div className="flex flex-col items-center">
               {/* Image container */}
-              <div className="w-64 h-64 mb-4">
+              <div className="mb-4 h-64 w-64">
                 <img
-                  className="object-cover w-full h-full rounded-2xl shadow-2xl"
+                  className="h-full w-full rounded-2xl object-cover shadow-2xl"
                   src="https://www.papermark.io/_static/testimonials/jaski.jpeg"
                   alt="Jaski"
                 />
               </div>
               {/* Text content */}
               <div className="max-w-xl text-center">
-                <blockquote className="text-l leading-8 text-gray-100 sm:text-xl sm:leading-9 text-balance">
+                <blockquote className="text-l text-balance leading-8 text-gray-100 sm:text-xl sm:leading-9">
                   <p>
                     True builders listen to their users and build what they
                     need. Thanks Papermark team for solving a big pain point.
@@ -200,10 +203,10 @@ export default function Login() {
                   </p>
                 </blockquote>
                 <figcaption className="mt-4">
-                  <div className="font-semibold text-white text-balance ">
+                  <div className="text-balance font-semibold text-white ">
                     Jaski
                   </div>
-                  <div className="text-gray-400 text-balance ">
+                  <div className="text-balance text-gray-400 ">
                     Founder, Townhall Network
                   </div>
                 </figcaption>

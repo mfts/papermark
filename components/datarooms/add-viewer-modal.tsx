@@ -1,3 +1,11 @@
+import { useRouter } from "next/router";
+
+import { useState } from "react";
+
+import { useTeam } from "@/context/team-context";
+import { toast } from "sonner";
+import { mutate } from "swr";
+
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -10,12 +18,8 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useTeam } from "@/context/team-context";
+
 import { useAnalytics } from "@/lib/analytics";
-import { useRouter } from "next/router";
-import { useState } from "react";
-import { toast } from "sonner";
-import { mutate } from "swr";
 
 export function AddViewerModal({
   dataroomId,
@@ -170,7 +174,7 @@ export function AddViewerModal({
             {emails.map((email, index) => (
               <div
                 key={index}
-                className="flex items-center gap-2 bg-gray-100 px-2 py-1 rounded"
+                className="flex items-center gap-2 rounded bg-gray-100 px-2 py-1"
               >
                 {email}
                 <button type="button" onClick={() => removeEmail(index)}>
@@ -195,7 +199,7 @@ export function AddViewerModal({
           </div>
 
           <DialogFooter>
-            <Button type="submit" className="w-full h-9 mt-8" loading={loading}>
+            <Button type="submit" className="mt-8 h-9 w-full" loading={loading}>
               {loading ? "Sending emails..." : "Add members"}
             </Button>
           </DialogFooter>

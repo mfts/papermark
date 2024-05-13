@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
+
 import { limiter, receiver } from "@/lib/cron";
+import { sendTrialEndFinalReminderEmail } from "@/lib/emails/send-trial-end-final-reminder";
+import { sendTrialEndReminderEmail } from "@/lib/emails/send-trial-end-reminder";
 import prisma from "@/lib/prisma";
 import { calculateDaysLeft, log } from "@/lib/utils";
-import { sendTrialEndReminderEmail } from "@/lib/emails/send-trial-end-reminder";
-import { sendTrialEndFinalReminderEmail } from "@/lib/emails/send-trial-end-final-reminder";
 
 /**
  * Cron to check if trial has expired.

@@ -1,10 +1,13 @@
 import { NextApiRequest, NextApiResponse } from "next";
+
+import { del } from "@vercel/blob";
 import { getServerSession } from "next-auth";
+
+import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
+
 import { authOptions } from "../../auth/[...nextauth]";
-import { errorhandler } from "@/lib/errorHandler";
-import { del } from "@vercel/blob";
 
 export default async function handle(
   req: NextApiRequest,

@@ -1,8 +1,12 @@
 import { useRouter } from "next/router";
-import { FileTree } from "@/components/ui/nextra-filetree";
+
 import { memo, useMemo } from "react";
-import { buildNestedFolderStructureWithDocs } from "./utils";
+
 import { DataroomDocument, DataroomFolder } from "@prisma/client";
+
+import { FileTree } from "@/components/ui/nextra-filetree";
+
+import { buildNestedFolderStructureWithDocs } from "./utils";
 
 type DataroomDocumentWithVersion = {
   dataroomDocumentId: string;

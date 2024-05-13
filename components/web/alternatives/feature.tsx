@@ -32,10 +32,10 @@ const Feature: React.FC<Props> = ({
         <button
           key={feat}
           onClick={() => toggleFeature(feat)}
-          className={`py-2 px-4 rounded-md mb-2 ${
+          className={`mb-2 rounded-md px-4 py-2 ${
             selectedFeatures.includes(feat)
-              ? "bg-black text-white border-black"
-              : "bg-white text-black border-2 border-black"
+              ? "border-black bg-black text-white"
+              : "border-2 border-black bg-white text-black"
           }`}
         >
           {feat}

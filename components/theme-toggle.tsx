@@ -1,17 +1,19 @@
 "use client";
 
 import * as React from "react";
-import Sun from "@/components/shared/icons/sun";
-import Moon from "@/components/shared/icons/moon";
+
 import { Monitor, Palette } from "lucide-react";
 import { useTheme } from "next-themes";
+
+import Moon from "@/components/shared/icons/moon";
+import Sun from "@/components/shared/icons/sun";
 import {
+  DropdownMenuPortal,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuSub,
-  DropdownMenuSubTrigger,
   DropdownMenuSubContent,
-  DropdownMenuPortal,
+  DropdownMenuSubTrigger,
 } from "@/components/ui/dropdown-menu";
 
 export function ModeToggle() {
@@ -19,26 +21,26 @@ export function ModeToggle() {
 
   return (
     <DropdownMenuSub>
-      <DropdownMenuSubTrigger className="w-full flex items-center px-3 !py-2 text-sm hover:!bg-gray-200 dark:hover:!bg-muted duration-200 rounded-none pr-2">
-        <Palette className="w-4 h-4 mr-2" /> Themes
+      <DropdownMenuSubTrigger className="flex w-full items-center rounded-none !py-2 px-3 pr-2 text-sm duration-200 hover:!bg-gray-200 dark:hover:!bg-muted">
+        <Palette className="mr-2 h-4 w-4" /> Themes
       </DropdownMenuSubTrigger>
       <DropdownMenuPortal>
         <DropdownMenuSubContent className="w-[180px]">
           <DropdownMenuRadioGroup
             value={theme}
             onValueChange={setTheme}
-            className="*:flex *:items-center space-y-1"
+            className="space-y-1 *:flex *:items-center"
           >
             <DropdownMenuRadioItem value="light">
-              <Sun className="h-4 w-4 mr-2" />
+              <Sun className="mr-2 h-4 w-4" />
               Light
             </DropdownMenuRadioItem>
             <DropdownMenuRadioItem value="dark">
-              <Moon className="h-4 w-4 mr-2" />
+              <Moon className="mr-2 h-4 w-4" />
               Dark
             </DropdownMenuRadioItem>
             <DropdownMenuRadioItem value="system">
-              <Monitor className="h-4 w-4 mr-2" />
+              <Monitor className="mr-2 h-4 w-4" />
               System
             </DropdownMenuRadioItem>
           </DropdownMenuRadioGroup>

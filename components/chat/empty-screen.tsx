@@ -1,5 +1,7 @@
-import { Button } from "@/components/ui/button";
 import Image from "next/image";
+
+import { Button } from "@/components/ui/button";
+
 import Sparkle from "../shared/icons/sparkle";
 
 const exampleMessages = [
@@ -43,7 +45,7 @@ export function EmptyScreen({
           {firstPage ? (
             firstPage.includes("cloudfront.net") ? (
               <img
-                className="object-contain rounded-md ring-1 ring-gray-700"
+                className="rounded-md object-contain ring-1 ring-gray-700"
                 src={firstPage}
                 alt={`Page 1`}
                 fetchPriority="high"
@@ -53,13 +55,13 @@ export function EmptyScreen({
                 src={firstPage}
                 width={768}
                 height={100}
-                className="object-contain rounded-md ring-1 ring-gray-700"
+                className="rounded-md object-contain ring-1 ring-gray-700"
                 alt="First page of the document"
               />
             )
           ) : (
-            <div className="flex items-center justify-center rounded-md w-full">
-              <p className="text-2xl text-center">
+            <div className="flex w-full items-center justify-center rounded-md">
+              <p className="text-center text-2xl">
                 Chat with{" "}
                 <span className="text-2xl font-bold tracking-tighter ">
                   Papermark
@@ -70,13 +72,13 @@ export function EmptyScreen({
           )}
         </div>
 
-        <div className="flex justify-center text-lg mt-4">
+        <div className="mt-4 flex justify-center text-lg">
           What would you like to know?
         </div>
       </div>
 
-      <div className="mx-auto max-w-2xl px-4 absolute bottom-0 inset-x-0">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+      <div className="absolute inset-x-0 bottom-0 mx-auto max-w-2xl px-4">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {exampleMessages.map((message, index) => (
             <Button
               key={index}

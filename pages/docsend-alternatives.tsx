@@ -1,18 +1,20 @@
 import Head from "next/head";
+
 import { useState } from "react";
+
+import LoadingDots from "@/components/ui/loading-dots";
+import Grid from "@/components/web/alternatives/alternativesgrid";
+import Article from "@/components/web/alternatives/docsendtext";
 import Feature from "@/components/web/alternatives/feature";
 import FeaturesTable from "@/components/web/alternatives/featurestable";
+import { PlanSelect } from "@/components/web/alternatives/plan";
 import PricingTable from "@/components/web/alternatives/pricingtable";
+import { UsecaseSelect } from "@/components/web/alternatives/usecase";
 import UseCaseTable from "@/components/web/alternatives/usecasetable";
-import Article from "@/components/web/alternatives/docsendtext";
-import Grid from "@/components/web/alternatives/alternativesgrid";
-import Testimonials from "@/components/web/testimonials";
 import CTA from "@/components/web/cta";
 import Footer from "@/components/web/footer";
 import Navbar from "@/components/web/navbar";
-import { PlanSelect } from "@/components/web/alternatives/plan";
-import { UsecaseSelect } from "@/components/web/alternatives/usecase";
-import LoadingDots from "@/components/ui/loading-dots";
+import Testimonials from "@/components/web/testimonials";
 
 const features = [
   "send unlimited documents",
@@ -153,11 +155,11 @@ Please note that the prices and availability of features may vary, and it is rec
       </Head>
       <div className="flex flex-1 flex-col bg-white text-black">
         <Navbar />
-        <main className="flex flex-col items-center w-full">
-          <section className="pt-24 lg:pt-24 bg-white w-full">
-            <div className="px-4 lg:px-2 w-full">
-              <div className="max-w-7xl mx-auto px-4 md:px-8 w-full">
-                <div className="w-full flex flex-col items-center">
+        <main className="flex w-full flex-col items-center">
+          <section className="w-full bg-white pt-24 lg:pt-24">
+            <div className="w-full px-4 lg:px-2">
+              <div className="mx-auto w-full max-w-7xl px-4 md:px-8">
+                <div className="flex w-full flex-col items-center">
                   <div className="pb-1">
                     <img
                       src="https://media.licdn.com/dms/image/C560BAQF0P4VJimYMZw/company-logo_200_200/0/1630615035618?e=1720656000&v=beta&t=gWnITXssNMEKBqbdPrGev6pbQf9iLywYEr404OFtKV0"
@@ -167,8 +169,8 @@ Please note that the prices and availability of features may vary, and it is rec
                       height={50}
                     />
                   </div>
-                  <div className="prose prose-h2:mb-2 first:prose-h2:mt-0 prose-h2:mt-10 prose-headings:font-medium sm:max-w-screen-md sm:pr-2 md:pr-0 w-full text-center">
-                    <h1 className="text-5xl font-bold text-black lg:text-7xl my-8">
+                  <div className="prose w-full text-center prose-headings:font-medium prose-h2:mb-2 prose-h2:mt-10 first:prose-h2:mt-0 sm:max-w-screen-md sm:pr-2 md:pr-0">
+                    <h1 className="my-8 text-5xl font-bold text-black lg:text-7xl">
                       Top 10 Docsend alternatives in 2024
                     </h1>
 
@@ -187,13 +189,13 @@ Please note that the prices and availability of features may vary, and it is rec
             <PricingTable />
             <UseCaseTable />
             <Grid />
-            <div className="max-w-5xl mx-auto px-8 lg:px-28">
-              <div className="max-w-5xl mx-auto">
-                <div className="w-full my-1 mx-auto "></div>
-                <h2 className="text-4xl font-bold text-black  my-8 text-center">
+            <div className="mx-auto max-w-5xl px-8 lg:px-28">
+              <div className="mx-auto max-w-5xl">
+                <div className="mx-auto my-1 w-full "></div>
+                <h2 className="my-8 text-center text-4xl  font-bold text-black">
                   Find Docsend alterntive based on your requirements
                 </h2>
-                <p className="text-1xl mt-3 mb-5 text-center text-black font-semibold ">
+                <p className="text-1xl mb-5 mt-3 text-center font-semibold text-black ">
                   Step 1. Select features you prioritize the most <br />
                 </p>
                 <Feature
@@ -201,26 +203,26 @@ Please note that the prices and availability of features may vary, and it is rec
                   setSelectedFeatures={setSelectedFeatures}
                 />
 
-                <div className="w-full my-1 mx-auto">
+                <div className="mx-auto my-1 w-full">
                   <div className="flex space-x-4">
                     <div className="w-full">
                       {shouldRenderSteps() && (
                         <>
-                          <p className="text-1xl mt-10 mb-5 text-center text-black font-semibold ">
+                          <p className="text-1xl mb-5 mt-10 text-center font-semibold text-black ">
                             Step 2. Select your plan
                             <br />
                           </p>
                           <div className="flex space-x-4">
                             {/* PlanSelect's width is decreased to half on larger screens using w-1/2 */}
-                            <div className="w-full lg:w-1/2 mx-auto">
+                            <div className="mx-auto w-full lg:w-1/2">
                               <PlanSelect plan={plan} setPlan={setPlan} />
                             </div>
                           </div>
-                          <p className="text-1xl mt-10 mb-5 text-center text-black font-semibold ">
+                          <p className="text-1xl mb-5 mt-10 text-center font-semibold text-black ">
                             Step 3. Select your use case
                             <br />
                           </p>
-                          <div className="w-full lg:w-1/2 mx-auto">
+                          <div className="mx-auto w-full lg:w-1/2">
                             <UsecaseSelect
                               usecase={usecase}
                               setUsecase={setUsecase}
@@ -232,7 +234,7 @@ Please note that the prices and availability of features may vary, and it is rec
                   </div>
                 </div>
 
-                <div className="w-full my-1 mx-auto">
+                <div className="mx-auto my-1 w-full">
                   <div className="flex space-x-6"></div>
                 </div>
 
@@ -240,7 +242,7 @@ Please note that the prices and availability of features may vary, and it is rec
                   <button
                     disabled={loading}
                     onClick={(e) => optimizePost(e)}
-                    className="bg-black font-medium rounded-md w-full text-white px-4 py-2 hover:bg-gray-900 disabled:bg-black"
+                    className="w-full rounded-md bg-black px-4 py-2 font-medium text-white hover:bg-gray-900 disabled:bg-black"
                   >
                     {loading && <LoadingDots color="white" />}
                     {!loading && ` Find alternatives `}
@@ -250,14 +252,14 @@ Please note that the prices and availability of features may vary, and it is rec
               <div className="flex md:flex-col lg:flex-col">
                 {optimizedPost && (
                   <div className="my-1">
-                    <div className="flex justify-between items-center pb-2 py-2 border-gray-300">
-                      <h2 className="text-xl font-bold text-white mx-auto">
+                    <div className="flex items-center justify-between border-gray-300 py-2 pb-2">
+                      <h2 className="mx-auto text-xl font-bold text-white">
                         Docsend alternatives just for you
                       </h2>
                     </div>
 
                     <div
-                      className="max-w-2x bg-gray mx-auto text-black rounded-xl p-4 hover:bg-gray-100 transition cursor-copy border"
+                      className="max-w-2x bg-gray mx-auto cursor-copy rounded-xl border p-4 text-black transition hover:bg-gray-100"
                       onClick={() => {
                         navigator.clipboard.write([
                           new ClipboardItem({
@@ -285,7 +287,7 @@ Please note that the prices and availability of features may vary, and it is rec
                     href="/login"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="bg-gray-200 text-xs rounded-md w-full text-white px-1 py-1 hover:bg-black disabled:bg-purple-500 inline-block text-center"
+                    className="inline-block w-full rounded-md bg-gray-200 px-1 py-1 text-center text-xs text-white hover:bg-black disabled:bg-purple-500"
                   >
                     Send document
                   </a>

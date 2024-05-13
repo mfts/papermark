@@ -1,6 +1,10 @@
-import { usePlausible } from "next-plausible";
 import { useRouter } from "next/router";
+
 import { useState } from "react";
+
+import { usePlausible } from "next-plausible";
+import { toast } from "sonner";
+
 import {
   Dialog,
   DialogContent,
@@ -10,10 +14,10 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
-import { toast } from "sonner";
 
 export function AddTeamModal({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -54,18 +58,18 @@ export function AddTeamModal({ children }: { children: React.ReactNode }) {
     <Dialog>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent
-        className="text-foreground bg-background"
+        className="bg-background text-foreground"
         onClick={(e) => e.stopPropagation()}
       >
         <DialogHeader>
           <DialogTitle>Create a Team</DialogTitle>
-          <DialogDescription className="py-2 mb-1 text-sm text-muted-foreground">
+          <DialogDescription className="mb-1 py-2 text-sm text-muted-foreground">
             Start by naming your new team and inviting team members.
           </DialogDescription>
         </DialogHeader>
         <form
           onSubmit={handleCreateTeam}
-          className="flex flex-col gap-8 mt-4"
+          className="mt-4 flex flex-col gap-8"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex flex-col gap-3">

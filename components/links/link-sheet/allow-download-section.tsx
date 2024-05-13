@@ -1,6 +1,9 @@
-import { Dispatch, SetStateAction, useState, useEffect } from "react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
+
 import { Switch } from "@/components/ui/switch";
+
 import { cn } from "@/lib/utils";
+
 import { DEFAULT_LINK_TYPE } from ".";
 
 export default function AllowDownloadSection({

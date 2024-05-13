@@ -1,6 +1,9 @@
-import { Dispatch, SetStateAction, useState, useEffect } from "react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
+
 import { Switch } from "@/components/ui/switch";
+
 import { cn } from "@/lib/utils";
+
 import { DEFAULT_LINK_TYPE } from ".";
 
 export default function EmailAuthenticationSection({
@@ -55,7 +58,7 @@ export default function EmailAuthenticationSection({
           >
             Require email verification
             {hasFreePlan && (
-              <span className="bg-background text-foreground ring-1 ring-gray-800 dark:ring-gray-500 rounded-full px-2 py-0.5 text-xs ml-2">
+              <span className="ml-2 rounded-full bg-background px-2 py-0.5 text-xs text-foreground ring-1 ring-gray-800 dark:ring-gray-500">
                 Pro
               </span>
             )}

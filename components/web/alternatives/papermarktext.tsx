@@ -3,15 +3,15 @@ import Link from "next/link";
 const PapermarkText = () => {
   return (
     <>
-      <div className="bg-gray-100 p-8 mt-16">
-        <div className="max-w-3xl mx-auto space-y-6 bg-white text-black p-6 rounded-lg shadow-sm">
+      <div className="mt-16 bg-gray-100 p-8">
+        <div className="mx-auto max-w-3xl space-y-6 rounded-lg bg-white p-6 text-black shadow-sm">
           <h1 className="text-4xl font-bold ">DocSend vs Papermark</h1>
           <p className="mb-4">
             Papermark emphasizes security and user interface, offering features
             like watermarking, password protection, and custom branding.
           </p>
 
-          <ul className="list-disc list-inside mb-4">
+          <ul className="mb-4 list-inside list-disc">
             <li className="">Founder First</li>
             <li className="">Budget Friendly</li>
             <li className="">Open Source</li>
@@ -20,20 +20,20 @@ const PapermarkText = () => {
           <p className="mb-4">
             <a
               href="https://github.com/mfts/papermark"
-              className="text-blue-600 underline px-2"
+              className="px-2 text-blue-600 underline"
             >
               Self-host Papermark
             </a>
             or let us host it for you
-            <Link href="/login" className="text-blue-600 underline px-2">
+            <Link href="/login" className="px-2 text-blue-600 underline">
               for free
             </Link>
           </p>
-          <h2 className="text-2xl font-bold mt-4">Papermark reviews</h2>
+          <h2 className="mt-4 text-2xl font-bold">Papermark reviews</h2>
 
           <p>⭐️⭐️⭐️⭐️⭐️</p>
 
-          <h3 className="text-2xl font-semi-bold mt-4">
+          <h3 className="font-semi-bold mt-4 text-2xl">
             Users love our customer support
           </h3>
           <img
@@ -41,7 +41,7 @@ const PapermarkText = () => {
             alt="Papermark reviews"
             className="my-4"
           />
-          <h3 className="text-2xl font-semi-bold mt-4">
+          <h3 className="font-semi-bold mt-4 text-2xl">
             Papermark focuses on UI and core features
           </h3>
           <img
@@ -49,7 +49,7 @@ const PapermarkText = () => {
             alt="Papermark reviews"
             className="my-4"
           />
-          <h3 className="text-2xl font-semi-bold mt-4">
+          <h3 className="font-semi-bold mt-4 text-2xl">
             Actively used by founders, VC funds and developers
           </h3>
           <img
@@ -57,7 +57,7 @@ const PapermarkText = () => {
             alt="Papermark reviews"
             className="my-4"
           />
-          <h2 className="text-2xl font-bold mt-4">
+          <h2 className="mt-4 text-2xl font-bold">
             Papermark plans and pricing
           </h2>
           <p>

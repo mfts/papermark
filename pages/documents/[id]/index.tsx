@@ -1,16 +1,20 @@
-import { useDocument, useDocumentLinks } from "@/lib/swr/use-document";
 import ErrorPage from "next/error";
+
+import { useState } from "react";
+
+import { useTeam } from "@/context/team-context";
+
+import DocumentHeader from "@/components/documents/document-header";
+import { StatsComponent } from "@/components/documents/stats";
 import AppLayout from "@/components/layouts/app";
 import LinkSheet from "@/components/links/link-sheet";
 import LinksTable from "@/components/links/links-table";
-import VisitorsTable from "@/components/visitors/visitors-table";
-import { useState } from "react";
-import LoadingSpinner from "@/components/ui/loading-spinner";
-import { useTeam } from "@/context/team-context";
-import { StatsComponent } from "@/components/documents/stats";
-import DocumentHeader from "@/components/documents/document-header";
-import { Button } from "@/components/ui/button";
 import { NavMenu } from "@/components/navigation-menu";
+import { Button } from "@/components/ui/button";
+import LoadingSpinner from "@/components/ui/loading-spinner";
+import VisitorsTable from "@/components/visitors/visitors-table";
+
+import { useDocument, useDocumentLinks } from "@/lib/swr/use-document";
 
 export default function DocumentPage() {
   const { document: prismaDocument, primaryVersion, error } = useDocument();
@@ -25,7 +29,7 @@ export default function DocumentPage() {
 
   return (
     <AppLayout>
-      <main className="relative overflow-hidden mx-2 sm:mx-3 md:mx-5 lg:mx-7 xl:mx-10 mt-4 md:mt-5 lg:mt-8 mb-10 space-y-8 px-1">
+      <main className="relative mx-2 mb-10 mt-4 space-y-8 overflow-hidden px-1 sm:mx-3 md:mx-5 md:mt-5 lg:mx-7 lg:mt-8 xl:mx-10">
         {prismaDocument && primaryVersion ? (
           <>
             {/* Action Header */}
@@ -36,7 +40,7 @@ export default function DocumentPage() {
               actions={[
                 <Button
                   key={"create-link"}
-                  className="flex h-8 lg:h-9 text-xs lg:text-sm whitespace-nowrap"
+                  className="flex h-8 whitespace-nowrap text-xs lg:h-9 lg:text-sm"
                   onClick={() => setIsLinkSheetOpen(true)}
                 >
                   Create Link
@@ -83,7 +87,7 @@ export default function DocumentPage() {
             />
           </>
         ) : (
-          <div className="h-screen flex items-center justify-center">
+          <div className="flex h-screen items-center justify-center">
             <LoadingSpinner className="mr-1 h-20 w-20" />
           </div>
         )}

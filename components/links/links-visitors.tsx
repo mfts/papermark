@@ -1,9 +1,10 @@
-import { durationFormat, timeAgo } from "@/lib/utils";
-import { TableCell, TableRow } from "@/components/ui/table";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useLinkVisits } from "@/lib/swr/use-link";
 import { Gauge } from "@/components/ui/gauge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { TableCell, TableRow } from "@/components/ui/table";
 import { VisitorAvatar } from "@/components/visitors/visitor-avatar";
+
+import { useLinkVisits } from "@/lib/swr/use-link";
+import { durationFormat, timeAgo } from "@/lib/utils";
 
 export default function LinksVisitors({
   linkId,
@@ -20,21 +21,21 @@ export default function LinksVisitors({
         views.map((view) => (
           <TableRow key={view.id}>
             <TableCell colSpan={2}>
-              <div className="flex items-center sm:space-x-3 overflow-visible">
+              <div className="flex items-center overflow-visible sm:space-x-3">
                 <VisitorAvatar
                   viewerEmail={view.viewerEmail}
-                  className="w-7 md:w-8 h-7 md:h-8 text-xs md:text-sm"
+                  className="h-7 w-7 text-xs md:h-8 md:w-8 md:text-sm"
                 />
 
-                <p className="text-sm text-gray-800 dark:text-gray-200 overflow-visible">
+                <p className="overflow-visible text-sm text-gray-800 dark:text-gray-200">
                   {view.viewerEmail ? view.viewerEmail : "Anonymous"}
                 </p>
               </div>
             </TableCell>
 
             <TableCell>
-              <div className="flex space-x-2 md:space-x-4 items-center">
-                <div className="text-sm text-muted-foreground whitespace-nowrap">
+              <div className="flex items-center space-x-2 md:space-x-4">
+                <div className="whitespace-nowrap text-sm text-muted-foreground">
                   {durationFormat(view.totalDuration)}
                 </div>
 

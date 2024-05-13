@@ -1,6 +1,6 @@
 export default function TermsPage() {
   return (
-    <div className="relative pt-48 pb-14 mx-auto  px-4 lg:px-8 bg-white text-black">
+    <div className="relative mx-auto bg-white px-4  pb-14 pt-48 text-black lg:px-8">
       <article className="prose prose-slate mx-auto">
         <h1>Terms of Service</h1>
         <p>Effective date: 26/04/2024</p>

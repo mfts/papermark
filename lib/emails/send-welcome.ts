@@ -1,5 +1,7 @@
-import { sendEmail } from "@/lib/resend";
 import WelcomeEmail from "@/components/emails/welcome";
+
+import { sendEmail } from "@/lib/resend";
+
 import { CreateUserEmailProps } from "../types";
 
 export const sendWelcomeEmail = async (params: CreateUserEmailProps) => {

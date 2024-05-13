@@ -1,11 +1,19 @@
-import { nFormatter, timeAgo } from "@/lib/utils";
-import Link from "next/link";
-import { type DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
-import { TeamContextType } from "@/context/team-context";
-import BarChart from "@/components/shared/icons/bar-chart";
 import Image from "next/image";
-import NotionIcon from "@/components/shared/icons/notion";
+import Link from "next/link";
+
+import { useEffect, useRef, useState } from "react";
+
+import { TeamContextType } from "@/context/team-context";
+import { FolderInputIcon, MoreVertical, TrashIcon } from "lucide-react";
+import { useTheme } from "next-themes";
 import { toast } from "sonner";
+import { mutate } from "swr";
+
+import { MoveToFolderModal } from "@/components/documents/move-folder-modal";
+import BarChart from "@/components/shared/icons/bar-chart";
+import Check from "@/components/shared/icons/check";
+import Copy from "@/components/shared/icons/copy";
+import NotionIcon from "@/components/shared/icons/notion";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -15,15 +23,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { TrashIcon, MoreVertical, FolderInputIcon } from "lucide-react";
-import { mutate } from "swr";
-import { useCopyToClipboard } from "@/lib/utils/use-copy-to-clipboard";
-import Check from "@/components/shared/icons/check";
-import Copy from "@/components/shared/icons/copy";
-import { useEffect, useRef, useState } from "react";
-import { useTheme } from "next-themes";
-import { MoveToFolderModal } from "@/components/documents/move-folder-modal";
+
 import { type DataroomFolderDocument } from "@/lib/swr/use-dataroom";
+import { type DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
+import { nFormatter, timeAgo } from "@/lib/utils";
+import { useCopyToClipboard } from "@/lib/utils/use-copy-to-clipboard";
+
 import { MoveToDataroomFolderModal } from "./move-dataroom-folder-modal";
 
 type DocumentsCardProps = {
@@ -46,11 +51,11 @@ export default function DataroomDocumentCard({
 
   return (
     <>
-      <li className="group/row relative rounded-lg p-3 border-0 dark:bg-secondary ring-1 ring-gray-200 dark:ring-gray-700 transition-all hover:ring-gray-300 hover:dark:ring-gray-500 hover:bg-secondary sm:p-4 flex justify-between items-center">
-        <div className="min-w-0 flex shrink items-center space-x-2 sm:space-x-4">
-          <div className="w-8 mx-0.5 sm:mx-1 text-center flex justify-center items-center">
+      <li className="group/row relative flex items-center justify-between rounded-lg border-0 p-3 ring-1 ring-gray-200 transition-all hover:bg-secondary hover:ring-gray-300 dark:bg-secondary dark:ring-gray-700 hover:dark:ring-gray-500 sm:p-4">
+        <div className="flex min-w-0 shrink items-center space-x-2 sm:space-x-4">
+          <div className="mx-0.5 flex w-8 items-center justify-center text-center sm:mx-1">
             {document.document.type === "notion" ? (
-              <NotionIcon className="w-8 h-8" />
+              <NotionIcon className="h-8 w-8" />
             ) : (
               <Image
                 src={`/_icons/${document.document.type}${isLight ? "-light" : ""}.svg`}
@@ -63,10 +68,10 @@ export default function DataroomDocumentCard({
 
           <div className="flex-col">
             <div className="flex items-center">
-              <h2 className="min-w-0 text-sm font-semibold leading-6 text-foreground truncate max-w-[150px] sm:max-w-md">
+              <h2 className="min-w-0 max-w-[150px] truncate text-sm font-semibold leading-6 text-foreground sm:max-w-md">
                 <Link
                   href={`/documents/${document.document.id}`}
-                  className="truncate w-full"
+                  className="w-full truncate"
                 >
                   <span>{document.document.name}</span>
                   <span className="absolute inset-0" />
@@ -91,10 +96,10 @@ export default function DataroomDocumentCard({
               e.stopPropagation();
             }}
             href={`/documents/${document.document.id}`}
-            className="flex items-center z-10 space-x-1 rounded-md bg-gray-200 dark:bg-gray-700 px-1.5 sm:px-2 py-0.5 transition-all duration-75 hover:scale-105 active:scale-100"
+            className="z-10 flex items-center space-x-1 rounded-md bg-gray-200 px-1.5 py-0.5 transition-all duration-75 hover:scale-105 active:scale-100 dark:bg-gray-700 sm:px-2"
           >
-            <BarChart className="h-3 sm:h-4 w-3 sm:w-4 text-muted-foreground" />
-            <p className="whitespace-nowrap text-xs sm:text-sm text-muted-foreground">
+            <BarChart className="h-3 w-3 text-muted-foreground sm:h-4 sm:w-4" />
+            <p className="whitespace-nowrap text-xs text-muted-foreground sm:text-sm">
               {nFormatter(document.document._count.views)}
               <span className="ml-1 hidden sm:inline-block">views</span>
             </p>
@@ -105,16 +110,16 @@ export default function DataroomDocumentCard({
               <Button
                 // size="icon"
                 variant="outline"
-                className="h-8 lg:h-9 w-8 lg:w-9 p-0 z-10 bg-transparent border-gray-200 dark:border-gray-700 hover:bg-gray-200 hover:dark:bg-gray-700"
+                className="z-10 h-8 w-8 border-gray-200 bg-transparent p-0 hover:bg-gray-200 dark:border-gray-700 hover:dark:bg-gray-700 lg:h-9 lg:w-9"
               >
                 <span className="sr-only">Open menu</span>
-                <MoreVertical className="w-4 h-4" />
+                <MoreVertical className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" ref={dropdownRef}>
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
               <DropdownMenuItem onClick={() => setMoveFolderOpen(true)}>
-                <FolderInputIcon className="w-4 h-4 mr-2" />
+                <FolderInputIcon className="mr-2 h-4 w-4" />
                 Move to folder
               </DropdownMenuItem>
               <DropdownMenuSeparator />

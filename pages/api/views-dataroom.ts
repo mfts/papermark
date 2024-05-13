@@ -1,13 +1,15 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import prisma from "@/lib/prisma";
-import { checkPassword, decryptEncrpytedPassword, log } from "@/lib/utils";
-import { newId } from "@/lib/id-helper";
+
+import { parsePageId } from "notion-utils";
+import { record } from "zod";
+
+import sendNotification from "@/lib/api/notification-helper";
 import { sendVerificationEmail } from "@/lib/emails/send-email-verification";
 import { getFile } from "@/lib/files/get-file";
-import sendNotification from "@/lib/api/notification-helper";
-import { parsePageId } from "notion-utils";
+import { newId } from "@/lib/id-helper";
 import notion from "@/lib/notion";
-import { record } from "zod";
+import prisma from "@/lib/prisma";
+import { checkPassword, decryptEncrpytedPassword, log } from "@/lib/utils";
 
 export default async function handle(
   req: NextApiRequest,

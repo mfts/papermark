@@ -1,38 +1,43 @@
-import { useEffect, useState } from "react";
-import { useSession } from "next-auth/react";
-import SettingsIcon from "@/components/shared/icons/settings";
-import MenuIcon from "@/components/shared/icons/menu";
-import { cn } from "@/lib/utils";
 import { useRouter } from "next/router";
-import Banner from "./banner";
-import ProBanner from "./billing/pro-banner";
-import Cookies from "js-cookie";
-import { usePlan } from "@/lib/swr/use-billing";
-import SelectTeam from "./teams/select-team";
+
+import { useEffect, useState } from "react";
+
 import { TeamContextType, initialState, useTeam } from "@/context/team-context";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import ProfileMenu from "./profile-menu";
+import Cookies from "js-cookie";
 import {
-  PaletteIcon,
   FolderIcon as FolderLucideIcon,
   FolderOpenIcon,
+  PaletteIcon,
   ServerIcon,
 } from "lucide-react";
-import SiderbarFolders from "./sidebar-folders";
-import { ScrollArea } from "./ui/scroll-area";
+import { useSession } from "next-auth/react";
+
+import MenuIcon from "@/components/shared/icons/menu";
+import SettingsIcon from "@/components/shared/icons/settings";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+
+import { usePlan } from "@/lib/swr/use-billing";
+import { cn } from "@/lib/utils";
+
+import Banner from "./banner";
+import ProBanner from "./billing/pro-banner";
 import { UpgradePlanModal } from "./billing/upgrade-plan-modal";
+import ProfileMenu from "./profile-menu";
+import SiderbarFolders from "./sidebar-folders";
+import SelectTeam from "./teams/select-team";
+import { ScrollArea } from "./ui/scroll-area";
 
 export default function Sidebar() {
   return (
     <>
       <nav>
         {/* sidebar for desktop */}
-        <SidebarComponent className="hidden lg:fixed lg:inset-y-0 lg:flex lg:z-50" />
+        <SidebarComponent className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex" />
 
         {/* move main screen to the right by width of the sidebar on desktop */}
         <div className="lg:pl-72"></div>
         {/* sidebar for mobile */}
-        <div className="sticky lg:hidden top-0 z-40 mb-1 flex items-center h-14 shrink-0 border-gray-50/90 bg-gray-50 dark:border-black/10 dark:bg-black/95 px-6 sm:px-12 border-b dark:border-none">
+        <div className="sticky top-0 z-40 mb-1 flex h-14 shrink-0 items-center border-b border-gray-50/90 bg-gray-50 px-6 dark:border-none dark:border-black/10 dark:bg-black/95 sm:px-12 lg:hidden">
           <Sheet>
             <SheetTrigger asChild>
               <button className="mt-1 p-0.5 text-muted-foreground lg:hidden">
@@ -41,12 +46,12 @@ export default function Sidebar() {
             </SheetTrigger>
             <SheetContent
               side="left"
-              className="w-[280px] sm:w-[300px] lg:hidden p-0 m-0"
+              className="m-0 w-[280px] p-0 sm:w-[300px] lg:hidden"
             >
               <SidebarComponent className="flex" />
             </SheetContent>
           </Sheet>
-          <div className="flex flex-1 gap-x-4 self-stretch items-center lg:gap-x-6 justify-end">
+          <div className="flex flex-1 items-center justify-end gap-x-4 self-stretch lg:gap-x-6">
             <ProfileMenu size="small" className="mr-3 mt-1.5" />
           </div>
         </div>
@@ -138,17 +143,17 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
     <div>
       <aside
         className={cn(
-          "w-full h-screen lg:w-72 flex-shrink-0 flex-col justify-between gap-y-6 bg-gray-50 dark:bg-black px-4 lg:px-6 pt-4 lg:pt-6",
+          "h-screen w-full flex-shrink-0 flex-col justify-between gap-y-6 bg-gray-50 px-4 pt-4 dark:bg-black lg:w-72 lg:px-6 lg:pt-6",
           className,
         )}
       >
         {/* Sidebar component, swap this element with another sidebar if you like */}
 
         <div className="flex h-16 shrink-0 items-center space-x-3">
-          <p className="text-2xl font-bold text-black dark:text-white  tracking-tighter flex items-center">
+          <p className="flex items-center text-2xl font-bold  tracking-tighter text-black dark:text-white">
             Papermark{" "}
             {userPlan && userPlan != "free" ? (
-              <span className="bg-background text-foreground ring-1 ring-gray-800 tracking-normal rounded-full px-2.5 py-1 text-xs ml-4">
+              <span className="ml-4 rounded-full bg-background px-2.5 py-1 text-xs tracking-normal text-foreground ring-1 ring-gray-800">
                 {userPlan.charAt(0).toUpperCase() + userPlan.slice(1)}
               </span>
             ) : null}
@@ -195,9 +200,9 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
                         disabled={item.disabled}
                         className={cn(
                           item.current
-                            ? "bg-gray-200 dark:bg-secondary text-foreground font-semibold"
-                            : " hover:bg-gray-200 hover:dark:bg-muted duration-200",
-                          "group flex gap-x-2 items-center rounded-md px-3 py-2 text-sm leading-6 w-full disabled:hover:bg-transparent disabled:text-muted-foreground disabled:cursor-default",
+                            ? "bg-gray-200 font-semibold text-foreground dark:bg-secondary"
+                            : " duration-200 hover:bg-gray-200 hover:dark:bg-muted",
+                          "group flex w-full items-center gap-x-2 rounded-md px-3 py-2 text-sm leading-6 disabled:cursor-default disabled:text-muted-foreground disabled:hover:bg-transparent",
                         )}
                       >
                         <item.icon
@@ -222,7 +227,7 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
                       clickedPlan={"Business"}
                       trigger={"datarooms"}
                     >
-                      <div className="group flex gap-x-2 items-center rounded-md px-3 py-2 text-sm leading-6 w-full hover:bg-transparent text-muted-foreground">
+                      <div className="group flex w-full items-center gap-x-2 rounded-md px-3 py-2 text-sm leading-6 text-muted-foreground hover:bg-transparent">
                         <item.icon
                           className="h-5 w-5 shrink-0"
                           aria-hidden="true"
@@ -239,9 +244,9 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
                     disabled={item.disabled}
                     className={cn(
                       item.current
-                        ? "bg-gray-200 dark:bg-secondary text-foreground font-semibold"
-                        : " hover:bg-gray-200 hover:dark:bg-muted duration-200",
-                      "group flex gap-x-2 items-center rounded-md px-3 py-2 text-sm leading-6 w-full disabled:hover:bg-transparent disabled:text-muted-foreground disabled:cursor-default",
+                        ? "bg-gray-200 font-semibold text-foreground dark:bg-secondary"
+                        : " duration-200 hover:bg-gray-200 hover:dark:bg-muted",
+                      "group flex w-full items-center gap-x-2 rounded-md px-3 py-2 text-sm leading-6 disabled:cursor-default disabled:text-muted-foreground disabled:hover:bg-transparent",
                     )}
                   >
                     <item.icon
@@ -271,7 +276,7 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
             <ProBanner setShowProBanner={setShowProBanner} />
           ) : null}
 
-          <div className="w-full hidden lg:block">
+          <div className="hidden w-full lg:block">
             <ProfileMenu size="large" />
           </div>
         </div>

@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+
 import oneImg from "@/public/_static/day1.webp";
 import twoImg from "@/public/_static/day2.png";
 import threeImg from "@/public/_static/day3.png";

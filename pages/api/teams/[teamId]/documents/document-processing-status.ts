@@ -1,15 +1,19 @@
 import { NextApiRequest, NextApiResponse } from "next";
+
 import prisma from "@/lib/prisma";
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse,
+) {
   const { documentVersionId } = req.query as { documentVersionId: string };
 
   const documentVersion = await prisma.documentVersion.findUnique({
     where: { id: documentVersionId },
-    select: { 
+    select: {
       numPages: true,
       hasPages: true,
-      _count: { select: { pages: true } }
+      _count: { select: { pages: true } },
     },
   });
 

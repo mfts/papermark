@@ -1,10 +1,11 @@
 import { type Message } from "ai";
 
 import { cn } from "@/lib/utils";
-import { ChatMessageActions } from "./chat-message-actions";
-import UserRound from "../shared/icons/user-round";
-import PapermarkSparkle from "../shared/icons/papermark-sparkle";
+
 import AlertCircle from "../shared/icons/alert-circle";
+import PapermarkSparkle from "../shared/icons/papermark-sparkle";
+import UserRound from "../shared/icons/user-round";
+import { ChatMessageActions } from "./chat-message-actions";
 
 // map role to icon and name
 const mapMessageRole = {
@@ -25,7 +26,7 @@ export function ChatMessage({ message, ...props }: ChatMessageProps) {
     <div
       key={message.id}
       className={cn(
-        "group relative mb-4 flex items-start md:ml-5 whitespace-pre-wrap",
+        "group relative mb-4 flex items-start whitespace-pre-wrap md:ml-5",
       )}
       {...props}
     >
@@ -41,12 +42,12 @@ export function ChatMessage({ message, ...props }: ChatMessageProps) {
       >
         {mapMessageRole[message.role].icon}
       </div>
-      <div className="flex-1 px-1 ml-4 space-y-2 overflow-hidden">
-        <div className="relative flex w-[calc(100%-50px)] flex-col group">
-          <div className="font-semibold select-none">
+      <div className="ml-4 flex-1 space-y-2 overflow-hidden px-1">
+        <div className="group relative flex w-[calc(100%-50px)] flex-col">
+          <div className="select-none font-semibold">
             {mapMessageRole[message.role].name}
           </div>
-          <div className="prose break-words dark:prose-invert prose-p:leading-relaxed prose-pre:p-0 font-light">
+          <div className="prose break-words font-light dark:prose-invert prose-p:leading-relaxed prose-pre:p-0">
             <p className="mb-2 last:mb-0">{message.content}</p>
           </div>
         </div>

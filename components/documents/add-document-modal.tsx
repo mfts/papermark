@@ -1,4 +1,15 @@
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { useRouter } from "next/router";
+
+import { FormEvent, useState } from "react";
+
+import { useTeam } from "@/context/team-context";
+import { usePlausible } from "next-plausible";
+import { parsePageId } from "notion-utils";
+import { toast } from "sonner";
+import { mutate } from "swr";
+
+import DocumentUpload from "@/components/document-upload";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -6,25 +17,18 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FormEvent, useState } from "react";
-import { useRouter } from "next/router";
-import DocumentUpload from "@/components/document-upload";
-import { copyToClipboard } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { usePlausible } from "next-plausible";
-import { toast } from "sonner";
-import { useTeam } from "@/context/team-context";
-import { parsePageId } from "notion-utils";
-import { putFile } from "@/lib/files/put-file";
+
+import { useAnalytics } from "@/lib/analytics";
 import {
   DocumentData,
   createDocument,
   createNewDocumentVersion,
 } from "@/lib/documents/create-document";
-import { useAnalytics } from "@/lib/analytics";
-import { mutate } from "swr";
+import { putFile } from "@/lib/files/put-file";
+import { copyToClipboard } from "@/lib/utils";
 
 export function AddDocumentModal({
   newVersion,
@@ -344,7 +348,7 @@ export function AddDocumentModal({
     <Dialog open={isOpen} onOpenChange={clearModelStates}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent
-        className="text-foreground bg-transparent border-none shadow-none"
+        className="border-none bg-transparent text-foreground shadow-none"
         isDocumentDialog
       >
         <Tabs defaultValue="document">
@@ -427,7 +431,7 @@ export function AddDocumentModal({
                           name="notion-link"
                           id="notion-link"
                           placeholder="notion.site/..."
-                          className="flex w-full rounded-md border-0 py-1.5 text-foreground bg-background shadow-sm ring-1 ring-inset ring-input placeholder:text-muted-foreground focus:ring-2 focus:ring-inset focus:ring-gray-400 sm:text-sm sm:leading-6"
+                          className="flex w-full rounded-md border-0 bg-background py-1.5 text-foreground shadow-sm ring-1 ring-inset ring-input placeholder:text-muted-foreground focus:ring-2 focus:ring-inset focus:ring-gray-400 sm:text-sm sm:leading-6"
                           value={notionLink || ""}
                           onChange={(e) => setNotionLink(e.target.value)}
                         />

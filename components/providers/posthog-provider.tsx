@@ -1,10 +1,11 @@
-import { getPostHogConfig } from "@/lib/posthog";
-import { CustomUser } from "@/lib/types";
 import { getSession } from "next-auth/react";
 import posthog from "posthog-js";
 // import { useEffect } from "react";
 // import { useRouter } from "next/router";
 import { PostHogProvider } from "posthog-js/react";
+
+import { getPostHogConfig } from "@/lib/posthog";
+import { CustomUser } from "@/lib/types";
 
 export const PostHogCustomProvider = ({
   children,

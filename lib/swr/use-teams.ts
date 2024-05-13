@@ -1,8 +1,10 @@
 import { useRouter } from "next/router";
-import useSWR from "swr";
-import { fetcher } from "@/lib/utils";
-import { Team } from "@/lib/types";
+
 import { useSession } from "next-auth/react";
+import useSWR from "swr";
+
+import { Team } from "@/lib/types";
+import { fetcher } from "@/lib/utils";
 
 export function useTeams() {
   const router = useRouter();

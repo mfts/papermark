@@ -1,13 +1,15 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { getServerSession } from "next-auth/next";
-import prisma from "@/lib/prisma";
+
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import { CustomUser } from "@/lib/types";
-import slugify from "@sindresorhus/slugify";
-import { newId } from "@/lib/id-helper";
-import { log } from "@/lib/utils";
-import { errorhandler } from "@/lib/errorHandler";
 import { client } from "@/trigger";
+import slugify from "@sindresorhus/slugify";
+import { getServerSession } from "next-auth/next";
+
+import { errorhandler } from "@/lib/errorHandler";
+import { newId } from "@/lib/id-helper";
+import prisma from "@/lib/prisma";
+import { CustomUser } from "@/lib/types";
+import { log } from "@/lib/utils";
 
 export default async function handle(
   req: NextApiRequest,

@@ -1,10 +1,11 @@
-import Footer from "@/components/web/footer";
-import Navbar from "@/components/web/navbar";
-import Hero from "@/components/web/launch/hero";
-import Grid from "@/components/web/launch/daysgrid";
-import CTA from "@/components/web/launch/cta";
 import Head from "next/head";
+
 import ChatPage from "@/components/web/assistant/public-chat";
+import Footer from "@/components/web/footer";
+import CTA from "@/components/web/launch/cta";
+import Grid from "@/components/web/launch/daysgrid";
+import Hero from "@/components/web/launch/hero";
+import Navbar from "@/components/web/navbar";
 
 export default function LaunchWeek() {
   return (

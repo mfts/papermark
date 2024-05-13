@@ -1,8 +1,9 @@
 import * as React from "react";
+
 import * as ProgressPrimitive from "@radix-ui/react-progress";
+import { HelpCircleIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import { HelpCircleIcon } from "lucide-react";
 
 const Progress = React.forwardRef<
   React.ElementRef<typeof ProgressPrimitive.Root>,
@@ -30,8 +31,8 @@ const Progress = React.forwardRef<
         style={{ transform: `translateX(-${100 - (value || 0)}%)` }}
       />
       {text && !error ? (
-        <div className="absolute inset-0 flex py-2 items-center justify-center">
-          <div className="overflow-hidden absolute inset-0 flex items-center justify-center">
+        <div className="absolute inset-0 flex items-center justify-center py-2">
+          <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
             <span className="text-xs text-foreground">{text}</span>
           </div>
           <div
@@ -43,8 +44,8 @@ const Progress = React.forwardRef<
         </div>
       ) : null}
       {text && error ? (
-        <div className="absolute inset-0 flex py-2 items-center justify-center">
-          <div className="overflow-hidden absolute inset-0 flex items-center justify-center gap-x-2 bg-destructive text-destructive-foreground">
+        <div className="absolute inset-0 flex items-center justify-center py-2">
+          <div className="absolute inset-0 flex items-center justify-center gap-x-2 overflow-hidden bg-destructive text-destructive-foreground">
             <span className="text-xs">{text}</span>
             <a href="mailto:support@papermark.io" title="Contact Support">
               <HelpCircleIcon className="size-4" />

@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { useDomainStatus } from "./use-domain-status";
+
 import { getSubdomain } from "@/lib/domains";
 import { cn } from "@/lib/utils";
+
+import { useDomainStatus } from "./use-domain-status";
 
 export const InlineSnippet = ({
   className,

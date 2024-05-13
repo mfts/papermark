@@ -1,10 +1,13 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import prisma from "@/lib/prisma";
-import { getServerSession } from "next-auth/next";
-import { generateEncrpytedPassword } from "@/lib/utils";
-import { CustomUser } from "@/lib/types";
-import { authOptions } from "../../auth/[...nextauth]";
+
 import { Brand, DataroomBrand } from "@prisma/client";
+import { getServerSession } from "next-auth/next";
+
+import prisma from "@/lib/prisma";
+import { CustomUser } from "@/lib/types";
+import { generateEncrpytedPassword } from "@/lib/utils";
+
+import { authOptions } from "../../auth/[...nextauth]";
 
 export default async function handle(
   req: NextApiRequest,

@@ -1,10 +1,12 @@
 import { NextApiRequest, NextApiResponse } from "next";
+
+import { DocumentPage } from "@prisma/client";
 // @ts-ignore
 import mupdf from "mupdf";
-import prisma from "@/lib/prisma";
+
 import { putFileServer } from "@/lib/files/put-file-server";
+import prisma from "@/lib/prisma";
 import { log } from "@/lib/utils";
-import { DocumentPage } from "@prisma/client";
 
 // This function can run for a maximum of 60 seconds
 export const config = {

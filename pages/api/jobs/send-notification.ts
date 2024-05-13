@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import prisma from "@/lib/prisma";
+
 import { sendViewedDocumentEmail } from "@/lib/emails/send-viewed-document";
+import prisma from "@/lib/prisma";
 import { log } from "@/lib/utils";
 
 export const config = {

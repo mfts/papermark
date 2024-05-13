@@ -1,4 +1,5 @@
 import { CheckCircle2Icon, MinusIcon } from "lucide-react";
+
 interface ToolFeature {
   name: string;
   features: { [feature: string]: string };
@@ -142,28 +143,28 @@ export default function ComparisonTable() {
         </div>
       </div> */}
       <div className="mt-6 flow-root">
-        <div className="rounded-lg border border-gray-300 bg-gray-100 overflow-x-auto ">
+        <div className="overflow-x-auto rounded-lg border border-gray-300 bg-gray-100 ">
           <div className="inline-block min-w-full align-middle">
             <table className="min-w-full divide-y divide-gray-300 border border-gray-300  ">
               <thead>
                 <tr>
-                  <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 text-balance">
+                  <th className="text-balance px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
                     Data Room Feature
                   </th>
                   {tools.map((tool) => (
                     <th
                       key={tool.name}
-                      className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 text-balance"
+                      className="text-balance px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
                     >
                       {tool.name}
                     </th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200 bg-white border border-gray-300 ">
+              <tbody className="divide-y divide-gray-200 border border-gray-300 bg-white ">
                 {featuresList.map((feature) => (
                   <tr key={feature}>
-                    <td className="px-3 py-4 text-sm text-gray-900 text-balance border border-gray-300 font-semibold ">
+                    <td className="text-balance border border-gray-300 px-3 py-4 text-sm font-semibold text-gray-900 ">
                       {featureDisplayNames[feature]}
                     </td>
                     {tools.map((tool) => (
@@ -171,7 +172,7 @@ export default function ComparisonTable() {
                         key={tool.name}
                         className={`px-3 py-4 text-sm  ${
                           tool.name === "Papermark"
-                            ? "bg-green-50 text-green-700 font-semibold text-balance"
+                            ? "text-balance bg-green-50 font-semibold text-green-700"
                             : ""
                         }`} // Consistent text color, conditional background color
                       >

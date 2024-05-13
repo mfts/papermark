@@ -1,6 +1,8 @@
-import { getColorForVersion, timeFormatter } from "./utils";
-import { useDocumentThumbnail } from "@/lib/swr/use-document";
 import { useRouter } from "next/router";
+
+import { useDocumentThumbnail } from "@/lib/swr/use-document";
+
+import { getColorForVersion, timeFormatter } from "./utils";
 
 const CustomTooltip = ({
   payload,
@@ -23,9 +25,9 @@ const CustomTooltip = ({
 
   return (
     <>
-      <div className="bg-tremor-background dark:bg-dark-tremor-background border border-tremor-border dark:border-dark-tremor-border rounded-md w-52 text-sm leading-6">
-        <div className="py-2 px-2.5 bg-tremor-background dark:bg-dark-tremor-background border-b border-tremor-border dark:border-dark-tremor-border rounded-t-md">
-          <p className="text-tremor-content dark:text-dark-tremor-content font-medium">
+      <div className="w-52 rounded-md border border-tremor-border bg-tremor-background text-sm leading-6 dark:border-dark-tremor-border dark:bg-dark-tremor-background">
+        <div className="rounded-t-md border-b border-tremor-border bg-tremor-background px-2.5 py-2 dark:border-dark-tremor-border dark:bg-dark-tremor-background">
+          <p className="font-medium text-tremor-content dark:text-dark-tremor-content">
             Page {payload[0].payload.pageNumber}
           </p>
           {imageUrl ? (
@@ -37,19 +39,19 @@ const CustomTooltip = ({
         </div>
         {payload.map((item: any, idx: number) => (
           <div
-            className="py-2 px-2.5 justify-between items-center w-full flex space-x-4"
+            className="flex w-full items-center justify-between space-x-4 px-2.5 py-2"
             key={idx}
           >
-            <div className="whitespace-nowrap overflow-hidden text-overflow-ellipsis items-center flex space-x-2">
+            <div className="text-overflow-ellipsis flex items-center space-x-2 overflow-hidden whitespace-nowrap">
               <span
-                className={`bg-${getColorForVersion(item.dataKey)}-500 rounded-full flex-shrink-0 w-2.5 h-2.5`}
+                className={`bg-${getColorForVersion(item.dataKey)}-500 h-2.5 w-2.5 flex-shrink-0 rounded-full`}
                 aria-hidden="true"
               ></span>
-              <p className="text-tremor-content dark:text-dark-tremor-content whitespace-nowrap overflow-hidden text-overflow-ellipsis">
+              <p className="text-overflow-ellipsis overflow-hidden whitespace-nowrap text-tremor-content dark:text-dark-tremor-content">
                 {item.dataKey}
               </p>
             </div>
-            <p className="text-tremor-content-emphasis dark:text-dark-tremor-content-emphasis font-medium">
+            <p className="font-medium text-tremor-content-emphasis dark:text-dark-tremor-content-emphasis">
               {timeFormatter(item.value)}
             </p>
           </div>

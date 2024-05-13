@@ -1,9 +1,12 @@
 import Link from "next/link";
-import { Button } from "./ui/button";
-import { calculateDaysLeft } from "@/lib/utils";
-import { CustomUser } from "@/lib/types";
+
 import { Session } from "next-auth";
+
 import { useDomains } from "@/lib/swr/use-domains";
+import { CustomUser } from "@/lib/types";
+import { calculateDaysLeft } from "@/lib/utils";
+
+import { Button } from "./ui/button";
 
 const cutoffDate = new Date("2023-10-12T00:00:00.000Z");
 
@@ -21,9 +24,9 @@ export default function Banner({ session }: { session: Session | null }) {
     domains && !noDomains && domains.every((domain) => domain.verified);
 
   return (
-    <aside className="flex flex-col justify-center w-full bg-background text-foreground p-4 mb-2 rounded-lg border border-gray-700">
+    <aside className="mb-2 flex w-full flex-col justify-center rounded-lg border border-gray-700 bg-background p-4 text-foreground">
       <div className="flex space-x-2">
-        <span className="font-bold text-sm">✨ Pro Trial ✨</span>
+        <span className="text-sm font-bold">✨ Pro Trial ✨</span>
       </div>
       <p className="my-4 text-sm">
         {`You are on the Pro trial for the next ${userDaysLeft} days.`}

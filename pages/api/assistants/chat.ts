@@ -1,9 +1,10 @@
-import { experimental_AssistantResponse } from "ai";
-import { type Run } from "openai/resources/beta/threads/runs/runs";
-import { type MessageContentText } from "openai/resources/beta/threads/messages/messages";
 import { Ratelimit } from "@upstash/ratelimit";
-import { redis } from "@/lib/redis";
+import { experimental_AssistantResponse } from "ai";
+import { type MessageContentText } from "openai/resources/beta/threads/messages/messages";
+import { type Run } from "openai/resources/beta/threads/runs/runs";
+
 import { openai } from "@/lib/openai";
+import { redis } from "@/lib/redis";
 
 const ratelimit = {
   public: new Ratelimit({

@@ -1,6 +1,8 @@
-import { cn } from "@/lib/utils";
 import Image, { ImageProps } from "next/image";
+
 import { useState } from "react";
+
+import { cn } from "@/lib/utils";
 
 export function BlurImage(props: ImageProps) {
   const [isLoading, setLoading] = useState(true);

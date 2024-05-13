@@ -1,13 +1,16 @@
 import { NextApiRequest, NextApiResponse } from "next";
+
 import { getServerSession } from "next-auth";
+
+import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
+
 import { authOptions } from "../../auth/[...nextauth]";
-import { errorhandler } from "@/lib/errorHandler";
 
 export default async function handle(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   if (req.method === "GET") {
     // GET /api/teams/:teamId
@@ -55,7 +58,7 @@ export default async function handle(
       // check that the user is member of the team, otherwise return 403
       const teamUsers = team?.users;
       const isUserPartOfTeam = teamUsers?.some(
-        (user) => user.userId === (session.user as CustomUser).id
+        (user) => user.userId === (session.user as CustomUser).id,
       );
       if (!isUserPartOfTeam) {
         return res.status(403).end("Unauthorized to access this team");
@@ -93,7 +96,7 @@ export default async function handle(
       const isUserAdmin = team.users.some(
         (user) =>
           user.role === "ADMIN" &&
-          user.userId === (session.user as CustomUser).id
+          user.userId === (session.user as CustomUser).id,
       );
       if (!isUserAdmin) {
         return res

@@ -1,6 +1,6 @@
 export default function PrivacyPage() {
   return (
-    <div className="relative pt-48 pb-14 mx-auto  px-4 lg:px-8 bg-white text-black">
+    <div className="relative mx-auto bg-white px-4  pb-14 pt-48 text-black lg:px-8">
       <article className="prose prose-slate mx-auto">
         <h1>Privacy Policy</h1>
         <p>Effective date: 09/04/2023</p>

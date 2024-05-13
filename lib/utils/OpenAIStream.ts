@@ -1,7 +1,7 @@
 import {
-  createParser,
   ParsedEvent,
   ReconnectInterval,
+  createParser,
 } from "eventsource-parser";
 
 export type ChatGPTAgent = "user" | "system";

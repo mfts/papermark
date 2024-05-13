@@ -14,7 +14,8 @@
     "vercel-build": "prisma migrate deploy && next build",
     "email": "email dev --dir ./components/emails --port 3001",
     "trigger:dev": "npx @trigger.dev/cli@latest dev",
-    "stripe:webhook": "pkgx stripe listen --forward-to localhost:3000/api/stripe/webhook"
+    "stripe:webhook": "pkgx stripe listen --forward-to localhost:3000/api/stripe/webhook",
+    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,mdx}\""
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.569.0",
@@ -122,6 +123,7 @@
   },
   "devDependencies": {
     "@tailwindcss/forms": "^0.5.7",
+    "@trivago/prettier-plugin-sort-imports": "^4.3.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/js-cookie": "^3.0.6",
     "@types/mdx": "^2.0.11",
@@ -131,6 +133,7 @@
     "@types/react-dom": "^18",
     "@types/ua-parser-js": "^0.7.39",
     "prettier": "^3.2.5",
+    "prettier-plugin-tailwindcss": "^0.5.11",
     "prisma": "^5.13.0"
   },
   "trigger.dev": {

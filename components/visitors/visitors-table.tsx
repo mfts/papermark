@@ -1,24 +1,5 @@
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import { Gauge } from "@/components/ui/gauge";
-import { Skeleton } from "@/components/ui/skeleton";
+import { useState } from "react";
 
-import { useDocumentVisits } from "@/lib/swr/use-document";
-import { durationFormat, timeAgo } from "@/lib/utils";
-import ChevronDown from "@/components/shared/icons/chevron-down";
-import VisitorChart from "./visitor-chart";
-import { VisitorAvatar } from "./visitor-avatar";
 import {
   AlertTriangleIcon,
   BadgeCheckIcon,
@@ -28,11 +9,31 @@ import {
   ThumbsDownIcon,
   ThumbsUpIcon,
 } from "lucide-react";
+
+import ChevronDown from "@/components/shared/icons/chevron-down";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { Gauge } from "@/components/ui/gauge";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { BadgeTooltip } from "@/components/ui/tooltip";
+
 import { usePlan } from "@/lib/swr/use-billing";
+import { useDocumentVisits } from "@/lib/swr/use-document";
+import { durationFormat, timeAgo } from "@/lib/utils";
+
 import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
 import { Button } from "../ui/button";
-import { useState } from "react";
 import {
   Pagination,
   PaginationContent,
@@ -42,6 +43,8 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "../ui/pagination";
+import { VisitorAvatar } from "./visitor-avatar";
+import VisitorChart from "./visitor-chart";
 
 export default function VisitorsTable({ numPages }: { numPages: number }) {
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -59,7 +62,7 @@ export default function VisitorsTable({ numPages }: { numPages: number }) {
       <div className="rounded-md border">
         <Table>
           <TableHeader>
-            <TableRow className="hover:bg-transparent *:font-medium *:whitespace-nowrap">
+            <TableRow className="*:whitespace-nowrap *:font-medium hover:bg-transparent">
               <TableHead>Name</TableHead>
               <TableHead>Visit Duration</TableHead>
               <TableHead>Visit Completion</TableHead>
@@ -72,7 +75,7 @@ export default function VisitorsTable({ numPages }: { numPages: number }) {
               views?.hiddenViewCount === 0 && (
                 <TableRow>
                   <TableCell colSpan={5}>
-                    <div className="w-full h-40 flex items-center justify-center">
+                    <div className="flex h-40 w-full items-center justify-center">
                       <p>No Data Available</p>
                     </div>
                   </TableCell>
@@ -85,11 +88,11 @@ export default function VisitorsTable({ numPages }: { numPages: number }) {
                     <TableRow key={view.id} className="group/row">
                       {/* Name */}
                       <TableCell className="">
-                        <div className="flex items-center sm:space-x-3 overflow-visible">
+                        <div className="flex items-center overflow-visible sm:space-x-3">
                           <VisitorAvatar viewerEmail={view.viewerEmail} />
                           <div className="min-w-0 flex-1">
                             <div className="focus:outline-none">
-                              <p className="text-sm font-medium text-gray-800 dark:text-gray-200 overflow-visible flex items-center gap-x-2">
+                              <p className="flex items-center gap-x-2 overflow-visible text-sm font-medium text-gray-800 dark:text-gray-200">
                                 {view.viewerEmail ? (
                                   <>
                                     {view.viewerEmail}{" "}
@@ -143,7 +146,7 @@ export default function VisitorsTable({ numPages }: { numPages: number }) {
                                   "Anonymous"
                                 )}
                               </p>
-                              <p className="text-xs sm:text-sm text-muted-foreground/60">
+                              <p className="text-xs text-muted-foreground/60 sm:text-sm">
                                 {view.link.name ? view.link.name : view.linkId}
                               </p>
                             </div>
@@ -173,10 +176,10 @@ export default function VisitorsTable({ numPages }: { numPages: number }) {
                         </time>
                       </TableCell>
                       {/* Actions */}
-                      <TableCell className="text-center sm:text-right cursor-pointer p-0">
+                      <TableCell className="cursor-pointer p-0 text-center sm:text-right">
                         <CollapsibleTrigger asChild>
-                          <div className="flex justify-end p-5 space-x-1 [&[data-state=open]>svg.chevron]:rotate-180">
-                            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 chevron" />
+                          <div className="flex justify-end space-x-1 p-5 [&[data-state=open]>svg.chevron]:rotate-180">
+                            <ChevronDown className="chevron h-4 w-4 shrink-0 transition-transform duration-200" />
                           </div>
                         </CollapsibleTrigger>
                       </TableCell>
@@ -218,9 +221,9 @@ export default function VisitorsTable({ numPages }: { numPages: number }) {
               <>
                 <TableRow className="">
                   <TableCell colSpan={5} className="text-left sm:text-center">
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-center gap-1">
+                    <div className="flex flex-col items-start justify-center gap-1 sm:flex-row sm:items-center">
                       <span className="flex items-center gap-x-1">
-                        <AlertTriangleIcon className="h-4 w-4 inline-block text-yellow-500" />
+                        <AlertTriangleIcon className="inline-block h-4 w-4 text-yellow-500" />
                         Some older visits may not be shown because your document
                         has more than 20 views.{" "}
                       </span>
@@ -241,8 +244,8 @@ export default function VisitorsTable({ numPages }: { numPages: number }) {
         </Table>
       </div>
       {/* Pagination Controls */}
-      <div className="mt-2 w-full flex items-center">
-        <div className="text-sm w-full">
+      <div className="mt-2 flex w-full items-center">
+        <div className="w-full text-sm">
           Showing{" "}
           <span className="font-semibold">
             {views?.totalViews && views?.totalViews > 10
@@ -305,14 +308,14 @@ const VisitorBlurred = () => {
   return (
     <TableRow className="blur-sm">
       <TableCell className="">
-        <div className="flex items-center sm:space-x-3 overflow-visible">
+        <div className="flex items-center overflow-visible sm:space-x-3">
           <VisitorAvatar viewerEmail={"abc@example.org"} />
           <div className="min-w-0 flex-1">
             <div className="focus:outline-none">
-              <p className="text-sm font-medium text-gray-800 dark:text-gray-200 overflow-visible flex items-center gap-x-2">
+              <p className="flex items-center gap-x-2 overflow-visible text-sm font-medium text-gray-800 dark:text-gray-200">
                 Anonymous
               </p>
-              <p className="text-xs sm:text-sm text-muted-foreground/60">
+              <p className="text-xs text-muted-foreground/60 sm:text-sm">
                 Demo link
               </p>
             </div>
@@ -342,9 +345,9 @@ const VisitorBlurred = () => {
         </time>
       </TableCell>
       {/* Actions */}
-      <TableCell className="text-center sm:text-right cursor-pointer p-0">
-        <div className="flex justify-end p-5 space-x-1 [&[data-state=open]>svg.chevron]:rotate-180">
-          <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 chevron" />
+      <TableCell className="cursor-pointer p-0 text-center sm:text-right">
+        <div className="flex justify-end space-x-1 p-5 [&[data-state=open]>svg.chevron]:rotate-180">
+          <ChevronDown className="chevron h-4 w-4 shrink-0 transition-transform duration-200" />
         </div>
       </TableCell>
     </TableRow>

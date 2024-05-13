@@ -1,6 +1,6 @@
-import Bottleneck from "bottleneck";
 import { Receiver } from "@upstash/qstash";
 import { Client } from "@upstash/qstash";
+import Bottleneck from "bottleneck";
 
 // we're using Bottleneck to avoid running into Resend's rate limit of 10 req/s
 export const limiter = new Bottleneck({

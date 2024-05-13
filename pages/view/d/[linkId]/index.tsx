@@ -1,14 +1,16 @@
-import LoadingSpinner from "@/components/ui/loading-spinner";
+import { GetStaticPropsContext } from "next";
+import Head from "next/head";
+import { useRouter } from "next/router";
+
 import NotFound from "@/pages/404";
+import { Brand, DataroomBrand, DataroomFolder, Link } from "@prisma/client";
 import { useSession } from "next-auth/react";
 
-import { CustomUser } from "@/lib/types";
-import { GetStaticPropsContext } from "next";
-import { useRouter } from "next/router";
-import { Brand, DataroomBrand, DataroomFolder, Link } from "@prisma/client";
+import LoadingSpinner from "@/components/ui/loading-spinner";
 import CustomMetatag from "@/components/view/custom-metatag";
-import Head from "next/head";
 import DataroomView from "@/components/view/dataroom/dataroom-view";
+
+import { CustomUser } from "@/lib/types";
 
 export interface LinkWithDataroom extends Link {
   dataroom: {
@@ -138,7 +140,7 @@ export default function ViewPage({
           imageUrl={meta?.metaImage ?? null}
           url={`https://www.papermark.io/view/d/${router.query.linkId}`}
         />
-        <div className="h-screen flex items-center justify-center">
+        <div className="flex h-screen items-center justify-center">
           <LoadingSpinner className="h-20 w-20" />
         </div>
       </>

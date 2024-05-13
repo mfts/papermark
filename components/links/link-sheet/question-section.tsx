@@ -1,24 +1,21 @@
 import {
   Dispatch,
   SetStateAction,
-  useState,
-  useEffect,
   useCallback,
+  useEffect,
+  useState,
 } from "react";
-import { Switch } from "@/components/ui/switch";
-import { cn } from "@/lib/utils";
-import { DEFAULT_LINK_TYPE } from ".";
+
 import { motion } from "framer-motion";
-import { FADE_IN_ANIMATION_SETTINGS } from "@/lib/constants";
-import LoadingSpinner from "@/components/ui/loading-spinner";
 import {
   Upload as ArrowUpTrayIcon,
   BadgeInfoIcon,
   HelpCircleIcon,
 } from "lucide-react";
+
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import LoadingSpinner from "@/components/ui/loading-spinner";
 import {
   Select,
   SelectContent,
@@ -26,6 +23,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
+
+import { FADE_IN_ANIMATION_SETTINGS } from "@/lib/constants";
+import { cn } from "@/lib/utils";
+
+import { DEFAULT_LINK_TYPE } from ".";
 
 export default function QuestionSection({
   data,
@@ -82,7 +86,7 @@ export default function QuestionSection({
               <HelpCircleIcon className="text-muted-foreground h-4 w-4" />
             </span> */}
             {hasFreePlan && (
-              <span className="bg-background text-foreground ring-1 ring-gray-800 dark:ring-gray-500 rounded-full px-2 py-0.5 text-xs ml-2">
+              <span className="ml-2 rounded-full bg-background px-2 py-0.5 text-xs text-foreground ring-1 ring-gray-800 dark:ring-gray-500">
                 Business
               </span>
             )}
@@ -110,11 +114,11 @@ export default function QuestionSection({
           className="relative mt-4 space-y-3"
           {...FADE_IN_ANIMATION_SETTINGS}
         >
-          <div className="flex flex-col w-full items-start gap-6 overflow-x-visible pb-4 pt-0">
+          <div className="flex w-full flex-col items-start gap-6 overflow-x-visible pb-4 pt-0">
             <div className="w-full space-y-2">
               <Label>Question Type</Label>
               <Select defaultValue="yes-no">
-                <SelectTrigger className="flex w-full rounded-md border-0 py-1.5 text-foreground bg-background shadow-sm ring-1 ring-inset ring-input placeholder:text-muted-foreground focus:ring-2 focus:ring-offset-3 focus:ring-gray-400 sm:text-sm sm:leading-6">
+                <SelectTrigger className="focus:ring-offset-3 flex w-full rounded-md border-0 bg-background py-1.5 text-foreground shadow-sm ring-1 ring-inset ring-input placeholder:text-muted-foreground focus:ring-2 focus:ring-gray-400 sm:text-sm sm:leading-6">
                   <SelectValue placeholder="Select a question type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -125,7 +129,7 @@ export default function QuestionSection({
             <div className="w-full space-y-2">
               <Label htmlFor="question">Question</Label>
               <Input
-                className="flex w-full rounded-md border-0 py-1.5 text-foreground bg-background shadow-sm ring-1 ring-inset ring-input placeholder:text-muted-foreground focus:ring-2 focus:ring-inset focus:ring-gray-400 sm:text-sm sm:leading-6"
+                className="flex w-full rounded-md border-0 bg-background py-1.5 text-foreground shadow-sm ring-1 ring-inset ring-input placeholder:text-muted-foreground focus:ring-2 focus:ring-inset focus:ring-gray-400 sm:text-sm sm:leading-6"
                 id="question"
                 type="text"
                 name="question"

@@ -1,11 +1,14 @@
 import { NextApiRequest, NextApiResponse } from "next";
+
 import { getServerSession } from "next-auth/next";
-import prisma from "@/lib/prisma";
-import { authOptions } from "../../../../auth/[...nextauth]";
-import { CustomUser } from "@/lib/types";
-import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
+
 import { errorhandler } from "@/lib/errorHandler";
 import { deleteFile } from "@/lib/files/delete-file-server";
+import prisma from "@/lib/prisma";
+import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
+import { CustomUser } from "@/lib/types";
+
+import { authOptions } from "../../../../auth/[...nextauth]";
 
 export default async function handle(
   req: NextApiRequest,

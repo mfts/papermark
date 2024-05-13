@@ -1,7 +1,8 @@
 import { NextApiRequest, NextApiResponse } from "next";
+
+import { sendDataroomViewerInvite } from "@/lib/emails/send-dataroom-viewer-invite";
 import prisma from "@/lib/prisma";
 import { log } from "@/lib/utils";
-import { sendDataroomViewerInvite } from "@/lib/emails/send-dataroom-viewer-invite";
 
 export const config = {
   maxDuration: 120,
