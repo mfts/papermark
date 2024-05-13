@@ -188,7 +188,6 @@ export default function DataroomViewer({
                       folders
                         .filter((folder) => folder.id === folderId)
                         .map((folder, index: number, array) => {
-                          console.log("folder", folder);
                           return (
                             <React.Fragment key={index}>
                               <BreadcrumbSeparator />

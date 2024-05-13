@@ -172,7 +172,6 @@ export default function DataroomView({
   // If token is present, run handle submit which will verify token and get document
   // If link is not submitted and does not have email / password protection, show the access form
   useEffect(() => {
-    console.log("viewData", viewData);
     if (!didMount.current) {
       if ((!submitted && !isProtected) || token || viewData.dataroomViewId) {
         handleSubmission();
@@ -182,7 +181,6 @@ export default function DataroomView({
   }, [submitted, isProtected, token, viewData.dataroomViewId]);
 
   useEffect(() => {
-    console.log("documentData", documentData);
     // Ensure we're not running this logic on initial mount, but only when `documentData` changes thereafter
     if (didMount.current) {
       if (documentData !== null) {

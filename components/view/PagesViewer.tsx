@@ -353,7 +353,7 @@ export default function PagesViewer({
             </div>
           ) : null}
         </div>
-        {feedbackEnabled && pageNumber !== numPagesWithFeedback ? (
+        {feedbackEnabled && pageNumber !== numPages + 1 ? (
           <Toolbar viewId={viewId} pageNumber={pageNumber} />
         ) : null}
         {screenshotProtectionEnabled ? <ScreenProtector /> : null}
