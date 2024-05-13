@@ -42,7 +42,7 @@ const DialogContent = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & {
     isDocumentDialog?: boolean;
   }
->(({ className, children, ...props }, ref) => (
+>(({ className, children, isDocumentDialog, ...props }, ref) => (
   <DialogPortal>
     <DialogOverlay />
     <DialogPrimitive.Content
@@ -57,7 +57,7 @@ const DialogContent = React.forwardRef<
       <DialogPrimitive.Close
         className={cn(
           "absolute rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground",
-          props.isDocumentDialog ? "right-8 top-20" : "right-4 top-4",
+          isDocumentDialog ? "right-8 top-20" : "right-4 top-4",
         )}
       >
         <X className="h-4 w-4" />
