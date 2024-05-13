@@ -8,7 +8,10 @@ import { mutate } from "swr";
 import Link from "next/link";
 import { useTeam } from "@/context/team-context";
 import { BLOCKED_PATHNAMES } from "@/lib/constants";
+
 import { BasePlan } from "@/lib/swr/use-billing";
+
+import useLimits from "@/lib/swr/use-limits";
 
 export default function DomainSection({
   data,
@@ -25,11 +28,12 @@ export default function DomainSection({
 }) {
   const [isModalOpen, setModalOpen] = useState(false);
   const teamInfo = useTeam();
+  const { limits } = useLimits();
 
   const handleDomainChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const value = event.target.value;
 
-    if (value === "add_domain") {
+    if (value === "add_domain" || value === "add_dataroom_domain") {
       // Redirect to the add domain page
       setModalOpen(true);
       return;
@@ -64,18 +68,36 @@ export default function DomainSection({
           <option key="papermark.io" value="papermark.io">
             papermark.io
           </option>
-          {(linkType === "DOCUMENT_LINK" ||
-            (plan && plan === "datarooms") ||
-            teamInfo?.currentTeam?.id === "clvnbn2540000t0s6qyaghvyf") && (
-            <>
-              {domains?.map(({ slug }) => (
-                <option key={slug} value={slug}>
-                  {slug}
-                </option>
-              ))}
-              <option value="add_domain">Add a custom domain ✨</option>
-            </>
-          )}
+          {linkType === "DOCUMENT_LINK" &&
+            (plan === "business" || (limits && limits.customDomainOnPro)) && (
+              <>
+                {domains?.map(({ slug }) => (
+                  <option key={slug} value={slug}>
+                    {slug}
+                  </option>
+                ))}
+              </>
+            )}
+          {linkType === "DATAROOM_LINK" &&
+            (plan === "datarooms" ||
+              (limits && limits.customDomainInDataroom)) && (
+              <>
+                {domains?.map(({ slug }) => (
+                  <option key={slug} value={slug}>
+                    {slug}
+                  </option>
+                ))}
+              </>
+            )}
+          <option
+            value={
+              linkType === "DOCUMENT_LINK"
+                ? "add_domain"
+                : "add_dataroom_domain"
+            }
+          >
+            Add a custom domain ✨
+          </option>
         </select>
 
         {data.domain && data.domain !== "papermark.io" ? (
@@ -136,7 +158,11 @@ export default function DomainSection({
         </div>
       ) : null}
 
-      <AddDomainModal open={isModalOpen} setOpen={setModalOpen} />
+      <AddDomainModal
+        open={isModalOpen}
+        setOpen={setModalOpen}
+        linkType={linkType}
+      />
     </>
   );
 }
