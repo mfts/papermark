@@ -189,6 +189,13 @@ export default async function handle(
       return;
     }
 
+    // delete the token after verification
+    await prisma.verificationToken.delete({
+      where: {
+        token: token,
+      },
+    });
+
     isEmailVerified = true;
   }
 
