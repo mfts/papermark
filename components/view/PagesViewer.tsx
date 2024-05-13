@@ -138,7 +138,29 @@ export default function PagesViewer({
         index < DEFAULT_PRELOADED_IMAGES_NUM ? true : loaded,
       ),
     );
-  }, []);
+  }, []); // Run once on mount
+
+  useEffect(() => {
+    // Remove token and email query parameters on component mount
+    const removeQueryParams = () => {
+      const currentQuery = { ...router.query };
+      delete currentQuery.token;
+      delete currentQuery.email;
+
+      router.replace(
+        {
+          pathname: router.pathname,
+          query: currentQuery,
+        },
+        undefined,
+        { shallow: true },
+      );
+    };
+
+    if (!dataroomId) {
+      removeQueryParams();
+    }
+  }, []); // Run once on mount
 
   const handleKeyDown = (event: KeyboardEvent) => {
     switch (event.key) {
@@ -331,7 +353,7 @@ export default function PagesViewer({
             </div>
           ) : null}
         </div>
-        {feedbackEnabled && pageNumber !== numPagesWithFeedback ? (
+        {feedbackEnabled && pageNumber !== numPages + 1 ? (
           <Toolbar viewId={viewId} pageNumber={pageNumber} />
         ) : null}
         {screenshotProtectionEnabled ? <ScreenProtector /> : null}

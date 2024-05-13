@@ -32,6 +32,7 @@ export default async function handle(
     token,
     ownerId,
     verifiedEmail,
+    dataroomVerified,
     linkType,
     dataroomViewId,
     viewType,
@@ -47,6 +48,7 @@ export default async function handle(
     token: string | null;
     ownerId: string | null;
     verifiedEmail: string | null;
+    dataroomVerified: boolean | undefined;
     linkType: string;
     dataroomViewId?: string;
     viewType: "DATAROOM_VIEW" | "DOCUMENT_VIEW";
@@ -152,10 +154,10 @@ export default async function handle(
   }
 
   // Check if email verification is required for visiting the link
-  if (link.emailAuthenticated && !token) {
+  if (link.emailAuthenticated && !token && !dataroomVerified) {
     const token = newId("email");
     const expiresAt = new Date();
-    expiresAt.setHours(expiresAt.getHours() + 1); // token expires in 1 hour
+    expiresAt.setMinutes(expiresAt.getMinutes() + 20); // token expires in 20 minutes
 
     await prisma.verificationToken.create({
       data: {
@@ -166,7 +168,7 @@ export default async function handle(
     });
 
     // set the default verification url
-    let verificationUrl: string = `${process.env.NEXT_PUBLIC_BASE_URL}/view/d/${linkId}/?token=${token}&email=${encodeURIComponent(email)}`;
+    let verificationUrl: string = `${process.env.NEXT_PUBLIC_BASE_URL}/view/${linkId}/?token=${token}&email=${encodeURIComponent(email)}`;
 
     if (link.domainSlug && link.slug) {
       // if custom domain is enabled, use the custom domain
@@ -182,7 +184,7 @@ export default async function handle(
   }
 
   let isEmailVerified: boolean = false;
-  if (link.emailAuthenticated && token) {
+  if (link.emailAuthenticated && token && !dataroomVerified) {
     const verification = await prisma.verificationToken.findUnique({
       where: {
         token: token,
@@ -191,7 +193,10 @@ export default async function handle(
     });
 
     if (!verification) {
-      res.status(401).json({ message: "Unauthorized access" });
+      res.status(401).json({
+        message: "Unauthorized access. Request new access.",
+        resetVerification: true,
+      });
       return;
     }
 
@@ -201,6 +206,17 @@ export default async function handle(
       return;
     }
 
+    // delete the token after verification
+    await prisma.verificationToken.delete({
+      where: {
+        token: token,
+      },
+    });
+
+    isEmailVerified = true;
+  }
+
+  if (link.emailAuthenticated && dataroomVerified) {
     isEmailVerified = true;
   }
 

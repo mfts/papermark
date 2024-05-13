@@ -66,6 +66,7 @@ export default function DataroomView({
   );
   const [verificationRequested, setVerificationRequested] =
     useState<boolean>(false);
+  const [dataroomVerified, setDataroomVerified] = useState<boolean>(false);
   const [documentData, setDocumentData] = useState<{
     id: string;
     name: string;
@@ -98,6 +99,7 @@ export default function DataroomView({
         hasPages: documentData?.hasPages,
         token: token ?? null,
         verifiedEmail: verifiedEmail ?? null,
+        dataroomVerified: dataroomVerified,
         dataroomId: dataroom?.id,
         linkType: linkType,
         dataroomViewId: viewData.dataroomViewId ?? null,
@@ -139,8 +141,23 @@ export default function DataroomView({
         setIsLoading(false);
       }
     } else {
-      const { message } = await response.json();
-      toast.error(message);
+      const data = await response.json();
+      toast.error(data.message);
+
+      if (data.resetVerification) {
+        const currentQuery = { ...router.query };
+        delete currentQuery.token;
+        delete currentQuery.email;
+
+        router.replace(
+          {
+            pathname: router.pathname,
+            query: currentQuery,
+          },
+          undefined,
+          { shallow: true },
+        );
+      }
       setIsLoading(false);
     }
   };
@@ -155,7 +172,6 @@ export default function DataroomView({
   // If token is present, run handle submit which will verify token and get document
   // If link is not submitted and does not have email / password protection, show the access form
   useEffect(() => {
-    console.log("viewData", viewData);
     if (!didMount.current) {
       if ((!submitted && !isProtected) || token || viewData.dataroomViewId) {
         handleSubmission();
@@ -165,7 +181,6 @@ export default function DataroomView({
   }, [submitted, isProtected, token, viewData.dataroomViewId]);
 
   useEffect(() => {
-    console.log("documentData", documentData);
     // Ensure we're not running this logic on initial mount, but only when `documentData` changes thereafter
     if (didMount.current) {
       if (documentData !== null) {
@@ -263,6 +278,7 @@ export default function DataroomView({
           dataroom={dataroom}
           setDocumentData={setDocumentData}
           setViewType={setViewType}
+          setDataroomVerified={setDataroomVerified}
         />
       </div>
     );
