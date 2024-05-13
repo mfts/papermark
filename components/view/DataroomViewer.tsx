@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import React from "react";
 
 import { Brand, Dataroom, DataroomBrand, DataroomFolder } from "@prisma/client";
@@ -32,6 +32,7 @@ import DocumentCard from "./dataroom/document-card";
 import FolderCard from "./dataroom/folder-card";
 import DataroomNav from "./dataroom/nav-dataroom";
 import Nav from "./nav";
+import { useRouter } from "next/router";
 
 type DataroomDocument = {
   dataroomDocumentId: string;
@@ -53,6 +54,7 @@ export default function DataroomViewer({
   dataroom,
   setViewType,
   setDocumentData,
+  setDataroomVerified,
 }: {
   brand: Partial<DataroomBrand>;
   viewId: string;
@@ -71,14 +73,39 @@ export default function DataroomViewer({
       documentVersionNumber: number;
     } | null>
   >;
+  setDataroomVerified: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
+  const router = useRouter();
   const [folderId, setFolderId] = useState<string | null>(null);
   const { documents, folders } = dataroom as {
     documents: DataroomDocument[];
     folders: DataroomFolder[];
   };
 
-  console.log("dataroom", dataroom);
+  useEffect(() => {
+    // Remove token and email query parameters on component mount
+    const removeQueryParams = () => {
+      const currentQuery = { ...router.query };
+
+      if (!currentQuery.token && !currentQuery.email) return;
+
+      setDataroomVerified(true);
+      delete currentQuery.token;
+      delete currentQuery.email;
+
+      router.replace(
+        {
+          pathname: router.pathname,
+          query: currentQuery,
+        },
+        undefined,
+        { shallow: true },
+      );
+    };
+
+    removeQueryParams();
+  }, []); // Run once on mount
+
   return (
     <>
       <DataroomNav brand={brand} viewId={viewId} dataroom={dataroom} />

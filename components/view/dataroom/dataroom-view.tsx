@@ -66,6 +66,7 @@ export default function DataroomView({
   );
   const [verificationRequested, setVerificationRequested] =
     useState<boolean>(false);
+  const [dataroomVerified, setDataroomVerified] = useState<boolean>(false);
   const [documentData, setDocumentData] = useState<{
     id: string;
     name: string;
@@ -98,6 +99,7 @@ export default function DataroomView({
         hasPages: documentData?.hasPages,
         token: token ?? null,
         verifiedEmail: verifiedEmail ?? null,
+        dataroomVerified: dataroomVerified,
         dataroomId: dataroom?.id,
         linkType: linkType,
         dataroomViewId: viewData.dataroomViewId ?? null,

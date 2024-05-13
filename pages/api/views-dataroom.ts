@@ -32,6 +32,7 @@ export default async function handle(
     token,
     ownerId,
     verifiedEmail,
+    dataroomVerified,
     linkType,
     dataroomViewId,
     viewType,
@@ -47,6 +48,7 @@ export default async function handle(
     token: string | null;
     ownerId: string | null;
     verifiedEmail: string | null;
+    dataroomVerified: boolean | undefined;
     linkType: string;
     dataroomViewId?: string;
     viewType: "DATAROOM_VIEW" | "DOCUMENT_VIEW";
@@ -152,7 +154,7 @@ export default async function handle(
   }
 
   // Check if email verification is required for visiting the link
-  if (link.emailAuthenticated && !token) {
+  if (link.emailAuthenticated && !token && !dataroomVerified) {
     const token = newId("email");
     const expiresAt = new Date();
     expiresAt.setHours(expiresAt.getHours() + 1); // token expires in 1 hour
@@ -182,7 +184,7 @@ export default async function handle(
   }
 
   let isEmailVerified: boolean = false;
-  if (link.emailAuthenticated && token) {
+  if (link.emailAuthenticated && token && !dataroomVerified) {
     const verification = await prisma.verificationToken.findUnique({
       where: {
         token: token,
@@ -201,6 +203,17 @@ export default async function handle(
       return;
     }
 
+    // delete the token after verification
+    await prisma.verificationToken.delete({
+      where: {
+        token: token,
+      },
+    });
+
+    isEmailVerified = true;
+  }
+
+  if (link.emailAuthenticated && dataroomVerified) {
     isEmailVerified = true;
   }
 
