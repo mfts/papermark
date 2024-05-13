@@ -82,8 +82,7 @@ export default function DocumentCard({
           <div className="flex-col">
             <div className="flex items-center">
               <h2 className="min-w-0 max-w-[150px] truncate text-sm font-semibold leading-6 text-foreground sm:max-w-md">
-                <Link
-                  href="#"
+                <button
                   onClick={() => {
                     setViewType("DOCUMENT_VIEW");
                     setDocumentData({
@@ -101,7 +100,7 @@ export default function DocumentCard({
                 >
                   <span>{document.name}</span>
                   <span className="absolute inset-0" />
-                </Link>
+                </button>
               </h2>
             </div>
           </div>
