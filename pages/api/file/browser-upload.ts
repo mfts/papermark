@@ -39,7 +39,7 @@ export default async function handler(
         });
 
         let maxSize = 30 * 1024 * 1024; // 30 MB
-        if (team?.plan === "pro") {
+        if (team?.plan === "business" || team?.plan === "datarooms") {
           maxSize = 100 * 1024 * 1024; // 100 MB
         }
 
