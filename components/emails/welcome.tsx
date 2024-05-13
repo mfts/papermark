@@ -5,14 +5,13 @@ import {
   Button,
   Container,
   Head,
-  Heading,
+  Text,
   Hr,
   Html,
   Link,
   Preview,
   Section,
   Tailwind,
-  Text,
 } from "@react-email/components";
 
 interface WelcomeEmailProps {
@@ -29,10 +28,10 @@ const WelcomeEmail = ({ name }: WelcomeEmailProps) => {
       <Tailwind>
         <Body className="mx-auto my-auto bg-white font-sans">
           <Container className="mx-auto my-10 w-[465px] p-5">
-            <Heading className="mx-0 mb-8 mt-4 p-0 text-center text-2xl font-normal">
+            <Text className="mx-0 mb-8 mt-4 p-0 text-center text-2xl font-normal">
               Welcome to{" "}
               <span className="font-bold tracking-tighter">Papermark</span>
-            </Heading>
+            </Text>
             <Text className="text-sm">
               Thanks for signing up{name && `, ${name}`}!
             </Text>
