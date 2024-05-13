@@ -14,7 +14,8 @@
     "vercel-build": "prisma migrate deploy && next build",
     "email": "email dev --dir ./components/emails --port 3001",
     "trigger:dev": "npx @trigger.dev/cli@latest dev",
-    "stripe:webhook": "pkgx stripe listen --forward-to localhost:3000/api/stripe/webhook"
+    "stripe:webhook": "pkgx stripe listen --forward-to localhost:3000/api/stripe/webhook",
+    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,mdx}\""
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.569.0",
