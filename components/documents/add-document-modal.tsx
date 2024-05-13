@@ -337,6 +337,7 @@ export function AddDocumentModal({
   const clearModelStates = () => {
     currentFile !== null && setCurrentFile(null);
     notionLink !== null && setNotionLink(null);
+    setIsOpen(!isOpen);
   };
 
   return (
