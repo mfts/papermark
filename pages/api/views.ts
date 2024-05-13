@@ -179,7 +179,10 @@ export default async function handle(
     });
 
     if (!verification) {
-      res.status(401).json({ message: "Unauthorized access" });
+      res.status(401).json({
+        message: "Unauthorized access. Request new access.",
+        resetVerification: true,
+      });
       return;
     }
 

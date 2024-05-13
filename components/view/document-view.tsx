@@ -115,8 +115,23 @@ export default function DocumentView({
         setIsLoading(false);
       }
     } else {
-      const { message } = await response.json();
-      toast.error(message);
+      const data = await response.json();
+      toast.error(data.message);
+
+      if (data.resetVerification) {
+        const currentQuery = { ...router.query };
+        delete currentQuery.token;
+        delete currentQuery.email;
+
+        router.replace(
+          {
+            pathname: router.pathname,
+            query: currentQuery,
+          },
+          undefined,
+          { shallow: true },
+        );
+      }
       setIsLoading(false);
     }
   };
