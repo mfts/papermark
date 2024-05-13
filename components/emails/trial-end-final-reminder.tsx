@@ -5,7 +5,6 @@ import {
   Button,
   Container,
   Head,
-  Heading,
   Hr,
   Html,
   Link,
@@ -29,12 +28,12 @@ const TrialEndFinalReminderEmail = ({ name }: TrialEndFinalReminderEmail) => {
       <Tailwind>
         <Body className="mx-auto my-auto bg-white font-sans">
           <Container className="mx-auto my-10 w-[465px] p-5">
-            <Heading className="mx-0 mb-8 mt-4 p-0 text-center text-2xl font-normal">
+            <Text className="mx-0 mb-8 mt-4 p-0 text-center text-2xl font-normal">
               <span className="font-bold tracking-tighter">Papermark</span>
-            </Heading>
-            <Heading className="font-seminbold mx-0 mb-8 mt-4 p-0 text-center text-xl">
+            </Text>
+            <Text className="font-seminbold mx-0 mb-8 mt-4 p-0 text-center text-xl">
               Your pro trial expires in 24 hours
-            </Heading>
+            </Text>
             <Text className="text-sm leading-6 text-black">
               Hey{name && ` ${name}`}!
             </Text>

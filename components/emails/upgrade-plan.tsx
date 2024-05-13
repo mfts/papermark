@@ -5,7 +5,6 @@ import {
   Button,
   Container,
   Head,
-  Heading,
   Hr,
   Html,
   Link,
@@ -17,10 +16,35 @@ import {
 
 interface UpgradePlanEmailProps {
   name: string | null | undefined;
+  planType: string;
 }
 
-const UpgradePlanEmail = ({ name }: UpgradePlanEmailProps) => {
+const UpgradePlanEmail = ({
+  name,
+  planType = "Pro",
+}: UpgradePlanEmailProps) => {
   const previewText = `The document sharing infrastructure for the modern web`;
+
+  const features: any = {
+    pro: [
+      "Custom branding",
+      "Unlimited link views",
+      "Folder organization",
+      "2 team members",
+    ],
+    business: [
+      "Custom domains on document links",
+      "Unlimited document uploads",
+      "1 data room for multi-file sharing",
+      "3 team members",
+    ],
+    datarooms: [
+      "Custom domains on data room links",
+      "Unlimited data rooms",
+      "Unlimited document uploads",
+      "5 team members",
+    ],
+  };
 
   return (
     <Html>
@@ -29,19 +53,19 @@ const UpgradePlanEmail = ({ name }: UpgradePlanEmailProps) => {
       <Tailwind>
         <Body className="mx-auto my-auto bg-white font-sans">
           <Container className="mx-auto my-10 w-[465px] p-5">
-            <Heading className="mx-0 mb-8 mt-4 p-0 text-center text-2xl font-normal">
+            <Text className="mx-0 mb-8 mt-4 p-0 text-center text-2xl font-normal">
               <span className="font-bold tracking-tighter">Papermark</span>
-            </Heading>
-            <Heading className="font-seminbold mx-0 mb-8 mt-4 p-0 text-center text-xl">
-              Thanks for for upgrading to Papermark Pro!
-            </Heading>
+            </Text>
+            <Text className="font-seminbold mx-0 mb-8 mt-4 p-0 text-center text-xl">
+              Thanks for upgrading to Papermark {planType}!
+            </Text>
             <Text className="text-sm leading-6 text-black">
               Hey{name && ` ${name}`}!
             </Text>
             <Text className="text-sm">
               My name is Marc, and I&apos;m the creator of Papermark. I wanted
-              to personally reach out to thank you for upgrading to Papermark
-              Pro!
+              to personally reach out to thank you for upgrading to Papermark{" "}
+              {planType}!
             </Text>
             <Text className="text-sm leading-6 text-black">
               As you might already know, we are a bootstrapped and{" "}
@@ -56,27 +80,23 @@ const UpgradePlanEmail = ({ name }: UpgradePlanEmailProps) => {
               to build and improve Papermark.
             </Text>
             <Text className="text-sm leading-6 text-black">
-              On the Pro plan, you now have access to:
+              On the {planType} plan, you now have access to:
             </Text>
-            <Text className="ml-1 text-sm leading-4 text-black">
-              ◆ Custom domains and white-label branding
-            </Text>
-            <Text className="ml-1 text-sm leading-4 text-black">
-              ◆ Unlimited link views
-            </Text>
-            <Text className="ml-1 text-sm leading-4 text-black">
-              ◆ Unlimited document uploads
-            </Text>
-            <Text className="ml-1 text-sm leading-4 text-black">
-              ◆ Invite your team members
-            </Text>
+            {features[planType.toLowerCase()].map(
+              (feature: string, index: number) => (
+                <Text key={index} className="ml-1 text-sm leading-4 text-black">
+                  ◆ {feature}
+                </Text>
+              ),
+              [],
+            )}
             <Section className="mb-[32px] mt-[32px] text-center">
               <Button
                 className="rounded bg-black text-center text-xs font-semibold text-white no-underline"
-                href={`${process.env.NEXT_PUBLIC_BASE_URL}/settings/domains`}
+                href={`${process.env.NEXT_PUBLIC_BASE_URL}/documents`}
                 style={{ padding: "12px 20px" }}
               >
-                Set up your custom domain
+                Share your documents
               </Button>
             </Section>
             <Section>
