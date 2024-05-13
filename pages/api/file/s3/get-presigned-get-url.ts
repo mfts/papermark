@@ -1,10 +1,11 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { getSignedUrl as getS3SignedUrl } from "@aws-sdk/s3-request-presigner";
-import { getS3Client } from "@/lib/files/aws-client";
-import { GetObjectCommand } from "@aws-sdk/client-s3";
-import { ONE_HOUR, ONE_SECOND } from "@/lib/constants";
 
+import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl as getCloudfrontSignedUrl } from "@aws-sdk/cloudfront-signer";
+import { getSignedUrl as getS3SignedUrl } from "@aws-sdk/s3-request-presigner";
+
+import { ONE_HOUR, ONE_SECOND } from "@/lib/constants";
+import { getS3Client } from "@/lib/files/aws-client";
 
 const client = getS3Client();
 

@@ -1,15 +1,18 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { signIn } from "next-auth/react";
+import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { Input } from "@/components/ui/input";
+
 import { useState } from "react";
-import { toast } from "sonner";
-import LinkedIn from "@/components/shared/icons/linkedin";
+
 import PapermarkLogo from "@/public/_static/papermark-logo.svg";
-import Image from "next/image";
+import { signIn } from "next-auth/react";
+import { toast } from "sonner";
+
+import LinkedIn from "@/components/shared/icons/linkedin";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 export default function Register() {
   const { next } = useParams as { next?: string };
@@ -30,7 +33,7 @@ export default function Register() {
           }}
         />
       </div>
-      <div className="z-10 mt-[calc(20vh)] h-fit w-full mx-5 sm:mx-0 max-w-md overflow-hidden border border-border bg-gray-50 dark:bg-gray-900 rounded-lg sm:shadow-xl">
+      <div className="z-10 mx-5 mt-[calc(20vh)] h-fit w-full max-w-md overflow-hidden rounded-lg border border-border bg-gray-50 dark:bg-gray-900 sm:mx-0 sm:shadow-xl">
         <div className="flex flex-col items-center justify-center space-y-3 px-4 py-6 pt-8 text-center sm:px-16">
           <Link href="/">
             <Image
@@ -40,12 +43,12 @@ export default function Register() {
               alt="Papermark Logo"
             />
           </Link>
-          <h3 className="text-2xl text-foreground font-medium">
+          <h3 className="text-2xl font-medium text-foreground">
             Start sharing documents
           </h3>
         </div>
         <form
-          className="flex flex-col p-4 pt-8 sm:px-16 gap-4"
+          className="flex flex-col gap-4 p-4 pt-8 sm:px-16"
           onSubmit={(e) => {
             e.preventDefault();
             signIn("email", {
@@ -71,14 +74,14 @@ export default function Register() {
           <Button type="submit">Continue with Email</Button>
         </form>
         <p className="text-center">or</p>
-        <div className="flex flex-col px-4 py-8 sm:px-16 space-y-2">
+        <div className="flex flex-col space-y-2 px-4 py-8 sm:px-16">
           <Button
             onClick={() => {
               signIn("google", {
                 ...(next && next.length > 0 ? { callbackUrl: next } : {}),
               });
             }}
-            className="flex justify-center items-center space-x-2"
+            className="flex items-center justify-center space-x-2"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -96,7 +99,7 @@ export default function Register() {
                 ...(next && next.length > 0 ? { callbackUrl: next } : {}),
               });
             }}
-            className="flex justify-center items-center space-x-2"
+            className="flex items-center justify-center space-x-2"
           >
             <LinkedIn />
             <span>Continue with LinkedIn</span>

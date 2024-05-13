@@ -1,7 +1,8 @@
-import hanko from "@/lib/hanko";
-import { CustomUser } from "@/lib/types";
 import { type Session } from "next-auth";
+
+import hanko from "@/lib/hanko";
 import prisma from "@/lib/prisma";
+import { CustomUser } from "@/lib/types";
 
 export async function startServerPasskeyRegistration({
   session,

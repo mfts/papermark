@@ -1,36 +1,37 @@
+import Image from "next/image";
+
+import dominikimage from "@/public/testimonials/dominik.jpg";
 import jaskiimage from "@/public/testimonials/jaski.jpeg";
 import vatanyutaimage from "@/public/testimonials/vatanyuta.png";
-import dominikimage from "@/public/testimonials/dominik.jpg";
-import Image from "next/image";
 
 export default function Testimonials() {
   return (
     <div className="bg-white py-24">
-      <div className="w-full mx-auto max-w-7xl px-4 md:px-8">
-        <h2 className="text-4xl text-balance">
+      <div className="mx-auto w-full max-w-7xl px-4 md:px-8">
+        <h2 className="text-balance text-4xl">
           Loved by over 5000 customers and users.
           <br />
           <span className="text-gray-500">
             Here&apos;s what they have to say about us.
           </span>
         </h2>
-        <div className="flex justify-center w-full bg-white">
+        <div className="flex w-full justify-center bg-white">
           <div className="flex w-full max-w-7xl  py-12">
-            <div className="flex w-full justify-center bg-white rounded-3xl">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full">
+            <div className="flex w-full justify-center rounded-3xl bg-white">
+              <div className="grid w-full grid-cols-1 gap-8 md:grid-cols-3">
                 {/* Column 1 */}
                 <div className="flex flex-col items-center">
                   {/* Image container */}
-                  <div className="flex flex-col items-center bg-white rounded-3xl shadow-xl overflow-hidden">
+                  <div className="flex flex-col items-center overflow-hidden rounded-3xl bg-white shadow-xl">
                     {/* Image container */}
                     <Image
-                      className="w-full h-80 object-cover"
+                      className="h-80 w-full object-cover"
                       src={jaskiimage}
                       alt="Testimonial 1"
                     />
                     {/* Text content */}
                     <div className="p-8">
-                      <blockquote className="text-gray-700 text-lg">
+                      <blockquote className="text-lg text-gray-700">
                         <p>
                           Papermark team listens to their users. Thanks for
                           solving a big pain. DocSend monopoly will end soon!
@@ -49,16 +50,16 @@ export default function Testimonials() {
                 <div className="flex flex-col items-center">
                   {/* Image container */}
                   {/* Image container */}
-                  <div className="flex flex-col items-center bg-white rounded-3xl shadow-xl overflow-hidden">
+                  <div className="flex flex-col items-center overflow-hidden rounded-3xl bg-white shadow-xl">
                     {/* Image container */}
                     <Image
-                      className="w-full h-80 object-cover"
+                      className="h-80 w-full object-cover"
                       src={vatanyutaimage}
                       alt="Testimonial 1"
                     />
                     {/* Text content */}
                     <div className="p-8">
-                      <blockquote className="text-gray-700 text-lg">
+                      <blockquote className="text-lg text-gray-700">
                         <p>
                           We actively use Papermark to create many links and
                           track analytics for our branded data room!
@@ -77,16 +78,16 @@ export default function Testimonials() {
                 <div className="flex flex-col items-center">
                   {/* Image container */}
                   {/* Image container */}
-                  <div className="flex flex-col items-center bg-white rounded-3xl shadow-xl overflow-hidden">
+                  <div className="flex flex-col items-center overflow-hidden rounded-3xl bg-white shadow-xl">
                     {/* Image container */}
                     <Image
-                      className="w-full h-80 object-cover"
+                      className="h-80 w-full object-cover"
                       src={dominikimage}
                       alt="Testimonial 1"
                     />
                     {/* Text content */}
                     <div className="p-8">
-                      <blockquote className="text-gray-700 text-lg">
+                      <blockquote className="text-lg text-gray-700">
                         <p>
                           I am using Papermark daily sharing documents to LPs
                           and viewing the pitch decks from founders.

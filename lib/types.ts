@@ -1,15 +1,15 @@
-import { User as NextAuthUser } from "next-auth";
 import {
-  Document,
-  Link,
-  View,
-  User as PrismaUser,
-  DocumentVersion,
-  DataroomDocument,
   Dataroom,
+  DataroomDocument,
   DataroomFolder,
+  Document,
+  DocumentVersion,
   Feedback,
+  Link,
+  User as PrismaUser,
+  View,
 } from "@prisma/client";
+import { User as NextAuthUser } from "next-auth";
 
 export type CustomUser = NextAuthUser & PrismaUser;
 

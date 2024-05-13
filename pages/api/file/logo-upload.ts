@@ -1,8 +1,11 @@
-import { handleUpload, type HandleUploadBody } from "@vercel/blob/client";
-import type { NextApiResponse, NextApiRequest } from "next";
+import type { NextApiRequest, NextApiResponse } from "next";
+
+import { type HandleUploadBody, handleUpload } from "@vercel/blob/client";
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "../auth/[...nextauth]";
+
 import { CustomUser } from "@/lib/types";
+
+import { authOptions } from "../auth/[...nextauth]";
 
 export default async function handler(
   req: NextApiRequest,

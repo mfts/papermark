@@ -1,13 +1,16 @@
 import { NextApiRequest, NextApiResponse } from "next";
+
 import { getServerSession } from "next-auth/next";
-import prisma from "@/lib/prisma";
-import { authOptions } from "../../auth/[...nextauth]";
-import { log } from "@/lib/utils";
-import { getViewPageDuration } from "@/lib/tinybird";
-import { getDocumentWithTeamAndUser } from "@/lib/team/helper";
-import { CustomUser } from "@/lib/types";
-import { errorhandler } from "@/lib/errorHandler";
+
 import { LIMITS } from "@/lib/constants";
+import { errorhandler } from "@/lib/errorHandler";
+import prisma from "@/lib/prisma";
+import { getDocumentWithTeamAndUser } from "@/lib/team/helper";
+import { getViewPageDuration } from "@/lib/tinybird";
+import { CustomUser } from "@/lib/types";
+import { log } from "@/lib/utils";
+
+import { authOptions } from "../../auth/[...nextauth]";
 
 export default async function handle(
   req: NextApiRequest,

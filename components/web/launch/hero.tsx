@@ -1,4 +1,5 @@
 import Image from "next/image";
+
 import michaelImg from "@/public/_static/michael.png";
 
 export default function Example() {
@@ -27,11 +28,11 @@ export default function Example() {
                 Follow live updates
               </a>
             </div>
-            <div className="mt-10 mx-auto w-full max-w-xs">
+            <div className="mx-auto mt-10 w-full max-w-xs">
               <Image
                 src={michaelImg}
                 alt="Description of Image"
-                className="mx-auto w-48 h-auto object-cover rounded-md "
+                className="mx-auto h-auto w-48 rounded-md object-cover "
               />
             </div>
           </div>

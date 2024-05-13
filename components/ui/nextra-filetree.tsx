@@ -3,18 +3,20 @@
  * https://github.com/shuding/nextra/blob/main/packages/nextra/src/components/file-tree.tsx
  *
  */
-
-import { cn } from "@/lib/utils";
 import { createContext, memo, useCallback, useContext, useState } from "react";
 import type { ReactElement, ReactNode } from "react";
-import ChevronDown from "../shared/icons/chevron-down";
-import ChevronRight from "../shared/icons/chevron-right";
+
 import {
   FileIcon,
   FolderClosedIcon,
   FolderIcon,
   FolderOpenIcon,
 } from "lucide-react";
+
+import { cn } from "@/lib/utils";
+
+import ChevronDown from "../shared/icons/chevron-down";
+import ChevronRight from "../shared/icons/chevron-right";
 
 const ctx = createContext(0);
 
@@ -42,7 +44,7 @@ interface FileProps {
 
 function Tree({ children }: { children: ReactNode }): ReactElement {
   return (
-    <div className={cn("nextra-filetree w-full select-none text-sm !mt-0")}>
+    <div className={cn("nextra-filetree !mt-0 w-full select-none text-sm")}>
       <div className="block rounded-lg">{children}</div>
     </div>
   );
@@ -81,21 +83,21 @@ const Folder = memo<FolderProps>(
     const isFolderOpen = open === undefined ? isOpen : open;
 
     return (
-      <li className="flex list-none flex-col w-full">
+      <li className="flex w-full list-none flex-col">
         <button
           onClick={toggle}
           title={name}
           className={cn(
-            "inline-flex cursor-pointer items-center w-full",
-            "text-foreground hover:bg-gray-200 hover:dark:bg-muted duration-100 rounded-md",
+            "inline-flex w-full cursor-pointer items-center",
+            "rounded-md text-foreground duration-100 hover:bg-gray-200 hover:dark:bg-muted",
             "px-3 py-1.5 leading-6",
-            active && "bg-gray-200 dark:bg-muted font-semibold",
+            active && "bg-gray-200 font-semibold dark:bg-muted",
           )}
         >
           <Ident />
           <ChevronRight
             className={cn(
-              "h-4 w-4 shrink-0 transition-transform duration-150 chevron mr-1",
+              "chevron mr-1 h-4 w-4 shrink-0 transition-transform duration-150",
               isFolderOpen && "rotate-90",
             )}
           />
@@ -145,13 +147,13 @@ const File = memo<FileProps>(({ label, name, active, onToggle }) => {
     <li
       className={cn(
         "flex list-none",
-        "text-foreground hover:bg-gray-200 hover:dark:bg-muted duration-100 rounded-md",
+        "rounded-md text-foreground duration-100 hover:bg-gray-200 hover:dark:bg-muted",
         "px-3 py-1.5 leading-6",
-        active && "bg-gray-200 dark:bg-muted font-semibold",
+        active && "bg-gray-200 font-semibold dark:bg-muted",
       )}
     >
       <span
-        className="inline-flex cursor-default items-center ml-5"
+        className="ml-5 inline-flex cursor-default items-center"
         onClick={toggle}
       >
         <Ident />

@@ -1,3 +1,11 @@
+import Link from "next/link";
+
+import { useEffect, useState } from "react";
+
+import { useTeam } from "@/context/team-context";
+import { toast } from "sonner";
+import useSWR, { mutate } from "swr";
+
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import DocumentHeader from "@/components/documents/document-header";
 import AppLayout from "@/components/layouts/app";
@@ -21,14 +29,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useTeam } from "@/context/team-context";
+
 import { usePlan } from "@/lib/swr/use-billing";
 import { useDocument } from "@/lib/swr/use-document";
 import { cn, fetcher } from "@/lib/utils";
-import Link from "next/link";
-import { useEffect, useState } from "react";
-import { toast } from "sonner";
-import useSWR, { mutate } from "swr";
 
 type Feedback = {
   id: string;
@@ -69,7 +73,7 @@ export default function Settings() {
 
   return (
     <AppLayout>
-      <main className="relative overflow-hidden mx-2 sm:mx-3 md:mx-5 lg:mx-7 xl:mx-10 mt-4 md:mt-5 lg:mt-8 mb-10 space-y-8 px-1">
+      <main className="relative mx-2 mb-10 mt-4 space-y-8 overflow-hidden px-1 sm:mx-3 md:mx-5 md:mt-5 lg:mx-7 lg:mt-8 xl:mx-10">
         {document && primaryVersion ? (
           <>
             {/* Action Header */}
@@ -304,7 +308,7 @@ export default function Settings() {
             </div>
           </>
         ) : (
-          <div className="h-screen flex items-center justify-center">
+          <div className="flex h-screen items-center justify-center">
             <LoadingSpinner className="mr-1 h-20 w-20" />
           </div>
         )}

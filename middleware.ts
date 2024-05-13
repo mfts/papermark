@@ -1,6 +1,8 @@
 import { NextFetchEvent, NextRequest, NextResponse } from "next/server";
+
 import AppMiddleware from "@/lib/middleware/app";
 import DomainMiddleware from "@/lib/middleware/domain";
+
 import { BLOCKED_PATHNAMES } from "./lib/constants";
 import PostHogMiddleware from "./lib/middleware/posthog";
 

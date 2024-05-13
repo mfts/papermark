@@ -1,14 +1,17 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import prisma from "@/lib/prisma";
+
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "../auth/[...nextauth]";
-import { generateEncrpytedPassword} from "@/lib/utils";
-import { CustomUser } from "@/lib/types";
+
 import { errorhandler } from "@/lib/errorHandler";
+import prisma from "@/lib/prisma";
 import {
   getDocumentWithTeamAndUser,
   getTeamWithUsersAndDocument,
 } from "@/lib/team/helper";
+import { CustomUser } from "@/lib/types";
+import { generateEncrpytedPassword } from "@/lib/utils";
+
+import { authOptions } from "../auth/[...nextauth]";
 
 export default async function handler(
   req: NextApiRequest,
@@ -70,7 +73,9 @@ export default async function handler(
       }
 
       const hashedPassword =
-        password && password.length > 0 ? await generateEncrpytedPassword(password) : null;
+        password && password.length > 0
+          ? await generateEncrpytedPassword(password)
+          : null;
       const exat = expiresAt ? new Date(expiresAt) : null;
 
       let { domain, slug, ...linkData } = linkDomainData;

@@ -1,14 +1,18 @@
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import { CheckIcon } from "lucide-react";
-import Navbar from "@/components/web/navbar";
-import Footer from "@/components/web/footer";
 import Link from "next/link";
-import GitHubIcon from "@/components/shared/icons/github";
-import { usePlausible } from "next-plausible";
-import { PricingComparison } from "@/components/web/pricing-component";
+
 import { useEffect, useState } from "react";
+
+import { CheckIcon } from "lucide-react";
+import { usePlausible } from "next-plausible";
+
+import GitHubIcon from "@/components/shared/icons/github";
+import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import Footer from "@/components/web/footer";
+import Navbar from "@/components/web/navbar";
+import { PricingComparison } from "@/components/web/pricing-component";
+
+import { cn } from "@/lib/utils";
 
 const frequencies: {
   value: "monthly" | "annually";
@@ -161,9 +165,9 @@ export default function PricingPage() {
     <>
       <div className="flex flex-1 flex-col bg-white text-black">
         <Navbar />
-        <div className="max-w-7xl w-full mx-auto px-4 md:px-8">
-          <div className="pt-24 pb-2">
-            <h1 className="text-4xl md:text-6xl text-balance">
+        <div className="mx-auto w-full max-w-7xl px-4 md:px-8">
+          <div className="pb-2 pt-24">
+            <h1 className="text-balance text-4xl md:text-6xl">
               Find the plan that
               <br />
               works for you
@@ -195,17 +199,17 @@ export default function PricingPage() {
         </div>
         <div className="bg-white py-16">
           <div className="mx-auto max-w-7xl px-4 md:px-8">
-            <div className="isolate grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 border border-black rounded-xl overflow-hidden">
+            <div className="isolate grid grid-cols-1 overflow-hidden rounded-xl border border-black md:grid-cols-2 xl:grid-cols-4">
               {tiers.map((tier) => (
                 <div
                   key={tier.id}
-                  className="border-black border-r-0 md:odd:border-r xl:even:border-r xl:last:!border-r-0 flex flex-col justify-between"
+                  className="flex flex-col justify-between border-r-0 border-black md:odd:border-r xl:last:!border-r-0 xl:even:border-r"
                 >
                   <div>
-                    <div className="border-b border-black p-6 bg-gray-100">
+                    <div className="border-b border-black bg-gray-100 p-6">
                       <h3
                         id={tier.id}
-                        className="text-balance text-gray-900 text-xl leading-8"
+                        className="text-balance text-xl leading-8 text-gray-900"
                       >
                         {tier.name}
                       </h3>
@@ -229,7 +233,7 @@ export default function PricingPage() {
                                 setToggleProYear(!toggleProYear)
                               }
                             />
-                            <div className="flex items-center gap-x-1 text-sm mb-1">
+                            <div className="mb-1 flex items-center gap-x-1 text-sm">
                               <span
                                 className={cn(
                                   toggleProYear
@@ -252,7 +256,7 @@ export default function PricingPage() {
                             </div>
                             <div
                               className={cn(
-                                "relative text-xs w-fit uppercase border border-gray-900 text-gray-900 rounded-3xl px-1.5 py-0.5",
+                                "relative w-fit rounded-3xl border border-gray-900 px-1.5 py-0.5 text-xs uppercase text-gray-900",
                                 !toggleProYear &&
                                   "border-gray-400 text-gray-400 opacity-40",
                               )}
@@ -277,7 +281,7 @@ export default function PricingPage() {
                                 setToggleBusinessYear(!toggleBusinessYear)
                               }
                             />
-                            <div className="flex items-center gap-x-1 text-sm mb-1">
+                            <div className="mb-1 flex items-center gap-x-1 text-sm">
                               <span
                                 className={cn(
                                   toggleBusinessYear
@@ -300,7 +304,7 @@ export default function PricingPage() {
                             </div>
                             <div
                               className={cn(
-                                "relative text-xs w-fit uppercase border border-[#fb7a00] text-[#fb7a00] rounded-3xl px-1.5 py-0.5",
+                                "relative w-fit rounded-3xl border border-[#fb7a00] px-1.5 py-0.5 text-xs uppercase text-[#fb7a00]",
                                 !toggleBusinessYear &&
                                   "border-gray-400 text-gray-400 opacity-40",
                               )}
@@ -325,7 +329,7 @@ export default function PricingPage() {
                                 setToggleDataroomsYear(!toggleDataroomsYear)
                               }
                             />
-                            <div className="flex items-center gap-x-1 text-sm mb-1">
+                            <div className="mb-1 flex items-center gap-x-1 text-sm">
                               <span
                                 className={cn(
                                   toggleDataroomsYear
@@ -348,7 +352,7 @@ export default function PricingPage() {
                             </div>
                             <div
                               className={cn(
-                                "relative text-xs w-fit uppercase border border-[#fb7a00] text-[#fb7a00] rounded-3xl px-1.5 py-0.5",
+                                "relative w-fit rounded-3xl border border-[#fb7a00] px-1.5 py-0.5 text-xs uppercase text-[#fb7a00]",
                                 !toggleDataroomsYear &&
                                   "border-gray-400 text-gray-400 opacity-40",
                               )}
@@ -379,7 +383,7 @@ export default function PricingPage() {
                                 : tier.price[frequency.value]}
                         </span>
                       </p>
-                      <p className="mt-6 text-sm leading-6 text-gray-600 text-balance">
+                      <p className="mt-6 text-balance text-sm leading-6 text-gray-600">
                         {tier.description}
                       </p>
                       <ul
@@ -416,7 +420,7 @@ export default function PricingPage() {
                           {tier.buttonText}
                         </Button>
                       ) : (
-                        <Button className="rounded-3xl text-base text-gray-200 bg-black hover:bg-gray-900">
+                        <Button className="rounded-3xl bg-black text-base text-gray-200 hover:bg-gray-900">
                           {tier.buttonText}
                         </Button>
                       )}
@@ -428,13 +432,13 @@ export default function PricingPage() {
           </div>
         </div>
 
-        <div className="w-full max-w-7xl px-4 md:px-8 mx-auto ">
-          <div className="py-12 bg-[#fb7a00] rounded-xl mx-auto px-6 my-4">
-            <div className="flex lg:flex-row flex-col item-center justify-between space-y-10 lg:space-y-0">
-              <h2 className="text-3xl text-nowrap">
+        <div className="mx-auto w-full max-w-7xl px-4 md:px-8 ">
+          <div className="mx-auto my-4 rounded-xl bg-[#fb7a00] px-6 py-12">
+            <div className="item-center flex flex-col justify-between space-y-10 lg:flex-row lg:space-y-0">
+              <h2 className="text-nowrap text-3xl">
                 Looking for enterprise plan or self-hosted version?
               </h2>
-              <div className="space-x-2 flex items-center">
+              <div className="flex items-center space-x-2">
                 <Link
                   href="https://github.com/mfts/papermark"
                   target="_blank"
@@ -442,7 +446,7 @@ export default function PricingPage() {
                 >
                   <Button
                     variant="outline"
-                    className="text-base rounded-3xl bg-transparent border-black hover:bg-gray-200 hover:text-black"
+                    className="rounded-3xl border-black bg-transparent text-base hover:bg-gray-200 hover:text-black"
                   >
                     <GitHubIcon className="mr-2 h-6 w-6" />
                     View Github
@@ -453,7 +457,7 @@ export default function PricingPage() {
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  <Button className="text-base rounded-3xl text-gray-200 bg-black hover:bg-gray-900">
+                  <Button className="rounded-3xl bg-black text-base text-gray-200 hover:bg-gray-900">
                     Book a demo
                   </Button>
                 </Link>

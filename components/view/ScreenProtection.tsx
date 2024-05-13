@@ -1,7 +1,9 @@
 import { useState } from "react";
-import { useHotkeys } from "react-hotkeys-hook";
-import { Button } from "@/components/ui/button";
+
 import { XOctagonIcon } from "lucide-react";
+import { useHotkeys } from "react-hotkeys-hook";
+
+import { Button } from "@/components/ui/button";
 
 export const ScreenProtector = () => {
   const [blockScreen, setBlockScreen] = useState<boolean>(false);
@@ -14,7 +16,7 @@ export const ScreenProtector = () => {
 
   if (blockScreen) {
     return (
-      <div className="absolute bg-white inset-0 w-screen h-screen flex items-center justify-center z-50">
+      <div className="absolute inset-0 z-50 flex h-screen w-screen items-center justify-center bg-white">
         <div className="flex flex-col gap-4">
           <div className="flex gap-2">
             <XOctagonIcon className="size-5 text-destructive" />
@@ -32,6 +34,6 @@ export const ScreenProtector = () => {
 
   // will be hidden unless user prints the screen
   return (
-    <div className="absolute bg-white inset-0 w-screen h-screen hidden print:block"></div>
+    <div className="absolute inset-0 hidden h-screen w-screen bg-white print:block"></div>
   );
 };

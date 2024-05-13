@@ -1,17 +1,21 @@
-import { getExtension } from "@/lib/utils";
-import { Document, DocumentVersion } from "@prisma/client";
 import Image from "next/image";
-import NotionIcon from "@/components/shared/icons/notion";
-import { useEffect, useRef, useState } from "react";
-import { toast } from "sonner";
-import { useTheme } from "next-themes";
-import { AddDocumentModal } from "./add-document-modal";
-import FileUp from "@/components/shared/icons/file-up";
-import { Button } from "@/components/ui/button";
-import PapermarkSparkle from "@/components/shared/icons/papermark-sparkle";
-import { mutate } from "swr";
 import { useRouter } from "next/router";
+
+import { useEffect, useRef, useState } from "react";
+
+import { useTeam } from "@/context/team-context";
+import { Document, DocumentVersion } from "@prisma/client";
+import { Sparkles, TrashIcon } from "lucide-react";
 import { usePlausible } from "next-plausible";
+import { useTheme } from "next-themes";
+import { toast } from "sonner";
+import { mutate } from "swr";
+
+import FileUp from "@/components/shared/icons/file-up";
+import MoreVertical from "@/components/shared/icons/more-vertical";
+import NotionIcon from "@/components/shared/icons/notion";
+import PapermarkSparkle from "@/components/shared/icons/papermark-sparkle";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,10 +25,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import MoreVertical from "@/components/shared/icons/more-vertical";
-import { Sparkles, TrashIcon } from "lucide-react";
+
 import { DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
-import { useTeam } from "@/context/team-context";
+import { getExtension } from "@/lib/utils";
+
+import { AddDocumentModal } from "./add-document-modal";
 
 export default function DocumentHeader({
   prismaDocument,
@@ -238,12 +243,12 @@ export default function DocumentHeader({
   };
 
   return (
-    <header className="flex items-center justify-between gap-x-8 !mb-16">
-      <div className="flex space-x-2 items-center">
+    <header className="!mb-16 flex items-center justify-between gap-x-8">
+      <div className="flex items-center space-x-2">
         {primaryVersion.type === "notion" ? (
-          <NotionIcon className="w-7 lg:w-8 h-7 lg:h-8" />
+          <NotionIcon className="h-7 w-7 lg:h-8 lg:w-8" />
         ) : (
-          <div className="w-[25px] lg:w-[32px] h-[25px] lg:h-[32px]">
+          <div className="h-[25px] w-[25px] lg:h-[32px] lg:w-[32px]">
             <Image
               src={`/_icons/${getExtension(primaryVersion.file)}${isLight ? "-light" : ""}.svg`}
               alt="File icon"
@@ -253,9 +258,9 @@ export default function DocumentHeader({
           </div>
         )}
 
-        <div className="flex flex-col mt-1 lg:mt-0">
+        <div className="mt-1 flex flex-col lg:mt-0">
           <h2
-            className="text-lg lg:text-xl xl:text-2xl text-foreground font-semibold tracking-tight py-0.5 lg:py-1 px-1 lg:px-3 rounded-md border border-transparent hover:cursor-text hover:border hover:border-border focus-visible:text-lg lg:focus-visible:text-xl duration-200"
+            className="rounded-md border border-transparent px-1 py-0.5 text-lg font-semibold tracking-tight text-foreground duration-200 hover:cursor-text hover:border hover:border-border focus-visible:text-lg lg:px-3 lg:py-1 lg:text-xl lg:focus-visible:text-xl xl:text-2xl"
             ref={nameRef}
             contentEditable={true}
             onFocus={() => setIsEditingName(true)}
@@ -265,7 +270,7 @@ export default function DocumentHeader({
             dangerouslySetInnerHTML={{ __html: prismaDocument.name }}
           />
           {isEditingName && (
-            <span className="text-xs text-muted-foreground mt-1">
+            <span className="mt-1 text-xs text-muted-foreground">
               {`Press <Enter> to save the name.`}
             </span>
           )}
@@ -276,7 +281,7 @@ export default function DocumentHeader({
         {primaryVersion.type !== "notion" && (
           <AddDocumentModal newVersion>
             <button title="Upload a new version" className="hidden md:flex">
-              <FileUp className="w-6 h-6" />
+              <FileUp className="h-6 w-6" />
             </button>
           </AddDocumentModal>
         )}
@@ -284,7 +289,7 @@ export default function DocumentHeader({
         {prismaDocument.type !== "notion" &&
           prismaDocument.assistantEnabled && (
             <Button
-              className="group hidden md:flex h-8 lg:h-9 space-x-1 text-xs lg:text-sm whitespace-nowrap bg-gradient-to-r from-[#16222A] via-emerald-500 to-[#16222A] duration-200 ease-linear hover:bg-right"
+              className="group hidden h-8 space-x-1 whitespace-nowrap bg-gradient-to-r from-[#16222A] via-emerald-500 to-[#16222A] text-xs duration-200 ease-linear hover:bg-right md:flex lg:h-9 lg:text-sm"
               variant={"special"}
               size={"icon"}
               style={{ backgroundSize: "200% auto" }}
@@ -299,7 +304,7 @@ export default function DocumentHeader({
           {actionRows.map((row, i) => (
             <ul
               key={i.toString()}
-              className="flex flex-wrap items-center justify-end gap-2 md:gap-4 md:flex-nowrap"
+              className="flex flex-wrap items-center justify-end gap-2 md:flex-nowrap md:gap-4"
             >
               {row.map((action, i) => (
                 <li key={i}>{action}</li>
@@ -312,7 +317,7 @@ export default function DocumentHeader({
           <DropdownMenuTrigger asChild>
             <Button
               variant="outline"
-              className="h-8 lg:h-9 w-8 lg:w-9 p-0 bg-transparent"
+              className="h-8 w-8 bg-transparent p-0 lg:h-9 lg:w-9"
             >
               <span className="sr-only">Open menu</span>
               <MoreVertical className="h-4 w-4" />
@@ -331,7 +336,7 @@ export default function DocumentHeader({
                     title="Add a new version"
                     className="flex items-center"
                   >
-                    <FileUp className="w-4 h-4 mr-2" /> Add new version
+                    <FileUp className="mr-2 h-4 w-4" /> Add new version
                   </button>
                 </AddDocumentModal>
               </DropdownMenuItem>
@@ -340,7 +345,7 @@ export default function DocumentHeader({
                 <DropdownMenuItem
                   onClick={() => activateOrRedirectAssistant(prismaDocument)}
                 >
-                  <PapermarkSparkle className="h-4 w-4 mr-2" />
+                  <PapermarkSparkle className="mr-2 h-4 w-4" />
                   Open AI Assistant
                 </DropdownMenuItem>
               )}
@@ -355,7 +360,7 @@ export default function DocumentHeader({
                     activateOrDeactivateAssistant(true, prismaDocument.id)
                   }
                 >
-                  <Sparkles className="w-4 h-4 mr-2" /> Activate Assistant
+                  <Sparkles className="mr-2 h-4 w-4" /> Activate Assistant
                 </DropdownMenuItem>
               ) : (
                 <DropdownMenuItem
@@ -363,7 +368,7 @@ export default function DocumentHeader({
                     activateOrDeactivateAssistant(false, prismaDocument.id)
                   }
                 >
-                  <Sparkles className="w-4 h-4 mr-2" /> Disable Assistant
+                  <Sparkles className="mr-2 h-4 w-4" /> Disable Assistant
                 </DropdownMenuItem>
               ))}
 
@@ -373,7 +378,7 @@ export default function DocumentHeader({
               className="text-destructive focus:bg-destructive focus:text-destructive-foreground"
               onClick={(event) => handleButtonClick(event, prismaDocument.id)}
             >
-              <TrashIcon className="w-4 h-4 mr-2" />
+              <TrashIcon className="mr-2 h-4 w-4" />
               {isFirstClick ? "Really delete?" : "Delete document"}
             </DropdownMenuItem>
             {/* create a dropdownmenuitem that onclick calls a post request to /api/assistants with the documentId */}

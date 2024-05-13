@@ -1,8 +1,12 @@
 "use client";
 
-import { cn } from "@/lib/utils";
 import Link from "next/link";
+
+import { useEffect, useState } from "react";
+
 import GithubSlugger from "github-slugger";
+
+import { cn } from "@/lib/utils";
 
 export default function TableOfContents({
   items,
@@ -16,7 +20,7 @@ export default function TableOfContents({
   const slugger = new GithubSlugger();
 
   return (
-    <div className="grid gap-4 -ml-[2.55rem] pl-10 border-l border-orange-500">
+    <div className="-ml-[2.55rem] grid gap-4 border-l border-orange-500 pl-10">
       <p className="text-sm font-medium">Table of Contents</p>
       {items &&
         items.map((item, idx) => {
@@ -26,7 +30,7 @@ export default function TableOfContents({
               key={itemId}
               href={`#${itemId}`}
               className={cn("text-sm text-gray-500 ", {
-                "border-l-2  border-black -ml-[2.6rem] pl-10 text-black":
+                "-ml-[2.6rem]  border-l-2 border-black pl-10 text-black":
                   currentAnchor ? currentAnchor === itemId : idx === 0,
               })}
             >
@@ -37,8 +41,6 @@ export default function TableOfContents({
     </div>
   );
 }
-
-import { useEffect, useState } from "react";
 
 function useCurrentAnchor() {
   const [currentAnchor, setCurrentAnchor] = useState<string | null>(null);

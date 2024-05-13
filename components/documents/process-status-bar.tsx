@@ -1,6 +1,8 @@
-import { Progress } from "@/components/ui/progress";
-import { cn } from "@/lib/utils";
 import { useEventRunStatuses } from "@trigger.dev/react";
+
+import { Progress } from "@/components/ui/progress";
+
+import { cn } from "@/lib/utils";
 
 export default function ProcessStatusBar({
   documentVersionId,
@@ -18,7 +20,7 @@ export default function ProcessStatusBar({
         value={0}
         text="Processing document..."
         className={cn(
-          "w-full text-[8px] font-semibold rounded-none",
+          "w-full rounded-none text-[8px] font-semibold",
           className,
         )}
       />
@@ -31,7 +33,7 @@ export default function ProcessStatusBar({
         value={0}
         text={error.message}
         className={cn(
-          "w-full text-[8px] font-semibold rounded-none",
+          "w-full rounded-none text-[8px] font-semibold",
           className,
         )}
       />
@@ -52,7 +54,7 @@ export default function ProcessStatusBar({
         text={`Error processing document page ${Number(statuses[0]?.data?.currentPage)}`}
         error={true}
         className={cn(
-          "w-full text-[8px] font-semibold rounded-none",
+          "w-full rounded-none text-[8px] font-semibold",
           className,
         )}
       />
@@ -63,7 +65,7 @@ export default function ProcessStatusBar({
     <Progress
       value={progress}
       text={text}
-      className={cn("w-full text-[8px] font-semibold rounded-none", className)}
+      className={cn("w-full rounded-none text-[8px] font-semibold", className)}
     />
   );
 }

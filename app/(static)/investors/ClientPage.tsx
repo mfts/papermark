@@ -1,15 +1,17 @@
 "use client";
 
-import Fuse from "fuse.js";
-
-import { useSearchParams } from "next/navigation";
-import { useMemo, useState } from "react";
-import { GlobeIcon, SearchIcon } from "lucide-react";
-import classNames from "clsx";
-import Link from "next/link";
 import Image from "next/image";
-import PlaceholderImg from "@/public/_static/placeholder.png";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+
+import { useMemo, useState } from "react";
+
 import PapermarkPImg from "@/public/_static/papermark-p.svg";
+import PlaceholderImg from "@/public/_static/placeholder.png";
+import classNames from "clsx";
+import Fuse from "fuse.js";
+import { GlobeIcon, SearchIcon } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 
 const searchOptions = {
@@ -112,8 +114,8 @@ export default function Dashboard({ data }: any) {
 
   return (
     <>
-      <div className="sm:flex flex-col md:flex-row justify-between mt-4">
-        <span className="isolate mt-5 inline-flex rounded-md shadow-sm w-fit px-2 md:px-0">
+      <div className="mt-4 flex-col justify-between sm:flex md:flex-row">
+        <span className="isolate mt-5 inline-flex w-fit rounded-md px-2 shadow-sm md:px-0">
           {stages.map((stage) => (
             <Link
               href={
@@ -126,7 +128,7 @@ export default function Dashboard({ data }: any) {
                 category === stage.id || (!category && stage.id === "7")
                   ? "bg-gray-200"
                   : "bg-white hover:bg-gray-50",
-                "relative inline-flex items-center first-of-type:rounded-l-md last-of-type:rounded-r-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 focus:z-10 focus:outline-none focus:ring-gray-500 -ml-px first-of-type:-ml-0",
+                "relative -ml-px inline-flex items-center border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 first-of-type:-ml-0 first-of-type:rounded-l-md last-of-type:rounded-r-md focus:z-10 focus:outline-none focus:ring-gray-500",
               )}
             >
               {stage.label}
@@ -135,7 +137,7 @@ export default function Dashboard({ data }: any) {
         </span>
         <div className="relative mt-5 px-2 md:px-0">
           <SearchIcon
-            className="h-5 w-5 absolute z-20 left-3 bottom-2 ml-1 md:ml-0"
+            className="absolute bottom-2 left-3 z-20 ml-1 h-5 w-5 md:ml-0"
             aria-hidden="true"
           />
           <input
@@ -144,21 +146,21 @@ export default function Dashboard({ data }: any) {
             name="search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-xl shadow-sm inline-flex relative items-center border border-gray-300 px-4 py-2 text-sm text-gray-700 placeholder:text-gray-400 focus:z-10 focus:outline-none focus:ring-gray-500 md:w-72 pl-10 xs:pl-12"
+            className="xs:pl-12 relative inline-flex w-full items-center rounded-xl border border-gray-300 px-4 py-2 pl-10 text-sm text-gray-700 shadow-sm placeholder:text-gray-400 focus:z-10 focus:outline-none focus:ring-gray-500 md:w-72"
             placeholder="Search by name or country"
           />
         </div>
       </div>
       <div className="mt-8 flex flex-col">
-        <div className="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-8">
-          <div className="inline-block min-w-full py-2 align-middle px-6 lg:px-8">
+        <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+          <div className="inline-block min-w-full px-6 py-2 align-middle lg:px-8">
             <div className="py-2">
               <span className="font-bold">{currentInvestors.length}</span>{" "}
               investors
             </div>
-            <div className="overflow-hidden md:shadow md:ring-1 md:ring-black md:ring-opacity-5 rounded-lg">
-              <table className="min-w-full md:divide-y bg-gray-100 md:bg-transparent divide-gray-300 rounded-lg overflow-hidden md:rounded-none">
-                <thead className="bg-gray-50 hidden md:table-header-group">
+            <div className="overflow-hidden rounded-lg md:shadow md:ring-1 md:ring-black md:ring-opacity-5">
+              <table className="min-w-full divide-gray-300 overflow-hidden rounded-lg bg-gray-100 md:divide-y md:rounded-none md:bg-transparent">
+                <thead className="hidden bg-gray-50 md:table-header-group">
                   <tr>
                     <th
                       scope="col"
@@ -193,20 +195,20 @@ export default function Dashboard({ data }: any) {
                   </tr>
                 </thead>
 
-                <tbody className="md:divide-y divide-gray-200 md:bg-white grid grid-cols-1 gap-3 sm:grid-cols-2 md:table-row-group">
+                <tbody className="grid grid-cols-1 gap-3 divide-gray-200 sm:grid-cols-2 md:table-row-group md:divide-y md:bg-white">
                   {paginatedInvestors.map((investor: any) => (
                     // Assuming you have a slug or some unique identifier for each investor
 
                     <tr
                       key={investor.id}
-                      className="hover:bg-gray-100 group grid grid-cols-3 gap-1 md:table-row bg-white rounded-lg md:rounded-none md:bg-transparent shadow md:shadow-none border border-gray-200 md:border-x-0 py-3 px-2 md:p-0"
+                      className="group grid grid-cols-3 gap-1 rounded-lg border border-gray-200 bg-white px-2 py-3 shadow hover:bg-gray-100 md:table-row md:rounded-none md:border-x-0 md:bg-transparent md:p-0 md:shadow-none"
                     >
-                      <td className="col-span-3 whitespace-nowrap pl-3 md:py-2 md:pl-6 text-sm sm:pl-6 md:h-24">
+                      <td className="col-span-3 whitespace-nowrap pl-3 text-sm sm:pl-6 md:h-24 md:py-2 md:pl-6">
                         <div className="flex items-center space-x-2">
                           <div className="h-10 w-10 flex-shrink-0">
                             {investor.imageUrl ? (
                               <img
-                                className="rounded-full h-10 w-10 object-contain"
+                                className="h-10 w-10 rounded-full object-contain"
                                 width={40}
                                 height={40}
                                 src={
@@ -218,7 +220,7 @@ export default function Dashboard({ data }: any) {
                               />
                             ) : (
                               <Image
-                                className="rounded-full h-10 w-10 object-contain"
+                                className="h-10 w-10 rounded-full object-contain"
                                 width={40}
                                 height={40}
                                 src={PlaceholderImg}
@@ -230,7 +232,7 @@ export default function Dashboard({ data }: any) {
                             <div className="font-medium text-gray-900">
                               {investor.name}
                             </div>
-                            <div className="flex space-x-2 items-center">
+                            <div className="flex items-center space-x-2">
                               {investor.website && (
                                 <a
                                   className="text-black"
@@ -239,7 +241,7 @@ export default function Dashboard({ data }: any) {
                                   rel="noopener"
                                 >
                                   <span className="sr-only">Website</span>
-                                  <GlobeIcon className="w-4 h-4" />
+                                  <GlobeIcon className="h-4 w-4" />
                                 </a>
                               )}
                               <Link
@@ -250,27 +252,27 @@ export default function Dashboard({ data }: any) {
                                   width={18}
                                   height={18}
                                   alt="Papermark"
-                                  className="block ring-1 ring-gray-300 rounded-full"
+                                  className="block rounded-full ring-1 ring-gray-300"
                                 />
                               </Link>
                             </div>
                           </div>
                         </div>
                       </td>
-                      <td className="col-span-1 row-start-2 whitespace-nowrap px-3 md:px-2 md:py-3 text-sm text-gray-500 font-bold md:font-normal">
+                      <td className="col-span-1 row-start-2 whitespace-nowrap px-3 text-sm font-bold text-gray-500 md:px-2 md:py-3 md:font-normal">
                         {investor.round ? investor.round : "Unknown"}
                       </td>
-                      <td className="col-span-3 whitespace-nowrap px-3 md:px-2 md:py-3 text-sm text-gray-500 md:mt-0">
+                      <td className="col-span-3 whitespace-nowrap px-3 text-sm text-gray-500 md:mt-0 md:px-2 md:py-3">
                         {investor.location ? investor.location : "Unknown"}
                       </td>
-                      <td className="col-span-3 md:max-w-xs px-3 md:px-2 md:py-3 text-sm text-gray-500 truncate w-40">
+                      <td className="col-span-3 w-40 truncate px-3 text-sm text-gray-500 md:max-w-xs md:px-2 md:py-3">
                         {investor.sector ? investor.sector : "Unknown"}
                       </td>
-                      <td className="col-span-3 md:max-w-xs px-3 md:px-2 md:py-3 text-sm text-gray-500 truncate w-40">
+                      <td className="col-span-3 w-40 truncate px-3 text-sm text-gray-500 md:max-w-xs md:px-2 md:py-3">
                         <a
                           href={`/investors/${encodeURIComponent(investor.slug)}`}
                         >
-                          <Button className="rounded-3xl bg-gray-200 text-xs text-gray-800 hover:bg-[#fb7a00]]">
+                          <Button className="hover:bg-[#fb7a00]] rounded-3xl bg-gray-200 text-xs text-gray-800">
                             Learn more
                           </Button>
                         </a>
@@ -279,27 +281,27 @@ export default function Dashboard({ data }: any) {
                   ))}
                 </tbody>
               </table>
-              <div className="flex justify-between items-center w-full my-4 px-4">
+              <div className="my-4 flex w-full items-center justify-between px-4">
                 <button
                   onClick={() => goToPage(currentPage - 1)}
                   disabled={currentPage === 1}
-                  className="px-2 py-2 rounded border text-xs"
+                  className="rounded border px-2 py-2 text-xs"
                 >
                   Previous
                 </button>
-                <div className="px-2 py-2 rounded  text-xs">
+                <div className="rounded px-2 py-2  text-xs">
                   Page {currentPage} of {totalPages}
                 </div>
                 <button
                   onClick={() => goToPage(currentPage + 1)}
                   disabled={currentPage === totalPages}
-                  className="px-2 py-2 rounded border text-xs"
+                  className="rounded border px-2 py-2 text-xs"
                 >
                   Next
                 </button>
               </div>
               {currentInvestors.length === 0 && (
-                <div className="text-center my-10">No results found</div>
+                <div className="my-10 text-center">No results found</div>
               )}
             </div>
           </div>

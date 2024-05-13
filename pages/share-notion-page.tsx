@@ -1,18 +1,20 @@
 import Head from "next/head";
-import Footer from "@/components/web/footer";
-import Navbar from "@/components/web/navbar";
+import Link from "next/link";
+
 import { Disclosure } from "@headlessui/react";
 import {
-  Plus as PlusSmallIcon,
-  Minus as MinusSmallIcon,
   RefreshCw as ArrowPathIcon,
   GitPullRequestArrow as CloudArrowUpIcon,
   Settings as Cog6ToothIcon,
   Fingerprint as FingerPrintIcon,
   Lock as LockClosedIcon,
+  Minus as MinusSmallIcon,
+  Plus as PlusSmallIcon,
   HardDrive as ServerIcon,
 } from "lucide-react";
-import Link from "next/link";
+
+import Footer from "@/components/web/footer";
+import Navbar from "@/components/web/navbar";
 
 const features = [
   {
@@ -121,7 +123,7 @@ export default function Home() {
 
       <main>
         {/* Hero section */}
-        <div className="relative isolate overflow-hidden bg-white dark:bg-black pb-16 pt-14 sm:pb-20">
+        <div className="relative isolate overflow-hidden bg-white pb-16 pt-14 dark:bg-black sm:pb-20">
           <div
             className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80"
             aria-hidden="true"
@@ -137,7 +139,7 @@ export default function Home() {
           <div className="mx-auto max-w-7xl px-6 lg:px-8">
             <div className="mx-auto max-w-2xl py-12 sm:py-12 lg:py-32 ">
               <div className="hidden sm:mb-8 sm:flex sm:justify-center">
-                <div className="relative rounded-full px-3 py-1 text-sm leading-6 text-black dark:text-white ring-1 ring-black/10 dark:ring-white/10 hover:ring-white/20">
+                <div className="relative rounded-full px-3 py-1 text-sm leading-6 text-black ring-1 ring-black/10 hover:ring-white/20 dark:text-white dark:ring-white/10">
                   Papermark for Notion ✍️
                 </div>
               </div>
@@ -151,7 +153,7 @@ export default function Home() {
                 </p>
                 <div className="mt-10 flex items-center justify-center gap-x-6">
                   <Link
-                    className="rounded-md bg-black dark:bg-white px-3.5 py-2.5 text-sm font-semibold text-white dark:text-black shadow-sm hover:bg-gray-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400"
+                    className="rounded-md bg-black px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-gray-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400 dark:bg-white dark:text-black"
                     href="/login"
                   >
                     Share your Notion
@@ -178,7 +180,7 @@ export default function Home() {
             </div>
 
             {/* Testimonial section */}
-            <div className="relative z-10 mt-32 bg-white dark:bg-gray-900 pb-20 sm:mt-56 sm:pb-24 xl:pb-0">
+            <div className="relative z-10 mt-32 bg-white pb-20 dark:bg-gray-900 sm:mt-56 sm:pb-24 xl:pb-0">
               <div
                 className="absolute inset-0 overflow-hidden"
                 aria-hidden="true"
@@ -194,11 +196,11 @@ export default function Home() {
                 </div>
               </div>
               <div className="mx-auto flex max-w-7xl flex-col items-center gap-x-8 gap-y-10 px-6 sm:gap-y-8 lg:px-8 xl:flex-row xl:items-stretch">
-                <div className="-mt-8 w-full max-w-2xl xl:-mb-8 xl:w-96 xl:flex-none flex items-center justify-center">
-                  <div className="relative w-64 h-64">
+                <div className="-mt-8 flex w-full max-w-2xl items-center justify-center xl:-mb-8 xl:w-96 xl:flex-none">
+                  <div className="relative h-64 w-64">
                     {" "}
                     <img
-                      className="absolute inset-0 object-cover rounded-2xl bg-gray-800  shadow-2xl"
+                      className="absolute inset-0 rounded-2xl bg-gray-800 object-cover  shadow-2xl"
                       src="https://pbs.twimg.com/profile_images/1506792347840888834/dS-r50Je_400x400.jpg"
                       alt=""
                     />

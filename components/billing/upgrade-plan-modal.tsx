@@ -1,18 +1,22 @@
 import { useEffect, useMemo, useState } from "react";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { motion } from "framer-motion";
-import { STAGGER_CHILD_VARIANTS } from "@/lib/constants";
-import { capitalize } from "@/lib/utils";
-import { PLANS } from "@/lib/stripe/utils";
-import { getStripe } from "@/lib/stripe/client";
-import { Badge } from "../ui/badge";
-import { useTeam } from "@/context/team-context";
-import { useAnalytics } from "@/lib/analytics";
 import React from "react";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+import { useTeam } from "@/context/team-context";
+import { motion } from "framer-motion";
 import { CheckIcon } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+import { useAnalytics } from "@/lib/analytics";
+import { STAGGER_CHILD_VARIANTS } from "@/lib/constants";
+import { getStripe } from "@/lib/stripe/client";
+import { PLANS } from "@/lib/stripe/utils";
+import { capitalize } from "@/lib/utils";
+
 import { DataroomTrialModal } from "../datarooms/dataroom-trial-modal";
+import { Badge } from "../ui/badge";
 
 export function UpgradePlanModal({
   clickedPlan,
@@ -111,7 +115,7 @@ export function UpgradePlanModal({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{buttonChild}</DialogTrigger>
-      <DialogContent className="text-foreground bg-background">
+      <DialogContent className="bg-background text-foreground">
         <motion.div
           variants={{
             show: {
@@ -180,7 +184,7 @@ export function UpgradePlanModal({
                       PLANS.find((p) => p.name === plan)!.price[period].amount
                     }/month`}{" "}
                     {period === "yearly" ? (
-                      <span className="text-xs ml-1">(billed yearly)</span>
+                      <span className="ml-1 text-xs">(billed yearly)</span>
                     ) : null}
                   </Badge>
                 </div>
@@ -258,7 +262,7 @@ export function UpgradePlanModal({
               {plan === "Business" ? (
                 <DataroomTrialModal>
                   <button
-                    className="text-center text-xs text-muted-foreground underline-offset-4 transition-all hover:text-gray-800 hover:dark:text-muted-foreground/80 hover:underline"
+                    className="text-center text-xs text-muted-foreground underline-offset-4 transition-all hover:text-gray-800 hover:underline hover:dark:text-muted-foreground/80"
                     onClick={() => analytics.capture("Dataroom Trial Clicked")}
                   >
                     Looking for a dataroom trial?
@@ -268,7 +272,7 @@ export function UpgradePlanModal({
                 <a
                   href="https://cal.com/marcseitz/papermark"
                   target="_blank"
-                  className="text-center text-xs text-muted-foreground underline-offset-4 transition-all hover:text-gray-800 hover:dark:text-muted-foreground/80 hover:underline"
+                  className="text-center text-xs text-muted-foreground underline-offset-4 transition-all hover:text-gray-800 hover:underline hover:dark:text-muted-foreground/80"
                 >
                   Looking for Papermark Enterprise?
                 </a>

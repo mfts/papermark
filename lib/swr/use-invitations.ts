@@ -1,7 +1,8 @@
-import useSWR from "swr";
-import { fetcher } from "@/lib/utils";
 import { useTeam } from "@/context/team-context";
 import { Invitation } from "@prisma/client";
+import useSWR from "swr";
+
+import { fetcher } from "@/lib/utils";
 
 export function useInvitations() {
   const teamInfo = useTeam();

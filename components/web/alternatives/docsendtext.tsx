@@ -1,14 +1,15 @@
+import Link from "next/link";
+
 import BlurImage from "@/components/blur-image";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
 
 const DocSendAlternatives = () => {
   return (
     <>
       <div className="relative">
-        <div className="grid grid-cols-4 gap-10 py-10 max-w-7xl w-full mx-auto px-4 md:px-8">
-          <div className="relative col-span-4 mb-10 flex flex-col space-y-8 bg-white md:col-span-3 sm:border-r sm:border-orange-500/50">
-            <div className="prose prose-h2:mb-2 first:prose-h2:mt-0 prose-h2:mt-10 prose-headings:font-medium sm:max-w-screen-md sm:pr-2 md:pr-0">
+        <div className="mx-auto grid w-full max-w-7xl grid-cols-4 gap-10 px-4 py-10 md:px-8">
+          <div className="relative col-span-4 mb-10 flex flex-col space-y-8 bg-white sm:border-r sm:border-orange-500/50 md:col-span-3">
+            <div className="prose prose-headings:font-medium prose-h2:mb-2 prose-h2:mt-10 first:prose-h2:mt-0 sm:max-w-screen-md sm:pr-2 md:pr-0">
               <>
                 <h2 id="quick-recap-of-alternatives-to-docsend">
                   Quick recap of alternatives to Docsend
@@ -291,7 +292,7 @@ const DocSendAlternatives = () => {
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  <Button variant="orange" className="text-base rounded-3xl">
+                  <Button variant="orange" className="rounded-3xl text-base">
                     Start with Docsend alternative for free
                   </Button>
                 </Link>
@@ -1356,7 +1357,7 @@ const DocSendAlternatives = () => {
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <Button variant="orange" className="text-base rounded-3xl">
+                <Button variant="orange" className="rounded-3xl text-base">
                   Start with Docsend alternative for free
                 </Button>
               </Link>

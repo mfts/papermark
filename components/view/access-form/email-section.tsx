@@ -1,4 +1,5 @@
 import { Dispatch, SetStateAction, useEffect } from "react";
+
 import { DEFAULT_ACCESS_FORM_TYPE } from ".";
 
 export default function EmailSection({
@@ -28,7 +29,7 @@ export default function EmailSection({
 
   return (
     <div className="pb-5">
-      <div className="relative rounded-md shadow-sm space-y-2">
+      <div className="relative space-y-2 rounded-md shadow-sm">
         <label
           htmlFor="email"
           className="block text-sm font-medium leading-6 text-white"
@@ -42,7 +43,7 @@ export default function EmailSection({
           autoCorrect="off"
           autoComplete="email"
           autoFocus
-          className="flex w-full rounded-md border-0 py-1.5 text-white bg-black shadow-sm ring-1 ring-inset ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-gray-300 sm:text-sm sm:leading-6"
+          className="flex w-full rounded-md border-0 bg-black py-1.5 text-white shadow-sm ring-1 ring-inset ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-gray-300 sm:text-sm sm:leading-6"
           value={email || ""}
           placeholder="Enter email"
           onChange={handleEmailChange}

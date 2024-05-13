@@ -1,8 +1,10 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { getServerSession } from "next-auth";
-import { CustomUser } from "@/lib/types";
+
 import { getLimits } from "@/ee/limits/server";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
+import { getServerSession } from "next-auth";
+
+import { CustomUser } from "@/lib/types";
 
 export default async function handle(
   req: NextApiRequest,

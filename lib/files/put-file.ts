@@ -1,9 +1,9 @@
-import { match } from "ts-pattern";
-import { upload } from "@vercel/blob/client";
-
 import { DocumentStorageType } from "@prisma/client";
-import { getPagesCount } from "@/lib/utils/get-page-number-count";
+import { upload } from "@vercel/blob/client";
+import { match } from "ts-pattern";
+
 import { newId } from "@/lib/id-helper";
+import { getPagesCount } from "@/lib/utils/get-page-number-count";
 
 // type File = {
 //   name: string;

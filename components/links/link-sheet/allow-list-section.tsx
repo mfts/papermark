@@ -1,14 +1,18 @@
 import {
+  ChangeEvent,
   Dispatch,
   SetStateAction,
-  useState,
   useEffect,
-  ChangeEvent,
+  useState,
 } from "react";
-import { Switch } from "@/components/ui/switch";
+
 import { motion } from "framer-motion";
+
+import { Switch } from "@/components/ui/switch";
+
 import { FADE_IN_ANIMATION_SETTINGS } from "@/lib/constants";
 import { cn, sanitizeAllowDenyList } from "@/lib/utils";
+
 import { DEFAULT_LINK_TYPE } from ".";
 
 export default function AllowListSection({
@@ -87,7 +91,7 @@ export default function AllowListSection({
           >
             Allow specified viewers
             {hasFreePlan && (
-              <span className="bg-background text-foreground ring-1 ring-gray-800 dark:ring-gray-500 rounded-full px-2 py-0.5 text-xs ml-2">
+              <span className="ml-2 rounded-full bg-background px-2 py-0.5 text-xs text-foreground ring-1 ring-gray-800 dark:ring-gray-500">
                 Pro
               </span>
             )}
@@ -113,7 +117,7 @@ export default function AllowListSection({
             {...FADE_IN_ANIMATION_SETTINGS}
           >
             <textarea
-              className="form-textarea w-full rounded-md border-0 py-1.5 text-foreground bg-background shadow-sm ring-1 ring-inset ring-input placeholder:text-muted-foreground focus:ring-2 focus:ring-inset focus:ring-gray-400 text-sm leading-6"
+              className="form-textarea w-full rounded-md border-0 bg-background py-1.5 text-sm leading-6 text-foreground shadow-sm ring-1 ring-inset ring-input placeholder:text-muted-foreground focus:ring-2 focus:ring-inset focus:ring-gray-400"
               rows={5}
               placeholder="Enter allowed emails/domains, one per line, e.g.                                      marc@papermark.io                                                                             @example.org"
               value={allowListInput}

@@ -1,4 +1,5 @@
 import Link from "next/link";
+
 import { getPostsRemote as getPosts } from "@/lib/content/blog";
 
 export default async function BlogIndex() {
@@ -7,10 +8,10 @@ export default async function BlogIndex() {
     <div className="bg-white py-24 sm:py-32">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-2xl lg:mx-0">
-          <h2 className="text-6xl text-balance text-gray-900 sm:text-6xl">
+          <h2 className="text-balance text-6xl text-gray-900 sm:text-6xl">
             Papermark Blog
           </h2>
-          <p className="mt-2 text-lg leading-8 text-gray-500 text-balance">
+          <p className="mt-2 text-balance text-lg leading-8 text-gray-500">
             All insights on secure document sharing in 2024
           </p>
         </div>
@@ -21,11 +22,11 @@ export default async function BlogIndex() {
               className="flex max-w-xl flex-col items-start justify-between"
             >
               <div className="flex items-center gap-x-4 text-xs">
-                <h1 className="text-2xl md:text-2xl text-balance">
+                <h1 className="text-balance text-2xl md:text-2xl">
                   {post?.data.title}
                 </h1>
               </div>
-              <p className="mt-1 text-xs md:text-xs text-balance text-gray-500">
+              <p className="mt-1 text-balance text-xs text-gray-500 md:text-xs">
                 {post?.data.summary}
               </p>
 
@@ -33,7 +34,7 @@ export default async function BlogIndex() {
                 <h3 className="mt-4 text-lg font-semibold leading-6 text-gray-900 group-hover:text-gray-600">
                   <Link
                     href={`/blog/${post?.data.slug}`}
-                    className="text-gray-500 text-balance font-light text-xs rounded-3xl bg-transparent border border-gray-500 px-4 py-2"
+                    className="text-balance rounded-3xl border border-gray-500 bg-transparent px-4 py-2 text-xs font-light text-gray-500"
                     target="_blank"
                     rel="noopener noreferrer"
                   >

@@ -1,10 +1,13 @@
 import { NextApiRequest, NextApiResponse } from "next";
+
 import { getServerSession } from "next-auth";
-import prisma from "@/lib/prisma";
-import { authOptions } from "../auth/[...nextauth]";
+
 import { errorhandler } from "@/lib/errorHandler";
-import { openai } from "@/lib/openai";
 import { getFile } from "@/lib/files/get-file";
+import { openai } from "@/lib/openai";
+import prisma from "@/lib/prisma";
+
+import { authOptions } from "../auth/[...nextauth]";
 
 export default async function handle(
   req: NextApiRequest,

@@ -1,6 +1,9 @@
 import { NextApiRequest, NextApiResponse } from "next";
+
 import { Readable } from "node:stream";
 import type Stripe from "stripe";
+
+import { sendUpgradePlanEmail } from "@/lib/emails/send-upgrade-plan";
 import prisma from "@/lib/prisma";
 import { stripe } from "@/lib/stripe";
 import {
@@ -9,7 +12,6 @@ import {
   isUpgradedCustomer,
 } from "@/lib/stripe/utils";
 import { log } from "@/lib/utils";
-import { sendUpgradePlanEmail } from "@/lib/emails/send-upgrade-plan";
 
 // Stripe requires the raw body to construct the event.
 export const config = {

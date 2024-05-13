@@ -1,9 +1,12 @@
 import { useRouter } from "next/router";
-import useSWR from "swr";
-import { fetcher } from "@/lib/utils";
+
 import { useMemo } from "react";
+
 import { useTeam } from "@/context/team-context";
 import { parse } from "path";
+import useSWR from "swr";
+
+import { fetcher } from "@/lib/utils";
 
 interface BillingProps {
   id: string;

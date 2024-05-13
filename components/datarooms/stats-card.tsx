@@ -1,6 +1,8 @@
 import ErrorPage from "next/error";
+
 import StatsElement from "@/components/documents/stats-element";
 import { Skeleton } from "@/components/ui/skeleton";
+
 import { useDataroomStats } from "@/lib/swr/use-dataroom-stats";
 
 export default function StatsCard() {
@@ -12,10 +14,10 @@ export default function StatsCard() {
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-3 border-foreground/5 space-y-2 sm:space-y-0 sm:space-x-2 lg:space-x-3">
+      <div className="grid grid-cols-1 space-y-2 border-foreground/5 sm:grid-cols-3 sm:space-x-2 sm:space-y-0 lg:grid-cols-3 lg:space-x-3">
         {Array.from({ length: 3 }).map((_, i) => (
           <div
-            className="border border-foreground/5 py-6 px-4 sm:px-6 lg:px-8 rounded-lg"
+            className="rounded-lg border border-foreground/5 px-4 py-6 sm:px-6 lg:px-8"
             key={i}
           >
             <Skeleton className="h-6 w-[80%] rounded-sm" />
@@ -55,7 +57,7 @@ export default function StatsCard() {
   ];
 
   return stats && stats.dataroomViews.length > 0 ? (
-    <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-3 border-foreground/5 space-y-2 sm:space-y-0 sm:space-x-2 lg:space-x-3">
+    <div className="grid grid-cols-1 space-y-2 border-foreground/5 sm:grid-cols-3 sm:space-x-2 sm:space-y-0 lg:grid-cols-3 lg:space-x-3">
       {statistics.map((stat, statIdx) => (
         <StatsElement key={statIdx} stat={stat} statIdx={statIdx} />
       ))}

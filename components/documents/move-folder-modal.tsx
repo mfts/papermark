@@ -1,3 +1,12 @@
+import { useRouter } from "next/router";
+
+import { useState } from "react";
+
+import { useTeam } from "@/context/team-context";
+import { toast } from "sonner";
+import { mutate } from "swr";
+
+import { SidebarFolderTreeSelection } from "@/components/sidebar-folders";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -7,12 +16,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useTeam } from "@/context/team-context";
-import { useState } from "react";
-import { toast } from "sonner";
-import { mutate } from "swr";
-import { SidebarFolderTreeSelection } from "@/components/sidebar-folders";
-import { useRouter } from "next/router";
 
 export function MoveToFolderModal({
   open,
@@ -105,7 +108,7 @@ export function MoveToFolderModal({
           </div>
 
           <DialogFooter>
-            <Button onClick={handleSubmit} className="w-full h-9">
+            <Button onClick={handleSubmit} className="h-9 w-full">
               Move to folder
             </Button>
           </DialogFooter>

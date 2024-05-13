@@ -12,12 +12,12 @@ export default function EmailVerificationMessage({
 }) {
   return (
     <>
-      <div className="flex h-screen flex-1 flex-col px-6 py-12 lg:px-8 bg-black">
+      <div className="flex h-screen flex-1 flex-col bg-black px-6 py-12 lg:px-8">
         <div className="sm:mx-auto sm:w-full sm:max-w-md">
           <h2 className="mt-10 text-2xl font-bold leading-9 tracking-tight text-white">
             Please verify your email
           </h2>
-          <p className="text-sm leading-6 text-white text-pretty">
+          <p className="text-pretty text-sm leading-6 text-white">
             A verification link has been send to your email:{" "}
             <span className="font-medium">{data.email}</span>
           </p>
@@ -30,7 +30,7 @@ export default function EmailVerificationMessage({
                 type="submit"
                 variant="link"
                 size="sm"
-                className="text-sm text-gray-400 font-normal"
+                className="text-sm font-normal text-gray-400"
                 loading={isLoading}
               >
                 Resend Link

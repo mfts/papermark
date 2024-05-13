@@ -1,6 +1,9 @@
-import { useVisitorStats } from "@/lib/swr/use-stats";
 import ErrorPage from "next/error";
+
 import BarChartComponent from "@/components/charts/bar-chart";
+
+import { useVisitorStats } from "@/lib/swr/use-stats";
+
 import StatsChartSkeleton from "../documents/stats-chart-skeleton";
 
 export default function VisitorChart({
@@ -37,7 +40,7 @@ export default function VisitorChart({
   });
 
   return (
-    <div className="pl-0.5 md:pl-1 pb-0.5 md:pb-1 border-l border-b rounded-bl-lg">
+    <div className="rounded-bl-lg border-b border-l pb-0.5 pl-0.5 md:pb-1 md:pl-1">
       <BarChartComponent data={durationData} isSum={true} />
     </div>
   );

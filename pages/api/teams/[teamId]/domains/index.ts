@@ -1,12 +1,15 @@
 import { NextApiRequest, NextApiResponse } from "next";
+
 import { getServerSession } from "next-auth/next";
-import prisma from "@/lib/prisma";
-import { authOptions } from "../../../auth/[...nextauth]";
-import { CustomUser } from "@/lib/types";
-import { log } from "@/lib/utils";
+
 import { addDomainToVercel, validDomainRegex } from "@/lib/domains";
 import { errorhandler } from "@/lib/errorHandler";
+import prisma from "@/lib/prisma";
 import { getTeamWithDomain } from "@/lib/team/helper";
+import { CustomUser } from "@/lib/types";
+import { log } from "@/lib/utils";
+
+import { authOptions } from "../../../auth/[...nextauth]";
 
 export default async function handle(
   req: NextApiRequest,

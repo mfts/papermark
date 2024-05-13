@@ -1,17 +1,20 @@
-import { Dispatch, SetStateAction, useState } from "react";
-import { cn } from "@/lib/utils";
-import { DEFAULT_LINK_TYPE } from ".";
-import { Label } from "@/components/ui/label";
-import { Domain } from "@prisma/client";
-import { AddDomainModal } from "@/components/domains/add-domain-modal";
-import { mutate } from "swr";
 import Link from "next/link";
+
+import { Dispatch, SetStateAction, useState } from "react";
+
 import { useTeam } from "@/context/team-context";
+import { Domain } from "@prisma/client";
+import { mutate } from "swr";
+
+import { AddDomainModal } from "@/components/domains/add-domain-modal";
+import { Label } from "@/components/ui/label";
+
 import { BLOCKED_PATHNAMES } from "@/lib/constants";
-
 import { BasePlan } from "@/lib/swr/use-billing";
-
 import useLimits from "@/lib/swr/use-limits";
+import { cn } from "@/lib/utils";
+
+import { DEFAULT_LINK_TYPE } from ".";
 
 export default function DomainSection({
   data,
@@ -62,7 +65,7 @@ export default function DomainSection({
             "w-full rounded-l-md border border-r-0 border-border bg-secondary px-5 text-sm text-secondary-foreground focus:border-border focus:outline-none focus:ring-0",
             data.domain && data.domain !== "papermark.io"
               ? ""
-              : "rounded-r-md border-r-1",
+              : "border-r-1 rounded-r-md",
           )}
         >
           <option key="papermark.io" value="papermark.io">
@@ -123,7 +126,7 @@ export default function DomainSection({
             }}
             autoComplete="off"
             className={cn(
-              "hidden w-full rounded-r-md border-0 py-1.5 text-foreground bg-background shadow-sm ring-1 ring-inset ring-input placeholder:text-muted-foreground focus:ring-2 focus:ring-inset focus:ring-gray-400 sm:text-sm sm:leading-6",
+              "hidden w-full rounded-r-md border-0 bg-background py-1.5 text-foreground shadow-sm ring-1 ring-inset ring-input placeholder:text-muted-foreground focus:ring-2 focus:ring-inset focus:ring-gray-400 sm:text-sm sm:leading-6",
               data.domain && data.domain !== "papermark.io" ? "flex" : "",
             )}
             placeholder="deck"
@@ -146,7 +149,7 @@ export default function DomainSection({
       </div>
 
       {data.domain && data.domain !== "papermark.io" && !isDomainVerified ? (
-        <div className="text-sm text-red-500 mt-4">
+        <div className="mt-4 text-sm text-red-500">
           Your domain is not verified yet!{" "}
           <Link
             className="underline hover:text-red-500/80"

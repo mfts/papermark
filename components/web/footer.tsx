@@ -1,9 +1,12 @@
-import GitHubIcon from "@/components/shared/icons/github";
-import TwitterIcon from "@/components/shared/icons/twitter";
-import LinkedinIcon from "@/components/shared/icons/linkedin";
-import { StatusWidget } from "./status-widget";
-import PapermarkLogo from "@/public/_static/papermark-logo.svg";
 import Image from "next/image";
+
+import PapermarkLogo from "@/public/_static/papermark-logo.svg";
+
+import GitHubIcon from "@/components/shared/icons/github";
+import LinkedinIcon from "@/components/shared/icons/linkedin";
+import TwitterIcon from "@/components/shared/icons/twitter";
+
+import { StatusWidget } from "./status-widget";
 
 const navigation = {
   product: [
@@ -68,7 +71,7 @@ export default function Footer() {
       <h2 id="footer-heading" className="sr-only">
         Footer
       </h2>
-      <div className="mx-auto max-w-7xl pt-20 pb-4 px-4 md:px-8">
+      <div className="mx-auto max-w-7xl px-4 pb-4 pt-20 md:px-8">
         {" "}
         {/* px-6 pb-8 pt-16 sm:pt-24 lg:px-8 lg:pt-32 */}
         <div className="xl:grid xl:grid-cols-3 xl:gap-8">
@@ -89,7 +92,7 @@ export default function Footer() {
                   href={item.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center h-10 rounded-md px-2.5 py-1 font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50"
+                  className="inline-flex h-10 items-center justify-center rounded-md px-2.5 py-1 font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50"
                 >
                   <span className="sr-only">{item.name}</span>
                   <item.icon />

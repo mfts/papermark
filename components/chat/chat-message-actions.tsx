@@ -3,8 +3,10 @@
 import { type Message } from "ai";
 
 import { Button } from "@/components/ui/button";
-import { useCopyToClipboard } from "@/lib/utils/use-copy-to-clipboard";
+
 import { cn } from "@/lib/utils";
+import { useCopyToClipboard } from "@/lib/utils/use-copy-to-clipboard";
+
 import Check from "../shared/icons/check";
 import Copy from "../shared/icons/copy";
 
@@ -27,7 +29,7 @@ export function ChatMessageActions({
   return (
     <div
       className={cn(
-        "flex items-center justify-end md:hidden md:absolute md:right-0 md:-top-2",
+        "flex items-center justify-end md:absolute md:-top-2 md:right-0 md:hidden",
         className,
       )}
       {...props}

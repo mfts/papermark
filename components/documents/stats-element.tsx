@@ -15,17 +15,17 @@ export default function StatsElement({ stat, statIdx }: StatsElementProps) {
   return (
     <div
       key={statIdx}
-      className="border border-foreground/5 py-6 px-6 xl:px-8 rounded-lg overflow-hidden"
+      className="overflow-hidden rounded-lg border border-foreground/5 px-6 py-6 xl:px-8"
     >
       <div
         className={cn(
-          "flex sm:flex-col lg:flex-row items-center sm:items-start lg:items-center space-x-2 sm:space-x-0 sm:space-y-2 lg:space-y-0 lg:space-x-2",
+          "flex items-center space-x-2 sm:flex-col sm:items-start sm:space-x-0 sm:space-y-2 lg:flex-row lg:items-center lg:space-x-2 lg:space-y-0",
           !stat.active
             ? "text-gray-300 dark:text-gray-700"
             : "text-muted-foreground",
         )}
       >
-        <p className="text-sm font-medium leading-6 whitespace-nowrap capitalize">
+        <p className="whitespace-nowrap text-sm font-medium capitalize leading-6">
           {stat.name}
         </p>
       </div>

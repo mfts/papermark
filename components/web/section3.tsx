@@ -12,7 +12,7 @@ export default function Section3() {
           </p>
         </div>
         {/* Video added below */}
-        <div className="mt-10 mx-auto w-full max-w-6xl">
+        <div className="mx-auto mt-10 w-full max-w-6xl">
           <video
             width="100%"
             id="video1"

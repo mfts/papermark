@@ -1,7 +1,7 @@
 "use client";
 
-import { Plus as PlusSmallIcon, Minus as MinusSmallIcon } from "lucide-react";
 import { Disclosure } from "@headlessui/react";
+import { Minus as MinusSmallIcon, Plus as PlusSmallIcon } from "lucide-react";
 
 const faqs = [
   {

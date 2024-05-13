@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/router";
+
 import * as React from "react";
 
 import { Separator } from "@/components/ui/separator";
+
 import { cn } from "@/lib/utils";
-import { useRouter } from "next/router";
 
 type Props = {
   navigation: {
@@ -23,7 +25,7 @@ export const NavMenu: React.FC<React.PropsWithChildren<Props>> = ({
 }) => {
   return (
     <nav className={cn("sticky top-0 bg-background", className)}>
-      <div className="flex items-center w-full pl-1 overflow-x-auto">
+      <div className="flex w-full items-center overflow-x-auto pl-1">
         <ul className="flex flex-row gap-4">
           {navigation.map(({ label, href, segment, tag }) => (
             <NavItem
@@ -63,7 +65,7 @@ const NavItem: React.FC<Props["navigation"][0]> = ({
       <Link
         href={href}
         className={cn(
-          "text-sm flex items-center gap-1 font-medium py-2 px-3 -mx-3 text-content-subtle hover:bg-background-subtle rounded-md hover:text-primary",
+          "text-content-subtle hover:bg-background-subtle -mx-3 flex items-center gap-1 rounded-md px-3 py-2 text-sm font-medium hover:text-primary",
           {
             "text-primary": active,
           },
@@ -71,7 +73,7 @@ const NavItem: React.FC<Props["navigation"][0]> = ({
       >
         {label}
         {tag ? (
-          <div className="bg-background border text-content-subtle rounded text-xs px-1 py-0.5 font-mono">
+          <div className="text-content-subtle rounded border bg-background px-1 py-0.5 font-mono text-xs">
             {tag}
           </div>
         ) : null}

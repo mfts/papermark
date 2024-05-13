@@ -1,6 +1,6 @@
 export default function CopyRight({ className }: { className?: string }) {
   return (
-<svg
+    <svg
       width="14"
       height="14"
       viewBox="0 0 24 24"

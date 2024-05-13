@@ -1,26 +1,29 @@
-import { getInvestor } from "@/lib/content/investor";
-import { notFound } from "next/navigation";
 import Head from "next/head";
-import Footer from "@/components/web/footer";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+
 import { Disclosure } from "@headlessui/react";
 import { CheckIcon } from "lucide-react";
 import { XIcon } from "lucide-react";
-import { cn } from "@/lib/utils";
 import {
-  Plus as PlusSmallIcon,
-  Minus as MinusSmallIcon,
   RefreshCw as ArrowPathIcon,
   GitPullRequestArrow as CloudArrowUpIcon,
   Settings as Cog6ToothIcon,
   Fingerprint as FingerPrintIcon,
   Lock as LockClosedIcon,
+  Minus as MinusSmallIcon,
+  Plus as PlusSmallIcon,
   HardDrive as ServerIcon,
 } from "lucide-react";
-import Link from "next/link";
-import { classNames } from "@/lib/utils";
-import { LogoCloud } from "@/components/web/landing-page/logo-cloud";
+
 import { Button } from "@/components/ui/button";
+import Footer from "@/components/web/footer";
+import { LogoCloud } from "@/components/web/landing-page/logo-cloud";
 import Navbar from "@/components/web/navbar";
+
+import { getInvestor } from "@/lib/content/investor";
+import { cn } from "@/lib/utils";
+import { classNames } from "@/lib/utils";
 
 export default async function InvestorPage({
   params,
@@ -56,8 +59,8 @@ export default async function InvestorPage({
         </Head>
 
         {/* Hero section */}
-        <div className="flex flex-1 flex-col bg-white text-black justify-center">
-          <div className="max-w-5xl w-full mx-auto px-4 md:px-8 text-center">
+        <div className="flex flex-1 flex-col justify-center bg-white text-black">
+          <div className="mx-auto w-full max-w-5xl px-4 text-center md:px-8">
             <div className="pt-32">
               {/* <div className=" pb-4">
                 <img
@@ -68,19 +71,19 @@ export default async function InvestorPage({
                   height={50}
                 />
               </div> */}
-              <div className="relative rounded-full inline-block my-4 ">
-                <span className="px-3 py-1 text-sm leading-6 bg-green-100 text-green-600 border border-green-200 rounded-full text-balance">
+              <div className="relative my-4 inline-block rounded-full ">
+                <span className="text-balance rounded-full border border-green-200 bg-green-100 px-3 py-1 text-sm leading-6 text-green-600">
                   Active
                 </span>
               </div>
 
-              <h1 className="text-6xl text-balance">{investor.name}</h1>
-              <p className="text-xl mt-8 text-balance max-w-3xl  mx-auto md:text-2xl">
+              <h1 className="text-balance text-6xl">{investor.name}</h1>
+              <p className="mx-auto mt-8 max-w-3xl text-balance  text-xl md:text-2xl">
                 Venture capital and investor firm
               </p>
-              <div className="pt-8 space-x-2">
+              <div className="space-x-2 pt-8">
                 <Link href={investor.website || "/investors"}>
-                  <Button className="text-white bg-gray-800 rounded-3xl hover:bg-gray-500 justify-center">
+                  <Button className="justify-center rounded-3xl bg-gray-800 text-white hover:bg-gray-500">
                     {investor.name} website link
                   </Button>
                 </Link>
@@ -89,20 +92,20 @@ export default async function InvestorPage({
           </div>
 
           {/* Comparison section */}
-          <div className="max-w-5xl w-full mx-auto px-4 md:px-8"></div>
+          <div className="mx-auto w-full max-w-5xl px-4 md:px-8"></div>
           <div className="bg-white py-16">
             <div className="mx-auto max-w-5xl px-4 md:px-8">
-              <div className="isolate grid grid-cols-1 md:grid-cols-2 border border-black rounded-xl overflow-hidden">
+              <div className="isolate grid grid-cols-1 overflow-hidden rounded-xl border border-black md:grid-cols-2">
                 {/* First hardcoded tier */}
-                <div className="border-black border-r-0 md:odd:border-r xl:even:border-r xl:last:!border-r-0 flex flex-col justify-between">
+                <div className="flex flex-col justify-between border-r-0 border-black md:odd:border-r xl:last:!border-r-0 xl:even:border-r">
                   <div>
-                    <div className="border-b border-black p-6 bg-gray-100">
-                      <h3 className="text-balance text-gray-800 text-xl leading-8">
+                    <div className="border-b border-black bg-gray-100 p-6">
+                      <h3 className="text-balance text-xl leading-8 text-gray-800">
                         Rounds {investor.name} invests
                       </h3>
                     </div>
                     <div className="p-6">
-                      <p className="mt-4 text-sm leading-6 text-gray-500 text-balance">
+                      <p className="mt-4 text-balance text-sm leading-6 text-gray-500">
                         Investor stage information
                       </p>
                       <p className="mt-6 flex items-baseline gap-x-1">
@@ -128,15 +131,15 @@ export default async function InvestorPage({
                 </div>
 
                 {/* Second hardcoded tier */}
-                <div className="border-black flex flex-col justify-between">
+                <div className="flex flex-col justify-between border-black">
                   <div>
-                    <div className="border-b border-black p-6 bg-gray-100">
-                      <h3 className="text-balance text-gray-800 text-xl leading-8">
+                    <div className="border-b border-black bg-gray-100 p-6">
+                      <h3 className="text-balance text-xl leading-8 text-gray-800">
                         Location {investor.name} invests
                       </h3>
                     </div>
                     <div className="p-6">
-                      <p className="mt-4 text-sm leading-6 text-gray-500 text-balance">
+                      <p className="mt-4 text-balance text-sm leading-6 text-gray-500">
                         Investor primarily location but not limited
                       </p>
                       <p className="mt-6 flex items-baseline gap-x-1">
@@ -162,16 +165,16 @@ export default async function InvestorPage({
                 </div>
               </div>
 
-              <div className="my-8 isolate  border border-black rounded-xl overflow-hidden">
+              <div className="isolate my-8  overflow-hidden rounded-xl border border-black">
                 <div className="flex flex-col justify-between">
                   <div>
-                    <div className="border-b border-black p-6 bg-gray-100">
-                      <h3 className="text-balance text-gray-800 text-xl leading-8">
+                    <div className="border-b border-black bg-gray-100 p-6">
+                      <h3 className="text-balance text-xl leading-8 text-gray-800">
                         Sector {investor.name} invests
                       </h3>
                     </div>
                     <div className="p-6">
-                      <p className="mt-4 text-sm leading-6 text-gray-500 text-balance">
+                      <p className="mt-4 text-balance text-sm leading-6 text-gray-500">
                         Sectors primarily invested in
                       </p>
                       <p className="mt-6 flex items-baseline gap-x-1">
@@ -199,23 +202,23 @@ export default async function InvestorPage({
             </div>
           </div>
 
-          <div className="w-full max-w-5xl px-4 md:px-8 mx-auto ">
-            <div className="py-12 bg-[#fb7a00] rounded-3xl mx-auto px-6">
-              <div className="flex lg:flex-row flex-col item-center justify-between space-y-10 lg:space-y-0">
-                <h2 className="text-3xl text-nowrap">
+          <div className="mx-auto w-full max-w-5xl px-4 md:px-8 ">
+            <div className="mx-auto rounded-3xl bg-[#fb7a00] px-6 py-12">
+              <div className="item-center flex flex-col justify-between space-y-10 lg:flex-row lg:space-y-0">
+                <h2 className="text-nowrap text-3xl">
                   Looking for more investors? <br />
-                  <p className="text-gray-800 text-xl my-2">
+                  <p className="my-2 text-xl text-gray-800">
                     Access our investor database with 10k+ venture capital firms
                   </p>
                 </h2>
 
-                <div className="space-x-2 flex items-center">
+                <div className="flex items-center space-x-2">
                   <Link
                     href="/investors"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    <Button className="text-base rounded-3xl text-gray-200 bg-black hover:bg-gray-900">
+                    <Button className="rounded-3xl bg-black text-base text-gray-200 hover:bg-gray-900">
                       Full investor database
                     </Button>
                   </Link>
@@ -226,10 +229,10 @@ export default async function InvestorPage({
 
           {/* /* Feature Section*/}
           <div
-            className="w-full mx-auto max-w-5xl px-4 md:px-8 py-20"
+            className="mx-auto w-full max-w-5xl px-4 py-20 md:px-8"
             id="features"
           >
-            <h2 className="text-4xl text-balance pt-12 pb-20 max-w-3xl">
+            <h2 className="max-w-3xl text-balance pb-20 pt-12 text-4xl">
               Powered by Papermark{" "}
               <span className="text-gray-500">
                 Open Source DocSend alternative to share your pitchdeck and
@@ -239,15 +242,15 @@ export default async function InvestorPage({
 
             {/* Testimonial section */}
             <div
-              className="w-full mx-auto max-w-5xl px-4 md:px-8 py-20 bg-gray-100 rounded-3xl"
+              className="mx-auto w-full max-w-5xl rounded-3xl bg-gray-100 px-4 py-20 md:px-8"
               id="features"
             >
               <div className="mx-auto flex flex-col items-center gap-x-8 gap-y-10 px-6 sm:gap-y-8 lg:px-8 xl:flex-row xl:items-stretch">
-                <div className="-mt-8 w-full max-w-2xl xl:-mb-8 xl:w-96 xl:flex-none flex items-center justify-center my-6">
-                  <div className="relative w-64 h-64">
+                <div className="my-6 -mt-8 flex w-full max-w-2xl items-center justify-center xl:-mb-8 xl:w-96 xl:flex-none">
+                  <div className="relative h-64 w-64">
                     {" "}
                     <img
-                      className="absolute inset-0 object-cover rounded-2xl bg-gray-800  shadow-2xl"
+                      className="absolute inset-0 rounded-2xl bg-gray-800 object-cover  shadow-2xl"
                       src="https://www.papermark.io/_static/testimonials/jaski.jpeg"
                       alt=""
                     />
@@ -271,7 +274,7 @@ export default async function InvestorPage({
                         x={86}
                       />
                     </svg>
-                    <blockquote className="text-xl font-medium leading-8 text-balance text-gray-800 text-black sm:text-2xl sm:leading-9">
+                    <blockquote className="text-balance text-xl font-medium leading-8 text-black text-gray-800 sm:text-2xl sm:leading-9">
                       <p>
                         Papermark solved a big pain point for me. DocSend
                         monopoly will end soon!
@@ -279,13 +282,13 @@ export default async function InvestorPage({
                     </blockquote>
                     <figcaption className="mt-8 text-balance ">
                       <div className="font-semibold text-black ">Jaski</div>
-                      <div className="mt-1 text-gray-500 my-6 ">
+                      <div className="my-6 mt-1 text-gray-500 ">
                         Founder in web3 space
                       </div>
                     </figcaption>
                   </figure>
                   <Link href="/login" target="_blank" rel="noopener noreferrer">
-                    <Button className="text-base rounded-3xl text-gray-800 bg-[#fb7a00] hover:bg-gray-200">
+                    <Button className="rounded-3xl bg-[#fb7a00] text-base text-gray-800 hover:bg-gray-200">
                       Join Jaski now
                     </Button>
                   </Link>

@@ -1,8 +1,10 @@
-import { STAGGER_CHILD_VARIANTS } from "@/lib/constants";
-import { cn } from "@/lib/utils";
+import { useState } from "react";
+
 import { motion } from "framer-motion";
 import { ThumbsDownIcon, ThumbsUpIcon } from "lucide-react";
-import { useState } from "react";
+
+import { STAGGER_CHILD_VARIANTS } from "@/lib/constants";
+import { cn } from "@/lib/utils";
 
 export default function Question({
   feedback,
@@ -59,7 +61,7 @@ export default function Question({
           variants={STAGGER_CHILD_VARIANTS}
           className="flex flex-col items-center space-y-10 text-center"
         >
-          <h1 className="font-display max-w-lg text-3xl font-semibold transition-colors sm:text-4xl text-white">
+          <h1 className="font-display max-w-lg text-3xl font-semibold text-white transition-colors sm:text-4xl">
             Thanks for your feedback!
           </h1>
         </motion.div>
@@ -69,7 +71,7 @@ export default function Question({
 
   return (
     <motion.div
-      className="z-10 flex flex-col items-center space-y-10 text-center w-full"
+      className="z-10 flex w-full flex-col items-center space-y-10 text-center"
       variants={{
         hidden: { opacity: 0, scale: 0.95 },
         show: {
@@ -87,25 +89,25 @@ export default function Question({
     >
       <motion.div
         variants={STAGGER_CHILD_VARIANTS}
-        className="flex flex-col items-center space-y-10 text-center w-full"
+        className="flex w-full flex-col items-center space-y-10 text-center"
       >
-        <h1 className="font-display max-w-xl text-3xl font-semibold transition-colors sm:text-4xl text-white">
+        <h1 className="font-display max-w-xl text-3xl font-semibold text-white transition-colors sm:text-4xl">
           {feedback.data.question}
         </h1>
       </motion.div>
       <motion.div
         variants={STAGGER_CHILD_VARIANTS}
-        className="grid w-full max-w-sm grid-cols-1 divide-border text-white rounded-md border border-border md:grid-cols-2 md:divide-x md:divide-y-0 divide-y"
+        className="grid w-full max-w-sm grid-cols-1 divide-y divide-border rounded-md border border-border text-white md:grid-cols-2 md:divide-x md:divide-y-0"
       >
         <button
           onClick={() => handleQuestionSubmit("yes")}
           className={cn(
-            "flex flex-col items-center justify-center overflow-hidden p-5 space-y-5 transition-colors hover:text-black hover:bg-gray-200 hover:dark:bg-gray-800 md:p-10 min-h-[200px]",
+            "flex min-h-[200px] flex-col items-center justify-center space-y-5 overflow-hidden p-5 transition-colors hover:bg-gray-200 hover:text-black hover:dark:bg-gray-800 md:p-10",
             answer === "yes" ? "bg-gray-200 dark:bg-gray-800" : "",
           )}
         >
           <ThumbsUpIcon
-            className="h-auto pointer-events-none w-12 sm:w-12"
+            className="pointer-events-none h-auto w-12 sm:w-12"
             strokeWidth={1}
           />
           <p>Yes</p>
@@ -113,12 +115,12 @@ export default function Question({
         <button
           onClick={() => handleQuestionSubmit("no")}
           className={cn(
-            "flex flex-col items-center justify-center overflow-hidden p-5 space-y-5 transition-colors hover:text-black hover:bg-gray-200 hover:dark:bg-gray-800 md:p-10 min-h-[200px]",
+            "flex min-h-[200px] flex-col items-center justify-center space-y-5 overflow-hidden p-5 transition-colors hover:bg-gray-200 hover:text-black hover:dark:bg-gray-800 md:p-10",
             answer === "no" ? "bg-gray-200 dark:bg-gray-800" : "",
           )}
         >
           <ThumbsDownIcon
-            className="h-auto pointer-events-none w-12 sm:w-12"
+            className="pointer-events-none h-auto w-12 sm:w-12"
             strokeWidth={1}
           />
           <p>No</p>

@@ -1,5 +1,6 @@
-import { sendEmail } from "@/lib/resend";
 import LoginLink from "@/components/emails/verification-link";
+
+import { sendEmail } from "@/lib/resend";
 
 export const sendVerificationRequestEmail = async (params: {
   email: string;

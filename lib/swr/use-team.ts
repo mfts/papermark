@@ -1,7 +1,8 @@
-import useSWR from "swr";
 import { useTeam } from "@/context/team-context";
-import { fetcher } from "@/lib/utils";
+import useSWR from "swr";
+
 import { TeamDetail } from "@/lib/types";
+import { fetcher } from "@/lib/utils";
 
 export function useGetTeam() {
   const teamInfo = useTeam();

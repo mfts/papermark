@@ -1,9 +1,12 @@
 import { NextApiRequest, NextApiResponse } from "next";
+
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "../../../auth/[...nextauth]";
-import { stripe } from "@/lib/stripe";
-import prisma from "@/lib/prisma";
+
 import { errorhandler } from "@/lib/errorHandler";
+import prisma from "@/lib/prisma";
+import { stripe } from "@/lib/stripe";
+
+import { authOptions } from "../../../auth/[...nextauth]";
 
 export default async function handle(
   req: NextApiRequest,

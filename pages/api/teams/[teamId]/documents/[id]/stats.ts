@@ -1,13 +1,16 @@
 import { NextApiRequest, NextApiResponse } from "next";
+
+import { View } from "@prisma/client";
 import { getServerSession } from "next-auth/next";
+
+import { LIMITS } from "@/lib/constants";
+import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
-import { authOptions } from "../../../../auth/[...nextauth]";
+import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
 import { getTotalAvgPageDuration } from "@/lib/tinybird";
 import { CustomUser } from "@/lib/types";
-import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
-import { errorhandler } from "@/lib/errorHandler";
-import { View } from "@prisma/client";
-import { LIMITS } from "@/lib/constants";
+
+import { authOptions } from "../../../../auth/[...nextauth]";
 
 export default async function handle(
   req: NextApiRequest,

@@ -1,7 +1,9 @@
 import { NextApiRequest, NextApiResponse } from "next";
+
+import { Brand, DataroomBrand } from "@prisma/client";
+
 import prisma from "@/lib/prisma";
 import { log } from "@/lib/utils";
-import { Brand, DataroomBrand } from "@prisma/client";
 
 export default async function handle(
   req: NextApiRequest,

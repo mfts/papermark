@@ -1,4 +1,5 @@
 import TeamInvitation from "@/components/emails/team-invitation";
+
 import { sendEmail } from "@/lib/resend";
 
 export const sendTeammateInviteEmail = async ({

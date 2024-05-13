@@ -1,10 +1,11 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import prisma from "@/lib/prisma";
-import { checkPassword, decryptEncrpytedPassword, log } from "@/lib/utils";
-import { newId } from "@/lib/id-helper";
+
+import sendNotification from "@/lib/api/notification-helper";
 import { sendVerificationEmail } from "@/lib/emails/send-email-verification";
 import { getFile } from "@/lib/files/get-file";
-import sendNotification from "@/lib/api/notification-helper";
+import { newId } from "@/lib/id-helper";
+import prisma from "@/lib/prisma";
+import { checkPassword, decryptEncrpytedPassword, log } from "@/lib/utils";
 
 export default async function handle(
   req: NextApiRequest,

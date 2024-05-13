@@ -1,5 +1,6 @@
-import { sendEmail } from "@/lib/resend";
 import TrialEndReminderEmail from "@/components/emails/trial-end-reminder";
+
+import { sendEmail } from "@/lib/resend";
 
 export const sendTrialEndReminderEmail = async (
   email: string,

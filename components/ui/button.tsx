@@ -1,8 +1,10 @@
 import * as React from "react";
+
 import { Slot } from "@radix-ui/react-slot";
-import { cva, type VariantProps } from "class-variance-authority";
+import { type VariantProps, cva } from "class-variance-authority";
 
 import { cn } from "@/lib/utils";
+
 import LoadingSpinner from "./loading-spinner";
 
 const buttonVariants = cva(
@@ -13,7 +15,8 @@ const buttonVariants = cva(
         default:
           "bg-primary text-primary-foreground hover:bg-primary/90 transition-colors",
         special: "text-white",
-        orange: "bg-[#fb7a00] text-black hover:bg-[#fb7a00]/90 transition-colors",
+        orange:
+          "bg-[#fb7a00] text-black hover:bg-[#fb7a00]/90 transition-colors",
         destructive:
           "bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors",
         outline:

@@ -1,19 +1,21 @@
 import { useRouter } from "next/router";
-import Intro from "@/components/welcome/intro";
-import Next from "@/components/welcome/next";
-import Upload from "@/components/welcome/upload";
-import { ArrowLeft as ArrowLeftIcon } from "lucide-react";
+
 import { AnimatePresence } from "framer-motion";
-import NotionForm from "@/components/welcome/notion-form";
+import { ArrowLeft as ArrowLeftIcon } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import Dataroom from "@/components/welcome/dataroom";
 import DataroomTrial from "@/components/welcome/dataroom-trial";
+import Intro from "@/components/welcome/intro";
+import Next from "@/components/welcome/next";
+import NotionForm from "@/components/welcome/notion-form";
+import Upload from "@/components/welcome/upload";
 
 export default function Welcome() {
   const router = useRouter();
 
   return (
-    <div className="flex h-screen flex-col items-center justify-center max-w-3xl mx-auto overflow-x-hidden">
+    <div className="mx-auto flex h-screen max-w-3xl flex-col items-center justify-center overflow-x-hidden">
       <div
         className="absolute inset-x-0 top-10 -z-10 flex transform-gpu justify-center overflow-hidden blur-3xl"
         aria-hidden="true"
@@ -30,7 +32,7 @@ export default function Welcome() {
         {router.query.type ? (
           <>
             <button
-              className="group absolute left-2 sm:left-10 top-10 z-40 rounded-full p-2 transition-all hover:bg-gray-400"
+              className="group absolute left-2 top-10 z-40 rounded-full p-2 transition-all hover:bg-gray-400 sm:left-10"
               onClick={() => router.back()}
             >
               <ArrowLeftIcon className="h-8 w-8 text-gray-500 group-hover:text-gray-800 group-active:scale-90" />
@@ -39,7 +41,7 @@ export default function Welcome() {
             <Button
               variant={"link"}
               onClick={() => router.push("/documents")}
-              className="absolute right-2 sm:right-10 top-10 z-40 p-2 text-muted-foreground"
+              className="absolute right-2 top-10 z-40 p-2 text-muted-foreground sm:right-10"
             >
               Skip to dashboard
             </Button>

@@ -1,3 +1,9 @@
+import { useState } from "react";
+
+import { useTeam } from "@/context/team-context";
+import { toast } from "sonner";
+import { mutate } from "swr";
+
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -10,13 +16,11 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useTeam } from "@/context/team-context";
-import { useState } from "react";
-import { toast } from "sonner";
-import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
-import { usePlan } from "@/lib/swr/use-billing";
+
 import { useAnalytics } from "@/lib/analytics";
-import { mutate } from "swr";
+import { usePlan } from "@/lib/swr/use-billing";
+
+import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
 
 export function AddDataroomModal({ children }: { children?: React.ReactNode }) {
   const [dataroomName, setDataroomName] = useState<string>("");
@@ -101,11 +105,11 @@ export function AddDataroomModal({ children }: { children?: React.ReactNode }) {
           <Input
             id="dataroom-name"
             placeholder="ACME Aquisition"
-            className="w-full mt-1 mb-4"
+            className="mb-4 mt-1 w-full"
             onChange={(e) => setDataroomName(e.target.value)}
           />
           <DialogFooter>
-            <Button type="submit" className="w-full h-9" loading={loading}>
+            <Button type="submit" className="h-9 w-full" loading={loading}>
               Add new dataroom
             </Button>
           </DialogFooter>

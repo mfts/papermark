@@ -1,12 +1,15 @@
+import { useState } from "react";
+
+import { useTeam } from "@/context/team-context";
+import { mutate } from "swr";
+
 import { AddDomainModal } from "@/components/domains/add-domain-modal";
 import DomainCard from "@/components/domains/domain-card";
 import AppLayout from "@/components/layouts/app";
 import Navbar from "@/components/settings/navbar";
 import { Button } from "@/components/ui/button";
-import { useTeam } from "@/context/team-context";
+
 import { useDomains } from "@/lib/swr/use-domains";
-import { useState } from "react";
-import { mutate } from "swr";
 
 export default function Domains() {
   const { domains } = useDomains();
@@ -33,10 +36,10 @@ export default function Domains() {
   return (
     <AppLayout>
       <Navbar current="Domains" />
-      <div className="p-4 sm:p-4 sm:m-4">
-        <div className="flex items-center justify-between mb-4 md:mb-8 lg:mb-12">
+      <div className="p-4 sm:m-4 sm:p-4">
+        <div className="mb-4 flex items-center justify-between md:mb-8 lg:mb-12">
           <div className="space-y-1">
-            <h3 className="text-2xl text-foreground font-semibold tracking-tight">
+            <h3 className="text-2xl font-semibold tracking-tight text-foreground">
               Domains
             </h3>
             <p className="text-sm text-muted-foreground">

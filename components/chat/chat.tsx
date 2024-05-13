@@ -1,18 +1,20 @@
 "use client";
 
-import {
-  experimental_useAssistant as useAssistant,
-  type Message,
-} from "ai/react";
+import { useEffect, useState } from "react";
 
+import {
+  type Message,
+  experimental_useAssistant as useAssistant,
+} from "ai/react";
+import { nanoid } from "nanoid";
+
+import { BasePlan } from "@/lib/swr/use-billing";
 import { cn } from "@/lib/utils";
-import { ChatList } from "./chat-list";
+
 import { ChatInput } from "./chat-input";
+import { ChatList } from "./chat-list";
 import { ChatScrollAnchor } from "./chat-scroll-anchor";
 import { EmptyScreen } from "./empty-screen";
-import { useEffect, useState } from "react";
-import { nanoid } from "nanoid";
-import { BasePlan } from "@/lib/swr/use-billing";
 
 export interface ChatProps extends React.ComponentProps<"div"> {
   initialMessages: Message[];
@@ -93,7 +95,7 @@ export function Chat({
     <>
       <div
         className={cn(
-          "pb-[20px] pt-24 h-[calc(100vh-96px)] relative overflow-y-auto",
+          "relative h-[calc(100vh-96px)] overflow-y-auto pb-[20px] pt-24",
           className,
         )}
       >

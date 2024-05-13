@@ -1,16 +1,19 @@
-import LoadingSpinner from "@/components/ui/loading-spinner";
-import DocumentView from "@/components/view/document-view";
-import { CustomUser, LinkWithDataroom, LinkWithDocument } from "@/lib/types";
-import NotFound from "@/pages/404";
 import { GetStaticPropsContext } from "next";
-import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
-import { ExtendedRecordMap } from "notion-types";
-import notion from "@/lib/notion";
-import { parsePageId } from "notion-utils";
+
+import NotFound from "@/pages/404";
 import { Brand, DataroomBrand } from "@prisma/client";
+import { useSession } from "next-auth/react";
+import { ExtendedRecordMap } from "notion-types";
+import { parsePageId } from "notion-utils";
+
+import LoadingSpinner from "@/components/ui/loading-spinner";
 import CustomMetatag from "@/components/view/custom-metatag";
 import DataroomView from "@/components/view/dataroom/dataroom-view";
+import DocumentView from "@/components/view/document-view";
+
+import notion from "@/lib/notion";
+import { CustomUser, LinkWithDataroom, LinkWithDocument } from "@/lib/types";
 
 type DocumentLinkData = {
   linkType: "DOCUMENT_LINK";
@@ -178,7 +181,7 @@ export default function ViewPage({
 
   if (router.isFallback) {
     return (
-      <div className="h-screen flex items-center justify-center bg-black">
+      <div className="flex h-screen items-center justify-center bg-black">
         <LoadingSpinner className="h-20 w-20" />
       </div>
     );
@@ -204,7 +207,7 @@ export default function ViewPage({
             imageUrl={meta?.metaImage ?? null}
             url={meta?.metaUrl ?? ""}
           />
-          <div className="h-screen flex items-center justify-center">
+          <div className="flex h-screen items-center justify-center">
             <LoadingSpinner className="h-20 w-20" />
           </div>
         </>
@@ -293,7 +296,7 @@ export default function ViewPage({
             imageUrl={meta?.metaImage ?? null}
             url={meta?.metaUrl ?? ""}
           />
-          <div className="h-screen flex items-center justify-center">
+          <div className="flex h-screen items-center justify-center">
             <LoadingSpinner className="h-20 w-20" />
           </div>
         </>

@@ -1,11 +1,14 @@
 import { useRouter } from "next/router";
+
 import { motion } from "framer-motion";
 import {
   File as DocumentIcon,
   Presentation as PresentationChartBarIcon,
 } from "lucide-react";
-import { STAGGER_CHILD_VARIANTS } from "@/lib/constants";
+
 import NotionIcon from "@/components/shared/icons/notion";
+
+import { STAGGER_CHILD_VARIANTS } from "@/lib/constants";
 
 export default function Next() {
   const router = useRouter();
@@ -40,7 +43,7 @@ export default function Next() {
       </motion.div>
       <motion.div
         variants={STAGGER_CHILD_VARIANTS}
-        className="grid w-full grid-cols-1 divide-y divide-border text-foreground rounded-md border border-border md:grid-cols-3 md:divide-x"
+        className="grid w-full grid-cols-1 divide-y divide-border rounded-md border border-border text-foreground md:grid-cols-3 md:divide-x"
       >
         <button
           onClick={() =>
@@ -51,9 +54,9 @@ export default function Next() {
               },
             })
           }
-          className="flex flex-col items-center justify-center overflow-hidden p-5 space-y-5 transition-colors hover:bg-gray-200 hover:dark:bg-gray-800 md:p-10 min-h-[200px]"
+          className="flex min-h-[200px] flex-col items-center justify-center space-y-5 overflow-hidden p-5 transition-colors hover:bg-gray-200 hover:dark:bg-gray-800 md:p-10"
         >
-          <PresentationChartBarIcon className="h-auto pointer-events-none w-12 sm:w-12" />
+          <PresentationChartBarIcon className="pointer-events-none h-auto w-12 sm:w-12" />
           <p>Pitchdeck</p>
         </button>
         <button
@@ -65,9 +68,9 @@ export default function Next() {
               },
             })
           }
-          className="flex flex-col items-center justify-center overflow-hidden p-5 space-y-5 transition-colors hover:bg-gray-200 hover:dark:bg-gray-800 md:p-10 min-h-[200px]"
+          className="flex min-h-[200px] flex-col items-center justify-center space-y-5 overflow-hidden p-5 transition-colors hover:bg-gray-200 hover:dark:bg-gray-800 md:p-10"
         >
-          <DocumentIcon className="h-auto pointer-events-none w-12 sm:w-12" />
+          <DocumentIcon className="pointer-events-none h-auto w-12 sm:w-12" />
           <p>Another document</p>
         </button>
         <button
@@ -79,16 +82,16 @@ export default function Next() {
               },
             })
           }
-          className="flex flex-col items-center justify-center overflow-hidden p-5 space-y-5 transition-colors hover:bg-gray-200 hover:dark:bg-gray-800 md:p-10 min-h-[200px]"
+          className="flex min-h-[200px] flex-col items-center justify-center space-y-5 overflow-hidden p-5 transition-colors hover:bg-gray-200 hover:dark:bg-gray-800 md:p-10"
         >
-          <NotionIcon className="h-auto pointer-events-none w-12 sm:w-12" />
+          <NotionIcon className="pointer-events-none h-auto w-12 sm:w-12" />
           <p>Notion Page</p>
         </button>
       </motion.div>
 
       <motion.div variants={STAGGER_CHILD_VARIANTS} className="text-center">
         <button
-          className="text-center text-sm text-muted-foreground underline-offset-4 transition-all hover:text-gray-800 hover:dark:text-muted-foreground/80 hover:underline"
+          className="text-center text-sm text-muted-foreground underline-offset-4 transition-all hover:text-gray-800 hover:underline hover:dark:text-muted-foreground/80"
           onClick={() =>
             router.push({
               pathname: "/welcome",

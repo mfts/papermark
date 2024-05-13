@@ -1,9 +1,9 @@
-import { log } from "@/lib/utils";
 import { deleteDomain } from "@/lib/api/domains";
-import prisma from "@/lib/prisma";
 import { limiter } from "@/lib/cron";
 import { sendDeletedDomainEmail } from "@/lib/emails/send-deleted-domain";
 import { sendInvalidDomainEmail } from "@/lib/emails/send-invalid-domain";
+import prisma from "@/lib/prisma";
+import { log } from "@/lib/utils";
 
 export const handleDomainUpdates = async ({
   domain,
@@ -19,7 +19,10 @@ export const handleDomainUpdates = async ({
   linksCount: number;
 }) => {
   if (changed) {
-    await log({message: `Domain *${domain}* changed status to *${verified}*`, type: "cron"});
+    await log({
+      message: `Domain *${domain}* changed status to *${verified}*`,
+      type: "cron",
+    });
   }
 
   if (verified) return;
@@ -111,7 +114,7 @@ export const handleDomainUpdates = async ({
         await log({
           message: `Domain *${domain}* has been invalid for > 30 days and has links with clicks, skipping.`,
           type: "cron",
-          mention: true
+          mention: true,
         });
         return;
       }

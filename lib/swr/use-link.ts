@@ -1,8 +1,11 @@
 import { useRouter } from "next/router";
-import useSWR from "swr";
-import { fetcher } from "@/lib/utils";
-import { LinkWithDocument } from "../types";
+
 import { View } from "@prisma/client";
+import useSWR from "swr";
+
+import { fetcher } from "@/lib/utils";
+
+import { LinkWithDocument } from "../types";
 
 export function useLink() {
   const router = useRouter();

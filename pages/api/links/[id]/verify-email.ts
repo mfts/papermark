@@ -1,7 +1,9 @@
 import { NextApiRequest, NextApiResponse } from "next";
+
+import z from "zod";
+
 import { sendVerificationEmail } from "@/lib/emails/send-email-verification";
 import prisma from "@/lib/prisma";
-import z from "zod";
 
 const bodySchema = z.object({
   email: z.string().email(),

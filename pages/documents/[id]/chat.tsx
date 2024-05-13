@@ -1,16 +1,20 @@
-import { type Message } from "ai/react";
-import prisma from "@/lib/prisma";
-import { getServerSession } from "next-auth";
+import Link from "next/link";
+
+import { useEffect } from "react";
+
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import { CustomUser } from "@/lib/types";
+import { type Message } from "ai/react";
+import { getServerSession } from "next-auth";
+import { usePlausible } from "next-plausible";
+
 import { Chat } from "@/components/chat/chat";
 import Sparkle from "@/components/shared/icons/sparkle";
-import { usePlan } from "@/lib/swr/use-billing";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
-import { usePlausible } from "next-plausible";
-import { useEffect } from "react";
+
 import { getFile } from "@/lib/files/get-file";
+import prisma from "@/lib/prisma";
+import { usePlan } from "@/lib/swr/use-billing";
+import { CustomUser } from "@/lib/types";
 
 export const getServerSideProps = async (context: any) => {
   const { id } = context.params;
@@ -142,7 +146,7 @@ export default function ChatPage({
 
 function Nav({ documentId }: { documentId: string }) {
   return (
-    <nav className="bg-black fixed top-0 inset-x-0 z-10">
+    <nav className="fixed inset-x-0 top-0 z-10 bg-black">
       <div className="mx-auto px-2 sm:px-6 lg:px-8">
         <div className="relative flex h-16 items-center justify-between">
           <div className="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start">

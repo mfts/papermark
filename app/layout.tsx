@@ -1,7 +1,9 @@
-import "@/styles/globals.css";
 import { Metadata } from "next";
-import PlausibleProvider from "next-plausible";
 import { Inter } from "next/font/google";
+
+import PlausibleProvider from "next-plausible";
+
+import "@/styles/globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
 

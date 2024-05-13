@@ -1,8 +1,10 @@
 "use client";
 
-import { cn } from "@/lib/utils";
-import { getStatus } from "@openstatus/react";
 import { useEffect, useState } from "react";
+
+import { getStatus } from "@openstatus/react";
+
+import { cn } from "@/lib/utils";
 
 export function StatusWidget() {
   const [status, setStatus] = useState("operational");
@@ -69,7 +71,7 @@ export function StatusWidget() {
 
   return (
     <a
-      className="flex justify-between space-x-2 items-center w-full border border-border rounded-md px-3 py-1"
+      className="flex w-full items-center justify-between space-x-2 rounded-md border border-border px-3 py-1"
       href="https://papermark.openstatus.dev"
       target="_blank"
       rel="noreferrer"
@@ -81,13 +83,13 @@ export function StatusWidget() {
       <span className="relative ml-auto flex h-2 w-2">
         <span
           className={cn(
-            "animate-ping absolute inline-flex h-full w-full rounded-full opacity-75",
+            "absolute inline-flex h-full w-full animate-ping rounded-full opacity-75",
             level.color2,
           )}
         />
         <span
           className={cn(
-            "relative inline-flex rounded-full h-2 w-2",
+            "relative inline-flex h-2 w-2 rounded-full",
             level.color,
           )}
         />

@@ -59,7 +59,7 @@ export default function ComparisonTable() {
         </div>
       </div>
       <div className="mt-6 flow-root">
-        <div className="rounded-lg border border-gray-300 mx-4 my-2 overflow-x-auto">
+        <div className="mx-4 my-2 overflow-x-auto rounded-lg border border-gray-300">
           <div className="inline-block min-w-full  align-middle">
             <table className="min-w-full divide-y divide-gray-300">
               <thead>

@@ -1,10 +1,9 @@
+import { DeleteObjectsCommand, ListObjectsV2Command } from "@aws-sdk/client-s3";
+import { DocumentStorageType } from "@prisma/client";
+import { del } from "@vercel/blob";
 import { match } from "ts-pattern";
 
-import { DocumentStorageType } from "@prisma/client";
-
 import { getS3Client } from "./aws-client";
-import { DeleteObjectsCommand, ListObjectsV2Command } from "@aws-sdk/client-s3";
-import { del } from "@vercel/blob";
 
 export type DeleteFileOptions = {
   type: DocumentStorageType;

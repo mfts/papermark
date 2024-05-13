@@ -1,7 +1,10 @@
-import prisma from "@/lib/prisma";
-import { DocumentError, TeamError } from "../errorHandler";
 import { Document, DocumentVersion, Domain, Link, View } from "@prisma/client";
+
+import prisma from "@/lib/prisma";
 import { decryptEncrpytedPassword } from "@/lib/utils";
+
+import { DocumentError, TeamError } from "../errorHandler";
+
 interface ITeamUserAndDocument {
   teamId: string;
   userId: string;

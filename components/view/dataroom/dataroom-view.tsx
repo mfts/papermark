@@ -1,21 +1,25 @@
+import { useRouter } from "next/router";
+
 import React, { useEffect, useRef, useState } from "react";
+
+import { LinkWithDataroom } from "@/pages/view/d/[linkId]";
+import { Brand, DataroomBrand } from "@prisma/client";
+import { usePlausible } from "next-plausible";
+import { ExtendedRecordMap } from "notion-types";
+import { toast } from "sonner";
+
+import { NotionPage } from "@/components/NotionPage";
+import LoadingSpinner from "@/components/ui/loading-spinner";
 import AccessForm, {
   DEFAULT_ACCESS_FORM_DATA,
   DEFAULT_ACCESS_FORM_TYPE,
 } from "@/components/view/access-form";
-import { usePlausible } from "next-plausible";
-import { toast } from "sonner";
-import LoadingSpinner from "@/components/ui/loading-spinner";
-import EmailVerificationMessage from "../email-verification-form";
-import { ExtendedRecordMap } from "notion-types";
 
-import { Brand, DataroomBrand } from "@prisma/client";
-import { useRouter } from "next/router";
 import { useAnalytics } from "@/lib/analytics";
+
 import DataroomViewer from "../DataroomViewer";
 import PagesViewer from "../PagesViewer";
-import { LinkWithDataroom } from "@/pages/view/d/[linkId]";
-import { NotionPage } from "@/components/NotionPage";
+import EmailVerificationMessage from "../email-verification-form";
 
 export type DEFAULT_DOCUMENT_VIEW_TYPE = {
   viewId: string;
@@ -208,7 +212,7 @@ export default function DataroomView({
 
   if (isLoading) {
     return (
-      <div className="h-screen flex items-center justify-center">
+      <div className="flex h-screen items-center justify-center">
         <LoadingSpinner className="h-20 w-20" />
       </div>
     );
@@ -266,7 +270,7 @@ export default function DataroomView({
 
   return (
     <div className="bg-gray-950">
-      <div className="h-screen flex items-center justify-center">
+      <div className="flex h-screen items-center justify-center">
         <LoadingSpinner className="h-20 w-20" />
       </div>
     </div>

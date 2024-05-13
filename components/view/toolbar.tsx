@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import { REACTIONS } from "@/lib/constants";
-import GripVertical from "../shared/icons/grip-vertical";
+
 import Draggable from "react-draggable";
+
+import { REACTIONS } from "@/lib/constants";
+
+import GripVertical from "../shared/icons/grip-vertical";
 
 export default function Toolbar({
   viewId,
@@ -58,7 +61,7 @@ export default function Toolbar({
   const Emoji = ({ label, emoji }: { label: string; emoji: string }) => (
     <div className="relative w-fit">
       <button
-        className="font-emoji text-xl leading-6 bg-transparent py-1 px-1.5 relative transition-bg-color duration-600 inline-flex justify-center items-center align-middle rounded-full ease-in-out hover:bg-gray-200 active:bg-gray-400 active:duration-0"
+        className="font-emoji transition-bg-color duration-600 relative inline-flex items-center justify-center rounded-full bg-transparent px-1.5 py-1 align-middle text-xl leading-6 ease-in-out hover:bg-gray-200 active:bg-gray-400 active:duration-0"
         role="img"
         aria-label={label ? label : ""}
         aria-hidden={label ? "false" : "true"}
@@ -68,7 +71,7 @@ export default function Toolbar({
         {currentEmoji && currentEmoji.emoji === emoji && (
           <span
             key={currentEmoji.id}
-            className="font-emoji absolute -top-10 left-0 right-0 mx-auto animate-flyEmoji duration-3000"
+            className="font-emoji duration-3000 absolute -top-10 left-0 right-0 mx-auto animate-flyEmoji"
           >
             {currentEmoji.emoji}
           </span>
@@ -80,14 +83,14 @@ export default function Toolbar({
   return (
     <>
       <div
-        className="fixed top-16 left-0 w-dvw justify-center items-end flex z-10"
+        className="fixed left-0 top-16 z-10 flex w-dvw items-end justify-center"
         style={{ height: "calc(100vh - 64px)" }}
       >
         <Draggable bounds="parent" handle=".moveable-icon">
-          <div className="bg-gray-950/40 rounded-full w-max mt-4 mb-4">
+          <div className="mb-4 mt-4 w-max rounded-full bg-gray-950/40">
             <div className="grid items-center justify-start">
               <div className="px-2 py-1">
-                <div className="grid items-center justify-start grid-flow-col">
+                <div className="grid grid-flow-col items-center justify-start">
                   {REACTIONS.map((reaction) => (
                     <Emoji
                       key={reaction.emoji}
@@ -95,7 +98,7 @@ export default function Toolbar({
                       label={reaction.label}
                     />
                   ))}
-                  <GripVertical className="h-5 w-5 text-gray-100 active:text-gray-300 moveable-icon" />
+                  <GripVertical className="moveable-icon h-5 w-5 text-gray-100 active:text-gray-300" />
                 </div>
               </div>
             </div>

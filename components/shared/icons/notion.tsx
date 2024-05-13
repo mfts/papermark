@@ -1,6 +1,5 @@
 // Thanks to trigger.dev for the icon:
 // https://github.com/triggerdotdev/companyicons/blob/c6dcc5b389aa47fd6d8a0d346b48e7099f90703c/src/icons/companies/notion.tsx
-
 import React from "react";
 
 export default function NotionIcon(

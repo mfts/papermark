@@ -1,4 +1,5 @@
 import prisma from "@/lib/prisma";
+
 import { getApexDomain, removeDomainFromVercel } from "../domains";
 
 // calculate the domainCount
