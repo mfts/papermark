@@ -56,7 +56,6 @@ export default async function handle(
         },
         include: {
           viewers: true,
-          links: true,
         },
       });
 
@@ -86,13 +85,23 @@ export default async function handle(
         },
       });
 
-      // get linkId from first available dataroom link
-      const linkId = dataroom.links[0].id;
+      // create a new link for the invited group
+      const link = await prisma.link.create({
+        data: {
+          dataroomId,
+          linkType: "DATAROOM_LINK",
+          name: `Invited ${new Date().toLocaleString()}`,
+          enableFeedback: false,
+        },
+        select: {
+          id: true,
+        },
+      });
 
       console.time("sendemail");
       await sendViewerInvitation({
         dataroomId,
-        linkId,
+        linkId: link.id,
         viewerIds: viewers.map((v) => v.id),
         senderUserId: (session.user as CustomUser).id,
       });
