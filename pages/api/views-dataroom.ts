@@ -157,7 +157,7 @@ export default async function handle(
   if (link.emailAuthenticated && !token && !dataroomVerified) {
     const token = newId("email");
     const expiresAt = new Date();
-    expiresAt.setHours(expiresAt.getHours() + 1); // token expires in 1 hour
+    expiresAt.setMinutes(expiresAt.getMinutes() + 20); // token expires in 20 minutes
 
     await prisma.verificationToken.create({
       data: {
