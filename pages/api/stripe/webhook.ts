@@ -120,6 +120,8 @@ export default async function webhookHandler(
                   email: team.users[0].user.email as string,
                   name: team.users[0].user.name as string,
                 },
+                planType:
+                  plan.slug.charAt(0).toUpperCase() + plan.slug.slice(1),
               });
             }
 

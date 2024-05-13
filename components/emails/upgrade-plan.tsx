@@ -16,8 +16,13 @@ import {
 
 interface UpgradePlanEmailProps {
   name: string | null | undefined;
+  planType: string;
 }
 
+const UpgradePlanEmail = ({
+  name,
+  planType = "Pro",
+}: UpgradePlanEmailProps) => {
   const previewText = `The document sharing infrastructure for the modern web`;
 
   const features: any = {
