@@ -24,8 +24,8 @@ export default function DataroomsPage() {
   const { plan, trial } = usePlan();
   const { limits } = useLimits();
 
-  const numDatarooms = datarooms?.length ?? 1;
-  const limitDatarooms = limits?.datarooms ?? 0;
+  const numDatarooms = datarooms?.length ?? 0;
+  const limitDatarooms = limits?.datarooms ?? 1;
 
   const isBusiness = plan === "business";
   const isDatarooms = plan === "datarooms";
