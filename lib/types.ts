@@ -5,6 +5,10 @@ import {
   View,
   User as PrismaUser,
   DocumentVersion,
+  DataroomDocument,
+  Dataroom,
+  DataroomFolder,
+  Feedback,
 } from "@prisma/client";
 
 export type CustomUser = NextAuthUser & PrismaUser;
@@ -34,6 +38,7 @@ export interface LinkWithViews extends Link {
     views: number;
   };
   views: View[];
+  feedback: { id: true; data: { question: string; type: string } } | null;
 }
 
 export interface LinkWithDocument extends Link {
@@ -44,11 +49,42 @@ export interface LinkWithDocument extends Link {
       type: string;
       hasPages: boolean;
       file: string;
-    }[] & {
-      team?: {
-        plan: string;
-      };
+    }[];
+    team: {
+      plan: string;
+    } | null;
+  };
+  feedback: {
+    id: string;
+    data: {
+      question: string;
+      type: string;
     };
+  } | null;
+}
+
+export interface LinkWithDataroom extends Link {
+  dataroom: {
+    id: string;
+    name: string;
+    teamId: string;
+    documents: {
+      id: string;
+      folderId: string | null;
+      document: {
+        id: string;
+        name: string;
+        versions: {
+          id: string;
+          versionNumber: number;
+          type: string;
+          hasPages: boolean;
+          file: string;
+        }[];
+      };
+    }[];
+    folders: DataroomFolder[];
+    lastUpdatedAt: Date;
   };
 }
 
@@ -163,6 +199,15 @@ export type AnalyticsEvents =
   | {
       event: "Domain Deleted";
       slug: string;
+    }
+  | {
+      event: "Team Member Invitation Accepted";
+      teamId: string;
+    }
+  | {
+      event: "Stripe Checkout Clicked";
+      teamId: string;
+      priceId: string;
     };
 
 export interface Team {

@@ -1,68 +1,26 @@
 import { BarChart } from "@tremor/react";
 import { useState } from "react";
+import {
+  type Data,
+  type SumData,
+  type TransformedData,
+  getColors,
+  timeFormatter,
+} from "./utils";
+import CustomTooltip from "./bar-chart-tooltip";
 
-type Data = {
-  pageNumber: string;
-  data: {
-    versionNumber: number;
-    avg_duration: number;
-  }[];
+const renameDummyDurationKey = (data: Data[]): TransformedData[] => {
+  return data.reduce((acc, { pageNumber, data }) => {
+    const transformedItem: Partial<TransformedData> = { pageNumber };
+
+    data.forEach(({ versionNumber, avg_duration }) => {
+      transformedItem[`Example time spent per page`] = avg_duration;
+    });
+
+    acc.push(transformedItem as TransformedData);
+    return acc;
+  }, [] as TransformedData[]);
 };
-
-type SumData = {
-  pageNumber: string;
-  sum_duration: number;
-};
-
-type TransformedData = {
-  pageNumber: string;
-  [key: string]: number | string; // Adjusted type to accommodate version keys
-};
-
-type Color =
-  | "neutral"
-  | "emerald"
-  | "gray"
-  | "slate"
-  | "zinc"
-  | "stone"
-  | "red"
-  | "orange"
-  | "amber"
-  | "yellow"
-  | "lime"
-  | "green"
-  | "teal"
-  | "cyan"
-  | "sky"
-  | "blue"
-  | "indigo"
-  | "violet"
-  | "purple"
-  | "fuchsia"
-  | "pink"
-  | "rose";
-
-const timeFormatter = (number: number) => {
-  const totalSeconds = Math.floor(number / 1000);
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = Math.round(totalSeconds % 60);
-
-  // Adding zero padding if seconds less than 10
-  const secondsFormatted = seconds < 10 ? `0${seconds}` : `${seconds}`;
-
-  return `${minutes}:${secondsFormatted}`;
-};
-
-// const renameAvgDurationKey = (data: any[]) => {
-//   return data.map((item) => {
-//     return {
-//       ...item,
-//       "Time spent per page": item.avg_duration,
-//       avg_duration: undefined,
-//     };
-//   });
-// };
 
 const renameSumDurationKey = (data: SumData[]) => {
   return data.map((item) => {
@@ -98,42 +56,14 @@ const getVersionNumbers = (data: TransformedData[]) => {
   ];
 };
 
-const getColors = (versionNumbers: string[]): Color[] => {
-  const colorArray = [
-    "emerald",
-    "teal",
-    "gray",
-    "orange",
-    "zinc",
-    "neutral",
-    "stone",
-    "red",
-    "amber",
-    "yellow",
-    "lime",
-    "green",
-    "cyan",
-    "sky",
-    "blue",
-    "indigo",
-    "violet",
-    "purple",
-    "fuchsia",
-    "pink",
-    "rose",
-  ];
-  return versionNumbers.map((versionNumber: string) => {
-    const versionIndex = parseInt(versionNumber.split(" ")[1]) - 1;
-    return colorArray[versionIndex % colorArray.length] as Color;
-  });
-};
-
 export default function BarChartComponent({
   data,
   isSum = false,
+  isDummy = false,
 }: {
   data: any;
   isSum?: boolean;
+  isDummy?: boolean;
 }) {
   const [, setValue] = useState<any>(null);
 
@@ -155,9 +85,15 @@ export default function BarChartComponent({
     );
   }
 
-  const renamedData = transformData(data);
-  const versionNumbers = getVersionNumbers(renamedData);
-  const colors = getColors(versionNumbers);
+  let renamedData = transformData(data);
+  let versionNumbers = getVersionNumbers(renamedData);
+  let colors = getColors(versionNumbers);
+
+  if (isDummy) {
+    colors = ["gray-300"];
+    renamedData = renameDummyDurationKey(data);
+    versionNumbers = getVersionNumbers(renamedData);
+  }
 
   return (
     <BarChart
@@ -170,6 +106,7 @@ export default function BarChartComponent({
       yAxisWidth={50}
       showGridLines={false}
       onValueChange={(v) => setValue(v)}
+      customTooltip={isDummy ? undefined : CustomTooltip}
     />
   );
 }

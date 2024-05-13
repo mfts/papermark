@@ -22,7 +22,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
-import { useDocumentLinks } from "@/lib/swr/use-document";
 import BarChart from "../shared/icons/bar-chart";
 import { cn, copyToClipboard, nFormatter, timeAgo } from "@/lib/utils";
 import MoreHorizontal from "../shared/icons/more-horizontal";
@@ -40,13 +39,18 @@ import { useRouter } from "next/router";
 import { usePlan } from "@/lib/swr/use-billing";
 import { useTeam } from "@/context/team-context";
 import ProcessStatusBar from "../documents/process-status-bar";
+import { Settings2Icon } from "lucide-react";
+import { DocumentVersion } from "@prisma/client";
 
 export default function LinksTable({
+  targetType,
+  links,
   primaryVersion,
 }: {
-  primaryVersion: any;
+  targetType: "DOCUMENT" | "DATAROOM";
+  links?: LinkWithViews[];
+  primaryVersion?: DocumentVersion;
 }) {
-  const { links } = useDocumentLinks();
   const router = useRouter();
   const { plan } = usePlan();
   const teamInfo = useTeam();
@@ -63,7 +67,7 @@ export default function LinksTable({
   const handleEditLink = (link: LinkWithViews) => {
     setSelectedLink({
       id: link.id,
-      name: link.name,
+      name: link.name || `Link #${link.id.slice(-5)}`,
       domain: link.domainSlug,
       slug: link.slug,
       expiresAt: link.expiresAt,
@@ -71,13 +75,21 @@ export default function LinksTable({
       emailProtected: link.emailProtected,
       emailAuthenticated: link.emailAuthenticated,
       allowDownload: link.allowDownload ? link.allowDownload : false,
+      allowList: link.allowList,
+      denyList: link.denyList,
       enableNotification: link.enableNotification
         ? link.enableNotification
         : false,
       enableFeedback: link.enableFeedback ? link.enableFeedback : false,
+      enableScreenshotProtection: link.enableScreenshotProtection
+        ? link.enableScreenshotProtection
+        : false,
       enableCustomMetatag: link.enableCustomMetatag
         ? link.enableCustomMetatag
         : false,
+      enableQuestion: link.enableQuestion ? link.enableQuestion : false,
+      questionText: link.feedback ? link.feedback.data?.question : "",
+      questionType: link.feedback ? link.feedback.data?.type : "",
       metaTitle: link.metaTitle,
       metaDescription: link.metaDescription,
       metaImage: link.metaImage,
@@ -90,7 +102,7 @@ export default function LinksTable({
 
   const handleArchiveLink = async (
     linkId: string,
-    documentId: string,
+    targetId: string,
     isArchived: boolean,
   ) => {
     setIsLoading(true);
@@ -110,11 +122,12 @@ export default function LinksTable({
     }
 
     const archivedLink = await response.json();
+    const endpointTargetType = `${targetType.toLowerCase()}s`; // "documents" or "datarooms"
 
     // Update the archived link in the list of links
     mutate(
-      `/api/teams/${teamInfo?.currentTeam?.id}/documents/${encodeURIComponent(
-        documentId,
+      `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
+        targetId,
       )}/links`,
       (links || []).map((link) => (link.id === linkId ? archivedLink : link)),
       false,
@@ -132,7 +145,9 @@ export default function LinksTable({
     ? links.filter((link) => link.isArchived).length
     : 0;
 
-  const hasFreePlan = plan && plan.plan === "free";
+  const hasFreePlan = plan === "free";
+
+  console.log("links", links);
 
   return (
     <>
@@ -162,14 +177,14 @@ export default function LinksTable({
                       <>
                         <TableRow key={link.id} className="group/row">
                           <TableCell className="font-medium truncate w-[220px]">
-                            {link.name || "No link name"}{" "}
+                            {link.name || `Link #${link.id.slice(-5)}`}{" "}
                             {link.domainId && hasFreePlan ? (
                               <span className="text-foreground bg-destructive ring-1 ring-destructive rounded-full px-2.5 py-0.5 text-xs ml-2">
                                 Inactive
                               </span>
                             ) : null}
                           </TableCell>
-                          <TableCell className="max-w-[250px] sm:min-w-[300px] md:min-w-[400px] lg:min-w-[450px]">
+                          <TableCell className="max-w-[250px] sm:min-w-[300px] md:min-w-[400px] lg:min-w-[450px] flex items-center gap-x-2">
                             <div
                               className={cn(
                                 `group/cell relative w-full overflow-hidden flex items-center gap-x-4 rounded-sm text-secondary-foreground text-center px-3 py-1.5 md:py-1 group-hover/row:ring-1 group-hover/row:ring-gray-400 group-hover/row:dark:ring-gray-100 transition-all truncate`,
@@ -179,7 +194,8 @@ export default function LinksTable({
                               )}
                             >
                               {/* Progress bar */}
-                              {primaryVersion.type !== "notion" &&
+                              {primaryVersion &&
+                              primaryVersion.type !== "notion" &&
                               !primaryVersion.hasPages ? (
                                 <ProcessStatusBar
                                   documentVersionId={primaryVersion.id}
@@ -219,11 +235,22 @@ export default function LinksTable({
                                 </button>
                               )}
                             </div>
+                            <Button
+                              variant="link"
+                              size="icon"
+                              className="group h-7 w-8"
+                              onClick={() => handleEditLink(link)}
+                              title="Edit link"
+                            >
+                              <span className="sr-only">Edit link</span>
+                              <Settings2Icon className="h-5 w-5 text-gray-400 group-hover:text-gray-500" />
+                            </Button>
                           </TableCell>
                           <TableCell>
                             <CollapsibleTrigger
                               disabled={
-                                Number(nFormatter(link._count.views)) === 0
+                                Number(nFormatter(link._count.views)) === 0 ||
+                                targetType === "DATAROOM"
                               }
                             >
                               <div className="flex items-center space-x-1 [&[data-state=open]>svg.chevron]:rotate-180">
@@ -234,7 +261,10 @@ export default function LinksTable({
                                     views
                                   </span>
                                 </p>
-                                <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0 transition-transform duration-200 chevron" />
+                                {Number(nFormatter(link._count.views)) > 0 &&
+                                targetType !== "DATAROOM" ? (
+                                  <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0 transition-transform duration-200 chevron" />
+                                ) : null}
                               </div>
                             </CollapsibleTrigger>
                           </TableCell>
@@ -272,7 +302,7 @@ export default function LinksTable({
                                   onClick={() =>
                                     handleArchiveLink(
                                       link.id,
-                                      link.documentId,
+                                      link.documentId ?? link.dataroomId ?? "",
                                       link.isArchived,
                                     )
                                   }
@@ -315,7 +345,9 @@ export default function LinksTable({
         <LinkSheet
           isOpen={isLinkSheetVisible}
           setIsOpen={setIsLinkSheetVisible}
+          linkType={`${targetType}_LINK`}
           currentLink={selectedLink}
+          existingLinks={links}
         />
 
         {archivedLinksCount > 0 && (
@@ -413,7 +445,9 @@ export default function LinksTable({
                                         onClick={() =>
                                           handleArchiveLink(
                                             link.id,
-                                            link.documentId,
+                                            link.documentId ??
+                                              link.dataroomId ??
+                                              "",
                                             link.isArchived,
                                           )
                                         }

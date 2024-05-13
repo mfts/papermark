@@ -8,21 +8,48 @@ const files = [
   {
     title: "Google Drive",
     size: "Document hosting platform",
-    source:
-      "https://dknlay9ljaq1f.cloudfront.net/alterantives/google-drive.jpg",
+    source: "https://assets.papermark.io/alterantives/google-drive.jpg",
     link: "/alternatives/google-drive",
   },
   {
     title: "Pitch",
     size: "Presentation creation platform",
-    source: "https://dknlay9ljaq1f.cloudfront.net/alterantives/pitch.webp",
+    source: "https://assets.papermark.io/alterantives/pitch.webp",
     link: "/alternatives/pitch",
   },
   {
     title: "PandaDoc",
-    size: "Optimizization of agreements and workflows",
-    source: "https://dknlay9ljaq1f.cloudfront.net/alterantives/pandadoc.png",
+    size: "Optimization of agreements and workflows",
+    source: "https://assets.papermark.io/alterantives/pandadoc.png",
     link: "/alternatives/pandadoc",
+  },
+  {
+    title: "Digify",
+    size: "Data Room creation software",
+    source:
+      "https://digify.com/wp-content/uploads/2024/01/Digify_Logo_Horizontal__big.png",
+    link: "/alternatives/digify",
+  },
+  {
+    title: "FirmRoom",
+    size: "Data Room software",
+    source:
+      "https://i.vimeocdn.com/video/1405840219-c1ea8b44d9c0b03421084d45f3370b3ae1ae631fcbe77d2792610d51e0ea6d32-d_640?f=webp",
+    link: "/alternatives/firmroom",
+  },
+  {
+    title: "VisibleVC",
+    size: "All in one fundraising platform",
+    source:
+      "https://cdn.sanity.io/images/mmb1hcvm/production/5e8920e8c2b43e1348ee7adbcb4f3697f608873e-1920x1080.png?w=1200&fm=webp",
+    link: "/alternatives/visible-vc",
+  },
+  {
+    title: "Box",
+    size: "Document sharing and collaboration",
+    source:
+      "https://sm.pcmag.com/pcmag_au/review/b/box-for-bu/box-for-business-review_vhcf.jpg",
+    link: "/alternatives/box",
   },
 ];
 
@@ -30,9 +57,9 @@ export default function Gridalternatives() {
   return (
     <div className="bg-gray-100 py-10 sm:py-10 px-6 sm:px-8 lg:px-20 my-20 ">
       <div className="px-6 py-12 sm:px-6 sm:py-20 lg:px-8 pb-20">
-        <div className="mx-auto max-w-2xl text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-            Learn more about 4 Docsend Alternatives in 2023
+        <div className="mx-auto max-w-5xl text-center">
+          <h2 className="text-4xl font-bold text-balance text-gray-900 ">
+            Learn more about Docsend Alternatives in 2024
             <br />
           </h2>
           <p className="mx-auto mt-6 max-w-xl text-lg leading-8 text-gray-600">

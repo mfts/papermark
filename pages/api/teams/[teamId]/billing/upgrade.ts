@@ -4,6 +4,7 @@ import { authOptions } from "../../../auth/[...nextauth]";
 import { CustomUser } from "@/lib/types";
 import { stripe } from "@/lib/stripe";
 import prisma from "@/lib/prisma";
+import { identifyUser, trackAnalytics } from "@/lib/analytics";
 
 export default async function handle(
   req: NextApiRequest,
@@ -50,7 +51,7 @@ export default async function handle(
         customer_update: { name: "auto" },
         billing_address_collection: "required",
         success_url: `${process.env.NEXTAUTH_URL}/settings/billing?success=true`,
-        cancel_url: `${process.env.NEXTAUTH_URL}/settings/billing`,
+        cancel_url: `${process.env.NEXTAUTH_URL}/settings/billing?cancel=true`,
         line_items: [{ price: priceId, quantity: 1 }],
         automatic_tax: {
           enabled: true,
@@ -68,7 +69,7 @@ export default async function handle(
         customer_email: userEmail ?? undefined,
         billing_address_collection: "required",
         success_url: `${process.env.NEXTAUTH_URL}/settings/billing?success=true`,
-        cancel_url: `${process.env.NEXTAUTH_URL}/settings/billing`,
+        cancel_url: `${process.env.NEXTAUTH_URL}/settings/billing?cancel=true`,
         line_items: [{ price: priceId, quantity: 1 }],
         automatic_tax: {
           enabled: true,
@@ -81,6 +82,13 @@ export default async function handle(
         client_reference_id: teamId,
       });
     }
+
+    await identifyUser(userEmail ?? userId);
+    await trackAnalytics({
+      event: "Stripe Checkout Clicked",
+      teamId,
+      priceId: priceId,
+    });
 
     return res.status(200).json(stripeSession);
   } else {

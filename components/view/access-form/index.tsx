@@ -44,9 +44,9 @@ export default function AccessForm({
     <>
       <div className="flex h-screen flex-1 flex-col  px-6 py-12 lg:px-8 bg-black">
         <div className="sm:mx-auto sm:w-full sm:max-w-md">
-          <h2 className="mt-10 text-2xl font-bold leading-9 tracking-tight text-white">
+          <h1 className="mt-10 text-2xl font-bold leading-9 tracking-tight text-white">
             Your action is requested to continue
-          </h2>
+          </h1>
         </div>
 
         <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-md">
@@ -57,7 +57,15 @@ export default function AccessForm({
             ) : null}
 
             <div className="flex justify-center">
-              <Button type="submit" className="w-1/3" loading={isLoading}>
+              <Button
+                type="submit"
+                disabled={
+                  (requireEmail && !data.email) ||
+                  (requirePassword && !data.password)
+                }
+                className="w-1/3 bg-white text-gray-950 hover:bg-white/90"
+                loading={isLoading}
+              >
                 Continue
               </Button>
             </div>

@@ -1,9 +1,10 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth/next";
-import { hashPassword } from "@/lib/utils";
+import { generateEncrpytedPassword } from "@/lib/utils";
 import { CustomUser } from "@/lib/types";
 import { authOptions } from "../../auth/[...nextauth]";
+import { Brand, DataroomBrand } from "@prisma/client";
 
 export default async function handle(
   req: NextApiRequest,
@@ -26,28 +27,19 @@ export default async function handle(
           emailAuthenticated: true,
           allowDownload: true,
           enableFeedback: true,
+          enableScreenshotProtection: true,
           password: true,
           isArchived: true,
           enableCustomMetatag: true,
           metaTitle: true,
           metaDescription: true,
           metaImage: true,
-          document: {
+          enableQuestion: true,
+          linkType: true,
+          feedback: {
             select: {
               id: true,
-              assistantEnabled: true,
-              teamId: true,
-              versions: {
-                where: { isPrimary: true },
-                select: {
-                  id: true,
-                  versionNumber: true,
-                  type: true,
-                  hasPages: true,
-                  file: true,
-                },
-                take: 1,
-              },
+              data: true,
             },
           },
         },
@@ -59,21 +51,117 @@ export default async function handle(
         return res.status(404).json({ error: "Link not found" });
       }
 
-      let brand = await prisma.brand.findFirst({
-        where: {
-          teamId: link.document.teamId!,
-        },
-        select: {
-          logo: true,
-          brandColor: true,
-        },
-      });
-
-      if (!brand) {
-        brand = null;
+      if (link.isArchived) {
+        return res.status(404).json({ error: "Link is archived" });
       }
 
-      return res.status(200).json({ link, brand });
+      const linkType = link.linkType;
+
+      let brand: Partial<Brand> | Partial<DataroomBrand> | null = null;
+      let linkData: any;
+
+      if (linkType === "DOCUMENT_LINK") {
+        linkData = await prisma.link.findUnique({
+          where: { id: id },
+          select: {
+            document: {
+              select: {
+                id: true,
+                name: true,
+                assistantEnabled: true,
+                teamId: true,
+                ownerId: true,
+                team: {
+                  select: {
+                    plan: true,
+                  },
+                },
+                versions: {
+                  where: { isPrimary: true },
+                  select: {
+                    id: true,
+                    versionNumber: true,
+                    type: true,
+                    hasPages: true,
+                    file: true,
+                  },
+                  take: 1,
+                },
+              },
+            },
+          },
+        });
+
+        brand = await prisma.brand.findFirst({
+          where: {
+            teamId: linkData.document.teamId,
+          },
+          select: {
+            logo: true,
+            brandColor: true,
+          },
+        });
+      } else if (linkType === "DATAROOM_LINK") {
+        linkData = await prisma.link.findUnique({
+          where: { id: id },
+          select: {
+            dataroom: {
+              select: {
+                id: true,
+                name: true,
+                teamId: true,
+                documents: {
+                  select: {
+                    id: true,
+                    folderId: true,
+                    updatedAt: true,
+                    document: {
+                      select: {
+                        id: true,
+                        name: true,
+                        versions: {
+                          where: { isPrimary: true },
+                          select: {
+                            id: true,
+                            versionNumber: true,
+                            type: true,
+                            hasPages: true,
+                            file: true,
+                          },
+                          take: 1,
+                        },
+                      },
+                    },
+                  },
+                },
+                folders: {
+                  orderBy: {
+                    name: "asc",
+                  },
+                },
+              },
+            },
+          },
+        });
+
+        brand = await prisma.dataroomBrand.findFirst({
+          where: {
+            dataroomId: linkData.dataroom.id,
+          },
+          select: {
+            logo: true,
+            banner: true,
+            brandColor: true,
+          },
+        });
+      }
+
+      const returnLink = {
+        ...link,
+        ...linkData,
+      };
+
+      return res.status(200).json({ linkType, link: returnLink, brand });
     } catch (error) {
       return res.status(500).json({
         message: "Internal Server Error",
@@ -88,10 +176,16 @@ export default async function handle(
     }
 
     const { id } = req.query as { id: string };
-    const { documentId, password, expiresAt, ...linkDomainData } = req.body;
+    const { targetId, linkType, password, expiresAt, ...linkDomainData } =
+      req.body;
+
+    const dataroomLink = linkType === "DATAROOM_LINK";
+    const documentLink = linkType === "DOCUMENT_LINK";
 
     const hashedPassword =
-      password && password.length > 0 ? await hashPassword(password) : null;
+      password && password.length > 0
+        ? await generateEncrpytedPassword(password)
+        : null;
     const exat = expiresAt ? new Date(expiresAt) : null;
 
     let { domain, slug, ...linkData } = linkDomainData;
@@ -147,22 +241,43 @@ export default async function handle(
     const updatedLink = await prisma.link.update({
       where: { id: id },
       data: {
-        documentId: documentId,
+        documentId: documentLink ? targetId : null,
+        dataroomId: dataroomLink ? targetId : null,
         password: hashedPassword,
         name: linkData.name || null,
         emailProtected: linkData.emailProtected,
         emailAuthenticated: linkData.emailAuthenticated,
         allowDownload: linkData.allowDownload,
+        allowList: linkData.allowList,
+        denyList: linkData.denyList,
         expiresAt: exat,
         domainId: domainObj?.id || null,
         domainSlug: domain || null,
         slug: slug || null,
         enableNotification: linkData.enableNotification,
         enableFeedback: linkData.enableFeedback,
+        enableScreenshotProtection: linkData.enableScreenshotProtection,
         enableCustomMetatag: linkData.enableCustomMetatag,
         metaTitle: linkData.metaTitle || null,
         metaDescription: linkData.metaDescription || null,
         metaImage: linkData.metaImage || null,
+        enableQuestion: linkData.enableQuestion,
+        feedback: {
+          upsert: {
+            create: {
+              data: {
+                question: linkData.questionText,
+                type: linkData.questionType,
+              },
+            },
+            update: {
+              data: {
+                question: linkData.questionText,
+                type: linkData.questionType,
+              },
+            },
+          },
+        },
       },
       include: {
         views: {
@@ -181,7 +296,7 @@ export default async function handle(
     }
 
     await fetch(
-      `${process.env.NEXTAUTH_URL}/api/revalidate?secret=${process.env.REVALIDATE_TOKEN}&linkId=${id}`,
+      `${process.env.NEXTAUTH_URL}/api/revalidate?secret=${process.env.REVALIDATE_TOKEN}&linkId=${id}&hasDomain=${updatedLink.domainId ? "true" : "false"}`,
     );
 
     return res.status(200).json(updatedLink);
@@ -213,7 +328,7 @@ export default async function handle(
       }
 
       if (
-        linkToBeDeleted.document.ownerId !== (session.user as CustomUser).id
+        linkToBeDeleted.document!.ownerId !== (session.user as CustomUser).id
       ) {
         return res.status(401).end("Unauthorized to access the link");
       }

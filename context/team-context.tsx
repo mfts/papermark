@@ -1,4 +1,10 @@
-import { createContext, useContext, useMemo, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  useState,
+} from "react";
 import { useTeams } from "@/lib/swr/use-teams";
 import { Team } from "@/lib/types";
 
@@ -24,7 +30,11 @@ const TeamContext = createContext<TeamContextType | null>(initialState);
 
 export const TeamProvider = ({ children }: TeamContextProps): JSX.Element => {
   const { teams, loading } = useTeams();
-  const [currentTeam, setCurrentTeam] = useState<Team | null>(null);
+  const [currentTeam, setCurrentTeamState] = useState<Team | null>(null);
+
+  const setCurrentTeam = useCallback((team: Team) => {
+    setCurrentTeamState(team);
+  }, []);
 
   const currentTeamId = currentTeam
     ? currentTeam.id

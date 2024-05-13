@@ -27,9 +27,9 @@ const scrollDown = () => {
 
 const features = [
   {
-    name: "AI-Powered Document Interaction",
+    name: "AI-Powered Document Assistant",
     description:
-      "Papermark AI is your personal assistant for interacting with various documents like pitch decks, sales decks, and PDFs, enhancing your document management and sharing experience.",
+      "Papermark AI is your personal AI document assistant for interacting with various documents like pitch decks, sales decks, and PDFs, enhancing your document management and sharing experience.",
     icon: Cog6ToothIcon,
   },
   {
@@ -73,7 +73,7 @@ const faqs = [
   {
     question: "How can I use Papermark AI?",
     answer:
-      "You can use it on shared with you docuemnt and on received. You can chat with the document, ask question, find information without checking whole document.",
+      "You can use it on shared with you document and on received. You can chat with the document, ask question, find information without checking whole document.",
   },
   {
     question: "Is Papermark AI free?",
@@ -151,12 +151,12 @@ export default function Home() {
     <div>
       <Head>
         <title>
-          Papermark AI: First AI assistant to chat with shared and received
-          documents
+          Papermark AI: First AI document assistant to chat with shared and
+          received documents
         </title>
         <meta
           name="description"
-          content="Transform the way you interact with documents using Papermark AI, the ultimate AI docuemnt assistant to chat with your documents, like pitch decks and sales materials."
+          content="Transform the way you interact with documents using Papermark AI document assistant, the ultimate AI docuemnt assistant to chat with your documents, like pitch decks and sales materials."
         />
         <meta
           property="og:title"
@@ -164,7 +164,7 @@ export default function Home() {
         />
         <meta
           property="og:description"
-          content="Discover Papermark AI, an advanced tool for document sharing. Enhance your documents with AI-driven insights, secure sharing, and real-time analytics. Get insights on shared with you documents and pitch decks"
+          content="Discover Papermark AI, an advanced AI document assistant for document sharing and chatting with your documents. Enhance your documents with AI-driven insights, secure sharing, and real-time analytics. Get insights on shared with you documents and pitch decks"
         />
         <meta
           property="og:image"
@@ -457,7 +457,7 @@ export default function Home() {
                 loop
               >
                 <source
-                  src="https://dknlay9ljaq1f.cloudfront.net/papermark-ai-video.mp4"
+                  src="https://assets.papermark.io/papermark-ai-video.mp4"
                   type="video/mp4"
                 />
               </video>

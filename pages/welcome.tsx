@@ -5,6 +5,9 @@ import Upload from "@/components/welcome/upload";
 import { ArrowLeft as ArrowLeftIcon } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import NotionForm from "@/components/welcome/notion-form";
+import { Button } from "@/components/ui/button";
+import Dataroom from "@/components/welcome/dataroom";
+import DataroomTrial from "@/components/welcome/dataroom-trial";
 
 export default function Welcome() {
   const router = useRouter();
@@ -25,12 +28,22 @@ export default function Welcome() {
       </div>
       <AnimatePresence mode="wait">
         {router.query.type ? (
-          <button
-            className="group absolute left-2 sm:left-10 top-10 z-40 rounded-full p-2 transition-all hover:bg-gray-400"
-            onClick={() => router.back()}
-          >
-            <ArrowLeftIcon className="h-8 w-8 text-gray-500 group-hover:text-gray-800 group-active:scale-90" />
-          </button>
+          <>
+            <button
+              className="group absolute left-2 sm:left-10 top-10 z-40 rounded-full p-2 transition-all hover:bg-gray-400"
+              onClick={() => router.back()}
+            >
+              <ArrowLeftIcon className="h-8 w-8 text-gray-500 group-hover:text-gray-800 group-active:scale-90" />
+            </button>
+
+            <Button
+              variant={"link"}
+              onClick={() => router.push("/documents")}
+              className="absolute right-2 sm:right-10 top-10 z-40 p-2 text-muted-foreground"
+            >
+              Skip to dashboard
+            </Button>
+          </>
         ) : (
           <Intro key="intro" />
         )}
@@ -38,6 +51,10 @@ export default function Welcome() {
         {router.query.type === "pitchdeck" && <Upload key="pitchdeck" />}
         {router.query.type === "document" && <Upload key="document" />}
         {router.query.type === "notion" && <NotionForm key="notion" />}
+        {router.query.type === "dataroom" && <Dataroom key="dataroom" />}
+        {router.query.type === "dataroom-trial" && (
+          <DataroomTrial key="dataroom-trial" />
+        )}
       </AnimatePresence>
     </div>
   );

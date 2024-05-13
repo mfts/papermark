@@ -55,37 +55,37 @@ module.exports = {
         //**  START: TREMOR **//
 
         // light mode
-        // tremor: {
-        //   brand: {
-        //     faint: "#eff6ff", // blue-50
-        //     muted: "#bfdbfe", // blue-200
-        //     subtle: "#60a5fa", // blue-400
-        //     DEFAULT: "#3b82f6", // blue-500
-        //     emphasis: "#1d4ed8", // blue-700
-        //     inverted: "#ffffff", // white
-        //   },
-        //   background: {
-        //     muted: "#f9fafb", // gray-50
-        //     subtle: "#f3f4f6", // gray-100
-        //     DEFAULT: "#ffffff", // white
-        //     emphasis: "#374151", // gray-700
-        //   },
-        //   border: {
-        //     DEFAULT: "#e5e7eb", // gray-200
-        //   },
-        //   ring: {
-        //     DEFAULT: "#e5e7eb", // gray-200
-        //   },
-        //   content: {
-        //     subtle: "#9ca3af", // gray-400
-        //     DEFAULT: "#6b7280", // gray-500
-        //     emphasis: "#374151", // gray-700
-        //     strong: "#111827", // gray-900
-        //     inverted: "#ffffff", // white
-        //   },
-        // },
-        // dark mode
         tremor: {
+          brand: {
+            faint: "#eff6ff", // blue-50
+            muted: "#bfdbfe", // blue-200
+            subtle: "#60a5fa", // blue-400
+            DEFAULT: "#3b82f6", // blue-500
+            emphasis: "#1d4ed8", // blue-700
+            inverted: "#ffffff", // white
+          },
+          background: {
+            muted: "#f9fafb", // gray-50
+            subtle: "#f3f4f6", // gray-100
+            DEFAULT: "#ffffff", // white
+            emphasis: "#374151", // gray-700
+          },
+          border: {
+            DEFAULT: "#e5e7eb", // gray-200
+          },
+          ring: {
+            DEFAULT: "#e5e7eb", // gray-200
+          },
+          content: {
+            subtle: "#9ca3af", // gray-400
+            DEFAULT: "#6b7280", // gray-500
+            emphasis: "#374151", // gray-700
+            strong: "#111827", // gray-900
+            inverted: "#ffffff", // white
+          },
+        },
+        // dark mode
+        "dark-tremor": {
           brand: {
             faint: "#0B1229", // custom
             muted: "#172554", // blue-950
@@ -119,16 +119,16 @@ module.exports = {
       boxShadow: {
         //**  START: TREMOR boxShadow **//
         // light
-        // "tremor-input": "0 1px 2px 0 rgb(0 0 0 / 0.05)",
-        // "tremor-card":
-        //   "0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)",
-        // "tremor-dropdown":
-        //   "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)",
-        // dark
         "tremor-input": "0 1px 2px 0 rgb(0 0 0 / 0.05)",
         "tremor-card":
           "0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)",
         "tremor-dropdown":
+          "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)",
+        // dark
+        "dark-tremor-input": "0 1px 2px 0 rgb(0 0 0 / 0.05)",
+        "dark-tremor-card":
+          "0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)",
+        "dark-tremor-dropdown":
           "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)",
         //**  END: TREMOR boxShadow **//
       },
@@ -169,11 +169,24 @@ module.exports = {
             opacity: "0",
           },
         },
+        "accordion-down": {
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
+        },
+        "accordion-up": {
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
+        },
+      },
+      gridTemplateColumns: {
+        16: "repeat(16, minmax(0, 1fr))",
       },
       animation: {
         gauge_fadeIn: "gauge_fadeIn 1s ease forwards",
         gauge_fill: "gauge_fill 1s ease forwards",
         flyEmoji: "flyEmoji 1s forwards",
+        "accordion-down": "accordion-down 0.2s ease-out",
+        "accordion-up": "accordion-up 0.2s ease-out",
       },
     },
   },

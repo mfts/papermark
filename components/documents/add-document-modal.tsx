@@ -10,34 +10,48 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/router";
-import { type PutBlobResult } from "@vercel/blob";
-import { upload } from "@vercel/blob/client";
 import DocumentUpload from "@/components/document-upload";
-import { pdfjs } from "react-pdf";
-import { copyToClipboard, getExtension } from "@/lib/utils";
+import { copyToClipboard } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { usePlausible } from "next-plausible";
 import { toast } from "sonner";
 import { useTeam } from "@/context/team-context";
 import { parsePageId } from "notion-utils";
-
-pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
+import { putFile } from "@/lib/files/put-file";
+import {
+  DocumentData,
+  createDocument,
+  createNewDocumentVersion,
+} from "@/lib/documents/create-document";
+import { useAnalytics } from "@/lib/analytics";
+import { mutate } from "swr";
 
 export function AddDocumentModal({
   newVersion,
   children,
+  isDataroom,
+  dataroomId,
 }: {
   newVersion?: boolean;
   children: React.ReactNode;
+  isDataroom?: boolean;
+  dataroomId?: string;
 }) {
   const router = useRouter();
   const plausible = usePlausible();
+  const analytics = useAnalytics();
   const [uploading, setUploading] = useState<boolean>(false);
+  const [isOpen, setIsOpen] = useState<boolean | undefined>(undefined);
   const [currentFile, setCurrentFile] = useState<File | null>(null);
   const [notionLink, setNotionLink] = useState<string | null>(null);
   const teamInfo = useTeam();
 
-  const handleBrowserUpload = async (
+  const teamId = teamInfo?.currentTeam?.id as string;
+
+  /** current folder name */
+  const currentFolderPath = router.query.name as string[] | undefined;
+
+  const handleFileUpload = async (
     event: FormEvent<HTMLFormElement>,
   ): Promise<void> => {
     event.preventDefault();
@@ -51,32 +65,59 @@ export function AddDocumentModal({
     try {
       setUploading(true);
 
-      const newBlob = await upload(currentFile.name, currentFile, {
-        access: "public",
-        handleUploadUrl: "/api/file/browser-upload",
+      const { type, data, numPages } = await putFile({
+        file: currentFile,
+        teamId,
       });
 
+      const documentData: DocumentData = {
+        name: currentFile.name,
+        key: data!,
+        storageType: type!,
+      };
       let response: Response | undefined;
-      let numPages: number | undefined;
-      // create a document or new version in the database if the document is a pdf
-      if (getExtension(newBlob.pathname).includes("pdf")) {
-        numPages = await getTotalPages(newBlob.url);
-        if (!newVersion) {
-          // create a document in the database
-          response = await saveDocumentToDatabase(newBlob, numPages);
-        } else {
-          // create a new version for existing document in the database
-          const documentId = router.query.id;
-          response = await saveNewVersionToDatabase(
-            newBlob,
-            documentId as string,
-            numPages,
-          );
-        }
+      // create a document or new version in the database
+      if (!newVersion) {
+        // create a document in the database
+        response = await createDocument({
+          documentData,
+          teamId,
+          numPages,
+          folderPathName: currentFolderPath?.join("/"),
+        });
+      } else {
+        // create a new version for existing document in the database
+        const documentId = router.query.id as string;
+        response = await createNewDocumentVersion({
+          documentData,
+          documentId,
+          numPages,
+          teamId,
+        });
       }
 
       if (response) {
         const document = await response.json();
+
+        if (isDataroom && dataroomId) {
+          await addDocumentToDataroom({
+            documentId: document.id,
+            folderPathName: currentFolderPath?.join("/"),
+          });
+
+          plausible("documentUploaded");
+          analytics.capture("Document Added", {
+            documentId: document.id,
+            name: document.name,
+            numPages: document.numPages,
+            path: router.asPath,
+            type: "pdf",
+            teamId: teamId,
+            dataroomId: dataroomId,
+          });
+
+          return;
+        }
 
         if (!newVersion) {
           // copy the link to the clipboard
@@ -87,22 +128,39 @@ export function AddDocumentModal({
 
           // track the event
           plausible("documentUploaded");
+          analytics.capture("Document Added", {
+            documentId: document.id,
+            name: document.name,
+            numPages: document.numPages,
+            path: router.asPath,
+            type: "pdf",
+            teamId: teamId,
+          });
+          analytics.capture("Link Added", {
+            linkId: document.links[0].id,
+            documentId: document.id,
+            customDomain: null,
+            teamId: teamId,
+          });
 
           // redirect to the document page
-          setTimeout(() => {
-            router.push("/documents/" + document.id);
-            setUploading(false);
-          }, 2000);
+          router.push("/documents/" + document.id);
         } else {
           // track the event
           plausible("documentVersionUploaded");
+          analytics.capture("Document Added", {
+            documentId: document.id,
+            name: document.name,
+            numPages: document.numPages,
+            path: router.asPath,
+            type: "pdf",
+            newVersion: true,
+            teamId: teamId,
+          });
           toast.success("New document version uploaded.");
 
           // reload to the document page
-          setTimeout(() => {
-            router.reload();
-            setUploading(false);
-          }, 2000);
+          router.reload();
         }
       }
     } catch (error) {
@@ -111,69 +169,54 @@ export function AddDocumentModal({
       console.error("An error occurred while uploading the file: ", error);
     } finally {
       setUploading(false);
+      setIsOpen(false);
     }
   };
 
-  async function saveDocumentToDatabase(
-    blob: PutBlobResult,
-    numPages?: number,
-  ) {
-    // create a document in the database with the blob url
-    const response = await fetch(
-      `/api/teams/${teamInfo?.currentTeam?.id}/documents`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+  const addDocumentToDataroom = async ({
+    documentId,
+    folderPathName,
+  }: {
+    documentId: string;
+    folderPathName?: string;
+  }) => {
+    try {
+      const response = await fetch(
+        `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}/documents`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            documentId: documentId,
+            folderPathName: folderPathName,
+          }),
         },
-        body: JSON.stringify({
-          name: blob.pathname,
-          url: blob.url,
-          numPages: numPages,
-        }),
-      },
-    );
+      );
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      if (!response.ok) {
+        const { message } = await response.json();
+        toast.error(message);
+        return;
+      }
+
+      mutate(
+        `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}/documents`,
+      );
+      mutate(
+        `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}/folders/documents/${folderPathName}`,
+      );
+
+      toast.success("Document added to dataroom successfully! 🎉");
+    } catch (error) {
+      toast.error("Error adding document to dataroom.");
+      console.error(
+        "An error occurred while adding document to the dataroom: ",
+        error,
+      );
     }
-
-    return response;
-  }
-
-  // create a new version in the database
-  async function saveNewVersionToDatabase(
-    blob: PutBlobResult,
-    documentId: string,
-    numPages?: number,
-  ) {
-    const response = await fetch(
-      `/api/teams/${teamInfo?.currentTeam?.id}/documents/${documentId}/versions`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          url: blob.url,
-          numPages: numPages,
-          type: "pdf",
-        }),
-      },
-    );
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    return response;
-  }
-
-  // get the number of pages in the pdf
-  async function getTotalPages(url: string): Promise<number> {
-    const pdf = await pdfjs.getDocument(url).promise;
-    return pdf.numPages;
-  }
+  };
 
   const createNotionFileName = () => {
     // Extract Notion file name from the URL
@@ -226,6 +269,27 @@ export function AddDocumentModal({
       if (response) {
         const document = await response.json();
 
+        if (isDataroom && dataroomId) {
+          await addDocumentToDataroom({
+            documentId: document.id,
+            folderPathName: currentFolderPath?.join("/"),
+          });
+
+          plausible("documentUploaded");
+          plausible("notionDocumentUploaded");
+          analytics.capture("Document Added", {
+            documentId: document.id,
+            name: document.name,
+            numPages: document.numPages,
+            path: router.asPath,
+            type: "notion",
+            teamId: teamId,
+            dataroomId: dataroomId,
+          });
+
+          return;
+        }
+
         if (!newVersion) {
           // copy the link to the clipboard
           copyToClipboard(
@@ -236,12 +300,23 @@ export function AddDocumentModal({
           // track the event
           plausible("documentUploaded");
           plausible("notionDocumentUploaded");
+          analytics.capture("Document Added", {
+            documentId: document.id,
+            name: document.name,
+            fileSize: null,
+            path: router.asPath,
+            type: "notion",
+            teamId: teamId,
+          });
+          analytics.capture("Link Added", {
+            linkId: document.links[0].id,
+            documentId: document.id,
+            customDomain: null,
+            teamId: teamId,
+          });
 
           // redirect to the document page
-          setTimeout(() => {
-            router.push("/documents/" + document.id);
-            setUploading(false);
-          }, 2000);
+          router.push("/documents/" + document.id);
         }
       }
     } catch (error) {
@@ -255,26 +330,34 @@ export function AddDocumentModal({
       );
     } finally {
       setUploading(false);
+      setIsOpen(false);
     }
   };
 
   const clearModelStates = () => {
     currentFile !== null && setCurrentFile(null);
     notionLink !== null && setNotionLink(null);
+    setIsOpen(!isOpen);
   };
 
   return (
-    <Dialog onOpenChange={clearModelStates}>
+    <Dialog open={isOpen} onOpenChange={clearModelStates}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent
         className="text-foreground bg-transparent border-none shadow-none"
         isDocumentDialog
       >
         <Tabs defaultValue="document">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="document">Document</TabsTrigger>
-            <TabsTrigger value="notion">Notion Page</TabsTrigger>
-          </TabsList>
+          {!newVersion ? (
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="document">Document</TabsTrigger>
+              <TabsTrigger value="notion">Notion Page</TabsTrigger>
+            </TabsList>
+          ) : (
+            <TabsList className="grid w-full grid-cols-1">
+              <TabsTrigger value="document">Document</TabsTrigger>
+            </TabsList>
+          )}
           <TabsContent value="document">
             <Card>
               <CardHeader className="space-y-3">
@@ -291,7 +374,7 @@ export function AddDocumentModal({
               <CardContent className="space-y-2">
                 <form
                   encType="multipart/form-data"
-                  onSubmit={handleBrowserUpload}
+                  onSubmit={handleFileUpload}
                   className="flex flex-col"
                 >
                   <div className="space-y-1">
@@ -319,53 +402,55 @@ export function AddDocumentModal({
               </CardContent>
             </Card>
           </TabsContent>
-          <TabsContent value="notion">
-            <Card>
-              <CardHeader className="space-y-3">
-                <CardTitle>Share a Notion Page</CardTitle>
-                <CardDescription>
-                  After you submit the Notion link, a shareable link will be
-                  generated and copied to your clipboard. Just like with a PDF
-                  document.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <form
-                  encType="multipart/form-data"
-                  onSubmit={handleNotionUpload}
-                  className="flex flex-col"
-                >
-                  <div className="space-y-1 pb-8">
-                    <Label htmlFor="notion-link">Notion Page Link</Label>
-                    <div className="mt-2">
-                      <input
-                        type="text"
-                        name="notion-link"
-                        id="notion-link"
-                        placeholder="notion.site/..."
-                        className="flex w-full rounded-md border-0 py-1.5 text-foreground bg-background shadow-sm ring-1 ring-inset ring-input placeholder:text-muted-foreground focus:ring-2 focus:ring-inset focus:ring-gray-400 sm:text-sm sm:leading-6"
-                        value={notionLink || ""}
-                        onChange={(e) => setNotionLink(e.target.value)}
-                      />
+          {!newVersion && (
+            <TabsContent value="notion">
+              <Card>
+                <CardHeader className="space-y-3">
+                  <CardTitle>Share a Notion Page</CardTitle>
+                  <CardDescription>
+                    After you submit the Notion link, a shareable link will be
+                    generated and copied to your clipboard. Just like with a PDF
+                    document.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <form
+                    encType="multipart/form-data"
+                    onSubmit={handleNotionUpload}
+                    className="flex flex-col"
+                  >
+                    <div className="space-y-1 pb-8">
+                      <Label htmlFor="notion-link">Notion Page Link</Label>
+                      <div className="mt-2">
+                        <input
+                          type="text"
+                          name="notion-link"
+                          id="notion-link"
+                          placeholder="notion.site/..."
+                          className="flex w-full rounded-md border-0 py-1.5 text-foreground bg-background shadow-sm ring-1 ring-inset ring-input placeholder:text-muted-foreground focus:ring-2 focus:ring-inset focus:ring-gray-400 sm:text-sm sm:leading-6"
+                          value={notionLink || ""}
+                          onChange={(e) => setNotionLink(e.target.value)}
+                        />
+                      </div>
+                      <small className="text-xs text-muted-foreground">
+                        Your Notion page needs to be shared publicly.
+                      </small>
                     </div>
-                    <small className="text-xs text-muted-foreground">
-                      Your Notion page needs to be shared publicly.
-                    </small>
-                  </div>
-                  <div className="flex justify-center">
-                    <Button
-                      type="submit"
-                      className="w-full lg:w-1/2"
-                      disabled={uploading || !notionLink}
-                      loading={uploading}
-                    >
-                      {uploading ? "Saving..." : "Save Notion Link"}
-                    </Button>
-                  </div>
-                </form>
-              </CardContent>
-            </Card>
-          </TabsContent>
+                    <div className="flex justify-center">
+                      <Button
+                        type="submit"
+                        className="w-full lg:w-1/2"
+                        disabled={uploading || !notionLink}
+                        loading={uploading}
+                      >
+                        {uploading ? "Saving..." : "Save Notion Link"}
+                      </Button>
+                    </div>
+                  </form>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          )}
         </Tabs>
       </DialogContent>
     </Dialog>

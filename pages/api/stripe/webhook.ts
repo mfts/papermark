@@ -3,10 +3,13 @@ import { Readable } from "node:stream";
 import type Stripe from "stripe";
 import prisma from "@/lib/prisma";
 import { stripe } from "@/lib/stripe";
-import { getPlanFromPriceId, isNewCustomer } from "@/lib/stripe/utils";
+import {
+  getPlanFromPriceId,
+  isNewCustomer,
+  isUpgradedCustomer,
+} from "@/lib/stripe/utils";
 import { log } from "@/lib/utils";
 import { sendUpgradePlanEmail } from "@/lib/emails/send-upgrade-plan";
-import { identifyUser, trackAnalytics } from "@/lib/analytics";
 
 // Stripe requires the raw body to construct the event.
 export const config = {
@@ -69,7 +72,10 @@ export default async function webhookHandler(
             checkoutSession.client_reference_id === null ||
             checkoutSession.customer === null
           ) {
-            await log("Missing items in Stripe webhook callback");
+            await log({
+              message: "Missing items in Stripe webhook callback",
+              type: "error",
+            });
             return;
           }
 
@@ -115,12 +121,6 @@ export default async function webhookHandler(
               });
             }
 
-            await identifyUser(team.users[0].user.id);
-            await trackAnalytics({
-              event: "User Upgraded",
-              email: team.users[0].user.email,
-            });
-
             // Remove the pending update from the store
             pendingSubscriptionUpdates.delete(stripeId);
           }
@@ -130,6 +130,9 @@ export default async function webhookHandler(
           const subscriptionUpdated = event.data.object as Stripe.Subscription;
           const priceId = subscriptionUpdated.items.data[0].price.id;
           const newCustomer = isNewCustomer(event.data.previous_attributes);
+          const upgradedCustomer = isUpgradedCustomer(
+            event.data.previous_attributes,
+          );
 
           const plan = getPlanFromPriceId(priceId);
           const stripeId = subscriptionUpdated.customer.toString();
@@ -149,17 +152,40 @@ export default async function webhookHandler(
             newCustomer,
           });
 
+          // if user upgrades from Pro to Business, checkout event won't be fired
+          // so we need to update the user immediately
+          if (upgradedCustomer && !newCustomer) {
+            await prisma.team.update({
+              where: {
+                stripeId: stripeId,
+              },
+              data: {
+                plan: plan.slug,
+                subscriptionId,
+                startsAt,
+                endsAt,
+              },
+              select: {
+                id: true,
+              },
+            });
+
+            pendingSubscriptionUpdates.delete(stripeId);
+          }
+
           // If project cancels their subscription
         } else if (event.type === "customer.subscription.deleted") {
           const subscriptionDeleted = event.data.object as Stripe.Subscription;
 
           const stripeId = subscriptionDeleted.customer.toString();
+          const subscriptionId = subscriptionDeleted.id;
 
           // If a project deletes their subscription, reset their usage limit in the database to 1000.
           // Also remove the root domain redirect for all their domains from Redis.
           const team = await prisma.team.update({
             where: {
               stripeId,
+              subscriptionId,
             },
             data: {
               plan: "free",
@@ -171,27 +197,37 @@ export default async function webhookHandler(
           });
 
           if (!team) {
-            await log(
-              "Team with stripeId: `" +
+            await log({
+              message:
+                "Team with stripeId: `" +
                 stripeId +
-                "`not found in Stripe webhook `customer.subscription.deleted` callback",
-            );
+                "` and subscriptionId `" +
+                subscriptionId +
+                "` not found in Stripe webhook `customer.subscription.deleted` callback",
+              type: "error",
+            });
             return;
           }
 
-          await log(
-            ":cry: Team *`" + team.id + "`* deleted their subscription",
-          );
+          await log({
+            message:
+              ":cry: Team *`" + team.id + "`* deleted their subscription",
+            type: "info",
+          });
         } else {
           throw new Error("Unhandled relevant event!");
         }
       } catch (error) {
-        await log(
-          `Stripe webook failed for Event: *${event.type}* (_${
+        await log({
+          message: `Stripe webook failed for Event: *${event.type}* ([_${
             event.id
-          }_) \n\n Error: ${(error as Error).message}`,
-        );
-        return;
+          }_](https://dashboard.stripe.com/events/${event.id})) \n\n Error: ${(error as Error).message}`,
+          type: "error",
+          mention: true,
+        });
+        return res
+          .status(400)
+          .send(`Error in webhook: ${(error as Error).message}`);
       }
     } else {
       return res.status(400).send(`🤷‍♀️ Unhandled event type: ${event.type}`);

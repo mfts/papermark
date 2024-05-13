@@ -1,4 +1,4 @@
-VERSION 2
+VERSION 3
 
 DESCRIPTION >
   Page views are events when a user views a document
@@ -8,6 +8,7 @@ SCHEMA >
   `linkId` String `json:$.linkId`,
   `documentId` String `json:$.documentId`,
   `viewId` String `json:$.viewId`,
+  `dataroomId` Nullable(String) `json:$.dataroomId`,
   `versionNumber` UInt16 `json:$.versionNumber`,
   # Unix timestamp
   `time` Int64 `json:$.time`,

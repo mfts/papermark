@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/lib/prisma";
-import { getDownloadUrl } from "@vercel/blob";
+import { getFile } from "@/lib/files/get-file";
 
 export default async function handle(
   req: NextApiRequest,
@@ -33,6 +33,7 @@ export default async function handle(
                 select: {
                   type: true,
                   file: true,
+                  storageType: true,
                 },
                 take: 1,
               },
@@ -62,7 +63,7 @@ export default async function handle(
       }
 
       // if document is a Notion document, we should not allow the download
-      if (view.document.versions[0].type === "notion") {
+      if (view.document!.versions[0].type === "notion") {
         return res.status(403).json({ error: "Error downloading" });
       }
 
@@ -80,7 +81,11 @@ export default async function handle(
         data: { downloadedAt: new Date() },
       });
 
-      const downloadUrl = getDownloadUrl(view.document.versions[0].file);
+      const downloadUrl = await getFile({
+        type: view.document!.versions[0].storageType,
+        data: view.document!.versions[0].file,
+        isDownload: true,
+      });
 
       return res.status(200).json({ downloadUrl });
     } catch (error) {

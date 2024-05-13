@@ -15,16 +15,20 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
 import { usePlan } from "@/lib/swr/use-billing";
+import { useAnalytics } from "@/lib/analytics";
+import useLimits from "@/lib/swr/use-limits";
 
 export function AddDomainModal({
   open,
   setOpen,
   onAddition,
+  linkType,
   children,
 }: {
   open: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
   onAddition?: (newDomain: string) => void;
+  linkType?: "DOCUMENT_LINK" | "DATAROOM_LINK";
   children?: React.ReactNode;
 }) {
   const [domain, setDomain] = useState<string>("");
@@ -32,6 +36,8 @@ export function AddDomainModal({
 
   const teamInfo = useTeam();
   const { plan } = usePlan();
+  const { limits } = useLimits();
+  const analytics = useAnalytics();
 
   const handleSubmit = async (event: any) => {
     event.preventDefault();
@@ -63,6 +69,7 @@ export function AddDomainModal({
 
     const newDomain = await response.json();
 
+    analytics.capture("Domain Added", { slug: domain });
     toast.success("Domain added successfully! 🎉");
 
     // Update local data with the new link
@@ -75,17 +82,35 @@ export function AddDomainModal({
     !onAddition && window.open("/settings/domains", "_blank");
   };
 
-  // If the team is on a free plan, show the upgrade modal
-  if (plan && plan.plan === "free") {
+  // If the team is
+  // - on a free plan
+  // - on pro plan and has custom domain on pro plan disabled
+  // - on business plan and has custom domain in dataroom disabled
+  // => then show the upgrade modal
+  if (
+    plan === "free" ||
+    (plan === "pro" && !limits?.customDomainOnPro) ||
+    (linkType === "DATAROOM_LINK" &&
+      plan === "business" &&
+      !limits?.customDomainInDataroom)
+  ) {
     if (children) {
       return (
-        <UpgradePlanModal clickedPlan="Pro">
+        <UpgradePlanModal
+          clickedPlan={linkType === "DATAROOM_LINK" ? "Data Rooms" : "Business"}
+          trigger={"add_domain_overview"}
+        >
           <Button>Upgrade to Add Domain</Button>
         </UpgradePlanModal>
       );
     } else {
       return (
-        <UpgradePlanModal clickedPlan="Pro" open={open} setOpen={setOpen} />
+        <UpgradePlanModal
+          clickedPlan={linkType === "DATAROOM_LINK" ? "Data Rooms" : "Business"}
+          open={open}
+          setOpen={setOpen}
+          trigger={"add_domain_link_sheet"}
+        />
       );
     }
   }

@@ -1,10 +1,14 @@
-import { useStats } from "@/lib/swr/use-stats";
+import { TStatsData } from "@/lib/swr/use-stats";
 import ErrorPage from "next/error";
 import StatsElement from "./stats-element";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export default function StatsCard() {
-  const { stats, loading, error } = useStats();
+export default function StatsCard({
+  statsData,
+}: {
+  statsData: { stats: TStatsData | undefined; loading: boolean; error: any };
+}) {
+  const { stats, loading, error } = statsData;
 
   if (error && error.status === 404) {
     return <ErrorPage statusCode={404} />;
@@ -36,7 +40,7 @@ export default function StatsCard() {
   const statistics = [
     {
       name: "Number of visits",
-      value: stats?.views.length.toString() ?? "0",
+      value: stats?.totalViews.toString() ?? "0",
       active: true,
     },
     {

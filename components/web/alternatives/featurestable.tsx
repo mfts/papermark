@@ -18,6 +18,8 @@ const tools: ToolFeature[] = [
       aiEnhancements: "Yes",
     },
   },
+
+  // data room,whitelabelling
   {
     name: "Docsend",
     features: {
@@ -28,6 +30,20 @@ const tools: ToolFeature[] = [
       customDomain: "No",
       trackAnalytics: "Yes",
       emailnotifications: "Yes",
+      feedbackOnPage: "No",
+      aiEnhancements: "No",
+    },
+  },
+  {
+    name: "DropBox",
+    features: {
+      selfhosted: "No",
+      unlimitedDocuments: "Yes",
+      emailCapture: "No",
+      teamAccess: "Yes",
+      customDomain: "No",
+      trackAnalytics: "No",
+      emailnotifications: "No",
       feedbackOnPage: "No",
       aiEnhancements: "No",
     },
@@ -102,18 +118,46 @@ const tools: ToolFeature[] = [
       aiEnhancements: "No",
     },
   },
+  {
+    name: "ClearSlide",
+    features: {
+      selfhosted: "No",
+      unlimitedDocuments: "Yes",
+      emailCapture: "No",
+      teamAccess: "Yes",
+      customDomain: "No",
+      trackAnalytics: "No",
+      emailnotifications: "No",
+      feedbackOnPage: "No",
+      aiEnhancements: "No",
+    },
+  },
+  {
+    name: "Ideals VDR",
+    features: {
+      selfhosted: "No",
+      unlimitedDocuments: "Yes",
+      emailCapture: "No",
+      teamAccess: "Yes",
+      customDomain: "No",
+      trackAnalytics: "Yes",
+      emailnotifications: "No",
+      feedbackOnPage: "No",
+      aiEnhancements: "No",
+    },
+  },
   // Add other tools in a similar format
 ];
 
 const featureDisplayNames: { [key: string]: string } = {
   emailCapture: "Shared link controls",
   teamAccess: "Team Access",
-  customDomain: "Custom Domain",
+  customDomain: "Custom Domain & Branding",
   unlimitedDocuments: "Unlimited Documents",
   trackAnalytics: "Analytics on each page",
-  feedbackOnPage: "Feedback on each page",
+  feedbackOnPage: "Unlimited Data Rooms",
   emailnotifications: "Email Notifications",
-  aiEnhancements: "AI-Enhancements",
+  aiEnhancements: "White-Labelling",
   selfhosted: "Self-Hosted and Open Source",
 };
 
@@ -121,20 +165,20 @@ export default function ComparisonTable() {
   const featuresList = Object.keys(tools[0].features);
 
   return (
-    <div className="px-6 sm:px-8 lg:px-20">
-      <div className="mt-20 px-6 py-12 sm:px-6 sm:py-6 lg:px-8">
+    <div className="">
+      {/* <div className="mt-20 px-6 py-12 sm:px-6 sm:py-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center">
-          {/* <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+          <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
             Compare best Docsend alternatives based on core features
             <br />
           </h2>
           <p className="mx-auto mt-6 max-w-xl text-lg leading-8 text-gray-600">
             Check all the features you need to securely share documents
-          </p> */}
+          </p>
         </div>
-      </div>
+      </div> */}
       <div className="mt-6 flow-root">
-        <div className="rounded-lg border border-gray-300 mx-4 my-2 overflow-x-auto">
+        <div className="rounded-lg border border-gray-300 bg-gray- mx-4 my-2 overflow-x-auto">
           <div className="inline-block min-w-full align-middle">
             <table className="min-w-full divide-y divide-gray-300">
               <thead>
@@ -161,8 +205,10 @@ export default function ComparisonTable() {
                     {tools.map((tool) => (
                       <td
                         key={tool.name}
-                        className={`px-3 py-4 text-sm text-gray-500 ${
-                          tool.name === "Papermark" ? "bg-green-100" : ""
+                        className={`px-3 py-4 text-sm  ${
+                          tool.name === "Papermark"
+                            ? "bg-green-50 text-green-700 font-semibold"
+                            : ""
                         }`} // Consistent text color, conditional background color
                       >
                         {tool.features[feature]}

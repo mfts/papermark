@@ -3,6 +3,7 @@ import type { NextApiResponse, NextApiRequest } from "next";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]";
 import { CustomUser } from "@/lib/types";
+import prisma from "@/lib/prisma";
 
 export default async function handler(
   req: NextApiRequest,
@@ -23,9 +24,28 @@ export default async function handler(
           throw new Error("Unauthorized");
         }
 
+        const userId = (session.user as CustomUser).id;
+        const team = await prisma.team.findFirst({
+          where: {
+            users: {
+              some: {
+                userId,
+              },
+            },
+          },
+          select: {
+            plan: true,
+          },
+        });
+
+        let maxSize = 30 * 1024 * 1024; // 30 MB
+        if (team?.plan === "business" || team?.plan === "datarooms") {
+          maxSize = 100 * 1024 * 1024; // 100 MB
+        }
+
         return {
           allowedContentTypes: ["application/pdf"],
-          maximumSizeInBytes: 30 * 1024 * 1024, // 30 MB
+          maximumSizeInBytes: maxSize, // 30 MB
           metadata: JSON.stringify({
             // optional, sent to your server on upload completion
             userId: (session.user as CustomUser).id,

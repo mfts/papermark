@@ -4,7 +4,7 @@ import { NotionRenderer } from "react-notion-x";
 // core styles shared by all of react-notion-x (required)
 import "react-notion-x/src/styles.css";
 import Nav from "./view/nav";
-import { Brand } from "@prisma/client";
+import { Brand, DataroomBrand } from "@prisma/client";
 
 export const NotionPage = ({
   recordMap,
@@ -12,8 +12,11 @@ export const NotionPage = ({
   viewId,
   linkId,
   documentId,
+  documentName,
   versionNumber,
   brand,
+  dataroomId,
+  setDocumentData,
 }: {
   recordMap: ExtendedRecordMap;
   rootPageId?: string;
@@ -21,37 +24,40 @@ export const NotionPage = ({
   linkId: string;
   documentId: string;
   versionNumber: number;
-  brand?: Brand;
+  documentName?: string;
+  brand?: Partial<Brand> | Partial<DataroomBrand> | null;
+  dataroomId?: string;
+  setDocumentData?: (data: any) => void;
 }) => {
   const [pageNumber, setPageNumber] = useState<number>(1); // start on first page
   const [maxScrollPercentage, setMaxScrollPercentage] = useState<number>(0);
 
   const startTimeRef = useRef(Date.now());
   const pageNumberRef = useRef<number>(pageNumber);
+  const visibilityRef = useRef<boolean>(true);
 
   useEffect(() => {
-    startTimeRef.current = Date.now(); // update the start time for the new page
-
-    // when component unmounts, calculate duration and track page view
-    return () => {
-      const endTime = Date.now();
-      const duration = Math.round(endTime - startTimeRef.current);
-      trackPageView(duration);
-    };
-  }, [pageNumber]); // monitor pageNumber for changes
-
-  // Send the last page view when the user leaves the page
-  useEffect(() => {
-    const handleBeforeUnload = () => {
-      const endTime = Date.now();
-      const duration = Math.round(endTime - startTimeRef.current);
-      trackPageView(duration);
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        visibilityRef.current = true;
+        startTimeRef.current = Date.now(); // Reset start time when page becomes visible
+      } else {
+        visibilityRef.current = false;
+        const duration = Date.now() - startTimeRef.current;
+        if (duration > 0) {
+          trackPageView(duration);
+        }
+      }
     };
 
-    window.addEventListener("beforeunload", handleBeforeUnload);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload);
+      if (visibilityRef.current) {
+        const duration = Date.now() - startTimeRef.current;
+        trackPageView(duration); // Also capture duration if component unmounts while visible
+      }
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, []);
 
@@ -112,7 +118,13 @@ export const NotionPage = ({
   return (
     <>
       <div className="bg-white">
-        <Nav brand={brand} type="notion" />
+        <Nav
+          brand={brand}
+          documentName={documentName}
+          isDataroom={dataroomId ? true : false}
+          setDocumentData={setDocumentData}
+          type="notion"
+        />
 
         <div>
           <NotionRenderer

@@ -11,6 +11,7 @@ export default function ViewData({
   link,
   notionData,
   brand,
+  showPoweredByBanner,
 }: {
   viewData: DEFAULT_DOCUMENT_VIEW_TYPE;
   link: LinkWithDocument;
@@ -18,9 +19,11 @@ export default function ViewData({
     rootNotionPageId: string | null;
     recordMap: ExtendedRecordMap | null;
   };
-  brand?: Brand;
+  brand?: Partial<Brand> | null;
+  showPoweredByBanner?: boolean;
 }) {
   const { document } = link;
+
   return notionData?.recordMap ? (
     <NotionPage
       recordMap={notionData.recordMap}
@@ -40,8 +43,12 @@ export default function ViewData({
       assistantEnabled={document.assistantEnabled}
       allowDownload={link.allowDownload!}
       feedbackEnabled={link.enableFeedback!}
+      screenshotProtectionEnabled={link.enableScreenshotProtection!}
       versionNumber={document.versions[0].versionNumber}
       brand={brand}
+      showPoweredByBanner={showPoweredByBanner}
+      enableQuestion={link.enableQuestion}
+      feedback={link.feedback}
     />
   ) : (
     <PDFViewer

@@ -13,6 +13,7 @@ const bodyValidation = z.object({
   linkId: z.string(),
   documentId: z.string(),
   viewId: z.string(),
+  dataroomId: z.string().nullable().optional(),
   versionNumber: z.number().int().optional(),
   time: z.number().int(),
   duration: z.number().int(),
@@ -54,15 +55,23 @@ export default async function handle(
   const referer = req.headers.referer;
   const ua = userAgentFromString(req.headers["user-agent"]);
 
-  const { linkId, documentId, viewId, duration, pageNumber, versionNumber } =
-    req.body as {
-      linkId: string;
-      documentId: string;
-      viewId: string;
-      duration: number;
-      pageNumber: number;
-      versionNumber: number;
-    };
+  const {
+    linkId,
+    documentId,
+    viewId,
+    dataroomId,
+    duration,
+    pageNumber,
+    versionNumber,
+  } = req.body as {
+    linkId: string;
+    documentId: string;
+    viewId: string;
+    dataroomId: string | undefined;
+    duration: number;
+    pageNumber: number;
+    versionNumber: number;
+  };
 
   const time = Date.now(); // in milliseconds
 
@@ -73,6 +82,7 @@ export default async function handle(
     linkId,
     documentId,
     viewId,
+    dataroomId: dataroomId || null,
     versionNumber: versionNumber || 1,
     time,
     duration,
@@ -110,7 +120,11 @@ export default async function handle(
 
     res.status(200).json({ message: "View recorded" });
   } catch (error) {
-    log(`Failed to record view for ${linkId}. Error: \n\n ${error}`);
+    log({
+      message: `Failed to record view (tinybird) for ${linkId}. \n\n ${error}`,
+      type: "error",
+      mention: true,
+    });
     res.status(500).json({ message: (error as Error).message });
   }
 }

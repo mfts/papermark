@@ -171,7 +171,7 @@ export default function Home() {
                 loop
               >
                 <source
-                  src="https://dknlay9ljaq1f.cloudfront.net/papermark-notion-video.mp4"
+                  src="https://assets.papermark.io/papermark-notion-video.mp4"
                   type="video/mp4"
                 />
               </video>

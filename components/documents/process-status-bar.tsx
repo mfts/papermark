@@ -1,8 +1,6 @@
 import { Progress } from "@/components/ui/progress";
-import ErrorPage from "next/error";
-import { useDocumentProcessingStatus } from "@/lib/swr/use-document";
-import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
+import { useEventRunStatuses } from "@trigger.dev/react";
 
 export default function ProcessStatusBar({
   documentVersionId,
@@ -11,33 +9,53 @@ export default function ProcessStatusBar({
   documentVersionId: string;
   className?: string;
 }) {
-  const { status, loading, error } =
-    useDocumentProcessingStatus(documentVersionId);
+  const { fetchStatus, error, statuses, run } =
+    useEventRunStatuses(documentVersionId);
 
-  const [progress, setProgress] = useState<number>(0);
-  const [text, setText] = useState<string>("");
-
-  useEffect(() => {
-    if (status) {
-      const progress = (status.currentPageCount / status.totalPages) * 100;
-      setProgress(progress);
-      if (progress === 100) {
-        setText("Processing complete");
-      } else {
-        setText(
-          `${status.currentPageCount} / ${status.totalPages} pages processed`,
-        );
-      }
-    }
-  }, [status]);
-
-  if (error && error.status === 404) {
-    return <ErrorPage statusCode={404} />;
+  if (fetchStatus === "loading") {
+    return (
+      <Progress
+        value={0}
+        text="Processing document..."
+        className={cn(
+          "w-full text-[8px] font-semibold rounded-none",
+          className,
+        )}
+      />
+    );
   }
 
-  if (loading) {
+  if (fetchStatus === "error") {
     return (
-      <Progress value={0} className={cn("w-full rounded-none", className)} />
+      <Progress
+        value={0}
+        text={error.message}
+        className={cn(
+          "w-full text-[8px] font-semibold rounded-none",
+          className,
+        )}
+      />
+    );
+  }
+
+  if (run.status === "SUCCESS") {
+    return null;
+  }
+
+  const progress = Number(statuses[0]?.data?.progress) * 100 || 0;
+  const text = String(statuses[0]?.data?.text) || "";
+
+  if (run.status === "FAILURE") {
+    return (
+      <Progress
+        value={progress}
+        text={`Error processing document page ${Number(statuses[0]?.data?.currentPage)}`}
+        error={true}
+        className={cn(
+          "w-full text-[8px] font-semibold rounded-none",
+          className,
+        )}
+      />
     );
   }
 
@@ -45,10 +63,7 @@ export default function ProcessStatusBar({
     <Progress
       value={progress}
       text={text}
-      className={cn(
-        "w-full text-[8px] font-semibold capitalize rounded-none",
-        className,
-      )}
+      className={cn("w-full text-[8px] font-semibold rounded-none", className)}
     />
   );
 }

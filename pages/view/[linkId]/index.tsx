@@ -5,74 +5,143 @@ import { useSession } from "next-auth/react";
 
 import { ExtendedRecordMap } from "notion-types";
 import notion from "@/lib/notion";
-import { CustomUser, LinkWithDocument } from "@/lib/types";
+import { CustomUser, LinkWithDataroom, LinkWithDocument } from "@/lib/types";
 import { parsePageId } from "notion-utils";
 import { GetStaticPropsContext } from "next";
 import { useRouter } from "next/router";
-import { Brand } from "@prisma/client";
+import { Brand, DataroomBrand } from "@prisma/client";
 import CustomMetatag from "@/components/view/custom-metatag";
+import DataroomView from "@/components/view/dataroom/dataroom-view";
+
+type DocumentLinkData = {
+  linkType: "DOCUMENT_LINK";
+  link: LinkWithDocument;
+  brand: Brand | null;
+};
+
+type DataroomLinkData = {
+  linkType: "DATAROOM_LINK";
+  link: LinkWithDataroom;
+  brand: DataroomBrand | null;
+};
 
 export const getStaticProps = async (context: GetStaticPropsContext) => {
   const { linkId } = context.params as { linkId: string };
 
-  // Fetch the link
-  const res = await fetch(`${process.env.NEXTAUTH_URL}/api/links/${linkId}`);
-  if (!res.ok) {
-    return { notFound: true };
-  }
-  const { link, brand } = (await res.json()) as {
-    link: LinkWithDocument;
-    brand: Brand | null;
-  };
+  try {
+    const res = await fetch(`${process.env.NEXTAUTH_URL}/api/links/${linkId}`);
+    if (!res.ok) {
+      throw new Error(`Failed to fetch: ${res.status}`);
+    }
+    const { linkType, link, brand } = (await res.json()) as
+      | DocumentLinkData
+      | DataroomLinkData;
 
-  if (!link || !link.document) {
-    return {
-      notFound: true,
-    };
-  }
-
-  let pageId = null;
-  let recordMap = null;
-
-  const { type, file, ...versionWithoutTypeAndFile } =
-    link.document.versions[0];
-
-  if (type === "notion") {
-    const notionPageId = parsePageId(file, { uuid: false });
-    if (!notionPageId) {
+    if (!link || !linkType) {
       return {
         notFound: true,
       };
     }
 
-    pageId = notionPageId;
-    recordMap = await notion.getPage(pageId);
-  }
+    // Manage the data for the document link
+    if (linkType === "DOCUMENT_LINK") {
+      let pageId = null;
+      let recordMap = null;
 
-  return {
-    props: {
-      // return link without file and type to avoid sending the file to the client
-      link: {
-        ...link,
-        document: {
-          ...link.document,
-          versions: [versionWithoutTypeAndFile],
+      const { type, file, ...versionWithoutTypeAndFile } =
+        link.document.versions[0];
+
+      if (type === "notion") {
+        const notionPageId = parsePageId(file, { uuid: false });
+        if (!notionPageId) {
+          return {
+            notFound: true,
+          };
+        }
+
+        pageId = notionPageId;
+        recordMap = await notion.getPage(pageId);
+      }
+
+      const { team, ...linkDocument } = link.document;
+      const teamPlan = team?.plan || "free";
+
+      return {
+        props: {
+          linkData: {
+            linkType: "DOCUMENT_LINK",
+            link: {
+              ...link,
+              document: {
+                ...linkDocument,
+                versions: [versionWithoutTypeAndFile],
+              },
+            },
+            brand,
+          },
+          notionData: {
+            rootNotionPageId: null, // do not pass rootNotionPageId to the client
+            recordMap,
+          },
+          meta: {
+            enableCustomMetatag: link.enableCustomMetatag || false,
+            metaTitle: link.metaTitle,
+            metaDescription: link.metaDescription,
+            metaImage: link.metaImage,
+          },
+          showPoweredByBanner: teamPlan === "free",
         },
-      },
-      notionData: {
-        rootNotionPageId: null, // do not pass rootNotionPageId to the client
-        recordMap,
-      },
-      meta: {
-        enableCustomMetatag: link.enableCustomMetatag || false,
-        metaTitle: link.metaTitle,
-        metaDescription: link.metaDescription,
-        metaImage: link.metaImage,
-      },
-      brand, // pass brand to the client
-    },
-    revalidate: brand ? 10 : false,
-  };
+        revalidate: brand ? 10 : false,
+      };
+    }
+
+    // Manage the data for the dataroom link
+    if (linkType === "DATAROOM_LINK") {
+      // iterate the link.documents and extract type and file and rest of the props
+      let documents = [];
+      for (const document of link.dataroom.documents) {
+        const { file, ...versionWithoutTypeAndFile } =
+          document.document.versions[0];
+
+        const newDocument = {
+          ...document.document,
+          dataroomDocumentId: document.id,
+          folderId: document.folderId,
+          versions: [versionWithoutTypeAndFile],
+        };
+
+        documents.push(newDocument);
+      }
+
+      return {
+        props: {
+          linkData: {
+            linkType: "DATAROOM_LINK",
+            link: {
+              ...link,
+              dataroom: {
+                ...link.dataroom,
+                documents,
+                lastUpdatedAt: null, // TODO: fix this to get the actual lastUpdatedAt
+              },
+            },
+            brand,
+          },
+          meta: {
+            enableCustomMetatag: link.enableCustomMetatag || false,
+            metaTitle: link.metaTitle,
+            metaDescription: link.metaDescription,
+            metaImage: link.metaImage,
+          },
+          showPoweredByBanner: false,
+        },
+        revalidate: 10,
+      };
+    }
+  } catch (error) {
+    console.error("Fetching error:", error);
+    return { notFound: true };
+  }
 };
 
 export async function getStaticPaths() {
@@ -83,12 +152,12 @@ export async function getStaticPaths() {
 }
 
 export default function ViewPage({
-  link,
+  linkData,
   notionData,
   meta,
-  brand,
+  showPoweredByBanner,
 }: {
-  link: LinkWithDocument;
+  linkData: DocumentLinkData | DataroomLinkData;
   notionData: {
     rootNotionPageId: string | null;
     recordMap: ExtendedRecordMap | null;
@@ -99,98 +168,204 @@ export default function ViewPage({
     metaDescription: string | null;
     metaImage: string | null;
   } | null;
-  brand?: Brand;
+  showPoweredByBanner: boolean;
 }) {
   const router = useRouter();
+  const { data: session, status } = useSession();
+
+  if (router.isFallback) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-black">
+        <LoadingSpinner className="h-20 w-20" />
+      </div>
+    );
+  }
+
   const { token, email: verifiedEmail } = router.query as {
     token: string;
     email: string;
   };
-  const { data: session, status } = useSession();
+  const { linkType, link, brand } = linkData;
 
-  if (!link || status === "loading" || router.isFallback) {
+  // Render the document view for DOCUMENT_LINK
+  if (linkType === "DOCUMENT_LINK") {
+    if (!linkData || status === "loading" || router.isFallback) {
+      return (
+        <>
+          <CustomMetatag
+            enableBranding={meta?.enableCustomMetatag ?? false}
+            title={
+              meta?.metaTitle ?? link?.document?.name ?? "Papermark Document"
+            }
+            description={meta?.metaDescription ?? null}
+            imageUrl={meta?.metaImage ?? null}
+            url={`https://www.papermark.io/view/${router.query.linkId}`}
+          />
+          <div className="h-screen flex items-center justify-center">
+            <LoadingSpinner className="h-20 w-20" />
+          </div>
+        </>
+      );
+    }
+
+    const {
+      expiresAt,
+      emailProtected,
+      emailAuthenticated,
+      password: linkPassword,
+      isArchived,
+    } = link;
+
+    const { email: userEmail, id: userId } =
+      (session?.user as CustomUser) || {};
+
+    // If the link is expired, show a 404 page
+    if (expiresAt && new Date(expiresAt) < new Date()) {
+      return (
+        <NotFound message="Sorry, the link you're looking for is expired." />
+      );
+    }
+
+    if (isArchived) {
+      return (
+        <NotFound message="Sorry, the link you're looking for is archived." />
+      );
+    }
+
+    const { enableCustomMetatag, metaTitle, metaDescription, metaImage } = link;
+
+    if (emailProtected || linkPassword) {
+      return (
+        <>
+          <CustomMetatag
+            enableBranding={enableCustomMetatag ?? false}
+            title={metaTitle ?? link.document.name}
+            description={metaDescription}
+            imageUrl={metaImage}
+            url={`https://www.papermark.io/view/${router.query.linkId}`}
+          />
+          <DocumentView
+            link={link}
+            userEmail={verifiedEmail ?? userEmail}
+            userId={userId}
+            isProtected={true}
+            notionData={notionData}
+            brand={brand}
+            token={token}
+            verifiedEmail={verifiedEmail}
+            showPoweredByBanner={showPoweredByBanner}
+          />
+        </>
+      );
+    }
+
     return (
       <>
-        {meta && meta.enableCustomMetatag ? (
-          <CustomMetatag
-            title={meta.metaTitle}
-            description={meta.metaDescription}
-            imageUrl={meta.metaImage}
-          />
-        ) : null}
-        <div className="h-screen flex items-center justify-center">
-          <LoadingSpinner className="h-20 w-20" />
-        </div>
+        <CustomMetatag
+          enableBranding={enableCustomMetatag ?? false}
+          title={metaTitle ?? link.document.name}
+          description={metaDescription}
+          imageUrl={metaImage}
+          url={`https://www.papermark.io/view/${router.query.linkId}`}
+        />
+        <DocumentView
+          link={link}
+          userEmail={verifiedEmail ?? userEmail}
+          userId={userId}
+          isProtected={false}
+          notionData={notionData}
+          brand={brand}
+          showPoweredByBanner={showPoweredByBanner}
+        />
       </>
     );
   }
 
-  const {
-    expiresAt,
-    emailProtected,
-    emailAuthenticated,
-    password: linkPassword,
-    isArchived,
-  } = link;
-
-  const { email: userEmail, id: userId } = (session?.user as CustomUser) || {};
-
-  // If the link is expired, show a 404 page
-  if (expiresAt && new Date(expiresAt) < new Date()) {
-    return (
-      <NotFound message="Sorry, the link you're looking for is expired." />
-    );
-  }
-
-  if (isArchived) {
-    return (
-      <NotFound message="Sorry, the link you're looking for is archived." />
-    );
-  }
-
-  const { enableCustomMetatag, metaTitle, metaDescription, metaImage } = link;
-
-  if (emailProtected || linkPassword) {
-    return (
-      <>
-        {enableCustomMetatag ? (
+  // Render the dataroom view for DATAROOM_LINK
+  if (linkType === "DATAROOM_LINK") {
+    if (!link || status === "loading" || router.isFallback) {
+      return (
+        <>
           <CustomMetatag
+            enableBranding={meta?.enableCustomMetatag ?? false}
+            title={meta?.metaTitle ?? link?.dataroom.name ?? "Dataroom"}
+            description={meta?.metaDescription ?? null}
+            imageUrl={meta?.metaImage ?? null}
+            url={`https://www.papermark.io/view/${router.query.linkId}`}
+          />
+          <div className="h-screen flex items-center justify-center">
+            <LoadingSpinner className="h-20 w-20" />
+          </div>
+        </>
+      );
+    }
+
+    const {
+      expiresAt,
+      emailProtected,
+      emailAuthenticated,
+      password: linkPassword,
+      isArchived,
+    } = link;
+
+    const { email: userEmail, id: userId } =
+      (session?.user as CustomUser) || {};
+
+    // If the link is expired, show a 404 page
+    if (expiresAt && new Date(expiresAt) < new Date()) {
+      return (
+        <NotFound message="Sorry, the link you're looking for is expired." />
+      );
+    }
+
+    if (isArchived) {
+      return (
+        <NotFound message="Sorry, the link you're looking for is archived." />
+      );
+    }
+
+    const { enableCustomMetatag, metaTitle, metaDescription, metaImage } = link;
+
+    if (emailProtected || linkPassword) {
+      return (
+        <>
+          <CustomMetatag
+            enableBranding={enableCustomMetatag ?? false}
             title={metaTitle}
             description={metaDescription}
             imageUrl={metaImage}
+            url={`https://www.papermark.io/view/${router.query.linkId}`}
           />
-        ) : null}
-        <DocumentView
+          <DataroomView
+            link={link}
+            userEmail={verifiedEmail ?? userEmail}
+            userId={userId}
+            isProtected={true}
+            brand={brand}
+            token={token}
+            verifiedEmail={verifiedEmail}
+          />
+        </>
+      );
+    }
+
+    return (
+      <>
+        <CustomMetatag
+          enableBranding={enableCustomMetatag ?? false}
+          title={metaTitle}
+          description={metaDescription}
+          imageUrl={metaImage}
+          url={`https://www.papermark.io/view/${router.query.linkId}`}
+        />
+        <DataroomView
           link={link}
-          userEmail={userEmail}
+          userEmail={verifiedEmail ?? userEmail}
           userId={userId}
-          isProtected={true}
-          notionData={notionData}
+          isProtected={false}
           brand={brand}
-          token={token}
-          verifiedEmail={verifiedEmail}
         />
       </>
     );
   }
-
-  return (
-    <>
-      {enableCustomMetatag ? (
-        <CustomMetatag
-          title={metaTitle}
-          description={metaDescription}
-          imageUrl={metaImage}
-        />
-      ) : null}
-      <DocumentView
-        link={link}
-        userEmail={userEmail}
-        userId={userId}
-        isProtected={false}
-        notionData={notionData}
-        brand={brand}
-      />
-    </>
-  );
 }

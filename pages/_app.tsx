@@ -5,16 +5,20 @@ import type { Session } from "next-auth";
 import { SessionProvider } from "next-auth/react";
 import { Toaster } from "@/components/ui/sonner";
 import Head from "next/head";
-import { Analytics } from "@vercel/analytics/react";
 import PlausibleProvider from "next-plausible";
 import { ThemeProvider } from "@/components/theme-provider";
 import { TeamProvider } from "@/context/team-context";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { PostHogCustomProvider } from "@/components/providers/posthog-provider";
+import { EXCLUDED_PATHS } from "@/lib/constants";
+import { TriggerCustomProvider } from "@/components/providers/trigger-provider";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export default function App({
   Component,
   pageProps: { session, ...pageProps },
+  router,
 }: AppProps<{ session: Session }>) {
   return (
     <>
@@ -41,7 +45,12 @@ export default function App({
           content="https://www.papermark.io/_static/meta-image.png"
           key="og-image"
         />
-        <meta property="og:url" content="https://www.papermark.io" />
+        <meta
+          property="og:url"
+          content="https://www.papermark.io"
+          key="og-url"
+        />
+        <meta property="og:type" content="website" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:site" content="@papermarkio" />
         <meta name="twitter:creator" content="@papermarkio" />
@@ -59,20 +68,29 @@ export default function App({
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <SessionProvider session={session}>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <PlausibleProvider
-            domain="papermark.io"
-            enabled={process.env.NEXT_PUBLIC_VERCEL_ENV === "production"}
-          >
-            <main className={inter.className}>
-              <Toaster closeButton richColors />
-              <TeamProvider>
-                <Component {...pageProps} />
-              </TeamProvider>
-            </main>
-          </PlausibleProvider>
-        </ThemeProvider>
-        <Analytics />
+        <PostHogCustomProvider>
+          <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+            <PlausibleProvider
+              domain="papermark.io"
+              enabled={process.env.NEXT_PUBLIC_VERCEL_ENV === "production"}
+            >
+              <main className={inter.className}>
+                <Toaster closeButton richColors />
+                <TooltipProvider delayDuration={100}>
+                  {EXCLUDED_PATHS.includes(router.pathname) ? (
+                    <Component {...pageProps} />
+                  ) : (
+                    <TeamProvider>
+                      <TriggerCustomProvider>
+                        <Component {...pageProps} />
+                      </TriggerCustomProvider>
+                    </TeamProvider>
+                  )}
+                </TooltipProvider>
+              </main>
+            </PlausibleProvider>
+          </ThemeProvider>
+        </PostHogCustomProvider>
       </SessionProvider>
     </>
   );

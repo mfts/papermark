@@ -4,6 +4,7 @@ import { UpgradePlanModal } from "./upgrade-plan-modal";
 import { Button } from "@/components/ui/button";
 import { usePlausible } from "next-plausible";
 import X from "@/components/shared/icons/x";
+import { useAnalytics } from "@/lib/analytics";
 
 export default function ProBanner({
   setShowProBanner,
@@ -11,6 +12,7 @@ export default function ProBanner({
   setShowProBanner: Dispatch<SetStateAction<boolean | null>>;
 }) {
   const plausible = usePlausible();
+  const analytics = useAnalytics();
 
   const handleHideBanner = () => {
     setShowProBanner(false);
@@ -38,7 +40,7 @@ export default function ProBanner({
         more.
       </p>
       <div className="flex">
-        <UpgradePlanModal clickedPlan={"Pro"}>
+        <UpgradePlanModal clickedPlan={"Pro"} trigger={"pro_banner"}>
           <Button
             type="button"
             className="grow"

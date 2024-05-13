@@ -8,9 +8,6 @@ import {
 } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
-import PasswordSection from "./password-section";
-import ExpirationSection from "./expiration-section";
-import EmailProtectionSection from "./email-protection-section";
 import { useRouter } from "next/router";
 import { useDocumentLinks } from "@/lib/swr/use-document";
 import { useDomains } from "@/lib/swr/use-domains";
@@ -20,13 +17,12 @@ import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
 import { convertDataUrlToFile, uploadImage } from "@/lib/utils";
 import DomainSection from "./domain-section";
-import AllowDownloadSection from "./allow-download-section";
 import { useTeam } from "@/context/team-context";
-import EmailAuthenticationSection from "./email-authentication-section";
-import AllowNotificationSection from "./allow-notification-section";
-import FeedbackSection from "./feedback-section";
-import OGSection from "./og-section";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { LinkOptions } from "./link-options";
+import { useAnalytics } from "@/lib/analytics";
+import { LinkWithViews } from "@/lib/types";
+import { usePlan } from "@/lib/swr/use-billing";
 
 export const DEFAULT_LINK_PROPS = {
   id: null,
@@ -38,12 +34,18 @@ export const DEFAULT_LINK_PROPS = {
   emailProtected: true,
   emailAuthenticated: false,
   allowDownload: false,
+  allowList: [],
+  denyList: [],
   enableNotification: true,
   enableFeedback: true,
+  enableScreenshotProtection: false,
   enableCustomMetatag: false,
   metaTitle: null,
   metaDescription: null,
   metaImage: null,
+  enabledQuestion: false,
+  questionText: null,
+  questionType: null,
 };
 
 export type DEFAULT_LINK_TYPE = {
@@ -56,31 +58,42 @@ export type DEFAULT_LINK_TYPE = {
   emailProtected: boolean;
   emailAuthenticated: boolean;
   allowDownload: boolean;
+  allowList: string[];
+  denyList: string[];
   enableNotification: boolean;
   enableFeedback: boolean;
+  enableScreenshotProtection: boolean;
   enableCustomMetatag: boolean; // metatags
   metaTitle: string | null; // metatags
   metaDescription: string | null; // metatags
   metaImage: string | null; // metatags
+  enableQuestion?: boolean; // feedback question
+  questionText: string | null;
+  questionType: string | null;
 };
 
 export default function LinkSheet({
   isOpen,
   setIsOpen,
+  linkType,
   currentLink,
+  existingLinks,
 }: {
   isOpen: boolean;
   setIsOpen: Dispatch<SetStateAction<boolean>>;
+  linkType: "DOCUMENT_LINK" | "DATAROOM_LINK";
   currentLink?: DEFAULT_LINK_TYPE;
+  existingLinks?: LinkWithViews[];
 }) {
-  const { links } = useDocumentLinks();
   const { domains } = useDomains();
   const teamInfo = useTeam();
+  const { plan } = usePlan();
+  const analytics = useAnalytics();
   const [data, setData] = useState<DEFAULT_LINK_TYPE>(DEFAULT_LINK_PROPS);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const router = useRouter();
-  const documentId = router.query.id as string;
+  const targetId = router.query.id as string;
 
   useEffect(() => {
     setData(currentLink || DEFAULT_LINK_PROPS);
@@ -121,7 +134,9 @@ export default function LinkSheet({
       body: JSON.stringify({
         ...data,
         metaImage: blobUrl,
-        documentId: documentId,
+        targetId: targetId,
+        linkType: linkType,
+        teamId: teamInfo?.currentTeam?.id,
       }),
     });
 
@@ -134,15 +149,16 @@ export default function LinkSheet({
     }
 
     const returnedLink = await response.json();
+    const endpointTargetType = `${linkType.replace("_LINK", "").toLowerCase()}s`; // "documents" or "datarooms"
 
     if (currentLink) {
       setIsOpen(false);
       // Update the link in the list of links
       mutate(
-        `/api/teams/${teamInfo?.currentTeam?.id}/documents/${encodeURIComponent(
-          documentId,
+        `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
+          targetId,
         )}/links`,
-        (links || []).map((link) =>
+        (existingLinks || []).map((link) =>
           link.id === currentLink.id ? returnedLink : link,
         ),
         false,
@@ -152,12 +168,20 @@ export default function LinkSheet({
       setIsOpen(false);
       // Add the new link to the list of links
       mutate(
-        `/api/teams/${teamInfo?.currentTeam?.id}/documents/${encodeURIComponent(
-          documentId,
+        `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
+          targetId,
         )}/links`,
-        [...(links || []), returnedLink],
+        [...(existingLinks || []), returnedLink],
         false,
       );
+
+      analytics.capture("Link Added", {
+        linkId: returnedLink.id,
+        targetId,
+        linkType,
+        customDomain: returnedLink.domainSlug,
+      });
+
       toast.success("Link created successfully");
     }
 
@@ -202,28 +226,23 @@ export default function LinkSheet({
                     </div>
 
                     <div className="space-y-2">
-                      <DomainSection {...{ data, setData, domains }} />
+                      <DomainSection
+                        {...{ data, setData, domains }}
+                        plan={plan}
+                        linkType={linkType}
+                      />
                     </div>
 
                     <div className="flex items-center relative">
                       <Separator className="bg-muted-foreground absolute" />
                       <div className="relative mx-auto">
                         <span className="px-2 bg-background text-muted-foreground text-sm">
-                          Optional
+                          Link Options
                         </span>
                       </div>
                     </div>
 
-                    <div>
-                      <EmailProtectionSection {...{ data, setData }} />
-                      <EmailAuthenticationSection {...{ data, setData }} />
-                      <AllowDownloadSection {...{ data, setData }} />
-                      <PasswordSection {...{ data, setData }} />
-                      <ExpirationSection {...{ data, setData }} />
-                      <OGSection {...{ data, setData }} />
-                      <AllowNotificationSection {...{ data, setData }} />
-                      <FeedbackSection {...{ data, setData }} />
-                    </div>
+                    <LinkOptions data={data} setData={setData} />
                   </div>
                 </div>
               </div>

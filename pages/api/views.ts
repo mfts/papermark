@@ -1,10 +1,10 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/lib/prisma";
-import { checkPassword, log } from "@/lib/utils";
-import { trackAnalytics } from "@/lib/analytics";
-import { client } from "@/trigger";
+import { checkPassword, decryptEncrpytedPassword, log } from "@/lib/utils";
 import { newId } from "@/lib/id-helper";
 import { sendVerificationEmail } from "@/lib/emails/send-email-verification";
+import { getFile } from "@/lib/files/get-file";
+import sendNotification from "@/lib/api/notification-helper";
 
 export default async function handle(
   req: NextApiRequest,
@@ -21,8 +21,10 @@ export default async function handle(
     documentId,
     userId,
     documentVersionId,
+    documentName,
     hasPages,
     token,
+    ownerId,
     verifiedEmail,
     ...data
   } = req.body as {
@@ -30,8 +32,10 @@ export default async function handle(
     documentId: string;
     userId: string | null;
     documentVersionId: string;
+    documentName: string;
     hasPages: boolean;
     token: string | null;
+    ownerId: string;
     verifiedEmail: string | null;
   };
 
@@ -48,12 +52,20 @@ export default async function handle(
       emailAuthenticated: true,
       password: true,
       domainSlug: true,
+      isArchived: true,
       slug: true,
+      allowList: true,
+      denyList: true,
     },
   });
 
   if (!link) {
     res.status(404).json({ message: "Link not found." });
+    return;
+  }
+
+  if (link.isArchived) {
+    res.status(404).json({ message: "Link is no longer available." });
     return;
   }
 
@@ -63,8 +75,6 @@ export default async function handle(
       res.status(400).json({ message: "Email is required." });
       return;
     }
-
-    // You can implement more thorough email validation if required
   }
 
   // Check if password is required for visiting the link
@@ -74,9 +84,56 @@ export default async function handle(
       return;
     }
 
-    const isPasswordValid = await checkPassword(password, link.password);
+    let isPasswordValid: boolean = false;
+    const textParts: string[] = link.password.split(":");
+    if (!textParts || textParts.length !== 2) {
+      isPasswordValid = await checkPassword(password, link.password);
+    } else {
+      const decryptedPassword = decryptEncrpytedPassword(link.password);
+      isPasswordValid = decryptedPassword === password;
+    }
+
     if (!isPasswordValid) {
       res.status(403).json({ message: "Invalid password." });
+      return;
+    }
+  }
+
+  // Check if email is allowed to visit the link
+  if (link.allowList && link.allowList.length > 0) {
+    // Extract the domain from the email address
+    const emailDomain = email.substring(email.lastIndexOf("@"));
+
+    // Determine if the email or its domain is allowed
+    const isAllowed = link.allowList.some((allowed) => {
+      return (
+        allowed === email ||
+        (allowed.startsWith("@") && emailDomain === allowed)
+      );
+    });
+
+    // Deny access if the email is not allowed
+    if (!isAllowed) {
+      res.status(403).json({ message: "Unauthorized access" });
+      return;
+    }
+  }
+
+  // Check if email is denied to visit the link
+  if (link.denyList && link.denyList.length > 0) {
+    // Extract the domain from the email address
+    const emailDomain = email.substring(email.lastIndexOf("@"));
+
+    // Determine if the email or its domain is denied
+    const isDenied = link.denyList.some((denied) => {
+      return (
+        denied === email || (denied.startsWith("@") && emailDomain === denied)
+      );
+    });
+
+    // Deny access if the email is denied
+    if (isDenied) {
+      res.status(403).json({ message: "Unauthorized access" });
       return;
     }
   }
@@ -85,7 +142,7 @@ export default async function handle(
   if (link.emailAuthenticated && !token) {
     const token = newId("email");
     const expiresAt = new Date();
-    expiresAt.setHours(expiresAt.getHours() + 24); // token expires in 24 hour
+    expiresAt.setHours(expiresAt.getHours() + 1); // token expires in 1 hour
 
     await prisma.verificationToken.create({
       data: {
@@ -159,9 +216,22 @@ export default async function handle(
         orderBy: { pageNumber: "asc" },
         select: {
           file: true,
+          storageType: true,
           pageNumber: true,
+          embeddedLinks: true,
         },
       });
+
+      documentPages = await Promise.all(
+        documentPages.map(async (page) => {
+          const { storageType, ...otherPage } = page;
+          return {
+            ...otherPage,
+            file: await getFile({ data: page.file, type: storageType }),
+          };
+        }),
+      );
+
       console.timeEnd("get-pages");
     } else {
       // get file from document version
@@ -170,37 +240,25 @@ export default async function handle(
         where: { id: documentVersionId },
         select: {
           file: true,
+          storageType: true,
         },
+      });
+
+      if (!documentVersion) {
+        res.status(404).json({ message: "Document version not found." });
+        return;
+      }
+
+      documentVersion.file = await getFile({
+        data: documentVersion.file,
+        type: documentVersion.storageType,
       });
       console.timeEnd("get-file");
     }
 
-    // const [newView, documentPages, documentVersion] = await Promise.all([
-    //   newViewPromise,
-    //   documentPagesPromise,
-    //   documentVersionPromise,
-    // ]);
-
-    // TODO: cannot identify user because session is not available
-    // await identifyUser((session.user as CustomUser).id);
-    // await analytics.identify();
-    console.time("track-analytics");
-    await trackAnalytics({
-      event: "Link Viewed",
-      linkId: linkId,
-      documentId: documentId,
-      viewerId: newView.id,
-      viewerEmail: email,
-    });
-    console.timeEnd("track-analytics");
-
     if (link.enableNotification) {
-      // trigger link viewed event to trigger send-notification job
       console.time("sendemail");
-      await client.sendEvent({
-        name: "link.viewed",
-        payload: { viewId: newView.id },
-      });
+      await sendNotification({ viewId: newView.id });
       console.timeEnd("sendemail");
     }
 
@@ -213,7 +271,11 @@ export default async function handle(
 
     return res.status(200).json(returnObject);
   } catch (error) {
-    log(`Failed to record view for ${linkId}. Error: \n\n ${error}`);
+    log({
+      message: `Failed to record view for ${linkId}. \n\n ${error}`,
+      type: "error",
+      mention: true,
+    });
     return res.status(500).json({ message: (error as Error).message });
   }
 }

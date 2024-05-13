@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { usePlausible } from "next-plausible";
 import { useEffect } from "react";
+import { getFile } from "@/lib/files/get-file";
 
 export const getServerSideProps = async (context: any) => {
   const { id } = context.params;
@@ -19,7 +20,7 @@ export const getServerSideProps = async (context: any) => {
     return {
       redirect: {
         permanent: false,
-        destination: `/login?next=/view/${id}/chat`,
+        destination: `/login?next=/documents/${id}/chat`,
       },
     };
   }
@@ -48,6 +49,7 @@ export const getServerSideProps = async (context: any) => {
             where: { pageNumber: 1 },
             select: {
               file: true,
+              storageType: true,
             },
           },
         },
@@ -84,11 +86,18 @@ export const getServerSideProps = async (context: any) => {
 
   const { threadId, messages } = await res.json();
 
+  const firstPage = document.versions[0].pages[0]
+    ? await getFile({
+        type: document.versions[0].pages[0].storageType,
+        data: document.versions[0].pages[0].file,
+      })
+    : "";
+
   return {
     props: {
       threadId,
       messages: messages || [],
-      firstPage: document.versions[0].pages[0]?.file || "",
+      firstPage,
       userId,
       documentId: document.id,
     },
@@ -125,7 +134,7 @@ export default function ChatPage({
         threadId={threadId}
         firstPage={firstPage}
         userId={userId}
-        plan={plan?.plan}
+        plan={plan}
       />
     </>
   );

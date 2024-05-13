@@ -48,11 +48,11 @@ export default function ComparisonTable() {
       <div className="mt-20 px-6 py-12 sm:px-6 sm:py-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center">
           <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-            Docsend alternatives based on plan and P pricing
+            Docsend alternatives based on plan and pricing
             <br />
           </h2>
           <p className="mx-auto mt-6 max-w-xl text-lg leading-8 text-gray-600">
-            Alternatives which help users to share documents and track the
+            Docsend Alternatives which help users share documents and track the
             progress on each page. So allow to capture email and set other
             setting for sharable links.
           </p>
@@ -87,7 +87,7 @@ export default function ComparisonTable() {
                       <td
                         key={tool.name}
                         className={`px-3 py-4 text-sm text-gray-500 ${
-                          tool.name === "Papermark" ? "bg-green-100" : ""
+                          tool.name === "Papermark" ? "bg-orange-100" : ""
                         }`}
                       >
                         {tool.features[feature]}

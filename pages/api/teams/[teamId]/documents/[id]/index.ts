@@ -3,9 +3,9 @@ import { getServerSession } from "next-auth/next";
 import prisma from "@/lib/prisma";
 import { authOptions } from "../../../../auth/[...nextauth]";
 import { CustomUser } from "@/lib/types";
-import { del } from "@vercel/blob";
 import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
 import { errorhandler } from "@/lib/errorHandler";
+import { deleteFile } from "@/lib/files/delete-file-server";
 
 export default async function handle(
   req: NextApiRequest,
@@ -48,6 +48,54 @@ export default async function handle(
     } catch (error) {
       errorhandler(error, res);
     }
+  } else if (req.method === "PUT") {
+    // PUT /api/teams/:teamId/document/:id
+    const session = await getServerSession(req, res, authOptions);
+    if (!session) {
+      res.status(401).end("Unauthorized");
+      return;
+    }
+    const userId = (session.user as CustomUser).id;
+    const { teamId, id: docId } = req.query as { teamId: string; id: string };
+    const { folderId, currentPathName } = req.body as {
+      folderId: string;
+      currentPathName: string;
+    };
+
+    const document = await prisma.document.update({
+      where: {
+        id: docId,
+        teamId: teamId,
+        team: {
+          users: {
+            some: {
+              role: "ADMIN",
+              userId: userId,
+            },
+          },
+        },
+      },
+      data: {
+        folderId: folderId,
+      },
+      select: {
+        folder: {
+          select: {
+            path: true,
+          },
+        },
+      },
+    });
+
+    if (!document) {
+      return res.status(404).end("Document not found");
+    }
+
+    return res.status(200).json({
+      message: "Document moved successfully",
+      newPath: document.folder?.path,
+      oldPath: currentPathName,
+    });
   } else if (req.method === "DELETE") {
     // DELETE /api/teams/:teamId/document/:id
     const session = await getServerSession(req, res, authOptions);
@@ -61,25 +109,41 @@ export default async function handle(
     const userId = (session.user as CustomUser).id;
 
     try {
-      const { document } = await getTeamWithUsersAndDocument({
-        teamId,
-        userId,
-        docId,
-        checkOwner: true,
-        options: {
-          select: {
-            id: true,
-            ownerId: true,
-            file: true,
-            type: true,
+      const documentVersions = await prisma.document.findUnique({
+        where: {
+          id: docId,
+          teamId: teamId,
+          team: {
+            users: {
+              some: {
+                // role: "ADMIN", // TODO: add role check when deleting document
+                userId: userId,
+              },
+            },
+          },
+        },
+        include: {
+          versions: {
+            select: {
+              id: true,
+              file: true,
+              type: true,
+              storageType: true,
+            },
           },
         },
       });
 
-      //if it is not notion document then only delete the document from vercel blob
-      if (document?.type !== "notion") {
-        // delete the document from vercel blob
-        await del(document!.file);
+      if (!documentVersions) {
+        return res.status(404).end("Document not found");
+      }
+
+      //if it is not notion document then only delete the document from storage
+      if (documentVersions.type !== "notion") {
+        // delete the files from storage
+        for (const version of documentVersions.versions) {
+          await deleteFile({ type: version.storageType, data: version.file });
+        }
       }
 
       // delete the document from database
@@ -94,8 +158,8 @@ export default async function handle(
       errorhandler(error, res);
     }
   } else {
-    // We only allow GET and DELETE requests
-    res.setHeader("Allow", ["GET", "DELETE"]);
+    // We only allow GET, PUT and DELETE requests
+    res.setHeader("Allow", ["GET", "PUT", "DELETE"]);
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 }
