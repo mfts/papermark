@@ -1,33 +1,6 @@
 import Image from "next/image";
-import Link from "next/link";
-
-import { useEffect, useRef, useState } from "react";
-
-import { TeamContextType } from "@/context/team-context";
-import { FolderInputIcon, MoreVertical, TrashIcon } from "lucide-react";
 import { useTheme } from "next-themes";
-import { toast } from "sonner";
-import { mutate } from "swr";
-
-import { MoveToFolderModal } from "@/components/documents/move-folder-modal";
-import BarChart from "@/components/shared/icons/bar-chart";
-import Check from "@/components/shared/icons/check";
-import Copy from "@/components/shared/icons/copy";
 import NotionIcon from "@/components/shared/icons/notion";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-
-import { type DataroomFolderDocument } from "@/lib/swr/use-dataroom";
-import { type DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
-import { nFormatter, timeAgo } from "@/lib/utils";
-import { useCopyToClipboard } from "@/lib/utils/use-copy-to-clipboard";
 
 type DRDocument = {
   dataroomDocumentId: string;
