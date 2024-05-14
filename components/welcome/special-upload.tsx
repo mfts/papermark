@@ -50,7 +50,7 @@ export default function DeckGeneratorUpload() {
       const blob = fetch(reportUrl)
         .then((response) => response.blob())
         .then((blob) => {
-          const file = new File([blob], "report.pdf", {
+          const file = new File([blob], "Pitchdeck.pdf", {
             type: "application/pdf",
           });
           setCurrentFile(file);
