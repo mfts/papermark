@@ -15,12 +15,15 @@ export default function EmailSection({
     // Load email from localStorage when the component mounts
     const storedEmail = window.localStorage.getItem("papermark.email");
     if (storedEmail) {
-      setData((prevData) => ({ ...prevData, email: storedEmail }));
+      setData((prevData) => ({
+        ...prevData,
+        email: storedEmail.toLowerCase(),
+      }));
     }
   }, [setData]);
 
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newEmail = e.target.value;
+    const newEmail = e.target.value.toLowerCase();
     // Store the new email in localStorage
     window.localStorage.setItem("papermark.email", newEmail);
     // Update the state
