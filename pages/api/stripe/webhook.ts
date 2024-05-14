@@ -1,5 +1,11 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
+import {
+  BUSINESS_PLAN_LIMITS,
+  DATAROOMS_PLAN_LIMITS,
+  FREE_PLAN_LIMITS,
+  PRO_PLAN_LIMITS,
+} from "@/ee/limits/constants";
 import { Readable } from "node:stream";
 import type Stripe from "stripe";
 
@@ -12,12 +18,6 @@ import {
   isUpgradedCustomer,
 } from "@/lib/stripe/utils";
 import { log } from "@/lib/utils";
-import {
-  BUSINESS_PLAN_LIMITS,
-  DATAROOMS_PLAN_LIMITS,
-  FREE_PLAN_LIMITS,
-  PRO_PLAN_LIMITS,
-} from "@/ee/limits/constants";
 
 // Stripe requires the raw body to construct the event.
 export const config = {

@@ -5,13 +5,13 @@ import {
   Button,
   Container,
   Head,
-  Text,
   Hr,
   Html,
   Link,
   Preview,
   Section,
   Tailwind,
+  Text,
 } from "@react-email/components";
 
 export default function InvalidDomain({
