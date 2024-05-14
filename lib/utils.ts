@@ -487,7 +487,7 @@ export const sanitizeAllowDenyList = (list: string): string[] => {
 
   return list
     .split("\n")
-    .map((item) => item.trim().replace(/,$/, "")) // Trim whitespace and remove trailing commas
+    .map((item) => item.trim().replace(/,$/, "").toLowerCase()) // Trim whitespace and remove trailing commas and lowercase
     .filter((item) => item !== "") // Remove empty items
     .filter((item) => emailRegex.test(item) || domainRegex.test(item)); // Remove items that don't match email or domain regex
 };

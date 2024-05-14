@@ -92,7 +92,7 @@ export function AddViewerModal({
     // Split the current input value by commas in case of pasting multiple emails
     const potentialEmails = inputValue
       .split(",")
-      .map((email) => email.trim())
+      .map((email) => email.trim().toLowerCase())
       .filter((email) => email);
 
     const newEmails = potentialEmails.filter((email) => {
