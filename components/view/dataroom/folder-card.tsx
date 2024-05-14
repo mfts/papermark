@@ -1,24 +1,5 @@
-import Link from "next/link";
-
-import { useRef } from "react";
-
-import { TeamContextType } from "@/context/team-context";
 import { DataroomFolder } from "@prisma/client";
-import { FolderIcon, MoreVertical } from "lucide-react";
-
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-
-import { DataroomFolderWithCount } from "@/lib/swr/use-dataroom";
-import { FolderWithCount } from "@/lib/swr/use-documents";
-import { timeAgo } from "@/lib/utils";
+import { FolderIcon } from "lucide-react";
 
 type FolderCardProps = {
   folder: DataroomFolder;
