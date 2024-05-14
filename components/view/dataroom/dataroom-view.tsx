@@ -3,7 +3,7 @@ import { useRouter } from "next/router";
 import React, { useEffect, useRef, useState } from "react";
 
 import { LinkWithDataroom } from "@/pages/view/d/[linkId]";
-import { Brand, DataroomBrand } from "@prisma/client";
+import { DataroomBrand } from "@prisma/client";
 import { usePlausible } from "next-plausible";
 import { ExtendedRecordMap } from "notion-types";
 import { toast } from "sonner";
