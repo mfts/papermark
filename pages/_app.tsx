@@ -1,17 +1,21 @@
-import "@/styles/globals.css";
 import type { AppProps } from "next/app";
 import { Inter } from "next/font/google";
+import Head from "next/head";
+
+import { TeamProvider } from "@/context/team-context";
 import type { Session } from "next-auth";
 import { SessionProvider } from "next-auth/react";
-import { Toaster } from "@/components/ui/sonner";
-import Head from "next/head";
 import PlausibleProvider from "next-plausible";
-import { ThemeProvider } from "@/components/theme-provider";
-import { TeamProvider } from "@/context/team-context";
-import { TooltipProvider } from "@/components/ui/tooltip";
+
 import { PostHogCustomProvider } from "@/components/providers/posthog-provider";
-import { EXCLUDED_PATHS } from "@/lib/constants";
 import { TriggerCustomProvider } from "@/components/providers/trigger-provider";
+import { ThemeProvider } from "@/components/theme-provider";
+import { Toaster } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+
+import { EXCLUDED_PATHS } from "@/lib/constants";
+
+import "@/styles/globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
 

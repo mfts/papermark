@@ -1,17 +1,19 @@
 import { Suspense } from "react";
+
+import { getInvestors } from "@/lib/content/investor";
+
 import Dashboard from "./ClientPage";
 import { FallbackInvestors } from "./Fallback";
-import { getInvestors } from "@/lib/content/investor";
 
 export default async function HomePage() {
   const allInvestors = await getInvestors();
 
   return (
     <>
-      <div className="mx-auto max-w-6xl pt-4 mb-10">
-        <div className="max-w-6xl mx-auto px-4 md:px-8 sm:pt-16 pt-8 text-gray-600">
-          <div className="space-y-5 max-w-4xl mx-auto text-center mb-10">
-            <h1 className="text-3xl text-gray-800 font-extrabold mx-auto sm:text-6xl max-w-3xl tracking-tighter">
+      <div className="mx-auto mb-10 max-w-6xl pt-4">
+        <div className="mx-auto max-w-6xl px-4 pt-8 text-gray-600 sm:pt-16 md:px-8">
+          <div className="mx-auto mb-10 max-w-4xl space-y-5 text-center">
+            <h1 className="mx-auto max-w-3xl text-3xl font-extrabold tracking-tighter text-gray-800 sm:text-6xl">
               Investors Database
             </h1>
             <p>

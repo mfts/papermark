@@ -1,4 +1,5 @@
 import { getTriggerClient } from "@/trigger";
+
 import { log } from "@/lib/utils";
 
 export default async function sendNotification({ viewId }: { viewId: string }) {

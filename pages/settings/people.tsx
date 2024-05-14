@@ -1,12 +1,20 @@
+import Link from "next/link";
+import { useRouter } from "next/router";
+
 import { useState } from "react";
+
+import { useTeam } from "@/context/team-context";
+import { useSession } from "next-auth/react";
+import { toast } from "sonner";
+import { mutate } from "swr";
+
+import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import AppLayout from "@/components/layouts/app";
 import Navbar from "@/components/settings/navbar";
-import { Button } from "@/components/ui/button";
-import MoreVertical from "@/components/shared/icons/more-vertical";
 import Folder from "@/components/shared/icons/folder";
-import { useGetTeam } from "@/lib/swr/use-team";
-import { Skeleton } from "@/components/ui/skeleton";
+import MoreVertical from "@/components/shared/icons/more-vertical";
 import { AddTeamMembers } from "@/components/teams/add-team-member-modal";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,18 +22,15 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useSession } from "next-auth/react";
-import { CustomUser } from "@/lib/types";
-import { toast } from "sonner";
-import { mutate } from "swr";
-import { useRouter } from "next/router";
-import { useTeam } from "@/context/team-context";
-import { useTeams } from "@/lib/swr/use-teams";
-import Link from "next/link";
+import { Skeleton } from "@/components/ui/skeleton";
+
+import { useAnalytics } from "@/lib/analytics";
 import { usePlan } from "@/lib/swr/use-billing";
 import { useInvitations } from "@/lib/swr/use-invitations";
-import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
-import { useAnalytics } from "@/lib/analytics";
+import useLimits from "@/lib/swr/use-limits";
+import { useGetTeam } from "@/lib/swr/use-team";
+import { useTeams } from "@/lib/swr/use-teams";
+import { CustomUser } from "@/lib/types";
 
 export default function Billing() {
   const [isTeamMemberInviteModalOpen, setTeamMemberInviteModalOpen] =
@@ -36,12 +41,15 @@ export default function Billing() {
   const { team, loading } = useGetTeam()!;
   const teamInfo = useTeam();
   const { plan: userPlan } = usePlan();
+  const { limits } = useLimits();
   const { teams } = useTeams();
   const analytics = useAnalytics();
 
   const { invitations } = useInvitations();
 
   const router = useRouter();
+
+  const numUsers = (team && team.users.length) ?? 1;
 
   const getUserDocumentCount = (userId: string) => {
     const documents = team?.documents.filter(
@@ -166,10 +174,10 @@ export default function Billing() {
   return (
     <AppLayout>
       <Navbar current="People" />
-      <div className="p-4 sm:p-4 sm:m-4">
-        <div className="flex items-center justify-between mb-4 md:mb-8 lg:mb-12">
+      <div className="p-4 sm:m-4 sm:p-4">
+        <div className="mb-4 flex items-center justify-between md:mb-8 lg:mb-12">
           <div className="space-y-1">
-            <h3 className="text-2xl text-foreground font-semibold tracking-tight">
+            <h3 className="text-2xl font-semibold tracking-tight text-foreground">
               Team Members
             </h3>
             <p className="text-sm text-muted-foreground">
@@ -178,14 +186,15 @@ export default function Billing() {
           </div>
         </div>
         <div>
-          <div className="flex justify-between items-center p-10 rounded-lg border border-border bg-secondary">
+          <div className="flex items-center justify-between rounded-lg border border-border bg-secondary p-10">
             <div className="flex flex-col space-y-3">
               <h2 className="text-xl font-medium">People</h2>
               <p className="text-sm text-secondary-foreground">
                 Teammates that have access to this project.
               </p>
             </div>
-            {userPlan !== "free" ? (
+            {userPlan !== "free" &&
+            (limits === null || (limits && limits.users >= numUsers)) ? (
               <AddTeamMembers
                 open={isTeamMemberInviteModalOpen}
                 setOpen={setTeamMemberInviteModalOpen}
@@ -203,9 +212,9 @@ export default function Billing() {
           </div>
         </div>
 
-        <ul className="mt-6 border rounded-lg divide-y">
+        <ul className="mt-6 divide-y rounded-lg border">
           {loading && (
-            <div className="flex justify-between items-center py-4 px-10">
+            <div className="flex items-center justify-between px-10 py-4">
               <div className="flex items-center gap-12">
                 <div className="space-y-2">
                   <Skeleton className="h-6 w-36" />
@@ -221,12 +230,12 @@ export default function Billing() {
           )}
           {team?.users.map((member, index) => (
             <li
-              className="flex py-4 px-10 justify-between items-center"
+              className="flex items-center justify-between px-10 py-4"
               key={index}
             >
               <div className="flex items-center gap-12">
                 <div className="space-y-1">
-                  <h4 className="font-semibold text-sm">{member.user.name}</h4>
+                  <h4 className="text-sm font-semibold">{member.user.name}</h4>
                   <p className="text-xs text-muted-foreground">
                     {member.user.email}
                   </p>
@@ -244,7 +253,7 @@ export default function Billing() {
                 </div>
               </div>
               <div className="flex items-center gap-12">
-                <span className="text-sm text-foreground capitalize">
+                <span className="text-sm capitalize text-foreground">
                   {member.role.toLowerCase()}
                 </span>
                 {leavingUserId === member.userId ? (
@@ -264,7 +273,7 @@ export default function Billing() {
                           onClick={() =>
                             removeTeammate(member.teamId, member.userId)
                           }
-                          className="text-red-500 focus:bg-destructive focus:text-destructive-foreground hover:cursor-pointer"
+                          className="text-red-500 hover:cursor-pointer focus:bg-destructive focus:text-destructive-foreground"
                         >
                           Leave team
                         </DropdownMenuItem>
@@ -274,7 +283,7 @@ export default function Billing() {
                           onClick={() =>
                             removeTeammate(member.teamId, member.userId)
                           }
-                          className="text-red-500 focus:bg-destructive focus:text-destructive-foreground hover:cursor-pointer"
+                          className="text-red-500 hover:cursor-pointer focus:bg-destructive focus:text-destructive-foreground"
                         >
                           Remove teammate
                         </DropdownMenuItem>
@@ -295,12 +304,12 @@ export default function Billing() {
           {invitations &&
             invitations.map((invitation, index) => (
               <li
-                className="flex py-4 px-10 justify-between items-center"
+                className="flex items-center justify-between px-10 py-4"
                 key={index}
               >
                 <div className="flex items-center gap-12">
                   <div className="space-y-1">
-                    <h4 className="font-semibold text-sm">
+                    <h4 className="text-sm font-semibold">
                       {invitation.email}
                     </h4>
                     <p className="text-xs text-muted-foreground">
@@ -331,13 +340,13 @@ export default function Billing() {
                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
                       <DropdownMenuItem
                         onClick={() => resendInvitation(invitation)}
-                        className="text-red-500 focus:bg-destructive focus:text-destructive-foreground hover:cursor-pointer"
+                        className="text-red-500 hover:cursor-pointer focus:bg-destructive focus:text-destructive-foreground"
                       >
                         Resend
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => revokeInvitation(invitation)}
-                        className="text-red-500 focus:bg-destructive focus:text-destructive-foreground hover:cursor-pointer"
+                        className="text-red-500 hover:cursor-pointer focus:bg-destructive focus:text-destructive-foreground"
                       >
                         Revoke invitation
                       </DropdownMenuItem>

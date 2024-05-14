@@ -1,12 +1,13 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { newId } from "@/lib/id-helper";
-import { publishPageView } from "@/lib/tinybird";
-import { capitalize, getDomainWithoutWWW, log } from "@/lib/utils";
-import { userAgentFromString } from "@/lib/utils/user-agent";
-import { Geo } from "@/lib/types";
-import { LOCALHOST_GEO_DATA, getGeoData } from "@/lib/utils/geo";
 
 import { z } from "zod";
+
+import { newId } from "@/lib/id-helper";
+import { publishPageView } from "@/lib/tinybird";
+import { Geo } from "@/lib/types";
+import { capitalize, getDomainWithoutWWW, log } from "@/lib/utils";
+import { LOCALHOST_GEO_DATA, getGeoData } from "@/lib/utils/geo";
+import { userAgentFromString } from "@/lib/utils/user-agent";
 
 const bodyValidation = z.object({
   id: z.string(),

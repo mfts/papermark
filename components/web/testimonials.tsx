@@ -1,4 +1,5 @@
 import Image from "next/image";
+
 import ProductHuntIcon from "@/components/shared/icons/producthunt";
 import TwitterIcon from "@/components/shared/icons/twitter";
 
@@ -74,22 +75,22 @@ const testimonials = [
 export default function Testimonials() {
   return (
     <div className="bg-white py-24">
-      <div className="w-full mx-auto max-w-7xl px-4 md:px-8">
-        <h2 className="text-4xl text-balance">
+      <div className="mx-auto w-full max-w-7xl px-4 md:px-8">
+        <h2 className="text-balance text-4xl">
           Loved by over 5000 customers and users.
           <br />
           <span className="text-gray-500">
             Here&apos;s what they have to say about us.
           </span>
         </h2>
-        <div className="mx-auto max-w-2xl lg:max-w-none mt-8">
+        <div className="mx-auto mt-8 max-w-2xl lg:max-w-none">
           <div className="space-y-6 py-8 sm:block sm:columns-2 sm:gap-6 lg:columns-3">
             {testimonials.map((testimonial) => (
               <div
                 key={testimonial.author.handle}
-                className="flex w-full relative"
+                className="relative flex w-full"
               >
-                <div className="rounded-lg shadow-lg border-gray-500 bg-white p-6 text-base leading-6 border  relative">
+                <div className="relative rounded-lg border border-gray-500 bg-white p-6 text-base leading-6  shadow-lg">
                   <div className="flex flex-col justify-between">
                     <div className="flex items-center justify-between gap-x-4">
                       <div className="flex items-center gap-x-4">
@@ -119,9 +120,9 @@ export default function Testimonials() {
                         className=""
                       >
                         {testimonial.producthunt ? (
-                          <ProductHuntIcon className="w-6 h-6 text-gray-800" />
+                          <ProductHuntIcon className="h-6 w-6 text-gray-800" />
                         ) : (
-                          <TwitterIcon className="w-5 h-5 text-gray-800" />
+                          <TwitterIcon className="h-5 w-5 text-gray-800" />
                         )}
                       </a>
                     </div>

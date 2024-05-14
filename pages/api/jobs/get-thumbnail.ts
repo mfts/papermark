@@ -1,6 +1,9 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { getFileForDocumentPage } from "@/lib/documents/get-file-helper";
+
 import { getServerSession } from "next-auth";
+
+import { getFileForDocumentPage } from "@/lib/documents/get-file-helper";
+
 import { authOptions } from "../auth/[...nextauth]";
 
 export default async function handle(

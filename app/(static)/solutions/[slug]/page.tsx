@@ -1,11 +1,11 @@
 import { type Metadata } from "next";
-
 import Link from "next/link";
+import { notFound } from "next/navigation";
+
 import { Button } from "@/components/ui/button";
 import Testimonials from "@/components/web/testimonials";
-import { getPage, getPages } from "@/lib/content/page";
 
-import { notFound } from "next/navigation";
+import { getPage, getPages } from "@/lib/content/page";
 import { constructMetadata } from "@/lib/utils";
 
 export async function generateStaticParams() {
@@ -38,8 +38,8 @@ export default async function PagePage({
   if (!page) return notFound();
 
   return (
-    <div className="flex flex-1 flex-col bg-white text-black justify-center">
-      <div className="max-w-5xl w-full mx-auto px-4 md:px-8 text-center">
+    <div className="flex flex-1 flex-col justify-center bg-white text-black">
+      <div className="mx-auto w-full max-w-5xl px-4 text-center md:px-8">
         <div className="pt-32">
           {/* <div className=" pb-4">
                 <img
@@ -53,19 +53,19 @@ export default async function PagePage({
           {/* <div className="relative rounded-full px-3 py-1 text-sm leading-6 text-black ring-black/10  hover:ring-white/20 text-balance">
             Join 1000s happy users
           </div> */}
-          <h1 className="text-6xl text-balance">{page.title}</h1>
-          <p className="text-xl mt-8 text-balance max-w-3xl mx-auto md:text-2xl">
+          <h1 className="text-balance text-6xl">{page.title}</h1>
+          <p className="mx-auto mt-8 max-w-3xl text-balance text-xl md:text-2xl">
             {page.description}
           </p>
-          <div className="pt-8 space-x-2">
+          <div className="space-x-2 pt-8">
             <Link href="/login">
-              <Button className="text-white text-balance bg-gray-900 rounded-3xl hover:bg-gray-800 justify-center">
+              <Button className="justify-center text-balance rounded-3xl bg-gray-900 text-white hover:bg-gray-800">
                 {page.button}
               </Button>
             </Link>
           </div>
         </div>
-        <div className="mt-24 mx-auto w-full">
+        <div className="mx-auto mt-24 w-full">
           <video
             width="100%"
             id="video1"
@@ -90,16 +90,16 @@ export default async function PagePage({
           <div className="grid grid-cols-1 gap-x-8 gap-y-16 sm:gap-y-20 lg:grid-cols-2 lg:items-start">
             <div className="px-6 lg:px-0 lg:pr-4 lg:pt-4">
               <div className="mx-auto max-w-2xl lg:mx-0 lg:max-w-lg">
-                <h2 className="mt-2 text-3xl text-gray-900 sm:text-4xl text-balance">
+                <h2 className="mt-2 text-balance text-3xl text-gray-900 sm:text-4xl">
                   {page.subtitle1}
                 </h2>
-                <p className="mt-6 text-lg leading-8 text-gray-600 text-balance">
+                <p className="mt-6 text-balance text-lg leading-8 text-gray-600">
                   {page.description1}
                 </p>
               </div>
-              <div className="pt-8 space-x-2">
+              <div className="space-x-2 pt-8">
                 <Link href="/login">
-                  <Button className="text-white text-balance bg-gray-900 rounded-3xl hover:bg-gray-800 justify-center">
+                  <Button className="justify-center text-balance rounded-3xl bg-gray-900 text-white hover:bg-gray-800">
                     {page.button}
                   </Button>
                 </Link>
@@ -162,16 +162,16 @@ export default async function PagePage({
             </div>
             <div className="px-6 lg:px-0 lg:pr-4 lg:pt-4">
               <div className="mx-auto max-w-2xl lg:mx-0 lg:max-w-lg">
-                <h2 className="mt-2 text-3xl text-gray-900 sm:text-4xl text-balance">
+                <h2 className="mt-2 text-balance text-3xl text-gray-900 sm:text-4xl">
                   {page.subtitle2}
                 </h2>
-                <p className="mt-6 text-lg leading-8 text-gray-600 text-balance">
+                <p className="mt-6 text-balance text-lg leading-8 text-gray-600">
                   {page.description2}
                 </p>
               </div>
-              <div className="pt-8 space-x-2">
+              <div className="space-x-2 pt-8">
                 <Link href="/login">
-                  <Button className="text-white text-balance bg-gray-900 rounded-3xl hover:bg-gray-800 justify-center">
+                  <Button className="justify-center text-balance rounded-3xl bg-gray-900 text-white hover:bg-gray-800">
                     {page.button}
                   </Button>
                 </Link>
@@ -186,10 +186,10 @@ export default async function PagePage({
 
       {/* CTA */}
       <div className="bg-[#fb7a00]">
-        <div className="w-full mx-auto max-w-5xl py-32 px-4 md:px-8">
-          <h2 className="text-4xl text-balance  ">{page.cta}</h2>
+        <div className="mx-auto w-full max-w-5xl px-4 py-32 md:px-8">
+          <h2 className="text-balance text-4xl  ">{page.cta}</h2>
 
-          <div className="pt-8 space-x-2">
+          <div className="space-x-2 pt-8">
             <Link href="/login">
               <Button className="text-balance rounded-3xl">
                 Start for free

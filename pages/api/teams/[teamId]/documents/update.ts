@@ -1,15 +1,18 @@
 import { NextApiRequest, NextApiResponse } from "next";
+
 import { getServerSession } from "next-auth/next";
+
+import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
-import { authOptions } from "../../../auth/[...nextauth]";
+import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
 import { CustomUser } from "@/lib/types";
 import { getExtension, log } from "@/lib/utils";
-import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
-import { errorhandler } from "@/lib/errorHandler";
+
+import { authOptions } from "../../../auth/[...nextauth]";
 
 export default async function handle(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   if (req.method === "POST") {
     // POST /api/teams/:teamId/documents/update
@@ -49,7 +52,10 @@ export default async function handle(
 
       return res.status(201).json({ message: "Document updated successfully" });
     } catch (error) {
-      log({message: `Failed to update document: _${documentId}_. \n\n ${error} \n\n*Metadata*: \`{teamId: ${teamId}, userId: ${userId}}\``, type: "error"});
+      log({
+        message: `Failed to update document: _${documentId}_. \n\n ${error} \n\n*Metadata*: \`{teamId: ${teamId}, userId: ${userId}}\``,
+        type: "error",
+      });
       errorhandler(error, res);
     }
   } else {

@@ -1,11 +1,15 @@
+import Image from "next/image";
 import Link from "next/link";
+
+import PapermarkLogo from "@/public/_static/papermark-logo.svg";
+
 import GitHubIcon from "@/components/shared/icons/github";
 
 export default function Navbar() {
   return (
     <>
       <div className="sticky top-0 z-50">
-        <div className="flex h-14 w-full mx-auto items-center justify-center bg-white/75 backdrop-blur-lg">
+        <div className="mx-auto flex h-14 w-full items-center justify-center bg-white/75 backdrop-blur-lg">
           <div className="mx-auto flex w-full max-w-7xl items-center justify-between self-center px-4 md:px-8">
             <div className="flex items-center space-x-10">
               <Link
@@ -14,9 +18,12 @@ export default function Navbar() {
                 href="/"
               >
                 <div className="flex items-center space-x-2">
-                  <span className="text-2xl font-bold tracking-tighter text-black">
-                    Papermark
-                  </span>
+                  <Image
+                    src={PapermarkLogo}
+                    width={119}
+                    height={32}
+                    alt="Papermark Logo"
+                  />
                 </div>
               </Link>
               <div className="hidden items-center gap-2 md:flex">

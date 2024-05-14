@@ -1,18 +1,22 @@
+import Link from "next/link";
+import { useRouter } from "next/router";
+
+import { useEffect, useState } from "react";
+
+import { useTeam } from "@/context/team-context";
+import { CheckIcon } from "lucide-react";
+import { toast } from "sonner";
+
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import AppLayout from "@/components/layouts/app";
 import Navbar from "@/components/settings/navbar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { useTeam } from "@/context/team-context";
+
 import { useAnalytics } from "@/lib/analytics";
 import { usePlan } from "@/lib/swr/use-billing";
 import { cn } from "@/lib/utils";
-import { CheckIcon } from "lucide-react";
-import Link from "next/link";
-import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
-import { toast } from "sonner";
 
 const frequencies: {
   value: "monthly" | "annually";
@@ -206,10 +210,10 @@ export default function Billing() {
     <AppLayout>
       <Navbar current="Billing" />
 
-      <div className="p-4 sm:p-4 sm:m-4">
-        <div className="flex items-center justify-between mb-4 md:mb-8 lg:mb-12">
+      <div className="p-4 sm:m-4 sm:p-4">
+        <div className="mb-4 flex items-center justify-between md:mb-8 lg:mb-12">
           <div className="space-y-1">
-            <h3 className="text-2xl text-foreground font-semibold tracking-tight">
+            <h3 className="text-2xl font-semibold tracking-tight text-foreground">
               Billing
             </h3>
             <p className="text-sm text-muted-foreground">
@@ -220,17 +224,17 @@ export default function Billing() {
 
         <div className="bg-white dark:bg-gray-900">
           <div className="mx-auto space-y-8">
-            <div className="isolate grid grid-cols-1 md:grid-cols-4 border border-black dark:border-muted-foreground rounded-xl overflow-hidden">
+            <div className="isolate grid grid-cols-1 overflow-hidden rounded-xl border border-black dark:border-muted-foreground md:grid-cols-4">
               {tiers.map((tier) => (
                 <div
                   key={tier.id}
-                  className="border-black dark:border-muted-foreground border-r-0 md:border-r md:last:!border-r-0 flex flex-col justify-between"
+                  className="flex flex-col justify-between border-r-0 border-black dark:border-muted-foreground md:border-r md:last:!border-r-0"
                 >
                   <div>
-                    <div className="border-b border-black p-6 bg-gray-100 dark:bg-gray-800 dark:border-muted-foreground">
+                    <div className="border-b border-black bg-gray-100 p-6 dark:border-muted-foreground dark:bg-gray-800">
                       <h3
                         id={tier.id}
-                        className="text-balance text-foreground text-xl leading-8 flex items-center gap-x-2"
+                        className="flex items-center gap-x-2 text-balance text-xl leading-8 text-foreground"
                       >
                         <span>{tier.name}</span>
                         {tier.currentPlan ? (
@@ -257,7 +261,7 @@ export default function Billing() {
                                 setToggleProYear(!toggleProYear)
                               }
                             />
-                            <div className="flex items-center gap-x-1 text-sm mb-1">
+                            <div className="mb-1 flex items-center gap-x-1 text-sm">
                               <span
                                 className={cn(
                                   toggleProYear
@@ -280,7 +284,7 @@ export default function Billing() {
                             </div>
                             <div
                               className={cn(
-                                "relative text-xs w-fit uppercase border border-gray-900 text-gray-900 rounded-3xl px-1.5 py-0.5",
+                                "relative w-fit rounded-3xl border border-gray-900 px-1.5 py-0.5 text-xs uppercase text-gray-900",
                                 !toggleProYear &&
                                   "border-gray-400 text-gray-400 opacity-40",
                               )}
@@ -305,7 +309,7 @@ export default function Billing() {
                                 setToggleBusinessYear(!toggleBusinessYear)
                               }
                             />
-                            <div className="flex items-center gap-x-1 text-sm mb-1">
+                            <div className="mb-1 flex items-center gap-x-1 text-sm">
                               <span
                                 className={cn(
                                   toggleBusinessYear
@@ -328,7 +332,7 @@ export default function Billing() {
                             </div>
                             <div
                               className={cn(
-                                "relative text-xs w-fit uppercase border border-[#fb7a00] text-[#fb7a00] rounded-3xl px-1.5 py-0.5",
+                                "relative w-fit rounded-3xl border border-[#fb7a00] px-1.5 py-0.5 text-xs uppercase text-[#fb7a00]",
                                 !toggleBusinessYear &&
                                   "border-gray-400 text-gray-400 opacity-40",
                               )}
@@ -353,7 +357,7 @@ export default function Billing() {
                                 setToggleDataroomsYear(!toggleDataroomsYear)
                               }
                             />
-                            <div className="flex items-center gap-x-1 text-sm mb-1">
+                            <div className="mb-1 flex items-center gap-x-1 text-sm">
                               <span
                                 className={cn(
                                   toggleDataroomsYear
@@ -376,7 +380,7 @@ export default function Billing() {
                             </div>
                             <div
                               className={cn(
-                                "relative text-xs w-fit uppercase border border-[#fb7a00] text-[#fb7a00] rounded-3xl px-1.5 py-0.5",
+                                "relative w-fit rounded-3xl border border-[#fb7a00] px-1.5 py-0.5 text-xs uppercase text-[#fb7a00]",
                                 !toggleDataroomsYear &&
                                   "border-gray-400 text-gray-400 opacity-40",
                               )}
@@ -427,7 +431,7 @@ export default function Billing() {
                               : frequency.priceSuffix}
                         </span> */}
                       </p>
-                      <p className="mt-4 text-sm leading-6 text-gray-600 dark:text-muted-foreground text-balance">
+                      <p className="mt-4 text-balance text-sm leading-6 text-gray-600 dark:text-muted-foreground">
                         {tier.description}
                       </p>
                       <ul
@@ -522,22 +526,22 @@ export default function Billing() {
                 </div>
               ))}
             </div>
-            <div className="isolate grid grid-cols-1 border border-black dark:border-muted-foreground rounded-xl overflow-hidden">
+            <div className="isolate grid grid-cols-1 overflow-hidden rounded-xl border border-black dark:border-muted-foreground">
               <div
                 key="tier-enterprise"
-                className="border-black dark:border-muted-foreground border-r-0 md:border-r md:last:!border-r-0 flex flex-col justify-between"
+                className="flex flex-col justify-between border-r-0 border-black dark:border-muted-foreground md:border-r md:last:!border-r-0"
               >
                 <div>
-                  <div className="border-b border-black dark:border-muted-foreground p-6 bg-gray-100 dark:bg-gray-800">
+                  <div className="border-b border-black bg-gray-100 p-6 dark:border-muted-foreground dark:bg-gray-800">
                     <h3
                       id="tier-enterprise"
-                      className="text-balance text-foreground text-xl leading-8 flex items-center gap-x-2"
+                      className="flex items-center gap-x-2 text-balance text-xl leading-8 text-foreground"
                     >
                       <span>Enterprise</span>
                     </h3>
                   </div>
                   <div className="p-6">
-                    <p className="mt-4 text-sm leading-6 text-gray-600 dark:text-muted-foreground text-balance">
+                    <p className="mt-4 text-balance text-sm leading-6 text-gray-600 dark:text-muted-foreground">
                       Self-hosted and advanced document infrastructure for your
                       company.
                     </p>
@@ -548,7 +552,7 @@ export default function Billing() {
                     </p>
                     <ul
                       role="list"
-                      className="mt-8 text-sm leading-6 text-gray-600 dark:text-muted-foreground grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-y-3"
+                      className="mt-8 grid grid-cols-1 gap-y-3 text-sm leading-6 text-gray-600 dark:text-muted-foreground sm:grid-cols-2 md:grid-cols-3"
                     >
                       {enterpriseFeatures.map((feature) => (
                         <li key={feature} className="flex gap-x-3">

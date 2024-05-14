@@ -15,9 +15,9 @@ export const DataroomHeader = ({
   }
 
   return (
-    <section className="flex items-center justify-between mb-4 md:mb-8 lg:mb-12">
+    <section className="mb-4 flex items-center justify-between md:mb-8 lg:mb-12">
       <div className="space-y-1">
-        <h1 className="text-xl sm:text-2xl text-foreground font-semibold tracking-tight">
+        <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
           {title}
         </h1>
         {/* <p className="text-xs sm:text-sm text-muted-foreground font-mono">
@@ -28,7 +28,7 @@ export const DataroomHeader = ({
         {actionRows.map((row, i) => (
           <ul
             key={i.toString()}
-            className="flex flex-wrap items-center justify-end gap-2 md:gap-4 md:flex-nowrap"
+            className="flex flex-wrap items-center justify-end gap-2 md:flex-nowrap md:gap-4"
           >
             {row.map((action, i) => (
               <li key={i}>{action}</li>

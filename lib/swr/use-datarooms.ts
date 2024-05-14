@@ -1,7 +1,8 @@
-import useSWR from "swr";
-import { fetcher } from "@/lib/utils";
 import { useTeam } from "@/context/team-context";
 import { Dataroom } from "@prisma/client";
+import useSWR from "swr";
+
+import { fetcher } from "@/lib/utils";
 
 export type DataroomWithCount = Dataroom & {
   _count: {

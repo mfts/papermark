@@ -1,7 +1,7 @@
 export default function EmailForm({ onSubmitHandler, setEmail }: any) {
   return (
     <>
-      <div className="flex h-screen flex-1 flex-col  px-6 py-12 lg:px-8 bg-black">
+      <div className="flex h-screen flex-1 flex-col  bg-black px-6 py-12 lg:px-8">
         <div className="sm:mx-auto sm:w-full sm:max-w-md">
           <h2 className="mt-10 text-2xl font-bold leading-9 tracking-tight text-white">
             Enter your email to view the document

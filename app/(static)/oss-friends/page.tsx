@@ -1,6 +1,7 @@
-import { Button } from "@/components/ui/button";
 import { Metadata } from "next";
 import Image from "next/image";
+
+import { Button } from "@/components/ui/button";
 
 const data = {
   description:
@@ -190,7 +191,7 @@ export default function Friends() {
         {friends.map((friend) => (
           <li
             key={friend.id}
-            className="overflow-hidden rounded-xl border border-gray-200 flex flex-col justify-between"
+            className="flex flex-col justify-between overflow-hidden rounded-xl border border-gray-200"
           >
             <div>
               <div className="flex items-center gap-x-4 p-6">
@@ -202,14 +203,14 @@ export default function Friends() {
                   className="h-12 w-12 flex-none rounded-lg bg-white object-cover"
                 />
               </div>
-              <div className="text-xl font-medium leading-6 text-gray-900 pb-1 px-6">
+              <div className="px-6 pb-1 text-xl font-medium leading-6 text-gray-900">
                 {friend.name}
               </div>
-              <p className="px-6 mt-2 text-gray-600 text-sm ">
+              <p className="mt-2 px-6 text-sm text-gray-600 ">
                 {friend.description}
               </p>
             </div>
-            <div className="text-left px-6">
+            <div className="px-6 text-left">
               <a
                 href={friend.buttonLink}
                 target="_blank"
@@ -218,7 +219,7 @@ export default function Friends() {
               >
                 <Button
                   type="button"
-                  className="mt-4 mb-6 rounded-md bg-black text-sm font-semibold text-white shadow-sm"
+                  className="mb-6 mt-4 rounded-md bg-black text-sm font-semibold text-white shadow-sm"
                 >
                   {friend.buttonText}
                 </Button>

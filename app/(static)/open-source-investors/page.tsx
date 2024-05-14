@@ -1,10 +1,14 @@
 import { Metadata } from "next";
-import Dashboard from "./ClientPage";
+import Link from "next/link";
+
+import { Suspense } from "react";
+
 import Stats from "@/components/investors/stats";
 import InvestorTable from "@/components/investors/table";
-import Link from "next/link";
+
 import { cn } from "@/lib/utils";
-import { Suspense } from "react";
+
+import Dashboard from "./ClientPage";
 
 export const revalidate = 3600; // revalidate the data at most every 24 hours
 
@@ -90,8 +94,8 @@ const InvestorFallback = ({ allInvestors }: { allInvestors: Investor[] }) => {
   return (
     <>
       <Stats angelsLength={allInvestors.length} />
-      <div className="sm:flex flex-col md:flex-row justify-between mt-4">
-        <span className="isolate mt-5 inline-flex rounded-md shadow-sm w-fit">
+      <div className="mt-4 flex-col justify-between sm:flex md:flex-row">
+        <span className="isolate mt-5 inline-flex w-fit rounded-md shadow-sm">
           {checkSizes.map((checkSize) => (
             <Link
               href={
@@ -104,7 +108,7 @@ const InvestorFallback = ({ allInvestors }: { allInvestors: Investor[] }) => {
                 category === checkSize.id || (!category && checkSize.id === "7")
                   ? "bg-gray-200"
                   : "bg-white hover:bg-gray-50",
-                "relative inline-flex items-center first-of-type:rounded-l-md last-of-type:rounded-r-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 focus:z-10 focus:outline-none focus:ring-gray-500 -ml-px first-of-type:-ml-0",
+                "relative -ml-px inline-flex items-center border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 first-of-type:-ml-0 first-of-type:rounded-l-md last-of-type:rounded-r-md focus:z-10 focus:outline-none focus:ring-gray-500",
               )}
             >
               {checkSize.label}
@@ -113,9 +117,9 @@ const InvestorFallback = ({ allInvestors }: { allInvestors: Investor[] }) => {
         </span>
       </div>
       <div className="mt-8 flex flex-col">
-        <div className="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-8">
-          <div className="inline-block min-w-full py-2 align-middle px-6 lg:px-8">
-            <div className="overflow-hidden md:shadow md:ring-1 md:ring-black md:ring-opacity-5 rounded-lg">
+        <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+          <div className="inline-block min-w-full px-6 py-2 align-middle lg:px-8">
+            <div className="overflow-hidden rounded-lg md:shadow md:ring-1 md:ring-black md:ring-opacity-5">
               <InvestorTable investors={allInvestors} />
             </div>
           </div>
@@ -131,10 +135,10 @@ export default async function HomePage() {
 
   return (
     <>
-      <div className="mx-auto max-w-6xl pt-4 mb-10">
-        <div className="max-w-6xl mx-auto px-4 md:px-8 sm:pt-16 pt-8 text-gray-600">
-          <div className="space-y-5 max-w-4xl mx-auto text-center">
-            <h1 className="text-3xl text-gray-800 font-extrabold mx-auto sm:text-6xl max-w-3xl tracking-tighter">
+      <div className="mx-auto mb-10 max-w-6xl pt-4">
+        <div className="mx-auto max-w-6xl px-4 pt-8 text-gray-600 sm:pt-16 md:px-8">
+          <div className="mx-auto max-w-4xl space-y-5 text-center">
+            <h1 className="mx-auto max-w-3xl text-3xl font-extrabold tracking-tighter text-gray-800 sm:text-6xl">
               Find the next angel investor for your open-source project
             </h1>
           </div>

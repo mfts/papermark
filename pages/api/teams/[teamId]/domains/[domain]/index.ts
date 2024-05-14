@@ -1,12 +1,14 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { getServerSession } from "next-auth/next";
-import prisma from "@/lib/prisma";
+
 import { authOptions } from "@/pages/api//auth/[...nextauth]";
-import { log } from "@/lib/utils";
+import { getServerSession } from "next-auth/next";
+
 import { getApexDomain, removeDomainFromVercel } from "@/lib/domains";
-import { CustomUser } from "@/lib/types";
-import { getTeamWithDomain } from "@/lib/team/helper";
 import { errorhandler } from "@/lib/errorHandler";
+import prisma from "@/lib/prisma";
+import { getTeamWithDomain } from "@/lib/team/helper";
+import { CustomUser } from "@/lib/types";
+import { log } from "@/lib/utils";
 
 export default async function handle(
   req: NextApiRequest,
@@ -63,7 +65,11 @@ export default async function handle(
 
       return res.status(204).end(); // 204 No Content response for successful deletes
     } catch (error) {
-      log({message: `Failed to delete domain: _${domain}_. \n\n ${error} \n\n*Metadata*: \`{teamId: ${teamId}, userId: ${userId}}\``, type: "error", mention: true});
+      log({
+        message: `Failed to delete domain: _${domain}_. \n\n ${error} \n\n*Metadata*: \`{teamId: ${teamId}, userId: ${userId}}\``,
+        type: "error",
+        mention: true,
+      });
       errorhandler(error, res);
     }
   } else {

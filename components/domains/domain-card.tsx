@@ -1,16 +1,18 @@
-import { mutate } from "swr";
-import { useDomainStatus } from "./use-domain-status";
-import DomainConfiguration from "./domain-configuration";
-
-import CheckCircle2 from "../shared/icons/check-cirlce-2";
-import AlertCircle from "../shared/icons/alert-circle";
-import XCircle from "../shared/icons/x-circle";
-import LoadingSpinner from "../ui/loading-spinner";
-import ExternalLink from "../shared/icons/external-link";
-import { Button } from "../ui/button";
 import { useState } from "react";
+
 import { useTeam } from "@/context/team-context";
+import { mutate } from "swr";
+
 import { useAnalytics } from "@/lib/analytics";
+
+import AlertCircle from "../shared/icons/alert-circle";
+import CheckCircle2 from "../shared/icons/check-cirlce-2";
+import ExternalLink from "../shared/icons/external-link";
+import XCircle from "../shared/icons/x-circle";
+import { Button } from "../ui/button";
+import LoadingSpinner from "../ui/loading-spinner";
+import DomainConfiguration from "./domain-configuration";
+import { useDomainStatus } from "./use-domain-status";
 
 export default function DomainCard({
   domain,
@@ -49,7 +51,7 @@ export default function DomainCard({
 
   return (
     <>
-      <div className="flex flex-col space-y-3 rounded-lg ring-1 ring-gray-200 dark:ring-gray-700 bg-white dark:bg-secondary hover:ring-gray-400 hover:dark:ring-gray-500 px-5 py-8 sm:px-10">
+      <div className="flex flex-col space-y-3 rounded-lg bg-white px-5 py-8 ring-1 ring-gray-200 hover:ring-gray-400 dark:bg-secondary dark:ring-gray-700 hover:dark:ring-gray-500 sm:px-10">
         <div className="flex flex-col justify-between space-y-4 sm:flex-row sm:space-x-4">
           <div className="flex items-center space-x-2">
             <a

@@ -1,3 +1,8 @@
+import { useState } from "react";
+
+import { useTeam } from "@/context/team-context";
+import { toast } from "sonner";
+
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -10,22 +15,24 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useTeam } from "@/context/team-context";
-import { useState } from "react";
-import { toast } from "sonner";
-import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
-import { usePlan } from "@/lib/swr/use-billing";
+
 import { useAnalytics } from "@/lib/analytics";
+import { usePlan } from "@/lib/swr/use-billing";
+import useLimits from "@/lib/swr/use-limits";
+
+import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
 
 export function AddDomainModal({
   open,
   setOpen,
   onAddition,
+  linkType,
   children,
 }: {
   open: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
   onAddition?: (newDomain: string) => void;
+  linkType?: "DOCUMENT_LINK" | "DATAROOM_LINK";
   children?: React.ReactNode;
 }) {
   const [domain, setDomain] = useState<string>("");
@@ -33,6 +40,7 @@ export function AddDomainModal({
 
   const teamInfo = useTeam();
   const { plan } = usePlan();
+  const { limits } = useLimits();
   const analytics = useAnalytics();
 
   const handleSubmit = async (event: any) => {
@@ -78,18 +86,31 @@ export function AddDomainModal({
     !onAddition && window.open("/settings/domains", "_blank");
   };
 
-  // If the team is on a free plan, show the upgrade modal
-  if (plan === "free") {
+  // If the team is
+  // - on a free plan
+  // - on pro plan and has custom domain on pro plan disabled
+  // - on business plan and has custom domain in dataroom disabled
+  // => then show the upgrade modal
+  if (
+    plan === "free" ||
+    (plan === "pro" && !limits?.customDomainOnPro) ||
+    (linkType === "DATAROOM_LINK" &&
+      plan === "business" &&
+      !limits?.customDomainInDataroom)
+  ) {
     if (children) {
       return (
-        <UpgradePlanModal clickedPlan="Pro" trigger={"add_domain_overview"}>
+        <UpgradePlanModal
+          clickedPlan={linkType === "DATAROOM_LINK" ? "Data Rooms" : "Business"}
+          trigger={"add_domain_overview"}
+        >
           <Button>Upgrade to Add Domain</Button>
         </UpgradePlanModal>
       );
     } else {
       return (
         <UpgradePlanModal
-          clickedPlan="Pro"
+          clickedPlan={linkType === "DATAROOM_LINK" ? "Data Rooms" : "Business"}
           open={open}
           setOpen={setOpen}
           trigger={"add_domain_link_sheet"}
@@ -115,11 +136,11 @@ export function AddDomainModal({
           <Input
             id="domain"
             placeholder="docs.yourdomain.com"
-            className="w-full mt-1 mb-8"
+            className="mb-8 mt-1 w-full"
             onChange={(e) => setDomain(e.target.value)}
           />
           <DialogFooter>
-            <Button type="submit" className="w-full h-9">
+            <Button type="submit" className="h-9 w-full">
               Add domain
             </Button>
           </DialogFooter>

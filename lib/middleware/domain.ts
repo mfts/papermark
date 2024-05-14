@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+
 import { BLOCKED_PATHNAMES, PAPERMARK_HEADERS } from "@/lib/constants";
 
 export default async function DomainMiddleware(req: NextRequest) {

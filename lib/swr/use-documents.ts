@@ -1,8 +1,9 @@
-import useSWR from "swr";
-import { fetcher } from "@/lib/utils";
-import { DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
 import { useTeam } from "@/context/team-context";
 import { Folder } from "@prisma/client";
+import useSWR from "swr";
+
+import { DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
+import { fetcher } from "@/lib/utils";
 
 export default function useDocuments() {
   const teamInfo = useTeam();

@@ -1,7 +1,8 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import prisma from "@/lib/prisma";
+
 import { errorhandler } from "@/lib/errorHandler";
 import { openai } from "@/lib/openai";
+import prisma from "@/lib/prisma";
 import { convertThreadMessagesToMessages } from "@/lib/utils";
 
 export default async function handle(

@@ -1,7 +1,8 @@
-import useSWR from "swr";
-import { fetcher } from "@/lib/utils";
-import { DomainResponse, DomainVerificationStatusProps } from "@/lib/types";
 import { useTeam } from "@/context/team-context";
+import useSWR from "swr";
+
+import { DomainResponse, DomainVerificationStatusProps } from "@/lib/types";
+import { fetcher } from "@/lib/utils";
 
 export function useDomainStatus({ domain }: { domain: string }) {
   const teamInfo = useTeam();

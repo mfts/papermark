@@ -1,12 +1,16 @@
 "use client";
 
-import Fuse from "fuse.js";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+
 import { useMemo, useState } from "react";
-import InvestorTable from "@/components/investors/table";
+
+import Fuse from "fuse.js";
+
 import SearchBar from "@/components/investors/search";
 import Stats from "@/components/investors/stats";
-import Link from "next/link";
+import InvestorTable from "@/components/investors/table";
+
 import { cn } from "@/lib/utils";
 
 const searchOptions = {
@@ -88,8 +92,8 @@ export default function Dashboard({ data }: any) {
   return (
     <>
       <Stats angelsLength={angels.length} />
-      <div className="sm:flex flex-col md:flex-row justify-between mt-4">
-        <span className="isolate mt-5 inline-flex rounded-md shadow-sm w-fit">
+      <div className="mt-4 flex-col justify-between sm:flex md:flex-row">
+        <span className="isolate mt-5 inline-flex w-fit rounded-md shadow-sm">
           {checkSizes.map((checkSize) => (
             <Link
               href={
@@ -99,11 +103,10 @@ export default function Dashboard({ data }: any) {
               }
               key={checkSize.id}
               className={cn(
-                category === checkSize.id ||
-                  (!category && checkSize.id === "7")
+                category === checkSize.id || (!category && checkSize.id === "7")
                   ? "bg-gray-200"
                   : "bg-white hover:bg-gray-50",
-                "relative inline-flex items-center first-of-type:rounded-l-md last-of-type:rounded-r-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 focus:z-10 focus:outline-none focus:ring-gray-500 -ml-px first-of-type:-ml-0",
+                "relative -ml-px inline-flex items-center border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 first-of-type:-ml-0 first-of-type:rounded-l-md last-of-type:rounded-r-md focus:z-10 focus:outline-none focus:ring-gray-500",
               )}
             >
               {checkSize.label}
@@ -113,9 +116,9 @@ export default function Dashboard({ data }: any) {
         <SearchBar search={search} setSearch={setSearch} />
       </div>
       <div className="mt-8 flex flex-col">
-        <div className="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-8">
-          <div className="inline-block min-w-full py-2 align-middle px-6 lg:px-8">
-            <div className="overflow-hidden md:shadow md:ring-1 md:ring-black md:ring-opacity-5 rounded-lg">
+        <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+          <div className="inline-block min-w-full px-6 py-2 align-middle lg:px-8">
+            <div className="overflow-hidden rounded-lg md:shadow md:ring-1 md:ring-black md:ring-opacity-5">
               <InvestorTable investors={angels} />
             </div>
           </div>

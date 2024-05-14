@@ -1,3 +1,15 @@
+import { useRouter } from "next/router";
+
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
+
+import { useTeam } from "@/context/team-context";
+import { toast } from "sonner";
+import { mutate } from "swr";
+
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
 import {
   Sheet,
   SheetContent,
@@ -6,22 +18,16 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { Separator } from "@/components/ui/separator";
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
-import { useRouter } from "next/router";
+
+import { useAnalytics } from "@/lib/analytics";
+import { usePlan } from "@/lib/swr/use-billing";
 import { useDocumentLinks } from "@/lib/swr/use-document";
 import { useDomains } from "@/lib/swr/use-domains";
-import { mutate } from "swr";
-import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
-import { Label } from "@/components/ui/label";
-import { convertDataUrlToFile, uploadImage } from "@/lib/utils";
-import DomainSection from "./domain-section";
-import { useTeam } from "@/context/team-context";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { LinkOptions } from "./link-options";
-import { useAnalytics } from "@/lib/analytics";
 import { LinkWithViews } from "@/lib/types";
+import { convertDataUrlToFile, uploadImage } from "@/lib/utils";
+
+import DomainSection from "./domain-section";
+import { LinkOptions } from "./link-options";
 
 export const DEFAULT_LINK_PROPS = {
   id: null,
@@ -86,6 +92,7 @@ export default function LinkSheet({
 }) {
   const { domains } = useDomains();
   const teamInfo = useTeam();
+  const { plan } = usePlan();
   const analytics = useAnalytics();
   const [data, setData] = useState<DEFAULT_LINK_TYPE>(DEFAULT_LINK_PROPS);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -189,7 +196,7 @@ export default function LinkSheet({
 
   return (
     <Sheet open={isOpen} onOpenChange={(open: boolean) => setIsOpen(open)}>
-      <SheetContent className="bg-background text-foreground flex flex-col justify-between px-4 md:px-5 w-[90%] sm:w-[450px]">
+      <SheetContent className="flex w-[90%] flex-col justify-between bg-background px-4 text-foreground sm:w-[450px] md:px-5">
         <SheetHeader className="text-start">
           <SheetTitle>
             {currentLink ? "Edit link" : "Create a new link"}
@@ -200,7 +207,7 @@ export default function LinkSheet({
           </SheetDescription>
         </SheetHeader>
 
-        <form className="flex flex-col grow" onSubmit={handleSubmit}>
+        <form className="flex grow flex-col" onSubmit={handleSubmit}>
           <ScrollArea className="flex-grow">
             <div className="h-0 flex-1">
               <div className="flex flex-1 flex-col justify-between">
@@ -215,7 +222,7 @@ export default function LinkSheet({
                           id="link-name"
                           placeholder="Recipient's Organization"
                           value={data.name || ""}
-                          className="flex w-full rounded-md border-0 py-1.5 text-foreground bg-background shadow-sm ring-1 ring-inset ring-input placeholder:text-muted-foreground focus:ring-2 focus:ring-inset focus:ring-gray-400 sm:text-sm sm:leading-6"
+                          className="flex w-full rounded-md border-0 bg-background py-1.5 text-foreground shadow-sm ring-1 ring-inset ring-input placeholder:text-muted-foreground focus:ring-2 focus:ring-inset focus:ring-gray-400 sm:text-sm sm:leading-6"
                           onChange={(e) =>
                             setData({ ...data, name: e.target.value })
                           }
@@ -226,14 +233,15 @@ export default function LinkSheet({
                     <div className="space-y-2">
                       <DomainSection
                         {...{ data, setData, domains }}
+                        plan={plan}
                         linkType={linkType}
                       />
                     </div>
 
-                    <div className="flex items-center relative">
-                      <Separator className="bg-muted-foreground absolute" />
+                    <div className="relative flex items-center">
+                      <Separator className="absolute bg-muted-foreground" />
                       <div className="relative mx-auto">
-                        <span className="px-2 bg-background text-muted-foreground text-sm">
+                        <span className="bg-background px-2 text-sm text-muted-foreground">
                           Link Options
                         </span>
                       </div>

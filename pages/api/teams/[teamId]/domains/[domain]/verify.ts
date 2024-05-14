@@ -1,12 +1,13 @@
 import { NextApiRequest, NextApiResponse } from "next";
+
+import { identifyUser, trackAnalytics } from "@/lib/analytics";
 import {
   getConfigResponse,
   getDomainResponse,
   verifyDomain,
 } from "@/lib/domains";
-import { DomainVerificationStatusProps } from "@/lib/types";
 import prisma from "@/lib/prisma";
-import { identifyUser, trackAnalytics } from "@/lib/analytics";
+import { DomainVerificationStatusProps } from "@/lib/types";
 
 export default async function handle(
   req: NextApiRequest,

@@ -1,8 +1,10 @@
-import { TStatsData } from "@/lib/swr/use-stats";
 import ErrorPage from "next/error";
+
+import { TStatsData } from "@/lib/swr/use-stats";
+
 import BarChartComponent from "../charts/bar-chart";
-import StatsChartSkeleton from "./stats-chart-skeleton";
 import StatsChartDummy from "./stats-chart-dummy";
+import StatsChartSkeleton from "./stats-chart-skeleton";
 
 export default function StatsChart({
   documentId,
@@ -80,7 +82,7 @@ export default function StatsChart({
   }
 
   return stats && stats.views.length > 0 ? (
-    <div className="pl-0.5 md:pl-1 pb-0.5 md:pb-1 border-l border-b rounded-bl-lg">
+    <div className="rounded-bl-lg border-b border-l pb-0.5 pl-0.5 md:pb-1 md:pl-1">
       <BarChartComponent data={durationData} />
     </div>
   ) : (

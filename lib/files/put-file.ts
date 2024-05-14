@@ -1,9 +1,9 @@
-import { match } from "ts-pattern";
-import { upload } from "@vercel/blob/client";
-
 import { DocumentStorageType } from "@prisma/client";
-import { getPagesCount } from "@/lib/utils/get-page-number-count";
+import { upload } from "@vercel/blob/client";
+import { match } from "ts-pattern";
+
 import { newId } from "@/lib/id-helper";
+import { getPagesCount } from "@/lib/utils/get-page-number-count";
 
 // type File = {
 //   name: string;
@@ -64,6 +64,11 @@ const putFileInS3 = async ({
   if (!docId) {
     docId = newId("doc");
   }
+
+  if (file.type !== "application/pdf") {
+    throw new Error("Only PDF files are supported");
+  }
+
   const presignedResponse = await fetch(
     `${process.env.NEXT_PUBLIC_BASE_URL}/api/file/s3/get-presigned-post-url`,
     {

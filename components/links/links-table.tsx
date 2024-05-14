@@ -1,11 +1,19 @@
+import { useRouter } from "next/router";
+
+import { useState } from "react";
+
+import { useTeam } from "@/context/team-context";
+import { DocumentVersion } from "@prisma/client";
+import { Settings2Icon } from "lucide-react";
+import { toast } from "sonner";
+import { mutate } from "swr";
+
+import { Button } from "@/components/ui/button";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,33 +22,29 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
-import BarChart from "../shared/icons/bar-chart";
+import { usePlan } from "@/lib/swr/use-billing";
+import { LinkWithViews } from "@/lib/types";
 import { cn, copyToClipboard, nFormatter, timeAgo } from "@/lib/utils";
-import MoreHorizontal from "../shared/icons/more-horizontal";
-import LinksVisitors from "./links-visitors";
+
+import ProcessStatusBar from "../documents/process-status-bar";
+import BarChart from "../shared/icons/bar-chart";
 import ChevronDown from "../shared/icons/chevron-down";
+import MoreHorizontal from "../shared/icons/more-horizontal";
 import LinkSheet, {
   DEFAULT_LINK_PROPS,
   type DEFAULT_LINK_TYPE,
 } from "./link-sheet";
-import { useState } from "react";
-import { LinkWithViews } from "@/lib/types";
-import { mutate } from "swr";
-import { toast } from "sonner";
-import { useRouter } from "next/router";
-import { usePlan } from "@/lib/swr/use-billing";
-import { useTeam } from "@/context/team-context";
-import ProcessStatusBar from "../documents/process-status-bar";
-import { Settings2Icon } from "lucide-react";
-import { DocumentVersion } from "@prisma/client";
+import LinksVisitors from "./links-visitors";
 
 export default function LinksTable({
   targetType,
@@ -158,7 +162,7 @@ export default function LinksTable({
         <div className="rounded-md border">
           <Table>
             <TableHeader>
-              <TableRow className="hover:bg-transparent *:whitespace-nowrap *:font-medium">
+              <TableRow className="*:whitespace-nowrap *:font-medium hover:bg-transparent">
                 <TableHead>Name</TableHead>
                 <TableHead className="w-[150px] sm:w-[200px] md:w-[250px]">
                   Link
@@ -176,18 +180,18 @@ export default function LinksTable({
                     <Collapsible key={link.id} asChild>
                       <>
                         <TableRow key={link.id} className="group/row">
-                          <TableCell className="font-medium truncate w-[220px]">
+                          <TableCell className="w-[220px] truncate font-medium">
                             {link.name || `Link #${link.id.slice(-5)}`}{" "}
                             {link.domainId && hasFreePlan ? (
-                              <span className="text-foreground bg-destructive ring-1 ring-destructive rounded-full px-2.5 py-0.5 text-xs ml-2">
+                              <span className="ml-2 rounded-full bg-destructive px-2.5 py-0.5 text-xs text-foreground ring-1 ring-destructive">
                                 Inactive
                               </span>
                             ) : null}
                           </TableCell>
-                          <TableCell className="max-w-[250px] sm:min-w-[300px] md:min-w-[400px] lg:min-w-[450px] flex items-center gap-x-2">
+                          <TableCell className="flex max-w-[250px] items-center gap-x-2 sm:min-w-[300px] md:min-w-[400px] lg:min-w-[450px]">
                             <div
                               className={cn(
-                                `group/cell relative w-full overflow-hidden flex items-center gap-x-4 rounded-sm text-secondary-foreground text-center px-3 py-1.5 md:py-1 group-hover/row:ring-1 group-hover/row:ring-gray-400 group-hover/row:dark:ring-gray-100 transition-all truncate`,
+                                `group/cell relative flex w-full items-center gap-x-4 overflow-hidden truncate rounded-sm px-3 py-1.5 text-center text-secondary-foreground transition-all group-hover/row:ring-1 group-hover/row:ring-gray-400 group-hover/row:dark:ring-gray-100 md:py-1`,
                                 link.domainId && hasFreePlan
                                   ? "bg-destructive hover:bg-red-700 hover:dark:bg-red-200"
                                   : "bg-secondary hover:bg-emerald-700 hover:dark:bg-emerald-200",
@@ -199,19 +203,19 @@ export default function LinksTable({
                               !primaryVersion.hasPages ? (
                                 <ProcessStatusBar
                                   documentVersionId={primaryVersion.id}
-                                  className="absolute z-20 top-0 left-0 right-0 bottom-0 h-full gap-x-8 flex items-center"
+                                  className="absolute bottom-0 left-0 right-0 top-0 z-20 flex h-full items-center gap-x-8"
                                 />
                               ) : null}
 
-                              <div className="whitespace-nowrap w-full flex text-xs md:text-sm group-hover/cell:opacity-0">
+                              <div className="flex w-full whitespace-nowrap text-xs group-hover/cell:opacity-0 md:text-sm">
                                 {link.domainId
                                   ? `https://${link.domainSlug}/${link.slug}`
-                                  : `https://${process.env.NEXT_PUBLIC_ROOT_DOMAIN}/view/${targetType === "DATAROOM" ? `d/` : ``}${link.id}`}
+                                  : `https://${process.env.NEXT_PUBLIC_ROOT_DOMAIN}/view/${link.id}`}
                               </div>
 
                               {link.domainId && hasFreePlan ? (
                                 <button
-                                  className="whitespace-nowrap text-sm text-center group-hover/cell:text-primary-foreground hidden group-hover/cell:block w-full absolute top-0 left-0 right-0 bottom-0 z-10"
+                                  className="absolute bottom-0 left-0 right-0 top-0 z-10 hidden w-full whitespace-nowrap text-center text-sm group-hover/cell:block group-hover/cell:text-primary-foreground"
                                   onClick={() =>
                                     router.push("/settings/billing")
                                   }
@@ -221,12 +225,12 @@ export default function LinksTable({
                                 </button>
                               ) : (
                                 <button
-                                  className="whitespace-nowrap w-full text-xs sm:text-sm text-center group-hover/cell:text-primary-foreground hidden group-hover/cell:block absolute top-0 left-0 right-0 bottom-0 z-10"
+                                  className="absolute bottom-0 left-0 right-0 top-0 z-10 hidden w-full whitespace-nowrap text-center text-xs group-hover/cell:block group-hover/cell:text-primary-foreground sm:text-sm"
                                   onClick={() =>
                                     handleCopyToClipboard(
                                       link.domainId
                                         ? `https://${link.domainSlug}/${link.slug}`
-                                        : `https://${process.env.NEXT_PUBLIC_ROOT_DOMAIN}/view/${targetType === "DATAROOM" ? `d/` : ``}${link.id}`,
+                                        : `https://${process.env.NEXT_PUBLIC_ROOT_DOMAIN}/view/${link.id}`,
                                     )
                                   }
                                   title="Copy to clipboard"
@@ -263,7 +267,7 @@ export default function LinksTable({
                                 </p>
                                 {Number(nFormatter(link._count.views)) > 0 &&
                                 targetType !== "DATAROOM" ? (
-                                  <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0 transition-transform duration-200 chevron" />
+                                  <ChevronDown className="chevron h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" />
                                 ) : null}
                               </div>
                             </CollapsibleTrigger>
@@ -357,10 +361,10 @@ export default function LinksTable({
                 <Button
                   variant="secondary"
                   size="sm"
-                  className="text-gray-400 mx-auto flex items-center gap-x-1 h-8 justify-center mt-4 [&[data-state=open]>svg.chevron]:rotate-180"
+                  className="mx-auto mt-4 flex h-8 items-center justify-center gap-x-1 text-gray-400 [&[data-state=open]>svg.chevron]:rotate-180"
                 >
                   {archivedLinksCount} Archived Links
-                  <ChevronDown className="h-4 w-4 text-gray-400 transition-transform duration-200 chevron" />
+                  <ChevronDown className="chevron h-4 w-4 text-gray-400 transition-transform duration-200" />
                 </Button>
               </CollapsibleTrigger>
               <CollapsibleContent className="mt-2">
@@ -370,7 +374,7 @@ export default function LinksTable({
                 <div className="rounded-md border">
                   <Table>
                     <TableHeader>
-                      <TableRow className="hover:bg-transparent *:whitespace-nowrap *:font-medium">
+                      <TableRow className="*:whitespace-nowrap *:font-medium hover:bg-transparent">
                         <TableHead>Name</TableHead>
                         <TableHead className="w-[150px] sm:w-[200px] md:w-[250px]">
                           Link
@@ -387,11 +391,11 @@ export default function LinksTable({
                           .map((link) => (
                             <>
                               <TableRow key={link.id} className="group/row">
-                                <TableCell className="truncate w-[180px]">
+                                <TableCell className="w-[180px] truncate">
                                   {link.name || "No link name"}
                                 </TableCell>
                                 <TableCell className="max-w-[250px] sm:min-w-[300px] md:min-w-[400px] lg:min-w-[450px]">
-                                  <div className="flex items-center gap-x-4 whitespace-nowrap text-xs sm:text-sm rounded-sm text-secondary-foreground bg-secondary px-3 py-1.5 sm:py-1">
+                                  <div className="flex items-center gap-x-4 whitespace-nowrap rounded-sm bg-secondary px-3 py-1.5 text-xs text-secondary-foreground sm:py-1 sm:text-sm">
                                     {link.domainId
                                       ? `https://${link.domainSlug}/${link.slug}`
                                       : `https://${process.env.NEXT_PUBLIC_ROOT_DOMAIN}/view/${link.id}`}

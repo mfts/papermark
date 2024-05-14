@@ -1,5 +1,6 @@
-import { DataroomFolderWithDocuments } from "@/lib/swr/use-dataroom";
 import { DataroomDocument, DataroomFolder } from "@prisma/client";
+
+import { DataroomFolderWithDocuments } from "@/lib/swr/use-dataroom";
 
 // Helper function to build nested folder structure
 export const buildNestedFolderStructure = (

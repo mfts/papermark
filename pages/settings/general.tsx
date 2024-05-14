@@ -1,16 +1,18 @@
+import { useRef, useState } from "react";
+
+import { useTeam } from "@/context/team-context";
+import {
+  type CredentialCreationOptionsJSON,
+  create,
+} from "@github/webauthn-json";
+import { toast } from "sonner";
+import { mutate } from "swr";
+
 import AppLayout from "@/components/layouts/app";
 import Navbar from "@/components/settings/navbar";
 import Passkey from "@/components/shared/icons/passkey";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useTeam } from "@/context/team-context";
-import {
-  create,
-  type CredentialCreationOptionsJSON,
-} from "@github/webauthn-json";
-import { useRef, useState } from "react";
-import { toast } from "sonner";
-import { mutate } from "swr";
 
 export default function General() {
   const teamInfo = useTeam();
@@ -77,20 +79,20 @@ export default function General() {
   return (
     <AppLayout>
       <Navbar current="General" />
-      <div className="p-4 sm:p-4 sm:m-4">
-        <div className="flex items-center justify-between mb-4 md:mb-8 lg:mb-12">
+      <div className="p-4 sm:m-4 sm:p-4">
+        <div className="mb-4 flex items-center justify-between md:mb-8 lg:mb-12">
           <div className="space-y-1">
-            <h3 className="text-2xl text-foreground font-semibold tracking-tight">
+            <h3 className="text-2xl font-semibold tracking-tight text-foreground">
               General
             </h3>
             <p className="text-sm text-muted-foreground">Manage your team</p>
           </div>
         </div>
         <div className="space-y-8">
-          <div className="flex justify-between items-center p-10 rounded-lg border border-border bg-secondary">
+          <div className="flex items-center justify-between rounded-lg border border-border bg-secondary p-10">
             <div className="flex flex-col">
               <h2 className="text-xl font-medium">Team Name</h2>
-              <p className="text-sm text-secondary-foreground mt-3">
+              <p className="mt-3 text-sm text-secondary-foreground">
                 This is the name of your team on Papermark.
               </p>
               <Input
@@ -108,20 +110,20 @@ export default function General() {
             </Button>
           </div>
 
-          <div className="p-10 rounded-lg border border-muted">
+          <div className="rounded-lg border border-muted p-10">
             <div className="space-y-6">
               <div className="space-y-3">
                 <h2 className="text-xl font-medium">Register a passkey</h2>
-                <p className="text-sm text-secondary-foreground mt-3">
+                <p className="mt-3 text-sm text-secondary-foreground">
                   Never use a password or oauth again. Register a passkey to
                   make logging in easy.
                 </p>
               </div>
               <Button
                 onClick={() => registerPasskey()}
-                className="flex justify-center items-center space-x-2"
+                className="flex items-center justify-center space-x-2"
               >
-                <Passkey className="w-4 h-4" />
+                <Passkey className="h-4 w-4" />
                 <span>Register a new passkey</span>
               </Button>
             </div>

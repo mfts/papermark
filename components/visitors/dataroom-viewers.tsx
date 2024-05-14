@@ -1,4 +1,18 @@
 import {
+  BadgeCheckIcon,
+  BadgeInfoIcon,
+  MailOpenIcon,
+  SendIcon,
+} from "lucide-react";
+
+import ChevronDown from "@/components/shared/icons/chevron-down";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
   Table,
   TableBody,
   TableCell,
@@ -6,25 +20,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import { Skeleton } from "@/components/ui/skeleton";
-
-import { timeAgo } from "@/lib/utils";
-import ChevronDown from "@/components/shared/icons/chevron-down";
-import { VisitorAvatar } from "./visitor-avatar";
-import {
-  BadgeCheckIcon,
-  BadgeInfoIcon,
-  MailOpenIcon,
-  SendIcon,
-} from "lucide-react";
 import { BadgeTooltip } from "@/components/ui/tooltip";
+
 import { useDataroomViewers } from "@/lib/swr/use-dataroom";
+import { timeAgo } from "@/lib/utils";
+
 import DataroomVisitHistory from "./dataroom-visitors-history";
+import { VisitorAvatar } from "./visitor-avatar";
 
 export default function DataroomViewersTable({
   dataroomId,
@@ -41,7 +43,7 @@ export default function DataroomViewersTable({
       <div className="rounded-md border">
         <Table>
           <TableHeader>
-            <TableRow className="hover:bg-transparent *:font-medium *:whitespace-nowrap">
+            <TableRow className="*:whitespace-nowrap *:font-medium hover:bg-transparent">
               <TableHead>Name</TableHead>
               {/* <TableHead>Visit Duration</TableHead> */}
               {/* <TableHead>Last Viewed Document</TableHead> */}
@@ -53,7 +55,7 @@ export default function DataroomViewersTable({
             {viewers?.length === 0 && (
               <TableRow>
                 <TableCell colSpan={5}>
-                  <div className="w-full h-40 flex items-center justify-center">
+                  <div className="flex h-40 w-full items-center justify-center">
                     <p>No Data Available</p>
                   </div>
                 </TableCell>
@@ -66,11 +68,11 @@ export default function DataroomViewersTable({
                     <TableRow key={viewer.id} className="group/row">
                       {/* Name */}
                       <TableCell className="">
-                        <div className="flex items-center sm:space-x-3 overflow-visible">
+                        <div className="flex items-center overflow-visible sm:space-x-3">
                           <VisitorAvatar viewerEmail={viewer.email} />
                           <div className="min-w-0 flex-1">
                             <div className="focus:outline-none">
-                              <p className="text-sm font-medium text-gray-800 dark:text-gray-200 overflow-visible flex items-center gap-x-2">
+                              <p className="flex items-center gap-x-2 overflow-visible text-sm font-medium text-gray-800 dark:text-gray-200">
                                 {viewer.email ? (
                                   <>
                                     {viewer.email}{" "}
@@ -103,7 +105,7 @@ export default function DataroomViewersTable({
                                   "Anonymous"
                                 )}
                               </p>
-                              <p className="text-xs sm:text-sm text-muted-foreground/60">
+                              <p className="text-xs text-muted-foreground/60 sm:text-sm">
                                 {/* {view.link.name ? view.link.name : view.linkId} */}
                               </p>
                             </div>
@@ -137,11 +139,11 @@ export default function DataroomViewersTable({
                         </time>
                       </TableCell>
                       {/* Actions */}
-                      <TableCell className="text-center sm:text-right cursor-pointer p-0">
+                      <TableCell className="cursor-pointer p-0 text-center sm:text-right">
                         {viewer.views.length > 0 ? (
                           <CollapsibleTrigger asChild>
-                            <div className="flex justify-end p-5 space-x-1 [&[data-state=open]>svg.chevron]:rotate-180">
-                              <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 chevron" />
+                            <div className="flex justify-end space-x-1 p-5 [&[data-state=open]>svg.chevron]:rotate-180">
+                              <ChevronDown className="chevron h-4 w-4 shrink-0 transition-transform duration-200" />
                             </div>
                           </CollapsibleTrigger>
                         ) : null}

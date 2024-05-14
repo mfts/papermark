@@ -1,8 +1,12 @@
-import { Dispatch, SetStateAction, useState, useEffect } from "react";
-import { Switch } from "@/components/ui/switch";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
+
 import { motion } from "framer-motion";
+
+import { Switch } from "@/components/ui/switch";
+
 import { FADE_IN_ANIMATION_SETTINGS } from "@/lib/constants";
 import { cn, getDateTimeLocal } from "@/lib/utils";
+
 import { DEFAULT_LINK_TYPE } from ".";
 
 export default function ExpirationSection({
@@ -54,7 +58,7 @@ export default function ExpirationSection({
             onChange={(e) => {
               setData({ ...data, expiresAt: new Date(e.target.value) });
             }}
-            className="flex w-full rounded-md border-0 py-1.5 text-foreground bg-background shadow-sm ring-1 ring-inset ring-input placeholder:text-muted-foreground focus:ring-2 focus:ring-inset focus:ring-gray-400 sm:text-sm sm:leading-6"
+            className="flex w-full rounded-md border-0 bg-background py-1.5 text-foreground shadow-sm ring-1 ring-inset ring-input placeholder:text-muted-foreground focus:ring-2 focus:ring-inset focus:ring-gray-400 sm:text-sm sm:leading-6"
           />
         </motion.div>
       )}

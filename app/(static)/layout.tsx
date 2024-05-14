@@ -1,6 +1,7 @@
+import { Metadata } from "next";
+
 import Footer from "@/components/web/footer";
 import Navbar from "@/components/web/navbar";
-import { Metadata } from "next";
 
 const data = {
   description:

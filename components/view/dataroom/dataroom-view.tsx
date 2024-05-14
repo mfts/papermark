@@ -1,21 +1,25 @@
+import { useRouter } from "next/router";
+
 import React, { useEffect, useRef, useState } from "react";
+
+import { LinkWithDataroom } from "@/pages/view/d/[linkId]";
+import { Brand, DataroomBrand } from "@prisma/client";
+import { usePlausible } from "next-plausible";
+import { ExtendedRecordMap } from "notion-types";
+import { toast } from "sonner";
+
+import { NotionPage } from "@/components/NotionPage";
+import LoadingSpinner from "@/components/ui/loading-spinner";
 import AccessForm, {
   DEFAULT_ACCESS_FORM_DATA,
   DEFAULT_ACCESS_FORM_TYPE,
 } from "@/components/view/access-form";
-import { usePlausible } from "next-plausible";
-import { toast } from "sonner";
-import LoadingSpinner from "@/components/ui/loading-spinner";
-import EmailVerificationMessage from "../email-verification-form";
-import { ExtendedRecordMap } from "notion-types";
 
-import { Brand, DataroomBrand } from "@prisma/client";
-import { useRouter } from "next/router";
 import { useAnalytics } from "@/lib/analytics";
+
 import DataroomViewer from "../DataroomViewer";
 import PagesViewer from "../PagesViewer";
-import { LinkWithDataroom } from "@/pages/view/d/[linkId]";
-import { NotionPage } from "@/components/NotionPage";
+import EmailVerificationMessage from "../email-verification-form";
 
 export type DEFAULT_DOCUMENT_VIEW_TYPE = {
   viewId: string;
@@ -38,7 +42,7 @@ export default function DataroomView({
   userEmail: string | null | undefined;
   userId: string | null | undefined;
   isProtected: boolean;
-  brand?: DataroomBrand;
+  brand?: Partial<DataroomBrand> | null;
   token?: string;
   verifiedEmail?: string;
 }) {
@@ -62,6 +66,7 @@ export default function DataroomView({
   );
   const [verificationRequested, setVerificationRequested] =
     useState<boolean>(false);
+  const [dataroomVerified, setDataroomVerified] = useState<boolean>(false);
   const [documentData, setDocumentData] = useState<{
     id: string;
     name: string;
@@ -84,16 +89,17 @@ export default function DataroomView({
       },
       body: JSON.stringify({
         ...data,
-        email: data.email || verifiedEmail || userEmail,
+        email: data.email ?? verifiedEmail ?? userEmail ?? null,
         linkId: link.id,
         documentId: documentData?.id,
         documentName: documentData?.name,
         // ownerId: documentData?.ownerId,
-        userId: userId || null,
+        userId: userId ?? null,
         documentVersionId: documentData?.documentVersionId,
         hasPages: documentData?.hasPages,
-        token: token || null,
-        verifiedEmail: verifiedEmail || null,
+        token: token ?? null,
+        verifiedEmail: verifiedEmail ?? null,
+        dataroomVerified: dataroomVerified,
         dataroomId: dataroom?.id,
         linkType: linkType,
         dataroomViewId: viewData.dataroomViewId ?? null,
@@ -120,7 +126,7 @@ export default function DataroomView({
           dataroomId: dataroom?.id,
           linkType: linkType,
           viewerId: viewId,
-          viewerEmail: data.email || verifiedEmail || userEmail,
+          viewerEmail: data.email ?? verifiedEmail ?? userEmail,
         });
         setViewData((prev) => ({
           viewId,
@@ -135,8 +141,23 @@ export default function DataroomView({
         setIsLoading(false);
       }
     } else {
-      const { message } = await response.json();
-      toast.error(message);
+      const data = await response.json();
+      toast.error(data.message);
+
+      if (data.resetVerification) {
+        const currentQuery = { ...router.query };
+        delete currentQuery.token;
+        delete currentQuery.email;
+
+        router.replace(
+          {
+            pathname: router.pathname,
+            query: currentQuery,
+          },
+          undefined,
+          { shallow: true },
+        );
+      }
       setIsLoading(false);
     }
   };
@@ -151,7 +172,6 @@ export default function DataroomView({
   // If token is present, run handle submit which will verify token and get document
   // If link is not submitted and does not have email / password protection, show the access form
   useEffect(() => {
-    console.log("viewData", viewData);
     if (!didMount.current) {
       if ((!submitted && !isProtected) || token || viewData.dataroomViewId) {
         handleSubmission();
@@ -161,7 +181,6 @@ export default function DataroomView({
   }, [submitted, isProtected, token, viewData.dataroomViewId]);
 
   useEffect(() => {
-    console.log("documentData", documentData);
     // Ensure we're not running this logic on initial mount, but only when `documentData` changes thereafter
     if (didMount.current) {
       if (documentData !== null) {
@@ -208,7 +227,7 @@ export default function DataroomView({
 
   if (isLoading) {
     return (
-      <div className="h-screen flex items-center justify-center">
+      <div className="flex h-screen items-center justify-center">
         <LoadingSpinner className="h-20 w-20" />
       </div>
     );
@@ -259,6 +278,7 @@ export default function DataroomView({
           dataroom={dataroom}
           setDocumentData={setDocumentData}
           setViewType={setViewType}
+          setDataroomVerified={setDataroomVerified}
         />
       </div>
     );
@@ -266,7 +286,7 @@ export default function DataroomView({
 
   return (
     <div className="bg-gray-950">
-      <div className="h-screen flex items-center justify-center">
+      <div className="flex h-screen items-center justify-center">
         <LoadingSpinner className="h-20 w-20" />
       </div>
     </div>

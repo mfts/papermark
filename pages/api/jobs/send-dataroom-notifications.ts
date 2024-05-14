@@ -1,7 +1,8 @@
 import { NextApiRequest, NextApiResponse } from "next";
+
+import { sendDataroomNotification } from "@/lib/emails/send-dataroom-notification";
 import prisma from "@/lib/prisma";
 import { log } from "@/lib/utils";
-import { sendDataroomNotification } from "@/lib/emails/send-dataroom-notification";
 
 export const config = {
   maxDuration: 120,
@@ -101,7 +102,7 @@ export default async function handle(
       senderEmail: user.email!,
       documentName: document?.document.name,
       to: viewer.email,
-      url: `${process.env.NEXTAUTH_URL}/view/d/${linkId}?email=${encodeURIComponent(viewer.email)}`,
+      url: `${process.env.NEXTAUTH_URL}/view/${linkId}?email=${encodeURIComponent(viewer.email)}`,
     });
 
     res

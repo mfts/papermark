@@ -1,17 +1,18 @@
 import React from "react";
+
 import {
   Body,
+  Button,
   Container,
   Head,
-  Heading,
+  Text,
+  Hr,
   Html,
   Preview,
-  Text,
-  Tailwind,
   Section,
-  Button,
-  Hr,
+  Tailwind,
 } from "@react-email/components";
+
 export default function DataroomNotification({
   dataroomName,
   documentName,
@@ -28,14 +29,14 @@ export default function DataroomNotification({
       <Head />
       <Preview>View dataroom on Papermark</Preview>
       <Tailwind>
-        <Body className="bg-white my-auto mx-auto font-sans">
-          <Container className="my-10 mx-auto p-5 w-[465px]">
-            <Heading className="text-2xl font-normal text-center p-0 mt-4 mb-8 mx-0">
+        <Body className="mx-auto my-auto bg-white font-sans">
+          <Container className="mx-auto my-10 w-[465px] p-5">
+            <Text className="mx-0 mb-8 mt-4 p-0 text-center text-2xl font-normal">
               <span className="font-bold tracking-tighter">Papermark</span>
-            </Heading>
-            <Heading className="text-xl font-seminbold text-center p-0 mt-4 mb-8 mx-0">
+            </Text>
+            <Text className="font-seminbold mx-0 mb-8 mt-4 p-0 text-center text-xl">
               {`New document available for ${dataroomName}`}
-            </Heading>
+            </Text>
             <Text className="text-sm leading-6 text-black">Hey!</Text>
             <Text className="text-sm leading-6 text-black">
               A new document{" "}
@@ -43,9 +44,9 @@ export default function DataroomNotification({
               added to <span className="font-semibold">{dataroomName}</span>{" "}
               dataroom on Papermark.
             </Text>
-            <Section className="text-center mt-[32px] mb-[32px]">
+            <Section className="mb-[32px] mt-[32px] text-center">
               <Button
-                className="bg-black rounded text-white text-xs font-semibold no-underline text-center"
+                className="rounded bg-black text-center text-xs font-semibold text-white no-underline"
                 href={`${url}`}
                 style={{ padding: "12px 20px" }}
               >
@@ -63,7 +64,7 @@ export default function DataroomNotification({
                 © {new Date().getFullYear()}{" "}
                 <a
                   href="https://www.papermark.io"
-                  className="no-underline text-gray-400 hover:text-gray-400 visited:text-gray-400"
+                  className="text-gray-400 no-underline visited:text-gray-400 hover:text-gray-400"
                   target="_blank"
                 >
                   papermark.io

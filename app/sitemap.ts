@@ -1,10 +1,11 @@
-import {
-  getPosts,
-  getAlternatives,
-  getPages,
-  getHelpArticles,
-} from "@/lib/content";
 import { MetadataRoute } from "next";
+
+import {
+  getAlternatives,
+  getHelpArticles,
+  getPages,
+  getPosts,
+} from "@/lib/content";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const posts = await getPosts();

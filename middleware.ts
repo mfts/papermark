@@ -1,6 +1,8 @@
 import { NextFetchEvent, NextRequest, NextResponse } from "next/server";
+
 import AppMiddleware from "@/lib/middleware/app";
 import DomainMiddleware from "@/lib/middleware/domain";
+
 import { BLOCKED_PATHNAMES } from "./lib/constants";
 import PostHogMiddleware from "./lib/middleware/posthog";
 
@@ -24,7 +26,7 @@ export const config = {
      * 4. /_vercel (Vercel internals)
      * 5. /favicon.ico, /sitemap.xml (static files)
      */
-    "/((?!api/|_next/|_static|_vercel|favicon.ico|sitemap.xml).*)",
+    "/((?!api/|_next/|_static|_icons|_vercel|favicon.ico|sitemap.xml).*)",
   ],
 };
 

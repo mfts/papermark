@@ -1,11 +1,14 @@
 import { NextApiRequest, NextApiResponse } from "next";
+
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "../auth/[...nextauth]";
-import { errorhandler } from "@/lib/errorHandler";
+
 import {
   finishServerPasskeyRegistration,
   startServerPasskeyRegistration,
 } from "@/lib/api/auth/passkey";
+import { errorhandler } from "@/lib/errorHandler";
+
+import { authOptions } from "../auth/[...nextauth]";
 
 export default async function handler(
   req: NextApiRequest,

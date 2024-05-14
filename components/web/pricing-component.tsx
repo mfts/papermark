@@ -1,5 +1,6 @@
-import { ArrowRightIcon, CheckCircle2Icon, MinusIcon } from "lucide-react";
 import Link from "next/link";
+
+import { ArrowRightIcon, CheckCircle2Icon, MinusIcon } from "lucide-react";
 
 const featureGroups: {
   name: string;
@@ -539,59 +540,59 @@ export function PricingComparison() {
     }
   };
   return (
-    <div className="max-w-full w-auto block">
-      <h2 className="text-3xl w-full sticky z-30 top-0 mt-[-80px] pt-[100px] border-b-0 pb-[40px] bg-white">
+    <div className="block w-auto max-w-full">
+      <h2 className="sticky top-0 z-30 mt-[-80px] w-full border-b-0 bg-white pb-[40px] pt-[100px] text-3xl">
         Compare features
       </h2>
       <div className="sticky top-[158px] z-40">
-        <div className="grid grid-cols-16 border border-black rounded-t-xl overflow-hidden">
-          <ul className="grid col-[span_16_/_span_16] grid-cols-16 overflow-hidden bg-gray-100 text-gray-900">
-            <li className="col-span-4 p-6 text-xl leading-8 list-none border-r border-black ">
+        <div className="grid grid-cols-16 overflow-hidden rounded-t-xl border border-black">
+          <ul className="col-[span_16_/_span_16] grid grid-cols-16 overflow-hidden bg-gray-100 text-gray-900">
+            <li className="col-span-4 list-none border-r border-black p-6 text-xl leading-8 ">
               Features
             </li>
-            <li className="col-span-3 p-6 text-xl leading-8 list-none border-r border-black">
+            <li className="col-span-3 list-none border-r border-black p-6 text-xl leading-8">
               Free
             </li>
-            <li className="col-span-3 p-6 text-xl leading-8 list-none border-r border-black">
+            <li className="col-span-3 list-none border-r border-black p-6 text-xl leading-8">
               Pro
             </li>
-            <li className="col-span-3 p-6 text-xl leading-8 list-none border-r border-black">
+            <li className="col-span-3 list-none border-r border-black p-6 text-xl leading-8">
               Business
             </li>
-            <li className="col-span-3 p-6 text-xl leading-8 list-none border-r-0">
+            <li className="col-span-3 list-none border-r-0 p-6 text-xl leading-8">
               Data Rooms
             </li>
           </ul>
         </div>
         <div className="grid grid-cols-16 border-x border-black">
-          <ul className="grid col-[span_16_/_span_16] grid-cols-16 overflow-hidden">
-            <li className="col-span-4 bg-white px-6 py-4 text-sm list-none border-r border-black"></li>
-            <li className="col-span-3 bg-white px-6 py-4 text-sm list-none border-r border-black hover:bg-black hover:text-white">
-              <Link href="/login" className="flex items-center gap-x-1 group">
+          <ul className="col-[span_16_/_span_16] grid grid-cols-16 overflow-hidden">
+            <li className="col-span-4 list-none border-r border-black bg-white px-6 py-4 text-sm"></li>
+            <li className="col-span-3 list-none border-r border-black bg-white px-6 py-4 text-sm hover:bg-black hover:text-white">
+              <Link href="/login" className="group flex items-center gap-x-1">
                 Start sharing <ArrowRightIcon className="h-4 w-4" />
               </Link>
             </li>
-            <li className="col-span-3 bg-white px-6 py-4 text-sm list-none border-r border-black hover:bg-black hover:text-white">
+            <li className="col-span-3 list-none border-r border-black bg-white px-6 py-4 text-sm hover:bg-black hover:text-white">
               <Link
                 href="/login?next=/settings/billing"
-                className="flex items-center gap-x-1 group"
+                className="group flex items-center gap-x-1"
               >
                 Choose Pro <ArrowRightIcon className="h-4 w-4" />
               </Link>
             </li>
-            <li className="col-span-3 bg-white px-6 py-4 text-sm list-none border-r border-black hover:bg-[#fb7a00] ">
+            <li className="col-span-3 list-none border-r border-black bg-white px-6 py-4 text-sm hover:bg-[#fb7a00] ">
               <Link
                 href="/login?next=/settings/billing"
-                className="flex items-center gap-x-1 group"
+                className="group flex items-center gap-x-1"
               >
                 Choose Business <ArrowRightIcon className="h-4 w-4" />
               </Link>
             </li>
-            <li className="col-span-3 bg-white px-6 py-4 text-sm list-none border-r-0 hover:bg-black hover:text-white">
+            <li className="col-span-3 list-none border-r-0 bg-white px-6 py-4 text-sm hover:bg-black hover:text-white">
               <Link
                 href="/login?next=/settings/billing"
                 target="_blank"
-                className="flex items-center gap-x-1 group"
+                className="group flex items-center gap-x-1"
               >
                 Create Data Rooms <ArrowRightIcon className="h-4 w-4" />
               </Link>
@@ -600,34 +601,34 @@ export function PricingComparison() {
         </div>
       </div>
       <div className="relative z-0">
-        <div className="w-full border-collapse overflow-visible bg-none border border-black rounded-b-xl">
+        <div className="w-full border-collapse overflow-visible rounded-b-xl border border-black bg-none">
           <div>
             {featureGroups.map((group) => (
               <>
                 <h3
-                  className="text-base sticky top-[292px] text-white z-30 w-full bg-black m-0 py-3 px-6 font-normal"
+                  className="sticky top-[292px] z-30 m-0 w-full bg-black px-6 py-3 text-base font-normal text-white"
                   key={group.name}
                 >
                   {group.name}
                 </h3>
                 {group.features.map((feature) => (
                   <div
-                    className="grid grid-cols-16 w-full relative odd:bg-gray-100 last:rounded-b-xl"
+                    className="relative grid w-full grid-cols-16 last:rounded-b-xl odd:bg-gray-100"
                     key={feature.name}
                   >
-                    <div className="relative py-7 px-6 text-base text-left flex flex-wrap font-normal col-end-[span_4] items-center text-black border-r border-black last:border-r-0">
+                    <div className="relative col-end-[span_4] flex flex-wrap items-center border-r border-black px-6 py-7 text-left text-base font-normal text-black last:border-r-0">
                       {feature.name}
                     </div>
-                    <div className="relative py-7 px-6 text-base text-left flex flex-wrap font-base col-end-[span_3] items-center text-black border-r border-black last:border-r-0">
+                    <div className="font-base relative col-end-[span_3] flex flex-wrap items-center border-r border-black px-6 py-7 text-left text-base text-black last:border-r-0">
                       {renderFeatureName(feature.tiers.free)}
                     </div>
-                    <div className="relative py-7 px-6 text-base text-left flex flex-wrap font-base col-end-[span_3] items-center text-black border-r border-black last:border-r-0">
+                    <div className="font-base relative col-end-[span_3] flex flex-wrap items-center border-r border-black px-6 py-7 text-left text-base text-black last:border-r-0">
                       {renderFeatureName(feature.tiers.pro)}
                     </div>
-                    <div className="relative py-7 px-6 text-base text-left flex flex-wrap font-base col-end-[span_3] items-center text-black border-r border-black last:border-r-0">
+                    <div className="font-base relative col-end-[span_3] flex flex-wrap items-center border-r border-black px-6 py-7 text-left text-base text-black last:border-r-0">
                       {renderFeatureName(feature.tiers.business)}
                     </div>
-                    <div className="relative py-7 px-6 text-base text-left flex flex-wrap font-base col-end-[span_3] items-center text-black border-r border-black last:border-r-0">
+                    <div className="font-base relative col-end-[span_3] flex flex-wrap items-center border-r border-black px-6 py-7 text-left text-base text-black last:border-r-0">
                       {renderFeatureName(feature.tiers.enterprise)}
                     </div>
                   </div>

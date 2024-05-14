@@ -1,4 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
+
+import { Brand, DataroomBrand } from "@prisma/client";
+
 import prisma from "@/lib/prisma";
 import { log } from "@/lib/utils";
 
@@ -45,6 +48,7 @@ export default async function handle(
           metaDescription: true,
           metaImage: true,
           enableQuestion: true,
+          linkType: true,
           feedback: {
             select: {
               id: true,
@@ -53,20 +57,21 @@ export default async function handle(
           },
           document: {
             select: {
-              id: true,
-              name: true,
-              ownerId: true,
-              team: { select: { id: true, plan: true } },
-              versions: {
-                where: { isPrimary: true },
+              team: {
                 select: {
                   id: true,
-                  versionNumber: true,
-                  hasPages: true,
-                  type: true,
-                  file: true,
+                  plan: true,
                 },
-                take: 1,
+              },
+            },
+          },
+          dataroom: {
+            select: {
+              team: {
+                select: {
+                  id: true,
+                  plan: true,
+                },
               },
             },
           },
@@ -74,7 +79,7 @@ export default async function handle(
       });
 
       // if link not found, return 404
-      if (!link || !link.document!.team) {
+      if (!link) {
         log({
           message: `Link not found for custom domain _${domain}/${slug}_`,
           type: "error",
@@ -82,20 +87,7 @@ export default async function handle(
         });
         return res.status(404).json({
           error: "Link not found",
-          message: `no link found, team ${link?.document!.team}`,
-        });
-      }
-
-      // if owner of document is on free plan, return 404
-      if (link.document!.team.plan === "free") {
-        log({
-          message: `Link is from a free team _${link.document!.team.id}_ for custom domain _${domain}/${slug}_`,
-          type: "info",
-          mention: true,
-        });
-        return res.status(404).json({
-          error: "Link not found",
-          message: `link found, team ${link.document!.team.plan}`,
+          message: "No link found",
         });
       }
 
@@ -106,21 +98,130 @@ export default async function handle(
         });
       }
 
-      let brand = await prisma.brand.findFirst({
-        where: {
-          teamId: link.document!.team.id,
-        },
-        select: {
-          logo: true,
-          brandColor: true,
-        },
-      });
-
-      if (!brand) {
-        brand = null;
+      const teamPlan = link.document?.team?.plan || link.dataroom?.team.plan;
+      const teamId = link.document?.team?.id || link.dataroom?.team.id;
+      // if owner of document is on free plan, return 404
+      if (teamPlan === "free") {
+        log({
+          message: `Link is from a free team _${teamId}_ for custom domain _${domain}/${slug}_`,
+          type: "info",
+          mention: true,
+        });
+        return res.status(404).json({
+          error: "Link not found",
+          message: `link found, team ${teamPlan}`,
+        });
       }
 
-      res.status(200).json({ link, brand });
+      const linkType = link.linkType;
+      let brand: Partial<Brand> | Partial<DataroomBrand> | null = null;
+      let linkData: any;
+
+      if (linkType === "DOCUMENT_LINK") {
+        linkData = await prisma.link.findUnique({
+          where: { id: link.id },
+          select: {
+            document: {
+              select: {
+                id: true,
+                name: true,
+                teamId: true,
+                ownerId: true,
+                team: { select: { plan: true } },
+                versions: {
+                  where: { isPrimary: true },
+                  select: {
+                    id: true,
+                    versionNumber: true,
+                    hasPages: true,
+                    type: true,
+                    file: true,
+                  },
+                  take: 1,
+                },
+              },
+            },
+          },
+        });
+
+        brand = await prisma.brand.findFirst({
+          where: {
+            teamId: linkData.document.teamId,
+          },
+          select: {
+            logo: true,
+            brandColor: true,
+          },
+        });
+      } else if (linkType === "DATAROOM_LINK") {
+        linkData = await prisma.link.findUnique({
+          where: { id: link.id },
+          select: {
+            dataroom: {
+              select: {
+                id: true,
+                name: true,
+                teamId: true,
+                documents: {
+                  select: {
+                    id: true,
+                    folderId: true,
+                    updatedAt: true,
+                    document: {
+                      select: {
+                        id: true,
+                        name: true,
+                        versions: {
+                          where: { isPrimary: true },
+                          select: {
+                            id: true,
+                            versionNumber: true,
+                            type: true,
+                            hasPages: true,
+                            file: true,
+                          },
+                          take: 1,
+                        },
+                      },
+                    },
+                  },
+                },
+                folders: {
+                  orderBy: {
+                    name: "asc",
+                  },
+                },
+              },
+            },
+          },
+        });
+
+        brand = await prisma.dataroomBrand.findFirst({
+          where: {
+            dataroomId: linkData.dataroom.id,
+          },
+          select: {
+            logo: true,
+            banner: true,
+            brandColor: true,
+          },
+        });
+      }
+
+      // remove document and domain from link
+      const sanitizedLink = {
+        ...link,
+        document: undefined,
+        dataroom: undefined,
+      };
+
+      // clean up the link return object
+      const returnLink = {
+        ...sanitizedLink,
+        ...linkData,
+      };
+
+      res.status(200).json({ linkType, link: returnLink, brand });
     } catch (error) {
       log({
         message: `Cannot get link for custom domain _${domainSlug}_ \n\n${error}`,

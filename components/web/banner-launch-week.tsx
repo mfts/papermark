@@ -25,7 +25,7 @@ export default function Banner() {
           }}
         />
       </div>
-      <div className="flex justify-center  items-center gap-x-4 gap-y-2">
+      <div className="flex items-center  justify-center gap-x-4 gap-y-2">
         <p className="text-sm leading-6 text-white">
           <strong className="font-semibold">Papermark AI</strong> on Product
           Hunt

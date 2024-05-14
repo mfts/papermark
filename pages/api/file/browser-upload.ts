@@ -1,9 +1,12 @@
-import { handleUpload, type HandleUploadBody } from "@vercel/blob/client";
-import type { NextApiResponse, NextApiRequest } from "next";
+import type { NextApiRequest, NextApiResponse } from "next";
+
+import { type HandleUploadBody, handleUpload } from "@vercel/blob/client";
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "../auth/[...nextauth]";
-import { CustomUser } from "@/lib/types";
+
 import prisma from "@/lib/prisma";
+import { CustomUser } from "@/lib/types";
+
+import { authOptions } from "../auth/[...nextauth]";
 
 export default async function handler(
   req: NextApiRequest,
@@ -39,7 +42,7 @@ export default async function handler(
         });
 
         let maxSize = 30 * 1024 * 1024; // 30 MB
-        if (team?.plan === "pro") {
+        if (team?.plan === "business" || team?.plan === "datarooms") {
           maxSize = 100 * 1024 * 1024; // 100 MB
         }
 

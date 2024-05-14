@@ -1,6 +1,6 @@
 import {
-  DomainResponse,
   DomainConfigResponse,
+  DomainResponse,
   DomainVerificationResponse,
 } from "@/lib/types";
 

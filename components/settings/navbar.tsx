@@ -1,5 +1,6 @@
-import { cn } from "@/lib/utils";
 import Link from "next/link";
+
+import { cn } from "@/lib/utils";
 
 const tabs = [
   { name: "General", href: "/settings/general" },
@@ -11,10 +12,10 @@ const tabs = [
 
 export default function Navbar({ current }: { current?: string }) {
   return (
-    <div className="p-4 sm:p-4 sm:m-4">
-      <div className="flex items-center justify-between mb-4 md:mb-8 lg:mb-12">
+    <div className="p-4 sm:m-4 sm:p-4">
+      <div className="mb-4 flex items-center justify-between md:mb-8 lg:mb-12">
         <div className="space-y-1">
-          <h2 className="text-2xl text-foreground font-semibold tracking-tight">
+          <h2 className="text-2xl font-semibold tracking-tight text-foreground">
             Settings
           </h2>
           <p className="text-sm text-muted-foreground">
@@ -33,7 +34,7 @@ export default function Navbar({ current }: { current?: string }) {
                   current === tab.name
                     ? "border-foreground text-foreground"
                     : "border-transparent text-muted-foreground hover:border-foreground hover:text-foreground",
-                  "whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium",
+                  "whitespace-nowrap border-b-2 px-1 py-4 text-sm font-medium",
                 )}
                 aria-current={current === tab.name ? "page" : undefined}
               >

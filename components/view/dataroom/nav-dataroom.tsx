@@ -1,20 +1,24 @@
-import Link from "next/link";
-import { Button } from "../../ui/button";
-import PapermarkSparkle from "../../shared/icons/papermark-sparkle";
-import { ArrowUpRight, Download } from "lucide-react";
-import { Brand, DataroomBrand } from "@prisma/client";
 import Image from "next/image";
+import Link from "next/link";
+
+import { Brand, DataroomBrand } from "@prisma/client";
+import { ArrowUpRight, Download } from "lucide-react";
 import { toast } from "sonner";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuTrigger,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuShortcut,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+
 import { timeAgo } from "@/lib/utils";
+
+import PapermarkSparkle from "../../shared/icons/papermark-sparkle";
+import { Button } from "../../ui/button";
 
 export default function DataroomNav({
   pageNumber,
@@ -34,7 +38,7 @@ export default function DataroomNav({
   numPages?: number;
   allowDownload?: boolean;
   assistantEnabled?: boolean;
-  brand?: DataroomBrand;
+  brand?: Partial<DataroomBrand>;
   embeddedLinks?: string[];
   viewId?: string;
   linkId?: string;
@@ -75,8 +79,8 @@ export default function DataroomNav({
     >
       <div className="mx-auto px-2 sm:px-6 lg:px-8">
         <div className="relative flex h-12 items-center justify-between">
-          <div className="flex flex-1 justify-start items-center">
-            <div className="flex flex-shrink-0 items-center relative h-6 w-36">
+          <div className="flex flex-1 items-center justify-start">
+            <div className="relative flex h-6 w-36 flex-shrink-0 items-center">
               {brand && brand.logo ? (
                 <Image
                   className="object-contain"
@@ -100,7 +104,7 @@ export default function DataroomNav({
               <div>
                 <Button
                   onClick={() => setDocumentData(null)}
-                  className="text-white text-sm font-medium"
+                  className="text-sm font-medium text-white"
                   variant="link"
                 >
                   Dataroom Home
@@ -108,11 +112,11 @@ export default function DataroomNav({
               </div>
             ) : null}
           </div>
-          <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0 space-x-4">
+          <div className="absolute inset-y-0 right-0 flex items-center space-x-4 pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
             {embeddedLinks && embeddedLinks.length > 0 ? (
               <DropdownMenu>
                 <DropdownMenuTrigger>
-                  <Button className="text-sm font-medium text-white bg-gray-900 hover:bg-gray-900/80">
+                  <Button className="bg-gray-900 text-sm font-medium text-white hover:bg-gray-900/80">
                     Links on Page
                   </Button>
                 </DropdownMenuTrigger>
@@ -127,7 +131,7 @@ export default function DataroomNav({
                       key={index}
                     >
                       <DropdownMenuItem className="group h-10">
-                        <span className="w-[200px] truncate group-focus:text-clip group-focus:overflow-x-auto">
+                        <span className="w-[200px] truncate group-focus:overflow-x-auto group-focus:text-clip">
                           {link}
                         </span>
                         <DropdownMenuShortcut className="pl-2 opacity-0 group-hover:opacity-60 group-focus:opacity-60">
@@ -142,7 +146,7 @@ export default function DataroomNav({
             {assistantEnabled ? (
               <Link href={`/view/${linkId}/chat`}>
                 <Button
-                  className="text-white bg-gray-900 hover:bg-gray-900/80 m-1"
+                  className="m-1 bg-gray-900 text-white hover:bg-gray-900/80"
                   variant={"special"}
                   size={"icon"}
                   style={{
@@ -157,15 +161,15 @@ export default function DataroomNav({
             {allowDownload ? (
               <Button
                 onClick={downloadFile}
-                className="text-white bg-gray-900 hover:bg-gray-900/80 m-1"
+                className="m-1 bg-gray-900 text-white hover:bg-gray-900/80"
                 size="icon"
                 title="Download document"
               >
-                <Download className="w-5 h-5" />
+                <Download className="h-5 w-5" />
               </Button>
             ) : null}
             {pageNumber && numPages ? (
-              <div className="bg-gray-900 text-white rounded-md h-10 px-4 py-2 items-center flex text-sm font-medium">
+              <div className="flex h-10 items-center rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white">
                 <span>{pageNumber}</span>
                 <span className="text-gray-400"> / {numPages}</span>
               </div>
@@ -176,7 +180,7 @@ export default function DataroomNav({
       {brand && brand.banner ? (
         <div className="relative h-[30vh]">
           <Image
-            className="object-cover w-full h-[30vh]"
+            className="h-[30vh] w-full object-cover"
             src={brand.banner}
             alt="Banner"
             width={1920}
@@ -184,8 +188,8 @@ export default function DataroomNav({
             quality={100}
             priority
           />
-          <div className="absolute bottom-5 w-fit backdrop-blur-md bg-white/30 rounded-r-md">
-            <div className="px-5 sm:px-10 py-2">
+          <div className="absolute bottom-5 w-fit rounded-r-md bg-white/30 backdrop-blur-md">
+            <div className="px-5 py-2 sm:px-10">
               <div className="text-3xl">{dataroom.name}</div>
               <time
                 className="text-sm"

@@ -1,21 +1,22 @@
-import Link from "next/link";
-import TwitterIcon from "@/components/shared/icons/twitter";
-import ProductHuntIcon from "@/components/shared/icons/producthunt";
-import { Button } from "@/components/ui/button";
 import Image from "next/image";
-import Navbar from "@/components/web/navbar";
-import Footer from "@/components/web/footer";
-import { LogoCloud } from "@/components/web/landing-page/logo-cloud";
-import Testimonials from "@/components/web/testimonials";
+import Link from "next/link";
 
 import {
   RefreshCw as ArrowPathIcon,
-  Settings as Cog6ToothIcon,
-  ServerIcon,
-  PaletteIcon,
-  SlidersIcon,
   BarChart3Icon,
+  Settings as Cog6ToothIcon,
+  PaletteIcon,
+  ServerIcon,
+  SlidersIcon,
 } from "lucide-react";
+
+import ProductHuntIcon from "@/components/shared/icons/producthunt";
+import TwitterIcon from "@/components/shared/icons/twitter";
+import { Button } from "@/components/ui/button";
+import Footer from "@/components/web/footer";
+import { LogoCloud } from "@/components/web/landing-page/logo-cloud";
+import Navbar from "@/components/web/navbar";
+import Testimonials from "@/components/web/testimonials";
 
 const features = [
   {
@@ -60,16 +61,16 @@ export default function Home() {
       <div className="flex flex-1 flex-col bg-white text-black">
         <Navbar />
 
-        <div className="max-w-7xl w-full mx-auto px-4 md:px-8">
+        <div className="mx-auto w-full max-w-7xl px-4 md:px-8">
           <div className="pt-24">
-            <h1 className="text-6xl md:text-8xl text-balance">
+            <h1 className="text-balance text-6xl md:text-8xl">
               The Open-Source DocSend Alternative
             </h1>
-            <p className="text-2xl mt-8 text-balance max-w-3xl">
+            <p className="mt-8 max-w-3xl text-balance text-2xl">
               Papermark is a modern document sharing infrastructure with
               built-in page analytics and full white-labeling
             </p>
-            <div className="pt-8 space-x-2">
+            <div className="space-x-2 pt-8">
               <Link
                 href="https://cal.com/marcseitz/papermark"
                 target="_blank"
@@ -77,16 +78,16 @@ export default function Home() {
               >
                 <Button
                   variant="outline"
-                  className="text-base rounded-3xl bg-transparent border-black"
+                  className="rounded-3xl border-black bg-transparent text-base"
                 >
                   Book a demo
                 </Button>
               </Link>
               <Link href="/login">
-                <Button className="text-base rounded-3xl">Send document</Button>
+                <Button className="rounded-3xl text-base">Send document</Button>
               </Link>
             </div>
-            <div className="mt-24 mx-auto w-full">
+            <div className="mx-auto mt-24 w-full">
               <video
                 width="100%"
                 id="video1"
@@ -106,16 +107,16 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="grid gap-16 md:gap-24 lg:gap-32 mt-20">
+          <div className="mt-20 grid gap-16 md:gap-24 lg:gap-32">
             <div className="mx-auto mt-4 w-full px-0 lg:px-8 xl:p-0">
               <LogoCloud />
             </div>
           </div>
         </div>
 
-        <div className="mt-24 bg-gray-50 w-full overflow-x-hidden">
-          <div className="w-full mx-auto max-w-7xl px-4 md:px-8">
-            <h2 className="text-4xl text-balance pt-20 pb-20">
+        <div className="mt-24 w-full overflow-x-hidden bg-gray-50">
+          <div className="mx-auto w-full max-w-7xl px-4 md:px-8">
+            <h2 className="text-balance pb-20 pt-20 text-4xl">
               Share your documents, securely.{" "}
               <span className="text-gray-500">
                 {/* Fine-tune access control. Receive real-time page analytics.
@@ -124,54 +125,54 @@ export default function Home() {
               </span>
             </h2>
           </div>
-          <div className="mx-4 sm:mx-0 sm:flex sm:flex-nowrap gap-6 lg:gap-10 mb-6 lg:mb-10 sm:translate-x-[-30px] text-balance">
-            <div className="bg-gray-200 flex-none rounded-xl p-6 mb-6 sm:max-w-[300px] sm:p-6 sm:mb-0 md:max-w-[360px] lg:max-w-[500px] lg:p-8 xl:max-w-[560px] xl:p-10 2xl:max-w-[640px]">
-              <p className="text-black/90 font-380 text-base lg:text-base xl:text-base 2xl:text-lg 2xl:-ml-0.5 tracking-tight leading-none">
+          <div className="mx-4 mb-6 gap-6 text-balance sm:mx-0 sm:flex sm:translate-x-[-30px] sm:flex-nowrap lg:mb-10 lg:gap-10">
+            <div className="mb-6 flex-none rounded-xl bg-gray-200 p-6 sm:mb-0 sm:max-w-[300px] sm:p-6 md:max-w-[360px] lg:max-w-[500px] lg:p-8 xl:max-w-[560px] xl:p-10 2xl:max-w-[640px]">
+              <p className="font-380 text-base leading-none tracking-tight text-black/90 lg:text-base xl:text-base 2xl:-ml-0.5 2xl:text-lg">
                 Real Estate
               </p>
-              <p className="text-black/90 font-380 text-xl -ml-0.5 md:text-2xl md:-ml-0.5 md:leading-none lg:text-4xl lg:-ml-0.5 xl:text-4xl xl:-ml-0.5 tracking-tighter leading-tight ">
+              <p className="font-380 -ml-0.5 text-xl leading-tight tracking-tighter text-black/90 md:-ml-0.5 md:text-2xl md:leading-none lg:-ml-0.5 lg:text-4xl xl:-ml-0.5 xl:text-4xl ">
                 Securely share property documents with clients
               </p>
             </div>
-            <div className="bg-black/80 flex-none rounded-xl p-6 mb-6 sm:max-w-[300px] sm:p-6 sm:mb-0 md:max-w-[360px] lg:max-w-[500px] lg:p-8 xl:max-w-[560px] xl:p-10 2xl:max-w-[640px]">
-              <p className="text-gray-50 font-380 text-base lg:text-base xl:text-base 2xl:text-lg 2xl:-ml-0.5 tracking-tight leading-none">
+            <div className="mb-6 flex-none rounded-xl bg-black/80 p-6 sm:mb-0 sm:max-w-[300px] sm:p-6 md:max-w-[360px] lg:max-w-[500px] lg:p-8 xl:max-w-[560px] xl:p-10 2xl:max-w-[640px]">
+              <p className="font-380 text-base leading-none tracking-tight text-gray-50 lg:text-base xl:text-base 2xl:-ml-0.5 2xl:text-lg">
                 Startups
               </p>
-              <p className="text-gray-50 font-380 text-xl -ml-0.5 md:text-2xl md:-ml-0.5 md:leading-none lg:text-4xl lg:-ml-0.5 xl:text-4xl xl:-ml-0.5 tracking-tighter leading-tight ">
+              <p className="font-380 -ml-0.5 text-xl leading-tight tracking-tighter text-gray-50 md:-ml-0.5 md:text-2xl md:leading-none lg:-ml-0.5 lg:text-4xl xl:-ml-0.5 xl:text-4xl ">
                 Take ownership of your fundraising process
               </p>
             </div>
-            <div className="bg-gray-200 flex-none rounded-xl p-6 mb-6 sm:max-w-[300px] sm:p-6 sm:mb-0 md:max-w-[360px] lg:max-w-[500px] lg:p-8 xl:max-w-[560px] xl:p-10 2xl:max-w-[640px]">
-              <p className="text-black/90 font-380 text-base lg:text-base xl:text-base 2xl:text-lg 2xl:-ml-0.5 tracking-tight leading-none">
+            <div className="mb-6 flex-none rounded-xl bg-gray-200 p-6 sm:mb-0 sm:max-w-[300px] sm:p-6 md:max-w-[360px] lg:max-w-[500px] lg:p-8 xl:max-w-[560px] xl:p-10 2xl:max-w-[640px]">
+              <p className="font-380 text-base leading-none tracking-tight text-black/90 lg:text-base xl:text-base 2xl:-ml-0.5 2xl:text-lg">
                 Growth
               </p>
-              <p className="text-black/90 font-380 text-xl -ml-0.5 md:text-2xl md:-ml-0.5 md:leading-none lg:text-4xl lg:-ml-0.5 xl:text-4xl xl:-ml-0.5 tracking-tighter leading-tight ">
+              <p className="font-380 -ml-0.5 text-xl leading-tight tracking-tighter text-black/90 md:-ml-0.5 md:text-2xl md:leading-none lg:-ml-0.5 lg:text-4xl xl:-ml-0.5 xl:text-4xl ">
                 Capture marketing-qualified leads on social media
               </p>
             </div>
           </div>
-          <div className="mx-4 sm:mx-0 sm:flex sm:flex-nowrap gap-6 lg:gap-10 mb-6 lg:mb-10 sm:translate-x-[50px] text-balance">
-            <div className="bg-black/80 flex-none rounded-xl p-6 mb-6 sm:max-w-[300px] sm:p-6 sm:mb-0 md:max-w-[360px] lg:max-w-[500px] lg:p-8 xl:max-w-[560px] xl:p-10 2xl:max-w-[640px]">
-              <p className="text-gray-50 font-380 text-base lg:text-base xl:text-base 2xl:text-lg 2xl:-ml-0.5 tracking-tight leading-none">
+          <div className="mx-4 mb-6 gap-6 text-balance sm:mx-0 sm:flex sm:translate-x-[50px] sm:flex-nowrap lg:mb-10 lg:gap-10">
+            <div className="mb-6 flex-none rounded-xl bg-black/80 p-6 sm:mb-0 sm:max-w-[300px] sm:p-6 md:max-w-[360px] lg:max-w-[500px] lg:p-8 xl:max-w-[560px] xl:p-10 2xl:max-w-[640px]">
+              <p className="font-380 text-base leading-none tracking-tight text-gray-50 lg:text-base xl:text-base 2xl:-ml-0.5 2xl:text-lg">
                 Sales
               </p>
-              <p className="text-gray-50 font-380 text-xl -ml-0.5 md:text-2xl md:-ml-0.5 md:leading-none lg:text-4xl lg:-ml-0.5 xl:text-4xl xl:-ml-0.5 tracking-tighter leading-tight ">
+              <p className="font-380 -ml-0.5 text-xl leading-tight tracking-tighter text-gray-50 md:-ml-0.5 md:text-2xl md:leading-none lg:-ml-0.5 lg:text-4xl xl:-ml-0.5 xl:text-4xl ">
                 Spend time on only engaged prospects
               </p>
             </div>
-            <div className="bg-gray-200 flex-none rounded-xl p-6 mb-6 sm:max-w-[300px] sm:p-6 sm:mb-0 md:max-w-[360px] lg:max-w-[500px] lg:p-8 xl:max-w-[560px] xl:p-10 2xl:max-w-[640px]">
-              <p className="text-black/90 font-380 text-base lg:text-base xl:text-base 2xl:text-lg 2xl:-ml-0.5 tracking-tight leading-none">
+            <div className="mb-6 flex-none rounded-xl bg-gray-200 p-6 sm:mb-0 sm:max-w-[300px] sm:p-6 md:max-w-[360px] lg:max-w-[500px] lg:p-8 xl:max-w-[560px] xl:p-10 2xl:max-w-[640px]">
+              <p className="font-380 text-base leading-none tracking-tight text-black/90 lg:text-base xl:text-base 2xl:-ml-0.5 2xl:text-lg">
                 Investors
               </p>
-              <p className="text-black/90 font-380 text-xl -ml-0.5 md:text-2xl md:-ml-0.5 md:leading-none lg:text-4xl lg:-ml-0.5 xl:text-4xl xl:-ml-0.5 tracking-tighter leading-tight">
+              <p className="font-380 -ml-0.5 text-xl leading-tight tracking-tighter text-black/90 md:-ml-0.5 md:text-2xl md:leading-none lg:-ml-0.5 lg:text-4xl xl:-ml-0.5 xl:text-4xl">
                 Take the guess-work out of LP updates
               </p>
             </div>
-            <div className="bg-black/80 flex-none rounded-xl p-6 mb-6 sm:max-w-[300px] sm:p-6 sm:mb-0 md:max-w-[360px] lg:max-w-[500px] lg:p-8 xl:max-w-[560px] xl:p-10 2xl:max-w-[640px]">
-              <p className="text-gray-50 font-380 text-base lg:text-base xl:text-base 2xl:text-lg 2xl:-ml-0.5 tracking-tight leading-none">
+            <div className="mb-6 flex-none rounded-xl bg-black/80 p-6 sm:mb-0 sm:max-w-[300px] sm:p-6 md:max-w-[360px] lg:max-w-[500px] lg:p-8 xl:max-w-[560px] xl:p-10 2xl:max-w-[640px]">
+              <p className="font-380 text-base leading-none tracking-tight text-gray-50 lg:text-base xl:text-base 2xl:-ml-0.5 2xl:text-lg">
                 Non-Profits
               </p>
-              <p className="text-gray-50 font-380 text-xl -ml-0.5 md:text-2xl md:-ml-0.5 md:leading-none lg:text-4xl lg:-ml-0.5 xl:text-4xl xl:-ml-0.5 tracking-tighter leading-tight ">
+              <p className="font-380 -ml-0.5 text-xl leading-tight tracking-tighter text-gray-50 md:-ml-0.5 md:text-2xl md:leading-none lg:-ml-0.5 lg:text-4xl xl:-ml-0.5 xl:text-4xl ">
                 Securely share and track grant applications
               </p>
             </div>
@@ -179,10 +180,10 @@ export default function Home() {
         </div>
 
         <div
-          className="w-full mx-auto max-w-7xl px-4 md:px-8 py-20"
+          className="mx-auto w-full max-w-7xl px-4 py-20 md:px-8"
           id="features"
         >
-          <h2 className="text-4xl text-balance pt-12 pb-20 max-w-3xl">
+          <h2 className="max-w-3xl text-balance pb-20 pt-12 text-4xl">
             Built for modern teams.{" "}
             <span className="text-gray-500">
               Share your documents with an impression that lasts.
@@ -199,10 +200,10 @@ export default function Home() {
                     className="h-10 w-10 text-gray-800"
                     aria-hidden="true"
                   />
-                  <dt className="inline text-gray-800 text-2xl">
+                  <dt className="inline text-2xl text-gray-800">
                     {feature.name}
                   </dt>{" "}
-                  <dd className="inline text-base text-balance">
+                  <dd className="inline text-balance text-base">
                     {feature.description}
                   </dd>
                 </div>
@@ -216,11 +217,11 @@ export default function Home() {
         </div>
 
         <div className="bg-[#fb7a00]">
-          <div className="w-full mx-auto max-w-7xl py-32 px-4 md:px-8">
-            <h2 className="text-4xl text-balance  ">
+          <div className="mx-auto w-full max-w-7xl px-4 py-32 md:px-8">
+            <h2 className="text-balance text-4xl  ">
               Sharing with Papermark is secure, fast, and free.
             </h2>
-            <div className="pt-8 space-x-2">
+            <div className="space-x-2 pt-8">
               <Link
                 href="https://cal.com/marcseitz/papermark"
                 target="_blank"
@@ -228,13 +229,13 @@ export default function Home() {
               >
                 <Button
                   variant="outline"
-                  className="text-base rounded-3xl bg-transparent border-black"
+                  className="rounded-3xl border-black bg-transparent text-base"
                 >
                   Book a demo
                 </Button>
               </Link>
               <Link href="/login">
-                <Button className="text-base rounded-3xl">
+                <Button className="rounded-3xl text-base">
                   Start for free
                 </Button>
               </Link>

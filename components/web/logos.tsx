@@ -15,7 +15,7 @@ export default function Logos() {
           ].map((logo, index) => (
             <img
               key={index}
-              className="w-20 h-20 object-contain lg:w-32 lg:h-32"
+              className="h-20 w-20 object-contain lg:h-32 lg:w-32"
               src={`/_static/${logo}`}
               alt=""
               // Note: These width and height attributes can be removed since we're using CSS to control the image size.

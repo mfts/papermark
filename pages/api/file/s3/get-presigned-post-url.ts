@@ -1,14 +1,17 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { getS3Client } from "@/lib/files/aws-client";
-import { getServerSession } from "next-auth";
-import { authOptions } from "../../auth/[...nextauth]";
-import { CustomUser } from "@/lib/types";
-import prisma from "@/lib/prisma";
-import path from "node:path";
-import slugify from "@sindresorhus/slugify";
+
 import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import slugify from "@sindresorhus/slugify";
+import { getServerSession } from "next-auth";
+import path from "node:path";
+
 import { ONE_HOUR, ONE_SECOND } from "@/lib/constants";
+import { getS3Client } from "@/lib/files/aws-client";
+import prisma from "@/lib/prisma";
+import { CustomUser } from "@/lib/types";
+
+import { authOptions } from "../../auth/[...nextauth]";
 
 const client = getS3Client();
 

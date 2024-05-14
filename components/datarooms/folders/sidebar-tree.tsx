@@ -1,11 +1,15 @@
 import { useRouter } from "next/router";
-import { FileTree } from "@/components/ui/nextra-filetree";
+
 import { memo, useMemo } from "react";
-import { buildNestedFolderStructure } from "./utils";
+
+import { FileTree } from "@/components/ui/nextra-filetree";
+
 import {
   DataroomFolderWithDocuments,
   useDataroomFoldersTree,
 } from "@/lib/swr/use-dataroom";
+
+import { buildNestedFolderStructure } from "./utils";
 
 const FolderComponent = memo(
   ({

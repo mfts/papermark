@@ -1,7 +1,8 @@
 import { NextApiRequest, NextApiResponse } from "next";
+
+import { sendDataroomViewerInvite } from "@/lib/emails/send-dataroom-viewer-invite";
 import prisma from "@/lib/prisma";
 import { log } from "@/lib/utils";
-import { sendDataroomViewerInvite } from "@/lib/emails/send-dataroom-viewer-invite";
 
 export const config = {
   maxDuration: 120,
@@ -84,7 +85,7 @@ export default async function handle(
       dataroomName: viewer.dataroom.name,
       senderEmail: user.email!,
       to: viewer.email,
-      url: `${process.env.NEXTAUTH_URL}/view/d/${linkId}?email=${encodeURIComponent(viewer.email)}`,
+      url: `${process.env.NEXTAUTH_URL}/view/${linkId}?email=${encodeURIComponent(viewer.email)}`,
     });
 
     res

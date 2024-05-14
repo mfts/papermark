@@ -12,7 +12,7 @@ export default function Stats({ angelsLength }: { angelsLength: any }) {
               {angelsLength}
             </dd>
           </div>
-          <div className="flex flex-col border-t border-b border-gray-100 p-6 text-center sm:border-0 sm:border-l sm:border-r">
+          <div className="flex flex-col border-b border-t border-gray-100 p-6 text-center sm:border-0 sm:border-l sm:border-r">
             <dt className="order-2 mt-2 text-lg font-medium leading-6 text-gray-500">
               Average Check Size
             </dt>
@@ -20,7 +20,7 @@ export default function Stats({ angelsLength }: { angelsLength: any }) {
               $45k
             </dd>
           </div>
-          <div className="flex flex-col border-t border-b border-gray-100 p-6 text-center sm:border-0 sm:border-l sm:border-r">
+          <div className="flex flex-col border-b border-t border-gray-100 p-6 text-center sm:border-0 sm:border-l sm:border-r">
             <dt className="order-2 mt-2 text-lg font-medium leading-6 text-gray-500">
               Confirmed Investments
             </dt>

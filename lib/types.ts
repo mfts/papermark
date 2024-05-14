@@ -1,15 +1,15 @@
-import { User as NextAuthUser } from "next-auth";
 import {
-  Document,
-  Link,
-  View,
-  User as PrismaUser,
-  DocumentVersion,
-  DataroomDocument,
   Dataroom,
+  DataroomDocument,
   DataroomFolder,
+  Document,
+  DocumentVersion,
   Feedback,
+  Link,
+  User as PrismaUser,
+  View,
 } from "@prisma/client";
+import { User as NextAuthUser } from "next-auth";
 
 export type CustomUser = NextAuthUser & PrismaUser;
 
@@ -61,6 +61,31 @@ export interface LinkWithDocument extends Link {
       type: string;
     };
   } | null;
+}
+
+export interface LinkWithDataroom extends Link {
+  dataroom: {
+    id: string;
+    name: string;
+    teamId: string;
+    documents: {
+      id: string;
+      folderId: string | null;
+      document: {
+        id: string;
+        name: string;
+        versions: {
+          id: string;
+          versionNumber: number;
+          type: string;
+          hasPages: boolean;
+          file: string;
+        }[];
+      };
+    }[];
+    folders: DataroomFolder[];
+    lastUpdatedAt: Date;
+  };
 }
 
 export interface Geo {

@@ -1,17 +1,17 @@
 import React from "react";
+
 import {
   Body,
   Button,
   Container,
   Head,
-  Heading,
+  Text,
+  Hr,
   Html,
+  Link,
   Preview,
   Section,
-  Text,
   Tailwind,
-  Link,
-  Hr,
 } from "@react-email/components";
 
 export default function InvalidDomain({
@@ -26,16 +26,16 @@ export default function InvalidDomain({
       <Head />
       <Preview>Invalid Domain Configuration</Preview>
       <Tailwind>
-        <Body className="bg-white my-auto mx-auto font-sans">
-          <Container className="my-10 mx-auto p-5 w-[465px]">
-            <Heading className="text-2xl font-normal text-center p-0 mt-4 mb-8 mx-0">
+        <Body className="mx-auto my-auto bg-white font-sans">
+          <Container className="mx-auto my-10 w-[465px] p-5">
+            <Text className="mx-0 mb-8 mt-4 p-0 text-center text-2xl font-normal">
               <span className="font-bold tracking-tighter">Papermark</span>
-            </Heading>
-            <Heading className="mx-0 my-7 p-0 text-center text-xl font-semibold text-black">
+            </Text>
+            <Text className="mx-0 my-7 p-0 text-center text-xl font-semibold text-black">
               {invalidDays >= 14
                 ? `Invalid Domain Configuration`
                 : `Finish configuring your domain`}
-            </Heading>
+            </Text>
             <Text className="text-sm leading-6 text-black">
               Your domain <code className="text-purple-600">{domain}</code> for
               your Papermark account{" "}
@@ -50,7 +50,7 @@ export default function InvalidDomain({
             </Text>
             <Section className="my-8 text-center">
               <Button
-                className="bg-black rounded text-white text-xs font-semibold no-underline text-center"
+                className="rounded bg-black text-center text-xs font-semibold text-white no-underline"
                 href={`https://www.papermark.io/settings/domains`}
                 style={{ padding: "12px 20px" }}
               >
@@ -83,7 +83,7 @@ export default function InvalidDomain({
                 © {new Date().getFullYear()}{" "}
                 <a
                   href="https://www.papermark.io"
-                  className="no-underline text-gray-400 hover:text-gray-400 visited:text-gray-400"
+                  className="text-gray-400 no-underline visited:text-gray-400 hover:text-gray-400"
                   target="_blank"
                 >
                   papermark.io

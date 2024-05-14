@@ -1,19 +1,24 @@
-import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import LoadingSpinner from "@/components/ui/loading-spinner";
-import BlankImg from "@/public/_static/blank.gif";
-import Nav from "./nav";
-import Toolbar from "./toolbar";
-import { Brand, DataroomBrand } from "@prisma/client";
 import { useRouter } from "next/router";
-import { PoweredBy } from "./powered-by";
-import Question from "./question";
-import { cn } from "@/lib/utils";
-import { ScreenProtector } from "./ScreenProtection";
+
+import { useEffect, useRef, useState } from "react";
+
+import BlankImg from "@/public/_static/blank.gif";
+import { Brand, DataroomBrand } from "@prisma/client";
+import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import { toast } from "sonner";
 
-const DEFAULT_PRELOADED_IMAGES_NUM = 10;
+import LoadingSpinner from "@/components/ui/loading-spinner";
+
+import { cn } from "@/lib/utils";
+
+import { ScreenProtector } from "./ScreenProtection";
+import Nav from "./nav";
+import { PoweredBy } from "./powered-by";
+import Question from "./question";
+import Toolbar from "./toolbar";
+
+const DEFAULT_PRELOADED_IMAGES_NUM = 5;
 
 export default function PagesViewer({
   pages,
@@ -42,7 +47,7 @@ export default function PagesViewer({
   feedbackEnabled: boolean;
   screenshotProtectionEnabled: boolean;
   versionNumber: number;
-  brand?: Brand | DataroomBrand;
+  brand?: Partial<Brand> | Partial<DataroomBrand> | null;
   documentName?: string;
   dataroomId?: string;
   setDocumentData?: (data: any) => void;
@@ -111,13 +116,51 @@ export default function PagesViewer({
     };
   }, [pageNumber, numPages]); // Track page view when the page number changes
 
+  // Send the last page view when the user leaves the page
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (pageNumber <= numPages && visibilityRef.current) {
+        const duration = Date.now() - startTimeRef.current;
+        trackPageView(duration);
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [pageNumber, numPages]);
+
   useEffect(() => {
     setLoadedImages((prev) =>
       prev.map((loaded, index) =>
         index < DEFAULT_PRELOADED_IMAGES_NUM ? true : loaded,
       ),
     );
-  }, []);
+  }, []); // Run once on mount
+
+  useEffect(() => {
+    // Remove token and email query parameters on component mount
+    const removeQueryParams = () => {
+      const currentQuery = { ...router.query };
+      delete currentQuery.token;
+      delete currentQuery.email;
+
+      router.replace(
+        {
+          pathname: router.pathname,
+          query: currentQuery,
+        },
+        undefined,
+        { shallow: true },
+      );
+    };
+
+    if (!dataroomId) {
+      removeQueryParams();
+    }
+  }, []); // Run once on mount
 
   const handleKeyDown = (event: KeyboardEvent) => {
     switch (event.key) {
@@ -220,18 +263,18 @@ export default function PagesViewer({
       />
       <div
         style={{ height: "calc(100vh - 64px)" }}
-        className="flex items-center relative"
+        className="relative flex items-center"
       >
         <button
           onClick={goToPreviousPage}
           disabled={pageNumber == 1}
           className={cn(
-            "absolute left-0 h-[calc(100vh - 64px)] px-2 py-24 z-20",
+            "h-[calc(100vh - 64px)] absolute left-0 z-20 px-2 py-24",
             pageNumber == 1 && "hidden",
           )}
         >
           <span className="sr-only">Previous</span>
-          <div className="bg-gray-950/50 hover:bg-gray-950/75 rounded-full relative flex items-center justify-center p-1">
+          <div className="relative flex items-center justify-center rounded-full bg-gray-950/50 p-1 hover:bg-gray-950/75">
             <ChevronLeftIcon
               className="h-10 w-10 text-white"
               aria-hidden="true"
@@ -242,12 +285,12 @@ export default function PagesViewer({
           onClick={goToNextPage}
           disabled={pageNumber >= numPagesWithFeedback}
           className={cn(
-            "absolute right-0 h-[calc(100vh - 64px)] px-2 py-24 z-20",
+            "h-[calc(100vh - 64px)] absolute right-0 z-20 px-2 py-24",
             pageNumber >= numPagesWithFeedback && "hidden",
           )}
         >
           <span className="sr-only">Next</span>
-          <div className="bg-gray-950/50 hover:bg-gray-950/75 rounded-full relative flex items-center justify-center p-1">
+          <div className="relative flex items-center justify-center rounded-full bg-gray-950/50 p-1 hover:bg-gray-950/75">
             <ChevronRightIcon
               className="h-10 w-10 text-white"
               aria-hidden="true"
@@ -256,7 +299,7 @@ export default function PagesViewer({
         </button>
 
         <div
-          className="flex justify-center mx-auto relative h-full w-full"
+          className="relative mx-auto flex h-full w-full justify-center"
           onContextMenu={handleContextMenu}
         >
           {pageNumber <= numPages &&
@@ -267,7 +310,7 @@ export default function PagesViewer({
                   return (
                     <img
                       key={index}
-                      className={`object-contain mx-auto ${
+                      className={`mx-auto object-contain ${
                         pageNumber - 1 === index ? "block" : "hidden"
                       }`}
                       src={
@@ -284,7 +327,7 @@ export default function PagesViewer({
                 return (
                   <Image
                     key={index}
-                    className={`object-contain mx-auto ${
+                    className={`mx-auto object-contain ${
                       pageNumber - 1 === index ? "block" : "hidden"
                     }`}
                     src={loadedImages[index] ? page.file : BlankImg}
@@ -300,7 +343,7 @@ export default function PagesViewer({
               <LoadingSpinner className="h-20 w-20 text-foreground" />
             ))}
           {enableQuestion && feedback && pageNumber === numPagesWithFeedback ? (
-            <div className="flex items-center justify-center w-full">
+            <div className="flex w-full items-center justify-center">
               <Question
                 feedback={feedback}
                 viewId={viewId}
@@ -310,7 +353,7 @@ export default function PagesViewer({
             </div>
           ) : null}
         </div>
-        {feedbackEnabled && pageNumber !== numPagesWithFeedback ? (
+        {feedbackEnabled && pageNumber !== numPages + 1 ? (
           <Toolbar viewId={viewId} pageNumber={pageNumber} />
         ) : null}
         {screenshotProtectionEnabled ? <ScreenProtector /> : null}

@@ -1,10 +1,11 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import prisma from "@/lib/prisma";
-import { checkPassword, decryptEncrpytedPassword, log } from "@/lib/utils";
-import { newId } from "@/lib/id-helper";
+
+import sendNotification from "@/lib/api/notification-helper";
 import { sendVerificationEmail } from "@/lib/emails/send-email-verification";
 import { getFile } from "@/lib/files/get-file";
-import sendNotification from "@/lib/api/notification-helper";
+import { newId } from "@/lib/id-helper";
+import prisma from "@/lib/prisma";
+import { checkPassword, decryptEncrpytedPassword, log } from "@/lib/utils";
 
 export default async function handle(
   req: NextApiRequest,
@@ -142,7 +143,7 @@ export default async function handle(
   if (link.emailAuthenticated && !token) {
     const token = newId("email");
     const expiresAt = new Date();
-    expiresAt.setHours(expiresAt.getHours() + 1); // token expires in 1 hour
+    expiresAt.setMinutes(expiresAt.getMinutes() + 20); // token expires in 20 minutes
 
     await prisma.verificationToken.create({
       data: {
@@ -178,7 +179,10 @@ export default async function handle(
     });
 
     if (!verification) {
-      res.status(401).json({ message: "Unauthorized access" });
+      res.status(401).json({
+        message: "Unauthorized access. Request new access.",
+        resetVerification: true,
+      });
       return;
     }
 
@@ -187,6 +191,13 @@ export default async function handle(
       res.status(401).json({ message: "Access expired" });
       return;
     }
+
+    // delete the token after verification
+    await prisma.verificationToken.delete({
+      where: {
+        token: token,
+      },
+    });
 
     isEmailVerified = true;
   }

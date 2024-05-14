@@ -1,14 +1,16 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { getServerSession } from "next-auth/next";
-import prisma from "@/lib/prisma";
+
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import { CustomUser } from "@/lib/types";
-import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
+import { getServerSession } from "next-auth/next";
+
 import { errorhandler } from "@/lib/errorHandler";
+import prisma from "@/lib/prisma";
+import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
+import { CustomUser } from "@/lib/types";
 
 export default async function handle(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   if (req.method === "POST") {
     // GET /api/teams/:teamId/documents/:id/update-name

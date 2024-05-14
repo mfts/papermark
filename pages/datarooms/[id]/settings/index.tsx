@@ -1,3 +1,13 @@
+import { useRouter } from "next/router";
+
+import { useCallback, useEffect, useState } from "react";
+
+import { useTeam } from "@/context/team-context";
+import { PlusIcon } from "lucide-react";
+import { HexColorInput, HexColorPicker } from "react-colorful";
+import { toast } from "sonner";
+import { mutate } from "swr";
+
 import { DataroomHeader } from "@/components/datarooms/dataroom-header";
 import AppLayout from "@/components/layouts/app";
 import { NavMenu } from "@/components/navigation-menu";
@@ -10,16 +20,10 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { useTeam } from "@/context/team-context";
+
 import { useDataroomBrand } from "@/lib/swr/use-brand";
 import { useDataroom } from "@/lib/swr/use-dataroom";
 import { convertDataUrlToFile, uploadImage } from "@/lib/utils";
-import { PlusIcon } from "lucide-react";
-import { useRouter } from "next/router";
-import { useCallback, useEffect, useState } from "react";
-import { HexColorInput, HexColorPicker } from "react-colorful";
-import { toast } from "sonner";
-import { mutate } from "swr";
 
 export default function DataroomBrandPage() {
   const router = useRouter();
@@ -163,7 +167,7 @@ export default function DataroomBrandPage() {
 
   return (
     <AppLayout>
-      <div className="relative overflow-hidden mx-2 sm:mx-3 md:mx-5 lg:mx-7 xl:mx-10 mt-4 md:mt-5 lg:mt-8 mb-10 space-y-8 px-1">
+      <div className="relative mx-2 mb-10 mt-4 space-y-8 overflow-hidden px-1 sm:mx-3 md:mx-5 md:mt-5 lg:mx-7 lg:mt-8 xl:mx-10">
         <header>
           <DataroomHeader
             title={dataroom.name}
@@ -213,7 +217,7 @@ export default function DataroomBrandPage() {
                     <div className="flex items-center justify-between">
                       <Label htmlFor="logo">
                         Logo{" "}
-                        <span className="italic text-muted-foreground text-sm">
+                        <span className="text-sm italic text-muted-foreground">
                           (max 2 MB)
                         </span>
                       </Label>
@@ -317,7 +321,7 @@ export default function DataroomBrandPage() {
                     <div className="flex items-center justify-between">
                       <Label htmlFor="banner">
                         Banner{" "}
-                        <span className="italic text-muted-foreground text-sm">
+                        <span className="text-sm italic text-muted-foreground">
                           (max 5 MB, min. 1920x320)
                         </span>
                       </Label>
@@ -423,7 +427,7 @@ export default function DataroomBrandPage() {
                       <Popover>
                         <PopoverTrigger>
                           <div
-                            className="w-9 h-9 rounded-md cursor-pointer ring-1 ring-muted-foreground shadow-sm hover:ring-1 hover:ring-gray-300"
+                            className="h-9 w-9 cursor-pointer rounded-md shadow-sm ring-1 ring-muted-foreground hover:ring-1 hover:ring-gray-300"
                             style={{ backgroundColor: brandColor }}
                           />
                         </PopoverTrigger>
@@ -435,7 +439,7 @@ export default function DataroomBrandPage() {
                         </PopoverContent>
                       </Popover>
                       <HexColorInput
-                        className="flex h-9 w-full rounded-md border-0 bg-background px-3 py-2 text-sm ring-1 ring-muted-foreground shadow-sm placeholder:text-muted-foreground focus:ring-1 focus:ring-gray-300 focus:border-0"
+                        className="flex h-9 w-full rounded-md border-0 bg-background px-3 py-2 text-sm shadow-sm ring-1 ring-muted-foreground placeholder:text-muted-foreground focus:border-0 focus:ring-1 focus:ring-gray-300"
                         color={brandColor}
                         onChange={setBrandColor}
                         prefixed

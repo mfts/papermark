@@ -1,10 +1,12 @@
-import { getServerSession } from "next-auth";
 import { NextApiRequest, NextApiResponse } from "next";
+
+import { authOptions } from "@/pages/api/auth/[...nextauth]";
+import { getServerSession } from "next-auth";
+
+import { sendViewerInvitation } from "@/lib/api/notification-helper";
+import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
-import { errorhandler } from "@/lib/errorHandler";
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import { sendViewerInvitation } from "@/lib/api/notification-helper";
 
 export default async function handle(
   req: NextApiRequest,
@@ -54,7 +56,6 @@ export default async function handle(
         },
         include: {
           viewers: true,
-          links: true,
         },
       });
 
@@ -84,13 +85,23 @@ export default async function handle(
         },
       });
 
-      // get linkId from first available dataroom link
-      const linkId = dataroom.links[0].id;
+      // create a new link for the invited group
+      const link = await prisma.link.create({
+        data: {
+          dataroomId,
+          linkType: "DATAROOM_LINK",
+          name: `Invited ${new Date().toLocaleString()}`,
+          enableFeedback: false,
+        },
+        select: {
+          id: true,
+        },
+      });
 
       console.time("sendemail");
       await sendViewerInvitation({
         dataroomId,
-        linkId,
+        linkId: link.id,
         viewerIds: viewers.map((v) => v.id),
         senderUserId: (session.user as CustomUser).id,
       });

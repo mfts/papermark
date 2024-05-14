@@ -1,18 +1,23 @@
+import { useRouter } from "next/router";
+
 import React, { useEffect, useRef, useState } from "react";
+
+import { Brand } from "@prisma/client";
+import { usePlausible } from "next-plausible";
+import { ExtendedRecordMap } from "notion-types";
+import { toast } from "sonner";
+
+import LoadingSpinner from "@/components/ui/loading-spinner";
 import AccessForm, {
   DEFAULT_ACCESS_FORM_DATA,
   DEFAULT_ACCESS_FORM_TYPE,
 } from "@/components/view/access-form";
-import { usePlausible } from "next-plausible";
-import { toast } from "sonner";
+
+import { useAnalytics } from "@/lib/analytics";
 import { LinkWithDocument } from "@/lib/types";
-import LoadingSpinner from "@/components/ui/loading-spinner";
-import { ExtendedRecordMap } from "notion-types";
+
 import EmailVerificationMessage from "./email-verification-form";
 import ViewData from "./view-data";
-import { Brand } from "@prisma/client";
-import { useRouter } from "next/router";
-import { useAnalytics } from "@/lib/analytics";
 
 export type DEFAULT_DOCUMENT_VIEW_TYPE = {
   viewId: string;
@@ -39,7 +44,7 @@ export default function DocumentView({
     rootNotionPageId: string | null;
     recordMap: ExtendedRecordMap | null;
   };
-  brand?: Brand;
+  brand?: Partial<Brand> | null;
   token?: string;
   verifiedEmail?: string;
   showPoweredByBanner?: boolean;
@@ -110,8 +115,23 @@ export default function DocumentView({
         setIsLoading(false);
       }
     } else {
-      const { message } = await response.json();
-      toast.error(message);
+      const data = await response.json();
+      toast.error(data.message);
+
+      if (data.resetVerification) {
+        const currentQuery = { ...router.query };
+        delete currentQuery.token;
+        delete currentQuery.email;
+
+        router.replace(
+          {
+            pathname: router.pathname,
+            query: currentQuery,
+          },
+          undefined,
+          { shallow: true },
+        );
+      }
       setIsLoading(false);
     }
   };
@@ -162,7 +182,7 @@ export default function DocumentView({
 
   if (isLoading) {
     return (
-      <div className="h-screen flex items-center justify-center">
+      <div className="flex h-screen items-center justify-center">
         <LoadingSpinner className="h-20 w-20" />
       </div>
     );
@@ -178,7 +198,7 @@ export default function DocumentView({
           showPoweredByBanner={showPoweredByBanner}
         />
       ) : (
-        <div className="h-screen flex items-center justify-center">
+        <div className="flex h-screen items-center justify-center">
           <LoadingSpinner className="h-20 w-20" />
         </div>
       )}

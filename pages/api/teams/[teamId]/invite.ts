@@ -1,12 +1,16 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "../../auth/[...nextauth]";
 import { NextApiRequest, NextApiResponse } from "next";
+
+import { getLimits } from "@/ee/limits/server";
+import { getServerSession } from "next-auth";
+
+import { hashToken } from "@/lib/api/auth/token";
+import { sendTeammateInviteEmail } from "@/lib/emails/send-teammate-invite";
+import { errorhandler } from "@/lib/errorHandler";
+import { newId } from "@/lib/id-helper";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
-import { errorhandler } from "@/lib/errorHandler";
-import { sendTeammateInviteEmail } from "@/lib/emails/send-teammate-invite";
-import { newId } from "@/lib/id-helper";
-import { hashToken } from "@/lib/api/auth/token";
+
+import { authOptions } from "../../auth/[...nextauth]";
 
 export default async function handle(
   req: NextApiRequest,
@@ -47,15 +51,33 @@ export default async function handle(
         },
       });
 
+      if (!team) {
+        res.status(404).json("Team not found");
+        return;
+      }
+
       // check that the user is admin of the team, otherwise return 403
-      const teamUsers = team?.users;
-      const isUserAdmin = teamUsers?.some(
+      const teamUsers = team.users;
+      const isUserAdmin = teamUsers.some(
         (user) =>
           user.role === "ADMIN" &&
           user.userId === (session.user as CustomUser).id,
       );
       if (!isUserAdmin) {
         res.status(403).json("Only admins can send the invitation!");
+        return;
+      }
+
+      // Check if the user has reached the limit of users in the team
+      const limits = await getLimits({
+        teamId,
+        userId: (session.user as CustomUser).id,
+      });
+
+      if (limits && teamUsers.length >= limits.users) {
+        res
+          .status(403)
+          .json("You have reached the limit of users in your team");
         return;
       }
 

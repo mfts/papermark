@@ -1,15 +1,15 @@
 import Head from "next/head";
-import { useState } from "react";
-import DataRoom from "@/components/web/dataroom-component";
-
-import Article from "@/components/web/alternatives/docsendtext";
-import Testimonials from "@/components/web/testimonials2";
-import CTA from "@/components/web/cta";
-import Footer from "@/components/web/footer";
-
 import Link from "next/link";
+
+import { useState } from "react";
+
 import { Button } from "@/components/ui/button";
+import Article from "@/components/web/alternatives/docsendtext";
+import CTA from "@/components/web/cta";
+import DataRoom from "@/components/web/dataroom-component";
+import Footer from "@/components/web/footer";
 import Navbar from "@/components/web/navbar";
+import Testimonials from "@/components/web/testimonials2";
 
 const features = [
   "send unlimited documents",
@@ -83,11 +83,11 @@ export default function Home() {
 
       <div className="flex flex-1 flex-col bg-white text-black">
         <Navbar />
-        <main className="flex flex-col items-center w-full">
-          <section className="pt-24 lg:pt-24 bg-white w-full">
-            <div className="px-4 lg:px-2 w-full">
-              <div className="max-w-7xl mx-auto px-4 md:px-8 w-full">
-                <div className="w-full flex flex-col items-center">
+        <main className="flex w-full flex-col items-center">
+          <section className="w-full bg-white pt-24 lg:pt-24">
+            <div className="w-full px-4 lg:px-2">
+              <div className="mx-auto w-full max-w-7xl px-4 md:px-8">
+                <div className="flex w-full flex-col items-center">
                   <div className="pb-1">
                     {/* <img
                       src="https://media.licdn.com/dms/image/C560BAQF0P4VJimYMZw/company-logo_200_200/0/1630615035618?e=1720656000&v=beta&t=gWnITXssNMEKBqbdPrGev6pbQf9iLywYEr404OFtKV0"
@@ -97,23 +97,23 @@ export default function Home() {
                       height={50}
                     /> */}
                   </div>
-                  <div className="prose prose-h2:mb-2 first:prose-h2:mt-0 prose-h2:mt-10 prose-headings:font-medium sm:max-w-screen-md sm:pr-2 md:pr-0 w-full text-center">
+                  <div className="prose w-full text-center prose-headings:font-medium prose-h2:mb-2 prose-h2:mt-10 first:prose-h2:mt-0 sm:max-w-screen-md sm:pr-2 md:pr-0">
                     {/* <span className="inline-block text-sm lg:text-base py-1 px-2 bg-gray-50 rounded-3xl text-gray-500 text-xs text-balance">
                       Powered by Papermark
                     </span> */}
-                    <div className="text-black lg:text-7xl my-6 text-balance">
-                      <h1 className="text-5xl lg:text-7xl mb-1">Data Room</h1>
+                    <div className="my-6 text-balance text-black lg:text-7xl">
+                      <h1 className="mb-1 text-5xl lg:text-7xl">Data Room</h1>
                     </div>
 
-                    <p className="text-m my-4  text-gray-500 sm:text-xl text-balance">
+                    <p className="text-m my-4  text-balance text-gray-500 sm:text-xl">
                       Learn more about Papermark Data Room and all available
                       features on 3 core plans including full-whitelabelling and
                       self-hosting
                     </p>
                   </div>
-                  <div className="pt-8 space-x-2">
+                  <div className="space-x-2 pt-8">
                     <Link href="/login">
-                      <Button className="text-base rounded-3xl bg-black text-white hover:bg-black/90">
+                      <Button className="rounded-3xl bg-black text-base text-white hover:bg-black/90">
                         Create Data Room
                       </Button>
                     </Link>
@@ -124,7 +124,7 @@ export default function Home() {
                     >
                       <Button
                         variant="outline"
-                        className="text-base rounded-3xl bg-transparent border-black"
+                        className="rounded-3xl border-black bg-transparent text-base"
                       >
                         Book a demo
                       </Button>
@@ -140,13 +140,13 @@ export default function Home() {
                 <DataRoom />
               </div>
 
-              <div className="w-full max-w-7xl px-4 md:px-8 mx-auto ">
-                <div className="py-12 bg-[#fb7a00] rounded-xl mx-auto px-6 my-4">
-                  <div className="flex lg:flex-row flex-col item-center justify-between space-y-10 lg:space-y-0">
-                    <h2 className="text-3xl text-nowrap">
+              <div className="mx-auto w-full max-w-7xl px-4 md:px-8 ">
+                <div className="mx-auto my-4 rounded-xl bg-[#fb7a00] px-6 py-12">
+                  <div className="item-center flex flex-col justify-between space-y-10 lg:flex-row lg:space-y-0">
+                    <h2 className="text-nowrap text-3xl">
                       Create secure data room on Papermark
                     </h2>
-                    <div className="space-x-2 flex items-center">
+                    <div className="flex items-center space-x-2">
                       <Link
                         href="https:papermark.io/login"
                         target="_blank"
@@ -154,7 +154,7 @@ export default function Home() {
                       >
                         <Button
                           variant="outline"
-                          className="text-base rounded-3xl bg-transparent border-black hover:bg-gray-200 hover:text-black"
+                          className="rounded-3xl border-black bg-transparent text-base hover:bg-gray-200 hover:text-black"
                         >
                           Crate Data Room
                         </Button>
@@ -164,7 +164,7 @@ export default function Home() {
                         target="_blank"
                         rel="noopener noreferrer"
                       >
-                        <Button className="text-base rounded-3xl text-gray-200 bg-black hover:bg-gray-900">
+                        <Button className="rounded-3xl bg-black text-base text-gray-200 hover:bg-gray-900">
                           Book a demo
                         </Button>
                       </Link>
@@ -177,18 +177,18 @@ export default function Home() {
                     <div className="grid grid-cols-1 gap-x-8 gap-y-16 sm:gap-y-20 lg:grid-cols-2 lg:items-start">
                       <div className="px-6 lg:px-0 lg:pr-4 lg:pt-4">
                         <div className="mx-auto max-w-2xl lg:mx-0 lg:max-w-lg">
-                          <h2 className="mt-2 text-3xl text-gray-900 sm:text-4xl text-balance">
+                          <h2 className="mt-2 text-balance text-3xl text-gray-900 sm:text-4xl">
                             Track activity in your data room
                           </h2>
-                          <p className="mt-6 text-lg leading-8 text-gray-600 text-balance">
+                          <p className="mt-6 text-balance text-lg leading-8 text-gray-600">
                             Papermark let you share your data room from a link,
                             but track activty on each document insight the Data
                             Room. Including time and views per each page.
                           </p>
                         </div>
-                        <div className="pt-8 space-x-2">
+                        <div className="space-x-2 pt-8">
                           <Link href="/login">
-                            <Button className="text-white text-balance bg-gray-900 rounded-3xl hover:bg-gray-800 justify-center text-balance">
+                            <Button className="justify-center text-balance text-balance rounded-3xl bg-gray-900 text-white hover:bg-gray-800">
                               Get insights
                             </Button>
                           </Link>
@@ -245,18 +245,18 @@ export default function Home() {
                       </div>
                       <div className="px-6 lg:px-0 lg:pr-4 lg:pt-4">
                         <div className="mx-auto max-w-2xl lg:mx-0 lg:max-w-lg">
-                          <h2 className="mt-2 text-3xl text-gray-900 sm:text-4xl text-balance">
+                          <h2 className="mt-2 text-balance text-3xl text-gray-900 sm:text-4xl">
                             Share branded data room
                           </h2>
-                          <p className="mt-6 text-lg leading-8 text-gray-600 text-balance">
+                          <p className="mt-6 text-balance text-lg leading-8 text-gray-600">
                             With Papermark you can have unlimited branded data
                             rooms for your business. Customize the design of
                             each data room and create white-labelling.
                           </p>
                         </div>
-                        <div className="pt-8 space-x-2">
+                        <div className="space-x-2 pt-8">
                           <Link href="/login">
-                            <Button className="text-white text-balance bg-gray-900 rounded-3xl hover:bg-gray-800 justify-center text-balance">
+                            <Button className="justify-center text-balance text-balance rounded-3xl bg-gray-900 text-white hover:bg-gray-800">
                               Create branded data room
                             </Button>
                           </Link>
@@ -266,7 +266,7 @@ export default function Home() {
                   </div>
                 </div>
 
-                <div className="mt-24 mx-auto w-full">
+                <div className="mx-auto mt-24 w-full">
                   <video
                     width="100%"
                     id="video1"
@@ -292,11 +292,11 @@ export default function Home() {
           </section>
         </main>
         <div className="bg-[#fb7a00]">
-          <div className="w-full mx-auto max-w-7xl py-32 px-4 md:px-8">
-            <h2 className="text-4xl text-balance  ">
+          <div className="mx-auto w-full max-w-7xl px-4 py-32 md:px-8">
+            <h2 className="text-balance text-4xl  ">
               Create secure and modern data room
             </h2>
-            <div className="pt-8 space-x-2">
+            <div className="space-x-2 pt-8">
               <Link
                 href="https://cal.com/marcseitz/papermark"
                 target="_blank"
@@ -304,13 +304,13 @@ export default function Home() {
               >
                 <Button
                   variant="outline"
-                  className="text-base rounded-3xl bg-transparent border-black"
+                  className="rounded-3xl border-black bg-transparent text-base"
                 >
                   Book a demo
                 </Button>
               </Link>
               <Link href="/login">
-                <Button className="text-base rounded-3xl">Start now</Button>
+                <Button className="rounded-3xl text-base">Start now</Button>
               </Link>
             </div>
           </div>

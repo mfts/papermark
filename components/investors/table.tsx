@@ -1,15 +1,17 @@
 import Image from "next/image";
-import TwitterIcon from "@/components/shared/icons/twitter";
-import WebsiteIcon from "@/components/shared/icons/globe";
-import { cn } from "@/lib/utils";
+
 import { type Investor } from "@/app/(static)/open-source-investors/page";
 
+import WebsiteIcon from "@/components/shared/icons/globe";
+import TwitterIcon from "@/components/shared/icons/twitter";
+
+import { cn } from "@/lib/utils";
 
 export default function Table({ investors }: { investors: Investor[] }) {
   return (
     <div>
-      <table className="min-w-full md:divide-y bg-gray-100 md:bg-transparent divide-gray-300 rounded-lg overflow-hidden md:rounded-none">
-        <thead className="bg-gray-50 hidden md:table-header-group">
+      <table className="min-w-full divide-gray-300 overflow-hidden rounded-lg bg-gray-100 md:divide-y md:rounded-none md:bg-transparent">
+        <thead className="hidden bg-gray-50 md:table-header-group">
           <tr>
             <th
               scope="col"
@@ -43,13 +45,13 @@ export default function Table({ investors }: { investors: Investor[] }) {
             </th>
           </tr>
         </thead>
-        <tbody className="md:divide-y divide-gray-200 md:bg-white grid grid-cols-1 gap-3 sm:grid-cols-2 md:table-row-group">
+        <tbody className="grid grid-cols-1 gap-3 divide-gray-200 sm:grid-cols-2 md:table-row-group md:divide-y md:bg-white">
           {investors.map((person: Investor) => (
             <tr
               key={person.id}
-              className="grid grid-cols-3 gap-1 md:table-row bg-white rounded-lg md:rounded-none md:bg-transparent shadow md:shadow-none border border-gray-200 md:border-x-0 py-3 px-2 md:p-0"
+              className="grid grid-cols-3 gap-1 rounded-lg border border-gray-200 bg-white px-2 py-3 shadow md:table-row md:rounded-none md:border-x-0 md:bg-transparent md:p-0 md:shadow-none"
             >
-              <td className="col-span-3 whitespace-nowrap pl-3 md:py-2 md:pl-6 text-sm sm:pl-6 h-24">
+              <td className="col-span-3 h-24 whitespace-nowrap pl-3 text-sm sm:pl-6 md:py-2 md:pl-6">
                 <div className="flex items-center">
                   <div className="h-10 w-10 flex-shrink-0">
                     <Image
@@ -64,7 +66,7 @@ export default function Table({ investors }: { investors: Investor[] }) {
                     <div className="font-medium text-gray-900">
                       {person.fields.name}
                     </div>
-                    <div className="flex space-x-2 items-center mt-1">
+                    <div className="mt-1 flex items-center space-x-2">
                       {person.fields.twitterUrl && (
                         <a
                           className="text-black"
@@ -73,7 +75,7 @@ export default function Table({ investors }: { investors: Investor[] }) {
                           rel="noopener noreferrer"
                         >
                           <span className="sr-only">Twitter</span>
-                          <TwitterIcon className="w-4 h-4" />
+                          <TwitterIcon className="h-4 w-4" />
                         </a>
                       )}
                       {person.fields.websiteUrl && (
@@ -84,20 +86,20 @@ export default function Table({ investors }: { investors: Investor[] }) {
                           rel="noopener noreferrer"
                         >
                           <span className="sr-only">Website</span>
-                          <WebsiteIcon className="w-4 h-4" />
+                          <WebsiteIcon className="h-4 w-4" />
                         </a>
                       )}
                     </div>
                   </div>
                 </div>
               </td>
-              <td className="col-span-1 row-start-2 whitespace-nowrap px-3 md:px-2 md:py-3 text-sm text-gray-500 font-bold md:font-normal">
+              <td className="col-span-1 row-start-2 whitespace-nowrap px-3 text-sm font-bold text-gray-500 md:px-2 md:py-3 md:font-normal">
                 {person.fields.company ?? "Unknown"}
               </td>
-              <td className="col-span-3 whitespace-nowrap px-3 md:px-2 md:py-3 text-sm text-gray-500 -mt-2 md:mt-0">
+              <td className="col-span-3 -mt-2 whitespace-nowrap px-3 text-sm text-gray-500 md:mt-0 md:px-2 md:py-3">
                 {person.fields.title ?? "Software Engineer"}
               </td>
-              <td className="col-span-3 row-start-2 whitespace-nowrap px-0 md:px-2 md:py-3 text-sm text-gray-500 justify-self-end">
+              <td className="col-span-3 row-start-2 justify-self-end whitespace-nowrap px-0 text-sm text-gray-500 md:px-2 md:py-3">
                 <span
                   className={cn(
                     person.fields.checkSize === "Unknown"
@@ -117,7 +119,7 @@ export default function Table({ investors }: { investors: Investor[] }) {
                   {person.fields.checkSize}
                 </span>
               </td>
-              <td className="col-span-3 md:max-w-xs px-3 md:px-2 md:py-3 text-sm text-gray-500">
+              <td className="col-span-3 px-3 text-sm text-gray-500 md:max-w-xs md:px-2 md:py-3">
                 {person.fields.openSourceInvestments ?? "Unknown"}
               </td>
             </tr>
@@ -125,7 +127,7 @@ export default function Table({ investors }: { investors: Investor[] }) {
         </tbody>
       </table>
       {investors.length === 0 && (
-        <div className="text-center my-10">No results found</div>
+        <div className="my-10 text-center">No results found</div>
       )}
     </div>
   );

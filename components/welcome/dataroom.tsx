@@ -1,9 +1,12 @@
 import { useRouter } from "next/router";
+
 import { motion } from "framer-motion";
 import { File as DocumentIcon, ServerIcon } from "lucide-react";
+
 import { STAGGER_CHILD_VARIANTS } from "@/lib/constants";
-import { Button } from "../ui/button";
+
 import { DataroomTrialModal } from "../datarooms/dataroom-trial-modal";
+import { Button } from "../ui/button";
 
 export default function Dataroom() {
   const router = useRouter();
@@ -38,7 +41,7 @@ export default function Dataroom() {
       </motion.div>
       <motion.div
         variants={STAGGER_CHILD_VARIANTS}
-        className="mt-24 mx-auto w-full"
+        className="mx-auto mt-24 w-full"
       >
         <video
           width="100%"
@@ -59,10 +62,10 @@ export default function Dataroom() {
       </motion.div>
       <motion.div
         variants={STAGGER_CHILD_VARIANTS}
-        className="flex flex-col items-center space-y-4 text-center mt-10"
+        className="mt-10 flex flex-col items-center space-y-4 text-center"
       >
         <Button
-          className="px-10 font-medium text-base"
+          className="px-10 text-base font-medium"
           onClick={() =>
             router.push({
               pathname: "/welcome",

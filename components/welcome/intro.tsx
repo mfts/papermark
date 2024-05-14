@@ -1,6 +1,9 @@
 import { useRouter } from "next/router";
+
 import { motion } from "framer-motion";
+
 import { STAGGER_CHILD_VARIANTS } from "@/lib/constants";
+
 import { Button } from "../ui/button";
 
 export default function Intro() {
@@ -43,7 +46,7 @@ export default function Intro() {
           // className="rounded  px-10 py-2 font-medium transition-colors text-gray-900 bg-gray-100 hover:text-gray-100 hover:bg-gray-500"
         >
           <Button
-            className="px-10 font-medium text-base"
+            className="px-10 text-base font-medium"
             onClick={() =>
               router.push({
                 pathname: "/welcome",

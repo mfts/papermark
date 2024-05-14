@@ -1,3 +1,11 @@
+import { useRouter } from "next/router";
+
+import { useState } from "react";
+
+import { useTeam } from "@/context/team-context";
+import { toast } from "sonner";
+import { mutate } from "swr";
+
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -10,12 +18,8 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useTeam } from "@/context/team-context";
+
 import { useAnalytics } from "@/lib/analytics";
-import { useRouter } from "next/router";
-import { useState } from "react";
-import { toast } from "sonner";
-import { mutate } from "swr";
 
 export function AddTeamMembers({
   open,
@@ -88,12 +92,12 @@ export function AddTeamMembers({
           <Input
             id="email"
             placeholder="team@member.com"
-            className="w-full mt-1 mb-8"
+            className="mb-8 mt-1 w-full"
             onChange={(e) => setEmail(e.target.value)}
           />
 
           <DialogFooter>
-            <Button type="submit" className="w-full h-9">
+            <Button type="submit" className="h-9 w-full">
               {loading ? "Sending email..." : "Add member"}
             </Button>
           </DialogFooter>

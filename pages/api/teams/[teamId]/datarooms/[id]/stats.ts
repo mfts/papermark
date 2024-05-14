@@ -1,11 +1,14 @@
 import { NextApiRequest, NextApiResponse } from "next";
+
+import { View } from "@prisma/client";
 import { getServerSession } from "next-auth/next";
+
+import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
-import { authOptions } from "../../../../auth/[...nextauth]";
 import { getTotalDataroomDuration } from "@/lib/tinybird";
 import { CustomUser } from "@/lib/types";
-import { errorhandler } from "@/lib/errorHandler";
-import { View } from "@prisma/client";
+
+import { authOptions } from "../../../../auth/[...nextauth]";
 
 export default async function handle(
   req: NextApiRequest,

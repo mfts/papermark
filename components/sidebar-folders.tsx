@@ -1,7 +1,10 @@
 import { useRouter } from "next/router";
-import { FileTree } from "@/components/ui/nextra-filetree";
-import { FolderWithDocuments, useFolders } from "@/lib/swr/use-documents";
+
 import { memo, useMemo } from "react";
+
+import { FileTree } from "@/components/ui/nextra-filetree";
+
+import { FolderWithDocuments, useFolders } from "@/lib/swr/use-documents";
 
 // Helper function to build nested folder structure
 const buildNestedFolderStructure = (folders: FolderWithDocuments[]) => {

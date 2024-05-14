@@ -1,10 +1,15 @@
+import Link from "next/link";
+
+import { useEffect, useState } from "react";
+import React from "react";
+
 import { Brand, Dataroom, DataroomBrand, DataroomFolder } from "@prisma/client";
-import Nav from "./nav";
-import { Button } from "../ui/button";
-import FolderCard from "./dataroom/folder-card";
-import DocumentCard from "./dataroom/document-card";
-import { useState } from "react";
-import { ScrollArea } from "../ui/scroll-area";
+import * as SheetPrimitive from "@radix-ui/react-dialog";
+import { MenuIcon, PanelLeftIcon, XIcon } from "lucide-react";
+
+import { cn } from "@/lib/utils";
+
+import { ViewFolderTree } from "../datarooms/folders";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -13,11 +18,9 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "../ui/breadcrumb";
-import Link from "next/link";
-import DataroomNav from "./dataroom/nav-dataroom";
+import { Button } from "../ui/button";
 import { FileTree } from "../ui/nextra-filetree";
-import { ViewFolderTree } from "../datarooms/folders";
-import React from "react";
+import { ScrollArea } from "../ui/scroll-area";
 import {
   Sheet,
   SheetContent,
@@ -25,9 +28,11 @@ import {
   SheetPortal,
   SheetTrigger,
 } from "../ui/sheet";
-import { MenuIcon, PanelLeftIcon, XIcon } from "lucide-react";
-import * as SheetPrimitive from "@radix-ui/react-dialog";
-import { cn } from "@/lib/utils";
+import DocumentCard from "./dataroom/document-card";
+import FolderCard from "./dataroom/folder-card";
+import DataroomNav from "./dataroom/nav-dataroom";
+import Nav from "./nav";
+import { useRouter } from "next/router";
 
 type DataroomDocument = {
   dataroomDocumentId: string;
@@ -49,8 +54,9 @@ export default function DataroomViewer({
   dataroom,
   setViewType,
   setDocumentData,
+  setDataroomVerified,
 }: {
-  brand: DataroomBrand;
+  brand: Partial<DataroomBrand>;
   viewId: string;
   dataroomViewId: string;
   dataroom: any;
@@ -67,24 +73,49 @@ export default function DataroomViewer({
       documentVersionNumber: number;
     } | null>
   >;
+  setDataroomVerified: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
+  const router = useRouter();
   const [folderId, setFolderId] = useState<string | null>(null);
   const { documents, folders } = dataroom as {
     documents: DataroomDocument[];
     folders: DataroomFolder[];
   };
 
-  console.log("dataroom", dataroom);
+  useEffect(() => {
+    // Remove token and email query parameters on component mount
+    const removeQueryParams = () => {
+      const currentQuery = { ...router.query };
+
+      if (!currentQuery.token && !currentQuery.email) return;
+
+      setDataroomVerified(true);
+      delete currentQuery.token;
+      delete currentQuery.email;
+
+      router.replace(
+        {
+          pathname: router.pathname,
+          query: currentQuery,
+        },
+        undefined,
+        { shallow: true },
+      );
+    };
+
+    removeQueryParams();
+  }, []); // Run once on mount
+
   return (
     <>
       <DataroomNav brand={brand} viewId={viewId} dataroom={dataroom} />
       <div
         style={{ height: "calc(100vh - 64px)" }}
-        className="flex items-center relative bg-white dark:bg-black"
+        className="relative flex items-center bg-white dark:bg-black"
       >
-        <div className="flex items-start justify-center mx-auto relative h-full w-full">
+        <div className="relative mx-auto flex h-full w-full items-start justify-center">
           {/* Tree view */}
-          <div className="hidden md:flex h-full overflow-auto md:mx-5 lg:mx-7 xl:mx-10 mt-4 md:mt-5 lg:mt-8 mb-10 space-y-8 py-3 w-1/4 ">
+          <div className="mb-10 mt-4 hidden h-full w-1/4 space-y-8 overflow-auto py-3 md:mx-5 md:mt-5 md:flex lg:mx-7 lg:mt-8 xl:mx-10 ">
             <ViewFolderTree
               folders={folders}
               documents={documents}
@@ -94,14 +125,14 @@ export default function DataroomViewer({
           </div>
 
           {/* Detail view */}
-          <ScrollArea className="flex-grow h-full" showScrollbar>
-            <div className="md:mx-5 lg:mx-7 xl:mx-10 mt-4 md:mt-5 lg:mt-8 mb-10 space-y-8 p-3">
+          <ScrollArea className="h-full flex-grow" showScrollbar>
+            <div className="mb-10 mt-4 space-y-8 p-3 md:mx-5 md:mt-5 lg:mx-7 lg:mt-8 xl:mx-10">
               <div className="flex items-center gap-x-2">
                 {/* sidebar for mobile */}
                 <div className="flex md:hidden">
                   <Sheet>
                     <SheetTrigger asChild>
-                      <button className="text-muted-foreground lg:hidden hover:text-black">
+                      <button className="text-muted-foreground hover:text-black lg:hidden">
                         <PanelLeftIcon className="h-5 w-5" aria-hidden="true" />
                       </button>
                     </SheetTrigger>
@@ -109,12 +140,12 @@ export default function DataroomViewer({
                       <SheetOverlay className="fixed top-[35dvh] z-50 bg-background/80 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
                       <SheetPrimitive.Content
                         className={cn(
-                          "fixed top-[35dvh] z-50 gap-4 bg-background p-6 shadow-lg transition ease-in-out data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:duration-300 data-[state=open]:duration-500",
+                          "fixed top-[35dvh] z-50 gap-4 bg-background p-6 shadow-lg transition ease-in-out data-[state=closed]:duration-300 data-[state=open]:duration-500 data-[state=open]:animate-in data-[state=closed]:animate-out",
                           "left-0 h-full w-3/4 border-r data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left sm:max-w-lg",
-                          "w-[280px] sm:w-[300px] lg:hidden p-0 m-0",
+                          "m-0 w-[280px] p-0 sm:w-[300px] lg:hidden",
                         )}
                       >
-                        <div className="h-full overflow-auto mt-8 space-y-8 py-3 px-2">
+                        <div className="mt-8 h-full space-y-8 overflow-auto px-2 py-3">
                           <ViewFolderTree
                             folders={folders}
                             documents={documents}
@@ -157,7 +188,6 @@ export default function DataroomViewer({
                       folders
                         .filter((folder) => folder.id === folderId)
                         .map((folder, index: number, array) => {
-                          console.log("folder", folder);
                           return (
                             <React.Fragment key={index}>
                               <BreadcrumbSeparator />

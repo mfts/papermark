@@ -1,9 +1,12 @@
 import { useRouter } from "next/router";
-import useSWR from "swr";
-import { fetcher } from "@/lib/utils";
+
 import { useMemo } from "react";
+
 import { useTeam } from "@/context/team-context";
 import { Brand, DataroomBrand } from "@prisma/client";
+import useSWR from "swr";
+
+import { fetcher } from "@/lib/utils";
 
 export function useBrand() {
   const teamInfo = useTeam();

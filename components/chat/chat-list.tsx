@@ -1,9 +1,10 @@
 import { type Message } from "ai";
 
 import { Separator } from "@/components/ui/separator";
-import { ChatMessage } from "./chat-message";
+
 import Skeleton from "../Skeleton";
 import PapermarkSparkle from "../shared/icons/papermark-sparkle";
+import { ChatMessage } from "./chat-message";
 
 export interface ChatList {
   messages: Message[];
@@ -30,13 +31,13 @@ export function ChatList({ messages, status }: ChatList) {
           <Separator className="my-4 bg-background" />
           <div
             key={"loading-message"}
-            className="group relative mb-4 flex items-start ml-5 whitespace-pre-wrap"
+            className="group relative mb-4 ml-5 flex items-start whitespace-pre-wrap"
           >
-            <div className="flex h-8 w-8 shrink-0 select-none items-center justify-center rounded-md border shadow bg-primary text-primary-foreground">
+            <div className="flex h-8 w-8 shrink-0 select-none items-center justify-center rounded-md border bg-primary text-primary-foreground shadow">
               <PapermarkSparkle />
             </div>
-            <div className="flex-1 px-1 ml-4 space-y-2 overflow-hidden">
-              <div className="font-semibold select-none">
+            <div className="ml-4 flex-1 space-y-2 overflow-hidden px-1">
+              <div className="select-none font-semibold">
                 Papermark Assistant
               </div>
               <Skeleton className="h-4 w-64" />

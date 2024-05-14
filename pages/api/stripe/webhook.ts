@@ -1,6 +1,9 @@
 import { NextApiRequest, NextApiResponse } from "next";
+
 import { Readable } from "node:stream";
 import type Stripe from "stripe";
+
+import { sendUpgradePlanEmail } from "@/lib/emails/send-upgrade-plan";
 import prisma from "@/lib/prisma";
 import { stripe } from "@/lib/stripe";
 import {
@@ -9,7 +12,12 @@ import {
   isUpgradedCustomer,
 } from "@/lib/stripe/utils";
 import { log } from "@/lib/utils";
-import { sendUpgradePlanEmail } from "@/lib/emails/send-upgrade-plan";
+import {
+  BUSINESS_PLAN_LIMITS,
+  DATAROOMS_PLAN_LIMITS,
+  FREE_PLAN_LIMITS,
+  PRO_PLAN_LIMITS,
+} from "@/ee/limits/constants";
 
 // Stripe requires the raw body to construct the event.
 export const config = {
@@ -88,6 +96,15 @@ export default async function webhookHandler(
             const { plan, subscriptionId, startsAt, endsAt, newCustomer } =
               pendingUpdate as SubscriptionInfo;
 
+            let planLimits = structuredClone(PRO_PLAN_LIMITS);
+            if (plan.slug === "pro") {
+              planLimits = structuredClone(PRO_PLAN_LIMITS);
+            } else if (plan.slug === "business") {
+              planLimits = structuredClone(BUSINESS_PLAN_LIMITS);
+            } else if (plan.slug === "datarooms") {
+              planLimits = structuredClone(DATAROOMS_PLAN_LIMITS);
+            }
+
             // Update the user with the subscription information and stripeId
             const team = await prisma.team.update({
               where: {
@@ -99,6 +116,7 @@ export default async function webhookHandler(
                 subscriptionId,
                 startsAt,
                 endsAt,
+                limits: planLimits,
               },
               select: {
                 id: true,
@@ -118,6 +136,8 @@ export default async function webhookHandler(
                   email: team.users[0].user.email as string,
                   name: team.users[0].user.name as string,
                 },
+                planType:
+                  plan.slug.charAt(0).toUpperCase() + plan.slug.slice(1),
               });
             }
 
@@ -152,6 +172,15 @@ export default async function webhookHandler(
             newCustomer,
           });
 
+          let planLimits = structuredClone(PRO_PLAN_LIMITS);
+          if (plan.slug === "pro") {
+            planLimits = structuredClone(PRO_PLAN_LIMITS);
+          } else if (plan.slug === "business") {
+            planLimits = structuredClone(BUSINESS_PLAN_LIMITS);
+          } else if (plan.slug === "datarooms") {
+            planLimits = structuredClone(DATAROOMS_PLAN_LIMITS);
+          }
+
           // if user upgrades from Pro to Business, checkout event won't be fired
           // so we need to update the user immediately
           if (upgradedCustomer && !newCustomer) {
@@ -164,6 +193,7 @@ export default async function webhookHandler(
                 subscriptionId,
                 startsAt,
                 endsAt,
+                limits: planLimits,
               },
               select: {
                 id: true,
@@ -180,8 +210,9 @@ export default async function webhookHandler(
           const stripeId = subscriptionDeleted.customer.toString();
           const subscriptionId = subscriptionDeleted.id;
 
-          // If a project deletes their subscription, reset their usage limit in the database to 1000.
-          // Also remove the root domain redirect for all their domains from Redis.
+          // reset the plan limits to free
+          const planlimits = structuredClone(FREE_PLAN_LIMITS);
+
           const team = await prisma.team.update({
             where: {
               stripeId,
@@ -192,6 +223,7 @@ export default async function webhookHandler(
               subscriptionId: null,
               endsAt: null,
               startsAt: null,
+              limits: planlimits,
             },
             select: { id: true },
           });

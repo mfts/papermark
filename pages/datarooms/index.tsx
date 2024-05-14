@@ -1,3 +1,7 @@
+import Link from "next/link";
+
+import { PlusIcon } from "lucide-react";
+
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { AddDataroomModal } from "@/components/datarooms/add-dataroom-modal";
 import { DataroomTrialModal } from "@/components/datarooms/dataroom-trial-modal";
@@ -12,68 +16,84 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+
 import { usePlan } from "@/lib/swr/use-billing";
 import useDatarooms from "@/lib/swr/use-datarooms";
+import useLimits from "@/lib/swr/use-limits";
 import { daysLeft } from "@/lib/utils";
-import { PlusIcon } from "lucide-react";
-import Link from "next/link";
 
 export default function DataroomsPage() {
   const { datarooms } = useDatarooms();
   const { plan, trial } = usePlan();
+  const { limits } = useLimits();
+
+  const numDatarooms = datarooms?.length ?? 0;
+  const limitDatarooms = limits?.datarooms ?? 1;
+
+  const isBusiness = plan === "business";
+  const isDatarooms = plan === "datarooms";
+  const isTrialDatarooms = trial === "drtrial";
+  const canCreateUnlimitedDatarooms =
+    isDatarooms || (isBusiness && numDatarooms < limitDatarooms);
 
   return (
     <AppLayout>
-      <main className="p-4 sm:py-4 sm:px-4 sm:m-4">
-        <section className="flex items-center justify-between mb-4 md:mb-8 lg:mb-12">
+      <main className="p-4 sm:m-4 sm:px-4 sm:py-4">
+        <section className="mb-4 flex items-center justify-between md:mb-8 lg:mb-12">
           <div className="space-y-1">
-            <h2 className="text-xl sm:text-2xl text-foreground font-semibold tracking-tight">
+            <h2 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
               Datarooms
             </h2>
-            <p className="text-xs sm:text-sm text-muted-foreground">
+            <p className="text-xs text-muted-foreground sm:text-sm">
               Manage your datarooms
             </p>
           </div>
           <div className="flex items-center gap-x-1">
-            {plan !== "business" && trial !== "drtrial" ? (
-              <DataroomTrialModal>
+            {isBusiness && !canCreateUnlimitedDatarooms ? (
+              <UpgradePlanModal clickedPlan="Data Rooms" trigger="datarooms">
                 <Button
-                  className="flex-1 text-left group flex gap-x-3 items-center justify-start px-3"
+                  className="group flex flex-1 items-center justify-start gap-x-3 px-3 text-left"
                   title="Add New Document"
                 >
-                  <span>Start Data Room Trial</span>
+                  <span>Upgrade to Create Dataroom</span>
                 </Button>
-              </DataroomTrialModal>
-            ) : datarooms && trial === "drtrial" && plan !== "business" ? (
+              </UpgradePlanModal>
+            ) : isTrialDatarooms && datarooms && !isBusiness && !isDatarooms ? (
               <div className="flex items-center gap-x-4">
-                <div className="text-sm text-destructive ">
-                  <span className="">Dataroom Trial:</span>{" "}
+                <div className="text-sm text-destructive">
+                  <span>Dataroom Trial: </span>
                   <span className="font-medium">
                     {daysLeft(new Date(datarooms[0].createdAt), 7)} days left
                   </span>
                 </div>
-                <UpgradePlanModal
-                  clickedPlan={"Business"}
-                  trigger={"datarooms"}
-                >
+                <UpgradePlanModal clickedPlan="Business" trigger="datarooms">
                   <Button
-                    className="flex-1 text-left group flex gap-x-3 items-center justify-start px-3"
+                    className="group flex flex-1 items-center justify-start gap-x-3 px-3 text-left"
                     title="Add New Document"
                   >
                     <span>Upgrade to Create Dataroom</span>
                   </Button>
                 </UpgradePlanModal>
               </div>
-            ) : (
+            ) : isBusiness || isDatarooms ? (
               <AddDataroomModal>
                 <Button
-                  className="flex-1 text-left group flex gap-x-3 items-center justify-start px-3"
+                  className="group flex flex-1 items-center justify-start gap-x-3 px-3 text-left"
                   title="Add New Document"
                 >
                   <PlusIcon className="h-5 w-5 shrink-0" aria-hidden="true" />
                   <span>Create New Dataroom</span>
                 </Button>
               </AddDataroomModal>
+            ) : (
+              <DataroomTrialModal>
+                <Button
+                  className="group flex flex-1 items-center justify-start gap-x-3 px-3 text-left"
+                  title="Add New Document"
+                >
+                  <span>Start Data Room Trial</span>
+                </Button>
+              </DataroomTrialModal>
             )}
           </div>
         </section>
@@ -85,7 +105,7 @@ export default function DataroomsPage() {
             {datarooms &&
               datarooms.map((dataroom) => (
                 <Link key={dataroom.id} href={`/datarooms/${dataroom.id}`}>
-                  <Card className="hover:border-primary/50 group relative overflow-hidden duration-500 ">
+                  <Card className="group relative overflow-hidden duration-500 hover:border-primary/50 ">
                     <CardHeader>
                       <div className="flex items-center justify-between">
                         <CardTitle className="truncate">

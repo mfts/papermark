@@ -1,13 +1,16 @@
 import { NextApiRequest, NextApiResponse } from "next";
+
 import { getServerSession } from "next-auth";
-import { authOptions } from "../../auth/[...nextauth]";
-import { CustomUser } from "@/lib/types";
+
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
+import { CustomUser } from "@/lib/types";
+
+import { authOptions } from "../../auth/[...nextauth]";
 
 export default async function handle(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   if (req.method === "DELETE") {
     // DELETE /api/teams/:teamId/remove-teammate

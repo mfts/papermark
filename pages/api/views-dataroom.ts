@@ -1,13 +1,15 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import prisma from "@/lib/prisma";
-import { checkPassword, decryptEncrpytedPassword, log } from "@/lib/utils";
-import { newId } from "@/lib/id-helper";
+
+import { parsePageId } from "notion-utils";
+import { record } from "zod";
+
+import sendNotification from "@/lib/api/notification-helper";
 import { sendVerificationEmail } from "@/lib/emails/send-email-verification";
 import { getFile } from "@/lib/files/get-file";
-import sendNotification from "@/lib/api/notification-helper";
-import { parsePageId } from "notion-utils";
+import { newId } from "@/lib/id-helper";
 import notion from "@/lib/notion";
-import { record } from "zod";
+import prisma from "@/lib/prisma";
+import { checkPassword, decryptEncrpytedPassword, log } from "@/lib/utils";
 
 export default async function handle(
   req: NextApiRequest,
@@ -30,6 +32,7 @@ export default async function handle(
     token,
     ownerId,
     verifiedEmail,
+    dataroomVerified,
     linkType,
     dataroomViewId,
     viewType,
@@ -45,6 +48,7 @@ export default async function handle(
     token: string | null;
     ownerId: string | null;
     verifiedEmail: string | null;
+    dataroomVerified: boolean | undefined;
     linkType: string;
     dataroomViewId?: string;
     viewType: "DATAROOM_VIEW" | "DOCUMENT_VIEW";
@@ -150,10 +154,10 @@ export default async function handle(
   }
 
   // Check if email verification is required for visiting the link
-  if (link.emailAuthenticated && !token) {
+  if (link.emailAuthenticated && !token && !dataroomVerified) {
     const token = newId("email");
     const expiresAt = new Date();
-    expiresAt.setHours(expiresAt.getHours() + 1); // token expires in 1 hour
+    expiresAt.setMinutes(expiresAt.getMinutes() + 20); // token expires in 20 minutes
 
     await prisma.verificationToken.create({
       data: {
@@ -164,7 +168,7 @@ export default async function handle(
     });
 
     // set the default verification url
-    let verificationUrl: string = `${process.env.NEXT_PUBLIC_BASE_URL}/view/d/${linkId}/?token=${token}&email=${encodeURIComponent(email)}`;
+    let verificationUrl: string = `${process.env.NEXT_PUBLIC_BASE_URL}/view/${linkId}/?token=${token}&email=${encodeURIComponent(email)}`;
 
     if (link.domainSlug && link.slug) {
       // if custom domain is enabled, use the custom domain
@@ -180,7 +184,7 @@ export default async function handle(
   }
 
   let isEmailVerified: boolean = false;
-  if (link.emailAuthenticated && token) {
+  if (link.emailAuthenticated && token && !dataroomVerified) {
     const verification = await prisma.verificationToken.findUnique({
       where: {
         token: token,
@@ -189,7 +193,10 @@ export default async function handle(
     });
 
     if (!verification) {
-      res.status(401).json({ message: "Unauthorized access" });
+      res.status(401).json({
+        message: "Unauthorized access. Request new access.",
+        resetVerification: true,
+      });
       return;
     }
 
@@ -199,35 +206,53 @@ export default async function handle(
       return;
     }
 
+    // delete the token after verification
+    await prisma.verificationToken.delete({
+      where: {
+        token: token,
+      },
+    });
+
+    isEmailVerified = true;
+  }
+
+  if (link.emailAuthenticated && dataroomVerified) {
     isEmailVerified = true;
   }
 
   let viewer: { id: string } | null = null;
-  // find or create a viewer
-  console.time("find-viewer");
-  viewer = await prisma.viewer.findUnique({
-    where: {
-      dataroomId_email: {
-        email: email,
-        dataroomId: dataroomId!,
-      },
-    },
-    select: { id: true },
-  });
-  console.timeEnd("find-viewer");
-
-  if (!viewer) {
-    console.time("create-viewer");
-    viewer = await prisma.viewer.create({
-      data: {
-        email: email,
-        dataroomId: dataroomId!,
-        verified: isEmailVerified,
+  if (email) {
+    // find or create a viewer
+    console.time("find-viewer");
+    viewer = await prisma.viewer.findUnique({
+      where: {
+        dataroomId_email: {
+          email: email,
+          dataroomId: dataroomId!,
+        },
       },
       select: { id: true },
     });
-    console.timeEnd("create-viewer");
+    console.timeEnd("find-viewer");
+
+    if (!viewer) {
+      console.time("create-viewer");
+      viewer = await prisma.viewer.create({
+        data: {
+          email: email,
+          dataroomId: dataroomId!,
+          verified: isEmailVerified,
+        },
+        select: { id: true },
+      });
+      console.timeEnd("create-viewer");
+    }
   }
+
+  // what's the difference between || and ?? on the viewer.id assignment?
+  // viewer?.id ?? undefined
+  // viewer?.id || undefined
+  // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Nullish_coalescing_operator
 
   if (viewType === "DATAROOM_VIEW") {
     try {
@@ -239,7 +264,7 @@ export default async function handle(
           verified: isEmailVerified,
           dataroomId: dataroomId,
           viewType: "DATAROOM_VIEW",
-          viewerId: viewer.id,
+          viewerId: viewer?.id ?? undefined,
         },
         select: { id: true },
       });
@@ -275,7 +300,7 @@ export default async function handle(
         dataroomViewId: dataroomViewId,
         dataroomId: dataroomId,
         viewType: "DOCUMENT_VIEW",
-        viewerId: viewer.id,
+        viewerId: viewer?.id ?? undefined,
       },
       select: { id: true },
     });

@@ -1,4 +1,4 @@
-export default function CheckCircle2({className}: {className?: string;}) {
+export default function CheckCircle2({ className }: { className?: string }) {
   return (
     <svg
       width="14"

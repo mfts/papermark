@@ -1,10 +1,13 @@
+import { useEffect, useRef } from "react";
+
 import { AssistantStatus, type Message } from "ai/react";
+import Textarea from "react-textarea-autosize";
 
 import { Button } from "@/components/ui/button";
-import Textarea from "react-textarea-autosize";
-import { useEffect, useRef } from "react";
+
 import { cn } from "@/lib/utils";
 import { useEnterSubmit } from "@/lib/utils/use-enter-submit";
+
 import ArrowUp from "../shared/icons/arrow-up";
 
 export function ChatInput({
@@ -37,14 +40,14 @@ export function ChatInput({
       <div className="mx-auto sm:max-w-3xl sm:px-4">
         <div className="space-y-4 bg-background px-4 py-4 md:py-4">
           <form onSubmit={submitMessage} ref={formRef}>
-            <div className="relative flex max-h-60 w-full flex-col overflow-hidden bg-background pr-8 rounded-xl ring-1 ring-muted-foreground/50 sm:pr-12 focus-within:ring-1 focus-within:ring-foreground">
+            <div className="relative flex max-h-60 w-full flex-col overflow-hidden rounded-xl bg-background pr-8 ring-1 ring-muted-foreground/50 focus-within:ring-1 focus-within:ring-foreground sm:pr-12">
               <Textarea
                 ref={inputRef}
                 tabIndex={0}
                 rows={1}
                 onKeyDown={onKeyDown}
                 disabled={status !== "awaiting_message"}
-                className="min-h-[60px] w-full resize-none bg-transparent px-4 py-[1.3rem] focus:ring-0 sm:text-sm border-none"
+                className="min-h-[60px] w-full resize-none border-none bg-transparent px-4 py-[1.3rem] focus:ring-0 sm:text-sm"
                 value={input}
                 placeholder="Message Papermark Assistant..."
                 onChange={handleInputChange}
@@ -55,7 +58,7 @@ export function ChatInput({
                   type="submit"
                   disabled={status === "in_progress" || input === ""}
                   title="Send message"
-                  className="rounded-md p-1 md:p-2 h-10 w-10"
+                  className="h-10 w-10 rounded-md p-1 md:p-2"
                 >
                   <ArrowUp className="h-full w-full" />
                   <span className="sr-only">Send message</span>

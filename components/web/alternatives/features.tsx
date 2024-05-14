@@ -58,7 +58,7 @@ export default function Features() {
               className="h-10 w-10 text-gray-800"
               aria-hidden="true"
             />
-            <dt className="inline text-gray-500 text-xl">{feature.name}</dt>{" "}
+            <dt className="inline text-xl text-gray-500">{feature.name}</dt>{" "}
             <dd className="inline text-balance">{feature.description}</dd>
           </div>
         ))}

@@ -1,9 +1,12 @@
+import { useState } from "react";
+
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+
 import { useStats } from "@/lib/swr/use-stats";
+
 import StatsCard from "./stats-card";
 import StatsChart from "./stats-chart";
-import { useState } from "react";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 
 export const StatsComponent = ({
   documentId,

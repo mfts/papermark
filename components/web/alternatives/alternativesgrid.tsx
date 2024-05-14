@@ -55,10 +55,10 @@ const files = [
 
 export default function Gridalternatives() {
   return (
-    <div className="bg-gray-100 py-10 sm:py-10 px-6 sm:px-8 lg:px-20 my-20 ">
-      <div className="px-6 py-12 sm:px-6 sm:py-20 lg:px-8 pb-20">
+    <div className="my-20 bg-gray-100 px-6 py-10 sm:px-8 sm:py-10 lg:px-20 ">
+      <div className="px-6 py-12 pb-20 sm:px-6 sm:py-20 lg:px-8">
         <div className="mx-auto max-w-5xl text-center">
-          <h2 className="text-4xl font-bold text-balance text-gray-900 ">
+          <h2 className="text-balance text-4xl font-bold text-gray-900 ">
             Learn more about Docsend Alternatives in 2024
             <br />
           </h2>
@@ -75,7 +75,7 @@ export default function Gridalternatives() {
         {files.map((file) => (
           <li key={file.source} className="relative">
             <a href={file.link} className="block focus:outline-none">
-              <div className="group aspect-h-7 aspect-w-10 block w-full overflow-hidden rounded-lg bg-gray-200 focus-within:ring-2 focus-within:ring-indigo-500 focus-within:ring-offset-2 focus-within:ring-offset-gray-100">
+              <div className="aspect-h-7 aspect-w-10 group block w-full overflow-hidden rounded-lg bg-gray-200 focus-within:ring-2 focus-within:ring-indigo-500 focus-within:ring-offset-2 focus-within:ring-offset-gray-100">
                 <img
                   src={file.source}
                   alt=""

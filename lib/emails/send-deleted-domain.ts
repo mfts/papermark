@@ -1,5 +1,6 @@
-import { sendEmail } from "@/lib/resend";
 import DeletedDomainEmail from "@/components/emails/deleted-domain";
+
+import { sendEmail } from "@/lib/resend";
 
 export const sendDeletedDomainEmail = async (email: string, domain: string) => {
   const emailTemplate = DeletedDomainEmail({ domain });

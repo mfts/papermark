@@ -1,9 +1,11 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { getServerSession } from "next-auth/next";
-import prisma from "@/lib/prisma";
+
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import { CustomUser } from "@/lib/types";
+import { getServerSession } from "next-auth/next";
+
 import { newId } from "@/lib/id-helper";
+import prisma from "@/lib/prisma";
+import { CustomUser } from "@/lib/types";
 import { log } from "@/lib/utils";
 
 export default async function handle(

@@ -1,6 +1,12 @@
-import { timeAgo } from "@/lib/utils";
 import Link from "next/link";
+
+import { useEffect, useRef, useState } from "react";
+
 import { TeamContextType } from "@/context/team-context";
+import { FolderIcon, MoreVertical, TrashIcon } from "lucide-react";
+import { toast } from "sonner";
+import { mutate } from "swr";
+
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -10,13 +16,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreVertical, FolderIcon, TrashIcon } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
-import { FolderWithCount } from "@/lib/swr/use-documents";
+
 import { DataroomFolderWithCount } from "@/lib/swr/use-dataroom";
+import { FolderWithCount } from "@/lib/swr/use-documents";
+import { timeAgo } from "@/lib/utils";
+
 import { EditFolderModal } from "../folders/edit-folder-modal";
-import { toast } from "sonner";
-import { mutate } from "swr";
 
 type FolderCardProps = {
   folder: FolderWithCount | DataroomFolderWithCount;
@@ -124,16 +129,16 @@ export default function FolderCard({
 
   return (
     <>
-      <li className="group/row relative rounded-lg p-3 border-0 dark:bg-secondary ring-1 ring-gray-400 dark:ring-gray-500 transition-all hover:ring-gray-500 hover:dark:ring-gray-400 hover:bg-secondary sm:p-4 flex justify-between items-center">
-        <div className="min-w-0 flex shrink items-center space-x-2 sm:space-x-4">
-          <div className="w-8 mx-0.5 sm:mx-1 text-center flex justify-center items-center">
-            <FolderIcon className="w-8 h-8 " strokeWidth={1} />
+      <li className="group/row relative flex items-center justify-between rounded-lg border-0 p-3 ring-1 ring-gray-400 transition-all hover:bg-secondary hover:ring-gray-500 dark:bg-secondary dark:ring-gray-500 hover:dark:ring-gray-400 sm:p-4">
+        <div className="flex min-w-0 shrink items-center space-x-2 sm:space-x-4">
+          <div className="mx-0.5 flex w-8 items-center justify-center text-center sm:mx-1">
+            <FolderIcon className="h-8 w-8 " strokeWidth={1} />
           </div>
 
           <div className="flex-col">
             <div className="flex items-center">
-              <h2 className="min-w-0 text-sm font-semibold leading-6 text-foreground truncate max-w-[150px] sm:max-w-md">
-                <Link href={`${folderPath}`} className="truncate w-full">
+              <h2 className="min-w-0 max-w-[150px] truncate text-sm font-semibold leading-6 text-foreground sm:max-w-md">
+                <Link href={`${folderPath}`} className="w-full truncate">
                   <span>{folder.name}</span>
                   <span className="absolute inset-0" />
                 </Link>
@@ -175,10 +180,10 @@ export default function FolderCard({
               <Button
                 // size="icon"
                 variant="outline"
-                className="h-8 lg:h-9 w-8 lg:w-9 p-0 z-10 bg-transparent border-gray-200 dark:border-gray-700 hover:bg-gray-200 hover:dark:bg-gray-700"
+                className="z-10 h-8 w-8 border-gray-200 bg-transparent p-0 hover:bg-gray-200 dark:border-gray-700 hover:dark:bg-gray-700 lg:h-9 lg:w-9"
               >
                 <span className="sr-only">Open menu</span>
-                <MoreVertical className="w-4 h-4" />
+                <MoreVertical className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" ref={dropdownRef}>
@@ -190,13 +195,13 @@ export default function FolderCard({
 
               <DropdownMenuItem
                 onClick={(event) => handleButtonClick(event, folder.id)}
-                className="text-destructive focus:bg-destructive focus:text-destructive-foreground duration-200"
+                className="text-destructive duration-200 focus:bg-destructive focus:text-destructive-foreground"
               >
                 {isFirstClick ? (
                   "Really delete?"
                 ) : (
                   <>
-                    <TrashIcon className="w-4 h-4 mr-2" /> Delete Folder
+                    <TrashIcon className="mr-2 h-4 w-4" /> Delete Folder
                   </>
                 )}
               </DropdownMenuItem>

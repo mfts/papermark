@@ -1,10 +1,13 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { getServerSession } from "next-auth/next";
-import prisma from "@/lib/prisma";
+
+import { getLimits } from "@/ee/limits/server";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import { CustomUser } from "@/lib/types";
 import slugify from "@sindresorhus/slugify";
+import { getServerSession } from "next-auth/next";
+
 import { newId } from "@/lib/id-helper";
+import prisma from "@/lib/prisma";
+import { CustomUser } from "@/lib/types";
 
 export default async function handle(
   req: NextApiRequest,
@@ -72,8 +75,8 @@ export default async function handle(
         where: {
           id: teamId,
           plan: {
-            // exclude all teams not on `business` plan
-            in: ["business"],
+            // exclude all teams not on `business`, `datarooms` plan
+            in: ["business", "datarooms"],
           },
           users: {
             some: {
@@ -87,6 +90,21 @@ export default async function handle(
         return res.status(401).end("Unauthorized");
       }
 
+      // Limits: Check if the user has reached the limit of datarooms in the team
+      const dataroomCount = await prisma.dataroom.count({
+        where: {
+          teamId: teamId,
+        },
+      });
+
+      const limits = await getLimits({ teamId, userId });
+
+      if (limits && dataroomCount >= limits.datarooms) {
+        return res
+          .status(403)
+          .json({ message: "You have reached the limit of datarooms" });
+      }
+
       const pId = newId("dataroom");
 
       const dataroom = await prisma.dataroom.create({
@@ -94,6 +112,9 @@ export default async function handle(
           name: name,
           teamId: teamId,
           pId: pId,
+          links: {
+            create: { linkType: "DATAROOM_LINK" },
+          },
         },
       });
 

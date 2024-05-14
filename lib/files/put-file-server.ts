@@ -1,12 +1,13 @@
+import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { DocumentStorageType } from "@prisma/client";
+import slugify from "@sindresorhus/slugify";
+import { put } from "@vercel/blob";
+import path from "node:path";
 import { match } from "ts-pattern";
 
-import { DocumentStorageType } from "@prisma/client";
 import { newId } from "@/lib/id-helper";
-import { put } from "@vercel/blob";
-import { PutObjectCommand } from "@aws-sdk/client-s3";
+
 import { getS3Client } from "./aws-client";
-import slugify from "@sindresorhus/slugify";
-import path from "node:path";
 
 // `File` is a web API type and not available server-side, so we need to define our own type
 type File = {
@@ -64,6 +65,10 @@ const putFileInS3Server = async ({
 }) => {
   if (!docId) {
     docId = newId("doc");
+  }
+
+  if (file.type !== "image/png") {
+    throw new Error("Only PNG files are supported");
   }
 
   const client = getS3Client();
