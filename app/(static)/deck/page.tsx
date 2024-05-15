@@ -55,7 +55,7 @@ const DeckPage = () => {
   const setItem = (key: string, value: string) => {
     iframeRef.current?.contentWindow?.postMessage(
       { type: "set", key, value },
-      "https://shared.mfts.dev",
+      "https://shared.papermark.io",
     );
   };
 
@@ -114,7 +114,7 @@ const DeckPage = () => {
     <>
       <iframe
         ref={iframeRef}
-        src="https://shared.mfts.dev"
+        src="https://shared.papermark.io"
         style={{
           width: 0,
           height: 0,
