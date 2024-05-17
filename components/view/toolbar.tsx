@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
+import { createPortal } from "react-dom";
 import Draggable from "react-draggable";
 
 import { REACTIONS } from "@/lib/constants";
@@ -80,31 +81,27 @@ export default function Toolbar({
     </div>
   );
 
-  return (
-    <>
-      <div
-        className="fixed left-0 top-16 z-10 flex w-dvw items-end justify-center"
-        style={{ height: "calc(100vh - 64px)" }}
-      >
-        <Draggable bounds="parent" handle=".moveable-icon">
-          <div className="mb-4 mt-4 w-max rounded-full bg-gray-950/40">
-            <div className="grid items-center justify-start">
-              <div className="px-2 py-1">
-                <div className="grid grid-flow-col items-center justify-start">
-                  {REACTIONS.map((reaction) => (
-                    <Emoji
-                      key={reaction.emoji}
-                      emoji={reaction.emoji}
-                      label={reaction.label}
-                    />
-                  ))}
-                  <GripVertical className="moveable-icon h-5 w-5 text-gray-100 active:text-gray-300" />
-                </div>
+  return createPortal(
+    <div className="pointer-events-none fixed inset-0 z-50">
+      <Draggable bounds="parent" handle=".moveable-icon">
+        <div className="pointer-events-auto absolute bottom-4 left-1/2  w-max -translate-x-1/2 transform rounded-full bg-gray-950/40">
+          <div className="grid items-center justify-start">
+            <div className="px-2 py-1">
+              <div className="grid grid-flow-col items-center justify-start">
+                {REACTIONS.map((reaction) => (
+                  <Emoji
+                    key={reaction.emoji}
+                    emoji={reaction.emoji}
+                    label={reaction.label}
+                  />
+                ))}
+                <GripVertical className="moveable-icon h-5 w-5 text-gray-100 active:text-gray-300" />
               </div>
             </div>
           </div>
-        </Draggable>
-      </div>
-    </>
+        </div>
+      </Draggable>
+    </div>,
+    document.body,
   );
 }

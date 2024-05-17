@@ -1,13 +1,25 @@
+import { useRouter } from "next/router";
+
 import { useEffect, useRef, useState } from "react";
 
+import { Brand, DataroomBrand } from "@prisma/client";
 import {
   ChevronDownIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   ChevronUpIcon,
 } from "lucide-react";
+import { toast } from "sonner";
 
 import { cn } from "@/lib/utils";
+
+import { ScreenProtector } from "./ScreenProtection";
+import Nav from "./nav";
+import { PoweredBy } from "./powered-by";
+import Question from "./question";
+import Toolbar from "./toolbar";
+
+const DEFAULT_PRELOADED_IMAGES_NUM = 5;
 
 const trackPageView = async (data: {
   linkId: string;
@@ -33,20 +45,63 @@ export default function PagesViewer({
   linkId,
   documentId,
   viewId,
+  assistantEnabled,
+  allowDownload,
+  feedbackEnabled,
+  screenshotProtectionEnabled,
   versionNumber,
+  brand,
+  documentName,
   dataroomId,
-  isVertical = true,
+  setDocumentData,
+  showPoweredByBanner,
+  enableQuestion = false,
+  feedback,
+  isVertical = false,
 }: {
   pages: { file: string; pageNumber: string; embeddedLinks: string[] }[];
   linkId: string;
   documentId: string;
   viewId: string;
+  assistantEnabled?: boolean;
+  allowDownload: boolean;
+  feedbackEnabled: boolean;
+  screenshotProtectionEnabled: boolean;
   versionNumber: number;
+  brand?: Partial<Brand> | Partial<DataroomBrand> | null;
+  documentName?: string;
   dataroomId?: string;
+  setDocumentData?: (data: any) => void;
+  showPoweredByBanner?: boolean;
+  enableQuestion?: boolean | null;
+  feedback?: {
+    id: string;
+    data: { question: string; type: string };
+  } | null;
   isVertical?: boolean;
 }) {
+  const router = useRouter();
+
   const numPages = pages.length;
-  const [pageNumber, setPageNumber] = useState<number>(1);
+  const numPagesWithFeedback =
+    enableQuestion && feedback ? numPages + 1 : numPages;
+
+  console.log("numPages", numPages, numPagesWithFeedback);
+
+  const pageQuery = router.query.p ? Number(router.query.p) : 1;
+
+  const [pageNumber, setPageNumber] = useState<number>(() =>
+    pageQuery >= 1 && pageQuery <= numPages ? pageQuery : 1,
+  ); // start on first page
+
+  const [loadedImages, setLoadedImages] = useState<boolean[]>(
+    new Array(numPages).fill(false),
+  );
+
+  const [submittedFeedback, setSubmittedFeedback] = useState<boolean>(false);
+
+  console.log("feedback enabled", feedbackEnabled, enableQuestion, feedback);
+
   const startTimeRef = useRef(Date.now());
   const pageNumberRef = useRef<number>(pageNumber);
   const visibilityRef = useRef<boolean>(true);
@@ -60,6 +115,7 @@ export default function PagesViewer({
     pageNumberRef.current = pageNumber;
     hasTrackedDownRef.current = false; // Reset tracking status on page number change
     hasTrackedUpRef.current = false; // Reset tracking status on page number change
+    console.log("pageNumber", pageNumber, pageNumberRef.current);
   }, [pageNumber]);
 
   useEffect(() => {
@@ -98,7 +154,6 @@ export default function PagesViewer({
   }, [pageNumber, numPages]);
 
   useEffect(() => {
-    // console.log(">>> calling pagenumer change");
     startTimeRef.current = Date.now();
 
     return () => {
@@ -151,6 +206,36 @@ export default function PagesViewer({
     };
   }, [pageNumber, numPages]);
 
+  useEffect(() => {
+    setLoadedImages((prev) =>
+      prev.map((loaded, index) =>
+        index < DEFAULT_PRELOADED_IMAGES_NUM ? true : loaded,
+      ),
+    );
+  }, []); // Run once on mount
+
+  useEffect(() => {
+    // Remove token and email query parameters on component mount
+    const removeQueryParams = () => {
+      const currentQuery = { ...router.query };
+      delete currentQuery.token;
+      delete currentQuery.email;
+
+      router.replace(
+        {
+          pathname: router.pathname,
+          query: currentQuery,
+        },
+        undefined,
+        { shallow: true },
+      );
+    };
+
+    if (!dataroomId) {
+      removeQueryParams();
+    }
+  }, []); // Run once on mount
+
   const handleScroll = () => {
     if (!isVertical) return;
 
@@ -158,7 +243,7 @@ export default function PagesViewer({
     if (!container) return;
 
     const scrollPosition = container.scrollTop;
-    const pageHeight = container.scrollHeight / numPages;
+    const pageHeight = container.scrollHeight / numPagesWithFeedback;
 
     const currentPage = Math.floor(scrollPosition / pageHeight) + 1;
     const currentPageFraction = (scrollPosition % pageHeight) / pageHeight;
@@ -270,73 +355,101 @@ export default function PagesViewer({
       hasTrackedUpRef.current = true;
       hasTrackedDownRef.current = false;
     }
+  };
 
-    // Reset tracking flags when crossing 50%
-    // if (currentPageFraction < 0.5 && hasTrackedDownRef.current) {
-    //   hasTrackedDownRef.current = false;
-    // } else if (currentPageFraction > 0.5 && hasTrackedUpRef.current) {
-    //   hasTrackedUpRef.current = false;
-    // }
+  // Function to handle context for screenshotting
+  const handleContextMenu = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (!screenshotProtectionEnabled) {
+      return null;
+    }
+
+    event.preventDefault();
+    // Close menu on click anywhere
+    const clickHandler = () => {
+      document.removeEventListener("click", clickHandler);
+    };
+    document.addEventListener("click", clickHandler);
+
+    toast.info("Context menu has been disabled.");
+  };
+
+  // Function to preload next image
+  const preloadImage = (index: number) => {
+    if (index < numPages && !loadedImages[index]) {
+      const newLoadedImages = [...loadedImages];
+      newLoadedImages[index] = true;
+      setLoadedImages(newLoadedImages);
+    }
   };
 
   const goToPreviousPage = () => {
-    if (pageNumber > 1) {
-      console.log(
-        ">>> tracking page view by PREVIOUS PAGE",
-        pageNumber,
-        pageNumberRef.current,
-      );
-      const duration = Date.now() - startTimeRef.current;
-      trackPageView({
-        linkId,
-        documentId,
-        viewId,
-        duration,
-        pageNumber: pageNumberRef.current,
-        versionNumber,
-        dataroomId,
-      });
+    if (pageNumber <= 1) return;
+    if (pageNumber === numPagesWithFeedback) {
       setPageNumber(pageNumber - 1);
-      pageNumberRef.current = pageNumber - 1;
-      startTimeRef.current = Date.now();
-      if (isVertical) {
-        scrollActionRef.current = true;
-        containerRef.current?.scrollTo({
-          top:
-            containerRef.current.scrollHeight * ((pageNumber - 2) / numPages),
-          behavior: "smooth",
-        });
-      }
+      return;
+    }
+
+    console.log(
+      ">>> tracking page view by PREVIOUS PAGE",
+      pageNumber,
+      pageNumberRef.current,
+    );
+    const duration = Date.now() - startTimeRef.current;
+    trackPageView({
+      linkId,
+      documentId,
+      viewId,
+      duration,
+      pageNumber: pageNumberRef.current,
+      versionNumber,
+      dataroomId,
+    });
+    setPageNumber(pageNumber - 1);
+    pageNumberRef.current = pageNumber - 1;
+    startTimeRef.current = Date.now();
+    if (isVertical) {
+      scrollActionRef.current = true;
+      containerRef.current?.scrollTo({
+        top:
+          containerRef.current.scrollHeight *
+          ((pageNumber - 2) / numPagesWithFeedback),
+        behavior: "smooth",
+      });
     }
   };
 
   const goToNextPage = () => {
-    if (pageNumber < numPages) {
-      console.log(
-        ">>> tracking page view by NEXT PAGE",
-        pageNumber,
-        pageNumberRef.current,
-      );
-      const duration = Date.now() - startTimeRef.current;
-      trackPageView({
-        linkId,
-        documentId,
-        viewId,
-        duration,
-        pageNumber: pageNumberRef.current,
-        versionNumber,
-        dataroomId,
+    if (pageNumber >= numPagesWithFeedback) return;
+
+    preloadImage(DEFAULT_PRELOADED_IMAGES_NUM - 1 + pageNumber); // Preload the next image
+
+    console.log(
+      ">>> tracking page view by NEXT PAGE",
+      pageNumber,
+      pageNumberRef.current,
+    );
+
+    const duration = Date.now() - startTimeRef.current;
+    trackPageView({
+      linkId,
+      documentId,
+      viewId,
+      duration,
+      pageNumber: pageNumberRef.current,
+      versionNumber,
+      dataroomId,
+    });
+    setPageNumber(pageNumber + 1);
+    pageNumberRef.current = pageNumber + 1;
+    startTimeRef.current = Date.now();
+    if (isVertical) {
+      scrollActionRef.current = true;
+      containerRef.current?.scrollTo({
+        top:
+          containerRef.current.scrollHeight *
+          (pageNumber / numPagesWithFeedback),
+        behavior: "smooth",
       });
-      setPageNumber(pageNumber + 1);
-      pageNumberRef.current = pageNumber + 1;
-      startTimeRef.current = Date.now();
-      if (isVertical) {
-        scrollActionRef.current = true;
-        containerRef.current?.scrollTo({
-          top: containerRef.current.scrollHeight * (pageNumber / numPages),
-          behavior: "smooth",
-        });
-      }
     }
   };
 
@@ -407,72 +520,113 @@ export default function PagesViewer({
     };
   }, [isVertical, handleScroll]);
 
-  // useEffect(() => {
-  //   console.log("current page number: ", pageNumber);
-  //   console.log("current page number ref: ", pageNumberRef.current);
-  // }, [pageNumber, pageNumberRef.current]);
-
   return (
-    <div className={cn("relative flex items-center", isVertical && "h-screen")}>
+    <>
+      <Nav
+        pageNumber={pageNumber}
+        numPages={numPagesWithFeedback}
+        assistantEnabled={assistantEnabled}
+        allowDownload={allowDownload}
+        brand={brand}
+        viewId={viewId}
+        linkId={linkId}
+        documentName={documentName}
+        embeddedLinks={pages[pageNumber - 1]?.embeddedLinks}
+        isDataroom={dataroomId ? true : false}
+        setDocumentData={setDocumentData}
+      />
       <div
-        className={`relative flex h-full w-full ${
-          isVertical ? "flex-col overflow-y-auto" : "flex-row"
-        }`}
-        ref={containerRef}
+        style={{ height: "calc(100vh - 64px)" }}
+        className={cn("relative flex items-center", isVertical && "h-screen")}
       >
-        <div className={`flex ${isVertical ? "flex-col" : "flex-row"} w-full`}>
-          {pages.map((page, index) => (
-            <div
-              key={index}
-              className={cn(
-                "relative h-screen w-full",
-                pageNumber - 1 === index
-                  ? "block"
-                  : !isVertical
-                    ? "hidden"
-                    : "block",
-              )}
-            >
-              <span className="absolute right-10 top-10 bg-black text-white">
-                PAGE NUMBER {index + 1}
-              </span>
-              <img
-                className={cn("h-full w-full object-contain")}
-                src={page.file}
-                alt={`Page ${index + 1}`}
-              />
-            </div>
-          ))}
+        <div
+          className={`relative flex h-full w-full ${
+            isVertical ? "flex-col overflow-y-auto" : "flex-row"
+          }`}
+          ref={containerRef}
+        >
+          <div
+            className={`flex ${isVertical ? "flex-col" : "flex-row"} w-full`}
+            onContextMenu={handleContextMenu}
+          >
+            {pageNumber <= numPages &&
+              pages.map((page, index) => (
+                <div
+                  key={index}
+                  style={{ height: "calc(100vh - 64px)" }}
+                  className={cn(
+                    `relative h-screen w-full ${index % 2 === 0 ? "bg-gray-100" : "bg-gray-600"}`,
+                    pageNumber - 1 === index
+                      ? "block"
+                      : !isVertical
+                        ? "hidden"
+                        : "block",
+                  )}
+                >
+                  <span className="absolute right-10 top-10 bg-black text-white">
+                    PAGE NUMBER {index + 1}
+                  </span>
+                  <img
+                    className={cn("h-full w-full object-contain")}
+                    src={page.file}
+                    alt={`Page ${index + 1}`}
+                  />
+                </div>
+              ))}
+            {enableQuestion &&
+            feedback &&
+            pageNumber === numPagesWithFeedback ? (
+              <div className="flex w-full items-center justify-center">
+                <Question
+                  feedback={feedback}
+                  viewId={viewId}
+                  submittedFeedback={submittedFeedback}
+                  setSubmittedFeedback={setSubmittedFeedback}
+                />
+              </div>
+            ) : null}
+          </div>
         </div>
+        {isVertical && (
+          <>
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 transform">
+              <button
+                onClick={goToNextPage}
+                disabled={pageNumber === numPagesWithFeedback}
+              >
+                <ChevronDownIcon className="h-10 w-10 text-white" />
+              </button>
+            </div>
+            <div className="absolute left-1/2 top-4 -translate-x-1/2 transform">
+              <button onClick={goToPreviousPage} disabled={pageNumber === 1}>
+                <ChevronUpIcon className="h-10 w-10 text-white" />
+              </button>
+            </div>
+          </>
+        )}
+        {!isVertical && (
+          <>
+            <div className="absolute left-4 top-1/2 -translate-y-1/2 transform">
+              <button onClick={goToPreviousPage} disabled={pageNumber === 1}>
+                <ChevronLeftIcon className="h-10 w-10 text-white" />
+              </button>
+            </div>
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 transform">
+              <button
+                onClick={goToNextPage}
+                disabled={pageNumber === numPagesWithFeedback}
+              >
+                <ChevronRightIcon className="h-10 w-10 text-white" />
+              </button>
+            </div>
+          </>
+        )}
+        {feedbackEnabled && pageNumber !== numPages + 1 ? (
+          <Toolbar viewId={viewId} pageNumber={pageNumber} />
+        ) : null}
+        {screenshotProtectionEnabled ? <ScreenProtector /> : null}
+        {showPoweredByBanner ? <PoweredBy linkId={linkId} /> : null}
       </div>
-      {isVertical && (
-        <>
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 transform">
-            <button onClick={goToNextPage} disabled={pageNumber === numPages}>
-              <ChevronDownIcon className="h-10 w-10 text-white" />
-            </button>
-          </div>
-          <div className="absolute left-1/2 top-4 -translate-x-1/2 transform">
-            <button onClick={goToPreviousPage} disabled={pageNumber === 1}>
-              <ChevronUpIcon className="h-10 w-10 text-white" />
-            </button>
-          </div>
-        </>
-      )}
-      {!isVertical && (
-        <>
-          <div className="absolute left-4 top-1/2 -translate-y-1/2 transform">
-            <button onClick={goToPreviousPage} disabled={pageNumber === 1}>
-              <ChevronLeftIcon className="h-10 w-10 text-white" />
-            </button>
-          </div>
-          <div className="absolute right-4 top-1/2 -translate-y-1/2 transform">
-            <button onClick={goToNextPage} disabled={pageNumber === numPages}>
-              <ChevronRightIcon className="h-10 w-10 text-white" />
-            </button>
-          </div>
-        </>
-      )}
-    </div>
+    </>
   );
 }
