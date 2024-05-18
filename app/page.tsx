@@ -16,7 +16,8 @@ import { Button } from "@/components/ui/button";
 import Footer from "@/components/web/footer";
 import { LogoCloud } from "@/components/web/landing-page/logo-cloud";
 import Navbar from "@/components/web/navbar";
-import Testimonials from "@/components/web/testimonials";
+import Testimonials from "@/components/web/testimonials2";
+import ImageSwitcher from "@/components/web/landing-page/imageswitcher";
 
 const features = [
   {
@@ -87,7 +88,7 @@ export default function Home() {
                 <Button className="rounded-3xl text-base">Send document</Button>
               </Link>
             </div>
-            <div className="mx-auto mt-24 w-full">
+            {/* <div className="mx-auto mt-24 w-full">
               <video
                 width="100%"
                 id="video1"
@@ -104,7 +105,11 @@ export default function Home() {
                   type="video/mp4"
                 />
               </video>
-            </div>
+            </div> */}
+          </div>
+
+          <div className="mx-auto mt-24 w-full">
+            <ImageSwitcher />
           </div>
 
           <div className="mt-20 grid gap-16 md:gap-24 lg:gap-32">
