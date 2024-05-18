@@ -84,7 +84,7 @@ export default function Toolbar({
   return createPortal(
     <div className="pointer-events-none fixed inset-0 z-50">
       <Draggable bounds="parent" handle=".moveable-icon">
-        <div className="pointer-events-auto absolute bottom-4 left-1/2  w-max -translate-x-1/2 transform rounded-full bg-gray-950/40">
+        <div className="pointer-events-auto absolute bottom-4 left-[45%] w-max -translate-x-1/2 transform rounded-full bg-gray-950/40">
           <div className="grid items-center justify-start">
             <div className="px-2 py-1">
               <div className="grid grid-flow-col items-center justify-start">
