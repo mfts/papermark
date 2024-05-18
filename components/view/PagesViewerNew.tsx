@@ -9,6 +9,7 @@ import {
   ChevronRightIcon,
   ChevronUpIcon,
 } from "lucide-react";
+import { start } from "node:repl";
 import { toast } from "sonner";
 
 import { cn } from "@/lib/utils";
@@ -86,8 +87,6 @@ export default function PagesViewer({
   const numPagesWithFeedback =
     enableQuestion && feedback ? numPages + 1 : numPages;
 
-  console.log("numPages", numPages, numPagesWithFeedback);
-
   const pageQuery = router.query.p ? Number(router.query.p) : 1;
 
   const [pageNumber, setPageNumber] = useState<number>(() =>
@@ -99,8 +98,6 @@ export default function PagesViewer({
   );
 
   const [submittedFeedback, setSubmittedFeedback] = useState<boolean>(false);
-
-  console.log("feedback enabled", feedbackEnabled, enableQuestion, feedback);
 
   const startTimeRef = useRef(Date.now());
   const pageNumberRef = useRef<number>(pageNumber);
@@ -115,23 +112,16 @@ export default function PagesViewer({
     pageNumberRef.current = pageNumber;
     hasTrackedDownRef.current = false; // Reset tracking status on page number change
     hasTrackedUpRef.current = false; // Reset tracking status on page number change
-    console.log("pageNumber", pageNumber, pageNumberRef.current);
   }, [pageNumber]);
 
   useEffect(() => {
     const handleVisibilityChange = () => {
-      console.log(">>> calling visibility change");
       if (document.visibilityState === "visible") {
         visibilityRef.current = true;
         startTimeRef.current = Date.now(); // Reset start time when the page becomes visible again
       } else {
         visibilityRef.current = false;
         if (pageNumber <= numPages) {
-          console.log(
-            ">>> tracking page view BECAUSE VISIBILITY FALSE",
-            pageNumber,
-            pageNumberRef.current,
-          );
           const duration = Date.now() - startTimeRef.current;
           trackPageView({
             linkId,
@@ -157,12 +147,11 @@ export default function PagesViewer({
     startTimeRef.current = Date.now();
 
     return () => {
-      if (visibilityRef.current && pageNumber <= numPages) {
-        console.log(
-          ">>> tracking page view BECAUSE VISIBILITY CURRENT TRUE",
-          pageNumber,
-          pageNumberRef.current,
-        );
+      if (
+        visibilityRef.current &&
+        pageNumber <= numPages &&
+        pageNumberRef.current <= numPages
+      ) {
         const duration = Date.now() - startTimeRef.current;
         trackPageView({
           linkId,
@@ -175,17 +164,11 @@ export default function PagesViewer({
         });
       }
     };
-  }, [pageNumber, numPages]);
+  }, [pageNumber, pageNumberRef.current, numPages]);
 
   useEffect(() => {
     const handleBeforeUnload = () => {
-      console.log(">>> calling before unload");
       if (pageNumber <= numPages && visibilityRef.current) {
-        console.log(
-          ">>> tracking page view BECAUSE VISIBILITY CURRENT TRUE in before unload",
-          pageNumber,
-          pageNumberRef.current,
-        );
         const duration = Date.now() - startTimeRef.current;
         trackPageView({
           linkId,
@@ -243,7 +226,7 @@ export default function PagesViewer({
     if (!container) return;
 
     const scrollPosition = container.scrollTop;
-    const pageHeight = container.scrollHeight / numPagesWithFeedback;
+    const pageHeight = container.clientHeight;
 
     const currentPage = Math.floor(scrollPosition / pageHeight) + 1;
     const currentPageFraction = (scrollPosition % pageHeight) / pageHeight;
@@ -255,15 +238,11 @@ export default function PagesViewer({
       return;
     }
 
-    console.log(">>> current page: ", currentPage);
-    // Log at 0.1 increments
-    const increment = 0.1;
-    const marginOfError = 0.005; // Small margin of error
-    if (Math.abs(currentPageFraction % increment) < marginOfError) {
-      console.log(
-        ">>> current page fraction: ",
-        currentPageFraction.toFixed(1),
-      );
+    // Do not track the question page
+    if (currentPage === numPages + 1) {
+      setPageNumber(currentPage);
+      startTimeRef.current = Date.now();
+      return;
     }
 
     // Scroll Down Tracking
@@ -272,7 +251,6 @@ export default function PagesViewer({
       currentPage === pageNumberRef.current &&
       !hasTrackedDownRef.current
     ) {
-      console.log("scrolling down", currentPage, pageNumberRef.current);
       const duration = Date.now() - startTimeRef.current;
       trackPageView({
         linkId,
@@ -293,17 +271,18 @@ export default function PagesViewer({
       currentPage === pageNumberRef.current - 1 &&
       !hasTrackedDownRef.current
     ) {
-      console.log("scrolling down 2", currentPage, pageNumberRef.current);
       const duration = Date.now() - startTimeRef.current;
-      trackPageView({
-        linkId,
-        documentId,
-        viewId,
-        duration,
-        pageNumber: pageNumberRef.current,
-        versionNumber,
-        dataroomId,
-      });
+      if (currentPage !== numPagesWithFeedback - 1) {
+        trackPageView({
+          linkId,
+          documentId,
+          viewId,
+          duration,
+          pageNumber: pageNumberRef.current,
+          versionNumber,
+          dataroomId,
+        });
+      }
       setPageNumber(currentPage);
       pageNumberRef.current = currentPage;
       startTimeRef.current = Date.now();
@@ -317,17 +296,18 @@ export default function PagesViewer({
       currentPage === pageNumberRef.current &&
       !hasTrackedUpRef.current
     ) {
-      console.log("scrolling up", currentPage, pageNumberRef.current);
       const duration = Date.now() - startTimeRef.current;
-      trackPageView({
-        linkId,
-        documentId,
-        viewId,
-        duration,
-        pageNumber: pageNumberRef.current,
-        versionNumber,
-        dataroomId,
-      });
+      if (currentPage !== numPagesWithFeedback - 1) {
+        trackPageView({
+          linkId,
+          documentId,
+          viewId,
+          duration,
+          pageNumber: pageNumberRef.current,
+          versionNumber,
+          dataroomId,
+        });
+      }
       setPageNumber(currentPage);
       pageNumberRef.current = currentPage;
       startTimeRef.current = Date.now();
@@ -338,7 +318,6 @@ export default function PagesViewer({
       currentPage === pageNumberRef.current + 1 &&
       !hasTrackedUpRef.current
     ) {
-      console.log("scrolling up 2", currentPage, pageNumberRef.current);
       const duration = Date.now() - startTimeRef.current;
       trackPageView({
         linkId,
@@ -384,16 +363,21 @@ export default function PagesViewer({
 
   const goToPreviousPage = () => {
     if (pageNumber <= 1) return;
-    if (pageNumber === numPagesWithFeedback) {
+    if (enableQuestion && feedback && pageNumber === numPagesWithFeedback) {
+      if (isVertical) {
+        scrollActionRef.current = true;
+        const newScrollPosition =
+          (pageNumber - 2) * containerRef.current!.clientHeight;
+        containerRef.current?.scrollTo({
+          top: newScrollPosition,
+          behavior: "smooth",
+        });
+      }
       setPageNumber(pageNumber - 1);
+      startTimeRef.current = Date.now();
       return;
     }
 
-    console.log(
-      ">>> tracking page view by PREVIOUS PAGE",
-      pageNumber,
-      pageNumberRef.current,
-    );
     const duration = Date.now() - startTimeRef.current;
     trackPageView({
       linkId,
@@ -404,30 +388,28 @@ export default function PagesViewer({
       versionNumber,
       dataroomId,
     });
+
     setPageNumber(pageNumber - 1);
     pageNumberRef.current = pageNumber - 1;
     startTimeRef.current = Date.now();
+
     if (isVertical) {
       scrollActionRef.current = true;
+      const newScrollPosition =
+        (pageNumberRef.current - 1) * containerRef.current!.clientHeight;
       containerRef.current?.scrollTo({
-        top:
-          containerRef.current.scrollHeight *
-          ((pageNumber - 2) / numPagesWithFeedback),
+        top: newScrollPosition,
         behavior: "smooth",
       });
     }
   };
 
   const goToNextPage = () => {
-    if (pageNumber >= numPagesWithFeedback) return;
+    if (pageNumberRef.current >= numPagesWithFeedback) {
+      return;
+    }
 
-    preloadImage(DEFAULT_PRELOADED_IMAGES_NUM - 1 + pageNumber); // Preload the next image
-
-    console.log(
-      ">>> tracking page view by NEXT PAGE",
-      pageNumber,
-      pageNumberRef.current,
-    );
+    preloadImage(DEFAULT_PRELOADED_IMAGES_NUM - 1 + pageNumber);
 
     const duration = Date.now() - startTimeRef.current;
     trackPageView({
@@ -439,15 +421,17 @@ export default function PagesViewer({
       versionNumber,
       dataroomId,
     });
+
     setPageNumber(pageNumber + 1);
     pageNumberRef.current = pageNumber + 1;
     startTimeRef.current = Date.now();
+
     if (isVertical) {
       scrollActionRef.current = true;
+      const newScrollPosition =
+        (pageNumberRef.current - 1) * containerRef.current!.clientHeight;
       containerRef.current?.scrollTo({
-        top:
-          containerRef.current.scrollHeight *
-          (pageNumber / numPagesWithFeedback),
+        top: newScrollPosition,
         behavior: "smooth",
       });
     }
@@ -508,13 +492,12 @@ export default function PagesViewer({
   useEffect(() => {
     if (!isVertical) return;
 
-    // console.log(">>> calling scroll effect", containerRef.current);
     if (isVertical && containerRef.current) {
       containerRef.current.addEventListener("scroll", handleScroll);
     }
 
     return () => {
-      if (containerRef.current) {
+      if (isVertical && containerRef.current) {
         containerRef.current.removeEventListener("scroll", handleScroll);
       }
     };
@@ -549,7 +532,7 @@ export default function PagesViewer({
             className={`flex ${isVertical ? "flex-col" : "flex-row"} w-full`}
             onContextMenu={handleContextMenu}
           >
-            {pageNumber <= numPages &&
+            {pageNumber <= numPagesWithFeedback &&
               pages.map((page, index) => (
                 <div
                   key={index}
@@ -575,8 +558,11 @@ export default function PagesViewer({
               ))}
             {enableQuestion &&
             feedback &&
-            pageNumber === numPagesWithFeedback ? (
-              <div className="flex w-full items-center justify-center">
+            (isVertical || pageNumber === numPagesWithFeedback) ? (
+              <div
+                className={cn("relative block h-screen w-full bg-gray-500")}
+                style={{ height: "calc(100vh - 64px)" }}
+              >
                 <Question
                   feedback={feedback}
                   viewId={viewId}
@@ -592,7 +578,7 @@ export default function PagesViewer({
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 transform">
               <button
                 onClick={goToNextPage}
-                disabled={pageNumber === numPagesWithFeedback}
+                disabled={pageNumber >= numPagesWithFeedback}
               >
                 <ChevronDownIcon className="h-10 w-10 text-white" />
               </button>
@@ -614,7 +600,7 @@ export default function PagesViewer({
             <div className="absolute right-4 top-1/2 -translate-y-1/2 transform">
               <button
                 onClick={goToNextPage}
-                disabled={pageNumber === numPagesWithFeedback}
+                disabled={pageNumber >= numPagesWithFeedback}
               >
                 <ChevronRightIcon className="h-10 w-10 text-white" />
               </button>
