@@ -158,7 +158,7 @@ export default function Home() {
                           </h2>
                           <p className="mt-6 text-balance text-lg leading-8 text-gray-600">
                             Papermark let you share your data room from a link,
-                            but track activty on each document insight the Data
+                            but track activity on each document insight the Data
                             Room. Including time and views per each page.
                           </p>
                         </div>
@@ -308,7 +308,7 @@ export default function Home() {
                 </div> */}
 
                 <div className="mx-auto w-full max-w-7xl ">
-                  <h2 className="text-balance text-4xl py-12">
+                  <h2 className="text-balance py-12 text-4xl">
                     Secure data room with a modern UI
                     <br />
                     <span className="text-gray-500">See the demo below</span>
