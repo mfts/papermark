@@ -23,12 +23,6 @@ const nextConfig = {
       },
       {
         source: "/ai-pitch-deck-generator",
-        has: [
-          {
-            type: "host",
-            value: "papermark.io",
-          },
-        ],
         destination: "https://deck.papermark.io/",
         permanent: false,
       },
