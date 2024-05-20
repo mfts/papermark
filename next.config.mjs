@@ -21,6 +21,11 @@ const nextConfig = {
         destination: "/view/:path*",
         permanent: true,
       },
+      {
+        source: "/ai-pitch-deck-generator",
+        destination: "https://deck.papermark.io/",
+        permanent: false,
+      },
     ];
   },
 };
