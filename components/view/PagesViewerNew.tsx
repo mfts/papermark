@@ -556,7 +556,7 @@ export default function PagesViewer({
                       key={index}
                       style={{ height: "calc(100vh - 64px)" }}
                       className={cn(
-                        `relative h-screen w-full ${index % 2 === 0 ? "bg-gray-100" : "bg-gray-600"}`,
+                        "relative h-screen w-full",
                         pageNumber - 1 === index
                           ? "block"
                           : !isVertical
@@ -578,7 +578,7 @@ export default function PagesViewer({
             feedback &&
             (isVertical || pageNumber === numPagesWithFeedback) ? (
               <div
-                className={cn("relative block h-screen w-full bg-gray-500")}
+                className={cn("relative block h-screen w-full")}
                 style={{ height: "calc(100vh - 64px)" }}
               >
                 <Question
