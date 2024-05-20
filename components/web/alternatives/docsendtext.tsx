@@ -89,7 +89,7 @@ const DocSendAlternatives = () => {
                         href="https://www.papermark.io/pricing"
                       >
                         {" "}
-                        included in the plan.
+                        included in the plan. In addition, all custom
                       </a>
                     </p>
                   </li>
@@ -961,13 +961,16 @@ const DocSendAlternatives = () => {
                   </li>
                 </ul>
                 <p>
+                  <h3 id="docsend-vs-google-drive">
+                    What is the difference between DocSend and Google Drive?
+                  </h3>
                   <span style={{ color: "rgb(19, 52, 59)" }}>
-                    In summary, DocSend is the preferred choice for more
-                    specific use cases, like for sales teams needing to closely
-                    track how prospects interact with their documents. Google
-                    Drive provides a more comprehensive collaboration solution
-                    suitable for various business needs around file sharing and
-                    co-editing documents.
+                    DocSend is the preferred choice for more specific use cases,
+                    like for sales teams needing to closely track how prospects
+                    interact with their documents. Google Drive provides a more
+                    comprehensive collaboration solution suitable for more
+                    general business needs around file sharing and co-editing
+                    documents.
                   </span>
                 </p>
                 <h2 id="docusign">DocuSign</h2>
@@ -1351,6 +1354,54 @@ const DocSendAlternatives = () => {
                 </ul>
                 <p />
               </>
+
+              <Link
+                href="https://papermark.io/login"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Button variant="orange" className="rounded-3xl text-base">
+                  Start with Docsend alternative for free
+                </Button>
+              </Link>
+              <h2>What is better than Docsend?</h2>
+              <ul>
+                <p>
+                  Papermark is a modern alternative to DocSend, offering much
+                  more flexibility, control, and cost savings and custom
+                  branding.
+                </p>
+                <li>
+                  <strong>Open Source:</strong> Being open source means that
+                  Papermark.io is constantly improved by a community of
+                  developers. You can trust that it is secure and up-to-date
+                  with the latest features.
+                </li>
+                <li>
+                  <strong>Cost-Effective:</strong> Unlike DocSend, which
+                  requires a subscription, Papermark.io is free to use. This
+                  makes it a great option for individuals and businesses looking
+                  to reduce costs.
+                </li>
+                <li>
+                  <strong>Customizable:</strong> With its open-source nature,
+                  you have the flexibility to customize Papermark.io to suit
+                  your specific needs. You can add features, modify existing
+                  ones, and integrate it seamlessly into your workflow.
+                </li>
+                <li>
+                  <strong>User-Friendly:</strong> Papermark is designed to be
+                  intuitive and easy to use, by founders and investors who focus
+                  on UX first products. Its clean interface ensures that you can
+                  manage your documents efficiently without any hassle.
+                </li>
+                <li>
+                  <strong>Privacy and Control:</strong> You have full control
+                  over your documents and data with Papermark.In self hosted
+                  version, there are no third-party servers involved, ensuring
+                  your sensitive information remains private.
+                </li>
+              </ul>
 
               <Link
                 href="https://papermark.io/login"

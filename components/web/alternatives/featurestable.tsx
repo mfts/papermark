@@ -7,15 +7,15 @@ const tools: ToolFeature[] = [
   {
     name: "Papermark",
     features: {
-      selfhosted: "Yes",
       unlimitedDocuments: "Yes",
+      unlimitedDataRooms: "Yes",
       emailCapture: "Yes",
       teamAccess: "Yes",
       customDomain: "Yes",
       trackAnalytics: "Yes",
       emailnotifications: "Yes",
-      feedbackOnPage: "Yes",
       aiEnhancements: "Yes",
+      selfhosted: "Yes",
     },
   },
 
@@ -30,7 +30,7 @@ const tools: ToolFeature[] = [
       customDomain: "No",
       trackAnalytics: "Yes",
       emailnotifications: "Yes",
-      feedbackOnPage: "No",
+      unlimitedDataRooms: "No",
       aiEnhancements: "No",
     },
   },
@@ -38,13 +38,13 @@ const tools: ToolFeature[] = [
     name: "DropBox",
     features: {
       selfhosted: "No",
-      unlimitedDocuments: "Yes",
+      unlimitedDocuments: "No",
       emailCapture: "No",
       teamAccess: "Yes",
       customDomain: "No",
       trackAnalytics: "No",
       emailnotifications: "No",
-      feedbackOnPage: "No",
+      unlimitedDataRooms: "No",
       aiEnhancements: "No",
     },
   },
@@ -58,7 +58,7 @@ const tools: ToolFeature[] = [
       customDomain: "No",
       trackAnalytics: "Yes",
       emailnotifications: "Yes",
-      feedbackOnPage: "No",
+      unlimitedDataRooms: "No",
       aiEnhancements: "No",
     },
   },
@@ -66,13 +66,13 @@ const tools: ToolFeature[] = [
     name: "Google Drive",
     features: {
       selfhosted: "No",
-      unlimitedDocuments: "Yes",
+      unlimitedDocuments: "No",
       emailCapture: "No",
       teamAccess: "Yes",
       customDomain: "No",
       trackAnalytics: "No",
       emailnotifications: "No",
-      feedbackOnPage: "No",
+      unlimitedDataRooms: "No",
       aiEnhancements: "No",
     },
   },
@@ -80,13 +80,13 @@ const tools: ToolFeature[] = [
     name: "Pitch",
     features: {
       selfhosted: "No",
-      unlimitedDocuments: "Yes",
+      unlimitedDocuments: "No",
       emailCapture: "No",
       teamAccess: "Yes",
       customDomain: "No",
       trackAnalytics: "No",
       emailnotifications: "No",
-      feedbackOnPage: "No",
+      unlimitedDataRooms: "No",
       aiEnhancements: "No",
     },
   },
@@ -94,13 +94,13 @@ const tools: ToolFeature[] = [
     name: "Notion",
     features: {
       selfhosted: "No",
-      unlimitedDocuments: "Yes",
+      unlimitedDocuments: "No",
       emailCapture: "No",
       teamAccess: "Yes",
       customDomain: "No",
       trackAnalytics: "No",
       emailnotifications: "No",
-      feedbackOnPage: "No",
+      unlimitedDataRooms: "No",
       aiEnhancements: "No",
     },
   },
@@ -114,7 +114,7 @@ const tools: ToolFeature[] = [
       customDomain: "No",
       trackAnalytics: "Yes",
       emailnotifications: "No",
-      feedbackOnPage: "No",
+      unlimitedDataRooms: "No",
       aiEnhancements: "No",
     },
   },
@@ -122,13 +122,13 @@ const tools: ToolFeature[] = [
     name: "ClearSlide",
     features: {
       selfhosted: "No",
-      unlimitedDocuments: "Yes",
+      unlimitedDocuments: "No",
       emailCapture: "No",
       teamAccess: "Yes",
       customDomain: "No",
       trackAnalytics: "No",
       emailnotifications: "No",
-      feedbackOnPage: "No",
+      unlimitedDataRooms: "No",
       aiEnhancements: "No",
     },
   },
@@ -136,13 +136,13 @@ const tools: ToolFeature[] = [
     name: "Ideals VDR",
     features: {
       selfhosted: "No",
-      unlimitedDocuments: "Yes",
+      unlimitedDocuments: "No",
       emailCapture: "No",
       teamAccess: "Yes",
       customDomain: "No",
       trackAnalytics: "Yes",
       emailnotifications: "No",
-      feedbackOnPage: "No",
+      unlimitedDataRooms: "No",
       aiEnhancements: "No",
     },
   },
@@ -150,15 +150,17 @@ const tools: ToolFeature[] = [
 ];
 
 const featureDisplayNames: { [key: string]: string } = {
-  emailCapture: "Shared link controls",
+  emailCapture: "Advanced link controls",
   teamAccess: "Team Access",
-  customDomain: "Custom Domain & Branding",
+  customDomain: "Custom Branding",
+  customDomain2: "Custom Domain for Data Rooms",
   unlimitedDocuments: "Unlimited Documents",
   trackAnalytics: "Analytics on each page",
-  feedbackOnPage: "Unlimited Data Rooms",
+  unlimitedDataRooms: "Unlimited Data Rooms",
   emailnotifications: "Email Notifications",
   aiEnhancements: "White-Labelling",
   selfhosted: "Self-Hosted and Open Source",
+  // feedbackonPage,
 };
 
 export default function ComparisonTable() {
@@ -201,6 +203,16 @@ export default function ComparisonTable() {
                   <tr key={feature}>
                     <td className="px-3 py-4 text-sm text-gray-900">
                       {featureDisplayNames[feature]}
+                      {feature === "unlimitedDocuments" && (
+                        <div className="text-xs text-gray-400">
+                          shared via custom domains
+                        </div>
+                      )}
+                      {feature === "unlimitedDataRooms" && (
+                        <div className="text-xs text-gray-400">
+                          shared via custom domains
+                        </div>
+                      )}
                     </td>
                     {tools.map((tool) => (
                       <td
