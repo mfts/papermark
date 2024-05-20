@@ -9,7 +9,6 @@ import {
   ChevronRightIcon,
   ChevronUpIcon,
 } from "lucide-react";
-import { start } from "node:repl";
 import { toast } from "sonner";
 
 import { cn } from "@/lib/utils";
@@ -58,7 +57,7 @@ export default function PagesViewer({
   showPoweredByBanner,
   enableQuestion = false,
   feedback,
-  isVertical = false,
+  isVertical = true,
 }: {
   pages: { file: string; pageNumber: string; embeddedLinks: string[] }[];
   linkId: string;
@@ -579,12 +578,23 @@ export default function PagesViewer({
               <button
                 onClick={goToNextPage}
                 disabled={pageNumber >= numPagesWithFeedback}
+                className={cn(
+                  "rounded-full bg-gray-950/50 p-1 hover:bg-gray-950/75",
+                  pageNumber >= numPagesWithFeedback && "hidden",
+                )}
               >
                 <ChevronDownIcon className="h-10 w-10 text-white" />
               </button>
             </div>
             <div className="absolute left-1/2 top-4 -translate-x-1/2 transform">
-              <button onClick={goToPreviousPage} disabled={pageNumber === 1}>
+              <button
+                onClick={goToPreviousPage}
+                disabled={pageNumber === 1}
+                className={cn(
+                  "rounded-full bg-gray-950/50 p-1 hover:bg-gray-950/75",
+                  pageNumber == 1 && "hidden",
+                )}
+              >
                 <ChevronUpIcon className="h-10 w-10 text-white" />
               </button>
             </div>
@@ -593,7 +603,14 @@ export default function PagesViewer({
         {!isVertical && (
           <>
             <div className="absolute left-4 top-1/2 -translate-y-1/2 transform">
-              <button onClick={goToPreviousPage} disabled={pageNumber === 1}>
+              <button
+                onClick={goToPreviousPage}
+                disabled={pageNumber === 1}
+                className={cn(
+                  "rounded-full bg-gray-950/50 p-1 hover:bg-gray-950/75",
+                  pageNumber == 1 && "hidden",
+                )}
+              >
                 <ChevronLeftIcon className="h-10 w-10 text-white" />
               </button>
             </div>
@@ -601,6 +618,10 @@ export default function PagesViewer({
               <button
                 onClick={goToNextPage}
                 disabled={pageNumber >= numPagesWithFeedback}
+                className={cn(
+                  "rounded-full bg-gray-950/50 p-1 hover:bg-gray-950/75",
+                  pageNumber >= numPagesWithFeedback && "hidden",
+                )}
               >
                 <ChevronRightIcon className="h-10 w-10 text-white" />
               </button>
