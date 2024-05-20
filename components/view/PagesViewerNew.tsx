@@ -35,14 +35,13 @@ const trackPageView = async (data: {
   versionNumber: number;
   dataroomId?: string;
 }) => {
-  console.log("record view data: ", data);
-  // await fetch("/api/record_view", {
-  //   method: "POST",
-  //   body: JSON.stringify(data),
-  //   headers: {
-  //     "Content-Type": "application/json",
-  //   },
-  // });
+  await fetch("/api/record_view", {
+    method: "POST",
+    body: JSON.stringify(data),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
 };
 
 export default function PagesViewer({

@@ -19,6 +19,7 @@ import { useAnalytics } from "@/lib/analytics";
 
 import DataroomViewer from "../DataroomViewer";
 import PagesViewer from "../PagesViewer";
+import PagesViewerNew from "../PagesViewerNew";
 import EmailVerificationMessage from "../email-verification-form";
 
 export type DEFAULT_DOCUMENT_VIEW_TYPE = {
@@ -250,7 +251,7 @@ export default function DataroomView({
       </div>
     ) : viewData.pages ? (
       <div className="bg-gray-950">
-        <PagesViewer
+        <PagesViewerNew
           pages={viewData.pages}
           viewId={viewData.viewId}
           linkId={link.id}
