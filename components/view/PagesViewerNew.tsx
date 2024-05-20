@@ -9,6 +9,11 @@ import {
   ChevronRightIcon,
   ChevronUpIcon,
 } from "lucide-react";
+import {
+  ReactZoomPanPinchContentRef,
+  TransformComponent,
+  TransformWrapper,
+} from "react-zoom-pan-pinch";
 import { toast } from "sonner";
 
 import { cn } from "@/lib/utils";
@@ -57,7 +62,7 @@ export default function PagesViewer({
   showPoweredByBanner,
   enableQuestion = false,
   feedback,
-  isVertical = true,
+  isVertical = false,
 }: {
   pages: { file: string; pageNumber: string; embeddedLinks: string[] }[];
   linkId: string;
@@ -97,6 +102,7 @@ export default function PagesViewer({
   );
 
   const [submittedFeedback, setSubmittedFeedback] = useState<boolean>(false);
+  const [scale, setScale] = useState<number>(1);
 
   const startTimeRef = useRef(Date.now());
   const pageNumberRef = useRef<number>(pageNumber);
@@ -105,6 +111,7 @@ export default function PagesViewer({
   const scrollActionRef = useRef<boolean>(false);
   const hasTrackedDownRef = useRef<boolean>(false);
   const hasTrackedUpRef = useRef<boolean>(false);
+  const pinchRefs = useRef<(ReactZoomPanPinchContentRef | null)[]>([]);
 
   // Update the previous page number after the effect hook has run
   useEffect(() => {
@@ -516,6 +523,7 @@ export default function PagesViewer({
         embeddedLinks={pages[pageNumber - 1]?.embeddedLinks}
         isDataroom={dataroomId ? true : false}
         setDocumentData={setDocumentData}
+        documentRefs={pinchRefs}
       />
       <div
         style={{ height: "calc(100vh - 64px)" }}
@@ -528,33 +536,45 @@ export default function PagesViewer({
           ref={containerRef}
         >
           <div
-            className={`flex ${isVertical ? "flex-col" : "flex-row"} w-full`}
+            className={`flex ${isVertical ? "flex-col items-center" : "flex-row justify-center"} w-full`}
             onContextMenu={handleContextMenu}
           >
             {pageNumber <= numPagesWithFeedback &&
               pages.map((page, index) => (
-                <div
+                <TransformWrapper
                   key={index}
-                  style={{ height: "calc(100vh - 64px)" }}
-                  className={cn(
-                    `relative h-screen w-full ${index % 2 === 0 ? "bg-gray-100" : "bg-gray-600"}`,
-                    pageNumber - 1 === index
-                      ? "block"
-                      : !isVertical
-                        ? "hidden"
-                        : "block",
-                  )}
+                  initialScale={scale}
+                  panning={{ disabled: scale === 1, velocityDisabled: true }}
+                  onZoom={(ref) => {
+                    setScale(ref.state.scale);
+                  }}
+                  ref={(ref) => {
+                    pinchRefs.current[index] = ref;
+                  }}
                 >
-                  <span className="absolute right-10 top-10 bg-black text-white">
-                    PAGE NUMBER {index + 1}
-                  </span>
-                  <img
-                    className={cn("h-full w-full object-contain")}
-                    src={page.file}
-                    alt={`Page ${index + 1}`}
-                  />
-                </div>
+                  <TransformComponent>
+                    <div
+                      key={index}
+                      style={{ height: "calc(100vh - 64px)" }}
+                      className={cn(
+                        `relative h-screen w-full ${index % 2 === 0 ? "bg-gray-100" : "bg-gray-600"}`,
+                        pageNumber - 1 === index
+                          ? "block"
+                          : !isVertical
+                            ? "hidden"
+                            : "block",
+                      )}
+                    >
+                      <img
+                        className={cn("h-full w-full object-contain")}
+                        src={page.file}
+                        alt={`Page ${index + 1}`}
+                      />
+                    </div>
+                  </TransformComponent>
+                </TransformWrapper>
               ))}
+
             {enableQuestion &&
             feedback &&
             (isVertical || pageNumber === numPagesWithFeedback) ? (
@@ -572,6 +592,7 @@ export default function PagesViewer({
             ) : null}
           </div>
         </div>
+
         {isVertical && (
           <>
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 transform">
