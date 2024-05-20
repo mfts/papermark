@@ -36,6 +36,10 @@ const navigation = {
       name: "DocSend Alternatives",
       href: "/docsend-alternatives",
     },
+    {
+      name: "AI Pitch Deck Generator",
+      href: "/ai-pitch-deck-generator",
+    },
   ],
   alternatives: [
     { name: "DocSend", href: "/alternatives/docsend" },

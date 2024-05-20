@@ -35,7 +35,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date().toISOString().split("T")[0],
     },
     {
+      url: "https://www.papermark.io/pricing",
+      lastModified: new Date().toISOString().split("T")[0],
+    },
+    {
       url: "https://www.papermark.io/privacy",
+      lastModified: new Date().toISOString().split("T")[0],
+    },
+    {
+      url: "https://www.papermark.io/terms",
       lastModified: new Date().toISOString().split("T")[0],
     },
     {
@@ -56,6 +64,22 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
     {
       url: "https://www.papermark.io/investors",
+      lastModified: new Date().toISOString().split("T")[0],
+    },
+    {
+      url: "https://www.papermark.io/data-room",
+      lastModified: new Date().toISOString().split("T")[0],
+    },
+    {
+      url: "https://www.papermark.io/share-notion-page",
+      lastModified: new Date().toISOString().split("T")[0],
+    },
+    {
+      url: "https://www.papermark.io/ai",
+      lastModified: new Date().toISOString().split("T")[0],
+    },
+    {
+      url: "https://www.papermark.io/ai-pitch-deck-generator",
       lastModified: new Date().toISOString().split("T")[0],
     },
     {

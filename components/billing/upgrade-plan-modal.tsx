@@ -43,7 +43,6 @@ export function UpgradePlanModal({
     if (plan === "Pro") {
       return [
         "2 users",
-        "Custom slug",
         "Custom branding",
         "1-year analytics retention",
         "Advanced access controls",
@@ -56,7 +55,7 @@ export function UpgradePlanModal({
         "3 users",
         "1 dataroom",
         "Multi-file sharing",
-        "Custom domain",
+        "Custom domain for documents",
         "Unlimited documents",
         "Unlimited subfolder levels",
         "Large file uploads",
@@ -79,7 +78,6 @@ export function UpgradePlanModal({
 
     return [
       "2 users",
-      "Custom slug",
       "Custom branding",
       "1-year analytics retention",
       "Advanced access controls",
