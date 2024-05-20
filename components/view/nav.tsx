@@ -1,8 +1,17 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import { MutableRefObject } from "react";
+
 import { Brand, DataroomBrand } from "@prisma/client";
-import { ArrowUpRight, Download, Slash } from "lucide-react";
+import {
+  ArrowUpRight,
+  Download,
+  Slash,
+  ZoomInIcon,
+  ZoomOutIcon,
+} from "lucide-react";
+import { ReactZoomPanPinchContentRef } from "react-zoom-pan-pinch";
 import { toast } from "sonner";
 
 import {
@@ -41,6 +50,7 @@ export default function Nav({
   documentName,
   isDataroom,
   setDocumentData,
+  documentRefs,
 }: {
   pageNumber?: number;
   numPages?: number;
@@ -54,6 +64,7 @@ export default function Nav({
   documentName?: string;
   isDataroom?: boolean;
   setDocumentData?: (data: any) => void;
+  documentRefs?: MutableRefObject<(ReactZoomPanPinchContentRef | null)[]>;
 }) {
   const downloadFile = async () => {
     if (!allowDownload || type === "notion") return;
@@ -201,10 +212,42 @@ export default function Nav({
                 <Download className="h-5 w-5" />
               </Button>
             ) : null}
+            {documentRefs ? (
+              <div className="flex gap-1">
+                <Button
+                  onClick={() =>
+                    documentRefs.current[pageNumber! - 1]?.zoomIn()
+                  }
+                  className=" bg-gray-900 text-white hover:bg-gray-900/80"
+                  size="icon"
+                  title="Zoom in"
+                >
+                  <ZoomInIcon className="h-5 w-5" />
+                </Button>
+                <Button
+                  onClick={() =>
+                    documentRefs.current[pageNumber! - 1]?.zoomOut()
+                  }
+                  className=" bg-gray-900 text-white hover:bg-gray-900/80"
+                  size="icon"
+                  title="Zoom out"
+                >
+                  <ZoomOutIcon className="h-5 w-5" />
+                </Button>
+              </div>
+            ) : null}
             {pageNumber && numPages ? (
               <div className="flex h-10 items-center rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white">
-                <span>{pageNumber}</span>
-                <span className="text-gray-400"> / {numPages}</span>
+                <span style={{ fontVariantNumeric: "tabular-nums" }}>
+                  {pageNumber}
+                </span>
+                <span
+                  className="text-gray-400"
+                  style={{ fontVariantNumeric: "tabular-nums" }}
+                >
+                  {" "}
+                  / {numPages}
+                </span>
               </div>
             ) : null}
           </div>

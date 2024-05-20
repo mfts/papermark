@@ -158,6 +158,7 @@ model DocumentVersion {
   storageType   DocumentStorageType @default(VERCEL_BLOB)
   numPages      Int? // This should be a reference to the number of pages in the document
   isPrimary     Boolean             @default(false) // Indicates if this is the primary version
+  isVertical    Boolean             @default(false) // Indicates if the document is vertical (portrait) or not (landscape)
   fileId        String? // This is the file ID of the OpenAI File API
   pages         DocumentPage[]
   hasPages      Boolean             @default(false) // Indicates if the document has pages

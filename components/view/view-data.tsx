@@ -7,6 +7,7 @@ import PagesViewer from "@/components/view/PagesViewer";
 
 import { LinkWithDocument } from "@/lib/types";
 
+import PagesViewerNew from "./PagesViewerNew";
 import { DEFAULT_DOCUMENT_VIEW_TYPE } from "./document-view";
 
 export default function ViewData({
@@ -38,7 +39,7 @@ export default function ViewData({
       brand={brand}
     />
   ) : viewData.pages ? (
-    <PagesViewer
+    <PagesViewerNew
       pages={viewData.pages}
       viewId={viewData.viewId}
       linkId={link.id}

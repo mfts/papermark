@@ -41,7 +41,7 @@ export default function Question({
   if (submittedFeedback) {
     return (
       <motion.div
-        className="z-10 mx-5 flex flex-col items-center space-y-10 text-center sm:mx-auto"
+        className="mx-5 flex h-full flex-col items-center justify-center space-y-10 text-center sm:mx-auto"
         variants={{
           hidden: { opacity: 0, scale: 0.95 },
           show: {
@@ -71,7 +71,7 @@ export default function Question({
 
   return (
     <motion.div
-      className="z-10 flex w-full flex-col items-center space-y-10 text-center"
+      className="flex h-full w-full flex-col items-center justify-center space-y-10 text-center"
       variants={{
         hidden: { opacity: 0, scale: 0.95 },
         show: {
