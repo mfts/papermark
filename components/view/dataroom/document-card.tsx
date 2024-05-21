@@ -38,6 +38,7 @@ type DRDocument = {
     type: string;
     versionNumber: number;
     hasPages: boolean;
+    isVertical: boolean;
   }[];
 };
 
@@ -51,6 +52,7 @@ type DocumentsCardProps = {
     documentType: "pdf" | "notion";
     documentVersionId: string;
     documentVersionNumber: number;
+    isVertical: boolean;
   }) => void;
 };
 export default function DocumentCard({
@@ -94,6 +96,7 @@ export default function DocumentCard({
                         | "notion",
                       documentVersionId: document.versions[0].id,
                       documentVersionNumber: document.versions[0].versionNumber,
+                      isVertical: document.versions[0].isVertical,
                     });
                   }}
                   className="w-full truncate"

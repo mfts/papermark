@@ -53,6 +53,7 @@ export default function ViewData({
       showPoweredByBanner={showPoweredByBanner}
       enableQuestion={link.enableQuestion}
       feedback={link.feedback}
+      isVertical={document.versions[0].isVertical}
     />
   ) : (
     <PDFViewer

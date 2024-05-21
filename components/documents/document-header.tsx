@@ -27,8 +27,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 import { DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
-import { getExtension } from "@/lib/utils";
+import { cn, getExtension } from "@/lib/utils";
 
+import PortraitLandscape from "../shared/icons/portrait-landscape";
 import { AddDocumentModal } from "./add-document-modal";
 
 export default function DocumentHeader({
@@ -168,6 +169,36 @@ export default function DocumentHeader({
     });
   };
 
+  const changeDocumentOrientation = async () => {
+    const response = await fetch(
+      "/api/teams/" +
+        teamId +
+        "/documents/" +
+        prismaDocument.id +
+        "/change-orientation",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          versionId: primaryVersion.id,
+          isVertical: primaryVersion.isVertical ? false : true,
+        }),
+      },
+    );
+
+    if (response.ok) {
+      const { message } = await response.json();
+      toast.success(message);
+
+      mutate(`/api/teams/${teamId}/documents/${prismaDocument.id}`);
+    } else {
+      const { message } = await response.json();
+      toast.error(message);
+    }
+  };
+
   useEffect(() => {
     function handleClickOutside(event: { target: any }) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -278,6 +309,19 @@ export default function DocumentHeader({
       </div>
 
       <div className="flex items-center gap-x-4 md:gap-x-2 lg:gap-x-4">
+        <button
+          className="hidden md:flex"
+          onClick={changeDocumentOrientation}
+          title={`Change document orientation to ${primaryVersion.isVertical ? "landscape" : "portrait"}`}
+        >
+          <PortraitLandscape
+            className={cn(
+              "h-6 w-6",
+              !primaryVersion.isVertical && "-rotate-90 transform",
+            )}
+          />
+        </button>
+
         {primaryVersion.type !== "notion" && (
           <AddDocumentModal newVersion>
             <button title="Upload a new version" className="hidden md:flex">
@@ -339,6 +383,16 @@ export default function DocumentHeader({
                     <FileUp className="mr-2 h-4 w-4" /> Add new version
                   </button>
                 </AddDocumentModal>
+              </DropdownMenuItem>
+
+              <DropdownMenuItem onClick={() => changeDocumentOrientation()}>
+                <PortraitLandscape
+                  className={cn(
+                    "mr-2 h-4 w-4",
+                    !primaryVersion.isVertical && "-rotate-90 transform",
+                  )}
+                />
+                {" Change orientation"}
               </DropdownMenuItem>
 
               {prismaDocument.type !== "notion" && (
