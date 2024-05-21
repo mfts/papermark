@@ -36,6 +36,7 @@ export default async function handle(
     viewerEmail: string | null;
     linkId: string;
     document: {
+      teamId: string;
       id: string;
       name: string;
       owner: {
@@ -56,6 +57,7 @@ export default async function handle(
         linkId: true,
         document: {
           select: {
+            teamId: true,
             id: true,
             name: true,
             owner: {
@@ -83,6 +85,21 @@ export default async function handle(
     return;
   }
 
+  // Update the view to mark it as viewed
+  const users = await prisma.userTeam.findMany({
+    where: {
+      role: "MANAGER",
+      teamId: view.document!.teamId,
+    },
+    select: {
+      user: {
+        select: {
+          email: true,
+        },
+      },
+    },
+  });
+
   // POST /api/jobs/send-notification
   try {
     // send email to document owner that document
@@ -91,6 +108,9 @@ export default async function handle(
       documentId: view.document!.id,
       documentName: view.document!.name,
       viewerEmail: view.viewerEmail,
+      teamMembers: users
+        .map((user) => user.user.email!)
+        .filter((email) => email !== view.document!.owner.email),
     });
 
     res.status(200).json({ message: "Successfully sent notification", viewId });

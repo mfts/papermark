@@ -95,6 +95,7 @@ model Brand {
 
 enum Role {
   ADMIN
+  MANAGER
   MEMBER
 }
 
