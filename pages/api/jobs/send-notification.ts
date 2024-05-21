@@ -36,7 +36,7 @@ export default async function handle(
     viewerEmail: string | null;
     linkId: string;
     document: {
-      teamId: string;
+      teamId: string | null;
       id: string;
       name: string;
       owner: {
@@ -89,7 +89,7 @@ export default async function handle(
   const users = await prisma.userTeam.findMany({
     where: {
       role: { in: ["ADMIN", "MANAGER"] },
-      teamId: view.document!.teamId,
+      teamId: view.document!.teamId!,
     },
     select: {
       user: {
