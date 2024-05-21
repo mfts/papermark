@@ -49,6 +49,7 @@ export interface LinkWithDocument extends Link {
       type: string;
       hasPages: boolean;
       file: string;
+      isVertical: boolean;
     }[];
     team: {
       plan: string;
@@ -80,6 +81,7 @@ export interface LinkWithDataroom extends Link {
           type: string;
           hasPages: boolean;
           file: string;
+          isVertical: boolean;
         }[];
       };
     }[];

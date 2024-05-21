@@ -75,6 +75,7 @@ export default function DataroomView({
     documentType: "pdf" | "notion";
     documentVersionId: string;
     documentVersionNumber: number;
+    isVertical: boolean;
   } | null>(null);
 
   const [viewType, setViewType] = useState<"DOCUMENT_VIEW" | "DATAROOM_VIEW">(
@@ -264,6 +265,7 @@ export default function DataroomView({
           brand={brand}
           dataroomId={dataroom.id}
           setDocumentData={setDocumentData}
+          isVertical={documentData.isVertical}
         />
       </div>
     ) : null;

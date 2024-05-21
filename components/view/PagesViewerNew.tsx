@@ -544,6 +544,7 @@ export default function PagesViewer({
                   key={index}
                   initialScale={scale}
                   panning={{ disabled: scale === 1, velocityDisabled: true }}
+                  wheel={{ disabled: scale === 1 }}
                   onZoom={(ref) => {
                     setScale(ref.state.scale);
                   }}
