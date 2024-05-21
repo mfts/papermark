@@ -30,6 +30,7 @@ import { DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
 import { cn, getExtension } from "@/lib/utils";
 
 import PortraitLandscape from "../shared/icons/portrait-landscape";
+import LoadingSpinner from "../ui/loading-spinner";
 import { AddDocumentModal } from "./add-document-modal";
 
 export default function DocumentHeader({
@@ -52,6 +53,7 @@ export default function DocumentHeader({
   const [isEditingName, setIsEditingName] = useState<boolean>(false);
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
   const [isFirstClick, setIsFirstClick] = useState<boolean>(false);
+  const [orientationLoading, setOrientationLoading] = useState<boolean>(false);
 
   const nameRef = useRef<HTMLHeadingElement>(null);
   const enterPressedRef = useRef<boolean>(false);
@@ -170,32 +172,40 @@ export default function DocumentHeader({
   };
 
   const changeDocumentOrientation = async () => {
-    const response = await fetch(
-      "/api/teams/" +
-        teamId +
-        "/documents/" +
-        prismaDocument.id +
-        "/change-orientation",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+    setOrientationLoading(true);
+    try {
+      const response = await fetch(
+        "/api/teams/" +
+          teamId +
+          "/documents/" +
+          prismaDocument.id +
+          "/change-orientation",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            versionId: primaryVersion.id,
+            isVertical: primaryVersion.isVertical ? false : true,
+          }),
         },
-        body: JSON.stringify({
-          versionId: primaryVersion.id,
-          isVertical: primaryVersion.isVertical ? false : true,
-        }),
-      },
-    );
+      );
 
-    if (response.ok) {
-      const { message } = await response.json();
-      toast.success(message);
+      if (response.ok) {
+        const { message } = await response.json();
+        toast.success(message);
 
-      mutate(`/api/teams/${teamId}/documents/${prismaDocument.id}`);
-    } else {
-      const { message } = await response.json();
-      toast.error(message);
+        mutate(`/api/teams/${teamId}/documents/${prismaDocument.id}`);
+      } else {
+        const { message } = await response.json();
+        toast.error(message);
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      toast.error("An error occurred. Please try again.");
+    } finally {
+      setOrientationLoading(false);
     }
   };
 
@@ -309,18 +319,24 @@ export default function DocumentHeader({
       </div>
 
       <div className="flex items-center gap-x-4 md:gap-x-2 lg:gap-x-4">
-        <button
-          className="hidden md:flex"
-          onClick={changeDocumentOrientation}
-          title={`Change document orientation to ${primaryVersion.isVertical ? "landscape" : "portrait"}`}
-        >
-          <PortraitLandscape
-            className={cn(
-              "h-6 w-6",
-              !primaryVersion.isVertical && "-rotate-90 transform",
-            )}
-          />
-        </button>
+        {!orientationLoading ? (
+          <button
+            className="hidden md:flex"
+            onClick={changeDocumentOrientation}
+            title={`Change document orientation to ${primaryVersion.isVertical ? "landscape" : "portrait"}`}
+          >
+            <PortraitLandscape
+              className={cn(
+                "h-6 w-6",
+                !primaryVersion.isVertical && "-rotate-90 transform",
+              )}
+            />
+          </button>
+        ) : (
+          <div className="hidden md:flex">
+            <LoadingSpinner className="h-6 w-6" />
+          </div>
+        )}
 
         {primaryVersion.type !== "notion" && (
           <AddDocumentModal newVersion>
