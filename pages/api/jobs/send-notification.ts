@@ -88,7 +88,7 @@ export default async function handle(
   // Update the view to mark it as viewed
   const users = await prisma.userTeam.findMany({
     where: {
-      role: "MANAGER",
+      role: { in: ["ADMIN", "MANAGER"] },
       teamId: view.document!.teamId,
     },
     select: {
