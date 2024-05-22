@@ -25,6 +25,10 @@ export type DEFAULT_DOCUMENT_VIEW_TYPE = {
   pages?:
     | { file: string; pageNumber: string; embeddedLinks: string[] }[]
     | null;
+  sheetData?: {
+    rowData: { [key: string]: any }[];
+    columnData: string[];
+  } | null;
 };
 
 export default function DocumentView({
@@ -98,7 +102,8 @@ export default function DocumentView({
         setVerificationRequested(true);
         setIsLoading(false);
       } else {
-        const { viewId, file, pages } = fetchData as DEFAULT_DOCUMENT_VIEW_TYPE;
+        const { viewId, file, pages, sheetData } =
+          fetchData as DEFAULT_DOCUMENT_VIEW_TYPE;
         plausible("documentViewed"); // track the event
         analytics.identify(
           userEmail ?? verifiedEmail ?? data.email ?? undefined,
@@ -109,7 +114,7 @@ export default function DocumentView({
           viewerId: viewId,
           viewerEmail: data.email || verifiedEmail || userEmail,
         });
-        setViewData({ viewId, file, pages });
+        setViewData({ viewId, file, pages, sheetData });
         setSubmitted(true);
         setVerificationRequested(false);
         setIsLoading(false);
