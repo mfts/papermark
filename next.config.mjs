@@ -21,10 +21,13 @@ const nextConfig = {
         destination: "/view/:path*",
         permanent: true,
       },
+    ];
+  },
+  async rewrites() {
+    return [
       {
-        source: "/ai-pitch-deck-generator",
-        destination: "https://deck.papermark.io/",
-        permanent: false,
+        source: "/ai-pitch-deck-generator/:path*",
+        destination: "https://deck.papermark.io/:path*",
       },
     ];
   },

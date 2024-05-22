@@ -65,6 +65,7 @@ export default async function middleware(req: NextRequest, ev: NextFetchEvent) {
     path !== "/investors" &&
     path !== "/ai" &&
     path !== "/share-notion-page" &&
+    !path.startsWith("/ai-pitch-deck-generator") &&
     !path.startsWith("/alternatives") &&
     !path.startsWith("/solutions") &&
     !path.startsWith("/investors") &&
