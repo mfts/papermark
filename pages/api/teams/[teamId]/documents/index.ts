@@ -152,8 +152,8 @@ export default async function handle(
         },
       });
 
-      // skip triggering convert-pdf-to-image job for "notion" documents
-      if (type !== "notion") {
+      // skip triggering convert-pdf-to-image job for "notion" / "excel" documents
+      if (type === "pdf") {
         // trigger document uploaded event to trigger convert-pdf-to-image job
         await client.sendEvent({
           id: document.versions[0].id, // unique eventId for the run

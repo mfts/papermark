@@ -65,8 +65,14 @@ const putFileInS3 = async ({
     docId = newId("doc");
   }
 
-  if (file.type !== "application/pdf") {
-    throw new Error("Only PDF files are supported");
+  if (
+    ![
+      "application/pdf",
+      "application/vnd.ms-excel",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    ].includes(file.type)
+  ) {
+    throw new Error("Only PDF and Excel files are supported");
   }
 
   const presignedResponse = await fetch(
@@ -110,8 +116,11 @@ const putFileInS3 = async ({
     );
   }
 
-  const body = await file.arrayBuffer();
-  const numPages = await getPagesCount(body);
+  let numPages: number = 1;
+  if (file.type === "application/pdf") {
+    const body = await file.arrayBuffer();
+    numPages = await getPagesCount(body);
+  }
 
   return {
     type: DocumentStorageType.S3_PATH,

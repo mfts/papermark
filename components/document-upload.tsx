@@ -5,6 +5,7 @@ import {
   Upload as ArrowUpTrayIcon,
   File as DocumentIcon,
   FileText as DocumentTextIcon,
+  FileSpreadsheetIcon,
   Image as PhotoIcon,
   Presentation as PresentationChartBarIcon,
 } from "lucide-react";
@@ -29,6 +30,9 @@ function fileIcon(fileType: string) {
     case "application/vnd.ms-powerpoint":
     case "application/msword":
       return <PresentationChartBarIcon className="mx-auto h-6 w-6" />;
+    case "application/vnd.ms-excel":
+    case "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
+      return <FileSpreadsheetIcon className="mx-auto h-6 w-6" />;
     default:
       return <DocumentIcon className="mx-auto h-6 w-6" />;
   }
@@ -46,11 +50,17 @@ export default function DocumentUpload({
   const { getRootProps, getInputProps } = useDropzone({
     accept: {
       "application/pdf": [], // ".pdf"
+      "application/vnd.ms-excel": [], // ".xls"
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [], // ".xlsx"
     },
     multiple: false,
     maxSize: maxSize * 1024 * 1024, // 30 MB
     onDropAccepted: (acceptedFiles) => {
       const file = acceptedFiles[0];
+      if (file.type !== "application/pdf") {
+        setCurrentFile(file);
+        return;
+      }
       file
         .arrayBuffer()
         .then((buffer) => {

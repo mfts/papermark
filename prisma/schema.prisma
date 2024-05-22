@@ -124,7 +124,7 @@ model Document {
   name             String
   description      String?
   file             String // This should be a reference to where the file is stored (S3, Google Cloud Storage, etc.)
-  type             String? // This should be a reference to the file type (pdf, docx, etc.)
+  type             String? // This should be a reference to the file type (pdf, xlsx, etc.)
   storageType      DocumentStorageType @default(VERCEL_BLOB)
   numPages         Int? // This should be a reference to the number of pages in the document
   owner            User                @relation(fields: [ownerId], references: [id], onDelete: Cascade)
