@@ -3,12 +3,12 @@ import { ExtendedRecordMap } from "notion-types";
 
 import { NotionPage } from "@/components/NotionPage";
 import PDFViewer from "@/components/view/PDFViewer";
-import PagesViewer from "@/components/view/PagesViewer";
+import PagesViewerNew from "@/components/view/PagesViewerNew";
+import { DEFAULT_DOCUMENT_VIEW_TYPE } from "@/components/view/document-view";
+import Nav from "@/components/view/nav";
+import { ExcelViewer } from "@/components/view/viewer/excel-viewer";
 
 import { LinkWithDocument } from "@/lib/types";
-
-import PagesViewerNew from "./PagesViewerNew";
-import { DEFAULT_DOCUMENT_VIEW_TYPE } from "./document-view";
 
 export default function ViewData({
   viewData,
@@ -38,6 +38,19 @@ export default function ViewData({
       versionNumber={document.versions[0].versionNumber}
       brand={brand}
     />
+  ) : viewData.sheetData ? (
+    <>
+      <Nav
+        pageNumber={1}
+        brand={brand}
+        viewId={viewData.viewId}
+        linkId={link.id}
+      />
+      <ExcelViewer
+        columns={viewData.sheetData.columnData!}
+        data={viewData.sheetData.rowData!}
+      />
+    </>
   ) : viewData.pages ? (
     <PagesViewerNew
       pages={viewData.pages}
