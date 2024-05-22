@@ -252,6 +252,7 @@ export default async function handle(
         select: {
           file: true,
           storageType: true,
+          type: true,
         },
       });
 
@@ -260,10 +261,12 @@ export default async function handle(
         return;
       }
 
-      documentVersion.file = await getFile({
-        data: documentVersion.file,
-        type: documentVersion.storageType,
-      });
+      if (documentVersion.type === "pdf") {
+        documentVersion.file = await getFile({
+          data: documentVersion.file,
+          type: documentVersion.storageType,
+        });
+      }
       console.timeEnd("get-file");
     }
 
@@ -276,8 +279,11 @@ export default async function handle(
     const returnObject = {
       message: "View recorded",
       viewId: newView.id,
-      file: documentVersion ? documentVersion.file : null,
-      pages: documentPages ? documentPages : null,
+      file:
+        documentVersion && documentVersion.type === "pdf"
+          ? documentVersion.file
+          : undefined,
+      pages: documentPages ? documentPages : undefined,
     };
 
     return res.status(200).json(returnObject);

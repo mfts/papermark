@@ -21,8 +21,10 @@ import ViewData from "./view-data";
 
 export type DEFAULT_DOCUMENT_VIEW_TYPE = {
   viewId: string;
-  file: string | null;
-  pages: { file: string; pageNumber: string; embeddedLinks: string[] }[] | null;
+  file?: string | null;
+  pages?:
+    | { file: string; pageNumber: string; embeddedLinks: string[] }[]
+    | null;
 };
 
 export default function DocumentView({
@@ -60,8 +62,6 @@ export default function DocumentView({
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [viewData, setViewData] = useState<DEFAULT_DOCUMENT_VIEW_TYPE>({
     viewId: "",
-    file: null,
-    pages: null,
   });
   const [data, setData] = useState<DEFAULT_ACCESS_FORM_TYPE>(
     DEFAULT_ACCESS_FORM_DATA,
