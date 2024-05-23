@@ -1,9 +1,9 @@
 import Link from "next/link";
 
-import { getPostsRemote as getPosts } from "@/lib/content/blog";
+import { getHelpArticles } from "@/lib/content/help";
 
 export default async function BlogIndex() {
-  const posts = await getPosts();
+  const posts = await getHelpArticles();
   return (
     <div className="bg-white py-24 sm:py-32">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
