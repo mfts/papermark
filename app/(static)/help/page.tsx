@@ -33,7 +33,7 @@ export default async function BlogIndex() {
               <div className="group relative">
                 <h3 className="mt-4 text-lg font-semibold leading-6 text-gray-900 group-hover:text-gray-600">
                   <Link
-                    href={`/blog/${post?.data.slug}`}
+                    href={`/help/article${post?.data.slug}`}
                     className="text-balance rounded-3xl border border-gray-500 bg-transparent px-4 py-2 text-xs font-light text-gray-500"
                     target="_blank"
                     rel="noopener noreferrer"
