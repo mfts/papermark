@@ -6,7 +6,7 @@ import BlurImage from "@/components/blur-image";
 import { ContentBody } from "@/components/mdx/post-body";
 import TableOfContents from "@/components/mdx/table-of-contents";
 
-import { getPost, getPostsRemote as getPosts } from "@/lib/content/blog";
+import { getPost, getPostsRemote as getPosts } from "@/lib/content/de";
 import { constructMetadata, formatDate } from "@/lib/utils";
 
 export async function generateStaticParams() {

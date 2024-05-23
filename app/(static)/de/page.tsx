@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { getPostsRemote as getPosts } from "@/lib/content/blog";
+import { getPostsRemote as getPosts } from "@/lib/content/de";
 
 export default async function BlogIndex() {
   const posts = await getPosts();
