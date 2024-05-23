@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 
 import { cn } from "@/lib/utils";
 
+import { Table } from "./feature-table";
 import { MDXImage } from "./mdx-image";
 
 export const mdxComponents: MDXComponents = {
@@ -85,5 +86,11 @@ export const mdxComponents: MDXComponents = {
       {children}
     </h3>
   ),
+  Table: ({ columns, rows, ...props }) => {
+    if (!columns || !rows || columns.length === 0 || rows.length === 0)
+      return null;
+
+    return <Table columns={columns} rows={rows} {...props} />;
+  },
   // any other components you want to use in your markdown
 };
