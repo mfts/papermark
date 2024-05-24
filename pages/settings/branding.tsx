@@ -158,6 +158,12 @@ export default function Branding() {
                   <label
                     htmlFor="image"
                     className="group relative mt-1 flex h-[4rem] w-[12rem] cursor-pointer flex-col items-center justify-center rounded-md border border-gray-300 bg-white shadow-sm transition-all hover:bg-gray-50"
+                    style={{
+                      backgroundImage:
+                        "linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(135deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(135deg, transparent 75%, #ccc 75%)",
+                      backgroundSize: "20px 20px",
+                      backgroundPosition: "0 0, 10px 0, 10px -10px, 0px 10px",
+                    }}
                   >
                     {false && (
                       <div className="absolute z-[5] flex h-full w-full items-center justify-center rounded-md bg-white">
