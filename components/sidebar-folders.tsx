@@ -6,6 +6,8 @@ import { FileTree } from "@/components/ui/nextra-filetree";
 
 import { FolderWithDocuments, useFolders } from "@/lib/swr/use-documents";
 
+import { TSelectedFolder } from "./documents/move-folder-modal";
+
 // Helper function to build nested folder structure
 const buildNestedFolderStructure = (folders: FolderWithDocuments[]) => {
   const folderMap = new Map();
@@ -89,12 +91,12 @@ FolderComponent.displayName = "FolderComponent";
 const FolderComponentSelection = memo(
   ({
     folder,
-    selectedFolderId,
-    setFolderId,
+    selectedFolder,
+    setSelectedFolder,
   }: {
     folder: FolderWithDocuments;
-    selectedFolderId: string;
-    setFolderId: React.Dispatch<React.SetStateAction<string>>;
+    selectedFolder: TSelectedFolder;
+    setSelectedFolder: React.Dispatch<React.SetStateAction<TSelectedFolder>>;
   }) => {
     // Recursively render child folders if they exist
     const childFolders = useMemo(
@@ -103,11 +105,16 @@ const FolderComponentSelection = memo(
           <FolderComponentSelection
             key={childFolder.id}
             folder={childFolder}
-            selectedFolderId={selectedFolderId}
-            setFolderId={setFolderId}
+            selectedFolder={selectedFolder}
+            setSelectedFolder={setSelectedFolder}
           />
         )),
-      [folder.childFolders, selectedFolderId, setFolderId],
+      [folder.childFolders, selectedFolder, setSelectedFolder],
+    );
+
+    const isActive = folder.id === selectedFolder?.id;
+    const isChildActive = folder.childFolders.some(
+      (childFolder) => childFolder.id === selectedFolder?.id,
     );
 
     return (
@@ -115,13 +122,17 @@ const FolderComponentSelection = memo(
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
-          setFolderId(folder.id);
+          setSelectedFolder({ id: folder.id, name: folder.name });
         }}
       >
         <FileTree.Folder
           name={folder.name}
           key={folder.id}
-          active={folder.id === selectedFolderId}
+          active={isActive}
+          childActive={isChildActive}
+          onToggle={() =>
+            setSelectedFolder({ id: folder.id, name: folder.name })
+          }
         >
           {childFolders}
         </FileTree.Folder>
@@ -156,14 +167,14 @@ export default function SidebarFolderTree() {
   return <SidebarFolders folders={folders} />;
 }
 
-const SidebarFoldersSelectipon = ({
+const SidebarFoldersSelection = ({
   folders,
-  selectedFolderId,
-  setFolderId,
+  selectedFolder,
+  setSelectedFolder,
 }: {
   folders: FolderWithDocuments[];
-  selectedFolderId: string;
-  setFolderId: React.Dispatch<React.SetStateAction<string>>;
+  selectedFolder: TSelectedFolder;
+  setSelectedFolder: React.Dispatch<React.SetStateAction<TSelectedFolder>>;
 }) => {
   const nestedFolders = useMemo(() => {
     if (folders) {
@@ -178,8 +189,8 @@ const SidebarFoldersSelectipon = ({
         <FolderComponentSelection
           key={folder.id}
           folder={folder}
-          selectedFolderId={selectedFolderId}
-          setFolderId={setFolderId}
+          selectedFolder={selectedFolder}
+          setSelectedFolder={setSelectedFolder}
         />
       ))}
     </FileTree>
@@ -187,21 +198,21 @@ const SidebarFoldersSelectipon = ({
 };
 
 export function SidebarFolderTreeSelection({
-  selectedFolderId,
-  setFolderId,
+  selectedFolder,
+  setSelectedFolder,
 }: {
-  selectedFolderId: string;
-  setFolderId: React.Dispatch<React.SetStateAction<string>>;
+  selectedFolder: TSelectedFolder;
+  setSelectedFolder: React.Dispatch<React.SetStateAction<TSelectedFolder>>;
 }) {
   const { folders, error } = useFolders();
 
   if (!folders || error) return null;
 
   return (
-    <SidebarFoldersSelectipon
+    <SidebarFoldersSelection
       folders={folders}
-      selectedFolderId={selectedFolderId}
-      setFolderId={setFolderId}
+      selectedFolder={selectedFolder}
+      setSelectedFolder={setSelectedFolder}
     />
   );
 }
