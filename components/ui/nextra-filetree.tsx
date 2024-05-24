@@ -1,9 +1,18 @@
+"use client";
+
 /**
  * This component is based on the nextra's filetree component from @shuding
  * https://github.com/shuding/nextra/blob/main/packages/nextra/src/components/file-tree.tsx
  *
  */
-import { createContext, memo, useCallback, useContext, useState } from "react";
+import {
+  createContext,
+  memo,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import type { ReactElement, ReactNode } from "react";
 
 import {
@@ -29,7 +38,6 @@ interface FolderProps {
   active?: boolean;
   childActive?: boolean;
   onToggle?: (open: boolean) => void;
-  onChevronClick?: (e: React.MouseEvent) => void; // New prop
   children: ReactNode;
 }
 
@@ -69,17 +77,30 @@ const Folder = memo<FolderProps>(
     childActive,
     defaultOpen = false,
     onToggle,
-    onChevronClick,
   }) => {
     const indent = useIndent();
-    const [isOpen, setIsOpen] = useState(defaultOpen || active || childActive);
+    const [isOpen, setIsOpen] = useState(defaultOpen || childActive);
 
-    const toggle = useCallback(
+    useEffect(() => {
+      if (childActive) {
+        setIsOpen(true);
+      }
+    }, [childActive]);
+
+    const handleFolderClick = useCallback(
       (e: React.MouseEvent) => {
         e.stopPropagation();
         onToggle?.(!isOpen);
       },
       [isOpen, onToggle],
+    );
+
+    const handleChevronClick = useCallback(
+      (e: React.MouseEvent) => {
+        e.stopPropagation();
+        setIsOpen(!isOpen);
+      },
+      [isOpen],
     );
 
     const isFolderOpen = open === undefined ? isOpen : open;
@@ -91,20 +112,16 @@ const Folder = memo<FolderProps>(
           className={cn(
             "inline-flex w-full cursor-pointer items-center",
             "rounded-md text-foreground duration-100 hover:bg-gray-100 hover:dark:bg-muted",
-            "px-3 py-1.5 leading-6",
+            "px-3 py-1.5 leading-6 ",
             "group",
             active && "bg-gray-100 font-semibold dark:bg-muted",
           )}
-          onClick={toggle}
+          onClick={handleFolderClick}
         >
           <Ident />
           <div
-            className="mr-2 rounded p-1 hover:bg-gray-300 group-hover:bg-gray-300 dark:group-hover:bg-muted"
-            onClick={(e) => {
-              e.stopPropagation();
-              onChevronClick?.(e); // Call the new prop if provided
-              setIsOpen(!isOpen);
-            }}
+            className="-m-1 mr-2 flex h-full items-center justify-center rounded p-2 hover:bg-gray-200 group-hover:bg-gray-200 dark:group-hover:bg-muted"
+            onClick={handleChevronClick}
           >
             <ChevronRightIcon
               className={cn(

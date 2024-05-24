@@ -54,13 +54,30 @@ const FolderComponent = memo(({ folder }: { folder: FolderWithDocuments }) => {
     [folder.childFolders],
   );
 
+  const isActive =
+    folder.path === "/" + (router.query.name as string[])?.join("/");
+  const isChildActive = folder.childFolders.some(
+    (childFolder) =>
+      childFolder.path === "/" + (router.query.name as string[])?.join("/"),
+  );
+
+  const handleFolderClick = () => {
+    router.push(
+      `/documents/tree${folder.path}`,
+      `/documents/tree${folder.path}`,
+      {
+        scroll: false,
+      },
+    );
+  };
+
   return (
     <FileTree.Folder
       name={folder.name}
       key={folder.id}
-      active={folder.path === "/" + (router.query.name as string[])?.join("/")}
-      childActive={router.query.name?.includes(folder.name)}
-      onToggle={() => router.push(`/documents/tree${folder.path}`)}
+      active={isActive}
+      childActive={isChildActive}
+      onToggle={handleFolderClick}
     >
       {childFolders}
       {documents}

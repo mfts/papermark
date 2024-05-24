@@ -69,6 +69,11 @@ const FolderComponent = memo(
       [folder.childFolders, folderId, setFolderId],
     );
 
+    const isActive = folder.id === folderId;
+    const isChildActive = folder.childFolders.some(
+      (childFolder) => childFolder.id === folderId,
+    );
+
     return (
       <div
         onClick={(e) => {
@@ -80,11 +85,9 @@ const FolderComponent = memo(
         <FileTree.Folder
           name={folder.name}
           key={folder.id}
-          // childActive={folder.parentId === folderId}
-          active={folder.id === folderId}
-          // onToggle={() =>
-          //   router.push(`/datarooms/${dataroomId}/documents${folder.path}`)
-          // }
+          active={isActive}
+          childActive={isChildActive}
+          onToggle={() => setFolderId(folder.id)}
         >
           {childFolders}
           {documents}

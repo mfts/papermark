@@ -47,24 +47,30 @@ const FolderComponent = memo(
       [folder.childFolders, dataroomId],
     );
 
-    const handleFolderClick = () => {
-      router.push(`/datarooms/${dataroomId}/documents${folder.path}`);
-    };
+    const isActive =
+      folder.path === "/" + (router.query.name as string[])?.join("/");
+    const isChildActive = folder.childFolders.some(
+      (childFolder) =>
+        childFolder.path === "/" + (router.query.name as string[])?.join("/"),
+    );
 
-    const handleChevronClick = (e: React.MouseEvent) => {
-      e.stopPropagation(); // Prevent navigation
+    const handleFolderClick = () => {
+      router.push(
+        `/datarooms/${dataroomId}/documents${folder.path}`,
+        `/datarooms/${dataroomId}/documents${folder.path}`,
+        {
+          scroll: false,
+        },
+      );
     };
 
     return (
       <FileTree.Folder
         name={folder.name}
         key={folder.id}
-        active={
-          folder.path === "/" + (router.query.name as string[])?.join("/")
-        }
-        childActive={router.query.name?.includes(folder.name)}
+        active={isActive}
+        childActive={isChildActive}
         onToggle={handleFolderClick}
-        onChevronClick={handleChevronClick} // Pass the new handler
       >
         {childFolders}
         {documents}
