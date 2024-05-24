@@ -5,6 +5,7 @@ import { memo, useMemo } from "react";
 import { FileTree } from "@/components/ui/nextra-filetree";
 
 import { FolderWithDocuments, useFolders } from "@/lib/swr/use-documents";
+import { cn } from "@/lib/utils";
 
 import { TSelectedFolder } from "./documents/move-folder-modal";
 
@@ -80,6 +81,7 @@ const FolderComponent = memo(({ folder }: { folder: FolderWithDocuments }) => {
       active={isActive}
       childActive={isChildActive}
       onToggle={handleFolderClick}
+      className={cn("hover:bg-gray-200", isActive && "bg-gray-200")}
     >
       {childFolders}
       {documents}

@@ -38,6 +38,7 @@ interface FolderProps {
   active?: boolean;
   childActive?: boolean;
   onToggle?: (open: boolean) => void;
+  className?: string;
   children: ReactNode;
 }
 
@@ -77,6 +78,7 @@ const Folder = memo<FolderProps>(
     childActive,
     defaultOpen = false,
     onToggle,
+    className,
   }) => {
     const indent = useIndent();
     const [isOpen, setIsOpen] = useState(defaultOpen || childActive);
@@ -113,14 +115,14 @@ const Folder = memo<FolderProps>(
             "inline-flex w-full cursor-pointer items-center",
             "rounded-md text-foreground duration-100 hover:bg-gray-100 hover:dark:bg-muted",
             "px-3 py-1.5 leading-6 ",
-            "group",
             active && "bg-gray-100 font-semibold dark:bg-muted",
+            className,
           )}
           onClick={handleFolderClick}
         >
           <Ident />
           <div
-            className="-m-1 mr-2 flex h-full items-center justify-center rounded p-2 hover:bg-gray-200 group-hover:bg-gray-200 dark:group-hover:bg-muted"
+            className="-m-1 -ml-2 flex h-full items-center justify-center rounded p-2"
             onClick={handleChevronClick}
           >
             <ChevronRightIcon
