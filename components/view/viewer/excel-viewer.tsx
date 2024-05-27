@@ -1,16 +1,54 @@
 import { useEffect, useRef, useState } from "react";
 
 import "@/public/vendor/handsontable/handsontable.full.min.css";
+import { Brand, DataroomBrand } from "@prisma/client";
+
+import { TDocumentData } from "../dataroom/dataroom-view";
+import Nav from "../nav";
 
 // Define the type for the JSON data
 type SheetData = { [key: string]: any };
 
+const trackPageView = async (data: {
+  linkId: string;
+  documentId: string;
+  viewId: string;
+  duration: number;
+  pageNumber: number;
+  versionNumber: number;
+  dataroomId?: string;
+}) => {
+  await fetch("/api/record_view", {
+    method: "POST",
+    body: JSON.stringify(data),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+};
+
 export default function ExcelViewer({
+  linkId,
+  viewId,
+  documentId,
+  documentName,
+  versionNumber,
   columns,
   data,
+  brand,
+  dataroomId,
+  setDocumentData,
 }: {
+  linkId: string;
+  viewId: string;
+  documentId: string;
+  documentName: string;
+  versionNumber: number;
   columns: string[];
   data: SheetData[];
+  brand?: Partial<Brand> | Partial<DataroomBrand> | null;
+  dataroomId?: string;
+  setDocumentData?: (data: TDocumentData) => void;
 }) {
   const [availableWidth, setAvailableWidth] = useState<number>(200);
   const [availableHeight, setAvailableHeight] = useState<number>(200);
@@ -39,6 +77,8 @@ export default function ExcelViewer({
   const containerRef = useRef<HTMLDivElement>(null);
   // @ts-ignore - Handsontable import has not types
   const hotInstanceRef = useRef<Handsontable | null>(null);
+  const startTimeRef = useRef(Date.now());
+  const visibilityRef = useRef<boolean>(true);
 
   const calculateSize = () => {
     if (containerRef.current) {
@@ -57,6 +97,66 @@ export default function ExcelViewer({
     calculateSize();
 
     return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        visibilityRef.current = true;
+        startTimeRef.current = Date.now(); // Reset start time when page becomes visible
+      } else {
+        visibilityRef.current = false;
+        const duration = Date.now() - startTimeRef.current;
+        trackPageView({
+          linkId,
+          documentId,
+          viewId,
+          duration,
+          pageNumber: 1,
+          versionNumber,
+          dataroomId,
+        });
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      if (visibilityRef.current) {
+        const duration = Date.now() - startTimeRef.current;
+        trackPageView({
+          linkId,
+          documentId,
+          viewId,
+          duration,
+          pageNumber: 1,
+          versionNumber,
+          dataroomId,
+        }); // Also capture duration if component unmounts while visible
+      }
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      const duration = Date.now() - startTimeRef.current;
+      trackPageView({
+        linkId,
+        documentId,
+        viewId,
+        duration,
+        pageNumber: 1,
+        versionNumber,
+        dataroomId,
+      });
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
   }, []);
 
   useEffect(() => {
@@ -92,12 +192,21 @@ export default function ExcelViewer({
   }, [handsontableLoaded, data, columns, availableHeight, availableWidth]);
 
   return (
-    <div
-      style={{ height: "calc(100vh - 64px)" }}
-      className="flex h-screen items-center justify-center"
-      ref={containerRef}
-    >
-      <div ref={hotRef}></div>
-    </div>
+    <>
+      <Nav
+        brand={brand}
+        documentName={documentName}
+        isDataroom={dataroomId ? true : false}
+        setDocumentData={setDocumentData}
+        type="sheet"
+      />
+      <div
+        style={{ height: "calc(100vh - 64px)" }}
+        className="flex h-screen items-center justify-center"
+        ref={containerRef}
+      >
+        <div ref={hotRef}></div>
+      </div>
+    </>
   );
 }

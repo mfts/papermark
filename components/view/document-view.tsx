@@ -82,16 +82,16 @@ export default function DocumentView({
       },
       body: JSON.stringify({
         ...data,
-        email: data.email || verifiedEmail || userEmail,
+        email: data.email ?? verifiedEmail ?? userEmail ?? null,
         linkId: link.id,
         documentId: document.id,
         documentName: document.name,
         ownerId: document.ownerId,
-        userId: userId || null,
+        userId: userId ?? null,
         documentVersionId: document.versions[0].id,
         hasPages: document.versions[0].hasPages,
-        token: token || null,
-        verifiedEmail: verifiedEmail || null,
+        token: token ?? null,
+        verifiedEmail: verifiedEmail ?? null,
       }),
     });
 
@@ -111,8 +111,9 @@ export default function DocumentView({
         analytics.capture("Link Viewed", {
           linkId: link.id,
           documentId: document.id,
+          linkType: "DOCUMENT_LINK",
           viewerId: viewId,
-          viewerEmail: data.email || verifiedEmail || userEmail,
+          viewerEmail: data.email ?? verifiedEmail ?? userEmail,
         });
         setViewData({ viewId, file, pages, sheetData });
         setSubmitted(true);

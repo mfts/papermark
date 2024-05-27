@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 import { ScreenProtector } from "./ScreenProtection";
+import { TDocumentData } from "./dataroom/dataroom-view";
 import Nav from "./nav";
 import { PoweredBy } from "./powered-by";
 import Question from "./question";
@@ -75,7 +76,7 @@ export default function PagesViewer({
   brand?: Partial<Brand> | Partial<DataroomBrand> | null;
   documentName?: string;
   dataroomId?: string;
-  setDocumentData?: (data: any) => void;
+  setDocumentData?: (data: TDocumentData) => void;
   showPoweredByBanner?: boolean;
   enableQuestion?: boolean | null;
   feedback?: {

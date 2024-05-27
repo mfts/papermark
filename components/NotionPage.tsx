@@ -6,6 +6,7 @@ import { NotionRenderer } from "react-notion-x";
 // core styles shared by all of react-notion-x (required)
 import "react-notion-x/src/styles.css";
 
+import { TDocumentData } from "./view/dataroom/dataroom-view";
 import Nav from "./view/nav";
 
 export const NotionPage = ({
@@ -29,7 +30,7 @@ export const NotionPage = ({
   documentName?: string;
   brand?: Partial<Brand> | Partial<DataroomBrand> | null;
   dataroomId?: string;
-  setDocumentData?: (data: any) => void;
+  setDocumentData?: (data: TDocumentData) => void;
 }) => {
   const [pageNumber, setPageNumber] = useState<number>(1); // start on first page
   const [maxScrollPercentage, setMaxScrollPercentage] = useState<number>(0);

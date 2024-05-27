@@ -36,6 +36,7 @@ import {
   BreadcrumbSeparator,
 } from "../ui/breadcrumb";
 import { Button } from "../ui/button";
+import { TDocumentData } from "./dataroom/dataroom-view";
 
 export default function Nav({
   pageNumber,
@@ -60,10 +61,10 @@ export default function Nav({
   embeddedLinks?: string[];
   viewId?: string;
   linkId?: string;
-  type?: "pdf" | "notion";
+  type?: "pdf" | "notion" | "sheet";
   documentName?: string;
   isDataroom?: boolean;
-  setDocumentData?: (data: any) => void;
+  setDocumentData?: (data: TDocumentData) => void;
   documentRefs?: MutableRefObject<(ReactZoomPanPinchContentRef | null)[]>;
 }) {
   const downloadFile = async () => {

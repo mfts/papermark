@@ -270,7 +270,7 @@ export default async function handle(
         });
       }
 
-      if (documentVersion.type === "xlsx") {
+      if (documentVersion.type === "sheet") {
         const fileUrl = await getFile({
           data: documentVersion.file,
           type: documentVersion.storageType,
@@ -298,7 +298,7 @@ export default async function handle(
           : undefined,
       pages: documentPages ? documentPages : undefined,
       sheetData:
-        documentVersion && documentVersion.type === "xlsx"
+        documentVersion && documentVersion.type === "sheet"
           ? { columnData, rowData }
           : undefined,
     };

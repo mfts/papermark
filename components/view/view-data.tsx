@@ -7,7 +7,6 @@ import { NotionPage } from "@/components/NotionPage";
 import PDFViewer from "@/components/view/PDFViewer";
 import PagesViewerNew from "@/components/view/PagesViewerNew";
 import { DEFAULT_DOCUMENT_VIEW_TYPE } from "@/components/view/document-view";
-import Nav from "@/components/view/nav";
 
 import { LinkWithDocument } from "@/lib/types";
 
@@ -45,18 +44,16 @@ export default function ViewData({
       brand={brand}
     />
   ) : viewData.sheetData ? (
-    <>
-      <Nav
-        pageNumber={1}
-        brand={brand}
-        viewId={viewData.viewId}
-        linkId={link.id}
-      />
-      <ExcelViewer
-        columns={viewData.sheetData.columnData!}
-        data={viewData.sheetData.rowData!}
-      />
-    </>
+    <ExcelViewer
+      linkId={link.id}
+      viewId={viewData.viewId}
+      documentId={document.id}
+      documentName={document.name}
+      versionNumber={document.versions[0].versionNumber}
+      columns={viewData.sheetData.columnData!}
+      data={viewData.sheetData.rowData!}
+      brand={brand}
+    />
   ) : viewData.pages ? (
     <PagesViewerNew
       pages={viewData.pages}
