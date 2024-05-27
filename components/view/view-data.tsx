@@ -1,3 +1,5 @@
+import dynamic from "next/dynamic";
+
 import { Brand } from "@prisma/client";
 import { ExtendedRecordMap } from "notion-types";
 
@@ -6,9 +8,13 @@ import PDFViewer from "@/components/view/PDFViewer";
 import PagesViewerNew from "@/components/view/PagesViewerNew";
 import { DEFAULT_DOCUMENT_VIEW_TYPE } from "@/components/view/document-view";
 import Nav from "@/components/view/nav";
-import { ExcelViewer } from "@/components/view/viewer/excel-viewer";
 
 import { LinkWithDocument } from "@/lib/types";
+
+const ExcelViewer = dynamic(
+  () => import("@/components/view/viewer/excel-viewer"),
+  { ssr: false },
+);
 
 export default function ViewData({
   viewData,

@@ -1,24 +1,43 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import "@/public/vendor/handsontable/handsontable.full.min.css";
 
 // Define the type for the JSON data
 type SheetData = { [key: string]: any };
 
-export const ExcelViewer = ({
+export default function ExcelViewer({
   columns,
   data,
 }: {
   columns: string[];
   data: SheetData[];
-}) => {
+}) {
   const [availableWidth, setAvailableWidth] = useState<number>(200);
   const [availableHeight, setAvailableHeight] = useState<number>(200);
-  const [handsontableLoaded, setHandsontableLoaded] = useState<boolean>(true);
+  const [handsontableLoaded, setHandsontableLoaded] = useState<boolean>(false);
+
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.src =
+      "https://cdnjs.cloudflare.com/ajax/libs/handsontable/6.2.2/handsontable.full.min.js";
+    script.async = true;
+    script.onload = () => {
+      setHandsontableLoaded(true);
+    };
+    script.onerror = () => {
+      console.error("Failed to load Handsontable script.");
+    };
+
+    document.body.appendChild(script);
+
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
 
   const hotRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  // @ts-ignore
+  // @ts-ignore - Handsontable import has not types
   const hotInstanceRef = useRef<Handsontable | null>(null);
 
   const calculateSize = () => {
@@ -46,10 +65,7 @@ export const ExcelViewer = ({
         hotInstanceRef.current.destroy();
       }
 
-      console.log("data", data);
-      console.log("columns", columns);
-
-      // @ts-ignore
+      // @ts-ignore - Handsontable import has not types
       hotInstanceRef.current = new Handsontable(hotRef.current!, {
         data: data,
         readOnly: true,
@@ -76,14 +92,12 @@ export const ExcelViewer = ({
   }, [handsontableLoaded, data, columns, availableHeight, availableWidth]);
 
   return (
-    <>
-      <div
-        style={{ height: "calc(100vh - 64px)" }}
-        className="flex h-screen items-center justify-center"
-        ref={containerRef}
-      >
-        <div ref={hotRef}></div>
-      </div>
-    </>
+    <div
+      style={{ height: "calc(100vh - 64px)" }}
+      className="flex h-screen items-center justify-center"
+      ref={containerRef}
+    >
+      <div ref={hotRef}></div>
+    </div>
   );
-};
+}
