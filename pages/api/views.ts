@@ -1,5 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
+import { waitUntil } from "@vercel/functions";
+
 import sendNotification from "@/lib/api/notification-helper";
 import { sendVerificationEmail } from "@/lib/emails/send-email-verification";
 import { getFile } from "@/lib/files/get-file";
@@ -285,7 +287,7 @@ export default async function handle(
 
     if (link.enableNotification) {
       console.time("sendemail");
-      await sendNotification({ viewId: newView.id });
+      waitUntil(sendNotification({ viewId: newView.id }));
       console.timeEnd("sendemail");
     }
 

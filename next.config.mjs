@@ -8,6 +8,7 @@ const nextConfig = {
   },
   transpilePackages: ["@trigger.dev/react"],
   skipTrailingSlashRedirect: true,
+  supportsResponseStreaming: true,
   experimental: {
     outputFileTracingIncludes: {
       "/api/mupdf/*": ["./node_modules/mupdf/lib/*.wasm"],
@@ -21,10 +22,13 @@ const nextConfig = {
         destination: "/view/:path*",
         permanent: true,
       },
+    ];
+  },
+  async rewrites() {
+    return [
       {
-        source: "/ai-pitch-deck-generator",
-        destination: "https://deck.papermark.io/",
-        permanent: false,
+        source: "/ai-pitch-deck-generator/:path*",
+        destination: "https://deck.papermark.io/:path*",
       },
     ];
   },

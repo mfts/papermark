@@ -17,6 +17,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
+export type TSelectedFolder = { id: string; name: string } | null;
+
 export function MoveToFolderModal({
   open,
   setOpen,
@@ -29,10 +31,11 @@ export function MoveToFolderModal({
   documentName?: string;
 }) {
   const router = useRouter();
-  const [folderId, setFolderId] = useState<string>("");
+  const [selectedFolder, setSelectedFolder] = useState<TSelectedFolder>(null);
   const [loading, setLoading] = useState<boolean>(false);
 
   const teamInfo = useTeam();
+  const teamId = teamInfo?.currentTeam?.id;
 
   const currentPath = router.query.name
     ? (router.query.name as string[]).join("/")
@@ -42,19 +45,19 @@ export function MoveToFolderModal({
     event.preventDefault();
     event.stopPropagation();
 
-    if (folderId === "") return;
+    if (!selectedFolder) return;
 
     setLoading(true);
     try {
       const response = await fetch(
-        `/api/teams/${teamInfo?.currentTeam?.id}/documents/${documentId}`,
+        `/api/teams/${teamId}/documents/${documentId}`,
         {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            folderId: folderId,
+            folderId: selectedFolder.id,
             currentPathName: "/" + currentPath,
           }),
         },
@@ -74,13 +77,11 @@ export function MoveToFolderModal({
 
       toast.success("Document moved successfully!");
 
-      mutate(`/api/teams/${teamInfo?.currentTeam?.id}/folders`);
-      mutate(`/api/teams/${teamInfo?.currentTeam?.id}/folders${oldPath}`);
-      mutate(`/api/teams/${teamInfo?.currentTeam?.id}/folders${newPath}`).then(
-        () => {
-          router.push(`/documents/tree${newPath}`);
-        },
-      );
+      mutate(`/api/teams/${teamId}/folders`);
+      mutate(`/api/teams/${teamId}/folders${oldPath}`);
+      mutate(`/api/teams/${teamId}/folders${newPath}`).then(() => {
+        router.push(`/documents/tree${newPath}`);
+      });
     } catch (error) {
       console.error("Error moving document", error);
       toast.error("Failed to move document. Try again.");
@@ -102,14 +103,26 @@ export function MoveToFolderModal({
         <form>
           <div className="mb-2">
             <SidebarFolderTreeSelection
-              selectedFolderId={folderId}
-              setFolderId={setFolderId}
+              selectedFolder={selectedFolder}
+              setSelectedFolder={setSelectedFolder}
             />
           </div>
 
           <DialogFooter>
-            <Button onClick={handleSubmit} className="h-9 w-full">
-              Move to folder
+            <Button
+              onClick={handleSubmit}
+              className="flex h-9 w-full gap-1"
+              loading={loading}
+              disabled={!selectedFolder}
+            >
+              {!selectedFolder ? (
+                "Select a folder"
+              ) : (
+                <>
+                  Move to{" "}
+                  <span className="font-medium">{selectedFolder.name}</span>
+                </>
+              )}
             </Button>
           </DialogFooter>
         </form>
