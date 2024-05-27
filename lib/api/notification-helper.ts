@@ -7,7 +7,6 @@ import { log } from "@/lib/utils";
 export default async function sendNotification({ viewId }: { viewId: string }) {
   // const client = getTriggerClient();
 
-          type: "error",
   // if (!client) {
   /** If client does not exist, use fetch to send notifications */
   return await fetch(`${process.env.NEXTAUTH_URL}/api/jobs/send-notification`, {
