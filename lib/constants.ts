@@ -75,3 +75,11 @@ export const EXCLUDED_PATHS = [
 export const LIMITS = {
   views: 20,
 };
+
+export const SUPPORTED_DOCUMENT_TYPES = [
+  "application/pdf",
+  "application/vnd.ms-excel",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "text/csv",
+  "application/vnd.oasis.opendocument.spreadsheet",
+];

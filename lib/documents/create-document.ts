@@ -4,6 +4,7 @@ export type DocumentData = {
   name: string;
   key: string;
   storageType: DocumentStorageType;
+  contentType: string; // papermark types: "pdf", "sheet"
 };
 
 export const createDocument = async ({
@@ -29,6 +30,7 @@ export const createDocument = async ({
       storageType: documentData.storageType,
       numPages: numPages,
       folderPathName: folderPathName,
+      type: documentData.contentType,
     }),
   });
 
@@ -62,7 +64,7 @@ export const createNewDocumentVersion = async ({
         url: documentData.key,
         storageType: documentData.storageType,
         numPages: numPages,
-        type: "pdf",
+        type: documentData.contentType,
       }),
     },
   );

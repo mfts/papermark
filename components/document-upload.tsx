@@ -52,6 +52,8 @@ export default function DocumentUpload({
       "application/pdf": [], // ".pdf"
       "application/vnd.ms-excel": [], // ".xls"
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [], // ".xlsx"
+      "text/csv": [], // ".csv"
+      "application/vnd.oasis.opendocument.spreadsheet": [], // ".ods"
     },
     multiple: false,
     maxSize: maxSize * 1024 * 1024, // 30 MB
