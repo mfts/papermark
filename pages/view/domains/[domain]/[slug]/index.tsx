@@ -95,6 +95,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
             metaTitle: link.metaTitle,
             metaDescription: link.metaDescription,
             metaImage: link.metaImage,
+            metaUrl: `https://${domain}/${slug}` || null,
           },
           showPoweredByBanner: teamPlan === "free",
         },
@@ -139,6 +140,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
             metaTitle: link.metaTitle,
             metaDescription: link.metaDescription,
             metaImage: link.metaImage,
+            metaUrl: `https://${domain}/${slug}` || null,
           },
           showPoweredByBanner: false,
         },
@@ -174,7 +176,7 @@ export default function ViewPage({
     metaDescription: string | null;
     metaImage: string | null;
     metaUrl: string | null;
-  } | null;
+  };
 }) {
   const router = useRouter();
   const { data: session, status } = useSession();
@@ -199,13 +201,15 @@ export default function ViewPage({
       return (
         <>
           <CustomMetatag
-            enableBranding={meta?.enableCustomMetatag ?? false}
+            enableBranding={meta.enableCustomMetatag ?? false}
             title={
-              meta?.metaTitle ?? link?.document?.name ?? "Papermark Document"
+              meta.metaTitle ??
+              `${link?.document?.name} | Powered by Papermark` ??
+              "Document powered by Papermark"
             }
-            description={meta?.metaDescription ?? null}
-            imageUrl={meta?.metaImage ?? null}
-            url={meta?.metaUrl ?? ""}
+            description={meta.metaDescription ?? null}
+            imageUrl={meta.metaImage ?? null}
+            url={meta.metaUrl ?? ""}
           />
           <div className="flex h-screen items-center justify-center">
             <LoadingSpinner className="h-20 w-20" />
@@ -237,17 +241,19 @@ export default function ViewPage({
       );
     }
 
-    const { enableCustomMetatag, metaTitle, metaDescription, metaImage } = link;
-
     if (emailProtected || linkPassword) {
       return (
         <>
           <CustomMetatag
-            enableBranding={enableCustomMetatag ?? false}
-            title={metaTitle}
-            description={metaDescription}
-            imageUrl={metaImage}
-            url={meta?.metaUrl ?? ""}
+            enableBranding={meta.enableCustomMetatag ?? false}
+            title={
+              meta.metaTitle ??
+              `${link?.document?.name} | Powered by Papermark` ??
+              "Document powered by Papermark"
+            }
+            description={meta.metaDescription ?? null}
+            imageUrl={meta.metaImage ?? null}
+            url={meta.metaUrl ?? ""}
           />
           <DocumentView
             link={link}
@@ -266,11 +272,15 @@ export default function ViewPage({
     return (
       <>
         <CustomMetatag
-          enableBranding={enableCustomMetatag ?? false}
-          title={metaTitle}
-          description={metaDescription}
-          imageUrl={metaImage}
-          url={meta?.metaUrl ?? ""}
+          enableBranding={meta.enableCustomMetatag ?? false}
+          title={
+            meta.metaTitle ??
+            `${link?.document?.name} | Powered by Papermark` ??
+            "Document powered by Papermark"
+          }
+          description={meta.metaDescription ?? null}
+          imageUrl={meta.metaImage ?? null}
+          url={meta.metaUrl ?? ""}
         />
         <DocumentView
           link={link}
@@ -290,11 +300,15 @@ export default function ViewPage({
       return (
         <>
           <CustomMetatag
-            enableBranding={meta?.enableCustomMetatag ?? false}
-            title={meta?.metaTitle ?? link?.dataroom.name ?? "Dataroom"}
-            description={meta?.metaDescription ?? null}
-            imageUrl={meta?.metaImage ?? null}
-            url={meta?.metaUrl ?? ""}
+            enableBranding={meta.enableCustomMetatag ?? false}
+            title={
+              meta.metaTitle ??
+              `${link?.dataroom?.name} | Powered by Papermark` ??
+              "Dataroom powered by Papermark"
+            }
+            description={meta.metaDescription ?? null}
+            imageUrl={meta.metaImage ?? null}
+            url={meta.metaUrl ?? ""}
           />
           <div className="flex h-screen items-center justify-center">
             <LoadingSpinner className="h-20 w-20" />
@@ -327,17 +341,19 @@ export default function ViewPage({
       );
     }
 
-    const { enableCustomMetatag, metaTitle, metaDescription, metaImage } = link;
-
     if (emailProtected || linkPassword) {
       return (
         <>
           <CustomMetatag
-            enableBranding={enableCustomMetatag ?? false}
-            title={metaTitle}
-            description={metaDescription}
-            imageUrl={metaImage}
-            url={meta?.metaUrl ?? ""}
+            enableBranding={meta.enableCustomMetatag ?? false}
+            title={
+              meta.metaTitle ??
+              `${link?.dataroom?.name} | Powered by Papermark` ??
+              "Dataroom powered by Papermark"
+            }
+            description={meta.metaDescription ?? null}
+            imageUrl={meta.metaImage ?? null}
+            url={meta.metaUrl ?? ""}
           />
           <DataroomView
             link={link}
@@ -355,11 +371,15 @@ export default function ViewPage({
     return (
       <>
         <CustomMetatag
-          enableBranding={enableCustomMetatag ?? false}
-          title={metaTitle}
-          description={metaDescription}
-          imageUrl={metaImage}
-          url={meta?.metaUrl ?? ""}
+          enableBranding={meta.enableCustomMetatag ?? false}
+          title={
+            meta.metaTitle ??
+            `${link?.dataroom?.name} | Powered by Papermark` ??
+            "Dataroom powered by Papermark"
+          }
+          description={meta.metaDescription ?? null}
+          imageUrl={meta.metaImage ?? null}
+          url={meta.metaUrl ?? ""}
         />
         <DataroomView
           link={link}

@@ -11,66 +11,49 @@ const CustomMetatag = ({
   title: string | null;
   description: string | null;
   imageUrl: string | null;
-  url: string;
+  url: string | null;
 }) => {
   return (
     <Head>
+      {/* meta URL */}
       {url && (
         <>
           <link rel="canonical" href={url} key="canonical" />
           <meta property="og:url" content={url} key="og-url" />
         </>
       )}
-      {title && (
+
+      {/* meta title */}
+      {enableBranding && title && (
         <>
           <title>{title}</title>
           <meta property="og:title" content={title} key="og-title" />
           <meta name="twitter:title" content={title} key="tw-title" />
         </>
       )}
-      {!enableBranding && (
+
+      {/* meta description */}
+      {enableBranding && description && (
         <>
+          <meta name="description" content={description} key="description" />
           <meta
-            property="og:image"
-            // content={`/api/og?title=${title ?? ""}`}
-            content="https://www.papermark.io/_static/meta-image.png"
-            key="og-image"
+            property="og:description"
+            content={description}
+            key="og-description"
           />
           <meta
-            name="twitter:image"
-            // content={`/api/og?title=${title ?? ""}`}
-            content="https://www.papermark.io/_static/meta-image.png"
-            key="tw-image"
+            name="twitter:description"
+            content={description}
+            key="tw-description"
           />
         </>
       )}
-      {enableBranding && (
+
+      {/* meta image */}
+      {enableBranding && imageUrl && (
         <>
-          {description ? (
-            <>
-              <meta
-                name="description"
-                content={description}
-                key="description"
-              />
-              <meta
-                property="og:description"
-                content={description}
-                key="og-description"
-              />
-              <meta
-                name="twitter:description"
-                content={description}
-                key="tw-description"
-              />
-            </>
-          ) : null}
-          {imageUrl ? (
-            <>
-              <meta property="og:image" content={imageUrl} key="og-image" />
-              <meta name="twitter:image" content={imageUrl} key="tw-image" />
-            </>
-          ) : null}
+          <meta property="og:image" content={imageUrl} key="og-image" />
+          <meta name="twitter:image" content={imageUrl} key="tw-image" />
         </>
       )}
     </Head>
