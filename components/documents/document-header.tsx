@@ -291,7 +291,7 @@ export default function DocumentHeader({
         ) : (
           <div className="h-[25px] w-[25px] lg:h-[32px] lg:w-[32px]">
             <Image
-              src={`/_icons/${getExtension(primaryVersion.file)}${isLight ? "-light" : ""}.svg`}
+              src={`/_icons/${primaryVersion.type}${isLight ? "-light" : ""}.svg`}
               alt="File icon"
               width={50}
               height={50}
