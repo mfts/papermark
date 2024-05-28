@@ -25,10 +25,15 @@ export const sendViewedDocumentEmail = async ({
       throw new Error("Document Owner not found");
     }
 
+    let subjectLine: string = `Your document has been viewed: ${documentName}`;
+    if (viewerEmail) {
+      subjectLine = `${viewerEmail} viewed the document: ${documentName}`;
+    }
+
     const data = await sendEmail({
       to: ownerEmail,
       cc: teamMembers,
-      subject: `Your document has been viewed: ${documentName}`,
+      subject: subjectLine,
       react: emailTemplate,
       test: process.env.NODE_ENV === "development",
       system: true,
