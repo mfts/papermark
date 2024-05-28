@@ -25,6 +25,7 @@ import {
   copyToClipboard,
   uploadImage,
 } from "@/lib/utils";
+import { getSupportedContentType } from "@/lib/utils/get-content-type";
 
 import Skeleton from "../Skeleton";
 import { DEFAULT_LINK_PROPS, DEFAULT_LINK_TYPE } from "../links/link-sheet";
@@ -58,6 +59,16 @@ export default function Upload() {
     try {
       setUploading(true);
 
+      const contentType = getSupportedContentType(currentFile.type);
+
+      if (!contentType) {
+        setUploading(false);
+        toast.error(
+          "Unsupported file format. Please upload a PDF or Excel file.",
+        );
+        return;
+      }
+
       const { type, data, numPages } = await putFile({
         file: currentFile,
         teamId,
@@ -70,7 +81,7 @@ export default function Upload() {
         name: currentFile.name,
         key: data!,
         storageType: type!,
-        contentType: currentFile.type,
+        contentType: contentType,
       };
       // create a document in the database
       const response = await createDocument({ documentData, teamId, numPages });
