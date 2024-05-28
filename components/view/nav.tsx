@@ -64,7 +64,7 @@ export default function Nav({
   type?: "pdf" | "notion" | "sheet";
   documentName?: string;
   isDataroom?: boolean;
-  setDocumentData?: (data: TDocumentData) => void;
+  setDocumentData?: (data: TDocumentData | null) => void;
   documentRefs?: MutableRefObject<(ReactZoomPanPinchContentRef | null)[]>;
 }) {
   const downloadFile = async () => {
