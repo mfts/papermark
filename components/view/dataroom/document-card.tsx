@@ -44,7 +44,7 @@ export default function DocumentCard({
               <NotionIcon className="h-8 w-8" />
             ) : (
               <Image
-                src={`/_icons/pdf${isLight ? "-light" : ""}.svg`}
+                src={`/_icons/${document.versions[0].type}${isLight ? "-light" : ""}.svg`}
                 alt="File icon"
                 width={50}
                 height={50}
