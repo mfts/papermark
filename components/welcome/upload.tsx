@@ -70,6 +70,7 @@ export default function Upload() {
         name: currentFile.name,
         key: data!,
         storageType: type!,
+        contentType: currentFile.type,
       };
       // create a document in the database
       const response = await createDocument({ documentData, teamId, numPages });
@@ -85,7 +86,7 @@ export default function Upload() {
           name: document.name,
           numPages: document.numPages,
           path: router.asPath,
-          type: "pdf",
+          type: document.type,
           teamId: teamInfo?.currentTeam?.id,
         });
         analytics.capture("Link Added", {

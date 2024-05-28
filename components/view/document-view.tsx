@@ -21,8 +21,14 @@ import ViewData from "./view-data";
 
 export type DEFAULT_DOCUMENT_VIEW_TYPE = {
   viewId: string;
-  file: string | null;
-  pages: { file: string; pageNumber: string; embeddedLinks: string[] }[] | null;
+  file?: string | null;
+  pages?:
+    | { file: string; pageNumber: string; embeddedLinks: string[] }[]
+    | null;
+  sheetData?: {
+    rowData: { [key: string]: any }[];
+    columnData: string[];
+  } | null;
 };
 
 export default function DocumentView({
@@ -60,8 +66,6 @@ export default function DocumentView({
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [viewData, setViewData] = useState<DEFAULT_DOCUMENT_VIEW_TYPE>({
     viewId: "",
-    file: null,
-    pages: null,
   });
   const [data, setData] = useState<DEFAULT_ACCESS_FORM_TYPE>(
     DEFAULT_ACCESS_FORM_DATA,
@@ -78,16 +82,16 @@ export default function DocumentView({
       },
       body: JSON.stringify({
         ...data,
-        email: data.email || verifiedEmail || userEmail,
+        email: data.email ?? verifiedEmail ?? userEmail ?? null,
         linkId: link.id,
         documentId: document.id,
         documentName: document.name,
         ownerId: document.ownerId,
-        userId: userId || null,
+        userId: userId ?? null,
         documentVersionId: document.versions[0].id,
         hasPages: document.versions[0].hasPages,
-        token: token || null,
-        verifiedEmail: verifiedEmail || null,
+        token: token ?? null,
+        verifiedEmail: verifiedEmail ?? null,
       }),
     });
 
@@ -98,7 +102,8 @@ export default function DocumentView({
         setVerificationRequested(true);
         setIsLoading(false);
       } else {
-        const { viewId, file, pages } = fetchData as DEFAULT_DOCUMENT_VIEW_TYPE;
+        const { viewId, file, pages, sheetData } =
+          fetchData as DEFAULT_DOCUMENT_VIEW_TYPE;
         plausible("documentViewed"); // track the event
         analytics.identify(
           userEmail ?? verifiedEmail ?? data.email ?? undefined,
@@ -106,10 +111,11 @@ export default function DocumentView({
         analytics.capture("Link Viewed", {
           linkId: link.id,
           documentId: document.id,
+          linkType: "DOCUMENT_LINK",
           viewerId: viewId,
-          viewerEmail: data.email || verifiedEmail || userEmail,
+          viewerEmail: data.email ?? verifiedEmail ?? userEmail,
         });
-        setViewData({ viewId, file, pages });
+        setViewData({ viewId, file, pages, sheetData });
         setSubmitted(true);
         setVerificationRequested(false);
         setIsLoading(false);

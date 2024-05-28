@@ -121,6 +121,7 @@
     "ts-pattern": "^5.1.1",
     "typescript": "^5.3.3",
     "ua-parser-js": "^1.0.37",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.2/xlsx-0.20.2.tgz",
     "zod": "^3.23.8"
   },
   "devDependencies": {

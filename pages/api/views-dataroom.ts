@@ -1,14 +1,13 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import { parsePageId } from "notion-utils";
-import { record } from "zod";
 
-import sendNotification from "@/lib/api/notification-helper";
 import { sendVerificationEmail } from "@/lib/emails/send-email-verification";
 import { getFile } from "@/lib/files/get-file";
 import { newId } from "@/lib/id-helper";
 import notion from "@/lib/notion";
 import prisma from "@/lib/prisma";
+import { parseSheet } from "@/lib/sheet";
 import { checkPassword, decryptEncrpytedPassword, log } from "@/lib/utils";
 
 export default async function handle(
@@ -273,9 +272,9 @@ export default async function handle(
       const returnObject = {
         message: "Dataroom View recorded",
         viewId: newDataroomView.id,
-        file: null,
-        pages: null,
-        notionData: null,
+        file: undefined,
+        pages: undefined,
+        notionData: undefined,
       };
 
       return res.status(200).json(returnObject);
@@ -310,7 +309,10 @@ export default async function handle(
     // otherwise, check if notion document,
     // if notion, return recordMap from document version file
     // otherwise, return file from document version
-    let documentPages, documentVersion, recordMap;
+    let documentPages, documentVersion;
+    let recordMap;
+    let columnData, rowData;
+
     if (hasPages) {
       // get pages from document version
       console.time("get-pages");
@@ -353,6 +355,13 @@ export default async function handle(
         return;
       }
 
+      if (documentVersion.type === "pdf") {
+        documentVersion.file = await getFile({
+          data: documentVersion.file,
+          type: documentVersion.storageType,
+        });
+      }
+
       if (documentVersion.type === "notion") {
         let notionPageId = parsePageId(documentVersion.file, { uuid: false });
         if (!notionPageId) {
@@ -363,10 +372,16 @@ export default async function handle(
         recordMap = await notion.getPage(pageId);
       }
 
-      documentVersion.file = await getFile({
-        data: documentVersion.file,
-        type: documentVersion.storageType,
-      });
+      if (documentVersion.type === "sheet") {
+        const fileUrl = await getFile({
+          data: documentVersion.file,
+          type: documentVersion.storageType,
+        });
+
+        const data = await parseSheet({ fileUrl });
+        columnData = data.columnData;
+        rowData = data.rowData;
+      }
       console.timeEnd("get-file");
     }
 
@@ -376,15 +391,19 @@ export default async function handle(
       file:
         documentVersion && documentVersion.type === "pdf"
           ? documentVersion.file
-          : null,
-      pages: documentPages ? documentPages : null,
-      notionData: recordMap ? { recordMap } : null,
+          : undefined,
+      pages: documentPages ? documentPages : undefined,
+      notionData: recordMap ? { recordMap } : undefined,
+      sheetData:
+        documentVersion && documentVersion.type === "sheet"
+          ? { columnData, rowData }
+          : undefined,
     };
 
     return res.status(200).json(returnObject);
   } catch (error) {
     log({
-      message: `Failed to record view for ${linkId}. \n\n ${error}`,
+      message: `Failed to record view for dataroom ${linkId}. \n\n ${error}`,
       type: "error",
       mention: true,
     });

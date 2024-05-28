@@ -7,6 +7,7 @@ import { sendVerificationEmail } from "@/lib/emails/send-email-verification";
 import { getFile } from "@/lib/files/get-file";
 import { newId } from "@/lib/id-helper";
 import prisma from "@/lib/prisma";
+import { parseSheet } from "@/lib/sheet";
 import { checkPassword, decryptEncrpytedPassword, log } from "@/lib/utils";
 
 export default async function handle(
@@ -220,6 +221,7 @@ export default async function handle(
     // if document version has pages, then return pages
     // otherwise, return file from document version
     let documentPages, documentVersion;
+    let columnData, rowData;
     // let documentPagesPromise, documentVersionPromise;
     if (hasPages) {
       // get pages from document version
@@ -254,6 +256,7 @@ export default async function handle(
         select: {
           file: true,
           storageType: true,
+          type: true,
         },
       });
 
@@ -262,10 +265,23 @@ export default async function handle(
         return;
       }
 
-      documentVersion.file = await getFile({
-        data: documentVersion.file,
-        type: documentVersion.storageType,
-      });
+      if (documentVersion.type === "pdf") {
+        documentVersion.file = await getFile({
+          data: documentVersion.file,
+          type: documentVersion.storageType,
+        });
+      }
+
+      if (documentVersion.type === "sheet") {
+        const fileUrl = await getFile({
+          data: documentVersion.file,
+          type: documentVersion.storageType,
+        });
+
+        const data = await parseSheet({ fileUrl });
+        columnData = data.columnData;
+        rowData = data.rowData;
+      }
       console.timeEnd("get-file");
     }
 
@@ -278,8 +294,15 @@ export default async function handle(
     const returnObject = {
       message: "View recorded",
       viewId: newView.id,
-      file: documentVersion ? documentVersion.file : null,
-      pages: documentPages ? documentPages : null,
+      file:
+        documentVersion && documentVersion.type === "pdf"
+          ? documentVersion.file
+          : undefined,
+      pages: documentPages ? documentPages : undefined,
+      sheetData:
+        documentVersion && documentVersion.type === "sheet"
+          ? { columnData, rowData }
+          : undefined,
     };
 
     return res.status(200).json(returnObject);

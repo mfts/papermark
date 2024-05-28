@@ -1,7 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
 
-import { Brand, DataroomBrand } from "@prisma/client";
+import React from "react";
+
+import { DataroomBrand } from "@prisma/client";
 import { ArrowUpRight, Download } from "lucide-react";
 import { toast } from "sonner";
 
@@ -19,6 +21,7 @@ import { timeAgo } from "@/lib/utils";
 
 import PapermarkSparkle from "../../shared/icons/papermark-sparkle";
 import { Button } from "../../ui/button";
+import { TDocumentData } from "./dataroom-view";
 
 export default function DataroomNav({
   pageNumber,
@@ -44,7 +47,7 @@ export default function DataroomNav({
   linkId?: string;
   type?: "pdf" | "notion";
   isDataroom?: boolean;
-  setDocumentData?: (data: any) => void;
+  setDocumentData?: React.Dispatch<React.SetStateAction<TDocumentData | null>>;
   dataroom?: any;
 }) {
   const downloadFile = async () => {

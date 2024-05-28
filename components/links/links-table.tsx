@@ -199,7 +199,7 @@ export default function LinksTable({
                             >
                               {/* Progress bar */}
                               {primaryVersion &&
-                              primaryVersion.type !== "notion" &&
+                              primaryVersion.type === "pdf" &&
                               !primaryVersion.hasPages ? (
                                 <ProcessStatusBar
                                   documentVersionId={primaryVersion.id}

@@ -47,7 +47,11 @@ export default async function handler(
         }
 
         return {
-          allowedContentTypes: ["application/pdf"],
+          allowedContentTypes: [
+            "application/pdf",
+            "application/vnd.ms-excel",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          ],
           maximumSizeInBytes: maxSize, // 30 MB
           metadata: JSON.stringify({
             // optional, sent to your server on upload completion
