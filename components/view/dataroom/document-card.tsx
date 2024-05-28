@@ -1,5 +1,7 @@
 import Image from "next/image";
 
+import React from "react";
+
 import { useTheme } from "next-themes";
 
 import NotionIcon from "@/components/shared/icons/notion";
@@ -22,7 +24,7 @@ type DRDocument = {
 type DocumentsCardProps = {
   document: DRDocument;
   setViewType: (type: "DOCUMENT_VIEW" | "DATAROOM_VIEW") => void;
-  setDocumentData: (data: TDocumentData) => void;
+  setDocumentData: React.Dispatch<React.SetStateAction<TDocumentData | null>>;
 };
 export default function DocumentCard({
   document,

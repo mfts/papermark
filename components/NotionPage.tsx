@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import React from "react";
 
 import { Brand, DataroomBrand } from "@prisma/client";
 import { ExtendedRecordMap } from "notion-types";
@@ -30,7 +31,7 @@ export const NotionPage = ({
   documentName?: string;
   brand?: Partial<Brand> | Partial<DataroomBrand> | null;
   dataroomId?: string;
-  setDocumentData?: (data: TDocumentData) => void;
+  setDocumentData?: React.Dispatch<React.SetStateAction<TDocumentData | null>>;
 }) => {
   const [pageNumber, setPageNumber] = useState<number>(1); // start on first page
   const [maxScrollPercentage, setMaxScrollPercentage] = useState<number>(0);

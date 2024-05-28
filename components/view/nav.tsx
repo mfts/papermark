@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { MutableRefObject } from "react";
+import React from "react";
 
 import { Brand, DataroomBrand } from "@prisma/client";
 import {
@@ -64,7 +65,7 @@ export default function Nav({
   type?: "pdf" | "notion" | "sheet";
   documentName?: string;
   isDataroom?: boolean;
-  setDocumentData?: (data: TDocumentData | null) => void;
+  setDocumentData?: React.Dispatch<React.SetStateAction<TDocumentData | null>>;
   documentRefs?: MutableRefObject<(ReactZoomPanPinchContentRef | null)[]>;
 }) {
   const downloadFile = async () => {

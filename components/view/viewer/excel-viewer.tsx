@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import React from "react";
 
 import "@/public/vendor/handsontable/handsontable.full.min.css";
 import { Brand, DataroomBrand } from "@prisma/client";
@@ -48,7 +49,7 @@ export default function ExcelViewer({
   data: SheetData[];
   brand?: Partial<Brand> | Partial<DataroomBrand> | null;
   dataroomId?: string;
-  setDocumentData?: (data: TDocumentData) => void;
+  setDocumentData?: React.Dispatch<React.SetStateAction<TDocumentData | null>>;
 }) {
   const [availableWidth, setAvailableWidth] = useState<number>(200);
   const [availableHeight, setAvailableHeight] = useState<number>(200);

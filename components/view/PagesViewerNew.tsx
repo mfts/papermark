@@ -1,6 +1,7 @@
 import { useRouter } from "next/router";
 
 import { useEffect, useRef, useState } from "react";
+import React from "react";
 
 import { Brand, DataroomBrand } from "@prisma/client";
 import {
@@ -76,7 +77,7 @@ export default function PagesViewer({
   brand?: Partial<Brand> | Partial<DataroomBrand> | null;
   documentName?: string;
   dataroomId?: string;
-  setDocumentData?: (data: TDocumentData) => void;
+  setDocumentData?: React.Dispatch<React.SetStateAction<TDocumentData | null>>;
   showPoweredByBanner?: boolean;
   enableQuestion?: boolean | null;
   feedback?: {
