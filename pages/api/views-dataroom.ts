@@ -311,7 +311,7 @@ export default async function handle(
     // otherwise, return file from document version
     let documentPages, documentVersion;
     let recordMap;
-    let columnData, rowData;
+    let sheetData;
 
     if (hasPages) {
       // get pages from document version
@@ -379,8 +379,7 @@ export default async function handle(
         });
 
         const data = await parseSheet({ fileUrl });
-        columnData = data.columnData;
-        rowData = data.rowData;
+        sheetData = data;
       }
       console.timeEnd("get-file");
     }
@@ -396,7 +395,7 @@ export default async function handle(
       notionData: recordMap ? { recordMap } : undefined,
       sheetData:
         documentVersion && documentVersion.type === "sheet"
-          ? { columnData, rowData }
+          ? sheetData
           : undefined,
     };
 

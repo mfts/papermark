@@ -50,8 +50,7 @@ export default function ViewData({
       documentId={document.id}
       documentName={document.name}
       versionNumber={document.versions[0].versionNumber}
-      columns={viewData.sheetData.columnData!}
-      data={viewData.sheetData.rowData!}
+      sheetData={viewData.sheetData}
       brand={brand}
     />
   ) : viewData.pages ? (

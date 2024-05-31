@@ -4,11 +4,20 @@ import React from "react";
 import "@/public/vendor/handsontable/handsontable.full.min.css";
 import { Brand, DataroomBrand } from "@prisma/client";
 
+import { Button } from "@/components/ui/button";
+
+import { cn } from "@/lib/utils";
+
 import { TDocumentData } from "../dataroom/dataroom-view";
 import Nav from "../nav";
 
 // Define the type for the JSON data
-type SheetData = { [key: string]: any };
+type RowData = { [key: string]: any };
+type SheetData = {
+  sheetName: string;
+  columnData: string[];
+  rowData: RowData[];
+};
 
 const trackPageView = async (data: {
   linkId: string;
@@ -34,8 +43,7 @@ export default function ExcelViewer({
   documentId,
   documentName,
   versionNumber,
-  columns,
-  data,
+  sheetData,
   brand,
   dataroomId,
   setDocumentData,
@@ -45,8 +53,7 @@ export default function ExcelViewer({
   documentId: string;
   documentName: string;
   versionNumber: number;
-  columns: string[];
-  data: SheetData[];
+  sheetData: SheetData[];
   brand?: Partial<Brand> | Partial<DataroomBrand> | null;
   dataroomId?: string;
   setDocumentData?: React.Dispatch<React.SetStateAction<TDocumentData | null>>;
@@ -54,6 +61,7 @@ export default function ExcelViewer({
   const [availableWidth, setAvailableWidth] = useState<number>(200);
   const [availableHeight, setAvailableHeight] = useState<number>(200);
   const [handsontableLoaded, setHandsontableLoaded] = useState<boolean>(false);
+  const [selectedSheetIndex, setSelectedSheetIndex] = useState<number>(0);
 
   useEffect(() => {
     const script = document.createElement("script");
@@ -84,8 +92,8 @@ export default function ExcelViewer({
   const calculateSize = () => {
     if (containerRef.current) {
       const offset = containerRef.current.getBoundingClientRect();
-      setAvailableWidth(Math.max(offset.width - 60, 200));
-      setAvailableHeight(Math.max(offset.height - 10, 200));
+      setAvailableWidth(Math.max(offset.width, 200));
+      setAvailableHeight(Math.max(offset.height - 50, 200));
     }
   };
 
@@ -113,7 +121,7 @@ export default function ExcelViewer({
           documentId,
           viewId,
           duration,
-          pageNumber: 1,
+          pageNumber: selectedSheetIndex + 1,
           versionNumber,
           dataroomId,
         });
@@ -130,24 +138,27 @@ export default function ExcelViewer({
           documentId,
           viewId,
           duration,
-          pageNumber: 1,
+          pageNumber: selectedSheetIndex + 1,
           versionNumber,
           dataroomId,
         }); // Also capture duration if component unmounts while visible
+        startTimeRef.current = Date.now();
       }
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, []);
+  }, [selectedSheetIndex]);
 
   useEffect(() => {
     const handleBeforeUnload = () => {
+      if (!visibilityRef.current) return;
+
       const duration = Date.now() - startTimeRef.current;
       trackPageView({
         linkId,
         documentId,
         viewId,
         duration,
-        pageNumber: 1,
+        pageNumber: selectedSheetIndex + 1,
         versionNumber,
         dataroomId,
       });
@@ -158,22 +169,24 @@ export default function ExcelViewer({
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
-  }, []);
+  }, [selectedSheetIndex]);
 
   useEffect(() => {
-    if (handsontableLoaded && data.length && columns.length) {
+    if (handsontableLoaded && sheetData.length) {
       if (hotInstanceRef.current) {
         hotInstanceRef.current.destroy();
       }
 
+      const { columnData, rowData } = sheetData[selectedSheetIndex];
+
       // @ts-ignore - Handsontable import has not types
       hotInstanceRef.current = new Handsontable(hotRef.current!, {
-        data: data,
+        data: rowData,
         readOnly: true,
         disableVisualSelection: true,
         comments: false,
         contextMenu: false,
-        colHeaders: columns,
+        colHeaders: columnData,
         rowHeaders: true,
         manualColumnResize: true,
         width: availableWidth,
@@ -190,7 +203,13 @@ export default function ExcelViewer({
         // },
       });
     }
-  }, [handsontableLoaded, data, columns, availableHeight, availableWidth]);
+  }, [
+    handsontableLoaded,
+    sheetData,
+    selectedSheetIndex,
+    availableHeight,
+    availableWidth,
+  ]);
 
   return (
     <>
@@ -202,11 +221,28 @@ export default function ExcelViewer({
         type="sheet"
       />
       <div
-        style={{ height: "calc(100vh - 64px)" }}
-        className="flex h-screen items-center justify-center"
+        style={{ height: "calc(100dvh - 64px)" }}
+        className="mx-2 flex h-screen flex-col sm:mx-6 lg:mx-8"
         ref={containerRef}
       >
-        <div ref={hotRef}></div>
+        <div className="" ref={hotRef}></div>
+        <div className="flex max-w-fit divide-x divide-gray-200 overflow-x-scroll whitespace-nowrap rounded-b-sm bg-[#f0f0f0] px-1 ">
+          {sheetData.map((sheet, index) => (
+            <div className="px-1">
+              <Button
+                key={sheet.sheetName}
+                onClick={() => setSelectedSheetIndex(index)}
+                className={cn(
+                  "mb-1 rounded-none rounded-b-sm bg-[#f0f0f0] font-normal text-gray-950 hover:bg-gray-50",
+                  index === selectedSheetIndex &&
+                    "bg-white font-medium text-black ring-1 ring-gray-500 hover:bg-white",
+                )}
+              >
+                {sheet.sheetName}
+              </Button>
+            </div>
+          ))}
+        </div>
       </div>
     </>
   );

@@ -27,6 +27,13 @@ const ExcelViewer = dynamic(
   { ssr: false },
 );
 
+type RowData = { [key: string]: any };
+type SheetData = {
+  sheetName: string;
+  columnData: string[];
+  rowData: RowData[];
+};
+
 export type TDocumentData = {
   id: string;
   name: string;
@@ -44,10 +51,7 @@ export type DEFAULT_DOCUMENT_VIEW_TYPE = {
   pages?:
     | { file: string; pageNumber: string; embeddedLinks: string[] }[]
     | null;
-  sheetData?: {
-    rowData: { [key: string]: any }[];
-    columnData: string[];
-  } | null;
+  sheetData?: SheetData[] | null;
   notionData?: { recordMap: ExtendedRecordMap | null };
 };
 
@@ -268,8 +272,7 @@ export default function DataroomView({
           documentId={documentData.id}
           documentName={documentData.name}
           versionNumber={documentData.documentVersionNumber}
-          columns={viewData.sheetData.columnData!}
-          data={viewData.sheetData.rowData!}
+          sheetData={viewData.sheetData}
           brand={brand}
           dataroomId={dataroom.id}
           setDocumentData={setDocumentData}
