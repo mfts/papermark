@@ -82,6 +82,11 @@ export default async function handle(
                 },
               },
             },
+            orderBy: {
+              document: {
+                name: "asc",
+              },
+            },
           },
           childFolders: {
             include: {
@@ -95,6 +100,11 @@ export default async function handle(
                       name: true,
                       type: true,
                     },
+                  },
+                },
+                orderBy: {
+                  document: {
+                    name: "asc",
                   },
                 },
               },
