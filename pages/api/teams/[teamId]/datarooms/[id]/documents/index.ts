@@ -51,7 +51,9 @@ export default async function handle(
           folderId: null,
         },
         orderBy: {
-          createdAt: "desc",
+          document: {
+            name: "asc",
+          },
         },
         include: {
           document: {

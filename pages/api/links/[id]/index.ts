@@ -138,6 +138,11 @@ export default async function handle(
                       },
                     },
                   },
+                  orderBy: {
+                    document: {
+                      name: "asc",
+                    },
+                  },
                 },
                 folders: {
                   orderBy: {
