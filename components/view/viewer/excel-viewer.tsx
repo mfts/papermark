@@ -228,9 +228,8 @@ export default function ExcelViewer({
         <div className="" ref={hotRef}></div>
         <div className="flex max-w-fit divide-x divide-gray-200 overflow-x-scroll whitespace-nowrap rounded-b-sm bg-[#f0f0f0] px-1 ">
           {sheetData.map((sheet, index) => (
-            <div className="px-1">
+            <div className="px-1" key={sheet.sheetName}>
               <Button
-                key={sheet.sheetName}
                 onClick={() => setSelectedSheetIndex(index)}
                 className={cn(
                   "mb-1 rounded-none rounded-b-sm bg-[#f0f0f0] font-normal text-gray-950 hover:bg-gray-50",
