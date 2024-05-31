@@ -16,9 +16,6 @@ const customSort = (a: string, b: string) => {
 };
 
 export const parseSheet = async ({ fileUrl }: { fileUrl: string }) => {
-  let columnData: string[] | null = null;
-  let rowData: RowData[] | null = null;
-
   const response = await fetch(fileUrl);
   const arrayBuffer = await response.arrayBuffer();
   const data = new Uint8Array(arrayBuffer);
