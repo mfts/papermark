@@ -19,16 +19,20 @@ import { LinkWithDocument } from "@/lib/types";
 import EmailVerificationMessage from "./email-verification-form";
 import ViewData from "./view-data";
 
+type RowData = { [key: string]: any };
+type SheetData = {
+  sheetName: string;
+  columnData: string[];
+  rowData: RowData[];
+};
+
 export type DEFAULT_DOCUMENT_VIEW_TYPE = {
   viewId: string;
   file?: string | null;
   pages?:
     | { file: string; pageNumber: string; embeddedLinks: string[] }[]
     | null;
-  sheetData?: {
-    rowData: { [key: string]: any }[];
-    columnData: string[];
-  } | null;
+  sheetData?: SheetData[] | null;
 };
 
 export default function DocumentView({

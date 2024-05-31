@@ -221,7 +221,7 @@ export default async function handle(
     // if document version has pages, then return pages
     // otherwise, return file from document version
     let documentPages, documentVersion;
-    let columnData, rowData;
+    let sheetData;
     // let documentPagesPromise, documentVersionPromise;
     if (hasPages) {
       // get pages from document version
@@ -279,8 +279,9 @@ export default async function handle(
         });
 
         const data = await parseSheet({ fileUrl });
-        columnData = data.columnData;
-        rowData = data.rowData;
+        sheetData = data;
+        // columnData = data.columnData;
+        // rowData = data.rowData;
       }
       console.timeEnd("get-file");
     }
@@ -301,7 +302,7 @@ export default async function handle(
       pages: documentPages ? documentPages : undefined,
       sheetData:
         documentVersion && documentVersion.type === "sheet"
-          ? { columnData, rowData }
+          ? sheetData
           : undefined,
     };
 
