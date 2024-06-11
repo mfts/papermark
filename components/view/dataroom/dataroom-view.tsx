@@ -3,7 +3,6 @@ import { useRouter } from "next/router";
 
 import React, { useEffect, useRef, useState } from "react";
 
-import { LinkWithDataroom } from "@/pages/view/d/[linkId]";
 import { DataroomBrand } from "@prisma/client";
 import { usePlausible } from "next-plausible";
 import { ExtendedRecordMap } from "notion-types";
@@ -17,6 +16,7 @@ import AccessForm, {
 } from "@/components/view/access-form";
 
 import { useAnalytics } from "@/lib/analytics";
+import { LinkWithDataroom } from "@/lib/types";
 
 import DataroomViewer from "../DataroomViewer";
 import PagesViewerNew from "../PagesViewerNew";
@@ -72,7 +72,13 @@ export default function DataroomView({
   token?: string;
   verifiedEmail?: string;
 }) {
-  const { linkType, dataroom, emailProtected, password: linkPassword } = link;
+  const {
+    linkType,
+    dataroom,
+    emailProtected,
+    password: linkPassword,
+    enableAgreement,
+  } = link;
 
   const plausible = usePlausible();
   const analytics = useAnalytics();
@@ -236,6 +242,8 @@ export default function DataroomView({
         onSubmitHandler={handleSubmit}
         requireEmail={emailProtected}
         requirePassword={!!linkPassword}
+        requireAgreement={enableAgreement!}
+        agreementContent={link.agreement?.content}
         isLoading={isLoading}
       />
     );

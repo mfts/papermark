@@ -2,7 +2,9 @@ import { useEffect } from "react";
 
 import { Button } from "@/components/ui/button";
 
+import AgreementSection from "./agreement-section";
 import EmailSection from "./email-section";
+import NameSection from "./name-section";
 import PasswordSection from "./password-section";
 
 export const DEFAULT_ACCESS_FORM_DATA = {
@@ -13,6 +15,8 @@ export const DEFAULT_ACCESS_FORM_DATA = {
 export type DEFAULT_ACCESS_FORM_TYPE = {
   email: string | null;
   password: string | null;
+  hasConfirmedAgreement?: boolean;
+  name?: string | null;
 };
 
 export default function AccessForm({
@@ -22,6 +26,8 @@ export default function AccessForm({
   onSubmitHandler,
   requireEmail,
   requirePassword,
+  requireAgreement,
+  agreementContent,
   isLoading,
 }: {
   data: DEFAULT_ACCESS_FORM_TYPE;
@@ -30,6 +36,8 @@ export default function AccessForm({
   onSubmitHandler: React.FormEventHandler<HTMLFormElement>;
   requireEmail: boolean;
   requirePassword: boolean;
+  requireAgreement?: boolean;
+  agreementContent?: string;
   isLoading: boolean;
 }) {
   useEffect(() => {
@@ -53,9 +61,18 @@ export default function AccessForm({
 
         <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-md">
           <form className="space-y-4" onSubmit={onSubmitHandler}>
+            {requireAgreement && agreementContent ? (
+              <NameSection {...{ data, setData }} />
+            ) : null}
             {requireEmail ? <EmailSection {...{ data, setData }} /> : null}
             {requirePassword ? (
               <PasswordSection {...{ data, setData }} />
+            ) : null}
+            {requireAgreement && agreementContent ? (
+              <AgreementSection
+                {...{ data, setData }}
+                agreementContent={agreementContent}
+              />
             ) : null}
 
             <div className="flex justify-center">
@@ -63,9 +80,11 @@ export default function AccessForm({
                 type="submit"
                 disabled={
                   (requireEmail && !data.email) ||
-                  (requirePassword && !data.password)
+                  (requirePassword && !data.password) ||
+                  (requireAgreement && !data.hasConfirmedAgreement) ||
+                  (requireAgreement && !data.name)
                 }
-                className="w-1/3 bg-white text-gray-950 hover:bg-white/90"
+                className="w-1/3 min-w-fit bg-white text-gray-950 hover:bg-white/90"
                 loading={isLoading}
               >
                 Continue

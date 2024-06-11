@@ -60,7 +60,12 @@ export default async function handle(
     viewType: "DATAROOM_VIEW" | "DOCUMENT_VIEW";
   };
 
-  const { email, password } = data as { email: string; password: string };
+  const { email, password, name, hasConfirmedAgreement } = data as {
+    email: string;
+    password: string;
+    name?: string;
+    hasConfirmedAgreement?: boolean;
+  };
 
   // Fetch the link to verify the settings
   const link = await prisma.link.findUnique({
@@ -77,6 +82,8 @@ export default async function handle(
       slug: true,
       allowList: true,
       denyList: true,
+      enableAgreement: true,
+      agreementId: true,
     },
   });
 
@@ -118,6 +125,12 @@ export default async function handle(
       res.status(403).json({ message: "Invalid password." });
       return;
     }
+  }
+
+  // Check if agreement is required for visiting the link
+  if (link.enableAgreement && !hasConfirmedAgreement) {
+    res.status(400).json({ message: "Agreement to NDA is required." });
+    return;
   }
 
   // Check if email is allowed to visit the link
@@ -267,10 +280,20 @@ export default async function handle(
         data: {
           linkId: linkId,
           viewerEmail: email,
+          viewerName: name,
           verified: isEmailVerified,
           dataroomId: dataroomId,
           viewType: "DATAROOM_VIEW",
           viewerId: viewer?.id ?? undefined,
+          ...(link.enableAgreement &&
+            link.agreementId &&
+            hasConfirmedAgreement && {
+              agreementResponse: {
+                create: {
+                  agreementId: link.agreementId,
+                },
+              },
+            }),
         },
         select: { id: true },
       });
@@ -307,12 +330,22 @@ export default async function handle(
       data: {
         linkId: linkId,
         viewerEmail: email,
+        viewerName: name,
         documentId: documentId,
         verified: isEmailVerified,
         dataroomViewId: dataroomViewId,
         dataroomId: dataroomId,
         viewType: "DOCUMENT_VIEW",
         viewerId: viewer?.id ?? undefined,
+        ...(link.enableAgreement &&
+          link.agreementId &&
+          hasConfirmedAgreement && {
+            agreementResponse: {
+              create: {
+                agreementId: link.agreementId,
+              },
+            },
+          }),
       },
       select: { id: true },
     });
@@ -415,7 +448,7 @@ export default async function handle(
     return res.status(200).json(returnObject);
   } catch (error) {
     log({
-      message: `Failed to record view for dataroom ${linkId}. \n\n ${error}`,
+      message: `Failed to record view for dataroom document ${linkId}. \n\n ${error}`,
       type: "error",
       mention: true,
     });

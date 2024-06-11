@@ -59,7 +59,12 @@ export default function DocumentView({
   verifiedEmail?: string;
   showPoweredByBanner?: boolean;
 }) {
-  const { document, emailProtected, password: linkPassword } = link;
+  const {
+    document,
+    emailProtected,
+    password: linkPassword,
+    enableAgreement,
+  } = link;
 
   const plausible = usePlausible();
   const analytics = useAnalytics();
@@ -185,6 +190,8 @@ export default function DocumentView({
         onSubmitHandler={handleSubmit}
         requireEmail={emailProtected}
         requirePassword={!!linkPassword}
+        requireAgreement={enableAgreement!}
+        agreementContent={link.agreement?.content}
         isLoading={isLoading}
       />
     );
