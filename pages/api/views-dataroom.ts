@@ -1,7 +1,9 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
+import { waitUntil } from "@vercel/functions";
 import { parsePageId } from "notion-utils";
 
+import sendNotification from "@/lib/api/notification-helper";
 import { sendVerificationEmail } from "@/lib/emails/send-email-verification";
 import { getFile } from "@/lib/files/get-file";
 import { newId } from "@/lib/id-helper";
@@ -9,6 +11,11 @@ import notion from "@/lib/notion";
 import prisma from "@/lib/prisma";
 import { parseSheet } from "@/lib/sheet";
 import { checkPassword, decryptEncrpytedPassword, log } from "@/lib/utils";
+
+export const config = {
+  // in order to enable `waitUntil` function
+  supportsResponseStreaming: true,
+};
 
 export default async function handle(
   req: NextApiRequest,
@@ -268,6 +275,12 @@ export default async function handle(
         select: { id: true },
       });
       console.timeEnd("create-view");
+
+      if (link.enableNotification) {
+        console.time("sendemail");
+        waitUntil(sendNotification({ viewId: newDataroomView.id }));
+        console.timeEnd("sendemail");
+      }
 
       const returnObject = {
         message: "Dataroom View recorded",
