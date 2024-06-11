@@ -8,7 +8,6 @@ const nextConfig = {
   },
   transpilePackages: ["@trigger.dev/react"],
   skipTrailingSlashRedirect: true,
-  supportsResponseStreaming: true,
   experimental: {
     outputFileTracingIncludes: {
       "/api/mupdf/*": ["./node_modules/mupdf/lib/*.wasm"],
