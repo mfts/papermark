@@ -80,6 +80,13 @@ interface ViewWithDuration extends View {
       answer: string;
     };
   } | null;
+  agreementResponse: {
+    id: string;
+    agreementId: string;
+    agreement: {
+      name: string;
+    };
+  } | null;
 }
 
 type TStatsData = {
@@ -99,9 +106,7 @@ export function useDocumentVisits(page: number, limit: number) {
 
   const cacheKey =
     teamId && id
-      ? `/api/teams/${teamInfo?.currentTeam?.id}/documents/${encodeURIComponent(
-          id,
-        )}/views?page=${page}&limit=${limit}`
+      ? `/api/teams/${teamId}/documents/${id}/views?page=${page}&limit=${limit}`
       : null;
 
   const { data: views, error } = useSWR<TStatsData>(cacheKey, fetcher, {
@@ -124,9 +129,11 @@ interface DocumentProcessingStatus {
 
 export function useDocumentProcessingStatus(documentVersionId: string) {
   const teamInfo = useTeam();
+  const teamId = teamInfo?.currentTeam?.id;
 
   const { data: status, error } = useSWR<DocumentProcessingStatus>(
-    `/api/teams/${teamInfo?.currentTeam?.id}/documents/document-processing-status?documentVersionId=${documentVersionId}`,
+    teamId &&
+      `/api/teams/${teamId}/documents/document-processing-status?documentVersionId=${documentVersionId}`,
     fetcher,
     {
       refreshInterval: 3000, // refresh every 3 seconds

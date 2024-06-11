@@ -66,6 +66,17 @@ export default async function handle(
                   name: true,
                 },
               },
+              agreementResponse: {
+                select: {
+                  id: true,
+                  agreementId: true,
+                  agreement: {
+                    select: {
+                      name: true,
+                    },
+                  },
+                },
+              },
             },
           },
         },

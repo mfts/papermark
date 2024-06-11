@@ -5,6 +5,7 @@ import {
   BadgeCheckIcon,
   BadgeInfoIcon,
   DownloadCloudIcon,
+  FileBadgeIcon,
   ServerIcon,
   ThumbsDownIcon,
   ThumbsUpIcon,
@@ -110,6 +111,14 @@ export default function VisitorsTable({ numPages }: { numPages: number }) {
                                         key="internal"
                                       >
                                         <BadgeInfoIcon className="h-4 w-4 text-blue-500 hover:text-blue-600" />
+                                      </BadgeTooltip>
+                                    )}
+                                    {view.agreementResponse && (
+                                      <BadgeTooltip
+                                        content={`Agreed to ${view.agreementResponse.agreement.name}`}
+                                        key="nda-agreement"
+                                      >
+                                        <FileBadgeIcon className="h-4 w-4 text-emerald-500 hover:text-emerald-600" />
                                       </BadgeTooltip>
                                     )}
                                     {view.downloadedAt && (
