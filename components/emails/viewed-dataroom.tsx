@@ -13,51 +13,53 @@ import {
   Text,
 } from "@react-email/components";
 
-export default function DataroomNotification({
-  dataroomName,
-  documentName,
-  senderEmail,
-  url,
+export default function ViewedDataroom({
+  dataroomId = "123",
+  dataroomName = "Example Dataroom",
+  viewerEmail,
 }: {
+  dataroomId: string;
   dataroomName: string;
-  documentName: string | undefined;
-  senderEmail: string;
-  url: string;
+  viewerEmail: string | null;
 }) {
   return (
     <Html>
       <Head />
-      <Preview>View dataroom on Papermark</Preview>
+      <Preview>See who visited your dataroom</Preview>
       <Tailwind>
         <Body className="mx-auto my-auto bg-white font-sans">
           <Container className="mx-auto my-10 w-[465px] p-5">
             <Text className="mx-0 mb-8 mt-4 p-0 text-center text-2xl font-normal">
               <span className="font-bold tracking-tighter">Papermark</span>
             </Text>
-            <Text className="font-seminbold mx-0 mb-8 mt-4 p-0 text-center text-xl">
-              {`New document available for ${dataroomName}`}
+            <Text className="mx-0 my-7 p-0 text-center text-xl font-semibold text-black">
+              New Dataroom Visitor
             </Text>
-            <Text className="text-sm leading-6 text-black">Hey!</Text>
             <Text className="text-sm leading-6 text-black">
-              A new document{" "}
-              <span className="font-semibold">{documentName}</span> has been
-              added to <span className="font-semibold">{dataroomName}</span>{" "}
-              dataroom on Papermark.
+              Your dataroom{" "}
+              <span className="font-semibold">{dataroomName}</span> was just
+              viewed by{" "}
+              <span className="font-semibold">
+                {viewerEmail ? `${viewerEmail}` : `someone`}
+              </span>
+              .
             </Text>
-            <Section className="mb-[32px] mt-[32px] text-center">
+            <Text className="text-sm leading-6 text-black">
+              You can get the detailed engagement analytics like time-spent per
+              document page and total duration for this dataroom on Papermark.
+            </Text>
+            <Section className="my-8 text-center">
               <Button
                 className="rounded bg-black text-center text-xs font-semibold text-white no-underline"
-                href={`${url}`}
+                href={`https://www.papermark.io/datarooms/${dataroomId}`}
                 style={{ padding: "12px 20px" }}
               >
-                View the dataroom
+                See my dataroom insights
               </Button>
             </Section>
-            <Text className="text-sm text-black">
-              or copy and paste this URL into your browser: <br />
-              {`${url}`}
+            <Text className="text-sm leading-6 text-black">
+              Stay informed, stay ahead with Papermark.
             </Text>
-            <Text className="text-sm text-gray-400">Papermark</Text>
             <Hr />
             <Section className="mt-8 text-gray-400">
               <Text className="text-xs">
@@ -72,7 +74,11 @@ export default function DataroomNotification({
               </Text>
               <Text className="text-xs">
                 If you have any feedback or questions about this email, simply
-                reply to it.
+                reply to it. I&apos;d love to hear from you!
+              </Text>
+              <Text className="text-xs">
+                To stop email notifications for this link, edit the link and
+                uncheck &quot;Receive email notification&quot;.
               </Text>
             </Section>
           </Container>

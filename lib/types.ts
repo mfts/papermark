@@ -1,4 +1,5 @@
 import {
+  Agreement,
   Dataroom,
   DataroomDocument,
   DataroomFolder,
@@ -62,6 +63,7 @@ export interface LinkWithDocument extends Link {
       type: string;
     };
   } | null;
+  agreement: Agreement | null;
 }
 
 export interface LinkWithDataroom extends Link {
@@ -88,6 +90,7 @@ export interface LinkWithDataroom extends Link {
     folders: DataroomFolder[];
     lastUpdatedAt: Date;
   };
+  agreement: Agreement | null;
 }
 
 export interface Geo {
