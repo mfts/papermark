@@ -82,7 +82,7 @@ export default async function handle(
 
       const { name, link } = req.body as { name: string; link: string };
 
-      const response = await prisma.agreement.create({
+      const agreement = await prisma.agreement.create({
         data: {
           teamId,
           name,
@@ -90,7 +90,7 @@ export default async function handle(
         },
       });
 
-      return res.status(201).json(response);
+      return res.status(201).json(agreement);
     } catch (error) {
       log({
         message: `Failed to add agreement. \n\n ${error} \n\n*Metadata*: \`{teamId: ${teamId}, userId: ${userId}}\``,

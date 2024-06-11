@@ -1,15 +1,7 @@
-import {
-  Dispatch,
-  SetStateAction,
-  useCallback,
-  useEffect,
-  useState,
-} from "react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 
-import { Button } from "@react-email/components";
 import { motion } from "framer-motion";
 
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
