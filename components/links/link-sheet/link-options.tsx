@@ -104,7 +104,7 @@ export const LinkOptions = ({
             />
             <AgreementSection
               {...{ data, setData }}
-              hasFreePlan={isNotBusiness && isNotDatarooms}
+              hasFreePlan={isNotDatarooms}
               handleUpgradeStateChange={handleUpgradeStateChange}
             />
           </AccordionContent>
