@@ -247,6 +247,12 @@ export default async function handle(
       }
     }
 
+    if (linkData.enableAgreement && !linkData.agreementId) {
+      return res.status(400).json({
+        error: "No agreement selected.",
+      });
+    }
+
     // Update the link in the database
     const updatedLink = await prisma.link.update({
       where: { id: id },
@@ -288,6 +294,8 @@ export default async function handle(
             },
           },
         },
+        enableAgreement: linkData.enableAgreement,
+        agreementId: linkData.agreementId || null,
       },
       include: {
         views: {

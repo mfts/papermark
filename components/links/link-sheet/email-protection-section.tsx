@@ -26,6 +26,7 @@ export default function EmailProtectionSection({
       ...data,
       emailProtected: updatedEmailProtection,
       emailAuthenticated: !updatedEmailProtection && false,
+      enableAgreement: !updatedEmailProtection && false,
     });
     setEnabled(updatedEmailProtection);
   };

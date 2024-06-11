@@ -97,6 +97,8 @@ export default function LinksTable({
       metaTitle: link.metaTitle,
       metaDescription: link.metaDescription,
       metaImage: link.metaImage,
+      enableAgreement: link.enableAgreement ? link.enableAgreement : false,
+      agreementId: link.agreementId,
     });
     //wait for dropdown to close before opening the link sheet
     setTimeout(() => {

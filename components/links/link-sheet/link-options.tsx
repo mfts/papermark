@@ -21,6 +21,7 @@ import {
 
 import { usePlan } from "@/lib/swr/use-billing";
 
+import AgreementSection from "./agreement-section";
 import QuestionSection from "./question-section";
 import ScreenshotProtectionSection from "./screenshot-protection-section";
 
@@ -97,6 +98,11 @@ export const LinkOptions = ({
             />
             <FeedbackSection {...{ data, setData }} />
             <QuestionSection
+              {...{ data, setData }}
+              hasFreePlan={isNotBusiness && isNotDatarooms}
+              handleUpgradeStateChange={handleUpgradeStateChange}
+            />
+            <AgreementSection
               {...{ data, setData }}
               hasFreePlan={isNotBusiness && isNotDatarooms}
               handleUpgradeStateChange={handleUpgradeStateChange}
