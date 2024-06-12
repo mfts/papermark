@@ -1,10 +1,16 @@
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/router";
 
 import { useEffect, useRef, useState } from "react";
 
 import { TeamContextType } from "@/context/team-context";
-import { FolderInputIcon, MoreVertical, TrashIcon } from "lucide-react";
+import {
+  FolderInputIcon,
+  Layers2Icon,
+  MoreVertical,
+  TrashIcon,
+} from "lucide-react";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
 import { mutate } from "swr";
@@ -37,6 +43,7 @@ export default function DocumentsCard({
   document: prismaDocument,
   teamInfo,
 }: DocumentsCardProps) {
+  const router = useRouter();
   const { theme, systemTheme } = useTheme();
   const isLight =
     theme === "light" || (theme === "system" && systemTheme === "light");
@@ -46,6 +53,9 @@ export default function DocumentsCard({
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
   const [moveFolderOpen, setMoveFolderOpen] = useState<boolean>(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
+
+  /** current folder name */
+  const currentFolderPath = router.query.name as string[] | undefined;
 
   function handleCopyToClipboard(id: string) {
     copyToClipboard(
@@ -123,6 +133,30 @@ export default function DocumentsCard({
     } else {
       setMenuOpen(true); // Open the dropdown
     }
+  };
+
+  const handleDuplicateDocument = async (event: any) => {
+    event.stopPropagation();
+    event.preventDefault();
+
+    toast.promise(
+      fetch(
+        `/api/teams/${teamInfo?.currentTeam?.id}/documents/${prismaDocument.id}/duplicate`,
+        {
+          method: "POST",
+        },
+      ).then(() => {
+        mutate(`/api/teams/${teamInfo?.currentTeam?.id}/documents`);
+        mutate(
+          `/api/teams/${teamInfo?.currentTeam?.id}/folders/documents/${currentFolderPath?.join("/")}`,
+        );
+      }),
+      {
+        loading: "Duplicating document...",
+        success: "Document duplicated successfully.",
+        error: "Failed to duplicate document. Try again.",
+      },
+    );
   };
 
   return (
@@ -217,6 +251,10 @@ export default function DocumentsCard({
               <DropdownMenuItem onClick={() => setMoveFolderOpen(true)}>
                 <FolderInputIcon className="mr-2 h-4 w-4" />
                 Move to folder
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={(e) => handleDuplicateDocument(e)}>
+                <Layers2Icon className="mr-2 h-4 w-4" />
+                Duplicate document
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
