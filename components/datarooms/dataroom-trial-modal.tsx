@@ -43,7 +43,7 @@ export function DataroomTrialModal({
   const [companySize, setCompanySize] = useState<string>("");
   const [name, setName] = useState<string>("");
   const [companyName, setCompanyName] = useState<string>("");
-  const [phoneNumber, setPhoneNumber] = useState<E164Number>("");
+  const [phoneNumber, setPhoneNumber] = useState<E164Number | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [open, setOpen] = useState<boolean>(false);
 
