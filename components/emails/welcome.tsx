@@ -46,6 +46,7 @@ const WelcomeEmail = ({ name }: WelcomeEmailProps) => {
             <Text className="text-sm">
               <ul className="list-inside list-disc text-sm">
                 <li>Upload a document</li>
+                 <li>Create a virtual data room</li>
                 <li>
                   Share a link{" "}
                   <span className="italic">(with your custom domain)✨</span>
@@ -64,7 +65,7 @@ const WelcomeEmail = ({ name }: WelcomeEmailProps) => {
             </Section>
             <Section>
               <Text className="text-sm">
-                If you would like to keep up to date, you can do:
+                If you would like to keep up to date, you can:
               </Text>
               <Text className="text-sm">
                 <ul className="list-inside list-disc text-sm">
@@ -79,8 +80,14 @@ const WelcomeEmail = ({ name }: WelcomeEmailProps) => {
                   </li>
                   <li>
                     Follow the journey on{" "}
-                    <Link href="https://twitter.com/mfts0" target="_blank">
+                    <Link href="https://x.com/papermarkio" target="_blank">
                       Twitter
+                    </Link>
+                  </li>
+                     <li>
+                    Have a call to talk enterprise{" "}
+                    <Link href="https://cal.com/marcseitz/papermark" target="_blank">
+                      Book
                     </Link>
                   </li>
                 </ul>
@@ -88,7 +95,7 @@ const WelcomeEmail = ({ name }: WelcomeEmailProps) => {
             </Section>
             <Section className="mt-4">
               <Text className="text-sm">
-                Let me know if you have any questions or feedback. I&apos;m
+                If you have any questions or feedback just respond to this email. I&apos;m
                 always happy to help!
               </Text>
               <Text className="text-sm text-gray-400">Marc from Papermark</Text>
@@ -106,8 +113,7 @@ const WelcomeEmail = ({ name }: WelcomeEmailProps) => {
                 </a>
               </Text>
               <Text className="text-xs">
-                If you have any feedback or questions about this email, simply
-                reply to it. I&apos;d love to hear from you!
+                You will shortly receive the intro to Papermark. Stay tuned.
               </Text>
             </Section>
           </Container>
