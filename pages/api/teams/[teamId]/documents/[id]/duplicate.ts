@@ -79,10 +79,7 @@ export default async function handle(
         storageType: documentVersion.storageType,
       });
 
-      console.log("type", type);
-      console.log("data", data);
-
-      const duplicateDocument = await prisma.document.create({
+      await prisma.document.create({
         data: {
           ...document,
           name: `${document.name} (Copy)`,
@@ -127,8 +124,6 @@ export default async function handle(
           },
         },
       });
-
-      console.log("duplicate document", duplicateDocument);
 
       return res.status(200).json({
         message: "Document duplicated successfully!",
