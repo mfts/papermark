@@ -50,13 +50,22 @@ export default async function handler(
       const links = await prisma.link.findMany({
         where: {
           documentId: documentId,
-          domainId: null,
         },
-        select: { id: true },
+        select: { id: true, domainSlug: true, slug: true },
       });
       for (const link of links) {
-        console.log("revalidating document link", `/view/${link.id}`);
-        await res.revalidate(`/view/${link.id}`);
+        if (link.domainSlug && link.slug) {
+          // revalidate a custom domain link
+          console.log(
+            "revalidating",
+            `/view/domains/${link.domainSlug}/${link.slug}`,
+          );
+          await res.revalidate(`/view/domains/${link.domainSlug}/${link.slug}`);
+        } else {
+          // revalidate a regular papermark link
+          console.log("revalidating document link", `/view/${link.id}`);
+          await res.revalidate(`/view/${link.id}`);
+        }
       }
     }
 
