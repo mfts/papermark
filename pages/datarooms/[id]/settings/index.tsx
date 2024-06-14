@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { mutate } from "swr";
 
 import { DataroomHeader } from "@/components/datarooms/dataroom-header";
+import DuplicateDataroom from "@/components/datarooms/settings/duplicate-dataroom";
 import AppLayout from "@/components/layouts/app";
 import { NavMenu } from "@/components/navigation-menu";
 import { Form } from "@/components/ui/form";
@@ -68,7 +69,7 @@ export default function Settings() {
         <div className="mx-auto grid w-full items-start gap-6 md:grid-cols-[180px_1fr] lg:grid-cols-[250px_1fr]">
           <nav className="grid gap-4 text-sm text-muted-foreground">
             <Link
-              href={`/datarooms/${dataroom.id}/settings2`}
+              href={`/datarooms/${dataroom.id}/settings`}
               className="font-semibold text-primary"
             >
               General
@@ -106,6 +107,7 @@ export default function Settings() {
                 })
               }
             />
+            <DuplicateDataroom dataroomId={dataroom.id} teamId={teamId} />
             {/* <Card>
                   <CardHeader className="relative">
                     <CardTitle>Feedback Question</CardTitle>
