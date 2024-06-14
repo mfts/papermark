@@ -209,7 +209,7 @@ export default async function handle(
       res.status(201).json(dataroomWithCount);
     } catch (error) {
       console.error("Request error", error);
-      res.status(500).json({ error: "Error copying dataroom" });
+      res.status(500).json({ message: "Error duplicating dataroom" });
     }
   } else {
     // We only allow POST requests
