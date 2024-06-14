@@ -221,7 +221,7 @@ export default function PagesViewer({
       );
     };
 
-    if (!dataroomId) {
+    if (!dataroomId && router.query.token) {
       removeQueryParams();
     }
   }, []); // Run once on mount
