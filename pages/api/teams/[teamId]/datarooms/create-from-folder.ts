@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
+import { getLimits } from "@/ee/limits/server";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { DataroomFolder, Document, Folder } from "@prisma/client";
 import { getServerSession } from "next-auth/next";
@@ -151,10 +152,17 @@ export default async function handle(
         return res.status(401).end("Unauthorized");
       }
 
-      if (team.plan === "business" && team._count.datarooms === 1) {
-        return res
-          .status(400)
-          .json({ message: "You've reached your dataroom limit" });
+      const limits = await getLimits({ teamId, userId });
+
+      if (
+        !team.plan.includes("drtrial") &&
+        limits &&
+        team._count.datarooms >= limits.datarooms
+      ) {
+        return res.status(403).json({
+          message:
+            "You've reached the limit of datarooms. Consider upgrading your plan.",
+        });
       }
 
       if (team.plan.includes("drtrial") && team._count.datarooms > 0) {
