@@ -18,7 +18,9 @@ export default async function DomainMiddleware(req: NextRequest) {
     // Subdomain available, rewriting
     // >>> Rewriting: ${path} to /view/domains/${host}${path}`
     url.pathname = `/view/domains/${host}${path}`;
-    return NextResponse.rewrite(url, PAPERMARK_HEADERS);
+    const response = NextResponse.rewrite(url, PAPERMARK_HEADERS);
+    response.headers.set("Cache-Control", "public, max-age=0, must-revalidate");
+    return response;
   } else {
     // redirect plain custom domain to papermark.io, eventually to it's own landing page
     return NextResponse.redirect(new URL("https://www.papermark.io", req.url));

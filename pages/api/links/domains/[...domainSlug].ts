@@ -230,7 +230,8 @@ export default async function handle(
         ...linkData,
       };
 
-      res.status(200).json({ linkType, link: returnLink, brand });
+      res.setHeader("Cache-Control", "public, max-age=0, must-revalidate");
+      return res.status(200).json({ linkType, link: returnLink, brand });
     } catch (error) {
       log({
         message: `Cannot get link for custom domain _${domainSlug}_ \n\n${error}`,
