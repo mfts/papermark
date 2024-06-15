@@ -1,33 +1,12 @@
 import Image from "next/image";
-import Link from "next/link";
 
-import { useEffect, useRef, useState } from "react";
+import React from "react";
 
-import { TeamContextType } from "@/context/team-context";
-import { FolderInputIcon, MoreVertical, TrashIcon } from "lucide-react";
 import { useTheme } from "next-themes";
-import { toast } from "sonner";
-import { mutate } from "swr";
 
-import { MoveToFolderModal } from "@/components/documents/move-folder-modal";
-import BarChart from "@/components/shared/icons/bar-chart";
-import Check from "@/components/shared/icons/check";
-import Copy from "@/components/shared/icons/copy";
 import NotionIcon from "@/components/shared/icons/notion";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
-import { type DataroomFolderDocument } from "@/lib/swr/use-dataroom";
-import { type DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
-import { nFormatter, timeAgo } from "@/lib/utils";
-import { useCopyToClipboard } from "@/lib/utils/use-copy-to-clipboard";
+import { TDocumentData } from "./dataroom-view";
 
 type DRDocument = {
   dataroomDocumentId: string;
@@ -38,20 +17,14 @@ type DRDocument = {
     type: string;
     versionNumber: number;
     hasPages: boolean;
+    isVertical: boolean;
   }[];
 };
 
 type DocumentsCardProps = {
   document: DRDocument;
   setViewType: (type: "DOCUMENT_VIEW" | "DATAROOM_VIEW") => void;
-  setDocumentData: (data: {
-    id: string;
-    name: string;
-    hasPages: boolean;
-    documentType: "pdf" | "notion";
-    documentVersionId: string;
-    documentVersionNumber: number;
-  }) => void;
+  setDocumentData: React.Dispatch<React.SetStateAction<TDocumentData | null>>;
 };
 export default function DocumentCard({
   document,
@@ -71,7 +44,7 @@ export default function DocumentCard({
               <NotionIcon className="h-8 w-8" />
             ) : (
               <Image
-                src={`/_icons/pdf${isLight ? "-light" : ""}.svg`}
+                src={`/_icons/${document.versions[0].type}${isLight ? "-light" : ""}.svg`}
                 alt="File icon"
                 width={50}
                 height={50}
@@ -91,9 +64,11 @@ export default function DocumentCard({
                       hasPages: document.versions[0].hasPages,
                       documentType: document.versions[0].type as
                         | "pdf"
-                        | "notion",
+                        | "notion"
+                        | "sheet",
                       documentVersionId: document.versions[0].id,
                       documentVersionNumber: document.versions[0].versionNumber,
+                      isVertical: document.versions[0].isVertical,
                     });
                   }}
                   className="w-full truncate"

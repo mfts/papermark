@@ -16,7 +16,7 @@ export const ScreenProtector = () => {
 
   if (blockScreen) {
     return (
-      <div className="absolute inset-0 z-50 flex h-screen w-screen items-center justify-center bg-white">
+      <div className="absolute inset-0 z-50 flex w-screen items-center justify-center bg-white">
         <div className="flex flex-col gap-4">
           <div className="flex gap-2">
             <XOctagonIcon className="size-5 text-destructive" />

@@ -51,7 +51,9 @@ export default async function handle(
           folderId: null,
         },
         orderBy: {
-          createdAt: "desc",
+          document: {
+            name: "asc",
+          },
         },
         include: {
           document: {
@@ -61,11 +63,7 @@ export default async function handle(
               type: true,
               _count: {
                 select: {
-                  views: {
-                    where: {
-                      dataroomId: dataroomId,
-                    },
-                  },
+                  views: { where: { viewType: "DATAROOM_VIEW" } },
                   versions: true,
                 },
               },

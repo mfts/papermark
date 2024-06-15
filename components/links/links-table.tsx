@@ -97,11 +97,46 @@ export default function LinksTable({
       metaTitle: link.metaTitle,
       metaDescription: link.metaDescription,
       metaImage: link.metaImage,
+      enableAgreement: link.enableAgreement ? link.enableAgreement : false,
+      agreementId: link.agreementId,
     });
     //wait for dropdown to close before opening the link sheet
     setTimeout(() => {
       setIsLinkSheetVisible(true);
     }, 0);
+  };
+
+  const handleDuplicateLink = async (link: LinkWithViews) => {
+    setIsLoading(true);
+
+    const response = await fetch(
+      `/api/links/${link.id}/duplicate?teamId=${teamInfo?.currentTeam?.id}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      },
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const duplicatedLink = await response.json();
+    const endpointTargetType = `${targetType.toLowerCase()}s`; // "documents" or "datarooms"
+
+    // Update the duplicated link in the list of links
+    mutate(
+      `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
+        link.documentId ?? link.dataroomId ?? "",
+      )}/links`,
+      (links || []).concat(duplicatedLink),
+      false,
+    );
+
+    toast.success("Link duplicated successfully");
+    setIsLoading(false);
   };
 
   const handleArchiveLink = async (
@@ -199,7 +234,7 @@ export default function LinksTable({
                             >
                               {/* Progress bar */}
                               {primaryVersion &&
-                              primaryVersion.type !== "notion" &&
+                              primaryVersion.type === "pdf" &&
                               !primaryVersion.hasPages ? (
                                 <ProcessStatusBar
                                   documentVersionId={primaryVersion.id}
@@ -288,7 +323,10 @@ export default function LinksTable({
                           <TableCell className="text-center sm:text-right">
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" className="h-8 w-8 p-0">
+                                <Button
+                                  variant="ghost"
+                                  className="h-8 w-8 p-0 group-hover/row:ring-1 group-hover/row:ring-gray-200 group-hover/row:dark:ring-gray-700"
+                                >
                                   <span className="sr-only">Open menu</span>
                                   <MoreHorizontal className="h-4 w-4" />
                                 </Button>
@@ -300,6 +338,11 @@ export default function LinksTable({
                                   onClick={() => handleEditLink(link)}
                                 >
                                   Edit Link
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => handleDuplicateLink(link)}
+                                >
+                                  Duplicate Link
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   className="text-destructive focus:bg-destructive focus:text-destructive-foreground"

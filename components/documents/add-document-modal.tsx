@@ -29,6 +29,7 @@ import {
 } from "@/lib/documents/create-document";
 import { putFile } from "@/lib/files/put-file";
 import { copyToClipboard } from "@/lib/utils";
+import { getSupportedContentType } from "@/lib/utils/get-content-type";
 
 export function AddDocumentModal({
   newVersion,
@@ -69,6 +70,16 @@ export function AddDocumentModal({
     try {
       setUploading(true);
 
+      const contentType = getSupportedContentType(currentFile.type);
+
+      if (!contentType) {
+        setUploading(false);
+        toast.error(
+          "Unsupported file format. Please upload a PDF or Excel file.",
+        );
+        return;
+      }
+
       const { type, data, numPages } = await putFile({
         file: currentFile,
         teamId,
@@ -78,6 +89,7 @@ export function AddDocumentModal({
         name: currentFile.name,
         key: data!,
         storageType: type!,
+        contentType: contentType,
       };
       let response: Response | undefined;
       // create a document or new version in the database
@@ -115,7 +127,7 @@ export function AddDocumentModal({
             name: document.name,
             numPages: document.numPages,
             path: router.asPath,
-            type: "pdf",
+            type: document.type,
             teamId: teamId,
             dataroomId: dataroomId,
           });
@@ -137,7 +149,7 @@ export function AddDocumentModal({
             name: document.name,
             numPages: document.numPages,
             path: router.asPath,
-            type: "pdf",
+            type: document.type,
             teamId: teamId,
           });
           analytics.capture("Link Added", {
@@ -157,7 +169,7 @@ export function AddDocumentModal({
             name: document.name,
             numPages: document.numPages,
             path: router.asPath,
-            type: "pdf",
+            type: document.type,
             newVersion: true,
             teamId: teamId,
           });

@@ -3,3 +3,5 @@ node_modules/
 .react-email/
 .vercel/
 .github/
+*.min.js
+*.min.css

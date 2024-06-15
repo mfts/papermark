@@ -1,15 +1,13 @@
-import Link from "next/link";
+import { useRouter } from "next/router";
 
 import { useEffect, useState } from "react";
 import React from "react";
 
-import { Brand, Dataroom, DataroomBrand, DataroomFolder } from "@prisma/client";
+import { DataroomBrand, DataroomFolder } from "@prisma/client";
 import * as SheetPrimitive from "@radix-ui/react-dialog";
-import { MenuIcon, PanelLeftIcon, XIcon } from "lucide-react";
+import { PanelLeftIcon, XIcon } from "lucide-react";
 
-import { cn } from "@/lib/utils";
-
-import { ViewFolderTree } from "../datarooms/folders";
+import { ViewFolderTree } from "@/components/datarooms/folders";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -17,22 +15,21 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from "../ui/breadcrumb";
-import { Button } from "../ui/button";
-import { FileTree } from "../ui/nextra-filetree";
-import { ScrollArea } from "../ui/scroll-area";
+} from "@/components/ui/breadcrumb";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Sheet,
-  SheetContent,
   SheetOverlay,
   SheetPortal,
   SheetTrigger,
-} from "../ui/sheet";
+} from "@/components/ui/sheet";
+
+import { cn } from "@/lib/utils";
+
+import { TDocumentData } from "./dataroom/dataroom-view";
 import DocumentCard from "./dataroom/document-card";
 import FolderCard from "./dataroom/folder-card";
 import DataroomNav from "./dataroom/nav-dataroom";
-import Nav from "./nav";
-import { useRouter } from "next/router";
 
 type DataroomDocument = {
   dataroomDocumentId: string;
@@ -44,6 +41,7 @@ type DataroomDocument = {
     type: string;
     versionNumber: number;
     hasPages: boolean;
+    isVertical: boolean;
   }[];
 };
 
@@ -63,16 +61,7 @@ export default function DataroomViewer({
   setViewType: React.Dispatch<
     React.SetStateAction<"DOCUMENT_VIEW" | "DATAROOM_VIEW">
   >;
-  setDocumentData: React.Dispatch<
-    React.SetStateAction<{
-      id: string;
-      name: string;
-      hasPages: boolean;
-      documentType: "pdf" | "notion";
-      documentVersionId: string;
-      documentVersionNumber: number;
-    } | null>
-  >;
+  setDocumentData: React.Dispatch<React.SetStateAction<TDocumentData | null>>;
   setDataroomVerified: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
   const router = useRouter();
@@ -159,19 +148,6 @@ export default function DataroomViewer({
                         </SheetPrimitive.Close>
                       </SheetPrimitive.Content>
                     </SheetPortal>
-                    {/* <SheetContent
-                side="left"
-                className="w-[280px] sm:w-[300px] lg:hidden p-0 m-0 top-56"
-              >
-                <div className="h-full overflow-auto md:mx-5 lg:mx-7 xl:mx-10 mt-4 md:mt-5 lg:mt-8 mb-10 space-y-8 py-3 px-2">
-                  <ViewFolderTree
-                    folders={folders}
-                    documents={documents}
-                    setFolderId={setFolderId}
-                    folderId={folderId}
-                  />
-                </div>
-              </SheetContent> */}
                   </Sheet>
                 </div>
 

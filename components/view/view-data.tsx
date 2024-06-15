@@ -1,13 +1,19 @@
+import dynamic from "next/dynamic";
+
 import { Brand } from "@prisma/client";
 import { ExtendedRecordMap } from "notion-types";
 
 import { NotionPage } from "@/components/NotionPage";
 import PDFViewer from "@/components/view/PDFViewer";
-import PagesViewer from "@/components/view/PagesViewer";
+import PagesViewerNew from "@/components/view/PagesViewerNew";
+import { DEFAULT_DOCUMENT_VIEW_TYPE } from "@/components/view/document-view";
 
 import { LinkWithDocument } from "@/lib/types";
 
-import { DEFAULT_DOCUMENT_VIEW_TYPE } from "./document-view";
+const ExcelViewer = dynamic(
+  () => import("@/components/view/viewer/excel-viewer"),
+  { ssr: false },
+);
 
 export default function ViewData({
   viewData,
@@ -37,8 +43,18 @@ export default function ViewData({
       versionNumber={document.versions[0].versionNumber}
       brand={brand}
     />
+  ) : viewData.sheetData ? (
+    <ExcelViewer
+      linkId={link.id}
+      viewId={viewData.viewId}
+      documentId={document.id}
+      documentName={document.name}
+      versionNumber={document.versions[0].versionNumber}
+      sheetData={viewData.sheetData}
+      brand={brand}
+    />
   ) : viewData.pages ? (
-    <PagesViewer
+    <PagesViewerNew
       pages={viewData.pages}
       viewId={viewData.viewId}
       linkId={link.id}
@@ -52,6 +68,7 @@ export default function ViewData({
       showPoweredByBanner={showPoweredByBanner}
       enableQuestion={link.enableQuestion}
       feedback={link.feedback}
+      isVertical={document.versions[0].isVertical}
     />
   ) : (
     <PDFViewer

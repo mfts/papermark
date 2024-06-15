@@ -55,6 +55,8 @@ export default async function handle(
               data: true,
             },
           },
+          enableAgreement: true,
+          agreement: true,
           document: {
             select: {
               team: {
@@ -136,6 +138,7 @@ export default async function handle(
                     hasPages: true,
                     type: true,
                     file: true,
+                    isVertical: true,
                   },
                   take: 1,
                 },
@@ -179,10 +182,16 @@ export default async function handle(
                             type: true,
                             hasPages: true,
                             file: true,
+                            isVertical: true,
                           },
                           take: 1,
                         },
                       },
+                    },
+                  },
+                  orderBy: {
+                    document: {
+                      name: "asc",
                     },
                   },
                 },

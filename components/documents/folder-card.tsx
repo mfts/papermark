@@ -127,6 +127,34 @@ export default function FolderCard({
     }
   };
 
+  const handleCreateDataroom = (e: any, folderId: string) => {
+    e.stopPropagation();
+    e.preventDefault();
+
+    toast.promise(
+      fetch(
+        `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/create-from-folder`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            folderId: folderId,
+          }),
+        },
+      ),
+      {
+        loading: "Creating dataroom...",
+        success: () => {
+          mutate(`/api/teams/${teamInfo?.currentTeam?.id}/datarooms`);
+          return "Dataroom created successfully.";
+        },
+        error: "Failed to create dataroom.",
+      },
+    );
+  };
+
   return (
     <>
       <li className="group/row relative flex items-center justify-between rounded-lg border-0 p-3 ring-1 ring-gray-400 transition-all hover:bg-secondary hover:ring-gray-500 dark:bg-secondary dark:ring-gray-500 hover:dark:ring-gray-400 sm:p-4">
@@ -189,8 +217,15 @@ export default function FolderCard({
             <DropdownMenuContent align="end" ref={dropdownRef}>
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
               <DropdownMenuItem onClick={() => setOpenFolder(true)}>
-                Rename folder
+                Rename
               </DropdownMenuItem>
+              {!isDataroom ? (
+                <DropdownMenuItem
+                  onClick={(e) => handleCreateDataroom(e, folder.id)}
+                >
+                  Create dataroom from folder
+                </DropdownMenuItem>
+              ) : null}
               <DropdownMenuSeparator />
 
               <DropdownMenuItem
