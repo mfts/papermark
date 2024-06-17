@@ -69,7 +69,7 @@ const tiers: {
     featureIntro: "Everything in Free, plus:",
     features: [
       "2 users included",
-      "Custom slug",
+
       "Custom branding",
       "1-year analytics retention",
       "Advanced access controls",
