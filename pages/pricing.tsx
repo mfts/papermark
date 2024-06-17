@@ -69,7 +69,6 @@ const tiers: {
     featureIntro: "Everything in Free, plus:",
     features: [
       "2 users included",
-
       "Custom branding",
       "1-year analytics retention",
       "Advanced access controls",
@@ -435,7 +434,7 @@ export default function PricingPage() {
         <div className="mx-auto w-full max-w-7xl px-4 md:px-8 ">
           <div className="mx-auto my-4 rounded-xl bg-[#fb7a00] px-6 py-12">
             <div className="item-center flex flex-col justify-between space-y-10 lg:flex-row lg:space-y-0">
-              <h2 className="text-nowrap text-3xl">
+              <h2 className="text-balance text-3xl">
                 Looking for enterprise plan or self-hosted version?
               </h2>
               <div className="flex items-center space-x-2">
