@@ -34,7 +34,7 @@ export function UpgradePlanModal({
   const [plan, setPlan] = useState<"Pro" | "Business" | "Data Rooms">(
     clickedPlan,
   );
-  const [period, setPeriod] = useState<"monthly" | "yearly">("monthly");
+  const [period, setPeriod] = useState<"yearly" | "monthly">("yearly");
   const [clicked, setClicked] = useState<boolean>(false);
   const teamInfo = useTeam();
   const analytics = useAnalytics();
@@ -55,7 +55,9 @@ export function UpgradePlanModal({
         "3 users",
         "1 dataroom",
         "Multi-file sharing",
-        "Custom domain for documents",
+        <span key="custom-domain">
+          Custom domain <b>for documents</b>
+        </span>,
         "Unlimited documents",
         "Unlimited subfolder levels",
         "Large file uploads",
@@ -66,7 +68,9 @@ export function UpgradePlanModal({
       return [
         "5 users included",
         "Unlimited data rooms",
-        "Custom domain for data rooms",
+        <span key="custom-dataroom">
+          Custom domain <b>for data rooms</b>
+        </span>,
         "Unlimited documents",
         "Unlimited folders and subfolders",
         "User groups permissions",
