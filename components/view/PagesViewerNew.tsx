@@ -10,6 +10,7 @@ import {
   ChevronRightIcon,
   ChevronUpIcon,
 } from "lucide-react";
+import { useSession } from "next-auth/react";
 import {
   ReactZoomPanPinchContentRef,
   TransformComponent,
@@ -25,6 +26,7 @@ import Nav from "./nav";
 import { PoweredBy } from "./powered-by";
 import Question from "./question";
 import Toolbar from "./toolbar";
+import ViewDurationSummary from "./visitor-graph";
 
 const DEFAULT_PRELOADED_IMAGES_NUM = 5;
 
@@ -36,7 +38,18 @@ const trackPageView = async (data: {
   pageNumber: number;
   versionNumber: number;
   dataroomId?: string;
+  setViewedPages?: React.Dispatch<
+    React.SetStateAction<{ pageNumber: number; duration: number }[]>
+  >;
 }) => {
+  data.setViewedPages &&
+    data.setViewedPages((prevViewedPages) =>
+      prevViewedPages.map((page) =>
+        page.pageNumber === data.pageNumber
+          ? { ...page, duration: page.duration + data.duration }
+          : page,
+      ),
+    );
   await fetch("/api/record_view", {
     method: "POST",
     body: JSON.stringify(data),
@@ -64,6 +77,7 @@ export default function PagesViewer({
   enableQuestion = false,
   feedback,
   isVertical = false,
+  viewerEmail,
 }: {
   pages: { file: string; pageNumber: string; embeddedLinks: string[] }[];
   linkId: string;
@@ -85,12 +99,19 @@ export default function PagesViewer({
     data: { question: string; type: string };
   } | null;
   isVertical?: boolean;
+  viewerEmail?: string;
 }) {
   const router = useRouter();
+  const { status: sessionStatus } = useSession();
 
   const numPages = pages.length;
   const numPagesWithFeedback =
     enableQuestion && feedback ? numPages + 1 : numPages;
+
+  const numPagesWithAccountCreation =
+    sessionStatus === "authenticated" && !dataroomId
+      ? numPagesWithFeedback
+      : numPagesWithFeedback + 1;
 
   const pageQuery = router.query.p ? Number(router.query.p) : 1;
 
@@ -103,7 +124,16 @@ export default function PagesViewer({
   );
 
   const [submittedFeedback, setSubmittedFeedback] = useState<boolean>(false);
+  const [accountCreated, setAccountCreated] = useState<boolean>(false);
   const [scale, setScale] = useState<number>(1);
+
+  const initialViewedPages = Array.from({ length: numPages }, (_, index) => ({
+    pageNumber: index + 1,
+    duration: 0,
+  }));
+
+  const [viewedPages, setViewedPages] =
+    useState<{ pageNumber: number; duration: number }[]>(initialViewedPages);
 
   const startTimeRef = useRef(Date.now());
   const pageNumberRef = useRef<number>(pageNumber);
@@ -123,6 +153,8 @@ export default function PagesViewer({
 
   useEffect(() => {
     const handleVisibilityChange = () => {
+      if (pageNumber > numPages) return;
+
       if (document.visibilityState === "visible") {
         visibilityRef.current = true;
         startTimeRef.current = Date.now(); // Reset start time when the page becomes visible again
@@ -135,9 +167,10 @@ export default function PagesViewer({
             documentId,
             viewId,
             duration,
-            pageNumber: pageNumberRef.current,
+            pageNumber: pageNumber,
             versionNumber,
             dataroomId,
+            setViewedPages,
           });
         }
       }
@@ -153,38 +186,34 @@ export default function PagesViewer({
   useEffect(() => {
     startTimeRef.current = Date.now();
 
-    return () => {
-      if (
-        visibilityRef.current &&
-        pageNumber <= numPages &&
-        pageNumberRef.current <= numPages
-      ) {
-        const duration = Date.now() - startTimeRef.current;
-        trackPageView({
-          linkId,
-          documentId,
-          viewId,
-          duration,
-          pageNumber: pageNumberRef.current,
-          versionNumber,
-          dataroomId,
-        });
-      }
-    };
-  }, [pageNumber, pageNumberRef.current, numPages]);
+    if (visibilityRef.current && pageNumber <= numPages) {
+      const duration = Date.now() - startTimeRef.current;
+      trackPageView({
+        linkId,
+        documentId,
+        viewId,
+        duration,
+        pageNumber: pageNumber,
+        versionNumber,
+        dataroomId,
+        setViewedPages,
+      });
+    }
+  }, [pageNumber, numPages]);
 
   useEffect(() => {
     const handleBeforeUnload = () => {
-      if (pageNumber <= numPages && visibilityRef.current) {
+      if (pageNumber <= numPages) {
         const duration = Date.now() - startTimeRef.current;
         trackPageView({
           linkId,
           documentId,
           viewId,
           duration,
-          pageNumber: pageNumberRef.current,
+          pageNumber: pageNumber,
           versionNumber,
           dataroomId,
+          setViewedPages,
         });
       }
     };
@@ -246,7 +275,7 @@ export default function PagesViewer({
     }
 
     // Do not track the question page
-    if (currentPage === numPages + 1) {
+    if (currentPage > numPages) {
       setPageNumber(currentPage);
       startTimeRef.current = Date.now();
       return;
@@ -254,8 +283,8 @@ export default function PagesViewer({
 
     // Scroll Down Tracking
     if (
-      currentPageFraction >= 0.8 &&
-      currentPage === pageNumberRef.current &&
+      currentPageFraction > 0.5 &&
+      currentPage === pageNumber &&
       !hasTrackedDownRef.current
     ) {
       const duration = Date.now() - startTimeRef.current;
@@ -264,9 +293,10 @@ export default function PagesViewer({
         documentId,
         viewId,
         duration,
-        pageNumber: pageNumberRef.current,
+        pageNumber: pageNumber,
         versionNumber,
         dataroomId,
+        setViewedPages,
       });
       setPageNumber(currentPage);
       pageNumberRef.current = currentPage;
@@ -274,22 +304,21 @@ export default function PagesViewer({
       hasTrackedDownRef.current = true;
       hasTrackedUpRef.current = false;
     } else if (
-      currentPageFraction >= 0.8 &&
-      currentPage === pageNumberRef.current - 1 &&
+      currentPageFraction > 0.5 &&
+      currentPage === pageNumber - 1 &&
       !hasTrackedDownRef.current
     ) {
       const duration = Date.now() - startTimeRef.current;
-      if (currentPage !== numPagesWithFeedback - 1) {
-        trackPageView({
-          linkId,
-          documentId,
-          viewId,
-          duration,
-          pageNumber: pageNumberRef.current,
-          versionNumber,
-          dataroomId,
-        });
-      }
+      trackPageView({
+        linkId,
+        documentId,
+        viewId,
+        duration,
+        pageNumber: pageNumber,
+        versionNumber,
+        dataroomId,
+        setViewedPages,
+      });
       setPageNumber(currentPage);
       pageNumberRef.current = currentPage;
       startTimeRef.current = Date.now();
@@ -299,30 +328,8 @@ export default function PagesViewer({
 
     // Scroll Up Tracking
     if (
-      currentPageFraction <= 0.2 &&
-      currentPage === pageNumberRef.current &&
-      !hasTrackedUpRef.current
-    ) {
-      const duration = Date.now() - startTimeRef.current;
-      if (currentPage !== numPagesWithFeedback - 1) {
-        trackPageView({
-          linkId,
-          documentId,
-          viewId,
-          duration,
-          pageNumber: pageNumberRef.current,
-          versionNumber,
-          dataroomId,
-        });
-      }
-      setPageNumber(currentPage);
-      pageNumberRef.current = currentPage;
-      startTimeRef.current = Date.now();
-      hasTrackedUpRef.current = true;
-      hasTrackedDownRef.current = false;
-    } else if (
-      currentPageFraction <= 0.2 &&
-      currentPage === pageNumberRef.current + 1 &&
+      currentPageFraction <= 0.5 &&
+      currentPage === pageNumber &&
       !hasTrackedUpRef.current
     ) {
       const duration = Date.now() - startTimeRef.current;
@@ -331,9 +338,31 @@ export default function PagesViewer({
         documentId,
         viewId,
         duration,
-        pageNumber: pageNumberRef.current + 1,
+        pageNumber: pageNumber,
         versionNumber,
         dataroomId,
+        setViewedPages,
+      });
+      setPageNumber(currentPage);
+      pageNumberRef.current = currentPage;
+      startTimeRef.current = Date.now();
+      hasTrackedUpRef.current = true;
+      hasTrackedDownRef.current = false;
+    } else if (
+      currentPageFraction <= 0.5 &&
+      currentPage === pageNumber + 1 &&
+      !hasTrackedUpRef.current
+    ) {
+      const duration = Date.now() - startTimeRef.current;
+      trackPageView({
+        linkId,
+        documentId,
+        viewId,
+        duration,
+        pageNumber: pageNumber + 1,
+        versionNumber,
+        dataroomId,
+        setViewedPages,
       });
       setPageNumber(currentPage);
       pageNumberRef.current = currentPage;
@@ -385,34 +414,63 @@ export default function PagesViewer({
       return;
     }
 
+    if (pageNumber === numPagesWithFeedback + 1) {
+      if (isVertical) {
+        scrollActionRef.current = true;
+        const newScrollPosition =
+          (pageNumber - 2) * containerRef.current!.clientHeight;
+        containerRef.current?.scrollTo({
+          top: newScrollPosition,
+          behavior: "smooth",
+        });
+      }
+      setPageNumber(pageNumber - 1);
+      startTimeRef.current = Date.now();
+      return;
+    }
+
     const duration = Date.now() - startTimeRef.current;
     trackPageView({
       linkId,
       documentId,
       viewId,
       duration,
-      pageNumber: pageNumberRef.current,
+      pageNumber: pageNumber,
       versionNumber,
       dataroomId,
+      setViewedPages,
     });
-
-    setPageNumber(pageNumber - 1);
-    pageNumberRef.current = pageNumber - 1;
-    startTimeRef.current = Date.now();
 
     if (isVertical) {
       scrollActionRef.current = true;
       const newScrollPosition =
-        (pageNumberRef.current - 1) * containerRef.current!.clientHeight;
+        (pageNumber - 2) * containerRef.current!.clientHeight;
       containerRef.current?.scrollTo({
         top: newScrollPosition,
         behavior: "smooth",
       });
     }
+
+    // decrement page number
+    setPageNumber(pageNumber - 1);
+    startTimeRef.current = Date.now();
   };
 
   const goToNextPage = () => {
-    if (pageNumberRef.current >= numPagesWithFeedback) {
+    if (pageNumber >= numPagesWithAccountCreation) return;
+
+    if (pageNumber > numPages) {
+      if (isVertical) {
+        scrollActionRef.current = true;
+        const newScrollPosition =
+          pageNumber * containerRef.current!.clientHeight;
+        containerRef.current?.scrollTo({
+          top: newScrollPosition,
+          behavior: "smooth",
+        });
+      }
+      setPageNumber(pageNumber + 1);
+      startTimeRef.current = Date.now();
       return;
     }
 
@@ -424,24 +482,24 @@ export default function PagesViewer({
       documentId,
       viewId,
       duration,
-      pageNumber: pageNumberRef.current,
+      pageNumber: pageNumber,
       versionNumber,
       dataroomId,
+      setViewedPages,
     });
-
-    setPageNumber(pageNumber + 1);
-    pageNumberRef.current = pageNumber + 1;
-    startTimeRef.current = Date.now();
 
     if (isVertical) {
       scrollActionRef.current = true;
-      const newScrollPosition =
-        (pageNumberRef.current - 1) * containerRef.current!.clientHeight;
+      const newScrollPosition = pageNumber * containerRef.current!.clientHeight;
       containerRef.current?.scrollTo({
         top: newScrollPosition,
         behavior: "smooth",
       });
     }
+
+    // increment page number
+    setPageNumber(pageNumber + 1);
+    startTimeRef.current = Date.now();
   };
 
   const handleKeyDown = (event: KeyboardEvent) => {
@@ -514,7 +572,7 @@ export default function PagesViewer({
     <>
       <Nav
         pageNumber={pageNumber}
-        numPages={numPagesWithFeedback}
+        numPages={numPagesWithAccountCreation}
         assistantEnabled={assistantEnabled}
         allowDownload={allowDownload}
         brand={brand}
@@ -540,7 +598,7 @@ export default function PagesViewer({
             className={`flex ${isVertical ? "flex-col items-center" : "flex-row justify-center"} w-full`}
             onContextMenu={handleContextMenu}
           >
-            {pageNumber <= numPagesWithFeedback &&
+            {pageNumber <= numPagesWithAccountCreation &&
               pages.map((page, index) => (
                 <TransformWrapper
                   key={index}
@@ -592,6 +650,23 @@ export default function PagesViewer({
                 />
               </div>
             ) : null}
+
+            {sessionStatus !== "authenticated" &&
+            !dataroomId &&
+            (isVertical || pageNumber === numPagesWithAccountCreation) ? (
+              <div
+                className={cn("relative block h-screen w-full")}
+                style={{ height: "calc(100vh - 64px)" }}
+              >
+                <ViewDurationSummary
+                  linkId={linkId}
+                  viewedPages={viewedPages}
+                  viewerEmail={viewerEmail}
+                  accountCreated={accountCreated}
+                  setAccountCreated={setAccountCreated}
+                />
+              </div>
+            ) : null}
           </div>
         </div>
 
@@ -600,10 +675,10 @@ export default function PagesViewer({
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 transform">
               <button
                 onClick={goToNextPage}
-                disabled={pageNumber >= numPagesWithFeedback}
+                disabled={pageNumber >= numPagesWithAccountCreation}
                 className={cn(
                   "rounded-full bg-gray-950/50 p-1 hover:bg-gray-950/75",
-                  pageNumber >= numPagesWithFeedback && "hidden",
+                  pageNumber >= numPagesWithAccountCreation && "hidden",
                 )}
               >
                 <ChevronDownIcon className="h-10 w-10 text-white" />
@@ -640,10 +715,10 @@ export default function PagesViewer({
             <div className="absolute right-4 top-1/2 -translate-y-1/2 transform">
               <button
                 onClick={goToNextPage}
-                disabled={pageNumber >= numPagesWithFeedback}
+                disabled={pageNumber >= numPagesWithAccountCreation}
                 className={cn(
                   "rounded-full bg-gray-950/50 p-1 hover:bg-gray-950/75",
-                  pageNumber >= numPagesWithFeedback && "hidden",
+                  pageNumber >= numPagesWithAccountCreation && "hidden",
                 )}
               >
                 <ChevronRightIcon className="h-10 w-10 text-white" />
@@ -651,7 +726,7 @@ export default function PagesViewer({
             </div>
           </>
         )}
-        {feedbackEnabled && pageNumber !== numPages + 1 ? (
+        {feedbackEnabled && pageNumber <= numPages ? (
           <Toolbar viewId={viewId} pageNumber={pageNumber} />
         ) : null}
         {screenshotProtectionEnabled ? <ScreenProtector /> : null}

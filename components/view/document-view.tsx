@@ -213,6 +213,7 @@ export default function DocumentView({
           notionData={notionData}
           brand={brand}
           showPoweredByBanner={showPoweredByBanner}
+          viewerEmail={data.email ?? verifiedEmail ?? userEmail ?? undefined}
         />
       ) : (
         <div className="flex h-screen items-center justify-center">
