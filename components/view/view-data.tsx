@@ -21,6 +21,7 @@ export default function ViewData({
   notionData,
   brand,
   showPoweredByBanner,
+  viewerEmail,
 }: {
   viewData: DEFAULT_DOCUMENT_VIEW_TYPE;
   link: LinkWithDocument;
@@ -30,6 +31,7 @@ export default function ViewData({
   };
   brand?: Partial<Brand> | null;
   showPoweredByBanner?: boolean;
+  viewerEmail?: string;
 }) {
   const { document } = link;
 
@@ -69,6 +71,7 @@ export default function ViewData({
       enableQuestion={link.enableQuestion}
       feedback={link.feedback}
       isVertical={document.versions[0].isVertical}
+      viewerEmail={viewerEmail}
     />
   ) : (
     <PDFViewer
