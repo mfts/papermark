@@ -1,3 +1,5 @@
+import dynamic from "next/dynamic";
+
 import { useEffect, useRef, useState } from "react";
 import React from "react";
 
@@ -9,6 +11,12 @@ import "react-notion-x/src/styles.css";
 
 import { TDocumentData } from "./view/dataroom/dataroom-view";
 import Nav from "./view/nav";
+
+const Collection = dynamic(() =>
+  import("react-notion-x/build/third-party/collection").then(
+    (m) => m.Collection,
+  ),
+);
 
 export const NotionPage = ({
   recordMap,
@@ -138,6 +146,7 @@ export const NotionPage = ({
             rootPageId={rootPageId}
             disableHeader={true}
             components={{
+              Collection,
               PageLink: (props: {
                 href: any;
                 children:
