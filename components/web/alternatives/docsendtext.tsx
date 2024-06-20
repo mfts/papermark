@@ -419,32 +419,7 @@ const DocSendAlternatives = () => {
                     </p>
                   </li>
                 </ul>
-                <h3 id="dropbox-pricing">Dropbox Pricing</h3>
-                <ul>
-                  <li>
-                    <p>
-                      Professional Plan 1: $9 per user/month, 2 TB of storage
-                    </p>
-                  </li>
-                  <li>
-                    <p>
-                      Professional Plan 2: $16.58 per user/month, 3 TB of
-                      storage
-                    </p>
-                  </li>
-                  <li>
-                    <p>
-                      Professional Plan 3: Starting at $60 per month for 3+
-                      users, 9 TB of storage
-                    </p>
-                  </li>
-                  <li>
-                    <p>
-                      Professional Plan 4: Starting at $350 per month for 3+
-                      users, 15 TB of storage
-                    </p>
-                  </li>
-                </ul>
+
                 <h3 id="dropbox-ratings-and-reviews">
                   Dropbox Ratings and Reviews
                 </h3>
