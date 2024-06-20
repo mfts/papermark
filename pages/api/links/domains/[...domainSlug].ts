@@ -154,6 +154,7 @@ export default async function handle(
           select: {
             logo: true,
             brandColor: true,
+            accentColor: true,
           },
         });
       } else if (linkType === "DATAROOM_LINK") {
