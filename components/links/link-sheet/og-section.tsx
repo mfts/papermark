@@ -1,23 +1,17 @@
-import {
-  Dispatch,
-  SetStateAction,
-  useCallback,
-  useEffect,
-  useState,
-} from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { motion } from "framer-motion";
 import { Upload as ArrowUpTrayIcon } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
 import LoadingSpinner from "@/components/ui/loading-spinner";
-import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 
 import { FADE_IN_ANIMATION_SETTINGS } from "@/lib/constants";
-import { cn } from "@/lib/utils";
 
 import { DEFAULT_LINK_TYPE } from ".";
+import LinkItem from "./link-item";
+import { LinkUpgradeOptions } from "./link-options";
 
 export default function OGSection({
   data,
@@ -26,9 +20,13 @@ export default function OGSection({
   handleUpgradeStateChange,
 }: {
   data: DEFAULT_LINK_TYPE;
-  setData: Dispatch<SetStateAction<DEFAULT_LINK_TYPE>>;
+  setData: React.Dispatch<React.SetStateAction<DEFAULT_LINK_TYPE>>;
   hasFreePlan: boolean;
-  handleUpgradeStateChange: (state: boolean, trigger: string) => void;
+  handleUpgradeStateChange: ({
+    state,
+    trigger,
+    plan,
+  }: LinkUpgradeOptions) => void;
 }) {
   const { enableCustomMetatag, metaTitle, metaDescription, metaImage } = data;
   const [enabled, setEnabled] = useState<boolean>(false);
@@ -73,39 +71,20 @@ export default function OGSection({
 
   return (
     <div className="pb-5">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center justify-between space-x-2">
-          <h2
-            className={cn(
-              "text-sm font-medium leading-6",
-              enabled ? "text-foreground" : "text-muted-foreground",
-              hasFreePlan ? "cursor-pointer" : undefined,
-            )}
-            onClick={
-              hasFreePlan
-                ? () => handleUpgradeStateChange(true, "link_sheet_og_section")
-                : undefined
-            }
-          >
-            Custom social media cards
-            {hasFreePlan && (
-              <span className="ml-2 rounded-full bg-background px-2 py-0.5 text-xs text-foreground ring-1 ring-gray-800 dark:ring-gray-500">
-                Pro
-              </span>
-            )}
-          </h2>
-        </div>
-        <Switch
-          checked={enabled}
-          onClick={
-            hasFreePlan
-              ? () => handleUpgradeStateChange(true, "link_sheet_og_section")
-              : undefined
-          }
-          className={hasFreePlan ? "opacity-50" : undefined}
-          onCheckedChange={hasFreePlan ? undefined : handleCustomMetatag}
-        />
-      </div>
+      <LinkItem
+        title="Custom social media cards"
+        enabled={enableCustomMetatag}
+        action={handleCustomMetatag}
+        hasFreePlan={hasFreePlan}
+        requiredPlan="Business"
+        upgradeAction={() =>
+          handleUpgradeStateChange({
+            state: true,
+            trigger: "link_sheet_og_section",
+            plan: "Business",
+          })
+        }
+      />
 
       {enabled && (
         <motion.div

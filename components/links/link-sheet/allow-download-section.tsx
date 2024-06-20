@@ -1,17 +1,14 @@
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
-
-import { Switch } from "@/components/ui/switch";
-
-import { cn } from "@/lib/utils";
+import { useEffect, useState } from "react";
 
 import { DEFAULT_LINK_TYPE } from ".";
+import LinkItem from "./link-item";
 
 export default function AllowDownloadSection({
   data,
   setData,
 }: {
   data: DEFAULT_LINK_TYPE;
-  setData: Dispatch<SetStateAction<DEFAULT_LINK_TYPE>>;
+  setData: React.Dispatch<React.SetStateAction<DEFAULT_LINK_TYPE>>;
 }) {
   const { allowDownload } = data;
   const [enabled, setEnabled] = useState<boolean>(false);
@@ -28,19 +25,11 @@ export default function AllowDownloadSection({
 
   return (
     <div className="pb-5">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center justify-between space-x-2">
-          <h2
-            className={cn(
-              "text-sm font-medium leading-6",
-              enabled ? "text-foreground" : "text-muted-foreground",
-            )}
-          >
-            Allow downloading
-          </h2>
-        </div>
-        <Switch checked={enabled} onCheckedChange={handleAllowDownload} />
-      </div>
+      <LinkItem
+        title="Allow downloading"
+        enabled={enabled}
+        action={handleAllowDownload}
+      />
     </div>
   );
 }
