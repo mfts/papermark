@@ -71,7 +71,6 @@ const tiers: {
       "2 users included",
       "Custom branding",
       "1-year analytics retention",
-      "Advanced access controls",
       "Folder organization",
     ],
     bgColor: "bg-gray-200",
@@ -84,13 +83,14 @@ const tiers: {
     name: "Business",
     id: "tier-business",
     href: "/login",
-    price: { monthly: "€79", annually: "€59" },
+    price: { monthly: "€79", annually: "€45" },
     description: "The one for more control, data room, and multi-file sharing.",
     featureIntro: "Everything in Pro, plus:",
     features: [
       "3 users included",
       "1 dataroom",
       "Custom domain for documents",
+      "Advanced link controls",
       "Multi-file sharing",
       "Unlimited documents",
       "Unlimited subfolder levels",
@@ -107,7 +107,7 @@ const tiers: {
     name: "Data Rooms",
     id: "tier-datarooms",
     href: "/login",
-    price: { monthly: "€199", annually: "€149" },
+    price: { monthly: "€199", annually: "€99" },
     description: "Advanced data rooms infrastructure for your company.",
     featureIntro: "Everything in Business, plus:",
     features: [
@@ -315,7 +315,7 @@ export default function PricingPage() {
                                     : "hidden",
                                 )}
                               />
-                              25% Saving
+                              43% Saving
                             </div>
                           </div>
                         ) : null}
@@ -363,7 +363,7 @@ export default function PricingPage() {
                                     : "hidden",
                                 )}
                               />
-                              25% Saving
+                              50% Saving
                             </div>
                           </div>
                         ) : null}
