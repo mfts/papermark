@@ -99,7 +99,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
           },
           showPoweredByBanner: teamPlan === "free",
         },
-        revalidate: brand ? 10 : false,
+        revalidate: 10,
       };
     }
 
