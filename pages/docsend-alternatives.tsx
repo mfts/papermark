@@ -191,11 +191,11 @@ Please note that the prices and availability of features may vary, and it is rec
             <Grid />
             <div className="mx-auto max-w-5xl px-8 lg:px-28">
               <div className="mx-auto max-w-5xl">
-                <div className="mx-auto my-1 w-full "></div>
-                <h2 className="my-8 text-center text-4xl  font-bold text-black">
+                <div className="mx-auto my-1 w-full"></div>
+                <h2 className="my-8 text-center text-4xl font-bold text-black">
                   Find Docsend alterntive based on your requirements
                 </h2>
-                <p className="text-1xl mb-5 mt-3 text-center font-semibold text-black ">
+                <p className="text-1xl mb-5 mt-3 text-center font-semibold text-black">
                   Step 1. Select features you prioritize the most <br />
                 </p>
                 <Feature
@@ -208,7 +208,7 @@ Please note that the prices and availability of features may vary, and it is rec
                     <div className="w-full">
                       {shouldRenderSteps() && (
                         <>
-                          <p className="text-1xl mb-5 mt-10 text-center font-semibold text-black ">
+                          <p className="text-1xl mb-5 mt-10 text-center font-semibold text-black">
                             Step 2. Select your plan
                             <br />
                           </p>
@@ -218,7 +218,7 @@ Please note that the prices and availability of features may vary, and it is rec
                               <PlanSelect plan={plan} setPlan={setPlan} />
                             </div>
                           </div>
-                          <p className="text-1xl mb-5 mt-10 text-center font-semibold text-black ">
+                          <p className="text-1xl mb-5 mt-10 text-center font-semibold text-black">
                             Step 3. Select your use case
                             <br />
                           </p>
@@ -238,7 +238,7 @@ Please note that the prices and availability of features may vary, and it is rec
                   <div className="flex space-x-6"></div>
                 </div>
 
-                <div className="my-4 lg:px-72 ">
+                <div className="my-4 lg:px-72">
                   <button
                     disabled={loading}
                     onClick={(e) => optimizePost(e)}

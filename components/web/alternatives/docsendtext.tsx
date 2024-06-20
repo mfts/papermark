@@ -216,13 +216,22 @@ const DocSendAlternatives = () => {
                     <p>Free: $0</p>
                   </li>
                   <li>
-                    <p>Starter: $19/month</p>
+                    <p>Starter: $25/month</p>
                   </li>
                   <li>
                     <p>
                       Business: $59/month (
                       <a target="_blank" rel="nofollow" href="/data-room">
                         data room
+                      </a>{" "}
+                      included)
+                    </p>
+                  </li>
+                  <li>
+                    <p>
+                      Data Rooms: $149/month (
+                      <a target="_blank" rel="nofollow" href="/data-room">
+                        unlimited data rooms
                       </a>{" "}
                       included)
                     </p>
@@ -1622,7 +1631,9 @@ const DocSendAlternatives = () => {
 
           <div className="sticky top-14 col-span-1 hidden flex-col divide-y divide-gray-200 self-start sm:flex">
             <div className="flex flex-col space-y-4">
-              <p className="text-sm text-gray-500">Written by</p>
+              <p className="text-sm text-gray-500">
+                Last updated on 19.06.2024
+              </p>
               {/* <Author username={data.author} /> */}
               <Link
                 href={`https://twitter.com/mfts0`}
@@ -1641,6 +1652,27 @@ const DocSendAlternatives = () => {
                   <p className="font-semibold text-gray-700">Marc Seitz</p>
                   <p className="text-sm text-gray-500">@mfts0</p>
                 </div>
+              </Link>
+              <Link
+                href="https://papermark.io/login"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Button
+                  variant="orange"
+                  className="mt-10 rounded-3xl text-base"
+                >
+                  Start with Docsend alternative
+                </Button>
+              </Link>
+              <Link
+                href="https://papermark.io/pricing"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Button className="rounded-3xl border border-gray-900 bg-gray-100 bg-white text-base text-gray-900 hover:bg-gray-200">
+                  Learn more about plans
+                </Button>
               </Link>
             </div>
           </div>

@@ -775,7 +775,7 @@ const DigifyAlternatives = () => {
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <Button className="rounded-3xl text-base text-gray-600 hover:text-gray-900">
+                <Button className="rounded-3xl border border-gray-900 bg-gray-100 bg-white text-base text-gray-900 hover:bg-gray-200">
                   Learn more about plans
                 </Button>
               </Link>

@@ -8,35 +8,39 @@ const tools: ToolFeature[] = [
     name: "Papermark",
     features: {
       plan1: "Free",
-      plan2: "$29/month (team access)",
-      plan3: "Custom",
+      plan2: "€39/month (2 users)",
+      plan3: "€79/month (3 users)",
+      plan4: "€149/month (5 users)",
       opensource: "Yes",
     },
   },
   {
     name: "Docsend",
     features: {
-      plan1: "$15/month (per user)",
-      plan2: "$65/month (per user)",
-      plan3: "$250/month",
+      plan1: "$15/month (1 user)",
+      plan2: "$65/month (1 user)",
+      plan3: "$250/month (3 users)",
+      plan4: "$300/month (3 users)",
       opensource: "No",
     },
   },
   {
     name: "PandaDoc",
     features: {
-      plan1: "$35/month",
-      plan2: "$65/month",
+      plan1: "$35/month (1 user)",
+      plan2: "$65/month (1 user)",
       plan3: "Enterprise",
+      plan4: "-",
       opensource: "No",
     },
   },
 ];
 
 const featureDisplayNames: { [key: string]: string } = {
-  plan1: "Essential plan",
-  plan2: "Standard plan",
-  plan3: "Pro plan",
+  plan1: "Plan 1",
+  plan2: "Plan 2",
+  plan3: "Plan 3",
+  plan4: "Plan 4",
   opensource: "Open Source and Self Hosted",
 };
 
@@ -60,7 +64,7 @@ export default function ComparisonTable() {
       </div>
       <div className="mt-6 flow-root">
         <div className="mx-4 my-2 overflow-x-auto rounded-lg border border-gray-300">
-          <div className="inline-block min-w-full  align-middle">
+          <div className="inline-block min-w-full align-middle">
             <table className="min-w-full divide-y divide-gray-300">
               <thead>
                 <tr>
@@ -87,7 +91,7 @@ export default function ComparisonTable() {
                       <td
                         key={tool.name}
                         className={`px-3 py-4 text-sm text-gray-500 ${
-                          tool.name === "Papermark" ? "bg-orange-100" : ""
+                          tool.name === "Papermark" ? "bg-green-100" : ""
                         }`}
                       >
                         {tool.features[feature]}
