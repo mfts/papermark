@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { motion } from "framer-motion";
 
@@ -9,14 +9,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 
 import { FADE_IN_ANIMATION_SETTINGS } from "@/lib/constants";
 import { useAgreements } from "@/lib/swr/use-agreements";
-import { cn } from "@/lib/utils";
 
 import { DEFAULT_LINK_TYPE } from ".";
 import AgreementSheet from "./agreement-panel";
+import LinkItem from "./link-item";
+import { LinkUpgradeOptions } from "./link-options";
 
 export default function AgreementSection({
   data,
@@ -25,13 +25,13 @@ export default function AgreementSection({
   handleUpgradeStateChange,
 }: {
   data: DEFAULT_LINK_TYPE;
-  setData: Dispatch<SetStateAction<DEFAULT_LINK_TYPE>>;
+  setData: React.Dispatch<React.SetStateAction<DEFAULT_LINK_TYPE>>;
   hasFreePlan: boolean;
-  handleUpgradeStateChange: (
-    state: boolean,
-    trigger: string,
-    plan?: "Pro" | "Business" | "Data Rooms",
-  ) => void;
+  handleUpgradeStateChange: ({
+    state,
+    trigger,
+    plan,
+  }: LinkUpgradeOptions) => void;
 }) {
   const { agreements } = useAgreements();
   const { enableAgreement, agreementId, emailProtected } = data;
@@ -66,52 +66,20 @@ export default function AgreementSection({
 
   return (
     <div className="pb-5">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center justify-between space-x-2">
-          <h2
-            className={cn(
-              "flex items-center gap-x-2 text-sm font-medium leading-6",
-              enabled ? "text-foreground" : "text-muted-foreground",
-              hasFreePlan ? "cursor-pointer" : undefined,
-            )}
-            onClick={
-              hasFreePlan
-                ? () =>
-                    handleUpgradeStateChange(
-                      true,
-                      "link_sheet_agreement_section",
-                      "Data Rooms",
-                    )
-                : undefined
-            }
-          >
-            Require NDA to view
-            {/* <span>
-              <HelpCircleIcon className="text-muted-foreground h-4 w-4" />
-            </span> */}
-            {hasFreePlan && (
-              <span className="ml-2 rounded-full bg-background px-2 py-0.5 text-xs text-foreground ring-1 ring-gray-800 dark:ring-gray-500">
-                Datarooms
-              </span>
-            )}
-          </h2>
-        </div>
-        <Switch
-          checked={enabled}
-          onClick={
-            hasFreePlan
-              ? () =>
-                  handleUpgradeStateChange(
-                    true,
-                    "link_sheet_agreement_section",
-                    "Data Rooms",
-                  )
-              : undefined
-          }
-          className={hasFreePlan ? "opacity-50" : undefined}
-          onCheckedChange={hasFreePlan ? undefined : handleAgreement}
-        />
-      </div>
+      <LinkItem
+        title="Require NDA to view"
+        enabled={enabled}
+        action={handleAgreement}
+        hasFreePlan={hasFreePlan}
+        requiredPlan="datarooms"
+        upgradeAction={() =>
+          handleUpgradeStateChange({
+            state: true,
+            trigger: "link_sheet_agreement_section",
+            plan: "Data Rooms",
+          })
+        }
+      />
 
       {enabled && (
         <motion.div
