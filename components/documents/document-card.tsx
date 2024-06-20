@@ -6,6 +6,8 @@ import { useEffect, useRef, useState } from "react";
 
 import { TeamContextType } from "@/context/team-context";
 import {
+  BetweenHorizontalStartIcon,
+  FilePlus2Icon,
   FolderInputIcon,
   Layers2Icon,
   MoreVertical,
@@ -33,6 +35,7 @@ import { DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
 import { nFormatter, timeAgo } from "@/lib/utils";
 import { useCopyToClipboard } from "@/lib/utils/use-copy-to-clipboard";
 
+import { AddToDataroomModal } from "./move-dataroom-modal";
 import { MoveToFolderModal } from "./move-folder-modal";
 
 type DocumentsCardProps = {
@@ -52,6 +55,7 @@ export default function DocumentsCard({
   const [isFirstClick, setIsFirstClick] = useState<boolean>(false);
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
   const [moveFolderOpen, setMoveFolderOpen] = useState<boolean>(false);
+  const [addDataroomOpen, setAddDataroomOpen] = useState<boolean>(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
   /** current folder name */
@@ -142,9 +146,7 @@ export default function DocumentsCard({
     toast.promise(
       fetch(
         `/api/teams/${teamInfo?.currentTeam?.id}/documents/${prismaDocument.id}/duplicate`,
-        {
-          method: "POST",
-        },
+        { method: "POST" },
       ).then(() => {
         mutate(`/api/teams/${teamInfo?.currentTeam?.id}/documents`);
         mutate(
@@ -256,6 +258,10 @@ export default function DocumentsCard({
                 <Layers2Icon className="mr-2 h-4 w-4" />
                 Duplicate document
               </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setAddDataroomOpen(true)}>
+                <BetweenHorizontalStartIcon className="mr-2 h-4 w-4" />
+                Add to dataroom
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={(event) => handleButtonClick(event, prismaDocument.id)}
@@ -277,6 +283,15 @@ export default function DocumentsCard({
         <MoveToFolderModal
           open={moveFolderOpen}
           setOpen={setMoveFolderOpen}
+          documentId={prismaDocument.id}
+          documentName={prismaDocument.name}
+        />
+      ) : null}
+
+      {addDataroomOpen ? (
+        <AddToDataroomModal
+          open={addDataroomOpen}
+          setOpen={setAddDataroomOpen}
           documentId={prismaDocument.id}
           documentName={prismaDocument.name}
         />
