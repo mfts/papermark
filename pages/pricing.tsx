@@ -118,7 +118,7 @@ const tiers: {
       "Unlimited folders and subfolders",
       "User groups permissions",
       "Advanced data rooms analytics",
-      // "Up to 5TB file uploads",
+      "NDA agreements",
       "24h priority support",
       "Custom onboarding",
     ],
@@ -431,7 +431,7 @@ export default function PricingPage() {
           </div>
         </div>
 
-        <div className="mx-auto w-full max-w-7xl px-4 md:px-8 ">
+        <div className="mx-auto w-full max-w-7xl px-4 md:px-8">
           <div className="mx-auto my-4 rounded-xl bg-[#fb7a00] px-6 py-12">
             <div className="item-center flex flex-col justify-between space-y-10 lg:flex-row lg:space-y-0">
               <h2 className="text-balance text-3xl">

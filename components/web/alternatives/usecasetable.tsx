@@ -116,7 +116,7 @@ export default function ComparisonTable() {
                       <td
                         key={tool.name}
                         className={`px-3 py-4 text-sm text-gray-500 ${
-                          tool.name === "Papermark" ? "bg-orange-100" : ""
+                          tool.name === "Papermark" ? "bg-green-100" : ""
                         }`}
                       >
                         {tool.features[feature]}
