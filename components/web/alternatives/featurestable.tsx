@@ -152,7 +152,7 @@ const tools: ToolFeature[] = [
 const featureDisplayNames: { [key: string]: string } = {
   emailCapture: "Advanced link controls",
   teamAccess: "Team Access",
-  customDomain: "Custom Branding",
+  customDomain: "Advanced Branding",
   customDomain2: "Custom Domain for Data Rooms",
   unlimitedDocuments: "Unlimited Documents",
   trackAnalytics: "Analytics on each page",
@@ -217,7 +217,7 @@ export default function ComparisonTable() {
                     {tools.map((tool) => (
                       <td
                         key={tool.name}
-                        className={`px-3 py-4 text-sm  ${
+                        className={`px-3 py-4 text-sm ${
                           tool.name === "Papermark"
                             ? "bg-green-50 font-semibold text-green-700"
                             : ""
