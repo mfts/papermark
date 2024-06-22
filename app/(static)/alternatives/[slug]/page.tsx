@@ -47,7 +47,7 @@ export default async function AlternativePage({
     <div className="flex flex-1 flex-col justify-center bg-white text-black">
       <div className="mx-auto w-full max-w-5xl px-4 text-center md:px-8">
         <div className="pt-32">
-          <div className=" pb-4">
+          <div className="pb-4">
             <img
               src={alternative.imageUrl!}
               alt="App screenshot"
@@ -60,7 +60,7 @@ export default async function AlternativePage({
             Free {alternative.name} alternative
           </div> */}
           <h1 className="text-balance text-6xl">{alternative.title}</h1>
-          <p className="mx-auto mt-8 max-w-3xl text-balance  text-xl md:text-2xl">
+          <p className="mx-auto mt-8 max-w-3xl text-balance text-xl md:text-2xl">
             {alternative.description}
           </p>
           <div className="space-x-2 pt-8">
@@ -93,7 +93,7 @@ export default async function AlternativePage({
       {/* Comparison section */}
       <div className="mx-auto w-full max-w-5xl px-4 md:px-8">
         <div className="pb-2 pt-32">
-          <h2 className="text-balance  text-5xl">
+          <h2 className="text-balance text-5xl">
             {alternative.subtitlecompare}
           </h2>
           <p className="mt-8 max-w-3xl text-balance text-xl">
@@ -101,8 +101,8 @@ export default async function AlternativePage({
           </p>
         </div>
         <div className="bg-white py-16">
-          <div className="mx-auto max-w-5xl ">
-            <div className="isolate grid  grid-cols-1  overflow-hidden  rounded-xl border border-black md:grid-cols-2">
+          <div className="mx-auto max-w-5xl">
+            <div className="isolate grid grid-cols-1 overflow-hidden rounded-xl border border-black md:grid-cols-2">
               {/* Column 1 - Papermark */}
               <div className="flex flex-col justify-between border-r-0 border-black md:odd:border-r xl:last:!border-r-0 xl:even:border-r">
                 <div>
@@ -118,7 +118,7 @@ export default async function AlternativePage({
                     <div className="flex flex-col justify-between"></div>
 
                     <p className="mt-4 text-balance text-2xl font-semibold leading-6 text-gray-900">
-                      $0
+                      from $0
                     </p>
                     <ul className="mt-8 space-y-3 text-sm leading-6 text-gray-500">
                       <li className="flex items-center gap-x-3">
@@ -147,7 +147,7 @@ export default async function AlternativePage({
                           className="h-6 w-6 text-green-500"
                           aria-hidden="true"
                         />
-                        Custom domain
+                        Custom domains
                       </li>
                       <li className="flex items-center gap-x-3">
                         <CheckIcon
@@ -161,7 +161,7 @@ export default async function AlternativePage({
                           className="h-6 w-6 text-green-500"
                           aria-hidden="true"
                         />
-                        Data Room
+                        Unlimited Data Rooms
                       </li>
 
                       {/* Add additional features here */}
