@@ -85,7 +85,7 @@ export default function DocumentUpload({
         .arrayBuffer()
         .then((buffer) => {
           getPagesCount(buffer).then((numPages) => {
-            if (numPages > 250) {
+            if (numPages > 300) {
               toast.error("File has too many pages (max. 100)");
             } else {
               setCurrentFile(file);
