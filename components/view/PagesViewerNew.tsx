@@ -20,6 +20,7 @@ import { toast } from "sonner";
 
 import { cn } from "@/lib/utils";
 
+import LoadingSpinner from "../ui/loading-spinner";
 import { ScreenProtector } from "./ScreenProtection";
 import { TDocumentData } from "./dataroom/dataroom-view";
 import Nav from "./nav";
@@ -599,41 +600,48 @@ export default function PagesViewer({
             onContextMenu={handleContextMenu}
           >
             {pageNumber <= numPagesWithAccountCreation &&
-              pages.map((page, index) => (
-                <TransformWrapper
-                  key={index}
-                  initialScale={scale}
-                  panning={{ disabled: scale === 1, velocityDisabled: true }}
-                  wheel={{ disabled: scale === 1 }}
-                  onZoom={(ref) => {
-                    setScale(ref.state.scale);
-                  }}
-                  ref={(ref) => {
-                    pinchRefs.current[index] = ref;
-                  }}
-                >
-                  <TransformComponent>
-                    <div
-                      key={index}
-                      style={{ height: "calc(100vh - 64px)" }}
-                      className={cn(
-                        "relative h-screen w-full",
-                        pageNumber - 1 === index
-                          ? "block"
-                          : !isVertical
-                            ? "hidden"
-                            : "block",
-                      )}
-                    >
-                      <img
-                        className={cn("h-full w-full object-contain")}
-                        src={page.file}
-                        alt={`Page ${index + 1}`}
-                      />
-                    </div>
-                  </TransformComponent>
-                </TransformWrapper>
-              ))}
+            pages &&
+            loadedImages[pageNumber - 1]
+              ? pages.map((page, index) => (
+                  <TransformWrapper
+                    key={index}
+                    initialScale={scale}
+                    panning={{ disabled: scale === 1, velocityDisabled: true }}
+                    wheel={{ disabled: scale === 1 }}
+                    onZoom={(ref) => {
+                      setScale(ref.state.scale);
+                    }}
+                    ref={(ref) => {
+                      pinchRefs.current[index] = ref;
+                    }}
+                  >
+                    <TransformComponent>
+                      <div
+                        key={index}
+                        style={{ height: "calc(100vh - 64px)" }}
+                        className={cn(
+                          "relative h-screen w-full",
+                          pageNumber - 1 === index
+                            ? "block"
+                            : !isVertical
+                              ? "hidden"
+                              : "block",
+                        )}
+                      >
+                        <img
+                          className={cn("h-full w-full object-contain")}
+                          src={
+                            loadedImages[index]
+                              ? page.file
+                              : "https://www.papermark.io/_static/blank.gif"
+                          }
+                          alt={`Page ${index + 1}`}
+                        />
+                      </div>
+                    </TransformComponent>
+                  </TransformWrapper>
+                ))
+              : null}
 
             {enableQuestion &&
             feedback &&
