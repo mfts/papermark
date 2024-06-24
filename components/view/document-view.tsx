@@ -45,6 +45,7 @@ export default function DocumentView({
   token,
   verifiedEmail,
   showPoweredByBanner,
+  showAccountCreationSlide,
 }: {
   link: LinkWithDocument;
   userEmail: string | null | undefined;
@@ -58,6 +59,7 @@ export default function DocumentView({
   token?: string;
   verifiedEmail?: string;
   showPoweredByBanner?: boolean;
+  showAccountCreationSlide?: boolean;
 }) {
   const {
     document,
@@ -220,6 +222,7 @@ export default function DocumentView({
           notionData={notionData}
           brand={brand}
           showPoweredByBanner={showPoweredByBanner}
+          showAccountCreationSlide={showAccountCreationSlide}
           viewerEmail={data.email ?? verifiedEmail ?? userEmail ?? undefined}
         />
       ) : (

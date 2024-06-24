@@ -20,6 +20,7 @@ import { toast } from "sonner";
 
 import { cn } from "@/lib/utils";
 
+import LoadingSpinner from "../ui/loading-spinner";
 import { ScreenProtector } from "./ScreenProtection";
 import { TDocumentData } from "./dataroom/dataroom-view";
 import Nav from "./nav";
@@ -74,6 +75,7 @@ export default function PagesViewer({
   dataroomId,
   setDocumentData,
   showPoweredByBanner,
+  showAccountCreationSlide,
   enableQuestion = false,
   feedback,
   isVertical = false,
@@ -93,6 +95,7 @@ export default function PagesViewer({
   dataroomId?: string;
   setDocumentData?: React.Dispatch<React.SetStateAction<TDocumentData | null>>;
   showPoweredByBanner?: boolean;
+  showAccountCreationSlide?: boolean;
   enableQuestion?: boolean | null;
   feedback?: {
     id: string;
@@ -104,14 +107,18 @@ export default function PagesViewer({
   const router = useRouter();
   const { status: sessionStatus } = useSession();
 
+  const showStatsSlideWithAccountCreation =
+    showAccountCreationSlide && // if showAccountCreationSlide is enabled
+    sessionStatus !== "authenticated" && // and user is not authenticated
+    !dataroomId; // and it's not a dataroom
+
   const numPages = pages.length;
   const numPagesWithFeedback =
     enableQuestion && feedback ? numPages + 1 : numPages;
 
-  const numPagesWithAccountCreation =
-    sessionStatus === "authenticated" && !dataroomId
-      ? numPagesWithFeedback
-      : numPagesWithFeedback + 1;
+  const numPagesWithAccountCreation = showStatsSlideWithAccountCreation
+    ? numPagesWithFeedback + 1
+    : numPagesWithFeedback;
 
   const pageQuery = router.query.p ? Number(router.query.p) : 1;
 
@@ -599,41 +606,48 @@ export default function PagesViewer({
             onContextMenu={handleContextMenu}
           >
             {pageNumber <= numPagesWithAccountCreation &&
-              pages.map((page, index) => (
-                <TransformWrapper
-                  key={index}
-                  initialScale={scale}
-                  panning={{ disabled: scale === 1, velocityDisabled: true }}
-                  wheel={{ disabled: scale === 1 }}
-                  onZoom={(ref) => {
-                    setScale(ref.state.scale);
-                  }}
-                  ref={(ref) => {
-                    pinchRefs.current[index] = ref;
-                  }}
-                >
-                  <TransformComponent>
-                    <div
-                      key={index}
-                      style={{ height: "calc(100vh - 64px)" }}
-                      className={cn(
-                        "relative h-screen w-full",
-                        pageNumber - 1 === index
-                          ? "block"
-                          : !isVertical
-                            ? "hidden"
-                            : "block",
-                      )}
-                    >
-                      <img
-                        className={cn("h-full w-full object-contain")}
-                        src={page.file}
-                        alt={`Page ${index + 1}`}
-                      />
-                    </div>
-                  </TransformComponent>
-                </TransformWrapper>
-              ))}
+            pages &&
+            loadedImages[pageNumber - 1]
+              ? pages.map((page, index) => (
+                  <TransformWrapper
+                    key={index}
+                    initialScale={scale}
+                    panning={{ disabled: scale === 1, velocityDisabled: true }}
+                    wheel={{ disabled: scale === 1 }}
+                    onZoom={(ref) => {
+                      setScale(ref.state.scale);
+                    }}
+                    ref={(ref) => {
+                      pinchRefs.current[index] = ref;
+                    }}
+                  >
+                    <TransformComponent>
+                      <div
+                        key={index}
+                        style={{ height: "calc(100vh - 64px)" }}
+                        className={cn(
+                          "relative h-screen w-full",
+                          pageNumber - 1 === index
+                            ? "block"
+                            : !isVertical
+                              ? "hidden"
+                              : "block",
+                        )}
+                      >
+                        <img
+                          className={cn("h-full w-full object-contain")}
+                          src={
+                            loadedImages[index]
+                              ? page.file
+                              : "https://www.papermark.io/_static/blank.gif"
+                          }
+                          alt={`Page ${index + 1}`}
+                        />
+                      </div>
+                    </TransformComponent>
+                  </TransformWrapper>
+                ))
+              : null}
 
             {enableQuestion &&
             feedback &&
@@ -651,8 +665,7 @@ export default function PagesViewer({
               </div>
             ) : null}
 
-            {sessionStatus !== "authenticated" &&
-            !dataroomId &&
+            {showStatsSlideWithAccountCreation &&
             (isVertical || pageNumber === numPagesWithAccountCreation) ? (
               <div
                 className={cn("relative block h-screen w-full")}

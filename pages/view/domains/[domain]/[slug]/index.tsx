@@ -98,6 +98,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
             metaUrl: `https://${domain}/${slug}` || null,
           },
           showPoweredByBanner: teamPlan === "free",
+          showAccountCreationSlide: teamPlan === "free" || teamPlan === "pro",
         },
         revalidate: 10,
       };
@@ -143,6 +144,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
             metaUrl: `https://${domain}/${slug}` || null,
           },
           showPoweredByBanner: false,
+          showAccountCreationSlide: false,
         },
         revalidate: 10,
       };
@@ -164,6 +166,7 @@ export default function ViewPage({
   linkData,
   notionData,
   meta,
+  showAccountCreationSlide,
 }: {
   linkData: DocumentLinkData | DataroomLinkData;
   notionData: {
@@ -177,6 +180,7 @@ export default function ViewPage({
     metaImage: string | null;
     metaUrl: string | null;
   };
+  showAccountCreationSlide: boolean;
 }) {
   const router = useRouter();
   const { data: session, status } = useSession();
@@ -264,6 +268,7 @@ export default function ViewPage({
             brand={brand}
             token={token}
             verifiedEmail={verifiedEmail}
+            showAccountCreationSlide={showAccountCreationSlide}
           />
         </>
       );
@@ -289,6 +294,7 @@ export default function ViewPage({
           isProtected={false}
           notionData={notionData}
           brand={brand}
+          showAccountCreationSlide={showAccountCreationSlide}
         />
       </>
     );
