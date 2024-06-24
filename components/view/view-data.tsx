@@ -21,6 +21,7 @@ export default function ViewData({
   notionData,
   brand,
   showPoweredByBanner,
+  showAccountCreationSlide,
   viewerEmail,
 }: {
   viewData: DEFAULT_DOCUMENT_VIEW_TYPE;
@@ -31,6 +32,7 @@ export default function ViewData({
   };
   brand?: Partial<Brand> | null;
   showPoweredByBanner?: boolean;
+  showAccountCreationSlide?: boolean;
   viewerEmail?: string;
 }) {
   const { document } = link;
@@ -68,6 +70,7 @@ export default function ViewData({
       versionNumber={document.versions[0].versionNumber}
       brand={brand}
       showPoweredByBanner={showPoweredByBanner}
+      showAccountCreationSlide={showAccountCreationSlide}
       enableQuestion={link.enableQuestion}
       feedback={link.feedback}
       isVertical={document.versions[0].isVertical}

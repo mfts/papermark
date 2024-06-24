@@ -75,6 +75,7 @@ export default function PagesViewer({
   dataroomId,
   setDocumentData,
   showPoweredByBanner,
+  showAccountCreationSlide,
   enableQuestion = false,
   feedback,
   isVertical = false,
@@ -94,6 +95,7 @@ export default function PagesViewer({
   dataroomId?: string;
   setDocumentData?: React.Dispatch<React.SetStateAction<TDocumentData | null>>;
   showPoweredByBanner?: boolean;
+  showAccountCreationSlide?: boolean;
   enableQuestion?: boolean | null;
   feedback?: {
     id: string;
@@ -105,14 +107,18 @@ export default function PagesViewer({
   const router = useRouter();
   const { status: sessionStatus } = useSession();
 
+  const showStatsSlideWithAccountCreation =
+    showAccountCreationSlide && // if showAccountCreationSlide is enabled
+    sessionStatus !== "authenticated" && // and user is not authenticated
+    !dataroomId; // and it's not a dataroom
+
   const numPages = pages.length;
   const numPagesWithFeedback =
     enableQuestion && feedback ? numPages + 1 : numPages;
 
-  const numPagesWithAccountCreation =
-    sessionStatus === "authenticated" && !dataroomId
-      ? numPagesWithFeedback
-      : numPagesWithFeedback + 1;
+  const numPagesWithAccountCreation = showStatsSlideWithAccountCreation
+    ? numPagesWithFeedback + 1
+    : numPagesWithFeedback;
 
   const pageQuery = router.query.p ? Number(router.query.p) : 1;
 
@@ -659,8 +665,7 @@ export default function PagesViewer({
               </div>
             ) : null}
 
-            {sessionStatus !== "authenticated" &&
-            !dataroomId &&
+            {showStatsSlideWithAccountCreation &&
             (isVertical || pageNumber === numPagesWithAccountCreation) ? (
               <div
                 className={cn("relative block h-screen w-full")}

@@ -93,6 +93,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
             metaUrl: `https://www.papermark.io/view/${linkId}`,
           },
           showPoweredByBanner: teamPlan === "free",
+          showAccountCreationSlide: teamPlan === "free" || teamPlan === "pro",
         },
         revalidate: brand ? 10 : false,
       };
@@ -138,6 +139,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
             metaUrl: `https://www.papermark.io/view/${linkId}`,
           },
           showPoweredByBanner: false,
+          showAccountCreationSlide: false,
         },
         revalidate: 10,
       };
@@ -160,6 +162,7 @@ export default function ViewPage({
   notionData,
   meta,
   showPoweredByBanner,
+  showAccountCreationSlide,
 }: {
   linkData: DocumentLinkData | DataroomLinkData;
   notionData: {
@@ -174,6 +177,7 @@ export default function ViewPage({
     metaUrl: string | null;
   };
   showPoweredByBanner: boolean;
+  showAccountCreationSlide: boolean;
 }) {
   const router = useRouter();
   const { data: session, status } = useSession();
@@ -263,6 +267,7 @@ export default function ViewPage({
             token={token}
             verifiedEmail={verifiedEmail}
             showPoweredByBanner={showPoweredByBanner}
+            showAccountCreationSlide={showAccountCreationSlide}
           />
         </>
       );
@@ -289,6 +294,7 @@ export default function ViewPage({
           notionData={notionData}
           brand={brand}
           showPoweredByBanner={showPoweredByBanner}
+          showAccountCreationSlide={showAccountCreationSlide}
         />
       </>
     );
