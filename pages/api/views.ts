@@ -338,6 +338,11 @@ export default async function handle(
         !useAdvancedExcelViewer
           ? sheetData
           : undefined,
+      fileType: documentVersion
+        ? documentVersion.type
+        : documentPages
+          ? "pdf"
+          : undefined,
     };
 
     return res.status(200).json(returnObject);

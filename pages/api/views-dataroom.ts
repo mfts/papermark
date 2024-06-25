@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 import { waitUntil } from "@vercel/functions";
 import { parsePageId } from "notion-utils";
+import { record } from "zod";
 
 import sendNotification from "@/lib/api/notification-helper";
 import { sendVerificationEmail } from "@/lib/emails/send-email-verification";
@@ -451,6 +452,13 @@ export default async function handle(
         !useAdvancedExcelViewer
           ? sheetData
           : undefined,
+      fileType: documentVersion
+        ? documentVersion.type
+        : documentPages
+          ? "pdf"
+          : recordMap
+            ? "notion"
+            : undefined,
     };
 
     return res.status(200).json(returnObject);

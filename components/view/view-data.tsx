@@ -51,7 +51,7 @@ export default function ViewData({
       versionNumber={document.versions[0].versionNumber}
       brand={brand}
     />
-  ) : viewData.sheetData ? (
+  ) : viewData.fileType === "sheet" && viewData.sheetData ? (
     <ExcelViewer
       linkId={link.id}
       viewId={viewData.viewId}
@@ -61,7 +61,7 @@ export default function ViewData({
       sheetData={viewData.sheetData}
       brand={brand}
     />
-  ) : useAdvancedExcelViewer ? (
+  ) : viewData.fileType === "sheet" && useAdvancedExcelViewer ? (
     <AdvancedExcelViewer
       linkId={link.id}
       viewId={viewData.viewId}
