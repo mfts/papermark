@@ -46,6 +46,7 @@ export default function DocumentView({
   verifiedEmail,
   showPoweredByBanner,
   showAccountCreationSlide,
+  useAdvancedExcelViewer,
 }: {
   link: LinkWithDocument;
   userEmail: string | null | undefined;
@@ -60,6 +61,7 @@ export default function DocumentView({
   verifiedEmail?: string;
   showPoweredByBanner?: boolean;
   showAccountCreationSlide?: boolean;
+  useAdvancedExcelViewer?: boolean;
 }) {
   const {
     document,
@@ -103,6 +105,7 @@ export default function DocumentView({
         hasPages: document.versions[0].hasPages,
         token: token ?? null,
         verifiedEmail: verifiedEmail ?? null,
+        useAdvancedExcelViewer,
       }),
     });
 
@@ -223,6 +226,7 @@ export default function DocumentView({
           brand={brand}
           showPoweredByBanner={showPoweredByBanner}
           showAccountCreationSlide={showAccountCreationSlide}
+          useAdvancedExcelViewer={useAdvancedExcelViewer}
           viewerEmail={data.email ?? verifiedEmail ?? userEmail ?? undefined}
         />
       ) : (
