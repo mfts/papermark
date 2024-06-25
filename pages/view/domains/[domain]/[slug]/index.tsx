@@ -70,7 +70,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
         recordMap = await notion.getPage(pageId);
       }
 
-      const { team, ...linkDocument } = link.document;
+      const { team, teamId, ...linkDocument } = link.document;
       const teamPlan = team?.plan || "free";
 
       return {
@@ -99,6 +99,9 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
           },
           showPoweredByBanner: teamPlan === "free",
           showAccountCreationSlide: teamPlan === "free" || teamPlan === "pro",
+          useAdvancedExcelViewer:
+            teamId === "clwt1qwt00000qz39aqra71w6" ||
+            teamId === "clup33by90000oewh4rfvp2eg",
         },
         revalidate: 10,
       };
@@ -121,6 +124,8 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
 
         documents.push(newDocument);
       }
+
+      const { teamId } = link.dataroom;
 
       return {
         props: {
@@ -145,6 +150,9 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
           },
           showPoweredByBanner: false,
           showAccountCreationSlide: false,
+          useAdvancedExcelViewer:
+            teamId === "clwt1qwt00000qz39aqra71w6" ||
+            teamId === "clup33by90000oewh4rfvp2eg",
         },
         revalidate: 10,
       };
@@ -167,6 +175,7 @@ export default function ViewPage({
   notionData,
   meta,
   showAccountCreationSlide,
+  useAdvancedExcelViewer,
 }: {
   linkData: DocumentLinkData | DataroomLinkData;
   notionData: {
@@ -181,6 +190,7 @@ export default function ViewPage({
     metaUrl: string | null;
   };
   showAccountCreationSlide: boolean;
+  useAdvancedExcelViewer: boolean;
 }) {
   const router = useRouter();
   const { data: session, status } = useSession();
@@ -269,6 +279,7 @@ export default function ViewPage({
             token={token}
             verifiedEmail={verifiedEmail}
             showAccountCreationSlide={showAccountCreationSlide}
+            useAdvancedExcelViewer={useAdvancedExcelViewer}
           />
         </>
       );
@@ -295,6 +306,7 @@ export default function ViewPage({
           notionData={notionData}
           brand={brand}
           showAccountCreationSlide={showAccountCreationSlide}
+          useAdvancedExcelViewer={useAdvancedExcelViewer}
         />
       </>
     );
@@ -369,6 +381,7 @@ export default function ViewPage({
             brand={brand}
             token={token}
             verifiedEmail={verifiedEmail}
+            useAdvancedExcelViewer={useAdvancedExcelViewer}
           />
         </>
       );
@@ -393,6 +406,7 @@ export default function ViewPage({
           userId={userId}
           isProtected={false}
           brand={brand}
+          useAdvancedExcelViewer={useAdvancedExcelViewer}
         />
       </>
     );

@@ -10,6 +10,8 @@ import { DEFAULT_DOCUMENT_VIEW_TYPE } from "@/components/view/document-view";
 
 import { LinkWithDocument } from "@/lib/types";
 
+import AdvancedExcelViewer from "./viewer/advanced-excel-viewer";
+
 const ExcelViewer = dynamic(
   () => import("@/components/view/viewer/excel-viewer"),
   { ssr: false },
@@ -22,6 +24,7 @@ export default function ViewData({
   brand,
   showPoweredByBanner,
   showAccountCreationSlide,
+  useAdvancedExcelViewer,
   viewerEmail,
 }: {
   viewData: DEFAULT_DOCUMENT_VIEW_TYPE;
@@ -33,6 +36,7 @@ export default function ViewData({
   brand?: Partial<Brand> | null;
   showPoweredByBanner?: boolean;
   showAccountCreationSlide?: boolean;
+  useAdvancedExcelViewer?: boolean;
   viewerEmail?: string;
 }) {
   const { document } = link;
@@ -55,6 +59,17 @@ export default function ViewData({
       documentName={document.name}
       versionNumber={document.versions[0].versionNumber}
       sheetData={viewData.sheetData}
+      brand={brand}
+    />
+  ) : useAdvancedExcelViewer ? (
+    <AdvancedExcelViewer
+      linkId={link.id}
+      viewId={viewData.viewId}
+      documentId={document.id}
+      documentName={document.name}
+      versionNumber={document.versions[0].versionNumber}
+      file={viewData.file!}
+      allowDownload={link.allowDownload!}
       brand={brand}
     />
   ) : viewData.pages ? (

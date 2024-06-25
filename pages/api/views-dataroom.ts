@@ -67,6 +67,11 @@ export default async function handle(
     hasConfirmedAgreement?: boolean;
   };
 
+  // INFO: for using the advanced excel viewer
+  const { useAdvancedExcelViewer } = data as {
+    useAdvancedExcelViewer: boolean;
+  };
+
   // Fetch the link to verify the settings
   const link = await prisma.link.findUnique({
     where: {
@@ -418,7 +423,7 @@ export default async function handle(
         recordMap = await notion.getPage(pageId);
       }
 
-      if (documentVersion.type === "sheet") {
+      if (documentVersion.type === "sheet" && !useAdvancedExcelViewer) {
         const fileUrl = await getFile({
           data: documentVersion.file,
           type: documentVersion.storageType,
@@ -434,13 +439,16 @@ export default async function handle(
       message: "View recorded",
       viewId: newView.id,
       file:
-        documentVersion && documentVersion.type === "pdf"
+        (documentVersion && documentVersion.type === "pdf") ||
+        (documentVersion && useAdvancedExcelViewer)
           ? documentVersion.file
           : undefined,
       pages: documentPages ? documentPages : undefined,
       notionData: recordMap ? { recordMap } : undefined,
       sheetData:
-        documentVersion && documentVersion.type === "sheet"
+        documentVersion &&
+        documentVersion.type === "sheet" &&
+        !useAdvancedExcelViewer
           ? sheetData
           : undefined,
     };

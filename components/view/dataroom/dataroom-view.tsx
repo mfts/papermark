@@ -21,6 +21,7 @@ import { LinkWithDataroom } from "@/lib/types";
 import DataroomViewer from "../DataroomViewer";
 import PagesViewerNew from "../PagesViewerNew";
 import EmailVerificationMessage from "../email-verification-form";
+import AdvancedExcelViewer from "../viewer/advanced-excel-viewer";
 
 const ExcelViewer = dynamic(
   () => import("@/components/view/viewer/excel-viewer"),
@@ -63,6 +64,7 @@ export default function DataroomView({
   brand,
   token,
   verifiedEmail,
+  useAdvancedExcelViewer,
 }: {
   link: LinkWithDataroom;
   userEmail: string | null | undefined;
@@ -71,6 +73,7 @@ export default function DataroomView({
   brand?: Partial<DataroomBrand> | null;
   token?: string;
   verifiedEmail?: string;
+  useAdvancedExcelViewer?: boolean;
 }) {
   const {
     linkType,
@@ -125,6 +128,7 @@ export default function DataroomView({
         linkType: linkType,
         dataroomViewId: viewData.dataroomViewId ?? null,
         viewType: viewType,
+        useAdvancedExcelViewer,
       }),
     });
 
@@ -281,6 +285,21 @@ export default function DataroomView({
           documentName={documentData.name}
           versionNumber={documentData.documentVersionNumber}
           sheetData={viewData.sheetData}
+          brand={brand}
+          dataroomId={dataroom.id}
+          setDocumentData={setDocumentData}
+        />
+      </div>
+    ) : useAdvancedExcelViewer ? (
+      <div className="bg-gray-950">
+        <AdvancedExcelViewer
+          linkId={link.id}
+          viewId={viewData.viewId}
+          documentId={documentData.id}
+          documentName={documentData.name}
+          versionNumber={documentData.documentVersionNumber}
+          file={viewData.file!}
+          allowDownload={link.allowDownload!}
           brand={brand}
           dataroomId={dataroom.id}
           setDocumentData={setDocumentData}
