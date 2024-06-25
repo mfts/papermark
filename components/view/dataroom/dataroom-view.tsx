@@ -54,6 +54,7 @@ export type DEFAULT_DOCUMENT_VIEW_TYPE = {
     | null;
   sheetData?: SheetData[] | null;
   notionData?: { recordMap: ExtendedRecordMap | null };
+  fileType?: string;
 };
 
 export default function DataroomView({
@@ -139,7 +140,7 @@ export default function DataroomView({
         setVerificationRequested(true);
         setIsLoading(false);
       } else {
-        const { viewId, file, pages, notionData, sheetData } =
+        const { viewId, file, pages, notionData, sheetData, fileType } =
           fetchData as DEFAULT_DOCUMENT_VIEW_TYPE;
         plausible("dataroomViewed"); // track the event
         analytics.identify(
@@ -161,6 +162,7 @@ export default function DataroomView({
           pages,
           notionData,
           sheetData,
+          fileType,
         }));
         setSubmitted(true);
         setVerificationRequested(false);
@@ -276,7 +278,7 @@ export default function DataroomView({
           setDocumentData={setDocumentData}
         />
       </div>
-    ) : viewData.sheetData ? (
+    ) : viewData.fileType === "sheet" && viewData.sheetData ? (
       <div className="bg-gray-950">
         <ExcelViewer
           linkId={link.id}
@@ -290,7 +292,7 @@ export default function DataroomView({
           setDocumentData={setDocumentData}
         />
       </div>
-    ) : useAdvancedExcelViewer ? (
+    ) : viewData.fileType === "sheet" && useAdvancedExcelViewer ? (
       <div className="bg-gray-950">
         <AdvancedExcelViewer
           linkId={link.id}
