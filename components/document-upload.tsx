@@ -103,7 +103,7 @@ export default function DocumentUpload({
       if (errors[0].code === "file-too-large") {
         message = `File size too big (max. ${maxSize} MB)`;
       } else if (errors[0].code === "file-invalid-type") {
-        message = "File type not supported (.pdf only)";
+        message = "File type not supported";
       } else {
         message = errors[0].message;
       }
@@ -156,7 +156,7 @@ export default function DocumentUpload({
             <p className="text-xs leading-5 text-gray-500">
               {currentFile
                 ? "Replace file?"
-                : `Only *.pdf & ${maxSize} MB limit`}
+                : `Only *.xls, *.xlsx, *.csv, *.ods, *.pdf & ${maxSize} MB limit`}
             </p>
           </div>
         </div>
