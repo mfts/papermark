@@ -1,6 +1,11 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
-import { Brand, DataroomBrand } from "@prisma/client";
+import {
+  Brand,
+  DataroomBrand,
+  DataroomDocument,
+  Document,
+} from "@prisma/client";
 import { getServerSession } from "next-auth/next";
 
 import prisma from "@/lib/prisma";
@@ -156,6 +161,29 @@ export default async function handle(
             },
           },
         });
+
+        // Sort documents by name considering the numerical part
+        linkData.dataroom.documents.sort(
+          (
+            a: DataroomDocument & { document: Document },
+            b: DataroomDocument & { document: Document },
+          ) => {
+            const getNumber = (str: string): number => {
+              const match = str.match(/^\d+/);
+              return match ? parseInt(match[0], 10) : 0;
+            };
+
+            const numA = getNumber(a.document.name);
+            const numB = getNumber(b.document.name);
+
+            if (numA !== numB) {
+              return numA - numB;
+            }
+
+            // If numerical parts are the same, fall back to lexicographical order
+            return a.document.name.localeCompare(b.document.name);
+          },
+        );
 
         brand = await prisma.dataroomBrand.findFirst({
           where: {
