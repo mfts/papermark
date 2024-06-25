@@ -288,6 +288,8 @@ export default function PagesViewer({
       return;
     }
 
+    preloadImage(DEFAULT_PRELOADED_IMAGES_NUM - 1 + pageNumber);
+
     // Scroll Down Tracking
     if (
       currentPageFraction > 0.5 &&
