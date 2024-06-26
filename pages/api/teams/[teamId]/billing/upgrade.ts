@@ -83,6 +83,11 @@ export default async function handle(
         mode: "subscription",
         allow_promotion_codes: true,
         client_reference_id: teamId,
+        ...(req.body.referral && {
+          metadata: {
+            tolt_referral: req.body.referral,
+          },
+        }),
       });
     }
 
@@ -91,6 +96,7 @@ export default async function handle(
       event: "Stripe Checkout Clicked",
       teamId,
       priceId: priceId,
+      referral: req.body.referral ? true : undefined,
     });
 
     return res.status(200).json(stripeSession);

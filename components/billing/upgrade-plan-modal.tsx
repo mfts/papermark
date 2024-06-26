@@ -235,6 +235,9 @@ export function UpgradePlanModal({
               loading={clicked}
               onClick={() => {
                 setClicked(true);
+                // @ts-ignore
+                // prettier-ignore
+                const tolt_referral_id: string | undefined = window.tolt_referral;
                 fetch(
                   `/api/teams/${
                     teamInfo?.currentTeam?.id
@@ -247,6 +250,10 @@ export function UpgradePlanModal({
                   }`,
                   {
                     method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ referral: tolt_referral_id }),
                   },
                 )
                   .then(async (res) => {
