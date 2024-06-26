@@ -213,6 +213,7 @@ export type AnalyticsEvents =
       event: "Stripe Checkout Clicked";
       teamId: string;
       priceId: string;
+      referral: boolean | undefined;
     };
 
 export interface Team {
