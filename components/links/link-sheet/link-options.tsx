@@ -77,65 +77,46 @@ export const LinkOptions = ({
         handleUpgradeStateChange={handleUpgradeStateChange}
       />
 
-      <Accordion type="single" collapsible>
-        <AccordionItem value="item-1" className="border-none">
-          <AccordionTrigger className="space-x-2 rounded-lg py-0">
-            <span className="text-sm font-medium leading-6 text-foreground">
-              Advanced Link Access Options
-            </span>
-          </AccordionTrigger>
-          <AccordionContent className="first:pt-5">
-            <EmailAuthenticationSection
-              {...{ data, setData }}
-              hasFreePlan={hasFreePlan}
-              handleUpgradeStateChange={handleUpgradeStateChange}
-            />
-            <AllowListSection
-              {...{ data, setData }}
-              hasFreePlan={
-                isNotBusiness &&
-                isNotDatarooms &&
-                !limits?.advancedLinkControlsOnPro
-              }
-              handleUpgradeStateChange={handleUpgradeStateChange}
-            />
-            <DenyListSection
-              {...{ data, setData }}
-              hasFreePlan={
-                isNotBusiness &&
-                isNotDatarooms &&
-                !limits?.advancedLinkControlsOnPro
-              }
-              handleUpgradeStateChange={handleUpgradeStateChange}
-            />
-            <PasswordSection {...{ data, setData }} />
-            <ScreenshotProtectionSection
-              {...{ data, setData }}
-              hasFreePlan={
-                isNotBusiness &&
-                isNotDatarooms &&
-                !limits?.advancedLinkControlsOnPro
-              }
-              handleUpgradeStateChange={handleUpgradeStateChange}
-            />
-            <FeedbackSection {...{ data, setData }} />
-            <QuestionSection
-              {...{ data, setData }}
-              hasFreePlan={
-                isNotBusiness &&
-                isNotDatarooms &&
-                !limits?.advancedLinkControlsOnPro
-              }
-              handleUpgradeStateChange={handleUpgradeStateChange}
-            />
-            <AgreementSection
-              {...{ data, setData }}
-              hasFreePlan={isNotDatarooms}
-              handleUpgradeStateChange={handleUpgradeStateChange}
-            />
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
+      <EmailAuthenticationSection
+        {...{ data, setData }}
+        hasFreePlan={hasFreePlan}
+        handleUpgradeStateChange={handleUpgradeStateChange}
+      />
+      <AllowListSection
+        {...{ data, setData }}
+        hasFreePlan={
+          isNotBusiness && isNotDatarooms && !limits?.advancedLinkControlsOnPro
+        }
+        handleUpgradeStateChange={handleUpgradeStateChange}
+      />
+      <DenyListSection
+        {...{ data, setData }}
+        hasFreePlan={
+          isNotBusiness && isNotDatarooms && !limits?.advancedLinkControlsOnPro
+        }
+        handleUpgradeStateChange={handleUpgradeStateChange}
+      />
+      <PasswordSection {...{ data, setData }} />
+      <ScreenshotProtectionSection
+        {...{ data, setData }}
+        hasFreePlan={
+          isNotBusiness && isNotDatarooms && !limits?.advancedLinkControlsOnPro
+        }
+        handleUpgradeStateChange={handleUpgradeStateChange}
+      />
+      <FeedbackSection {...{ data, setData }} />
+      <QuestionSection
+        {...{ data, setData }}
+        hasFreePlan={
+          isNotBusiness && isNotDatarooms && !limits?.advancedLinkControlsOnPro
+        }
+        handleUpgradeStateChange={handleUpgradeStateChange}
+      />
+      <AgreementSection
+        {...{ data, setData }}
+        hasFreePlan={isNotDatarooms}
+        handleUpgradeStateChange={handleUpgradeStateChange}
+      />
 
       <UpgradePlanModal
         clickedPlan={upgradePlan}

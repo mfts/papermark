@@ -116,7 +116,6 @@ const tiers: {
       "Custom domain for data rooms",
       "Unlimited documents",
       "Unlimited folders and subfolders",
-      "User groups permissions",
       "Advanced data rooms analytics",
       "NDA agreements",
       "24h priority support",
