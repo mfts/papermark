@@ -73,7 +73,7 @@ export function UpgradePlanModal({
         </span>,
         "Unlimited documents",
         "Unlimited folders and subfolders",
-        "User groups permissions",
+        "NDA agreements",
         "Advanced data rooms analytics",
         "24h priority support",
         "Custom onboarding",

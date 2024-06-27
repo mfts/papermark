@@ -205,10 +205,6 @@ export default function LinkSheet({
           <SheetTitle>
             {currentLink ? "Edit link" : "Create a new link"}
           </SheetTitle>
-          <SheetDescription>
-            Customize a document link for sharing. Click save when you&apos;re
-            done.
-          </SheetDescription>
         </SheetHeader>
 
         <form className="flex grow flex-col" onSubmit={handleSubmit}>
@@ -216,7 +212,7 @@ export default function LinkSheet({
             <div className="h-0 flex-1">
               <div className="flex flex-1 flex-col justify-between">
                 <div className="divide-y divide-gray-200">
-                  <div className="space-y-6 pb-5 pt-6">
+                  <div className="space-y-6 pb-5 pt-2">
                     <div className="space-y-2">
                       <Label htmlFor="link-name">Link Name</Label>
                       <div className="mt-2">
