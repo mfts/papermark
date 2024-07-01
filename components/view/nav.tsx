@@ -8,7 +8,6 @@ import { Brand, DataroomBrand } from "@prisma/client";
 import {
   ArrowUpRight,
   Download,
-  Minimize2Icon,
   Slash,
   ZoomInIcon,
   ZoomOutIcon,
@@ -221,9 +220,9 @@ export default function Nav({
               <div className="flex gap-1">
                 <Button
                   onClick={() =>
-                    documentRefs.current.map((ref) => ref?.zoomIn())
+                    documentRefs.current[pageNumber! - 1]?.zoomIn()
                   }
-                  className="bg-gray-900 text-white hover:bg-gray-900/80"
+                  className=" bg-gray-900 text-white hover:bg-gray-900/80"
                   size="icon"
                   title="Zoom in"
                 >
@@ -231,23 +230,13 @@ export default function Nav({
                 </Button>
                 <Button
                   onClick={() =>
-                    documentRefs.current.map((ref) => ref?.zoomOut())
+                    documentRefs.current[pageNumber! - 1]?.zoomOut()
                   }
-                  className="bg-gray-900 text-white hover:bg-gray-900/80"
+                  className=" bg-gray-900 text-white hover:bg-gray-900/80"
                   size="icon"
                   title="Zoom out"
                 >
                   <ZoomOutIcon className="h-5 w-5" />
-                </Button>
-                <Button
-                  onClick={() =>
-                    documentRefs.current.map((ref) => ref?.resetTransform())
-                  }
-                  className="bg-gray-900 text-white hover:bg-gray-900/80"
-                  size="icon"
-                  title="Reset zoom"
-                >
-                  <Minimize2Icon className="h-5 w-5" />
                 </Button>
               </div>
             ) : null}
