@@ -63,14 +63,14 @@ export default function AccessForm({
 
   console.log("brand", brand);
   return (
-    <>
-      <div
-        className="bg-gray-95 flex h-screen flex-1 flex-col px-6 py-12 lg:px-8"
-        style={{
-          backgroundColor:
-            brand && brand.accentColor ? brand.accentColor : "black",
-        }}
-      >
+    <div
+      className="flex h-dvh flex-col justify-between pb-4 pt-12"
+      style={{
+        backgroundColor:
+          brand && brand.accentColor ? brand.accentColor : "black",
+      }}
+    >
+      <div className="flex flex-1 flex-col px-6 lg:px-8">
         {/* <div className="bg-gray-950" style={{ backgroundColor: accentColor }}> */}
 
         {/* <div className="relative flex h-16 w-full flex-shrink-0 items-center justify-center">
@@ -152,15 +152,15 @@ export default function AccessForm({
             </div>
           </form>
         </div>
-        <div className="mt-auto text-center">
-          <p className="mt-10 text-sm leading-9 tracking-tight text-gray-500">
-            <a href="/" target="_blank" rel="noopener noreferrer">
-              This document is securely shared with you using{" "}
-              <span className="font-semibold">Papermark</span>
-            </a>
-          </p>
-        </div>
       </div>
-    </>
+      <div className="flex justify-center">
+        <p className="text-sm leading-9 tracking-tight text-gray-500">
+          <a href="/" target="_blank" rel="noopener noreferrer">
+            This document is securely shared with you using{" "}
+            <span className="font-semibold">Papermark</span>
+          </a>
+        </p>
+      </div>
+    </div>
   );
 }

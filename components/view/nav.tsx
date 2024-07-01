@@ -53,6 +53,7 @@ export default function Nav({
   isDataroom,
   setDocumentData,
   documentRefs,
+  disableZoom,
 }: {
   pageNumber?: number;
   numPages?: number;
@@ -67,6 +68,7 @@ export default function Nav({
   isDataroom?: boolean;
   setDocumentData?: React.Dispatch<React.SetStateAction<TDocumentData | null>>;
   documentRefs?: MutableRefObject<(ReactZoomPanPinchContentRef | null)[]>;
+  disableZoom?: boolean;
 }) {
   const downloadFile = async () => {
     if (!allowDownload || type === "notion") return;
@@ -214,7 +216,7 @@ export default function Nav({
                 <Download className="h-5 w-5" />
               </Button>
             ) : null}
-            {documentRefs ? (
+            {!disableZoom && documentRefs ? (
               <div className="flex gap-1">
                 <Button
                   onClick={() =>

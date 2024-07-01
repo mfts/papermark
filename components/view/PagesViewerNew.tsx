@@ -19,6 +19,7 @@ import {
 import { toast } from "sonner";
 
 import { cn } from "@/lib/utils";
+import { useMediaQuery } from "@/lib/utils/use-media-query";
 
 import LoadingSpinner from "../ui/loading-spinner";
 import { ScreenProtector } from "./ScreenProtection";
@@ -151,6 +152,8 @@ export default function PagesViewer({
   const hasTrackedUpRef = useRef<boolean>(false);
   const pinchRefs = useRef<(ReactZoomPanPinchContentRef | null)[]>([]);
 
+  const { isMobile } = useMediaQuery();
+
   // Update the previous page number after the effect hook has run
   useEffect(() => {
     pageNumberRef.current = pageNumber;
@@ -269,7 +272,7 @@ export default function PagesViewer({
     if (!container) return;
 
     const scrollPosition = container.scrollTop;
-    const pageHeight = container.clientHeight;
+    const pageHeight = container.scrollHeight / numPagesWithAccountCreation;
 
     const currentPage = Math.floor(scrollPosition / pageHeight) + 1;
     const currentPageFraction = (scrollPosition % pageHeight) / pageHeight;
@@ -412,7 +415,8 @@ export default function PagesViewer({
       if (isVertical) {
         scrollActionRef.current = true;
         const newScrollPosition =
-          (pageNumber - 2) * containerRef.current!.clientHeight;
+          ((pageNumber - 2) * containerRef.current!.scrollHeight) /
+          numPagesWithAccountCreation;
         containerRef.current?.scrollTo({
           top: newScrollPosition,
           behavior: "smooth",
@@ -427,7 +431,8 @@ export default function PagesViewer({
       if (isVertical) {
         scrollActionRef.current = true;
         const newScrollPosition =
-          (pageNumber - 2) * containerRef.current!.clientHeight;
+          ((pageNumber - 2) * containerRef.current!.scrollHeight) /
+          numPagesWithAccountCreation;
         containerRef.current?.scrollTo({
           top: newScrollPosition,
           behavior: "smooth",
@@ -453,7 +458,8 @@ export default function PagesViewer({
     if (isVertical) {
       scrollActionRef.current = true;
       const newScrollPosition =
-        (pageNumber - 2) * containerRef.current!.clientHeight;
+        ((pageNumber - 2) * containerRef.current!.scrollHeight) /
+        numPagesWithAccountCreation;
       containerRef.current?.scrollTo({
         top: newScrollPosition,
         behavior: "smooth",
@@ -472,7 +478,8 @@ export default function PagesViewer({
       if (isVertical) {
         scrollActionRef.current = true;
         const newScrollPosition =
-          pageNumber * containerRef.current!.clientHeight;
+          (pageNumber * containerRef.current!.scrollHeight) /
+          numPagesWithAccountCreation;
         containerRef.current?.scrollTo({
           top: newScrollPosition,
           behavior: "smooth",
@@ -499,7 +506,10 @@ export default function PagesViewer({
 
     if (isVertical) {
       scrollActionRef.current = true;
-      const newScrollPosition = pageNumber * containerRef.current!.clientHeight;
+      const newScrollPosition =
+        (pageNumber * containerRef.current!.scrollHeight) /
+        numPagesWithAccountCreation;
+      console.log("newScrollPosition", newScrollPosition);
       containerRef.current?.scrollTo({
         top: newScrollPosition,
         behavior: "smooth",
@@ -592,10 +602,11 @@ export default function PagesViewer({
         isDataroom={dataroomId ? true : false}
         setDocumentData={setDocumentData}
         documentRefs={pinchRefs}
+        disableZoom={isVertical && isMobile}
       />
       <div
         style={{ height: "calc(100vh - 64px)" }}
-        className={cn("relative flex items-center", isVertical && "h-screen")}
+        className={cn("relative flex items-center", isVertical && "h-dvh")}
       >
         <div
           className={`relative flex h-full w-full ${
@@ -614,21 +625,44 @@ export default function PagesViewer({
                   <TransformWrapper
                     key={index}
                     initialScale={scale}
-                    panning={{ disabled: scale === 1, velocityDisabled: true }}
-                    wheel={{ disabled: scale === 1 }}
+                    initialPositionX={0}
+                    initialPositionY={0}
+                    disabled={isVertical && isMobile}
+                    panning={{
+                      lockAxisY: isVertical,
+                      velocityDisabled: true,
+                      wheelPanning: false,
+                    }}
+                    wheel={{ disabled: true }}
+                    pinch={{ disabled: true }}
+                    doubleClick={{ disabled: true }}
                     onZoom={(ref) => {
                       setScale(ref.state.scale);
                     }}
                     ref={(ref) => {
                       pinchRefs.current[index] = ref;
                     }}
+                    customTransform={(x: number, y: number, scale: number) => {
+                      // Keep the translateY value constant
+                      if (isVertical) {
+                        const transform = `translate(${x}px, ${index * y * -2}px) scale(${scale})`;
+                        return transform;
+                      }
+                      const transform = `translate(${x}px, ${y}px) scale(${scale})`;
+                      return transform;
+                    }}
                   >
-                    <TransformComponent>
+                    <TransformComponent
+                      wrapperClass={cn(
+                        isVertical && "!overflow-x-clip !overflow-y-visible",
+                      )}
+                      contentClass={cn(isVertical && "!w-screen")}
+                    >
                       <div
                         key={index}
-                        style={{ height: "calc(100vh - 64px)" }}
+                        style={{ height: "calc(100dvh - 64px)" }}
                         className={cn(
-                          "relative h-screen w-full",
+                          "relative w-full",
                           pageNumber - 1 === index
                             ? "block"
                             : !isVertical
@@ -655,7 +689,7 @@ export default function PagesViewer({
             feedback &&
             (isVertical || pageNumber === numPagesWithFeedback) ? (
               <div
-                className={cn("relative block h-screen w-full")}
+                className={cn("relative block h-dvh w-full")}
                 style={{ height: "calc(100vh - 64px)" }}
               >
                 <Question
@@ -670,7 +704,7 @@ export default function PagesViewer({
             {showStatsSlideWithAccountCreation &&
             (isVertical || pageNumber === numPagesWithAccountCreation) ? (
               <div
-                className={cn("relative block h-screen w-full")}
+                className={cn("relative block h-dvh w-full")}
                 style={{ height: "calc(100vh - 64px)" }}
               >
                 <ViewDurationSummary
