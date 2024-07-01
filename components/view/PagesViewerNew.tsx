@@ -19,6 +19,7 @@ import {
 import { toast } from "sonner";
 
 import { cn } from "@/lib/utils";
+import { useMediaQuery } from "@/lib/utils/use-media-query";
 
 import LoadingSpinner from "../ui/loading-spinner";
 import { ScreenProtector } from "./ScreenProtection";
@@ -150,6 +151,8 @@ export default function PagesViewer({
   const hasTrackedDownRef = useRef<boolean>(false);
   const hasTrackedUpRef = useRef<boolean>(false);
   const pinchRefs = useRef<(ReactZoomPanPinchContentRef | null)[]>([]);
+
+  const { isMobile } = useMediaQuery();
 
   // Update the previous page number after the effect hook has run
   useEffect(() => {
@@ -599,10 +602,11 @@ export default function PagesViewer({
         isDataroom={dataroomId ? true : false}
         setDocumentData={setDocumentData}
         documentRefs={pinchRefs}
+        disableZoom={isVertical && isMobile}
       />
       <div
         style={{ height: "calc(100vh - 64px)" }}
-        className={cn("relative flex items-center", isVertical && "h-screen")}
+        className={cn("relative flex items-center", isVertical && "h-dvh")}
       >
         <div
           className={`relative flex h-full w-full ${
@@ -623,8 +627,8 @@ export default function PagesViewer({
                     initialScale={scale}
                     initialPositionX={0}
                     initialPositionY={0}
+                    disabled={isVertical && isMobile}
                     panning={{
-                      // disabled: isVertical,
                       lockAxisY: isVertical,
                       velocityDisabled: true,
                       wheelPanning: false,
@@ -656,7 +660,7 @@ export default function PagesViewer({
                     >
                       <div
                         key={index}
-                        style={{ height: "calc(100vh - 64px)" }}
+                        style={{ height: "calc(100dvh - 64px)" }}
                         className={cn(
                           "relative w-full",
                           pageNumber - 1 === index
@@ -685,7 +689,7 @@ export default function PagesViewer({
             feedback &&
             (isVertical || pageNumber === numPagesWithFeedback) ? (
               <div
-                className={cn("relative block h-screen w-full")}
+                className={cn("relative block h-dvh w-full")}
                 style={{ height: "calc(100vh - 64px)" }}
               >
                 <Question
@@ -700,7 +704,7 @@ export default function PagesViewer({
             {showStatsSlideWithAccountCreation &&
             (isVertical || pageNumber === numPagesWithAccountCreation) ? (
               <div
-                className={cn("relative block h-screen w-full")}
+                className={cn("relative block h-dvh w-full")}
                 style={{ height: "calc(100vh - 64px)" }}
               >
                 <ViewDurationSummary
