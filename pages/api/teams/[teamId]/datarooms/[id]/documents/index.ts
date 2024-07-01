@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { client } from "@/trigger";
+import { DataroomDocument, Document } from "@prisma/client";
 import slugify from "@sindresorhus/slugify";
 import { getServerSession } from "next-auth/next";
 
@@ -51,7 +52,9 @@ export default async function handle(
           folderId: null,
         },
         orderBy: {
-          createdAt: "desc",
+          document: {
+            name: "asc",
+          },
         },
         include: {
           document: {
@@ -61,11 +64,7 @@ export default async function handle(
               type: true,
               _count: {
                 select: {
-                  views: {
-                    where: {
-                      dataroomId: dataroomId,
-                    },
-                  },
+                  views: { where: { viewType: "DATAROOM_VIEW" } },
                   versions: true,
                 },
               },
@@ -78,6 +77,24 @@ export default async function handle(
         ...document,
         document: { ...document.document },
       }));
+
+      // Sort documents by name considering the numerical part
+      documentsWithCount.sort((a, b) => {
+        const getNumber = (str: string): number => {
+          const match = str.match(/^\d+/);
+          return match ? parseInt(match[0], 10) : 0;
+        };
+
+        const numA = getNumber(a.document.name);
+        const numB = getNumber(b.document.name);
+
+        if (numA !== numB) {
+          return numA - numB;
+        }
+
+        // If numerical parts are the same, fall back to lexicographical order
+        return a.document.name.localeCompare(b.document.name);
+      });
 
       return res.status(200).json(documentsWithCount);
     } catch (error) {

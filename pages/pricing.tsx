@@ -69,10 +69,8 @@ const tiers: {
     featureIntro: "Everything in Free, plus:",
     features: [
       "2 users included",
-      "Custom slug",
       "Custom branding",
       "1-year analytics retention",
-      "Advanced access controls",
       "Folder organization",
     ],
     bgColor: "bg-gray-200",
@@ -85,13 +83,14 @@ const tiers: {
     name: "Business",
     id: "tier-business",
     href: "/login",
-    price: { monthly: "€79", annually: "€59" },
+    price: { monthly: "€79", annually: "€45" },
     description: "The one for more control, data room, and multi-file sharing.",
     featureIntro: "Everything in Pro, plus:",
     features: [
       "3 users included",
       "1 dataroom",
       "Custom domain for documents",
+      "Advanced link controls",
       "Multi-file sharing",
       "Unlimited documents",
       "Unlimited subfolder levels",
@@ -108,7 +107,7 @@ const tiers: {
     name: "Data Rooms",
     id: "tier-datarooms",
     href: "/login",
-    price: { monthly: "€199", annually: "€149" },
+    price: { monthly: "€199", annually: "€99" },
     description: "Advanced data rooms infrastructure for your company.",
     featureIntro: "Everything in Business, plus:",
     features: [
@@ -117,9 +116,8 @@ const tiers: {
       "Custom domain for data rooms",
       "Unlimited documents",
       "Unlimited folders and subfolders",
-      "User groups permissions",
       "Advanced data rooms analytics",
-      // "Up to 5TB file uploads",
+      "NDA agreements",
       "24h priority support",
       "Custom onboarding",
     ],
@@ -316,7 +314,7 @@ export default function PricingPage() {
                                     : "hidden",
                                 )}
                               />
-                              25% Saving
+                              43% Saving
                             </div>
                           </div>
                         ) : null}
@@ -364,7 +362,7 @@ export default function PricingPage() {
                                     : "hidden",
                                 )}
                               />
-                              25% Saving
+                              50% Saving
                             </div>
                           </div>
                         ) : null}
@@ -432,10 +430,10 @@ export default function PricingPage() {
           </div>
         </div>
 
-        <div className="mx-auto w-full max-w-7xl px-4 md:px-8 ">
+        <div className="mx-auto w-full max-w-7xl px-4 md:px-8">
           <div className="mx-auto my-4 rounded-xl bg-[#fb7a00] px-6 py-12">
             <div className="item-center flex flex-col justify-between space-y-10 lg:flex-row lg:space-y-0">
-              <h2 className="text-nowrap text-3xl">
+              <h2 className="text-balance text-3xl">
                 Looking for enterprise plan or self-hosted version?
               </h2>
               <div className="flex items-center space-x-2">

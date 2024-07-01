@@ -70,7 +70,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
         recordMap = await notion.getPage(pageId);
       }
 
-      const { team, ...linkDocument } = link.document;
+      const { team, teamId, ...linkDocument } = link.document;
       const teamPlan = team?.plan || "free";
 
       return {
@@ -95,10 +95,15 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
             metaTitle: link.metaTitle,
             metaDescription: link.metaDescription,
             metaImage: link.metaImage,
+            metaUrl: `https://${domain}/${slug}` || null,
           },
           showPoweredByBanner: teamPlan === "free",
+          showAccountCreationSlide: teamPlan === "free" || teamPlan === "pro",
+          useAdvancedExcelViewer:
+            teamId === "clwt1qwt00000qz39aqra71w6" ||
+            teamId === "clup33by90000oewh4rfvp2eg",
         },
-        revalidate: brand ? 10 : false,
+        revalidate: 10,
       };
     }
 
@@ -120,6 +125,8 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
         documents.push(newDocument);
       }
 
+      const { teamId } = link.dataroom;
+
       return {
         props: {
           linkData: {
@@ -139,8 +146,13 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
             metaTitle: link.metaTitle,
             metaDescription: link.metaDescription,
             metaImage: link.metaImage,
+            metaUrl: `https://${domain}/${slug}` || null,
           },
           showPoweredByBanner: false,
+          showAccountCreationSlide: false,
+          useAdvancedExcelViewer:
+            teamId === "clwt1qwt00000qz39aqra71w6" ||
+            teamId === "clup33by90000oewh4rfvp2eg",
         },
         revalidate: 10,
       };
@@ -162,6 +174,8 @@ export default function ViewPage({
   linkData,
   notionData,
   meta,
+  showAccountCreationSlide,
+  useAdvancedExcelViewer,
 }: {
   linkData: DocumentLinkData | DataroomLinkData;
   notionData: {
@@ -174,7 +188,9 @@ export default function ViewPage({
     metaDescription: string | null;
     metaImage: string | null;
     metaUrl: string | null;
-  } | null;
+  };
+  showAccountCreationSlide: boolean;
+  useAdvancedExcelViewer: boolean;
 }) {
   const router = useRouter();
   const { data: session, status } = useSession();
@@ -199,13 +215,15 @@ export default function ViewPage({
       return (
         <>
           <CustomMetatag
-            enableBranding={meta?.enableCustomMetatag ?? false}
+            enableBranding={meta.enableCustomMetatag ?? false}
             title={
-              meta?.metaTitle ?? link?.document?.name ?? "Papermark Document"
+              meta.metaTitle ??
+              `${link?.document?.name} | Powered by Papermark` ??
+              "Document powered by Papermark"
             }
-            description={meta?.metaDescription ?? null}
-            imageUrl={meta?.metaImage ?? null}
-            url={meta?.metaUrl ?? ""}
+            description={meta.metaDescription ?? null}
+            imageUrl={meta.metaImage ?? null}
+            url={meta.metaUrl ?? ""}
           />
           <div className="flex h-screen items-center justify-center">
             <LoadingSpinner className="h-20 w-20" />
@@ -237,17 +255,19 @@ export default function ViewPage({
       );
     }
 
-    const { enableCustomMetatag, metaTitle, metaDescription, metaImage } = link;
-
     if (emailProtected || linkPassword) {
       return (
         <>
           <CustomMetatag
-            enableBranding={enableCustomMetatag ?? false}
-            title={metaTitle}
-            description={metaDescription}
-            imageUrl={metaImage}
-            url={meta?.metaUrl ?? ""}
+            enableBranding={meta.enableCustomMetatag ?? false}
+            title={
+              meta.metaTitle ??
+              `${link?.document?.name} | Powered by Papermark` ??
+              "Document powered by Papermark"
+            }
+            description={meta.metaDescription ?? null}
+            imageUrl={meta.metaImage ?? null}
+            url={meta.metaUrl ?? ""}
           />
           <DocumentView
             link={link}
@@ -258,6 +278,8 @@ export default function ViewPage({
             brand={brand}
             token={token}
             verifiedEmail={verifiedEmail}
+            showAccountCreationSlide={showAccountCreationSlide}
+            useAdvancedExcelViewer={useAdvancedExcelViewer}
           />
         </>
       );
@@ -266,11 +288,15 @@ export default function ViewPage({
     return (
       <>
         <CustomMetatag
-          enableBranding={enableCustomMetatag ?? false}
-          title={metaTitle}
-          description={metaDescription}
-          imageUrl={metaImage}
-          url={meta?.metaUrl ?? ""}
+          enableBranding={meta.enableCustomMetatag ?? false}
+          title={
+            meta.metaTitle ??
+            `${link?.document?.name} | Powered by Papermark` ??
+            "Document powered by Papermark"
+          }
+          description={meta.metaDescription ?? null}
+          imageUrl={meta.metaImage ?? null}
+          url={meta.metaUrl ?? ""}
         />
         <DocumentView
           link={link}
@@ -279,6 +305,8 @@ export default function ViewPage({
           isProtected={false}
           notionData={notionData}
           brand={brand}
+          showAccountCreationSlide={showAccountCreationSlide}
+          useAdvancedExcelViewer={useAdvancedExcelViewer}
         />
       </>
     );
@@ -290,11 +318,15 @@ export default function ViewPage({
       return (
         <>
           <CustomMetatag
-            enableBranding={meta?.enableCustomMetatag ?? false}
-            title={meta?.metaTitle ?? link?.dataroom.name ?? "Dataroom"}
-            description={meta?.metaDescription ?? null}
-            imageUrl={meta?.metaImage ?? null}
-            url={meta?.metaUrl ?? ""}
+            enableBranding={meta.enableCustomMetatag ?? false}
+            title={
+              meta.metaTitle ??
+              `${link?.dataroom?.name} | Powered by Papermark` ??
+              "Dataroom powered by Papermark"
+            }
+            description={meta.metaDescription ?? null}
+            imageUrl={meta.metaImage ?? null}
+            url={meta.metaUrl ?? ""}
           />
           <div className="flex h-screen items-center justify-center">
             <LoadingSpinner className="h-20 w-20" />
@@ -327,17 +359,19 @@ export default function ViewPage({
       );
     }
 
-    const { enableCustomMetatag, metaTitle, metaDescription, metaImage } = link;
-
     if (emailProtected || linkPassword) {
       return (
         <>
           <CustomMetatag
-            enableBranding={enableCustomMetatag ?? false}
-            title={metaTitle}
-            description={metaDescription}
-            imageUrl={metaImage}
-            url={meta?.metaUrl ?? ""}
+            enableBranding={meta.enableCustomMetatag ?? false}
+            title={
+              meta.metaTitle ??
+              `${link?.dataroom?.name} | Powered by Papermark` ??
+              "Dataroom powered by Papermark"
+            }
+            description={meta.metaDescription ?? null}
+            imageUrl={meta.metaImage ?? null}
+            url={meta.metaUrl ?? ""}
           />
           <DataroomView
             link={link}
@@ -347,6 +381,7 @@ export default function ViewPage({
             brand={brand}
             token={token}
             verifiedEmail={verifiedEmail}
+            useAdvancedExcelViewer={useAdvancedExcelViewer}
           />
         </>
       );
@@ -355,11 +390,15 @@ export default function ViewPage({
     return (
       <>
         <CustomMetatag
-          enableBranding={enableCustomMetatag ?? false}
-          title={metaTitle}
-          description={metaDescription}
-          imageUrl={metaImage}
-          url={meta?.metaUrl ?? ""}
+          enableBranding={meta.enableCustomMetatag ?? false}
+          title={
+            meta.metaTitle ??
+            `${link?.dataroom?.name} | Powered by Papermark` ??
+            "Dataroom powered by Papermark"
+          }
+          description={meta.metaDescription ?? null}
+          imageUrl={meta.metaImage ?? null}
+          url={meta.metaUrl ?? ""}
         />
         <DataroomView
           link={link}
@@ -367,6 +406,7 @@ export default function ViewPage({
           userId={userId}
           isProtected={false}
           brand={brand}
+          useAdvancedExcelViewer={useAdvancedExcelViewer}
         />
       </>
     );

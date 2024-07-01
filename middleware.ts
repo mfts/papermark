@@ -26,7 +26,7 @@ export const config = {
      * 4. /_vercel (Vercel internals)
      * 5. /favicon.ico, /sitemap.xml (static files)
      */
-    "/((?!api/|_next/|_static|_icons|_vercel|favicon.ico|sitemap.xml).*)",
+    "/((?!api/|_next/|_static|vendor|_icons|_vercel|favicon.ico|sitemap.xml).*)",
   ],
 };
 
@@ -59,16 +59,20 @@ export default async function middleware(req: NextRequest, ev: NextFetchEvent) {
     path !== "/oss-friends" &&
     path !== "/pricing" &&
     path !== "/docsend-alternatives" &&
+    path !== "/digify-alternatives" &&
     path !== "/data-room" &&
     path !== "/launch-week" &&
     path !== "/open-source-investors" &&
     path !== "/investors" &&
     path !== "/ai" &&
     path !== "/share-notion-page" &&
+    !path.startsWith("/ai-pitch-deck-generator") &&
     !path.startsWith("/alternatives") &&
     !path.startsWith("/solutions") &&
     !path.startsWith("/investors") &&
     !path.startsWith("/blog") &&
+    !path.startsWith("/help") &&
+    !path.startsWith("/de") &&
     !path.startsWith("/view/")
   ) {
     return AppMiddleware(req);

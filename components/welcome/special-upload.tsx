@@ -26,6 +26,7 @@ import {
   copyToClipboard,
   uploadImage,
 } from "@/lib/utils";
+import { getSupportedContentType } from "@/lib/utils/get-content-type";
 
 import Skeleton from "../Skeleton";
 import { DEFAULT_LINK_PROPS, DEFAULT_LINK_TYPE } from "../links/link-sheet";
@@ -55,7 +56,7 @@ export default function DeckGeneratorUpload() {
       const blob = fetch(reportUrl)
         .then((response) => response.blob())
         .then((blob) => {
-          const file = new File([blob], "report.pdf", {
+          const file = new File([blob], "Pitchdeck.pdf", {
             type: "application/pdf",
           });
           setCurrentFile(file);
@@ -78,6 +79,16 @@ export default function DeckGeneratorUpload() {
     try {
       setUploading(true);
 
+      const contentType = getSupportedContentType(currentFile.type);
+
+      if (!contentType) {
+        setUploading(false);
+        toast.error(
+          "Unsupported file format. Please upload a PDF or Excel file.",
+        );
+        return;
+      }
+
       const { type, data, numPages } = await putFile({
         file: currentFile,
         teamId,
@@ -90,6 +101,7 @@ export default function DeckGeneratorUpload() {
         name: currentFile.name,
         key: data!,
         storageType: type!,
+        contentType: contentType,
       };
       // create a document in the database
       const response = await createDocument({ documentData, teamId, numPages });
@@ -105,7 +117,7 @@ export default function DeckGeneratorUpload() {
           name: document.name,
           numPages: document.numPages,
           path: router.asPath,
-          type: "pdf",
+          type: document.type,
           teamId: teamInfo?.currentTeam?.id,
         });
         analytics.capture("Link Added", {

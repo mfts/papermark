@@ -1,7 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
 
-import { Brand, DataroomBrand } from "@prisma/client";
+import React from "react";
+
+import { DataroomBrand } from "@prisma/client";
 import { ArrowUpRight, Download } from "lucide-react";
 import { toast } from "sonner";
 
@@ -19,6 +21,7 @@ import { timeAgo } from "@/lib/utils";
 
 import PapermarkSparkle from "../../shared/icons/papermark-sparkle";
 import { Button } from "../../ui/button";
+import { TDocumentData } from "./dataroom-view";
 
 export default function DataroomNav({
   pageNumber,
@@ -44,7 +47,7 @@ export default function DataroomNav({
   linkId?: string;
   type?: "pdf" | "notion";
   isDataroom?: boolean;
-  setDocumentData?: (data: any) => void;
+  setDocumentData?: React.Dispatch<React.SetStateAction<TDocumentData | null>>;
   dataroom?: any;
 }) {
   const downloadFile = async () => {
@@ -78,9 +81,9 @@ export default function DataroomNav({
       }}
     >
       <div className="mx-auto px-2 sm:px-6 lg:px-8">
-        <div className="relative flex h-12 items-center justify-between">
+        <div className="relative flex h-16 items-center justify-between">
           <div className="flex flex-1 items-center justify-start">
-            <div className="relative flex h-6 w-36 flex-shrink-0 items-center">
+            <div className="relative flex h-16 w-36 flex-shrink-0 items-center">
               {brand && brand.logo ? (
                 <Image
                   className="object-contain"

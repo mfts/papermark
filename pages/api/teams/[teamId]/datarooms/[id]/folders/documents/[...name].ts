@@ -65,9 +65,6 @@ export default async function handle(
           dataroomId: dataroomId,
           folderId: folder.id,
         },
-        orderBy: {
-          createdAt: "desc",
-        },
         select: {
           id: true,
           dataroomId: true,
@@ -80,9 +77,17 @@ export default async function handle(
               name: true,
               type: true,
               _count: {
-                select: { views: true, versions: true },
+                select: {
+                  views: { where: { viewType: "DATAROOM_VIEW" } },
+                  versions: true,
+                },
               },
             },
+          },
+        },
+        orderBy: {
+          document: {
+            name: "asc",
           },
         },
       });

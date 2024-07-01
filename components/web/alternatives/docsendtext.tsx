@@ -89,7 +89,7 @@ const DocSendAlternatives = () => {
                         href="https://www.papermark.io/pricing"
                       >
                         {" "}
-                        included in the plan.
+                        included in the plan. In addition, all custom
                       </a>
                     </p>
                   </li>
@@ -216,13 +216,22 @@ const DocSendAlternatives = () => {
                     <p>Free: $0</p>
                   </li>
                   <li>
-                    <p>Starter: $19/month</p>
+                    <p>Starter: $25/month</p>
                   </li>
                   <li>
                     <p>
                       Business: $59/month (
                       <a target="_blank" rel="nofollow" href="/data-room">
                         data room
+                      </a>{" "}
+                      included)
+                    </p>
+                  </li>
+                  <li>
+                    <p>
+                      Data Rooms: $149/month (
+                      <a target="_blank" rel="nofollow" href="/data-room">
+                        unlimited data rooms
                       </a>{" "}
                       included)
                     </p>
@@ -410,32 +419,7 @@ const DocSendAlternatives = () => {
                     </p>
                   </li>
                 </ul>
-                <h3 id="dropbox-pricing">Dropbox Pricing</h3>
-                <ul>
-                  <li>
-                    <p>
-                      Professional Plan 1: $9 per user/month, 2 TB of storage
-                    </p>
-                  </li>
-                  <li>
-                    <p>
-                      Professional Plan 2: $16.58 per user/month, 3 TB of
-                      storage
-                    </p>
-                  </li>
-                  <li>
-                    <p>
-                      Professional Plan 3: Starting at $60 per month for 3+
-                      users, 9 TB of storage
-                    </p>
-                  </li>
-                  <li>
-                    <p>
-                      Professional Plan 4: Starting at $350 per month for 3+
-                      users, 15 TB of storage
-                    </p>
-                  </li>
-                </ul>
+
                 <h3 id="dropbox-ratings-and-reviews">
                   Dropbox Ratings and Reviews
                 </h3>
@@ -961,13 +945,16 @@ const DocSendAlternatives = () => {
                   </li>
                 </ul>
                 <p>
+                  <h3 id="docsend-vs-google-drive">
+                    What is the difference between DocSend and Google Drive?
+                  </h3>
                   <span style={{ color: "rgb(19, 52, 59)" }}>
-                    In summary, DocSend is the preferred choice for more
-                    specific use cases, like for sales teams needing to closely
-                    track how prospects interact with their documents. Google
-                    Drive provides a more comprehensive collaboration solution
-                    suitable for various business needs around file sharing and
-                    co-editing documents.
+                    DocSend is the preferred choice for more specific use cases,
+                    like for sales teams needing to closely track how prospects
+                    interact with their documents. Google Drive provides a more
+                    comprehensive collaboration solution suitable for more
+                    general business needs around file sharing and co-editing
+                    documents.
                   </span>
                 </p>
                 <h2 id="docusign">DocuSign</h2>
@@ -1361,6 +1348,54 @@ const DocSendAlternatives = () => {
                   Start with Docsend alternative for free
                 </Button>
               </Link>
+              <h2>What is better than Docsend?</h2>
+              <ul>
+                <p>
+                  Papermark is a modern alternative to DocSend, offering much
+                  more flexibility, control, and cost savings and custom
+                  branding.
+                </p>
+                <li>
+                  <strong>Open Source:</strong> Being open source means that
+                  Papermark.io is constantly improved by a community of
+                  developers. You can trust that it is secure and up-to-date
+                  with the latest features.
+                </li>
+                <li>
+                  <strong>Cost-Effective:</strong> Unlike DocSend, which
+                  requires a subscription, Papermark.io is free to use. This
+                  makes it a great option for individuals and businesses looking
+                  to reduce costs.
+                </li>
+                <li>
+                  <strong>Customizable:</strong> With its open-source nature,
+                  you have the flexibility to customize Papermark.io to suit
+                  your specific needs. You can add features, modify existing
+                  ones, and integrate it seamlessly into your workflow.
+                </li>
+                <li>
+                  <strong>User-Friendly:</strong> Papermark is designed to be
+                  intuitive and easy to use, by founders and investors who focus
+                  on UX first products. Its clean interface ensures that you can
+                  manage your documents efficiently without any hassle.
+                </li>
+                <li>
+                  <strong>Privacy and Control:</strong> You have full control
+                  over your documents and data with Papermark.In self hosted
+                  version, there are no third-party servers involved, ensuring
+                  your sensitive information remains private.
+                </li>
+              </ul>
+
+              <Link
+                href="https://papermark.io/login"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Button variant="orange" className="rounded-3xl text-base">
+                  Start with Docsend alternative for free
+                </Button>
+              </Link>
 
               {/* <h1 className="text-4xl font-bold ">
                 DocSend Alternatives listed in this article
@@ -1571,7 +1606,9 @@ const DocSendAlternatives = () => {
 
           <div className="sticky top-14 col-span-1 hidden flex-col divide-y divide-gray-200 self-start sm:flex">
             <div className="flex flex-col space-y-4">
-              <p className="text-sm text-gray-500">Written by</p>
+              <p className="text-sm text-gray-500">
+                Last updated on 19.06.2024
+              </p>
               {/* <Author username={data.author} /> */}
               <Link
                 href={`https://twitter.com/mfts0`}
@@ -1590,6 +1627,27 @@ const DocSendAlternatives = () => {
                   <p className="font-semibold text-gray-700">Marc Seitz</p>
                   <p className="text-sm text-gray-500">@mfts0</p>
                 </div>
+              </Link>
+              <Link
+                href="https://papermark.io/login"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Button
+                  variant="orange"
+                  className="mt-10 rounded-3xl text-base"
+                >
+                  Start with Docsend alternative
+                </Button>
+              </Link>
+              <Link
+                href="https://papermark.io/pricing"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Button className="rounded-3xl border border-gray-900 bg-gray-100 bg-white text-base text-gray-900 hover:bg-gray-200">
+                  Learn more about plans
+                </Button>
               </Link>
             </div>
           </div>

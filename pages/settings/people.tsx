@@ -73,6 +73,36 @@ export default function Billing() {
     );
   };
 
+  const changeRole = async (teamId: string, userId: string, role: string) => {
+    const response = await fetch(`/api/teams/${teamId}/change-role`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        userToBeChanged: userId,
+        role: role,
+      }),
+    });
+
+    if (response.status !== 204) {
+      const error = await response.json();
+      toast.error(error);
+      return;
+    }
+
+    await mutate(`/api/teams/${teamId}`);
+    await mutate("/api/teams");
+
+    analytics.capture("Team Member Role Changed", {
+      userId: userId,
+      teamId: teamId,
+      role: role,
+    });
+
+    toast.success("Role changed successfully!");
+  };
+
   const removeTeammate = async (teamId: string, userId: string) => {
     setLeavingUserId(userId);
     const response = await fetch(`/api/teams/${teamId}/remove-teammate`, {
@@ -279,14 +309,29 @@ export default function Billing() {
                         </DropdownMenuItem>
                       )}
                       {isCurrentUserAdmin() && !isCurrentUser(member.userId) ? (
-                        <DropdownMenuItem
-                          onClick={() =>
-                            removeTeammate(member.teamId, member.userId)
-                          }
-                          className="text-red-500 hover:cursor-pointer focus:bg-destructive focus:text-destructive-foreground"
-                        >
-                          Remove teammate
-                        </DropdownMenuItem>
+                        <>
+                          <DropdownMenuItem
+                            onClick={() =>
+                              changeRole(
+                                member.teamId,
+                                member.userId,
+                                member.role === "MEMBER" ? "MANAGER" : "MEMBER",
+                              )
+                            }
+                            className="text-red-500 hover:cursor-pointer focus:bg-destructive focus:text-destructive-foreground"
+                          >
+                            Change role to{" "}
+                            {member.role === "MEMBER" ? "MANAGER" : "MEMBER"}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() =>
+                              removeTeammate(member.teamId, member.userId)
+                            }
+                            className="text-red-500 hover:cursor-pointer focus:bg-destructive focus:text-destructive-foreground"
+                          >
+                            Remove teammate
+                          </DropdownMenuItem>
+                        </>
                       ) : (
                         <DropdownMenuItem
                           disabled

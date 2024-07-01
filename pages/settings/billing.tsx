@@ -114,7 +114,7 @@ export default function Billing() {
 
       bgColor: "bg-gray-200",
       borderColor: "#bg-gray-800",
-      textColor: "#bg-gray-800",
+      textColor: "text-foreground ",
       buttonText: "Start for free",
       mostPopular: false,
     },
@@ -127,16 +127,14 @@ export default function Billing() {
       description: "The branded experience for your documents.",
       featureIntro: "Everything in Free, plus:",
       features: [
-        "2 users",
-        "Custom slug",
+        "2 users included",
         "Custom branding",
         "1-year analytics retention",
-        "Advanced access controls",
         "Folder organization",
       ],
       bgColor: "bg-gray-200",
       borderColor: "#bg-gray-800",
-      textColor: "#bg-gray-800",
+      textColor: "#bg-gray-500",
       buttonText: "Upgrade to Pro",
       mostPopular: false,
     },
@@ -145,23 +143,24 @@ export default function Billing() {
       id: "tier-business",
       href: "/login",
       currentPlan: plan && plan == "business" ? true : false,
-      price: { monthly: "€79", annually: "€59" },
+      price: { monthly: "€79", annually: "€45" },
       description:
         "The one for more control, data room, and multi-file sharing.",
       featureIntro: "Everything in Pro, plus:",
       features: [
-        "3 users",
+        "3 users included",
         "1 dataroom",
         "Multi-file sharing",
-        "Custom domain",
+        "Advanced link controls",
+        "Custom domain for documents",
         "Unlimited documents",
         "Unlimited subfolder levels",
         "Large file uploads",
         "48h priority support",
       ],
-      bgColor: "#fb7a00",
+      bgColor: "#bg-gray-500",
       borderColor: "#fb7a00",
-      textColor: "#black",
+      textColor: "#bg-gray-500",
       buttonText: "Upgrade to Business",
       mostPopular: true,
     },
@@ -171,17 +170,17 @@ export default function Billing() {
       id: "tier-datarooms",
       href: "/login",
       currentPlan: plan && plan == "datarooms" ? true : false,
-      price: { monthly: "€199", annually: "€149" },
+      price: { monthly: "€199", annually: "€99" },
       description:
         "The one for more control, data room, and multi-file sharing.",
-      featureIntro: "Everything in Pro, plus:",
+      featureIntro: "Everything in Business, plus:",
       features: [
-        "5 users included",
+        "3 users included",
         "Unlimited data rooms",
         "Custom domain for data rooms",
         "Unlimited documents",
         "Unlimited folders and subfolders",
-        "User groups permissions",
+        "NDA agreements",
         "Advanced data rooms analytics",
         "24h priority support",
         "Custom onboarding",
@@ -231,7 +230,7 @@ export default function Billing() {
                   className="flex flex-col justify-between border-r-0 border-black dark:border-muted-foreground md:border-r md:last:!border-r-0"
                 >
                   <div>
-                    <div className="border-b border-black bg-gray-100 p-6 dark:border-muted-foreground dark:bg-gray-800">
+                    <div className="border-b border-black bg-gray-100 p-6 dark:border-muted-foreground dark:bg-gray-500">
                       <h3
                         id={tier.id}
                         className="flex items-center gap-x-2 text-balance text-xl leading-8 text-foreground"
@@ -266,7 +265,7 @@ export default function Billing() {
                                 className={cn(
                                   toggleProYear
                                     ? "text-gray-400"
-                                    : "text-black",
+                                    : "text-foreground",
                                 )}
                               >
                                 Monthly
@@ -275,7 +274,7 @@ export default function Billing() {
                               <span
                                 className={cn(
                                   toggleProYear
-                                    ? "text-black"
+                                    ? "text-foreground"
                                     : "text-gray-400",
                                 )}
                               >
@@ -284,7 +283,7 @@ export default function Billing() {
                             </div>
                             <div
                               className={cn(
-                                "relative w-fit rounded-3xl border border-gray-900 px-1.5 py-0.5 text-xs uppercase text-gray-900",
+                                "relative w-fit rounded-3xl border border-[#fb7a00] px-1.5 py-0.5 text-xs uppercase text-[#fb7a00]",
                                 !toggleProYear &&
                                   "border-gray-400 text-gray-400 opacity-40",
                               )}
@@ -314,7 +313,7 @@ export default function Billing() {
                                 className={cn(
                                   toggleBusinessYear
                                     ? "text-gray-400"
-                                    : "text-black",
+                                    : "text-foreground",
                                 )}
                               >
                                 Monthly
@@ -323,7 +322,7 @@ export default function Billing() {
                               <span
                                 className={cn(
                                   toggleBusinessYear
-                                    ? "text-black"
+                                    ? "text-foreground"
                                     : "text-gray-400",
                                 )}
                               >
@@ -344,7 +343,7 @@ export default function Billing() {
                                     : "hidden",
                                 )}
                               />
-                              25% Saving
+                              43% Saving
                             </div>
                           </div>
                         ) : null}
@@ -362,7 +361,7 @@ export default function Billing() {
                                 className={cn(
                                   toggleDataroomsYear
                                     ? "text-gray-400"
-                                    : "text-black",
+                                    : "text-foreground",
                                 )}
                               >
                                 Monthly
@@ -371,7 +370,7 @@ export default function Billing() {
                               <span
                                 className={cn(
                                   toggleDataroomsYear
-                                    ? "text-black"
+                                    ? "text-foreground"
                                     : "text-gray-400",
                                 )}
                               >
@@ -392,7 +391,7 @@ export default function Billing() {
                                     : "hidden",
                                 )}
                               />
-                              25% Saving
+                              50% Saving
                             </div>
                           </div>
                         ) : null}
@@ -407,7 +406,7 @@ export default function Billing() {
                       </div>
                       <p className="mt-6 flex items-baseline gap-x-1">
                         <span
-                          className="text-balance text-4xl font-medium text-gray-900"
+                          className="text-balance text-4xl font-medium text-foreground"
                           style={{ fontVariantNumeric: "tabular-nums" }}
                         >
                           {tier.id === "tier-pro"

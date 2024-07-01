@@ -9,6 +9,7 @@ export type LimitProps = {
   domains: number;
   customDomainOnPro: boolean;
   customDomainInDataroom: boolean;
+  advancedLinkControlsOnPro: boolean;
 };
 
 export function useLimits() {

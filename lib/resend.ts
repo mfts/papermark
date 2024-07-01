@@ -15,6 +15,7 @@ export const sendEmail = async ({
   marketing,
   system,
   test,
+  cc,
 }: {
   to: string;
   subject: string;
@@ -22,6 +23,7 @@ export const sendEmail = async ({
   marketing?: boolean;
   system?: boolean;
   test?: boolean;
+  cc?: string | string[];
 }) => {
   if (!resend) {
     // Throw an error if resend is not initialized
@@ -36,6 +38,7 @@ export const sendEmail = async ({
           ? "Papermark <system@papermark.io>"
           : "Marc from Papermark <marc@papermark.io>",
       to: test ? "delivered@resend.dev" : to,
+      cc: cc,
       reply_to: marketing ? "marc@papermark.io" : undefined,
       subject,
       react,

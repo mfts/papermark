@@ -36,13 +36,23 @@ const navigation = {
       name: "DocSend Alternatives",
       href: "/docsend-alternatives",
     },
+     {
+      name: "Digify Alternatives",
+      href: "/digify-alternatives",
+    },
+    {
+      name: "AI Pitch Deck Generator",
+      href: "https://deck.papermark.io",
+    },
   ],
   alternatives: [
     { name: "DocSend", href: "/alternatives/docsend" },
     { name: "BriefLink", href: "/alternatives/brieflink" },
     { name: "PandaDoc", href: "/alternatives/pandadoc" },
-    { name: "Google Drive", href: "/alternatives/google-drive" },
-    { name: "Pitch", href: "/alternatives/pitch" },
+    { name: "Digify", href: "/alternatives/digify" },
+    { name: "FirmRoom", href: "/alternatives/firmroom" },
+    { name: "Google-Drive", href: "/alternatives/google-drive" },
+
   ],
   social: [
     {

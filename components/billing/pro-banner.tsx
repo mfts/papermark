@@ -37,14 +37,13 @@ export default function ProBanner({
         <span className="sr-only">Close</span>
       </button>
       <div className="flex space-x-2">
-        <span className="text-sm font-bold">✨ Papermark Pro ✨</span>
+        <span className="text-sm font-bold">✨ Papermark Business ✨</span>
       </div>
       <p className="my-4 text-sm">
-        Join the Papermark Pro plan to unlock custom domains, team members, and
-        more.
+        Join to unlock custom branding, domains, team members, and data rooms.
       </p>
       <div className="flex">
-        <UpgradePlanModal clickedPlan={"Pro"} trigger={"pro_banner"}>
+        <UpgradePlanModal clickedPlan={"Business"} trigger={"pro_banner"}>
           <Button
             type="button"
             className="grow"

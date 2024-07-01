@@ -22,7 +22,6 @@ import {
   useDataroomDocuments,
   useDataroomFolders,
 } from "@/lib/swr/use-dataroom";
-import useDocuments, { useRootFolders } from "@/lib/swr/use-documents";
 
 export default function Documents() {
   const { dataroom } = useDataroom();
@@ -89,6 +88,11 @@ export default function Documents() {
               },
               {
                 label: "Customization",
+                href: `/datarooms/${dataroom?.id}/branding`,
+                segment: "branding",
+              },
+              {
+                label: "Settings",
                 href: `/datarooms/${dataroom?.id}/settings`,
                 segment: "settings",
               },
@@ -97,7 +101,7 @@ export default function Documents() {
         </header>
 
         <div className="grid gap-2 md:grid-cols-4">
-          <div className="md:col-span-1">
+          <div className="truncate md:col-span-1">
             <SidebarFolderTree dataroomId={dataroom?.id!} />
           </div>
           <div className="space-y-4 md:col-span-3">

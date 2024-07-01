@@ -51,6 +51,8 @@ export const DEFAULT_LINK_PROPS = {
   enabledQuestion: false,
   questionText: null,
   questionType: null,
+  enableAgreement: false,
+  agreementId: null,
 };
 
 export type DEFAULT_LINK_TYPE = {
@@ -75,6 +77,8 @@ export type DEFAULT_LINK_TYPE = {
   enableQuestion?: boolean; // feedback question
   questionText: string | null;
   questionType: string | null;
+  enableAgreement: boolean; // agreement
+  agreementId: string | null;
 };
 
 export default function LinkSheet({
@@ -196,15 +200,11 @@ export default function LinkSheet({
 
   return (
     <Sheet open={isOpen} onOpenChange={(open: boolean) => setIsOpen(open)}>
-      <SheetContent className="flex w-[90%] flex-col justify-between bg-background px-4 text-foreground sm:w-[450px] md:px-5">
+      <SheetContent className="flex w-[90%] flex-col justify-between bg-background px-4 text-foreground sm:w-[600px] sm:max-w-2xl md:px-5">
         <SheetHeader className="text-start">
           <SheetTitle>
             {currentLink ? "Edit link" : "Create a new link"}
           </SheetTitle>
-          <SheetDescription>
-            Customize a document link for sharing. Click save when you&apos;re
-            done.
-          </SheetDescription>
         </SheetHeader>
 
         <form className="flex grow flex-col" onSubmit={handleSubmit}>
@@ -212,7 +212,7 @@ export default function LinkSheet({
             <div className="h-0 flex-1">
               <div className="flex flex-1 flex-col justify-between">
                 <div className="divide-y divide-gray-200">
-                  <div className="space-y-6 pb-5 pt-6">
+                  <div className="space-y-6 pb-5 pt-2">
                     <div className="space-y-2">
                       <Label htmlFor="link-name">Link Name</Label>
                       <div className="mt-2">

@@ -1,20 +1,19 @@
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { motion } from "framer-motion";
 
-import { Switch } from "@/components/ui/switch";
-
 import { FADE_IN_ANIMATION_SETTINGS } from "@/lib/constants";
-import { cn, getDateTimeLocal } from "@/lib/utils";
+import { getDateTimeLocal } from "@/lib/utils";
 
 import { DEFAULT_LINK_TYPE } from ".";
+import LinkItem from "./link-item";
 
 export default function ExpirationSection({
   data,
   setData,
 }: {
   data: DEFAULT_LINK_TYPE;
-  setData: Dispatch<SetStateAction<DEFAULT_LINK_TYPE>>;
+  setData: React.Dispatch<React.SetStateAction<DEFAULT_LINK_TYPE>>;
 }) {
   const { expiresAt } = data;
   const [enabled, setEnabled] = useState<boolean>(false);
@@ -33,19 +32,12 @@ export default function ExpirationSection({
 
   return (
     <div className="pb-5">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center justify-between space-x-2">
-          <h2
-            className={cn(
-              "text-sm font-medium leading-6",
-              enabled ? "text-foreground" : "text-muted-foreground",
-            )}
-          >
-            Expiration Date
-          </h2>
-        </div>
-        <Switch checked={enabled} onCheckedChange={handleEnableExpiration} />
-      </div>
+      <LinkItem
+        title="Expiration Date"
+        enabled={enabled}
+        action={handleEnableExpiration}
+      />
+
       {enabled && (
         <motion.div className="mt-3" {...FADE_IN_ANIMATION_SETTINGS}>
           <input

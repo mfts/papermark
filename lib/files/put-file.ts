@@ -3,7 +3,12 @@ import { upload } from "@vercel/blob/client";
 import { match } from "ts-pattern";
 
 import { newId } from "@/lib/id-helper";
-import { getPagesCount } from "@/lib/utils/get-page-number-count";
+import {
+  getPagesCount,
+  getSheetsCount,
+} from "@/lib/utils/get-page-number-count";
+
+import { SUPPORTED_DOCUMENT_TYPES } from "../constants";
 
 // type File = {
 //   name: string;
@@ -42,8 +47,11 @@ const putFileInVercel = async (file: File) => {
     handleUploadUrl: "/api/file/browser-upload",
   });
 
-  const contents = await file.arrayBuffer();
-  const numPages = await getPagesCount(contents);
+  let numPages: number = 1;
+  if (file.type === "application/pdf") {
+    const contents = await file.arrayBuffer();
+    numPages = await getPagesCount(contents);
+  }
 
   return {
     type: DocumentStorageType.VERCEL_BLOB,
@@ -65,8 +73,8 @@ const putFileInS3 = async ({
     docId = newId("doc");
   }
 
-  if (file.type !== "application/pdf") {
-    throw new Error("Only PDF files are supported");
+  if (!SUPPORTED_DOCUMENT_TYPES.includes(file.type)) {
+    throw new Error("Only PDF and Excel files are supported");
   }
 
   const presignedResponse = await fetch(
@@ -110,8 +118,20 @@ const putFileInS3 = async ({
     );
   }
 
-  const body = await file.arrayBuffer();
-  const numPages = await getPagesCount(body);
+  let numPages: number = 1;
+  // get page count for pdf files
+  if (file.type === "application/pdf") {
+    const body = await file.arrayBuffer();
+    numPages = await getPagesCount(body);
+  }
+  // get sheet count for excel files
+  else if (
+    SUPPORTED_DOCUMENT_TYPES.includes(file.type) &&
+    file.type !== "application/pdf"
+  ) {
+    const body = await file.arrayBuffer();
+    numPages = getSheetsCount(body);
+  }
 
   return {
     type: DocumentStorageType.S3_PATH,

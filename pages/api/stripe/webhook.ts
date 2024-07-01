@@ -173,12 +173,14 @@ export default async function webhookHandler(
           });
 
           let planLimits = structuredClone(PRO_PLAN_LIMITS);
-          if (plan.slug === "pro") {
-            planLimits = structuredClone(PRO_PLAN_LIMITS);
-          } else if (plan.slug === "business") {
-            planLimits = structuredClone(BUSINESS_PLAN_LIMITS);
-          } else if (plan.slug === "datarooms") {
-            planLimits = structuredClone(DATAROOMS_PLAN_LIMITS);
+          if (plan) {
+            if (plan.slug === "pro") {
+              planLimits = structuredClone(PRO_PLAN_LIMITS);
+            } else if (plan.slug === "business") {
+              planLimits = structuredClone(BUSINESS_PLAN_LIMITS);
+            } else if (plan.slug === "datarooms") {
+              planLimits = structuredClone(DATAROOMS_PLAN_LIMITS);
+            }
           }
 
           // if user upgrades from Pro to Business, checkout event won't be fired
@@ -213,39 +215,49 @@ export default async function webhookHandler(
           // reset the plan limits to free
           const planlimits = structuredClone(FREE_PLAN_LIMITS);
 
-          const team = await prisma.team.update({
-            where: {
-              stripeId,
-              subscriptionId,
-            },
-            data: {
-              plan: "free",
-              subscriptionId: null,
-              endsAt: null,
-              startsAt: null,
-              limits: planlimits,
-            },
-            select: { id: true },
-          });
+          try {
+            const team = await prisma.team.update({
+              where: {
+                stripeId,
+                subscriptionId,
+              },
+              data: {
+                plan: "free",
+                subscriptionId: null,
+                endsAt: null,
+                startsAt: null,
+                limits: planlimits,
+              },
+              select: { id: true },
+            });
 
-          if (!team) {
+            if (!team) {
+              throw new Error("Team not found in database");
+            }
+
+            await log({
+              message:
+                ":cry: Team *`" + team.id + "`* deleted their subscription",
+              type: "info",
+            });
+          } catch (error) {
             await log({
               message:
                 "Team with stripeId: `" +
                 stripeId +
                 "` and subscriptionId `" +
                 subscriptionId +
-                "` not found in Stripe webhook `customer.subscription.deleted` callback",
+                "` not found in Stripe webhook `customer.subscription.deleted` callback" +
+                `\n\n Error: ${(error as Error).message}` +
+                `\n\n Event: https://dashboard.stripe.com/events/${event.id}`,
               type: "error",
             });
-            return;
+            return res
+              .status(200)
+              .send(
+                `Acknowledged error in webhook: ${(error as Error).message}`,
+              );
           }
-
-          await log({
-            message:
-              ":cry: Team *`" + team.id + "`* deleted their subscription",
-            type: "info",
-          });
         } else {
           throw new Error("Unhandled relevant event!");
         }

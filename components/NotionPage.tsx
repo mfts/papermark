@@ -1,4 +1,7 @@
+import dynamic from "next/dynamic";
+
 import { useEffect, useRef, useState } from "react";
+import React from "react";
 
 import { Brand, DataroomBrand } from "@prisma/client";
 import { ExtendedRecordMap } from "notion-types";
@@ -6,7 +9,14 @@ import { NotionRenderer } from "react-notion-x";
 // core styles shared by all of react-notion-x (required)
 import "react-notion-x/src/styles.css";
 
+import { TDocumentData } from "./view/dataroom/dataroom-view";
 import Nav from "./view/nav";
+
+const Collection = dynamic(() =>
+  import("react-notion-x/build/third-party/collection").then(
+    (m) => m.Collection,
+  ),
+);
 
 export const NotionPage = ({
   recordMap,
@@ -29,7 +39,7 @@ export const NotionPage = ({
   documentName?: string;
   brand?: Partial<Brand> | Partial<DataroomBrand> | null;
   dataroomId?: string;
-  setDocumentData?: (data: any) => void;
+  setDocumentData?: React.Dispatch<React.SetStateAction<TDocumentData | null>>;
 }) => {
   const [pageNumber, setPageNumber] = useState<number>(1); // start on first page
   const [maxScrollPercentage, setMaxScrollPercentage] = useState<number>(0);
@@ -136,6 +146,7 @@ export const NotionPage = ({
             rootPageId={rootPageId}
             disableHeader={true}
             components={{
+              Collection,
               PageLink: (props: {
                 href: any;
                 children:

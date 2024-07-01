@@ -34,7 +34,7 @@ export function UpgradePlanModal({
   const [plan, setPlan] = useState<"Pro" | "Business" | "Data Rooms">(
     clickedPlan,
   );
-  const [period, setPeriod] = useState<"monthly" | "yearly">("monthly");
+  const [period, setPeriod] = useState<"yearly" | "monthly">("yearly");
   const [clicked, setClicked] = useState<boolean>(false);
   const teamInfo = useTeam();
   const analytics = useAnalytics();
@@ -42,21 +42,22 @@ export function UpgradePlanModal({
   const features = useMemo(() => {
     if (plan === "Pro") {
       return [
-        "2 users",
-        "Custom slug",
+        "2 users included",
         "Custom branding",
         "1-year analytics retention",
-        "Advanced access controls",
         "Folder organization",
       ];
     }
 
     if (plan === "Business") {
       return [
-        "3 users",
+        "3 users included",
         "1 dataroom",
         "Multi-file sharing",
-        "Custom domain",
+        <span key="custom-domain">
+          Custom domain <b>for documents</b>
+        </span>,
+        "Advanced link controls",
         "Unlimited documents",
         "Unlimited subfolder levels",
         "Large file uploads",
@@ -65,12 +66,14 @@ export function UpgradePlanModal({
     }
     if (plan === "Data Rooms") {
       return [
-        "5 users included",
+        "3 users included",
         "Unlimited data rooms",
-        "Custom domain for data rooms",
+        <span key="custom-dataroom">
+          Custom domain <b>for data rooms</b>
+        </span>,
         "Unlimited documents",
         "Unlimited folders and subfolders",
-        "User groups permissions",
+        "NDA agreements",
         "Advanced data rooms analytics",
         "24h priority support",
         "Custom onboarding",
@@ -79,10 +82,8 @@ export function UpgradePlanModal({
 
     return [
       "2 users",
-      "Custom slug",
       "Custom branding",
       "1-year analytics retention",
-      "Advanced access controls",
       "Folders",
     ];
   }, [plan]);
@@ -195,9 +196,11 @@ export function UpgradePlanModal({
                   className="text-xs text-muted-foreground underline underline-offset-4 transition-colors hover:text-gray-800 hover:dark:text-muted-foreground/80"
                 >
                   {period === "monthly"
-                    ? ["Business", "Data Rooms"].includes(plan)
-                      ? "Want 25% off?"
-                      : "Want 35% off?"
+                    ? plan === "Business"
+                      ? "Want 43% off?"
+                      : plan === "Data Rooms"
+                        ? "Want 50% off?"
+                        : "Want 35% off?"
                     : "Switch to monthly"}
                 </button>
               </div>
@@ -232,6 +235,9 @@ export function UpgradePlanModal({
               loading={clicked}
               onClick={() => {
                 setClicked(true);
+                // @ts-ignore
+                // prettier-ignore
+                const tolt_referral_id: string | undefined = window.tolt_referral;
                 fetch(
                   `/api/teams/${
                     teamInfo?.currentTeam?.id
@@ -244,6 +250,10 @@ export function UpgradePlanModal({
                   }`,
                   {
                     method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ referral: tolt_referral_id }),
                   },
                 )
                   .then(async (res) => {

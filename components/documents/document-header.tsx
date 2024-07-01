@@ -27,8 +27,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 import { DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
-import { getExtension } from "@/lib/utils";
+import { cn, getExtension } from "@/lib/utils";
 
+import PortraitLandscape from "../shared/icons/portrait-landscape";
+import LoadingSpinner from "../ui/loading-spinner";
 import { AddDocumentModal } from "./add-document-modal";
 
 export default function DocumentHeader({
@@ -51,6 +53,7 @@ export default function DocumentHeader({
   const [isEditingName, setIsEditingName] = useState<boolean>(false);
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
   const [isFirstClick, setIsFirstClick] = useState<boolean>(false);
+  const [orientationLoading, setOrientationLoading] = useState<boolean>(false);
 
   const nameRef = useRef<HTMLHeadingElement>(null);
   const enterPressedRef = useRef<boolean>(false);
@@ -168,6 +171,44 @@ export default function DocumentHeader({
     });
   };
 
+  const changeDocumentOrientation = async () => {
+    setOrientationLoading(true);
+    try {
+      const response = await fetch(
+        "/api/teams/" +
+          teamId +
+          "/documents/" +
+          prismaDocument.id +
+          "/change-orientation",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            versionId: primaryVersion.id,
+            isVertical: primaryVersion.isVertical ? false : true,
+          }),
+        },
+      );
+
+      if (response.ok) {
+        const { message } = await response.json();
+        toast.success(message);
+
+        mutate(`/api/teams/${teamId}/documents/${prismaDocument.id}`);
+      } else {
+        const { message } = await response.json();
+        toast.error(message);
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      toast.error("An error occurred. Please try again.");
+    } finally {
+      setOrientationLoading(false);
+    }
+  };
+
   useEffect(() => {
     function handleClickOutside(event: { target: any }) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -250,7 +291,7 @@ export default function DocumentHeader({
         ) : (
           <div className="h-[25px] w-[25px] lg:h-[32px] lg:w-[32px]">
             <Image
-              src={`/_icons/${getExtension(primaryVersion.file)}${isLight ? "-light" : ""}.svg`}
+              src={`/_icons/${primaryVersion.type}${isLight ? "-light" : ""}.svg`}
               alt="File icon"
               width={50}
               height={50}
@@ -278,6 +319,25 @@ export default function DocumentHeader({
       </div>
 
       <div className="flex items-center gap-x-4 md:gap-x-2 lg:gap-x-4">
+        {!orientationLoading ? (
+          <button
+            className="hidden md:flex"
+            onClick={changeDocumentOrientation}
+            title={`Change document orientation to ${primaryVersion.isVertical ? "landscape" : "portrait"}`}
+          >
+            <PortraitLandscape
+              className={cn(
+                "h-6 w-6",
+                !primaryVersion.isVertical && "-rotate-90 transform",
+              )}
+            />
+          </button>
+        ) : (
+          <div className="hidden md:flex">
+            <LoadingSpinner className="h-6 w-6" />
+          </div>
+        )}
+
         {primaryVersion.type !== "notion" && (
           <AddDocumentModal newVersion>
             <button title="Upload a new version" className="hidden md:flex">
@@ -339,6 +399,16 @@ export default function DocumentHeader({
                     <FileUp className="mr-2 h-4 w-4" /> Add new version
                   </button>
                 </AddDocumentModal>
+              </DropdownMenuItem>
+
+              <DropdownMenuItem onClick={() => changeDocumentOrientation()}>
+                <PortraitLandscape
+                  className={cn(
+                    "mr-2 h-4 w-4",
+                    !primaryVersion.isVertical && "-rotate-90 transform",
+                  )}
+                />
+                {" Change orientation"}
               </DropdownMenuItem>
 
               {prismaDocument.type !== "notion" && (

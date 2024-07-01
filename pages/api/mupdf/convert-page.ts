@@ -61,6 +61,22 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
 
     let page = doc.loadPage(pageNumber - 1); // 0-based page index
 
+    if (pageNumber === 1) {
+      // get the orientation of the document and update document version
+      const bounds = page.getBounds();
+      const [ulx, uly, lrx, lry] = bounds;
+
+      const width = Math.abs(lrx - ulx);
+      const height = Math.abs(lry - uly);
+
+      const isVertical = height > width;
+
+      await prisma.documentVersion.update({
+        where: { id: documentVersionId },
+        data: { isVertical },
+      });
+    }
+
     // get links
     const links = page.getLinks();
     const embeddedLinks = links.map((link: any) => link.getURI());

@@ -23,6 +23,14 @@ const nextConfig = {
       },
     ];
   },
+  async rewrites() {
+    return [
+      {
+        source: "/ai-pitch-deck-generator/:path*",
+        destination: "https://deck.papermark.io/:path*",
+      },
+    ];
+  },
 };
 
 function prepareRemotePatterns() {

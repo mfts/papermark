@@ -1,6 +1,11 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
-import { Brand, DataroomBrand } from "@prisma/client";
+import {
+  Brand,
+  DataroomBrand,
+  DataroomDocument,
+  Document,
+} from "@prisma/client";
 import { getServerSession } from "next-auth/next";
 
 import prisma from "@/lib/prisma";
@@ -45,6 +50,8 @@ export default async function handle(
               data: true,
             },
           },
+          enableAgreement: true,
+          agreement: true,
         },
       });
 
@@ -87,6 +94,7 @@ export default async function handle(
                     type: true,
                     hasPages: true,
                     file: true,
+                    isVertical: true,
                   },
                   take: 1,
                 },
@@ -102,6 +110,7 @@ export default async function handle(
           select: {
             logo: true,
             brandColor: true,
+            accentColor: true,
           },
         });
       } else if (linkType === "DATAROOM_LINK") {
@@ -130,10 +139,16 @@ export default async function handle(
                             type: true,
                             hasPages: true,
                             file: true,
+                            isVertical: true,
                           },
                           take: 1,
                         },
                       },
+                    },
+                  },
+                  orderBy: {
+                    document: {
+                      name: "asc",
                     },
                   },
                 },
@@ -146,6 +161,29 @@ export default async function handle(
             },
           },
         });
+
+        // Sort documents by name considering the numerical part
+        linkData.dataroom.documents.sort(
+          (
+            a: DataroomDocument & { document: Document },
+            b: DataroomDocument & { document: Document },
+          ) => {
+            const getNumber = (str: string): number => {
+              const match = str.match(/^\d+/);
+              return match ? parseInt(match[0], 10) : 0;
+            };
+
+            const numA = getNumber(a.document.name);
+            const numB = getNumber(b.document.name);
+
+            if (numA !== numB) {
+              return numA - numB;
+            }
+
+            // If numerical parts are the same, fall back to lexicographical order
+            return a.document.name.localeCompare(b.document.name);
+          },
+        );
 
         brand = await prisma.dataroomBrand.findFirst({
           where: {
@@ -240,6 +278,12 @@ export default async function handle(
       }
     }
 
+    if (linkData.enableAgreement && !linkData.agreementId) {
+      return res.status(400).json({
+        error: "No agreement selected.",
+      });
+    }
+
     // Update the link in the database
     const updatedLink = await prisma.link.update({
       where: { id: id },
@@ -281,6 +325,8 @@ export default async function handle(
             },
           },
         },
+        enableAgreement: linkData.enableAgreement,
+        agreementId: linkData.agreementId || null,
       },
       include: {
         views: {

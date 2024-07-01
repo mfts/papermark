@@ -37,6 +37,7 @@ export async function getLimits({
     domains: z.number(),
     customDomainOnPro: z.boolean(),
     customDomainInDataroom: z.boolean(),
+    advancedLinkControlsOnPro: z.boolean().nullish(),
   });
 
   try {

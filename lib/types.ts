@@ -1,4 +1,5 @@
 import {
+  Agreement,
   Dataroom,
   DataroomDocument,
   DataroomFolder,
@@ -49,6 +50,7 @@ export interface LinkWithDocument extends Link {
       type: string;
       hasPages: boolean;
       file: string;
+      isVertical: boolean;
     }[];
     team: {
       plan: string;
@@ -61,6 +63,7 @@ export interface LinkWithDocument extends Link {
       type: string;
     };
   } | null;
+  agreement: Agreement | null;
 }
 
 export interface LinkWithDataroom extends Link {
@@ -80,12 +83,14 @@ export interface LinkWithDataroom extends Link {
           type: string;
           hasPages: boolean;
           file: string;
+          isVertical: boolean;
         }[];
       };
     }[];
     folders: DataroomFolder[];
     lastUpdatedAt: Date;
   };
+  agreement: Agreement | null;
 }
 
 export interface Geo {
@@ -208,6 +213,7 @@ export type AnalyticsEvents =
       event: "Stripe Checkout Clicked";
       teamId: string;
       priceId: string;
+      referral: boolean | undefined;
     };
 
 export interface Team {
@@ -225,7 +231,7 @@ export interface TeamDetail {
     };
   }[];
   users: {
-    role: "ADMIN" | "MEMBER";
+    role: "ADMIN" | "MANAGER" | "MEMBER";
     teamId: string;
     user: {
       email: string;

@@ -1,9 +1,9 @@
+import dynamic from "next/dynamic";
 import { useRouter } from "next/router";
 
 import React, { useEffect, useRef, useState } from "react";
 
-import { LinkWithDataroom } from "@/pages/view/d/[linkId]";
-import { Brand, DataroomBrand } from "@prisma/client";
+import { DataroomBrand } from "@prisma/client";
 import { usePlausible } from "next-plausible";
 import { ExtendedRecordMap } from "notion-types";
 import { toast } from "sonner";
@@ -16,17 +16,45 @@ import AccessForm, {
 } from "@/components/view/access-form";
 
 import { useAnalytics } from "@/lib/analytics";
+import { LinkWithDataroom } from "@/lib/types";
 
 import DataroomViewer from "../DataroomViewer";
-import PagesViewer from "../PagesViewer";
+import PagesViewerNew from "../PagesViewerNew";
 import EmailVerificationMessage from "../email-verification-form";
+import AdvancedExcelViewer from "../viewer/advanced-excel-viewer";
+
+const ExcelViewer = dynamic(
+  () => import("@/components/view/viewer/excel-viewer"),
+  { ssr: false },
+);
+
+type RowData = { [key: string]: any };
+type SheetData = {
+  sheetName: string;
+  columnData: string[];
+  rowData: RowData[];
+};
+
+export type TDocumentData = {
+  id: string;
+  name: string;
+  hasPages: boolean;
+  documentType: "pdf" | "notion" | "sheet";
+  documentVersionId: string;
+  documentVersionNumber: number;
+  isVertical?: boolean;
+};
 
 export type DEFAULT_DOCUMENT_VIEW_TYPE = {
   viewId: string;
   dataroomViewId?: string;
-  file: string | null;
-  pages: { file: string; pageNumber: string; embeddedLinks: string[] }[] | null;
-  notionData: { recordMap: ExtendedRecordMap | null } | null;
+  file?: string | null;
+  pages?:
+    | { file: string; pageNumber: string; embeddedLinks: string[] }[]
+    | null;
+  sheetData?: SheetData[] | null;
+  notionData?: { recordMap: ExtendedRecordMap | null };
+  fileType?: string;
 };
 
 export default function DataroomView({
@@ -37,6 +65,7 @@ export default function DataroomView({
   brand,
   token,
   verifiedEmail,
+  useAdvancedExcelViewer,
 }: {
   link: LinkWithDataroom;
   userEmail: string | null | undefined;
@@ -45,8 +74,15 @@ export default function DataroomView({
   brand?: Partial<DataroomBrand> | null;
   token?: string;
   verifiedEmail?: string;
+  useAdvancedExcelViewer?: boolean;
 }) {
-  const { linkType, dataroom, emailProtected, password: linkPassword } = link;
+  const {
+    linkType,
+    dataroom,
+    emailProtected,
+    password: linkPassword,
+    enableAgreement,
+  } = link;
 
   const plausible = usePlausible();
   const analytics = useAnalytics();
@@ -57,9 +93,6 @@ export default function DataroomView({
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [viewData, setViewData] = useState<DEFAULT_DOCUMENT_VIEW_TYPE>({
     viewId: "",
-    file: null,
-    pages: null,
-    notionData: null,
   });
   const [data, setData] = useState<DEFAULT_ACCESS_FORM_TYPE>(
     DEFAULT_ACCESS_FORM_DATA,
@@ -67,14 +100,7 @@ export default function DataroomView({
   const [verificationRequested, setVerificationRequested] =
     useState<boolean>(false);
   const [dataroomVerified, setDataroomVerified] = useState<boolean>(false);
-  const [documentData, setDocumentData] = useState<{
-    id: string;
-    name: string;
-    hasPages: boolean;
-    documentType: "pdf" | "notion";
-    documentVersionId: string;
-    documentVersionNumber: number;
-  } | null>(null);
+  const [documentData, setDocumentData] = useState<TDocumentData | null>(null);
 
   const [viewType, setViewType] = useState<"DOCUMENT_VIEW" | "DATAROOM_VIEW">(
     "DATAROOM_VIEW",
@@ -93,7 +119,6 @@ export default function DataroomView({
         linkId: link.id,
         documentId: documentData?.id,
         documentName: documentData?.name,
-        // ownerId: documentData?.ownerId,
         userId: userId ?? null,
         documentVersionId: documentData?.documentVersionId,
         hasPages: documentData?.hasPages,
@@ -104,6 +129,7 @@ export default function DataroomView({
         linkType: linkType,
         dataroomViewId: viewData.dataroomViewId ?? null,
         viewType: viewType,
+        useAdvancedExcelViewer,
       }),
     });
 
@@ -114,7 +140,7 @@ export default function DataroomView({
         setVerificationRequested(true);
         setIsLoading(false);
       } else {
-        const { viewId, file, pages, notionData } =
+        const { viewId, file, pages, notionData, sheetData, fileType } =
           fetchData as DEFAULT_DOCUMENT_VIEW_TYPE;
         plausible("dataroomViewed"); // track the event
         analytics.identify(
@@ -135,6 +161,8 @@ export default function DataroomView({
           file,
           pages,
           notionData,
+          sheetData,
+          fileType,
         }));
         setSubmitted(true);
         setVerificationRequested(false);
@@ -191,10 +219,10 @@ export default function DataroomView({
 
     setViewData((prev) => ({
       ...prev,
-      pages: null,
-      file: null,
+      pages: undefined,
+      file: undefined,
       viewId: "",
-      notionData: null,
+      notionData: undefined,
     }));
     // This effect is specifically for handling changes to `documentData` post-mount
   }, [documentData]);
@@ -220,6 +248,8 @@ export default function DataroomView({
         onSubmitHandler={handleSubmit}
         requireEmail={emailProtected}
         requirePassword={!!linkPassword}
+        requireAgreement={enableAgreement!}
+        agreementContent={link.agreement?.content}
         isLoading={isLoading}
       />
     );
@@ -248,9 +278,38 @@ export default function DataroomView({
           setDocumentData={setDocumentData}
         />
       </div>
+    ) : viewData.fileType === "sheet" && viewData.sheetData ? (
+      <div className="bg-gray-950">
+        <ExcelViewer
+          linkId={link.id}
+          viewId={viewData.viewId}
+          documentId={documentData.id}
+          documentName={documentData.name}
+          versionNumber={documentData.documentVersionNumber}
+          sheetData={viewData.sheetData}
+          brand={brand}
+          dataroomId={dataroom.id}
+          setDocumentData={setDocumentData}
+        />
+      </div>
+    ) : viewData.fileType === "sheet" && useAdvancedExcelViewer ? (
+      <div className="bg-gray-950">
+        <AdvancedExcelViewer
+          linkId={link.id}
+          viewId={viewData.viewId}
+          documentId={documentData.id}
+          documentName={documentData.name}
+          versionNumber={documentData.documentVersionNumber}
+          file={viewData.file!}
+          allowDownload={link.allowDownload!}
+          brand={brand}
+          dataroomId={dataroom.id}
+          setDocumentData={setDocumentData}
+        />
+      </div>
     ) : viewData.pages ? (
       <div className="bg-gray-950">
-        <PagesViewer
+        <PagesViewerNew
           pages={viewData.pages}
           viewId={viewData.viewId}
           linkId={link.id}
@@ -263,6 +322,7 @@ export default function DataroomView({
           brand={brand}
           dataroomId={dataroom.id}
           setDocumentData={setDocumentData}
+          isVertical={documentData.isVertical}
         />
       </div>
     ) : null;
