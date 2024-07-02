@@ -655,7 +655,9 @@ export default function PagesViewer({
                       wrapperClass={cn(
                         isVertical
                           ? "!overflow-x-clip !overflow-y-visible"
-                          : "!overflow-x-visible !overflow-y-clip",
+                          : isMobile
+                            ? "!overflow-x-clip !overflow-y-clip"
+                            : "!overflow-x-visible !overflow-y-clip",
                       )}
                       contentClass={cn(isVertical && "!w-dvw")}
                     >
