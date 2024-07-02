@@ -431,8 +431,7 @@ export default function PagesViewer({
       if (isVertical) {
         scrollActionRef.current = true;
         const newScrollPosition =
-          ((pageNumber - 2) * containerRef.current!.scrollHeight) /
-          numPagesWithAccountCreation;
+          (pageNumber - 2) * containerRef.current!.clientHeight;
         containerRef.current?.scrollTo({
           top: newScrollPosition,
           behavior: "smooth",
@@ -478,8 +477,7 @@ export default function PagesViewer({
       if (isVertical) {
         scrollActionRef.current = true;
         const newScrollPosition =
-          (pageNumber * containerRef.current!.scrollHeight) /
-          numPagesWithAccountCreation;
+          pageNumber * containerRef.current!.clientHeight;
         containerRef.current?.scrollTo({
           top: newScrollPosition,
           behavior: "smooth",
