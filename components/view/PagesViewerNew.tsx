@@ -605,7 +605,7 @@ export default function PagesViewer({
         disableZoom={isVertical && isMobile}
       />
       <div
-        style={{ height: "calc(100vh - 64px)" }}
+        style={{ height: "calc(100dvh - 64px)" }}
         className={cn("relative flex items-center", isVertical && "h-dvh")}
       >
         <div
@@ -705,7 +705,7 @@ export default function PagesViewer({
             (isVertical || pageNumber === numPagesWithAccountCreation) ? (
               <div
                 className={cn("relative block h-dvh w-full")}
-                style={{ height: "calc(100vh - 64px)" }}
+                style={{ height: "calc(100dvh - 64px)" }}
               >
                 <ViewDurationSummary
                   linkId={linkId}
