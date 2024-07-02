@@ -118,7 +118,7 @@ export default function PagesViewer({
     enableQuestion && feedback ? numPages + 1 : numPages;
 
   const numPagesWithAccountCreation = showStatsSlideWithAccountCreation
-    ? numPagesWithFeedback + 1
+    ? numPagesWithFeedback
     : numPagesWithFeedback;
 
   const pageQuery = router.query.p ? Number(router.query.p) : 1;
@@ -700,7 +700,7 @@ export default function PagesViewer({
               </div>
             ) : null}
 
-            {showStatsSlideWithAccountCreation &&
+            {/* {showStatsSlideWithAccountCreation &&
             (isVertical || pageNumber === numPagesWithAccountCreation) ? (
               <div
                 className={cn("relative block h-dvh w-full")}
@@ -714,7 +714,7 @@ export default function PagesViewer({
                   setAccountCreated={setAccountCreated}
                 />
               </div>
-            ) : null}
+            ) : null} */}
           </div>
         </div>
 
