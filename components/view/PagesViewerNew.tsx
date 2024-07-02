@@ -602,7 +602,8 @@ export default function PagesViewer({
         isDataroom={dataroomId ? true : false}
         setDocumentData={setDocumentData}
         documentRefs={pinchRefs}
-        disableZoom={isVertical && isMobile}
+        isVertical={isVertical}
+        isMobile={isMobile}
       />
       <div
         style={{ height: "calc(100dvh - 64px)" }}
