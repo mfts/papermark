@@ -653,9 +653,11 @@ export default function PagesViewer({
                   >
                     <TransformComponent
                       wrapperClass={cn(
-                        isVertical && "!overflow-x-clip !overflow-y-visible",
+                        isVertical
+                          ? "!overflow-x-clip !overflow-y-visible"
+                          : "!overflow-x-visible !overflow-y-clip",
                       )}
-                      contentClass={cn(isVertical && "!w-screen")}
+                      contentClass={cn(isVertical && "!w-dvw")}
                     >
                       <div
                         key={index}
@@ -689,7 +691,7 @@ export default function PagesViewer({
             (isVertical || pageNumber === numPagesWithFeedback) ? (
               <div
                 className={cn("relative block h-dvh w-full")}
-                style={{ height: "calc(100vh - 64px)" }}
+                style={{ height: "calc(100dvh - 64px)" }}
               >
                 <Question
                   feedback={feedback}
