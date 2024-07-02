@@ -8,6 +8,7 @@ import { Brand, DataroomBrand } from "@prisma/client";
 import {
   ArrowUpRight,
   Download,
+  Minimize2Icon,
   Slash,
   ZoomInIcon,
   ZoomOutIcon,
@@ -53,6 +54,8 @@ export default function Nav({
   isDataroom,
   setDocumentData,
   documentRefs,
+  isVertical,
+  isMobile,
 }: {
   pageNumber?: number;
   numPages?: number;
@@ -67,6 +70,8 @@ export default function Nav({
   isDataroom?: boolean;
   setDocumentData?: React.Dispatch<React.SetStateAction<TDocumentData | null>>;
   documentRefs?: MutableRefObject<(ReactZoomPanPinchContentRef | null)[]>;
+  isVertical?: boolean;
+  isMobile?: boolean;
 }) {
   const downloadFile = async () => {
     if (!allowDownload || type === "notion") return;
@@ -214,27 +219,49 @@ export default function Nav({
                 <Download className="h-5 w-5" />
               </Button>
             ) : null}
-            {documentRefs ? (
+            {!(isVertical && isMobile) && documentRefs ? (
               <div className="flex gap-1">
                 <Button
-                  onClick={() =>
-                    documentRefs.current[pageNumber! - 1]?.zoomIn()
-                  }
-                  className=" bg-gray-900 text-white hover:bg-gray-900/80"
+                  onClick={() => {
+                    if (isMobile) {
+                      documentRefs.current[pageNumber! - 1]?.zoomIn();
+                      return;
+                    }
+                    documentRefs.current.map((ref) => ref?.zoomIn());
+                  }}
+                  className="bg-gray-900 text-white hover:bg-gray-900/80"
                   size="icon"
                   title="Zoom in"
                 >
                   <ZoomInIcon className="h-5 w-5" />
                 </Button>
                 <Button
-                  onClick={() =>
-                    documentRefs.current[pageNumber! - 1]?.zoomOut()
-                  }
-                  className=" bg-gray-900 text-white hover:bg-gray-900/80"
+                  onClick={() => {
+                    if (isMobile) {
+                      documentRefs.current[pageNumber! - 1]?.zoomOut();
+                      return;
+                    }
+                    documentRefs.current.map((ref) => ref?.zoomOut());
+                  }}
+                  className="bg-gray-900 text-white hover:bg-gray-900/80"
                   size="icon"
                   title="Zoom out"
                 >
                   <ZoomOutIcon className="h-5 w-5" />
+                </Button>
+                <Button
+                  onClick={() => {
+                    if (isMobile) {
+                      documentRefs.current[pageNumber! - 1]?.resetTransform();
+                      return;
+                    }
+                    documentRefs.current.map((ref) => ref?.resetTransform());
+                  }}
+                  className="bg-gray-900 text-white hover:bg-gray-900/80"
+                  size="icon"
+                  title="Reset zoom"
+                >
+                  <Minimize2Icon className="h-5 w-5" />
                 </Button>
               </div>
             ) : null}

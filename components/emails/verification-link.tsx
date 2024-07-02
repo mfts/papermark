@@ -5,11 +5,11 @@ import {
   Button,
   Container,
   Head,
-  Text,
   Html,
   Preview,
   Section,
   Tailwind,
+  Text,
 } from "@react-email/components";
 
 const VerificationLinkEmail = ({

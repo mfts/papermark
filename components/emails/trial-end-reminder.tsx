@@ -5,12 +5,12 @@ import {
   Button,
   Container,
   Head,
-  Text,
   Hr,
   Html,
   Preview,
   Section,
   Tailwind,
+  Text,
 } from "@react-email/components";
 
 interface TrialEndReminderEmail {
