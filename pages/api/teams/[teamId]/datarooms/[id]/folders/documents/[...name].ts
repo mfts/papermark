@@ -65,6 +65,11 @@ export default async function handle(
           dataroomId: dataroomId,
           folderId: folder.id,
         },
+        orderBy: {
+          document: {
+            name: "asc",
+          },
+        },
         select: {
           id: true,
           dataroomId: true,
@@ -85,11 +90,24 @@ export default async function handle(
             },
           },
         },
-        orderBy: {
-          document: {
-            name: "asc",
-          },
-        },
+      });
+
+      // Sort documents by name considering the numerical part
+      documents.sort((a, b) => {
+        const getNumber = (str: string): number => {
+          const match = str.match(/^\d+/);
+          return match ? parseInt(match[0], 10) : 0;
+        };
+
+        const numA = getNumber(a.document.name);
+        const numB = getNumber(b.document.name);
+
+        if (numA !== numB) {
+          return numA - numB;
+        }
+
+        // If numerical parts are the same, fall back to lexicographical order
+        return a.document.name.localeCompare(b.document.name);
       });
 
       return res.status(200).json(documents);
