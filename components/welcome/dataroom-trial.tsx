@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { motion } from "framer-motion";
-import { E164Number } from "libphonenumber-js/types.cjs";
+import { E164Number } from "libphonenumber-js";
 import { toast } from "sonner";
 import { mutate } from "swr";
 

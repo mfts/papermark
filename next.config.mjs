@@ -10,7 +10,7 @@ const nextConfig = {
   skipTrailingSlashRedirect: true,
   experimental: {
     outputFileTracingIncludes: {
-      "/api/mupdf/*": ["./node_modules/mupdf/lib/*.wasm"],
+      "/api/mupdf/*": ["./node_modules/mupdf/dist/*.wasm"],
     },
     missingSuspenseWithCSRBailout: false,
   },

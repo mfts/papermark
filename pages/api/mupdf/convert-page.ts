@@ -1,16 +1,15 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import { DocumentPage } from "@prisma/client";
-// @ts-ignore
-import mupdf from "mupdf";
+import * as mupdf from "mupdf";
 
 import { putFileServer } from "@/lib/files/put-file-server";
 import prisma from "@/lib/prisma";
 import { log } from "@/lib/utils";
 
-// This function can run for a maximum of 60 seconds
+// This function can run for a maximum of 120 seconds
 export const config = {
-  maxDuration: 120,
+  maxDuration: 180,
 };
 
 export default async (req: NextApiRequest, res: NextApiResponse) => {
@@ -91,7 +90,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
 
     const pngBuffer = pixmap.asPNG(); // as PNG
 
-    let buffer = Buffer.from(pngBuffer, "binary");
+    let buffer = Buffer.from(pngBuffer);
 
     // get docId from url with starts with "doc_" with regex
     const match = url.match(/(doc_[^\/]+)\//);
