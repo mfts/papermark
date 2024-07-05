@@ -4,10 +4,7 @@ import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { toast } from "sonner";
-import { mutate } from "swr";
-import { select } from "ts-pattern/dist/patterns";
 
-import { SidebarFolderTreeSelection } from "@/components/sidebar-folders";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -20,13 +17,10 @@ import {
 
 import useDatarooms from "@/lib/swr/use-datarooms";
 
-import { ScrollArea } from "../ui/scroll-area";
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "../ui/select";

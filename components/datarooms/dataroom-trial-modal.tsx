@@ -3,7 +3,7 @@ import { useRouter } from "next/router";
 import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
-import { E164Number } from "libphonenumber-js/types.cjs";
+import { E164Number } from "libphonenumber-js";
 import { toast } from "sonner";
 import { mutate } from "swr";
 

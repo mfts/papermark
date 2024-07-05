@@ -5,7 +5,6 @@ import { useState } from "react";
 import { useTeam } from "@/context/team-context";
 import { toast } from "sonner";
 import { mutate } from "swr";
-import { set } from "ts-pattern/dist/patterns";
 
 import { SidebarFolderTreeSelection } from "@/components/datarooms/folders";
 import { Button } from "@/components/ui/button";
