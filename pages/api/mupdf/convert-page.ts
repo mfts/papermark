@@ -1,8 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import { DocumentPage } from "@prisma/client";
-// @ts-ignore
-import mupdf from "mupdf";
+import * as mupdf from "mupdf";
 
 import { putFileServer } from "@/lib/files/put-file-server";
 import prisma from "@/lib/prisma";
