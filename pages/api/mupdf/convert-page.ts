@@ -53,12 +53,19 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     // Convert the response to a buffer
     const pdfData = await response.arrayBuffer();
     // Create a MuPDF instance
-    var doc = mupdf.Document.openDocument(pdfData, "application/pdf");
+    var doc = new mupdf.PDFDocument(pdfData);
+    console.log("Original document size:", pdfData.byteLength);
+
+    // compress the pdf
+    var pdfDoc = doc.saveToBuffer("compress=true,linearize=true,garbage=true");
+    console.log("Compressed document size:", pdfDoc.getLength());
+
+    var newDoc = new mupdf.PDFDocument(pdfDoc);
 
     // Scale the document to 300 DPI
     const doc_to_screen = mupdf.Matrix.scale(216 / 72, 216 / 72); // scale 3x // to 216 DPI
 
-    let page = doc.loadPage(pageNumber - 1); // 0-based page index
+    let page = newDoc.loadPage(pageNumber - 1); // 0-based page index
 
     if (pageNumber === 1) {
       // get the orientation of the document and update document version
