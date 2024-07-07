@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { DocumentVersion } from "@prisma/client";
-import { Settings2Icon } from "lucide-react";
+import { EyeIcon, Settings2Icon } from "lucide-react";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
@@ -106,6 +106,30 @@ export default function LinksTable({
     }, 0);
   };
 
+  const handlePreviewLink = async (link: LinkWithViews) => {
+    if (link.domainId && plan === "free") {
+      toast.error("You need to upgrade to preview this link");
+      return;
+    }
+
+    const response = await fetch(`/api/links/${link.id}/preview`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      toast.error("Failed to generate preview link");
+      return;
+    }
+
+    const { previewToken } = await response.json();
+    const previewLink = `https://${process.env.NEXT_PUBLIC_ROOT_DOMAIN}/view/${link.id}?previewToken=${previewToken}`;
+
+    window.open(previewLink, "_blank");
+  };
+
   const handleDuplicateLink = async (link: LinkWithViews) => {
     setIsLoading(true);
 
@@ -185,8 +209,6 @@ export default function LinksTable({
     : 0;
 
   const hasFreePlan = plan === "free";
-
-  console.log("links", links);
 
   return (
     <>
@@ -274,16 +296,25 @@ export default function LinksTable({
                                 </button>
                               )}
                             </div>
-                            <Button
-                              variant="link"
-                              size="icon"
-                              className="group h-7 w-8"
-                              onClick={() => handleEditLink(link)}
-                              title="Edit link"
-                            >
-                              <span className="sr-only">Edit link</span>
-                              <Settings2Icon className="h-5 w-5 text-gray-400 group-hover:text-gray-500" />
-                            </Button>
+                              <Button
+                                variant={"link"}
+                                size={"icon"}
+                                className="group h-7 w-8"
+                                onClick={() => handlePreviewLink(link)}
+                              >
+                                <span className="sr-only">Preview link</span>
+                                <EyeIcon className="h-5 w-5 text-gray-400 group-hover:text-gray-500" />
+                              </Button>
+                              <Button
+                                variant="link"
+                                size="icon"
+                                className="group h-7 w-8"
+                                onClick={() => handleEditLink(link)}
+                                title="Edit link"
+                              >
+                                <span className="sr-only">Edit link</span>
+                                <Settings2Icon className="h-5 w-5 text-gray-400 group-hover:text-gray-500" />
+                              </Button>
                           </TableCell>
                           <TableCell>
                             <CollapsibleTrigger

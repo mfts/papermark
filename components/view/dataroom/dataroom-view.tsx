@@ -46,7 +46,8 @@ export type TDocumentData = {
 };
 
 export type DEFAULT_DOCUMENT_VIEW_TYPE = {
-  viewId: string;
+  viewId?: string;
+  isPreview?: boolean;
   dataroomViewId?: string;
   file?: string | null;
   pages?:
@@ -66,6 +67,7 @@ export default function DataroomView({
   token,
   verifiedEmail,
   useAdvancedExcelViewer,
+  previewToken,
 }: {
   link: LinkWithDataroom;
   userEmail: string | null | undefined;
@@ -75,6 +77,7 @@ export default function DataroomView({
   token?: string;
   verifiedEmail?: string;
   useAdvancedExcelViewer?: boolean;
+  previewToken?: string;
 }) {
   const {
     linkType,
@@ -130,6 +133,7 @@ export default function DataroomView({
         dataroomViewId: viewData.dataroomViewId ?? null,
         viewType: viewType,
         useAdvancedExcelViewer,
+        previewToken,
       }),
     });
 
@@ -140,8 +144,15 @@ export default function DataroomView({
         setVerificationRequested(true);
         setIsLoading(false);
       } else {
-        const { viewId, file, pages, notionData, sheetData, fileType } =
-          fetchData as DEFAULT_DOCUMENT_VIEW_TYPE;
+        const {
+          viewId,
+          file,
+          pages,
+          notionData,
+          sheetData,
+          fileType,
+          isPreview,
+        } = fetchData as DEFAULT_DOCUMENT_VIEW_TYPE;
         plausible("dataroomViewed"); // track the event
         analytics.identify(
           userEmail ?? verifiedEmail ?? data.email ?? undefined,
@@ -163,6 +174,7 @@ export default function DataroomView({
           notionData,
           sheetData,
           fileType,
+          isPreview,
         }));
         setSubmitted(true);
         setVerificationRequested(false);
@@ -269,6 +281,7 @@ export default function DataroomView({
         <NotionPage
           recordMap={viewData.notionData.recordMap}
           viewId={viewData.viewId}
+          isPreview={viewData.isPreview}
           linkId={link.id}
           documentId={documentData.id}
           documentName={documentData.name}
@@ -283,6 +296,7 @@ export default function DataroomView({
         <ExcelViewer
           linkId={link.id}
           viewId={viewData.viewId}
+          isPreview={viewData.isPreview}
           documentId={documentData.id}
           documentName={documentData.name}
           versionNumber={documentData.documentVersionNumber}
@@ -297,6 +311,7 @@ export default function DataroomView({
         <AdvancedExcelViewer
           linkId={link.id}
           viewId={viewData.viewId}
+          isPreview={viewData.isPreview}
           documentId={documentData.id}
           documentName={documentData.name}
           versionNumber={documentData.documentVersionNumber}
@@ -312,6 +327,7 @@ export default function DataroomView({
         <PagesViewerNew
           pages={viewData.pages}
           viewId={viewData.viewId}
+          isPreview={viewData.isPreview}
           linkId={link.id}
           documentId={documentData.id}
           documentName={documentData.name}
@@ -334,6 +350,7 @@ export default function DataroomView({
         <DataroomViewer
           brand={brand!}
           viewId={viewData.viewId}
+          isPreview={viewData.isPreview}
           linkId={link.id}
           dataroomViewId={viewData.dataroomViewId!}
           dataroom={dataroom}

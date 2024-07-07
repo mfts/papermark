@@ -39,4 +39,5 @@ export const newId = new IdGenerator({
   doc: "doc",
   page: "page",
   dataroom: "dr",
+  preview: "preview",
 }).id;

@@ -36,6 +36,7 @@ export default function DataroomNav({
   isDataroom,
   setDocumentData,
   dataroom,
+  isPreview,
 }: {
   pageNumber?: number;
   numPages?: number;
@@ -49,11 +50,12 @@ export default function DataroomNav({
   isDataroom?: boolean;
   setDocumentData?: React.Dispatch<React.SetStateAction<TDocumentData | null>>;
   dataroom?: any;
+  isPreview?: boolean;
 }) {
   const [loading, setLoading] = useState<boolean>(false);
 
   const downloadDataroom = async () => {
-    if (!allowDownload || type === "notion") return;
+    if (!allowDownload || type === "notion" || isPreview) return;
     setLoading(true);
     try {
       toast.promise(

@@ -55,9 +55,10 @@ export default function DataroomViewer({
   setViewType,
   setDocumentData,
   setDataroomVerified,
+  isPreview,
 }: {
   brand: Partial<DataroomBrand>;
-  viewId: string;
+  viewId?: string;
   linkId: string;
   dataroomViewId: string;
   dataroom: any;
@@ -67,6 +68,7 @@ export default function DataroomViewer({
   >;
   setDocumentData: React.Dispatch<React.SetStateAction<TDocumentData | null>>;
   setDataroomVerified: React.Dispatch<React.SetStateAction<boolean>>;
+  isPreview?: boolean;
 }) {
   const router = useRouter();
   const [folderId, setFolderId] = useState<string | null>(null);
@@ -107,6 +109,7 @@ export default function DataroomViewer({
         viewId={viewId}
         dataroom={dataroom}
         allowDownload={allowDownload}
+        isPreview={isPreview}
       />
       <div
         style={{ height: "calc(100vh - 64px)" }}
