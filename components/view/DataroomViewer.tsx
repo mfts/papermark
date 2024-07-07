@@ -1,6 +1,6 @@
 import { useRouter } from "next/router";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import React from "react";
 
 import { DataroomBrand, DataroomFolder } from "@prisma/client";
@@ -43,6 +43,23 @@ type DataroomDocument = {
     hasPages: boolean;
     isVertical: boolean;
   }[];
+};
+
+const getParentFolders = (
+  folderId: string | null,
+  folders: DataroomFolder[],
+): DataroomFolder[] => {
+  const breadcrumbFolders: DataroomFolder[] = [];
+  let currentFolder = folders.find((folder) => folder.id === folderId);
+
+  while (currentFolder) {
+    breadcrumbFolders.unshift(currentFolder);
+    currentFolder = folders.find(
+      (folder) => folder.id === currentFolder!.parentId,
+    );
+  }
+
+  return breadcrumbFolders;
 };
 
 export default function DataroomViewer({
@@ -95,6 +112,11 @@ export default function DataroomViewer({
     removeQueryParams();
   }, []); // Run once on mount
 
+  const breadcrumbFolders = useMemo(
+    () => getParentFolders(folderId, folders),
+    [folderId, folders],
+  );
+
   return (
     <>
       <DataroomNav brand={brand} viewId={viewId} dataroom={dataroom} />
@@ -104,7 +126,7 @@ export default function DataroomViewer({
       >
         <div className="relative mx-auto flex h-full w-full items-start justify-center">
           {/* Tree view */}
-          <div className="mb-10 mt-4 hidden h-full w-1/4 space-y-8 overflow-auto py-3 md:mx-5 md:mt-5 md:flex lg:mx-7 lg:mt-8 xl:mx-10 ">
+          <div className="mb-10 mt-4 hidden h-full w-1/4 space-y-8 overflow-auto py-3 md:mx-5 md:mt-5 md:flex lg:mx-7 lg:mt-8 xl:mx-10">
             <ViewFolderTree
               folders={folders}
               documents={documents}
@@ -154,27 +176,33 @@ export default function DataroomViewer({
                 <Breadcrumb>
                   <BreadcrumbList>
                     <BreadcrumbItem key={"root"}>
-                      <BreadcrumbLink asChild>
-                        <BreadcrumbLink onClick={() => setFolderId(null)}>
-                          Home
-                        </BreadcrumbLink>
+                      <BreadcrumbLink
+                        onClick={() => setFolderId(null)}
+                        className="cursor-pointer"
+                      >
+                        Home
                       </BreadcrumbLink>
                     </BreadcrumbItem>
-                    {folders &&
-                      folders
-                        .filter((folder) => folder.id === folderId)
-                        .map((folder, index: number, array) => {
-                          return (
-                            <React.Fragment key={index}>
-                              <BreadcrumbSeparator />
-                              <BreadcrumbItem>
-                                <BreadcrumbPage className="capitalize">
-                                  {folder.name}
-                                </BreadcrumbPage>
-                              </BreadcrumbItem>
-                            </React.Fragment>
-                          );
-                        })}
+
+                    {breadcrumbFolders.map((folder, index) => (
+                      <React.Fragment key={folder.id}>
+                        <BreadcrumbSeparator />
+                        <BreadcrumbItem>
+                          {index === breadcrumbFolders.length - 1 ? (
+                            <BreadcrumbPage className="capitalize">
+                              {folder.name}
+                            </BreadcrumbPage>
+                          ) : (
+                            <BreadcrumbLink
+                              onClick={() => setFolderId(folder.id)}
+                              className="cursor-pointer capitalize"
+                            >
+                              {folder.name}
+                            </BreadcrumbLink>
+                          )}
+                        </BreadcrumbItem>
+                      </React.Fragment>
+                    ))}
                   </BreadcrumbList>
                 </Breadcrumb>
               </div>
