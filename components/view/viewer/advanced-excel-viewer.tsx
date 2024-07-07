@@ -110,6 +110,7 @@ export default function AdvancedExcelViewer({
         isDataroom={dataroomId ? true : false}
         setDocumentData={setDocumentData}
         type="sheet"
+        isPreview={isPreview}
       />
       <div
         style={{ height: "calc(100dvh - 64px)" }}

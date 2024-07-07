@@ -51,6 +51,7 @@ export default function ExcelViewer({
   brand,
   dataroomId,
   setDocumentData,
+  isPreview,
 }: {
   linkId: string;
   viewId?: string;
@@ -224,6 +225,7 @@ export default function ExcelViewer({
         isDataroom={dataroomId ? true : false}
         setDocumentData={setDocumentData}
         type="sheet"
+        isPreview={isPreview}
       />
       <div
         style={{ height: "calc(100dvh - 64px)" }}

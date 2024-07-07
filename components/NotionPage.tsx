@@ -140,6 +140,7 @@ export const NotionPage = ({
           isDataroom={dataroomId ? true : false}
           setDocumentData={setDocumentData}
           type="notion"
+          isPreview={isPreview}
         />
 
         <div>

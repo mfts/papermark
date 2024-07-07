@@ -716,6 +716,7 @@ export default function PagesViewer({
                   viewId={viewId}
                   submittedFeedback={submittedFeedback}
                   setSubmittedFeedback={setSubmittedFeedback}
+                  isPreview={isPreview}
                 />
               </div>
             ) : null}
@@ -795,7 +796,11 @@ export default function PagesViewer({
           </>
         )}
         {feedbackEnabled && pageNumber <= numPages ? (
-          <Toolbar viewId={viewId} pageNumber={pageNumber} />
+          <Toolbar
+            viewId={viewId}
+            pageNumber={pageNumber}
+            isPreview={isPreview}
+          />
         ) : null}
         {screenshotProtectionEnabled ? <ScreenProtector /> : null}
         {showPoweredByBanner ? <PoweredBy linkId={linkId} /> : null}

@@ -10,9 +10,11 @@ import GripVertical from "../shared/icons/grip-vertical";
 export default function Toolbar({
   viewId,
   pageNumber,
+  isPreview,
 }: {
-  viewId: string;
+  viewId?: string;
   pageNumber: number;
+  isPreview?: boolean;
 }) {
   const [currentEmoji, setCurrentEmoji] = useState<{
     emoji: string;
@@ -45,6 +47,9 @@ export default function Toolbar({
     clearEmojiTimeout.current = setTimeout(() => {
       setCurrentEmoji(null);
     }, 3000); // Adjust this duration to match your animation
+
+    // skip recording reactions if in preview mode
+    if (isPreview) return;
 
     await fetch("/api/record_reaction", {
       method: "POST",
