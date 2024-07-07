@@ -40,6 +40,7 @@ import ProcessStatusBar from "../documents/process-status-bar";
 import BarChart from "../shared/icons/bar-chart";
 import ChevronDown from "../shared/icons/chevron-down";
 import MoreHorizontal from "../shared/icons/more-horizontal";
+import { BadgeTooltip, ButtonTooltip } from "../ui/tooltip";
 import LinkSheet, {
   DEFAULT_LINK_PROPS,
   type DEFAULT_LINK_TYPE,
@@ -296,6 +297,7 @@ export default function LinksTable({
                                 </button>
                               )}
                             </div>
+                            <ButtonTooltip content="Preview link">
                               <Button
                                 variant={"link"}
                                 size={"icon"}
@@ -305,6 +307,8 @@ export default function LinksTable({
                                 <span className="sr-only">Preview link</span>
                                 <EyeIcon className="h-5 w-5 text-gray-400 group-hover:text-gray-500" />
                               </Button>
+                            </ButtonTooltip>
+                            <ButtonTooltip content="Edit link">
                               <Button
                                 variant="link"
                                 size="icon"
@@ -315,6 +319,7 @@ export default function LinksTable({
                                 <span className="sr-only">Edit link</span>
                                 <Settings2Icon className="h-5 w-5 text-gray-400 group-hover:text-gray-500" />
                               </Button>
+                            </ButtonTooltip>
                           </TableCell>
                           <TableCell>
                             <CollapsibleTrigger
