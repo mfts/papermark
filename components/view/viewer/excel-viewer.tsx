@@ -22,12 +22,16 @@ type SheetData = {
 const trackPageView = async (data: {
   linkId: string;
   documentId: string;
-  viewId: string;
+  viewId?: string;
   duration: number;
   pageNumber: number;
   versionNumber: number;
   dataroomId?: string;
+  isPreview?: boolean;
 }) => {
+  // If the view is a preview, do not track the view
+  if (data.isPreview) return;
+
   await fetch("/api/record_view", {
     method: "POST",
     body: JSON.stringify(data),
@@ -47,9 +51,10 @@ export default function ExcelViewer({
   brand,
   dataroomId,
   setDocumentData,
+  isPreview,
 }: {
   linkId: string;
-  viewId: string;
+  viewId?: string;
   documentId: string;
   documentName: string;
   versionNumber: number;
@@ -57,6 +62,7 @@ export default function ExcelViewer({
   brand?: Partial<Brand> | Partial<DataroomBrand> | null;
   dataroomId?: string;
   setDocumentData?: React.Dispatch<React.SetStateAction<TDocumentData | null>>;
+  isPreview?: boolean;
 }) {
   const [availableWidth, setAvailableWidth] = useState<number>(200);
   const [availableHeight, setAvailableHeight] = useState<number>(200);
@@ -219,14 +225,15 @@ export default function ExcelViewer({
         isDataroom={dataroomId ? true : false}
         setDocumentData={setDocumentData}
         type="sheet"
+        isPreview={isPreview}
       />
       <div
         style={{ height: "calc(100dvh - 64px)" }}
-        className="mx-2 flex h-screen flex-col sm:mx-6 lg:mx-8"
+        className="mx-2 flex h-dvh flex-col sm:mx-6 lg:mx-8"
         ref={containerRef}
       >
         <div className="" ref={hotRef}></div>
-        <div className="flex max-w-fit divide-x divide-gray-200 overflow-x-scroll whitespace-nowrap rounded-b-sm bg-[#f0f0f0] px-1 ">
+        <div className="flex max-w-fit divide-x divide-gray-200 overflow-x-scroll whitespace-nowrap rounded-b-sm bg-[#f0f0f0] px-1">
           {sheetData.map((sheet, index) => (
             <div className="px-1" key={sheet.sheetName}>
               <Button

@@ -47,6 +47,30 @@ export const BadgeTooltip = ({
   );
 };
 
+export const ButtonTooltip = ({
+  content,
+  sideOffset = 0,
+  children,
+}: {
+  content: string;
+  sideOffset?: number;
+  children: React.ReactNode;
+}) => {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>{children}</TooltipTrigger>
+      <TooltipPortal>
+        <TooltipContent
+          sideOffset={sideOffset}
+          className="bg-[#474e5a] px-2 py-1 text-white"
+        >
+          <p>{content}</p>
+        </TooltipContent>
+      </TooltipPortal>
+    </Tooltip>
+  );
+};
+
 export {
   Tooltip,
   TooltipTrigger,

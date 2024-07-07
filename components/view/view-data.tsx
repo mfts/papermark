@@ -46,6 +46,7 @@ export default function ViewData({
       recordMap={notionData.recordMap}
       // rootPageId={notionData.rootNotionPageId}
       viewId={viewData.viewId}
+      isPreview={viewData.isPreview}
       linkId={link.id}
       documentId={document.id}
       versionNumber={document.versions[0].versionNumber}
@@ -55,6 +56,7 @@ export default function ViewData({
     <ExcelViewer
       linkId={link.id}
       viewId={viewData.viewId}
+      isPreview={viewData.isPreview}
       documentId={document.id}
       documentName={document.name}
       versionNumber={document.versions[0].versionNumber}
@@ -65,6 +67,7 @@ export default function ViewData({
     <AdvancedExcelViewer
       linkId={link.id}
       viewId={viewData.viewId}
+      isPreview={viewData.isPreview}
       documentId={document.id}
       documentName={document.name}
       versionNumber={document.versions[0].versionNumber}
@@ -76,6 +79,7 @@ export default function ViewData({
     <PagesViewerNew
       pages={viewData.pages}
       viewId={viewData.viewId}
+      isPreview={viewData.isPreview}
       linkId={link.id}
       documentId={document.id}
       assistantEnabled={document.assistantEnabled}
@@ -95,6 +99,7 @@ export default function ViewData({
     <PDFViewer
       file={viewData.file}
       viewId={viewData.viewId}
+      isPreview={viewData.isPreview}
       linkId={link.id}
       documentId={document.id}
       name={document.name}

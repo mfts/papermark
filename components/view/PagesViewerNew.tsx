@@ -35,7 +35,7 @@ const DEFAULT_PRELOADED_IMAGES_NUM = 5;
 const trackPageView = async (data: {
   linkId: string;
   documentId: string;
-  viewId: string;
+  viewId?: string;
   duration: number;
   pageNumber: number;
   versionNumber: number;
@@ -43,6 +43,7 @@ const trackPageView = async (data: {
   setViewedPages?: React.Dispatch<
     React.SetStateAction<{ pageNumber: number; duration: number }[]>
   >;
+  isPreview?: boolean;
 }) => {
   data.setViewedPages &&
     data.setViewedPages((prevViewedPages) =>
@@ -52,6 +53,10 @@ const trackPageView = async (data: {
           : page,
       ),
     );
+
+  // If the view is a preview, do not track the view
+  if (data.isPreview) return;
+
   await fetch("/api/record_view", {
     method: "POST",
     body: JSON.stringify(data),
@@ -81,11 +86,12 @@ export default function PagesViewer({
   feedback,
   isVertical = false,
   viewerEmail,
+  isPreview,
 }: {
   pages: { file: string; pageNumber: string; embeddedLinks: string[] }[];
   linkId: string;
   documentId: string;
-  viewId: string;
+  viewId?: string;
   assistantEnabled?: boolean;
   allowDownload: boolean;
   feedbackEnabled: boolean;
@@ -104,6 +110,7 @@ export default function PagesViewer({
   } | null;
   isVertical?: boolean;
   viewerEmail?: string;
+  isPreview?: boolean;
 }) {
   const router = useRouter();
   const { status: sessionStatus } = useSession();
@@ -181,6 +188,7 @@ export default function PagesViewer({
             versionNumber,
             dataroomId,
             setViewedPages,
+            isPreview,
           });
         }
       }
@@ -207,6 +215,7 @@ export default function PagesViewer({
         versionNumber,
         dataroomId,
         setViewedPages,
+        isPreview,
       });
     }
   }, [pageNumber, numPages]);
@@ -224,6 +233,7 @@ export default function PagesViewer({
           versionNumber,
           dataroomId,
           setViewedPages,
+          isPreview,
         });
       }
     };
@@ -245,10 +255,9 @@ export default function PagesViewer({
 
   useEffect(() => {
     // Remove token and email query parameters on component mount
-    const removeQueryParams = () => {
+    const removeQueryParams = (queries: string[]) => {
       const currentQuery = { ...router.query };
-      delete currentQuery.token;
-      delete currentQuery.email;
+      queries.map((query) => delete currentQuery[query]);
 
       router.replace(
         {
@@ -261,7 +270,7 @@ export default function PagesViewer({
     };
 
     if (!dataroomId && router.query.token) {
-      removeQueryParams();
+      removeQueryParams(["token", "email"]);
     }
   }, []); // Run once on mount
 
@@ -309,6 +318,7 @@ export default function PagesViewer({
         versionNumber,
         dataroomId,
         setViewedPages,
+        isPreview,
       });
       setPageNumber(currentPage);
       pageNumberRef.current = currentPage;
@@ -330,6 +340,7 @@ export default function PagesViewer({
         versionNumber,
         dataroomId,
         setViewedPages,
+        isPreview,
       });
       setPageNumber(currentPage);
       pageNumberRef.current = currentPage;
@@ -354,6 +365,7 @@ export default function PagesViewer({
         versionNumber,
         dataroomId,
         setViewedPages,
+        isPreview,
       });
       setPageNumber(currentPage);
       pageNumberRef.current = currentPage;
@@ -375,6 +387,7 @@ export default function PagesViewer({
         versionNumber,
         dataroomId,
         setViewedPages,
+        isPreview,
       });
       setPageNumber(currentPage);
       pageNumberRef.current = currentPage;
@@ -452,6 +465,7 @@ export default function PagesViewer({
       versionNumber,
       dataroomId,
       setViewedPages,
+      isPreview,
     });
 
     if (isVertical) {
@@ -500,6 +514,7 @@ export default function PagesViewer({
       versionNumber,
       dataroomId,
       setViewedPages,
+      isPreview,
     });
 
     if (isVertical) {
@@ -602,6 +617,7 @@ export default function PagesViewer({
         documentRefs={pinchRefs}
         isVertical={isVertical}
         isMobile={isMobile}
+        isPreview={isPreview}
       />
       <div
         style={{ height: "calc(100dvh - 64px)" }}
@@ -700,6 +716,7 @@ export default function PagesViewer({
                   viewId={viewId}
                   submittedFeedback={submittedFeedback}
                   setSubmittedFeedback={setSubmittedFeedback}
+                  isPreview={isPreview}
                 />
               </div>
             ) : null}
@@ -779,7 +796,11 @@ export default function PagesViewer({
           </>
         )}
         {feedbackEnabled && pageNumber <= numPages ? (
-          <Toolbar viewId={viewId} pageNumber={pageNumber} />
+          <Toolbar
+            viewId={viewId}
+            pageNumber={pageNumber}
+            isPreview={isPreview}
+          />
         ) : null}
         {screenshotProtectionEnabled ? <ScreenProtector /> : null}
         {showPoweredByBanner ? <PoweredBy linkId={linkId} /> : null}

@@ -8,12 +8,16 @@ import Nav from "../nav";
 const trackPageView = async (data: {
   linkId: string;
   documentId: string;
-  viewId: string;
+  viewId?: string;
   duration: number;
   pageNumber: number;
   versionNumber: number;
   dataroomId?: string;
+  isPreview?: boolean;
 }) => {
+  // If the view is a preview, do not track the view
+  if (data.isPreview) return;
+
   await fetch("/api/record_view", {
     method: "POST",
     body: JSON.stringify(data),
@@ -34,9 +38,10 @@ export default function AdvancedExcelViewer({
   brand,
   dataroomId,
   setDocumentData,
+  isPreview,
 }: {
   linkId: string;
-  viewId: string;
+  viewId?: string;
   documentId: string;
   documentName: string;
   versionNumber: number;
@@ -45,6 +50,7 @@ export default function AdvancedExcelViewer({
   brand?: Partial<Brand> | Partial<DataroomBrand> | null;
   dataroomId?: string;
   setDocumentData?: React.Dispatch<React.SetStateAction<TDocumentData | null>>;
+  isPreview?: boolean;
 }) {
   const [pageNumber, setPageNumber] = useState<number>(1); // start on first page
   const [maxScrollPercentage, setMaxScrollPercentage] = useState<number>(0);
@@ -70,6 +76,7 @@ export default function AdvancedExcelViewer({
             pageNumber,
             versionNumber,
             dataroomId,
+            isPreview,
           });
         }
       }
@@ -88,6 +95,7 @@ export default function AdvancedExcelViewer({
           pageNumber,
           versionNumber,
           dataroomId,
+          isPreview,
         }); // Also capture duration if component unmounts while visible
       }
       document.removeEventListener("visibilitychange", handleVisibilityChange);
@@ -102,6 +110,7 @@ export default function AdvancedExcelViewer({
         isDataroom={dataroomId ? true : false}
         setDocumentData={setDocumentData}
         type="sheet"
+        isPreview={isPreview}
       />
       <div
         style={{ height: "calc(100dvh - 64px)" }}

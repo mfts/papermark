@@ -56,6 +56,7 @@ export default function Nav({
   documentRefs,
   isVertical,
   isMobile,
+  isPreview,
 }: {
   pageNumber?: number;
   numPages?: number;
@@ -72,9 +73,10 @@ export default function Nav({
   documentRefs?: MutableRefObject<(ReactZoomPanPinchContentRef | null)[]>;
   isVertical?: boolean;
   isMobile?: boolean;
+  isPreview?: boolean;
 }) {
   const downloadFile = async () => {
-    if (!allowDownload || type === "notion") return;
+    if (!allowDownload || type === "notion" || isPreview) return;
     try {
       const response = await fetch(`/api/links/download`, {
         method: "POST",

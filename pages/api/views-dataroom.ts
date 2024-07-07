@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import { waitUntil } from "@vercel/functions";
+import { getServerSession } from "next-auth/next";
 import { parsePageId } from "notion-utils";
 import { record } from "zod";
 
@@ -11,7 +12,10 @@ import { newId } from "@/lib/id-helper";
 import notion from "@/lib/notion";
 import prisma from "@/lib/prisma";
 import { parseSheet } from "@/lib/sheet";
+import { CustomUser } from "@/lib/types";
 import { checkPassword, decryptEncrpytedPassword, log } from "@/lib/utils";
+
+import { authOptions } from "./auth/[...nextauth]";
 
 export const config = {
   // in order to enable `waitUntil` function
@@ -71,6 +75,11 @@ export default async function handle(
   // INFO: for using the advanced excel viewer
   const { useAdvancedExcelViewer } = data as {
     useAdvancedExcelViewer: boolean;
+  };
+
+  // previewToken is used to determine if the view is a preview and therefore should not be recorded
+  const { previewToken } = data as {
+    previewToken?: string;
   };
 
   // Fetch the link to verify the settings
@@ -245,8 +254,48 @@ export default async function handle(
     isEmailVerified = true;
   }
 
+  // Check if the view is a preview
+  let isPreview: boolean = false;
+  if (previewToken) {
+    const session = await getServerSession(req, res, authOptions);
+    if (!session) {
+      return res
+        .status(401)
+        .json({ message: "You need to be logged in to preview the link." });
+    }
+    const verification = await prisma.verificationToken.findUnique({
+      where: {
+        token: previewToken,
+        identifier: `preview:${linkId}:${(session.user as CustomUser).id}`,
+      },
+    });
+
+    if (!verification) {
+      res.status(401).json({
+        message: "Unauthorized access.",
+      });
+      return;
+    }
+
+    // Check the token's expiration date
+    if (Date.now() > verification.expires.getTime()) {
+      res.status(401).json({ message: "Preview access expired" });
+      return;
+    }
+
+    // TODO: delete previewToken
+    // delete the token after verification
+    // await prisma.verificationToken.delete({
+    //   where: {
+    //     token: previewToken,
+    //   },
+    // });
+
+    isPreview = true;
+  }
+
   let viewer: { id: string } | null = null;
-  if (email) {
+  if (email && !isPreview) {
     // find or create a viewer
     console.time("find-viewer");
     viewer = await prisma.viewer.findUnique({
@@ -281,39 +330,43 @@ export default async function handle(
 
   if (viewType === "DATAROOM_VIEW") {
     try {
-      console.time("create-view");
-      const newDataroomView = await prisma.view.create({
-        data: {
-          linkId: linkId,
-          viewerEmail: email,
-          viewerName: name,
-          verified: isEmailVerified,
-          dataroomId: dataroomId,
-          viewType: "DATAROOM_VIEW",
-          viewerId: viewer?.id ?? undefined,
-          ...(link.enableAgreement &&
-            link.agreementId &&
-            hasConfirmedAgreement && {
-              agreementResponse: {
-                create: {
-                  agreementId: link.agreementId,
+      let newDataroomView: { id: string } | null = null;
+      if (!isPreview) {
+        console.time("create-view");
+        newDataroomView = await prisma.view.create({
+          data: {
+            linkId: linkId,
+            viewerEmail: email,
+            viewerName: name,
+            verified: isEmailVerified,
+            dataroomId: dataroomId,
+            viewType: "DATAROOM_VIEW",
+            viewerId: viewer?.id ?? undefined,
+            ...(link.enableAgreement &&
+              link.agreementId &&
+              hasConfirmedAgreement && {
+                agreementResponse: {
+                  create: {
+                    agreementId: link.agreementId,
+                  },
                 },
-              },
-            }),
-        },
-        select: { id: true },
-      });
-      console.timeEnd("create-view");
+              }),
+          },
+          select: { id: true },
+        });
+        console.timeEnd("create-view");
 
-      if (link.enableNotification) {
-        console.time("sendemail");
-        waitUntil(sendNotification({ viewId: newDataroomView.id }));
-        console.timeEnd("sendemail");
+        if (link.enableNotification) {
+          console.time("sendemail");
+          waitUntil(sendNotification({ viewId: newDataroomView.id }));
+          console.timeEnd("sendemail");
+        }
       }
 
       const returnObject = {
         message: "Dataroom View recorded",
-        viewId: newDataroomView.id,
+        viewId: !isPreview && newDataroomView ? newDataroomView.id : undefined,
+        isPreview: isPreview ? true : undefined,
         file: undefined,
         pages: undefined,
         notionData: undefined,
@@ -331,31 +384,34 @@ export default async function handle(
   }
 
   try {
-    console.time("create-view");
-    const newView = await prisma.view.create({
-      data: {
-        linkId: linkId,
-        viewerEmail: email,
-        viewerName: name,
-        documentId: documentId,
-        verified: isEmailVerified,
-        dataroomViewId: dataroomViewId,
-        dataroomId: dataroomId,
-        viewType: "DOCUMENT_VIEW",
-        viewerId: viewer?.id ?? undefined,
-        ...(link.enableAgreement &&
-          link.agreementId &&
-          hasConfirmedAgreement && {
-            agreementResponse: {
-              create: {
-                agreementId: link.agreementId,
+    let newView: { id: string } | null = null;
+    if (!isPreview) {
+      console.time("create-view");
+      newView = await prisma.view.create({
+        data: {
+          linkId: linkId,
+          viewerEmail: email,
+          viewerName: name,
+          documentId: documentId,
+          verified: isEmailVerified,
+          dataroomViewId: dataroomViewId,
+          dataroomId: dataroomId,
+          viewType: "DOCUMENT_VIEW",
+          viewerId: viewer?.id ?? undefined,
+          ...(link.enableAgreement &&
+            link.agreementId &&
+            hasConfirmedAgreement && {
+              agreementResponse: {
+                create: {
+                  agreementId: link.agreementId,
+                },
               },
-            },
-          }),
-      },
-      select: { id: true },
-    });
-    console.timeEnd("create-view");
+            }),
+        },
+        select: { id: true },
+      });
+      console.timeEnd("create-view");
+    }
 
     // if document version has pages, then return pages
     // otherwise, check if notion document,
@@ -438,7 +494,8 @@ export default async function handle(
 
     const returnObject = {
       message: "View recorded",
-      viewId: newView.id,
+      viewId: !isPreview && newView ? newView.id : undefined,
+      isPreview: isPreview ? true : undefined,
       file:
         (documentVersion && documentVersion.type === "pdf") ||
         (documentVersion && useAdvancedExcelViewer)
