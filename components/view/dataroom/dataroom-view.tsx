@@ -334,8 +334,10 @@ export default function DataroomView({
         <DataroomViewer
           brand={brand!}
           viewId={viewData.viewId}
+          linkId={link.id}
           dataroomViewId={viewData.dataroomViewId!}
           dataroom={dataroom}
+          allowDownload={link.allowDownload!}
           setDocumentData={setDocumentData}
           setViewType={setViewType}
           setDataroomVerified={setDataroomVerified}
