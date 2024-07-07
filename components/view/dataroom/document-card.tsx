@@ -54,7 +54,7 @@ export default function DocumentCard({
 
           <div className="flex-col">
             <div className="flex items-center">
-              <h2 className="min-w-0 max-w-[150px] truncate text-sm font-semibold leading-6 text-foreground sm:max-w-md">
+              <h2 className="min-w-0 max-w-[300px] truncate text-sm font-semibold leading-6 text-foreground sm:max-w-lg">
                 <button
                   onClick={() => {
                     setViewType("DOCUMENT_VIEW");

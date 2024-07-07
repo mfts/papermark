@@ -1,6 +1,6 @@
 import { useRouter } from "next/router";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import React from "react";
 
 import { DataroomBrand, DataroomFolder } from "@prisma/client";
@@ -43,6 +43,23 @@ type DataroomDocument = {
     hasPages: boolean;
     isVertical: boolean;
   }[];
+};
+
+const getParentFolders = (
+  folderId: string | null,
+  folders: DataroomFolder[],
+): DataroomFolder[] => {
+  const breadcrumbFolders: DataroomFolder[] = [];
+  let currentFolder = folders.find((folder) => folder.id === folderId);
+
+  while (currentFolder) {
+    breadcrumbFolders.unshift(currentFolder);
+    currentFolder = folders.find(
+      (folder) => folder.id === currentFolder!.parentId,
+    );
+  }
+
+  return breadcrumbFolders;
 };
 
 export default function DataroomViewer({
@@ -98,6 +115,11 @@ export default function DataroomViewer({
 
     removeQueryParams();
   }, []); // Run once on mount
+
+  const breadcrumbFolders = useMemo(
+    () => getParentFolders(folderId, folders),
+    [folderId, folders],
+  );
 
   return (
     <>
@@ -164,27 +186,33 @@ export default function DataroomViewer({
                 <Breadcrumb>
                   <BreadcrumbList>
                     <BreadcrumbItem key={"root"}>
-                      <BreadcrumbLink asChild>
-                        <BreadcrumbLink onClick={() => setFolderId(null)}>
-                          Home
-                        </BreadcrumbLink>
+                      <BreadcrumbLink
+                        onClick={() => setFolderId(null)}
+                        className="cursor-pointer"
+                      >
+                        Home
                       </BreadcrumbLink>
                     </BreadcrumbItem>
-                    {folders &&
-                      folders
-                        .filter((folder) => folder.id === folderId)
-                        .map((folder, index: number, array) => {
-                          return (
-                            <React.Fragment key={index}>
-                              <BreadcrumbSeparator />
-                              <BreadcrumbItem>
-                                <BreadcrumbPage className="capitalize">
-                                  {folder.name}
-                                </BreadcrumbPage>
-                              </BreadcrumbItem>
-                            </React.Fragment>
-                          );
-                        })}
+
+                    {breadcrumbFolders.map((folder, index) => (
+                      <React.Fragment key={folder.id}>
+                        <BreadcrumbSeparator />
+                        <BreadcrumbItem>
+                          {index === breadcrumbFolders.length - 1 ? (
+                            <BreadcrumbPage className="capitalize">
+                              {folder.name}
+                            </BreadcrumbPage>
+                          ) : (
+                            <BreadcrumbLink
+                              onClick={() => setFolderId(folder.id)}
+                              className="cursor-pointer capitalize"
+                            >
+                              {folder.name}
+                            </BreadcrumbLink>
+                          )}
+                        </BreadcrumbItem>
+                      </React.Fragment>
+                    ))}
                   </BreadcrumbList>
                 </Breadcrumb>
               </div>
