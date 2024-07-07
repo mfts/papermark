@@ -12,18 +12,19 @@ const navigation = {
   product: [
     { name: "Data Room", href: "/data-room" },
     { name: "AI Document Assistant", href: "/ai" },
-    { name: "Notion", href: "/share-notion-page" },
+    { name: "Notion sharing", href: "/share-notion-page" },
     { name: "Pricing", href: "/pricing" },
   ],
   resources: [
     { name: "Privacy Policy", href: "/privacy" },
     { name: "Terms of Service", href: "/terms" },
-    { name: "Launch Week", href: "/launch-week" },
+    { name: "Blog", href: "/blog" },
+    { name: "Launch Week 2023", href: "/launch-week" },
   ],
   tools: [
     { name: "Open Source Friends", href: "/oss-friends" },
     { name: "Open Source Investors", href: "/open-source-investors" },
-    { name: "Investor Database", href: "/investors" },
+    { name: "Investor Database (7k+)", href: "/investors" },
     {
       name: "YC Application GPT",
       href: "https://chat.openai.com/g/g-LYDRCiZB9-yc-application-gpt",
@@ -32,14 +33,7 @@ const navigation = {
       name: "FindVC GPT",
       href: "https://chat.openai.com/g/g-G5orSgI31-findvc",
     },
-    {
-      name: "DocSend Alternatives",
-      href: "/docsend-alternatives",
-    },
-     {
-      name: "Digify Alternatives",
-      href: "/digify-alternatives",
-    },
+
     {
       name: "AI Pitch Deck Generator",
       href: "https://deck.papermark.io",
@@ -52,7 +46,14 @@ const navigation = {
     { name: "Digify", href: "/alternatives/digify" },
     { name: "FirmRoom", href: "/alternatives/firmroom" },
     { name: "Google-Drive", href: "/alternatives/google-drive" },
-
+    {
+      name: "DocSend Alternatives",
+      href: "/docsend-alternatives",
+    },
+    {
+      name: "Digify Alternatives",
+      href: "/digify-alternatives",
+    },
   ],
   social: [
     {
@@ -73,6 +74,93 @@ const navigation = {
       ),
     },
   ],
+  cases: [
+    {
+      name: "Fundraising",
+      href: "/solutions/open-source-fundraising-software",
+    },
+    {
+      name: "Document tracking",
+      href: "/solutions/free-document-tracking-software",
+    },
+    {
+      name: "Legal document sharing",
+      href: "/solutions/legal-documents-sharing-platform",
+    },
+    {
+      name: "Open source document sharing",
+      href: "/solutions/open-source-document-sharing-platform",
+    },
+    {
+      name: "Investor update software",
+      href: "/solutions/investor-update-software",
+    },
+    {
+      name: "Pitch deck sharing",
+      href: "/solutions/pitch-deck-sharing-sofware",
+    },
+  ],
+  room: [
+    {
+      name: "Data Room for investors",
+      href: "/solutions/data-room-for-investors",
+    },
+    {
+      name: "Data Room for fundraising",
+      href: "/solutions/data-room-for-startups",
+    },
+    {
+      name: "VC portfolio management ",
+      href: "/solutions/vc-portfolio-management-software",
+    },
+    { name: "Data Room for realtors", href: "/" },
+    // {
+    //   name: "Private equaity portfolio management ",
+    //   href: "/solutions/private-equity-portfolio-management-software",
+    // },
+    {
+      name: "Virtual sales data room",
+      href: "https://www.papermark.io/solutions/virtual-sales-room",
+    },
+  ],
+  support: [
+    { name: "Help Center", href: "/help" },
+    {
+      name: "Create shareable link",
+      href: "/help/article/create-link-to-document",
+    },
+    {
+      name: "Link permissions",
+      href: "/help/article/link-settings",
+    },
+    {
+      name: "Custom domain",
+      href: "/help/article/how-to-add-custom-domain-to-link",
+    },
+    { name: "Document versions", href: "/help/article/document-versions" },
+    {
+      name: "Track time on document",
+      href: "/help/article/built-in-page-by-page-analytics",
+    },
+  ],
+  more: [
+    {
+      name: "Password protect Notion",
+      href: "/blog/password-protect-a-notion-page",
+    },
+    {
+      name: "Send deck to investors ",
+      href: "blog/how-to-send-pitch-deck-to-investors",
+    },
+    {
+      name: "Track time on pitch deck",
+      href: "/blog/how-to-track-activity-on-your-pitch-deck",
+    },
+    {
+      name: "Prevent pdf forwarding",
+      href: "/blog/how-to-prevent-pdf-forwarding",
+    },
+  ],
 };
 
 export default function Footer() {
@@ -84,7 +172,7 @@ export default function Footer() {
       <div className="mx-auto max-w-7xl px-4 pb-4 pt-20 md:px-8">
         {" "}
         {/* px-6 pb-8 pt-16 sm:pt-24 lg:px-8 lg:pt-32 */}
-        <div className="xl:grid xl:grid-cols-3 xl:gap-8">
+        <div className="xl:grid xl:grid-cols-4 xl:gap-8">
           <div className="space-y-4">
             <Image
               src={PapermarkLogo}
@@ -113,7 +201,7 @@ export default function Footer() {
               <StatusWidget />
             </div>
           </div>
-          <div className="mt-16 grid grid-cols-2 gap-8 xl:col-span-2 xl:mt-0">
+          <div className="mt-16 grid grid-cols-2 gap-8 xl:col-span-3 xl:mt-0">
             <div className="md:grid md:grid-cols-2 md:gap-8">
               <div>
                 <h3 className="font-semibold leading-6 text-black">Product</h3>
@@ -150,6 +238,41 @@ export default function Footer() {
             </div>
             <div className="md:grid md:grid-cols-2 md:gap-8">
               <div>
+                <h3 className="font-semibold leading-6 text-black">
+                  Papermark for
+                </h3>
+                <ul role="list" className="mt-6 space-y-4">
+                  {navigation.cases.map((item) => (
+                    <li key={item.name}>
+                      <a
+                        href={item.href}
+                        className="leading-6 text-gray-500 hover:text-black"
+                      >
+                        {item.name}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div>
+                <h3 className="font-semibold leading-6 text-black">Support</h3>
+                <ul role="list" className="mt-6 space-y-4">
+                  {navigation.support.map((item) => (
+                    <li key={item.name}>
+                      <a
+                        href={item.href}
+                        className="leading-6 text-gray-500 hover:text-black"
+                      >
+                        {item.name}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+            <div className="md:grid md:grid-cols-2 md:gap-8">
+              <div>
                 <h3 className="font-semibold leading-6 text-black">Tools</h3>
                 <ul role="list" className="mt-6 space-y-4">
                   {navigation.tools.map((item) => (
@@ -164,6 +287,26 @@ export default function Footer() {
                   ))}
                 </ul>
               </div>
+
+              <div className="mt-10 md:mt-0">
+                <h3 className="font-semibold leading-6 text-black">
+                  Data Room
+                </h3>
+                <ul role="list" className="mt-6 space-y-4">
+                  {navigation.room.map((item) => (
+                    <li key={item.name}>
+                      <a
+                        href={item.href}
+                        className="leading-6 text-gray-500 hover:text-black"
+                      >
+                        {item.name}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+            <div className="md:grid md:grid-cols-2 md:gap-8">
               <div className="mt-10 md:mt-0">
                 <h3 className="font-semibold leading-6 text-black">
                   Alternatives
@@ -181,6 +324,25 @@ export default function Footer() {
                   ))}
                 </ul>
               </div>
+
+              <div className="mt-10 md:mt-0">
+                <h3 className="font-semibold leading-6 text-black">
+                  Read more
+                </h3>
+                <ul role="list" className="mt-6 space-y-4">
+                  {navigation.more.map((item) => (
+                    <li key={item.name}>
+                      <a
+                        href={item.href}
+                        className="leading-6 text-gray-500 hover:text-black"
+                      >
+                        {item.name}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="md:grid md:grid-cols-2 md:gap-8"></div>
             </div>
           </div>
         </div>
