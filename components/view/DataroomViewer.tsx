@@ -48,16 +48,20 @@ type DataroomDocument = {
 export default function DataroomViewer({
   brand,
   viewId,
+  linkId,
   dataroomViewId,
   dataroom,
+  allowDownload,
   setViewType,
   setDocumentData,
   setDataroomVerified,
 }: {
   brand: Partial<DataroomBrand>;
   viewId: string;
+  linkId: string;
   dataroomViewId: string;
   dataroom: any;
+  allowDownload: boolean;
   setViewType: React.Dispatch<
     React.SetStateAction<"DOCUMENT_VIEW" | "DATAROOM_VIEW">
   >;
@@ -97,14 +101,20 @@ export default function DataroomViewer({
 
   return (
     <>
-      <DataroomNav brand={brand} viewId={viewId} dataroom={dataroom} />
+      <DataroomNav
+        brand={brand}
+        linkId={linkId}
+        viewId={viewId}
+        dataroom={dataroom}
+        allowDownload={allowDownload}
+      />
       <div
         style={{ height: "calc(100vh - 64px)" }}
         className="relative flex items-center bg-white dark:bg-black"
       >
         <div className="relative mx-auto flex h-full w-full items-start justify-center">
           {/* Tree view */}
-          <div className="mb-10 mt-4 hidden h-full w-1/4 space-y-8 overflow-auto py-3 md:mx-5 md:mt-5 md:flex lg:mx-7 lg:mt-8 xl:mx-10 ">
+          <div className="mb-10 mt-4 hidden h-full w-1/4 space-y-8 overflow-auto py-3 md:mx-5 md:mt-5 md:flex lg:mx-7 lg:mt-8 xl:mx-10">
             <ViewFolderTree
               folders={folders}
               documents={documents}
