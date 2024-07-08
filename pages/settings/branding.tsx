@@ -35,6 +35,7 @@ export default function Branding() {
   const [brandColor, setBrandColor] = useState<string>("#000000");
   const [accentColor, setAccentColor] = useState<string>("#030712");
   const [logo, setLogo] = useState<string | null>(null);
+  const [blobUrl, setBlobUrl] = useState<string | null>(null);
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [fileError, setFileError] = useState<string | null>(null);
@@ -52,7 +53,12 @@ export default function Branding() {
         } else {
           const reader = new FileReader();
           reader.onload = (e) => {
-            setLogo(e.target?.result as string);
+            const dataUrl = e.target?.result as string;
+            setLogo(dataUrl);
+            // create a blob url for preview
+            const blob = convertDataUrlToFile({ dataUrl });
+            const blobUrl = URL.createObjectURL(blob);
+            setBlobUrl(blobUrl);
           };
           reader.readAsDataURL(file);
         }
@@ -205,7 +211,14 @@ export default function Branding() {
                               } else {
                                 const reader = new FileReader();
                                 reader.onload = (e) => {
-                                  setLogo(e.target?.result as string);
+                                  const dataUrl = e.target?.result as string;
+                                  setLogo(dataUrl);
+                                  // create a blob url for preview
+                                  const blob = convertDataUrlToFile({
+                                    dataUrl,
+                                  });
+                                  const blobUrl = URL.createObjectURL(blob);
+                                  setBlobUrl(blobUrl);
                                 };
                                 reader.readAsDataURL(file);
                               }
@@ -381,7 +394,7 @@ export default function Branding() {
                           key={`branding-${brandColor}-${accentColor}`}
                           name="checkout-demo"
                           id="checkout-demo"
-                          src={`/nav_ppreview_demo?brandColor=${encodeURIComponent(brandColor)}&accentColor=${encodeURIComponent(accentColor)}&brandLogo=${logo ? encodeURIComponent(logo) : ""}`}
+                          src={`/nav_ppreview_demo?brandColor=${encodeURIComponent(brandColor)}&accentColor=${encodeURIComponent(accentColor)}&brandLogo=${blobUrl ? encodeURIComponent(blobUrl) : ""}`}
                           style={{
                             width: "1390px",
                             height: "831px",
