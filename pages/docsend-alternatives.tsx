@@ -14,7 +14,7 @@ import UseCaseTable from "@/components/web/alternatives/usecasetable";
 import CTA from "@/components/web/cta";
 import Footer from "@/components/web/footer";
 import Navbar from "@/components/web/navbar";
-import Testimonials from "@/components/web/testimonials";
+import Testimonials from "@/components/web/testimonials/testimonials";
 
 const features = [
   "send unlimited documents",
