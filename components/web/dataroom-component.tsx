@@ -17,13 +17,15 @@ const tools: ToolFeature[] = [
       blocklist: "✔️",
       verifications: "✔️",
       branding: "✔️",
+      upload: "✔️",
+      screenshot: "✔️",
       support: "✔️",
+      nda: "⛌",
       domains: "⛌",
       notifications: "⛌",
       rooms: "⛌",
       users: "⛌",
       sso: "⛌",
-      upload: "⛌",
       migration: "⛌",
       support2: "⛌",
       self: "⛌",
@@ -48,11 +50,13 @@ const tools: ToolFeature[] = [
       rooms: "✔️",
       users: "⛌",
       sso: "⛌",
-      upload: "⛌",
+      upload: "✔️",
       migration: "⛌",
       support2: "⛌",
       self: "⛌",
       white: "⛌",
+      nda: "✔️",
+      screenshot: "✔️",
     },
   },
 
@@ -79,6 +83,8 @@ const tools: ToolFeature[] = [
       upload: "✔️",
       self: "⛌",
       white: "⛌",
+      nda: "✔️",
+      screenshot: "✔️",
     },
   },
   {
@@ -104,6 +110,8 @@ const tools: ToolFeature[] = [
       upload: "✔️",
       self: "✔️",
       white: "✔️",
+      nda: "✔️",
+      screenshot: "✔️",
     },
   },
 
@@ -124,12 +132,14 @@ const featureDisplayNames: { [key: string]: string } = {
   rooms: "Unlimited data rooms",
   users: "User Groups",
   white: "Full white-labelling",
+  nda: "NDA and agreements",
   sso: "SSO",
   upload: "Bulk upload",
   self: "Self-hosted on your servers",
   migration: "Migration from other platform",
   support: "48h email support ",
   support2: "24h  support ",
+  screenshot: "Screenshot protection",
 };
 
 export default function ComparisonTable() {
@@ -172,9 +182,9 @@ export default function ComparisonTable() {
         </div>
       </div> */}
       <div className="mt-6 flow-root">
-        <div className="overflow-x-auto rounded-lg border border-gray-300 bg-gray-100 ">
+        <div className="overflow-x-auto rounded-lg border border-gray-300 bg-gray-100">
           <div className="inline-block min-w-full align-middle">
-            <table className="min-w-full divide-y divide-gray-300 border border-gray-300  ">
+            <table className="min-w-full divide-y divide-gray-300 border border-gray-300">
               <thead>
                 <tr>
                   <th className="text-balance px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
@@ -190,16 +200,16 @@ export default function ComparisonTable() {
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200 border border-gray-300 bg-white ">
+              <tbody className="divide-y divide-gray-200 border border-gray-300 bg-white">
                 {featuresList.map((feature) => (
                   <tr key={feature}>
-                    <td className="text-balance border border-gray-300 px-3 py-4 text-sm font-semibold text-gray-900 ">
+                    <td className="text-balance border border-gray-300 px-3 py-4 text-sm font-semibold text-gray-900">
                       {featureDisplayNames[feature]}
                     </td>
                     {tools.map((tool) => (
                       <td
                         key={tool.name}
-                        className={`px-3 py-4 text-sm  ${
+                        className={`px-3 py-4 text-sm ${
                           tool.name === "Papermark"
                             ? "text-balance bg-green-50 font-semibold text-green-700"
                             : ""

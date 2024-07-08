@@ -77,7 +77,7 @@ export default function Testimonials() {
     <div className="bg-white py-24">
       <div className="mx-auto w-full max-w-7xl px-4 md:px-8">
         <h2 className="text-balance text-4xl">
-          Loved by over 5000 customers and users.
+          Loved by over 7000 companies and employees
           <br />
           <span className="text-gray-500">
             Here&apos;s what they have to say about us.
@@ -90,7 +90,7 @@ export default function Testimonials() {
                 key={testimonial.author.handle}
                 className="relative flex w-full"
               >
-                <div className="relative rounded-lg border border-gray-500 bg-white p-6 text-base leading-6  shadow-lg">
+                <div className="relative rounded-lg border border-gray-500 bg-white p-6 text-base leading-6 shadow-lg">
                   <div className="flex flex-col justify-between">
                     <div className="flex items-center justify-between gap-x-4">
                       <div className="flex items-center gap-x-4">

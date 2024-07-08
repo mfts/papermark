@@ -7,7 +7,7 @@ import { CheckIcon, XIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Features from "@/components/web/alternatives/features";
 import FAQ from "@/components/web/faq";
-import Testimonials from "@/components/web/testimonials";
+import Testimonials from "@/components/web/testimonials/testimonials";
 
 import { getAlternative, getAlternatives } from "@/lib/content/alternative";
 import { constructMetadata } from "@/lib/utils";

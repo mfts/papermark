@@ -2,7 +2,7 @@ export const LogoCloud = () => {
   return (
     <div>
       <div className="mb-4 text-center text-2xl font-medium leading-6">
-        <p>Used by companies and employees of</p>
+        <p>Trusted by companies and employees of</p>
       </div>
       <div className="overflow-hidden border border-l-0 border-r-0 border-gray-100 bg-gray-100 lg:rounded-xl lg:border-l lg:border-r">
         <div className="grid grid-cols-2 grid-rows-[100px] gap-px md:grid-cols-4">
