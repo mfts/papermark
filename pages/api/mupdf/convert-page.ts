@@ -12,8 +12,6 @@ export const config = {
   maxDuration: 180,
 };
 
-const SCALE_FACTORS = [3, 2, 1];
-
 export default async (req: NextApiRequest, res: NextApiResponse) => {
   // check if post method
   if (req.method !== "POST") {
@@ -31,18 +29,11 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     return;
   }
 
-  const {
-    documentVersionId,
-    pageNumber,
-    url,
-    teamId,
-    attempt = 0,
-  } = req.body as {
+  const { documentVersionId, pageNumber, url, teamId } = req.body as {
     documentVersionId: string;
     pageNumber: number;
     url: string;
     teamId: string;
-    attempt: number;
   };
 
   try {
@@ -65,30 +56,14 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     var doc = new mupdf.PDFDocument(pdfData);
     console.log("Original document size:", pdfData.byteLength);
 
-    const scaleFactor = SCALE_FACTORS[attempt] || 1;
-    const desiredDPI = 72 * scaleFactor;
-    const currentDPI = 72;
-
-    // Calculate the scale factor to achieve the desired DPI
-    const dpiScaleFactor = desiredDPI / currentDPI;
-    const doc_to_screen = mupdf.Matrix.scale(dpiScaleFactor, dpiScaleFactor);
-
-    console.log(
-      `Converting with scale factor: ${scaleFactor}, DPI: ${desiredDPI}`,
-    );
-    console.log("attempt", attempt);
-
-    // Scale the document to 300 DPI
-    // const doc_to_screen = mupdf.Matrix.scale(216 / 72, 216 / 72); // scale 3x // to 216 DPI
-    // const doc_to_screen = mupdf.Matrix.scale(2, 2); // scale 2x // to 144 DPI
-
-    let page = doc.loadPage(pageNumber - 1); // 0-based page index
+    const page = doc.loadPage(pageNumber - 1); // 0-based page index
+    // get the bounds of the page for orientation and scaling
+    const bounds = page.getBounds();
+    const [ulx, uly, lrx, lry] = bounds;
+    const widthInPoints = Math.abs(lrx - ulx);
 
     if (pageNumber === 1) {
       // get the orientation of the document and update document version
-      const bounds = page.getBounds();
-      const [ulx, uly, lrx, lry] = bounds;
-      const widthInPoints = Math.abs(lrx - ulx);
       const heightInPoints = Math.abs(lry - uly);
       const isVertical = heightInPoints > widthInPoints;
 
@@ -98,10 +73,17 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
       });
     }
 
+    // Scale the document to 144 DPI
+    const scaleFactor = widthInPoints >= 1600 ? 2 : 3; // 2x for width >= 1600, 3x for width < 1600
+    const doc_to_screen = mupdf.Matrix.scale(scaleFactor, scaleFactor);
+
+    console.log("Scale factor:", scaleFactor);
+
     // get links
     const links = page.getLinks();
     const embeddedLinks = links.map((link: any) => link.getURI());
 
+    console.time("toPixmap");
     let scaledPixmap = page.toPixmap(
       // [3, 0, 0, 3, 0, 0], // scale 3x // to 300 DPI
       doc_to_screen,
@@ -109,9 +91,15 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
       false,
       true,
     );
+    console.timeEnd("toPixmap");
 
+    console.time("compare");
+    console.time("asPNG");
     const pngBuffer = scaledPixmap.asPNG(); // as PNG
+    console.timeEnd("asPNG");
+    console.time("asJPEG");
     const jpegBuffer = scaledPixmap.asJPEG(80, false); // as JPEG
+    console.timeEnd("asJPEG");
 
     const pngSize = pngBuffer.byteLength;
     const jpegSize = jpegBuffer.byteLength;
@@ -125,6 +113,10 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
       chosenBuffer = jpegBuffer;
       chosenFormat = "jpeg";
     }
+
+    console.log("Chosen format:", chosenFormat);
+
+    console.timeEnd("compare");
 
     let buffer = Buffer.from(chosenBuffer);
 
@@ -143,6 +135,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     });
 
     buffer = Buffer.alloc(0); // free memory
+    chosenBuffer = Buffer.alloc(0); // free memory
     scaledPixmap.destroy(); // free memory
     page.destroy(); // free memory
 
