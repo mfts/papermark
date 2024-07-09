@@ -12,6 +12,8 @@ export const config = {
   maxDuration: 180,
 };
 
+const SCALE_FACTORS = [3, 2, 1];
+
 export default async (req: NextApiRequest, res: NextApiResponse) => {
   // check if post method
   if (req.method !== "POST") {
@@ -29,11 +31,18 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     return;
   }
 
-  const { documentVersionId, pageNumber, url, teamId } = req.body as {
+  const {
+    documentVersionId,
+    pageNumber,
+    url,
+    teamId,
+    attempt = 0,
+  } = req.body as {
     documentVersionId: string;
     pageNumber: number;
     url: string;
     teamId: string;
+    attempt: number;
   };
 
   try {
@@ -56,14 +65,18 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     var doc = new mupdf.PDFDocument(pdfData);
     console.log("Original document size:", pdfData.byteLength);
 
-    const desiredDPI = 216;
+    const scaleFactor = SCALE_FACTORS[attempt] || 1;
+    const desiredDPI = 72 * scaleFactor;
     const currentDPI = 72;
 
     // Calculate the scale factor to achieve the desired DPI
-    const scaleFactor = desiredDPI / currentDPI;
-    const doc_to_screen = mupdf.Matrix.scale(scaleFactor, scaleFactor);
+    const dpiScaleFactor = desiredDPI / currentDPI;
+    const doc_to_screen = mupdf.Matrix.scale(dpiScaleFactor, dpiScaleFactor);
 
-    console.log("scaleFactor:", scaleFactor);
+    console.log(
+      `Converting with scale factor: ${scaleFactor}, DPI: ${desiredDPI}`,
+    );
+    console.log("attempt", attempt);
 
     // Scale the document to 300 DPI
     // const doc_to_screen = mupdf.Matrix.scale(216 / 72, 216 / 72); // scale 3x // to 216 DPI
@@ -165,7 +178,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     }
 
     // Send the images as a response
-    res.status(200).json({ documentPageId: documentPage.id });
+    res.status(200).json({ documentPageId: documentPage!.id });
     return;
   } catch (error) {
     log({
