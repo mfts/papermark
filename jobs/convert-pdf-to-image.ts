@@ -134,7 +134,7 @@ client.defineJob({
       currentPage = i + 1;
       await io.runTask(
         `upload-page-${currentPage}`,
-        async ({ attempts }) => {
+        async () => {
           // send page number to api/convert-page endpoint in a task and get back page img url
           const response = await fetch(
             `${process.env.NEXT_PUBLIC_BASE_URL}/api/mupdf/convert-page`,
@@ -145,7 +145,6 @@ client.defineJob({
                 pageNumber: currentPage,
                 url: signedUrl,
                 teamId: payload.teamId,
-                attempts: attempts - 1,
               }),
               headers: {
                 "Content-Type": "application/json",
@@ -173,15 +172,15 @@ client.defineJob({
         },
         // { retry: retry.standardBackoff },
         {
-          retry: {
-            limit: 3,
-            minTimeoutInMs: 1000,
-            maxTimeoutInMs: 10000,
-            factor: 2,
-            randomize: true,
-          },
+          // retry: {
+          //   limit: 3,
+          //   minTimeoutInMs: 1000,
+          //   maxTimeoutInMs: 10000,
+          //   factor: 2,
+          //   randomize: true,
+          // },
         },
-        (error) => {
+        (error, task) => {
           conversionWithoutError = false;
           return { error: error as Error };
         },
