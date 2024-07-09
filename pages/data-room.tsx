@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import DataRoom from "@/components/web/dataroom-component";
 import Footer from "@/components/web/footer";
 import Navbar from "@/components/web/navbar";
-import Testimonials from "@/components/web/testimonials2";
+import Testimonials from "@/components/web/testimonials/testimonials2";
 
 const features = [
   "send unlimited documents",
@@ -81,7 +81,7 @@ export default function Home() {
                       </h1>
                     </div>
 
-                    <p className="text-m my-4  text-balance text-gray-500 sm:text-xl">
+                    <p className="text-m my-4 text-balance text-gray-500 sm:text-xl">
                       Learn more about Papermark Data Room and all available
                       features on 4 core plans including custom domains,
                       branding and self-hosting
@@ -116,7 +116,7 @@ export default function Home() {
                 <DataRoom />
               </div>
 
-              <div className="mx-auto w-full max-w-7xl px-4 md:px-8 ">
+              <div className="mx-auto w-full max-w-7xl px-4 md:px-8">
                 <div className="mx-auto my-4 rounded-xl bg-[#fb7a00] px-6 py-12">
                   <div className="item-center flex flex-col justify-between space-y-10 lg:flex-row lg:space-y-0">
                     <h2 className="text-nowrap text-3xl">
@@ -149,7 +149,7 @@ export default function Home() {
                 </div>
 
                 <div className="overflow-hidden bg-white py-24 sm:py-24">
-                  <div className="mx-auto max-w-7xl ">
+                  <div className="mx-auto max-w-7xl">
                     <div className="grid grid-cols-1 gap-x-8 gap-y-16 sm:gap-y-20 lg:grid-cols-2 lg:items-start">
                       <div className="px-6 lg:px-0 lg:pr-4 lg:pt-4">
                         <div className="mx-auto max-w-2xl lg:mx-0 lg:max-w-lg">
@@ -164,17 +164,13 @@ export default function Home() {
                         </div>
                         <div className="space-x-2 pt-8">
                           <Link href="/login">
-                            <Button className="justify-center text-balance text-balance rounded-3xl bg-gray-900 text-white hover:bg-gray-800">
+                            <Button className="justify-center text-balance rounded-3xl bg-gray-900 text-white hover:bg-gray-800">
                               Get insights
                             </Button>
                           </Link>
                         </div>
                       </div>
                       <div className="sm:px-6 lg:px-0">
-                        <div
-                          className="absolute -inset-y-px -left-3 -z-10 w-full origin-bottom-left skew-x-[-30deg] bg-orange-200 opacity-20 ring-1 ring-inset ring-white"
-                          aria-hidden="true"
-                        />
                         <div className="mx-auto max-w-2xl sm:mx-0 sm:max-w-none">
                           <img
                             src="https://assets.papermark.io/upload/file_Y1UuAt51v17QtBKTuP9Rj5-Screenshot-2024-05-18-at-12.56.35-PM.png"
@@ -183,11 +179,6 @@ export default function Home() {
                             height={1442}
                             className="-mb-12 w-[57rem] max-w-none rounded-tl-xl bg-gray-800 ring-1 ring-white/10"
                           />
-
-                          <div
-                            className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-black/10 sm:rounded-3xl"
-                            aria-hidden="true"
-                          />
                         </div>
                       </div>
                     </div>
@@ -195,7 +186,7 @@ export default function Home() {
                 </div>
 
                 <div className="overflow-hidden bg-white py-24 sm:py-24">
-                  <div className="mx-auto max-w-7xl ">
+                  <div className="mx-auto max-w-7xl">
                     <div className="grid grid-cols-1 gap-x-8 gap-y-16 sm:gap-y-20 lg:grid-cols-2 lg:items-start">
                       <div className="px-6 lg:px-0 lg:pr-4 lg:pt-4">
                         <div className="mx-auto max-w-2xl lg:mx-0 lg:max-w-lg">
@@ -210,7 +201,7 @@ export default function Home() {
                         </div>
                         <div className="space-x-2 pt-8">
                           <Link href="/login">
-                            <Button className="justify-center text-balance text-balance rounded-3xl bg-gray-900 text-white hover:bg-gray-800">
+                            <Button className="justify-center text-balance rounded-3xl bg-gray-900 text-white hover:bg-gray-800">
                               Create branded data room
                             </Button>
                           </Link>
@@ -307,7 +298,7 @@ export default function Home() {
                   </div>
                 </div> */}
 
-                <div className="mx-auto w-full max-w-7xl ">
+                <div className="mx-auto w-full max-w-7xl">
                   <h2 className="text-balance py-12 text-4xl">
                     Secure data room with a modern UI
                     <br />
@@ -339,7 +330,7 @@ export default function Home() {
         </main>
         <div className="bg-[#fb7a00]">
           <div className="mx-auto w-full max-w-7xl px-4 py-32 md:px-8">
-            <h2 className="text-balance text-4xl  ">
+            <h2 className="text-balance text-4xl">
               Create secure and modern data room
             </h2>
             <div className="space-x-2 pt-8">

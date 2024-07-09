@@ -29,10 +29,11 @@ export const NotionPage = ({
   brand,
   dataroomId,
   setDocumentData,
+  isPreview,
 }: {
   recordMap: ExtendedRecordMap;
   rootPageId?: string;
-  viewId: string;
+  viewId?: string;
   linkId: string;
   documentId: string;
   versionNumber: number;
@@ -40,6 +41,7 @@ export const NotionPage = ({
   brand?: Partial<Brand> | Partial<DataroomBrand> | null;
   dataroomId?: string;
   setDocumentData?: React.Dispatch<React.SetStateAction<TDocumentData | null>>;
+  isPreview?: boolean;
 }) => {
   const [pageNumber, setPageNumber] = useState<number>(1); // start on first page
   const [maxScrollPercentage, setMaxScrollPercentage] = useState<number>(0);
@@ -74,6 +76,8 @@ export const NotionPage = ({
   }, []);
 
   async function trackPageView(duration: number = 0) {
+    if (isPreview) return;
+
     await fetch("/api/record_view", {
       method: "POST",
       body: JSON.stringify({
@@ -136,6 +140,7 @@ export const NotionPage = ({
           isDataroom={dataroomId ? true : false}
           setDocumentData={setDocumentData}
           type="notion"
+          isPreview={isPreview}
         />
 
         <div>

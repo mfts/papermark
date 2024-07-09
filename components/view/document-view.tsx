@@ -27,13 +27,14 @@ type SheetData = {
 };
 
 export type DEFAULT_DOCUMENT_VIEW_TYPE = {
-  viewId: string;
+  viewId?: string;
   file?: string | null;
   pages?:
     | { file: string; pageNumber: string; embeddedLinks: string[] }[]
     | null;
   sheetData?: SheetData[] | null;
   fileType?: string;
+  isPreview?: boolean;
 };
 
 export default function DocumentView({
@@ -48,6 +49,7 @@ export default function DocumentView({
   showPoweredByBanner,
   showAccountCreationSlide,
   useAdvancedExcelViewer,
+  previewToken,
 }: {
   link: LinkWithDocument;
   userEmail: string | null | undefined;
@@ -63,6 +65,7 @@ export default function DocumentView({
   showPoweredByBanner?: boolean;
   showAccountCreationSlide?: boolean;
   useAdvancedExcelViewer?: boolean;
+  previewToken?: string;
 }) {
   const {
     document,
@@ -107,6 +110,7 @@ export default function DocumentView({
         token: token ?? null,
         verifiedEmail: verifiedEmail ?? null,
         useAdvancedExcelViewer,
+        previewToken,
       }),
     });
 
@@ -117,7 +121,7 @@ export default function DocumentView({
         setVerificationRequested(true);
         setIsLoading(false);
       } else {
-        const { viewId, file, pages, sheetData, fileType } =
+        const { viewId, file, pages, sheetData, fileType, isPreview } =
           fetchData as DEFAULT_DOCUMENT_VIEW_TYPE;
         plausible("documentViewed"); // track the event
         analytics.identify(
@@ -130,7 +134,7 @@ export default function DocumentView({
           viewerId: viewId,
           viewerEmail: data.email ?? verifiedEmail ?? userEmail,
         });
-        setViewData({ viewId, file, pages, sheetData, fileType });
+        setViewData({ viewId, file, pages, sheetData, fileType, isPreview });
         setSubmitted(true);
         setVerificationRequested(false);
         setIsLoading(false);

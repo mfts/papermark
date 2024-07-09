@@ -1,12 +1,14 @@
 import Head from "next/head";
+import Link from "next/link";
 
 import { useState } from "react";
 
+import { Button } from "@/components/ui/button";
 import LoadingDots from "@/components/ui/loading-dots";
 import Grid from "@/components/web/alternatives/alternativesgrid";
+import FeaturesTable from "@/components/web/alternatives/digifytable";
 import Article from "@/components/web/alternatives/digifytext";
 import Feature from "@/components/web/alternatives/feature";
-import FeaturesTable from "@/components/web/alternatives/digifytable";
 import { PlanSelect } from "@/components/web/alternatives/plan";
 import PricingTable from "@/components/web/alternatives/pricingtable";
 import { UsecaseSelect } from "@/components/web/alternatives/usecase";
@@ -14,9 +16,7 @@ import UseCaseTable from "@/components/web/alternatives/usecasetable";
 import CTA from "@/components/web/cta";
 import Footer from "@/components/web/footer";
 import Navbar from "@/components/web/navbar";
-import Testimonials from "@/components/web/testimonials2";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import Testimonials from "@/components/web/testimonials/testimonials2";
 
 const features = [
   "send unlimited documents",
@@ -38,13 +38,12 @@ export default function Home() {
     return selectedFeatures.length > 0;
   };
 
-
-
   return (
     <>
       <Head>
         <title>
-          Top 10 Digify Alternatives in 2024 | Create Secure and Branded Data Room
+          Top 10 Digify Alternatives in 2024 | Create Secure and Branded Data
+          Room
         </title>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
 
@@ -73,7 +72,7 @@ export default function Home() {
         />
       </Head>
       <div className="flex flex-1 flex-col bg-white text-black">
-        <Navbar/>
+        <Navbar />
         <main className="flex w-full flex-col items-center">
           <section className="w-full bg-white pt-24 lg:pt-24">
             <div className="w-full px-4 lg:px-2">
@@ -173,32 +172,32 @@ export default function Home() {
             </div> */}
 
             <Testimonials />
-             <div className="bg-[#fb7a00]">
-          <div className="mx-auto w-full max-w-7xl px-4 py-32 md:px-8">
-            <h2 className="text-balance text-4xl  ">
-              Sharing with Papermark is secure, fast, and free.
-            </h2>
-            <div className="space-x-2 pt-8">
-              <Link
-                href="https://cal.com/marcseitz/papermark"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Button
-                  variant="outline"
-                  className="rounded-3xl border-black bg-transparent text-base"
-                >
-                  Book a demo
-                </Button>
-              </Link>
-              <Link href="/login">
-                <Button className="rounded-3xl text-base">
-                  Start for free
-                </Button>
-              </Link>
+            <div className="bg-[#fb7a00]">
+              <div className="mx-auto w-full max-w-7xl px-4 py-32 md:px-8">
+                <h2 className="text-balance text-4xl">
+                  Sharing with Papermark is secure, fast, and free.
+                </h2>
+                <div className="space-x-2 pt-8">
+                  <Link
+                    href="https://cal.com/marcseitz/papermark"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Button
+                      variant="outline"
+                      className="rounded-3xl border-black bg-transparent text-base"
+                    >
+                      Book a demo
+                    </Button>
+                  </Link>
+                  <Link href="/login">
+                    <Button className="rounded-3xl text-base">
+                      Start for free
+                    </Button>
+                  </Link>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
             <CTA />
           </section>
         </main>

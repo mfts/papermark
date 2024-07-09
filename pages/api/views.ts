@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import { waitUntil } from "@vercel/functions";
+import { getServerSession } from "next-auth/next";
 
 import sendNotification from "@/lib/api/notification-helper";
 import { sendVerificationEmail } from "@/lib/emails/send-email-verification";
@@ -8,7 +9,10 @@ import { getFile } from "@/lib/files/get-file";
 import { newId } from "@/lib/id-helper";
 import prisma from "@/lib/prisma";
 import { parseSheet } from "@/lib/sheet";
+import { CustomUser } from "@/lib/types";
 import { checkPassword, decryptEncrpytedPassword, log } from "@/lib/utils";
+
+import { authOptions } from "./auth/[...nextauth]";
 
 export const config = {
   // in order to enable `waitUntil` function
@@ -58,6 +62,11 @@ export default async function handle(
   // INFO: for using the advanced excel viewer
   const { useAdvancedExcelViewer } = data as {
     useAdvancedExcelViewer: boolean;
+  };
+
+  // previewToken is used to determine if the view is a preview and therefore should not be recorded
+  const { previewToken } = data as {
+    previewToken?: string;
   };
 
   // Fetch the link to verify the settings
@@ -180,9 +189,11 @@ export default async function handle(
     });
 
     // set the default verification url
-    let verificationUrl: string = `${process.env.NEXT_PUBLIC_BASE_URL}/view/${linkId}/?token=${token}&email=${encodeURIComponent(email)}`;
+    let verificationUrl: string =
+      `${process.env.NEXT_PUBLIC_BASE_URL}/view/${linkId}/?token=${token}&email=${encodeURIComponent(email)}` +
+      (previewToken ? `&previewToken=${previewToken}` : "");
 
-    if (link.domainSlug && link.slug) {
+    if (link.domainSlug && link.slug && !previewToken) {
       // if custom domain is enabled, use the custom domain
       verificationUrl = `https://${link.domainSlug}/${link.slug}/?token=${token}&email=${encodeURIComponent(email)}`;
     }
@@ -228,28 +239,71 @@ export default async function handle(
     isEmailVerified = true;
   }
 
-  try {
-    console.time("create-view");
-    const newView = await prisma.view.create({
-      data: {
-        linkId: linkId,
-        viewerEmail: email,
-        viewerName: name,
-        documentId: documentId,
-        verified: isEmailVerified,
-        ...(link.enableAgreement &&
-          link.agreementId &&
-          hasConfirmedAgreement && {
-            agreementResponse: {
-              create: {
-                agreementId: link.agreementId,
-              },
-            },
-          }),
+  // Check if the view is a preview
+  let isPreview: boolean = false;
+  if (previewToken) {
+    const session = await getServerSession(req, res, authOptions);
+    if (!session) {
+      return res
+        .status(401)
+        .json({ message: "You need to be logged in to preview the link." });
+    }
+    const verification = await prisma.verificationToken.findUnique({
+      where: {
+        token: previewToken,
+        identifier: `preview:${linkId}:${(session.user as CustomUser).id}`,
       },
-      select: { id: true },
     });
-    console.timeEnd("create-view");
+
+    if (!verification) {
+      res.status(401).json({
+        message: "Unauthorized access.",
+      });
+      return;
+    }
+
+    // Check the token's expiration date
+    if (Date.now() > verification.expires.getTime()) {
+      res.status(401).json({ message: "Preview access expired" });
+      return;
+    }
+
+    // TODO: delete previewToken
+    // delete the token after verification
+    // await prisma.verificationToken.delete({
+    //   where: {
+    //     token: previewToken,
+    //   },
+    // });
+
+    isPreview = true;
+  }
+
+  try {
+    let newView: { id: string } | null = null;
+    if (!isPreview) {
+      console.time("create-view");
+      newView = await prisma.view.create({
+        data: {
+          linkId: linkId,
+          viewerEmail: email,
+          viewerName: name,
+          documentId: documentId,
+          verified: isEmailVerified,
+          ...(link.enableAgreement &&
+            link.agreementId &&
+            hasConfirmedAgreement && {
+              agreementResponse: {
+                create: {
+                  agreementId: link.agreementId,
+                },
+              },
+            }),
+        },
+        select: { id: true },
+      });
+      console.timeEnd("create-view");
+    }
 
     // if document version has pages, then return pages
     // otherwise, return file from document version
@@ -317,7 +371,7 @@ export default async function handle(
       console.timeEnd("get-file");
     }
 
-    if (link.enableNotification) {
+    if (link.enableNotification && newView) {
       console.time("sendemail");
       waitUntil(sendNotification({ viewId: newView.id }));
       console.timeEnd("sendemail");
@@ -325,7 +379,8 @@ export default async function handle(
 
     const returnObject = {
       message: "View recorded",
-      viewId: newView.id,
+      viewId: !isPreview && newView ? newView.id : undefined,
+      isPreview: isPreview ? true : undefined,
       file:
         (documentVersion && documentVersion.type === "pdf") ||
         (documentVersion && useAdvancedExcelViewer)

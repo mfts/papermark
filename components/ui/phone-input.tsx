@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { E164Number } from "libphonenumber-js/types.cjs";
+import { E164Number } from "libphonenumber-js";
 import { CheckIcon, ChevronsUpDown } from "lucide-react";
 import * as RPNInput from "react-phone-number-input";
 import flags from "react-phone-number-input/flags";

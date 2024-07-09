@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 
-import React from "react";
+import React, { useState } from "react";
 
 import { DataroomBrand } from "@prisma/client";
 import { ArrowUpRight, Download } from "lucide-react";
@@ -36,6 +36,7 @@ export default function DataroomNav({
   isDataroom,
   setDocumentData,
   dataroom,
+  isPreview,
 }: {
   pageNumber?: number;
   numPages?: number;
@@ -49,27 +50,47 @@ export default function DataroomNav({
   isDataroom?: boolean;
   setDocumentData?: React.Dispatch<React.SetStateAction<TDocumentData | null>>;
   dataroom?: any;
+  isPreview?: boolean;
 }) {
-  const downloadFile = async () => {
-    if (!allowDownload || type === "notion") return;
+  const [loading, setLoading] = useState<boolean>(false);
+
+  const downloadDataroom = async () => {
+    if (!allowDownload || type === "notion" || isPreview) return;
+    setLoading(true);
     try {
-      const response = await fetch(`/api/links/download`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      toast.promise(
+        fetch(`/api/links/download/bulk`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ linkId, viewId }),
+        }),
+        {
+          loading: "Downloading dataroom...",
+          success: async (response) => {
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.setAttribute("download", "files.zip");
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            return "Dataroom downloaded successfully.";
+          },
+          error: (error) => {
+            console.log(error);
+            return (
+              error.message || "An error occurred while downloading dataroom."
+            );
+          },
         },
-        body: JSON.stringify({ linkId, viewId }),
-      });
-
-      if (!response.ok) {
-        toast.error("Error downloading file");
-        return;
-      }
-
-      const { downloadUrl } = await response.json();
-      window.open(downloadUrl, "_blank");
+      );
     } catch (error) {
-      console.error("Error downloading file:", error);
+      console.error(error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -163,10 +184,11 @@ export default function DataroomNav({
             ) : null}
             {allowDownload ? (
               <Button
-                onClick={downloadFile}
+                onClick={downloadDataroom}
                 className="m-1 bg-gray-900 text-white hover:bg-gray-900/80"
                 size="icon"
-                title="Download document"
+                title="Download Dataroom"
+                loading={loading}
               >
                 <Download className="h-5 w-5" />
               </Button>

@@ -14,10 +14,10 @@ import ProductHuntIcon from "@/components/shared/icons/producthunt";
 import TwitterIcon from "@/components/shared/icons/twitter";
 import { Button } from "@/components/ui/button";
 import Footer from "@/components/web/footer";
+import ImageSwitcher from "@/components/web/landing-page/imageswitcher";
 import { LogoCloud } from "@/components/web/landing-page/logo-cloud";
 import Navbar from "@/components/web/navbar";
-import Testimonials from "@/components/web/testimonials2";
-import ImageSwitcher from "@/components/web/landing-page/imageswitcher";
+import Testimonials from "@/components/web/testimonials/testimonials2";
 
 const features = [
   {
@@ -135,7 +135,7 @@ export default function Home() {
               <p className="font-380 text-base leading-none tracking-tight text-black/90 lg:text-base xl:text-base 2xl:-ml-0.5 2xl:text-lg">
                 Real Estate
               </p>
-              <p className="font-380 -ml-0.5 text-xl leading-tight tracking-tighter text-black/90 md:-ml-0.5 md:text-2xl md:leading-none lg:-ml-0.5 lg:text-4xl xl:-ml-0.5 xl:text-4xl ">
+              <p className="font-380 -ml-0.5 text-xl leading-tight tracking-tighter text-black/90 md:-ml-0.5 md:text-2xl md:leading-none lg:-ml-0.5 lg:text-4xl xl:-ml-0.5 xl:text-4xl">
                 Securely share property documents with clients
               </p>
             </div>
@@ -143,7 +143,7 @@ export default function Home() {
               <p className="font-380 text-base leading-none tracking-tight text-gray-50 lg:text-base xl:text-base 2xl:-ml-0.5 2xl:text-lg">
                 Startups
               </p>
-              <p className="font-380 -ml-0.5 text-xl leading-tight tracking-tighter text-gray-50 md:-ml-0.5 md:text-2xl md:leading-none lg:-ml-0.5 lg:text-4xl xl:-ml-0.5 xl:text-4xl ">
+              <p className="font-380 -ml-0.5 text-xl leading-tight tracking-tighter text-gray-50 md:-ml-0.5 md:text-2xl md:leading-none lg:-ml-0.5 lg:text-4xl xl:-ml-0.5 xl:text-4xl">
                 Take ownership of your fundraising process
               </p>
             </div>
@@ -151,7 +151,7 @@ export default function Home() {
               <p className="font-380 text-base leading-none tracking-tight text-black/90 lg:text-base xl:text-base 2xl:-ml-0.5 2xl:text-lg">
                 Growth
               </p>
-              <p className="font-380 -ml-0.5 text-xl leading-tight tracking-tighter text-black/90 md:-ml-0.5 md:text-2xl md:leading-none lg:-ml-0.5 lg:text-4xl xl:-ml-0.5 xl:text-4xl ">
+              <p className="font-380 -ml-0.5 text-xl leading-tight tracking-tighter text-black/90 md:-ml-0.5 md:text-2xl md:leading-none lg:-ml-0.5 lg:text-4xl xl:-ml-0.5 xl:text-4xl">
                 Capture marketing-qualified leads on social media
               </p>
             </div>
@@ -161,7 +161,7 @@ export default function Home() {
               <p className="font-380 text-base leading-none tracking-tight text-gray-50 lg:text-base xl:text-base 2xl:-ml-0.5 2xl:text-lg">
                 Sales
               </p>
-              <p className="font-380 -ml-0.5 text-xl leading-tight tracking-tighter text-gray-50 md:-ml-0.5 md:text-2xl md:leading-none lg:-ml-0.5 lg:text-4xl xl:-ml-0.5 xl:text-4xl ">
+              <p className="font-380 -ml-0.5 text-xl leading-tight tracking-tighter text-gray-50 md:-ml-0.5 md:text-2xl md:leading-none lg:-ml-0.5 lg:text-4xl xl:-ml-0.5 xl:text-4xl">
                 Spend time on only engaged prospects
               </p>
             </div>
@@ -177,7 +177,7 @@ export default function Home() {
               <p className="font-380 text-base leading-none tracking-tight text-gray-50 lg:text-base xl:text-base 2xl:-ml-0.5 2xl:text-lg">
                 Non-Profits
               </p>
-              <p className="font-380 -ml-0.5 text-xl leading-tight tracking-tighter text-gray-50 md:-ml-0.5 md:text-2xl md:leading-none lg:-ml-0.5 lg:text-4xl xl:-ml-0.5 xl:text-4xl ">
+              <p className="font-380 -ml-0.5 text-xl leading-tight tracking-tighter text-gray-50 md:-ml-0.5 md:text-2xl md:leading-none lg:-ml-0.5 lg:text-4xl xl:-ml-0.5 xl:text-4xl">
                 Securely share and track grant applications
               </p>
             </div>
@@ -195,7 +195,7 @@ export default function Home() {
             </span>
           </h2>
           <div className="">
-            <dl className="mx-auto grid max-w-2xl grid-cols-1 gap-x-6 gap-y-10 leading-7  sm:grid-cols-2 lg:mx-0 lg:max-w-none lg:grid-cols-3 lg:gap-x-8 lg:gap-y-16">
+            <dl className="mx-auto grid max-w-2xl grid-cols-1 gap-x-6 gap-y-10 leading-7 sm:grid-cols-2 lg:mx-0 lg:max-w-none lg:grid-cols-3 lg:gap-x-8 lg:gap-y-16">
               {features.map((feature) => (
                 <div
                   key={feature.name}
@@ -223,7 +223,7 @@ export default function Home() {
 
         <div className="bg-[#fb7a00]">
           <div className="mx-auto w-full max-w-7xl px-4 py-32 md:px-8">
-            <h2 className="text-balance text-4xl  ">
+            <h2 className="text-balance text-4xl">
               Sharing with Papermark is secure, fast, and free.
             </h2>
             <div className="space-x-2 pt-8">

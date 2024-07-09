@@ -1,6 +1,7 @@
 import {
   BadgeCheckIcon,
   BadgeInfoIcon,
+  DownloadCloudIcon,
   MailOpenIcon,
   SendIcon,
 } from "lucide-react";
@@ -179,6 +180,34 @@ export default function DataroomViewersTable({
                                 </TableCell>
                                 <TableCell className="table-cell"></TableCell>
                               </TableRow>
+
+                              {view.downloadedAt ? (
+                                <TableRow key={view.id + 1}>
+                                  <TableCell>
+                                    <div className="flex items-center gap-x-4 overflow-visible">
+                                      <DownloadCloudIcon className="h-5 w-5 text-cyan-500 hover:text-cyan-600" />
+                                      Downloaded {viewer.dataroomName} dataroom
+                                    </div>
+                                  </TableCell>
+
+                                  <TableCell>
+                                    <div>
+                                      <time
+                                        className="truncate text-sm text-muted-foreground"
+                                        dateTime={new Date(
+                                          view.downloadedAt,
+                                        ).toLocaleString()}
+                                        title={new Date(
+                                          view.downloadedAt,
+                                        ).toLocaleString()}
+                                      >
+                                        {timeAgo(view.downloadedAt)}
+                                      </time>
+                                    </div>
+                                  </TableCell>
+                                  <TableCell className="table-cell"></TableCell>
+                                </TableRow>
+                              ) : null}
 
                               <DataroomVisitHistory
                                 viewId={view.id}
