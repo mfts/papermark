@@ -171,7 +171,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     }
 
     // Send the images as a response
-    res.status(200).json({ documentPageId: documentPage!.id });
+    res.status(200).json({ documentPageId: documentPage.id });
     return;
   } catch (error) {
     log({
