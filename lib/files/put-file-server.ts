@@ -67,8 +67,8 @@ const putFileInS3Server = async ({
     docId = newId("doc");
   }
 
-  if (file.type !== "image/png") {
-    throw new Error("Only PNG files are supported");
+  if (file.type !== "image/png" && file.type !== "image/jpeg") {
+    throw new Error("Only PNG or JPEG files are supported");
   }
 
   const client = getS3Client();

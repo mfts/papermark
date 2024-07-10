@@ -56,26 +56,16 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     var doc = new mupdf.PDFDocument(pdfData);
     console.log("Original document size:", pdfData.byteLength);
 
-    // compress the pdf
-    var pdfDoc = doc.saveToBuffer("compress=true,linearize=true,garbage=true");
-    console.log("Compressed document size:", pdfDoc.getLength());
-
-    var newDoc = new mupdf.PDFDocument(pdfDoc);
-
-    // Scale the document to 300 DPI
-    const doc_to_screen = mupdf.Matrix.scale(216 / 72, 216 / 72); // scale 3x // to 216 DPI
-
-    let page = newDoc.loadPage(pageNumber - 1); // 0-based page index
+    const page = doc.loadPage(pageNumber - 1); // 0-based page index
+    // get the bounds of the page for orientation and scaling
+    const bounds = page.getBounds();
+    const [ulx, uly, lrx, lry] = bounds;
+    const widthInPoints = Math.abs(lrx - ulx);
 
     if (pageNumber === 1) {
       // get the orientation of the document and update document version
-      const bounds = page.getBounds();
-      const [ulx, uly, lrx, lry] = bounds;
-
-      const width = Math.abs(lrx - ulx);
-      const height = Math.abs(lry - uly);
-
-      const isVertical = height > width;
+      const heightInPoints = Math.abs(lry - uly);
+      const isVertical = heightInPoints > widthInPoints;
 
       await prisma.documentVersion.update({
         where: { id: documentVersionId },
@@ -83,21 +73,52 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
       });
     }
 
+    // Scale the document to 144 DPI
+    const scaleFactor = widthInPoints >= 1600 ? 2 : 3; // 2x for width >= 1600, 3x for width < 1600
+    const doc_to_screen = mupdf.Matrix.scale(scaleFactor, scaleFactor);
+
+    console.log("Scale factor:", scaleFactor);
+
     // get links
     const links = page.getLinks();
     const embeddedLinks = links.map((link: any) => link.getURI());
 
-    let pixmap = page.toPixmap(
+    console.time("toPixmap");
+    let scaledPixmap = page.toPixmap(
       // [3, 0, 0, 3, 0, 0], // scale 3x // to 300 DPI
       doc_to_screen,
       mupdf.ColorSpace.DeviceRGB,
       false,
       true,
     );
+    console.timeEnd("toPixmap");
 
-    const pngBuffer = pixmap.asPNG(); // as PNG
+    console.time("compare");
+    console.time("asPNG");
+    const pngBuffer = scaledPixmap.asPNG(); // as PNG
+    console.timeEnd("asPNG");
+    console.time("asJPEG");
+    const jpegBuffer = scaledPixmap.asJPEG(80, false); // as JPEG
+    console.timeEnd("asJPEG");
 
-    let buffer = Buffer.from(pngBuffer);
+    const pngSize = pngBuffer.byteLength;
+    const jpegSize = jpegBuffer.byteLength;
+
+    let chosenBuffer;
+    let chosenFormat;
+    if (pngSize < jpegSize) {
+      chosenBuffer = pngBuffer;
+      chosenFormat = "png";
+    } else {
+      chosenBuffer = jpegBuffer;
+      chosenFormat = "jpeg";
+    }
+
+    console.log("Chosen format:", chosenFormat);
+
+    console.timeEnd("compare");
+
+    let buffer = Buffer.from(chosenBuffer);
 
     // get docId from url with starts with "doc_" with regex
     const match = url.match(/(doc_[^\/]+)\//);
@@ -105,8 +126,8 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
 
     const { type, data } = await putFileServer({
       file: {
-        name: `page-${pageNumber}.png`,
-        type: "image/png",
+        name: `page-${pageNumber}.${chosenFormat}`,
+        type: `image/${chosenFormat}`,
         buffer: buffer,
       },
       teamId: teamId,
@@ -114,7 +135,8 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     });
 
     buffer = Buffer.alloc(0); // free memory
-    pixmap.destroy(); // free memory
+    chosenBuffer = Buffer.alloc(0); // free memory
+    scaledPixmap.destroy(); // free memory
     page.destroy(); // free memory
 
     if (!data || !type) {
