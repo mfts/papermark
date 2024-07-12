@@ -24,7 +24,7 @@ const tusServer = new Server({
   // `path` needs to match the route declared by the next file router
   path: "/api/file/tus",
   datastore: new S3Store({
-    partSize: 8 * 1024 * 1024, // each uploaded part will have ~8MiB,
+    partSize: 4.5 * 1024 * 1024, // each uploaded part will have ~8MiB,
     s3ClientConfig: {
       bucket: process.env.NEXT_PRIVATE_UPLOAD_BUCKET as string,
       region: process.env.NEXT_PRIVATE_UPLOAD_REGION as string,
