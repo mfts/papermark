@@ -1,16 +1,12 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
-import { client } from "@/trigger";
-import { DocumentStorageType } from "@prisma/client";
 import slugify from "@sindresorhus/slugify";
 import { S3Store } from "@tus/s3-store";
-import { Server, Upload } from "@tus/server";
+import { Server } from "@tus/server";
 import { getServerSession } from "next-auth/next";
-import { IncomingMessage } from "node:http";
 import path from "node:path";
 
 import { newId } from "@/lib/id-helper";
-import prisma from "@/lib/prisma";
 
 import { authOptions } from "../../auth/[...nextauth]";
 
@@ -58,6 +54,26 @@ const tusServer = new Server({
 });
 
 export default function handler(req: NextApiRequest, res: NextApiResponse) {
+  // Set CORS headers for all responses
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET,POST,PUT,HEAD,DELETE,OPTIONS",
+  );
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "Content-Type,Upload-Length,Upload-Offset,Upload-Metadata,Upload-Defer-Length,Upload-Concat",
+  );
+  res.setHeader(
+    "Access-Control-Expose-Headers",
+    "Upload-Offset,Upload-Length,Location",
+  );
+
+  if (req.method === "OPTIONS") {
+    // Handle preflight requests
+    res.status(204).end();
+    return;
+  }
+
   // Get the session
   const session = getServerSession(req, res, authOptions);
   if (!session) {
