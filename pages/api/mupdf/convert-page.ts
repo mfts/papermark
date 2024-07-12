@@ -61,10 +61,10 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     const bounds = page.getBounds();
     const [ulx, uly, lrx, lry] = bounds;
     const widthInPoints = Math.abs(lrx - ulx);
+    const heightInPoints = Math.abs(lry - uly);
 
     if (pageNumber === 1) {
       // get the orientation of the document and update document version
-      const heightInPoints = Math.abs(lry - uly);
       const isVertical = heightInPoints > widthInPoints;
 
       await prisma.documentVersion.update({
@@ -81,7 +81,17 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
 
     // get links
     const links = page.getLinks();
-    const embeddedLinks = links.map((link: any) => link.getURI());
+    const embeddedLinks = links.map((link) => {
+      return { href: link.getURI(), coords: link.getBounds().join(",") };
+    });
+
+    const metadata = {
+      originalWidth: widthInPoints,
+      originalHeight: heightInPoints,
+      width: widthInPoints * scaleFactor,
+      height: heightInPoints * scaleFactor,
+      scaleFactor: scaleFactor,
+    };
 
     console.time("toPixmap");
     let scaledPixmap = page.toPixmap(
@@ -163,7 +173,8 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
           pageNumber: pageNumber,
           file: data,
           storageType: type,
-          embeddedLinks: embeddedLinks,
+          pageLinks: embeddedLinks,
+          metadata: metadata,
         },
       });
     } else {

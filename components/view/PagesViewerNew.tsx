@@ -88,7 +88,13 @@ export default function PagesViewer({
   viewerEmail,
   isPreview,
 }: {
-  pages: { file: string; pageNumber: string; embeddedLinks: string[] }[];
+  pages: {
+    file: string;
+    pageNumber: string;
+    embeddedLinks: string[];
+    pageLinks: { href: string; coords: string }[];
+    metadata: { width: number; height: number; scaleFactor: number };
+  }[];
   linkId: string;
   documentId: string;
   viewId?: string;
@@ -160,6 +166,26 @@ export default function PagesViewer({
   const pinchRefs = useRef<(ReactZoomPanPinchContentRef | null)[]>([]);
 
   const { isMobile } = useMediaQuery();
+
+  const scaleCoordinates = (coords: string, scaleFactor: number) => {
+    return coords
+      .split(",")
+      .map((coord) => parseFloat(coord) * scaleFactor)
+      .join(",");
+  };
+
+  const getScaleFactor = ({
+    naturalHeight,
+    scaleFactor,
+  }: {
+    naturalHeight: number;
+    scaleFactor: number;
+  }) => {
+    const containerHeight = containerRef.current
+      ? containerRef.current.clientHeight
+      : window.innerHeight - 64;
+    return (scaleFactor * containerHeight) / naturalHeight;
+  };
 
   // Update the previous page number after the effect hook has run
   useEffect(() => {
@@ -682,15 +708,20 @@ export default function PagesViewer({
                         style={{ height: "calc(100dvh - 64px)" }}
                         className={cn(
                           "relative w-full",
+                          isVertical && "flex justify-center",
                           pageNumber - 1 === index
-                            ? "block"
+                            ? "flex"
                             : !isVertical
                               ? "hidden"
-                              : "block",
+                              : "flex",
                         )}
                       >
                         <img
-                          className={cn("h-full w-full object-contain")}
+                          className={cn(
+                            "!pointer-events-auto h-full object-contain",
+                            !isVertical && "w-full",
+                          )}
+                          useMap={`#page-map-${index + 1}`}
                           src={
                             loadedImages[index]
                               ? page.file
@@ -698,6 +729,26 @@ export default function PagesViewer({
                           }
                           alt={`Page ${index + 1}`}
                         />
+                        {page.pageLinks ? (
+                          <map name={`page-map-${index + 1}`}>
+                            {page.pageLinks.map((link, index) => (
+                              <area
+                                key={index}
+                                shape="rect"
+                                coords={scaleCoordinates(
+                                  link.coords,
+                                  getScaleFactor({
+                                    naturalHeight: page.metadata.height,
+                                    scaleFactor: page.metadata.scaleFactor,
+                                  }),
+                                )}
+                                href={link.href}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              />
+                            ))}
+                          </map>
+                        ) : null}
                       </div>
                     </TransformComponent>
                   </TransformWrapper>

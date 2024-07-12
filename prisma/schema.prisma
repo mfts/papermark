@@ -177,6 +177,8 @@ model DocumentPage {
   versionId     String
   pageNumber    Int // e.g., 1, 2, 3 for 
   embeddedLinks String[]
+  pageLinks     Json? // This will store the page links data: [{href: "https://example.com", coords: "0,0,100,100"}]
+  metadata      Json? // This will store the page metadata: {originalWidth: 100, origianlHeight: 100, scaledWidth: 50, scaledHeight: 50, scaleFactor: 2}
   file          String // This should be a reference to where the file / page is stored (S3, Google Cloud Storage, etc.)
   storageType   DocumentStorageType @default(VERCEL_BLOB)
   createdAt     DateTime            @default(now())
