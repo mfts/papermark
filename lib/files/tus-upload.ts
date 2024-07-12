@@ -52,7 +52,7 @@ export function resumableUpload({
           ownerId: ownerId,
           relativePath: relativePath,
         },
-        chunkSize: 6 * 1024 * 1024,
+        chunkSize: 4 * 1024 * 1024,
         onError: (error) => {
           console.error("Failed because: " + error);
           reject(error);
