@@ -321,6 +321,8 @@ export default async function handle(
           storageType: true,
           pageNumber: true,
           embeddedLinks: true,
+          pageLinks: true,
+          metadata: true,
         },
       });
 
