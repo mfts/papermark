@@ -131,7 +131,7 @@ export default function PagesViewer({
     enableQuestion && feedback ? numPages + 1 : numPages;
 
   const numPagesWithAccountCreation = showStatsSlideWithAccountCreation
-    ? numPagesWithFeedback
+    ? numPagesWithFeedback + 1
     : numPagesWithFeedback;
 
   const pageQuery = router.query.p ? Number(router.query.p) : 1;
@@ -164,6 +164,11 @@ export default function PagesViewer({
   const hasTrackedDownRef = useRef<boolean>(false);
   const hasTrackedUpRef = useRef<boolean>(false);
   const pinchRefs = useRef<(ReactZoomPanPinchContentRef | null)[]>([]);
+  const imageRefs = useRef<(HTMLImageElement | null)[]>([]);
+
+  const [imageDimensions, setImageDimensions] = useState<
+    Record<number, { width: number; height: number }>
+  >({});
 
   const { isMobile } = useMediaQuery();
 
@@ -181,11 +186,35 @@ export default function PagesViewer({
     naturalHeight: number;
     scaleFactor: number;
   }) => {
-    const containerHeight = containerRef.current
-      ? containerRef.current.clientHeight
+    const containerHeight = imageDimensions[pageNumber - 1]
+      ? imageDimensions[pageNumber - 1]!.height
       : window.innerHeight - 64;
+
     return (scaleFactor * containerHeight) / naturalHeight;
   };
+
+  useEffect(() => {
+    const updateImageDimensions = () => {
+      const newDimensions: Record<number, { width: number; height: number }> =
+        {};
+      imageRefs.current.forEach((img, index) => {
+        if (img) {
+          newDimensions[index] = {
+            width: img.clientWidth,
+            height: img.clientHeight,
+          };
+        }
+      });
+      setImageDimensions(newDimensions);
+    };
+
+    updateImageDimensions();
+    window.addEventListener("resize", updateImageDimensions);
+
+    return () => {
+      window.removeEventListener("resize", updateImageDimensions);
+    };
+  }, [loadedImages, pageNumber]);
 
   // Update the previous page number after the effect hook has run
   useEffect(() => {
@@ -695,32 +724,52 @@ export default function PagesViewer({
                   >
                     <TransformComponent
                       wrapperClass={cn(
+                        !isVertical && "!h-full",
                         isVertical
                           ? "!overflow-x-clip !overflow-y-visible"
                           : isMobile
                             ? "!overflow-x-clip !overflow-y-clip"
                             : "!overflow-x-visible !overflow-y-clip",
                       )}
-                      contentClass={cn(isVertical && "!w-dvw")}
+                      contentClass={cn(
+                        !isVertical && "!h-full",
+                        isVertical && "!w-dvw !h-[calc(100dvh-64px)]",
+                      )}
                     >
                       <div
                         key={index}
-                        style={{ height: "calc(100dvh - 64px)" }}
                         className={cn(
-                          "relative w-full",
+                          "relative my-auto w-full",
+                          pageNumber - 1 === index && !isVertical
+                            ? "block"
+                            : "hidden",
                           isVertical && "flex justify-center",
-                          pageNumber - 1 === index
-                            ? "flex"
-                            : !isVertical
-                              ? "hidden"
-                              : "flex",
                         )}
                       >
                         <img
                           className={cn(
-                            "!pointer-events-auto h-full object-contain",
-                            !isVertical && "w-full",
+                            "!pointer-events-auto object-contain",
+                            isVertical && "h-auto",
                           )}
+                          style={{
+                            maxHeight: "calc(100dvh - 64px)",
+                          }}
+                          // ref={(ref) => {
+                          //   imageRefs.current[index] = ref;
+                          // }}
+                          ref={(ref) => {
+                            imageRefs.current[index] = ref;
+                            if (ref) {
+                              ref.onload = () =>
+                                setImageDimensions((prev) => ({
+                                  ...prev,
+                                  [index]: {
+                                    width: ref.clientWidth,
+                                    height: ref.clientHeight,
+                                  },
+                                }));
+                            }
+                          }}
                           useMap={`#page-map-${index + 1}`}
                           src={
                             loadedImages[index]
@@ -772,8 +821,9 @@ export default function PagesViewer({
               </div>
             ) : null}
 
-            {/* {showStatsSlideWithAccountCreation &&
-            (isVertical || pageNumber === numPagesWithAccountCreation) ? (
+            {showStatsSlideWithAccountCreation &&
+            !isVertical &&
+            pageNumber === numPagesWithAccountCreation ? (
               <div
                 className={cn("relative block h-dvh w-full")}
                 style={{ height: "calc(100dvh - 64px)" }}
@@ -786,7 +836,7 @@ export default function PagesViewer({
                   setAccountCreated={setAccountCreated}
                 />
               </div>
-            ) : null} */}
+            ) : null}
           </div>
         </div>
 
