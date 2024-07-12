@@ -51,7 +51,13 @@ export type DEFAULT_DOCUMENT_VIEW_TYPE = {
   dataroomViewId?: string;
   file?: string | null;
   pages?:
-    | { file: string; pageNumber: string; embeddedLinks: string[] }[]
+    | {
+        file: string;
+        pageNumber: string;
+        embeddedLinks: string[];
+        pageLinks: { href: string; coords: string }[];
+        metadata: { width: number; height: number; scaleFactor: number };
+      }[]
     | null;
   sheetData?: SheetData[] | null;
   notionData?: { recordMap: ExtendedRecordMap | null };
