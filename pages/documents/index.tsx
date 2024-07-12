@@ -2,15 +2,11 @@ import { useTeam } from "@/context/team-context";
 import { FileIcon, FolderIcon, FolderPlusIcon, PlusIcon } from "lucide-react";
 
 import { AddDocumentModal } from "@/components/documents/add-document-modal";
-import DocumentCard from "@/components/documents/document-card";
-import { EmptyDocuments } from "@/components/documents/empty-document";
-import FolderCard from "@/components/documents/folder-card";
+import { DocumentsList } from "@/components/documents/documents-list";
 import { AddFolderModal } from "@/components/folders/add-folder-modal";
 import AppLayout from "@/components/layouts/app";
-import Folder from "@/components/shared/icons/folder";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Skeleton } from "@/components/ui/skeleton";
 
 import useDocuments, { useRootFolders } from "@/lib/swr/use-documents";
 
@@ -21,7 +17,7 @@ export default function Documents() {
 
   return (
     <AppLayout>
-      <main className="p-4 sm:m-4 sm:px-4 sm:py-4">
+      <main className="p-4 sm:mx-4 sm:mt-4">
         <section className="mb-4 flex items-center justify-between md:mb-8 lg:mb-12">
           <div className="space-y-1">
             <h2 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
@@ -86,73 +82,11 @@ export default function Documents() {
 
         <Separator className="mb-5 bg-gray-200 dark:bg-gray-800" />
 
-        <div className="space-y-4">
-          {/* Folders list */}
-          <ul role="list" className="space-y-4">
-            {folders
-              ? folders.map((folder) => {
-                  return (
-                    <FolderCard
-                      key={folder.id}
-                      folder={folder}
-                      teamInfo={teamInfo}
-                    />
-                  );
-                })
-              : Array.from({ length: 3 }).map((_, i) => (
-                  <li
-                    key={i}
-                    className="relative flex w-full items-center space-x-3 rounded-lg border px-4 py-5 sm:px-6 lg:px-6"
-                  >
-                    <Skeleton key={i} className="h-9 w-9" />
-                    <div>
-                      <Skeleton key={i} className="h-4 w-32" />
-                      <Skeleton key={i + 1} className="mt-2 h-3 w-12" />
-                    </div>
-                    <Skeleton
-                      key={i + 1}
-                      className="absolute right-5 top-[50%] h-5 w-20 -translate-y-[50%] transform"
-                    />
-                  </li>
-                ))}
-          </ul>
-
-          {/* Documents list */}
-          <ul role="list" className="space-y-4">
-            {documents
-              ? documents.map((document) => {
-                  return (
-                    <DocumentCard
-                      key={document.id}
-                      document={document}
-                      teamInfo={teamInfo}
-                    />
-                  );
-                })
-              : Array.from({ length: 3 }).map((_, i) => (
-                  <li
-                    key={i}
-                    className="relative flex w-full items-center space-x-3 rounded-lg border px-4 py-5 sm:px-6 lg:px-6"
-                  >
-                    <Skeleton key={i} className="h-9 w-9" />
-                    <div>
-                      <Skeleton key={i} className="h-4 w-32" />
-                      <Skeleton key={i + 1} className="mt-2 h-3 w-12" />
-                    </div>
-                    <Skeleton
-                      key={i + 1}
-                      className="absolute right-5 top-[50%] h-5 w-20 -translate-y-[50%] transform"
-                    />
-                  </li>
-                ))}
-          </ul>
-
-          {documents && documents.length === 0 && (
-            <div className="flex items-center justify-center">
-              <EmptyDocuments />
-            </div>
-          )}
-        </div>
+        <DocumentsList
+          documents={documents}
+          folders={folders}
+          teamInfo={teamInfo}
+        />
       </main>
     </AppLayout>
   );
