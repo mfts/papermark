@@ -93,7 +93,10 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
             metaUrl: `https://www.papermark.io/view/${linkId}`,
           },
           showPoweredByBanner: teamPlan === "free",
-          showAccountCreationSlide: teamPlan === "free" || teamPlan === "pro",
+          showAccountCreationSlide:
+            teamPlan === "free" ||
+            teamPlan === "pro" ||
+            teamPlan.includes("drtrial"),
           useAdvancedExcelViewer:
             teamId === "clwt1qwt00000qz39aqra71w6" ||
             teamId === "clup33by90000oewh4rfvp2eg",

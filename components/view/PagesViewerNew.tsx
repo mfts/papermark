@@ -131,7 +131,7 @@ export default function PagesViewer({
     enableQuestion && feedback ? numPages + 1 : numPages;
 
   const numPagesWithAccountCreation = showStatsSlideWithAccountCreation
-    ? numPagesWithFeedback
+    ? numPagesWithFeedback + 1
     : numPagesWithFeedback;
 
   const pageQuery = router.query.p ? Number(router.query.p) : 1;
