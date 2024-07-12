@@ -43,8 +43,9 @@ const tusServer = new Server({
   },
   generateUrl(req, { proto, host, path, id }) {
     // Encode the ID to be URL safe
+    console.log("proto", proto);
     id = Buffer.from(id, "utf-8").toString("base64url");
-    return `${proto}://${host}${path}/${id}`;
+    return `${proto}s://${host}${path}/${id}`;
   },
   getFileIdFromRequest(req) {
     // Extract the ID from the URL
@@ -54,25 +55,25 @@ const tusServer = new Server({
 });
 
 export default function handler(req: NextApiRequest, res: NextApiResponse) {
-  // Set CORS headers for all responses
-  res.setHeader(
-    "Access-Control-Allow-Methods",
-    "GET,POST,PUT,HEAD,DELETE,OPTIONS",
-  );
-  res.setHeader(
-    "Access-Control-Allow-Headers",
-    "Content-Type,Upload-Length,Upload-Offset,Upload-Metadata,Upload-Defer-Length,Upload-Concat",
-  );
-  res.setHeader(
-    "Access-Control-Expose-Headers",
-    "Upload-Offset,Upload-Length,Location",
-  );
+  // // Set CORS headers for all responses
+  // res.setHeader(
+  //   "Access-Control-Allow-Methods",
+  //   "GET,POST,PUT,HEAD,DELETE,OPTIONS",
+  // );
+  // res.setHeader(
+  //   "Access-Control-Allow-Headers",
+  //   "Content-Type,Upload-Length,Upload-Offset,Upload-Metadata,Upload-Defer-Length,Upload-Concat",
+  // );
+  // res.setHeader(
+  //   "Access-Control-Expose-Headers",
+  //   "Upload-Offset,Upload-Length,Location",
+  // );
 
-  if (req.method === "OPTIONS") {
-    // Handle preflight requests
-    res.status(204).end();
-    return;
-  }
+  // if (req.method === "OPTIONS") {
+  //   // Handle preflight requests
+  //   res.status(204).end();
+  //   return;
+  // }
 
   // Get the session
   const session = getServerSession(req, res, authOptions);
