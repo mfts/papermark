@@ -19,8 +19,11 @@ export const config = {
 const tusServer = new Server({
   // `path` needs to match the route declared by the next file router
   path: "/api/file/tus",
+  maxSize: 1024 * 1024 * 1024 * 2, // 2 GiB
+  respectForwardedHeaders: true,
   datastore: new S3Store({
     partSize: 8 * 1024 * 1024, // each uploaded part will have ~8MiB,
+    expirationPeriodInMilliseconds: 1000 * 60 * 60 * 3, // 3 hours
     s3ClientConfig: {
       bucket: process.env.NEXT_PRIVATE_UPLOAD_BUCKET as string,
       region: process.env.NEXT_PRIVATE_UPLOAD_REGION as string,
@@ -44,6 +47,7 @@ const tusServer = new Server({
   generateUrl(req, { proto, host, path, id }) {
     // Encode the ID to be URL safe
     id = Buffer.from(id, "utf-8").toString("base64url");
+    console.log("proto", proto);
     // INFO: hardcoding the protocol to https for now - https://github.com/tus/tus-node-server/issues/635
     proto = process.env.NODE_ENV === "development" ? "http" : "https";
     return `${proto}://${host}${path}/${id}`;
