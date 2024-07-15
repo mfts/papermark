@@ -67,11 +67,19 @@ export default function UploadZone({
   setRejectedFiles,
 }: {
   children: React.ReactNode;
-  onUploadStart: (uploads: { fileName: string; progress: number }[]) => void;
-  onUploadProgress: (index: number, progress: number) => void;
+  onUploadStart: (
+    uploads: { fileName: string; progress: number; documentId?: string }[],
+  ) => void;
+  onUploadProgress: (
+    index: number,
+    progress: number,
+    documentId?: string,
+  ) => void;
   onUploadRejected: (rejected: { fileName: string; message: string }[]) => void;
   setUploads: React.Dispatch<
-    React.SetStateAction<{ fileName: string; progress: number }[]>
+    React.SetStateAction<
+      { fileName: string; progress: number; documentId?: string }[]
+    >
   >;
   setRejectedFiles: React.Dispatch<
     React.SetStateAction<{ fileName: string; message: string }[]>
@@ -121,7 +129,10 @@ export default function UploadZone({
           file, // File
           onProgress: (bytesUploaded, bytesTotal) => {
             uploadProgress.current[index] = (bytesUploaded / bytesTotal) * 100;
-            onUploadProgress(index, Math.round(uploadProgress.current[index]));
+            onUploadProgress(
+              index,
+              Math.min(Math.round(uploadProgress.current[index]), 99),
+            );
 
             const _progress = uploadProgress.current.reduce(
               (acc, progress) => acc + progress,
@@ -159,7 +170,11 @@ export default function UploadZone({
             `/api/teams/${teamInfo?.currentTeam?.id}/folders/documents/${folderPathName}`,
           );
 
-        return await response.json();
+        const document = await response.json();
+        // update progress to 100%
+        onUploadProgress(index, 100, document.id);
+
+        return document;
       });
 
       const documents = Promise.all(uploadPromises);
