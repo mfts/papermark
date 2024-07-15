@@ -43,9 +43,10 @@ const tusServer = new Server({
   },
   generateUrl(req, { proto, host, path, id }) {
     // Encode the ID to be URL safe
-    console.log("proto", proto);
     id = Buffer.from(id, "utf-8").toString("base64url");
-    return `${proto}s://${host}${path}/${id}`;
+    // INFO: hardcoding the protocol to https for now - https://github.com/tus/tus-node-server/issues/635
+    proto = process.env.NODE_ENV === "development" ? "http" : "https";
+    return `${proto}://${host}${path}/${id}`;
   },
   getFileIdFromRequest(req) {
     // Extract the ID from the URL
