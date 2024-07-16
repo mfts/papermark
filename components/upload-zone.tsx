@@ -141,6 +141,16 @@ export default function UploadZone({
 
             setProgress(Math.round(_progress / acceptedFiles.length));
           },
+          onError: (error) => {
+            setUploads((prev) =>
+              prev.filter((upload) => upload.fileName !== file.name),
+            );
+
+            setRejectedFiles((prev) => [
+              { fileName: file.name, message: "Error uploading file" },
+              ...prev,
+            ]);
+          },
           ownerId: (session?.user as CustomUser).id,
           teamId: teamInfo?.currentTeam?.id as string,
           numPages,

@@ -5,6 +5,7 @@ import { decodeBase64Url } from "../utils/decode-base64url";
 type ResumableUploadParams = {
   file: File;
   onProgress?: (bytesUploaded: number, bytesTotal: number) => void;
+  onError?: (error: Error | tus.DetailedError) => void;
   ownerId: string;
   teamId: string;
   numPages: number;
@@ -25,6 +26,7 @@ type UploadResult = {
 export function resumableUpload({
   file,
   onProgress,
+  onError,
   ownerId,
   teamId,
   numPages,
@@ -54,8 +56,21 @@ export function resumableUpload({
         },
         chunkSize: 4 * 1024 * 1024,
         onError: (error) => {
+          onError && onError(error);
           console.error("Failed because: " + error);
           reject(error);
+        },
+        onShouldRetry(error, retryAttempt, options) {
+          console.error(`Should retry upload. Attempt ${retryAttempt}`);
+          var status = error.originalResponse
+            ? error.originalResponse.getStatus()
+            : 0;
+          // Do not retry if the status is a 500.
+          if (status === 500 || status === 403) {
+            return false;
+          }
+          // For any other status code, we retry.
+          return true;
         },
         onProgress,
         onSuccess: () => {
