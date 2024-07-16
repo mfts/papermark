@@ -68,6 +68,7 @@ export default function UploadZone({
   folderPathName,
   setUploads,
   setRejectedFiles,
+  dataroomId,
 }: {
   children: React.ReactNode;
   onUploadStart: (
@@ -88,6 +89,7 @@ export default function UploadZone({
     React.SetStateAction<{ fileName: string; message: string }[]>
   >;
   folderPathName?: string;
+  dataroomId?: string;
 }) {
   const analytics = useAnalytics();
   const { plan, loading } = usePlan();
@@ -186,6 +188,46 @@ export default function UploadZone({
           );
 
         const document = await response.json();
+
+        if (dataroomId) {
+          try {
+            const response = await fetch(
+              `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}/documents`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  documentId: document.id,
+                  folderPathName: folderPathName,
+                }),
+              },
+            );
+
+            if (!response.ok) {
+              const { message } = await response.json();
+              console.error(
+                "An error occurred while adding document to the dataroom: ",
+                message,
+              );
+              return;
+            }
+
+            mutate(
+              `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}/documents`,
+            );
+            mutate(
+              `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}/folders/documents/${folderPathName}`,
+            );
+          } catch (error) {
+            console.error(
+              "An error occurred while adding document to the dataroom: ",
+              error,
+            );
+          }
+        }
+
         // update progress to 100%
         onUploadProgress(index, 100, document.id);
 
@@ -197,6 +239,7 @@ export default function UploadZone({
           type: document.type,
           teamId: teamInfo?.currentTeam?.id,
           bulkupload: true,
+          dataroomId: dataroomId,
         });
 
         return document;
