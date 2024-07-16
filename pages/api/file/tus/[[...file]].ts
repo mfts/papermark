@@ -19,11 +19,11 @@ export const config = {
 const tusServer = new Server({
   // `path` needs to match the route declared by the next file router
   path: "/api/file/tus",
-  maxSize: 1024 * 1024 * 1024 * 2, // 2 GiB
+  // maxSize: 1024 * 1024 * 1024 * 2, // 2 GiB
   // respectForwardedHeaders: true,
   datastore: new S3Store({
     partSize: 8 * 1024 * 1024, // each uploaded part will have ~8MiB,
-    expirationPeriodInMilliseconds: 1000 * 60 * 60 * 3, // 3 hours
+    // expirationPeriodInMilliseconds: 1000 * 60 * 60 * 3, // 3 hours
     s3ClientConfig: {
       bucket: process.env.NEXT_PRIVATE_UPLOAD_BUCKET as string,
       region: process.env.NEXT_PRIVATE_UPLOAD_REGION as string,
