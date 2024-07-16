@@ -23,7 +23,7 @@ const tusServer = new Server({
   respectForwardedHeaders: true,
   datastore: new S3Store({
     partSize: 8 * 1024 * 1024, // each uploaded part will have ~8MiB,
-    // expirationPeriodInMilliseconds: 1000 * 60 * 60 * 3, // 3 hours
+    expirationPeriodInMilliseconds: 1000 * 60 * 60 * 3, // 3 hours
     s3ClientConfig: {
       bucket: process.env.NEXT_PRIVATE_UPLOAD_BUCKET as string,
       region: process.env.NEXT_PRIVATE_UPLOAD_REGION as string,
@@ -53,6 +53,9 @@ const tusServer = new Server({
     // Extract the ID from the URL
     const id = (req.url as string).split("/api/file/tus/")[1];
     return Buffer.from(id, "base64url").toString("utf-8");
+  },
+  onResponseError(req, res, err) {
+    console.error(err);
   },
 });
 
