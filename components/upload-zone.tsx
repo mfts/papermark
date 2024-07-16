@@ -1,3 +1,5 @@
+import { useRouter } from "next/router";
+
 import { useCallback, useRef, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
@@ -11,9 +13,10 @@ import {
   Presentation as PresentationChartBarIcon,
 } from "lucide-react";
 import { useSession } from "next-auth/react";
-import { FileError, FileRejection, useDropzone } from "react-dropzone";
+import { FileRejection, useDropzone } from "react-dropzone";
 import { mutate } from "swr";
 
+import { useAnalytics } from "@/lib/analytics";
 import { createDocument } from "@/lib/documents/create-document";
 import { resumableUpload } from "@/lib/files/tus-upload";
 import { usePlan } from "@/lib/swr/use-billing";
@@ -86,7 +89,9 @@ export default function UploadZone({
   >;
   folderPathName?: string;
 }) {
+  const analytics = useAnalytics();
   const { plan, loading } = usePlan();
+  const router = useRouter();
   const teamInfo = useTeam();
   const { data: session } = useSession();
   const maxSize = plan === "business" || plan === "datarooms" ? 100 : 30;
@@ -141,6 +146,16 @@ export default function UploadZone({
 
             setProgress(Math.round(_progress / acceptedFiles.length));
           },
+          onError: (error) => {
+            setUploads((prev) =>
+              prev.filter((upload) => upload.fileName !== file.name),
+            );
+
+            setRejectedFiles((prev) => [
+              { fileName: file.name, message: "Error uploading file" },
+              ...prev,
+            ]);
+          },
           ownerId: (session?.user as CustomUser).id,
           teamId: teamInfo?.currentTeam?.id as string,
           numPages,
@@ -173,6 +188,16 @@ export default function UploadZone({
         const document = await response.json();
         // update progress to 100%
         onUploadProgress(index, 100, document.id);
+
+        analytics.capture("Document Added", {
+          documentId: document.id,
+          name: document.name,
+          numPages: document.numPages,
+          path: router.asPath,
+          type: document.type,
+          teamId: teamInfo?.currentTeam?.id,
+          bulkupload: true,
+        });
 
         return document;
       });
