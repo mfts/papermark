@@ -7,6 +7,7 @@ import { getServerSession } from "next-auth/next";
 import path from "node:path";
 
 import { newId } from "@/lib/id-helper";
+import { log } from "@/lib/utils";
 
 import { authOptions } from "../../auth/[...nextauth]";
 
@@ -19,10 +20,11 @@ export const config = {
 const tusServer = new Server({
   // `path` needs to match the route declared by the next file router
   path: "/api/file/tus",
-  // maxSize: 1024 * 1024 * 1024 * 2, // 2 GiB
+  maxSize: 1024 * 1024 * 1024 * 2, // 2 GiB
   respectForwardedHeaders: true,
   datastore: new S3Store({
     partSize: 8 * 1024 * 1024, // each uploaded part will have ~8MiB,
+    // TODO: expirationPeriodInMilliseconds is not working due to a permissions issue
     // expirationPeriodInMilliseconds: 1000 * 60 * 60 * 3, // 3 hours
     s3ClientConfig: {
       bucket: process.env.NEXT_PRIVATE_UPLOAD_BUCKET as string,
@@ -47,9 +49,6 @@ const tusServer = new Server({
   generateUrl(req, { proto, host, path, id }) {
     // Encode the ID to be URL safe
     id = Buffer.from(id, "utf-8").toString("base64url");
-    console.log("proto", proto);
-    // INFO: hardcoding the protocol to https for now - https://github.com/tus/tus-node-server/issues/635
-    proto = process.env.NODE_ENV === "development" ? "http" : "https";
     return `${proto}://${host}${path}/${id}`;
   },
   getFileIdFromRequest(req) {
@@ -57,29 +56,16 @@ const tusServer = new Server({
     const id = (req.url as string).split("/api/file/tus/")[1];
     return Buffer.from(id, "base64url").toString("utf-8");
   },
+  onResponseError(req, res, err) {
+    log({
+      message: "Error uploading a file. Error: \n\n" + err,
+      type: "error",
+    });
+    return { status_code: 500, body: "Internal Server Error" };
+  },
 });
 
 export default function handler(req: NextApiRequest, res: NextApiResponse) {
-  // // Set CORS headers for all responses
-  // res.setHeader(
-  //   "Access-Control-Allow-Methods",
-  //   "GET,POST,PUT,HEAD,DELETE,OPTIONS",
-  // );
-  // res.setHeader(
-  //   "Access-Control-Allow-Headers",
-  //   "Content-Type,Upload-Length,Upload-Offset,Upload-Metadata,Upload-Defer-Length,Upload-Concat",
-  // );
-  // res.setHeader(
-  //   "Access-Control-Expose-Headers",
-  //   "Upload-Offset,Upload-Length,Location",
-  // );
-
-  // if (req.method === "OPTIONS") {
-  //   // Handle preflight requests
-  //   res.status(204).end();
-  //   return;
-  // }
-
   // Get the session
   const session = getServerSession(req, res, authOptions);
   if (!session) {
