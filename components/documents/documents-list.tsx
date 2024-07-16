@@ -26,7 +26,7 @@ export function DocumentsList({
   folderPathName?: string[];
 }) {
   const [uploads, setUploads] = useState<
-    { fileName: string; progress: number }[]
+    { fileName: string; progress: number; documentId?: string }[]
   >([]);
   const [rejectedFiles, setRejectedFiles] = useState<
     { fileName: string; message: string }[]
@@ -42,10 +42,10 @@ export function DocumentsList({
           setUploads(newUploads);
           setShowDrawer(true);
         }}
-        onUploadProgress={(index, progress) => {
+        onUploadProgress={(index, progress, documentId) => {
           setUploads((prevUploads) =>
             prevUploads.map((upload, i) =>
-              i === index ? { ...upload, progress } : upload,
+              i === index ? { ...upload, progress, documentId } : upload,
             ),
           );
         }}

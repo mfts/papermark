@@ -83,11 +83,6 @@ export default async function handle(
         mode: "subscription",
         allow_promotion_codes: true,
         client_reference_id: teamId,
-        ...(req.body.referral && {
-          metadata: {
-            tolt_referral: req.body.referral,
-          },
-        }),
       });
     }
 
