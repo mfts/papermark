@@ -1,6 +1,5 @@
 import { ERRORS, Lock, Locker, RequestRelease } from "@tus/utils";
 import { Redis } from "@upstash/redis";
-import { request } from "node:http";
 
 /**
  * RedisLocker is an implementation of the Locker interface that manages locks in key-value store using Redis.
