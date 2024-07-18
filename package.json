@@ -58,6 +58,7 @@
     "@trigger.dev/sdk": "^2.3.19",
     "@tus/s3-store": "^1.5.0",
     "@tus/server": "^1.7.0",
+    "@tus/utils": "^0.3.0",
     "@upstash/qstash": "^2.6.0",
     "@upstash/ratelimit": "^1.2.1",
     "@upstash/redis": "^1.32.0",
