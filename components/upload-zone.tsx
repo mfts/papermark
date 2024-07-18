@@ -300,7 +300,7 @@ export default function UploadZone({
           <input
             {...getInputProps()}
             name="file"
-            id="upload-files"
+            id="upload-multi-files-zone"
             className="sr-only"
           />
 
