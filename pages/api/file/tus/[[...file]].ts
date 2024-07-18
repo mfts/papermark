@@ -6,7 +6,9 @@ import { Server } from "@tus/server";
 import { getServerSession } from "next-auth/next";
 import path from "node:path";
 
+import { RedisLocker } from "@/lib/files/tus-redis-locker";
 import { newId } from "@/lib/id-helper";
+import { lockerRedisClient } from "@/lib/redis";
 import { log } from "@/lib/utils";
 
 import { authOptions } from "../../auth/[...nextauth]";
@@ -17,11 +19,16 @@ export const config = {
   },
 };
 
+const locker = new RedisLocker({
+  redisClient: lockerRedisClient,
+});
+
 const tusServer = new Server({
   // `path` needs to match the route declared by the next file router
   path: "/api/file/tus",
   maxSize: 1024 * 1024 * 1024 * 2, // 2 GiB
   respectForwardedHeaders: true,
+  locker,
   datastore: new S3Store({
     partSize: 8 * 1024 * 1024, // each uploaded part will have ~8MiB,
     // TODO: expirationPeriodInMilliseconds is not working due to a permissions issue
