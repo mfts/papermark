@@ -102,11 +102,15 @@ export default function DocumentsCard({
       return;
     }
 
+    const endpoint = currentFolderPath
+      ? `/folders/documents/${currentFolderPath.join("/")}`
+      : "/documents";
+
     toast.promise(
       fetch(`/api/teams/${teamInfo?.currentTeam?.id}/documents/${documentId}`, {
         method: "DELETE",
       }).then(() => {
-        mutate(`/api/teams/${teamInfo?.currentTeam?.id}/documents`, null, {
+        mutate(`/api/teams/${teamInfo?.currentTeam?.id}${endpoint}`, null, {
           populateCache: (_, docs) => {
             return docs.filter(
               (doc: DocumentWithLinksAndLinkCountAndViewCount) =>

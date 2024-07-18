@@ -154,14 +154,16 @@ export function DocumentsList({
           </div>
         </ScrollArea>
       </UploadZone>
-      <UploadNotificationDrawer
-        open={showDrawer}
-        onOpenChange={setShowDrawer}
-        uploads={uploads}
-        setUploads={setUploads}
-        rejectedFiles={rejectedFiles}
-        setRejectedFiles={setRejectedFiles}
-      />
+      {showDrawer ? (
+        <UploadNotificationDrawer
+          open={showDrawer}
+          onOpenChange={setShowDrawer}
+          uploads={uploads}
+          setUploads={setUploads}
+          rejectedFiles={rejectedFiles}
+          setRejectedFiles={setRejectedFiles}
+        />
+      ) : null}
     </>
   );
 }
