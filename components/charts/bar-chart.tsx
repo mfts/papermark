@@ -83,6 +83,7 @@ export default function BarChartComponent({
         yAxisWidth={50}
         showGridLines={false}
         onValueChange={(v) => setValue(v)}
+        customTooltip={isDummy ? undefined : CustomTooltip}
       />
     );
   }
