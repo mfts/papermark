@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import BlurImage from "@/components/blur-image";
+import { BlurImage } from "@/components/blur-image";
 import { ContentBody } from "@/components/mdx/post-body";
 import TableOfContents from "@/components/mdx/table-of-contents";
 import {
