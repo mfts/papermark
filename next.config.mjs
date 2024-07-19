@@ -45,6 +45,8 @@ function prepareRemotePatterns() {
     { protocol: "https", hostname: "lh3.googleusercontent.com" },
     // papermark img
     { protocol: "https", hostname: "www.papermark.io" },
+    // useragent img
+    { protocol: "https", hostname: "faisalman.github.io" },
     // special document pages
     { protocol: "https", hostname: "d36r2enbzam0iu.cloudfront.net" },
     // blog images
