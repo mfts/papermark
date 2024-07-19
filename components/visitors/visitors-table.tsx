@@ -46,6 +46,7 @@ import {
 } from "../ui/pagination";
 import { VisitorAvatar } from "./visitor-avatar";
 import VisitorChart from "./visitor-chart";
+import VisitorUserAgent from "./visitor-useragent";
 
 export default function VisitorsTable({ numPages }: { numPages: number }) {
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -198,6 +199,9 @@ export default function VisitorsTable({ numPages }: { numPages: number }) {
                       <>
                         <TableRow className="hover:bg-transparent">
                           <TableCell colSpan={5}>
+                            {!isFreePlan ? (
+                              <VisitorUserAgent viewId={view.id} />
+                            ) : null}
                             <VisitorChart
                               documentId={view.documentId!}
                               viewId={view.id}
