@@ -31,6 +31,22 @@ export const getViewPageDuration = tb.buildPipe({
   }),
 });
 
+export const getViewUserAgent = tb.buildPipe({
+  pipe: "get_useragent_per_view__v2",
+  parameters: z.object({
+    documentId: z.string(),
+    viewId: z.string(),
+    since: z.number(),
+  }),
+  data: z.object({
+    country: z.string(),
+    city: z.string(),
+    browser: z.string(),
+    os: z.string(),
+    device: z.string(),
+  }),
+});
+
 export const getTotalDataroomDuration = tb.buildPipe({
   pipe: "get_total_dataroom_duration__v1",
   parameters: z.object({

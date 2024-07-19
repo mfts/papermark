@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 import { useTeam } from "@/context/team-context";
 import { View } from "@prisma/client";
 import useSWR from "swr";
+import useSWRImmutable from "swr/immutable";
 
 import { fetcher } from "@/lib/utils";
 
@@ -77,6 +78,34 @@ export function useVisitorStats(viewId: string) {
   return {
     stats,
     loading: !error && !stats,
+    error,
+  };
+}
+
+export function useVisitorUserAgent(viewId: string) {
+  const router = useRouter();
+  const teamInfo = useTeam();
+
+  const { id: documentId } = router.query as {
+    id: string;
+  };
+
+  const { data: userAgent, error } = useSWRImmutable<{
+    country: string;
+    city: string;
+    os: string;
+    browser: string;
+    device: string;
+  }>(
+    documentId &&
+      viewId &&
+      `/api/teams/${teamInfo?.currentTeam?.id}/documents/${documentId}/views/${viewId}/user-agent`,
+    fetcher,
+  );
+
+  return {
+    userAgent,
+    loading: !error && !userAgent,
     error,
   };
 }
