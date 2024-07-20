@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { TeamContextType, initialState, useTeam } from "@/context/team-context";
 import Cookies from "js-cookie";
 import {
+  CogIcon,
   FolderIcon as FolderLucideIcon,
   FolderOpenIcon,
   PaletteIcon,
@@ -13,7 +14,6 @@ import {
 import { useSession } from "next-auth/react";
 
 import MenuIcon from "@/components/shared/icons/menu";
-import SettingsIcon from "@/components/shared/icons/settings";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 import { usePlan } from "@/lib/swr/use-billing";
@@ -24,6 +24,7 @@ import ProBanner from "./billing/pro-banner";
 import { UpgradePlanModal } from "./billing/upgrade-plan-modal";
 import ProfileMenu from "./profile-menu";
 import SiderbarFolders from "./sidebar-folders";
+import { AddTeamModal } from "./teams/add-team-modal";
 import SelectTeam from "./teams/select-team";
 import { ScrollArea } from "./ui/scroll-area";
 
@@ -128,7 +129,7 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
     {
       name: "Settings",
       href: "/settings/general",
-      icon: SettingsIcon,
+      icon: CogIcon,
       current:
         router.pathname.includes("settings") &&
         !router.pathname.includes("branding") &&

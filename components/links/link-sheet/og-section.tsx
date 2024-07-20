@@ -8,6 +8,7 @@ import LoadingSpinner from "@/components/ui/loading-spinner";
 import { Textarea } from "@/components/ui/textarea";
 
 import { FADE_IN_ANIMATION_SETTINGS } from "@/lib/constants";
+import { cn } from "@/lib/utils";
 
 import { DEFAULT_LINK_TYPE } from ".";
 import LinkItem from "./link-item";
@@ -100,7 +101,7 @@ export default function OGSection({
             </div>
             <label
               htmlFor="image"
-              className="group relative mt-1 flex h-[14rem] cursor-pointer flex-col items-center justify-center rounded-md border border-gray-300 bg-white shadow-sm transition-all hover:bg-gray-50"
+              className="group relative mt-1 flex h-[14rem] cursor-pointer flex-col items-center justify-center rounded-md border border-input bg-white shadow-sm transition-all hover:border-muted-foreground hover:bg-gray-50 hover:ring-muted-foreground dark:bg-gray-800 hover:dark:bg-transparent"
             >
               {false && (
                 <div className="absolute z-[5] flex h-full w-full items-center justify-center rounded-md bg-white">
@@ -154,20 +155,20 @@ export default function OGSection({
                 }}
               />
               <div
-                className={`${
-                  dragActive
-                    ? "cursor-copy border-2 border-black bg-gray-50 opacity-100"
-                    : ""
-                } absolute z-[3] flex h-full w-full flex-col items-center justify-center rounded-md bg-white transition-all ${
+                className={cn(
+                  "absolute z-[3] flex h-full w-full flex-col items-center justify-center rounded-md transition-all",
+                  dragActive &&
+                    "cursor-copy border-2 border-black bg-gray-50 opacity-100 dark:bg-transparent",
                   metaImage
                     ? "opacity-0 group-hover:opacity-100"
-                    : "group-hover:bg-gray-50"
-                }`}
+                    : "group-hover:bg-gray-50 group-hover:dark:bg-transparent",
+                )}
               >
                 <ArrowUpTrayIcon
-                  className={`${
-                    dragActive ? "scale-110" : "scale-100"
-                  } h-7 w-7 text-gray-500 transition-all duration-75 group-hover:scale-110 group-active:scale-95`}
+                  className={cn(
+                    "h-7 w-7 text-gray-500 transition-all duration-75 group-hover:scale-110 group-active:scale-95",
+                    dragActive ? "scale-110" : "scale-100",
+                  )}
                 />
                 <p className="mt-2 text-center text-sm text-gray-500">
                   Drag and drop or click to upload.
@@ -214,7 +215,7 @@ export default function OGSection({
                 name="title"
                 id="title"
                 maxLength={120}
-                className="flex w-full rounded-md border-0 bg-background py-1.5 text-foreground shadow-sm ring-1 ring-inset ring-input placeholder:text-muted-foreground focus:ring-2 focus:ring-inset focus:ring-gray-400 sm:text-sm sm:leading-6"
+                className="focus:ring-inset"
                 placeholder={`Papermark - open-source document sharing infrastructure.`}
                 value={metaTitle || ""}
                 onChange={(e) => {
@@ -245,7 +246,7 @@ export default function OGSection({
                 id="description"
                 rows={3}
                 maxLength={240}
-                className="flex w-full rounded-md border-0 bg-background py-1.5 text-foreground shadow-sm ring-1 ring-inset ring-input placeholder:text-muted-foreground focus:ring-2 focus:ring-inset focus:ring-gray-400 sm:text-sm sm:leading-6"
+                className="focus:ring-inset"
                 placeholder={`Papermark is an open-source document sharing infrastructure for modern teams.`}
                 value={metaDescription || ""}
                 onChange={(e) => {

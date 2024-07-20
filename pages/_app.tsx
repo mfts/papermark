@@ -79,7 +79,7 @@ export default function App({
               enabled={process.env.NEXT_PUBLIC_VERCEL_ENV === "production"}
             >
               <main className={inter.className}>
-                <Toaster closeButton richColors />
+                <Toaster closeButton />
                 <TooltipProvider delayDuration={100}>
                   {EXCLUDED_PATHS.includes(router.pathname) ? (
                     <Component {...pageProps} />

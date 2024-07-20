@@ -85,7 +85,7 @@ export default function Settings() {
                 placeholder: "My Dataroom",
                 maxLength: 32,
               }}
-              helpText="Max 32 characters."
+              helpText="Max 32 characters"
               handleSubmit={(updateData) =>
                 fetch(`/api/teams/${teamId}/datarooms/${dataroom.id}`, {
                   method: "PATCH",

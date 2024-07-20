@@ -151,6 +151,16 @@ module.exports = {
         //**  END: TREMOR fontSize **//
       },
       keyframes: {
+        // Modal
+        "scale-in": {
+          "0%": { transform: "scale(0.95)" },
+          "100%": { transform: "scale(1)" },
+        },
+        "fade-in": {
+          "0%": { opacity: "0" },
+          "100%": { opacity: "1" },
+        },
+        // Others
         gauge_fadeIn: {
           from: { opacity: "0" },
           to: { opacity: "1" },
@@ -182,6 +192,10 @@ module.exports = {
         16: "repeat(16, minmax(0, 1fr))",
       },
       animation: {
+        // Modal
+        "scale-in": "scale-in 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
+        "fade-in": "fade-in 0.2s ease-out forwards",
+        // Others
         gauge_fadeIn: "gauge_fadeIn 1s ease forwards",
         gauge_fill: "gauge_fill 1s ease forwards",
         flyEmoji: "flyEmoji 1s forwards",

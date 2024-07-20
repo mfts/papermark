@@ -62,8 +62,8 @@ export default function DuplicateDataroom({
   };
 
   return (
-    <div className="rounded-lg bg-background">
-      <Card>
+    <div className="rounded-lg">
+      <Card className="bg-transparent">
         <CardHeader>
           <CardTitle>Duplicate Dataroom</CardTitle>
           <CardDescription>
@@ -84,21 +84,5 @@ export default function DuplicateDataroom({
         </CardFooter>
       </Card>
     </div>
-    // <div className="rounded-lg border border-gray-200 bg-white">
-    //   <div className="flex flex-col space-y-3 p-5 sm:p-10">
-    //     <h2 className="text-xl font-medium">Duplicate Dataroom</h2>
-    //     <p className="text-sm text-gray-500">
-    //       Create a new data room with the same content (folders and files) as
-    //       this data room.
-    //     </p>
-    //   </div>
-    //   <div className="border-b border-gray-200" />
-
-    //   <div className="flex items-center justify-end px-5 py-4 sm:px-10">
-    //     <Button onClick={(e) => handleDuplicateDataroom(e)} loading={loading}>
-    //       Duplicate Dataroom
-    //     </Button>
-    //   </div>
-    // </div>
   );
 }
