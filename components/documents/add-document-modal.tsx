@@ -391,17 +391,31 @@ export function AddDocumentModal({
                 <form
                   encType="multipart/form-data"
                   onSubmit={handleFileUpload}
-                  className="flex flex-col"
+                  className="flex flex-col space-y-4"
                 >
                   <div className="space-y-1">
-                    <div className="pb-6">
-                      <div className="grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
-                        <DocumentUpload
-                          currentFile={currentFile}
-                          setCurrentFile={setCurrentFile}
-                        />
-                      </div>
+                    <div className="grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
+                      <DocumentUpload
+                        currentFile={currentFile}
+                        setCurrentFile={setCurrentFile}
+                      />
                     </div>
+                  </div>
+
+                  <div className="flex justify-center">
+                    <button
+                      type="button"
+                      className="text-sm text-muted-foreground underline-offset-4 transition-all hover:text-gray-800 hover:underline hover:dark:text-muted-foreground/80"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        document
+                          .getElementById("upload-multi-files-zone")
+                          ?.click();
+                        clearModelStates();
+                      }}
+                    >
+                      Want to upload multiple files?
+                    </button>
                   </div>
 
                   <div className="flex justify-center">

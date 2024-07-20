@@ -1,3 +1,5 @@
+import { useRouter } from "next/router";
+
 import { useCallback, useRef, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
@@ -11,9 +13,10 @@ import {
   Presentation as PresentationChartBarIcon,
 } from "lucide-react";
 import { useSession } from "next-auth/react";
-import { FileError, FileRejection, useDropzone } from "react-dropzone";
+import { FileRejection, useDropzone } from "react-dropzone";
 import { mutate } from "swr";
 
+import { useAnalytics } from "@/lib/analytics";
 import { createDocument } from "@/lib/documents/create-document";
 import { resumableUpload } from "@/lib/files/tus-upload";
 import { usePlan } from "@/lib/swr/use-billing";
@@ -65,6 +68,7 @@ export default function UploadZone({
   folderPathName,
   setUploads,
   setRejectedFiles,
+  dataroomId,
 }: {
   children: React.ReactNode;
   onUploadStart: (
@@ -85,8 +89,11 @@ export default function UploadZone({
     React.SetStateAction<{ fileName: string; message: string }[]>
   >;
   folderPathName?: string;
+  dataroomId?: string;
 }) {
+  const analytics = useAnalytics();
   const { plan, loading } = usePlan();
+  const router = useRouter();
   const teamInfo = useTeam();
   const { data: session } = useSession();
   const maxSize = plan === "business" || plan === "datarooms" ? 100 : 30;
@@ -141,6 +148,16 @@ export default function UploadZone({
 
             setProgress(Math.round(_progress / acceptedFiles.length));
           },
+          onError: (error) => {
+            setUploads((prev) =>
+              prev.filter((upload) => upload.fileName !== file.name),
+            );
+
+            setRejectedFiles((prev) => [
+              { fileName: file.name, message: "Error uploading file" },
+              ...prev,
+            ]);
+          },
           ownerId: (session?.user as CustomUser).id,
           teamId: teamInfo?.currentTeam?.id as string,
           numPages,
@@ -171,8 +188,59 @@ export default function UploadZone({
           );
 
         const document = await response.json();
+
+        if (dataroomId) {
+          try {
+            const response = await fetch(
+              `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}/documents`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  documentId: document.id,
+                  folderPathName: folderPathName,
+                }),
+              },
+            );
+
+            if (!response.ok) {
+              const { message } = await response.json();
+              console.error(
+                "An error occurred while adding document to the dataroom: ",
+                message,
+              );
+              return;
+            }
+
+            mutate(
+              `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}/documents`,
+            );
+            mutate(
+              `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}/folders/documents/${folderPathName}`,
+            );
+          } catch (error) {
+            console.error(
+              "An error occurred while adding document to the dataroom: ",
+              error,
+            );
+          }
+        }
+
         // update progress to 100%
         onUploadProgress(index, 100, document.id);
+
+        analytics.capture("Document Added", {
+          documentId: document.id,
+          name: document.name,
+          numPages: document.numPages,
+          path: router.asPath,
+          type: document.type,
+          teamId: teamInfo?.currentTeam?.id,
+          bulkupload: true,
+          dataroomId: dataroomId,
+        });
 
         return document;
       });
@@ -232,7 +300,7 @@ export default function UploadZone({
           <input
             {...getInputProps()}
             name="file"
-            id="upload-files"
+            id="upload-multi-files-zone"
             className="sr-only"
           />
 

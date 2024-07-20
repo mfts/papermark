@@ -1,5 +1,3 @@
-import { useState } from "react";
-
 import { CheckIcon, XIcon } from "lucide-react";
 
 import {
@@ -9,8 +7,6 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
-
-import { cn } from "@/lib/utils";
 
 import { Gauge } from "./ui/gauge";
 
@@ -33,15 +29,12 @@ export function UploadNotificationDrawer({
 }) {
   const uploadCount = uploads.length;
   const failedCount = rejectedFiles.length;
-  const [activeSnap, setActiveSnap] = useState<number | string | null>("250px");
 
   const onOpenChangeHandler = (open: boolean) => {
     onOpenChange(open);
     if (!open) {
       setUploads([]);
       setRejectedFiles([]);
-    } else {
-      setActiveSnap("250px");
     }
   };
 
@@ -51,11 +44,9 @@ export function UploadNotificationDrawer({
         modal={false}
         open={open}
         onOpenChange={onOpenChangeHandler}
-        snapPoints={["40px", "250px"]}
-        activeSnapPoint={activeSnap}
-        setActiveSnapPoint={setActiveSnap}
+        dismissible={false}
       >
-        <DrawerContent className="inset-x-auto right-6 h-full w-1/5 min-w-[350px] shadow-md focus-visible:outline-none">
+        <DrawerContent className="inset-x-auto right-6 max-h-[250px] w-1/5 min-w-[350px] max-w-[400px] shadow-md focus-visible:outline-none">
           <DrawerHeader className="flex h-10 items-center justify-between rounded-t-lg border-b border-transparent bg-gray-100 dark:bg-gray-900">
             <div className="flex items-center space-x-1">
               <DrawerTitle>{uploadCount} uploads</DrawerTitle>
@@ -71,20 +62,11 @@ export function UploadNotificationDrawer({
               <XIcon className="h-6 w-6" />
             </DrawerClose>
           </DrawerHeader>
-          <div
-            className={cn(
-              "mx-auto flex w-full max-w-md grow flex-col *:px-4 *:py-3",
-
-              {
-                "mb-[742px] overflow-y-auto": activeSnap === "250px",
-                "overflow-hidden": activeSnap !== "250px",
-              },
-            )}
-          >
+          <div className="mx-auto flex w-full flex-1 flex-col overflow-y-auto">
             {uploads.map((upload, index) => (
               <div
                 key={index}
-                className="p-2 hover:bg-gray-100 hover:dark:bg-gray-900"
+                className="px-4 py-3 hover:bg-gray-100 hover:dark:bg-gray-900"
               >
                 <a
                   href={`/documents/${upload.documentId}`}
@@ -109,7 +91,7 @@ export function UploadNotificationDrawer({
             {rejectedFiles.map((rejected, index) => (
               <div
                 key={index}
-                className="flex items-center justify-between p-2 text-destructive hover:bg-gray-100 hover:dark:bg-gray-900"
+                className="flex items-center justify-between px-4 py-3 text-destructive hover:bg-gray-100 hover:dark:bg-gray-900"
               >
                 <span>{rejected.fileName}</span>
                 <span>{rejected.message}</span>

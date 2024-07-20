@@ -39,7 +39,7 @@ Papermark is the open-source document sharing alternative to DocSend with built-
 - [Typescript](https://www.typescriptlang.org/) – Language
 - [Tailwind](https://tailwindcss.com/) – CSS
 - [shadcn/ui](https://ui.shadcn.com) - UI Components
-- [Prisma](https://prisma.io) - ORM
+- [Prisma](https://prisma.io) - ORM [![Made with Prisma](https://made-with.prisma.io/dark.svg)](https://prisma.io)
 - PostgreSQL - Database
 - [NextAuth.js](https://next-auth.js.org/) – Authentication
 - [Tinybird](https://tinybird.co) – Analytics

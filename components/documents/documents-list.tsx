@@ -7,9 +7,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { UploadNotificationDrawer } from "@/components/upload-notification";
 import UploadZone from "@/components/upload-zone";
 
+import {
+  DataroomFolderDocument,
+  DataroomFolderWithCount,
+} from "@/lib/swr/use-dataroom";
 import { FolderWithCount } from "@/lib/swr/use-documents";
 import { DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
 
+import DataroomDocumentCard from "../datarooms/dataroom-document-card";
 import DocumentCard from "./document-card";
 import { EmptyDocuments } from "./empty-document";
 import FolderCard from "./folder-card";
@@ -19,11 +24,16 @@ export function DocumentsList({
   documents,
   teamInfo,
   folderPathName,
+  dataroomId,
 }: {
-  folders: FolderWithCount[] | undefined;
-  documents: DocumentWithLinksAndLinkCountAndViewCount[] | undefined;
+  folders: FolderWithCount[] | DataroomFolderWithCount[] | undefined;
+  documents:
+    | DocumentWithLinksAndLinkCountAndViewCount[]
+    | DataroomFolderDocument[]
+    | undefined;
   teamInfo: TeamContextType | null;
   folderPathName?: string[];
+  dataroomId?: string;
 }) {
   const [uploads, setUploads] = useState<
     { fileName: string; progress: number; documentId?: string }[]
@@ -55,6 +65,7 @@ export function DocumentsList({
         }}
         setUploads={setUploads}
         setRejectedFiles={setRejectedFiles}
+        dataroomId={dataroomId}
       >
         <ScrollArea
           className="-m-2 h-[calc(100dvh-205px)] *:p-2"
@@ -70,6 +81,8 @@ export function DocumentsList({
                         key={folder.id}
                         folder={folder}
                         teamInfo={teamInfo}
+                        isDataroom={dataroomId ? true : false}
+                        dataroomId={dataroomId}
                       />
                     );
                   })
@@ -95,13 +108,25 @@ export function DocumentsList({
             <ul role="list" className="space-y-4">
               {documents
                 ? documents.map((document) => {
-                    return (
-                      <DocumentCard
-                        key={document.id}
-                        document={document}
-                        teamInfo={teamInfo}
-                      />
-                    );
+                    if (dataroomId) {
+                      return (
+                        <DataroomDocumentCard
+                          key={document.id}
+                          document={document as DataroomFolderDocument}
+                          teamInfo={teamInfo}
+                        />
+                      );
+                    } else {
+                      return (
+                        <DocumentCard
+                          key={document.id}
+                          document={
+                            document as DocumentWithLinksAndLinkCountAndViewCount
+                          }
+                          teamInfo={teamInfo}
+                        />
+                      );
+                    }
                   })
                 : Array.from({ length: 3 }).map((_, i) => (
                     <li
@@ -129,14 +154,16 @@ export function DocumentsList({
           </div>
         </ScrollArea>
       </UploadZone>
-      <UploadNotificationDrawer
-        open={showDrawer}
-        onOpenChange={setShowDrawer}
-        uploads={uploads}
-        setUploads={setUploads}
-        rejectedFiles={rejectedFiles}
-        setRejectedFiles={setRejectedFiles}
-      />
+      {showDrawer ? (
+        <UploadNotificationDrawer
+          open={showDrawer}
+          onOpenChange={setShowDrawer}
+          uploads={uploads}
+          setUploads={setUploads}
+          rejectedFiles={rejectedFiles}
+          setRejectedFiles={setRejectedFiles}
+        />
+      ) : null}
     </>
   );
 }

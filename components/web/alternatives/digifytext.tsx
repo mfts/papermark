@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import BlurImage from "@/components/blur-image";
+import { BlurImage } from "@/components/blur-image";
 import { Button } from "@/components/ui/button";
 
 const DigifyAlternatives = () => {
