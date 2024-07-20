@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 
 import { motion } from "framer-motion";
 
+import { Textarea } from "@/components/ui/textarea";
+
 import { FADE_IN_ANIMATION_SETTINGS } from "@/lib/constants";
 import { sanitizeAllowDenyList } from "@/lib/utils";
 
@@ -91,8 +93,8 @@ export default function DenyListSection({
             className="mt-1 block w-full"
             {...FADE_IN_ANIMATION_SETTINGS}
           >
-            <textarea
-              className="form-textarea w-full rounded-md border-0 bg-background py-1.5 text-sm leading-6 text-foreground shadow-sm ring-1 ring-inset ring-input placeholder:text-muted-foreground focus:ring-2 focus:ring-inset focus:ring-gray-400"
+            <Textarea
+              className="focus:ring-inset"
               rows={5}
               placeholder="Enter blocked emails/domains, one per line, e.g.                                      marc@papermark.io                                                                                   @example.org"
               value={denyListInput}
