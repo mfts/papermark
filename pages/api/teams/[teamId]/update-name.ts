@@ -2,7 +2,6 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 import { getServerSession } from "next-auth";
 
-import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 
@@ -12,7 +11,7 @@ export default async function handle(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
-  if (req.method === "POST") {
+  if (req.method === "PATCH") {
     // POST /api/teams/:teamId/update-name
     const session = await getServerSession(req, res, authOptions);
     if (!session) {

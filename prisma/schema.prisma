@@ -128,10 +128,10 @@ model Document {
   type             String? // This should be a reference to the file type (pdf, sheet, etc.)
   storageType      DocumentStorageType @default(VERCEL_BLOB)
   numPages         Int? // This should be a reference to the number of pages in the document
-  owner            User                @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  teamId           String?
-  team             Team?               @relation(fields: [teamId], references: [id], onDelete: SetNull)
-  ownerId          String // This field holds the foreign key.
+  owner            User?               @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  teamId           String
+  team             Team                @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  ownerId          String? // This field holds the foreign key.
   assistantEnabled Boolean             @default(false) // This indicates if assistant is enabled for this document
   createdAt        DateTime            @default(now())
   updatedAt        DateTime            @updatedAt
@@ -244,10 +244,10 @@ model Link {
 model Domain {
   id          String   @id @default(cuid())
   slug        String   @unique
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId      String
-  teamId      String?
-  Team        Team?    @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userId      String?
+  teamId      String
+  Team        Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
   verified    Boolean  @default(false) // Whether the domain has been verified
   lastChecked DateTime @default(now())
   createdAt   DateTime @default(now())

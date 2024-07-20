@@ -41,10 +41,6 @@ export default async function handle(
       teamId: string | null;
       id: string;
       name: string;
-      owner: {
-        id: string;
-        email: string | null;
-      };
     } | null;
     dataroom: {
       teamId: string | null;
@@ -68,12 +64,6 @@ export default async function handle(
             teamId: true,
             id: true,
             name: true,
-            owner: {
-              select: {
-                id: true,
-                email: true,
-              },
-            },
           },
         },
         dataroom: {
@@ -100,14 +90,16 @@ export default async function handle(
     return;
   }
 
+  const teamId =
+    view.viewType === "DOCUMENT_VIEW"
+      ? view.document!.teamId!
+      : view.dataroom!.teamId!;
+
   // Get all team members who are admins or managers to be notified
   const users = await prisma.userTeam.findMany({
     where: {
       role: { in: ["ADMIN", "MANAGER"] },
-      teamId:
-        view.viewType === "DOCUMENT_VIEW"
-          ? view.document!.teamId!
-          : view.dataroom!.teamId!,
+      teamId: teamId,
     },
     select: {
       role: true,
@@ -121,21 +113,20 @@ export default async function handle(
 
   // POST /api/jobs/send-notification
   try {
+    const adminEmail = users.find((user) => user.role === "ADMIN")?.user.email;
+
     if (view.viewType === "DOCUMENT_VIEW") {
       // send email to document owner that document
       await sendViewedDocumentEmail({
-        ownerEmail: view.document!.owner.email,
+        ownerEmail: adminEmail!,
         documentId: view.document!.id,
         documentName: view.document!.name,
         viewerEmail: view.viewerEmail,
         teamMembers: users
           .map((user) => user.user.email!)
-          .filter((email) => email !== view.document!.owner.email),
+          .filter((email) => email !== adminEmail),
       });
     } else {
-      // prettier-ignore
-      const adminEmail = users
-        .find((user) => user.role === "ADMIN")?.user.email;
       // send email to dataroom owner that dataroom
       await sendViewedDataroomEmail({
         ownerEmail: adminEmail!,
@@ -152,7 +143,7 @@ export default async function handle(
     return;
   } catch (error) {
     log({
-      message: `Failed to send email in _/api/views_ route for linkId: ${view.linkId}. \n\n Error: ${error} \n\n*Metadata*: \`{ownerId: ${view.document!.owner.id}, viewId: ${viewId}}\``,
+      message: `Failed to send email in _/api/views_ route for linkId: ${view.linkId}. \n\n Error: ${error} \n\n*Metadata*: \`{teamId: ${teamId}, viewId: ${viewId}}\``,
       type: "error",
       mention: true,
     });

@@ -53,7 +53,7 @@ const SelectTeam = ({ teams, currentTeam, isLoading }: TeamContextType) => {
                 key={team.id}
                 onClick={() => switchTeam(team)}
                 className={cn(
-                  `flex w-full cursor-pointer items-center justify-between truncate px-3 py-2 text-sm font-normal transition-all duration-75 hover:bg-gray-200 hover:dark:bg-gray-800 `,
+                  `flex w-full cursor-pointer items-center justify-between truncate px-3 py-2 text-sm font-normal transition-all duration-75 hover:bg-gray-200 hover:dark:bg-gray-800`,
                   team.id === currentTeam?.id && "font-medium",
                 )}
               >

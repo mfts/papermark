@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { mutate } from "swr";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
@@ -200,7 +201,7 @@ export default function LinkSheet({
 
   return (
     <Sheet open={isOpen} onOpenChange={(open: boolean) => setIsOpen(open)}>
-      <SheetContent className="flex w-[90%] flex-col justify-between bg-background px-4 text-foreground sm:w-[600px] sm:max-w-2xl md:px-5">
+      <SheetContent className="flex w-[90%] flex-col justify-between border-l border-gray-200 bg-background px-4 text-foreground dark:border-gray-800 dark:bg-gray-900 sm:w-[600px] sm:max-w-2xl md:px-5">
         <SheetHeader className="text-start">
           <SheetTitle>
             {currentLink ? "Edit link" : "Create a new link"}
@@ -216,13 +217,13 @@ export default function LinkSheet({
                     <div className="space-y-2">
                       <Label htmlFor="link-name">Link Name</Label>
                       <div className="mt-2">
-                        <input
+                        <Input
                           type="text"
                           name="link-name"
                           id="link-name"
                           placeholder="Recipient's Organization"
                           value={data.name || ""}
-                          className="flex w-full rounded-md border-0 bg-background py-1.5 text-foreground shadow-sm ring-1 ring-inset ring-input placeholder:text-muted-foreground focus:ring-2 focus:ring-inset focus:ring-gray-400 sm:text-sm sm:leading-6"
+                          className="focus:ring-inset"
                           onChange={(e) =>
                             setData({ ...data, name: e.target.value })
                           }
@@ -241,7 +242,7 @@ export default function LinkSheet({
                     <div className="relative flex items-center">
                       <Separator className="absolute bg-muted-foreground" />
                       <div className="relative mx-auto">
-                        <span className="bg-background px-2 text-sm text-muted-foreground">
+                        <span className="bg-background px-2 text-sm text-muted-foreground dark:bg-gray-900">
                           Link Options
                         </span>
                       </div>

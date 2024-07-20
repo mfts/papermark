@@ -73,10 +73,10 @@ export default function QuestionSection({
             <div className="w-full space-y-2">
               <Label>Question Type</Label>
               <Select defaultValue="yes-no">
-                <SelectTrigger className="focus:ring-offset-3 flex w-full rounded-md border-0 bg-background py-1.5 text-foreground shadow-sm ring-1 ring-inset ring-input placeholder:text-muted-foreground focus:ring-2 focus:ring-gray-400 sm:text-sm sm:leading-6">
+                <SelectTrigger className="flex w-full rounded-md border border-input bg-white text-foreground placeholder-muted-foreground focus:border-muted-foreground focus:outline-none focus:ring-inset focus:ring-muted-foreground dark:border-gray-500 dark:bg-gray-800 focus:dark:bg-transparent sm:text-sm">
                   <SelectValue placeholder="Select a question type" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="flex w-full rounded-md border border-input bg-white text-foreground placeholder-muted-foreground focus:border-muted-foreground focus:outline-none focus:ring-inset focus:ring-muted-foreground dark:border-gray-500 dark:bg-gray-800 focus:dark:bg-transparent sm:text-sm">
                   <SelectItem value="yes-no">Yes / No</SelectItem>
                 </SelectContent>
               </Select>
@@ -84,7 +84,7 @@ export default function QuestionSection({
             <div className="w-full space-y-2">
               <Label htmlFor="question">Question</Label>
               <Input
-                className="flex w-full rounded-md border-0 bg-background py-1.5 text-foreground shadow-sm ring-1 ring-inset ring-input placeholder:text-muted-foreground focus:ring-2 focus:ring-inset focus:ring-gray-400 sm:text-sm sm:leading-6"
+                className="focus:ring-inset"
                 id="question"
                 type="text"
                 name="question"

@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 
 import { motion } from "framer-motion";
 
+import { Input } from "@/components/ui/input";
+
 import { FADE_IN_ANIMATION_SETTINGS } from "@/lib/constants";
 import { getDateTimeLocal } from "@/lib/utils";
 
@@ -40,7 +42,7 @@ export default function ExpirationSection({
 
       {enabled && (
         <motion.div className="mt-3" {...FADE_IN_ANIMATION_SETTINGS}>
-          <input
+          <Input
             type="datetime-local"
             id="expiresAt"
             name="expiresAt"
@@ -50,7 +52,7 @@ export default function ExpirationSection({
             onChange={(e) => {
               setData({ ...data, expiresAt: new Date(e.target.value) });
             }}
-            className="flex w-full rounded-md border-0 bg-background py-1.5 text-foreground shadow-sm ring-1 ring-inset ring-input placeholder:text-muted-foreground focus:ring-2 focus:ring-inset focus:ring-gray-400 sm:text-sm sm:leading-6"
+            className="focus:ring-inset"
           />
         </motion.div>
       )}
