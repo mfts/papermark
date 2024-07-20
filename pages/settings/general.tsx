@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { mutate } from "swr";
 
 import AppLayout from "@/components/layouts/app";
+import DeleteTeam from "@/components/settings/delete-team";
 import { SettingsHeader } from "@/components/settings/settings-header";
 import Passkey from "@/components/shared/icons/passkey";
 import { Button } from "@/components/ui/button";
@@ -106,6 +107,8 @@ export default function General() {
               </Button>
             </div>
           </div>
+
+          <DeleteTeam />
         </div>
       </main>
     </AppLayout>
