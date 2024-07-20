@@ -1,5 +1,3 @@
-import { useRef, useState } from "react";
-
 import { useTeam } from "@/context/team-context";
 import {
   type CredentialCreationOptionsJSON,
@@ -9,45 +7,13 @@ import { toast } from "sonner";
 import { mutate } from "swr";
 
 import AppLayout from "@/components/layouts/app";
-import Navbar from "@/components/settings/navbar";
+import { SettingsHeader } from "@/components/settings/settings-header";
 import Passkey from "@/components/shared/icons/passkey";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Form } from "@/components/ui/form";
 
 export default function General() {
   const teamInfo = useTeam();
-  const teamNameInputRef = useRef<HTMLInputElement>(null);
-  const [isTeamNameChanging, setTeamNameChanging] = useState<boolean>(false);
-
-  const changeTeamName = async () => {
-    if (teamInfo?.currentTeam?.name === teamNameInputRef.current?.value) return;
-
-    setTeamNameChanging(true);
-
-    const response = await fetch(
-      `/api/teams/${teamInfo?.currentTeam?.id}/update-name`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: teamNameInputRef.current?.value,
-        }),
-      },
-    );
-
-    if (response.ok) {
-      const message = await response.json();
-      toast.success(message);
-    } else {
-      const message = await response.json();
-      toast.error(message);
-    }
-
-    await mutate("/api/teams");
-    setTeamNameChanging(false);
-  };
 
   async function registerPasskey() {
     const createOptionsResponse = await fetch("/api/passkeys/register", {
@@ -78,8 +44,9 @@ export default function General() {
 
   return (
     <AppLayout>
-      <Navbar current="General" />
-      <div className="p-4 sm:m-4 sm:p-4">
+      <main className="relative mx-2 mb-10 mt-4 space-y-8 overflow-hidden px-1 sm:mx-3 md:mx-5 md:mt-5 lg:mx-7 lg:mt-8 xl:mx-10">
+        <SettingsHeader />
+
         <div className="mb-4 flex items-center justify-between md:mb-8 lg:mb-12">
           <div className="space-y-1">
             <h3 className="text-2xl font-semibold tracking-tight text-foreground">
@@ -88,27 +55,38 @@ export default function General() {
             <p className="text-sm text-muted-foreground">Manage your team</p>
           </div>
         </div>
-        <div className="space-y-8">
-          <div className="flex items-center justify-between rounded-lg border border-border bg-secondary p-10">
-            <div className="flex flex-col">
-              <h2 className="text-xl font-medium">Team Name</h2>
-              <p className="mt-3 text-sm text-secondary-foreground">
-                This is the name of your team on Papermark.
-              </p>
-              <Input
-                ref={teamNameInputRef}
-                className="mt-6"
-                defaultValue={teamInfo?.currentTeam?.name}
-              />
-            </div>
-            <Button
-              size={"lg"}
-              onClick={changeTeamName}
-              loading={isTeamNameChanging}
-            >
-              {isTeamNameChanging ? "Saving..." : "Save changes"}
-            </Button>
-          </div>
+        <div className="space-y-6">
+          <Form
+            title="Team Name"
+            description="This is the name of your team on Papermark."
+            inputAttrs={{
+              name: "name",
+              defaultValue: teamInfo?.currentTeam?.name,
+              placeholder: "My Personal Team",
+              maxLength: 32,
+            }}
+            helpText="Max 32 characters."
+            handleSubmit={(updateData) =>
+              fetch(`/api/teams/${teamInfo?.currentTeam?.id}/update-name`, {
+                method: "PATCH",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify(updateData),
+              }).then(async (res) => {
+                if (res.status === 200) {
+                  await Promise.all([
+                    mutate(`/api/teams/${teamInfo?.currentTeam?.id}`),
+                    mutate(`/api/teams`),
+                  ]);
+                  toast.success("Successfully updated team name!");
+                } else {
+                  const { error } = await res.json();
+                  toast.error(error.message);
+                }
+              })
+            }
+          />
 
           <div className="rounded-lg border border-muted p-10">
             <div className="space-y-6">
@@ -129,7 +107,7 @@ export default function General() {
             </div>
           </div>
         </div>
-      </div>
+      </main>
     </AppLayout>
   );
 }
