@@ -77,7 +77,7 @@ export default async function handle(
       });
 
       if (!currentDomain!.verified && updatedDomain.verified) {
-        await identifyUser(updatedDomain.userId);
+        // await identifyUser(updatedDomain.userId);
         await trackAnalytics({ event: "Domain Verified", slug: domain });
       }
     }
