@@ -1,29 +1,9 @@
 import Head from "next/head";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-
-import { Disclosure } from "@headlessui/react";
-import { CheckIcon } from "lucide-react";
-import { XIcon } from "lucide-react";
-import {
-  RefreshCw as ArrowPathIcon,
-  GitPullRequestArrow as CloudArrowUpIcon,
-  Settings as Cog6ToothIcon,
-  Fingerprint as FingerPrintIcon,
-  Lock as LockClosedIcon,
-  Minus as MinusSmallIcon,
-  Plus as PlusSmallIcon,
-  HardDrive as ServerIcon,
-} from "lucide-react";
-
 import { Button } from "@/components/ui/button";
-import Footer from "@/components/web/footer";
-import { LogoCloud } from "@/components/web/landing-page/logo-cloud";
-import Navbar from "@/components/web/navbar";
 
 import { getInvestor } from "@/lib/content/investor";
-import { cn } from "@/lib/utils";
-import { classNames } from "@/lib/utils";
 
 export default async function InvestorPage({
   params,
@@ -274,7 +254,7 @@ export default async function InvestorPage({
                         x={86}
                       />
                     </svg>
-                    <blockquote className="text-balance text-xl font-medium leading-8 text-black text-gray-800 sm:text-2xl sm:leading-9">
+                    <blockquote className="text-balance text-xl font-medium leading-8 text-gray-800 sm:text-2xl sm:leading-9">
                       <p>
                         Papermark solved a big pain point for me. DocSend
                         monopoly will end soon!
