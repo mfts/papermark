@@ -149,5 +149,10 @@
   },
   "trigger.dev": {
     "endpointId": "papermark-dev-Ojwu"
+  },
+  "overrides": {
+    "resend": {
+      "@react-email/render": "0.0.16-canary.0"
+    }
   }
 }
