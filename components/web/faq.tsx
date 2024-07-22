@@ -67,22 +67,3 @@ export default function Faq() {
     </div>
   );
 }
-
-//  return (
-//           <Disclosure as="div" >
-//             {({ open }) => (
-//               <>
-//                 <dt>
-//                   <Disclosure.Button >
-//                     
-                    
-//                   </Disclosure.Button>
-//                 </dt>
-//                 <Disclosure.Panel as="dd" >
-//                   
-//                 </Disclosure.Panel>
-//               </>
-//             )}
-//     </Accordion>
-//   )
-
