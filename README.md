@@ -65,6 +65,8 @@ git clone https://github.com/mfts/papermark.git
 cd papermark
 ```
 
+## Without Docker
+
 ### 2. Install npm dependencies
 
 ```shell
@@ -91,6 +93,24 @@ npm run dev
 ```
 
 ### 6. Open the app in your browser
+
+Visit [http://localhost:3000](http://localhost:3000) in your browser.
+
+## With Docker
+
+### 2. Copy the environment variables to `.env` and change the values where the Databaseurl="postgresql://postgres:mysecretpassword@db:5432/paper?schema=public"
+
+```shell
+cp .env.example .env
+```
+
+### 3. Run docker compose
+
+```shell
+docker compose up
+```
+
+### 4. Open the app in your browser
 
 Visit [http://localhost:3000](http://localhost:3000) in your browser.
 
