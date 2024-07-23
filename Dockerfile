@@ -10,10 +10,10 @@ RUN  npm install
 
 COPY . .
 
-##ENV DATABASE_URL="postgresql://postgres:mysecretpassword@db:5432/paper"
+ENV DATABASE_URL="postgresql://postgres:mysecretpassword@db:5432/paper"
 
 RUN npx prisma generate
 
 EXPOSE 3000
 
-CMD ["npm", "run", "dev"]
+CMD ["npm", "run", "docker-dev"]
