@@ -2,7 +2,6 @@ import Head from "next/head";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { Disclosure } from "@headlessui/react";
 import { CheckIcon } from "lucide-react";
 import { XIcon } from "lucide-react";
 import {

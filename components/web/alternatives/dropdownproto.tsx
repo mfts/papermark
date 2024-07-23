@@ -1,7 +1,8 @@
-import { Dispatch, Fragment, SetStateAction } from "react";
+import { Dispatch, SetStateAction, useState } from "react";
 
-import { Menu, Transition } from "@headlessui/react";
 import { CheckIcon, ChevronDownIcon, ChevronUpIcon } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(" ");
@@ -18,58 +19,43 @@ export default function DropDown({
   option,
   setOption,
 }: DropDownProps) {
+  const [menuOpen, setMenuOpen] = useState<boolean>(false);
+  
+  const handleMenuStateChange = (open: boolean) => {
+    setMenuOpen(open);
+  };
   return (
-    <Menu as="div" className="relative block w-full text-left">
-      <div>
-        <Menu.Button className="inline-flex w-full items-center justify-between rounded-md border border-black bg-white px-4 py-2 text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none">
+    <DropdownMenu open={menuOpen} onOpenChange={handleMenuStateChange}>
+      <DropdownMenuTrigger asChild>
+        <Button className="inline-flex w-full items-center justify-between rounded-md border border-black font-normal text-md bg-white px-4 py-2 text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none">
           {option}
-          <ChevronDownIcon
-            className="-mr-1 ml-2 h-5 w-5 ui-open:hidden"
+          {menuOpen ? <ChevronUpIcon
+            className="-mr-1 ml-2 h-5 w-5"
             aria-hidden="true"
-          />
-          <ChevronUpIcon
-            className="-mr-1 ml-2 hidden h-5 w-5 ui-open:block"
+          /> : <ChevronDownIcon
+            className="-mr-1 ml-2 h-5 w-5"
             aria-hidden="true"
-          />
-        </Menu.Button>
-      </div>
-
-      <Transition
-        as={Fragment}
-        enter="transition ease-out duration-100"
-        enterFrom="transform opacity-0 scale-95"
-        enterTo="transform opacity-100 scale-100"
-        leave="transition ease-in duration-75"
-        leaveFrom="transform opacity-100 scale-100"
-        leaveTo="transform opacity-0 scale-95"
-      >
-        <Menu.Items
-          className="absolute left-0 z-10 mt-2 w-full origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
-          key={option}
-        >
-          <div className="">
-            {options.map((optionItem) => (
-              <Menu.Item key={optionItem}>
-                {({ active }) => (
-                  <button
-                    onClick={() => setOption(optionItem)}
-                    className={classNames(
-                      active ? "bg-gray-100 text-gray-900" : "text-gray-700",
-                      option === optionItem ? "bg-gray-200" : "",
-                      "flex w-full items-center justify-between space-x-2 px-4 py-2 text-left text-sm",
-                    )}
-                  >
-                    <span>{optionItem}</span>
-                    {option === optionItem ? (
-                      <CheckIcon className="text-bold h-4 w-4" />
-                    ) : null}
-                  </button>
-                )}
-              </Menu.Item>
-            ))}
-          </div>
-        </Menu.Items>
-      </Transition>
-    </Menu>
+          />}
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent onFocusOutside={(e) => e.preventDefault()} className="w-[--radix-dropdown-menu-trigger-width] p-0 mt-2 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none" key={option}>
+          {options.map((optionItem) => (
+            <DropdownMenuItem key={optionItem} className="text-gray-700 border-none hover:outline-none p-0 hover:bg-gray-100 hover:text-gray-900">
+                <button
+                  onClick={() => setOption(optionItem)}
+                  className={classNames(
+                    option === optionItem ? "bg-gray-200" : "",
+                    "flex w-full items-center justify-between space-x-2 px-4 py-2 text-left text-sm",
+                  )}
+                >
+                  <span>{optionItem}</span>
+                  {option === optionItem ? (
+                    <CheckIcon className="w-4 h-4 text-bold" />
+                  ) : null}
+                </button>
+            </DropdownMenuItem>
+          ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

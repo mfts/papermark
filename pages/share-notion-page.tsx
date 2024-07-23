@@ -1,7 +1,6 @@
 import Head from "next/head";
 import Link from "next/link";
 
-import { Disclosure } from "@headlessui/react";
 import {
   RefreshCw as ArrowPathIcon,
   GitPullRequestArrow as CloudArrowUpIcon,
@@ -15,6 +14,7 @@ import {
 
 import Footer from "@/components/web/footer";
 import Navbar from "@/components/web/navbar";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 const features = [
   {
@@ -249,39 +249,18 @@ export default function Home() {
                 <h2 className="text-2xl font-bold leading-10 tracking-tight text-white">
                   Frequently asked questions
                 </h2>
-                <dl className="mt-10 space-y-6 divide-y divide-gray-900/10 dark:divide-gray-200/10">
+                <dl className="mt-10 divide-y divide-gray-900/10 dark:divide-gray-200/10">
                   {faqs.map((faq) => (
-                    <Disclosure as="div" key={faq.question} className="pt-6">
-                      {({ open }) => (
-                        <>
-                          <dt>
-                            <Disclosure.Button className="flex w-full items-start justify-between text-left text-gray-900 dark:text-gray-200">
-                              <span className="text-base font-semibold leading-7">
-                                {faq.question}
-                              </span>
-                              <span className="ml-6 flex h-7 items-center">
-                                {open ? (
-                                  <MinusSmallIcon
-                                    className="h-6 w-6"
-                                    aria-hidden="true"
-                                  />
-                                ) : (
-                                  <PlusSmallIcon
-                                    className="h-6 w-6"
-                                    aria-hidden="true"
-                                  />
-                                )}
-                              </span>
-                            </Disclosure.Button>
-                          </dt>
-                          <Disclosure.Panel as="dd" className="mt-2 pr-12">
-                            <p className="text-base leading-7 text-gray-500">
-                              {faq.answer}
-                            </p>
-                          </Disclosure.Panel>
-                        </>
-                      )}
-                    </Disclosure>
+                    <Accordion key={faq.question} type="single" collapsible>
+                    <AccordionItem value={faq.question} className="py-2 border-none">
+                      <AccordionTrigger className="text-left text-gray-900 dark:text-gray-200 text-base font-semibold leading-7 hover:no-underline">
+                        {faq.question}
+                      </AccordionTrigger>
+                      <AccordionContent className="text-base leading-7 text-gray-500">
+                        {faq.answer}
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
                   ))}
                 </dl>
               </div>
