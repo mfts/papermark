@@ -98,7 +98,7 @@ Visit [http://localhost:3000](http://localhost:3000) in your browser.
 
 ### with Docker
 
-#### 2. Copy the environment variables to `.env` and change the values where the DATABASE_URL="postgresql://postgres:mysecretpassword@db:5432/paper"
+#### 2. Copy the environment variables to `.env` and change the values where the DATABASE_URL="postgresql://postgres:mysecretpassword@db:5432/paper?schema=public"
 
 ```shell
 cp .env.example .env
