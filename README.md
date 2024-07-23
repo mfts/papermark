@@ -111,7 +111,7 @@ docker compose up
 ```
 
 
-#### 6. Open the app in your browser
+#### 4. Open the app in your browser
 
 Visit [http://localhost:3000](http://localhost:3000) in your browser.
 
