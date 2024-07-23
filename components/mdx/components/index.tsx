@@ -5,6 +5,7 @@ import { Code } from "bright";
 import { MDXComponents } from "mdx/types";
 
 import { Button } from "@/components/ui/button";
+import Faq from "@/components/web/faq";
 
 import { cn } from "@/lib/utils";
 
@@ -91,6 +92,11 @@ export const mdxComponents: MDXComponents = {
       return null;
 
     return <Table columns={columns} rows={rows} {...props} />;
+  },
+  Faq: ({ rows, ...props }) => {
+    if (!rows || rows.length === 0) return null;
+
+    return <Faq rows={rows} {...props} />;
   },
   // any other components you want to use in your markdown
 };
