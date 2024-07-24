@@ -22,6 +22,8 @@
     "@aws-sdk/cloudfront-signer": "^3.609.0",
     "@aws-sdk/s3-request-presigner": "^3.609.0",
     "@chronark/zod-bird": "^0.3.9",
+    "@dnd-kit/modifiers": "^7.0.0",
+    "@dnd-kit/sortable": "^8.0.0",
     "@github/webauthn-json": "^2.1.1",
     "@headlessui/react": "^1.7.19",
     "@jitsu/js": "^1.9.5",
