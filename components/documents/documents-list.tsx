@@ -96,27 +96,26 @@ export function DocumentsList({
           className="-m-2 h-[calc(100dvh-205px)] *:p-2"
           showScrollbar={true}
         >
-          {documents ? (
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              modifiers={[restrictToVerticalAxis, restrictToParentElement]}
-              // onDragEnd={({ active, over }) => {
-              //   if (over && active.id !== over.id ) {
-              //     const activeIndex = documents?.findIndex(
-              //       (document) => document.id === active.id,
-              //     );
-              //     const overIndex = documents?.findIndex(
-              //       (document) => document.id === over.id,
-              //     );
-            
-              //     console.log("this", activeIndex, overIndex);
-              //   }
-              // }}
+          {/* Documents list */}
+          <ul role="list" className="space-y-4">
+            {documents ? (
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                modifiers={[restrictToVerticalAxis, restrictToParentElement]}
+                // onDragEnd={({ active, over }) => {
+                //   if (over && active.id !== over.id ) {
+                //     const activeIndex = documents?.findIndex(
+                //       (document) => document.id === active.id,
+                //     );
+                //     const overIndex = documents?.findIndex(
+                //       (document) => document.id === over.id,
+                //     );
 
-            >
-               {/* Documents list */}
-              <ul role="list" className="space-y-4">
+                //     console.log("this", activeIndex, overIndex);
+                //   }
+                // }}
+              >
                 <SortableContext
                   items={documents}
                   strategy={verticalListSortingStrategy}
@@ -143,66 +142,66 @@ export function DocumentsList({
                     }
                   })}
                 </SortableContext>
-              </ul>
-            </DndContext>
-          ) : (
-            Array.from({ length: 3 }).map((_, i) => (
-              <li
-                key={i}
-                className="relative flex w-full items-center space-x-3 rounded-lg border px-4 py-5 sm:px-6 lg:px-6"
-              >
-                <Skeleton key={i} className="h-9 w-9" />
-                <div>
-                  <Skeleton key={i} className="h-4 w-32" />
-                  <Skeleton key={i + 1} className="mt-2 h-3 w-12" />
-                </div>
-                <Skeleton
-                  key={i + 1}
-                  className="absolute right-5 top-[50%] h-5 w-20 -translate-y-[50%] transform"
-                />
-              </li>
-            ))
-          )}
-
-          <div className="space-y-4">
-            {/* Folders list */}
-            <ul role="list" className="space-y-4">
-              {folders
-                ? folders.map((folder) => {
-                    return (
-                      <FolderCard
-                        key={folder.id}
-                        folder={folder}
-                        teamInfo={teamInfo}
-                        isDataroom={dataroomId ? true : false}
-                        dataroomId={dataroomId}
-                      />
-                    );
-                  })
-                : Array.from({ length: 3 }).map((_, i) => (
-                    <li
-                      key={i}
-                      className="relative flex w-full items-center space-x-3 rounded-lg border px-4 py-5 sm:px-6 lg:px-6"
-                    >
-                      <Skeleton key={i} className="h-9 w-9" />
-                      <div>
-                        <Skeleton key={i} className="h-4 w-32" />
-                        <Skeleton key={i + 1} className="mt-2 h-3 w-12" />
-                      </div>
-                      <Skeleton
-                        key={i + 1}
-                        className="absolute right-5 top-[50%] h-5 w-20 -translate-y-[50%] transform"
-                      />
-                    </li>
-                  ))}
-            </ul>
-
-            {documents && documents.length === 0 && (
-              <div className="flex items-center justify-center">
-                <EmptyDocuments />
-              </div>
+              </DndContext>
+            ) : (
+              Array.from({ length: 3 }).map((_, i) => (
+                <li
+                  key={i}
+                  className="relative ml-[60px] flex items-center space-x-3 rounded-lg border px-4 py-5 sm:px-6 lg:px-6"
+                >
+                  <Skeleton key={i} className="h-9 w-9" />
+                  <div>
+                    <Skeleton key={i} className="h-4 w-32" />
+                    <Skeleton key={i + 1} className="mt-2 h-3 w-12" />
+                  </div>
+                  <Skeleton
+                    key={i + 1}
+                    className="absolute right-5 top-[50%] h-5 w-20 -translate-y-[50%] transform"
+                  />
+                </li>
+              ))
             )}
-          </div>
+
+            <div className="space-y-4">
+              {/* Folders list */}
+              <ul role="list" className="space-y-4">
+                {folders
+                  ? folders.map((folder) => {
+                      return (
+                        <FolderCard
+                          key={folder.id}
+                          folder={folder}
+                          teamInfo={teamInfo}
+                          isDataroom={dataroomId ? true : false}
+                          dataroomId={dataroomId}
+                        />
+                      );
+                    })
+                  : Array.from({ length: 3 }).map((_, i) => (
+                      <li
+                        key={i}
+                        className="relative ml-[60px] flex items-center space-x-3 rounded-lg border px-4 py-5 sm:px-6 lg:px-6"
+                      >
+                        <Skeleton key={i} className="h-9 w-9" />
+                        <div>
+                          <Skeleton key={i} className="h-4 w-32" />
+                          <Skeleton key={i + 1} className="mt-2 h-3 w-12" />
+                        </div>
+                        <Skeleton
+                          key={i + 1}
+                          className="absolute right-5 top-[50%] h-5 w-20 -translate-y-[50%] transform"
+                        />
+                      </li>
+                    ))}
+              </ul>
+
+              {documents && documents.length === 0 && (
+                <div className="flex items-center justify-center">
+                  <EmptyDocuments />
+                </div>
+              )}
+            </div>
+          </ul>
         </ScrollArea>
       </UploadZone>
       <UploadNotificationDrawer
