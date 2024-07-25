@@ -69,23 +69,6 @@ export function DocumentsList({
     }),
   );
 
-  // function handleDragEnd(event: any) {
-  //   const { active, over } = event;
-
-  //   if (over && active.id !== over.id ) {
-  //     const activeIndex = documents?.findIndex(
-  //       (document) => document.id === active.id,
-  //     );
-  //     const overIndex = documents?.findIndex(
-  //       (document) => document.id === over.id,
-  //     );
-
-  //     console.log("this", activeIndex, overIndex);
-
-  //     };
-  //   }
-  // }
-
   return (
     <>
       <UploadZone
@@ -118,7 +101,19 @@ export function DocumentsList({
               sensors={sensors}
               collisionDetection={closestCenter}
               modifiers={[restrictToVerticalAxis, restrictToParentElement]}
-              // onDragEnd={handleDragEnd}
+              // onDragEnd={({ active, over }) => {
+              //   if (over && active.id !== over.id ) {
+              //     const activeIndex = documents?.findIndex(
+              //       (document) => document.id === active.id,
+              //     );
+              //     const overIndex = documents?.findIndex(
+              //       (document) => document.id === over.id,
+              //     );
+            
+              //     console.log("this", activeIndex, overIndex);
+              //   }
+              // }}
+
             >
                {/* Documents list */}
               <ul role="list" className="space-y-4">
