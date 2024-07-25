@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 import { TeamContextType } from "@/context/team-context";
-import { FolderInputIcon, MoreVertical, TrashIcon } from "lucide-react";
+import { FolderInputIcon, MoreVertical, TrashIcon, GripVertical } from "lucide-react";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
 import { mutate } from "swr";
@@ -28,6 +28,8 @@ import { type DataroomFolderDocument } from "@/lib/swr/use-dataroom";
 import { type DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
 import { nFormatter, timeAgo } from "@/lib/utils";
 import { useCopyToClipboard } from "@/lib/utils/use-copy-to-clipboard";
+import {useSortable} from '@dnd-kit/sortable';
+import {CSS} from '@dnd-kit/utilities';
 
 import { MoveToDataroomFolderModal } from "./move-dataroom-folder-modal";
 
@@ -48,10 +50,27 @@ export default function DataroomDocumentCard({
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
   const [moveFolderOpen, setMoveFolderOpen] = useState<boolean>(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging
+  } = useSortable({id: document.id});
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
 
   return (
     <>
-      <li className="group/row relative flex items-center justify-between rounded-lg border-0 p-3 ring-1 ring-gray-200 transition-all hover:bg-secondary hover:ring-gray-300 dark:bg-secondary dark:ring-gray-700 hover:dark:ring-gray-500 sm:p-4">
+      <li data-state={isDragging ? "dragging" : undefined} ref={setNodeRef} style={style} className="relative flex group items-center gap-5 data-[state=dragging]:cursor-grabbing data-[state=dragging]:z-10">
+        <Button  {...attributes} {...listeners} className="invisible group-hover:visible group-data-[state=dragging]:visible cursor-grab group-data-[state=dragging]:cursor-grabbing" variant="ghost" size="icon">
+          <GripVertical className="text-gray-300" />
+        </Button> 
+        <div className="group/row relative flex items-center justify-between rounded-lg border-0 p-3 ring-1 ring-gray-200 transition-all hover:bg-secondary hover:ring-gray-300 dark:bg-secondary dark:ring-gray-700 hover:dark:ring-gray-500 group-data-[state=dragging]:bg-secondary sm:p-4 grow">
         <div className="flex min-w-0 shrink items-center space-x-2 sm:space-x-4">
           <div className="mx-0.5 flex w-8 items-center justify-center text-center sm:mx-1">
             {document.document.type === "notion" ? (
@@ -139,7 +158,7 @@ export default function DataroomDocumentCard({
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-      </li>
+      </div>
       {moveFolderOpen ? (
         <MoveToDataroomFolderModal
           open={moveFolderOpen}
@@ -149,6 +168,9 @@ export default function DataroomDocumentCard({
           documentName={document.document.name}
         />
       ) : null}
+
+      </li>
+      
     </>
   );
 }
