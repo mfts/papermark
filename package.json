@@ -23,7 +23,6 @@
     "@aws-sdk/s3-request-presigner": "^3.614.0",
     "@chronark/zod-bird": "^0.3.9",
     "@github/webauthn-json": "^2.1.1",
-    "@headlessui/react": "^1.7.19",
     "@jitsu/js": "^1.9.5",
     "@mdx-js/loader": "^3.0.1",
     "@mdx-js/react": "^3.0.1",

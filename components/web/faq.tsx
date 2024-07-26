@@ -5,8 +5,6 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion"
-import { Minus as MinusSmallIcon, Plus as PlusSmallIcon } from "lucide-react";
-
 const faqs = [
   {
     question: "What is Papermark?",
@@ -48,22 +46,20 @@ const faqs = [
 export default function Faq() {
   return (
     <div className="">
-        <Accordion type="single" collapsible className="space-y-4">
-          {faqs.map((faq) => (
-            <AccordionItem  key={faq.question} value={faq.question} >
-              <AccordionTrigger className="flex w-full items-start justify-between text-left text-gray-800 hover:no-underline">
-                <span className="text-balance  font-medium leading-7">
-                  {faq.question}
-                </span>
-              </AccordionTrigger>
-              <AccordionContent className="mt-2 pr-12">
-                <p className="text-balance leading-7 text-gray-500">
-                  {faq.answer}
-                </p>
-              </AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
+        <dl className="mt-10 divide-y divide-gray-800/10">
+            {faqs.map((faq) => (
+              <Accordion key={faq.question} type="single" collapsible>
+                <AccordionItem value={faq.question} className="py-2 border-none">
+                  <AccordionTrigger className="text-left text-gray-800 dark:text-gray-200 text-balance font-medium leading-7 hover:no-underline">
+                    {faq.question}
+                  </AccordionTrigger>
+                  <AccordionContent className="text-base leading-7 text-gray-500">
+                    {faq.answer}
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            ))}
+        </dl>
     </div>
   );
 }
