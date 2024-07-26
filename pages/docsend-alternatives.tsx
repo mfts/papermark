@@ -162,8 +162,8 @@ Please note that the prices and availability of features may vary, and it is rec
                 <div className="flex w-full flex-col items-center">
                   <div className="pb-1">
                     <img
-                      src="https://media.licdn.com/dms/image/C560BAQF0P4VJimYMZw/company-logo_200_200/0/1630615035618?e=1720656000&v=beta&t=gWnITXssNMEKBqbdPrGev6pbQf9iLywYEr404OFtKV0"
-                      alt="App screenshot"
+                      src="https://assets.papermark.io/upload/file_92Bos9juXhoWZMSHEd5E1h-1630615035618.jpeg"
+                      alt="Docsend logo"
                       className="mx-auto"
                       width={100}
                       height={50}
