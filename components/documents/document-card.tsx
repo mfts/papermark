@@ -68,6 +68,15 @@ export default function DocumentsCard({
     );
   }
 
+  // https://github.com/radix-ui/primitives/issues/1241#issuecomment-1888232392
+  useEffect(() => {
+    if (!moveFolderOpen || !addDataroomOpen) {
+      setTimeout(() => {
+        document.body.style.pointerEvents = "";
+      });
+    }
+  }, [moveFolderOpen, addDataroomOpen]);
+
   useEffect(() => {
     function handleClickOutside(event: { target: any }) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
