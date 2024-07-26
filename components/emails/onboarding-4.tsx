@@ -7,18 +7,13 @@ import {
   Head,
   Hr,
   Html,
-  Link,
   Preview,
   Section,
   Tailwind,
   Text,
 } from "@react-email/components";
 
-interface Onboarding4EmailProps {
-  name: string | null | undefined;
-}
-
-const Onboarding4Email = ({ name }: Onboarding4EmailProps) => {
+const Onboarding4Email = () => {
   const previewText = `The document sharing infrastructure for the modern web`;
 
   return (
@@ -44,7 +39,7 @@ const Onboarding4Email = ({ name }: Onboarding4EmailProps) => {
                   Share documnets with your <strong>custom domain💫</strong>{" "}
                 </li>
 
-                <li>Remove "powered by Papermark"</li>
+                <li>Remove &quot;powered by Papermark&quot;</li>
                 <li>Add logo and custom colors</li>
                 <li>Share data room with custom domain</li>
                 <li>Add banner and custom brand to data rooms</li>
@@ -88,7 +83,7 @@ const Onboarding4Email = ({ name }: Onboarding4EmailProps) => {
               </Text>
               <Text className="text-xs">
                 If you have any feedback or questions about this email, simply
-                reply to it. I'd love to hear from you!{" "}
+                reply to it. I&apos;d love to hear from you!{" "}
               </Text>
 
               <Text className="text-xs">Stop this onboarding sequence</Text>

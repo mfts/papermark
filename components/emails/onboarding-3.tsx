@@ -7,18 +7,13 @@ import {
   Head,
   Hr,
   Html,
-  Link,
   Preview,
   Section,
   Tailwind,
   Text,
 } from "@react-email/components";
 
-interface Onboarding3EmailProps {
-  name: string | null | undefined;
-}
-
-const Onboarding3Email = ({ name }: Onboarding3EmailProps) => {
+const Onboarding3Email = () => {
   const previewText = `The document sharing infrastructure for the modern web`;
 
   return (
@@ -82,7 +77,7 @@ const Onboarding3Email = ({ name }: Onboarding3EmailProps) => {
               </Text>
               <Text className="text-xs">
                 If you have any feedback or questions about this email, simply
-                reply to it. I'd love to hear from you!{" "}
+                reply to it. I&apos;d love to hear from you!{" "}
               </Text>
 
               <Text className="text-xs">Stop this onboarding sequence</Text>
