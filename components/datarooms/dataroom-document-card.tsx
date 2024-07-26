@@ -36,7 +36,7 @@ type DocumentsCardProps = {
   teamInfo: TeamContextType | null;
 };
 export default function DataroomDocumentCard({
-  document,
+  document: dataroomDocument,
   teamInfo,
 }: DocumentsCardProps) {
   const { theme, systemTheme } = useTheme();
@@ -49,16 +49,25 @@ export default function DataroomDocumentCard({
   const [moveFolderOpen, setMoveFolderOpen] = useState<boolean>(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
+  // https://github.com/radix-ui/primitives/issues/1241#issuecomment-1888232392
+  useEffect(() => {
+    if (!moveFolderOpen) {
+      setTimeout(() => {
+        document.body.style.pointerEvents = "";
+      });
+    }
+  }, [moveFolderOpen]);
+
   return (
     <>
       <li className="group/row relative flex items-center justify-between rounded-lg border-0 p-3 ring-1 ring-gray-200 transition-all hover:bg-secondary hover:ring-gray-300 dark:bg-secondary dark:ring-gray-700 hover:dark:ring-gray-500 sm:p-4">
         <div className="flex min-w-0 shrink items-center space-x-2 sm:space-x-4">
           <div className="mx-0.5 flex w-8 items-center justify-center text-center sm:mx-1">
-            {document.document.type === "notion" ? (
+            {dataroomDocument.document.type === "notion" ? (
               <NotionIcon className="h-8 w-8" />
             ) : (
               <Image
-                src={`/_icons/${document.document.type}${isLight ? "-light" : ""}.svg`}
+                src={`/_icons/${dataroomDocument.document.type}${isLight ? "-light" : ""}.svg`}
                 alt="File icon"
                 width={50}
                 height={50}
@@ -70,20 +79,20 @@ export default function DataroomDocumentCard({
             <div className="flex items-center">
               <h2 className="min-w-0 max-w-[150px] truncate text-sm font-semibold leading-6 text-foreground sm:max-w-md">
                 <Link
-                  href={`/documents/${document.document.id}`}
+                  href={`/documents/${dataroomDocument.document.id}`}
                   className="w-full truncate"
                 >
-                  <span>{document.document.name}</span>
+                  <span>{dataroomDocument.document.name}</span>
                   <span className="absolute inset-0" />
                 </Link>
               </h2>
             </div>
             <div className="mt-1 flex items-center space-x-1 text-xs leading-5 text-muted-foreground">
-              <p className="truncate">{timeAgo(document.createdAt)}</p>
-              {document.document._count.versions > 1 ? (
+              <p className="truncate">{timeAgo(dataroomDocument.createdAt)}</p>
+              {dataroomDocument.document._count.versions > 1 ? (
                 <>
                   <p>•</p>
-                  <p className="truncate">{`${document.document._count.versions} Versions`}</p>
+                  <p className="truncate">{`${dataroomDocument.document._count.versions} Versions`}</p>
                 </>
               ) : null}
             </div>
@@ -95,12 +104,12 @@ export default function DataroomDocumentCard({
             onClick={(e) => {
               e.stopPropagation();
             }}
-            href={`/documents/${document.document.id}`}
+            href={`/documents/${dataroomDocument.document.id}`}
             className="z-10 flex items-center space-x-1 rounded-md bg-gray-200 px-1.5 py-0.5 transition-all duration-75 hover:scale-105 active:scale-100 dark:bg-gray-700 sm:px-2"
           >
             <BarChart className="h-3 w-3 text-muted-foreground sm:h-4 sm:w-4" />
             <p className="whitespace-nowrap text-xs text-muted-foreground sm:text-sm">
-              {nFormatter(document.document._count.views)}
+              {nFormatter(dataroomDocument.document._count.views)}
               <span className="ml-1 hidden sm:inline-block">views</span>
             </p>
           </Link>
@@ -144,9 +153,9 @@ export default function DataroomDocumentCard({
         <MoveToDataroomFolderModal
           open={moveFolderOpen}
           setOpen={setMoveFolderOpen}
-          dataroomId={document.dataroomId}
-          documentId={document.id}
-          documentName={document.document.name}
+          dataroomId={dataroomDocument.dataroomId}
+          documentId={dataroomDocument.id}
+          documentName={dataroomDocument.document.name}
         />
       ) : null}
     </>

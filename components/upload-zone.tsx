@@ -96,7 +96,7 @@ export default function UploadZone({
   const router = useRouter();
   const teamInfo = useTeam();
   const { data: session } = useSession();
-  const maxSize = plan === "business" || plan === "datarooms" ? 100 : 30;
+  const maxSize = plan === "business" || plan === "datarooms" ? 250 : 30;
 
   const [progress, setProgress] = useState<number>(0);
   const [showProgress, setShowProgress] = useState(false);

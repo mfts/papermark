@@ -107,6 +107,7 @@
     "react-notion-x": "^6.16.0",
     "react-pdf": "^8.0.2",
     "react-phone-number-input": "^3.4.3",
+    "react-player": "^2.16.0",
     "react-textarea-autosize": "^8.5.3",
     "react-zoom-pan-pinch": "^3.6.1",
     "rehype-autolink-headings": "^7.1.0",

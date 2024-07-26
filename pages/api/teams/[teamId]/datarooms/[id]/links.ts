@@ -51,7 +51,7 @@ export default async function handle(
           linkType: "DATAROOM_LINK",
         },
         orderBy: {
-          createdAt: "asc",
+          createdAt: "desc",
         },
         include: {
           views: {

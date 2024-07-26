@@ -181,7 +181,7 @@ export default function LinkSheet({
         `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
           targetId,
         )}/links`,
-        [...(existingLinks || []), returnedLink],
+        [returnedLink, ...(existingLinks || [])],
         false,
       );
 
