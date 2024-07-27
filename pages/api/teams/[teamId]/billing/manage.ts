@@ -5,6 +5,7 @@ import { getServerSession } from "next-auth/next";
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
 import { stripe } from "@/lib/stripe";
+import { CustomUser } from "@/lib/types";
 
 import { authOptions } from "../../../auth/[...nextauth]";
 
@@ -25,6 +26,11 @@ export default async function handle(
       const team = await prisma.team.findUnique({
         where: {
           id: teamId,
+          users: {
+            some: {
+              userId: (session.user as CustomUser).id,
+            },
+          },
         },
         select: {
           stripeId: true,
