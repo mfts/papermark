@@ -103,7 +103,7 @@ export default function FolderCard({
         },
       ),
       {
-        loading: "Deleting folder...",
+        loading: isDataroom ? "Removing folder..." : "Deleting folder...",
         success: () => {
           mutate(
             `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}?root=true`,
@@ -114,9 +114,13 @@ export default function FolderCard({
           mutate(
             `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}${parentFolderPath}`,
           );
-          return "Folder deleted successfully.";
+          return isDataroom
+            ? "Folder removed successfully."
+            : "Folder deleted successfully.";
         },
-        error: "Failed to delete folder. Move documents first.",
+        error: isDataroom
+          ? "Failed to remove folder."
+          : "Failed to delete folder. Move documents first.",
       },
     );
   };
@@ -242,10 +246,11 @@ export default function FolderCard({
                 className="text-destructive duration-200 focus:bg-destructive focus:text-destructive-foreground"
               >
                 {isFirstClick ? (
-                  "Really delete?"
+                  `Really ${isDataroom ? "remove" : "delete"}?`
                 ) : (
                   <>
-                    <TrashIcon className="mr-2 h-4 w-4" /> Delete Folder
+                    <TrashIcon className="mr-2 h-4 w-4" />{" "}
+                    {isDataroom ? "Remove Folder" : "Delete Folder"}
                   </>
                 )}
               </DropdownMenuItem>
