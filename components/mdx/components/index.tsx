@@ -5,10 +5,10 @@ import { Code } from "bright";
 import { MDXComponents } from "mdx/types";
 
 import { Button } from "@/components/ui/button";
-import Faq from "@/components/web/faq";
 
 import { cn } from "@/lib/utils";
 
+import { Faq } from "./faq";
 import { Table } from "./feature-table";
 import { MDXImage } from "./mdx-image";
 import { VideoPlayer, YoutubePlayer } from "./video";
