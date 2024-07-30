@@ -111,6 +111,7 @@ export default function AdvancedExcelViewer({
         setDocumentData={setDocumentData}
         type="sheet"
         isPreview={isPreview}
+        allowDownload={allowDownload}
       />
       <div
         style={{ height: "calc(100dvh - 64px)" }}
