@@ -61,7 +61,6 @@ export default function AccessForm({
     }
   }, [email]);
 
-  console.log("brand", brand);
   return (
     <div
       className="flex h-dvh flex-col justify-between pb-4 pt-12"
