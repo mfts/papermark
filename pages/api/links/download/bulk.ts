@@ -1,70 +1,13 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
-import {
-  InvocationType,
-  InvokeCommand,
-  LambdaClient,
-} from "@aws-sdk/client-lambda";
+import { InvocationType, InvokeCommand } from "@aws-sdk/client-lambda";
 import { ViewType } from "@prisma/client";
-import archiver from "archiver";
-import mime from "mime-types";
 
-import { getS3Client } from "@/lib/files/aws-client";
-import { S3DownloadService } from "@/lib/files/bulk-download";
-import { getFile } from "@/lib/files/get-file";
+import { getLambdaClient } from "@/lib/files/aws-client";
 import prisma from "@/lib/prisma";
-import {
-  getExtensionFromSupportedType,
-  getMimeTypeFromSupportedType,
-} from "@/lib/utils/get-content-type";
 
 export const config = {
   maxDuration: 180,
-};
-
-const s3Client = getS3Client();
-const s3Service = new S3DownloadService(s3Client);
-
-const finalizeArchiveSafely = (archive: archiver.Archiver): Promise<void> => {
-  return new Promise((resolve, reject) => {
-    archive.on("error", reject);
-    archive.finalize().then(resolve).catch(reject);
-  });
-};
-
-const sanitizeFileName = (name: string, mimeType: string): string => {
-  // Replace newlines and other potentially problematic characters
-  let sanitized = name.replace(/[\n\r\\\/]/g, "_");
-
-  // Add correct extension if it doesn't exist
-  const extension = mime.extension(getMimeTypeFromSupportedType(mimeType)!);
-  if (extension && !sanitized.endsWith(`.${extension}`)) {
-    sanitized += `.${extension}`;
-  }
-
-  return sanitized;
-};
-
-const generateUniqueFileName = (
-  name: string,
-  existingNames: Set<string>,
-): string => {
-  let uniqueName = name;
-  let counter = 1;
-
-  while (existingNames.has(uniqueName)) {
-    const nameParts = name.split(".");
-    if (nameParts.length > 1) {
-      const ext = nameParts.pop();
-      uniqueName = `${nameParts.join(".")} (${counter}).${ext}`;
-    } else {
-      uniqueName = `${name}_${counter}`;
-    }
-    counter++;
-  }
-
-  existingNames.add(uniqueName);
-  return uniqueName;
 };
 
 export default async function handle(
@@ -163,15 +106,7 @@ export default async function handle(
           return doc.document.versions[0].file;
         });
 
-      const client = new LambdaClient({
-        region: process.env.NEXT_PRIVATE_UPLOAD_REGION || "eu-central-1",
-        credentials: {
-          accessKeyId: String(process.env.NEXT_PRIVATE_UPLOAD_ACCESS_KEY_ID),
-          secretAccessKey: String(
-            process.env.NEXT_PRIVATE_UPLOAD_SECRET_ACCESS_KEY,
-          ),
-        },
-      });
+      const client = getLambdaClient();
 
       const params = {
         FunctionName: "bulk-download-zip-creator-prod", // Use the name you gave your Lambda function
