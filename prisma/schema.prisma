@@ -223,7 +223,7 @@ model Link {
   createdAt                  DateTime   @default(now())
   updatedAt                  DateTime   @updatedAt
   enableNotification         Boolean?   @default(true) // Optional give user a option to pause/resume the notifications
-  enableFeedback             Boolean?   @default(true) // Optional give user a option to enable the reactions toolbar
+  enableFeedback             Boolean?   @default(false) // Optional give user a option to enable the reactions toolbar
   enableQuestion             Boolean?   @default(false) // Optional give user a option to enable the question feedback
   enableScreenshotProtection Boolean?   @default(false) // Optional give user a option to enable the screenshot protection
   feedback                   Feedback?

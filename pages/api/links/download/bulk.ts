@@ -13,6 +13,10 @@ import {
   getMimeTypeFromSupportedType,
 } from "@/lib/utils/get-content-type";
 
+export const config = {
+  maxDuration: 180,
+};
+
 const s3Client = getS3Client();
 const s3Service = new S3DownloadService(s3Client);
 
