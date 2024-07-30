@@ -37,16 +37,19 @@ export default function Home() {
 
         <meta
           name="description"
-          content="Secure and manage your business documents with Papermark Virtual Data Room. Designed for optimal security and collaboration, our solution adapts to your unique needs."
+          content="Papermark Virtual Data Room offers a secure platform for your business’s document storage and collaboration needs. Enhance your operational efficiency with tailored features."
+          key="description"
         />
 
         <meta
           property="og:description"
           content="Papermark Virtual Data Room offers a secure platform for your business’s document storage and collaboration needs. Enhance your operational efficiency with tailored features."
+          key="og-description"
         />
         <meta
           property="og:title"
-          content="Virtual Data Room Powered by Papermark | Tailored for Your Business"
+          content="Virtual Data Room | Powered by Papermark"
+          key="og-title"
         />
 
         <meta
