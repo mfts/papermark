@@ -69,14 +69,8 @@ export default function DataroomNav({
         {
           loading: "Downloading dataroom...",
           success: async (response) => {
-            const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
-            const link = document.createElement("a");
-            link.href = url;
-            link.setAttribute("download", "files.zip");
-            document.body.appendChild(link);
-            link.click();
-            link.remove();
+            const { downloadUrl } = await response.json();
+            window.open(downloadUrl, "_blank");
             return "Dataroom downloaded successfully.";
           },
           error: (error) => {

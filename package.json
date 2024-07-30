@@ -18,9 +18,10 @@
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,mdx}\""
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.614.0",
+    "@aws-sdk/client-lambda": "^3.620.1",
+    "@aws-sdk/client-s3": "^3.620.1",
     "@aws-sdk/cloudfront-signer": "^3.609.0",
-    "@aws-sdk/s3-request-presigner": "^3.614.0",
+    "@aws-sdk/s3-request-presigner": "^3.620.1",
     "@chronark/zod-bird": "^0.3.9",
     "@github/webauthn-json": "^2.1.1",
     "@headlessui/react": "^1.7.19",

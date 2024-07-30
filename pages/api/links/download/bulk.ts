@@ -1,5 +1,10 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
+import {
+  InvocationType,
+  InvokeCommand,
+  LambdaClient,
+} from "@aws-sdk/client-lambda";
 import { ViewType } from "@prisma/client";
 import archiver from "archiver";
 import mime from "mime-types";
@@ -151,55 +156,52 @@ export default async function handle(
         data: { downloadedAt: new Date() },
       });
 
-      // get a list of file keys that are not "notion" and return storageType and file
-      const fileKeys = view.dataroom.documents
+      const fileKeysOnly = view.dataroom.documents
         .filter((doc) => doc.document.versions[0].type !== "notion")
+        .filter((doc) => doc.document.versions[0].storageType === "VERCEL_BLOB")
         .map((doc) => {
-          return {
-            file: doc.document.versions[0].file,
-            storageType: doc.document.versions[0].storageType,
-            name: doc.document.name,
-            contentType: doc.document.versions[0].type,
-          };
+          return doc.document.versions[0].file;
         });
 
-      const archive = archiver("zip", { zlib: { level: 9 } });
-      const existingNames = new Set<string>();
+      const client = new LambdaClient({
+        region: process.env.NEXT_PRIVATE_UPLOAD_REGION || "eu-central-1",
+        credentials: {
+          accessKeyId: String(process.env.NEXT_PRIVATE_UPLOAD_ACCESS_KEY_ID),
+          secretAccessKey: String(
+            process.env.NEXT_PRIVATE_UPLOAD_SECRET_ACCESS_KEY,
+          ),
+        },
+      });
+
+      const params = {
+        FunctionName: "bulk-download-zip-creator-prod", // Use the name you gave your Lambda function
+        InvocationType: InvocationType.RequestResponse,
+        Payload: JSON.stringify({
+          sourceBucket: process.env.NEXT_PRIVATE_UPLOAD_BUCKET,
+          fileKeys: fileKeysOnly,
+        }),
+      };
 
       try {
-        res.setHeader("Content-Type", "application/zip");
-        res.setHeader("Content-Disposition", "attachment; filename=files.zip");
+        const command = new InvokeCommand(params);
+        const response = await client.send(command);
 
-        archive.pipe(res);
+        if (response.Payload) {
+          const decodedPayload = new TextDecoder().decode(response.Payload);
 
-        for (const file of fileKeys) {
-          const sanitizedFileName = sanitizeFileName(
-            file.name,
-            file.contentType!,
-          );
-          const uniqueFileName = generateUniqueFileName(
-            sanitizedFileName,
-            existingNames,
-          );
-          if (file.file.startsWith("https://")) {
-            const downloadStream = s3Service.createLazyDownloadStreamFromUrl(
-              file.file,
-            );
-            archive.append(downloadStream, { name: uniqueFileName });
-          } else {
-            const downloadStream = s3Service.createLazyDownloadStreamFrom(
-              process.env.NEXT_PRIVATE_UPLOAD_BUCKET as string,
-              file.file,
-            );
-            archive.append(downloadStream, { name: uniqueFileName });
-          }
+          const payload = JSON.parse(decodedPayload);
+          const { downloadUrl } = JSON.parse(payload.body);
+
+          res.status(200).json({ downloadUrl });
+        } else {
+          throw new Error("Payload is undefined or empty");
         }
-
-        await finalizeArchiveSafely(archive);
       } catch (error) {
-        console.error(error);
-        archive.abort();
-        return res.status(500).json({ error: "Failed to download files" });
+        console.error("Error invoking Lambda:", error);
+        res.status(500).json({
+          error: "Failed to generate download link",
+          details: (error as Error).message,
+        });
       }
     } catch (error) {
       return res.status(500).json({
