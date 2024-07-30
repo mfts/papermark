@@ -158,7 +158,7 @@ export default async function handle(
 
       const fileKeysOnly = view.dataroom.documents
         .filter((doc) => doc.document.versions[0].type !== "notion")
-        .filter((doc) => doc.document.versions[0].storageType === "VERCEL_BLOB")
+        .filter((doc) => doc.document.versions[0].storageType !== "VERCEL_BLOB")
         .map((doc) => {
           return doc.document.versions[0].file;
         });
