@@ -230,6 +230,7 @@ model Link {
   enableAgreement            Boolean?   @default(false) // Optional give user a option to enable the terms and conditions
   agreement                  Agreement? @relation(fields: [agreementId], references: [id], onDelete: SetNull)
   agreementId                String? // This can be nullable, representing links without agreements
+  showBanner                 Boolean?   @default(false) // Optional give user a option to show the banner and end of document signup form
 
   // custom metatags
   metaTitle           String? // This will be the meta title of the link

@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
+import { LinkType } from "@prisma/client";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
@@ -14,7 +15,6 @@ import { Separator } from "@/components/ui/separator";
 import {
   Sheet,
   SheetContent,
-  SheetDescription,
   SheetFooter,
   SheetHeader,
   SheetTitle,
@@ -22,7 +22,6 @@ import {
 
 import { useAnalytics } from "@/lib/analytics";
 import { usePlan } from "@/lib/swr/use-billing";
-import { useDocumentLinks } from "@/lib/swr/use-document";
 import { useDomains } from "@/lib/swr/use-domains";
 import { LinkWithViews } from "@/lib/types";
 import { convertDataUrlToFile, uploadImage } from "@/lib/utils";
@@ -30,7 +29,7 @@ import { convertDataUrlToFile, uploadImage } from "@/lib/utils";
 import DomainSection from "./domain-section";
 import { LinkOptions } from "./link-options";
 
-export const DEFAULT_LINK_PROPS = {
+export const DEFAULT_LINK_PROPS = (linkType: LinkType) => ({
   id: null,
   name: null,
   domain: null,
@@ -43,7 +42,7 @@ export const DEFAULT_LINK_PROPS = {
   allowList: [],
   denyList: [],
   enableNotification: true,
-  enableFeedback: true,
+  enableFeedback: false,
   enableScreenshotProtection: false,
   enableCustomMetatag: false,
   metaTitle: null,
@@ -54,7 +53,8 @@ export const DEFAULT_LINK_PROPS = {
   questionType: null,
   enableAgreement: false,
   agreementId: null,
-};
+  showBanner: linkType === LinkType.DOCUMENT_LINK ? true : false,
+});
 
 export type DEFAULT_LINK_TYPE = {
   id: string | null;
@@ -80,6 +80,7 @@ export type DEFAULT_LINK_TYPE = {
   questionType: string | null;
   enableAgreement: boolean; // agreement
   agreementId: string | null;
+  showBanner: boolean;
 };
 
 export default function LinkSheet({
@@ -91,7 +92,7 @@ export default function LinkSheet({
 }: {
   isOpen: boolean;
   setIsOpen: Dispatch<SetStateAction<boolean>>;
-  linkType: "DOCUMENT_LINK" | "DATAROOM_LINK";
+  linkType: LinkType;
   currentLink?: DEFAULT_LINK_TYPE;
   existingLinks?: LinkWithViews[];
 }) {
@@ -99,14 +100,16 @@ export default function LinkSheet({
   const teamInfo = useTeam();
   const { plan } = usePlan();
   const analytics = useAnalytics();
-  const [data, setData] = useState<DEFAULT_LINK_TYPE>(DEFAULT_LINK_PROPS);
+  const [data, setData] = useState<DEFAULT_LINK_TYPE>(
+    DEFAULT_LINK_PROPS(linkType),
+  );
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const router = useRouter();
   const targetId = router.query.id as string;
 
   useEffect(() => {
-    setData(currentLink || DEFAULT_LINK_PROPS);
+    setData(currentLink || DEFAULT_LINK_PROPS(linkType));
   }, [currentLink]);
 
   const handleSubmit = async (event: any) => {
@@ -195,7 +198,7 @@ export default function LinkSheet({
       toast.success("Link created successfully");
     }
 
-    setData(DEFAULT_LINK_PROPS);
+    setData(DEFAULT_LINK_PROPS(linkType));
     setIsLoading(false);
   };
 
@@ -248,7 +251,11 @@ export default function LinkSheet({
                       </div>
                     </div>
 
-                    <LinkOptions data={data} setData={setData} />
+                    <LinkOptions
+                      data={data}
+                      setData={setData}
+                      linkType={linkType}
+                    />
                   </div>
                 </div>
               </div>
