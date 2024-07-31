@@ -1,5 +1,4 @@
 import Sidebar from "../Sidebar";
-import { ScrollArea } from "../ui/scroll-area";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
