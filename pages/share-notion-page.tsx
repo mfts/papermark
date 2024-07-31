@@ -52,6 +52,45 @@ const features = [
   },
 ];
 
+const faqs = [
+  {
+    question: "What is Papermark?",
+    answer:
+      "Papermark is an innovative platform designed to extend the capabilities of Notion pages. It allows users to share Notion documents or pages with custom domain support, password protection, email capture, and comprehensive analytics tracking.",
+  },
+  {
+    question: "How can I use Papermark for Notion?",
+    answer:
+      "Using Papermark is straightforward. Set up your Notion page, then use Papermark to share it with enhanced features like custom domains, password protection, and more. It's perfect for professionals who need secure and trackable document sharing.",
+  },
+  {
+    question: "Is Papermark free to use?",
+    answer:
+      "Papermark offers both free and premium options. The open-source nature of Papermark allows for flexibility and customization, with advanced features available in our premium plans.",
+  },
+  {
+    question: "Can I add my custom domain to Papermark?",
+    answer:
+      "Absolutely! Papermark supports custom domains, enabling you to maintain your brand's identity while sharing your Notion pages or documents.",
+  },
+  {
+    question: "How can I track visitor engagement on my shared Notion pages?",
+    answer:
+      "Papermark provides detailed analytics for your shared Notion pages, including visitor insights, engagement metrics, and more, helping you understand your audience better.",
+  },
+  {
+    question: "Can I secure my Notion pages with Papermark?",
+    answer:
+      "Yes, Papermark offers robust password protection for your Notion pages, ensuring that your shared documents are accessed only by intended recipients.",
+  },
+  {
+    question: "Can I contribute to improving Papermark?",
+    answer:
+      "We welcome contributions to Papermark! Our GitHub repository is open for developers to contribute, whether it's through code enhancements, feature additions, or bug reporting.",
+  },
+  // More questions...
+];
+
 export default function Home() {
   return (
     <div>
@@ -208,7 +247,7 @@ export default function Home() {
                 <h2 className="text-2xl font-bold leading-10 tracking-tight text-black">
                   Frequently asked questions
                 </h2>
-                <Faq/>
+                <Faq faqs={faqs}/>
               </div>
             </div>
           </div>

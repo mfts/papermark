@@ -20,25 +20,9 @@ export default function DropDown({
   option,
   setOption,
 }: DropDownProps) {
-  const [menuOpen, setMenuOpen] = useState<boolean>(false);
-  const [isFirstClick, setIsFirstClick] = useState<boolean>(false);
 
-  const handleMenuStateChange = (open: boolean) => {
-    if (isFirstClick) {
-      setMenuOpen(true); // Keep the dropdown open on the first click
-      return;
-    }
-
-    // If the menu is closed, reset the isFirstClick state
-    if (!open) {
-      setIsFirstClick(false);
-      setMenuOpen(false); // Ensure the dropdown is closed
-    } else {
-      setMenuOpen(true); // Open the dropdown
-    }
-  };
   return (
-    <Select open={menuOpen} onOpenChange={handleMenuStateChange}>
+    <Select>
       <SelectTrigger className="inline-flex w-full justify-between items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-gray-400 font-light shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue text-base">
         <SelectValue placeholder={option}/>
       </SelectTrigger>
@@ -47,7 +31,6 @@ export default function DropDown({
           <button
             onClick={() => {
               setOption(optionItem)
-              setMenuOpen(false)
             }}
             className={cn(
               option === optionItem ? "bg-gray-200" : "hover:bg-gray-100",

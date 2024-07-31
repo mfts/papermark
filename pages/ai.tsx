@@ -67,6 +67,50 @@ const features = [
   },
 ];
 
+const faqs = [
+  {
+    question: "What is Papermark AI?",
+    answer:
+      "Papermark AI is an innovative AI document assistant that enables users to interact with a variety of documents, such as pitch decks, sales decks, and PDFs, in a more efficient and secure manner.",
+  },
+  {
+    question: "How can I use Papermark AI?",
+    answer:
+      "You can use it on shared with you document and on received. You can chat with the document, ask question, find information without checking whole document.",
+  },
+  {
+    question: "Is Papermark AI free?",
+    answer:
+      "Yes, Papermark AI offers an open-source version, giving you the freedom to use and modify it according to your needs, under the terms of our license.",
+  },
+  {
+    question: "How can Papermark AI help me reach more investors?",
+    answer:
+      "Papermark AI provides recommendations and analytics to help you fine-tune your pitch decks, increasing your chances of making a successful connection with potential investors.",
+  },
+  {
+    question: "How I as an investor can use Papermark AI?",
+    answer:
+      "VCs can utilize Papermark AI to efficiently analyze and summarize data from various pitch decks, streamlining their investment decision-making process. Search inside the pitch deck, summarise and turn it into Memo.",
+  },
+  {
+    question: "Can I contribute to the Papermark AI project?",
+    answer:
+      "Definitely! We welcome contributions to Papermark AI. Whether it's improving the code, adding new features, or reporting bugs, your input is highly valued.",
+  },
+  {
+    question: "How to summarise document with Papermark AI?",
+    answer:
+      "You can use one of the starting commands and get the summary of received docuement. If you want that documents shared with you.",
+  },
+  {
+    question: "How to turn Pitch Deck into Memo?",
+    answer:
+      "You can use Papermark AI and ask it to create Memo from Pitch Deck received. You can also uplaod your own Pitch deck there.",
+  },
+
+  // More questions...
+];
 
 const tiers = [
   {
@@ -428,7 +472,7 @@ export default function Home() {
                 <h2 className="text-2xl font-bold leading-10 tracking-tight text-black">
                   Frequently asked questions
                 </h2>
-                <Faq />
+                <Faq faqs={faqs}/>
               </div>
             </div>
           </div>
