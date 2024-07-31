@@ -101,7 +101,7 @@ export default function Documents() {
           />
         </header>
 
-        <div className="grid h-full gap-4 md:grid-cols-4">
+        <div className="grid h-full gap-4 pb-2 md:grid-cols-4">
           <div className="h-full truncate md:col-span-1">
             <ScrollArea showScrollbar>
               <SidebarFolderTree dataroomId={dataroom?.id!} />
