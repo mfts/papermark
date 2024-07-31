@@ -13,6 +13,7 @@ import {
 import ProductHuntIcon from "@/components/shared/icons/producthunt";
 import TwitterIcon from "@/components/shared/icons/twitter";
 import { Button } from "@/components/ui/button";
+import FAQ from "@/components/web/faq";
 import Footer from "@/components/web/footer";
 import ImageSwitcher from "@/components/web/landing-page/imageswitcher";
 import { LogoCloud } from "@/components/web/landing-page/logo-cloud";
@@ -53,6 +54,139 @@ const features = [
     name: "Self-host",
     description: "Papermark is open-source. Run it on your own infrastructure.",
     icon: ServerIcon,
+  },
+];
+
+const faqs = [
+  {
+    question: "What is Papermark?",
+    answer:
+      "Papermark is a dynamic, open-source alternative to DocSend. It enables secure document and data rooms sharing, tracking, and storage, providing users with real-time analytics.",
+  },
+  {
+    question: "How can I use Papermark?",
+    answer: (
+      <>
+        You can subscribe to one of our plans or self-host it it. Simply visit
+        our{" "}
+        <a
+          href="https://github.com/mfts/papermark"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-bold text-orange-500"
+        >
+          GitHub page
+        </a>{" "}
+        , clone the repository, follow the setup instructions and start using
+        Papermark. You can customize it according to your specific needs as it
+        is open-source
+      </>
+    ),
+  },
+  {
+    question: "Is Papermark free?",
+    answer: (
+      <>
+        Yes, Papermark has free plan and fully open source. This means you can
+        start using it for free, or self host it. You can use, modify, and
+        distribute it as you see fit according to the terms of our license.
+        Papermark provides advanced features and all detailes in plans and
+        pricing{" "}
+        <a
+          href="https://www.papermark.io/pricing"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-bold text-orange-500"
+        >
+          plans and pricing
+        </a>{" "}
+      </>
+    ),
+  },
+  {
+    question: "Can I share documents with custom domain and branding?",
+    answer:
+      "Yes, with Papermark you can connect your custom domain and share your documents or data rooms. We also provide enterprise and full white-labelled options here.",
+  },
+
+  {
+    question: "What is Papermark Data Rooms?",
+    answer: (
+      <>
+        Papermark virtual{" "}
+        <a
+          href="https://www.papermark.io/data-room"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-bold text-orange-500"
+        >
+          data rooms
+        </a>{" "}
+        is a secure way to share multiple files in one place, using the link
+        permissions, custom domains ans custom branding.
+      </>
+    ),
+  },
+  {
+    question: "Can you self-host Papermark for me?",
+    answer: (
+      <>
+        Yes! If you are looking for self hosted version of Papermark, just{" "}
+        <a
+          href="https://cal.com/marcseitz/papermark"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-bold text-orange-500"
+        >
+          book a call
+        </a>{" "}
+        with us. We help with self-hosting Papermark on your own servers, so all
+        documents hosted and shared from there and with other enterprise
+        enquiries .
+      </>
+    ),
+  },
+  {
+    question: "Can I contribute to the Papermark project?",
+    answer: (
+      <>
+        Yes, contributions are welcome! Please visit our{" "}
+        <a
+          href="https://github.com/mfts/papermark"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-bold text-orange-500"
+        >
+          GitHub repository
+        </a>{" "}
+        to learn about how you can contribute. Whether it's by improving the
+        code, adding new features, or even reporting bugs, all contributions are
+        appreciated.
+      </>
+    ),
+  },
+  {
+    question: "How I can use Papermark as a VC?",
+    answer:
+      "You can use to create a fundraising data room or receive pitch decks from founders.",
+  },
+  {
+    question: "How I can reach more investors with Papermark as a founder?",
+    answer: (
+      <>
+        You can share link and capture activity of investors on each page.
+        Papermark has also open investor database with more than{" "}
+        <a
+          href="https://www.papermark.io/investors"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-bold text-orange-500"
+        >
+          7k investors
+        </a>{" "}
+        in it
+      </>
+    ),
   },
 ];
 
@@ -219,6 +353,21 @@ export default function Home() {
 
         <div>
           <Testimonials />
+        </div>
+
+        {/* FAQ section */}
+        <div className="mb-10 mt-2 w-full overflow-x-hidden">
+          <div className="mx-auto w-full max-w-7xl px-4 md:px-8">
+            <h2 className="text-balance pb-5 pt-20 text-4xl">
+              FAQ{" "}
+              <span className="text-gray-500">
+                {/* Fine-tune access control. Receive real-time page analytics.
+                Customize the experience with your brand and domain. Papermark
+                is 100% open source. */}
+              </span>
+            </h2>
+            <FAQ faqs={faqs} />
+          </div>
         </div>
 
         <div className="bg-[#fb7a00]">

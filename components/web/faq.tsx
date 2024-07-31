@@ -1,14 +1,17 @@
 "use client";
+
+import { ReactNode } from "react";
+
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/ui/accordion"
+} from "@/components/ui/accordion";
 
 type Faq = {
   question: string;
-  answer: string;
+  answer: string | ReactNode;
 };
 
 type FaqProps = {
@@ -17,20 +20,20 @@ type FaqProps = {
 export default function Faq({ faqs }: FaqProps) {
   return (
     <div className="">
-        <dl className="mt-10 divide-y divide-gray-800/10">
-            {faqs.map((faq) => (
-              <Accordion key={faq.question} type="single" collapsible>
-                <AccordionItem value={faq.question} className="py-2 border-none">
-                  <AccordionTrigger className="text-left text-gray-800 dark:text-gray-200 text-balance font-medium leading-7 hover:no-underline">
-                    {faq.question}
-                  </AccordionTrigger>
-                  <AccordionContent className="text-base leading-7 text-gray-500">
-                    {faq.answer}
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-            ))}
-        </dl>
+      <dl className="mt-10 divide-y divide-gray-800/10">
+        {faqs.map((faq) => (
+          <Accordion key={faq.question} type="single" collapsible>
+            <AccordionItem value={faq.question} className="border-none py-2">
+              <AccordionTrigger className="text-balance text-left font-medium leading-7 text-gray-800 hover:no-underline dark:text-gray-200">
+                {faq.question}
+              </AccordionTrigger>
+              <AccordionContent className="text-base leading-7 text-gray-500">
+                {faq.answer}
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        ))}
+      </dl>
     </div>
   );
 }

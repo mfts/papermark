@@ -37,24 +37,31 @@ export default function Home() {
 
         <meta
           name="description"
-          content="Papermark Virtual Data Room offers a secure platform for your business’s document storage and collaboration needs. Enhance your operational efficiency with tailored features."
+          content="Papermark Virtual Data Room offers a secure platform for your business document sharing. Create branded data rooms and sahre via custom domains."
           key="description"
         />
 
         <meta
           property="og:description"
-          content="Papermark Virtual Data Room offers a secure platform for your business’s document storage and collaboration needs. Enhance your operational efficiency with tailored features."
+          content="Papermark Virtual Data Room offers a secure platform for your business document sharing. Create branded data rooms and sahre via custom domains."
           key="og-description"
         />
-        <meta
-          property="og:title"
-          content="Virtual Data Room | Powered by Papermark"
-          key="og-title"
-        />
+        <meta property="og:title" content=" " key="og-title" />
 
         <meta
           property="og:image"
           content="https://www.papermark.io/cover.png"
+        />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta
+          name="twitter:title"
+          content="Virtual Data Room | Powered by Papermark"
+          key="tw-title"
+        />
+        <meta
+          name="twitter:description"
+          content="Papermark Virtual Data Room offers a secure platform for your business document sharing. Create branded data rooms and sahre via custom domains."
+          key="tw-description"
         />
       </Head>
 

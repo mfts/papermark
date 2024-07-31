@@ -14,11 +14,11 @@ import {
 
 import PapermarkSparkle from "@/components/shared/icons/papermark-sparkle";
 import ChatPage from "@/components/web/assistant/public-chat";
+import Faq from "@/components/web/faq";
 import Footer from "@/components/web/footer";
 import Navbar from "@/components/web/navbar";
 
 import { classNames } from "@/lib/utils";
-import Faq from "@/components/web/faq";
 
 const scrollDown = () => {
   window.scrollBy({
@@ -154,20 +154,23 @@ export default function Home() {
     <div>
       <Head>
         <title>
-          Papermark AI: First AI document assistant to chat with shared and
-          received documents
+          Papermark AI: AI document assistant to chat with shared and received
+          documents
         </title>
         <meta
           name="description"
-          content="Transform the way you interact with documents using Papermark AI document assistant, the ultimate AI docuemnt assistant to chat with your documents, like pitch decks and sales materials."
+          content="Discover Papermark AI, an advanced AI document assistant for document sharing and chatting with your documents. Enhance your documents with AI-driven insights, secure sharing, and real-time analytics. Get insights on shared with you documents and pitch decks."
+          key="description"
         />
         <meta
           property="og:title"
-          content="Papermark AI: Your AI-Powered Document Assistant"
+          content="Papermark AI: AI document assistant to chat with shared and received documents"
+          key="og-title"
         />
         <meta
           property="og:description"
           content="Discover Papermark AI, an advanced AI document assistant for document sharing and chatting with your documents. Enhance your documents with AI-driven insights, secure sharing, and real-time analytics. Get insights on shared with you documents and pitch decks"
+          key="og-description"
         />
         <meta
           property="og:image"
@@ -175,6 +178,18 @@ export default function Home() {
         />
         <meta property="og:url" content="https://www.papermark.io" />
         <meta name="twitter:card" content="summary_large_image" />
+
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta
+          name="twitter:title"
+          content="Papermark AI: AI document assistant to chat with shared and received documents"
+          key="tw-title"
+        />
+        <meta
+          name="twitter:description"
+          content="Discover Papermark AI, an advanced AI document assistant for document sharing and chatting with your documents. Enhance your documents with AI-driven insights, secure sharing, and real-time analytics. Get insights on shared with you documents and pitch decks."
+          key="tw-description"
+        />
       </Head>
       <Navbar />
 
@@ -194,7 +209,7 @@ export default function Home() {
             />
           </div>
           <div className="mx-auto max-w-7xl px-6 lg:px-8">
-            <div className="mx-auto max-w-2xl py-8 sm:py-12 lg:py-24 ">
+            <div className="mx-auto max-w-2xl py-8 sm:py-12 lg:py-24">
               <div className="hidden sm:mb-8 sm:flex sm:justify-center">
                 <div className="relative flex items-center rounded-full px-3 py-1 text-sm leading-6 text-black ring-1 ring-black/10 hover:ring-white/20 dark:text-white dark:ring-white/10">
                   <PapermarkSparkle className="mr-1 h-4 w-4" />
@@ -234,7 +249,7 @@ export default function Home() {
             </div>
 
             {/* Pricing section */}
-            <div className="relative isolate mt-32  px-6 sm:mt-36 lg:px-8">
+            <div className="relative isolate mt-32 px-6 sm:mt-36 lg:px-8">
               <div
                 className="absolute inset-x-0 -top-3 -z-10 transform-gpu overflow-hidden px-36 blur-3xl"
                 aria-hidden="true"
@@ -266,8 +281,8 @@ export default function Home() {
                     key={tier.id}
                     className={classNames(
                       tier.featured
-                        ? " relative text-gray-800 shadow-2xl dark:text-white"
-                        : " bg-white dark:bg-transparent sm:mx-8 lg:mx-0",
+                        ? "relative text-gray-800 shadow-2xl dark:text-white"
+                        : "bg-white dark:bg-transparent sm:mx-8 lg:mx-0",
                       tier.featured
                         ? ""
                         : tierIdx === 0
@@ -405,7 +420,7 @@ export default function Home() {
                   <div className="relative h-64 w-64">
                     {" "}
                     <img
-                      className="absolute inset-0 rounded-2xl bg-gray-800 object-cover  shadow-2xl"
+                      className="absolute inset-0 rounded-2xl bg-gray-800 object-cover shadow-2xl"
                       src="https://pbs.twimg.com/profile_images/1506792347840888834/dS-r50Je_400x400.jpg"
                       alt=""
                     />
@@ -448,7 +463,7 @@ export default function Home() {
               </div>
             </div>
 
-            <div className=" mx-auto w-full max-w-5xl">
+            <div className="mx-auto w-full max-w-5xl">
               <video
                 width="100%"
                 id="video1"
@@ -472,7 +487,7 @@ export default function Home() {
                 <h2 className="text-2xl font-bold leading-10 tracking-tight text-black">
                   Frequently asked questions
                 </h2>
-                <Faq faqs={faqs}/>
+                <Faq faqs={faqs} />
               </div>
             </div>
           </div>
