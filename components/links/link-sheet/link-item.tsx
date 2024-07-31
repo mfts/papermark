@@ -3,8 +3,6 @@ import { Switch } from "@/components/ui/switch";
 
 import { cn } from "@/lib/utils";
 
-import { LinkUpgradeOptions } from "./link-options";
-
 export default function LinkItem({
   title,
   enabled,

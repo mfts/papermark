@@ -62,6 +62,7 @@ export default async function handle(
           },
           enableAgreement: true,
           agreement: true,
+          showBanner: true,
           document: {
             select: {
               team: {

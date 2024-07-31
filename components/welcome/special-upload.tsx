@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
+import { LinkType } from "@prisma/client";
 import { motion } from "framer-motion";
 import Cookies from "js-cookie";
 import { usePlausible } from "next-plausible";
@@ -42,8 +43,9 @@ export default function DeckGeneratorUpload() {
   const [currentBlob, setCurrentBlob] = useState<boolean>(false);
   const [currentLinkId, setCurrentLinkId] = useState<string | null>(null);
   const [currentDocId, setCurrentDocId] = useState<string | null>(null);
-  const [linkData, setLinkData] =
-    useState<DEFAULT_LINK_TYPE>(DEFAULT_LINK_PROPS);
+  const [linkData, setLinkData] = useState<DEFAULT_LINK_TYPE>(
+    DEFAULT_LINK_PROPS(LinkType.DOCUMENT_LINK),
+  );
   const teamInfo = useTeam();
 
   const teamId = teamInfo?.currentTeam?.id as string;
@@ -334,7 +336,11 @@ export default function DeckGeneratorUpload() {
                           </span>
                         </AccordionTrigger>
                         <AccordionContent className="first:pt-5">
-                          <LinkOptions data={linkData} setData={setLinkData} />
+                          <LinkOptions
+                            data={linkData}
+                            setData={setLinkData}
+                            linkType={LinkType.DOCUMENT_LINK}
+                          />
                         </AccordionContent>
                       </AccordionItem>
                     </Accordion>

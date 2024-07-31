@@ -160,6 +160,7 @@ export default async function handler(
             enableAgreement: linkData.enableAgreement,
             agreementId: linkData.agreementId,
           }),
+          showBanner: linkData.showBanner,
         },
       });
 

@@ -1,5 +1,7 @@
 import { useState } from "react";
 
+import { LinkType } from "@prisma/client";
+
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { DEFAULT_LINK_TYPE } from "@/components/links/link-sheet";
 import AllowDownloadSection from "@/components/links/link-sheet/allow-download-section";
@@ -12,12 +14,7 @@ import ExpirationSection from "@/components/links/link-sheet/expiration-section"
 import FeedbackSection from "@/components/links/link-sheet/feedback-section";
 import OGSection from "@/components/links/link-sheet/og-section";
 import PasswordSection from "@/components/links/link-sheet/password-section";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+import { ProBannerSection } from "@/components/links/link-sheet/pro-banner-section";
 
 import { usePlan } from "@/lib/swr/use-billing";
 import useLimits from "@/lib/swr/use-limits";
@@ -35,9 +32,11 @@ export type LinkUpgradeOptions = {
 export const LinkOptions = ({
   data,
   setData,
+  linkType,
 }: {
   data: DEFAULT_LINK_TYPE;
   setData: React.Dispatch<React.SetStateAction<DEFAULT_LINK_TYPE>>;
+  linkType: LinkType;
 }) => {
   const { plan } = usePlan();
   const { limits } = useLimits();
@@ -117,7 +116,13 @@ export const LinkOptions = ({
         hasFreePlan={isNotDatarooms}
         handleUpgradeStateChange={handleUpgradeStateChange}
       />
-
+      {linkType === LinkType.DOCUMENT_LINK ? (
+        <ProBannerSection
+          {...{ data, setData }}
+          hasFreePlan={hasFreePlan || plan === "starter"}
+          handleUpgradeStateChange={handleUpgradeStateChange}
+        />
+      ) : null}
       <UpgradePlanModal
         clickedPlan={upgradePlan}
         open={openUpgradeModal}
