@@ -36,8 +36,6 @@ export default function EmailSection({
     setData({ ...data, email: newEmail });
   };
 
-  console.log("brand", brand);
-
   return (
     <div className="pb-5">
       <div className="relative space-y-2 rounded-md shadow-sm">

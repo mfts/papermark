@@ -64,28 +64,16 @@ export default async function handle(
           id: folderId,
           dataroomId: dataroomId,
         },
-        select: {
-          _count: {
-            select: {
-              documents: true,
-              childFolders: true,
-            },
-          },
-        },
       });
 
-      if (folder?._count.documents! > 0 || folder?._count.childFolders! > 0) {
-        return res.status(401).json({
-          message: "Folder contains documents or folders. Move them first",
+      if (!folder) {
+        return res.status(404).json({
+          message: "Folder not found",
         });
       }
 
-      await prisma.dataroomFolder.delete({
-        where: {
-          id: folderId,
-          dataroomId: dataroomId,
-        },
-      });
+      // Delete the folder and its contents recursively
+      await deleteFolderAndContents(folderId);
 
       return res.status(204).end(); // 204 No Content response for successful deletes
     } catch (error) {
@@ -96,4 +84,30 @@ export default async function handle(
     res.setHeader("Allow", ["DELETE"]);
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
+}
+
+async function deleteFolderAndContents(folderId: string) {
+  const childFoldersToDelete = await prisma.dataroomFolder.findMany({
+    where: {
+      parentId: folderId,
+    },
+  });
+
+  console.log("Deleting folder and contents", childFoldersToDelete);
+
+  for (const folder of childFoldersToDelete) {
+    await deleteFolderAndContents(folder.id);
+  }
+
+  await prisma.dataroomDocument.deleteMany({
+    where: {
+      folderId: folderId,
+    },
+  });
+
+  await prisma.dataroomFolder.delete({
+    where: {
+      id: folderId,
+    },
+  });
 }

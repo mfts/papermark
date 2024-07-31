@@ -124,33 +124,42 @@ Please note that the prices and availability of features may vary, and it is rec
   return (
     <>
       <Head>
-        <title>
+        {/* <title>
           Top 10 Docsend Alternatives in 2024 | Find Your Best Match
+        </title> */}
+        <title>
+          Top 10 Docsend Alternatives in 2024 Personalised for Your Business
         </title>
+
         <meta name="viewport" content="width=device-width, initial-scale=1" />
 
         <meta
           name="description"
-          content="Explore the best Docsend alternatives in 2024 tailored for your needs. Find the right document sharing and tracking solution personalized for your use case."
+          content="Looking for Docsend alternatives? Discover best document sharing platforms that cater to your unique business requirements and enhance your operational efficiency"
+          key="description"
         />
 
         <meta
           property="og:description"
           content="Looking for Docsend alternatives? Discover best document sharing platforms that cater to your unique business requirements and enhance your operational efficiency."
+          key="og-description"
         />
         <meta
           property="og:title"
-          content="Best 10 Docsend Alternatives in 2024 Personalised for Your Business"
+          content="Top 10 Docsend Alternatives in 2024 Personalised for Your Business"
+          key="og-title"
         />
 
         <meta name="twitter:card" content="summary_large_image" />
         <meta
           name="twitter:title"
-          content="Explore Best Docsend Alternatives | Find Your Match"
+          content="Top 10 Docsend Alternatives in 2024 Personalised for Your Business"
+          key="tw-title"
         />
         <meta
           name="twitter:description"
-          content="Uncover personalized Docsend alternatives for your business. Find the best document and pitch deck sharing platforms tailored to fit your specific needs."
+          content="Looking for Docsend alternatives? Discover best document sharing platforms that cater to your unique business requirements and enhance your operational efficiency."
+          key="tw-description"
         />
       </Head>
       <div className="flex flex-1 flex-col bg-white text-black">

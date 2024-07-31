@@ -72,6 +72,61 @@ export default async function handle(
         oldPath: currentPathName,
       });
     } catch (error) {}
+  } else if (req.method === "DELETE") {
+    /// DELETE /api/teams/:teamId/datarooms/:id/documents/:documentId
+    const session = await getServerSession(req, res, authOptions);
+    if (!session) {
+      res.status(401).end("Unauthorized");
+      return;
+    }
+
+    const userId = (session.user as CustomUser).id;
+    const {
+      teamId,
+      id: dataroomId,
+      documentId,
+    } = req.query as { teamId: string; id: string; documentId: string };
+
+    try {
+      const team = await prisma.team.findUnique({
+        where: {
+          id: teamId,
+          users: {
+            some: {
+              userId: userId,
+            },
+          },
+        },
+      });
+
+      if (!team) {
+        return res.status(401).end("Unauthorized");
+      }
+
+      const dataroom = await prisma.dataroom.findUnique({
+        where: {
+          id: dataroomId,
+          teamId: team.id,
+        },
+      });
+
+      if (!dataroom) {
+        return res.status(401).end("Dataroom not found");
+      }
+
+      const document = await prisma.dataroomDocument.delete({
+        where: {
+          id: documentId,
+          dataroomId: dataroomId,
+        },
+      });
+
+      if (!document) {
+        return res.status(404).end("Document not found");
+      }
+
+      return res.status(204).end(); // No Content
+    } catch (error) {}
   } else {
     // We only allow GET, PUT and DELETE requests
     res.setHeader("Allow", ["GET", "PUT", "DELETE"]);

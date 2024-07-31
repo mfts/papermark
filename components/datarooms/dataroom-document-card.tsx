@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/router";
 
 import { useEffect, useRef, useState } from "react";
 
@@ -34,20 +35,25 @@ import { MoveToDataroomFolderModal } from "./move-dataroom-folder-modal";
 type DocumentsCardProps = {
   document: DataroomFolderDocument;
   teamInfo: TeamContextType | null;
+  dataroomId: string;
 };
 export default function DataroomDocumentCard({
   document: dataroomDocument,
   teamInfo,
+  dataroomId,
 }: DocumentsCardProps) {
   const { theme, systemTheme } = useTheme();
   const isLight =
     theme === "light" || (theme === "system" && systemTheme === "light");
+  const router = useRouter();
 
-  const { isCopied, copyToClipboard } = useCopyToClipboard({});
   const [isFirstClick, setIsFirstClick] = useState<boolean>(false);
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
   const [moveFolderOpen, setMoveFolderOpen] = useState<boolean>(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
+
+  /** current folder name */
+  const currentFolderPath = router.query.name as string[] | undefined;
 
   // https://github.com/radix-ui/primitives/issues/1241#issuecomment-1888232392
   useEffect(() => {
@@ -57,6 +63,89 @@ export default function DataroomDocumentCard({
       });
     }
   }, [moveFolderOpen]);
+
+  useEffect(() => {
+    function handleClickOutside(event: { target: any }) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setMenuOpen(false);
+        setIsFirstClick(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const handleButtonClick = (event: any, documentId: string) => {
+    event.stopPropagation();
+    event.preventDefault();
+
+    console.log("isFirstClick", isFirstClick);
+    if (isFirstClick) {
+      handleRemoveDocument(documentId);
+      setIsFirstClick(false);
+      setMenuOpen(false); // Close the dropdown after deleting
+    } else {
+      setIsFirstClick(true);
+    }
+  };
+
+  const handleRemoveDocument = async (documentId: string) => {
+    // Prevent the first click from deleting the document
+    if (!isFirstClick) {
+      setIsFirstClick(true);
+      return;
+    }
+
+    const endpoint = currentFolderPath
+      ? `/folders/documents/${currentFolderPath.join("/")}`
+      : "/documents";
+
+    toast.promise(
+      fetch(
+        `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}/documents/${documentId}`,
+        {
+          method: "DELETE",
+        },
+      ).then(() => {
+        mutate(
+          `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}${endpoint}`,
+          null,
+          {
+            populateCache: (_, docs) => {
+              return docs.filter(
+                (doc: DocumentWithLinksAndLinkCountAndViewCount) =>
+                  doc.id !== documentId,
+              );
+            },
+            revalidate: false,
+          },
+        );
+      }),
+      {
+        loading: "Removing document...",
+        success: "Document removed successfully.",
+        error: "Failed to remove document. Try again.",
+      },
+    );
+  };
+
+  const handleMenuStateChange = (open: boolean) => {
+    if (isFirstClick) {
+      setMenuOpen(true); // Keep the dropdown open on the first click
+      return;
+    }
+
+    // If the menu is closed, reset the isFirstClick state
+    if (!open) {
+      setIsFirstClick(false);
+      setMenuOpen(false); // Ensure the dropdown is closed
+    } else {
+      setMenuOpen(true); // Open the dropdown
+    }
+  };
 
   return (
     <>
@@ -114,7 +203,7 @@ export default function DataroomDocumentCard({
             </p>
           </Link>
 
-          <DropdownMenu>
+          <DropdownMenu open={menuOpen} onOpenChange={handleMenuStateChange}>
             <DropdownMenuTrigger asChild>
               <Button
                 // size="icon"
@@ -133,18 +222,20 @@ export default function DataroomDocumentCard({
               </DropdownMenuItem>
               <DropdownMenuSeparator />
 
-              {/* <DropdownMenuItem
-              onClick={(event) => handleButtonClick(event, prismaDocument.id)}
-              className="text-destructive focus:bg-destructive focus:text-destructive-foreground duration-200"
-            >
-              {isFirstClick ? (
-                "Really delete?"
-              ) : (
-                <>
-                  <TrashIcon className="w-4 h-4 mr-2" /> Delete document
-                </>
-              )}
-            </DropdownMenuItem> */}
+              <DropdownMenuItem
+                onClick={(event) =>
+                  handleButtonClick(event, dataroomDocument.id)
+                }
+                className="text-destructive duration-200 focus:bg-destructive focus:text-destructive-foreground"
+              >
+                {isFirstClick ? (
+                  "Really remove?"
+                ) : (
+                  <>
+                    <TrashIcon className="mr-2 h-4 w-4" /> Remove document
+                  </>
+                )}
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

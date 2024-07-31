@@ -114,6 +114,7 @@ export function DocumentsList({
                           key={document.id}
                           document={document as DataroomFolderDocument}
                           teamInfo={teamInfo}
+                          dataroomId={dataroomId}
                         />
                       );
                     } else {

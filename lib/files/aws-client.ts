@@ -1,3 +1,4 @@
+import { LambdaClient } from "@aws-sdk/client-lambda";
 import { S3Client } from "@aws-sdk/client-s3";
 
 export const getS3Client = () => {
@@ -22,5 +23,23 @@ export const getS3Client = () => {
           ),
         }
       : undefined,
+  });
+};
+
+export const getLambdaClient = () => {
+  const NEXT_PUBLIC_UPLOAD_TRANSPORT = process.env.NEXT_PUBLIC_UPLOAD_TRANSPORT;
+
+  if (NEXT_PUBLIC_UPLOAD_TRANSPORT !== "s3") {
+    throw new Error("Invalid upload transport");
+  }
+
+  return new LambdaClient({
+    region: process.env.NEXT_PRIVATE_UPLOAD_REGION || "eu-central-1",
+    credentials: {
+      accessKeyId: String(process.env.NEXT_PRIVATE_UPLOAD_ACCESS_KEY_ID),
+      secretAccessKey: String(
+        process.env.NEXT_PRIVATE_UPLOAD_SECRET_ACCESS_KEY,
+      ),
+    },
   });
 };
