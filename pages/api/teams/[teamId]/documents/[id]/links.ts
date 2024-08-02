@@ -36,7 +36,7 @@ export default async function handle(
             id: true,
             links: {
               orderBy: {
-                createdAt: "asc",
+                createdAt: "desc",
               },
               include: {
                 views: {

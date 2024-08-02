@@ -96,7 +96,8 @@ export function MoveToFolderModal({
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader className="text-start">
           <DialogTitle>
-            Move <span className="font-bold">{documentName}</span>
+            Move
+            <div className="w-[376px] truncate font-bold">{documentName}</div>
           </DialogTitle>
           <DialogDescription>Move your document to a folder.</DialogDescription>
         </DialogHeader>

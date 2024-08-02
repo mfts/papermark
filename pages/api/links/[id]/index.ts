@@ -52,6 +52,7 @@ export default async function handle(
           },
           enableAgreement: true,
           agreement: true,
+          showBanner: true,
         },
       });
 
@@ -327,6 +328,7 @@ export default async function handle(
         },
         enableAgreement: linkData.enableAgreement,
         agreementId: linkData.agreementId || null,
+        showBanner: linkData.showBanner,
       },
       include: {
         views: {

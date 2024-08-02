@@ -1,3 +1,5 @@
+import { useRouter } from "next/router";
+
 import { useEffect, useMemo, useState } from "react";
 import React from "react";
 
@@ -13,6 +15,7 @@ import { useAnalytics } from "@/lib/analytics";
 import { STAGGER_CHILD_VARIANTS } from "@/lib/constants";
 import { getStripe } from "@/lib/stripe/client";
 import { PLANS } from "@/lib/stripe/utils";
+import { usePlan } from "@/lib/swr/use-billing";
 import { capitalize } from "@/lib/utils";
 
 import { DataroomTrialModal } from "../datarooms/dataroom-trial-modal";
@@ -31,12 +34,14 @@ export function UpgradePlanModal({
   setOpen?: React.Dispatch<React.SetStateAction<boolean>>;
   children?: React.ReactNode;
 }) {
+  const router = useRouter();
   const [plan, setPlan] = useState<"Pro" | "Business" | "Data Rooms">(
     clickedPlan,
   );
   const [period, setPeriod] = useState<"yearly" | "monthly">("yearly");
   const [clicked, setClicked] = useState<boolean>(false);
   const teamInfo = useTeam();
+  const { plan: teamPlan } = usePlan();
   const analytics = useAnalytics();
 
   const features = useMemo(() => {
@@ -238,6 +243,23 @@ export function UpgradePlanModal({
                 // @ts-ignore
                 // prettier-ignore
 
+                if (teamPlan !== "free") {
+                  fetch(
+                    `/api/teams/${teamInfo?.currentTeam?.id}/billing/manage`,
+                    {
+                      method: "POST",
+                    },
+                  )
+                    .then(async (res) => {
+                      const url = await res.json();
+                      router.push(url);
+                    })
+                    .catch((err) => {
+                      alert(err);
+                      setClicked(false);
+                    });
+                } else {
+
                 fetch(
                   `/api/teams/${
                     teamInfo?.currentTeam?.id
@@ -265,6 +287,7 @@ export function UpgradePlanModal({
                     alert(err);
                     setClicked(false);
                   });
+                }
               }}
             >{`Upgrade to ${plan} ${capitalize(period)}`}</Button>
             <div className="flex items-center justify-center space-x-2">

@@ -63,6 +63,15 @@ export default function FolderCard({
     };
   }, []);
 
+  // https://github.com/radix-ui/primitives/issues/1241#issuecomment-1888232392
+  useEffect(() => {
+    if (!openFolder) {
+      setTimeout(() => {
+        document.body.style.pointerEvents = "";
+      });
+    }
+  }, [openFolder]);
+
   const handleButtonClick = (event: any, documentId: string) => {
     event.stopPropagation();
     event.preventDefault();
@@ -94,7 +103,7 @@ export default function FolderCard({
         },
       ),
       {
-        loading: "Deleting folder...",
+        loading: isDataroom ? "Removing folder..." : "Deleting folder...",
         success: () => {
           mutate(
             `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}?root=true`,
@@ -105,9 +114,13 @@ export default function FolderCard({
           mutate(
             `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}${parentFolderPath}`,
           );
-          return "Folder deleted successfully.";
+          return isDataroom
+            ? "Folder removed successfully."
+            : "Folder deleted successfully.";
         },
-        error: "Failed to delete folder. Move documents first.",
+        error: isDataroom
+          ? "Failed to remove folder."
+          : "Failed to delete folder. Move documents first.",
       },
     );
   };
@@ -160,7 +173,7 @@ export default function FolderCard({
       <li className="group/row relative flex items-center justify-between rounded-lg border-0 p-3 ring-1 ring-gray-400 transition-all hover:bg-secondary hover:ring-gray-500 dark:bg-secondary dark:ring-gray-500 hover:dark:ring-gray-400 sm:p-4">
         <div className="flex min-w-0 shrink items-center space-x-2 sm:space-x-4">
           <div className="mx-0.5 flex w-8 items-center justify-center text-center sm:mx-1">
-            <FolderIcon className="h-8 w-8 " strokeWidth={1} />
+            <FolderIcon className="h-8 w-8" strokeWidth={1} />
           </div>
 
           <div className="flex-col">
@@ -233,10 +246,11 @@ export default function FolderCard({
                 className="text-destructive duration-200 focus:bg-destructive focus:text-destructive-foreground"
               >
                 {isFirstClick ? (
-                  "Really delete?"
+                  `Really ${isDataroom ? "remove" : "delete"}?`
                 ) : (
                   <>
-                    <TrashIcon className="mr-2 h-4 w-4" /> Delete Folder
+                    <TrashIcon className="mr-2 h-4 w-4" />{" "}
+                    {isDataroom ? "Remove Folder" : "Delete Folder"}
                   </>
                 )}
               </DropdownMenuItem>

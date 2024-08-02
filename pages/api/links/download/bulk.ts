@@ -1,61 +1,13 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
+import { InvocationType, InvokeCommand } from "@aws-sdk/client-lambda";
 import { ViewType } from "@prisma/client";
-import archiver from "archiver";
-import mime from "mime-types";
 
-import { getS3Client } from "@/lib/files/aws-client";
-import { S3DownloadService } from "@/lib/files/bulk-download";
-import { getFile } from "@/lib/files/get-file";
+import { getLambdaClient } from "@/lib/files/aws-client";
 import prisma from "@/lib/prisma";
-import {
-  getExtensionFromSupportedType,
-  getMimeTypeFromSupportedType,
-} from "@/lib/utils/get-content-type";
 
-const s3Client = getS3Client();
-const s3Service = new S3DownloadService(s3Client);
-
-const finalizeArchiveSafely = (archive: archiver.Archiver): Promise<void> => {
-  return new Promise((resolve, reject) => {
-    archive.on("error", reject);
-    archive.finalize().then(resolve).catch(reject);
-  });
-};
-
-const sanitizeFileName = (name: string, mimeType: string): string => {
-  // Replace newlines and other potentially problematic characters
-  let sanitized = name.replace(/[\n\r\\\/]/g, "_");
-
-  // Add correct extension if it doesn't exist
-  const extension = mime.extension(getMimeTypeFromSupportedType(mimeType)!);
-  if (extension && !sanitized.endsWith(`.${extension}`)) {
-    sanitized += `.${extension}`;
-  }
-
-  return sanitized;
-};
-
-const generateUniqueFileName = (
-  name: string,
-  existingNames: Set<string>,
-): string => {
-  let uniqueName = name;
-  let counter = 1;
-
-  while (existingNames.has(uniqueName)) {
-    const nameParts = name.split(".");
-    if (nameParts.length > 1) {
-      const ext = nameParts.pop();
-      uniqueName = `${nameParts.join(".")} (${counter}).${ext}`;
-    } else {
-      uniqueName = `${name}_${counter}`;
-    }
-    counter++;
-  }
-
-  existingNames.add(uniqueName);
-  return uniqueName;
+export const config = {
+  maxDuration: 180,
 };
 
 export default async function handle(
@@ -147,55 +99,44 @@ export default async function handle(
         data: { downloadedAt: new Date() },
       });
 
-      // get a list of file keys that are not "notion" and return storageType and file
-      const fileKeys = view.dataroom.documents
+      const fileKeysOnly = view.dataroom.documents
         .filter((doc) => doc.document.versions[0].type !== "notion")
+        .filter((doc) => doc.document.versions[0].storageType !== "VERCEL_BLOB")
         .map((doc) => {
-          return {
-            file: doc.document.versions[0].file,
-            storageType: doc.document.versions[0].storageType,
-            name: doc.document.name,
-            contentType: doc.document.versions[0].type,
-          };
+          return doc.document.versions[0].file;
         });
 
-      const archive = archiver("zip", { zlib: { level: 9 } });
-      const existingNames = new Set<string>();
+      const client = getLambdaClient();
+
+      const params = {
+        FunctionName: "bulk-download-zip-creator-prod", // Use the name you gave your Lambda function
+        InvocationType: InvocationType.RequestResponse,
+        Payload: JSON.stringify({
+          sourceBucket: process.env.NEXT_PRIVATE_UPLOAD_BUCKET,
+          fileKeys: fileKeysOnly,
+        }),
+      };
 
       try {
-        res.setHeader("Content-Type", "application/zip");
-        res.setHeader("Content-Disposition", "attachment; filename=files.zip");
+        const command = new InvokeCommand(params);
+        const response = await client.send(command);
 
-        archive.pipe(res);
+        if (response.Payload) {
+          const decodedPayload = new TextDecoder().decode(response.Payload);
 
-        for (const file of fileKeys) {
-          const sanitizedFileName = sanitizeFileName(
-            file.name,
-            file.contentType!,
-          );
-          const uniqueFileName = generateUniqueFileName(
-            sanitizedFileName,
-            existingNames,
-          );
-          if (file.file.startsWith("https://")) {
-            const downloadStream = s3Service.createLazyDownloadStreamFromUrl(
-              file.file,
-            );
-            archive.append(downloadStream, { name: uniqueFileName });
-          } else {
-            const downloadStream = s3Service.createLazyDownloadStreamFrom(
-              process.env.NEXT_PRIVATE_UPLOAD_BUCKET as string,
-              file.file,
-            );
-            archive.append(downloadStream, { name: uniqueFileName });
-          }
+          const payload = JSON.parse(decodedPayload);
+          const { downloadUrl } = JSON.parse(payload.body);
+
+          res.status(200).json({ downloadUrl });
+        } else {
+          throw new Error("Payload is undefined or empty");
         }
-
-        await finalizeArchiveSafely(archive);
       } catch (error) {
-        console.error(error);
-        archive.abort();
-        return res.status(500).json({ error: "Failed to download files" });
+        console.error("Error invoking Lambda:", error);
+        res.status(500).json({
+          error: "Failed to generate download link",
+          details: (error as Error).message,
+        });
       }
     } catch (error) {
       return res.status(500).json({

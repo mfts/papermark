@@ -49,26 +49,33 @@ export default function Home() {
 
         <meta
           name="description"
-          content="Explore the best Digify alternatives in 2024 for creating data room and sharing documents securely. Get the right document sharing and tracking solution for your use case."
+          content="Explore the best Digify alternatives in 2024 for creating data room and sharing documents securely. Get the right  data room solution for your use case."
+          key="description"
         />
 
         <meta
           property="og:description"
-          content="Looking for Digify alternatives? Discover best document sharing platforms that fits your needs."
+          content="Explore the best Digify alternatives in 2024 for creating data room and sharing documents securely. Get the right  data room solution for your use case."
+          key="og-description"
         />
         <meta
           property="og:title"
-          content="Best 10 Digify Alternatives in 2024 for your business"
+          content="Top 10 Digify Alternatives in 2024 | Create Secure and Branded Data
+          Rooms"
+          key="og-title"
         />
 
         <meta name="twitter:card" content="summary_large_image" />
         <meta
           name="twitter:title"
-          content="Explore Best Digify Alternatives | Create secure Data Room"
+          content=" Top 10 Digify Alternatives in 2024 | Create Secure and Branded Data
+          Room"
+          key="tw-title"
         />
         <meta
           name="twitter:description"
-          content="Explore the best Digify alternatives in 2024 for creating data room and sharing documents securely. Get the right document sharing and tracking solution for your use case."
+          content="Explore the best Digify alternatives in 2024 for creating data room and sharing documents securely. Get the right data room solution for your use case."
+          key="tw-description"
         />
       </Head>
       <div className="flex flex-1 flex-col bg-white text-black">
