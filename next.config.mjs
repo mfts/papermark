@@ -8,6 +8,10 @@ const nextConfig = {
   },
   transpilePackages: ["@trigger.dev/react"],
   skipTrailingSlashRedirect: true,
+  assetPrefix:
+    process.env.NODE_ENV === "production"
+      ? process.env.NEXT_PUBLIC_BASE_URL
+      : undefined,
   experimental: {
     outputFileTracingIncludes: {
       "/api/mupdf/*": ["./node_modules/mupdf/dist/*.wasm"],
