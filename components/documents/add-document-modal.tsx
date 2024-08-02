@@ -138,7 +138,7 @@ export function AddDocumentModal({
         if (!newVersion) {
           // copy the link to the clipboard
           copyToClipboard(
-            `${process.env.NEXT_PUBLIC_BASE_URL}/view/${document.links[0].id}`,
+            `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${document.links[0].id}`,
             "Document uploaded and link copied to clipboard. Redirecting to document page...",
           );
 
@@ -309,7 +309,7 @@ export function AddDocumentModal({
         if (!newVersion) {
           // copy the link to the clipboard
           copyToClipboard(
-            `${process.env.NEXT_PUBLIC_BASE_URL}/view/${document.links[0].id}`,
+            `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${document.links[0].id}`,
             "Notion Page processed and link copied to clipboard. Redirecting to document page...",
           );
 

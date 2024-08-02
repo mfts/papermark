@@ -63,7 +63,7 @@ export default function DocumentsCard({
 
   function handleCopyToClipboard(id: string) {
     copyToClipboard(
-      `${process.env.NEXT_PUBLIC_BASE_URL}/view/${id}`,
+      `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${id}`,
       "Link copied to clipboard.",
     );
   }
