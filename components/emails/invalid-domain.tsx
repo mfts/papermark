@@ -51,7 +51,7 @@ export default function InvalidDomain({
             <Section className="my-8 text-center">
               <Button
                 className="rounded bg-black text-center text-xs font-semibold text-white no-underline"
-                href={`https://www.papermark.io/settings/domains`}
+                href={`https://app.papermark.io/settings/domains`}
                 style={{ padding: "12px 20px" }}
               >
                 Configure domain
@@ -60,7 +60,7 @@ export default function InvalidDomain({
             <Text className="text-sm leading-6 text-black">
               If you do not want to keep this domain on Papermark, you can{" "}
               <Link
-                href={`https://www.papermark.io/settings/domains`}
+                href={`https://app.papermark.io/settings/domains`}
                 className="font-medium text-blue-600 no-underline"
               >
                 delete it

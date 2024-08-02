@@ -43,7 +43,7 @@ export default function DomainDeleted({
             <Section className="my-8 text-center">
               <Button
                 className="rounded bg-black text-center text-xs font-semibold text-white no-underline"
-                href={`https://www.papermark.io/settings/domains`}
+                href={`https://app.papermark.io/settings/domains`}
                 style={{ padding: "12px 20px" }}
               >
                 Set up your custom domain

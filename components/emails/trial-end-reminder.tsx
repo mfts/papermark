@@ -58,7 +58,7 @@ const TrialEndReminderEmail = ({ name }: TrialEndReminderEmail) => {
             <Section className="mb-[32px] mt-[32px] text-center">
               <Button
                 className="rounded bg-black text-center text-xs font-semibold text-white no-underline"
-                href={`https://www.papermark.io/settings/billing`}
+                href={`https://app.papermark.io/settings/billing`}
                 style={{ padding: "12px 20px" }}
               >
                 Upgrade your plan

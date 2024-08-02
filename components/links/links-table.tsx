@@ -128,7 +128,7 @@ export default function LinksTable({
     }
 
     const { previewToken } = await response.json();
-    const previewLink = `https://${process.env.NEXT_PUBLIC_ROOT_DOMAIN}/view/${link.id}?previewToken=${previewToken}`;
+    const previewLink = `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${link.id}?previewToken=${previewToken}`;
 
     window.open(previewLink, "_blank");
   };
@@ -270,7 +270,7 @@ export default function LinksTable({
                               <div className="flex w-full whitespace-nowrap text-xs group-hover/cell:opacity-0 md:text-sm">
                                 {link.domainId
                                   ? `https://${link.domainSlug}/${link.slug}`
-                                  : `https://${process.env.NEXT_PUBLIC_ROOT_DOMAIN}/view/${link.id}`}
+                                  : `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${link.id}`}
                               </div>
 
                               {link.domainId && hasFreePlan ? (
@@ -290,7 +290,7 @@ export default function LinksTable({
                                     handleCopyToClipboard(
                                       link.domainId
                                         ? `https://${link.domainSlug}/${link.slug}`
-                                        : `https://${process.env.NEXT_PUBLIC_ROOT_DOMAIN}/view/${link.id}`,
+                                        : `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${link.id}`,
                                     )
                                   }
                                   title="Copy to clipboard"
@@ -479,7 +479,7 @@ export default function LinksTable({
                                   <div className="flex items-center gap-x-4 whitespace-nowrap rounded-sm bg-secondary px-3 py-1.5 text-xs text-secondary-foreground sm:py-1 sm:text-sm">
                                     {link.domainId
                                       ? `https://${link.domainSlug}/${link.slug}`
-                                      : `https://${process.env.NEXT_PUBLIC_ROOT_DOMAIN}/view/${link.id}`}
+                                      : `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${link.id}`}
                                   </div>
                                 </TableCell>
                                 <TableCell>

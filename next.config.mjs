@@ -1,3 +1,13 @@
+const REDIRECT_SEGMENTS = [
+  "documents",
+  "datarooms",
+  "settings",
+  "api",
+  "_static",
+  "_icons",
+  "_example",
+];
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
@@ -8,6 +18,10 @@ const nextConfig = {
   },
   transpilePackages: ["@trigger.dev/react"],
   skipTrailingSlashRedirect: true,
+  assetPrefix:
+    process.env.NODE_ENV === "production"
+      ? process.env.NEXT_PUBLIC_BASE_URL
+      : undefined,
   experimental: {
     outputFileTracingIncludes: {
       "/api/mupdf/*": ["./node_modules/mupdf/dist/*.wasm"],
@@ -16,11 +30,34 @@ const nextConfig = {
   },
   async redirects() {
     return [
-      {
-        source: "/view/d/:path*",
-        destination: "/view/:path*",
-        permanent: true,
-      },
+      ...REDIRECT_SEGMENTS.map(
+        (segment) => (
+          {
+            source: `/${segment}`,
+            has: [
+              {
+                type: "host",
+                value: "www.papermark.io",
+              },
+            ],
+            destination: `https://app.papermark.io/${segment}`,
+            permanent: true,
+            statusCode: 301,
+          },
+          {
+            source: `/${segment}/:path*`,
+            has: [
+              {
+                type: "host",
+                value: "www.papermark.io",
+              },
+            ],
+            destination: `https://app.papermark.io/${segment}/:path*`,
+            permanent: true,
+            statusCode: 301,
+          }
+        ),
+      ),
     ];
   },
   async rewrites() {
@@ -45,6 +82,7 @@ function prepareRemotePatterns() {
     { protocol: "https", hostname: "lh3.googleusercontent.com" },
     // papermark img
     { protocol: "https", hostname: "www.papermark.io" },
+    { protocol: "https", hostname: "app.papermark.io" },
     // useragent img
     { protocol: "https", hostname: "faisalman.github.io" },
     // special document pages

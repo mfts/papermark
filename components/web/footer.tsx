@@ -120,7 +120,7 @@ const navigation = {
     // },
     {
       name: "Virtual sales data room",
-      href: "https://www.papermark.io/solutions/virtual-sales-room",
+      href: "/solutions/virtual-sales-room",
     },
   ],
   support: [

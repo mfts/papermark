@@ -1340,7 +1340,7 @@ const DocSendAlternatives = () => {
               </>
 
               <Link
-                href="https://papermark.io/login"
+                href="https://www.papermark.io/login"
                 target="_blank"
                 rel="noopener noreferrer"
               >
@@ -1388,7 +1388,7 @@ const DocSendAlternatives = () => {
               </ul>
 
               <Link
-                href="https://papermark.io/login"
+                href="https://www.papermark.io/login"
                 target="_blank"
                 rel="noopener noreferrer"
               >
@@ -1629,7 +1629,7 @@ const DocSendAlternatives = () => {
                 </div>
               </Link>
               <Link
-                href="https://papermark.io/login"
+                href="https://www.papermark.io/login"
                 target="_blank"
                 rel="noopener noreferrer"
               >
@@ -1641,7 +1641,7 @@ const DocSendAlternatives = () => {
                 </Button>
               </Link>
               <Link
-                href="https://papermark.io/pricing"
+                href="https://www.papermark.io/pricing"
                 target="_blank"
                 rel="noopener noreferrer"
               >
