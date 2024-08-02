@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { PlusIcon } from "lucide-react";
+import { encode } from "next-auth/jwt";
 import { HexColorInput, HexColorPicker } from "react-colorful";
 import { toast } from "sonner";
 import { mutate } from "swr";
@@ -395,7 +396,7 @@ export default function Branding() {
                             key={`branding-${brandColor}-${accentColor}`}
                             name="checkout-demo"
                             id="checkout-demo"
-                            src={`/nav_ppreview_demo?brandColor=${encodeURIComponent(brandColor)}&accentColor=${encodeURIComponent(accentColor)}&brandLogo=${blobUrl ? encodeURIComponent(blobUrl) : ""}`}
+                            src={`/nav_ppreview_demo?brandColor=${encodeURIComponent(brandColor)}&accentColor=${encodeURIComponent(accentColor)}&brandLogo=${blobUrl ? encodeURIComponent(blobUrl) : logo ? encodeURIComponent(logo) : ""}`}
                             style={{
                               width: "1390px",
                               height: "831px",

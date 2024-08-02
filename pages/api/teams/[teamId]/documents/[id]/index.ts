@@ -119,7 +119,7 @@ export default async function handle(
           team: {
             users: {
               some: {
-                // role: "ADMIN", // TODO: add role check when deleting document
+                role: { in: ["ADMIN", "MANAGER"] },
                 userId: userId,
               },
             },

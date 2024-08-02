@@ -8,8 +8,10 @@ import { Button } from "@/components/ui/button";
 
 import { cn } from "@/lib/utils";
 
+import { Faq } from "./faq";
 import { Table } from "./feature-table";
 import { MDXImage } from "./mdx-image";
+import { VideoPlayer, YoutubePlayer } from "./video";
 
 export const mdxComponents: MDXComponents = {
   a: ({ children, ...props }) => {
@@ -91,6 +93,20 @@ export const mdxComponents: MDXComponents = {
       return null;
 
     return <Table columns={columns} rows={rows} {...props} />;
+  },
+  Faq: ({ rows, ...props }) => {
+    if (!rows || rows.length === 0) return null;
+
+    return <Faq rows={rows} {...props} />;
+  },
+  Video: ({ src, ...props }) => {
+    if (!src || !src.startsWith("https://")) return null;
+
+    if (src.includes("assets.papermark.io")) {
+      return <VideoPlayer url={src} {...props} />;
+    }
+
+    return <YoutubePlayer url={src} {...props} />;
   },
   // any other components you want to use in your markdown
 };

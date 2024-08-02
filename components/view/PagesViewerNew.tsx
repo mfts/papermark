@@ -21,7 +21,6 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useMediaQuery } from "@/lib/utils/use-media-query";
 
-import LoadingSpinner from "../ui/loading-spinner";
 import { ScreenProtector } from "./ScreenProtection";
 import { TDocumentData } from "./dataroom/dataroom-view";
 import Nav from "./nav";
@@ -124,7 +123,8 @@ export default function PagesViewer({
   const showStatsSlideWithAccountCreation =
     showAccountCreationSlide && // if showAccountCreationSlide is enabled
     sessionStatus !== "authenticated" && // and user is not authenticated
-    !dataroomId; // and it's not a dataroom
+    !dataroomId && // and it's not a dataroom
+    !isVertical; // and it's not vertical document
 
   const numPages = pages.length;
   const numPagesWithFeedback =

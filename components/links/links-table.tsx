@@ -62,8 +62,9 @@ export default function LinksTable({
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isLinkSheetVisible, setIsLinkSheetVisible] = useState<boolean>(false);
-  const [selectedLink, setSelectedLink] =
-    useState<DEFAULT_LINK_TYPE>(DEFAULT_LINK_PROPS);
+  const [selectedLink, setSelectedLink] = useState<DEFAULT_LINK_TYPE>(
+    DEFAULT_LINK_PROPS(`${targetType}_LINK`),
+  );
 
   const handleCopyToClipboard = (linkString: string) => {
     copyToClipboard(`${linkString}`, "Link copied to clipboard.");
@@ -100,6 +101,7 @@ export default function LinksTable({
       metaImage: link.metaImage,
       enableAgreement: link.enableAgreement ? link.enableAgreement : false,
       agreementId: link.agreementId,
+      showBanner: link.showBanner ?? false,
     });
     //wait for dropdown to close before opening the link sheet
     setTimeout(() => {

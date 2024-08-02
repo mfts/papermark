@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { Document, DocumentVersion } from "@prisma/client";
-import { Sparkles, TrashIcon } from "lucide-react";
+import { BetweenHorizontalStartIcon, Sparkles, TrashIcon } from "lucide-react";
 import { usePlausible } from "next-plausible";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
@@ -32,6 +32,7 @@ import { cn, getExtension } from "@/lib/utils";
 import PortraitLandscape from "../shared/icons/portrait-landscape";
 import LoadingSpinner from "../ui/loading-spinner";
 import { AddDocumentModal } from "./add-document-modal";
+import { AddToDataroomModal } from "./move-dataroom-modal";
 
 export default function DocumentHeader({
   prismaDocument,
@@ -54,6 +55,7 @@ export default function DocumentHeader({
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
   const [isFirstClick, setIsFirstClick] = useState<boolean>(false);
   const [orientationLoading, setOrientationLoading] = useState<boolean>(false);
+  const [addDataroomOpen, setAddDataroomOpen] = useState<boolean>(false);
 
   const nameRef = useRef<HTMLHeadingElement>(null);
   const enterPressedRef = useRef<boolean>(false);
@@ -67,6 +69,15 @@ export default function DocumentHeader({
   }
 
   const plausible = usePlausible();
+
+  // https://github.com/radix-ui/primitives/issues/1241#issuecomment-1888232392
+  useEffect(() => {
+    if (!addDataroomOpen) {
+      setTimeout(() => {
+        document.body.style.pointerEvents = "";
+      });
+    }
+  }, [addDataroomOpen]);
 
   const handleNameSubmit = async () => {
     if (enterPressedRef.current) {
@@ -442,6 +453,11 @@ export default function DocumentHeader({
                 </DropdownMenuItem>
               ))}
 
+            <DropdownMenuItem onClick={() => setAddDataroomOpen(true)}>
+              <BetweenHorizontalStartIcon className="mr-2 h-4 w-4" />
+              Add to dataroom
+            </DropdownMenuItem>
+
             <DropdownMenuSeparator />
 
             <DropdownMenuItem
@@ -455,6 +471,15 @@ export default function DocumentHeader({
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+
+      {addDataroomOpen ? (
+        <AddToDataroomModal
+          open={addDataroomOpen}
+          setOpen={setAddDataroomOpen}
+          documentId={prismaDocument.id}
+          documentName={prismaDocument.name}
+        />
+      ) : null}
     </header>
   );
 }

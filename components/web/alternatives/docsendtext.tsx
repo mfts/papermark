@@ -148,7 +148,7 @@ const DocSendAlternatives = () => {
                   <a
                     target="_blank"
                     rel="nofollow"
-                    href="papermark.io/docsend-pricing"
+                    href="/blog/docsend-pricing"
                   >
                     article
                   </a>
@@ -213,14 +213,14 @@ const DocSendAlternatives = () => {
                 <h3 id="papermark-pricing">Papermark Pricing</h3>
                 <ul>
                   <li>
-                    <p>Free: $0</p>
+                    <p>Free: €0</p>
                   </li>
                   <li>
-                    <p>Starter: $25/month</p>
+                    <p>Starter: €25/month</p>
                   </li>
                   <li>
                     <p>
-                      Business: $59/month (
+                      Business: €45/month (
                       <a target="_blank" rel="nofollow" href="/data-room">
                         data room
                       </a>{" "}
@@ -229,7 +229,7 @@ const DocSendAlternatives = () => {
                   </li>
                   <li>
                     <p>
-                      Data Rooms: $149/month (
+                      Data Rooms: €99/month (
                       <a target="_blank" rel="nofollow" href="/data-room">
                         unlimited data rooms
                       </a>{" "}
@@ -247,7 +247,7 @@ const DocSendAlternatives = () => {
                   Papermark Ratings and Reviews
                 </h3>
                 <p>
-                  Papermark loved by over 5000 customers and users, who actively
+                  Papermark loved by over 7000 customers and users, who actively
                   use it for:
                 </p>
                 <ul>
@@ -1607,7 +1607,7 @@ const DocSendAlternatives = () => {
           <div className="sticky top-14 col-span-1 hidden flex-col divide-y divide-gray-200 self-start sm:flex">
             <div className="flex flex-col space-y-4">
               <p className="text-sm text-gray-500">
-                Last updated on 19.06.2024
+                Last updated on 24.07.2024
               </p>
               {/* <Author username={data.author} /> */}
               <Link

@@ -97,8 +97,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
             metaImage: link.metaImage,
             metaUrl: `https://${domain}/${slug}` || null,
           },
-          showPoweredByBanner: teamPlan === "free",
-          showAccountCreationSlide: teamPlan === "free" || teamPlan === "pro",
+          showAccountCreationSlide: link.showBanner || teamPlan === "free",
           useAdvancedExcelViewer:
             teamId === "clwt1qwt00000qz39aqra71w6" ||
             teamId === "clup33by90000oewh4rfvp2eg",

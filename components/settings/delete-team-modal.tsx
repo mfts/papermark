@@ -18,6 +18,7 @@ import { CardDescription, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Modal } from "@/components/ui/modal";
 
+import { useAnalytics } from "@/lib/analytics";
 import { useMediaQuery } from "@/lib/utils/use-media-query";
 
 function DeleteTeamModal({
@@ -29,6 +30,7 @@ function DeleteTeamModal({
 }) {
   const router = useRouter();
   const teamInfo = useTeam();
+  const analytics = useAnalytics();
 
   const [deleting, setDeleting] = useState(false);
 
@@ -45,6 +47,10 @@ function DeleteTeamModal({
         },
       }).then(async (res) => {
         if (res.ok) {
+          analytics.capture("Account Deleted", {
+            teamName: teamInfo?.currentTeam?.name,
+            teamId: teamInfo?.currentTeam?.id,
+          });
           await mutate("/api/teams");
           console.log("teamsCount", teamsCount);
           teamsCount > 1 ? router.push("/documents") : signOut();

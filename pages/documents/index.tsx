@@ -17,7 +17,7 @@ export default function Documents() {
 
   return (
     <AppLayout>
-      <main className="p-4 sm:mx-4 sm:mt-4">
+      <div className="sticky top-0 z-50 bg-white p-4 pb-0 sm:mx-4 sm:pt-8">
         <section className="mb-4 flex items-center justify-between md:mb-8 lg:mb-12">
           <div className="space-y-1">
             <h2 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
@@ -27,18 +27,6 @@ export default function Documents() {
               Manage all your documents in one place.
             </p>
           </div>
-          {/* <div className="flex items-center justify-between gap-4"> */}
-          {/* <AddDocumentModal>
-              <Button
-                size="icon"
-                className="fixed bottom-6 right-5 z-30 lg:hidden sm:bottom-0 sm:right-0 sm:relative w-10 sm:w-44 h-10 sm:h-10"
-              >
-                <span className="hidden sm:block">Add New Document</span>
-                <span className="block sm:hidden">
-                  <PlusIcon className="w-6 h-6" />
-                </span>
-              </Button>
-            </AddDocumentModal> */}
           <div className="flex items-center gap-x-1">
             <AddDocumentModal>
               <Button
@@ -81,13 +69,15 @@ export default function Documents() {
         </section>
 
         <Separator className="mb-5 bg-gray-200 dark:bg-gray-800" />
+      </div>
 
+      <div className="p-4 pt-0 sm:mx-4 sm:mt-4">
         <DocumentsList
           documents={documents}
           folders={folders}
           teamInfo={teamInfo}
         />
-      </main>
+      </div>
     </AppLayout>
   );
 }
