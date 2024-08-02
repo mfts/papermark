@@ -1,13 +1,3 @@
-const REDIRECT_SEGMENTS = [
-  "documents",
-  "datarooms",
-  "settings",
-  "api",
-  "_static",
-  "_icons",
-  "_example",
-];
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
@@ -22,51 +12,20 @@ const nextConfig = {
     process.env.NODE_ENV === "production"
       ? process.env.NEXT_PUBLIC_BASE_URL
       : undefined,
+  async redirects() {
+    return [
+      {
+        source: "/",
+        destination: "/documents",
+        permanent: false,
+      },
+    ];
+  },
   experimental: {
     outputFileTracingIncludes: {
       "/api/mupdf/*": ["./node_modules/mupdf/dist/*.wasm"],
     },
     missingSuspenseWithCSRBailout: false,
-  },
-  async redirects() {
-    return [
-      ...REDIRECT_SEGMENTS.map(
-        (segment) => (
-          {
-            source: `/${segment}`,
-            has: [
-              {
-                type: "host",
-                value: "www.papermark.io",
-              },
-            ],
-            destination: `https://app.papermark.io/${segment}`,
-            permanent: true,
-            statusCode: 301,
-          },
-          {
-            source: `/${segment}/:path*`,
-            has: [
-              {
-                type: "host",
-                value: "www.papermark.io",
-              },
-            ],
-            destination: `https://app.papermark.io/${segment}/:path*`,
-            permanent: true,
-            statusCode: 301,
-          }
-        ),
-      ),
-    ];
-  },
-  async rewrites() {
-    return [
-      {
-        source: "/ai-pitch-deck-generator/:path*",
-        destination: "https://deck.papermark.io/:path*",
-      },
-    ];
   },
 };
 
@@ -87,13 +46,6 @@ function prepareRemotePatterns() {
     { protocol: "https", hostname: "faisalman.github.io" },
     // special document pages
     { protocol: "https", hostname: "d36r2enbzam0iu.cloudfront.net" },
-    // blog images
-    {
-      protocol: "https",
-      hostname: "aicontentfy-customer-images.s3.eu-central-1.amazonaws.com",
-    },
-    // also blog images
-    { protocol: "https", hostname: "dev-to-uploads.s3.amazonaws.com" },
   ];
 
   if (process.env.NEXT_PRIVATE_UPLOAD_DISTRIBUTION_HOST) {
