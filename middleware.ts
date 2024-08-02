@@ -50,31 +50,7 @@ export default async function middleware(req: NextRequest, ev: NextFetchEvent) {
     return DomainMiddleware(req);
   }
 
-  if (
-    path !== "/" &&
-    path !== "/v1" &&
-    path !== "/register" &&
-    path !== "/privacy" &&
-    path !== "/terms" &&
-    path !== "/oss-friends" &&
-    path !== "/pricing" &&
-    path !== "/docsend-alternatives" &&
-    path !== "/digify-alternatives" &&
-    path !== "/data-room" &&
-    path !== "/launch-week" &&
-    path !== "/open-source-investors" &&
-    path !== "/investors" &&
-    path !== "/ai" &&
-    path !== "/share-notion-page" &&
-    !path.startsWith("/ai-pitch-deck-generator") &&
-    !path.startsWith("/alternatives") &&
-    !path.startsWith("/solutions") &&
-    !path.startsWith("/investors") &&
-    !path.startsWith("/blog") &&
-    !path.startsWith("/help") &&
-    !path.startsWith("/de") &&
-    !path.startsWith("/view/")
-  ) {
+  if (!path.startsWith("/view/")) {
     return AppMiddleware(req);
   }
 

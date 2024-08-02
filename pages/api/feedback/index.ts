@@ -1,6 +1,5 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
-import { getFile } from "@/lib/files/get-file";
 import prisma from "@/lib/prisma";
 
 export default async function handle(
