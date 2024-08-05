@@ -97,6 +97,59 @@ export default async function handle(
     } catch (error) {
       errorhandler(error, res);
     }
+  } else if (req.method === "DELETE") {
+    // DELETE /api/teams/:teamId/datarooms/:id
+    const session = await getServerSession(req, res, authOptions);
+    if (!session) {
+      return res.status(401).end("Unauthorized");
+    }
+
+    const { teamId, id: dataroomId } = req.query as {
+      teamId: string;
+      id: string;
+    };
+
+    try {
+      // Check if the user is part of the team
+      const team = await prisma.team.findUnique({
+        where: {
+          id: teamId,
+          datarooms: {
+            some: {
+              id: dataroomId,
+            },
+          },
+        },
+        include: { users: true },
+      });
+
+      if (!team) {
+        return res.status(401).end("Unauthorized");
+      }
+
+      // check if current user is admin of the team
+      const isUserAdmin = team.users.some(
+        (user) =>
+          user.role === "ADMIN" &&
+          user.userId === (session.user as CustomUser).id,
+      );
+      if (!isUserAdmin) {
+        return res
+          .status(403)
+          .json({ message: "You are not permitted to perform this action" });
+      }
+
+      await prisma.dataroom.delete({
+        where: {
+          id: dataroomId,
+          teamId,
+        },
+      });
+
+      return res.status(204).end();
+    } catch (error) {
+      errorhandler(error, res);
+    }
   } else {
     // We only allow GET requests
     res.setHeader("Allow", ["GET", "PATCH"]);
