@@ -101,7 +101,7 @@ export default function DataroomNav({
             <div className="relative flex h-16 w-36 flex-shrink-0 items-center">
               {brand && brand.logo ? (
                 <img
-                  className="object-contain"
+                  className="h-16 w-36 object-contain"
                   src={brand.logo}
                   alt="Logo"
                   // fill
