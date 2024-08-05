@@ -11,12 +11,16 @@ import AppLayout from "@/components/layouts/app";
 import { NavMenu } from "@/components/navigation-menu";
 import { Form } from "@/components/ui/form";
 
+import { usePlan } from "@/lib/swr/use-billing";
 import { useDataroom } from "@/lib/swr/use-dataroom";
 
 export default function Settings() {
   const { dataroom } = useDataroom();
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
+
+  const { plan } = usePlan();
+  const isDataroomsPlan = plan === "datarooms";
 
   if (!dataroom) {
     return <div>Loading...</div>;
@@ -109,10 +113,12 @@ export default function Settings() {
               }
             />
             <DuplicateDataroom dataroomId={dataroom.id} teamId={teamId} />
-            <DeleteDataroom
-              dataroomId={dataroom.id}
-              dataroomName={dataroom.name}
-            />
+            {isDataroomsPlan ? (
+              <DeleteDataroom
+                dataroomId={dataroom.id}
+                dataroomName={dataroom.name}
+              />
+            ) : null}
             {/* <Card>
                   <CardHeader className="relative">
                     <CardTitle>Feedback Question</CardTitle>
