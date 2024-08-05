@@ -3,7 +3,12 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 import { TeamContextType } from "@/context/team-context";
-import { FolderIcon, MoreVertical, TrashIcon } from "lucide-react";
+import {
+  BetweenHorizontalStartIcon,
+  FolderIcon,
+  MoreVertical,
+  TrashIcon,
+} from "lucide-react";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
@@ -22,6 +27,7 @@ import { FolderWithCount } from "@/lib/swr/use-documents";
 import { timeAgo } from "@/lib/utils";
 
 import { EditFolderModal } from "../folders/edit-folder-modal";
+import { AddFolderToDataroomModal } from "./add-folder-to-dataroom-modal";
 
 type FolderCardProps = {
   folder: FolderWithCount | DataroomFolderWithCount;
@@ -38,6 +44,8 @@ export default function FolderCard({
   const [openFolder, setOpenFolder] = useState<boolean>(false);
   const [isFirstClick, setIsFirstClick] = useState<boolean>(false);
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
+  const [addDataroomOpen, setAddDataroomOpen] = useState<boolean>(false);
+
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
   const folderPath =
@@ -65,12 +73,12 @@ export default function FolderCard({
 
   // https://github.com/radix-ui/primitives/issues/1241#issuecomment-1888232392
   useEffect(() => {
-    if (!openFolder) {
+    if (!openFolder || !addDataroomOpen) {
       setTimeout(() => {
         document.body.style.pointerEvents = "";
       });
     }
-  }, [openFolder]);
+  }, [openFolder, addDataroomOpen]);
 
   const handleButtonClick = (event: any, documentId: string) => {
     event.stopPropagation();
@@ -233,11 +241,17 @@ export default function FolderCard({
                 Rename
               </DropdownMenuItem>
               {!isDataroom ? (
-                <DropdownMenuItem
-                  onClick={(e) => handleCreateDataroom(e, folder.id)}
-                >
-                  Create dataroom from folder
-                </DropdownMenuItem>
+                <>
+                  <DropdownMenuItem
+                    onClick={(e) => handleCreateDataroom(e, folder.id)}
+                  >
+                    Create dataroom from folder
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setAddDataroomOpen(true)}>
+                    <BetweenHorizontalStartIcon className="mr-2 h-4 w-4" />
+                    Add folder to dataroom
+                  </DropdownMenuItem>
+                </>
               ) : null}
               <DropdownMenuSeparator />
 
@@ -266,6 +280,14 @@ export default function FolderCard({
           name={folder.name}
           isDataroom={isDataroom}
           dataroomId={dataroomId}
+        />
+      ) : null}
+      {addDataroomOpen ? (
+        <AddFolderToDataroomModal
+          open={addDataroomOpen}
+          setOpen={setAddDataroomOpen}
+          folderId={folder.id}
+          folderName={folder.name}
         />
       ) : null}
     </>
