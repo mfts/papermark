@@ -2,11 +2,9 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth/next";
-import { version } from "os";
 
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
-import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
 import { CustomUser } from "@/lib/types";
 
 export default async function handle(
@@ -14,7 +12,7 @@ export default async function handle(
   res: NextApiResponse,
 ) {
   if (req.method === "POST") {
-    // GET /api/teams/:teamId/documents/:id/add-to-dataroom
+    // POST /api/teams/:teamId/documents/:id/add-to-dataroom
     const session = await getServerSession(req, res, authOptions);
     if (!session) {
       return res.status(401).end("Unauthorized");

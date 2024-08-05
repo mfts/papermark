@@ -64,7 +64,7 @@ export default async function handle(
               type: true,
               _count: {
                 select: {
-                  views: { where: { viewType: "DATAROOM_VIEW" } },
+                  views: { where: { dataroomId } },
                   versions: true,
                 },
               },

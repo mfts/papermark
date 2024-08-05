@@ -5,17 +5,22 @@ import { toast } from "sonner";
 import { mutate } from "swr";
 
 import { DataroomHeader } from "@/components/datarooms/dataroom-header";
+import DeleteDataroom from "@/components/datarooms/settings/delete-dataroooom";
 import DuplicateDataroom from "@/components/datarooms/settings/duplicate-dataroom";
 import AppLayout from "@/components/layouts/app";
 import { NavMenu } from "@/components/navigation-menu";
 import { Form } from "@/components/ui/form";
 
+import { usePlan } from "@/lib/swr/use-billing";
 import { useDataroom } from "@/lib/swr/use-dataroom";
 
 export default function Settings() {
   const { dataroom } = useDataroom();
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
+
+  const { plan } = usePlan();
+  const isDataroomsPlan = plan === "datarooms";
 
   if (!dataroom) {
     return <div>Loading...</div>;
@@ -108,6 +113,12 @@ export default function Settings() {
               }
             />
             <DuplicateDataroom dataroomId={dataroom.id} teamId={teamId} />
+            {isDataroomsPlan ? (
+              <DeleteDataroom
+                dataroomId={dataroom.id}
+                dataroomName={dataroom.name}
+              />
+            ) : null}
             {/* <Card>
                   <CardHeader className="relative">
                     <CardTitle>Feedback Question</CardTitle>

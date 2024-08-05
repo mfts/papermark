@@ -32,7 +32,7 @@ import { cn, getExtension } from "@/lib/utils";
 import PortraitLandscape from "../shared/icons/portrait-landscape";
 import LoadingSpinner from "../ui/loading-spinner";
 import { AddDocumentModal } from "./add-document-modal";
-import { AddToDataroomModal } from "./move-dataroom-modal";
+import { AddToDataroomModal } from "./add-document-to-dataroom-modal";
 
 export default function DocumentHeader({
   prismaDocument,

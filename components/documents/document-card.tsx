@@ -35,7 +35,7 @@ import { DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
 import { nFormatter, timeAgo } from "@/lib/utils";
 import { useCopyToClipboard } from "@/lib/utils/use-copy-to-clipboard";
 
-import { AddToDataroomModal } from "./move-dataroom-modal";
+import { AddToDataroomModal } from "./add-document-to-dataroom-modal";
 import { MoveToFolderModal } from "./move-folder-modal";
 
 type DocumentsCardProps = {
