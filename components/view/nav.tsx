@@ -110,13 +110,13 @@ export default function Nav({
           <div className="flex flex-1 items-center justify-start">
             <div className="relative flex h-16 w-36 flex-shrink-0 items-center">
               {brand && brand.logo ? (
-                <Image
+                <img
                   className="object-contain"
                   src={brand.logo}
                   alt="Logo"
-                  fill
-                  quality={100}
-                  priority
+                  // fill
+                  // quality={100}
+                  // priority
                 />
               ) : (
                 <Link

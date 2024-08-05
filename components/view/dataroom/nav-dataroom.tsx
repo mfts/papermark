@@ -100,13 +100,13 @@ export default function DataroomNav({
           <div className="flex flex-1 items-center justify-start">
             <div className="relative flex h-16 w-36 flex-shrink-0 items-center">
               {brand && brand.logo ? (
-                <Image
+                <img
                   className="object-contain"
                   src={brand.logo}
                   alt="Logo"
-                  fill
-                  quality={100}
-                  priority
+                  // fill
+                  // quality={100}
+                  // priority
                 />
               ) : (
                 <Link
@@ -198,14 +198,14 @@ export default function DataroomNav({
       </div>
       {brand && brand.banner ? (
         <div className="relative h-[30vh]">
-          <Image
+          <img
             className="h-[30vh] w-full object-cover"
             src={brand.banner}
             alt="Banner"
             width={1920}
             height={320}
-            quality={100}
-            priority
+            // quality={100}
+            // priority
           />
           <div className="absolute bottom-5 w-fit rounded-r-md bg-white/30 backdrop-blur-md">
             <div className="px-5 py-2 sm:px-10">
