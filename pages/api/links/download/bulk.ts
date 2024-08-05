@@ -15,7 +15,7 @@ export default async function handle(
   res: NextApiResponse,
 ) {
   if (req.method === "POST") {
-    // GET /api/links/download/bulk
+    // POST /api/links/download/bulk
     const { linkId, viewId } = req.body as { linkId: string; viewId: string };
 
     try {

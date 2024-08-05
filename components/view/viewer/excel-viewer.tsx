@@ -48,6 +48,7 @@ export default function ExcelViewer({
   documentName,
   versionNumber,
   sheetData,
+  allowDownload,
   brand,
   dataroomId,
   setDocumentData,
@@ -59,6 +60,7 @@ export default function ExcelViewer({
   documentName: string;
   versionNumber: number;
   sheetData: SheetData[];
+  allowDownload: boolean;
   brand?: Partial<Brand> | Partial<DataroomBrand> | null;
   dataroomId?: string;
   setDocumentData?: React.Dispatch<React.SetStateAction<TDocumentData | null>>;
@@ -226,6 +228,7 @@ export default function ExcelViewer({
         setDocumentData={setDocumentData}
         type="sheet"
         isPreview={isPreview}
+        allowDownload={allowDownload}
       />
       <div
         style={{ height: "calc(100dvh - 64px)" }}

@@ -310,6 +310,7 @@ export default function DataroomView({
           brand={brand}
           dataroomId={dataroom.id}
           setDocumentData={setDocumentData}
+          allowDownload={link.allowDownload!}
         />
       </div>
     ) : viewData.fileType === "sheet" && useAdvancedExcelViewer ? (
