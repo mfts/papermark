@@ -62,6 +62,7 @@ export default function ViewData({
       versionNumber={document.versions[0].versionNumber}
       sheetData={viewData.sheetData}
       brand={brand}
+      allowDownload={link.allowDownload!}
     />
   ) : viewData.fileType === "sheet" && useAdvancedExcelViewer ? (
     <AdvancedExcelViewer
