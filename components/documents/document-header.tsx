@@ -354,11 +354,9 @@ export default function DocumentHeader({
 
         {primaryVersion.type !== "notion" && (
           <AddDocumentModal newVersion>
-            <ButtonTooltip content="Add new version">
-              <button title="Upload a new version" className="hidden md:flex">
-                <FileUp className="h-6 w-6" />
-              </button>
-            </ButtonTooltip>
+            <button title="Upload a new version" className="hidden md:flex">
+              <FileUp className="h-6 w-6" />
+            </button>
           </AddDocumentModal>
         )}
 
