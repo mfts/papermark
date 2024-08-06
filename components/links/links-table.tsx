@@ -248,7 +248,7 @@ export default function LinksTable({
                               </span>
                             ) : null}
                           </TableCell>
-                          <TableCell className="flex max-w-[250px] items-center gap-x-2 sm:min-w-[300px] md:min-w-[400px] lg:min-w-[450px]">
+                          <TableCell className="flex items-center gap-x-2 sm:min-w-[300px] md:min-w-[400px] lg:min-w-[450px]">
                             <div
                               className={cn(
                                 `group/cell relative flex w-full items-center gap-x-4 overflow-hidden truncate rounded-sm px-3 py-1.5 text-center text-secondary-foreground transition-all group-hover/row:ring-1 group-hover/row:ring-gray-400 group-hover/row:dark:ring-gray-100 md:py-1`,
@@ -267,7 +267,7 @@ export default function LinksTable({
                                 />
                               ) : null}
 
-                              <div className="flex w-full whitespace-nowrap text-xs group-hover/cell:opacity-0 md:text-sm">
+                              <div className="flex w-full whitespace-nowrap text-sm group-hover/cell:opacity-0">
                                 {link.domainId
                                   ? `https://${link.domainSlug}/${link.slug}`
                                   : `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${link.id}`}

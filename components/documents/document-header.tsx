@@ -31,6 +31,7 @@ import { cn, getExtension } from "@/lib/utils";
 
 import PortraitLandscape from "../shared/icons/portrait-landscape";
 import LoadingSpinner from "../ui/loading-spinner";
+import { ButtonTooltip } from "../ui/tooltip";
 import { AddDocumentModal } from "./add-document-modal";
 import { AddToDataroomModal } from "./add-document-to-dataroom-modal";
 
@@ -331,18 +332,20 @@ export default function DocumentHeader({
 
       <div className="flex items-center gap-x-4 md:gap-x-2 lg:gap-x-4">
         {!orientationLoading ? (
-          <button
-            className="hidden md:flex"
-            onClick={changeDocumentOrientation}
-            title={`Change document orientation to ${primaryVersion.isVertical ? "landscape" : "portrait"}`}
-          >
-            <PortraitLandscape
-              className={cn(
-                "h-6 w-6",
-                !primaryVersion.isVertical && "-rotate-90 transform",
-              )}
-            />
-          </button>
+          <ButtonTooltip content="Change orientation">
+            <button
+              className="hidden md:flex"
+              onClick={changeDocumentOrientation}
+              title={`Change document orientation to ${primaryVersion.isVertical ? "landscape" : "portrait"}`}
+            >
+              <PortraitLandscape
+                className={cn(
+                  "h-6 w-6",
+                  !primaryVersion.isVertical && "-rotate-90 transform",
+                )}
+              />
+            </button>
+          </ButtonTooltip>
         ) : (
           <div className="hidden md:flex">
             <LoadingSpinner className="h-6 w-6" />
@@ -351,9 +354,11 @@ export default function DocumentHeader({
 
         {primaryVersion.type !== "notion" && (
           <AddDocumentModal newVersion>
-            <button title="Upload a new version" className="hidden md:flex">
-              <FileUp className="h-6 w-6" />
-            </button>
+            <ButtonTooltip content="Add new version">
+              <button title="Upload a new version" className="hidden md:flex">
+                <FileUp className="h-6 w-6" />
+              </button>
+            </ButtonTooltip>
           </AddDocumentModal>
         )}
 
