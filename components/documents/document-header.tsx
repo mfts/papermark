@@ -57,6 +57,7 @@ export default function DocumentHeader({
   const [isFirstClick, setIsFirstClick] = useState<boolean>(false);
   const [orientationLoading, setOrientationLoading] = useState<boolean>(false);
   const [addDataroomOpen, setAddDataroomOpen] = useState<boolean>(false);
+  const [addDocumentVersion, setAddDocumentVersion] = useState<boolean>(false);
 
   const nameRef = useRef<HTMLHeadingElement>(null);
   const enterPressedRef = useRef<boolean>(false);
@@ -73,12 +74,12 @@ export default function DocumentHeader({
 
   // https://github.com/radix-ui/primitives/issues/1241#issuecomment-1888232392
   useEffect(() => {
-    if (!addDataroomOpen) {
+    if (!addDataroomOpen || !addDocumentVersion) {
       setTimeout(() => {
         document.body.style.pointerEvents = "";
       });
     }
-  }, [addDataroomOpen]);
+  }, [addDataroomOpen, addDocumentVersion]);
 
   const handleNameSubmit = async () => {
     if (enterPressedRef.current) {
@@ -405,10 +406,17 @@ export default function DocumentHeader({
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuGroup className="block md:hidden">
               <DropdownMenuItem>
-                <AddDocumentModal newVersion>
+                <AddDocumentModal
+                  newVersion
+                  setAddDocumentModalOpen={setAddDocumentVersion}
+                >
                   <button
                     title="Add a new version"
                     className="flex items-center"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setAddDocumentVersion(true);
+                    }}
                   >
                     <FileUp className="mr-2 h-4 w-4" /> Add new version
                   </button>

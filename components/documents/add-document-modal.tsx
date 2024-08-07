@@ -36,11 +36,13 @@ export function AddDocumentModal({
   children,
   isDataroom,
   dataroomId,
+  setAddDocumentModalOpen,
 }: {
   newVersion?: boolean;
   children: React.ReactNode;
   isDataroom?: boolean;
   dataroomId?: string;
+  setAddDocumentModalOpen?: (isOpen: boolean) => void;
 }) {
   const router = useRouter();
   const plausible = usePlausible();
@@ -186,6 +188,7 @@ export function AddDocumentModal({
     } finally {
       setUploading(false);
       setIsOpen(false);
+      setAddDocumentModalOpen && setAddDocumentModalOpen(false);
     }
   };
 
@@ -354,6 +357,7 @@ export function AddDocumentModal({
     currentFile !== null && setCurrentFile(null);
     notionLink !== null && setNotionLink(null);
     setIsOpen(!isOpen);
+    setAddDocumentModalOpen && setAddDocumentModalOpen(!isOpen);
   };
 
   return (
