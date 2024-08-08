@@ -1,7 +1,16 @@
 import { useRouter } from "next/router";
 
+import { useState } from "react";
+
 import { useTeam } from "@/context/team-context";
-import { FileIcon, FolderIcon, FolderPlusIcon, PlusIcon } from "lucide-react";
+import {
+  ArrowUpDownIcon,
+  CheckIcon,
+  FileIcon,
+  FolderIcon,
+  FolderPlusIcon,
+  PlusIcon,
+} from "lucide-react";
 
 import { BreadcrumbComponent } from "@/components/datarooms/dataroom-breadcrumb";
 import { DataroomHeader } from "@/components/datarooms/dataroom-header";
@@ -29,6 +38,8 @@ export default function Documents() {
   const { documents } = useDataroomFolderDocuments({ name });
 
   const teamInfo = useTeam();
+
+  const [reorderItems, setReorderItems] = useState<boolean>(false);
 
   return (
     <AppLayout>
@@ -109,29 +120,57 @@ export default function Documents() {
             </ScrollArea>
           </div>
           <div className="space-y-4 md:col-span-3">
-            <BreadcrumbComponent />
-            <section className="mb-2 flex items-center gap-x-2">
-              {folders && folders.length > 0 ? (
-                <p className="flex items-center gap-x-1 text-sm text-gray-400">
-                  <FolderIcon className="h-4 w-4" />
-                  <span>{folders.length} folders</span>
-                </p>
-              ) : null}
-              {documents && documents.length > 0 ? (
-                <p className="flex items-center gap-x-1 text-sm text-gray-400">
-                  <FileIcon className="h-4 w-4" />
-                  <span>{documents.length} documents</span>
-                </p>
-              ) : null}
-            </section>
+            <div className="flex justify-between">
+              <div className="space-y-2">
+                <BreadcrumbComponent />
+                <section className="mb-2 flex items-center gap-x-2">
+                  {folders && folders.length > 0 ? (
+                    <p className="flex items-center gap-x-1 text-sm text-gray-400">
+                      <FolderIcon className="h-4 w-4" />
+                      <span>{folders.length} folders</span>
+                    </p>
+                  ) : null}
+                  {documents && documents.length > 0 ? (
+                    <p className="flex items-center gap-x-1 text-sm text-gray-400">
+                      <FileIcon className="h-4 w-4" />
+                      <span>{documents.length} documents</span>
+                    </p>
+                  ) : null}
+                </section>
+              </div>
+              <div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="gap-x-1"
+                  onClick={() => setReorderItems(!reorderItems)}
+                >
+                  {reorderItems ? (
+                    <CheckIcon className="size-4" />
+                  ) : (
+                    <ArrowUpDownIcon className="h-4 w-4" />
+                  )}
+                  {reorderItems ? "Save index" : "Edit index"}
+                </Button>
+              </div>
+            </div>
 
-            <DocumentsList
-              documents={documents}
-              folders={folders}
-              teamInfo={teamInfo}
-              folderPathName={name}
-              dataroomId={dataroom?.id}
-            />
+            {reorderItems ? (
+              <DataroomSortableList
+                documents={documents}
+                folders={folders}
+                teamInfo={teamInfo}
+                dataroomId={dataroom?.id!}
+              />
+            ) : (
+              <DocumentsList
+                documents={documents}
+                folders={folders}
+                teamInfo={teamInfo}
+                folderPathName={name}
+                dataroomId={dataroom?.id}
+              />
+            )}
           </div>
         </div>
       </div>
