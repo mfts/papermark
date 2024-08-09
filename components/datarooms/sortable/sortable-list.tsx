@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import React from "react";
 
 import { TeamContextType } from "@/context/team-context";
@@ -19,9 +19,13 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
+import { CheckIcon } from "lucide-react";
+import { toast } from "sonner";
+import { mutate } from "swr";
 
 import DataroomDocumentCard from "@/components/datarooms/dataroom-document-card";
 import FolderCard from "@/components/documents/folder-card";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
 import {
@@ -29,35 +33,25 @@ import {
   DataroomFolderWithCount,
 } from "@/lib/swr/use-dataroom";
 
-import { ItemCategory, SortableItem } from "./sortable-item";
+import { SortableItem } from "./sortable-item";
 
-type FolderOrDocument = DataroomFolderWithCount | DataroomFolderDocument;
-
-const isFolder = (item: FolderOrDocument): item is DataroomFolderWithCount =>
-  "_count" in item && "childFolders" in item._count;
+type FolderOrDocument =
+  | (DataroomFolderWithCount & { itemType: "folder" })
+  | (DataroomFolderDocument & { itemType: "document" });
 
 export function DataroomSortableList({
-  folders,
-  documents,
+  mixedItems,
   teamInfo,
   dataroomId,
-  onReorder,
+  setIsReordering,
 }: {
-  folders: DataroomFolderWithCount[] | undefined;
-  documents: DataroomFolderDocument[] | undefined;
+  mixedItems: FolderOrDocument[] | undefined;
   teamInfo: TeamContextType | null;
   dataroomId: string;
-  onReorder: (newOrder: { category: ItemCategory; id: string }[]) => void;
+  setIsReordering: (isReordering: boolean) => void;
 }) {
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [items, setItems] = useState<FolderOrDocument[]>([
-    ...(folders || []),
-    ...(documents || []),
-  ]);
-
-  useEffect(() => {
-    setItems([...(folders || []), ...(documents || [])]);
-  }, [folders, documents]);
+  const [items, setItems] = useState<FolderOrDocument[]>(mixedItems ?? []);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -86,40 +80,72 @@ export function DataroomSortableList({
     if (activeId !== overId) {
       setItems((prevItems) => {
         const oldIndex = prevItems.findIndex(
-          (item) =>
-            `${isFolder(item) ? "folder" : "document"}-${item.id}` === activeId,
+          (item) => `${item.itemType}-${item.id}` === activeId,
         );
         const newIndex = prevItems.findIndex(
-          (item) =>
-            `${isFolder(item) ? "folder" : "document"}-${item.id}` === overId,
+          (item) => `${item.itemType}-${item.id}` === overId,
         );
-
-        const newItems = arrayMove(prevItems, oldIndex, newIndex);
-        // onReorder(
-        //   newItems.map((item) => ({
-        //     category: isFolder(item) ? "folder" : "document",
-        //     id: item.id,
-        //   })),
-        // );
-        console.log("reorder", newItems);
-
-        return newItems;
+        const newOrder = arrayMove(prevItems, oldIndex, newIndex);
+        return newOrder;
       });
     }
 
     setActiveId(null);
   };
 
+  const handleSave = async () => {
+    // if nothing changed just return
+    if (items.every((item, index) => item.id === mixedItems?.[index].id)) {
+      setIsReordering(false);
+      return;
+    }
+
+    const newOrder = items.map((item, index) => ({
+      category: item.itemType,
+      id: item.id,
+      orderIndex: index,
+    }));
+
+    try {
+      // Make API call to save the new order
+      console.log("Saving new order:", newOrder);
+      const response = await fetch(
+        `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}/reorder`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(newOrder),
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to save new order");
+      }
+
+      // Update local data using SWR's mutate
+      mutate(
+        `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}/folders?root=true`,
+      );
+      mutate(
+        `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}/documents`,
+      );
+      setIsReordering(false);
+      toast.success("Index saved successfully");
+    } catch (error) {
+      console.error("Failed to save new order:", error);
+      toast.error("Failed to save index");
+      // Optionally, show an error message to the user
+    } finally {
+      setIsReordering(false);
+    }
+  };
+
   const renderItem = (item: FolderOrDocument) => {
-    const itemId = `${isFolder(item) ? "folder" : "document"}-${item.id}`;
+    const itemId = `${item.itemType}-${item.id}`;
 
     return (
-      <SortableItem
-        key={itemId}
-        id={itemId}
-        category={isFolder(item) ? "folder" : "document"}
-      >
-        {isFolder(item) ? (
+      <SortableItem key={itemId} id={itemId} category={item.itemType}>
+        {item.itemType === "folder" ? (
           <FolderCard
             folder={item}
             teamInfo={teamInfo}
@@ -138,14 +164,20 @@ export function DataroomSortableList({
   };
 
   const activeItem = activeId
-    ? items.find(
-        (item) =>
-          `${isFolder(item) ? "folder" : "document"}-${item.id}` === activeId,
-      )
+    ? items.find((item) => `${item.itemType}-${item.id}` === activeId)
     : null;
 
   return (
-    <div className="rounded-lg border-2 border-dashed border-gray-400 p-2">
+    <div className="relative rounded-lg border-2 border-dashed border-gray-400 p-2">
+      <Button
+        onClick={handleSave}
+        variant={"outline"}
+        size="sm"
+        className="absolute right-[-2px] top-[-66px] gap-x-1"
+      >
+        <CheckIcon className="size-4" />
+        Save index
+      </Button>
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
@@ -153,9 +185,7 @@ export function DataroomSortableList({
         onDragStart={handleDragStart}
       >
         <SortableContext
-          items={items.map(
-            (item) => `${isFolder(item) ? "folder" : "document"}-${item.id}`,
-          )}
+          items={items.map((item) => `${item.itemType}-${item.id}`)}
           strategy={verticalListSortingStrategy}
         >
           <ul role="list" className="relative space-y-4">
@@ -172,7 +202,7 @@ export function DataroomSortableList({
                 boxShadow: "0 0 10px rgba(0, 0, 0, 0.2)",
               }}
             >
-              {isFolder(activeItem) ? (
+              {activeItem.itemType === "folder" ? (
                 <FolderCard
                   folder={activeItem}
                   teamInfo={teamInfo}

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import {
@@ -9,32 +9,32 @@ import {
   FolderPlusIcon,
   PlusIcon,
 } from "lucide-react";
+import { mutate } from "swr";
 
 import { BreadcrumbComponent } from "@/components/datarooms/dataroom-breadcrumb";
 import { DataroomHeader } from "@/components/datarooms/dataroom-header";
 import { SidebarFolderTree } from "@/components/datarooms/folders";
 import { DataroomSortableList } from "@/components/datarooms/sortable/sortable-list";
 import { AddDocumentModal } from "@/components/documents/add-document-modal";
+import { DataroomItemsList } from "@/components/documents/dataroom-items-list";
 import { DocumentsList } from "@/components/documents/documents-list";
 import { AddFolderModal } from "@/components/folders/add-folder-modal";
 import AppLayout from "@/components/layouts/app";
 import { NavMenu } from "@/components/navigation-menu";
 import { Button } from "@/components/ui/button";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { Skeleton } from "@/components/ui/skeleton";
 
-import {
-  useDataroom,
-  useDataroomDocuments,
-  useDataroomFolders,
-} from "@/lib/swr/use-dataroom";
+import { useDataroom, useDataroomItems } from "@/lib/swr/use-dataroom";
 
 export default function Documents() {
   const { dataroom } = useDataroom();
-  const { documents } = useDataroomDocuments();
-  const { folders } = useDataroomFolders({ root: true });
+  const { items, folderCount, documentCount } = useDataroomItems({
+    root: true,
+  });
   const teamInfo = useTeam();
 
-  const [reorderItems, setReorderItems] = useState<boolean>(false);
+  const [isReordering, setIsReordering] = useState<boolean>(false);
 
   return (
     <AppLayout>
@@ -119,50 +119,48 @@ export default function Documents() {
               <div className="space-y-2">
                 <BreadcrumbComponent />
                 <section className="mb-2 flex items-center gap-x-2">
-                  {folders && folders.length > 0 ? (
+                  {folderCount > 0 ? (
                     <p className="flex items-center gap-x-1 text-sm text-gray-400">
                       <FolderIcon className="h-4 w-4" />
-                      <span>{folders.length} folders</span>
+                      <span>{folderCount} folders</span>
                     </p>
                   ) : null}
-                  {documents && documents.length > 0 ? (
+                  {documentCount > 0 ? (
                     <p className="flex items-center gap-x-1 text-sm text-gray-400">
                       <FileIcon className="h-4 w-4" />
-                      <span>{documents.length} documents</span>
+                      <span>{documentCount} documents</span>
                     </p>
                   ) : null}
                 </section>
               </div>
               <div>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="gap-x-1"
-                  onClick={() => setReorderItems(!reorderItems)}
-                >
-                  {reorderItems ? (
-                    <CheckIcon className="size-4" />
-                  ) : (
+                {!isReordering ? (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="gap-x-1"
+                    onClick={() => setIsReordering(!isReordering)}
+                  >
                     <ArrowUpDownIcon className="h-4 w-4" />
-                  )}
-                  {reorderItems ? "Save index" : "Edit index"}
-                </Button>
+                    Edit index
+                  </Button>
+                ) : null}
               </div>
             </div>
 
-            {reorderItems ? (
+            {}
+            {isReordering ? (
               <DataroomSortableList
-                documents={documents}
-                folders={folders}
+                mixedItems={items}
                 teamInfo={teamInfo}
                 dataroomId={dataroom?.id!}
+                setIsReordering={setIsReordering}
               />
             ) : (
-              <DocumentsList
-                documents={documents}
-                folders={folders}
+              <DataroomItemsList
+                mixedItems={items}
                 teamInfo={teamInfo}
-                dataroomId={dataroom?.id}
+                dataroomId={dataroom?.id!}
               />
             )}
           </div>

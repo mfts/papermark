@@ -223,7 +223,12 @@ export default function DataroomDocumentCard({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" ref={dropdownRef}>
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem onClick={() => setMoveFolderOpen(true)}>
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setMoveFolderOpen(true);
+                }}
+              >
                 <FolderInputIcon className="mr-2 h-4 w-4" />
                 Move to folder
               </DropdownMenuItem>
