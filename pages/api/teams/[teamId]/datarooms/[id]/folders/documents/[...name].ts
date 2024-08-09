@@ -5,6 +5,7 @@ import { getServerSession } from "next-auth/next";
 
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
+import { sortItemsByIndexAndName } from "@/lib/utils/sort-items-by-index-name";
 
 export default async function handle(
   req: NextApiRequest,
@@ -96,25 +97,9 @@ export default async function handle(
         },
       });
 
-      // Sort documents by name considering the numerical part
-      documents.sort((a, b) => {
-        const getNumber = (str: string): number => {
-          const match = str.match(/^\d+/);
-          return match ? parseInt(match[0], 10) : 0;
-        };
+      const sortedDocuments = sortItemsByIndexAndName(documents);
 
-        const numA = getNumber(a.document.name);
-        const numB = getNumber(b.document.name);
-
-        if (numA !== numB) {
-          return numA - numB;
-        }
-
-        // If numerical parts are the same, fall back to lexicographical order
-        return a.document.name.localeCompare(b.document.name);
-      });
-
-      return res.status(200).json(documents);
+      return res.status(200).json(sortedDocuments);
     } catch (error) {
       console.error("Request error", error);
       return res
