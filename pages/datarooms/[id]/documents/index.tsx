@@ -1,7 +1,6 @@
 import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
-import { mix } from "framer-motion";
 import {
   ArrowUpDownIcon,
   FileIcon,
