@@ -1,35 +1,33 @@
-import { useCallback, useState } from "react";
+import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
+import { mix } from "framer-motion";
 import {
   ArrowUpDownIcon,
-  CheckIcon,
   FileIcon,
   FolderIcon,
   FolderPlusIcon,
   PlusIcon,
 } from "lucide-react";
-import { mutate } from "swr";
 
 import { BreadcrumbComponent } from "@/components/datarooms/dataroom-breadcrumb";
 import { DataroomHeader } from "@/components/datarooms/dataroom-header";
+import { DataroomItemsList } from "@/components/datarooms/dataroom-items-list";
 import { SidebarFolderTree } from "@/components/datarooms/folders";
 import { DataroomSortableList } from "@/components/datarooms/sortable/sortable-list";
 import { AddDocumentModal } from "@/components/documents/add-document-modal";
-import { DataroomItemsList } from "@/components/documents/dataroom-items-list";
-import { DocumentsList } from "@/components/documents/documents-list";
+import { LoadingDocuments } from "@/components/documents/loading-document";
 import { AddFolderModal } from "@/components/folders/add-folder-modal";
 import AppLayout from "@/components/layouts/app";
 import { NavMenu } from "@/components/navigation-menu";
 import { Button } from "@/components/ui/button";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { Skeleton } from "@/components/ui/skeleton";
 
 import { useDataroom, useDataroomItems } from "@/lib/swr/use-dataroom";
 
 export default function Documents() {
   const { dataroom } = useDataroom();
-  const { items, folderCount, documentCount } = useDataroomItems({
+  const { items, folderCount, documentCount, isLoading } = useDataroomItems({
     root: true,
   });
   const teamInfo = useTeam();
@@ -148,7 +146,8 @@ export default function Documents() {
               </div>
             </div>
 
-            {}
+            {isLoading ? <LoadingDocuments count={3} /> : null}
+
             {isReordering ? (
               <DataroomSortableList
                 mixedItems={items}

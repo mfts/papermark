@@ -1,5 +1,4 @@
 import { useState } from "react";
-import React from "react";
 
 import { TeamContextType } from "@/context/team-context";
 import {
@@ -26,7 +25,6 @@ import { mutate } from "swr";
 import DataroomDocumentCard from "@/components/datarooms/dataroom-document-card";
 import FolderCard from "@/components/documents/folder-card";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 
 import {
   DataroomFolderDocument,
@@ -43,11 +41,13 @@ export function DataroomSortableList({
   mixedItems,
   teamInfo,
   dataroomId,
+  folderPathName,
   setIsReordering,
 }: {
   mixedItems: FolderOrDocument[] | undefined;
   teamInfo: TeamContextType | null;
   dataroomId: string;
+  folderPathName?: string[];
   setIsReordering: (isReordering: boolean) => void;
 }) {
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -124,10 +124,10 @@ export function DataroomSortableList({
 
       // Update local data using SWR's mutate
       mutate(
-        `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}/folders?root=true`,
+        `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}/folders${folderPathName ? `/${folderPathName.join(" / ")}` : "?root=true"}`,
       );
       mutate(
-        `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}/documents`,
+        `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}${folderPathName ? `/folders/documents/${folderPathName.join("/")}` : "/documents"}`,
       );
       setIsReordering(false);
       toast.success("Index saved successfully");
@@ -219,96 +219,7 @@ export function DataroomSortableList({
             </div>
           ) : null}
         </DragOverlay>
-        {/* <DragOverlay>
-            {activeId && activeId.startsWith("document-") && (
-              <div className="opacity-50">
-                {renderItem(
-                  items.find(
-                    (item) =>
-                      !isFolder(item) && `document-${item.id}` === activeId,
-                  )!,
-                )}
-              </div>
-            )}
-          </DragOverlay> */}
       </DndContext>
-      {/* <div className="space-y-4"> */}
-      {/* Folders list */}
-      {/* <ul role="list" className="space-y-4">
-            {folders
-              ? folders.map((folder) => {
-                  return (
-                    <FolderCard
-                      key={folder.id}
-                      folder={folder}
-                      teamInfo={teamInfo}
-                      isDataroom={!!dataroomId}
-                      dataroomId={dataroomId}
-                    />
-                  );
-                })
-              : Array.from({ length: 3 }).map((_, i) => (
-                  <li
-                    key={i}
-                    className="relative flex w-full items-center space-x-3 rounded-lg border px-4 py-5 sm:px-6 lg:px-6"
-                  >
-                    <Skeleton key={i} className="h-9 w-9" />
-                    <div>
-                      <Skeleton key={i} className="h-4 w-32" />
-                      <Skeleton key={i + 1} className="mt-2 h-3 w-12" />
-                    </div>
-                    <Skeleton
-                      key={i + 1}
-                      className="absolute right-5 top-[50%] h-5 w-20 -translate-y-[50%] transform"
-                    />
-                  </li>
-                ))}
-          </ul> */}
-
-      {/* Documents list */}
-      {/* <ul role="list" className="space-y-4">
-            {documents
-              ? documents.map((document) => {
-                  if (dataroomId) {
-                    return (
-                      <DataroomDocumentCard
-                        key={document.id}
-                        document={document as DataroomFolderDocument}
-                        teamInfo={teamInfo}
-                        dataroomId={dataroomId}
-                      />
-                    );
-                  } else {
-                    return (
-                      <DocumentCard
-                        key={document.id}
-                        document={
-                          document as DocumentWithLinksAndLinkCountAndViewCount
-                        }
-                        teamInfo={teamInfo}
-                      />
-                    );
-                  }
-                })
-              : Array.from({ length: 3 }).map((_, i) => (
-                  <li
-                    key={i}
-                    className="relative flex w-full items-center space-x-3 rounded-lg border px-4 py-5 sm:px-6 lg:px-6"
-                  >
-                    <Skeleton key={i} className="h-9 w-9" />
-                    <div>
-                      <Skeleton key={i} className="h-4 w-32" />
-                      <Skeleton key={i + 1} className="mt-2 h-3 w-12" />
-                    </div>
-                    <Skeleton
-                      key={i + 1}
-                      className="absolute right-5 top-[50%] h-5 w-20 -translate-y-[50%] transform"
-                    />
-                  </li>
-                ))}
-          </ul> */}
-
-      {/* </div> */}
     </div>
   );
 }

@@ -76,24 +76,32 @@ export function useDataroomItems({
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
 
-  console.log("useDataroomItems", teamId, id);
-
   const { data: folderData, error: folderError } = useSWR<
     DataroomFolderWithCount[]
   >(
-    teamId && id && `/api/teams/${teamId}/datarooms/${id}/folders?root=true`,
+    teamId &&
+      id &&
+      `/api/teams/${teamId}/datarooms/${id}/folders${root ? "?root=true" : name ? `/${name.join("/")}` : ""}`,
     fetcher,
     {
       revalidateOnFocus: false,
       dedupingInterval: 30000,
     },
   );
+
   const { data: documentData, error: documentError } = useSWR<
     DataroomFolderDocument[]
-  >(teamId && id && `/api/teams/${teamId}/datarooms/${id}/documents`, fetcher, {
-    revalidateOnFocus: false,
-    dedupingInterval: 30000,
-  });
+  >(
+    teamId &&
+      id &&
+      `/api/teams/${teamId}/datarooms/${id}${name ? `/folders/documents/${name.join("/")}` : "/documents"}`,
+
+    fetcher,
+    {
+      revalidateOnFocus: false,
+      dedupingInterval: 30000,
+    },
+  );
 
   const isLoading =
     !folderData && !documentData && !folderError && !documentError;
@@ -114,7 +122,10 @@ export function useDataroomItems({
   }, [folderData, documentData]);
 
   return {
-    items: combinedItems,
+    items: combinedItems as (
+      | (DataroomFolderWithCount & { itemType: "folder" })
+      | (DataroomFolderDocument & { itemType: "document" })
+    )[],
     folderCount: folderData?.length || 0,
     documentCount: documentData?.length || 0,
     isLoading,

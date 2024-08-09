@@ -65,17 +65,21 @@ export default async function handle(
           dataroomId: dataroomId,
           folderId: folder.id,
         },
-        orderBy: {
-          document: {
-            name: "asc",
+        orderBy: [
+          { orderIndex: "asc" },
+          {
+            document: {
+              name: "asc",
+            },
           },
-        },
+        ],
         select: {
           id: true,
           dataroomId: true,
           folderId: true,
           createdAt: true,
           updatedAt: true,
+          orderIndex: true,
           document: {
             select: {
               id: true,

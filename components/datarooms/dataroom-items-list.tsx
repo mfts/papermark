@@ -1,8 +1,9 @@
 import { useState } from "react";
-import React from "react";
 
 import { TeamContextType } from "@/context/team-context";
 
+import { EmptyDocuments } from "@/components/documents/empty-document";
+import FolderCard from "@/components/documents/folder-card";
 import { UploadNotificationDrawer } from "@/components/upload-notification";
 import UploadZone from "@/components/upload-zone";
 
@@ -11,16 +12,11 @@ import {
   DataroomFolderWithCount,
 } from "@/lib/swr/use-dataroom";
 
-import DataroomDocumentCard from "../datarooms/dataroom-document-card";
-import { EmptyDocuments } from "./empty-document";
-import FolderCard from "./folder-card";
+import DataroomDocumentCard from "./dataroom-document-card";
 
 type FolderOrDocument =
   | (DataroomFolderWithCount & { itemType: "folder" })
   | (DataroomFolderDocument & { itemType: "document" });
-
-// const isFolder = (item: FolderOrDocument): item is DataroomFolderWithCount =>
-//   "_count" in item && "childFolders" in item._count;
 
 export function DataroomItemsList({
   mixedItems,
@@ -94,8 +90,8 @@ export function DataroomItemsList({
           {mixedItems.map(renderItem)}
         </ul>
 
-        {!mixedItems.length && (
-          <div className="flex items-center justify-center">
+        {mixedItems.length === 0 && (
+          <div className="flex h-full justify-center">
             <EmptyDocuments />
           </div>
         )}
