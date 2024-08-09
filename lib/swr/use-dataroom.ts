@@ -1,5 +1,7 @@
 import { useRouter } from "next/router";
 
+import { useMemo } from "react";
+
 import { useTeam } from "@/context/team-context";
 import { Dataroom, DataroomDocument, DataroomFolder } from "@prisma/client";
 import useSWR from "swr";
@@ -56,6 +58,66 @@ export function useDataroomLinks() {
   return {
     links,
     loading: !error && !links,
+    error,
+  };
+}
+
+export function useDataroomItems({
+  root,
+  name,
+}: {
+  root?: boolean;
+  name?: string[];
+}) {
+  const router = useRouter();
+  const { id } = router.query as {
+    id: string;
+  };
+  const teamInfo = useTeam();
+  const teamId = teamInfo?.currentTeam?.id;
+
+  console.log("useDataroomItems", teamId, id);
+
+  const { data: folderData, error: folderError } = useSWR<
+    DataroomFolderWithCount[]
+  >(
+    teamId && id && `/api/teams/${teamId}/datarooms/${id}/folders?root=true`,
+    fetcher,
+    {
+      revalidateOnFocus: false,
+      dedupingInterval: 30000,
+    },
+  );
+  const { data: documentData, error: documentError } = useSWR<
+    DataroomFolderDocument[]
+  >(teamId && id && `/api/teams/${teamId}/datarooms/${id}/documents`, fetcher, {
+    revalidateOnFocus: false,
+    dedupingInterval: 30000,
+  });
+
+  const isLoading =
+    !folderData && !documentData && !folderError && !documentError;
+  const error = folderError || documentError;
+
+  const combinedItems = useMemo(() => {
+    if (!folderData && !documentData) return [];
+
+    const allItems = [
+      ...(folderData || []).map((folder) => ({
+        ...folder,
+        itemType: "folder",
+      })),
+      ...(documentData || []).map((doc) => ({ ...doc, itemType: "document" })),
+    ];
+
+    return allItems.sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
+  }, [folderData, documentData]);
+
+  return {
+    items: combinedItems,
+    folderCount: folderData?.length || 0,
+    documentCount: documentData?.length || 0,
+    isLoading,
     error,
   };
 }
