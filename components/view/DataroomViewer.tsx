@@ -31,11 +31,14 @@ import DocumentCard from "./dataroom/document-card";
 import FolderCard from "./dataroom/folder-card";
 import DataroomNav from "./dataroom/nav-dataroom";
 
+type FolderOrDocument = DataroomFolder | DataroomDocument;
+
 type DataroomDocument = {
   dataroomDocumentId: string;
   folderId: string | null;
   id: string;
   name: string;
+  orderIndex: number | null;
   versions: {
     id: string;
     type: string;
@@ -123,6 +126,42 @@ export default function DataroomViewer({
     [folderId, folders],
   );
 
+  // create a mixedItems array with folders and documents of the current folder and memoize it
+  const mixedItems = useMemo(() => {
+    const mixedItems: FolderOrDocument[] = [
+      ...(folders || [])
+        .filter((folder) => folder.parentId === folderId)
+        .map((folder) => ({ ...folder, itemType: "folder" })),
+      ...(documents || [])
+        .filter((doc) => doc.folderId === folderId)
+        .map((doc) => ({ ...doc, itemType: "document" })),
+    ];
+
+    return mixedItems.sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
+  }, [folders, documents, folderId]);
+
+  const renderItem = (item: FolderOrDocument) => {
+    if ("versions" in item) {
+      return (
+        <DocumentCard
+          key={item.id}
+          document={item}
+          setViewType={setViewType}
+          setDocumentData={setDocumentData}
+        />
+      );
+    }
+
+    return (
+      <FolderCard
+        key={item.id}
+        folder={item}
+        dataroomId={dataroom?.id}
+        setFolderId={setFolderId}
+      />
+    );
+  };
+
   return (
     <>
       <DataroomNav
@@ -149,7 +188,7 @@ export default function DataroomViewer({
           </div>
 
           {/* Detail view */}
-          <ScrollArea className="h-full flex-grow" showScrollbar>
+          <div className="h-full flex-grow">
             <div className="mb-10 mt-4 space-y-8 p-3 md:mx-5 md:mt-5 lg:mx-7 lg:mt-8 xl:mx-10">
               <div className="flex items-center gap-x-2">
                 {/* sidebar for mobile */}
@@ -219,45 +258,11 @@ export default function DataroomViewer({
                   </BreadcrumbList>
                 </Breadcrumb>
               </div>
-              <div className="space-y-4">
-                {/* Folders list */}
-                <ul role="list" className="space-y-4">
-                  {folders
-                    ? folders
-                        .filter((folder) => folder.parentId === folderId)
-                        .map((folder) => {
-                          return (
-                            <FolderCard
-                              key={folder.id}
-                              folder={folder}
-                              dataroomId={dataroom?.id}
-                              setFolderId={setFolderId}
-                            />
-                          );
-                        })
-                    : null}
-                </ul>
-
-                {/* Documents list */}
-                <ul role="list" className="space-y-4">
-                  {documents
-                    ? documents
-                        .filter((doc) => doc.folderId === folderId)
-                        .map((document: DataroomDocument) => {
-                          return (
-                            <DocumentCard
-                              key={document.id}
-                              document={document}
-                              setViewType={setViewType}
-                              setDocumentData={setDocumentData}
-                            />
-                          );
-                        })
-                    : null}
-                </ul>
-              </div>
+              <ul role="list" className="space-y-4">
+                {mixedItems.map(renderItem)}
+              </ul>
             </div>
-          </ScrollArea>
+          </div>
         </div>
       </div>
     </>

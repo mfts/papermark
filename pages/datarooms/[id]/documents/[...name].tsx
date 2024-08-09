@@ -1,34 +1,43 @@
 import { useRouter } from "next/router";
 
+import { useState } from "react";
+
 import { useTeam } from "@/context/team-context";
-import { FileIcon, FolderIcon, FolderPlusIcon, PlusIcon } from "lucide-react";
+import {
+  ArrowUpDownIcon,
+  FileIcon,
+  FolderIcon,
+  FolderPlusIcon,
+  PlusIcon,
+} from "lucide-react";
 
 import { BreadcrumbComponent } from "@/components/datarooms/dataroom-breadcrumb";
 import { DataroomHeader } from "@/components/datarooms/dataroom-header";
+import { DataroomItemsList } from "@/components/datarooms/dataroom-items-list";
 import { SidebarFolderTree } from "@/components/datarooms/folders";
+import { DataroomSortableList } from "@/components/datarooms/sortable/sortable-list";
 import { AddDocumentModal } from "@/components/documents/add-document-modal";
-import { DocumentsList } from "@/components/documents/documents-list";
+import { LoadingDocuments } from "@/components/documents/loading-document";
 import { AddFolderModal } from "@/components/folders/add-folder-modal";
 import AppLayout from "@/components/layouts/app";
 import { NavMenu } from "@/components/navigation-menu";
 import { Button } from "@/components/ui/button";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
-import {
-  useDataroom,
-  useDataroomFolderDocuments,
-  useDataroomFolders,
-} from "@/lib/swr/use-dataroom";
+import { useDataroom, useDataroomItems } from "@/lib/swr/use-dataroom";
 
 export default function Documents() {
   const router = useRouter();
   const { name } = router.query as { name: string[] };
 
   const { dataroom } = useDataroom();
-  const { folders } = useDataroomFolders({ name });
-  const { documents } = useDataroomFolderDocuments({ name });
+  const { items, folderCount, documentCount, isLoading } = useDataroomItems({
+    name,
+  });
 
   const teamInfo = useTeam();
+
+  const [isReordering, setIsReordering] = useState<boolean>(false);
 
   return (
     <AppLayout>
@@ -109,29 +118,57 @@ export default function Documents() {
             </ScrollArea>
           </div>
           <div className="space-y-4 md:col-span-3">
-            <BreadcrumbComponent />
-            <section className="mb-2 flex items-center gap-x-2">
-              {folders && folders.length > 0 ? (
-                <p className="flex items-center gap-x-1 text-sm text-gray-400">
-                  <FolderIcon className="h-4 w-4" />
-                  <span>{folders.length} folders</span>
-                </p>
-              ) : null}
-              {documents && documents.length > 0 ? (
-                <p className="flex items-center gap-x-1 text-sm text-gray-400">
-                  <FileIcon className="h-4 w-4" />
-                  <span>{documents.length} documents</span>
-                </p>
-              ) : null}
-            </section>
+            <div className="flex justify-between">
+              <div className="space-y-2">
+                <BreadcrumbComponent />
+                <section className="mb-2 flex items-center gap-x-2">
+                  {folderCount > 0 ? (
+                    <p className="flex items-center gap-x-1 text-sm text-gray-400">
+                      <FolderIcon className="h-4 w-4" />
+                      <span>{folderCount} folders</span>
+                    </p>
+                  ) : null}
+                  {documentCount > 0 ? (
+                    <p className="flex items-center gap-x-1 text-sm text-gray-400">
+                      <FileIcon className="h-4 w-4" />
+                      <span>{documentCount} documents</span>
+                    </p>
+                  ) : null}
+                </section>
+              </div>
+              <div>
+                {items.length > 0 && !isReordering ? (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="gap-x-1"
+                    onClick={() => setIsReordering(!isReordering)}
+                  >
+                    <ArrowUpDownIcon className="h-4 w-4" />
+                    Edit index
+                  </Button>
+                ) : null}
+              </div>
+            </div>
 
-            <DocumentsList
-              documents={documents}
-              folders={folders}
-              teamInfo={teamInfo}
-              folderPathName={name}
-              dataroomId={dataroom?.id}
-            />
+            {isLoading ? <LoadingDocuments count={3} /> : null}
+
+            {isReordering ? (
+              <DataroomSortableList
+                mixedItems={items}
+                folderPathName={name}
+                teamInfo={teamInfo}
+                dataroomId={dataroom?.id!}
+                setIsReordering={setIsReordering}
+              />
+            ) : (
+              <DataroomItemsList
+                mixedItems={items}
+                teamInfo={teamInfo}
+                dataroomId={dataroom?.id!}
+                folderPathName={name}
+              />
+            )}
           </div>
         </div>
       </div>

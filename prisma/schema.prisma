@@ -411,12 +411,14 @@ model DataroomDocument {
   document   Document        @relation(fields: [documentId], references: [id], onDelete: Cascade)
   folderId   String?
   folder     DataroomFolder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
+  orderIndex Int?             
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@unique([dataroomId, documentId])
   @@index([folderId])
+  @@index([dataroomId, folderId, orderIndex])
 }
 
 model DataroomFolder {
@@ -429,12 +431,14 @@ model DataroomFolder {
   parentFolder DataroomFolder?    @relation("SubFolders", fields: [parentId], references: [id], onDelete: SetNull)
   dataroomId   String
   dataroom     Dataroom           @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
+  orderIndex   Int?                
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@unique([dataroomId, path])
   @@index([parentId])
+  @@index([dataroomId, parentId, orderIndex])
 }
 
 model DataroomBrand {

@@ -10,10 +10,7 @@ import { useTheme } from "next-themes";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
-import { MoveToFolderModal } from "@/components/documents/move-folder-modal";
 import BarChart from "@/components/shared/icons/bar-chart";
-import Check from "@/components/shared/icons/check";
-import Copy from "@/components/shared/icons/copy";
 import NotionIcon from "@/components/shared/icons/notion";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,8 +24,7 @@ import {
 
 import { type DataroomFolderDocument } from "@/lib/swr/use-dataroom";
 import { type DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
-import { nFormatter, timeAgo } from "@/lib/utils";
-import { useCopyToClipboard } from "@/lib/utils/use-copy-to-clipboard";
+import { cn, nFormatter, timeAgo } from "@/lib/utils";
 
 import { MoveToDataroomFolderModal } from "./move-dataroom-folder-modal";
 
@@ -36,11 +32,13 @@ type DocumentsCardProps = {
   document: DataroomFolderDocument;
   teamInfo: TeamContextType | null;
   dataroomId: string;
+  isDragging?: boolean;
 };
 export default function DataroomDocumentCard({
   document: dataroomDocument,
   teamInfo,
   dataroomId,
+  isDragging,
 }: DocumentsCardProps) {
   const { theme, systemTheme } = useTheme();
   const isLight =
@@ -147,9 +145,24 @@ export default function DataroomDocumentCard({
     }
   };
 
+  const handleCardClick = (e: React.MouseEvent) => {
+    if (isDragging) {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+    router.push(`/documents/${dataroomDocument.document.id}`);
+  };
+
   return (
     <>
-      <li className="group/row relative flex items-center justify-between rounded-lg border-0 p-3 ring-1 ring-gray-200 transition-all hover:bg-secondary hover:ring-gray-300 dark:bg-secondary dark:ring-gray-700 hover:dark:ring-gray-500 sm:p-4">
+      <div
+        onClick={handleCardClick}
+        className={cn(
+          "group/row relative flex items-center justify-between rounded-lg border-0 bg-white p-3 ring-1 ring-gray-200 transition-all hover:bg-secondary hover:ring-gray-300 dark:bg-secondary dark:ring-gray-700 hover:dark:ring-gray-500 sm:p-4",
+          isDragging ? "cursor-grabbing" : "cursor-pointer",
+        )}
+      >
         <div className="flex min-w-0 shrink items-center space-x-2 sm:space-x-4">
           <div className="mx-0.5 flex w-8 items-center justify-center text-center sm:mx-1">
             {dataroomDocument.document.type === "notion" ? (
@@ -167,13 +180,7 @@ export default function DataroomDocumentCard({
           <div className="flex-col">
             <div className="flex items-center">
               <h2 className="min-w-0 max-w-[150px] truncate text-sm font-semibold leading-6 text-foreground sm:max-w-md">
-                <Link
-                  href={`/documents/${dataroomDocument.document.id}`}
-                  className="w-full truncate"
-                >
-                  <span>{dataroomDocument.document.name}</span>
-                  <span className="absolute inset-0" />
-                </Link>
+                {dataroomDocument.document.name}
               </h2>
             </div>
             <div className="mt-1 flex items-center space-x-1 text-xs leading-5 text-muted-foreground">
@@ -216,7 +223,12 @@ export default function DataroomDocumentCard({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" ref={dropdownRef}>
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem onClick={() => setMoveFolderOpen(true)}>
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setMoveFolderOpen(true);
+                }}
+              >
                 <FolderInputIcon className="mr-2 h-4 w-4" />
                 Move to folder
               </DropdownMenuItem>
@@ -239,7 +251,7 @@ export default function DataroomDocumentCard({
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-      </li>
+      </div>
       {moveFolderOpen ? (
         <MoveToDataroomFolderModal
           open={moveFolderOpen}

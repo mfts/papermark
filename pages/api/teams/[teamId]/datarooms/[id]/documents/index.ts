@@ -1,16 +1,13 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import { client } from "@/trigger";
-import { DataroomDocument, Document } from "@prisma/client";
-import slugify from "@sindresorhus/slugify";
 import { getServerSession } from "next-auth/next";
 
 import { errorhandler } from "@/lib/errorHandler";
-import { newId } from "@/lib/id-helper";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 import { log } from "@/lib/utils";
+import { sortItemsByIndexAndName } from "@/lib/utils/sort-items-by-index-name";
 
 export default async function handle(
   req: NextApiRequest,
@@ -51,11 +48,14 @@ export default async function handle(
           dataroomId: dataroomId,
           folderId: null,
         },
-        orderBy: {
-          document: {
-            name: "asc",
+        orderBy: [
+          { orderIndex: "asc" },
+          {
+            document: {
+              name: "asc",
+            },
           },
-        },
+        ],
         include: {
           document: {
             select: {
@@ -73,30 +73,9 @@ export default async function handle(
         },
       });
 
-      const documentsWithCount = documents.map((document) => ({
-        ...document,
-        document: { ...document.document },
-      }));
+      const sortedDocuments = sortItemsByIndexAndName(documents);
 
-      // Sort documents by name considering the numerical part
-      documentsWithCount.sort((a, b) => {
-        const getNumber = (str: string): number => {
-          const match = str.match(/^\d+/);
-          return match ? parseInt(match[0], 10) : 0;
-        };
-
-        const numA = getNumber(a.document.name);
-        const numB = getNumber(b.document.name);
-
-        if (numA !== numB) {
-          return numA - numB;
-        }
-
-        // If numerical parts are the same, fall back to lexicographical order
-        return a.document.name.localeCompare(b.document.name);
-      });
-
-      return res.status(200).json(documentsWithCount);
+      return res.status(200).json(sortedDocuments);
     } catch (error) {
       console.error("Request error", error);
       return res

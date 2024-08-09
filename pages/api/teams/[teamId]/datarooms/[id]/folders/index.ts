@@ -49,9 +49,12 @@ export default async function handle(
             dataroomId,
             parentId: null,
           },
-          orderBy: {
-            name: "asc",
-          },
+          orderBy: [
+            { orderIndex: "asc" },
+            {
+              name: "asc",
+            },
+          ],
           include: {
             _count: {
               select: { documents: true, childFolders: true },
@@ -66,9 +69,12 @@ export default async function handle(
         where: {
           dataroomId,
         },
-        orderBy: {
-          name: "asc",
-        },
+        orderBy: [
+          { orderIndex: "asc" },
+          {
+            name: "asc",
+          },
+        ],
         include: {
           documents: {
             select: {
@@ -82,11 +88,14 @@ export default async function handle(
                 },
               },
             },
-            orderBy: {
-              document: {
-                name: "asc",
+            orderBy: [
+              { orderIndex: "asc" },
+              {
+                document: {
+                  name: "asc",
+                },
               },
-            },
+            ],
           },
           childFolders: {
             include: {
@@ -102,11 +111,14 @@ export default async function handle(
                     },
                   },
                 },
-                orderBy: {
-                  document: {
-                    name: "asc",
+                orderBy: [
+                  { orderIndex: "asc" },
+                  {
+                    document: {
+                      name: "asc",
+                    },
                   },
-                },
+                ],
               },
             },
           },

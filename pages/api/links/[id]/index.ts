@@ -1,13 +1,12 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
-import {
-  Brand,
-  DataroomBrand,
-  DataroomDocument,
-  Document,
-} from "@prisma/client";
+import { Brand, DataroomBrand } from "@prisma/client";
 import { getServerSession } from "next-auth/next";
 
+import {
+  fetchDataroomLinkData,
+  fetchDocumentLinkData,
+} from "@/lib/api/links/link-data";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 import { generateEncrpytedPassword } from "@/lib/utils";
@@ -72,130 +71,13 @@ export default async function handle(
       let linkData: any;
 
       if (linkType === "DOCUMENT_LINK") {
-        linkData = await prisma.link.findUnique({
-          where: { id: id },
-          select: {
-            document: {
-              select: {
-                id: true,
-                name: true,
-                assistantEnabled: true,
-                teamId: true,
-                ownerId: true,
-                team: {
-                  select: {
-                    plan: true,
-                  },
-                },
-                versions: {
-                  where: { isPrimary: true },
-                  select: {
-                    id: true,
-                    versionNumber: true,
-                    type: true,
-                    hasPages: true,
-                    file: true,
-                    isVertical: true,
-                  },
-                  take: 1,
-                },
-              },
-            },
-          },
-        });
-
-        brand = await prisma.brand.findFirst({
-          where: {
-            teamId: linkData.document.teamId,
-          },
-          select: {
-            logo: true,
-            brandColor: true,
-            accentColor: true,
-          },
-        });
+        const data = await fetchDocumentLinkData({ linkId: id });
+        linkData = data.linkData;
+        brand = data.brand;
       } else if (linkType === "DATAROOM_LINK") {
-        linkData = await prisma.link.findUnique({
-          where: { id: id },
-          select: {
-            dataroom: {
-              select: {
-                id: true,
-                name: true,
-                teamId: true,
-                documents: {
-                  select: {
-                    id: true,
-                    folderId: true,
-                    updatedAt: true,
-                    document: {
-                      select: {
-                        id: true,
-                        name: true,
-                        versions: {
-                          where: { isPrimary: true },
-                          select: {
-                            id: true,
-                            versionNumber: true,
-                            type: true,
-                            hasPages: true,
-                            file: true,
-                            isVertical: true,
-                          },
-                          take: 1,
-                        },
-                      },
-                    },
-                  },
-                  orderBy: {
-                    document: {
-                      name: "asc",
-                    },
-                  },
-                },
-                folders: {
-                  orderBy: {
-                    name: "asc",
-                  },
-                },
-              },
-            },
-          },
-        });
-
-        // Sort documents by name considering the numerical part
-        linkData.dataroom.documents.sort(
-          (
-            a: DataroomDocument & { document: Document },
-            b: DataroomDocument & { document: Document },
-          ) => {
-            const getNumber = (str: string): number => {
-              const match = str.match(/^\d+/);
-              return match ? parseInt(match[0], 10) : 0;
-            };
-
-            const numA = getNumber(a.document.name);
-            const numB = getNumber(b.document.name);
-
-            if (numA !== numB) {
-              return numA - numB;
-            }
-
-            // If numerical parts are the same, fall back to lexicographical order
-            return a.document.name.localeCompare(b.document.name);
-          },
-        );
-
-        brand = await prisma.dataroomBrand.findFirst({
-          where: {
-            dataroomId: linkData.dataroom.id,
-          },
-          select: {
-            logo: true,
-            banner: true,
-            brandColor: true,
-          },
-        });
+        const data = await fetchDataroomLinkData({ linkId: id });
+        linkData = data.linkData;
+        brand = data.brand;
       }
 
       const returnLink = {
