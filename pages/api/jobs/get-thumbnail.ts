@@ -21,15 +21,17 @@ export default async function handle(
     return res.status(401).end("Unauthorized");
   }
 
-  const { documentId, pageNumber } = req.query as {
+  const { documentId, pageNumber, versionNumber } = req.query as {
     documentId: string;
     pageNumber: string;
+    versionNumber: string;
   };
 
   try {
     const imageUrl = await getFileForDocumentPage(
       Number(pageNumber),
       documentId,
+      versionNumber === "undefined" ? undefined : Number(versionNumber),
     );
 
     return res.status(200).json({ imageUrl });

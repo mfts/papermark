@@ -4,11 +4,14 @@ import prisma from "@/lib/prisma";
 export const getFileForDocumentPage = async (
   pageNumber: number,
   documentId: string,
+  versionNumber?: number,
 ): Promise<string> => {
   const documentVersions = await prisma.documentVersion.findMany({
     where: {
       documentId: documentId,
-      isPrimary: true,
+      ...(versionNumber
+        ? { versionNumber: versionNumber }
+        : { isPrimary: true }),
     },
     select: {
       id: true,
