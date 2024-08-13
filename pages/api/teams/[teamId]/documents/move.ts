@@ -33,7 +33,7 @@ export default async function handle(
       include: {
         users: {
           where: {
-            role: "ADMIN",
+            role: { in: ["ADMIN", "MANAGER"] },
             userId: userId,
           },
         },

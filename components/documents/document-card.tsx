@@ -7,7 +7,6 @@ import { useEffect, useRef, useState } from "react";
 import { TeamContextType } from "@/context/team-context";
 import {
   BetweenHorizontalStartIcon,
-  FilePlus2Icon,
   FolderInputIcon,
   Layers2Icon,
   MoreVertical,
@@ -35,7 +34,6 @@ import { DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
 import { cn, nFormatter, timeAgo } from "@/lib/utils";
 import { useCopyToClipboard } from "@/lib/utils/use-copy-to-clipboard";
 
-import { Checkbox } from "../ui/checkbox";
 import { AddToDataroomModal } from "./add-document-to-dataroom-modal";
 import { MoveToFolderModal } from "./move-folder-modal";
 
