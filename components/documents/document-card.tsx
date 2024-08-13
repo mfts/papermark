@@ -7,7 +7,6 @@ import { useEffect, useRef, useState } from "react";
 import { TeamContextType } from "@/context/team-context";
 import {
   BetweenHorizontalStartIcon,
-  FilePlus2Icon,
   FolderInputIcon,
   Layers2Icon,
   MoreVertical,
@@ -32,7 +31,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 import { DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
-import { nFormatter, timeAgo } from "@/lib/utils";
+import { cn, nFormatter, timeAgo } from "@/lib/utils";
 import { useCopyToClipboard } from "@/lib/utils/use-copy-to-clipboard";
 
 import { AddToDataroomModal } from "./add-document-to-dataroom-modal";
@@ -41,10 +40,16 @@ import { MoveToFolderModal } from "./move-folder-modal";
 type DocumentsCardProps = {
   document: DocumentWithLinksAndLinkCountAndViewCount;
   teamInfo: TeamContextType | null;
+  isDragging?: boolean;
+  isSelected?: boolean;
+  isHovered?: boolean;
 };
 export default function DocumentsCard({
   document: prismaDocument,
   teamInfo,
+  isDragging,
+  isSelected,
+  isHovered,
 }: DocumentsCardProps) {
   const router = useRouter();
   const { theme, systemTheme } = useTheme();
@@ -176,20 +181,29 @@ export default function DocumentsCard({
 
   return (
     <>
-      <li className="group/row relative flex items-center justify-between rounded-lg border-0 p-3 ring-1 ring-gray-200 transition-all hover:bg-secondary hover:ring-gray-300 dark:bg-secondary dark:ring-gray-700 hover:dark:ring-gray-500 sm:p-4">
+      <div
+        className={cn(
+          "group/row relative flex items-center justify-between rounded-lg border-0 bg-white p-3 ring-1 ring-gray-200 transition-all hover:bg-secondary hover:ring-gray-300 dark:bg-secondary dark:ring-gray-700 hover:dark:ring-gray-500 sm:p-4",
+          isHovered && "bg-secondary ring-gray-300 dark:ring-gray-500",
+        )}
+      >
         <div className="flex min-w-0 shrink items-center space-x-2 sm:space-x-4">
-          <div className="mx-0.5 flex w-8 items-center justify-center text-center sm:mx-1">
-            {prismaDocument.type === "notion" ? (
-              <NotionIcon className="h-8 w-8" />
-            ) : (
-              <Image
-                src={`/_icons/${prismaDocument.type}${isLight ? "-light" : ""}.svg`}
-                alt="File icon"
-                width={50}
-                height={50}
-              />
-            )}
-          </div>
+          {!isSelected && !isHovered ? (
+            <div className="mx-0.5 flex w-8 items-center justify-center text-center sm:mx-1">
+              {prismaDocument.type === "notion" ? (
+                <NotionIcon className="h-8 w-8" />
+              ) : (
+                <Image
+                  src={`/_icons/${prismaDocument.type}${isLight ? "-light" : ""}.svg`}
+                  alt="File icon"
+                  width={50}
+                  height={50}
+                />
+              )}
+            </div>
+          ) : (
+            <div className="mx-0.5 w-8 sm:mx-1"></div>
+          )}
 
           <div className="flex-col">
             <div className="flex items-center">
@@ -241,7 +255,7 @@ export default function DocumentsCard({
               e.stopPropagation();
             }}
             href={`/documents/${prismaDocument.id}`}
-            className="z-10 flex items-center space-x-1 rounded-md bg-gray-200 px-1.5 py-0.5 transition-all duration-75 hover:scale-105 active:scale-100 dark:bg-gray-700 sm:px-2"
+            className="z-20 flex items-center space-x-1 rounded-md bg-gray-200 px-1.5 py-0.5 transition-all duration-75 hover:scale-105 active:scale-100 dark:bg-gray-700 sm:px-2"
           >
             <BarChart className="h-3 w-3 text-muted-foreground sm:h-4 sm:w-4" />
             <p className="whitespace-nowrap text-xs text-muted-foreground sm:text-sm">
@@ -255,7 +269,7 @@ export default function DocumentsCard({
               <Button
                 // size="icon"
                 variant="outline"
-                className="z-10 h-8 w-8 border-gray-200 bg-transparent p-0 hover:bg-gray-200 dark:border-gray-700 hover:dark:bg-gray-700 lg:h-9 lg:w-9"
+                className="z-20 h-8 w-8 border-gray-200 bg-transparent p-0 hover:bg-gray-200 dark:border-gray-700 hover:dark:bg-gray-700 lg:h-9 lg:w-9"
               >
                 <span className="sr-only">Open menu</span>
                 <MoreVertical className="h-4 w-4" />
@@ -291,7 +305,7 @@ export default function DocumentsCard({
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-      </li>
+      </div>
       {moveFolderOpen ? (
         <MoveToFolderModal
           open={moveFolderOpen}
