@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { useRouter } from "next/router";
 
 import { useEffect, useRef, useState } from "react";
 
@@ -34,13 +34,18 @@ type FolderCardProps = {
   teamInfo: TeamContextType | null;
   isDataroom?: boolean;
   dataroomId?: string;
+  isDragging?: boolean;
+  isOver?: boolean;
 };
 export default function FolderCard({
   folder,
   teamInfo,
   isDataroom,
   dataroomId,
+  isDragging,
+  isOver,
 }: FolderCardProps) {
+  const router = useRouter();
   const [openFolder, setOpenFolder] = useState<boolean>(false);
   const [isFirstClick, setIsFirstClick] = useState<boolean>(false);
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
@@ -176,9 +181,19 @@ export default function FolderCard({
     );
   };
 
+  const handleCardClick = (e: React.MouseEvent) => {
+    if (isDragging) {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+    router.push(folderPath);
+  };
+
   return (
     <>
       <div
+        onClick={handleCardClick}
         className="group/row relative flex items-center justify-between rounded-lg border-0 bg-white p-3 ring-1 ring-gray-400 transition-all hover:bg-secondary hover:ring-gray-500 dark:bg-secondary dark:ring-gray-500 hover:dark:ring-gray-400 sm:p-4"
       >
         <div className="flex min-w-0 shrink items-center space-x-2 sm:space-x-4">
@@ -189,10 +204,7 @@ export default function FolderCard({
           <div className="flex-col">
             <div className="flex items-center">
               <h2 className="min-w-0 max-w-[150px] truncate text-sm font-semibold leading-6 text-foreground sm:max-w-md">
-                <Link href={`${folderPath}`} className="w-full truncate">
-                  <span>{folder.name}</span>
-                  <span className="absolute inset-0" />
-                </Link>
+                {folder.name}
               </h2>
             </div>
             <div className="mt-1 flex items-center space-x-1 text-xs leading-5 text-muted-foreground">
@@ -273,7 +285,16 @@ export default function FolderCard({
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
+        {/* only used for drag and drop */}
+        {isOver && !isDragging && (
+          <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-black bg-opacity-20 dark:bg-white dark:bg-opacity-20">
+            <span className="font-semibold text-black dark:text-gray-100">
+              Drop to move
+            </span>
+          </div>
+        )}
       </div>
+
       {openFolder ? (
         <EditFolderModal
           open={openFolder}

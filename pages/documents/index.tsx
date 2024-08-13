@@ -17,7 +17,7 @@ export default function Documents() {
 
   return (
     <AppLayout>
-      <div className="sticky top-0 z-50 bg-white p-4 pb-0 sm:mx-4 sm:pt-8">
+      <div className="sticky top-0 z-[100] bg-white p-4 pb-0 dark:bg-gray-900 sm:mx-4 sm:pt-8">
         <section className="mb-4 flex items-center justify-between md:mb-8 lg:mb-12">
           <div className="space-y-1">
             <h2 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
@@ -50,23 +50,10 @@ export default function Documents() {
               </Button>
             </AddFolderModal>
           </div>
-          {/* </div> */}
         </section>
 
-        <section className="mb-2 flex items-center gap-x-2">
-          {folders && folders.length > 0 ? (
-            <p className="flex items-center gap-x-1 text-sm text-gray-400">
-              <FolderIcon className="h-4 w-4" />
-              <span>{folders.length} folders</span>
-            </p>
-          ) : null}
-          {documents && documents.length > 0 ? (
-            <p className="flex items-center gap-x-1 text-sm text-gray-400">
-              <FileIcon className="h-4 w-4" />
-              <span>{documents.length} documents</span>
-            </p>
-          ) : null}
-        </section>
+        {/* Portaled in from DocumentsList component */}
+        <section id="documents-header-count" />
 
         <Separator className="mb-5 bg-gray-200 dark:bg-gray-800" />
       </div>

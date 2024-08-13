@@ -73,20 +73,8 @@ export default function DocumentTreePage() {
           </div>
         </section>
 
-        <section className="mb-2 flex items-center gap-x-2">
-          {folders && folders.length > 0 ? (
-            <p className="flex items-center gap-x-1 text-sm text-gray-400">
-              <FolderIcon className="h-4 w-4" />
-              <span>{folders.length} folders</span>
-            </p>
-          ) : null}
-          {documents && documents.length > 0 ? (
-            <p className="flex items-center gap-x-1 text-sm text-gray-400">
-              <FileIcon className="h-4 w-4" />
-              <span>{documents.length} documents</span>
-            </p>
-          ) : null}
-        </section>
+        {/* Portaled in from DocumentsList component */}
+        <section id="documents-header-count" />
 
         <Separator className="mb-5 bg-gray-200 dark:bg-gray-800" />
 
