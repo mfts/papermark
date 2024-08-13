@@ -242,6 +242,7 @@ export function DocumentsList({
       );
     }
   });
+  HeaderContent.displayName = "HeaderContent";
 
   return (
     <>
