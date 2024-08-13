@@ -1,19 +1,19 @@
-import { useLayoutEffect, useState } from "react";
+import * as React from "react";
 
-import * as Portal from "@radix-ui/react-portal";
+import * as PortalPrimitive from "@radix-ui/react-portal";
 
-export default ({
+const Portal = ({
   containerId,
   children,
 }: {
   containerId?: string | null;
   children: React.ReactElement;
 }) => {
-  const [mounted, setMounted] = useState(false);
-  useLayoutEffect(() => setMounted(true), []);
+  const [mounted, setMounted] = React.useState(false);
+  React.useLayoutEffect(() => setMounted(true), []);
 
   return (
-    <Portal.Root
+    <PortalPrimitive.Root
       container={
         containerId && mounted
           ? document.getElementById(containerId)
@@ -21,6 +21,9 @@ export default ({
       }
     >
       {children}
-    </Portal.Root>
+    </PortalPrimitive.Root>
   );
 };
+Portal.displayName = PortalPrimitive.Root.displayName;
+
+export { Portal };

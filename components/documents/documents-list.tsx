@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo, useState } from "react";
+import { memo, useCallback, useState } from "react";
 import React from "react";
 
 import { TeamContextType } from "@/context/team-context";
@@ -26,10 +26,9 @@ import UploadZone from "@/components/upload-zone";
 
 import { FolderWithCount } from "@/lib/swr/use-documents";
 import { DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
-import { cn } from "@/lib/utils";
 
 import { Button } from "../ui/button";
-import Portal from "../ui/portal";
+import { Portal } from "../ui/portal";
 import DocumentCard from "./document-card";
 import { DraggableItem } from "./drag-and-drop/draggable-item";
 import { DroppableFolder } from "./drag-and-drop/droppable-folder";
