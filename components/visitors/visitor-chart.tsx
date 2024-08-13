@@ -10,10 +10,12 @@ export default function VisitorChart({
   documentId,
   viewId,
   totalPages = 0,
+  versionNumber,
 }: {
   documentId: string;
   viewId: string;
   totalPages?: number;
+  versionNumber?: number;
 }) {
   const { stats, error } = useVisitorStats(viewId);
 
@@ -41,7 +43,11 @@ export default function VisitorChart({
 
   return (
     <div className="rounded-bl-lg border-b border-l pb-0.5 pl-0.5 md:pb-1 md:pl-1">
-      <BarChartComponent data={durationData} isSum={true} />
+      <BarChartComponent
+        data={durationData}
+        isSum={true}
+        versionNumber={versionNumber}
+      />
     </div>
   );
 }

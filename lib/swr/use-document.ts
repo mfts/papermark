@@ -2,6 +2,7 @@ import { useRouter } from "next/router";
 
 import { useTeam } from "@/context/team-context";
 import { View } from "@prisma/client";
+import { version } from "os";
 import useSWR from "swr";
 import useSWRImmutable from "swr/immutable";
 
@@ -87,6 +88,8 @@ interface ViewWithDuration extends View {
       name: string;
     };
   } | null;
+  versionNumber: number;
+  versionNumPages: number;
 }
 
 type TStatsData = {
@@ -147,11 +150,15 @@ export function useDocumentProcessingStatus(documentVersionId: string) {
   };
 }
 
-export function useDocumentThumbnail(pageNumber: number, documentId: string) {
+export function useDocumentThumbnail(
+  pageNumber: number,
+  documentId: string,
+  versionNumber?: number,
+) {
   const { data, error } = useSWR<{ imageUrl: string }>(
     pageNumber === 0
       ? null
-      : `/api/jobs/get-thumbnail?documentId=${documentId}&pageNumber=${pageNumber}`,
+      : `/api/jobs/get-thumbnail?documentId=${documentId}&pageNumber=${pageNumber}&versionNumber=${versionNumber}`,
     fetcher,
     {
       dedupingInterval: 1200000,

@@ -406,21 +406,23 @@ export function AddDocumentModal({
                     </div>
                   </div>
 
-                  <div className="flex justify-center">
-                    <button
-                      type="button"
-                      className="text-sm text-muted-foreground underline-offset-4 transition-all hover:text-gray-800 hover:underline hover:dark:text-muted-foreground/80"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        document
-                          .getElementById("upload-multi-files-zone")
-                          ?.click();
-                        clearModelStates();
-                      }}
-                    >
-                      Want to upload multiple files?
-                    </button>
-                  </div>
+                  {!newVersion ? (
+                    <div className="flex justify-center">
+                      <button
+                        type="button"
+                        className="text-sm text-muted-foreground underline-offset-4 transition-all hover:text-gray-800 hover:underline hover:dark:text-muted-foreground/80"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          document
+                            .getElementById("upload-multi-files-zone")
+                            ?.click();
+                          clearModelStates();
+                        }}
+                      >
+                        Want to upload multiple files?
+                      </button>
+                    </div>
+                  ) : null}
 
                   <div className="flex justify-center">
                     <Button

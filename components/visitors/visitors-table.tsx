@@ -6,6 +6,7 @@ import {
   BadgeInfoIcon,
   DownloadCloudIcon,
   FileBadgeIcon,
+  FileDigitIcon,
   ServerIcon,
   ThumbsDownIcon,
   ThumbsUpIcon,
@@ -202,10 +203,17 @@ export default function VisitorsTable({ numPages }: { numPages: number }) {
                             {!isFreePlan ? (
                               <VisitorUserAgent viewId={view.id} />
                             ) : null}
+                            <div className="pb-0.5 pl-0.5 md:pb-1 md:pl-1">
+                              <div className="flex items-center gap-x-1 px-1">
+                                <FileDigitIcon className="size-4" /> Document
+                                Version {view.versionNumber}
+                              </div>
+                            </div>
                             <VisitorChart
                               documentId={view.documentId!}
                               viewId={view.id}
-                              totalPages={numPages}
+                              totalPages={view.versionNumPages}
+                              versionNumber={view.versionNumber}
                             />
                           </TableCell>
                         </TableRow>
