@@ -780,24 +780,62 @@ export default function PagesViewer({
                         />
                         {page.pageLinks ? (
                           <map name={`page-map-${index + 1}`}>
-                            {page.pageLinks.map((link, index) => (
-                              <area
-                                key={index}
-                                shape="rect"
-                                coords={scaleCoordinates(
+                            {page.pageLinks
+                              .filter((link) => !link.href.includes(".gif"))
+                              .map((link, index) => (
+                                <area
+                                  key={index}
+                                  shape="rect"
+                                  coords={scaleCoordinates(
+                                    link.coords,
+                                    getScaleFactor({
+                                      naturalHeight: page.metadata.height,
+                                      scaleFactor: page.metadata.scaleFactor,
+                                    }),
+                                  )}
+                                  href={link.href}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                />
+                              ))}
+                          </map>
+                        ) : null}
+
+                        {/** Automatically Render Overlays **/}
+                        {page.pageLinks
+                          ? page.pageLinks
+                              .filter((link) => link.href.includes(".gif"))
+                              .map((link, linkIndex) => {
+                                const [x1, y1, x2, y2] = scaleCoordinates(
                                   link.coords,
                                   getScaleFactor({
                                     naturalHeight: page.metadata.height,
                                     scaleFactor: page.metadata.scaleFactor,
                                   }),
-                                )}
-                                href={link.href}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                              />
-                            ))}
-                          </map>
-                        ) : null}
+                                )
+                                  .split(",")
+                                  .map(Number);
+
+                                const overlayWidth = x2 - x1;
+                                const overlayHeight = y2 - y1;
+
+                                return (
+                                  <img
+                                    key={`overlay-${index}-${linkIndex}`}
+                                    src={link.href} // Assuming the href points to a GIF or overlay image
+                                    alt={`Overlay ${index + 1}`}
+                                    style={{
+                                      position: "absolute",
+                                      top: y1,
+                                      left: x1,
+                                      width: `${overlayWidth}px`,
+                                      height: `${overlayHeight}px`,
+                                      pointerEvents: "none", // To ensure the overlay doesn't interfere with interaction
+                                    }}
+                                  />
+                                );
+                              })
+                          : null}
                       </div>
                     </TransformComponent>
                   </TransformWrapper>
