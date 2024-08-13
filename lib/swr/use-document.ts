@@ -87,6 +87,8 @@ interface ViewWithDuration extends View {
       name: string;
     };
   } | null;
+  versionNumber: number;
+  versionNumPages: number;
 }
 
 type TStatsData = {

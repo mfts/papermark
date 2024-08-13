@@ -202,10 +202,11 @@ export default function VisitorsTable({ numPages }: { numPages: number }) {
                             {!isFreePlan ? (
                               <VisitorUserAgent viewId={view.id} />
                             ) : null}
+
                             <VisitorChart
                               documentId={view.documentId!}
                               viewId={view.id}
-                              totalPages={numPages}
+                              totalPages={view.versionNumPages}
                             />
                           </TableCell>
                         </TableRow>
