@@ -101,6 +101,14 @@ export function MoveToDataroomFolderModal({
       mutate(
         `/api/teams/${teamId}/datarooms/${dataroomId}${newPath ? `/folders/documents${newPath}` : "/documents"}`,
       );
+      // update folder document counts in new path
+      mutate(
+        `/api/teams/${teamId}/datarooms/${dataroomId}/folders${newPath ? `${newPath}` : "?root=true"}`,
+      );
+      // update folder document counts in current path
+      mutate(
+        `/api/teams/${teamId}/datarooms/${dataroomId}/folders${currentPath !== "" ? `/${currentPath}` : "?root=true"}`,
+      );
 
       toast.success("Document moved successfully!");
     } catch (error) {
