@@ -26,6 +26,7 @@ import UploadZone from "@/components/upload-zone";
 
 import { FolderWithCount } from "@/lib/swr/use-documents";
 import { DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
+import { useMediaQuery } from "@/lib/utils/use-media-query";
 
 import { Button } from "../ui/button";
 import { Portal } from "../ui/portal";
@@ -46,6 +47,8 @@ export function DocumentsList({
   teamInfo: TeamContextType | null;
   folderPathName?: string[];
 }) {
+  const { isMobile } = useMediaQuery();
+
   const [uploads, setUploads] = useState<
     { fileName: string; progress: number; documentId?: string }[]
   >([]);
@@ -266,31 +269,18 @@ export function DocumentsList({
         setUploads={setUploads}
         setRejectedFiles={setRejectedFiles}
       >
-        <DndContext
-          sensors={sensors}
-          onDragStart={handleDragStart}
-          onDragOver={handleDragOver}
-          onDragEnd={handleDragEnd}
-          onDragCancel={() => setIsOverFolder(false)}
-          measuring={{
-            droppable: {
-              strategy: MeasuringStrategy.Always,
-            },
-          }}
-        >
+        {isMobile ? (
           <div className="space-y-4">
             {/* Folders list */}
             <ul role="list" className="space-y-4">
               {folders
                 ? folders.map((folder) => {
                     return (
-                      <DroppableFolder key={folder.id} id={folder.id}>
-                        <FolderCard
-                          key={folder.id}
-                          folder={folder}
-                          teamInfo={teamInfo}
-                        />
-                      </DroppableFolder>
+                      <FolderCard
+                        key={folder.id}
+                        folder={folder}
+                        teamInfo={teamInfo}
+                      />
                     );
                   })
                 : Array.from({ length: 3 }).map((_, i) => (
@@ -316,23 +306,14 @@ export function DocumentsList({
               {documents
                 ? documents.map((document) => {
                     return (
-                      <DraggableItem
+                      <DocumentCard
                         key={document.id}
-                        id={document.id}
-                        isSelected={selectedDocuments.includes(document.id)}
-                        onSelect={handleSelect}
-                        isDraggingSelected={isDragging}
-                      >
-                        <DocumentCard
-                          key={document.id}
-                          document={document}
-                          teamInfo={teamInfo}
-                          isDragging={
-                            isDragging &&
-                            selectedDocuments.includes(document.id)
-                          }
-                        />
-                      </DraggableItem>
+                        document={document}
+                        teamInfo={teamInfo}
+                        isDragging={
+                          isDragging && selectedDocuments.includes(document.id)
+                        }
+                      />
                     );
                   })
                 : Array.from({ length: 3 }).map((_, i) => (
@@ -353,34 +334,132 @@ export function DocumentsList({
                   ))}
             </ul>
 
-            <Portal>
-              <DragOverlay className="cursor-default">
-                <motion.div
-                  initial={{ scale: 1, opacity: 1 }}
-                  animate={{ scale: 0.5, opacity: 1 }}
-                  exit={{ scale: 1, opacity: 1 }}
-                  transition={{ duration: 0.2 }}
-                  className="relative flex h-20 w-40 items-center justify-center rounded-lg bg-gray-200"
-                >
-                  <div className="h-20 w-40 rounded-lg bg-white text-foreground dark:bg-secondary">
-                    {draggedDocumentName}
-                  </div>
-                  {selectedDocuments.length > 1 ? (
-                    <div className="absolute right-0 top-0 rounded-full bg-white p-1 ring ring-gray-500">
-                      <span className="text-xs font-semibold text-gray-500">
-                        {selectedDocuments.length}
-                      </span>
-                    </div>
-                  ) : null}
-                </motion.div>
-              </DragOverlay>
-            </Portal>
-
             <Portal containerId={"documents-header-count"}>
               <HeaderContent />
             </Portal>
 
-            {/* {selectedDocuments.length > 0 ? (
+            {documents && documents.length === 0 && (
+              <div className="flex items-center justify-center">
+                <EmptyDocuments />
+              </div>
+            )}
+          </div>
+        ) : (
+          <DndContext
+            sensors={sensors}
+            onDragStart={handleDragStart}
+            onDragOver={handleDragOver}
+            onDragEnd={handleDragEnd}
+            onDragCancel={() => setIsOverFolder(false)}
+            measuring={{
+              droppable: {
+                strategy: MeasuringStrategy.Always,
+              },
+            }}
+          >
+            <div className="space-y-4">
+              {/* Folders list */}
+              <ul role="list" className="space-y-4">
+                {folders
+                  ? folders.map((folder) => {
+                      return (
+                        <DroppableFolder key={folder.id} id={folder.id}>
+                          <FolderCard
+                            key={folder.id}
+                            folder={folder}
+                            teamInfo={teamInfo}
+                          />
+                        </DroppableFolder>
+                      );
+                    })
+                  : Array.from({ length: 3 }).map((_, i) => (
+                      <li
+                        key={i}
+                        className="relative flex w-full items-center space-x-3 rounded-lg border px-4 py-5 sm:px-6 lg:px-6"
+                      >
+                        <Skeleton key={i} className="h-9 w-9" />
+                        <div>
+                          <Skeleton key={i} className="h-4 w-32" />
+                          <Skeleton key={i + 1} className="mt-2 h-3 w-12" />
+                        </div>
+                        <Skeleton
+                          key={i + 1}
+                          className="absolute right-5 top-[50%] h-5 w-20 -translate-y-[50%] transform"
+                        />
+                      </li>
+                    ))}
+              </ul>
+
+              {/* Documents list */}
+              <ul role="list" className="space-y-4">
+                {documents
+                  ? documents.map((document) => {
+                      return (
+                        <DraggableItem
+                          key={document.id}
+                          id={document.id}
+                          isSelected={selectedDocuments.includes(document.id)}
+                          onSelect={handleSelect}
+                          isDraggingSelected={isDragging}
+                        >
+                          <DocumentCard
+                            key={document.id}
+                            document={document}
+                            teamInfo={teamInfo}
+                            isDragging={
+                              isDragging &&
+                              selectedDocuments.includes(document.id)
+                            }
+                          />
+                        </DraggableItem>
+                      );
+                    })
+                  : Array.from({ length: 3 }).map((_, i) => (
+                      <li
+                        key={i}
+                        className="relative flex w-full items-center space-x-3 rounded-lg border px-4 py-5 sm:px-6 lg:px-6"
+                      >
+                        <Skeleton key={i} className="h-9 w-9" />
+                        <div>
+                          <Skeleton key={i} className="h-4 w-32" />
+                          <Skeleton key={i + 1} className="mt-2 h-3 w-12" />
+                        </div>
+                        <Skeleton
+                          key={i + 1}
+                          className="absolute right-5 top-[50%] h-5 w-20 -translate-y-[50%] transform"
+                        />
+                      </li>
+                    ))}
+              </ul>
+
+              <Portal>
+                <DragOverlay className="cursor-default">
+                  <motion.div
+                    initial={{ scale: 1, opacity: 1 }}
+                    animate={{ scale: 0.5, opacity: 1 }}
+                    exit={{ scale: 1, opacity: 1 }}
+                    transition={{ duration: 0.2 }}
+                    className="relative flex h-20 w-40 items-center justify-center rounded-lg bg-gray-200"
+                  >
+                    <div className="h-20 w-40 rounded-lg bg-white text-foreground dark:bg-secondary">
+                      {draggedDocumentName}
+                    </div>
+                    {selectedDocuments.length > 1 ? (
+                      <div className="absolute right-0 top-0 rounded-full bg-white p-1 ring ring-gray-500">
+                        <span className="text-xs font-semibold text-gray-500">
+                          {selectedDocuments.length}
+                        </span>
+                      </div>
+                    ) : null}
+                  </motion.div>
+                </DragOverlay>
+              </Portal>
+
+              <Portal containerId={"documents-header-count"}>
+                <HeaderContent />
+              </Portal>
+
+              {/* {selectedDocuments.length > 0 ? (
               <Portal
                 container={document.getElementById("documents-header-count")}
               >
@@ -391,13 +470,14 @@ export function DocumentsList({
               </Portal>
             ) : null} */}
 
-            {documents && documents.length === 0 && (
-              <div className="flex items-center justify-center">
-                <EmptyDocuments />
-              </div>
-            )}
-          </div>
-        </DndContext>
+              {documents && documents.length === 0 && (
+                <div className="flex items-center justify-center">
+                  <EmptyDocuments />
+                </div>
+              )}
+            </div>
+          </DndContext>
+        )}
       </UploadZone>
       {showDrawer ? (
         <UploadNotificationDrawer

@@ -17,7 +17,7 @@ export default function Documents() {
 
   return (
     <AppLayout>
-      <div className="sticky top-0 z-[100] bg-white p-4 pb-0 dark:bg-gray-900 sm:mx-4 sm:pt-8">
+      <div className="sticky top-0 z-50 bg-white p-4 pb-0 dark:bg-gray-900 sm:mx-4 sm:pt-8">
         <section className="mb-4 flex items-center justify-between md:mb-8 lg:mb-12">
           <div className="space-y-1">
             <h2 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">

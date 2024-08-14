@@ -28,6 +28,7 @@ import {
   DataroomFolderDocument,
   DataroomFolderWithCount,
 } from "@/lib/swr/use-dataroom";
+import { useMediaQuery } from "@/lib/utils/use-media-query";
 
 import { DraggableItem } from "../documents/drag-and-drop/draggable-item";
 import { DroppableFolder } from "../documents/drag-and-drop/droppable-folder";
@@ -54,6 +55,8 @@ export function DataroomItemsList({
   folderCount: number;
   documentCount: number;
 }) {
+  const { isMobile } = useMediaQuery();
+
   const [uploads, setUploads] = useState<
     { fileName: string; progress: number; documentId?: string }[]
   >([]);
@@ -221,6 +224,29 @@ export function DataroomItemsList({
   const renderItem = (item: FolderOrDocument) => {
     const itemId = `${item.itemType}-${item.id}`;
 
+    if (isMobile) {
+      return (
+        <>
+          {item.itemType === "folder" ? (
+            <FolderCard
+              key={itemId}
+              folder={item}
+              teamInfo={teamInfo}
+              isDataroom={!!dataroomId}
+              dataroomId={dataroomId}
+            />
+          ) : (
+            <DataroomDocumentCard
+              key={itemId}
+              document={item as DataroomFolderDocument}
+              teamInfo={teamInfo}
+              dataroomId={dataroomId}
+            />
+          )}
+        </>
+      );
+    }
+
     return (
       <>
         {item.itemType === "folder" ? (
@@ -315,55 +341,71 @@ export function DataroomItemsList({
         setRejectedFiles={setRejectedFiles}
         dataroomId={dataroomId}
       >
-        <DndContext
-          sensors={sensors}
-          onDragStart={handleDragStart}
-          onDragOver={handleDragOver}
-          onDragEnd={handleDragEnd}
-          onDragCancel={() => setIsOverFolder(false)}
-          measuring={{
-            droppable: {
-              strategy: MeasuringStrategy.Always,
-            },
-          }}
-        >
-          <ul role="list" className="space-y-4">
-            {mixedItems.map(renderItem)}
-          </ul>
+        {isMobile ? (
+          <div>
+            <ul role="list" className="space-y-4">
+              {mixedItems.map(renderItem)}
+            </ul>
+            <Portal containerId={"documents-header-count"}>
+              <HeaderContent />
+            </Portal>
+            {mixedItems.length === 0 && (
+              <div className="flex h-full justify-center">
+                <EmptyDocuments />
+              </div>
+            )}
+          </div>
+        ) : (
+          <DndContext
+            sensors={sensors}
+            onDragStart={handleDragStart}
+            onDragOver={handleDragOver}
+            onDragEnd={handleDragEnd}
+            onDragCancel={() => setIsOverFolder(false)}
+            measuring={{
+              droppable: {
+                strategy: MeasuringStrategy.Always,
+              },
+            }}
+          >
+            <ul role="list" className="space-y-4">
+              {mixedItems.map(renderItem)}
+            </ul>
 
-          <Portal>
-            <DragOverlay className="cursor-default">
-              <motion.div
-                initial={{ scale: 1, opacity: 1 }}
-                animate={{ scale: 0.5, opacity: 1 }}
-                exit={{ scale: 1, opacity: 1 }}
-                transition={{ duration: 0.2 }}
-                className="relative flex h-20 w-40 items-center justify-center rounded-lg bg-gray-200"
-              >
-                <div className="h-20 w-40 rounded-lg bg-white text-foreground dark:bg-secondary">
-                  {draggedDocumentName}
-                </div>
-                {selectedDocuments.length > 1 ? (
-                  <div className="absolute right-0 top-0 rounded-full bg-white p-1 ring ring-gray-500">
-                    <span className="text-xs font-semibold text-gray-500">
-                      {selectedDocuments.length}
-                    </span>
+            <Portal>
+              <DragOverlay className="cursor-default">
+                <motion.div
+                  initial={{ scale: 1, opacity: 1 }}
+                  animate={{ scale: 0.5, opacity: 1 }}
+                  exit={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.2 }}
+                  className="relative flex h-20 w-40 items-center justify-center rounded-lg bg-gray-200"
+                >
+                  <div className="h-20 w-40 rounded-lg bg-white text-foreground dark:bg-secondary">
+                    {draggedDocumentName}
                   </div>
-                ) : null}
-              </motion.div>
-            </DragOverlay>
-          </Portal>
+                  {selectedDocuments.length > 1 ? (
+                    <div className="absolute right-0 top-0 rounded-full bg-white p-1 ring ring-gray-500">
+                      <span className="text-xs font-semibold text-gray-500">
+                        {selectedDocuments.length}
+                      </span>
+                    </div>
+                  ) : null}
+                </motion.div>
+              </DragOverlay>
+            </Portal>
 
-          <Portal containerId={"documents-header-count"}>
-            <HeaderContent />
-          </Portal>
+            <Portal containerId={"documents-header-count"}>
+              <HeaderContent />
+            </Portal>
 
-          {mixedItems.length === 0 && (
-            <div className="flex h-full justify-center">
-              <EmptyDocuments />
-            </div>
-          )}
-        </DndContext>
+            {mixedItems.length === 0 && (
+              <div className="flex h-full justify-center">
+                <EmptyDocuments />
+              </div>
+            )}
+          </DndContext>
+        )}
       </UploadZone>
       {showDrawer ? (
         <UploadNotificationDrawer
