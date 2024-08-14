@@ -194,10 +194,20 @@ export function DataroomItemsList({
         throw new Error("Failed to move document");
       }
 
-      const { updatedCount } = await response.json();
+      const { updatedCount, newPath } = await response.json();
 
       // Update local data using SWR's mutate
       mutate(key);
+      // update folder document counts in current path
+      mutate(
+        `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}/folders${folderPathName ? `/${folderPathName.join("/")}` : "?root=true"}`,
+      );
+      // update documents in new folder (or home)
+      newPath &&
+        mutate(
+          `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}/folders/documents${newPath}`,
+        );
+
       toast.success(
         `${updatedCount} Document${updatedCount > 1 ? "s" : ""} moved successfully`,
       );

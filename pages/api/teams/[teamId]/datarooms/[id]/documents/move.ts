@@ -58,6 +58,12 @@ export default async function handle(
       },
     });
 
+    // Get new path for folder
+    const folder = await prisma.dataroomFolder.findUnique({
+      where: { id: folderId },
+      select: { path: true },
+    });
+
     if (updatedDocuments.count === 0) {
       return res.status(404).end("No documents were updated");
     }
@@ -67,6 +73,7 @@ export default async function handle(
     return res.status(200).json({
       message: "Document moved successfully",
       updatedCount: updatedDocuments.count,
+      newPath: folder?.path,
     });
   } else {
     // We only allow PATCH requests

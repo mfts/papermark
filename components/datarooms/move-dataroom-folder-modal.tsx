@@ -97,7 +97,7 @@ export function MoveToDataroomFolderModal({
 
       // update current folder
       mutate(key);
-      // update new folder (or home)
+      // update documents in new folder (or home)
       mutate(
         `/api/teams/${teamId}/datarooms/${dataroomId}${newPath ? `/folders/documents${newPath}` : "/documents"}`,
       );
