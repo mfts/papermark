@@ -33,12 +33,16 @@ type DocumentsCardProps = {
   teamInfo: TeamContextType | null;
   dataroomId: string;
   isDragging?: boolean;
+  isSelected?: boolean;
+  isHovered?: boolean;
 };
 export default function DataroomDocumentCard({
   document: dataroomDocument,
   teamInfo,
   dataroomId,
   isDragging,
+  isSelected,
+  isHovered,
 }: DocumentsCardProps) {
   const { theme, systemTheme } = useTheme();
   const isLight =
@@ -161,21 +165,26 @@ export default function DataroomDocumentCard({
         className={cn(
           "group/row relative flex items-center justify-between rounded-lg border-0 bg-white p-3 ring-1 ring-gray-200 transition-all hover:bg-secondary hover:ring-gray-300 dark:bg-secondary dark:ring-gray-700 hover:dark:ring-gray-500 sm:p-4",
           isDragging ? "cursor-grabbing" : "cursor-pointer",
+          isHovered && "bg-secondary ring-gray-300 dark:ring-gray-500",
         )}
       >
         <div className="flex min-w-0 shrink items-center space-x-2 sm:space-x-4">
-          <div className="mx-0.5 flex w-8 items-center justify-center text-center sm:mx-1">
-            {dataroomDocument.document.type === "notion" ? (
-              <NotionIcon className="h-8 w-8" />
-            ) : (
-              <Image
-                src={`/_icons/${dataroomDocument.document.type}${isLight ? "-light" : ""}.svg`}
-                alt="File icon"
-                width={50}
-                height={50}
-              />
-            )}
-          </div>
+          {!isSelected && !isHovered ? (
+            <div className="mx-0.5 flex w-8 items-center justify-center text-center sm:mx-1">
+              {dataroomDocument.document.type === "notion" ? (
+                <NotionIcon className="h-8 w-8" />
+              ) : (
+                <Image
+                  src={`/_icons/${dataroomDocument.document.type}${isLight ? "-light" : ""}.svg`}
+                  alt="File icon"
+                  width={50}
+                  height={50}
+                />
+              )}
+            </div>
+          ) : (
+            <div className="mx-0.5 w-8 sm:mx-1"></div>
+          )}
 
           <div className="flex-col">
             <div className="flex items-center">

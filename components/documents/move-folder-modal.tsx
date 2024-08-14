@@ -17,7 +17,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-export type TSelectedFolder = { id: string; name: string } | null;
+export type TSelectedFolder = { id: string | null; name: string } | null;
 
 export function MoveToFolderModal({
   open,
