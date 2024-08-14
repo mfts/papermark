@@ -47,6 +47,8 @@ export function DocumentsList({
   teamInfo: TeamContextType | null;
   folderPathName?: string[];
 }) {
+  const { isMobile } = useMediaQuery();
+
   const [uploads, setUploads] = useState<
     { fileName: string; progress: number; documentId?: string }[]
   >([]);
@@ -55,8 +57,6 @@ export function DocumentsList({
   >([]);
 
   const [showDrawer, setShowDrawer] = useState(false);
-
-  const { isMobile } = useMediaQuery();
 
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [selectedDocuments, setSelectedDocuments] = useState<string[]>([]);
@@ -333,6 +333,10 @@ export function DocumentsList({
                     </li>
                   ))}
             </ul>
+
+            <Portal containerId={"documents-header-count"}>
+              <HeaderContent />
+            </Portal>
 
             {documents && documents.length === 0 && (
               <div className="flex items-center justify-center">
