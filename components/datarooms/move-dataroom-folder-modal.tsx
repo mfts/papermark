@@ -50,11 +50,30 @@ export function MoveToDataroomFolderModal({
     if (!selectedFolder) return;
 
     setLoading(true);
+
+    const key = `/api/teams/${teamId}/datarooms/${dataroomId}${currentPath !== "" ? `/folders/documents/${currentPath}` : "/documents"}`;
+
+    mutate(
+      key,
+      (documents: any[] | undefined) => {
+        if (!documents) return documents;
+
+        // Filter out the document that are being moved
+        const updatedDocuments = documents.filter(
+          (doc) => doc.id !== documentId,
+        );
+
+        // Return the updated list of documents
+        return updatedDocuments;
+      },
+      false,
+    );
+
     try {
       const response = await fetch(
         `/api/teams/${teamId}/datarooms/${dataroomId}/documents/${documentId}`,
         {
-          method: "PUT",
+          method: "PATCH",
           headers: {
             "Content-Type": "application/json",
           },
@@ -72,23 +91,31 @@ export function MoveToDataroomFolderModal({
         return;
       }
 
-      const { newPath, oldPath } = (await response.json()) as {
+      const { newPath } = (await response.json()) as {
         newPath: string;
-        oldPath: string;
       };
 
-      toast.success("Document moved successfully!");
-
-      mutate(`/api/teams/${teamId}/datarooms/${dataroomId}/folders`);
-      mutate(`/api/teams/${teamId}/datarooms/${dataroomId}/folders${oldPath}`);
+      // update current folder
+      mutate(key);
+      // update documents in new folder (or home)
       mutate(
-        `/api/teams/${teamId}/datarooms/${dataroomId}/folders${newPath}`,
-      ).then(() => {
-        router.push(`/datarooms/${dataroomId}/documents${newPath}`);
-      });
+        `/api/teams/${teamId}/datarooms/${dataroomId}${newPath ? `/folders/documents${newPath}` : "/documents"}`,
+      );
+      // update folder document counts in new path
+      mutate(
+        `/api/teams/${teamId}/datarooms/${dataroomId}/folders${newPath ? `${newPath}` : "?root=true"}`,
+      );
+      // update folder document counts in current path
+      mutate(
+        `/api/teams/${teamId}/datarooms/${dataroomId}/folders${currentPath !== "" ? `/${currentPath}` : "?root=true"}`,
+      );
+
+      toast.success("Document moved successfully!");
     } catch (error) {
       console.error("Error moving document", error);
-      toast.error("Failed to move document. Try again.");
+      toast.error("Failed to move document");
+      // Revert the UI back to the previous state
+      mutate(key);
     } finally {
       setLoading(false);
       setOpen(false);

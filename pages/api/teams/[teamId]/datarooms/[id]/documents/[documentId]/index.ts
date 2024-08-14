@@ -10,8 +10,8 @@ export default async function handle(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
-  if (req.method === "PUT") {
-    // PUT /api/teams/:teamId/datarooms/:id/documents/:documentId
+  if (req.method === "PATCH") {
+    // PATCH /api/teams/:teamId/datarooms/:id/documents/:documentId
     const session = await getServerSession(req, res, authOptions);
     if (!session) {
       res.status(401).end("Unauthorized");
@@ -128,8 +128,8 @@ export default async function handle(
       return res.status(204).end(); // No Content
     } catch (error) {}
   } else {
-    // We only allow GET, PUT and DELETE requests
-    res.setHeader("Allow", ["GET", "PUT", "DELETE"]);
+    // We only allow PATCH and DELETE requests
+    res.setHeader("Allow", ["PATCH", "DELETE"]);
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 }

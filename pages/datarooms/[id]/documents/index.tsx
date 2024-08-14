@@ -115,20 +115,7 @@ export default function Documents() {
             <div className="flex justify-between">
               <div className="space-y-2">
                 <BreadcrumbComponent />
-                <section className="mb-2 flex items-center gap-x-2">
-                  {folderCount > 0 ? (
-                    <p className="flex items-center gap-x-1 text-sm text-gray-400">
-                      <FolderIcon className="h-4 w-4" />
-                      <span>{folderCount} folders</span>
-                    </p>
-                  ) : null}
-                  {documentCount > 0 ? (
-                    <p className="flex items-center gap-x-1 text-sm text-gray-400">
-                      <FileIcon className="h-4 w-4" />
-                      <span>{documentCount} documents</span>
-                    </p>
-                  ) : null}
-                </section>
+                <section id="documents-header-count" />
               </div>
               <div>
                 {!isReordering ? (
@@ -159,6 +146,8 @@ export default function Documents() {
                 mixedItems={items}
                 teamInfo={teamInfo}
                 dataroomId={dataroom?.id!}
+                folderCount={folderCount}
+                documentCount={documentCount}
               />
             )}
           </div>
