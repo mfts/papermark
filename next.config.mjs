@@ -33,6 +33,7 @@ function prepareRemotePatterns() {
   let patterns = [
     // static images and videos
     { protocol: "https", hostname: "assets.papermark.io" },
+    { protocol: "https", hostname: "cdn.papermarkassets.com" },
     // twitter img
     { protocol: "https", hostname: "pbs.twimg.com" },
     // linkedin img
