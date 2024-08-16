@@ -55,6 +55,8 @@ export default function DocumentUpload({
 }) {
   const { plan, loading } = usePlan();
   const maxSize = plan === "business" || plan === "datarooms" ? 100 : 30;
+  const maxNumPages = plan === "business" || plan === "datarooms" ? 500 : 100;
+
   const { getRootProps, getInputProps } = useDropzone({
     accept: {
       "application/pdf": [], // ".pdf"
@@ -85,8 +87,8 @@ export default function DocumentUpload({
         .arrayBuffer()
         .then((buffer) => {
           getPagesCount(buffer).then((numPages) => {
-            if (numPages > 500) {
-              toast.error("File has too many pages (max. 100)");
+            if (numPages > maxNumPages) {
+              toast.error(`File has too many pages (max. ${maxNumPages})`);
             } else {
               setCurrentFile(file);
             }

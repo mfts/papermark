@@ -97,6 +97,7 @@ export default function UploadZone({
   const teamInfo = useTeam();
   const { data: session } = useSession();
   const maxSize = plan === "business" || plan === "datarooms" ? 250 : 30;
+  const maxNumPages = plan === "business" || plan === "datarooms" ? 500 : 100;
 
   const [progress, setProgress] = useState<number>(0);
   const [showProgress, setShowProgress] = useState(false);
@@ -117,7 +118,7 @@ export default function UploadZone({
           const buffer = await file.arrayBuffer();
           numPages = await getPagesCount(buffer);
 
-          if (numPages > 500) {
+          if (numPages > maxNumPages) {
             setUploads((prev) =>
               prev.filter((upload) => upload.fileName !== file.name),
             );
@@ -125,7 +126,7 @@ export default function UploadZone({
             return setRejectedFiles((prev) => [
               {
                 fileName: file.name,
-                message: "File has too many pages (max. 100)",
+                message: `File has too many pages (max. ${maxNumPages})`,
               },
               ...prev,
             ]);
