@@ -117,7 +117,7 @@ export default function UploadZone({
           const buffer = await file.arrayBuffer();
           numPages = await getPagesCount(buffer);
 
-          if (numPages > 150) {
+          if (numPages > 500) {
             setUploads((prev) =>
               prev.filter((upload) => upload.fileName !== file.name),
             );
@@ -125,7 +125,7 @@ export default function UploadZone({
             return setRejectedFiles((prev) => [
               {
                 fileName: file.name,
-                message: "File has too many pages (max. 150)",
+                message: "File has too many pages (max. 100)",
               },
               ...prev,
             ]);
