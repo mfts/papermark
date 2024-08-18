@@ -143,6 +143,9 @@ export default function DocumentsCard({
   };
 
   const handleMenuStateChange = (open: boolean) => {
+    // If the document is selected, don't open the dropdown
+    if (isSelected) return;
+
     if (isFirstClick) {
       setMenuOpen(true); // Keep the dropdown open on the first click
       return;
@@ -310,7 +313,7 @@ export default function DocumentsCard({
         <MoveToFolderModal
           open={moveFolderOpen}
           setOpen={setMoveFolderOpen}
-          documentId={prismaDocument.id}
+          documentIds={[prismaDocument.id]}
           documentName={prismaDocument.name}
         />
       ) : null}

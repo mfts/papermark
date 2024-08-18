@@ -25,6 +25,7 @@ import { mutate } from "swr";
 import DataroomDocumentCard from "@/components/datarooms/dataroom-document-card";
 import FolderCard from "@/components/documents/folder-card";
 import { Button } from "@/components/ui/button";
+import { Portal } from "@/components/ui/portal";
 
 import {
   DataroomFolderDocument,
@@ -168,16 +169,7 @@ export function DataroomSortableList({
     : null;
 
   return (
-    <div className="relative rounded-lg border-2 border-dashed border-gray-400 p-2">
-      <Button
-        onClick={handleSave}
-        variant={"outline"}
-        size="sm"
-        className="absolute right-[-2px] top-[-66px] gap-x-1"
-      >
-        <CheckIcon className="size-4" />
-        Save index
-      </Button>
+    <div className="rounded-lg border-2 border-dashed border-gray-400 p-2">
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
@@ -220,6 +212,18 @@ export function DataroomSortableList({
           ) : null}
         </DragOverlay>
       </DndContext>
+
+      <Portal containerId="dataroom-reordering-action">
+        <Button
+          onClick={handleSave}
+          variant={"outline"}
+          size="sm"
+          className="gap-x-1"
+        >
+          <CheckIcon className="size-4" />
+          Save index
+        </Button>
+      </Portal>
     </div>
   );
 }

@@ -10,7 +10,7 @@ const Portal = ({
   children: React.ReactElement;
 }) => {
   const [mounted, setMounted] = React.useState(false);
-  React.useLayoutEffect(() => setMounted(true), []);
+  React.useEffect(() => setMounted(true), []);
 
   return (
     <PortalPrimitive.Root

@@ -33,6 +33,17 @@ function DeleteTeamModal({
   const analytics = useAnalytics();
 
   const [deleting, setDeleting] = useState(false);
+  const [isValid, setIsValid] = useState(false);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { value } = e.target;
+    // Check if the input matches the pattern
+    if (value === "confirm delete team") {
+      setIsValid(true);
+    } else {
+      setIsValid(false);
+    }
+  };
 
   async function deleteTeam() {
     const teamsCount = teamInfo?.teams.length ?? 1;
@@ -135,11 +146,12 @@ function DeleteTeamModal({
               required
               autoComplete="off"
               className="bg-white dark:border-gray-500 dark:bg-gray-800 focus:dark:bg-transparent"
+              onInput={handleInputChange}
             />
           </div>
         </div>
 
-        <Button variant="destructive" loading={deleting}>
+        <Button variant="destructive" loading={deleting} disabled={!isValid}>
           Confirm delete team
         </Button>
       </form>

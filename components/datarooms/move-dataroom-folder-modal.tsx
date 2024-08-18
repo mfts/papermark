@@ -3,8 +3,6 @@ import { useRouter } from "next/router";
 import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
-import { toast } from "sonner";
-import { mutate } from "swr";
 
 import { SidebarFolderTreeSelection } from "@/components/datarooms/folders";
 import { Button } from "@/components/ui/button";
@@ -17,19 +15,23 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
+import { moveDataroomDocumentToFolder } from "@/lib/documents/move-dataroom-documents";
+
 import { TSelectedFolder } from "../documents/move-folder-modal";
 
 export function MoveToDataroomFolderModal({
   open,
   setOpen,
   dataroomId,
-  documentId,
+  setSelectedDocuments,
+  documentIds,
   documentName,
 }: {
   open: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
   dataroomId: string;
-  documentId?: string;
+  setSelectedDocuments?: React.Dispatch<React.SetStateAction<string[]>>;
+  documentIds: string[];
   documentName?: string;
 }) {
   const router = useRouter();
@@ -51,75 +53,17 @@ export function MoveToDataroomFolderModal({
 
     setLoading(true);
 
-    const key = `/api/teams/${teamId}/datarooms/${dataroomId}${currentPath !== "" ? `/folders/documents/${currentPath}` : "/documents"}`;
+    await moveDataroomDocumentToFolder({
+      documentIds,
+      folderId: selectedFolder.id!,
+      folderPathName: currentPath ? currentPath.split("/") : undefined,
+      dataroomId,
+      teamId,
+    });
 
-    mutate(
-      key,
-      (documents: any[] | undefined) => {
-        if (!documents) return documents;
-
-        // Filter out the document that are being moved
-        const updatedDocuments = documents.filter(
-          (doc) => doc.id !== documentId,
-        );
-
-        // Return the updated list of documents
-        return updatedDocuments;
-      },
-      false,
-    );
-
-    try {
-      const response = await fetch(
-        `/api/teams/${teamId}/datarooms/${dataroomId}/documents/${documentId}`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            folderId: selectedFolder.id,
-            currentPathName: "/" + currentPath,
-          }),
-        },
-      );
-
-      if (!response.ok) {
-        const { message } = await response.json();
-        setLoading(false);
-        toast.error(message);
-        return;
-      }
-
-      const { newPath } = (await response.json()) as {
-        newPath: string;
-      };
-
-      // update current folder
-      mutate(key);
-      // update documents in new folder (or home)
-      mutate(
-        `/api/teams/${teamId}/datarooms/${dataroomId}${newPath ? `/folders/documents${newPath}` : "/documents"}`,
-      );
-      // update folder document counts in new path
-      mutate(
-        `/api/teams/${teamId}/datarooms/${dataroomId}/folders${newPath ? `${newPath}` : "?root=true"}`,
-      );
-      // update folder document counts in current path
-      mutate(
-        `/api/teams/${teamId}/datarooms/${dataroomId}/folders${currentPath !== "" ? `/${currentPath}` : "?root=true"}`,
-      );
-
-      toast.success("Document moved successfully!");
-    } catch (error) {
-      console.error("Error moving document", error);
-      toast.error("Failed to move document");
-      // Revert the UI back to the previous state
-      mutate(key);
-    } finally {
-      setLoading(false);
-      setOpen(false);
-    }
+    setLoading(false);
+    setOpen(false); // Close the modal
+    setSelectedDocuments?.([]); // Clear the selected documents
   };
 
   return (
@@ -127,7 +71,10 @@ export function MoveToDataroomFolderModal({
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader className="text-start">
           <DialogTitle>
-            Move <span className="font-bold">{documentName}</span>
+            Move{" "}
+            <span className="font-bold">
+              {documentName ? documentName : `${documentIds.length} items`}
+            </span>
           </DialogTitle>
           <DialogDescription>Move your document to a folder.</DialogDescription>
         </DialogHeader>

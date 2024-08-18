@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useState } from "react";
 
 import { useDraggable } from "@dnd-kit/core";
 
@@ -65,7 +65,7 @@ export function DraggableItem({
       {/* <div className="absolute left-2 top-3 z-50 hidden h-14 w-14 items-center justify-center bg-secondary group-hover:flex"> */}
       <div
         className={cn(
-          "absolute left-4 top-6 z-50 hidden items-center justify-center group-hover:flex sm:left-6 sm:top-7",
+          "absolute left-4 top-6 z-[49] hidden items-center justify-center group-hover:flex sm:left-6 sm:top-7",
           isSelected ? "flex" : "",
         )}
       >

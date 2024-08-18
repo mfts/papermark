@@ -3,8 +3,6 @@ import { useRouter } from "next/router";
 import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
-import { toast } from "sonner";
-import { mutate } from "swr";
 
 import { SidebarFolderTreeSelection } from "@/components/sidebar-folders";
 import { Button } from "@/components/ui/button";
@@ -17,17 +15,21 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
+import { moveDocumentToFolder } from "@/lib/documents/move-documents";
+
 export type TSelectedFolder = { id: string | null; name: string } | null;
 
 export function MoveToFolderModal({
   open,
   setOpen,
-  documentId,
+  setSelectedDocuments,
+  documentIds,
   documentName,
 }: {
   open: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  documentId?: string;
+  setSelectedDocuments?: React.Dispatch<React.SetStateAction<string[]>>;
+  documentIds: string[];
   documentName?: string;
 }) {
   const router = useRouter();
@@ -48,47 +50,17 @@ export function MoveToFolderModal({
     if (!selectedFolder) return;
 
     setLoading(true);
-    try {
-      const response = await fetch(
-        `/api/teams/${teamId}/documents/${documentId}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            folderId: selectedFolder.id,
-            currentPathName: "/" + currentPath,
-          }),
-        },
-      );
 
-      if (!response.ok) {
-        const { message } = await response.json();
-        setLoading(false);
-        toast.error(message);
-        return;
-      }
+    await moveDocumentToFolder({
+      documentIds,
+      folderId: selectedFolder.id!,
+      folderPathName: currentPath ? currentPath.split("/") : undefined,
+      teamId,
+    });
 
-      const { newPath, oldPath } = (await response.json()) as {
-        newPath: string;
-        oldPath: string;
-      };
-
-      toast.success("Document moved successfully!");
-
-      mutate(`/api/teams/${teamId}/folders`);
-      mutate(`/api/teams/${teamId}/folders${oldPath}`);
-      mutate(`/api/teams/${teamId}/folders${newPath}`).then(() => {
-        router.push(`/documents/tree${newPath}`);
-      });
-    } catch (error) {
-      console.error("Error moving document", error);
-      toast.error("Failed to move document. Try again.");
-    } finally {
-      setLoading(false);
-      setOpen(false);
-    }
+    setLoading(false);
+    setOpen(false); // Close the modal
+    setSelectedDocuments?.([]); // Clear the selected documents
   };
 
   return (
@@ -97,7 +69,9 @@ export function MoveToFolderModal({
         <DialogHeader className="text-start">
           <DialogTitle>
             Move
-            <div className="w-[376px] truncate font-bold">{documentName}</div>
+            <div className="w-[376px] truncate font-bold">
+              {documentName ? documentName : `${documentIds.length} items`}
+            </div>
           </DialogTitle>
           <DialogDescription>Move your document to a folder.</DialogDescription>
         </DialogHeader>

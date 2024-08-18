@@ -18,6 +18,7 @@ export function Modal({
   onClose,
   desktopOnly,
   preventDefaultClose,
+  noBackdropBlur = false,
 }: {
   children: React.ReactNode;
   className?: string;
@@ -26,6 +27,7 @@ export function Modal({
   onClose?: () => void;
   desktopOnly?: boolean;
   preventDefaultClose?: boolean;
+  noBackdropBlur?: boolean;
 }) {
   const router = useRouter();
 
@@ -88,13 +90,16 @@ export function Modal({
         <Dialog.Overlay
           // for detecting when there's an active opened modal
           id="modal-backdrop"
-          className="animate-fade-in fixed inset-0 z-50 bg-background/80 backdrop-blur-md"
+          className={cn(
+            "fixed inset-0 z-50 animate-fade-in bg-background/80",
+            !noBackdropBlur && "backdrop-blur-md",
+          )} // backdrop-blur-md
         />
         <Dialog.Content
           onOpenAutoFocus={(e) => e.preventDefault()}
           onCloseAutoFocus={(e) => e.preventDefault()}
           className={cn(
-            "animate-scale-in fixed inset-0 z-50 m-auto max-h-fit w-full max-w-md overflow-hidden border border-gray-200 bg-background p-0 shadow-xl dark:border-gray-800 dark:bg-gray-900 sm:rounded-lg",
+            "fixed inset-0 z-50 m-auto max-h-fit w-full max-w-md animate-scale-in overflow-hidden border border-gray-200 bg-background p-0 shadow-xl dark:border-gray-800 dark:bg-gray-900 sm:rounded-lg",
             className,
           )}
         >

@@ -64,7 +64,7 @@ const FolderComponentSelection = memo(
 );
 FolderComponentSelection.displayName = "FolderComponentSelection";
 
-const SidebarFoldersSelectipon = ({
+const SidebarFoldersSelection = ({
   folders,
   selectedFolder,
   setSelectedFolder,
@@ -119,7 +119,7 @@ export function SidebarFolderTreeSelection({
   if (!folders || error) return null;
 
   return (
-    <SidebarFoldersSelectipon
+    <SidebarFoldersSelection
       folders={folders}
       selectedFolder={selectedFolder}
       setSelectedFolder={setSelectedFolder}

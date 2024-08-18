@@ -5,7 +5,7 @@ import { useRouter } from "next/router";
 import { useEffect, useRef, useState } from "react";
 
 import { TeamContextType } from "@/context/team-context";
-import { FolderInputIcon, MoreVertical, TrashIcon } from "lucide-react";
+import { ArchiveXIcon, FolderInputIcon, MoreVertical } from "lucide-react";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
 import { mutate } from "swr";
@@ -253,7 +253,7 @@ export default function DataroomDocumentCard({
                   "Really remove?"
                 ) : (
                   <>
-                    <TrashIcon className="mr-2 h-4 w-4" /> Remove document
+                    <ArchiveXIcon className="mr-2 h-4 w-4" /> Remove document
                   </>
                 )}
               </DropdownMenuItem>
@@ -266,7 +266,7 @@ export default function DataroomDocumentCard({
           open={moveFolderOpen}
           setOpen={setMoveFolderOpen}
           dataroomId={dataroomDocument.dataroomId}
-          documentId={dataroomDocument.id}
+          documentIds={[dataroomDocument.id]}
           documentName={dataroomDocument.document.name}
         />
       ) : null}
