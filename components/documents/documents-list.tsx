@@ -16,25 +16,33 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 import { motion } from "framer-motion";
-import { FileIcon, FolderIcon, XIcon } from "lucide-react";
-import { toast } from "sonner";
-import { mutate } from "swr";
+import {
+  FileIcon,
+  FolderIcon,
+  FolderInputIcon,
+  Trash2Icon,
+  XIcon,
+} from "lucide-react";
 
 import { Skeleton } from "@/components/ui/skeleton";
 import { UploadNotificationDrawer } from "@/components/upload-notification";
 import UploadZone from "@/components/upload-zone";
 
+import { moveDocumentToFolder } from "@/lib/documents/move-documents";
 import { FolderWithCount } from "@/lib/swr/use-documents";
 import { DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
 import { useMediaQuery } from "@/lib/utils/use-media-query";
 
 import { Button } from "../ui/button";
 import { Portal } from "../ui/portal";
+import { ButtonTooltip } from "../ui/tooltip";
 import DocumentCard from "./document-card";
 import { DraggableItem } from "./drag-and-drop/draggable-item";
 import { DroppableFolder } from "./drag-and-drop/droppable-folder";
 import { EmptyDocuments } from "./empty-document";
 import FolderCard from "./folder-card";
+import { MoveToFolderModal } from "./move-folder-modal";
+import { useDeleteDocumentsModal } from "./settings/delete-documents-modal";
 
 export function DocumentsList({
   folders,
@@ -56,16 +64,22 @@ export function DocumentsList({
     { fileName: string; message: string }[]
   >([]);
 
-  const [showDrawer, setShowDrawer] = useState(false);
+  const [showDrawer, setShowDrawer] = useState<boolean>(false);
   const [moveFolderOpen, setMoveFolderOpen] = useState<boolean>(false);
 
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [selectedDocuments, setSelectedDocuments] = useState<string[]>([]);
-  const [draggedDocumentName, setDraggedDocumentName] = useState<string | null>(
-    null,
-  );
+
+  const [draggedDocument, setDraggedDocument] =
+    useState<DocumentWithLinksAndLinkCountAndViewCount | null>(null);
   const [isOverFolder, setIsOverFolder] = useState<boolean>(false);
   const [isDragging, setIsDragging] = useState<boolean>(false);
+
+  const { setShowDeleteDocumentsModal, DeleteDocumentsModal } =
+    useDeleteDocumentsModal({
+      documentIds: selectedDocuments,
+      setSelectedDocuments: setSelectedDocuments,
+    });
 
   const sensors = useSensors(
     useSensor(MouseSensor),
@@ -87,7 +101,9 @@ export function DocumentsList({
     setIsDragging(true);
     // Set draggedDocumentName for DragOverlay
     if (event.active.data.current?.type === "document") {
-      setDraggedDocumentName(event.active.data.current.name);
+      setDraggedDocument(
+        documents?.find((doc) => doc.id === event.active.id) ?? null,
+      );
     }
     const documentId = event.active.id as string;
     // Find the index of the document that's being dragged
@@ -97,15 +113,15 @@ export function DocumentsList({
     const isSelected = selectedDocuments.includes(documentId);
 
     // Calculate yOffset only if the task is already selected
-    // let yOffset = 0;
-    // if (isSelected) {
-    //   const firstSelectedIndex = documents?.findIndex((document) =>
-    //     selectedDocuments.includes(document.id.toString()),
-    //   );
-    //   yOffset = (documentIndex - firstSelectedIndex) * 80; // Example task height, adjust accordingly
-    // }
+    let yOffset = 0;
+    if (isSelected) {
+      const firstSelectedIndex = documents?.findIndex((document) =>
+        selectedDocuments.includes(document.id.toString()),
+      );
+      yOffset = (documentIndex! - firstSelectedIndex!) * 80; // Example task height, adjust accordingly
+    }
 
-    // setDragOffset({ x: 0, y: yOffset });
+    setDragOffset({ x: 0, y: yOffset });
 
     // Select the document if it's not already selected
     if (!isSelected) {
@@ -130,7 +146,7 @@ export function DocumentsList({
     setIsDragging(false);
     const { active, over } = event;
 
-    setDraggedDocumentName(null);
+    setDraggedDocument(null);
 
     if (!over) return;
 
@@ -183,11 +199,16 @@ export function DocumentsList({
               <FolderInputIcon className="h-5 w-5" />
             </Button>
           </ButtonTooltip>
+          <ButtonTooltip content="Delete">
+            <Button
+              onClick={() => setShowDeleteDocumentsModal(true)}
+              className="mx-1.5 my-1 size-8 rounded-full hover:bg-destructive hover:text-destructive-foreground"
               variant="ghost"
               size="icon"
             >
-              <XIcon className="h-4 w-4" />
+              <Trash2Icon className="h-5 w-5" />
             </Button>
+          </ButtonTooltip>
         </div>
       );
     } else {
