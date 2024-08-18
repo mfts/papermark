@@ -310,7 +310,7 @@ export default function DocumentsCard({
         <MoveToFolderModal
           open={moveFolderOpen}
           setOpen={setMoveFolderOpen}
-          documentId={prismaDocument.id}
+          documentIds={[prismaDocument.id]}
           documentName={prismaDocument.name}
         />
       ) : null}

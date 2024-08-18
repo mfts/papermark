@@ -57,6 +57,7 @@ export function DocumentsList({
   >([]);
 
   const [showDrawer, setShowDrawer] = useState(false);
+  const [moveFolderOpen, setMoveFolderOpen] = useState<boolean>(false);
 
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [selectedDocuments, setSelectedDocuments] = useState<string[]>([]);
@@ -144,90 +145,57 @@ export function DocumentsList({
     // Move the document(s) to the new folder
     const documentsToMove =
       selectedDocuments.length > 0 ? selectedDocuments : [activeId.toString()];
-    moveDocumentToFolder(documentsToMove, overId.toString());
+    moveDocumentToFolder({
+      documentIds: documentsToMove,
+      folderId: overId.toString(),
+      folderPathName,
+      teamId: teamInfo?.currentTeam?.id,
+    });
 
     setSelectedDocuments([]);
     setIsOverFolder(false);
   };
 
-  const moveDocumentToFolder = async (
-    documentIds: string[],
-    folderId: string,
-  ) => {
-    console.log("moving documents to folder", documentIds, folderId);
-    const key = `/api/teams/${teamInfo?.currentTeam?.id}${folderPathName ? `/folders/documents/${folderPathName.join("/")}` : "/documents"}`;
-    // Optimistically update the UI by removing the documents from current folder
-    mutate(
-      key,
-      (documents: DocumentWithLinksAndLinkCountAndViewCount[] | undefined) => {
-        if (!documents) return documents;
-
-        // Filter out the documents that are being moved
-        const updatedDocuments = documents.filter(
-          (doc) => !documentIds.includes(doc.id),
-        );
-
-        // Return the updated list of documents
-        return updatedDocuments;
-      },
-      false,
-    );
-
-    try {
-      // Make the API call to move the document
-      const response = await fetch(
-        `/api/teams/${teamInfo?.currentTeam?.id}/documents/move`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ documentIds, folderId }),
-        },
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to move document");
-      }
-
-      const { updatedCount } = await response.json();
-
-      // Update local data using SWR's mutate
-      mutate(key);
-      toast.success(
-        `${updatedCount} Document${updatedCount > 1 ? "s" : ""} moved successfully`,
-      );
-    } catch (error) {
-      toast.error("Failed to move documents");
-      // Revert the UI back to the previous state
-      mutate(key);
-    }
-  };
-
   const HeaderContent = memo(() => {
     if (selectedDocuments.length > 0) {
       return (
-        <div className="mb-2 flex items-center gap-x-2">
-          <p className="flex items-center gap-x-1 text-sm text-gray-400">
+        <div className="mb-2 flex items-center gap-x-1 rounded-3xl bg-gray-100 text-sm text-foreground dark:bg-gray-800">
+          <ButtonTooltip content="Clear selection">
             <Button
               onClick={() => setSelectedDocuments([])}
-              className="size-5 rounded-full p-0.5"
+              className="mx-1.5 my-1 size-8 rounded-full hover:bg-gray-200 hover:dark:bg-gray-700"
+              variant="ghost"
+              size="icon"
+            >
+              <XIcon className="h-5 w-5" />
+            </Button>
+          </ButtonTooltip>
+          <div className="mr-2 tabular-nums">
+            {selectedDocuments.length} selected
+          </div>
+          <ButtonTooltip content="Move">
+            <Button
+              onClick={() => setMoveFolderOpen(true)}
+              className="mx-1.5 my-1 size-8 rounded-full hover:bg-gray-200 hover:dark:bg-gray-700"
+              variant="ghost"
+              size="icon"
+            >
+              <FolderInputIcon className="h-5 w-5" />
+            </Button>
+          </ButtonTooltip>
               variant="ghost"
               size="icon"
             >
               <XIcon className="h-4 w-4" />
             </Button>
-            <span>
-              {selectedDocuments.length} document
-              {selectedDocuments.length > 1 ? "s" : ""} selected
-            </span>
-          </p>
         </div>
       );
     } else {
       return (
-        <div className="mb-2 flex items-center gap-x-2">
+        <div className="mb-2 flex items-center gap-x-2 pt-5">
           {folders && folders.length > 0 && (
             <p className="flex items-center gap-x-1 text-sm text-gray-400">
-              <FolderIcon className="h-4 w-4" />
+              <FolderIcon className="h-5 w-5" />
               <span>
                 {folders.length} folder{folders.length > 1 ? "s" : ""}
               </span>
@@ -235,7 +203,7 @@ export function DocumentsList({
           )}
           {documents && documents.length > 0 && (
             <p className="flex items-center gap-x-1 text-sm text-gray-400">
-              <FileIcon className="h-4 w-4" />
+              <FileIcon className="h-5 w-5" />
               <span>
                 {documents.length} document{documents.length > 1 ? "s" : ""}
               </span>
@@ -345,138 +313,142 @@ export function DocumentsList({
             )}
           </div>
         ) : (
-          <DndContext
-            sensors={sensors}
-            onDragStart={handleDragStart}
-            onDragOver={handleDragOver}
-            onDragEnd={handleDragEnd}
-            onDragCancel={() => setIsOverFolder(false)}
-            measuring={{
-              droppable: {
-                strategy: MeasuringStrategy.Always,
-              },
-            }}
-          >
-            <div className="space-y-4">
-              {/* Folders list */}
-              <ul role="list" className="space-y-4">
-                {folders
-                  ? folders.map((folder) => {
-                      return (
-                        <DroppableFolder key={folder.id} id={folder.id}>
-                          <FolderCard
-                            key={folder.id}
-                            folder={folder}
-                            teamInfo={teamInfo}
-                          />
-                        </DroppableFolder>
-                      );
-                    })
-                  : Array.from({ length: 3 }).map((_, i) => (
-                      <li
-                        key={i}
-                        className="relative flex w-full items-center space-x-3 rounded-lg border px-4 py-5 sm:px-6 lg:px-6"
-                      >
-                        <Skeleton key={i} className="h-9 w-9" />
-                        <div>
-                          <Skeleton key={i} className="h-4 w-32" />
-                          <Skeleton key={i + 1} className="mt-2 h-3 w-12" />
-                        </div>
-                        <Skeleton
-                          key={i + 1}
-                          className="absolute right-5 top-[50%] h-5 w-20 -translate-y-[50%] transform"
-                        />
-                      </li>
-                    ))}
-              </ul>
-
-              {/* Documents list */}
-              <ul role="list" className="space-y-4">
-                {documents
-                  ? documents.map((document) => {
-                      return (
-                        <DraggableItem
-                          key={document.id}
-                          id={document.id}
-                          isSelected={selectedDocuments.includes(document.id)}
-                          onSelect={handleSelect}
-                          isDraggingSelected={isDragging}
+          <>
+            <DndContext
+              sensors={sensors}
+              onDragStart={handleDragStart}
+              onDragOver={handleDragOver}
+              onDragEnd={handleDragEnd}
+              onDragCancel={() => setIsOverFolder(false)}
+              measuring={{
+                droppable: {
+                  strategy: MeasuringStrategy.Always,
+                },
+              }}
+            >
+              <div className="space-y-4">
+                {/* Folders list */}
+                <ul role="list" className="space-y-4">
+                  {folders
+                    ? folders.map((folder) => {
+                        return (
+                          <DroppableFolder key={folder.id} id={folder.id}>
+                            <FolderCard
+                              key={folder.id}
+                              folder={folder}
+                              teamInfo={teamInfo}
+                            />
+                          </DroppableFolder>
+                        );
+                      })
+                    : Array.from({ length: 3 }).map((_, i) => (
+                        <li
+                          key={i}
+                          className="relative flex w-full items-center space-x-3 rounded-lg border px-4 py-5 sm:px-6 lg:px-6"
                         >
-                          <DocumentCard
-                            key={document.id}
-                            document={document}
-                            teamInfo={teamInfo}
-                            isDragging={
-                              isDragging &&
-                              selectedDocuments.includes(document.id)
-                            }
+                          <Skeleton key={i} className="h-9 w-9" />
+                          <div>
+                            <Skeleton key={i} className="h-4 w-32" />
+                            <Skeleton key={i + 1} className="mt-2 h-3 w-12" />
+                          </div>
+                          <Skeleton
+                            key={i + 1}
+                            className="absolute right-5 top-[50%] h-5 w-20 -translate-y-[50%] transform"
                           />
-                        </DraggableItem>
-                      );
-                    })
-                  : Array.from({ length: 3 }).map((_, i) => (
-                      <li
-                        key={i}
-                        className="relative flex w-full items-center space-x-3 rounded-lg border px-4 py-5 sm:px-6 lg:px-6"
-                      >
-                        <Skeleton key={i} className="h-9 w-9" />
-                        <div>
-                          <Skeleton key={i} className="h-4 w-32" />
-                          <Skeleton key={i + 1} className="mt-2 h-3 w-12" />
-                        </div>
-                        <Skeleton
-                          key={i + 1}
-                          className="absolute right-5 top-[50%] h-5 w-20 -translate-y-[50%] transform"
+                        </li>
+                      ))}
+                </ul>
+
+                {/* Documents list */}
+                <ul role="list" className="space-y-4">
+                  {documents
+                    ? documents.map((document) => {
+                        return (
+                          <DraggableItem
+                            key={document.id}
+                            id={document.id}
+                            isSelected={selectedDocuments.includes(document.id)}
+                            onSelect={handleSelect}
+                            isDraggingSelected={isDragging}
+                          >
+                            <DocumentCard
+                              key={document.id}
+                              document={document}
+                              teamInfo={teamInfo}
+                              isDragging={
+                                isDragging &&
+                                selectedDocuments.includes(document.id)
+                              }
+                            />
+                          </DraggableItem>
+                        );
+                      })
+                    : Array.from({ length: 3 }).map((_, i) => (
+                        <li
+                          key={i}
+                          className="relative flex w-full items-center space-x-3 rounded-lg border px-4 py-5 sm:px-6 lg:px-6"
+                        >
+                          <Skeleton key={i} className="h-9 w-9" />
+                          <div>
+                            <Skeleton key={i} className="h-4 w-32" />
+                            <Skeleton key={i + 1} className="mt-2 h-3 w-12" />
+                          </div>
+                          <Skeleton
+                            key={i + 1}
+                            className="absolute right-5 top-[50%] h-5 w-20 -translate-y-[50%] transform"
+                          />
+                        </li>
+                      ))}
+                </ul>
+
+                <Portal>
+                  <DragOverlay className="cursor-default">
+                    <motion.div
+                      initial={{ scale: 1, opacity: 1 }}
+                      animate={{ scale: 0.9, opacity: 0.95 }}
+                      exit={{ scale: 1, opacity: 1 }}
+                      transition={{ duration: 0.2 }}
+                      className="relative"
+                      style={{ transform: `translateY(${dragOffset.y}px)` }}
+                    >
+                      {draggedDocument ? (
+                        <DocumentCard
+                          document={draggedDocument}
+                          teamInfo={teamInfo}
                         />
-                      </li>
-                    ))}
-              </ul>
+                      ) : null}
+                      {selectedDocuments.length > 1 ? (
+                        <div className="absolute -right-4 -top-4 rounded-full border border-border bg-foreground px-4 py-2">
+                          <span className="text-sm font-semibold text-background">
+                            {selectedDocuments.length}
+                          </span>
+                        </div>
+                      ) : null}
+                    </motion.div>
+                  </DragOverlay>
+                </Portal>
 
-              <Portal>
-                <DragOverlay className="cursor-default">
-                  <motion.div
-                    initial={{ scale: 1, opacity: 1 }}
-                    animate={{ scale: 0.5, opacity: 1 }}
-                    exit={{ scale: 1, opacity: 1 }}
-                    transition={{ duration: 0.2 }}
-                    className="relative flex h-20 w-40 items-center justify-center rounded-lg bg-gray-200"
-                  >
-                    <div className="h-20 w-40 rounded-lg bg-white text-foreground dark:bg-secondary">
-                      {draggedDocumentName}
-                    </div>
-                    {selectedDocuments.length > 1 ? (
-                      <div className="absolute right-0 top-0 rounded-full bg-white p-1 ring ring-gray-500">
-                        <span className="text-xs font-semibold text-gray-500">
-                          {selectedDocuments.length}
-                        </span>
-                      </div>
-                    ) : null}
-                  </motion.div>
-                </DragOverlay>
-              </Portal>
+                <Portal containerId={"documents-header-count"}>
+                  <HeaderContent />
+                </Portal>
 
-              <Portal containerId={"documents-header-count"}>
-                <HeaderContent />
-              </Portal>
-
-              {/* {selectedDocuments.length > 0 ? (
-              <Portal
-                container={document.getElementById("documents-header-count")}
-              >
-                <p className="flex items-center gap-x-1 text-sm text-gray-400">
-                  <XIcon className="h-4 w-4" />
-                  <span>{selectedDocuments.length} documents selected</span>
-                </p>
-              </Portal>
-            ) : null} */}
-
-              {documents && documents.length === 0 && (
-                <div className="flex items-center justify-center">
-                  <EmptyDocuments />
-                </div>
-              )}
-            </div>
-          </DndContext>
+                {documents && documents.length === 0 && (
+                  <div className="flex items-center justify-center">
+                    <EmptyDocuments />
+                  </div>
+                )}
+              </div>
+            </DndContext>
+            {moveFolderOpen ? (
+              <MoveToFolderModal
+                open={moveFolderOpen}
+                setOpen={setMoveFolderOpen}
+                setSelectedDocuments={setSelectedDocuments}
+                documentIds={selectedDocuments}
+              />
+            ) : null}
+            <DeleteDocumentsModal />
+          </>
         )}
       </UploadZone>
       {showDrawer ? (
