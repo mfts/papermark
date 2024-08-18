@@ -212,7 +212,7 @@ export function DataroomItemsList({
         );
 
       toast.success(
-        `${updatedCount} Document${updatedCount > 1 ? "s" : ""} moved successfully`,
+        `${updatedCount} document${updatedCount > 1 ? "s" : ""} moved successfully`,
       );
     } catch (error) {
       toast.error("Failed to move documents");
