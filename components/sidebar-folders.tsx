@@ -185,16 +185,27 @@ const SidebarFoldersSelection = ({
     return [];
   }, [folders]);
 
+  // Create a virtual "Home" folder
+  const homeFolder: Partial<FolderWithDocuments> = {
+    // @ts-ignore
+    id: null,
+    name: "Home",
+    path: "/",
+    childFolders: nestedFolders,
+    documents: [],
+  };
+
   return (
     <FileTree>
-      {nestedFolders.map((folder) => (
-        <FolderComponentSelection
-          key={folder.id}
-          folder={folder}
-          selectedFolder={selectedFolder}
-          setSelectedFolder={setSelectedFolder}
-        />
-      ))}
+      {/* {nestedFolders.map((folder) => ( */}
+      <FolderComponentSelection
+        // key={folder.id}
+        // @ts-ignore
+        folder={homeFolder}
+        selectedFolder={selectedFolder}
+        setSelectedFolder={setSelectedFolder}
+      />
+      {/* ))} */}
     </FileTree>
   );
 };
