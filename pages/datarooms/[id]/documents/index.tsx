@@ -112,12 +112,11 @@ export default function Documents() {
             </ScrollArea>
           </div>
           <div className="space-y-4 md:col-span-3">
-            <div className="flex justify-between">
+            <div className="flex items-center justify-between">
               <div className="space-y-2">
                 <BreadcrumbComponent />
-                <section id="documents-header-count" />
               </div>
-              <div>
+              <div id="dataroom-reordering-action">
                 {!isReordering ? (
                   <Button
                     size="sm"
@@ -131,6 +130,7 @@ export default function Documents() {
                 ) : null}
               </div>
             </div>
+            <section id="documents-header-count" className="min-h-8" />
 
             {isLoading ? <LoadingDocuments count={3} /> : null}
 
