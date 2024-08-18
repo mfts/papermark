@@ -24,7 +24,7 @@ export default async function handle(
     };
     const { documentIds, folderId } = req.body as {
       documentIds: string[];
-      folderId: string;
+      folderId: string | null;
     };
 
     // Ensure the user is an admin of the team
@@ -58,11 +58,14 @@ export default async function handle(
       },
     });
 
-    // Get new path for folder
-    const folder = await prisma.dataroomFolder.findUnique({
-      where: { id: folderId },
-      select: { path: true },
-    });
+    // Get new path for folder unless folderId is null
+    let folder: { path: string } | null = null;
+    if (folderId) {
+      folder = await prisma.dataroomFolder.findUnique({
+        where: { id: folderId },
+        select: { path: true },
+      });
+    }
 
     if (updatedDocuments.count === 0) {
       return res.status(404).end("No documents were updated");
