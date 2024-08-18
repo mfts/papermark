@@ -75,10 +75,11 @@ export function DataroomItemsList({
   const [showDrawer, setShowDrawer] = useState(false);
   const [moveFolderOpen, setMoveFolderOpen] = useState<boolean>(false);
 
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [selectedDocuments, setSelectedDocuments] = useState<string[]>([]);
-  const [draggedDocumentName, setDraggedDocumentName] = useState<string | null>(
-    null,
-  );
+  const [draggedDocument, setDraggedDocument] =
+    useState<FolderOrDocument | null>(null);
+
   const [isOverFolder, setIsOverFolder] = useState<boolean>(false);
   const [isDragging, setIsDragging] = useState<boolean>(false);
 
@@ -109,7 +110,11 @@ export function DataroomItemsList({
     setIsDragging(true);
     // Set draggedDocumentName for DragOverlay
     if (event.active.data.current?.type === "document") {
-      setDraggedDocumentName(event.active.data.current.name);
+      setDraggedDocument(
+        mixedItems
+          .filter((item) => item.itemType === "document")
+          .find((doc) => doc.id === event.active.id) ?? null,
+      );
     }
     const documentId = event.active.id as string;
     // Find the index of the document that's being dragged
@@ -121,15 +126,15 @@ export function DataroomItemsList({
     const isSelected = selectedDocuments.includes(documentId);
 
     // Calculate yOffset only if the task is already selected
-    // let yOffset = 0;
-    // if (isSelected) {
-    //   const firstSelectedIndex = documents?.findIndex((document) =>
-    //     selectedDocuments.includes(document.id.toString()),
-    //   );
-    //   yOffset = (documentIndex - firstSelectedIndex) * 80; // Example task height, adjust accordingly
-    // }
+    let yOffset = 0;
+    if (isSelected) {
+      const firstSelectedIndex = mixedItems?.findIndex((document) =>
+        selectedDocuments.includes(document.id.toString()),
+      );
+      yOffset = (documentIndex - firstSelectedIndex) * 80; // Example task height, adjust accordingly
+    }
 
-    // setDragOffset({ x: 0, y: yOffset });
+    setDragOffset({ x: 0, y: yOffset });
 
     // Select the document if it's not already selected
     if (!isSelected) {
@@ -154,7 +159,7 @@ export function DataroomItemsList({
     setIsDragging(false);
     const { active, over } = event;
 
-    setDraggedDocumentName(null);
+    setDraggedDocument(null);
 
     if (!over) return;
 
@@ -356,17 +361,22 @@ export function DataroomItemsList({
                 <DragOverlay className="cursor-default">
                   <motion.div
                     initial={{ scale: 1, opacity: 1 }}
-                    animate={{ scale: 0.5, opacity: 1 }}
+                    animate={{ scale: 0.9, opacity: 0.95 }}
                     exit={{ scale: 1, opacity: 1 }}
                     transition={{ duration: 0.2 }}
-                    className="relative flex h-20 w-40 items-center justify-center rounded-lg bg-gray-200"
+                    className="relative"
+                    style={{ transform: `translateY(${dragOffset.y}px)` }}
                   >
-                    <div className="h-20 w-40 rounded-lg bg-white text-foreground dark:bg-secondary">
-                      {draggedDocumentName}
-                    </div>
+                    {draggedDocument ? (
+                      <DataroomDocumentCard
+                        document={draggedDocument as DataroomFolderDocument}
+                        teamInfo={teamInfo}
+                        dataroomId={dataroomId}
+                      />
+                    ) : null}
                     {selectedDocuments.length > 1 ? (
-                      <div className="absolute right-0 top-0 rounded-full bg-white p-1 ring ring-gray-500">
-                        <span className="text-xs font-semibold text-gray-500">
+                      <div className="absolute -right-4 -top-4 rounded-full border border-border bg-foreground px-4 py-2">
+                        <span className="text-sm font-semibold text-background">
                           {selectedDocuments.length}
                         </span>
                       </div>
