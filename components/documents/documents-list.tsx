@@ -36,13 +36,13 @@ import { useMediaQuery } from "@/lib/utils/use-media-query";
 import { Button } from "../ui/button";
 import { Portal } from "../ui/portal";
 import { ButtonTooltip } from "../ui/tooltip";
+import { useDeleteDocumentsModal } from "./actions/delete-documents-modal";
 import DocumentCard from "./document-card";
 import { DraggableItem } from "./drag-and-drop/draggable-item";
 import { DroppableFolder } from "./drag-and-drop/droppable-folder";
 import { EmptyDocuments } from "./empty-document";
 import FolderCard from "./folder-card";
 import { MoveToFolderModal } from "./move-folder-modal";
-import { useDeleteDocumentsModal } from "./settings/delete-documents-modal";
 
 export function DocumentsList({
   folders,
