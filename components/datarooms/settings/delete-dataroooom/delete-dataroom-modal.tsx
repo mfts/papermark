@@ -51,7 +51,7 @@ function DeleteDataroomModal({
         },
       }).then(async (res) => {
         if (res.ok) {
-          analytics.capture("Account Deleted", {
+          analytics.capture("Dataroom Deleted", {
             dataroomName: dataroomName,
             dataroomId: dataroomId,
           });
