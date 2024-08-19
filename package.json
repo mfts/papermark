@@ -83,7 +83,7 @@
     "nanoid": "^5.0.7",
     "next": "^14.2.5",
     "next-auth": "^4.24.7",
-    "next-plausible": "^3.12.1",
+    "next-plausible": "^3.12.0",
     "next-themes": "^0.3.0",
     "nodemailer": "^6.9.14",
     "notion-client": "^6.16.0",
