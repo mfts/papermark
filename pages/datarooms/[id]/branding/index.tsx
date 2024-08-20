@@ -9,8 +9,8 @@ import { toast } from "sonner";
 import { mutate } from "swr";
 
 import { DataroomHeader } from "@/components/datarooms/dataroom-header";
+import { DataroomNavigation } from "@/components/datarooms/dataroom-navigation";
 import AppLayout from "@/components/layouts/app";
-import { NavMenu } from "@/components/navigation-menu";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -181,35 +181,7 @@ export default function DataroomBrandPage() {
             }
           />
 
-          <NavMenu
-            navigation={[
-              {
-                label: "Overview",
-                href: `/datarooms/${dataroom.id}`,
-                segment: `${dataroom.id}`,
-              },
-              {
-                label: "Documents",
-                href: `/datarooms/${dataroom.id}/documents`,
-                segment: "documents",
-              },
-              {
-                label: "Users",
-                href: `/datarooms/${dataroom.id}/users`,
-                segment: "users",
-              },
-              {
-                label: "Customization",
-                href: `/datarooms/${dataroom.id}/branding`,
-                segment: "branding",
-              },
-              {
-                label: "Settings",
-                href: `/datarooms/${dataroom.id}/settings`,
-                segment: "settings",
-              },
-            ]}
-          />
+          <DataroomNavigation dataroomId={dataroom.id} />
         </header>
 
         <div className="space-y-4">

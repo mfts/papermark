@@ -1,11 +1,11 @@
 import { useState } from "react";
 
 import { DataroomHeader } from "@/components/datarooms/dataroom-header";
+import { DataroomNavigation } from "@/components/datarooms/dataroom-navigation";
 import StatsCard from "@/components/datarooms/stats-card";
 import AppLayout from "@/components/layouts/app";
 import LinkSheet from "@/components/links/link-sheet";
 import LinksTable from "@/components/links/links-table";
-import { NavMenu } from "@/components/navigation-menu";
 import { Button } from "@/components/ui/button";
 import DataroomVisitorsTable from "@/components/visitors/dataroom-visitors-table";
 
@@ -35,35 +35,7 @@ export default function DataroomPage() {
             ]}
           />
 
-          <NavMenu
-            navigation={[
-              {
-                label: "Overview",
-                href: `/datarooms/${dataroom.id}`,
-                segment: `${dataroom.id}`,
-              },
-              {
-                label: "Documents",
-                href: `/datarooms/${dataroom.id}/documents`,
-                segment: "documents",
-              },
-              {
-                label: "Users",
-                href: `/datarooms/${dataroom.id}/users`,
-                segment: "users",
-              },
-              {
-                label: "Customization",
-                href: `/datarooms/${dataroom.id}/branding`,
-                segment: "branding",
-              },
-              {
-                label: "Settings",
-                href: `/datarooms/${dataroom.id}/settings`,
-                segment: "settings",
-              },
-            ]}
-          />
+          <DataroomNavigation dataroomId={dataroom.id} />
         </header>
 
         <div className="space-y-4">

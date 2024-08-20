@@ -5,10 +5,10 @@ import { toast } from "sonner";
 import { mutate } from "swr";
 
 import { DataroomHeader } from "@/components/datarooms/dataroom-header";
+import { DataroomNavigation } from "@/components/datarooms/dataroom-navigation";
 import DeleteDataroom from "@/components/datarooms/settings/delete-dataroooom";
 import DuplicateDataroom from "@/components/datarooms/settings/duplicate-dataroom";
 import AppLayout from "@/components/layouts/app";
-import { NavMenu } from "@/components/navigation-menu";
 import { Form } from "@/components/ui/form";
 
 import { usePlan } from "@/lib/swr/use-billing";
@@ -36,35 +36,7 @@ export default function Settings() {
             actions={[]}
           />
 
-          <NavMenu
-            navigation={[
-              {
-                label: "Overview",
-                href: `/datarooms/${dataroom.id}`,
-                segment: `${dataroom.id}`,
-              },
-              {
-                label: "Documents",
-                href: `/datarooms/${dataroom.id}/documents`,
-                segment: "documents",
-              },
-              {
-                label: "Users",
-                href: `/datarooms/${dataroom.id}/users`,
-                segment: "users",
-              },
-              {
-                label: "Customization",
-                href: `/datarooms/${dataroom.id}/branding`,
-                segment: "branding",
-              },
-              {
-                label: "Settings",
-                href: `/datarooms/${dataroom.id}/settings`,
-                segment: "settings",
-              },
-            ]}
-          />
+          <DataroomNavigation dataroomId={dataroom.id} />
         </header>
 
         {/* Settings */}
