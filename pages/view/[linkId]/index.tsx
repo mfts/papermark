@@ -204,10 +204,12 @@ export default function ViewPage({
   const {
     token,
     email: verifiedEmail,
+    d: disableEditEmail,
     previewToken,
   } = router.query as {
     token: string;
     email: string;
+    d: string;
     previewToken?: string;
   };
   const { linkType, link, brand } = linkData;
@@ -287,6 +289,7 @@ export default function ViewPage({
             showAccountCreationSlide={showAccountCreationSlide}
             useAdvancedExcelViewer={useAdvancedExcelViewer}
             previewToken={previewToken}
+            disableEditEmail={!!disableEditEmail}
           />
         </>
       );
@@ -316,6 +319,7 @@ export default function ViewPage({
           showAccountCreationSlide={showAccountCreationSlide}
           useAdvancedExcelViewer={useAdvancedExcelViewer}
           previewToken={previewToken}
+          disableEditEmail={!!disableEditEmail}
         />
       </>
     );
@@ -392,6 +396,7 @@ export default function ViewPage({
             verifiedEmail={verifiedEmail}
             useAdvancedExcelViewer={useAdvancedExcelViewer}
             previewToken={previewToken}
+            disableEditEmail={!!disableEditEmail}
           />
         </>
       );
@@ -418,6 +423,7 @@ export default function ViewPage({
           brand={brand}
           useAdvancedExcelViewer={useAdvancedExcelViewer}
           previewToken={previewToken}
+          disableEditEmail={!!disableEditEmail}
         />
       </>
     );

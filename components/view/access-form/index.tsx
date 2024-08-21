@@ -39,6 +39,7 @@ export default function AccessForm({
   requireName,
   isLoading,
   linkId,
+  disableEditEmail,
 }: {
   data: DEFAULT_ACCESS_FORM_TYPE;
   email: string | null | undefined;
@@ -52,6 +53,7 @@ export default function AccessForm({
   requireName?: boolean;
   isLoading: boolean;
   linkId?: string;
+  disableEditEmail?: boolean;
 }) {
   useEffect(() => {
     const userEmail = email;
@@ -115,7 +117,10 @@ export default function AccessForm({
               <NameSection {...{ data, setData, brand }} />
             ) : null}
             {requireEmail ? (
-              <EmailSection {...{ data, setData, brand }} />
+              <EmailSection
+                {...{ data, setData, brand }}
+                disableEditEmail={disableEditEmail}
+              />
             ) : null}
             {requirePassword ? (
               <PasswordSection {...{ data, setData, brand }} />
