@@ -30,6 +30,8 @@ import {
 import { putFile } from "@/lib/files/put-file";
 import { getSupportedContentType } from "@/lib/utils/get-content-type";
 
+import LinkItem from "../link-item";
+
 export default function AgreementSheet({
   isOpen,
   setIsOpen,
@@ -39,7 +41,7 @@ export default function AgreementSheet({
 }) {
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
-  const [data, setData] = useState({ name: "", link: "" });
+  const [data, setData] = useState({ name: "", link: "", requireName: true });
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [currentFile, setCurrentFile] = useState<File | null>(null);
   const [currentLink, setCurrentLink] = useState<string | null>(null);
@@ -129,7 +131,7 @@ export default function AgreementSheet({
     } finally {
       setIsLoading(false);
       setIsOpen(false);
-      setData({ name: "", link: "" });
+      setData({ name: "", link: "", requireName: true });
     }
   };
 
@@ -169,6 +171,16 @@ export default function AgreementSheet({
                     ...data,
                     name: e.target.value,
                   })
+                }
+              />
+            </div>
+
+            <div>
+              <LinkItem
+                title="Require viewer's name"
+                enabled={data.requireName}
+                action={() =>
+                  setData({ ...data, requireName: !data.requireName })
                 }
               />
             </div>

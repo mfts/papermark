@@ -25,7 +25,7 @@ export default function AgreementSection({
 
   return (
     <div className="pb-5">
-      <div className="relative flex items-start space-x-2 rounded-md shadow-sm">
+      <div className="relative flex items-start space-x-2">
         <Checkbox
           id="agreement"
           onCheckedChange={handleCheckChange}

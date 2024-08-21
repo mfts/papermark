@@ -80,13 +80,18 @@ export default async function handle(
         return res.status(401).json("Unauthorized");
       }
 
-      const { name, link } = req.body as { name: string; link: string };
+      const { name, link, requireName } = req.body as {
+        name: string;
+        link: string;
+        requireName: boolean;
+      };
 
       const agreement = await prisma.agreement.create({
         data: {
           teamId,
           name,
           content: link,
+          requireName,
         },
       });
 

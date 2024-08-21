@@ -56,6 +56,7 @@ export default function DocumentView({
   showAccountCreationSlide,
   useAdvancedExcelViewer,
   previewToken,
+  disableEditEmail,
 }: {
   link: LinkWithDocument;
   userEmail: string | null | undefined;
@@ -72,6 +73,7 @@ export default function DocumentView({
   showAccountCreationSlide?: boolean;
   useAdvancedExcelViewer?: boolean;
   previewToken?: string;
+  disableEditEmail?: boolean;
 }) {
   const {
     document,
@@ -208,8 +210,10 @@ export default function DocumentView({
         requirePassword={!!linkPassword}
         requireAgreement={enableAgreement!}
         agreementContent={link.agreement?.content}
+        requireName={link.agreement?.requireName}
         isLoading={isLoading}
         brand={brand}
+        disableEditEmail={disableEditEmail}
       />
     );
   }
