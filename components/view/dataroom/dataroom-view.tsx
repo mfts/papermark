@@ -268,6 +268,7 @@ export default function DataroomView({
         requirePassword={!!linkPassword}
         requireAgreement={enableAgreement!}
         agreementContent={link.agreement?.content}
+        requireName={link.agreement?.requireName}
         isLoading={isLoading}
       />
     );

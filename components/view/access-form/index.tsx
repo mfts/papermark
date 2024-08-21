@@ -36,6 +36,7 @@ export default function AccessForm({
   requirePassword,
   requireAgreement,
   agreementContent,
+  requireName,
   isLoading,
   linkId,
 }: {
@@ -48,6 +49,7 @@ export default function AccessForm({
   requirePassword: boolean;
   requireAgreement?: boolean;
   agreementContent?: string;
+  requireName?: boolean;
   isLoading: boolean;
   linkId?: string;
 }) {
@@ -109,7 +111,7 @@ export default function AccessForm({
 
         <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-md">
           <form className="space-y-4" onSubmit={onSubmitHandler}>
-            {requireAgreement && agreementContent ? (
+            {requireAgreement && agreementContent && requireName ? (
               <NameSection {...{ data, setData, brand }} />
             ) : null}
             {requireEmail ? (
@@ -132,7 +134,7 @@ export default function AccessForm({
                   (requireEmail && !data.email) ||
                   (requirePassword && !data.password) ||
                   (requireAgreement && !data.hasConfirmedAgreement) ||
-                  (requireAgreement && !data.name)
+                  (requireAgreement && requireName && !data.name)
                 }
                 className="w-1/3 min-w-fit bg-white text-gray-950 hover:bg-white/90"
                 loading={isLoading}

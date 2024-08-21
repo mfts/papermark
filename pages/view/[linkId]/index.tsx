@@ -240,6 +240,7 @@ export default function ViewPage({
       emailProtected,
       emailAuthenticated,
       password: linkPassword,
+      enableAgreement,
       isArchived,
     } = link;
 
@@ -259,7 +260,7 @@ export default function ViewPage({
       );
     }
 
-    if (emailProtected || linkPassword) {
+    if (emailProtected || linkPassword || enableAgreement) {
       return (
         <>
           <CustomMetatag

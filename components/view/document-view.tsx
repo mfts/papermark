@@ -208,6 +208,7 @@ export default function DocumentView({
         requirePassword={!!linkPassword}
         requireAgreement={enableAgreement!}
         agreementContent={link.agreement?.content}
+        requireName={link.agreement?.requireName}
         isLoading={isLoading}
         brand={brand}
       />

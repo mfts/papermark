@@ -491,6 +491,8 @@ model Agreement {
   links     Link[]
   responses AgreementResponse[]
 
+  requireName    Boolean @default(true) // Optional require name field
+
   teamId String
   team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
 
