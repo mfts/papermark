@@ -39,7 +39,7 @@ export const sendEmail = async ({
           : "Marc from Papermark <marc@papermark.io>",
       to: test ? "delivered@resend.dev" : to,
       cc: cc,
-      reply_to: marketing ? "marc@papermark.io" : undefined,
+      replyTo: marketing ? "marc@papermark.io" : undefined,
       subject,
       react,
       headers: {
