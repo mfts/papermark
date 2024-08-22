@@ -1,8 +1,10 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
+import { waitUntil } from "@vercel/functions";
 import { getServerSession } from "next-auth/next";
 
+import { sendDataroomTrialWelcome } from "@/lib/emails/send-dataroom-trial";
 import { newId } from "@/lib/id-helper";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
@@ -21,6 +23,7 @@ export default async function handle(
     }
 
     const userId = (session.user as CustomUser).id;
+    const email = (session.user as CustomUser).email;
 
     const { teamId } = req.query as { teamId: string };
     const { name, fullName, companyName, industry, companySize, phoneNumber } =
@@ -65,7 +68,7 @@ export default async function handle(
       }
 
       await log({
-        message: `Dataroom Trial: ${teamId} \n\nEmail: ${(session.user as CustomUser).email} \nName: ${fullName} \nCompany Name: ${companyName} \nIndustry: ${industry} \nCompany Size: ${companySize} \nPhone Number: ${phoneNumber}`,
+        message: `Dataroom Trial: ${teamId} \n\nEmail: ${email} \nName: ${fullName} \nCompany Name: ${companyName} \nIndustry: ${industry} \nCompany Size: ${companySize} \nPhone Number: ${phoneNumber}`,
         type: "trial",
         mention: true,
       });
@@ -91,6 +94,8 @@ export default async function handle(
         ...dataroom,
         _count: { documents: 0 },
       };
+
+      waitUntil(sendDataroomTrialWelcome({ fullName, to: email! }));
 
       res.status(201).json(dataroomWithCount);
     } catch (error) {
