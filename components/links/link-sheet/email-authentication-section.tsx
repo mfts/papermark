@@ -32,8 +32,6 @@ export default function EmailAuthenticationSection({
       ...data,
       emailProtected: updatedEmailAuthentication ? true : emailProtected,
       emailAuthenticated: updatedEmailAuthentication,
-      allowList: updatedEmailAuthentication ? data.allowList : [],
-      denyList: updatedEmailAuthentication ? data.denyList : [],
     });
     setEnabled(updatedEmailAuthentication);
   };
