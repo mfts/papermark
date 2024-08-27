@@ -26,7 +26,7 @@ export default function DenyListSection({
     plan,
   }: LinkUpgradeOptions) => void;
 }) {
-  const { emailAuthenticated, denyList } = data;
+  const { emailProtected, denyList } = data;
   // Initialize enabled state based on whether denyList is not null and not empty
   const [enabled, setEnabled] = useState<boolean>(
     !!denyList && denyList.length > 0,
@@ -38,12 +38,12 @@ export default function DenyListSection({
   useEffect(() => {
     // Update the denyList in the data state when their inputs change
     const newDenyList = sanitizeAllowDenyList(denyListInput);
-    setEnabled((prevEnabled) => prevEnabled && emailAuthenticated);
+    setEnabled((prevEnabled) => prevEnabled && emailProtected);
     setData((prevData) => ({
       ...prevData,
-      denyList: emailAuthenticated && enabled ? newDenyList : [],
+      denyList: emailProtected && enabled ? newDenyList : [],
     }));
-  }, [denyListInput, enabled, emailAuthenticated, setData]);
+  }, [denyListInput, enabled, emailProtected, setData]);
 
   const handleEnableDenyList = () => {
     const updatedEnabled = !enabled;
