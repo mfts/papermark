@@ -16,7 +16,7 @@ export const DataroomHeader = ({
 
   return (
     <section className="mb-4 flex items-center justify-between md:mb-8 lg:mb-12">
-      <div className="space-y-1">
+      <div className="flex min-h-10 items-center space-y-1">
         <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
           {title}
         </h1>
