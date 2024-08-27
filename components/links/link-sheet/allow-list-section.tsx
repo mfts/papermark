@@ -26,7 +26,7 @@ export default function AllowListSection({
     plan,
   }: LinkUpgradeOptions) => void;
 }) {
-  const { emailAuthenticated, allowList } = data;
+  const { emailProtected, allowList } = data;
 
   // Initialize enabled state based on whether allowList is not null and not empty
   const [enabled, setEnabled] = useState<boolean>(
@@ -39,12 +39,12 @@ export default function AllowListSection({
   useEffect(() => {
     // Update the allowList in the data state when their inputs change
     const newAllowList = sanitizeAllowDenyList(allowListInput);
-    setEnabled((prevEnabled) => prevEnabled && emailAuthenticated);
+    setEnabled((prevEnabled) => prevEnabled && emailProtected);
     setData((prevData) => ({
       ...prevData,
-      allowList: emailAuthenticated && enabled ? newAllowList : [],
+      allowList: emailProtected && enabled ? newAllowList : [],
     }));
-  }, [allowListInput, enabled, emailAuthenticated, setData]);
+  }, [allowListInput, emailProtected, enabled, setData]);
 
   const handleEnableAllowList = () => {
     const updatedEnabled = !enabled;

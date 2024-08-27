@@ -2,6 +2,7 @@ import { Dispatch, SetStateAction, useEffect } from "react";
 
 import { Brand, DataroomBrand } from "@prisma/client";
 
+import { cn } from "@/lib/utils";
 import { determineTextColor } from "@/lib/utils/determine-text-color";
 
 import { DEFAULT_ACCESS_FORM_TYPE } from ".";
@@ -10,10 +11,12 @@ export default function EmailSection({
   data,
   setData,
   brand,
+  disableEditEmail,
 }: {
   data: DEFAULT_ACCESS_FORM_TYPE;
   setData: Dispatch<SetStateAction<DEFAULT_ACCESS_FORM_TYPE>>;
   brand?: Partial<Brand> | Partial<DataroomBrand> | null;
+  disableEditEmail?: boolean;
 }) {
   const { email } = data;
 
@@ -38,7 +41,7 @@ export default function EmailSection({
 
   return (
     <div className="pb-5">
-      <div className="relative space-y-2 rounded-md shadow-sm">
+      <div className="relative space-y-2">
         <label
           htmlFor="email"
           className="block text-sm font-medium leading-6 text-white"
@@ -62,14 +65,16 @@ export default function EmailSection({
           style={{
             backgroundColor:
               brand && brand.accentColor ? brand.accentColor : "black",
-            color:
-              brand && brand.accentColor
+            color: disableEditEmail
+              ? "hsl(var(--muted-foreground))"
+              : brand && brand.accentColor
                 ? determineTextColor(brand.accentColor)
                 : "white",
           }}
           value={email || ""}
           placeholder="Enter email"
           onChange={handleEmailChange}
+          disabled={disableEditEmail}
           aria-invalid="true"
           data-1p-ignore
         />

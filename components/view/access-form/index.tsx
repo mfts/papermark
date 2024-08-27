@@ -36,8 +36,10 @@ export default function AccessForm({
   requirePassword,
   requireAgreement,
   agreementContent,
+  requireName,
   isLoading,
   linkId,
+  disableEditEmail,
 }: {
   data: DEFAULT_ACCESS_FORM_TYPE;
   email: string | null | undefined;
@@ -48,8 +50,10 @@ export default function AccessForm({
   requirePassword: boolean;
   requireAgreement?: boolean;
   agreementContent?: string;
+  requireName?: boolean;
   isLoading: boolean;
   linkId?: string;
+  disableEditEmail?: boolean;
 }) {
   useEffect(() => {
     const userEmail = email;
@@ -109,11 +113,14 @@ export default function AccessForm({
 
         <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-md">
           <form className="space-y-4" onSubmit={onSubmitHandler}>
-            {requireAgreement && agreementContent ? (
+            {requireAgreement && agreementContent && requireName ? (
               <NameSection {...{ data, setData, brand }} />
             ) : null}
             {requireEmail ? (
-              <EmailSection {...{ data, setData, brand }} />
+              <EmailSection
+                {...{ data, setData, brand }}
+                disableEditEmail={disableEditEmail}
+              />
             ) : null}
             {requirePassword ? (
               <PasswordSection {...{ data, setData, brand }} />
@@ -132,7 +139,7 @@ export default function AccessForm({
                   (requireEmail && !data.email) ||
                   (requirePassword && !data.password) ||
                   (requireAgreement && !data.hasConfirmedAgreement) ||
-                  (requireAgreement && !data.name)
+                  (requireAgreement && requireName && !data.name)
                 }
                 className="w-1/3 min-w-fit bg-white text-gray-950 hover:bg-white/90"
                 loading={isLoading}
