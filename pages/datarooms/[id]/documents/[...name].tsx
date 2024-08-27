@@ -73,7 +73,7 @@ export default function Documents() {
             ]}
           />
 
-          <DataroomNavigation dataroomId={dataroom!.id} />
+          <DataroomNavigation dataroomId={dataroom?.id} />
         </header>
 
         <div className="grid h-full gap-4 pb-2 md:grid-cols-4">

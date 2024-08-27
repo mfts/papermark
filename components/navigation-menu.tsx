@@ -52,7 +52,7 @@ const NavItem: React.FC<Props["navigation"][0]> = ({
   tag,
 }) => {
   const router = useRouter();
-  const active = segment === router.asPath.split("/").pop();
+  const active = router.pathname.includes(segment as string);
 
   return (
     <li
