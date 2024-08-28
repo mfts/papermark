@@ -7,12 +7,12 @@ import { LinkUpgradeOptions } from "./link-options";
 export default function EmailAuthenticationSection({
   data,
   setData,
-  hasFreePlan,
+  isAllowed,
   handleUpgradeStateChange,
 }: {
   data: DEFAULT_LINK_TYPE;
   setData: React.Dispatch<React.SetStateAction<DEFAULT_LINK_TYPE>>;
-  hasFreePlan: boolean;
+  isAllowed: boolean;
   handleUpgradeStateChange: ({
     state,
     trigger,
@@ -42,7 +42,7 @@ export default function EmailAuthenticationSection({
         title="Require email verification"
         enabled={enabled}
         action={handleEnableAuthentication}
-        hasFreePlan={hasFreePlan}
+        isAllowed={isAllowed}
         requiredPlan="pro"
         upgradeAction={() =>
           handleUpgradeStateChange({

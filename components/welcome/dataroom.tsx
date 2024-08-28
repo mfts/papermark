@@ -78,7 +78,8 @@ export default function Dataroom() {
           Get a data room trial
         </Button>
         <span className="text-xs text-muted-foreground">
-          Data rooms are available on our `Business` plan. <br />
+          Data rooms are available on our `Business` and `Data Rooms` plan.{" "}
+          <br />
           You receive a 7-day trial.
         </span>
       </motion.div>

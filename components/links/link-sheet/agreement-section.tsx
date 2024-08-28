@@ -21,12 +21,12 @@ import { LinkUpgradeOptions } from "./link-options";
 export default function AgreementSection({
   data,
   setData,
-  hasFreePlan,
+  isAllowed,
   handleUpgradeStateChange,
 }: {
   data: DEFAULT_LINK_TYPE;
   setData: React.Dispatch<React.SetStateAction<DEFAULT_LINK_TYPE>>;
-  hasFreePlan: boolean;
+  isAllowed: boolean;
   handleUpgradeStateChange: ({
     state,
     trigger,
@@ -70,7 +70,7 @@ export default function AgreementSection({
         title="Require NDA to view"
         enabled={enabled}
         action={handleAgreement}
-        hasFreePlan={hasFreePlan}
+        isAllowed={isAllowed}
         requiredPlan="datarooms"
         upgradeAction={() =>
           handleUpgradeStateChange({

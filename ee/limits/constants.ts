@@ -26,7 +26,7 @@ export const BUSINESS_PLAN_LIMITS = {
 };
 
 export const DATAROOMS_PLAN_LIMITS = {
-  users: 5,
+  users: 3,
   domains: 10,
   datarooms: 100,
   customDomainOnPro: true,

@@ -41,8 +41,10 @@ export function UpgradePlanModal({
   const [period, setPeriod] = useState<"yearly" | "monthly">("yearly");
   const [clicked, setClicked] = useState<boolean>(false);
   const teamInfo = useTeam();
-  const { plan: teamPlan } = usePlan();
+  const { plan: teamPlan, trial } = usePlan();
   const analytics = useAnalytics();
+
+  const isTrial = !!trial;
 
   const features = useMemo(() => {
     if (plan === "Pro") {
@@ -291,13 +293,13 @@ export function UpgradePlanModal({
               }}
             >{`Upgrade to ${plan} ${capitalize(period)}`}</Button>
             <div className="flex items-center justify-center space-x-2">
-              {plan === "Business" ? (
+              {plan === "Business" && !isTrial ? (
                 <DataroomTrialModal>
                   <button
                     className="text-center text-xs text-muted-foreground underline-offset-4 transition-all hover:text-gray-800 hover:underline hover:dark:text-muted-foreground/80"
                     onClick={() => analytics.capture("Dataroom Trial Clicked")}
                   >
-                    Looking for a dataroom trial?
+                    Looking for a trial?
                   </button>
                 </DataroomTrialModal>
               ) : (
