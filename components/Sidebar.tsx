@@ -79,6 +79,7 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
   }, []);
 
   const userPlan = plan;
+  const isTrial = !!userTrial;
 
   const navigation = [
     // {
@@ -156,6 +157,11 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
             {userPlan && userPlan != "free" ? (
               <span className="ml-4 rounded-full bg-background px-2.5 py-1 text-xs tracking-normal text-foreground ring-1 ring-gray-800">
                 {userPlan.charAt(0).toUpperCase() + userPlan.slice(1)}
+              </span>
+            ) : null}
+            {isTrial ? (
+              <span className="ml-4 rounded-sm bg-foreground px-2 py-0.5 text-xs tracking-normal text-background ring-1 ring-gray-800">
+                Trial
               </span>
             ) : null}
           </p>

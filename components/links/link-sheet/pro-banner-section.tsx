@@ -7,12 +7,12 @@ import { LinkUpgradeOptions } from "./link-options";
 export function ProBannerSection({
   data,
   setData,
-  hasFreePlan,
+  isAllowed,
   handleUpgradeStateChange,
 }: {
   data: DEFAULT_LINK_TYPE;
   setData: React.Dispatch<React.SetStateAction<DEFAULT_LINK_TYPE>>;
-  hasFreePlan: boolean;
+  isAllowed: boolean;
   handleUpgradeStateChange: ({
     state,
     trigger,
@@ -39,7 +39,7 @@ export function ProBannerSection({
         title="Show Visitor Statistics & Papermark Branding"
         enabled={enabled}
         action={handleShowBanner}
-        hasFreePlan={hasFreePlan}
+        isAllowed={isAllowed}
         requiredPlan="pro"
         upgradeAction={() =>
           handleUpgradeStateChange({

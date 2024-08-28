@@ -7,14 +7,14 @@ export default function LinkItem({
   title,
   enabled,
   action,
-  hasFreePlan,
+  isAllowed = true,
   requiredPlan,
   upgradeAction,
 }: {
   title: string;
   enabled: boolean;
   action: () => void;
-  hasFreePlan?: boolean;
+  isAllowed?: boolean;
   requiredPlan?: string;
   upgradeAction?: () => void;
 }) {
@@ -26,17 +26,17 @@ export default function LinkItem({
             "cursor-pointer text-sm font-medium leading-6",
             enabled ? "text-foreground" : "text-muted-foreground",
           )}
-          onClick={hasFreePlan ? () => upgradeAction?.() : action}
+          onClick={isAllowed ? action : () => upgradeAction?.()}
         >
           {title}
-          {hasFreePlan && requiredPlan && <PlanBadge plan={requiredPlan} />}
+          {!isAllowed && requiredPlan && <PlanBadge plan={requiredPlan} />}
         </h2>
       </div>
       <Switch
         checked={enabled}
-        onClick={hasFreePlan ? () => upgradeAction?.() : undefined}
-        className={hasFreePlan ? "opacity-50" : undefined}
-        onCheckedChange={hasFreePlan ? undefined : action}
+        onClick={isAllowed ? undefined : () => upgradeAction?.()}
+        className={isAllowed ? undefined : "opacity-50"}
+        onCheckedChange={isAllowed ? action : undefined}
       />
     </div>
   );
