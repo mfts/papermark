@@ -14,12 +14,12 @@ import { LinkUpgradeOptions } from "./link-options";
 export default function AllowListSection({
   data,
   setData,
-  hasFreePlan,
+  isAllowed,
   handleUpgradeStateChange,
 }: {
   data: DEFAULT_LINK_TYPE;
   setData: React.Dispatch<React.SetStateAction<DEFAULT_LINK_TYPE>>;
-  hasFreePlan: boolean;
+  isAllowed: boolean;
   handleUpgradeStateChange: ({
     state,
     trigger,
@@ -77,7 +77,7 @@ export default function AllowListSection({
         <LinkItem
           title="Allow specified viewers"
           enabled={enabled}
-          hasFreePlan={hasFreePlan}
+          isAllowed={isAllowed}
           action={handleEnableAllowList}
           requiredPlan="business"
           upgradeAction={() =>

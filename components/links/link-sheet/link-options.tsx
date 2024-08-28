@@ -38,11 +38,16 @@ export const LinkOptions = ({
   setData: React.Dispatch<React.SetStateAction<DEFAULT_LINK_TYPE>>;
   linkType: LinkType;
 }) => {
-  const { plan } = usePlan();
+  const { plan, trial } = usePlan();
   const { limits } = useLimits();
-  const hasFreePlan = plan === "free";
-  const isNotBusiness = plan !== "business";
-  const isNotDatarooms = plan !== "datarooms";
+
+  const isTrial = !!trial;
+  const isPro = plan === "pro";
+  const isBusiness = plan === "business";
+  const isDatarooms = plan === "datarooms";
+  const allowAdvancedLinkControls = limits
+    ? limits?.advancedLinkControlsOnPro
+    : false;
 
   const [openUpgradeModal, setOpenUpgradeModal] = useState<boolean>(false);
   const [trigger, setTrigger] = useState<string>("");
@@ -70,56 +75,73 @@ export const LinkOptions = ({
       <ExpirationSection {...{ data, setData }} />
       <OGSection
         {...{ data, setData }}
-        hasFreePlan={
-          isNotBusiness && isNotDatarooms && !limits?.advancedLinkControlsOnPro
+        isAllowed={
+          isTrial ||
+          (isPro && allowAdvancedLinkControls) ||
+          isBusiness ||
+          isDatarooms
         }
         handleUpgradeStateChange={handleUpgradeStateChange}
       />
 
       <EmailAuthenticationSection
         {...{ data, setData }}
-        hasFreePlan={hasFreePlan}
+        isAllowed={isTrial || isPro || isBusiness || isDatarooms}
         handleUpgradeStateChange={handleUpgradeStateChange}
       />
       <AllowListSection
         {...{ data, setData }}
-        hasFreePlan={
-          isNotBusiness && isNotDatarooms && !limits?.advancedLinkControlsOnPro
+        isAllowed={
+          isTrial ||
+          (isPro && allowAdvancedLinkControls) ||
+          isBusiness ||
+          isDatarooms
         }
         handleUpgradeStateChange={handleUpgradeStateChange}
       />
       <DenyListSection
         {...{ data, setData }}
-        hasFreePlan={
-          isNotBusiness && isNotDatarooms && !limits?.advancedLinkControlsOnPro
+        isAllowed={
+          isTrial ||
+          (isPro && allowAdvancedLinkControls) ||
+          isBusiness ||
+          isDatarooms
         }
         handleUpgradeStateChange={handleUpgradeStateChange}
       />
       <PasswordSection {...{ data, setData }} />
       <ScreenshotProtectionSection
         {...{ data, setData }}
-        hasFreePlan={
-          isNotBusiness && isNotDatarooms && !limits?.advancedLinkControlsOnPro
+        isAllowed={
+          isTrial ||
+          (isPro && allowAdvancedLinkControls) ||
+          isBusiness ||
+          isDatarooms
         }
         handleUpgradeStateChange={handleUpgradeStateChange}
       />
       <FeedbackSection {...{ data, setData }} />
       <QuestionSection
         {...{ data, setData }}
-        hasFreePlan={
-          isNotBusiness && isNotDatarooms && !limits?.advancedLinkControlsOnPro
+        isAllowed={
+          isTrial ||
+          (isPro && allowAdvancedLinkControls) ||
+          isBusiness ||
+          isDatarooms
         }
         handleUpgradeStateChange={handleUpgradeStateChange}
       />
       <AgreementSection
         {...{ data, setData }}
-        hasFreePlan={isNotDatarooms}
+        isAllowed={isTrial || isDatarooms}
         handleUpgradeStateChange={handleUpgradeStateChange}
       />
       {linkType === LinkType.DOCUMENT_LINK ? (
         <ProBannerSection
           {...{ data, setData }}
-          hasFreePlan={hasFreePlan || plan === "starter"}
+          isAllowed={
+            isTrial || isPro || isBusiness || isDatarooms || plan === "starter"
+          }
           handleUpgradeStateChange={handleUpgradeStateChange}
         />
       ) : null}
