@@ -28,7 +28,7 @@ import { convertDataUrlToFile, uploadImage } from "@/lib/utils";
 
 import DomainSection from "./domain-section";
 import { LinkOptions } from "./link-options";
-import { WatermarkConfig } from "./watermark-section";
+import { WatermarkConfig } from "./watermark-panel";
 
 export const DEFAULT_LINK_PROPS = (linkType: LinkType) => ({
   id: null,
