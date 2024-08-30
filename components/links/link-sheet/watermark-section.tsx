@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 
 import { motion } from "framer-motion";
 import { SettingsIcon, StampIcon } from "lucide-react";
-import { set } from "zod";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -102,7 +101,7 @@ export default function WatermarkSection({
                   setData((prevData) => ({
                     ...prevData,
                     watermarkConfig: {
-                      ...prevData.watermarkConfig,
+                      ...(prevData.watermarkConfig || initialconfig),
                       text: e.target.value,
                     },
                   }));
@@ -122,7 +121,7 @@ export default function WatermarkSection({
                       setData((prevData) => ({
                         ...prevData,
                         watermarkConfig: {
-                          ...prevData.watermarkConfig,
+                          ...(prevData.watermarkConfig || initialconfig),
                           text: `${prevData.watermarkConfig?.text || ""} {{${item}}}`,
                         },
                       }));
