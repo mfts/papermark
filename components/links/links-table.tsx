@@ -45,7 +45,7 @@ import LinkSheet, {
   DEFAULT_LINK_PROPS,
   type DEFAULT_LINK_TYPE,
 } from "./link-sheet";
-import { WatermarkConfig } from "./link-sheet/watermark-section";
+import { WatermarkConfig } from "./link-sheet/watermark-panel";
 import LinksVisitors from "./links-visitors";
 
 export default function LinksTable({
