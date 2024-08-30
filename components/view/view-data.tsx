@@ -10,6 +10,7 @@ import { DEFAULT_DOCUMENT_VIEW_TYPE } from "@/components/view/document-view";
 
 import { LinkWithDocument } from "@/lib/types";
 
+import { WatermarkConfig } from "../links/link-sheet/watermark-panel";
 import AdvancedExcelViewer from "./viewer/advanced-excel-viewer";
 
 const ExcelViewer = dynamic(
@@ -95,6 +96,9 @@ export default function ViewData({
       feedback={link.feedback}
       isVertical={document.versions[0].isVertical}
       viewerEmail={viewerEmail}
+      watermarkConfig={
+        link.enableWatermark ? (link.watermarkConfig as WatermarkConfig) : null
+      }
     />
   ) : (
     <PDFViewer

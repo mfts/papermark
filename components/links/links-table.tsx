@@ -45,6 +45,7 @@ import LinkSheet, {
   DEFAULT_LINK_PROPS,
   type DEFAULT_LINK_TYPE,
 } from "./link-sheet";
+import { WatermarkConfig } from "./link-sheet/watermark-section";
 import LinksVisitors from "./links-visitors";
 
 export default function LinksTable({
@@ -102,6 +103,8 @@ export default function LinksTable({
       enableAgreement: link.enableAgreement ? link.enableAgreement : false,
       agreementId: link.agreementId,
       showBanner: link.showBanner ?? false,
+      enableWatermark: link.enableWatermark ?? false,
+      watermarkConfig: link.watermarkConfig as WatermarkConfig | null,
     });
     //wait for dropdown to close before opening the link sheet
     setTimeout(() => {

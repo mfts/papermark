@@ -99,6 +99,8 @@ export default async function handle(
       denyList: true,
       enableAgreement: true,
       agreementId: true,
+      enableWatermark: true,
+      watermarkConfig: true,
     },
   });
 
@@ -518,6 +520,7 @@ export default async function handle(
           : recordMap
             ? "notion"
             : undefined,
+      watermarkConfig: link.enableWatermark ? link.watermarkConfig : undefined,
     };
 
     return res.status(200).json(returnObject);

@@ -57,6 +57,7 @@ export default function Nav({
   isVertical,
   isMobile,
   isPreview,
+  hasWatermark,
 }: {
   pageNumber?: number;
   numPages?: number;
@@ -74,6 +75,7 @@ export default function Nav({
   isVertical?: boolean;
   isMobile?: boolean;
   isPreview?: boolean;
+  hasWatermark?: boolean;
 }) {
   const downloadFile = async () => {
     if (!allowDownload || type === "notion" || isPreview) return;
@@ -86,13 +88,30 @@ export default function Nav({
         body: JSON.stringify({ linkId, viewId }),
       });
 
-      if (!response.ok) {
-        toast.error("Error downloading file");
-        return;
-      }
+      if (hasWatermark) {
+        const pdfBlob = await response.blob();
+        const blobUrl = URL.createObjectURL(pdfBlob);
 
-      const { downloadUrl } = await response.json();
-      window.open(downloadUrl, "_blank");
+        console.log("Blob URL:", blobUrl);
+
+        const a = document.createElement("a");
+        a.href = blobUrl;
+        a.download = "watermarked_document.pdf";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+
+        // Clean up the Blob URL
+        URL.revokeObjectURL(blobUrl);
+      } else {
+        if (!response.ok) {
+          toast.error("Error downloading file");
+          return;
+        }
+        const { downloadUrl } = await response.json();
+
+        window.open(downloadUrl, "_blank");
+      }
     } catch (error) {
       console.error("Error downloading file:", error);
     }

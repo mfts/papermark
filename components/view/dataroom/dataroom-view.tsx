@@ -9,6 +9,7 @@ import { ExtendedRecordMap } from "notion-types";
 import { toast } from "sonner";
 
 import { NotionPage } from "@/components/NotionPage";
+import { WatermarkConfig } from "@/components/links/link-sheet/watermark-panel";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import AccessForm, {
   DEFAULT_ACCESS_FORM_DATA,
@@ -350,6 +351,11 @@ export default function DataroomView({
           dataroomId={dataroom.id}
           setDocumentData={setDocumentData}
           isVertical={documentData.isVertical}
+          watermarkConfig={
+            link.enableWatermark
+              ? (link.watermarkConfig as WatermarkConfig)
+              : null
+          }
         />
       </div>
     ) : null;

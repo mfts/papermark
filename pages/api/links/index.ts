@@ -160,6 +160,10 @@ export default async function handler(
             enableAgreement: linkData.enableAgreement,
             agreementId: linkData.agreementId,
           }),
+          ...(linkData.enableWatermark && {
+            enableWatermark: linkData.enableWatermark,
+            watermarkConfig: linkData.watermarkConfig,
+          }),
           showBanner: linkData.showBanner,
         },
       });

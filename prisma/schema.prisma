@@ -231,6 +231,8 @@ model Link {
   agreement                  Agreement? @relation(fields: [agreementId], references: [id], onDelete: SetNull)
   agreementId                String? // This can be nullable, representing links without agreements
   showBanner                 Boolean?   @default(false) // Optional give user a option to show the banner and end of document signup form
+  enableWatermark            Boolean?   @default(false) // Optional give user a option to enable the watermark
+  watermarkConfig            Json?      // This will store the watermark configuration: {text: "Confidential", isTiled: false, color: "#000000", fontSize: 12, opacity: 0.5, rotation: 30, position: "top-right"}
 
   // custom metatags
   metaTitle           String? // This will be the meta title of the link
