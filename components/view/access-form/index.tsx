@@ -159,14 +159,14 @@ export default function AccessForm({
           </form>
         </div>
       </div>
-      <div className="flex justify-center">
+      {/* <div className="flex justify-center">
         <p className="text-sm leading-9 tracking-tight text-gray-500">
           <a href="/" target="_blank" rel="noopener noreferrer">
             This document is securely shared with you using{" "}
             <span className="font-semibold">Papermark</span>
           </a>
         </p>
-      </div>
+      </div> */}
     </div>
   );
 }
