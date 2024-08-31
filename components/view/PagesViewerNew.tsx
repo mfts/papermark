@@ -29,7 +29,7 @@ import { PoweredBy } from "./powered-by";
 import Question from "./question";
 import Toolbar from "./toolbar";
 import ViewDurationSummary from "./visitor-graph";
-import Watermark from "./watermark-view";
+import { SVGWatermark } from "./watermark-svg";
 
 const DEFAULT_PRELOADED_IMAGES_NUM = 5;
 
@@ -786,7 +786,7 @@ export default function PagesViewer({
 
                         {/* Add Watermark Component */}
                         {watermarkConfig ? (
-                          <Watermark
+                          <SVGWatermark
                             config={watermarkConfig}
                             viewerData={{
                               email: viewerEmail,
@@ -795,9 +795,10 @@ export default function PagesViewer({
                               link: window.location.href,
                               ipAddress: "127.0.0.1",
                             }}
-                            imageDimensions={
+                            documentDimensions={
                               imageDimensions[index] || { width: 0, height: 0 }
                             }
+                            pageIndex={index}
                           />
                         ) : null}
 

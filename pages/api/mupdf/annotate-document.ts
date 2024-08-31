@@ -24,7 +24,7 @@ interface WatermarkConfig {
     | "bottom-left"
     | "bottom-center"
     | "bottom-right";
-  rotation: 30 | 45 | 90 | 180;
+  rotation: 0 | 30 | 45 | 90 | 180;
   color: string;
   fontSize: number;
   opacity: number; // 0 to 0.8
@@ -34,7 +34,7 @@ interface ViewerData {
   email: string;
   date: string;
   ipAddress: string;
-  linkName: string;
+  link: string;
   time: string;
 }
 
@@ -69,31 +69,42 @@ async function insertWatermark(
   const page = pages[pageIndex];
   const { width, height } = page.getSize();
 
-  const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
 
   // Compile the Handlebars template
   const template = Handlebars.compile(config.text);
   const watermarkText = template(viewerData);
 
-  const textWidth = font.widthOfTextAtSize(watermarkText, config.fontSize);
-  const textHeight = font.heightAtSize(config.fontSize);
+  // Calculate a responsive font size
+  const calculateFontSize = () => {
+    const baseFontSize = Math.min(width, height) * (config.fontSize / 1000);
+    return Math.max(8, Math.min(baseFontSize, config.fontSize));
+  };
+  const fontSize = calculateFontSize();
+
+  const textWidth = font.widthOfTextAtSize(watermarkText, fontSize);
+  const textHeight = font.heightAtSize(fontSize);
 
   if (config.isTiled) {
-    const tileSpacingX = textWidth; // Space between tiles horizontally
-    const tileSpacingY = textHeight * 10; // Space between tiles vertically
+    const patternWidth = textWidth / 1.1;
+    const patternHeight = textHeight * 15;
 
-    const maxTilesPerRow = Math.ceil(width / tileSpacingX);
-    const maxTilesPerColumn = Math.ceil(height / tileSpacingY);
+    // Calculate the offset to center the pattern
+    const offsetX = -patternWidth / 4;
+    const offsetY = -patternHeight / 4;
+
+    const maxTilesPerRow = Math.ceil(width / patternWidth) + 1;
+    const maxTilesPerColumn = Math.ceil(height / patternHeight) + 1;
 
     for (let i = 0; i < maxTilesPerRow; i++) {
       for (let j = 0; j < maxTilesPerColumn; j++) {
-        const x = i * tileSpacingX + (tileSpacingX - textWidth) / 2;
-        const y = height - (j * tileSpacingY + (tileSpacingY + textHeight) / 2);
+        const x = i * patternWidth + offsetX;
+        const y = j * patternHeight + offsetY;
 
         page.drawText(watermarkText, {
           x,
           y,
-          size: config.fontSize,
+          size: fontSize,
           font,
           color: hexToRgb(config.color) ?? rgb(0, 0, 0),
           opacity: config.opacity,
@@ -113,7 +124,7 @@ async function insertWatermark(
     page.drawText(watermarkText, {
       x,
       y,
-      size: config.fontSize,
+      size: fontSize,
       font,
       color: hexToRgb(config.color) ?? rgb(0, 0, 0),
       opacity: config.opacity,
