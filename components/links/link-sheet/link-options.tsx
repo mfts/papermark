@@ -134,7 +134,7 @@ export const LinkOptions = ({
       />
       <WatermarkSection
         {...{ data, setData }}
-        isAllowed={true}
+        isAllowed={isTrial || isDatarooms}
         handleUpgradeStateChange={handleUpgradeStateChange}
       />
       <AgreementSection
