@@ -52,6 +52,8 @@ export default async function handle(
           enableAgreement: true,
           agreement: true,
           showBanner: true,
+          enableWatermark: true,
+          watermarkConfig: true,
         },
       });
 
@@ -211,6 +213,8 @@ export default async function handle(
         enableAgreement: linkData.enableAgreement,
         agreementId: linkData.agreementId || null,
         showBanner: linkData.showBanner,
+        enableWatermark: linkData.enableWatermark || false,
+        watermarkConfig: linkData.watermarkConfig || null,
       },
       include: {
         views: {

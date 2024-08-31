@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
+import { Prisma } from "@prisma/client";
 import { getServerSession } from "next-auth/next";
 
 import { errorhandler } from "@/lib/errorHandler";
@@ -67,6 +68,7 @@ export default async function handle(
           id: undefined,
           slug: linkData.slug ? linkData.slug + "-copy" : null,
           name: newLinkName,
+          watermarkConfig: linkData.watermarkConfig || Prisma.JsonNull,
           createdAt: undefined,
           updatedAt: undefined,
         },

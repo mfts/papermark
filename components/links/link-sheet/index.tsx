@@ -23,7 +23,7 @@ import {
 import { useAnalytics } from "@/lib/analytics";
 import { usePlan } from "@/lib/swr/use-billing";
 import { useDomains } from "@/lib/swr/use-domains";
-import { LinkWithViews } from "@/lib/types";
+import { LinkWithViews, WatermarkConfig } from "@/lib/types";
 import { convertDataUrlToFile, uploadImage } from "@/lib/utils";
 
 import DomainSection from "./domain-section";
@@ -54,6 +54,8 @@ export const DEFAULT_LINK_PROPS = (linkType: LinkType) => ({
   enableAgreement: false,
   agreementId: null,
   showBanner: linkType === LinkType.DOCUMENT_LINK ? true : false,
+  enableWatermark: false,
+  watermarkConfig: null,
 });
 
 export type DEFAULT_LINK_TYPE = {
@@ -81,6 +83,8 @@ export type DEFAULT_LINK_TYPE = {
   enableAgreement: boolean; // agreement
   agreementId: string | null;
   showBanner: boolean;
+  enableWatermark: boolean;
+  watermarkConfig: WatermarkConfig | null;
 };
 
 export default function LinkSheet({

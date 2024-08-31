@@ -33,7 +33,7 @@ import {
 } from "@/components/ui/table";
 
 import { usePlan } from "@/lib/swr/use-billing";
-import { LinkWithViews } from "@/lib/types";
+import { LinkWithViews, WatermarkConfig } from "@/lib/types";
 import { cn, copyToClipboard, nFormatter, timeAgo } from "@/lib/utils";
 
 import ProcessStatusBar from "../documents/process-status-bar";
@@ -102,6 +102,8 @@ export default function LinksTable({
       enableAgreement: link.enableAgreement ? link.enableAgreement : false,
       agreementId: link.agreementId,
       showBanner: link.showBanner ?? false,
+      enableWatermark: link.enableWatermark ?? false,
+      watermarkConfig: link.watermarkConfig as WatermarkConfig | null,
     });
     //wait for dropdown to close before opening the link sheet
     setTimeout(() => {

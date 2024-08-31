@@ -62,6 +62,8 @@ export default async function handle(
           enableAgreement: true,
           agreement: true,
           showBanner: true,
+          enableWatermark: true,
+          watermarkConfig: true,
           document: {
             select: {
               team: {
