@@ -33,7 +33,7 @@ import {
 } from "@/components/ui/table";
 
 import { usePlan } from "@/lib/swr/use-billing";
-import { LinkWithViews } from "@/lib/types";
+import { LinkWithViews, WatermarkConfig } from "@/lib/types";
 import { cn, copyToClipboard, nFormatter, timeAgo } from "@/lib/utils";
 
 import ProcessStatusBar from "../documents/process-status-bar";
@@ -45,7 +45,6 @@ import LinkSheet, {
   DEFAULT_LINK_PROPS,
   type DEFAULT_LINK_TYPE,
 } from "./link-sheet";
-import { WatermarkConfig } from "./link-sheet/watermark-panel";
 import LinksVisitors from "./links-visitors";
 
 export default function LinksTable({

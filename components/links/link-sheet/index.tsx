@@ -23,12 +23,11 @@ import {
 import { useAnalytics } from "@/lib/analytics";
 import { usePlan } from "@/lib/swr/use-billing";
 import { useDomains } from "@/lib/swr/use-domains";
-import { LinkWithViews } from "@/lib/types";
+import { LinkWithViews, WatermarkConfig } from "@/lib/types";
 import { convertDataUrlToFile, uploadImage } from "@/lib/utils";
 
 import DomainSection from "./domain-section";
 import { LinkOptions } from "./link-options";
-import { WatermarkConfig } from "./watermark-panel";
 
 export const DEFAULT_LINK_PROPS = (linkType: LinkType) => ({
   id: null,

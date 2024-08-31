@@ -2,7 +2,7 @@ import React, { useMemo } from "react";
 
 import Handlebars from "handlebars";
 
-import { WatermarkConfig } from "../links/link-sheet/watermark-panel";
+import { WatermarkConfig } from "@/lib/types";
 
 export const SVGWatermark = ({
   config,

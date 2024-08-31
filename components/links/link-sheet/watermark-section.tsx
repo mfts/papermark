@@ -8,11 +8,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 import { FADE_IN_ANIMATION_SETTINGS } from "@/lib/constants";
+import { WatermarkConfig } from "@/lib/types";
 
 import { DEFAULT_LINK_TYPE } from ".";
 import LinkItem from "./link-item";
 import { LinkUpgradeOptions } from "./link-options";
-import WatermarkConfigSheet, { WatermarkConfig } from "./watermark-panel";
+import WatermarkConfigSheet from "./watermark-panel";
 
 export default function WatermarkSection({
   data,

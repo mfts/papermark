@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 import { getFile } from "@/lib/files/get-file";
 import prisma from "@/lib/prisma";
+import { getIpAddress } from "@/lib/utils/ip";
 
 export default async function handle(
   req: NextApiRequest,
@@ -118,7 +119,7 @@ export default async function handle(
               viewerData: {
                 email: view.viewerEmail,
                 date: new Date(view.viewedAt).toLocaleDateString(),
-                ipAddress: "192.168.1.1",
+                ipAddress: getIpAddress(req.headers),
                 link: view.link.name,
                 time: new Date(view.viewedAt).toLocaleTimeString(),
               },

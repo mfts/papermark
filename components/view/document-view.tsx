@@ -14,7 +14,7 @@ import AccessForm, {
 } from "@/components/view/access-form";
 
 import { useAnalytics } from "@/lib/analytics";
-import { LinkWithDocument } from "@/lib/types";
+import { LinkWithDocument, WatermarkConfig } from "@/lib/types";
 
 import EmailVerificationMessage from "./email-verification-form";
 import ViewData from "./view-data";
@@ -41,6 +41,7 @@ export type DEFAULT_DOCUMENT_VIEW_TYPE = {
   sheetData?: SheetData[] | null;
   fileType?: string;
   isPreview?: boolean;
+  ipAddress?: string;
 };
 
 export default function DocumentView({
@@ -129,8 +130,15 @@ export default function DocumentView({
         setVerificationRequested(true);
         setIsLoading(false);
       } else {
-        const { viewId, file, pages, sheetData, fileType, isPreview } =
-          fetchData as DEFAULT_DOCUMENT_VIEW_TYPE;
+        const {
+          viewId,
+          file,
+          pages,
+          sheetData,
+          fileType,
+          isPreview,
+          ipAddress,
+        } = fetchData as DEFAULT_DOCUMENT_VIEW_TYPE;
         plausible("documentViewed"); // track the event
         analytics.identify(
           userEmail ?? verifiedEmail ?? data.email ?? undefined,
@@ -142,7 +150,15 @@ export default function DocumentView({
           viewerId: viewId,
           viewerEmail: data.email ?? verifiedEmail ?? userEmail,
         });
-        setViewData({ viewId, file, pages, sheetData, fileType, isPreview });
+        setViewData({
+          viewId,
+          file,
+          pages,
+          sheetData,
+          fileType,
+          isPreview,
+          ipAddress,
+        });
         setSubmitted(true);
         setVerificationRequested(false);
         setIsLoading(false);

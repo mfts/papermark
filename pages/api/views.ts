@@ -9,8 +9,9 @@ import { getFile } from "@/lib/files/get-file";
 import { newId } from "@/lib/id-helper";
 import prisma from "@/lib/prisma";
 import { parseSheet } from "@/lib/sheet";
-import { CustomUser } from "@/lib/types";
+import { CustomUser, WatermarkConfigSchema } from "@/lib/types";
 import { checkPassword, decryptEncrpytedPassword, log } from "@/lib/utils";
+import { getIpAddress } from "@/lib/utils/ip";
 
 import { authOptions } from "./auth/[...nextauth]";
 
@@ -403,6 +404,14 @@ export default async function handle(
           ? "pdf"
           : undefined,
       watermarkConfig: link.enableWatermark ? link.watermarkConfig : undefined,
+      ipAddress:
+        link.enableWatermark &&
+        link.watermarkConfig &&
+        WatermarkConfigSchema.parse(link.watermarkConfig).text.includes(
+          "{{ipAddress}}",
+        )
+          ? getIpAddress(req.headers)
+          : undefined,
     };
 
     return res.status(200).json(returnObject);

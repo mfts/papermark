@@ -8,9 +8,8 @@ import PDFViewer from "@/components/view/PDFViewer";
 import PagesViewerNew from "@/components/view/PagesViewerNew";
 import { DEFAULT_DOCUMENT_VIEW_TYPE } from "@/components/view/document-view";
 
-import { LinkWithDocument } from "@/lib/types";
+import { LinkWithDocument, WatermarkConfig } from "@/lib/types";
 
-import { WatermarkConfig } from "../links/link-sheet/watermark-panel";
 import AdvancedExcelViewer from "./viewer/advanced-excel-viewer";
 
 const ExcelViewer = dynamic(
@@ -99,6 +98,8 @@ export default function ViewData({
       watermarkConfig={
         link.enableWatermark ? (link.watermarkConfig as WatermarkConfig) : null
       }
+      ipAddress={viewData.ipAddress}
+      linkName={link.name ?? `Link #${link.id.slice(-5)}`}
     />
   ) : (
     <PDFViewer

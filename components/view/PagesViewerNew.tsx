@@ -18,10 +18,10 @@ import {
 } from "react-zoom-pan-pinch";
 import { toast } from "sonner";
 
+import { WatermarkConfig } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useMediaQuery } from "@/lib/utils/use-media-query";
 
-import { WatermarkConfig } from "../links/link-sheet/watermark-panel";
 import { ScreenProtector } from "./ScreenProtection";
 import { TDocumentData } from "./dataroom/dataroom-view";
 import Nav from "./nav";
@@ -89,6 +89,8 @@ export default function PagesViewer({
   viewerEmail,
   isPreview,
   watermarkConfig,
+  ipAddress,
+  linkName,
 }: {
   pages: {
     file: string;
@@ -120,6 +122,8 @@ export default function PagesViewer({
   viewerEmail?: string;
   isPreview?: boolean;
   watermarkConfig?: WatermarkConfig | null;
+  ipAddress?: string;
+  linkName?: string;
 }) {
   const router = useRouter();
   const { status: sessionStatus } = useSession();
@@ -792,8 +796,8 @@ export default function PagesViewer({
                               email: viewerEmail,
                               date: new Date().toLocaleDateString(),
                               time: new Date().toLocaleTimeString(),
-                              link: window.location.href,
-                              ipAddress: "127.0.0.1",
+                              link: linkName,
+                              ipAddress: ipAddress,
                             }}
                             documentDimensions={
                               imageDimensions[index] || { width: 0, height: 0 }
