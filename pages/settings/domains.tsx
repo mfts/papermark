@@ -64,6 +64,7 @@ export default function Domains() {
                   <li key={index} className="mt-4">
                     <DomainCard
                       domain={domain.slug}
+                      isDefault={domain.isDefault}
                       onDelete={handleDomainDeletion}
                     />
                   </li>

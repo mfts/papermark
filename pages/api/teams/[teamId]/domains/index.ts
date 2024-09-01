@@ -34,6 +34,7 @@ export default async function handle(
           select: {
             slug: true,
             verified: true,
+            isDefault: true,
           },
           orderBy: {
             createdAt: "asc",

@@ -110,7 +110,8 @@ export type DomainVerificationStatusProps =
   | "Invalid Configuration"
   | "Pending Verification"
   | "Domain Not Found"
-  | "Unknown Error";
+  | "Unknown Error"
+  | "Conflicting DNS Records";
 
 // From https://vercel.com/docs/rest-api/endpoints#get-a-project-domain
 export interface DomainResponse {
@@ -141,6 +142,12 @@ export interface DomainConfigResponse {
   acceptedChallenges?: ("dns-01" | "http-01")[];
   /** Whether or not the domain is configured AND we can automatically generate a TLS certificate. */
   misconfigured: boolean;
+  /** conflicts */
+  conflicts: {
+    name: string;
+    type: string;
+    value: string;
+  }[];
 }
 
 // From https://vercel.com/docs/rest-api/endpoints#verify-project-domain
