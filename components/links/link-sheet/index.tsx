@@ -243,6 +243,7 @@ export default function LinkSheet({
                         {...{ data, setData, domains }}
                         plan={plan}
                         linkType={linkType}
+                        editLink={!!currentLink}
                       />
                     </div>
 
