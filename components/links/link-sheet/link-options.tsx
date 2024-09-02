@@ -34,10 +34,12 @@ export const LinkOptions = ({
   data,
   setData,
   linkType,
+  editLink,
 }: {
   data: DEFAULT_LINK_TYPE;
   setData: React.Dispatch<React.SetStateAction<DEFAULT_LINK_TYPE>>;
   linkType: LinkType;
+  editLink: boolean;
 }) => {
   const { plan, trial } = usePlan();
   const { limits } = useLimits();
@@ -83,6 +85,7 @@ export const LinkOptions = ({
           isDatarooms
         }
         handleUpgradeStateChange={handleUpgradeStateChange}
+        editLink={editLink}
       />
 
       <EmailAuthenticationSection

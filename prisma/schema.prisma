@@ -76,6 +76,8 @@ model Team {
   startsAt       DateTime? // Stripe subscription start date
   endsAt         DateTime? // Stripe subscription end date
 
+  linkPresets LinkPreset[] // Link presets for the team
+
   limits Json? // Plan limits // {datarooms: 1, users: 1, domains: 1, customDomainOnPro: boolean, customDomainInDataroom: boolean}
 
   createdAt DateTime @default(now())
@@ -242,6 +244,23 @@ model Link {
 
   @@unique([domainSlug, slug])
   @@index([documentId])
+}
+
+model LinkPreset {
+  id          String   @id @default(cuid())
+  name        String
+  teamId      String
+  team        Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  
+  enableCustomMetaTag Boolean? @default(false) // Optional give user a option to enable the custom metatag
+  metaTitle           String? // This will be the meta title of the link
+  metaDescription     String? // This will be the meta description of the link
+  metaImage           String? // This will be the meta image of the link
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([teamId])
 }
 
 model Domain {

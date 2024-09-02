@@ -1,14 +1,18 @@
 import { useCallback, useEffect, useState } from "react";
 
+import { useTeam } from "@/context/team-context";
+import { LinkPreset } from "@prisma/client";
 import { motion } from "framer-motion";
 import { Upload as ArrowUpTrayIcon } from "lucide-react";
+import useSWRImmutable from "swr/immutable";
 
 import { Input } from "@/components/ui/input";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import { Textarea } from "@/components/ui/textarea";
 
 import { FADE_IN_ANIMATION_SETTINGS } from "@/lib/constants";
-import { cn } from "@/lib/utils";
+import { cn, fetcher } from "@/lib/utils";
+import { resizeImage } from "@/lib/utils/resize-image";
 
 import { DEFAULT_LINK_TYPE } from ".";
 import LinkItem from "./link-item";
@@ -19,6 +23,7 @@ export default function OGSection({
   setData,
   isAllowed,
   handleUpgradeStateChange,
+  editLink,
 }: {
   data: DEFAULT_LINK_TYPE;
   setData: React.Dispatch<React.SetStateAction<DEFAULT_LINK_TYPE>>;
@@ -28,15 +33,21 @@ export default function OGSection({
     trigger,
     plan,
   }: LinkUpgradeOptions) => void;
+  editLink: boolean;
 }) {
   const { enableCustomMetatag, metaTitle, metaDescription, metaImage } = data;
-  const [enabled, setEnabled] = useState<boolean>(false);
+  const teamInfo = useTeam();
+  const { data: presets } = useSWRImmutable<LinkPreset>(
+    `/api/teams/${teamInfo?.currentTeam?.id}/presets`,
+    fetcher,
+  );
 
+  const [enabled, setEnabled] = useState<boolean>(false);
   const [fileError, setFileError] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
 
   const onChangePicture = useCallback(
-    (e: any) => {
+    async (e: any) => {
       setFileError(null);
       const file = e.target.files[0];
       if (file) {
@@ -45,14 +56,11 @@ export default function OGSection({
         } else if (file.type !== "image/png" && file.type !== "image/jpeg") {
           setFileError("File type not supported (.png or .jpg only)");
         } else {
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            setData((prev) => ({
-              ...prev,
-              metaImage: e.target?.result as string,
-            }));
-          };
-          reader.readAsDataURL(file);
+          const image = await resizeImage(file);
+          setData((prev) => ({
+            ...prev,
+            metaImage: image,
+          }));
         }
       }
     },
@@ -63,11 +71,43 @@ export default function OGSection({
     setEnabled(enableCustomMetatag);
   }, [enableCustomMetatag]);
 
+  useEffect(() => {
+    if (presets && !(metaTitle || metaDescription || metaImage)) {
+      const preset = presets;
+      if (preset) {
+        setData((prev) => ({
+          ...prev,
+          metaImage: prev.metaImage || preset.metaImage,
+          metaTitle: prev.metaTitle || preset.metaTitle,
+          metaDescription: prev.metaDescription || preset.metaDescription,
+          enableCustomMetatag: !editLink && true,
+        }));
+      }
+    }
+  }, [
+    presets,
+    setData,
+    editLink,
+    enableCustomMetatag,
+    metaTitle,
+    metaDescription,
+    metaImage,
+  ]);
+
   const handleCustomMetatag = async () => {
     const updatedCustomMetatag = !enabled;
 
     setData({ ...data, enableCustomMetatag: updatedCustomMetatag });
     setEnabled(updatedCustomMetatag);
+  };
+
+  const resetMetatags = () => {
+    setData({
+      ...data,
+      metaImage: null || (presets?.metaImage ?? null),
+      metaTitle: null || (presets?.metaTitle ?? null),
+      metaDescription: null || (presets?.metaDescription ?? null),
+    });
   };
 
   return (
@@ -85,6 +125,7 @@ export default function OGSection({
             plan: "Business",
           })
         }
+        resetAction={resetMetatags}
       />
 
       {enabled && (
@@ -101,7 +142,7 @@ export default function OGSection({
             </div>
             <label
               htmlFor="image"
-              className="group relative mt-1 flex h-[14rem] cursor-pointer flex-col items-center justify-center rounded-md border border-input bg-white shadow-sm transition-all hover:border-muted-foreground hover:bg-gray-50 hover:ring-muted-foreground dark:bg-gray-800 hover:dark:bg-transparent"
+              className="group relative mt-1 flex aspect-[1200/630] h-full min-h-[14rem] cursor-pointer flex-col items-center justify-center rounded-md border border-input bg-white shadow-sm transition-all hover:border-muted-foreground hover:bg-gray-50 hover:ring-muted-foreground dark:bg-gray-800 hover:dark:bg-transparent"
             >
               {false && (
                 <div className="absolute z-[5] flex h-full w-full items-center justify-center rounded-md bg-white">
@@ -125,7 +166,7 @@ export default function OGSection({
                   e.stopPropagation();
                   setDragActive(false);
                 }}
-                onDrop={(e) => {
+                onDrop={async (e) => {
                   e.preventDefault();
                   e.stopPropagation();
                   setDragActive(false);
@@ -142,14 +183,11 @@ export default function OGSection({
                         "File type not supported (.png or .jpg only)",
                       );
                     } else {
-                      const reader = new FileReader();
-                      reader.onload = (e) => {
-                        setData((prev) => ({
-                          ...prev,
-                          metaImage: e.target?.result as string,
-                        }));
-                      };
-                      reader.readAsDataURL(file);
+                      const image = await resizeImage(file);
+                      setData((prev) => ({
+                        ...prev,
+                        metaImage: image,
+                      }));
                     }
                   }
                 }}
