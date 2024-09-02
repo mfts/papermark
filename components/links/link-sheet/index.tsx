@@ -260,6 +260,7 @@ export default function LinkSheet({
                       data={data}
                       setData={setData}
                       linkType={linkType}
+                      editLink={!!currentLink}
                     />
                   </div>
                 </div>

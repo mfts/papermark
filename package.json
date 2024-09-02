@@ -112,6 +112,7 @@
     "stripe": "^16.8.0",
     "swr": "^2.2.5",
     "tailwind-merge": "^2.5.2",
+    "tailwind-scrollbar-hide": "^1.1.7",
     "tailwindcss": "^3.4.10",
     "tailwindcss-animate": "^1.0.7",
     "ts-pattern": "^5.3.1",
