@@ -326,7 +326,7 @@ export default function Presets() {
                       clickedPlan="Pro"
                       trigger={"branding_page"}
                     >
-                      <Button>Upgrade to Save Branding</Button>
+                      <Button>Upgrade to Save Preset</Button>
                     </UpgradePlanModal>
                   ) : (
                     <Button onClick={handleSavePreset} loading={isLoading}>
