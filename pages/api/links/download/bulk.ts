@@ -37,8 +37,16 @@ export default async function handle(
           },
           dataroom: {
             select: {
+              folders: {
+                select: {
+                  id: true,
+                  name: true,
+                  path: true,
+                },
+              },
               documents: {
                 select: {
+                  folderId: true,
                   document: {
                     select: {
                       name: true,
@@ -99,12 +107,75 @@ export default async function handle(
         data: { downloadedAt: new Date() },
       });
 
-      const fileKeysOnly = view.dataroom.documents
+      // Construct folderStructure and fileKeys
+      const folderStructure: {
+        [key: string]: {
+          name: string;
+          path: string;
+          files: { name: string; key: string }[];
+        };
+      } = {};
+      const fileKeys: string[] = [];
+
+      // Create a map of folder IDs to folder names
+      const folderMap = new Map(
+        view.dataroom.folders.map((folder) => [
+          folder.path,
+          { name: folder.name, id: folder.id },
+        ]),
+      );
+
+      // Helper function to add a file to the structure
+      const addFileToStructure = (
+        path: string,
+        fileName: string,
+        fileKey: string,
+      ) => {
+        const folderInfo = folderMap.get(path) || { name: "Root", id: null };
+        if (!folderStructure[path]) {
+          folderStructure[path] = {
+            name: folderInfo.name,
+            path: path,
+            files: [],
+          };
+        }
+        folderStructure[path].files.push({ name: fileName, key: fileKey });
+        fileKeys.push(fileKey);
+      };
+
+      // Add root level documents
+      view.dataroom.documents
+        .filter((doc) => !doc.folderId)
         .filter((doc) => doc.document.versions[0].type !== "notion")
         .filter((doc) => doc.document.versions[0].storageType !== "VERCEL_BLOB")
-        .map((doc) => {
-          return doc.document.versions[0].file;
-        });
+        .forEach((doc) =>
+          addFileToStructure(
+            "/",
+            doc.document.name,
+            doc.document.versions[0].file,
+          ),
+        );
+
+      // Add documents in folders
+      view.dataroom.folders.forEach((folder) => {
+        const folderDocs =
+          view.dataroom &&
+          view.dataroom.documents
+            .filter((doc) => doc.folderId === folder.id)
+            .filter((doc) => doc.document.versions[0].type !== "notion")
+            .filter(
+              (doc) => doc.document.versions[0].storageType !== "VERCEL_BLOB",
+            );
+
+        folderDocs &&
+          folderDocs.forEach((doc) =>
+            addFileToStructure(
+              folder.path,
+              doc.document.name,
+              doc.document.versions[0].file,
+            ),
+          );
+      });
 
       const client = getLambdaClient();
 
@@ -113,7 +184,8 @@ export default async function handle(
         InvocationType: InvocationType.RequestResponse,
         Payload: JSON.stringify({
           sourceBucket: process.env.NEXT_PRIVATE_UPLOAD_BUCKET,
-          fileKeys: fileKeysOnly,
+          fileKeys: fileKeys,
+          folderStructure: folderStructure,
         }),
       };
 
