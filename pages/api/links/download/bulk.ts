@@ -180,7 +180,7 @@ export default async function handle(
       const client = getLambdaClient();
 
       const params = {
-        FunctionName: "bulk-download-zip-creator-dev", // Use the name you gave your Lambda function
+        FunctionName: "bulk-download-zip-creator-prod", // Use the name you gave your Lambda function
         InvocationType: InvocationType.RequestResponse,
         Payload: JSON.stringify({
           sourceBucket: process.env.NEXT_PRIVATE_UPLOAD_BUCKET,
