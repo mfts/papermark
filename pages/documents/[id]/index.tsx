@@ -18,13 +18,18 @@ import { useDocument, useDocumentLinks } from "@/lib/swr/use-document";
 
 export default function DocumentPage() {
   const { document: prismaDocument, primaryVersion, error } = useDocument();
+  
   const { links } = useDocumentLinks();
   const teamInfo = useTeam();
-
+  
   const [isLinkSheetOpen, setIsLinkSheetOpen] = useState<boolean>(false);
 
   if (error && error.status === 404) {
     return <ErrorPage statusCode={404} />;
+  }
+  
+  if (error && error.status === 400) {
+    return <ErrorPage statusCode={400} />;
   }
 
   return (
