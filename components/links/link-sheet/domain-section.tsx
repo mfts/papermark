@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { Dispatch, SetStateAction, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { Domain } from "@prisma/client";
@@ -30,12 +30,14 @@ export default function DomainSection({
   domains,
   plan,
   linkType,
+  editLink,
 }: {
   data: DEFAULT_LINK_TYPE;
   setData: Dispatch<SetStateAction<DEFAULT_LINK_TYPE>>;
   domains?: Domain[];
   plan?: BasePlan | null;
   linkType: "DOCUMENT_LINK" | "DATAROOM_LINK";
+  editLink?: boolean;
 }) {
   const [isModalOpen, setModalOpen] = useState(false);
   const teamInfo = useTeam();
@@ -59,6 +61,22 @@ export default function DomainSection({
     mutate(`/api/teams/${teamInfo?.currentTeam?.id}/domains`);
   };
 
+  useEffect(() => {
+    console.log("data.domain", data.domain);
+    if (domains && !editLink) {
+      console.log("data.domain", data.domain);
+      const defaultDomain = domains.find((domain) => domain.isDefault);
+      setData({
+        ...data,
+        domain: defaultDomain?.slug ?? "papermark.io",
+      });
+    }
+  }, [domains, editLink]);
+
+  const defaultDomain = editLink
+    ? (data.domain ?? "papermark.io")
+    : (domains?.find((domain) => domain.isDefault)?.slug ?? "papermark.io");
+
   const currentDomain = domains?.find((domain) => domain.slug === data.domain);
   const isDomainVerified = currentDomain?.verified;
 
@@ -67,7 +85,7 @@ export default function DomainSection({
       <Label htmlFor="link-domain">Domain</Label>
       <div className="flex">
         <Select
-          defaultValue={data.domain || "papermark.io"}
+          defaultValue={defaultDomain}
           onValueChange={handleDomainChange}
           onOpenChange={handleSelectFocus}
         >

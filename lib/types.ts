@@ -11,6 +11,7 @@ import {
   View,
 } from "@prisma/client";
 import { User as NextAuthUser } from "next-auth";
+import { z } from "zod";
 
 export type CustomUser = NextAuthUser & PrismaUser;
 
@@ -109,7 +110,8 @@ export type DomainVerificationStatusProps =
   | "Invalid Configuration"
   | "Pending Verification"
   | "Domain Not Found"
-  | "Unknown Error";
+  | "Unknown Error"
+  | "Conflicting DNS Records";
 
 // From https://vercel.com/docs/rest-api/endpoints#get-a-project-domain
 export interface DomainResponse {
@@ -140,6 +142,12 @@ export interface DomainConfigResponse {
   acceptedChallenges?: ("dns-01" | "http-01")[];
   /** Whether or not the domain is configured AND we can automatically generate a TLS certificate. */
   misconfigured: boolean;
+  /** conflicts */
+  conflicts: {
+    name: string;
+    type: string;
+    value: string;
+  }[];
 }
 
 // From https://vercel.com/docs/rest-api/endpoints#verify-project-domain
@@ -241,3 +249,33 @@ export interface TeamDetail {
     userId: string;
   }[];
 }
+
+export const WatermarkConfigSchema = z.object({
+  text: z.string().min(1, "Text is required."),
+  isTiled: z.boolean(),
+  position: z.enum([
+    "top-left",
+    "top-center",
+    "top-right",
+    "middle-left",
+    "middle-center",
+    "middle-right",
+    "bottom-left",
+    "bottom-center",
+    "bottom-right",
+  ]),
+  rotation: z.union([
+    z.literal(0),
+    z.literal(30),
+    z.literal(45),
+    z.literal(90),
+    z.literal(180),
+  ]),
+  color: z.string().refine((val) => /^#([0-9A-F]{3}){1,2}$/i.test(val), {
+    message: "Invalid color format. Use HEX format like #RRGGBB.",
+  }),
+  fontSize: z.number().min(1, "Font size must be greater than 0."),
+  opacity: z.number().min(0).max(1, "Opacity must be between 0 and 1."),
+});
+
+export type WatermarkConfig = z.infer<typeof WatermarkConfigSchema>;

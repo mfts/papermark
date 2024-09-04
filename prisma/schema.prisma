@@ -76,6 +76,8 @@ model Team {
   startsAt       DateTime? // Stripe subscription start date
   endsAt         DateTime? // Stripe subscription end date
 
+  linkPresets LinkPreset[] // Link presets for the team
+
   limits Json? // Plan limits // {datarooms: 1, users: 1, domains: 1, customDomainOnPro: boolean, customDomainInDataroom: boolean}
 
   createdAt DateTime @default(now())
@@ -231,6 +233,8 @@ model Link {
   agreement                  Agreement? @relation(fields: [agreementId], references: [id], onDelete: SetNull)
   agreementId                String? // This can be nullable, representing links without agreements
   showBanner                 Boolean?   @default(false) // Optional give user a option to show the banner and end of document signup form
+  enableWatermark            Boolean?   @default(false) // Optional give user a option to enable the watermark
+  watermarkConfig            Json?      // This will store the watermark configuration: {text: "Confidential", isTiled: false, color: "#000000", fontSize: 12, opacity: 0.5, rotation: 30, position: "top-right"}
 
   // custom metatags
   metaTitle           String? // This will be the meta title of the link
@@ -242,6 +246,23 @@ model Link {
   @@index([documentId])
 }
 
+model LinkPreset {
+  id          String   @id @default(cuid())
+  name        String
+  teamId      String
+  team        Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  
+  enableCustomMetaTag Boolean? @default(false) // Optional give user a option to enable the custom metatag
+  metaTitle           String? // This will be the meta title of the link
+  metaDescription     String? // This will be the meta description of the link
+  metaImage           String? // This will be the meta image of the link
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([teamId])
+}
+
 model Domain {
   id          String   @id @default(cuid())
   slug        String   @unique
@@ -250,6 +271,7 @@ model Domain {
   teamId      String
   Team        Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
   verified    Boolean  @default(false) // Whether the domain has been verified
+  isDefault   Boolean  @default(false) // Whether the domain is the primary domain
   lastChecked DateTime @default(now())
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

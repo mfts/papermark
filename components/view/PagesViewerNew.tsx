@@ -18,6 +18,7 @@ import {
 } from "react-zoom-pan-pinch";
 import { toast } from "sonner";
 
+import { WatermarkConfig } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useMediaQuery } from "@/lib/utils/use-media-query";
 
@@ -28,6 +29,7 @@ import { PoweredBy } from "./powered-by";
 import Question from "./question";
 import Toolbar from "./toolbar";
 import ViewDurationSummary from "./visitor-graph";
+import { SVGWatermark } from "./watermark-svg";
 
 const DEFAULT_PRELOADED_IMAGES_NUM = 5;
 
@@ -86,6 +88,9 @@ export default function PagesViewer({
   isVertical = false,
   viewerEmail,
   isPreview,
+  watermarkConfig,
+  ipAddress,
+  linkName,
 }: {
   pages: {
     file: string;
@@ -116,6 +121,9 @@ export default function PagesViewer({
   isVertical?: boolean;
   viewerEmail?: string;
   isPreview?: boolean;
+  watermarkConfig?: WatermarkConfig | null;
+  ipAddress?: string;
+  linkName?: string;
 }) {
   const router = useRouter();
   const { status: sessionStatus } = useSession();
@@ -673,6 +681,7 @@ export default function PagesViewer({
         isVertical={isVertical}
         isMobile={isMobile}
         isPreview={isPreview}
+        hasWatermark={watermarkConfig ? true : false}
       />
       <div
         style={{ height: "calc(100dvh - 64px)" }}
@@ -778,6 +787,25 @@ export default function PagesViewer({
                           }
                           alt={`Page ${index + 1}`}
                         />
+
+                        {/* Add Watermark Component */}
+                        {watermarkConfig ? (
+                          <SVGWatermark
+                            config={watermarkConfig}
+                            viewerData={{
+                              email: viewerEmail,
+                              date: new Date().toLocaleDateString(),
+                              time: new Date().toLocaleTimeString(),
+                              link: linkName,
+                              ipAddress: ipAddress,
+                            }}
+                            documentDimensions={
+                              imageDimensions[index] || { width: 0, height: 0 }
+                            }
+                            pageIndex={index}
+                          />
+                        ) : null}
+
                         {page.pageLinks ? (
                           <map name={`page-map-${index + 1}`}>
                             {page.pageLinks

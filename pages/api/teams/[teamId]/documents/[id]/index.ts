@@ -119,7 +119,7 @@ export default async function handle(
           team: {
             users: {
               some: {
-                role: { in: ["ADMIN", "MANAGER"] },
+                // role: { in: ["ADMIN", "MANAGER"] },
                 userId: userId,
               },
             },

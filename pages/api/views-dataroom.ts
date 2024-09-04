@@ -3,7 +3,6 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { waitUntil } from "@vercel/functions";
 import { getServerSession } from "next-auth/next";
 import { parsePageId } from "notion-utils";
-import { record } from "zod";
 
 import sendNotification from "@/lib/api/notification-helper";
 import { sendVerificationEmail } from "@/lib/emails/send-email-verification";
@@ -12,8 +11,9 @@ import { newId } from "@/lib/id-helper";
 import notion from "@/lib/notion";
 import prisma from "@/lib/prisma";
 import { parseSheet } from "@/lib/sheet";
-import { CustomUser } from "@/lib/types";
+import { CustomUser, WatermarkConfigSchema } from "@/lib/types";
 import { checkPassword, decryptEncrpytedPassword, log } from "@/lib/utils";
+import { getIpAddress } from "@/lib/utils/ip";
 
 import { authOptions } from "./auth/[...nextauth]";
 
@@ -99,6 +99,8 @@ export default async function handle(
       denyList: true,
       enableAgreement: true,
       agreementId: true,
+      enableWatermark: true,
+      watermarkConfig: true,
     },
   });
 
@@ -518,6 +520,15 @@ export default async function handle(
           : recordMap
             ? "notion"
             : undefined,
+      watermarkConfig: link.enableWatermark ? link.watermarkConfig : undefined,
+      ipAddress:
+        link.enableWatermark &&
+        link.watermarkConfig &&
+        WatermarkConfigSchema.parse(link.watermarkConfig).text.includes(
+          "{{ipAddress}}",
+        )
+          ? getIpAddress(req.headers)
+          : undefined,
     };
 
     return res.status(200).json(returnObject);

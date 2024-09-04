@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 import { getFile } from "@/lib/files/get-file";
 import prisma from "@/lib/prisma";
+import { getIpAddress } from "@/lib/utils/ip";
 
 export default async function handle(
   req: NextApiRequest,
@@ -20,11 +21,15 @@ export default async function handle(
         select: {
           id: true,
           viewedAt: true,
+          viewerEmail: true,
           link: {
             select: {
               allowDownload: true,
               expiresAt: true,
               isArchived: true,
+              enableWatermark: true,
+              watermarkConfig: true,
+              name: true,
             },
           },
           document: {
@@ -36,6 +41,7 @@ export default async function handle(
                   type: true,
                   file: true,
                   storageType: true,
+                  numPages: true,
                 },
                 take: 1,
               },
@@ -97,6 +103,46 @@ export default async function handle(
         data: view.document!.versions[0].file,
         isDownload: true,
       });
+
+      if (view.link.enableWatermark) {
+        const response = await fetch(
+          `${process.env.NEXTAUTH_URL}/api/mupdf/annotate-document`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              url: downloadUrl,
+              numPages: view.document!.versions[0].numPages,
+              watermarkConfig: view.link.watermarkConfig,
+              viewerData: {
+                email: view.viewerEmail,
+                date: new Date(view.viewedAt).toLocaleDateString(),
+                ipAddress: getIpAddress(req.headers),
+                link: view.link.name,
+                time: new Date(view.viewedAt).toLocaleTimeString(),
+              },
+            }),
+          },
+        );
+
+        if (!response.ok) {
+          return res.status(500).json({ error: "Error downloading" });
+        }
+
+        const pdfBuffer = await response.arrayBuffer();
+
+        // Set appropriate headers
+        res.setHeader("Content-Type", "application/pdf");
+        res.setHeader(
+          "Content-Disposition",
+          'attachment; filename="watermarked.pdf"',
+        );
+
+        // Send the buffer directly
+        return res.send(Buffer.from(pdfBuffer));
+      }
 
       return res.status(200).json({ downloadUrl });
     } catch (error) {

@@ -16,7 +16,7 @@ import AccessForm, {
 } from "@/components/view/access-form";
 
 import { useAnalytics } from "@/lib/analytics";
-import { LinkWithDataroom } from "@/lib/types";
+import { LinkWithDataroom, WatermarkConfig } from "@/lib/types";
 
 import DataroomViewer from "../DataroomViewer";
 import PagesViewerNew from "../PagesViewerNew";
@@ -62,6 +62,7 @@ export type DEFAULT_DOCUMENT_VIEW_TYPE = {
   sheetData?: SheetData[] | null;
   notionData?: { recordMap: ExtendedRecordMap | null };
   fileType?: string;
+  ipAddress?: string;
 };
 
 export default function DataroomView({
@@ -160,6 +161,7 @@ export default function DataroomView({
           sheetData,
           fileType,
           isPreview,
+          ipAddress,
         } = fetchData as DEFAULT_DOCUMENT_VIEW_TYPE;
         plausible("dataroomViewed"); // track the event
         analytics.identify(
@@ -183,6 +185,7 @@ export default function DataroomView({
           sheetData,
           fileType,
           isPreview,
+          ipAddress,
         }));
         setSubmitted(true);
         setVerificationRequested(false);
@@ -243,6 +246,7 @@ export default function DataroomView({
       file: undefined,
       viewId: "",
       notionData: undefined,
+      ipAddress: undefined,
     }));
     // This effect is specifically for handling changes to `documentData` post-mount
   }, [documentData]);
@@ -350,6 +354,13 @@ export default function DataroomView({
           dataroomId={dataroom.id}
           setDocumentData={setDocumentData}
           isVertical={documentData.isVertical}
+          watermarkConfig={
+            link.enableWatermark
+              ? (link.watermarkConfig as WatermarkConfig)
+              : null
+          }
+          ipAddress={viewData.ipAddress}
+          linkName={link.name ?? `Link #${link.id.slice(-5)}`}
         />
       </div>
     ) : null;

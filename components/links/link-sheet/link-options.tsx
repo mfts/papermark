@@ -22,6 +22,7 @@ import useLimits from "@/lib/swr/use-limits";
 import AgreementSection from "./agreement-section";
 import QuestionSection from "./question-section";
 import ScreenshotProtectionSection from "./screenshot-protection-section";
+import WatermarkSection from "./watermark-section";
 
 export type LinkUpgradeOptions = {
   state: boolean;
@@ -33,10 +34,12 @@ export const LinkOptions = ({
   data,
   setData,
   linkType,
+  editLink,
 }: {
   data: DEFAULT_LINK_TYPE;
   setData: React.Dispatch<React.SetStateAction<DEFAULT_LINK_TYPE>>;
   linkType: LinkType;
+  editLink?: boolean;
 }) => {
   const { plan, trial } = usePlan();
   const { limits } = useLimits();
@@ -82,6 +85,7 @@ export const LinkOptions = ({
           isDatarooms
         }
         handleUpgradeStateChange={handleUpgradeStateChange}
+        editLink={editLink ?? false}
       />
 
       <EmailAuthenticationSection
@@ -129,6 +133,11 @@ export const LinkOptions = ({
           isBusiness ||
           isDatarooms
         }
+        handleUpgradeStateChange={handleUpgradeStateChange}
+      />
+      <WatermarkSection
+        {...{ data, setData }}
+        isAllowed={isTrial || isDatarooms}
         handleUpgradeStateChange={handleUpgradeStateChange}
       />
       <AgreementSection
