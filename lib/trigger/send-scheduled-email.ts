@@ -3,6 +3,8 @@ import { logger, task } from "@trigger.dev/sdk/v3";
 import { sendDataroomInfoEmail } from "@/lib/emails/send-dataroom-info";
 import prisma from "@/lib/prisma";
 
+import { sendDataroomTrialEndEmail } from "../emails/send-dataroom-trial-end";
+
 export const sendDataroomTrialInfoEmailTask = task({
   id: "send-dataroom-trial-info-email",
   retry: { maxAttempts: 3 },
@@ -15,7 +17,7 @@ export const sendDataroomTrialInfoEmailTask = task({
 export const sendDataroomTrialExpiredEmailTask = task({
   id: "send-dataroom-trial-expired-email",
   retry: { maxAttempts: 3 },
-  run: async (payload: { to: string; teamId: string }) => {
+  run: async (payload: { to: string; name: string; teamId: string }) => {
     const team = await prisma.team.findUnique({
       where: {
         id: payload.teamId,
@@ -31,8 +33,9 @@ export const sendDataroomTrialExpiredEmailTask = task({
     }
 
     if (team.plan.includes("drtrial")) {
-      await sendDataroomInfoEmail({
-        user: { email: payload.to, name: "Marc" },
+      await sendDataroomTrialEndEmail({
+        email: payload.to,
+        name: payload.name,
       });
       logger.info("Email sent", { to: payload.to, teamId: payload.teamId });
 

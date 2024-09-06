@@ -99,6 +99,12 @@ export default async function handle(
         _count: { documents: 0 },
       };
 
+      /** Emails
+       *
+       * 1. Send welcome email
+       * 2. Send dataroom info email after 3 days
+       * 3. Send expired trial email after 7 days
+       */
       waitUntil(sendDataroomTrialWelcome({ fullName, to: email! }));
       waitUntil(
         sendDataroomTrialInfoEmailTask.trigger(
@@ -108,7 +114,7 @@ export default async function handle(
       );
       waitUntil(
         sendDataroomTrialExpiredEmailTask.trigger(
-          { to: email!, teamId: teamId },
+          { to: email!, name: fullName.split(" ")[0], teamId },
           { delay: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) },
         ),
       );
