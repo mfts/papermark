@@ -1,4 +1,5 @@
 import { useTeam } from "@/context/team-context";
+import useSWR from "swr";
 import useSWRImmutable from "swr/immutable";
 
 import {
@@ -11,7 +12,7 @@ import { fetcher } from "@/lib/utils";
 export function useDomainStatus({ domain }: { domain: string }) {
   const teamInfo = useTeam();
 
-  const { data, isValidating, mutate } = useSWRImmutable<{
+  const { data, isValidating, mutate } = useSWR<{
     status: DomainVerificationStatusProps;
     response: {
       domainJson: DomainResponse & { error: { code: string; message: string } };
