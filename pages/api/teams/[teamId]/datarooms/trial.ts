@@ -10,7 +10,6 @@ import prisma from "@/lib/prisma";
 import {
   sendDataroomTrialExpiredEmailTask,
   sendDataroomTrialInfoEmailTask,
-  sendScheduledEmailTask,
 } from "@/lib/trigger/send-scheduled-email";
 import { CustomUser } from "@/lib/types";
 import { log } from "@/lib/utils";

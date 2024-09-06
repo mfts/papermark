@@ -85,7 +85,7 @@ function DeleteDocumentsModal({
 
         const errors = results
           .filter((result) => result.status === "rejected")
-          .map((result) => result.reason);
+          .map((result) => (result as PromiseRejectedResult).reason);
 
         // Deselect only the successfully deleted documents
         setSelectedDocuments((prevSelected) =>
