@@ -251,7 +251,13 @@ export default function FolderCard({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" ref={dropdownRef}>
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem onClick={() => setOpenFolder(true)}>
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setOpenFolder(true);
+                }}
+              >
                 Rename
               </DropdownMenuItem>
               {!isDataroom ? (
