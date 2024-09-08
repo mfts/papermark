@@ -316,6 +316,14 @@ export default function ExpandableTable({
         updatedPermissions.view = true;
       }
 
+      if (updatedPermissions.partialDownload) {
+        updatedPermissions.download = true;
+      }
+
+      if (updatedPermissions.partialView) {
+        updatedPermissions.view = true;
+      }
+
       setData((prevData) => {
         const updateItemInTree = (items: FileOrFolder[]): FileOrFolder[] => {
           return items.map((currentItem) => {
@@ -334,6 +342,7 @@ export default function ExpandableTable({
                 updatedItem.subItems = updateSubItems(
                   updatedItem.subItems || [],
                   updatedPermissions.view,
+                  updatedPermissions.download,
                 );
               }
 
@@ -362,6 +371,7 @@ export default function ExpandableTable({
         const updateSubItems = (
           items: FileOrFolder[],
           viewState: boolean,
+          downloadState: boolean,
         ): FileOrFolder[] => {
           return items.map((item) => ({
             ...item,
@@ -369,10 +379,11 @@ export default function ExpandableTable({
               ...item.permissions,
               view: viewState,
               partialView: false,
-              download: item.permissions.download && viewState,
+              partialDownload: false,
+              download: downloadState,
             },
             subItems: item.subItems
-              ? updateSubItems(item.subItems, viewState)
+              ? updateSubItems(item.subItems, viewState, downloadState)
               : undefined,
           }));
         };
@@ -442,36 +453,38 @@ export default function ExpandableTable({
 
         // Ensure all parent folders are viewable if the item is being set to viewable
         // and downloadable if the item is being set to downloadable
-        if (updatedPermissions.view || updatedPermissions.download) {
-          parents.forEach((parent) => {
-            changes[parent.id] = {
-              view: updatedPermissions.view || parent.permissions.view,
-              download:
-                updatedPermissions.download || parent.permissions.download,
-              itemType: parent.itemType,
-            };
-          });
-        } else {
-          // If turning off view, recalculate parent permissions
-          [...parents].reverse().forEach((parent) => {
-            const someSubItemViewable = parent.subItems?.some((subItem) =>
-              subItem.id === item.id
-                ? updatedPermissions.view
-                : subItem.permissions.view,
-            );
-            const someSubItemDownloadable = parent.subItems?.some((subItem) =>
-              subItem.id === item.id
-                ? updatedPermissions.download
-                : subItem.permissions.download,
-            );
+        // if (updatedPermissions.view || updatedPermissions.download) {
+        //   parents.forEach((parent) => {
+        //     changes[parent.id] = {
+        //       view: updatedPermissions.view || parent.permissions.view,
+        //       download:
+        //         updatedPermissions.download || parent.permissions.download,
+        //       itemType: parent.itemType,
+        //     };
+        //   });
 
-            changes[parent.id] = {
-              view: someSubItemViewable || false,
-              download: someSubItemDownloadable || false,
-              itemType: parent.itemType,
-            };
-          });
-        }
+        // } else {
+        // If turning off view, recalculate parent permissions
+        [...parents].reverse().forEach((parent) => {
+          const someSubItemViewable = parent.subItems?.some((subItem) =>
+            subItem.id === item.id
+              ? updatedPermissions.view
+              : subItem.permissions.view,
+          );
+          const someSubItemDownloadable = parent.subItems?.some((subItem) =>
+            subItem.id === item.id
+              ? updatedPermissions.download
+              : subItem.permissions.download,
+          );
+
+          changes[parent.id] = {
+            view: someSubItemViewable || false,
+            download: someSubItemDownloadable || false,
+            itemType: parent.itemType,
+          };
+        });
+        // }
+
 
         return changes;
       };
