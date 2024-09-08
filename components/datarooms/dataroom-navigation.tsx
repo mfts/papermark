@@ -18,6 +18,11 @@ export const DataroomNavigation = ({ dataroomId }: { dataroomId?: string }) => {
           segment: "documents",
         },
         {
+          label: "Groups",
+          href: `/datarooms/${dataroomId}/groups`,
+          segment: "groups",
+        },
+        {
           label: "Users",
           href: `/datarooms/${dataroomId}/users`,
           segment: "users",

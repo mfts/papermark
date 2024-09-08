@@ -206,12 +206,19 @@ export type DataroomFolderWithDocuments = DataroomFolder & {
   }[];
 };
 
-export function useDataroomFoldersTree({ dataroomId }: { dataroomId: string }) {
+export function useDataroomFoldersTree({
+  dataroomId,
+  include_documents,
+}: {
+  dataroomId: string;
+  include_documents?: boolean;
+}) {
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
 
   const { data: folders, error } = useSWR<DataroomFolderWithDocuments[]>(
-    teamId && `/api/teams/${teamId}/datarooms/${dataroomId}/folders`,
+    teamId &&
+      `/api/teams/${teamId}/datarooms/${dataroomId}/folders${include_documents ? "?include_documents=true" : ""}`,
     fetcher,
     {
       revalidateOnFocus: false,
