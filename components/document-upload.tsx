@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 
+import DrivePicker from "@/pages/documents/DrivePicker";
 import {
   Upload as ArrowUpTrayIcon,
   File as DocumentIcon,
@@ -67,37 +68,10 @@ export default function DocumentUpload({
     },
     multiple: false,
     maxSize: maxSize * 1024 * 1024, // 30 MB
+
     onDropAccepted: (acceptedFiles) => {
       const file = acceptedFiles[0];
-      const fileType = file.type;
-      const fileSizeLimit = fileSizeLimits[fileType] * 1024 * 1024;
-
-      if (file.size > fileSizeLimit) {
-        toast.error(
-          `File size too big for ${fileType} (max. ${fileSizeLimits[fileType]} MB)`,
-        );
-        return;
-      }
-
-      if (file.type !== "application/pdf") {
-        setCurrentFile(file);
-        return;
-      }
-      file
-        .arrayBuffer()
-        .then((buffer) => {
-          getPagesCount(buffer).then((numPages) => {
-            if (numPages > maxNumPages) {
-              toast.error(`File has too many pages (max. ${maxNumPages})`);
-            } else {
-              setCurrentFile(file);
-            }
-          });
-        })
-        .catch((error) => {
-          console.error("Error reading file:", error);
-          toast.error("Failed to read the file");
-        });
+      fileValidations(file);
     },
     onDropRejected: (fileRejections) => {
       const { errors } = fileRejections[0];
@@ -117,6 +91,39 @@ export default function DocumentUpload({
     () => (currentFile ? URL.createObjectURL(currentFile) : ""),
     [currentFile],
   );
+
+  const fileValidations = (file) => {
+    const fileType = file.type;
+    const fileSizeLimit = fileSizeLimits[fileType] * 1024 * 1024;
+
+    if (file.size > fileSizeLimit) {
+      toast.error(
+        `File size too big for ${fileType} (max. ${fileSizeLimits[fileType]} MB)`,
+      );
+      return;
+    }
+
+    if (file.type !== "application/pdf") {
+      setCurrentFile(file);
+      return;
+    }
+    file
+      .arrayBuffer()
+      .then((buffer) => {
+        getPagesCount(buffer).then((numPages) => {
+          console.log("num of pages!", numPages);
+          if (numPages > maxNumPages) {
+            toast.error(`File has too many pages (max. ${maxNumPages})`);
+          } else {
+            setCurrentFile(file);
+          }
+        });
+      })
+      .catch((error) => {
+        console.error("Error reading file:", error);
+        toast.error("Failed to read the file");
+      });
+  };
 
   return (
     <div className="col-span-full">
@@ -160,6 +167,11 @@ export default function DocumentUpload({
                 ? "Replace file?"
                 : `Only *.xls, *.xlsx, *.csv, *.ods, *.pdf & ${maxSize} MB limit`}
             </p>
+            {currentFile ? (
+              <></>
+            ) : (
+              <DrivePicker fileValidations={fileValidations} />
+            )}
           </div>
         </div>
       </div>
