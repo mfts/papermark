@@ -47,6 +47,7 @@ type FileOrFolder = {
     view: boolean;
     download: boolean;
     partialView?: boolean;
+    partialDownload?: boolean;
   };
   itemType: ItemType;
   documentId?: string;
@@ -54,12 +55,7 @@ type FileOrFolder = {
 
 type ItemPermission = Record<
   string,
-  {
-    view: boolean;
-    download: boolean;
-    // partialView?: boolean;
-    itemType: ItemType;
-  }
+  { view: boolean; download: boolean; itemType: ItemType }
 >;
 
 type ColumnExtra = {
@@ -123,7 +119,7 @@ const createColumns = (extra: ColumnExtra): ColumnDef<FileOrFolder>[] => [
             aria-label="Toggle view"
             size="sm"
             className={cn(
-              "text-muted-foreground hover:ring-1 hover:ring-gray-400 data-[state=on]:bg-foreground data-[state=on]:text-background",
+              "px-2 text-muted-foreground hover:ring-1 hover:ring-gray-400 data-[state=on]:bg-foreground data-[state=on]:text-background",
               item.permissions.view
                 ? item.permissions.partialView
                   ? "data-[state=on]:bg-gray-400 data-[state=on]:text-background"
@@ -131,7 +127,8 @@ const createColumns = (extra: ColumnExtra): ColumnDef<FileOrFolder>[] => [
                 : "",
             )}
           >
-            {item.permissions.view || item.permissions.partialView ? (
+            {item.permissions.view ||
+            (item.permissions.view && item.permissions.partialView) ? (
               <EyeIcon className="h-5 w-5" />
             ) : (
               <EyeOffIcon className="h-5 w-5" />
@@ -141,9 +138,17 @@ const createColumns = (extra: ColumnExtra): ColumnDef<FileOrFolder>[] => [
             value="download"
             aria-label="Toggle download"
             size="sm"
-            className="text-muted-foreground hover:ring-1 hover:ring-gray-400 data-[state=on]:bg-foreground data-[state=on]:text-background"
+            className={cn(
+              "px-2 text-muted-foreground hover:ring-1 hover:ring-gray-400 data-[state=on]:bg-foreground data-[state=on]:text-background",
+              item.permissions.download
+                ? item.permissions.partialDownload
+                  ? "data-[state=on]:bg-gray-400 data-[state=on]:text-background"
+                  : "data-[state=on]:bg-foreground data-[state=on]:text-background"
+                : "",
+            )}
           >
-            {item.permissions.download ? (
+            {item.permissions.download ||
+            (item.permissions.download && item.permissions.partialDownload) ? (
               <ArrowDownToLineIcon className="h-5 w-5" />
             ) : (
               <CloudDownloadOff className="h-5 w-5" />
@@ -167,6 +172,7 @@ const buildTree = (
       view: permission?.canView ?? false,
       download: permission?.canDownload ?? false,
       partialView: false,
+      partialDownload: false,
     };
   };
 
@@ -198,15 +204,28 @@ const buildTree = (
       const allSubItemsViewable = allSubItems.every(
         (subItem) => subItem.permissions.view,
       );
+      const someSubItemDownloadable = allSubItems.some(
+        (subItem) => subItem.permissions.download,
+      );
+      const allSubItemsDownloadable = allSubItems.every(
+        (subItem) => subItem.permissions.download,
+      );
 
       folderPermissions.view = folderPermissions.view || someSubItemViewable;
       folderPermissions.partialView =
         someSubItemViewable && !allSubItemsViewable;
+      folderPermissions.download =
+        folderPermissions.download || someSubItemDownloadable;
+      folderPermissions.partialDownload =
+        someSubItemDownloadable && !allSubItemsDownloadable;
 
-      // Propagate view permission up if any subitem has view permission
+      // Propagate view/download permission up if any subitem has view/download permission
       folderPermissions.view =
         folderPermissions.view ||
         allSubItems.some((subItem) => subItem.permissions.view);
+      folderPermissions.download =
+        folderPermissions.download ||
+        allSubItems.some((subItem) => subItem.permissions.download);
 
       result.push({
         id: folder.id,
@@ -256,8 +275,6 @@ export default function ExpandableTable({
   const [pendingChanges, setPendingChanges] = useState<ItemPermission>({});
   const [debouncedPendingChanges] = useDebounce(pendingChanges, 2000);
 
-  console.log("folders", folders);
-
   const updatePermissions = useCallback(
     (id: string, newPermissions: string[]) => {
       const findItemAndParents = (
@@ -288,6 +305,8 @@ export default function ExpandableTable({
       const updatedPermissions = {
         view: newPermissions.includes("view"),
         download: newPermissions.includes("download"),
+        partialView: newPermissions.includes("partialView"),
+        partialDownload: newPermissions.includes("partialDownload"),
       };
 
       // Special cases
@@ -320,27 +339,16 @@ export default function ExpandableTable({
 
               return updatedItem;
             }
+
+            // if the current item is a parent of the updated item, update the parent's permissions
             if (parents.some((parent) => parent.id === currentItem.id)) {
               const updatedSubItems = currentItem.subItems
                 ? updateItemInTree(currentItem.subItems)
                 : [];
-              const someSubItemViewable = updatedSubItems.some(
-                (subItem) => subItem.permissions.view,
-              );
-              const allSubItemsViewable = updatedSubItems.every(
-                (subItem) => subItem.permissions.view,
-              );
-              return {
-                ...currentItem,
-                permissions: {
-                  view: someSubItemViewable,
-                  partialView: someSubItemViewable && !allSubItemsViewable,
-                  download:
-                    currentItem.permissions.download && someSubItemViewable,
-                },
-                subItems: updatedSubItems,
-              };
+              return updateParentPermissions(currentItem, updatedSubItems);
             }
+
+            // if the current item has subitems, update the subitems
             if (currentItem.subItems) {
               return {
                 ...currentItem,
@@ -369,9 +377,40 @@ export default function ExpandableTable({
           }));
         };
 
+        const updateParentPermissions = (
+          parent: FileOrFolder,
+          subItems: FileOrFolder[],
+        ): FileOrFolder => {
+          const someSubItemViewable = subItems.some(
+            (subItem) => subItem.permissions.view,
+          );
+          const allSubItemsViewable = subItems.every(
+            (subItem) => subItem.permissions.view,
+          );
+          const someSubItemDownloadable = subItems.some(
+            (subItem) => subItem.permissions.download,
+          );
+          const allSubItemsDownloadable = subItems.every(
+            (subItem) => subItem.permissions.download,
+          );
+
+          return {
+            ...parent,
+            permissions: {
+              view: someSubItemViewable,
+              partialView: someSubItemViewable && !allSubItemsViewable,
+              download: someSubItemDownloadable,
+              partialDownload:
+                someSubItemDownloadable && !allSubItemsDownloadable,
+            },
+            subItems,
+          };
+        };
+
         return updateItemInTree(prevData);
       });
 
+      // database changes
       const collectChanges = (
         item: FileOrFolder,
         parents: FileOrFolder[],
@@ -392,7 +431,7 @@ export default function ExpandableTable({
           subItems.forEach((subItem) => {
             changes[subItem.id] = {
               view: updatedPermissions.view,
-              download: subItem.permissions.download && updatedPermissions.view,
+              download: updatedPermissions.download,
               itemType: subItem.itemType,
             };
             collectSubItemChanges(subItem.subItems);
@@ -402,11 +441,13 @@ export default function ExpandableTable({
         collectSubItemChanges(item.subItems);
 
         // Ensure all parent folders are viewable if the item is being set to viewable
-        if (updatedPermissions.view) {
+        // and downloadable if the item is being set to downloadable
+        if (updatedPermissions.view || updatedPermissions.download) {
           parents.forEach((parent) => {
             changes[parent.id] = {
-              view: true,
-              download: parent.permissions.download,
+              view: updatedPermissions.view || parent.permissions.view,
+              download:
+                updatedPermissions.download || parent.permissions.download,
               itemType: parent.itemType,
             };
           });
@@ -418,11 +459,15 @@ export default function ExpandableTable({
                 ? updatedPermissions.view
                 : subItem.permissions.view,
             );
+            const someSubItemDownloadable = parent.subItems?.some((subItem) =>
+              subItem.id === item.id
+                ? updatedPermissions.download
+                : subItem.permissions.download,
+            );
 
             changes[parent.id] = {
               view: someSubItemViewable || false,
-              download:
-                (parent.permissions.download && someSubItemViewable) || false,
+              download: someSubItemDownloadable || false,
               itemType: parent.itemType,
             };
           });
@@ -445,8 +490,6 @@ export default function ExpandableTable({
       setData(treeData);
     }
   }, [folders, loading, permissions]);
-
-  console.log("data", data);
 
   const saveChanges = useCallback(
     async (changes: typeof pendingChanges) => {
@@ -505,8 +548,6 @@ export default function ExpandableTable({
   });
 
   if (loading) return <div>Loading...</div>;
-
-  console.log("permissions", permissions);
 
   return (
     <div className="rounded-md border">
