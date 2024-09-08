@@ -36,6 +36,7 @@ import {
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 import { useDataroomFoldersTree } from "@/lib/swr/use-dataroom";
+import { cn } from "@/lib/utils";
 
 // Update the FileOrFolder type to include permissions
 type FileOrFolder = {
@@ -45,6 +46,7 @@ type FileOrFolder = {
   permissions: {
     view: boolean;
     download: boolean;
+    partialView?: boolean;
   };
   itemType: ItemType;
   documentId?: string;
@@ -52,7 +54,12 @@ type FileOrFolder = {
 
 type ItemPermission = Record<
   string,
-  { view: boolean; download: boolean; itemType: ItemType }
+  {
+    view: boolean;
+    download: boolean;
+    // partialView?: boolean;
+    itemType: ItemType;
+  }
 >;
 
 type ColumnExtra = {
@@ -115,9 +122,16 @@ const createColumns = (extra: ColumnExtra): ColumnDef<FileOrFolder>[] => [
             value="view"
             aria-label="Toggle view"
             size="sm"
-            className="text-muted-foreground hover:ring-1 hover:ring-gray-400 data-[state=on]:bg-foreground data-[state=on]:text-background"
+            className={cn(
+              "text-muted-foreground hover:ring-1 hover:ring-gray-400 data-[state=on]:bg-foreground data-[state=on]:text-background",
+              item.permissions.view
+                ? item.permissions.partialView
+                  ? "data-[state=on]:bg-gray-400 data-[state=on]:text-background"
+                  : "data-[state=on]:bg-foreground data-[state=on]:text-background"
+                : "",
+            )}
           >
-            {item.permissions.view ? (
+            {item.permissions.view || item.permissions.partialView ? (
               <EyeIcon className="h-5 w-5" />
             ) : (
               <EyeOffIcon className="h-5 w-5" />
@@ -143,65 +157,84 @@ const createColumns = (extra: ColumnExtra): ColumnDef<FileOrFolder>[] => [
 
 // Update the buildTree function to include permissions
 const buildTree = (
-  folders: any[],
-  documents: any[],
+  items: any[],
   permissions: ViewerGroupAccessControls[],
   parentId: string | null = null,
 ): FileOrFolder[] => {
-  const items: FileOrFolder[] = [];
-
   const getPermissions = (id: string) => {
     const permission = permissions.find((p) => p.itemId === id);
     return {
       view: permission?.canView ?? false,
       download: permission?.canDownload ?? false,
+      partialView: false,
     };
   };
 
-  folders
-    .filter((folder) => folder.parentId === parentId)
+  const result: FileOrFolder[] = [];
+
+  // Handle folders and their contents
+  items
+    .filter((item) => item.parentId === parentId && !item.document)
     .forEach((folder) => {
-      const folderDocuments = folder.documents.map((doc: any) => ({
-        id: doc.id,
-        documentId: doc.documentId,
-        name: doc.document.name,
-        permissions: getPermissions(doc.id),
-        itemType: ItemType.DATAROOM_DOCUMENT,
-      }));
+      const subItems = buildTree(items, permissions, folder.id);
 
-      const subItems = [
-        ...buildTree(folders, [], permissions, folder.id),
-        ...folderDocuments,
-      ];
-
-      const folderPermissions = getPermissions(folder.id);
-      // Propagate view permission up if any subitem has view permission
-      folderPermissions.view =
-        folderPermissions.view ||
-        subItems.some((item) => item.permissions.view);
-
-      items.push({
-        id: folder.id,
-        name: folder.name,
-        subItems: subItems,
-        permissions: folderPermissions,
-        itemType: ItemType.DATAROOM_FOLDER,
-      });
-    });
-
-  if (parentId === null) {
-    items.push(
-      ...documents.map((doc: any) => ({
+      // Add documents directly in this folder
+      const folderDocuments = (folder.documents || []).map((doc: any) => ({
         id: doc.id,
         documentId: doc.document.id,
         name: doc.document.name,
         permissions: getPermissions(doc.id),
         itemType: ItemType.DATAROOM_DOCUMENT,
-      })),
-    );
-  }
+      }));
 
-  return items;
+      const allSubItems = [...subItems, ...folderDocuments];
+
+      const folderPermissions = getPermissions(folder.id);
+
+      // Calculate view and partialView
+      const someSubItemViewable = allSubItems.some(
+        (subItem) => subItem.permissions.view,
+      );
+      const allSubItemsViewable = allSubItems.every(
+        (subItem) => subItem.permissions.view,
+      );
+
+      folderPermissions.view = folderPermissions.view || someSubItemViewable;
+      folderPermissions.partialView =
+        someSubItemViewable && !allSubItemsViewable;
+
+      // Propagate view permission up if any subitem has view permission
+      folderPermissions.view =
+        folderPermissions.view ||
+        allSubItems.some((subItem) => subItem.permissions.view);
+
+      result.push({
+        id: folder.id,
+        name: folder.name,
+        subItems: allSubItems,
+        permissions: folderPermissions,
+        itemType: ItemType.DATAROOM_FOLDER,
+      });
+    });
+
+  // Handle documents at the current level (including root level)
+  items
+    .filter(
+      (item) =>
+        (item.parentId === parentId && item.document) ||
+        (parentId === null && item.folderId === null && item.document),
+    )
+    .forEach((doc) => {
+      result.push({
+        id: doc.id,
+        documentId: doc.document.id,
+        name: doc.document.name,
+        permissions: getPermissions(doc.id),
+        itemType: ItemType.DATAROOM_DOCUMENT,
+      });
+    });
+
+  return result;
 };
 
 export default function ExpandableTable({
@@ -227,22 +260,30 @@ export default function ExpandableTable({
 
   const updatePermissions = useCallback(
     (id: string, newPermissions: string[]) => {
-      const findItemById = (
+      const findItemAndParents = (
         items: FileOrFolder[],
         targetId: string,
-      ): FileOrFolder | null => {
+        parents: FileOrFolder[] = [],
+      ): { item: FileOrFolder; parents: FileOrFolder[] } | null => {
         for (const item of items) {
-          if (item.id === targetId) return item;
+          if (item.id === targetId) {
+            return { item, parents };
+          }
           if (item.subItems) {
-            const found = findItemById(item.subItems, targetId);
-            if (found) return found;
+            const result = findItemAndParents(item.subItems, targetId, [
+              ...parents,
+              item,
+            ]);
+            if (result) return result;
           }
         }
         return null;
       };
 
-      const item = findItemById(data, id);
-      if (!item) return;
+      const result = findItemAndParents(data, id);
+      if (!result) return;
+
+      const { item, parents } = result;
 
       const updatedPermissions = {
         view: newPermissions.includes("view"),
@@ -251,57 +292,139 @@ export default function ExpandableTable({
 
       // Special cases
       if (!updatedPermissions.view && item.permissions.download) {
-        // If view is toggled off, also toggle off download
         updatedPermissions.download = false;
       } else if (updatedPermissions.download && !updatedPermissions.view) {
-        // If download is toggled on, also toggle on view
         updatedPermissions.view = true;
       }
 
-      const updateItemAndSubItems = (item: FileOrFolder): FileOrFolder => {
-        const updatedItem = {
-          ...item,
-          permissions: updatedPermissions,
-        };
-
-        if (item.subItems) {
-          updatedItem.subItems = item.subItems.map(updateItemAndSubItems);
-        }
-
-        return updatedItem;
-      };
-
-      const updatedItem = updateItemAndSubItems(item);
-
       setData((prevData) => {
         const updateItemInTree = (items: FileOrFolder[]): FileOrFolder[] => {
-          return items.map((item) => {
-            if (item.id === id) {
+          return items.map((currentItem) => {
+            if (currentItem.id === id) {
+              const updatedItem = {
+                ...currentItem,
+                permissions: {
+                  view: updatedPermissions.view,
+                  download: updatedPermissions.download,
+                  partialView: false,
+                },
+              };
+
+              // If it's a folder, update all subitems
+              if (updatedItem.itemType === ItemType.DATAROOM_FOLDER) {
+                updatedItem.subItems = updateSubItems(
+                  updatedItem.subItems || [],
+                  updatedPermissions.view,
+                );
+              }
+
               return updatedItem;
             }
-            if (item.subItems) {
+            if (parents.some((parent) => parent.id === currentItem.id)) {
+              const updatedSubItems = currentItem.subItems
+                ? updateItemInTree(currentItem.subItems)
+                : [];
+              const someSubItemViewable = updatedSubItems.some(
+                (subItem) => subItem.permissions.view,
+              );
+              const allSubItemsViewable = updatedSubItems.every(
+                (subItem) => subItem.permissions.view,
+              );
               return {
-                ...item,
-                subItems: updateItemInTree(item.subItems),
+                ...currentItem,
+                permissions: {
+                  view: someSubItemViewable,
+                  partialView: someSubItemViewable && !allSubItemsViewable,
+                  download:
+                    currentItem.permissions.download && someSubItemViewable,
+                },
+                subItems: updatedSubItems,
               };
             }
-            return item;
+            if (currentItem.subItems) {
+              return {
+                ...currentItem,
+                subItems: updateItemInTree(currentItem.subItems),
+              };
+            }
+            return currentItem;
           });
         };
+
+        const updateSubItems = (
+          items: FileOrFolder[],
+          viewState: boolean,
+        ): FileOrFolder[] => {
+          return items.map((item) => ({
+            ...item,
+            permissions: {
+              ...item.permissions,
+              view: viewState,
+              partialView: false,
+              download: item.permissions.download && viewState,
+            },
+            subItems: item.subItems
+              ? updateSubItems(item.subItems, viewState)
+              : undefined,
+          }));
+        };
+
         return updateItemInTree(prevData);
       });
 
-      const collectChanges = (item: FileOrFolder): ItemPermission => {
-        let changes = {
+      const collectChanges = (
+        item: FileOrFolder,
+        parents: FileOrFolder[],
+      ): ItemPermission => {
+        let changes: ItemPermission = {
           [item.id]: {
-            ...updatedPermissions,
+            view: updatedPermissions.view,
+            download: updatedPermissions.download,
             itemType: item.itemType,
           },
         };
 
-        if (item.subItems) {
-          item.subItems.forEach((subItem) => {
-            changes = { ...changes, ...collectChanges(subItem) };
+        // Collect changes for all subitems
+        const collectSubItemChanges = (
+          subItems: FileOrFolder[] | undefined,
+        ) => {
+          if (!subItems) return;
+          subItems.forEach((subItem) => {
+            changes[subItem.id] = {
+              view: updatedPermissions.view,
+              download: subItem.permissions.download && updatedPermissions.view,
+              itemType: subItem.itemType,
+            };
+            collectSubItemChanges(subItem.subItems);
+          });
+        };
+
+        collectSubItemChanges(item.subItems);
+
+        // Ensure all parent folders are viewable if the item is being set to viewable
+        if (updatedPermissions.view) {
+          parents.forEach((parent) => {
+            changes[parent.id] = {
+              view: true,
+              download: parent.permissions.download,
+              itemType: parent.itemType,
+            };
+          });
+        } else {
+          // If turning off view, recalculate parent permissions
+          [...parents].reverse().forEach((parent) => {
+            const someSubItemViewable = parent.subItems?.some((subItem) =>
+              subItem.id === item.id
+                ? updatedPermissions.view
+                : subItem.permissions.view,
+            );
+
+            changes[parent.id] = {
+              view: someSubItemViewable || false,
+              download:
+                (parent.permissions.download && someSubItemViewable) || false,
+              itemType: parent.itemType,
+            };
           });
         }
 
@@ -310,7 +433,7 @@ export default function ExpandableTable({
 
       setPendingChanges((prev) => ({
         ...prev,
-        ...collectChanges(updatedItem),
+        ...collectChanges(item, parents),
       }));
     },
     [data],
@@ -318,13 +441,7 @@ export default function ExpandableTable({
 
   useEffect(() => {
     if (folders && !loading) {
-      const treeData = buildTree(
-        // @ts-ignore
-        folders.filter((folder) => folder.parentId == null && !folder.document),
-        // @ts-ignore
-        folders.filter((folder) => folder.folderId == null && folder.document),
-        permissions,
-      );
+      const treeData = buildTree(folders, permissions);
       setData(treeData);
     }
   }, [folders, loading, permissions]);
