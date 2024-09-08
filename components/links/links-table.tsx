@@ -231,7 +231,7 @@ export default function LinksTable({
                 </TableHead>
                 <TableHead className="w-[250px] sm:w-auto">Views</TableHead>
                 <TableHead>Last Viewed</TableHead>
-                <TableHead className="ftext-center sm:text-right"></TableHead>
+                <TableHead className="text-center sm:text-right"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
