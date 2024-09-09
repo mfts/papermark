@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
+import { LinkAudienceType } from "@prisma/client";
 import { waitUntil } from "@vercel/functions";
 import { getServerSession } from "next-auth/next";
 import { parsePageId } from "notion-utils";
@@ -47,6 +48,7 @@ export default async function handle(
     linkType,
     dataroomViewId,
     viewType,
+    groupId,
     ...data
   } = req.body as {
     linkId: string;
@@ -63,6 +65,7 @@ export default async function handle(
     linkType: string;
     dataroomViewId?: string;
     viewType: "DATAROOM_VIEW" | "DOCUMENT_VIEW";
+    groupId?: string;
   };
 
   const { email, password, name, hasConfirmedAgreement } = data as {
@@ -101,6 +104,8 @@ export default async function handle(
       agreementId: true,
       enableWatermark: true,
       watermarkConfig: true,
+      groupId: true,
+      audienceType: true,
     },
   });
 
@@ -184,6 +189,27 @@ export default async function handle(
 
     // Deny access if the email is denied
     if (isDenied) {
+      res.status(403).json({ message: "Unauthorized access" });
+      return;
+    }
+  }
+
+  // Check if group is allowed to visit the link
+  if (link.audienceType === LinkAudienceType.GROUP && link.groupId) {
+    const group = await prisma.viewerGroup.findUnique({
+      where: { id: link.groupId },
+      select: { members: { include: { viewer: { select: { email: true } } } } },
+    });
+
+    if (!group) {
+      res.status(404).json({ message: "Group not found." });
+      return;
+    }
+
+    const isMember = group.members.some(
+      (member) => member.viewer.email === email,
+    );
+    if (!isMember) {
       res.status(403).json({ message: "Unauthorized access" });
       return;
     }
@@ -353,6 +379,10 @@ export default async function handle(
                   },
                 },
               }),
+            ...(link.audienceType === LinkAudienceType.GROUP &&
+              link.groupId && {
+                groupId: link.groupId,
+              }),
           },
           select: { id: true },
         });
@@ -408,6 +438,10 @@ export default async function handle(
                   agreementId: link.agreementId,
                 },
               },
+            }),
+          ...(link.audienceType === LinkAudienceType.GROUP &&
+            link.groupId && {
+              groupId: link.groupId,
             }),
         },
         select: { id: true },

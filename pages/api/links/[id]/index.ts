@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
-import { Brand, DataroomBrand } from "@prisma/client";
+import { Brand, DataroomBrand, LinkAudienceType } from "@prisma/client";
 import { getServerSession } from "next-auth/next";
 
 import {
@@ -54,6 +54,8 @@ export default async function handle(
           showBanner: true,
           enableWatermark: true,
           watermarkConfig: true,
+          groupId: true,
+          audienceType: true,
         },
       });
 
@@ -77,7 +79,13 @@ export default async function handle(
         linkData = data.linkData;
         brand = data.brand;
       } else if (linkType === "DATAROOM_LINK") {
-        const data = await fetchDataroomLinkData({ linkId: id });
+        const data = await fetchDataroomLinkData({
+          linkId: id,
+          ...(link.audienceType === LinkAudienceType.GROUP &&
+            link.groupId && {
+              groupId: link.groupId,
+            }),
+        });
         linkData = data.linkData;
         brand = data.brand;
       }
@@ -177,7 +185,10 @@ export default async function handle(
         dataroomId: dataroomLink ? targetId : null,
         password: hashedPassword,
         name: linkData.name || null,
-        emailProtected: linkData.emailProtected,
+        emailProtected:
+          linkData.audienceType === LinkAudienceType.GROUP
+            ? true
+            : linkData.emailProtected,
         emailAuthenticated: linkData.emailAuthenticated,
         allowDownload: linkData.allowDownload,
         allowList: linkData.allowList,
@@ -215,6 +226,8 @@ export default async function handle(
         showBanner: linkData.showBanner,
         enableWatermark: linkData.enableWatermark || false,
         watermarkConfig: linkData.watermarkConfig || null,
+        groupId: linkData.groupId || null,
+        audienceType: linkData.audienceType || LinkAudienceType.GENERAL,
       },
       include: {
         views: {

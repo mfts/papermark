@@ -122,6 +122,15 @@ export default async function handler(
         });
       }
 
+      if (
+        linkData.audienceType === LinkAudienceType.GROUP &&
+        !linkData.groupId
+      ) {
+        return res.status(400).json({
+          error: "No group selected.",
+        });
+      }
+
       // Fetch the link and its related document from the database
       const link = await prisma.link.create({
         data: {
@@ -130,7 +139,10 @@ export default async function handler(
           linkType,
           password: hashedPassword,
           name: linkData.name || null,
-          emailProtected: linkData.emailProtected,
+          emailProtected:
+            linkData.audienceType === LinkAudienceType.GROUP
+              ? true
+              : linkData.emailProtected,
           emailAuthenticated: linkData.emailAuthenticated,
           expiresAt: exat,
           allowDownload: linkData.allowDownload,
