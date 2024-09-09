@@ -53,6 +53,7 @@ export default async function handler(
       }
 
       if (dataroomLink) {
+        console.log("Creating dataroom link for dataroomId:", targetId);
         const dataroom = await prisma.dataroom.findUnique({
           where: {
             id: targetId,
@@ -68,8 +69,11 @@ export default async function handler(
         });
 
         if (!dataroom) {
+          console.error("Dataroom not found for id:", targetId);
           return res.status(400).json({ error: "Dataroom not found." });
         }
+
+        console.log("Dataroom found:", dataroom);
       }
 
       const hashedPassword =
@@ -122,51 +126,57 @@ export default async function handler(
       }
 
       // Fetch the link and its related document from the database
+      console.log("Creating link with data:", {
+        dataroomId: dataroomLink ? targetId : undefined,
+        linkType,
+        // ... other link properties
+      });
+
       const link = await prisma.link.create({
         data: {
-          documentId: documentLink ? targetId : null,
-          dataroomId: dataroomLink ? targetId : null,
           linkType,
           password: hashedPassword,
-          name: linkData.name || null,
-          emailProtected: linkData.emailProtected,
-          emailAuthenticated: linkData.emailAuthenticated,
+          name: linkDomainData.name || null,
+          emailProtected: linkDomainData.emailProtected,
+          emailAuthenticated: linkDomainData.emailAuthenticated,
           expiresAt: exat,
-          allowDownload: linkData.allowDownload,
-          domainId: domainObj?.id || null,
+          allowDownload: linkDomainData.allowDownload,
           domainSlug: domain || null,
           slug: slug || null,
-          enableNotification: linkData.enableNotification,
-          enableFeedback: linkData.enableFeedback,
-          enableScreenshotProtection: linkData.enableScreenshotProtection,
-          enableCustomMetatag: linkData.enableCustomMetatag,
-          metaTitle: linkData.metaTitle || null,
-          metaDescription: linkData.metaDescription || null,
-          metaImage: linkData.metaImage || null,
-          allowList: linkData.allowList,
-          denyList: linkData.denyList,
-          ...(linkData.enableQuestion && {
-            enableQuestion: linkData.enableQuestion,
-            feedback: {
-              create: {
-                data: {
-                  question: linkData.questionText,
-                  type: linkData.questionType,
+          enableNotification: linkDomainData.enableNotification,
+          enableFeedback: linkDomainData.enableFeedback,
+          enableScreenshotProtection: linkDomainData.enableScreenshotProtection,
+          enableCustomMetatag: linkDomainData.enableCustomMetatag,
+          metaTitle: linkDomainData.metaTitle || null,
+          metaDescription: linkDomainData.metaDescription || null,
+          metaImage: linkDomainData.metaImage || null,
+          allowList: linkDomainData.allowList,
+          denyList: linkDomainData.denyList,
+          ...(dataroomLink
+            ? {
+                dataroom: {
+                  connect: { id: targetId },
                 },
-              },
-            },
-          }),
-          ...(linkData.enableAgreement && {
-            enableAgreement: linkData.enableAgreement,
-            agreementId: linkData.agreementId,
-          }),
-          ...(linkData.enableWatermark && {
-            enableWatermark: linkData.enableWatermark,
-            watermarkConfig: linkData.watermarkConfig,
-          }),
-          showBanner: linkData.showBanner,
+              }
+            : {}),
+          ...(documentLink
+            ? {
+                document: {
+                  connect: { id: targetId },
+                },
+              }
+            : {}),
+          ...(domainObj
+            ? {
+                domain: {
+                  connect: { id: domainObj.id },
+                },
+              }
+            : {}),
         },
       });
+
+      console.log("Link created:", link);
 
       const linkWithView = {
         ...link,
@@ -174,12 +184,9 @@ export default async function handler(
         views: [],
       };
 
-      if (!linkWithView) {
-        return res.status(404).json({ error: "Link not found" });
-      }
-
       return res.status(200).json(linkWithView);
     } catch (error) {
+      console.error("Error creating link:", error);
       errorhandler(error, res);
     }
   }

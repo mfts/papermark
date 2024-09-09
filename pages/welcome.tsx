@@ -6,13 +6,25 @@ import { ArrowLeft as ArrowLeftIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Dataroom from "@/components/welcome/dataroom";
 import DataroomTrial from "@/components/welcome/dataroom-trial";
+import DataroomUpload from "@/components/welcome/dataroom-upload";
 import Intro from "@/components/welcome/intro";
 import Next from "@/components/welcome/next";
 import NotionForm from "@/components/welcome/notion-form";
+import Select from "@/components/welcome/select";
 import Upload from "@/components/welcome/upload";
 
 export default function Welcome() {
   const router = useRouter();
+
+  const isDataroomUpload = router.query.type === "dataroom-upload";
+
+  const skipButtonText = isDataroomUpload
+    ? "Skip to dataroom"
+    : "Skip to dashboard";
+  const skipButtonPath =
+    isDataroomUpload && router.query.dataroomId
+      ? `/datarooms/${router.query.dataroomId}`
+      : "/documents";
 
   return (
     <div className="mx-auto flex h-screen max-w-3xl flex-col items-center justify-center overflow-x-hidden">
@@ -40,22 +52,29 @@ export default function Welcome() {
 
             <Button
               variant={"link"}
-              onClick={() => router.push("/documents")}
+              onClick={() => router.push(skipButtonPath)}
               className="absolute right-2 top-10 z-40 p-2 text-muted-foreground sm:right-10"
             >
-              Skip to dashboard
+              {skipButtonText}
             </Button>
           </>
         ) : (
           <Intro key="intro" />
         )}
         {router.query.type === "next" && <Next key="next" />}
+        {router.query.type === "select" && <Select key="select" />}
         {router.query.type === "pitchdeck" && <Upload key="pitchdeck" />}
         {router.query.type === "document" && <Upload key="document" />}
         {router.query.type === "notion" && <NotionForm key="notion" />}
         {router.query.type === "dataroom" && <Dataroom key="dataroom" />}
         {router.query.type === "dataroom-trial" && (
           <DataroomTrial key="dataroom-trial" />
+        )}
+        {router.query.type === "dataroom-upload" && router.query.dataroomId && (
+          <DataroomUpload
+            key="dataroom-upload"
+            dataroomId={router.query.dataroomId as string}
+          />
         )}
       </AnimatePresence>
     </div>

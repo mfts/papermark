@@ -1,6 +1,6 @@
 import { useRouter } from "next/router";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { LinkType } from "@prisma/client";
@@ -32,7 +32,11 @@ import Skeleton from "../Skeleton";
 import { DEFAULT_LINK_PROPS, DEFAULT_LINK_TYPE } from "../links/link-sheet";
 import { LinkOptions } from "../links/link-sheet/link-options";
 
-export default function Upload() {
+interface DataroomUploadProps {
+  dataroomId: string; // Define the dataroomId prop
+}
+
+export default function DataroomUpload({ dataroomId }: DataroomUploadProps) {
   const router = useRouter();
   const plausible = usePlausible();
   const analytics = useAnalytics();
@@ -43,19 +47,62 @@ export default function Upload() {
   const [currentLinkId, setCurrentLinkId] = useState<string | null>(null);
   const [currentDocId, setCurrentDocId] = useState<string | null>(null);
   const [linkData, setLinkData] = useState<DEFAULT_LINK_TYPE>(
-    DEFAULT_LINK_PROPS(LinkType.DOCUMENT_LINK),
+    DEFAULT_LINK_PROPS(LinkType.DATAROOM_LINK),
   );
   const teamInfo = useTeam();
 
   const teamId = teamInfo?.currentTeam?.id as string;
 
-  const handleBrowserUpload = async (event: any) => {
+  useEffect(() => {
+    if (dataroomId && !currentLinkId) {
+      fetchOrCreateDataroomLink();
+    }
+  }, [dataroomId, currentLinkId]);
+
+  const fetchOrCreateDataroomLink = async () => {
+    try {
+      const linkResponse = await fetch(
+        `/api/teams/${teamId}/datarooms/${dataroomId}/links`,
+      );
+      if (linkResponse.ok) {
+        const links = await linkResponse.json();
+        if (links.length > 0) {
+          setCurrentLinkId(links[0].id);
+        } else {
+          const createLinkResponse = await fetch(
+            `/api/teams/${teamId}/datarooms/${dataroomId}/links`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ linkType: "DATAROOM_LINK" }),
+            },
+          );
+          if (createLinkResponse.ok) {
+            const newLink = await createLinkResponse.json();
+            setCurrentLinkId(newLink.id);
+          } else {
+            const errorData = await createLinkResponse.json();
+            toast.error(errorData.message || "Failed to create link.");
+          }
+        }
+      } else {
+        const errorData = await linkResponse.json();
+        toast.error(errorData.message || "Failed to fetch links.");
+      }
+    } catch (error) {
+      console.error("Error fetching or creating dataroom link:", error);
+      toast.error("Failed to generate dataroom link. Please try again.");
+    }
+  };
+
+  const handleFileUpload = async (event: any) => {
     event.preventDefault();
 
-    // Check if the file is chosen
     if (!currentFile) {
       toast.error("Please select a file to upload.");
-      return; // prevent form from submitting
+      return;
     }
 
     try {
@@ -85,33 +132,34 @@ export default function Upload() {
         storageType: type!,
         contentType: contentType,
       };
-      // create a document in the database
+
       const response = await createDocument({ documentData, teamId, numPages });
 
       if (response) {
         const document = await response.json();
-        const linkId = document.links[0].id;
 
-        // track the event
-        plausible("documentUploaded");
-        analytics.capture("Document Added", {
+        // Add document to dataroom
+        await fetch(`/api/teams/${teamId}/datarooms/${dataroomId}/documents`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ documentId: document.id }),
+        });
+
+        plausible("documentUploadedToDataroom");
+        analytics.capture("Document Added to Dataroom", {
           documentId: document.id,
           name: document.name,
           numPages: document.numPages,
           path: router.asPath,
           type: document.type,
           teamId: teamInfo?.currentTeam?.id,
-        });
-        analytics.capture("Link Added", {
-          linkId: document.links[0].id,
-          documentId: document.id,
-          customDomain: null,
-          teamId: teamInfo?.currentTeam?.id,
+          dataroomId: dataroomId,
         });
 
         setTimeout(() => {
           setCurrentDocId(document.id);
-          setCurrentLinkId(linkId);
           setUploading(false);
         }, 2000);
       }
@@ -127,15 +175,12 @@ export default function Upload() {
 
     setIsLoading(true);
 
-    // Upload the image if it's a data URL
     let blobUrl: string | null =
       linkData.metaImage && linkData.metaImage.startsWith("data:")
         ? null
         : linkData.metaImage;
     if (linkData.metaImage && linkData.metaImage.startsWith("data:")) {
-      // Convert the data URL to a blob
       const blob = convertDataUrlToFile({ dataUrl: linkData.metaImage });
-      // Upload the blob to vercel storage
       blobUrl = await uploadImage(blob);
       setLinkData({ ...linkData, metaImage: blobUrl });
     }
@@ -148,13 +193,12 @@ export default function Upload() {
       body: JSON.stringify({
         ...linkData,
         metaImage: blobUrl,
-        targetId: currentDocId,
-        linkType: "DOCUMENT_LINK",
+        targetId: dataroomId,
+        linkType: "DATAROOM_LINK",
       }),
     });
 
     if (!response.ok) {
-      // handle error with toast message
       const { error } = await response.json();
       toast.error(error);
       setIsLoading(false);
@@ -163,10 +207,10 @@ export default function Upload() {
 
     copyToClipboard(
       `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${currentLinkId}`,
-      "Link copied to clipboard. Redirecting to document page...",
+      "Link copied to clipboard. Redirecting to dataroom page...",
     );
 
-    router.push(`/documents/${currentDocId}`);
+    router.push(`/datarooms/${dataroomId}`);
     setIsLoading(false);
   };
 
@@ -194,15 +238,15 @@ export default function Upload() {
             variants={STAGGER_CHILD_VARIANTS}
             className="flex flex-col items-center space-y-10 text-center"
           >
-            <h1 className="font-display text-3xl font-semibold text-foreground transition-colors sm:text-4xl">
-              {`Upload your ${router.query.type}`}
+            <h1 className="font-display max-w-lg text-3xl font-semibold text-foreground transition-colors sm:text-4xl">
+              Upload first document to your data room
             </h1>
           </motion.div>
           <motion.div variants={STAGGER_CHILD_VARIANTS}>
             <main className="mt-8">
               <form
                 encType="multipart/form-data"
-                onSubmit={handleBrowserUpload}
+                onSubmit={handleFileUpload}
                 className="flex flex-col"
               >
                 <div className="space-y-12">
@@ -279,7 +323,7 @@ export default function Upload() {
             className="flex flex-col items-center space-y-10 text-center"
           >
             <h1 className="font-display text-3xl font-semibold text-foreground transition-colors sm:text-4xl">
-              Share your unique link
+              Share your dataroom link
             </h1>
           </motion.div>
 
@@ -295,7 +339,7 @@ export default function Upload() {
                 </div>
               </main>
             )}
-            {currentLinkId && currentDocId && (
+            {currentLinkId && (
               <main className="min-h-[300px]">
                 <div className="flex flex-col justify-center">
                   <div className="relative">
@@ -319,7 +363,7 @@ export default function Upload() {
                           <LinkOptions
                             data={linkData}
                             setData={setLinkData}
-                            linkType={LinkType.DOCUMENT_LINK}
+                            linkType={LinkType.DATAROOM_LINK}
                           />
                         </AccordionContent>
                       </AccordionItem>
@@ -327,8 +371,11 @@ export default function Upload() {
                   </div>
                   <div className="mb-4 flex items-center justify-center">
                     <Button onClick={handleSubmit} loading={isLoading}>
-                      Share Document
+                      Share Dataroom
                     </Button>
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    <span> One link to share multiple files</span>
                   </div>
                 </div>
               </main>
