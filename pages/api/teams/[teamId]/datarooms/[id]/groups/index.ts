@@ -57,6 +57,13 @@ export default async function handle(
             orderBy: {
               createdAt: "desc",
             },
+            include: {
+              _count: {
+                select: {
+                  members: true,
+                },
+              },
+            },
           },
         },
       });

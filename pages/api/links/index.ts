@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
+import { LinkAudienceType } from "@prisma/client";
 import { getServerSession } from "next-auth/next";
 
 import { errorhandler } from "@/lib/errorHandler";
@@ -145,6 +146,11 @@ export default async function handler(
           metaImage: linkData.metaImage || null,
           allowList: linkData.allowList,
           denyList: linkData.denyList,
+          audienceType: linkData.audienceType,
+          groupId:
+            linkData.audienceType === LinkAudienceType.GROUP
+              ? linkData.groupId
+              : null,
           ...(linkData.enableQuestion && {
             enableQuestion: linkData.enableQuestion,
             feedback: {
@@ -173,6 +179,8 @@ export default async function handler(
         _count: { views: 0 },
         views: [],
       };
+
+      console.log("linkWithView", linkWithView);
 
       if (!linkWithView) {
         return res.status(404).json({ error: "Link not found" });

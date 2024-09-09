@@ -18,21 +18,29 @@ export default function useDataroomGroups() {
     id: string;
   };
 
-  const { data: viewerGroups, error } = useSWR<ViewerGroup[]>(
+  type ViewerGroupWithCount = ViewerGroup & {
+    _count: {
+      members: number;
+    };
+  };
+
+  const {
+    data: viewerGroups,
+    error,
+    mutate,
+  } = useSWR<ViewerGroupWithCount[]>(
     teamInfo?.currentTeam?.id &&
       id &&
       `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${id}/groups`,
     fetcher,
-    {
-      revalidateOnFocus: false,
-      dedupingInterval: 30000,
-    },
+    { dedupingInterval: 30000 },
   );
 
   return {
     viewerGroups,
     loading: !viewerGroups && !error,
     error,
+    mutate,
   };
 }
 
