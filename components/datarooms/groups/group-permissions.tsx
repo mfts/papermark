@@ -485,7 +485,6 @@ export default function ExpandableTable({
         });
         // }
 
-
         return changes;
       };
 
@@ -526,9 +525,7 @@ export default function ExpandableTable({
           throw new Error("Failed to save permissions");
         }
 
-        toast.success("Permissions updated", {
-          description: "The permissions have been successfully updated.",
-        });
+        toast.success("Permissions updated successfully.");
 
         setPendingChanges({});
       } catch (error) {
