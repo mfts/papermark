@@ -195,7 +195,7 @@ export default function Upload() {
             className="flex flex-col items-center space-y-10 text-center"
           >
             <h1 className="font-display text-3xl font-semibold text-foreground transition-colors sm:text-4xl">
-              {`Upload your ${router.query.type}`}
+              {`Upload your ${router.query.type === "sales-document" ? "document" : `${router.query.type}`}`}
             </h1>
           </motion.div>
           <motion.div variants={STAGGER_CHILD_VARIANTS}>

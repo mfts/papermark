@@ -97,10 +97,7 @@ export default async function handle(
 
       waitUntil(sendDataroomTrialWelcome({ fullName, to: email! }));
 
-      res.status(201).json({
-        ...dataroomWithCount,
-        dataroomId: dataroom.id, // Add this line to include the dataroomId
-      });
+      res.status(201).json(dataroomWithCount);
     } catch (error) {
       console.error("Request error", error);
       res.status(500).json({ error: "Error creating dataroom" });

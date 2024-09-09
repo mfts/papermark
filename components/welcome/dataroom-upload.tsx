@@ -50,52 +50,7 @@ export default function DataroomUpload({ dataroomId }: DataroomUploadProps) {
     DEFAULT_LINK_PROPS(LinkType.DATAROOM_LINK),
   );
   const teamInfo = useTeam();
-
   const teamId = teamInfo?.currentTeam?.id as string;
-
-  useEffect(() => {
-    if (dataroomId && !currentLinkId) {
-      fetchOrCreateDataroomLink();
-    }
-  }, [dataroomId, currentLinkId]);
-
-  const fetchOrCreateDataroomLink = async () => {
-    try {
-      const linkResponse = await fetch(
-        `/api/teams/${teamId}/datarooms/${dataroomId}/links`,
-      );
-      if (linkResponse.ok) {
-        const links = await linkResponse.json();
-        if (links.length > 0) {
-          setCurrentLinkId(links[0].id);
-        } else {
-          const createLinkResponse = await fetch(
-            `/api/teams/${teamId}/datarooms/${dataroomId}/links`,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({ linkType: "DATAROOM_LINK" }),
-            },
-          );
-          if (createLinkResponse.ok) {
-            const newLink = await createLinkResponse.json();
-            setCurrentLinkId(newLink.id);
-          } else {
-            const errorData = await createLinkResponse.json();
-            toast.error(errorData.message || "Failed to create link.");
-          }
-        }
-      } else {
-        const errorData = await linkResponse.json();
-        toast.error(errorData.message || "Failed to fetch links.");
-      }
-    } catch (error) {
-      console.error("Error fetching or creating dataroom link:", error);
-      toast.error("Failed to generate dataroom link. Please try again.");
-    }
-  };
 
   const handleFileUpload = async (event: any) => {
     event.preventDefault();
@@ -157,6 +112,24 @@ export default function DataroomUpload({ dataroomId }: DataroomUploadProps) {
           teamId: teamInfo?.currentTeam?.id,
           dataroomId: dataroomId,
         });
+
+        // create link to dataroom
+        const newLinkResponse = await fetch(`/api/links`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            ...linkData,
+            targetId: dataroomId,
+            linkType: "DATAROOM_LINK",
+          }),
+        });
+
+        if (newLinkResponse.ok) {
+          const link = await newLinkResponse.json();
+          setCurrentLinkId(link.id);
+        }
 
         setTimeout(() => {
           setCurrentDocId(document.id);

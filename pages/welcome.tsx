@@ -65,6 +65,9 @@ export default function Welcome() {
         {router.query.type === "select" && <Select key="select" />}
         {router.query.type === "pitchdeck" && <Upload key="pitchdeck" />}
         {router.query.type === "document" && <Upload key="document" />}
+        {router.query.type === "sales-document" && (
+          <Upload key="sales-document" />
+        )}
         {router.query.type === "notion" && <NotionForm key="notion" />}
         {router.query.type === "dataroom" && <Dataroom key="dataroom" />}
         {router.query.type === "dataroom-trial" && (

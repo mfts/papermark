@@ -74,7 +74,7 @@ export default function DataroomTrial() {
         return;
       }
 
-      const { dataroomId } = await response.json(); // Assuming the API returns the created dataroom's ID
+      const { id: dataroomId } = await response.json(); // Assuming the API returns the created dataroom's ID
 
       if (!dataroomId) {
         throw new Error("No dataroom ID returned from the server");
@@ -93,7 +93,6 @@ export default function DataroomTrial() {
       // Instead of redirecting to "/datarooms", we'll navigate to the dataroom-upload page
       router.push(`/welcome?type=dataroom-upload&dataroomId=${dataroomId}`);
     } catch (error) {
-      setLoading(false);
       toast.error("Error adding dataroom. Please try again.");
       console.error("Error creating dataroom:", error);
     } finally {
@@ -245,7 +244,7 @@ export default function DataroomTrial() {
                 <button className="underline">Business</button>
               </UpgradePlanModal>{" "}
               plan. <br /> */}
-              Credit card is not required. After the trial, upgrade to{" "}
+              No credit card is required. After the trial, upgrade to{" "}
               <UpgradePlanModal clickedPlan="Business">
                 <button className="underline">
                   Papermark Business or Data Rooms

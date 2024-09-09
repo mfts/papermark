@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 import { motion } from "framer-motion";
 import {
   File as DocumentIcon,
+  FileChartPieIcon,
   Presentation as PresentationChartBarIcon,
 } from "lucide-react";
 
@@ -65,13 +66,13 @@ export default function Next() {
             router.push({
               pathname: "/welcome",
               query: {
-                type: "document",
+                type: "sales-document",
               },
             })
           }
           className="flex min-h-[200px] flex-col items-center justify-center space-y-5 overflow-hidden p-5 transition-colors hover:bg-gray-200 hover:dark:bg-gray-800 md:p-10"
         >
-          <DocumentIcon className="pointer-events-none h-auto w-12 sm:w-12" />
+          <FileChartPieIcon className="pointer-events-none h-auto w-12 sm:w-12" />
           <p>Sales document</p>
         </button>
 
@@ -105,8 +106,11 @@ export default function Next() {
         </button>
       </motion.div>
 
-      <motion.div variants={STAGGER_CHILD_VARIANTS} className="text-center">
-        <button
+      <motion.div
+        variants={STAGGER_CHILD_VARIANTS}
+        className="text-center text-sm text-muted-foreground"
+      >
+        {/* <button
           className="text-center text-sm text-muted-foreground underline-offset-4 transition-all hover:text-gray-800 hover:underline hover:dark:text-muted-foreground/80"
           onClick={() =>
             router.push({
@@ -116,10 +120,9 @@ export default function Next() {
               },
             })
           }
-        >
-          You can start by sharing documents an switch to data room creation
-          later.
-        </button>
+        > */}
+        You can start by sharing documents and create a data room later.
+        {/* </button> */}
       </motion.div>
     </motion.div>
   );
