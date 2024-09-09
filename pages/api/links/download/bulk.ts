@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import { InvocationType, InvokeCommand } from "@aws-sdk/client-lambda";
-import { ViewType } from "@prisma/client";
+import { ItemType, ViewType } from "@prisma/client";
 
 import { getLambdaClient } from "@/lib/files/aws-client";
 import prisma from "@/lib/prisma";
@@ -35,6 +35,7 @@ export default async function handle(
               isArchived: true,
             },
           },
+          groupId: true,
           dataroom: {
             select: {
               folders: {
@@ -46,6 +47,7 @@ export default async function handle(
               },
               documents: {
                 select: {
+                  id: true,
                   folderId: true,
                   document: {
                     select: {
@@ -101,6 +103,37 @@ export default async function handle(
         return res.status(403).json({ error: "Error downloading" });
       }
 
+      let downloadFolders = view.dataroom.folders;
+      let downloadDocuments = view.dataroom.documents;
+
+      // if groupId is not null,
+      // we should find the group permissions
+      // and reduce the number of documents and folders to download
+      if (view.groupId) {
+        const groupPermissions =
+          await prisma.viewerGroupAccessControls.findMany({
+            where: { groupId: view.groupId, canDownload: true },
+          });
+
+        const permittedFolderIds = groupPermissions
+          .filter(
+            (permission) => permission.itemType === ItemType.DATAROOM_FOLDER,
+          )
+          .map((permission) => permission.itemId);
+        const permittedDocumentIds = groupPermissions
+          .filter(
+            (permission) => permission.itemType === ItemType.DATAROOM_DOCUMENT,
+          )
+          .map((permission) => permission.itemId);
+
+        downloadFolders = downloadFolders.filter((folder) =>
+          permittedFolderIds.includes(folder.id),
+        );
+        downloadDocuments = downloadDocuments.filter((doc) =>
+          permittedDocumentIds.includes(doc.id),
+        );
+      }
+
       // update the view with the downloadedAt timestamp
       await prisma.view.update({
         where: { id: viewId },
@@ -119,7 +152,7 @@ export default async function handle(
 
       // Create a map of folder IDs to folder names
       const folderMap = new Map(
-        view.dataroom.folders.map((folder) => [
+        downloadFolders.map((folder) => [
           folder.path,
           { name: folder.name, id: folder.id },
         ]),
@@ -144,7 +177,7 @@ export default async function handle(
       };
 
       // Add root level documents
-      view.dataroom.documents
+      downloadDocuments
         .filter((doc) => !doc.folderId)
         .filter((doc) => doc.document.versions[0].type !== "notion")
         .filter((doc) => doc.document.versions[0].storageType !== "VERCEL_BLOB")
@@ -157,30 +190,27 @@ export default async function handle(
         );
 
       // Add documents in folders
-      view.dataroom.folders.forEach((folder) => {
-        const folderDocs =
-          view.dataroom &&
-          view.dataroom.documents
-            .filter((doc) => doc.folderId === folder.id)
-            .filter((doc) => doc.document.versions[0].type !== "notion")
-            .filter(
-              (doc) => doc.document.versions[0].storageType !== "VERCEL_BLOB",
-            );
-
-        folderDocs &&
-          folderDocs.forEach((doc) =>
-            addFileToStructure(
-              folder.path,
-              doc.document.name,
-              doc.document.versions[0].file,
-            ),
+      downloadFolders.forEach((folder) => {
+        const folderDocs = downloadDocuments
+          .filter((doc) => doc.folderId === folder.id)
+          .filter((doc) => doc.document.versions[0].type !== "notion")
+          .filter(
+            (doc) => doc.document.versions[0].storageType !== "VERCEL_BLOB",
           );
+
+        folderDocs.forEach((doc) =>
+          addFileToStructure(
+            folder.path,
+            doc.document.name,
+            doc.document.versions[0].file,
+          ),
+        );
       });
 
       const client = getLambdaClient();
 
       const params = {
-        FunctionName: "bulk-download-zip-creator-prod", // Use the name you gave your Lambda function
+        FunctionName: `bulk-download-zip-creator-${process.env.NODE_ENV === "development" ? "dev" : "prod"}`, // Use the name you gave your Lambda function
         InvocationType: InvocationType.RequestResponse,
         Payload: JSON.stringify({
           sourceBucket: process.env.NEXT_PRIVATE_UPLOAD_BUCKET,
