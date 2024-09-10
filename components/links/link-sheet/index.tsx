@@ -233,7 +233,7 @@ export default function LinkSheet({
         <SheetHeader className="text-start">
           <SheetTitle>
             {currentLink
-              ? `Edit ${currentLink.audienceType === LinkAudienceType.GROUP ? "group" : "general"} link`
+              ? `Edit ${currentLink.audienceType === LinkAudienceType.GROUP ? "group" : ""} link`
               : "Create a new link"}
           </SheetTitle>
         </SheetHeader>
@@ -252,7 +252,7 @@ export default function LinkSheet({
                       })
                     }
                   >
-                    {!!!currentLink ? (
+                    {linkType === LinkType.DATAROOM_LINK && !!!currentLink ? (
                       <TabsList className="grid w-full grid-cols-2">
                         <TabsTrigger value={LinkAudienceType.GENERAL}>
                           General
