@@ -3,8 +3,8 @@ import { useRouter } from "next/router";
 import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
-import { DocumentVersion, LinkAudienceType } from "@prisma/client";
-import { EyeIcon, GlobeIcon, Settings2Icon, UsersIcon } from "lucide-react";
+import { DocumentVersion } from "@prisma/client";
+import { EyeIcon, Settings2Icon } from "lucide-react";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
@@ -40,8 +40,7 @@ import ProcessStatusBar from "../documents/process-status-bar";
 import BarChart from "../shared/icons/bar-chart";
 import ChevronDown from "../shared/icons/chevron-down";
 import MoreHorizontal from "../shared/icons/more-horizontal";
-import { BadgeTooltip, ButtonTooltip } from "../ui/tooltip";
-import { LinkBadge } from "./link-badge";
+import { ButtonTooltip } from "../ui/tooltip";
 import LinkSheet, {
   DEFAULT_LINK_PROPS,
   type DEFAULT_LINK_TYPE,
