@@ -1,21 +1,7 @@
-import Link from "next/link";
-
-import { useRef, useState } from "react";
+import { useState } from "react";
 
 import { ViewerGroup } from "@prisma/client";
-import { motion } from "framer-motion";
-import {
-  ChevronDownIcon,
-  CircleCheckIcon,
-  FlagIcon,
-  GlobeIcon,
-  Layers2Icon,
-  MousePointerClickIcon,
-  PenIcon,
-  RefreshCcwDotIcon,
-  SettingsIcon,
-  UsersIcon,
-} from "lucide-react";
+import { Layers2Icon, PenIcon, UsersIcon } from "lucide-react";
 
 import BarChart from "@/components/shared/icons/bar-chart";
 import MoreVertical from "@/components/shared/icons/more-vertical";
@@ -30,7 +16,11 @@ import {
 
 import { cn, nFormatter } from "@/lib/utils";
 
-export default function GroupCard({ group }: { group: ViewerGroup }) {
+export default function GroupCard({
+  group,
+}: {
+  group: ViewerGroup & { _count: { members: number; views: number } };
+}) {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
@@ -48,28 +38,25 @@ export default function GroupCard({ group }: { group: ViewerGroup }) {
               </div>
             </div>
             <div className="overflow-hidden">
-              <div className="flex items-center gap-1.5 sm:gap-2.5">
+              <div className="flex flex-col gap-1">
                 <p className="truncate text-sm font-medium" title="Group Name">
                   {group.name}
                 </p>
+                <span className="text-xs text-muted-foreground">
+                  {group._count.members} members
+                </span>
               </div>
             </div>
           </div>
 
           <div className="flex justify-end gap-2 sm:gap-3">
-            <Link
-              onClick={(e) => {
-                e.stopPropagation();
-              }}
-              href="#2"
-              className="z-20 flex items-center space-x-1 rounded-md bg-gray-200 px-1.5 py-0.5 transition-all duration-75 hover:scale-105 active:scale-100 dark:bg-gray-700 sm:px-2"
-            >
+            <div className="z-20 flex items-center space-x-1 rounded-md bg-gray-200 px-1.5 py-0.5 transition-all duration-75 hover:scale-105 active:scale-100 dark:bg-gray-700 sm:px-2">
               <BarChart className="h-3 w-3 text-muted-foreground sm:h-4 sm:w-4" />
               <p className="whitespace-nowrap text-xs text-muted-foreground sm:text-sm">
-                {nFormatter(10000)}
+                {nFormatter(group._count.views)}
                 <span className="ml-1 hidden sm:inline-block">views</span>
               </p>
-            </Link>
+            </div>
 
             <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
               <DropdownMenuTrigger asChild>
