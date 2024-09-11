@@ -10,7 +10,7 @@ export const DataroomNavigation = ({ dataroomId }: { dataroomId?: string }) => {
         {
           label: "Overview",
           href: `/datarooms/${dataroomId}`,
-          segment: `${dataroomId}`,
+          segment: `/datarooms/[id]`,
         },
         {
           label: "Documents",
