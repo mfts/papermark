@@ -21,6 +21,7 @@ export default function useDataroomGroups() {
   type ViewerGroupWithCount = ViewerGroup & {
     _count: {
       members: number;
+      views: number;
     };
   };
 
