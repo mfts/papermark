@@ -4,14 +4,13 @@ import { useState } from "react";
 
 import { UsersIcon } from "lucide-react";
 
-import { AddViewerModal } from "@/components/datarooms/add-viewer-modal";
 import { DataroomHeader } from "@/components/datarooms/dataroom-header";
 import { DataroomNavigation } from "@/components/datarooms/dataroom-navigation";
 import { AddGroupModal } from "@/components/datarooms/groups/add-group-modal";
 import GroupCard from "@/components/datarooms/groups/group-card";
+import { GroupCardPlaceholder } from "@/components/datarooms/groups/group-card-placeholder";
 import AppLayout from "@/components/layouts/app";
 import { Button } from "@/components/ui/button";
-import DataroomViewersTable from "@/components/visitors/dataroom-viewers";
 
 import { useDataroom } from "@/lib/swr/use-dataroom";
 import useDataroomGroups from "@/lib/swr/use-dataroom-groups";
@@ -50,35 +49,9 @@ export default function DataroomGroupPage() {
                 </h1>
               </div>
               <div className="flex w-full flex-wrap items-center gap-3 sm:w-auto">
-                <div className="w-full sm:w-auto">
-                  {/* <SearchBoxPersisted
-                    loading={loading}
-                    onChangeDebounced={(t) => {
-                      if (t) {
-                        queryParams({ set: { search: t }, del: "page" });
-                      } else {
-                        queryParams({ del: "search" });
-                      }
-                    }}
-                  /> */}
-                </div>
-                {/* <ToggleGroup
-                  options={[
-                    { value: "active", label: "Active" },
-                    { value: "archived", label: "Archived" },
-                  ]}
-                  selected={archived ? "archived" : "active"}
-                  selectAction={(id) =>
-                    id === "active"
-                      ? queryParams({ del: ["archived", "page"] })
-                      : queryParams({ set: { archived: "true" }, del: "page" })
-                  }
-                /> */}
-                {/* <AddDomainButton /> */}
                 <Button onClick={() => setModalOpen(true)}>Create group</Button>
               </div>
             </div>
-            {/* {workspaceId && <AddEditDomainModal />} */}
             <div className="animate-fade-in">
               {!loading ? (
                 viewerGroups && viewerGroups.length > 0 ? (
@@ -114,18 +87,12 @@ export default function DataroomGroupPage() {
                 <ul className="grid grid-cols-1 gap-3">
                   {Array.from({ length: 3 }).map((_, idx) => (
                     <li key={idx}>
-                      {/* <DomainCardPlaceholder /> */}
-                      Loading...
+                      <GroupCardPlaceholder />
                     </li>
                   ))}
                 </ul>
               )}
             </div>
-            {/* <Pagination
-              pageSize={50}
-              totalCount={domainsCount || 0}
-              unit="domains"
-            /> */}
           </div>
 
           <AddGroupModal
