@@ -7,6 +7,10 @@ import { getServerSession } from "next-auth/next";
 import { sendDataroomTrialWelcome } from "@/lib/emails/send-dataroom-trial";
 import { newId } from "@/lib/id-helper";
 import prisma from "@/lib/prisma";
+import {
+  sendDataroomTrialExpiredEmailTask,
+  sendDataroomTrialInfoEmailTask,
+} from "@/lib/trigger/send-scheduled-email";
 import { CustomUser } from "@/lib/types";
 import { log } from "@/lib/utils";
 
@@ -95,7 +99,25 @@ export default async function handle(
         _count: { documents: 0 },
       };
 
+      /** Emails
+       *
+       * 1. Send welcome email
+       * 2. Send dataroom info email after 3 days
+       * 3. Send expired trial email after 7 days
+       */
       waitUntil(sendDataroomTrialWelcome({ fullName, to: email! }));
+      waitUntil(
+        sendDataroomTrialInfoEmailTask.trigger(
+          { to: email! },
+          { delay: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000) },
+        ),
+      );
+      waitUntil(
+        sendDataroomTrialExpiredEmailTask.trigger(
+          { to: email!, name: fullName.split(" ")[0], teamId },
+          { delay: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) },
+        ),
+      );
 
       res.status(201).json(dataroomWithCount);
     } catch (error) {

@@ -36,12 +36,11 @@ const Onboarding3Email = () => {
                 <li>Share data rooms with one link</li>
                 <li>Upload unlimited files</li>
                 <li>Create unlimited folders and subfolders</li>
-                <li>Invite unlimited team members</li>
                 <li>
                   Connect your <strong>custom domain 💫</strong>{" "}
                 </li>
-                <li>Create fully branded expereince </li>
-                <li>Use advancedlink settings</li>
+                <li>Create fully branded experience </li>
+                <li>Use advanced link settings</li>
                 <li>Create full whitelabeling</li>
                 <li>Build self-hosted expereince</li>
               </ul>
@@ -60,14 +59,14 @@ const Onboarding3Email = () => {
             <Section className="mb-[32px] mt-[32px] text-center">
               <Button
                 className="rounded bg-black text-center text-xs font-semibold text-white no-underline"
-                href={`https://app.papermark.io/documents?utm_source=onboarding&utm_medium=email&utm_campaign=20240723&utm_content=upload_documents`}
+                href={`https://app.papermark.io/datarooms?utm_source=dataroom-info&utm_medium=email&utm_campaign=20240723&utm_content=upload_documents`}
                 style={{ padding: "12px 20px" }}
               >
                 Create new data room
               </Button>
             </Section>
             <Text className="text-sm">
-              If you want to sel-host Papermark, and build fully customizable
+              If you want to self-host Papermark, and build fully customizable
               experience{" "}
               <a
                 href="https://cal.com/marcseitz/papermark"
@@ -90,7 +89,7 @@ const Onboarding3Email = () => {
                 </a>
               </Text>
               <Text className="text-xs">
-                This is a last onboaridng email. If you have any feedback or
+                This is a last onboarding email. If you have any feedback or
                 questions about this email, simply reply to it. I&apos;d love to
                 hear from you!{" "}
               </Text>

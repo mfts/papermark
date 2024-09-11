@@ -159,13 +159,47 @@ export default async function handle(
       );
 
       // Helper function to add a file to the structure
+      // const addFileToStructure = (
+      //   path: string,
+      //   fileName: string,
+      //   fileKey: string,
+      // ) => {
+      //   const folderInfo = folderMap.get(path) || { name: "Root", id: null };
+      //   if (!folderStructure[path]) {
+      //     folderStructure[path] = {
+      //       name: folderInfo.name,
+      //       path: path,
+      //       files: [],
+      //     };
+      //   }
+      //   folderStructure[path].files.push({ name: fileName, key: fileKey });
+      //   fileKeys.push(fileKey);
+      // };
+
       const addFileToStructure = (
         path: string,
         fileName: string,
         fileKey: string,
       ) => {
-        const folderInfo = folderMap.get(path) || { name: "Root", id: null };
+        const pathParts = path.split("/").filter(Boolean);
+        let currentPath = "";
+
+        // Add folder information for each level of the path
+        pathParts.forEach((part, index) => {
+          currentPath += "/" + part;
+          const folderInfo = folderMap.get(currentPath);
+          if (!folderStructure[currentPath]) {
+            folderStructure[currentPath] = {
+              name: folderInfo ? folderInfo.name : part,
+              path: currentPath,
+              files: [],
+            };
+          }
+        });
+
+        // Add the file to the leaf folder
         if (!folderStructure[path]) {
+          const folderInfo = folderMap.get(path) || { name: "Root", id: null };
           folderStructure[path] = {
             name: folderInfo.name,
             path: path,
@@ -198,13 +232,10 @@ export default async function handle(
             (doc) => doc.document.versions[0].storageType !== "VERCEL_BLOB",
           );
 
-        folderDocs.forEach((doc) =>
-          addFileToStructure(
-            folder.path,
-            doc.document.name,
-            doc.document.versions[0].file,
-          ),
-        );
+        // If the folder is empty, ensure it's still added to the structure
+        if (folderDocs && folderDocs.length === 0) {
+          addFileToStructure(folder.path, "", "");
+        }
       });
 
       const client = getLambdaClient();

@@ -3,8 +3,8 @@ import { useRouter } from "next/router";
 import { motion } from "framer-motion";
 import {
   File as DocumentIcon,
+  FileChartPieIcon,
   Presentation as PresentationChartBarIcon,
-  ServerIcon,
 } from "lucide-react";
 
 import NotionIcon from "@/components/shared/icons/notion";
@@ -39,45 +39,78 @@ export default function Next() {
           Papermark
         </p>
         <h1 className="font-display max-w-md text-3xl font-semibold transition-colors sm:text-4xl">
-          What do you want to share today?
+          Which document do you want to share today?
         </h1>
       </motion.div>
       <motion.div
         variants={STAGGER_CHILD_VARIANTS}
-        className="grid w-full grid-cols-1 divide-y divide-border rounded-md border border-border text-foreground md:grid-cols-2 md:divide-x"
+        className="grid w-full grid-cols-1 divide-y divide-border rounded-md border border-border text-foreground md:grid-cols-4 md:divide-x"
       >
         <button
           onClick={() =>
             router.push({
               pathname: "/welcome",
               query: {
-                type: "select",
+                type: "pitchdeck",
               },
             })
           }
           className="flex min-h-[200px] flex-col items-center justify-center space-y-5 overflow-hidden p-5 transition-colors hover:bg-gray-200 hover:dark:bg-gray-800 md:p-10"
         >
-          <DocumentIcon className="pointer-events-none h-auto w-12 sm:w-12" />
-          <p>Document</p>
+          <PresentationChartBarIcon className="pointer-events-none h-auto w-12 sm:w-12" />
+          <p>Pitchdeck</p>
+        </button>
+
+        <button
+          onClick={() =>
+            router.push({
+              pathname: "/welcome",
+              query: {
+                type: "sales-document",
+              },
+            })
+          }
+          className="flex min-h-[200px] flex-col items-center justify-center space-y-5 overflow-hidden p-5 transition-colors hover:bg-gray-200 hover:dark:bg-gray-800 md:p-10"
+        >
+          <FileChartPieIcon className="pointer-events-none h-auto w-12 sm:w-12" />
+          <p>Sales document</p>
+        </button>
+
+        <button
+          onClick={() =>
+            router.push({
+              pathname: "/welcome",
+              query: {
+                type: "notion",
+              },
+            })
+          }
+          className="flex min-h-[200px] flex-col items-center justify-center space-y-5 overflow-hidden p-5 transition-colors hover:bg-gray-200 hover:dark:bg-gray-800 md:p-10"
+        >
+          <NotionIcon className="pointer-events-none h-auto w-12 sm:w-12" />
+          <p>Notion Page</p>
         </button>
         <button
           onClick={() =>
             router.push({
               pathname: "/welcome",
               query: {
-                type: "dataroom",
+                type: "document",
               },
             })
           }
           className="flex min-h-[200px] flex-col items-center justify-center space-y-5 overflow-hidden p-5 transition-colors hover:bg-gray-200 hover:dark:bg-gray-800 md:p-10"
         >
-          <ServerIcon className="pointer-events-none h-auto w-12 sm:w-12" />
-          <p>Data Room</p>
+          <DocumentIcon className="pointer-events-none h-auto w-12 sm:w-12" />
+          <p>Another document</p>
         </button>
       </motion.div>
 
-      {/* <motion.div variants={STAGGER_CHILD_VARIANTS} className="text-center">
-        <button
+      <motion.div
+        variants={STAGGER_CHILD_VARIANTS}
+        className="text-center text-sm text-muted-foreground"
+      >
+        {/* <button
           className="text-center text-sm text-muted-foreground underline-offset-4 transition-all hover:text-gray-800 hover:underline hover:dark:text-muted-foreground/80"
           onClick={() =>
             router.push({
@@ -87,10 +120,10 @@ export default function Next() {
               },
             })
           }
-        >
-          Sharing Data Room is possible in 7 day free trial
-        </button>
-      </motion.div> */}
+        > */}
+        You can start by sharing documents and create a data room later.
+        {/* </button> */}
+      </motion.div>
     </motion.div>
   );
 }
