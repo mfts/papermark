@@ -1,18 +1,10 @@
 import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
-import {
-  BadgeCheckIcon,
-  MoreHorizontalIcon,
-  PlusCircleIcon,
-  SendIcon,
-  UserXIcon,
-  XIcon,
-} from "lucide-react";
+import { MoreHorizontalIcon, PlusCircleIcon, UserXIcon } from "lucide-react";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
-import { AddTeamMembers } from "@/components/teams/add-team-member-modal";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -31,13 +23,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { BadgeTooltip } from "@/components/ui/tooltip";
 import { VisitorAvatar } from "@/components/visitors/visitor-avatar";
 
 import { useDataroomGroup } from "@/lib/swr/use-dataroom-groups";
-import { timeAgo } from "@/lib/utils";
 
-import { AddViewerModal } from "../add-viewer-modal";
 import { AddGroupMemberModal } from "./add-member-modal";
 
 export default function GroupMemberTable({
@@ -48,19 +37,22 @@ export default function GroupMemberTable({
   groupId: string;
 }) {
   const teamInfo = useTeam();
+  const teamId = teamInfo?.currentTeam?.id;
   const { viewerGroupMembers } = useDataroomGroup();
 
   const [addMembersOpen, setAddMembersOpen] = useState<boolean>(false);
 
   const handleRemoveMember = async (id: string) => {
     // mutate the data optimistically
+    const key = `/api/teams/${teamId}/datarooms/${dataroomId}/groups/${groupId}`;
     mutate(
-      `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}/groups/${groupId}/members`,
-      (currentData: { viewerGroupMembers: any[] } | undefined) => {
+      key,
+      (currentData: { members: any[] } | undefined) => {
         if (!currentData) return currentData;
+        console.log(currentData);
         return {
           ...currentData,
-          viewerGroupMembers: currentData.viewerGroupMembers.filter(
+          viewerGroupMembers: currentData.members.filter(
             (member) => member.id !== id,
           ),
         };
@@ -69,19 +61,23 @@ export default function GroupMemberTable({
     );
 
     const response = await fetch(
-      `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}/groups/${groupId}/members/${id}`,
-      { method: "DELETE" },
+      `/api/teams/${teamId}/datarooms/${dataroomId}/groups/${groupId}/members/${id}`,
+      {
+        method: "DELETE",
+      },
     );
 
     if (!response.ok) {
+      mutate(key);
       toast.error("Failed to remove member");
       return;
     }
+    mutate(key);
     toast.success("Member removed successfully");
   };
 
   return (
-    <div className="w-full">
+    <div className="l">
       <div className="mb-2 flex items-center justify-between md:mb-4">
         <h2>All members</h2>
         <Button
@@ -107,7 +103,7 @@ export default function GroupMemberTable({
               <TableHead>Name</TableHead>
               {/* <TableHead>Visit Duration</TableHead> */}
               {/* <TableHead>Last Viewed Document</TableHead> */}
-              <TableHead>Last Viewed</TableHead>
+              {/* <TableHead>Last Viewed</TableHead> */}
               <TableHead className="text-center"></TableHead>
             </TableRow>
           </TableHeader>
@@ -140,24 +136,8 @@ export default function GroupMemberTable({
                       </div>
                     </div>
                   </TableCell>
-                  {/* Duration */}
-                  {/* <TableCell className="">
-                        <div className="text-sm text-muted-foreground">
-                          {durationFormat(view.totalDuration)}
-                        </div>
-                      </TableCell> */}
-                  {/* Completion */}
-                  {/* <TableCell className="flex justify-start">
-                        <div className="text-sm text-muted-foreground">
-                          <Gauge
-                            value={view.completionRate}
-                            size={"small"}
-                            showValue={true}
-                          />
-                        </div>
-                      </TableCell> */}
                   {/* Last Viewed */}
-                  <TableCell className="text-sm text-muted-foreground">
+                  {/* <TableCell className="text-sm text-muted-foreground">
                     <time
                       dateTime={new Date(viewer.viewer.updatedAt).toISOString()}
                     >
@@ -165,7 +145,7 @@ export default function GroupMemberTable({
                         ? timeAgo(viewer.viewer.updatedAt)
                         : "-"}
                     </time>
-                  </TableCell>
+                  </TableCell> */}
                   {/* Actions */}
                   <TableCell className="p-0 text-center">
                     <DropdownMenu>
@@ -197,12 +177,6 @@ export default function GroupMemberTable({
               <TableRow>
                 <TableCell className="min-w-[100px]">
                   <Skeleton className="h-6 w-full" />
-                </TableCell>
-                <TableCell className="min-w-[450px]">
-                  <Skeleton className="h-6 w-full" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton className="h-6 w-24" />
                 </TableCell>
                 <TableCell>
                   <Skeleton className="h-6 w-24" />

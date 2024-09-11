@@ -3,10 +3,8 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth/next";
 
-import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
-import { log } from "@/lib/utils";
 
 export default async function handle(
   req: NextApiRequest,
@@ -95,8 +93,8 @@ export default async function handle(
       res.status(500).json({ error: "Error creating folder" });
     }
   } else {
-    // We only allow GET, POST requests
-    res.setHeader("Allow", ["GET", "POST"]);
+    // We only allow POST requests
+    res.setHeader("Allow", ["POST"]);
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 }

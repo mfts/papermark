@@ -34,6 +34,7 @@ export function AddGroupMemberModal({
   const [inputValue, setInputValue] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const teamInfo = useTeam();
+  const teamId = teamInfo?.currentTeam?.id;
   const analytics = useAnalytics();
 
   // Email validation regex pattern
@@ -71,7 +72,7 @@ export function AddGroupMemberModal({
 
     // POST request with multiple emails
     const response = await fetch(
-      `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}/groups/${groupId}/members`,
+      `/api/teams/${teamId}/datarooms/${dataroomId}/groups/${groupId}/members`,
       {
         method: "POST",
         headers: {
@@ -87,22 +88,22 @@ export function AddGroupMemberModal({
       const error = await response.json();
       setLoading(false);
       setOpen(false);
-      toast.error(error.message || "Failed to send invitations.");
+      toast.error(error.message || "Failed to add group members.");
       return;
     }
 
-    analytics.capture("Dataroom View Invitation Sent", {
+    analytics.capture("Dataroom Group Member Added", {
       inviteeCount: emails.length,
-      teamId: teamInfo?.currentTeam?.id,
+      teamId: teamId,
       dataroomId: dataroomId,
+      groupId: groupId,
     });
 
-    mutate(
-      `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}/groups/${groupId}`,
-    );
+    mutate(`/api/teams/${teamId}/datarooms/${dataroomId}/groups/${groupId}`);
 
-    toast.success("Invitation emails have been sent!");
+    toast.success("Group members added successfully!");
     setOpen(false);
+    setInputValue("");
     setLoading(false);
   };
 
