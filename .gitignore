@@ -55,3 +55,6 @@ lib/emails/marketing
 
 # vscode configs
 .vscode
+
+# trigger.dev
+.trigger

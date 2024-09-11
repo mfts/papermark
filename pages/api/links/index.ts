@@ -115,6 +115,12 @@ export default async function handler(
         }
       }
 
+      if (linkData.enableAgreement && !linkData.agreementId) {
+        return res.status(400).json({
+          error: "No agreement selected.",
+        });
+      }
+
       // Fetch the link and its related document from the database
       const link = await prisma.link.create({
         data: {
@@ -150,6 +156,15 @@ export default async function handler(
               },
             },
           }),
+          ...(linkData.enableAgreement && {
+            enableAgreement: linkData.enableAgreement,
+            agreementId: linkData.agreementId,
+          }),
+          ...(linkData.enableWatermark && {
+            enableWatermark: linkData.enableWatermark,
+            watermarkConfig: linkData.watermarkConfig,
+          }),
+          showBanner: linkData.showBanner,
         },
       });
 

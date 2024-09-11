@@ -1,15 +1,13 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import { client } from "@/trigger";
-import slugify from "@sindresorhus/slugify";
 import { getServerSession } from "next-auth/next";
 
 import { errorhandler } from "@/lib/errorHandler";
-import { newId } from "@/lib/id-helper";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 import { log } from "@/lib/utils";
+import { sortItemsByIndexAndName } from "@/lib/utils/sort-items-by-index-name";
 
 export default async function handle(
   req: NextApiRequest,
@@ -50,9 +48,14 @@ export default async function handle(
           dataroomId: dataroomId,
           folderId: null,
         },
-        orderBy: {
-          createdAt: "desc",
-        },
+        orderBy: [
+          { orderIndex: "asc" },
+          {
+            document: {
+              name: "asc",
+            },
+          },
+        ],
         include: {
           document: {
             select: {
@@ -61,11 +64,7 @@ export default async function handle(
               type: true,
               _count: {
                 select: {
-                  views: {
-                    where: {
-                      dataroomId: dataroomId,
-                    },
-                  },
+                  views: { where: { dataroomId } },
                   versions: true,
                 },
               },
@@ -74,12 +73,9 @@ export default async function handle(
         },
       });
 
-      const documentsWithCount = documents.map((document) => ({
-        ...document,
-        document: { ...document.document },
-      }));
+      const sortedDocuments = sortItemsByIndexAndName(documents);
 
-      return res.status(200).json(documentsWithCount);
+      return res.status(200).json(sortedDocuments);
     } catch (error) {
       console.error("Request error", error);
       return res

@@ -1,5 +1,6 @@
 import * as React from "react";
 
+import { E164Number } from "libphonenumber-js";
 import { CheckIcon, ChevronsUpDown } from "lucide-react";
 import * as RPNInput from "react-phone-number-input";
 import flags from "react-phone-number-input/flags";
@@ -51,7 +52,7 @@ const PhoneInput: React.ForwardRefExoticComponent<PhoneInputProps> =
            *
            * @param {E164Number | undefined} value - The entered value
            */
-          onChange={(value) => onChange?.(value || "")}
+          onChange={(value) => onChange?.((value || "") as E164Number)}
           {...props}
         />
       );

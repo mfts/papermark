@@ -3,17 +3,18 @@ import { useRouter } from "next/router";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
+import { LinkType } from "@prisma/client";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import {
   Sheet,
   SheetContent,
-  SheetDescription,
   SheetFooter,
   SheetHeader,
   SheetTitle,
@@ -21,15 +22,14 @@ import {
 
 import { useAnalytics } from "@/lib/analytics";
 import { usePlan } from "@/lib/swr/use-billing";
-import { useDocumentLinks } from "@/lib/swr/use-document";
 import { useDomains } from "@/lib/swr/use-domains";
-import { LinkWithViews } from "@/lib/types";
+import { LinkWithViews, WatermarkConfig } from "@/lib/types";
 import { convertDataUrlToFile, uploadImage } from "@/lib/utils";
 
 import DomainSection from "./domain-section";
 import { LinkOptions } from "./link-options";
 
-export const DEFAULT_LINK_PROPS = {
+export const DEFAULT_LINK_PROPS = (linkType: LinkType) => ({
   id: null,
   name: null,
   domain: null,
@@ -42,7 +42,7 @@ export const DEFAULT_LINK_PROPS = {
   allowList: [],
   denyList: [],
   enableNotification: true,
-  enableFeedback: true,
+  enableFeedback: false,
   enableScreenshotProtection: false,
   enableCustomMetatag: false,
   metaTitle: null,
@@ -51,7 +51,12 @@ export const DEFAULT_LINK_PROPS = {
   enabledQuestion: false,
   questionText: null,
   questionType: null,
-};
+  enableAgreement: false,
+  agreementId: null,
+  showBanner: linkType === LinkType.DOCUMENT_LINK ? true : false,
+  enableWatermark: false,
+  watermarkConfig: null,
+});
 
 export type DEFAULT_LINK_TYPE = {
   id: string | null;
@@ -75,6 +80,11 @@ export type DEFAULT_LINK_TYPE = {
   enableQuestion?: boolean; // feedback question
   questionText: string | null;
   questionType: string | null;
+  enableAgreement: boolean; // agreement
+  agreementId: string | null;
+  showBanner: boolean;
+  enableWatermark: boolean;
+  watermarkConfig: WatermarkConfig | null;
 };
 
 export default function LinkSheet({
@@ -86,7 +96,7 @@ export default function LinkSheet({
 }: {
   isOpen: boolean;
   setIsOpen: Dispatch<SetStateAction<boolean>>;
-  linkType: "DOCUMENT_LINK" | "DATAROOM_LINK";
+  linkType: LinkType;
   currentLink?: DEFAULT_LINK_TYPE;
   existingLinks?: LinkWithViews[];
 }) {
@@ -94,14 +104,16 @@ export default function LinkSheet({
   const teamInfo = useTeam();
   const { plan } = usePlan();
   const analytics = useAnalytics();
-  const [data, setData] = useState<DEFAULT_LINK_TYPE>(DEFAULT_LINK_PROPS);
+  const [data, setData] = useState<DEFAULT_LINK_TYPE>(
+    DEFAULT_LINK_PROPS(linkType),
+  );
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const router = useRouter();
   const targetId = router.query.id as string;
 
   useEffect(() => {
-    setData(currentLink || DEFAULT_LINK_PROPS);
+    setData(currentLink || DEFAULT_LINK_PROPS(linkType));
   }, [currentLink]);
 
   const handleSubmit = async (event: any) => {
@@ -176,7 +188,7 @@ export default function LinkSheet({
         `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
           targetId,
         )}/links`,
-        [...(existingLinks || []), returnedLink],
+        [returnedLink, ...(existingLinks || [])],
         false,
       );
 
@@ -190,21 +202,17 @@ export default function LinkSheet({
       toast.success("Link created successfully");
     }
 
-    setData(DEFAULT_LINK_PROPS);
+    setData(DEFAULT_LINK_PROPS(linkType));
     setIsLoading(false);
   };
 
   return (
     <Sheet open={isOpen} onOpenChange={(open: boolean) => setIsOpen(open)}>
-      <SheetContent className="flex w-[90%] flex-col justify-between bg-background px-4 text-foreground sm:w-[450px] md:px-5">
+      <SheetContent className="flex w-[90%] flex-col justify-between border-l border-gray-200 bg-background px-4 text-foreground dark:border-gray-800 dark:bg-gray-900 sm:w-[600px] sm:max-w-2xl md:px-5">
         <SheetHeader className="text-start">
           <SheetTitle>
             {currentLink ? "Edit link" : "Create a new link"}
           </SheetTitle>
-          <SheetDescription>
-            Customize a document link for sharing. Click save when you&apos;re
-            done.
-          </SheetDescription>
         </SheetHeader>
 
         <form className="flex grow flex-col" onSubmit={handleSubmit}>
@@ -212,17 +220,17 @@ export default function LinkSheet({
             <div className="h-0 flex-1">
               <div className="flex flex-1 flex-col justify-between">
                 <div className="divide-y divide-gray-200">
-                  <div className="space-y-6 pb-5 pt-6">
+                  <div className="space-y-6 pb-5 pt-2">
                     <div className="space-y-2">
                       <Label htmlFor="link-name">Link Name</Label>
                       <div className="mt-2">
-                        <input
+                        <Input
                           type="text"
                           name="link-name"
                           id="link-name"
                           placeholder="Recipient's Organization"
                           value={data.name || ""}
-                          className="flex w-full rounded-md border-0 bg-background py-1.5 text-foreground shadow-sm ring-1 ring-inset ring-input placeholder:text-muted-foreground focus:ring-2 focus:ring-inset focus:ring-gray-400 sm:text-sm sm:leading-6"
+                          className="focus:ring-inset"
                           onChange={(e) =>
                             setData({ ...data, name: e.target.value })
                           }
@@ -235,19 +243,25 @@ export default function LinkSheet({
                         {...{ data, setData, domains }}
                         plan={plan}
                         linkType={linkType}
+                        editLink={!!currentLink}
                       />
                     </div>
 
                     <div className="relative flex items-center">
                       <Separator className="absolute bg-muted-foreground" />
                       <div className="relative mx-auto">
-                        <span className="bg-background px-2 text-sm text-muted-foreground">
+                        <span className="bg-background px-2 text-sm text-muted-foreground dark:bg-gray-900">
                           Link Options
                         </span>
                       </div>
                     </div>
 
-                    <LinkOptions data={data} setData={setData} />
+                    <LinkOptions
+                      data={data}
+                      setData={setData}
+                      linkType={linkType}
+                      editLink={!!currentLink}
+                    />
                   </div>
                 </div>
               </div>

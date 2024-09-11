@@ -1,6 +1,8 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
-import { identifyUser, trackAnalytics } from "@/lib/analytics";
+import { waitUntil } from "@vercel/functions";
+
+import { trackAnalytics } from "@/lib/analytics";
 import {
   getConfigResponse,
   getDomainResponse,
@@ -26,13 +28,34 @@ export default async function handle(
     if (domainJson?.error?.code === "not_found") {
       // domain not found on Vercel project
       status = "Domain Not Found";
-
+      return res.status(200).json({
+        status,
+        response: { domainJson, configJson },
+      });
       // unknown error
     } else if (domainJson.error) {
       status = "Unknown Error";
+      return res.status(200).json({
+        status,
+        response: { domainJson, configJson },
+      });
+    }
 
-      // if domain is not verified, we try to verify now
-    } else if (!domainJson.verified) {
+    /**
+     * Domain has DNS conflicts
+     */
+    if (configJson?.conflicts.length > 0) {
+      status = "Conflicting DNS Records";
+      return res.status(200).json({
+        status,
+        response: { domainJson, configJson },
+      });
+    }
+
+    /**
+     * If domain is not verified, we try to verify now
+     */
+    if (!domainJson.verified) {
       status = "Pending Verification";
       const verificationJson = await verifyDomain(domain);
 
@@ -40,18 +63,14 @@ export default async function handle(
       if (verificationJson && verificationJson.verified) {
         status = "Valid Configuration";
       }
-    } else if (configJson.misconfigured) {
-      status = "Invalid Configuration";
-      await prisma.domain.update({
-        where: {
-          slug: domain,
-        },
-        data: {
-          verified: false,
-          lastChecked: new Date(),
-        },
+
+      return res.status(200).json({
+        status,
+        response: { domainJson, configJson },
       });
-    } else {
+    }
+
+    if (!configJson.misconfigured) {
       status = "Valid Configuration";
       const currentDomain = await prisma.domain.findUnique({
         where: {
@@ -77,14 +96,24 @@ export default async function handle(
       });
 
       if (!currentDomain!.verified && updatedDomain.verified) {
-        await identifyUser(updatedDomain.userId);
-        await trackAnalytics({ event: "Domain Verified", slug: domain });
+        waitUntil(trackAnalytics({ event: "Domain Verified", slug: domain }));
       }
+    } else {
+      status = "Invalid Configuration";
+      await prisma.domain.update({
+        where: {
+          slug: domain,
+        },
+        data: {
+          verified: false,
+          lastChecked: new Date(),
+        },
+      });
     }
 
     return res.status(200).json({
       status,
-      domainJson,
+      response: { domainJson, configJson },
     });
   } else {
     res.setHeader("Allow", ["GET"]);

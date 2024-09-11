@@ -14,15 +14,34 @@ import AccessForm, {
 } from "@/components/view/access-form";
 
 import { useAnalytics } from "@/lib/analytics";
-import { LinkWithDocument } from "@/lib/types";
+import { LinkWithDocument, WatermarkConfig } from "@/lib/types";
 
 import EmailVerificationMessage from "./email-verification-form";
 import ViewData from "./view-data";
 
+type RowData = { [key: string]: any };
+type SheetData = {
+  sheetName: string;
+  columnData: string[];
+  rowData: RowData[];
+};
+
 export type DEFAULT_DOCUMENT_VIEW_TYPE = {
-  viewId: string;
-  file: string | null;
-  pages: { file: string; pageNumber: string; embeddedLinks: string[] }[] | null;
+  viewId?: string;
+  file?: string | null;
+  pages?:
+    | {
+        file: string;
+        pageNumber: string;
+        embeddedLinks: string[];
+        pageLinks: { href: string; coords: string }[];
+        metadata: { width: number; height: number; scaleFactor: number };
+      }[]
+    | null;
+  sheetData?: SheetData[] | null;
+  fileType?: string;
+  isPreview?: boolean;
+  ipAddress?: string;
 };
 
 export default function DocumentView({
@@ -35,6 +54,10 @@ export default function DocumentView({
   token,
   verifiedEmail,
   showPoweredByBanner,
+  showAccountCreationSlide,
+  useAdvancedExcelViewer,
+  previewToken,
+  disableEditEmail,
 }: {
   link: LinkWithDocument;
   userEmail: string | null | undefined;
@@ -48,8 +71,17 @@ export default function DocumentView({
   token?: string;
   verifiedEmail?: string;
   showPoweredByBanner?: boolean;
+  showAccountCreationSlide?: boolean;
+  useAdvancedExcelViewer?: boolean;
+  previewToken?: string;
+  disableEditEmail?: boolean;
 }) {
-  const { document, emailProtected, password: linkPassword } = link;
+  const {
+    document,
+    emailProtected,
+    password: linkPassword,
+    enableAgreement,
+  } = link;
 
   const plausible = usePlausible();
   const analytics = useAnalytics();
@@ -60,8 +92,6 @@ export default function DocumentView({
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [viewData, setViewData] = useState<DEFAULT_DOCUMENT_VIEW_TYPE>({
     viewId: "",
-    file: null,
-    pages: null,
   });
   const [data, setData] = useState<DEFAULT_ACCESS_FORM_TYPE>(
     DEFAULT_ACCESS_FORM_DATA,
@@ -78,16 +108,18 @@ export default function DocumentView({
       },
       body: JSON.stringify({
         ...data,
-        email: data.email || verifiedEmail || userEmail,
+        email: data.email ?? verifiedEmail ?? userEmail ?? null,
         linkId: link.id,
         documentId: document.id,
         documentName: document.name,
         ownerId: document.ownerId,
-        userId: userId || null,
+        userId: userId ?? null,
         documentVersionId: document.versions[0].id,
         hasPages: document.versions[0].hasPages,
-        token: token || null,
-        verifiedEmail: verifiedEmail || null,
+        token: token ?? null,
+        verifiedEmail: verifiedEmail ?? null,
+        useAdvancedExcelViewer,
+        previewToken,
       }),
     });
 
@@ -98,7 +130,15 @@ export default function DocumentView({
         setVerificationRequested(true);
         setIsLoading(false);
       } else {
-        const { viewId, file, pages } = fetchData as DEFAULT_DOCUMENT_VIEW_TYPE;
+        const {
+          viewId,
+          file,
+          pages,
+          sheetData,
+          fileType,
+          isPreview,
+          ipAddress,
+        } = fetchData as DEFAULT_DOCUMENT_VIEW_TYPE;
         plausible("documentViewed"); // track the event
         analytics.identify(
           userEmail ?? verifiedEmail ?? data.email ?? undefined,
@@ -106,10 +146,19 @@ export default function DocumentView({
         analytics.capture("Link Viewed", {
           linkId: link.id,
           documentId: document.id,
+          linkType: "DOCUMENT_LINK",
           viewerId: viewId,
-          viewerEmail: data.email || verifiedEmail || userEmail,
+          viewerEmail: data.email ?? verifiedEmail ?? userEmail,
         });
-        setViewData({ viewId, file, pages });
+        setViewData({
+          viewId,
+          file,
+          pages,
+          sheetData,
+          fileType,
+          isPreview,
+          ipAddress,
+        });
         setSubmitted(true);
         setVerificationRequested(false);
         setIsLoading(false);
@@ -175,7 +224,12 @@ export default function DocumentView({
         onSubmitHandler={handleSubmit}
         requireEmail={emailProtected}
         requirePassword={!!linkPassword}
+        requireAgreement={enableAgreement!}
+        agreementContent={link.agreement?.content}
+        requireName={link.agreement?.requireName}
         isLoading={isLoading}
+        brand={brand}
+        disableEditEmail={disableEditEmail}
       />
     );
   }
@@ -188,7 +242,13 @@ export default function DocumentView({
     );
   }
   return (
-    <div className="bg-gray-950">
+    <div
+      className="bg-gray-950"
+      style={{
+        backgroundColor:
+          brand && brand.accentColor ? brand.accentColor : "rgb(3, 7, 18)",
+      }}
+    >
       {submitted ? (
         <ViewData
           link={link}
@@ -196,6 +256,9 @@ export default function DocumentView({
           notionData={notionData}
           brand={brand}
           showPoweredByBanner={showPoweredByBanner}
+          showAccountCreationSlide={showAccountCreationSlide}
+          useAdvancedExcelViewer={useAdvancedExcelViewer}
+          viewerEmail={data.email ?? verifiedEmail ?? userEmail ?? undefined}
         />
       ) : (
         <div className="flex h-screen items-center justify-center">

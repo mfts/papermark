@@ -1,7 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
 
-import { Brand, DataroomBrand } from "@prisma/client";
+import React, { useState } from "react";
+
+import { DataroomBrand } from "@prisma/client";
 import { ArrowUpRight, Download } from "lucide-react";
 import { toast } from "sonner";
 
@@ -19,6 +21,7 @@ import { timeAgo } from "@/lib/utils";
 
 import PapermarkSparkle from "../../shared/icons/papermark-sparkle";
 import { Button } from "../../ui/button";
+import { TDocumentData } from "./dataroom-view";
 
 export default function DataroomNav({
   pageNumber,
@@ -33,6 +36,7 @@ export default function DataroomNav({
   isDataroom,
   setDocumentData,
   dataroom,
+  isPreview,
 }: {
   pageNumber?: number;
   numPages?: number;
@@ -44,29 +48,43 @@ export default function DataroomNav({
   linkId?: string;
   type?: "pdf" | "notion";
   isDataroom?: boolean;
-  setDocumentData?: (data: any) => void;
+  setDocumentData?: React.Dispatch<React.SetStateAction<TDocumentData | null>>;
   dataroom?: any;
+  isPreview?: boolean;
 }) {
-  const downloadFile = async () => {
-    if (!allowDownload || type === "notion") return;
+  const [loading, setLoading] = useState<boolean>(false);
+
+  const downloadDataroom = async () => {
+    if (!allowDownload || type === "notion" || isPreview) return;
+    setLoading(true);
     try {
-      const response = await fetch(`/api/links/download`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      toast.promise(
+        fetch(`/api/links/download/bulk`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ linkId, viewId }),
+        }),
+        {
+          loading: "Downloading dataroom...",
+          success: async (response) => {
+            const { downloadUrl } = await response.json();
+            window.open(downloadUrl, "_blank");
+            return "Dataroom downloaded successfully.";
+          },
+          error: (error) => {
+            console.log(error);
+            return (
+              error.message || "An error occurred while downloading dataroom."
+            );
+          },
         },
-        body: JSON.stringify({ linkId, viewId }),
-      });
-
-      if (!response.ok) {
-        toast.error("Error downloading file");
-        return;
-      }
-
-      const { downloadUrl } = await response.json();
-      window.open(downloadUrl, "_blank");
+      );
     } catch (error) {
-      console.error("Error downloading file:", error);
+      console.error(error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -78,17 +96,17 @@ export default function DataroomNav({
       }}
     >
       <div className="mx-auto px-2 sm:px-6 lg:px-8">
-        <div className="relative flex h-12 items-center justify-between">
+        <div className="relative flex h-16 items-center justify-between">
           <div className="flex flex-1 items-center justify-start">
-            <div className="relative flex h-6 w-36 flex-shrink-0 items-center">
+            <div className="relative flex h-16 w-36 flex-shrink-0 items-center">
               {brand && brand.logo ? (
-                <Image
-                  className="object-contain"
+                <img
+                  className="h-16 w-36 object-contain"
                   src={brand.logo}
                   alt="Logo"
-                  fill
-                  quality={100}
-                  priority
+                  // fill
+                  // quality={100}
+                  // priority
                 />
               ) : (
                 <Link
@@ -160,10 +178,11 @@ export default function DataroomNav({
             ) : null}
             {allowDownload ? (
               <Button
-                onClick={downloadFile}
+                onClick={downloadDataroom}
                 className="m-1 bg-gray-900 text-white hover:bg-gray-900/80"
                 size="icon"
-                title="Download document"
+                title="Download Dataroom"
+                loading={loading}
               >
                 <Download className="h-5 w-5" />
               </Button>
@@ -179,14 +198,14 @@ export default function DataroomNav({
       </div>
       {brand && brand.banner ? (
         <div className="relative h-[30vh]">
-          <Image
+          <img
             className="h-[30vh] w-full object-cover"
             src={brand.banner}
             alt="Banner"
             width={1920}
             height={320}
-            quality={100}
-            priority
+            // quality={100}
+            // priority
           />
           <div className="absolute bottom-5 w-fit rounded-r-md bg-white/30 backdrop-blur-md">
             <div className="px-5 py-2 sm:px-10">

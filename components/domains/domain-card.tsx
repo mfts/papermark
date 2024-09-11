@@ -1,30 +1,66 @@
-import { useState } from "react";
+import Link from "next/link";
+
+import { useRef, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
+import { motion } from "framer-motion";
+import {
+  ChevronDownIcon,
+  CircleCheckIcon,
+  FlagIcon,
+  GlobeIcon,
+  MoreVertical,
+  RefreshCwIcon,
+  SettingsIcon,
+  TrashIcon,
+} from "lucide-react";
 import { mutate } from "swr";
 
 import { useAnalytics } from "@/lib/analytics";
+import { cn } from "@/lib/utils";
 
-import AlertCircle from "../shared/icons/alert-circle";
-import CheckCircle2 from "../shared/icons/check-cirlce-2";
-import ExternalLink from "../shared/icons/external-link";
-import XCircle from "../shared/icons/x-circle";
 import { Button } from "../ui/button";
-import LoadingSpinner from "../ui/loading-spinner";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "../ui/dropdown-menu";
+import { StatusBadge } from "../ui/status-badge";
 import DomainConfiguration from "./domain-configuration";
 import { useDomainStatus } from "./use-domain-status";
 
 export default function DomainCard({
   domain,
+  isDefault,
   onDelete,
 }: {
   domain: string;
+  isDefault: boolean;
   onDelete: (deletedDomain: string) => void;
 }) {
-  const { status, loading } = useDomainStatus({ domain });
   const [deleting, setDeleting] = useState<boolean>(false);
+  const [showDetails, setShowDetails] = useState(false);
+  const [groupHover, setGroupHover] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const domainRef = useRef<HTMLDivElement>(null);
+
+  const {
+    status,
+    loading,
+    domainJson,
+    configJson,
+    mutate: mutateDomain,
+  } = useDomainStatus({
+    domain,
+  });
   const teamInfo = useTeam();
   const analytics = useAnalytics();
+
+  const isInvalid =
+    status && !["Valid Configuration", "Pending Verification"].includes(status);
 
   const handleDelete = async () => {
     setDeleting(true);
@@ -49,66 +85,181 @@ export default function DomainCard({
     setDeleting(false);
   };
 
+  const handleMakeDefault = async () => {
+    const response = await fetch(
+      `/api/teams/${teamInfo?.currentTeam?.id}/domains/${domain}`,
+      { method: "PATCH" },
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    // Update domains by refetching
+    mutate(`/api/teams/${teamInfo?.currentTeam?.id}/domains`);
+  };
+
   return (
     <>
-      <div className="flex flex-col space-y-3 rounded-lg bg-white px-5 py-8 ring-1 ring-gray-200 hover:ring-gray-400 dark:bg-secondary dark:ring-gray-700 hover:dark:ring-gray-500 sm:px-10">
-        <div className="flex flex-col justify-between space-y-4 sm:flex-row sm:space-x-4">
-          <div className="flex items-center space-x-2">
-            <a
-              href={`http://${domain}`}
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center space-x-2"
-            >
-              <p className="flex items-center text-xl font-semibold">
-                {domain}
-              </p>
-              <ExternalLink className="h-5 w-5" />
-            </a>
+      <div
+        ref={domainRef}
+        className="hover:drop-shadow-card-hover group rounded-xl border border-gray-200 bg-white p-4 transition-[filter] sm:p-5"
+        onPointerEnter={() => setGroupHover(true)}
+        onPointerLeave={() => setGroupHover(false)}
+      >
+        <div className="flex items-center justify-between gap-3 sm:gap-4">
+          <div className="flex min-w-0 items-center gap-4">
+            <div className="hidden rounded-full border border-gray-200 sm:block">
+              <div
+                className={cn(
+                  "rounded-full",
+                  "border border-white bg-gradient-to-t from-gray-100 p-1 md:p-3",
+                )}
+              >
+                <GlobeIcon className="size-5" />
+              </div>
+            </div>
+            <div className="overflow-hidden">
+              <div className="flex items-center gap-1.5 sm:gap-2.5">
+                <a
+                  href={`http://${domain}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="truncate text-sm font-medium"
+                  title={domain}
+                >
+                  {domain}
+                </a>
+
+                {isDefault ? (
+                  <span className="xs:px-3 xs:py-1 flex items-center gap-1 rounded-full bg-sky-400/[.15] px-1.5 py-0.5 text-xs font-medium text-sky-600">
+                    <FlagIcon className="hidden h-3 w-3 sm:block" />
+                    Default
+                  </span>
+                ) : null}
+              </div>
+            </div>
           </div>
-          <div className="flex space-x-3">
+
+          <div className="flex items-center justify-end gap-2 sm:gap-3">
+            {/* Status */}
+            <div className="hidden sm:block">
+              {status && !loading ? (
+                <StatusBadge
+                  variant={
+                    status === "Valid Configuration"
+                      ? "success"
+                      : status === "Pending Verification"
+                        ? "pending"
+                        : "error"
+                  }
+                >
+                  {status === "Valid Configuration"
+                    ? "Active"
+                    : status === "Pending Verification"
+                      ? "Pending"
+                      : "Invalid"}
+                </StatusBadge>
+              ) : (
+                <div className="h-6 w-16 animate-pulse rounded-md bg-gray-200" />
+              )}
+            </div>
             <Button
               variant="secondary"
-              className="bg-gray-300 hover:bg-gray-300/80 dark:bg-gray-700 hover:dark:bg-gray-700/80"
-              loading={loading}
-              onClick={() => {
-                mutate(
-                  `/api/teams/${teamInfo?.currentTeam?.id}/domains/${domain}/verify`,
-                );
-              }}
+              className={cn(
+                "h-8 w-auto px-2 opacity-100 transition-opacity lg:h-9",
+                !showDetails &&
+                  !isInvalid &&
+                  "sm:opacity-0 sm:group-hover:opacity-100",
+              )}
+              onClick={() => setShowDetails((s) => !s)}
+              data-state={showDetails ? "open" : "closed"}
             >
-              Refresh
+              <div className="flex items-center gap-1">
+                <div className="relative">
+                  <SettingsIcon
+                    className={cn(
+                      "h-4 w-4",
+                      showDetails ? "text-gray-800" : "text-gray-600",
+                    )}
+                  />
+                  {/* Error indicator */}
+                  {status && isInvalid && (
+                    <div className="absolute -right-px -top-px h-[5px] w-[5px] rounded-full bg-red-500">
+                      <div className="h-full w-full animate-pulse rounded-full ring-2 ring-red-500/30" />
+                    </div>
+                  )}
+                </div>
+                <ChevronDownIcon
+                  className={cn(
+                    "hidden h-4 w-4 text-gray-400 transition-transform sm:block",
+                    showDetails && "rotate-180",
+                  )}
+                />
+              </div>
             </Button>
-            <Button
-              variant="destructive"
-              onClick={handleDelete}
-              loading={deleting}
-            >
-              Delete
-            </Button>
+            <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  // size="icon"
+                  variant="outline"
+                  className="z-20 h-8 w-8 border-gray-200 bg-transparent p-0 hover:bg-gray-200 dark:border-gray-700 hover:dark:bg-gray-700 lg:h-9 lg:w-9"
+                >
+                  <span className="sr-only">Open menu</span>
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                <DropdownMenuItem
+                  disabled={isDefault}
+                  onClick={handleMakeDefault}
+                >
+                  <FlagIcon className="mr-2 h-4 w-4" />
+                  Make default
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => mutateDomain()}
+                  disabled={loading}
+                >
+                  <RefreshCwIcon className="mr-2 h-4 w-4" />
+                  Refresh
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="text-destructive transition-colors duration-200 focus:bg-destructive focus:text-destructive-foreground"
+                  onClick={handleDelete}
+                >
+                  <TrashIcon className="mr-2 h-4 w-4" />
+                  Delete domain
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
-        <div className="flex h-10 flex-col space-y-2 sm:flex-row sm:items-center sm:space-x-5 sm:space-y-0">
-          <div className="flex items-center space-x-2">
-            {status ? (
-              status === "Valid Configuration" ? (
-                <CheckCircle2 className="h-6 w-6 text-emerald-500" />
-              ) : status === "Pending Verification" ? (
-                <AlertCircle className="h-6 w-6 text-yellow-500" />
-              ) : (
-                <XCircle className="h-6 w-6 text-red-500" />
-              )
+        <motion.div
+          initial={false}
+          animate={{ height: showDetails ? "auto" : 0 }}
+          className="overflow-hidden"
+        >
+          {status ? (
+            status === "Valid Configuration" ? (
+              <div className="mt-6 flex items-center gap-2 text-pretty rounded-lg bg-green-100/80 p-3 text-sm text-green-600">
+                <CircleCheckIcon className="h-5 w-5 shrink-0" />
+                <div>
+                  Good news! Your DNS records are set up correctly, but it can
+                  take some time for them to propagate globally.
+                </div>
+              </div>
             ) : (
-              <LoadingSpinner className="mr-1 h-5 w-5" />
-            )}
-            <p className="text-sm text-muted-foreground">
-              {status ? status : "Checking Domain Status"}
-            </p>
-          </div>
-        </div>
-        {status && status !== "Valid Configuration" && (
-          <DomainConfiguration domain={domain} />
-        )}
+              <DomainConfiguration
+                status={status}
+                response={{ domainJson, configJson }}
+              />
+            )
+          ) : (
+            <div className="mt-6 h-6 w-32 animate-pulse rounded-md bg-gray-200" />
+          )}
+        </motion.div>
       </div>
     </>
   );

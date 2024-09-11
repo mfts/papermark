@@ -3,8 +3,6 @@ import { useRouter } from "next/router";
 import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
-import { toast } from "sonner";
-import { mutate } from "swr";
 
 import { SidebarFolderTreeSelection } from "@/components/sidebar-folders";
 import { Button } from "@/components/ui/button";
@@ -17,22 +15,29 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
+import { moveDocumentToFolder } from "@/lib/documents/move-documents";
+
+export type TSelectedFolder = { id: string | null; name: string } | null;
+
 export function MoveToFolderModal({
   open,
   setOpen,
-  documentId,
+  setSelectedDocuments,
+  documentIds,
   documentName,
 }: {
   open: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  documentId?: string;
+  setSelectedDocuments?: React.Dispatch<React.SetStateAction<string[]>>;
+  documentIds: string[];
   documentName?: string;
 }) {
   const router = useRouter();
-  const [folderId, setFolderId] = useState<string>("");
+  const [selectedFolder, setSelectedFolder] = useState<TSelectedFolder>(null);
   const [loading, setLoading] = useState<boolean>(false);
 
   const teamInfo = useTeam();
+  const teamId = teamInfo?.currentTeam?.id;
 
   const currentPath = router.query.name
     ? (router.query.name as string[]).join("/")
@@ -42,52 +47,20 @@ export function MoveToFolderModal({
     event.preventDefault();
     event.stopPropagation();
 
-    if (folderId === "") return;
+    if (!selectedFolder) return;
 
     setLoading(true);
-    try {
-      const response = await fetch(
-        `/api/teams/${teamInfo?.currentTeam?.id}/documents/${documentId}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            folderId: folderId,
-            currentPathName: "/" + currentPath,
-          }),
-        },
-      );
 
-      if (!response.ok) {
-        const { message } = await response.json();
-        setLoading(false);
-        toast.error(message);
-        return;
-      }
+    await moveDocumentToFolder({
+      documentIds,
+      folderId: selectedFolder.id!,
+      folderPathName: currentPath ? currentPath.split("/") : undefined,
+      teamId,
+    });
 
-      const { newPath, oldPath } = (await response.json()) as {
-        newPath: string;
-        oldPath: string;
-      };
-
-      toast.success("Document moved successfully!");
-
-      mutate(`/api/teams/${teamInfo?.currentTeam?.id}/folders`);
-      mutate(`/api/teams/${teamInfo?.currentTeam?.id}/folders${oldPath}`);
-      mutate(`/api/teams/${teamInfo?.currentTeam?.id}/folders${newPath}`).then(
-        () => {
-          router.push(`/documents/tree${newPath}`);
-        },
-      );
-    } catch (error) {
-      console.error("Error moving document", error);
-      toast.error("Failed to move document. Try again.");
-    } finally {
-      setLoading(false);
-      setOpen(false);
-    }
+    setLoading(false);
+    setOpen(false); // Close the modal
+    setSelectedDocuments?.([]); // Clear the selected documents
   };
 
   return (
@@ -95,21 +68,36 @@ export function MoveToFolderModal({
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader className="text-start">
           <DialogTitle>
-            Move <span className="font-bold">{documentName}</span>
+            Move
+            <div className="w-[376px] truncate font-bold">
+              {documentName ? documentName : `${documentIds.length} items`}
+            </div>
           </DialogTitle>
           <DialogDescription>Move your document to a folder.</DialogDescription>
         </DialogHeader>
         <form>
           <div className="mb-2">
             <SidebarFolderTreeSelection
-              selectedFolderId={folderId}
-              setFolderId={setFolderId}
+              selectedFolder={selectedFolder}
+              setSelectedFolder={setSelectedFolder}
             />
           </div>
 
           <DialogFooter>
-            <Button onClick={handleSubmit} className="h-9 w-full">
-              Move to folder
+            <Button
+              onClick={handleSubmit}
+              className="flex h-9 w-full gap-1"
+              loading={loading}
+              disabled={!selectedFolder}
+            >
+              {!selectedFolder ? (
+                "Select a folder"
+              ) : (
+                <>
+                  Move to{" "}
+                  <span className="font-medium">{selectedFolder.name}</span>
+                </>
+              )}
             </Button>
           </DialogFooter>
         </form>

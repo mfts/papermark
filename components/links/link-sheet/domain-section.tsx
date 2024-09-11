@@ -1,13 +1,21 @@
 import Link from "next/link";
 
-import { Dispatch, SetStateAction, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { Domain } from "@prisma/client";
 import { mutate } from "swr";
 
 import { AddDomainModal } from "@/components/domains/add-domain-modal";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 import { BLOCKED_PATHNAMES } from "@/lib/constants";
 import { BasePlan } from "@/lib/swr/use-billing";
@@ -22,23 +30,26 @@ export default function DomainSection({
   domains,
   plan,
   linkType,
+  editLink,
 }: {
   data: DEFAULT_LINK_TYPE;
   setData: Dispatch<SetStateAction<DEFAULT_LINK_TYPE>>;
   domains?: Domain[];
   plan?: BasePlan | null;
   linkType: "DOCUMENT_LINK" | "DATAROOM_LINK";
+  editLink?: boolean;
 }) {
   const [isModalOpen, setModalOpen] = useState(false);
   const teamInfo = useTeam();
   const { limits } = useLimits();
 
-  const handleDomainChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = event.target.value;
+  const handleDomainChange = (value: string) => {
+    // const value = event.target.value;
 
     if (value === "add_domain" || value === "add_dataroom_domain") {
       // Redirect to the add domain page
       setModalOpen(true);
+      setData({ ...data, domain: "papermark.io" });
       return;
     }
 
@@ -50,6 +61,22 @@ export default function DomainSection({
     mutate(`/api/teams/${teamInfo?.currentTeam?.id}/domains`);
   };
 
+  useEffect(() => {
+    console.log("data.domain", data.domain);
+    if (domains && !editLink) {
+      console.log("data.domain", data.domain);
+      const defaultDomain = domains.find((domain) => domain.isDefault);
+      setData({
+        ...data,
+        domain: defaultDomain?.slug ?? "papermark.io",
+      });
+    }
+  }, [domains, editLink]);
+
+  const defaultDomain = editLink
+    ? (data.domain ?? "papermark.io")
+    : (domains?.find((domain) => domain.isDefault)?.slug ?? "papermark.io");
+
   const currentDomain = domains?.find((domain) => domain.slug === data.domain);
   const isDomainVerified = currentDomain?.verified;
 
@@ -57,54 +84,69 @@ export default function DomainSection({
     <>
       <Label htmlFor="link-domain">Domain</Label>
       <div className="flex">
-        <select
-          value={data.domain || "papermark.io"}
-          onChange={handleDomainChange}
-          onFocus={handleSelectFocus}
-          className={cn(
-            "w-full rounded-l-md border border-r-0 border-border bg-secondary px-5 text-sm text-secondary-foreground focus:border-border focus:outline-none focus:ring-0",
-            data.domain && data.domain !== "papermark.io"
-              ? ""
-              : "border-r-1 rounded-r-md",
-          )}
+        <Select
+          defaultValue={defaultDomain}
+          onValueChange={handleDomainChange}
+          onOpenChange={handleSelectFocus}
         >
-          <option key="papermark.io" value="papermark.io">
-            papermark.io
-          </option>
-          {linkType === "DOCUMENT_LINK" &&
-            (plan === "business" || (limits && limits.customDomainOnPro)) && (
-              <>
-                {domains?.map(({ slug }) => (
-                  <option key={slug} value={slug}>
-                    {slug}
-                  </option>
-                ))}
-              </>
+          <SelectTrigger
+            className={cn(
+              "flex w-full rounded-none rounded-l-md border border-input bg-white text-foreground placeholder-muted-foreground focus:border-muted-foreground focus:outline-none focus:ring-inset focus:ring-muted-foreground dark:border-gray-500 dark:bg-gray-800 focus:dark:bg-transparent sm:text-sm",
+              data.domain && data.domain !== "papermark.io"
+                ? ""
+                : "border-r-1 rounded-r-md",
             )}
-          {linkType === "DATAROOM_LINK" &&
-            (plan === "datarooms" ||
-              (limits && limits.customDomainInDataroom)) && (
-              <>
-                {domains?.map(({ slug }) => (
-                  <option key={slug} value={slug}>
-                    {slug}
-                  </option>
-                ))}
-              </>
-            )}
-          <option
-            value={
-              linkType === "DOCUMENT_LINK"
-                ? "add_domain"
-                : "add_dataroom_domain"
-            }
           >
-            Add a custom domain ✨
-          </option>
-        </select>
+            <SelectValue placeholder="Select a domain" />
+          </SelectTrigger>
+          <SelectContent className="flex w-full rounded-md border border-input bg-white text-foreground placeholder-muted-foreground focus:border-muted-foreground focus:outline-none focus:ring-inset focus:ring-muted-foreground dark:border-gray-500 dark:bg-gray-800 focus:dark:bg-transparent sm:text-sm">
+            <SelectItem value="papermark.io" className="hover:bg-muted">
+              papermark.io
+            </SelectItem>
+            {linkType === "DOCUMENT_LINK" &&
+              (plan === "business" || (limits && limits.customDomainOnPro)) && (
+                <>
+                  {domains?.map(({ slug }) => (
+                    <SelectItem
+                      key={slug}
+                      value={slug}
+                      className="hover:bg-muted hover:dark:bg-gray-700"
+                    >
+                      {slug}
+                    </SelectItem>
+                  ))}
+                </>
+              )}
+            {linkType === "DATAROOM_LINK" &&
+              (plan === "datarooms" ||
+                (limits && limits.customDomainInDataroom)) && (
+                <>
+                  {domains?.map(({ slug }) => (
+                    <SelectItem
+                      key={slug}
+                      value={slug}
+                      className="hover:bg-muted hover:dark:bg-gray-700"
+                    >
+                      {slug}
+                    </SelectItem>
+                  ))}
+                </>
+              )}
+            <SelectItem
+              className="hover:bg-muted hover:dark:bg-gray-700"
+              value={
+                linkType === "DOCUMENT_LINK"
+                  ? "add_domain"
+                  : "add_dataroom_domain"
+              }
+            >
+              Add a custom domain ✨
+            </SelectItem>
+          </SelectContent>
+        </Select>
 
         {data.domain && data.domain !== "papermark.io" ? (
-          <input
+          <Input
             type="text"
             name="key"
             required
@@ -126,7 +168,7 @@ export default function DomainSection({
             }}
             autoComplete="off"
             className={cn(
-              "hidden w-full rounded-r-md border-0 bg-background py-1.5 text-foreground shadow-sm ring-1 ring-inset ring-input placeholder:text-muted-foreground focus:ring-2 focus:ring-inset focus:ring-gray-400 sm:text-sm sm:leading-6",
+              "hidden rounded-l-none focus:ring-inset",
               data.domain && data.domain !== "papermark.io" ? "flex" : "",
             )}
             placeholder="deck"

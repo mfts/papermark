@@ -5,6 +5,8 @@ import {
   BadgeCheckIcon,
   BadgeInfoIcon,
   DownloadCloudIcon,
+  FileBadgeIcon,
+  FileDigitIcon,
   ServerIcon,
   ThumbsDownIcon,
   ThumbsUpIcon,
@@ -45,6 +47,7 @@ import {
 } from "../ui/pagination";
 import { VisitorAvatar } from "./visitor-avatar";
 import VisitorChart from "./visitor-chart";
+import VisitorUserAgent from "./visitor-useragent";
 
 export default function VisitorsTable({ numPages }: { numPages: number }) {
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -110,6 +113,14 @@ export default function VisitorsTable({ numPages }: { numPages: number }) {
                                         key="internal"
                                       >
                                         <BadgeInfoIcon className="h-4 w-4 text-blue-500 hover:text-blue-600" />
+                                      </BadgeTooltip>
+                                    )}
+                                    {view.agreementResponse && (
+                                      <BadgeTooltip
+                                        content={`Agreed to ${view.agreementResponse.agreement.name}`}
+                                        key="nda-agreement"
+                                      >
+                                        <FileBadgeIcon className="h-4 w-4 text-emerald-500 hover:text-emerald-600" />
                                       </BadgeTooltip>
                                     )}
                                     {view.downloadedAt && (
@@ -189,10 +200,20 @@ export default function VisitorsTable({ numPages }: { numPages: number }) {
                       <>
                         <TableRow className="hover:bg-transparent">
                           <TableCell colSpan={5}>
+                            {!isFreePlan ? (
+                              <VisitorUserAgent viewId={view.id} />
+                            ) : null}
+                            <div className="pb-0.5 pl-0.5 md:pb-1 md:pl-1">
+                              <div className="flex items-center gap-x-1 px-1">
+                                <FileDigitIcon className="size-4" /> Document
+                                Version {view.versionNumber}
+                              </div>
+                            </div>
                             <VisitorChart
                               documentId={view.documentId!}
                               viewId={view.id}
-                              totalPages={numPages}
+                              totalPages={view.versionNumPages}
+                              versionNumber={view.versionNumber}
                             />
                           </TableCell>
                         </TableRow>

@@ -24,7 +24,9 @@ export const NavMenu: React.FC<React.PropsWithChildren<Props>> = ({
   className,
 }) => {
   return (
-    <nav className={cn("sticky top-0 bg-background", className)}>
+    <nav
+      className={cn("sticky top-0 bg-background dark:bg-gray-900", className)}
+    >
       <div className="flex w-full items-center overflow-x-auto pl-1">
         <ul className="flex flex-row gap-4">
           {navigation.map(({ label, href, segment, tag }) => (
@@ -65,7 +67,7 @@ const NavItem: React.FC<Props["navigation"][0]> = ({
       <Link
         href={href}
         className={cn(
-          "text-content-subtle hover:bg-background-subtle -mx-3 flex items-center gap-1 rounded-md px-3 py-2 text-sm font-medium hover:text-primary",
+          "text-content-subtle hover:bg-background-subtle -mx-3 flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium hover:bg-muted hover:text-primary",
           {
             "text-primary": active,
           },

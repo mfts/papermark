@@ -1,4 +1,10 @@
-import { BadgeCheckIcon, BadgeInfoIcon, MailOpenIcon } from "lucide-react";
+import {
+  BadgeCheckIcon,
+  BadgeInfoIcon,
+  DownloadCloudIcon,
+  FileBadgeIcon,
+  MailOpenIcon,
+} from "lucide-react";
 
 import ChevronDown from "@/components/shared/icons/chevron-down";
 import {
@@ -87,6 +93,22 @@ export default function DataroomVisitorsTable({
                                         <BadgeInfoIcon className="h-4 w-4 text-blue-500 hover:text-blue-600" />
                                       </BadgeTooltip>
                                     )}
+                                    {view.downloadedAt && (
+                                      <BadgeTooltip
+                                        content={`Downloaded ${timeAgo(view.downloadedAt)}`}
+                                        key="download"
+                                      >
+                                        <DownloadCloudIcon className="h-4 w-4 text-cyan-500 hover:text-cyan-600" />
+                                      </BadgeTooltip>
+                                    )}
+                                    {view.agreementResponse && (
+                                      <BadgeTooltip
+                                        content={`Agreed to ${view.agreementResponse.agreement.name}`}
+                                        key="nda-agreement"
+                                      >
+                                        <FileBadgeIcon className="h-4 w-4 text-emerald-500 hover:text-emerald-600" />
+                                      </BadgeTooltip>
+                                    )}
                                   </>
                                 ) : (
                                   "Anonymous"
@@ -156,6 +178,34 @@ export default function DataroomVisitorsTable({
                           </TableCell>
                           <TableCell className="table-cell"></TableCell>
                         </TableRow>
+
+                        {view.downloadedAt ? (
+                          <TableRow key={view.id + 1}>
+                            <TableCell>
+                              <div className="flex items-center gap-x-4 overflow-visible">
+                                <DownloadCloudIcon className="h-5 w-5 text-cyan-500 hover:text-cyan-600" />
+                                Downloaded {view.dataroomName} dataroom
+                              </div>
+                            </TableCell>
+
+                            <TableCell>
+                              <div>
+                                <time
+                                  className="truncate text-sm text-muted-foreground"
+                                  dateTime={new Date(
+                                    view.downloadedAt,
+                                  ).toLocaleString()}
+                                  title={new Date(
+                                    view.downloadedAt,
+                                  ).toLocaleString()}
+                                >
+                                  {timeAgo(view.downloadedAt)}
+                                </time>
+                              </div>
+                            </TableCell>
+                            <TableCell className="table-cell"></TableCell>
+                          </TableRow>
+                        ) : null}
 
                         <DataroomVisitHistory
                           viewId={view.id}

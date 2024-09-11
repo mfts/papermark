@@ -1,3 +1,5 @@
+import { useRouter } from "next/router";
+
 import { useEffect, useMemo, useState } from "react";
 import React from "react";
 
@@ -13,6 +15,7 @@ import { useAnalytics } from "@/lib/analytics";
 import { STAGGER_CHILD_VARIANTS } from "@/lib/constants";
 import { getStripe } from "@/lib/stripe/client";
 import { PLANS } from "@/lib/stripe/utils";
+import { usePlan } from "@/lib/swr/use-billing";
 import { capitalize } from "@/lib/utils";
 
 import { DataroomTrialModal } from "../datarooms/dataroom-trial-modal";
@@ -31,32 +34,37 @@ export function UpgradePlanModal({
   setOpen?: React.Dispatch<React.SetStateAction<boolean>>;
   children?: React.ReactNode;
 }) {
+  const router = useRouter();
   const [plan, setPlan] = useState<"Pro" | "Business" | "Data Rooms">(
     clickedPlan,
   );
-  const [period, setPeriod] = useState<"monthly" | "yearly">("monthly");
+  const [period, setPeriod] = useState<"yearly" | "monthly">("yearly");
   const [clicked, setClicked] = useState<boolean>(false);
   const teamInfo = useTeam();
+  const { plan: teamPlan, trial } = usePlan();
   const analytics = useAnalytics();
+
+  const isTrial = !!trial;
 
   const features = useMemo(() => {
     if (plan === "Pro") {
       return [
-        "2 users",
-        "Custom slug",
+        "2 users included",
         "Custom branding",
         "1-year analytics retention",
-        "Advanced access controls",
         "Folder organization",
       ];
     }
 
     if (plan === "Business") {
       return [
-        "3 users",
+        "3 users included",
         "1 dataroom",
         "Multi-file sharing",
-        "Custom domain",
+        <span key="custom-domain">
+          Custom domain <b>for documents</b>
+        </span>,
+        "Advanced link controls",
         "Unlimited documents",
         "Unlimited subfolder levels",
         "Large file uploads",
@@ -65,12 +73,14 @@ export function UpgradePlanModal({
     }
     if (plan === "Data Rooms") {
       return [
-        "5 users included",
+        "3 users included",
         "Unlimited data rooms",
-        "Custom domain for data rooms",
+        <span key="custom-dataroom">
+          Custom domain <b>for data rooms</b>
+        </span>,
         "Unlimited documents",
         "Unlimited folders and subfolders",
-        "User groups permissions",
+        "NDA agreements",
         "Advanced data rooms analytics",
         "24h priority support",
         "Custom onboarding",
@@ -79,10 +89,8 @@ export function UpgradePlanModal({
 
     return [
       "2 users",
-      "Custom slug",
       "Custom branding",
       "1-year analytics retention",
-      "Advanced access controls",
       "Folders",
     ];
   }, [plan]);
@@ -195,9 +203,11 @@ export function UpgradePlanModal({
                   className="text-xs text-muted-foreground underline underline-offset-4 transition-colors hover:text-gray-800 hover:dark:text-muted-foreground/80"
                 >
                   {period === "monthly"
-                    ? ["Business", "Data Rooms"].includes(plan)
-                      ? "Want 25% off?"
-                      : "Want 35% off?"
+                    ? plan === "Business"
+                      ? "Want 43% off?"
+                      : plan === "Data Rooms"
+                        ? "Want 50% off?"
+                        : "Want 35% off?"
                     : "Switch to monthly"}
                 </button>
               </div>
@@ -232,6 +242,26 @@ export function UpgradePlanModal({
               loading={clicked}
               onClick={() => {
                 setClicked(true);
+                // @ts-ignore
+                // prettier-ignore
+
+                if (teamPlan !== "free") {
+                  fetch(
+                    `/api/teams/${teamInfo?.currentTeam?.id}/billing/manage`,
+                    {
+                      method: "POST",
+                    },
+                  )
+                    .then(async (res) => {
+                      const url = await res.json();
+                      router.push(url);
+                    })
+                    .catch((err) => {
+                      alert(err);
+                      setClicked(false);
+                    });
+                } else {
+
                 fetch(
                   `/api/teams/${
                     teamInfo?.currentTeam?.id
@@ -244,6 +274,9 @@ export function UpgradePlanModal({
                   }`,
                   {
                     method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                    },
                   },
                 )
                   .then(async (res) => {
@@ -256,16 +289,17 @@ export function UpgradePlanModal({
                     alert(err);
                     setClicked(false);
                   });
+                }
               }}
             >{`Upgrade to ${plan} ${capitalize(period)}`}</Button>
             <div className="flex items-center justify-center space-x-2">
-              {plan === "Business" ? (
+              {plan === "Business" && !isTrial ? (
                 <DataroomTrialModal>
                   <button
                     className="text-center text-xs text-muted-foreground underline-offset-4 transition-all hover:text-gray-800 hover:underline hover:dark:text-muted-foreground/80"
                     onClick={() => analytics.capture("Dataroom Trial Clicked")}
                   >
-                    Looking for a dataroom trial?
+                    Looking for a trial?
                   </button>
                 </DataroomTrialModal>
               ) : (

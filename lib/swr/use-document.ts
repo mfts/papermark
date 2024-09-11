@@ -2,6 +2,7 @@ import { useRouter } from "next/router";
 
 import { useTeam } from "@/context/team-context";
 import { View } from "@prisma/client";
+import { version } from "os";
 import useSWR from "swr";
 import useSWRImmutable from "swr/immutable";
 
@@ -80,6 +81,15 @@ interface ViewWithDuration extends View {
       answer: string;
     };
   } | null;
+  agreementResponse: {
+    id: string;
+    agreementId: string;
+    agreement: {
+      name: string;
+    };
+  } | null;
+  versionNumber: number;
+  versionNumPages: number;
 }
 
 type TStatsData = {
@@ -99,9 +109,7 @@ export function useDocumentVisits(page: number, limit: number) {
 
   const cacheKey =
     teamId && id
-      ? `/api/teams/${teamInfo?.currentTeam?.id}/documents/${encodeURIComponent(
-          id,
-        )}/views?page=${page}&limit=${limit}`
+      ? `/api/teams/${teamId}/documents/${id}/views?page=${page}&limit=${limit}`
       : null;
 
   const { data: views, error } = useSWR<TStatsData>(cacheKey, fetcher, {
@@ -124,9 +132,11 @@ interface DocumentProcessingStatus {
 
 export function useDocumentProcessingStatus(documentVersionId: string) {
   const teamInfo = useTeam();
+  const teamId = teamInfo?.currentTeam?.id;
 
   const { data: status, error } = useSWR<DocumentProcessingStatus>(
-    `/api/teams/${teamInfo?.currentTeam?.id}/documents/document-processing-status?documentVersionId=${documentVersionId}`,
+    teamId &&
+      `/api/teams/${teamId}/documents/document-processing-status?documentVersionId=${documentVersionId}`,
     fetcher,
     {
       refreshInterval: 3000, // refresh every 3 seconds
@@ -140,11 +150,15 @@ export function useDocumentProcessingStatus(documentVersionId: string) {
   };
 }
 
-export function useDocumentThumbnail(pageNumber: number, documentId: string) {
+export function useDocumentThumbnail(
+  pageNumber: number,
+  documentId: string,
+  versionNumber?: number,
+) {
   const { data, error } = useSWR<{ imageUrl: string }>(
     pageNumber === 0
       ? null
-      : `/api/jobs/get-thumbnail?documentId=${documentId}&pageNumber=${pageNumber}`,
+      : `/api/jobs/get-thumbnail?documentId=${documentId}&pageNumber=${pageNumber}&versionNumber=${versionNumber}`,
     fetcher,
     {
       dedupingInterval: 1200000,

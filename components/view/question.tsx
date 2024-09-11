@@ -11,16 +11,25 @@ export default function Question({
   viewId,
   submittedFeedback,
   setSubmittedFeedback,
+  isPreview,
 }: {
   feedback: { id: string; data: { question: string; type: string } };
-  viewId: string;
+  viewId?: string;
   submittedFeedback: boolean;
   setSubmittedFeedback: (submittedFeedback: boolean) => void;
+  isPreview?: boolean;
 }) {
   const [answer, setAnswer] = useState<"yes" | "no" | "">("");
 
   const handleQuestionSubmit = async (answer: string) => {
     if (answer === "") return;
+
+    // If in preview mode, skip recording the answer
+    if (isPreview) {
+      setAnswer(answer as "yes" | "no");
+      setSubmittedFeedback(true);
+      return;
+    }
 
     const response = await fetch(`/api/feedback`, {
       method: "POST",
@@ -41,7 +50,7 @@ export default function Question({
   if (submittedFeedback) {
     return (
       <motion.div
-        className="z-10 mx-5 flex flex-col items-center space-y-10 text-center sm:mx-auto"
+        className="mx-5 flex h-full flex-col items-center justify-center space-y-10 text-center sm:mx-auto"
         variants={{
           hidden: { opacity: 0, scale: 0.95 },
           show: {
@@ -71,7 +80,7 @@ export default function Question({
 
   return (
     <motion.div
-      className="z-10 flex w-full flex-col items-center space-y-10 text-center"
+      className="flex h-full w-full flex-col items-center justify-center space-y-10 text-center"
       variants={{
         hidden: { opacity: 0, scale: 0.95 },
         show: {

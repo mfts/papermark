@@ -1,4 +1,5 @@
 import {
+  Agreement,
   Dataroom,
   DataroomDocument,
   DataroomFolder,
@@ -10,6 +11,7 @@ import {
   View,
 } from "@prisma/client";
 import { User as NextAuthUser } from "next-auth";
+import { z } from "zod";
 
 export type CustomUser = NextAuthUser & PrismaUser;
 
@@ -49,6 +51,7 @@ export interface LinkWithDocument extends Link {
       type: string;
       hasPages: boolean;
       file: string;
+      isVertical: boolean;
     }[];
     team: {
       plan: string;
@@ -61,6 +64,7 @@ export interface LinkWithDocument extends Link {
       type: string;
     };
   } | null;
+  agreement: Agreement | null;
 }
 
 export interface LinkWithDataroom extends Link {
@@ -71,6 +75,7 @@ export interface LinkWithDataroom extends Link {
     documents: {
       id: string;
       folderId: string | null;
+      orderIndex: number | null;
       document: {
         id: string;
         name: string;
@@ -80,12 +85,14 @@ export interface LinkWithDataroom extends Link {
           type: string;
           hasPages: boolean;
           file: string;
+          isVertical: boolean;
         }[];
       };
     }[];
     folders: DataroomFolder[];
     lastUpdatedAt: Date;
   };
+  agreement: Agreement | null;
 }
 
 export interface Geo {
@@ -103,7 +110,8 @@ export type DomainVerificationStatusProps =
   | "Invalid Configuration"
   | "Pending Verification"
   | "Domain Not Found"
-  | "Unknown Error";
+  | "Unknown Error"
+  | "Conflicting DNS Records";
 
 // From https://vercel.com/docs/rest-api/endpoints#get-a-project-domain
 export interface DomainResponse {
@@ -134,6 +142,12 @@ export interface DomainConfigResponse {
   acceptedChallenges?: ("dns-01" | "http-01")[];
   /** Whether or not the domain is configured AND we can automatically generate a TLS certificate. */
   misconfigured: boolean;
+  /** conflicts */
+  conflicts: {
+    name: string;
+    type: string;
+    value: string;
+  }[];
 }
 
 // From https://vercel.com/docs/rest-api/endpoints#verify-project-domain
@@ -208,6 +222,7 @@ export type AnalyticsEvents =
       event: "Stripe Checkout Clicked";
       teamId: string;
       priceId: string;
+      referral: boolean | undefined;
     };
 
 export interface Team {
@@ -225,7 +240,7 @@ export interface TeamDetail {
     };
   }[];
   users: {
-    role: "ADMIN" | "MEMBER";
+    role: "ADMIN" | "MANAGER" | "MEMBER";
     teamId: string;
     user: {
       email: string;
@@ -234,3 +249,33 @@ export interface TeamDetail {
     userId: string;
   }[];
 }
+
+export const WatermarkConfigSchema = z.object({
+  text: z.string().min(1, "Text is required."),
+  isTiled: z.boolean(),
+  position: z.enum([
+    "top-left",
+    "top-center",
+    "top-right",
+    "middle-left",
+    "middle-center",
+    "middle-right",
+    "bottom-left",
+    "bottom-center",
+    "bottom-right",
+  ]),
+  rotation: z.union([
+    z.literal(0),
+    z.literal(30),
+    z.literal(45),
+    z.literal(90),
+    z.literal(180),
+  ]),
+  color: z.string().refine((val) => /^#([0-9A-F]{3}){1,2}$/i.test(val), {
+    message: "Invalid color format. Use HEX format like #RRGGBB.",
+  }),
+  fontSize: z.number().min(1, "Font size must be greater than 0."),
+  opacity: z.number().min(0).max(1, "Opacity must be between 0 and 1."),
+});
+
+export type WatermarkConfig = z.infer<typeof WatermarkConfigSchema>;

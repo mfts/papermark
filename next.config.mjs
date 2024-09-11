@@ -8,20 +8,25 @@ const nextConfig = {
   },
   transpilePackages: ["@trigger.dev/react"],
   skipTrailingSlashRedirect: true,
-  experimental: {
-    outputFileTracingIncludes: {
-      "/api/mupdf/*": ["./node_modules/mupdf/lib/*.wasm"],
-    },
-    missingSuspenseWithCSRBailout: false,
-  },
+  assetPrefix:
+    process.env.NODE_ENV === "production" &&
+    process.env.VERCEL_ENV === "production"
+      ? process.env.NEXT_PUBLIC_BASE_URL
+      : undefined,
   async redirects() {
     return [
       {
-        source: "/view/d/:path*",
-        destination: "/view/:path*",
-        permanent: true,
+        source: "/",
+        destination: "/documents",
+        permanent: false,
       },
     ];
+  },
+  experimental: {
+    outputFileTracingIncludes: {
+      "/api/mupdf/*": ["./node_modules/mupdf/dist/*.wasm"],
+    },
+    missingSuspenseWithCSRBailout: false,
   },
 };
 
@@ -29,6 +34,8 @@ function prepareRemotePatterns() {
   let patterns = [
     // static images and videos
     { protocol: "https", hostname: "assets.papermark.io" },
+    { protocol: "https", hostname: "cdn.papermarkassets.com" },
+    { protocol: "https", hostname: "d2kgph70pw5d9n.cloudfront.net" },
     // twitter img
     { protocol: "https", hostname: "pbs.twimg.com" },
     // linkedin img
@@ -37,15 +44,11 @@ function prepareRemotePatterns() {
     { protocol: "https", hostname: "lh3.googleusercontent.com" },
     // papermark img
     { protocol: "https", hostname: "www.papermark.io" },
+    { protocol: "https", hostname: "app.papermark.io" },
+    // useragent img
+    { protocol: "https", hostname: "faisalman.github.io" },
     // special document pages
     { protocol: "https", hostname: "d36r2enbzam0iu.cloudfront.net" },
-    // blog images
-    {
-      protocol: "https",
-      hostname: "aicontentfy-customer-images.s3.eu-central-1.amazonaws.com",
-    },
-    // also blog images
-    { protocol: "https", hostname: "dev-to-uploads.s3.amazonaws.com" },
   ];
 
   if (process.env.NEXT_PRIVATE_UPLOAD_DISTRIBUTION_HOST) {

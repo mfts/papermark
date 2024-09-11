@@ -1,22 +1,22 @@
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { motion } from "framer-motion";
 
 import Eye from "@/components/shared/icons/eye";
 import EyeOff from "@/components/shared/icons/eye-off";
-import { Switch } from "@/components/ui/switch";
+import { Input } from "@/components/ui/input";
 
 import { FADE_IN_ANIMATION_SETTINGS } from "@/lib/constants";
-import { cn } from "@/lib/utils";
 
 import { DEFAULT_LINK_TYPE } from ".";
+import LinkItem from "./link-item";
 
 export default function PasswordSection({
   data,
   setData,
 }: {
   data: DEFAULT_LINK_TYPE;
-  setData: Dispatch<SetStateAction<DEFAULT_LINK_TYPE>>;
+  setData: React.Dispatch<React.SetStateAction<DEFAULT_LINK_TYPE>>;
 }) {
   const { password } = data;
   const [enabled, setEnabled] = useState<boolean>(false);
@@ -36,31 +36,25 @@ export default function PasswordSection({
 
   return (
     <div className="pb-5">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center justify-between space-x-2">
-          <h2
-            className={cn(
-              "text-sm font-medium leading-6",
-              enabled ? "text-foreground" : "text-muted-foreground",
-            )}
-          >
-            Require password to view
-          </h2>
-        </div>
-        <Switch checked={enabled} onCheckedChange={handleEnablePassword} />
-      </div>
+      <LinkItem
+        title="Require password to view"
+        enabled={enabled}
+        action={handleEnablePassword}
+      />
+
       {enabled && (
         <motion.div
           className="relative mt-4 rounded-md shadow-sm"
           {...FADE_IN_ANIMATION_SETTINGS}
         >
-          <input
+          <Input
             name="password"
             id="password"
             autoComplete="off"
             data-1p-ignore
             type={showPassword ? "text" : "password"}
-            className="flex w-full rounded-md border-0 bg-background py-1.5 text-foreground shadow-sm ring-1 ring-inset ring-input placeholder:text-muted-foreground focus:ring-2 focus:ring-inset focus:ring-gray-400 sm:text-sm sm:leading-6"
+            className="focus:ring-inset"
+            // className="flex w-full rounded-md border-0 bg-background py-1.5 text-foreground shadow-sm ring-1 ring-inset ring-input placeholder:text-muted-foreground focus:ring-2 focus:ring-inset focus:ring-gray-400 sm:text-sm sm:leading-6"
             value={password || ""}
             placeholder="Enter password"
             onChange={(e) => {

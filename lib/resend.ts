@@ -15,6 +15,8 @@ export const sendEmail = async ({
   marketing,
   system,
   test,
+  cc,
+  scheduledAt,
 }: {
   to: string;
   subject: string;
@@ -22,6 +24,8 @@ export const sendEmail = async ({
   marketing?: boolean;
   system?: boolean;
   test?: boolean;
+  cc?: string | string[];
+  scheduledAt?: string;
 }) => {
   if (!resend) {
     // Throw an error if resend is not initialized
@@ -34,11 +38,15 @@ export const sendEmail = async ({
         ? "Marc from Papermark <marc@ship.papermark.io>"
         : system
           ? "Papermark <system@papermark.io>"
-          : "Marc from Papermark <marc@papermark.io>",
+          : !!scheduledAt
+            ? "Marc Seitz <marc@papermark.io>"
+            : "Marc from Papermark <marc@papermark.io>",
       to: test ? "delivered@resend.dev" : to,
-      reply_to: marketing ? "marc@papermark.io" : undefined,
+      cc: cc,
+      replyTo: marketing ? "marc@papermark.io" : undefined,
       subject,
       react,
+      scheduledAt,
       headers: {
         "X-Entity-Ref-ID": nanoid(),
       },

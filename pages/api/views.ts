@@ -1,11 +1,24 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
+import { waitUntil } from "@vercel/functions";
+import { getServerSession } from "next-auth/next";
+
 import sendNotification from "@/lib/api/notification-helper";
 import { sendVerificationEmail } from "@/lib/emails/send-email-verification";
 import { getFile } from "@/lib/files/get-file";
 import { newId } from "@/lib/id-helper";
 import prisma from "@/lib/prisma";
+import { parseSheet } from "@/lib/sheet";
+import { CustomUser, WatermarkConfigSchema } from "@/lib/types";
 import { checkPassword, decryptEncrpytedPassword, log } from "@/lib/utils";
+import { getIpAddress } from "@/lib/utils/ip";
+
+import { authOptions } from "./auth/[...nextauth]";
+
+export const config = {
+  // in order to enable `waitUntil` function
+  supportsResponseStreaming: true,
+};
 
 export default async function handle(
   req: NextApiRequest,
@@ -40,7 +53,22 @@ export default async function handle(
     verifiedEmail: string | null;
   };
 
-  const { email, password } = data as { email: string; password: string };
+  const { email, password, name, hasConfirmedAgreement } = data as {
+    email: string;
+    password: string;
+    name?: string;
+    hasConfirmedAgreement?: boolean;
+  };
+
+  // INFO: for using the advanced excel viewer
+  const { useAdvancedExcelViewer } = data as {
+    useAdvancedExcelViewer: boolean;
+  };
+
+  // previewToken is used to determine if the view is a preview and therefore should not be recorded
+  const { previewToken } = data as {
+    previewToken?: string;
+  };
 
   // Fetch the link to verify the settings
   const link = await prisma.link.findUnique({
@@ -57,6 +85,10 @@ export default async function handle(
       slug: true,
       allowList: true,
       denyList: true,
+      enableAgreement: true,
+      agreementId: true,
+      enableWatermark: true,
+      watermarkConfig: true,
     },
   });
 
@@ -98,6 +130,12 @@ export default async function handle(
       res.status(403).json({ message: "Invalid password." });
       return;
     }
+  }
+
+  // Check if agreement is required for visiting the link
+  if (link.enableAgreement && !hasConfirmedAgreement) {
+    res.status(400).json({ message: "Agreement to NDA is required." });
+    return;
   }
 
   // Check if email is allowed to visit the link
@@ -154,9 +192,11 @@ export default async function handle(
     });
 
     // set the default verification url
-    let verificationUrl: string = `${process.env.NEXT_PUBLIC_BASE_URL}/view/${linkId}/?token=${token}&email=${encodeURIComponent(email)}`;
+    let verificationUrl: string =
+      `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${linkId}/?token=${token}&email=${encodeURIComponent(email)}` +
+      (previewToken ? `&previewToken=${previewToken}` : "");
 
-    if (link.domainSlug && link.slug) {
+    if (link.domainSlug && link.slug && !previewToken) {
       // if custom domain is enabled, use the custom domain
       verificationUrl = `https://${link.domainSlug}/${link.slug}/?token=${token}&email=${encodeURIComponent(email)}`;
     }
@@ -202,22 +242,76 @@ export default async function handle(
     isEmailVerified = true;
   }
 
-  try {
-    console.time("create-view");
-    const newView = await prisma.view.create({
-      data: {
-        linkId: linkId,
-        viewerEmail: email,
-        documentId: documentId,
-        verified: isEmailVerified,
+  // Check if the view is a preview
+  let isPreview: boolean = false;
+  if (previewToken) {
+    const session = await getServerSession(req, res, authOptions);
+    if (!session) {
+      return res
+        .status(401)
+        .json({ message: "You need to be logged in to preview the link." });
+    }
+    const verification = await prisma.verificationToken.findUnique({
+      where: {
+        token: previewToken,
+        identifier: `preview:${linkId}:${(session.user as CustomUser).id}`,
       },
-      select: { id: true },
     });
-    console.timeEnd("create-view");
+
+    if (!verification) {
+      res.status(401).json({
+        message: "Unauthorized access.",
+      });
+      return;
+    }
+
+    // Check the token's expiration date
+    if (Date.now() > verification.expires.getTime()) {
+      res.status(401).json({ message: "Preview access expired" });
+      return;
+    }
+
+    // TODO: delete previewToken
+    // delete the token after verification
+    // await prisma.verificationToken.delete({
+    //   where: {
+    //     token: previewToken,
+    //   },
+    // });
+
+    isPreview = true;
+  }
+
+  try {
+    let newView: { id: string } | null = null;
+    if (!isPreview) {
+      console.time("create-view");
+      newView = await prisma.view.create({
+        data: {
+          linkId: linkId,
+          viewerEmail: email,
+          viewerName: name,
+          documentId: documentId,
+          verified: isEmailVerified,
+          ...(link.enableAgreement &&
+            link.agreementId &&
+            hasConfirmedAgreement && {
+              agreementResponse: {
+                create: {
+                  agreementId: link.agreementId,
+                },
+              },
+            }),
+        },
+        select: { id: true },
+      });
+      console.timeEnd("create-view");
+    }
 
     // if document version has pages, then return pages
     // otherwise, return file from document version
     let documentPages, documentVersion;
+    let sheetData;
     // let documentPagesPromise, documentVersionPromise;
     if (hasPages) {
       // get pages from document version
@@ -230,6 +324,8 @@ export default async function handle(
           storageType: true,
           pageNumber: true,
           embeddedLinks: true,
+          pageLinks: true,
+          metadata: true,
         },
       });
 
@@ -252,6 +348,7 @@ export default async function handle(
         select: {
           file: true,
           storageType: true,
+          type: true,
         },
       });
 
@@ -260,24 +357,61 @@ export default async function handle(
         return;
       }
 
-      documentVersion.file = await getFile({
-        data: documentVersion.file,
-        type: documentVersion.storageType,
-      });
+      if (documentVersion.type === "pdf") {
+        documentVersion.file = await getFile({
+          data: documentVersion.file,
+          type: documentVersion.storageType,
+        });
+      }
+
+      if (documentVersion.type === "sheet" && !useAdvancedExcelViewer) {
+        const fileUrl = await getFile({
+          data: documentVersion.file,
+          type: documentVersion.storageType,
+        });
+
+        const data = await parseSheet({ fileUrl });
+        sheetData = data;
+      }
       console.timeEnd("get-file");
     }
 
-    if (link.enableNotification) {
+    if (link.enableNotification && newView) {
       console.time("sendemail");
-      await sendNotification({ viewId: newView.id });
+      waitUntil(sendNotification({ viewId: newView.id }));
       console.timeEnd("sendemail");
     }
 
     const returnObject = {
       message: "View recorded",
-      viewId: newView.id,
-      file: documentVersion ? documentVersion.file : null,
-      pages: documentPages ? documentPages : null,
+      viewId: !isPreview && newView ? newView.id : undefined,
+      isPreview: isPreview ? true : undefined,
+      file:
+        (documentVersion && documentVersion.type === "pdf") ||
+        (documentVersion && useAdvancedExcelViewer)
+          ? documentVersion.file
+          : undefined,
+      pages: documentPages ? documentPages : undefined,
+      sheetData:
+        documentVersion &&
+        documentVersion.type === "sheet" &&
+        !useAdvancedExcelViewer
+          ? sheetData
+          : undefined,
+      fileType: documentVersion
+        ? documentVersion.type
+        : documentPages
+          ? "pdf"
+          : undefined,
+      watermarkConfig: link.enableWatermark ? link.watermarkConfig : undefined,
+      ipAddress:
+        link.enableWatermark &&
+        link.watermarkConfig &&
+        WatermarkConfigSchema.parse(link.watermarkConfig).text.includes(
+          "{{ipAddress}}",
+        )
+          ? getIpAddress(req.headers)
+          : undefined,
     };
 
     return res.status(200).json(returnObject);

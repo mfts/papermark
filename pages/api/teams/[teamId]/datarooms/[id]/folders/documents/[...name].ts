@@ -5,6 +5,7 @@ import { getServerSession } from "next-auth/next";
 
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
+import { sortItemsByIndexAndName } from "@/lib/utils/sort-items-by-index-name";
 
 export default async function handle(
   req: NextApiRequest,
@@ -65,29 +66,40 @@ export default async function handle(
           dataroomId: dataroomId,
           folderId: folder.id,
         },
-        orderBy: {
-          createdAt: "desc",
-        },
+        orderBy: [
+          { orderIndex: "asc" },
+          {
+            document: {
+              name: "asc",
+            },
+          },
+        ],
         select: {
           id: true,
           dataroomId: true,
           folderId: true,
           createdAt: true,
           updatedAt: true,
+          orderIndex: true,
           document: {
             select: {
               id: true,
               name: true,
               type: true,
               _count: {
-                select: { views: true, versions: true },
+                select: {
+                  views: { where: { dataroomId } },
+                  versions: true,
+                },
               },
             },
           },
         },
       });
 
-      return res.status(200).json(documents);
+      const sortedDocuments = sortItemsByIndexAndName(documents);
+
+      return res.status(200).json(sortedDocuments);
     } catch (error) {
       console.error("Request error", error);
       return res

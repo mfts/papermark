@@ -171,8 +171,16 @@ client.defineJob({
           return { documentPageId, payload };
         },
         // { retry: retry.standardBackoff },
-        {},
-        (error) => {
+        {
+          // retry: {
+          //   limit: 3,
+          //   minTimeoutInMs: 1000,
+          //   maxTimeoutInMs: 10000,
+          //   factor: 2,
+          //   randomize: true,
+          // },
+        },
+        (error, task) => {
           conversionWithoutError = false;
           return { error: error as Error };
         },

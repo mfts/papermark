@@ -29,17 +29,20 @@ import {
 } from "@/lib/documents/create-document";
 import { putFile } from "@/lib/files/put-file";
 import { copyToClipboard } from "@/lib/utils";
+import { getSupportedContentType } from "@/lib/utils/get-content-type";
 
 export function AddDocumentModal({
   newVersion,
   children,
   isDataroom,
   dataroomId,
+  setAddDocumentModalOpen,
 }: {
   newVersion?: boolean;
   children: React.ReactNode;
   isDataroom?: boolean;
   dataroomId?: string;
+  setAddDocumentModalOpen?: (isOpen: boolean) => void;
 }) {
   const router = useRouter();
   const plausible = usePlausible();
@@ -69,6 +72,16 @@ export function AddDocumentModal({
     try {
       setUploading(true);
 
+      const contentType = getSupportedContentType(currentFile.type);
+
+      if (!contentType) {
+        setUploading(false);
+        toast.error(
+          "Unsupported file format. Please upload a PDF or Excel file.",
+        );
+        return;
+      }
+
       const { type, data, numPages } = await putFile({
         file: currentFile,
         teamId,
@@ -78,6 +91,7 @@ export function AddDocumentModal({
         name: currentFile.name,
         key: data!,
         storageType: type!,
+        contentType: contentType,
       };
       let response: Response | undefined;
       // create a document or new version in the database
@@ -115,7 +129,7 @@ export function AddDocumentModal({
             name: document.name,
             numPages: document.numPages,
             path: router.asPath,
-            type: "pdf",
+            type: document.type,
             teamId: teamId,
             dataroomId: dataroomId,
           });
@@ -126,7 +140,7 @@ export function AddDocumentModal({
         if (!newVersion) {
           // copy the link to the clipboard
           copyToClipboard(
-            `${process.env.NEXT_PUBLIC_BASE_URL}/view/${document.links[0].id}`,
+            `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${document.links[0].id}`,
             "Document uploaded and link copied to clipboard. Redirecting to document page...",
           );
 
@@ -137,7 +151,7 @@ export function AddDocumentModal({
             name: document.name,
             numPages: document.numPages,
             path: router.asPath,
-            type: "pdf",
+            type: document.type,
             teamId: teamId,
           });
           analytics.capture("Link Added", {
@@ -157,7 +171,7 @@ export function AddDocumentModal({
             name: document.name,
             numPages: document.numPages,
             path: router.asPath,
-            type: "pdf",
+            type: document.type,
             newVersion: true,
             teamId: teamId,
           });
@@ -174,6 +188,7 @@ export function AddDocumentModal({
     } finally {
       setUploading(false);
       setIsOpen(false);
+      setAddDocumentModalOpen && setAddDocumentModalOpen(false);
     }
   };
 
@@ -297,7 +312,7 @@ export function AddDocumentModal({
         if (!newVersion) {
           // copy the link to the clipboard
           copyToClipboard(
-            `${process.env.NEXT_PUBLIC_BASE_URL}/view/${document.links[0].id}`,
+            `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${document.links[0].id}`,
             "Notion Page processed and link copied to clipboard. Redirecting to document page...",
           );
 
@@ -342,6 +357,7 @@ export function AddDocumentModal({
     currentFile !== null && setCurrentFile(null);
     notionLink !== null && setNotionLink(null);
     setIsOpen(!isOpen);
+    setAddDocumentModalOpen && setAddDocumentModalOpen(!isOpen);
   };
 
   return (
@@ -370,7 +386,7 @@ export function AddDocumentModal({
                 </CardTitle>
                 <CardDescription>
                   {newVersion
-                    ? `After you upload a new version, the existing links will remain the unchanged but `
+                    ? `After you upload a new version, the existing links will remain the unchanged.`
                     : `After you upload the document, a shareable link will be
                 generated and copied to your clipboard.`}
                 </CardDescription>
@@ -379,18 +395,34 @@ export function AddDocumentModal({
                 <form
                   encType="multipart/form-data"
                   onSubmit={handleFileUpload}
-                  className="flex flex-col"
+                  className="flex flex-col space-y-4"
                 >
                   <div className="space-y-1">
-                    <div className="pb-6">
-                      <div className="grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
-                        <DocumentUpload
-                          currentFile={currentFile}
-                          setCurrentFile={setCurrentFile}
-                        />
-                      </div>
+                    <div className="grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
+                      <DocumentUpload
+                        currentFile={currentFile}
+                        setCurrentFile={setCurrentFile}
+                      />
                     </div>
                   </div>
+
+                  {!newVersion ? (
+                    <div className="flex justify-center">
+                      <button
+                        type="button"
+                        className="text-sm text-muted-foreground underline-offset-4 transition-all hover:text-gray-800 hover:underline hover:dark:text-muted-foreground/80"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          document
+                            .getElementById("upload-multi-files-zone")
+                            ?.click();
+                          clearModelStates();
+                        }}
+                      >
+                        Want to upload multiple files?
+                      </button>
+                    </div>
+                  ) : null}
 
                   <div className="flex justify-center">
                     <Button

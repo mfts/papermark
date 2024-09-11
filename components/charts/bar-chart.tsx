@@ -24,12 +24,13 @@ const renameDummyDurationKey = (data: Data[]): TransformedData[] => {
   }, [] as TransformedData[]);
 };
 
-const renameSumDurationKey = (data: SumData[]) => {
+const renameSumDurationKey = (data: SumData[], versionNumber?: number) => {
   return data.map((item) => {
     return {
       ...item,
       "Time spent per page": item.sum_duration,
       sum_duration: undefined,
+      versionNumber: versionNumber,
     };
   });
 };
@@ -62,15 +63,17 @@ export default function BarChartComponent({
   data,
   isSum = false,
   isDummy = false,
+  versionNumber,
 }: {
   data: any;
   isSum?: boolean;
   isDummy?: boolean;
+  versionNumber?: number;
 }) {
   const [, setValue] = useState<any>(null);
 
   if (isSum) {
-    const renamedData = renameSumDurationKey(data);
+    const renamedData = renameSumDurationKey(data, versionNumber);
 
     return (
       <BarChart
@@ -83,6 +86,7 @@ export default function BarChartComponent({
         yAxisWidth={50}
         showGridLines={false}
         onValueChange={(v) => setValue(v)}
+        customTooltip={isDummy ? undefined : CustomTooltip}
       />
     );
   }

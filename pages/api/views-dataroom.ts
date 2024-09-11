@@ -1,7 +1,8 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
+import { waitUntil } from "@vercel/functions";
+import { getServerSession } from "next-auth/next";
 import { parsePageId } from "notion-utils";
-import { record } from "zod";
 
 import sendNotification from "@/lib/api/notification-helper";
 import { sendVerificationEmail } from "@/lib/emails/send-email-verification";
@@ -9,7 +10,17 @@ import { getFile } from "@/lib/files/get-file";
 import { newId } from "@/lib/id-helper";
 import notion from "@/lib/notion";
 import prisma from "@/lib/prisma";
+import { parseSheet } from "@/lib/sheet";
+import { CustomUser, WatermarkConfigSchema } from "@/lib/types";
 import { checkPassword, decryptEncrpytedPassword, log } from "@/lib/utils";
+import { getIpAddress } from "@/lib/utils/ip";
+
+import { authOptions } from "./auth/[...nextauth]";
+
+export const config = {
+  // in order to enable `waitUntil` function
+  supportsResponseStreaming: true,
+};
 
 export default async function handle(
   req: NextApiRequest,
@@ -54,7 +65,22 @@ export default async function handle(
     viewType: "DATAROOM_VIEW" | "DOCUMENT_VIEW";
   };
 
-  const { email, password } = data as { email: string; password: string };
+  const { email, password, name, hasConfirmedAgreement } = data as {
+    email: string;
+    password: string;
+    name?: string;
+    hasConfirmedAgreement?: boolean;
+  };
+
+  // INFO: for using the advanced excel viewer
+  const { useAdvancedExcelViewer } = data as {
+    useAdvancedExcelViewer: boolean;
+  };
+
+  // previewToken is used to determine if the view is a preview and therefore should not be recorded
+  const { previewToken } = data as {
+    previewToken?: string;
+  };
 
   // Fetch the link to verify the settings
   const link = await prisma.link.findUnique({
@@ -71,6 +97,10 @@ export default async function handle(
       slug: true,
       allowList: true,
       denyList: true,
+      enableAgreement: true,
+      agreementId: true,
+      enableWatermark: true,
+      watermarkConfig: true,
     },
   });
 
@@ -112,6 +142,12 @@ export default async function handle(
       res.status(403).json({ message: "Invalid password." });
       return;
     }
+  }
+
+  // Check if agreement is required for visiting the link
+  if (link.enableAgreement && !hasConfirmedAgreement) {
+    res.status(400).json({ message: "Agreement to NDA is required." });
+    return;
   }
 
   // Check if email is allowed to visit the link
@@ -168,7 +204,7 @@ export default async function handle(
     });
 
     // set the default verification url
-    let verificationUrl: string = `${process.env.NEXT_PUBLIC_BASE_URL}/view/${linkId}/?token=${token}&email=${encodeURIComponent(email)}`;
+    let verificationUrl: string = `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${linkId}/?token=${token}&email=${encodeURIComponent(email)}`;
 
     if (link.domainSlug && link.slug) {
       // if custom domain is enabled, use the custom domain
@@ -220,8 +256,48 @@ export default async function handle(
     isEmailVerified = true;
   }
 
+  // Check if the view is a preview
+  let isPreview: boolean = false;
+  if (previewToken) {
+    const session = await getServerSession(req, res, authOptions);
+    if (!session) {
+      return res
+        .status(401)
+        .json({ message: "You need to be logged in to preview the link." });
+    }
+    const verification = await prisma.verificationToken.findUnique({
+      where: {
+        token: previewToken,
+        identifier: `preview:${linkId}:${(session.user as CustomUser).id}`,
+      },
+    });
+
+    if (!verification) {
+      res.status(401).json({
+        message: "Unauthorized access.",
+      });
+      return;
+    }
+
+    // Check the token's expiration date
+    if (Date.now() > verification.expires.getTime()) {
+      res.status(401).json({ message: "Preview access expired" });
+      return;
+    }
+
+    // TODO: delete previewToken
+    // delete the token after verification
+    // await prisma.verificationToken.delete({
+    //   where: {
+    //     token: previewToken,
+    //   },
+    // });
+
+    isPreview = true;
+  }
+
   let viewer: { id: string } | null = null;
-  if (email) {
+  if (email && !isPreview) {
     // find or create a viewer
     console.time("find-viewer");
     viewer = await prisma.viewer.findUnique({
@@ -256,26 +332,46 @@ export default async function handle(
 
   if (viewType === "DATAROOM_VIEW") {
     try {
-      console.time("create-view");
-      const newDataroomView = await prisma.view.create({
-        data: {
-          linkId: linkId,
-          viewerEmail: email,
-          verified: isEmailVerified,
-          dataroomId: dataroomId,
-          viewType: "DATAROOM_VIEW",
-          viewerId: viewer?.id ?? undefined,
-        },
-        select: { id: true },
-      });
-      console.timeEnd("create-view");
+      let newDataroomView: { id: string } | null = null;
+      if (!isPreview) {
+        console.time("create-view");
+        newDataroomView = await prisma.view.create({
+          data: {
+            linkId: linkId,
+            viewerEmail: email,
+            viewerName: name,
+            verified: isEmailVerified,
+            dataroomId: dataroomId,
+            viewType: "DATAROOM_VIEW",
+            viewerId: viewer?.id ?? undefined,
+            ...(link.enableAgreement &&
+              link.agreementId &&
+              hasConfirmedAgreement && {
+                agreementResponse: {
+                  create: {
+                    agreementId: link.agreementId,
+                  },
+                },
+              }),
+          },
+          select: { id: true },
+        });
+        console.timeEnd("create-view");
+
+        if (link.enableNotification) {
+          console.time("sendemail");
+          waitUntil(sendNotification({ viewId: newDataroomView.id }));
+          console.timeEnd("sendemail");
+        }
+      }
 
       const returnObject = {
         message: "Dataroom View recorded",
-        viewId: newDataroomView.id,
-        file: null,
-        pages: null,
-        notionData: null,
+        viewId: !isPreview && newDataroomView ? newDataroomView.id : undefined,
+        isPreview: isPreview ? true : undefined,
+        file: undefined,
+        pages: undefined,
+        notionData: undefined,
       };
 
       return res.status(200).json(returnObject);
@@ -290,27 +386,43 @@ export default async function handle(
   }
 
   try {
-    console.time("create-view");
-    const newView = await prisma.view.create({
-      data: {
-        linkId: linkId,
-        viewerEmail: email,
-        documentId: documentId,
-        verified: isEmailVerified,
-        dataroomViewId: dataroomViewId,
-        dataroomId: dataroomId,
-        viewType: "DOCUMENT_VIEW",
-        viewerId: viewer?.id ?? undefined,
-      },
-      select: { id: true },
-    });
-    console.timeEnd("create-view");
+    let newView: { id: string } | null = null;
+    if (!isPreview) {
+      console.time("create-view");
+      newView = await prisma.view.create({
+        data: {
+          linkId: linkId,
+          viewerEmail: email,
+          viewerName: name,
+          documentId: documentId,
+          verified: isEmailVerified,
+          dataroomViewId: dataroomViewId,
+          dataroomId: dataroomId,
+          viewType: "DOCUMENT_VIEW",
+          viewerId: viewer?.id ?? undefined,
+          ...(link.enableAgreement &&
+            link.agreementId &&
+            hasConfirmedAgreement && {
+              agreementResponse: {
+                create: {
+                  agreementId: link.agreementId,
+                },
+              },
+            }),
+        },
+        select: { id: true },
+      });
+      console.timeEnd("create-view");
+    }
 
     // if document version has pages, then return pages
     // otherwise, check if notion document,
     // if notion, return recordMap from document version file
     // otherwise, return file from document version
-    let documentPages, documentVersion, recordMap;
+    let documentPages, documentVersion;
+    let recordMap;
+    let sheetData;
+
     if (hasPages) {
       // get pages from document version
       console.time("get-pages");
@@ -322,6 +434,8 @@ export default async function handle(
           storageType: true,
           pageNumber: true,
           embeddedLinks: true,
+          pageLinks: true,
+          metadata: true,
         },
       });
 
@@ -353,6 +467,13 @@ export default async function handle(
         return;
       }
 
+      if (documentVersion.type === "pdf") {
+        documentVersion.file = await getFile({
+          data: documentVersion.file,
+          type: documentVersion.storageType,
+        });
+      }
+
       if (documentVersion.type === "notion") {
         let notionPageId = parsePageId(documentVersion.file, { uuid: false });
         if (!notionPageId) {
@@ -363,28 +484,57 @@ export default async function handle(
         recordMap = await notion.getPage(pageId);
       }
 
-      documentVersion.file = await getFile({
-        data: documentVersion.file,
-        type: documentVersion.storageType,
-      });
+      if (documentVersion.type === "sheet" && !useAdvancedExcelViewer) {
+        const fileUrl = await getFile({
+          data: documentVersion.file,
+          type: documentVersion.storageType,
+        });
+
+        const data = await parseSheet({ fileUrl });
+        sheetData = data;
+      }
       console.timeEnd("get-file");
     }
 
     const returnObject = {
       message: "View recorded",
-      viewId: newView.id,
+      viewId: !isPreview && newView ? newView.id : undefined,
+      isPreview: isPreview ? true : undefined,
       file:
-        documentVersion && documentVersion.type === "pdf"
+        (documentVersion && documentVersion.type === "pdf") ||
+        (documentVersion && useAdvancedExcelViewer)
           ? documentVersion.file
-          : null,
-      pages: documentPages ? documentPages : null,
-      notionData: recordMap ? { recordMap } : null,
+          : undefined,
+      pages: documentPages ? documentPages : undefined,
+      notionData: recordMap ? { recordMap } : undefined,
+      sheetData:
+        documentVersion &&
+        documentVersion.type === "sheet" &&
+        !useAdvancedExcelViewer
+          ? sheetData
+          : undefined,
+      fileType: documentVersion
+        ? documentVersion.type
+        : documentPages
+          ? "pdf"
+          : recordMap
+            ? "notion"
+            : undefined,
+      watermarkConfig: link.enableWatermark ? link.watermarkConfig : undefined,
+      ipAddress:
+        link.enableWatermark &&
+        link.watermarkConfig &&
+        WatermarkConfigSchema.parse(link.watermarkConfig).text.includes(
+          "{{ipAddress}}",
+        )
+          ? getIpAddress(req.headers)
+          : undefined,
     };
 
     return res.status(200).json(returnObject);
   } catch (error) {
     log({
-      message: `Failed to record view for ${linkId}. \n\n ${error}`,
+      message: `Failed to record view for dataroom document ${linkId}. \n\n ${error}`,
       type: "error",
       mention: true,
     });

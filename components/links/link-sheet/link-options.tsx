@@ -1,4 +1,6 @@
-import { Dispatch, SetStateAction, useState } from "react";
+import { useState } from "react";
+
+import { LinkType } from "@prisma/client";
 
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { DEFAULT_LINK_TYPE } from "@/components/links/link-sheet";
@@ -12,41 +14,55 @@ import ExpirationSection from "@/components/links/link-sheet/expiration-section"
 import FeedbackSection from "@/components/links/link-sheet/feedback-section";
 import OGSection from "@/components/links/link-sheet/og-section";
 import PasswordSection from "@/components/links/link-sheet/password-section";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+import { ProBannerSection } from "@/components/links/link-sheet/pro-banner-section";
 
 import { usePlan } from "@/lib/swr/use-billing";
+import useLimits from "@/lib/swr/use-limits";
 
+import AgreementSection from "./agreement-section";
 import QuestionSection from "./question-section";
 import ScreenshotProtectionSection from "./screenshot-protection-section";
+import WatermarkSection from "./watermark-section";
+
+export type LinkUpgradeOptions = {
+  state: boolean;
+  trigger: string;
+  plan?: "Pro" | "Business" | "Data Rooms";
+};
 
 export const LinkOptions = ({
   data,
   setData,
+  linkType,
+  editLink,
 }: {
   data: DEFAULT_LINK_TYPE;
-  setData: Dispatch<SetStateAction<DEFAULT_LINK_TYPE>>;
+  setData: React.Dispatch<React.SetStateAction<DEFAULT_LINK_TYPE>>;
+  linkType: LinkType;
+  editLink?: boolean;
 }) => {
-  const { plan } = usePlan();
-  const hasFreePlan = plan === "free";
-  const isNotBusiness = plan !== "business";
-  const isNotDatarooms = plan !== "datarooms";
+  const { plan, trial } = usePlan();
+  const { limits } = useLimits();
+
+  const isTrial = !!trial;
+  const isPro = plan === "pro";
+  const isBusiness = plan === "business";
+  const isDatarooms = plan === "datarooms";
+  const allowAdvancedLinkControls = limits
+    ? limits?.advancedLinkControlsOnPro
+    : false;
 
   const [openUpgradeModal, setOpenUpgradeModal] = useState<boolean>(false);
   const [trigger, setTrigger] = useState<string>("");
   const [upgradePlan, setUpgradePlan] = useState<
     "Pro" | "Business" | "Data Rooms"
-  >("Pro");
+  >("Business");
 
-  const handleUpgradeStateChange = (
-    state: boolean,
-    trigger: string,
-    plan?: "Pro" | "Business" | "Data Rooms",
-  ) => {
+  const handleUpgradeStateChange = ({
+    state,
+    trigger,
+    plan,
+  }: LinkUpgradeOptions) => {
     setOpenUpgradeModal(state);
     setTrigger(trigger);
     if (plan) {
@@ -62,49 +78,82 @@ export const LinkOptions = ({
       <ExpirationSection {...{ data, setData }} />
       <OGSection
         {...{ data, setData }}
-        hasFreePlan={hasFreePlan}
+        isAllowed={
+          isTrial ||
+          (isPro && allowAdvancedLinkControls) ||
+          isBusiness ||
+          isDatarooms
+        }
         handleUpgradeStateChange={handleUpgradeStateChange}
+        editLink={editLink ?? false}
       />
 
-      <Accordion type="single" collapsible>
-        <AccordionItem value="item-1" className="border-none">
-          <AccordionTrigger className="space-x-2 rounded-lg py-0">
-            <span className="text-sm font-medium leading-6 text-foreground">
-              Advanced Link Access Options
-            </span>
-          </AccordionTrigger>
-          <AccordionContent className="first:pt-5">
-            <EmailAuthenticationSection
-              {...{ data, setData }}
-              hasFreePlan={hasFreePlan}
-              handleUpgradeStateChange={handleUpgradeStateChange}
-            />
-            <AllowListSection
-              {...{ data, setData }}
-              hasFreePlan={hasFreePlan}
-              handleUpgradeStateChange={handleUpgradeStateChange}
-            />
-            <DenyListSection
-              {...{ data, setData }}
-              hasFreePlan={hasFreePlan}
-              handleUpgradeStateChange={handleUpgradeStateChange}
-            />
-            <PasswordSection {...{ data, setData }} />
-            <ScreenshotProtectionSection
-              {...{ data, setData }}
-              hasFreePlan={isNotBusiness && isNotDatarooms}
-              handleUpgradeStateChange={handleUpgradeStateChange}
-            />
-            <FeedbackSection {...{ data, setData }} />
-            <QuestionSection
-              {...{ data, setData }}
-              hasFreePlan={isNotBusiness && isNotDatarooms}
-              handleUpgradeStateChange={handleUpgradeStateChange}
-            />
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
-
+      <EmailAuthenticationSection
+        {...{ data, setData }}
+        isAllowed={isTrial || isPro || isBusiness || isDatarooms}
+        handleUpgradeStateChange={handleUpgradeStateChange}
+      />
+      <AllowListSection
+        {...{ data, setData }}
+        isAllowed={
+          isTrial ||
+          (isPro && allowAdvancedLinkControls) ||
+          isBusiness ||
+          isDatarooms
+        }
+        handleUpgradeStateChange={handleUpgradeStateChange}
+      />
+      <DenyListSection
+        {...{ data, setData }}
+        isAllowed={
+          isTrial ||
+          (isPro && allowAdvancedLinkControls) ||
+          isBusiness ||
+          isDatarooms
+        }
+        handleUpgradeStateChange={handleUpgradeStateChange}
+      />
+      <PasswordSection {...{ data, setData }} />
+      <ScreenshotProtectionSection
+        {...{ data, setData }}
+        isAllowed={
+          isTrial ||
+          (isPro && allowAdvancedLinkControls) ||
+          isBusiness ||
+          isDatarooms
+        }
+        handleUpgradeStateChange={handleUpgradeStateChange}
+      />
+      <FeedbackSection {...{ data, setData }} />
+      <QuestionSection
+        {...{ data, setData }}
+        isAllowed={
+          isTrial ||
+          (isPro && allowAdvancedLinkControls) ||
+          isBusiness ||
+          isDatarooms
+        }
+        handleUpgradeStateChange={handleUpgradeStateChange}
+      />
+      <WatermarkSection
+        {...{ data, setData }}
+        isAllowed={isTrial || isDatarooms}
+        handleUpgradeStateChange={handleUpgradeStateChange}
+      />
+      <AgreementSection
+        {...{ data, setData }}
+        isAllowed={isTrial || isDatarooms}
+        handleUpgradeStateChange={handleUpgradeStateChange}
+      />
+      {linkType === LinkType.DOCUMENT_LINK ? (
+        <ProBannerSection
+          {...{ data, setData }}
+          isAllowed={
+            isTrial || isPro || isBusiness || isDatarooms || plan === "starter"
+          }
+          handleUpgradeStateChange={handleUpgradeStateChange}
+        />
+      ) : null}
       <UpgradePlanModal
         clickedPlan={upgradePlan}
         open={openUpgradeModal}

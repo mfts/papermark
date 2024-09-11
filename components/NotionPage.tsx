@@ -1,4 +1,7 @@
+import dynamic from "next/dynamic";
+
 import { useEffect, useRef, useState } from "react";
+import React from "react";
 
 import { Brand, DataroomBrand } from "@prisma/client";
 import { ExtendedRecordMap } from "notion-types";
@@ -6,7 +9,14 @@ import { NotionRenderer } from "react-notion-x";
 // core styles shared by all of react-notion-x (required)
 import "react-notion-x/src/styles.css";
 
+import { TDocumentData } from "./view/dataroom/dataroom-view";
 import Nav from "./view/nav";
+
+const Collection = dynamic(() =>
+  import("react-notion-x/build/third-party/collection").then(
+    (m) => m.Collection,
+  ),
+);
 
 export const NotionPage = ({
   recordMap,
@@ -19,17 +29,19 @@ export const NotionPage = ({
   brand,
   dataroomId,
   setDocumentData,
+  isPreview,
 }: {
   recordMap: ExtendedRecordMap;
   rootPageId?: string;
-  viewId: string;
+  viewId?: string;
   linkId: string;
   documentId: string;
   versionNumber: number;
   documentName?: string;
   brand?: Partial<Brand> | Partial<DataroomBrand> | null;
   dataroomId?: string;
-  setDocumentData?: (data: any) => void;
+  setDocumentData?: React.Dispatch<React.SetStateAction<TDocumentData | null>>;
+  isPreview?: boolean;
 }) => {
   const [pageNumber, setPageNumber] = useState<number>(1); // start on first page
   const [maxScrollPercentage, setMaxScrollPercentage] = useState<number>(0);
@@ -64,6 +76,8 @@ export const NotionPage = ({
   }, []);
 
   async function trackPageView(duration: number = 0) {
+    if (isPreview) return;
+
     await fetch("/api/record_view", {
       method: "POST",
       body: JSON.stringify({
@@ -126,6 +140,7 @@ export const NotionPage = ({
           isDataroom={dataroomId ? true : false}
           setDocumentData={setDocumentData}
           type="notion"
+          isPreview={isPreview}
         />
 
         <div>
@@ -136,6 +151,7 @@ export const NotionPage = ({
             rootPageId={rootPageId}
             disableHeader={true}
             components={{
+              Collection,
               PageLink: (props: {
                 href: any;
                 children:

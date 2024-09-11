@@ -3,7 +3,7 @@ import { useRouter } from "next/router";
 import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
-import { E164Number } from "libphonenumber-js/types.cjs";
+import { E164Number } from "libphonenumber-js";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
@@ -43,7 +43,7 @@ export function DataroomTrialModal({
   const [companySize, setCompanySize] = useState<string>("");
   const [name, setName] = useState<string>("");
   const [companyName, setCompanyName] = useState<string>("");
-  const [phoneNumber, setPhoneNumber] = useState<E164Number>("");
+  const [phoneNumber, setPhoneNumber] = useState<E164Number | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [open, setOpen] = useState<boolean>(false);
 

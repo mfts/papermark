@@ -2,6 +2,10 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 import { Brand, DataroomBrand } from "@prisma/client";
 
+import {
+  fetchDataroomLinkData,
+  fetchDocumentLinkData,
+} from "@/lib/api/links/link-data";
 import prisma from "@/lib/prisma";
 import { log } from "@/lib/utils";
 
@@ -10,7 +14,7 @@ export default async function handle(
   res: NextApiResponse,
 ) {
   // Immediately set the Cache-Control header to prevent any form of caching
-  res.setHeader("Cache-Control", "no-store, max-age=0, must-revalidate");
+  // res.setHeader("Cache-Control", "no-store, max-age=0, must-revalidate");
 
   if (req.method === "GET") {
     // GET /api/links/domains/:domain/:slug
@@ -55,6 +59,11 @@ export default async function handle(
               data: true,
             },
           },
+          enableAgreement: true,
+          agreement: true,
+          showBanner: true,
+          enableWatermark: true,
+          watermarkConfig: true,
           document: {
             select: {
               team: {
@@ -118,94 +127,13 @@ export default async function handle(
       let linkData: any;
 
       if (linkType === "DOCUMENT_LINK") {
-        linkData = await prisma.link.findUnique({
-          where: { id: link.id },
-          select: {
-            document: {
-              select: {
-                id: true,
-                name: true,
-                teamId: true,
-                ownerId: true,
-                team: { select: { plan: true } },
-                versions: {
-                  where: { isPrimary: true },
-                  select: {
-                    id: true,
-                    versionNumber: true,
-                    hasPages: true,
-                    type: true,
-                    file: true,
-                  },
-                  take: 1,
-                },
-              },
-            },
-          },
-        });
-
-        brand = await prisma.brand.findFirst({
-          where: {
-            teamId: linkData.document.teamId,
-          },
-          select: {
-            logo: true,
-            brandColor: true,
-          },
-        });
+        const data = await fetchDocumentLinkData({ linkId: link.id });
+        linkData = data.linkData;
+        brand = data.brand;
       } else if (linkType === "DATAROOM_LINK") {
-        linkData = await prisma.link.findUnique({
-          where: { id: link.id },
-          select: {
-            dataroom: {
-              select: {
-                id: true,
-                name: true,
-                teamId: true,
-                documents: {
-                  select: {
-                    id: true,
-                    folderId: true,
-                    updatedAt: true,
-                    document: {
-                      select: {
-                        id: true,
-                        name: true,
-                        versions: {
-                          where: { isPrimary: true },
-                          select: {
-                            id: true,
-                            versionNumber: true,
-                            type: true,
-                            hasPages: true,
-                            file: true,
-                          },
-                          take: 1,
-                        },
-                      },
-                    },
-                  },
-                },
-                folders: {
-                  orderBy: {
-                    name: "asc",
-                  },
-                },
-              },
-            },
-          },
-        });
-
-        brand = await prisma.dataroomBrand.findFirst({
-          where: {
-            dataroomId: linkData.dataroom.id,
-          },
-          select: {
-            logo: true,
-            banner: true,
-            brandColor: true,
-          },
-        });
+        const data = await fetchDataroomLinkData({ linkId: link.id });
+        linkData = data.linkData;
+        brand = data.brand;
       }
 
       // remove document and domain from link

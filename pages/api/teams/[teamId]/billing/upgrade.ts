@@ -91,6 +91,7 @@ export default async function handle(
       event: "Stripe Checkout Clicked",
       teamId,
       priceId: priceId,
+      referral: req.body.referral ? true : undefined,
     });
 
     return res.status(200).json(stripeSession);

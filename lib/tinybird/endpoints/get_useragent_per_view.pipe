@@ -1,0 +1,20 @@
+VERSION 1
+
+NODE endpoint
+SQL >
+    %
+    SELECT
+        country,
+        city,
+        browser,
+        os,
+        device
+    FROM
+        page_views__v3
+    WHERE
+        documentId = {{ String(documentId, required=True) }}
+        AND viewId = {{ String(viewId, required=True) }}
+        AND time >= {{ Int64(since, required=True) }}
+    ORDER BY
+        viewId, time ASC
+    LIMIT 1

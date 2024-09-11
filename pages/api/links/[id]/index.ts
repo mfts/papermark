@@ -3,6 +3,10 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { Brand, DataroomBrand } from "@prisma/client";
 import { getServerSession } from "next-auth/next";
 
+import {
+  fetchDataroomLinkData,
+  fetchDocumentLinkData,
+} from "@/lib/api/links/link-data";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 import { generateEncrpytedPassword } from "@/lib/utils";
@@ -45,6 +49,11 @@ export default async function handle(
               data: true,
             },
           },
+          enableAgreement: true,
+          agreement: true,
+          showBanner: true,
+          enableWatermark: true,
+          watermarkConfig: true,
         },
       });
 
@@ -64,99 +73,13 @@ export default async function handle(
       let linkData: any;
 
       if (linkType === "DOCUMENT_LINK") {
-        linkData = await prisma.link.findUnique({
-          where: { id: id },
-          select: {
-            document: {
-              select: {
-                id: true,
-                name: true,
-                assistantEnabled: true,
-                teamId: true,
-                ownerId: true,
-                team: {
-                  select: {
-                    plan: true,
-                  },
-                },
-                versions: {
-                  where: { isPrimary: true },
-                  select: {
-                    id: true,
-                    versionNumber: true,
-                    type: true,
-                    hasPages: true,
-                    file: true,
-                  },
-                  take: 1,
-                },
-              },
-            },
-          },
-        });
-
-        brand = await prisma.brand.findFirst({
-          where: {
-            teamId: linkData.document.teamId,
-          },
-          select: {
-            logo: true,
-            brandColor: true,
-          },
-        });
+        const data = await fetchDocumentLinkData({ linkId: id });
+        linkData = data.linkData;
+        brand = data.brand;
       } else if (linkType === "DATAROOM_LINK") {
-        linkData = await prisma.link.findUnique({
-          where: { id: id },
-          select: {
-            dataroom: {
-              select: {
-                id: true,
-                name: true,
-                teamId: true,
-                documents: {
-                  select: {
-                    id: true,
-                    folderId: true,
-                    updatedAt: true,
-                    document: {
-                      select: {
-                        id: true,
-                        name: true,
-                        versions: {
-                          where: { isPrimary: true },
-                          select: {
-                            id: true,
-                            versionNumber: true,
-                            type: true,
-                            hasPages: true,
-                            file: true,
-                          },
-                          take: 1,
-                        },
-                      },
-                    },
-                  },
-                },
-                folders: {
-                  orderBy: {
-                    name: "asc",
-                  },
-                },
-              },
-            },
-          },
-        });
-
-        brand = await prisma.dataroomBrand.findFirst({
-          where: {
-            dataroomId: linkData.dataroom.id,
-          },
-          select: {
-            logo: true,
-            banner: true,
-            brandColor: true,
-          },
-        });
+        const data = await fetchDataroomLinkData({ linkId: id });
+        linkData = data.linkData;
+        brand = data.brand;
       }
 
       const returnLink = {
@@ -240,6 +163,12 @@ export default async function handle(
       }
     }
 
+    if (linkData.enableAgreement && !linkData.agreementId) {
+      return res.status(400).json({
+        error: "No agreement selected.",
+      });
+    }
+
     // Update the link in the database
     const updatedLink = await prisma.link.update({
       where: { id: id },
@@ -281,6 +210,11 @@ export default async function handle(
             },
           },
         },
+        enableAgreement: linkData.enableAgreement,
+        agreementId: linkData.agreementId || null,
+        showBanner: linkData.showBanner,
+        enableWatermark: linkData.enableWatermark || false,
+        watermarkConfig: linkData.watermarkConfig || null,
       },
       include: {
         views: {

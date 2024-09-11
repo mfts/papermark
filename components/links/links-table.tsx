@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { DocumentVersion } from "@prisma/client";
-import { Settings2Icon } from "lucide-react";
+import { EyeIcon, Settings2Icon } from "lucide-react";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
@@ -33,13 +33,14 @@ import {
 } from "@/components/ui/table";
 
 import { usePlan } from "@/lib/swr/use-billing";
-import { LinkWithViews } from "@/lib/types";
+import { LinkWithViews, WatermarkConfig } from "@/lib/types";
 import { cn, copyToClipboard, nFormatter, timeAgo } from "@/lib/utils";
 
 import ProcessStatusBar from "../documents/process-status-bar";
 import BarChart from "../shared/icons/bar-chart";
 import ChevronDown from "../shared/icons/chevron-down";
 import MoreHorizontal from "../shared/icons/more-horizontal";
+import { BadgeTooltip, ButtonTooltip } from "../ui/tooltip";
 import LinkSheet, {
   DEFAULT_LINK_PROPS,
   type DEFAULT_LINK_TYPE,
@@ -61,8 +62,9 @@ export default function LinksTable({
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isLinkSheetVisible, setIsLinkSheetVisible] = useState<boolean>(false);
-  const [selectedLink, setSelectedLink] =
-    useState<DEFAULT_LINK_TYPE>(DEFAULT_LINK_PROPS);
+  const [selectedLink, setSelectedLink] = useState<DEFAULT_LINK_TYPE>(
+    DEFAULT_LINK_PROPS(`${targetType}_LINK`),
+  );
 
   const handleCopyToClipboard = (linkString: string) => {
     copyToClipboard(`${linkString}`, "Link copied to clipboard.");
@@ -97,11 +99,73 @@ export default function LinksTable({
       metaTitle: link.metaTitle,
       metaDescription: link.metaDescription,
       metaImage: link.metaImage,
+      enableAgreement: link.enableAgreement ? link.enableAgreement : false,
+      agreementId: link.agreementId,
+      showBanner: link.showBanner ?? false,
+      enableWatermark: link.enableWatermark ?? false,
+      watermarkConfig: link.watermarkConfig as WatermarkConfig | null,
     });
     //wait for dropdown to close before opening the link sheet
     setTimeout(() => {
       setIsLinkSheetVisible(true);
     }, 0);
+  };
+
+  const handlePreviewLink = async (link: LinkWithViews) => {
+    if (link.domainId && plan === "free") {
+      toast.error("You need to upgrade to preview this link");
+      return;
+    }
+
+    const response = await fetch(`/api/links/${link.id}/preview`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      toast.error("Failed to generate preview link");
+      return;
+    }
+
+    const { previewToken } = await response.json();
+    const previewLink = `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${link.id}?previewToken=${previewToken}`;
+
+    window.open(previewLink, "_blank");
+  };
+
+  const handleDuplicateLink = async (link: LinkWithViews) => {
+    setIsLoading(true);
+
+    const response = await fetch(
+      `/api/links/${link.id}/duplicate?teamId=${teamInfo?.currentTeam?.id}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      },
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const duplicatedLink = await response.json();
+    const endpointTargetType = `${targetType.toLowerCase()}s`; // "documents" or "datarooms"
+
+    // Update the duplicated link in the list of links
+    mutate(
+      `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
+        link.documentId ?? link.dataroomId ?? "",
+      )}/links`,
+      (links || []).concat(duplicatedLink),
+      false,
+    );
+
+    toast.success("Link duplicated successfully");
+    setIsLoading(false);
   };
 
   const handleArchiveLink = async (
@@ -151,8 +215,6 @@ export default function LinksTable({
 
   const hasFreePlan = plan === "free";
 
-  console.log("links", links);
-
   return (
     <>
       <div className="w-full">
@@ -188,7 +250,7 @@ export default function LinksTable({
                               </span>
                             ) : null}
                           </TableCell>
-                          <TableCell className="flex max-w-[250px] items-center gap-x-2 sm:min-w-[300px] md:min-w-[400px] lg:min-w-[450px]">
+                          <TableCell className="flex items-center gap-x-2 sm:min-w-[300px] md:min-w-[400px] lg:min-w-[450px]">
                             <div
                               className={cn(
                                 `group/cell relative flex w-full items-center gap-x-4 overflow-hidden truncate rounded-sm px-3 py-1.5 text-center text-secondary-foreground transition-all group-hover/row:ring-1 group-hover/row:ring-gray-400 group-hover/row:dark:ring-gray-100 md:py-1`,
@@ -199,7 +261,7 @@ export default function LinksTable({
                             >
                               {/* Progress bar */}
                               {primaryVersion &&
-                              primaryVersion.type !== "notion" &&
+                              primaryVersion.type === "pdf" &&
                               !primaryVersion.hasPages ? (
                                 <ProcessStatusBar
                                   documentVersionId={primaryVersion.id}
@@ -207,10 +269,10 @@ export default function LinksTable({
                                 />
                               ) : null}
 
-                              <div className="flex w-full whitespace-nowrap text-xs group-hover/cell:opacity-0 md:text-sm">
+                              <div className="flex w-full whitespace-nowrap text-sm group-hover/cell:opacity-0">
                                 {link.domainId
                                   ? `https://${link.domainSlug}/${link.slug}`
-                                  : `https://${process.env.NEXT_PUBLIC_ROOT_DOMAIN}/view/${link.id}`}
+                                  : `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${link.id}`}
                               </div>
 
                               {link.domainId && hasFreePlan ? (
@@ -230,7 +292,7 @@ export default function LinksTable({
                                     handleCopyToClipboard(
                                       link.domainId
                                         ? `https://${link.domainSlug}/${link.slug}`
-                                        : `https://${process.env.NEXT_PUBLIC_ROOT_DOMAIN}/view/${link.id}`,
+                                        : `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${link.id}`,
                                     )
                                   }
                                   title="Copy to clipboard"
@@ -239,16 +301,29 @@ export default function LinksTable({
                                 </button>
                               )}
                             </div>
-                            <Button
-                              variant="link"
-                              size="icon"
-                              className="group h-7 w-8"
-                              onClick={() => handleEditLink(link)}
-                              title="Edit link"
-                            >
-                              <span className="sr-only">Edit link</span>
-                              <Settings2Icon className="h-5 w-5 text-gray-400 group-hover:text-gray-500" />
-                            </Button>
+                            <ButtonTooltip content="Preview link">
+                              <Button
+                                variant={"link"}
+                                size={"icon"}
+                                className="group h-7 w-8"
+                                onClick={() => handlePreviewLink(link)}
+                              >
+                                <span className="sr-only">Preview link</span>
+                                <EyeIcon className="h-5 w-5 text-gray-400 group-hover:text-gray-500" />
+                              </Button>
+                            </ButtonTooltip>
+                            <ButtonTooltip content="Edit link">
+                              <Button
+                                variant="link"
+                                size="icon"
+                                className="group h-7 w-8"
+                                onClick={() => handleEditLink(link)}
+                                title="Edit link"
+                              >
+                                <span className="sr-only">Edit link</span>
+                                <Settings2Icon className="h-5 w-5 text-gray-400 group-hover:text-gray-500" />
+                              </Button>
+                            </ButtonTooltip>
                           </TableCell>
                           <TableCell>
                             <CollapsibleTrigger
@@ -288,7 +363,10 @@ export default function LinksTable({
                           <TableCell className="text-center sm:text-right">
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" className="h-8 w-8 p-0">
+                                <Button
+                                  variant="ghost"
+                                  className="h-8 w-8 p-0 group-hover/row:ring-1 group-hover/row:ring-gray-200 group-hover/row:dark:ring-gray-700"
+                                >
                                   <span className="sr-only">Open menu</span>
                                   <MoreHorizontal className="h-4 w-4" />
                                 </Button>
@@ -300,6 +378,11 @@ export default function LinksTable({
                                   onClick={() => handleEditLink(link)}
                                 >
                                   Edit Link
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => handleDuplicateLink(link)}
+                                >
+                                  Duplicate Link
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   className="text-destructive focus:bg-destructive focus:text-destructive-foreground"
@@ -398,7 +481,7 @@ export default function LinksTable({
                                   <div className="flex items-center gap-x-4 whitespace-nowrap rounded-sm bg-secondary px-3 py-1.5 text-xs text-secondary-foreground sm:py-1 sm:text-sm">
                                     {link.domainId
                                       ? `https://${link.domainSlug}/${link.slug}`
-                                      : `https://${process.env.NEXT_PUBLIC_ROOT_DOMAIN}/view/${link.id}`}
+                                      : `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${link.id}`}
                                   </div>
                                 </TableCell>
                                 <TableCell>

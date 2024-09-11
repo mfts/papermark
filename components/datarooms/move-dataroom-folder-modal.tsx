@@ -3,8 +3,6 @@ import { useRouter } from "next/router";
 import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
-import { toast } from "sonner";
-import { mutate } from "swr";
 
 import { SidebarFolderTreeSelection } from "@/components/datarooms/folders";
 import { Button } from "@/components/ui/button";
@@ -17,24 +15,31 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
+import { moveDataroomDocumentToFolder } from "@/lib/documents/move-dataroom-documents";
+
+import { TSelectedFolder } from "../documents/move-folder-modal";
+
 export function MoveToDataroomFolderModal({
   open,
   setOpen,
   dataroomId,
-  documentId,
+  setSelectedDocuments,
+  documentIds,
   documentName,
 }: {
   open: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
   dataroomId: string;
-  documentId?: string;
+  setSelectedDocuments?: React.Dispatch<React.SetStateAction<string[]>>;
+  documentIds: string[];
   documentName?: string;
 }) {
   const router = useRouter();
-  const [folderId, setFolderId] = useState<string>("");
+  const [selectedFolder, setSelectedFolder] = useState<TSelectedFolder>(null);
   const [loading, setLoading] = useState<boolean>(false);
 
   const teamInfo = useTeam();
+  const teamId = teamInfo?.currentTeam?.id;
 
   const currentPath = router.query.name
     ? (router.query.name as string[]).join("/")
@@ -44,56 +49,21 @@ export function MoveToDataroomFolderModal({
     event.preventDefault();
     event.stopPropagation();
 
-    if (folderId === "") return;
+    if (!selectedFolder) return;
 
     setLoading(true);
-    try {
-      const response = await fetch(
-        `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}/documents/${documentId}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            folderId: folderId,
-            currentPathName: "/" + currentPath,
-          }),
-        },
-      );
 
-      if (!response.ok) {
-        const { message } = await response.json();
-        setLoading(false);
-        toast.error(message);
-        return;
-      }
+    await moveDataroomDocumentToFolder({
+      documentIds,
+      folderId: selectedFolder.id!,
+      folderPathName: currentPath ? currentPath.split("/") : undefined,
+      dataroomId,
+      teamId,
+    });
 
-      const { newPath, oldPath } = (await response.json()) as {
-        newPath: string;
-        oldPath: string;
-      };
-
-      toast.success("Document moved successfully!");
-
-      mutate(
-        `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}/folders`,
-      );
-      mutate(
-        `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}/folders${oldPath}`,
-      );
-      mutate(
-        `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}/folders${newPath}`,
-      ).then(() => {
-        router.push(`/datarooms/${dataroomId}/documents${newPath}`);
-      });
-    } catch (error) {
-      console.error("Error moving document", error);
-      toast.error("Failed to move document. Try again.");
-    } finally {
-      setLoading(false);
-      setOpen(false);
-    }
+    setLoading(false);
+    setOpen(false); // Close the modal
+    setSelectedDocuments?.([]); // Clear the selected documents
   };
 
   return (
@@ -101,7 +71,10 @@ export function MoveToDataroomFolderModal({
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader className="text-start">
           <DialogTitle>
-            Move <span className="font-bold">{documentName}</span>
+            Move{" "}
+            <span className="font-bold">
+              {documentName ? documentName : `${documentIds.length} items`}
+            </span>
           </DialogTitle>
           <DialogDescription>Move your document to a folder.</DialogDescription>
         </DialogHeader>
@@ -109,14 +82,26 @@ export function MoveToDataroomFolderModal({
           <div className="mb-2">
             <SidebarFolderTreeSelection
               dataroomId={dataroomId}
-              selectedFolderId={folderId}
-              setFolderId={setFolderId}
+              selectedFolder={selectedFolder}
+              setSelectedFolder={setSelectedFolder}
             />
           </div>
 
           <DialogFooter>
-            <Button onClick={handleSubmit} className="h-9 w-full">
-              Move to folder
+            <Button
+              onClick={handleSubmit}
+              className="flex h-9 w-full gap-1"
+              loading={loading}
+              disabled={!selectedFolder}
+            >
+              {!selectedFolder ? (
+                "Select a folder"
+              ) : (
+                <>
+                  Move to{" "}
+                  <span className="font-medium">{selectedFolder.name}</span>
+                </>
+              )}
             </Button>
           </DialogFooter>
         </form>

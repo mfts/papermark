@@ -1,10 +1,10 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 
-import { useTeam } from "@/context/team-context";
 import {
   Upload as ArrowUpTrayIcon,
   File as DocumentIcon,
   FileText as DocumentTextIcon,
+  FileSpreadsheetIcon,
   Image as PhotoIcon,
   Presentation as PresentationChartBarIcon,
 } from "lucide-react";
@@ -14,6 +14,13 @@ import { toast } from "sonner";
 import { usePlan } from "@/lib/swr/use-billing";
 import { bytesToSize } from "@/lib/utils";
 import { getPagesCount } from "@/lib/utils/get-page-number-count";
+
+const fileSizeLimits: { [key: string]: number } = {
+  "application/vnd.ms-excel": 100, // 30 MB
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": 30, // 30 MB
+  "text/csv": 30, // 30 MB
+  "application/vnd.oasis.opendocument.spreadsheet": 30, // 30 MB
+};
 
 function fileIcon(fileType: string) {
   switch (fileType) {
@@ -29,6 +36,11 @@ function fileIcon(fileType: string) {
     case "application/vnd.ms-powerpoint":
     case "application/msword":
       return <PresentationChartBarIcon className="mx-auto h-6 w-6" />;
+    case "application/vnd.ms-excel":
+    case "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
+    case "text/csv":
+    case "application/vnd.oasis.opendocument.spreadsheet":
+      return <FileSpreadsheetIcon className="mx-auto h-6 w-6" />;
     default:
       return <DocumentIcon className="mx-auto h-6 w-6" />;
   }
@@ -43,20 +55,40 @@ export default function DocumentUpload({
 }) {
   const { plan, loading } = usePlan();
   const maxSize = plan === "business" || plan === "datarooms" ? 100 : 30;
+  const maxNumPages = plan === "business" || plan === "datarooms" ? 500 : 100;
+
   const { getRootProps, getInputProps } = useDropzone({
     accept: {
       "application/pdf": [], // ".pdf"
+      "application/vnd.ms-excel": [], // ".xls"
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [], // ".xlsx"
+      "text/csv": [], // ".csv"
+      "application/vnd.oasis.opendocument.spreadsheet": [], // ".ods"
     },
     multiple: false,
     maxSize: maxSize * 1024 * 1024, // 30 MB
     onDropAccepted: (acceptedFiles) => {
       const file = acceptedFiles[0];
+      const fileType = file.type;
+      const fileSizeLimit = fileSizeLimits[fileType] * 1024 * 1024;
+
+      if (file.size > fileSizeLimit) {
+        toast.error(
+          `File size too big for ${fileType} (max. ${fileSizeLimits[fileType]} MB)`,
+        );
+        return;
+      }
+
+      if (file.type !== "application/pdf") {
+        setCurrentFile(file);
+        return;
+      }
       file
         .arrayBuffer()
         .then((buffer) => {
           getPagesCount(buffer).then((numPages) => {
-            if (numPages > 100) {
-              toast.error("File has too many pages (max. 100)");
+            if (numPages > maxNumPages) {
+              toast.error(`File has too many pages (max. ${maxNumPages})`);
             } else {
               setCurrentFile(file);
             }
@@ -73,7 +105,7 @@ export default function DocumentUpload({
       if (errors[0].code === "file-too-large") {
         message = `File size too big (max. ${maxSize} MB)`;
       } else if (errors[0].code === "file-invalid-type") {
-        message = "File type not supported (.pdf only)";
+        message = "File type not supported";
       } else {
         message = errors[0].message;
       }
@@ -126,7 +158,7 @@ export default function DocumentUpload({
             <p className="text-xs leading-5 text-gray-500">
               {currentFile
                 ? "Replace file?"
-                : `Only *.pdf & ${maxSize} MB limit`}
+                : `Only *.xls, *.xlsx, *.csv, *.ods, *.pdf & ${maxSize} MB limit`}
             </p>
           </div>
         </div>

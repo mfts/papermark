@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 import { type FormEvent, use, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
+import { LinkType } from "@prisma/client";
 import { motion } from "framer-motion";
 import { usePlausible } from "next-plausible";
 import { parsePageId } from "notion-utils";
@@ -41,8 +42,9 @@ export default function NotionForm() {
   const [currentLinkId, setCurrentLinkId] = useState<string | null>(null);
   const [currentDocId, setCurrentDocId] = useState<string | null>(null);
   const [notionLink, setNotionLink] = useState<string | null>(null);
-  const [linkData, setLinkData] =
-    useState<DEFAULT_LINK_TYPE>(DEFAULT_LINK_PROPS);
+  const [linkData, setLinkData] = useState<DEFAULT_LINK_TYPE>(
+    DEFAULT_LINK_PROPS(LinkType.DOCUMENT_LINK),
+  );
   const teamInfo = useTeam();
 
   const createNotionFileName = () => {
@@ -176,7 +178,7 @@ export default function NotionForm() {
     }
 
     copyToClipboard(
-      `${process.env.NEXT_PUBLIC_BASE_URL}/view/${currentLinkId}`,
+      `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${currentLinkId}`,
       "Link copied to clipboard. Redirecting to document page...",
     );
 
@@ -311,7 +313,7 @@ export default function NotionForm() {
                     <div className="flex py-8">
                       <div className="flex w-full max-w-xs focus-within:z-10 sm:max-w-lg">
                         <p className="block w-full overflow-y-scroll rounded-md border-0 bg-secondary px-4 py-1.5 text-left leading-6 text-secondary-foreground md:min-w-[500px]">
-                          {`${process.env.NEXT_PUBLIC_BASE_URL}/view/${currentLinkId}`}
+                          {`${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${currentLinkId}`}
                         </p>
                       </div>
                     </div>
@@ -325,7 +327,11 @@ export default function NotionForm() {
                           </span>
                         </AccordionTrigger>
                         <AccordionContent className="first:pt-5">
-                          <LinkOptions data={linkData} setData={setLinkData} />
+                          <LinkOptions
+                            data={linkData}
+                            setData={setLinkData}
+                            linkType={LinkType.DOCUMENT_LINK}
+                          />
                         </AccordionContent>
                       </AccordionItem>
                     </Accordion>

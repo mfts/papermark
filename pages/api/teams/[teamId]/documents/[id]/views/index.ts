@@ -57,10 +57,12 @@ export default async function handle(
           ownerId: true,
           numPages: true,
           versions: {
-            where: { isPrimary: true },
             orderBy: { createdAt: "desc" },
-            take: 1,
-            select: { numPages: true },
+            select: {
+              versionNumber: true,
+              createdAt: true,
+              numPages: true,
+            },
           },
           _count: {
             select: {
@@ -95,6 +97,17 @@ export default async function handle(
               data: true,
             },
           },
+          agreementResponse: {
+            select: {
+              id: true,
+              agreementId: true,
+              agreement: {
+                select: {
+                  name: true,
+                },
+              },
+            },
+          },
         },
       });
 
@@ -114,10 +127,6 @@ export default async function handle(
           email: true,
         },
       });
-
-      // get the numPages from document
-      const numPages =
-        document.versions?.[0]?.numPages || document.numPages || 0;
 
       // filter the last 20 views
       const limitedViews =
@@ -145,6 +154,15 @@ export default async function handle(
       // Construct the response combining views and their respective durations
       const viewsWithDuration = limitedViews?.map(
         (view: any, index: number) => {
+          // find the relevant document version for the view
+          const relevantDocumentVersion = document.versions.find(
+            (version) => version.createdAt <= view.viewedAt,
+          );
+
+          // get the number of pages for the document version or the document
+          const numPages =
+            relevantDocumentVersion?.numPages || document.numPages || 0;
+
           // calculate the completion rate
           const completionRate = numPages
             ? (durations[index].data.length / numPages) * 100
@@ -156,6 +174,8 @@ export default async function handle(
             duration: durations[index],
             totalDuration: summedDurations[index],
             completionRate: completionRate.toFixed(),
+            versionNumber: relevantDocumentVersion?.versionNumber || 0,
+            versionNumPages: numPages,
           };
         },
       );

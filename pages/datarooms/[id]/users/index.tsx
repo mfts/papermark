@@ -56,6 +56,11 @@ export default function DataroomPage() {
               },
               {
                 label: "Customization",
+                href: `/datarooms/${dataroom.id}/branding`,
+                segment: "branding",
+              },
+              {
+                label: "Settings",
                 href: `/datarooms/${dataroom.id}/settings`,
                 segment: "settings",
               },

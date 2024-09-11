@@ -1,16 +1,15 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import { DocumentPage } from "@prisma/client";
-// @ts-ignore
-import mupdf from "mupdf";
+import * as mupdf from "mupdf";
 
 import { putFileServer } from "@/lib/files/put-file-server";
 import prisma from "@/lib/prisma";
 import { log } from "@/lib/utils";
 
-// This function can run for a maximum of 60 seconds
+// This function can run for a maximum of 120 seconds
 export const config = {
-  maxDuration: 120,
+  maxDuration: 180,
 };
 
 export default async (req: NextApiRequest, res: NextApiResponse) => {
@@ -54,28 +53,82 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     // Convert the response to a buffer
     const pdfData = await response.arrayBuffer();
     // Create a MuPDF instance
-    var doc = mupdf.Document.openDocument(pdfData, "application/pdf");
+    var doc = new mupdf.PDFDocument(pdfData);
+    console.log("Original document size:", pdfData.byteLength);
 
-    // Scale the document to 300 DPI
-    const doc_to_screen = mupdf.Matrix.scale(216 / 72, 216 / 72); // scale 3x // to 216 DPI
+    const page = doc.loadPage(pageNumber - 1); // 0-based page index
+    // get the bounds of the page for orientation and scaling
+    const bounds = page.getBounds();
+    const [ulx, uly, lrx, lry] = bounds;
+    const widthInPoints = Math.abs(lrx - ulx);
+    const heightInPoints = Math.abs(lry - uly);
 
-    let page = doc.loadPage(pageNumber - 1); // 0-based page index
+    if (pageNumber === 1) {
+      // get the orientation of the document and update document version
+      const isVertical = heightInPoints > widthInPoints;
+
+      await prisma.documentVersion.update({
+        where: { id: documentVersionId },
+        data: { isVertical },
+      });
+    }
+
+    // Scale the document to 144 DPI
+    const scaleFactor = widthInPoints >= 1600 ? 2 : 3; // 2x for width >= 1600, 3x for width < 1600
+    const doc_to_screen = mupdf.Matrix.scale(scaleFactor, scaleFactor);
+
+    console.log("Scale factor:", scaleFactor);
 
     // get links
     const links = page.getLinks();
-    const embeddedLinks = links.map((link: any) => link.getURI());
+    const embeddedLinks = links.map((link) => {
+      return { href: link.getURI(), coords: link.getBounds().join(",") };
+    });
 
-    let pixmap = page.toPixmap(
+    const metadata = {
+      originalWidth: widthInPoints,
+      originalHeight: heightInPoints,
+      width: widthInPoints * scaleFactor,
+      height: heightInPoints * scaleFactor,
+      scaleFactor: scaleFactor,
+    };
+
+    console.time("toPixmap");
+    let scaledPixmap = page.toPixmap(
       // [3, 0, 0, 3, 0, 0], // scale 3x // to 300 DPI
       doc_to_screen,
       mupdf.ColorSpace.DeviceRGB,
       false,
       true,
     );
+    console.timeEnd("toPixmap");
 
-    const pngBuffer = pixmap.asPNG(); // as PNG
+    console.time("compare");
+    console.time("asPNG");
+    const pngBuffer = scaledPixmap.asPNG(); // as PNG
+    console.timeEnd("asPNG");
+    console.time("asJPEG");
+    const jpegBuffer = scaledPixmap.asJPEG(80, false); // as JPEG
+    console.timeEnd("asJPEG");
 
-    let buffer = Buffer.from(pngBuffer, "binary");
+    const pngSize = pngBuffer.byteLength;
+    const jpegSize = jpegBuffer.byteLength;
+
+    let chosenBuffer;
+    let chosenFormat;
+    if (pngSize < jpegSize) {
+      chosenBuffer = pngBuffer;
+      chosenFormat = "png";
+    } else {
+      chosenBuffer = jpegBuffer;
+      chosenFormat = "jpeg";
+    }
+
+    console.log("Chosen format:", chosenFormat);
+
+    console.timeEnd("compare");
+
+    let buffer = Buffer.from(chosenBuffer);
 
     // get docId from url with starts with "doc_" with regex
     const match = url.match(/(doc_[^\/]+)\//);
@@ -83,8 +136,8 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
 
     const { type, data } = await putFileServer({
       file: {
-        name: `page-${pageNumber}.png`,
-        type: "image/png",
+        name: `page-${pageNumber}.${chosenFormat}`,
+        type: `image/${chosenFormat}`,
         buffer: buffer,
       },
       teamId: teamId,
@@ -92,7 +145,8 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     });
 
     buffer = Buffer.alloc(0); // free memory
-    pixmap.destroy(); // free memory
+    chosenBuffer = Buffer.alloc(0); // free memory
+    scaledPixmap.destroy(); // free memory
     page.destroy(); // free memory
 
     if (!data || !type) {
@@ -119,7 +173,8 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
           pageNumber: pageNumber,
           file: data,
           storageType: type,
-          embeddedLinks: embeddedLinks,
+          pageLinks: embeddedLinks,
+          metadata: metadata,
         },
       });
     } else {

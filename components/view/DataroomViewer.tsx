@@ -1,15 +1,13 @@
-import Link from "next/link";
+import { useRouter } from "next/router";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import React from "react";
 
-import { Brand, Dataroom, DataroomBrand, DataroomFolder } from "@prisma/client";
+import { DataroomBrand, DataroomFolder } from "@prisma/client";
 import * as SheetPrimitive from "@radix-ui/react-dialog";
-import { MenuIcon, PanelLeftIcon, XIcon } from "lucide-react";
+import { PanelLeftIcon, XIcon } from "lucide-react";
 
-import { cn } from "@/lib/utils";
-
-import { ViewFolderTree } from "../datarooms/folders";
+import { ViewFolderTree } from "@/components/datarooms/folders";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -17,63 +15,80 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from "../ui/breadcrumb";
-import { Button } from "../ui/button";
-import { FileTree } from "../ui/nextra-filetree";
-import { ScrollArea } from "../ui/scroll-area";
+} from "@/components/ui/breadcrumb";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Sheet,
-  SheetContent,
   SheetOverlay,
   SheetPortal,
   SheetTrigger,
-} from "../ui/sheet";
+} from "@/components/ui/sheet";
+
+import { cn } from "@/lib/utils";
+
+import { TDocumentData } from "./dataroom/dataroom-view";
 import DocumentCard from "./dataroom/document-card";
 import FolderCard from "./dataroom/folder-card";
 import DataroomNav from "./dataroom/nav-dataroom";
-import Nav from "./nav";
-import { useRouter } from "next/router";
+
+type FolderOrDocument = DataroomFolder | DataroomDocument;
 
 type DataroomDocument = {
   dataroomDocumentId: string;
   folderId: string | null;
   id: string;
   name: string;
+  orderIndex: number | null;
   versions: {
     id: string;
     type: string;
     versionNumber: number;
     hasPages: boolean;
+    isVertical: boolean;
   }[];
+};
+
+const getParentFolders = (
+  folderId: string | null,
+  folders: DataroomFolder[],
+): DataroomFolder[] => {
+  const breadcrumbFolders: DataroomFolder[] = [];
+  let currentFolder = folders.find((folder) => folder.id === folderId);
+
+  while (currentFolder) {
+    breadcrumbFolders.unshift(currentFolder);
+    currentFolder = folders.find(
+      (folder) => folder.id === currentFolder!.parentId,
+    );
+  }
+
+  return breadcrumbFolders;
 };
 
 export default function DataroomViewer({
   brand,
   viewId,
+  linkId,
   dataroomViewId,
   dataroom,
+  allowDownload,
   setViewType,
   setDocumentData,
   setDataroomVerified,
+  isPreview,
 }: {
   brand: Partial<DataroomBrand>;
-  viewId: string;
+  viewId?: string;
+  linkId: string;
   dataroomViewId: string;
   dataroom: any;
+  allowDownload: boolean;
   setViewType: React.Dispatch<
     React.SetStateAction<"DOCUMENT_VIEW" | "DATAROOM_VIEW">
   >;
-  setDocumentData: React.Dispatch<
-    React.SetStateAction<{
-      id: string;
-      name: string;
-      hasPages: boolean;
-      documentType: "pdf" | "notion";
-      documentVersionId: string;
-      documentVersionNumber: number;
-    } | null>
-  >;
+  setDocumentData: React.Dispatch<React.SetStateAction<TDocumentData | null>>;
   setDataroomVerified: React.Dispatch<React.SetStateAction<boolean>>;
+  isPreview?: boolean;
 }) {
   const router = useRouter();
   const [folderId, setFolderId] = useState<string | null>(null);
@@ -106,16 +121,64 @@ export default function DataroomViewer({
     removeQueryParams();
   }, []); // Run once on mount
 
+  const breadcrumbFolders = useMemo(
+    () => getParentFolders(folderId, folders),
+    [folderId, folders],
+  );
+
+  // create a mixedItems array with folders and documents of the current folder and memoize it
+  const mixedItems = useMemo(() => {
+    const mixedItems: FolderOrDocument[] = [
+      ...(folders || [])
+        .filter((folder) => folder.parentId === folderId)
+        .map((folder) => ({ ...folder, itemType: "folder" })),
+      ...(documents || [])
+        .filter((doc) => doc.folderId === folderId)
+        .map((doc) => ({ ...doc, itemType: "document" })),
+    ];
+
+    return mixedItems.sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
+  }, [folders, documents, folderId]);
+
+  const renderItem = (item: FolderOrDocument) => {
+    if ("versions" in item) {
+      return (
+        <DocumentCard
+          key={item.id}
+          document={item}
+          setViewType={setViewType}
+          setDocumentData={setDocumentData}
+        />
+      );
+    }
+
+    return (
+      <FolderCard
+        key={item.id}
+        folder={item}
+        dataroomId={dataroom?.id}
+        setFolderId={setFolderId}
+      />
+    );
+  };
+
   return (
     <>
-      <DataroomNav brand={brand} viewId={viewId} dataroom={dataroom} />
+      <DataroomNav
+        brand={brand}
+        linkId={linkId}
+        viewId={viewId}
+        dataroom={dataroom}
+        allowDownload={allowDownload}
+        isPreview={isPreview}
+      />
       <div
         style={{ height: "calc(100vh - 64px)" }}
         className="relative flex items-center bg-white dark:bg-black"
       >
         <div className="relative mx-auto flex h-full w-full items-start justify-center">
           {/* Tree view */}
-          <div className="mb-10 mt-4 hidden h-full w-1/4 space-y-8 overflow-auto py-3 md:mx-5 md:mt-5 md:flex lg:mx-7 lg:mt-8 xl:mx-10 ">
+          <div className="mb-10 mt-4 hidden h-full w-1/4 space-y-8 overflow-auto py-3 md:mx-5 md:mt-5 md:flex lg:mx-7 lg:mt-8 xl:mx-10">
             <ViewFolderTree
               folders={folders}
               documents={documents}
@@ -125,7 +188,7 @@ export default function DataroomViewer({
           </div>
 
           {/* Detail view */}
-          <ScrollArea className="h-full flex-grow" showScrollbar>
+          <div className="h-full flex-grow">
             <div className="mb-10 mt-4 space-y-8 p-3 md:mx-5 md:mt-5 lg:mx-7 lg:mt-8 xl:mx-10">
               <div className="flex items-center gap-x-2">
                 {/* sidebar for mobile */}
@@ -159,88 +222,47 @@ export default function DataroomViewer({
                         </SheetPrimitive.Close>
                       </SheetPrimitive.Content>
                     </SheetPortal>
-                    {/* <SheetContent
-                side="left"
-                className="w-[280px] sm:w-[300px] lg:hidden p-0 m-0 top-56"
-              >
-                <div className="h-full overflow-auto md:mx-5 lg:mx-7 xl:mx-10 mt-4 md:mt-5 lg:mt-8 mb-10 space-y-8 py-3 px-2">
-                  <ViewFolderTree
-                    folders={folders}
-                    documents={documents}
-                    setFolderId={setFolderId}
-                    folderId={folderId}
-                  />
-                </div>
-              </SheetContent> */}
                   </Sheet>
                 </div>
 
                 <Breadcrumb>
                   <BreadcrumbList>
                     <BreadcrumbItem key={"root"}>
-                      <BreadcrumbLink asChild>
-                        <BreadcrumbLink onClick={() => setFolderId(null)}>
-                          Home
-                        </BreadcrumbLink>
+                      <BreadcrumbLink
+                        onClick={() => setFolderId(null)}
+                        className="cursor-pointer"
+                      >
+                        Home
                       </BreadcrumbLink>
                     </BreadcrumbItem>
-                    {folders &&
-                      folders
-                        .filter((folder) => folder.id === folderId)
-                        .map((folder, index: number, array) => {
-                          return (
-                            <React.Fragment key={index}>
-                              <BreadcrumbSeparator />
-                              <BreadcrumbItem>
-                                <BreadcrumbPage className="capitalize">
-                                  {folder.name}
-                                </BreadcrumbPage>
-                              </BreadcrumbItem>
-                            </React.Fragment>
-                          );
-                        })}
+
+                    {breadcrumbFolders.map((folder, index) => (
+                      <React.Fragment key={folder.id}>
+                        <BreadcrumbSeparator />
+                        <BreadcrumbItem>
+                          {index === breadcrumbFolders.length - 1 ? (
+                            <BreadcrumbPage className="capitalize">
+                              {folder.name}
+                            </BreadcrumbPage>
+                          ) : (
+                            <BreadcrumbLink
+                              onClick={() => setFolderId(folder.id)}
+                              className="cursor-pointer capitalize"
+                            >
+                              {folder.name}
+                            </BreadcrumbLink>
+                          )}
+                        </BreadcrumbItem>
+                      </React.Fragment>
+                    ))}
                   </BreadcrumbList>
                 </Breadcrumb>
               </div>
-              <div className="space-y-4">
-                {/* Folders list */}
-                <ul role="list" className="space-y-4">
-                  {folders
-                    ? folders
-                        .filter((folder) => folder.parentId === folderId)
-                        .map((folder) => {
-                          return (
-                            <FolderCard
-                              key={folder.id}
-                              folder={folder}
-                              dataroomId={dataroom?.id}
-                              setFolderId={setFolderId}
-                            />
-                          );
-                        })
-                    : null}
-                </ul>
-
-                {/* Documents list */}
-                <ul role="list" className="space-y-4">
-                  {documents
-                    ? documents
-                        .filter((doc) => doc.folderId === folderId)
-                        .map((document: DataroomDocument) => {
-                          return (
-                            <DocumentCard
-                              key={document.id}
-                              document={document}
-                              setViewType={setViewType}
-                              setDocumentData={setDocumentData}
-                            />
-                          );
-                        })
-                    : null}
-                </ul>
-              </div>
+              <ul role="list" className="space-y-4">
+                {mixedItems.map(renderItem)}
+              </ul>
             </div>
-          </ScrollArea>
+          </div>
         </div>
       </div>
     </>

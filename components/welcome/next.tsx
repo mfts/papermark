@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import {
   File as DocumentIcon,
   Presentation as PresentationChartBarIcon,
+  ServerIcon,
 } from "lucide-react";
 
 import NotionIcon from "@/components/shared/icons/notion";
@@ -38,58 +39,44 @@ export default function Next() {
           Papermark
         </p>
         <h1 className="font-display max-w-md text-3xl font-semibold transition-colors sm:text-4xl">
-          Which document do you want to share today?
+          What do you want to share today?
         </h1>
       </motion.div>
       <motion.div
         variants={STAGGER_CHILD_VARIANTS}
-        className="grid w-full grid-cols-1 divide-y divide-border rounded-md border border-border text-foreground md:grid-cols-3 md:divide-x"
+        className="grid w-full grid-cols-1 divide-y divide-border rounded-md border border-border text-foreground md:grid-cols-2 md:divide-x"
       >
         <button
           onClick={() =>
             router.push({
               pathname: "/welcome",
               query: {
-                type: "pitchdeck",
-              },
-            })
-          }
-          className="flex min-h-[200px] flex-col items-center justify-center space-y-5 overflow-hidden p-5 transition-colors hover:bg-gray-200 hover:dark:bg-gray-800 md:p-10"
-        >
-          <PresentationChartBarIcon className="pointer-events-none h-auto w-12 sm:w-12" />
-          <p>Pitchdeck</p>
-        </button>
-        <button
-          onClick={() =>
-            router.push({
-              pathname: "/welcome",
-              query: {
-                type: "document",
+                type: "select",
               },
             })
           }
           className="flex min-h-[200px] flex-col items-center justify-center space-y-5 overflow-hidden p-5 transition-colors hover:bg-gray-200 hover:dark:bg-gray-800 md:p-10"
         >
           <DocumentIcon className="pointer-events-none h-auto w-12 sm:w-12" />
-          <p>Another document</p>
+          <p>Document</p>
         </button>
         <button
           onClick={() =>
             router.push({
               pathname: "/welcome",
               query: {
-                type: "notion",
+                type: "dataroom",
               },
             })
           }
           className="flex min-h-[200px] flex-col items-center justify-center space-y-5 overflow-hidden p-5 transition-colors hover:bg-gray-200 hover:dark:bg-gray-800 md:p-10"
         >
-          <NotionIcon className="pointer-events-none h-auto w-12 sm:w-12" />
-          <p>Notion Page</p>
+          <ServerIcon className="pointer-events-none h-auto w-12 sm:w-12" />
+          <p>Data Room</p>
         </button>
       </motion.div>
 
-      <motion.div variants={STAGGER_CHILD_VARIANTS} className="text-center">
+      {/* <motion.div variants={STAGGER_CHILD_VARIANTS} className="text-center">
         <button
           className="text-center text-sm text-muted-foreground underline-offset-4 transition-all hover:text-gray-800 hover:underline hover:dark:text-muted-foreground/80"
           onClick={() =>
@@ -101,9 +88,9 @@ export default function Next() {
             })
           }
         >
-          Looking to create and share a full dataroom?
+          Sharing Data Room is possible in 7 day free trial
         </button>
-      </motion.div>
+      </motion.div> */}
     </motion.div>
   );
 }

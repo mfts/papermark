@@ -17,7 +17,17 @@ const CustomTooltip = ({
   // Default pageNumber to 0 or a sensible default if payload is not available
   const pageNumber =
     payload && payload.length > 0 ? parseInt(payload[0].payload.pageNumber) : 0;
-  const { data, error } = useDocumentThumbnail(pageNumber, documentId);
+
+  // Default versionNumber to 0 or a sensible default if payload is not available
+  const versionNumber =
+    payload && payload.length > 0
+      ? parseInt(payload[0].payload.versionNumber)
+      : 1;
+  const { data, error } = useDocumentThumbnail(
+    pageNumber,
+    documentId,
+    versionNumber,
+  );
 
   const imageUrl = data && !error ? data.imageUrl : null; // Always called, regardless of `active` or `payload`
 

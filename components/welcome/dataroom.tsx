@@ -55,7 +55,7 @@ export default function Dataroom() {
           controls
         >
           <source
-            src="https://assets.papermark.io/short-video.mp4"
+            src="https://assets.papermark.io/upload/file_A4qNV68jr3MAUayMNi3WmY-Data-Room-demo-2.mp4"
             type="video/mp4"
           />
         </video>
@@ -78,7 +78,8 @@ export default function Dataroom() {
           Get a data room trial
         </Button>
         <span className="text-xs text-muted-foreground">
-          Data rooms are available on our `Business` plan. <br />
+          Data rooms are available on our `Business` and `Data Rooms` plan.{" "}
+          <br />
           You receive a 7-day trial.
         </span>
       </motion.div>

@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
+import { LinkType } from "@prisma/client";
 import { motion } from "framer-motion";
 import { usePlausible } from "next-plausible";
 import { toast } from "sonner";
@@ -25,6 +26,7 @@ import {
   copyToClipboard,
   uploadImage,
 } from "@/lib/utils";
+import { getSupportedContentType } from "@/lib/utils/get-content-type";
 
 import Skeleton from "../Skeleton";
 import { DEFAULT_LINK_PROPS, DEFAULT_LINK_TYPE } from "../links/link-sheet";
@@ -40,8 +42,9 @@ export default function Upload() {
   const [currentBlob, setCurrentBlob] = useState<boolean>(false);
   const [currentLinkId, setCurrentLinkId] = useState<string | null>(null);
   const [currentDocId, setCurrentDocId] = useState<string | null>(null);
-  const [linkData, setLinkData] =
-    useState<DEFAULT_LINK_TYPE>(DEFAULT_LINK_PROPS);
+  const [linkData, setLinkData] = useState<DEFAULT_LINK_TYPE>(
+    DEFAULT_LINK_PROPS(LinkType.DOCUMENT_LINK),
+  );
   const teamInfo = useTeam();
 
   const teamId = teamInfo?.currentTeam?.id as string;
@@ -58,6 +61,16 @@ export default function Upload() {
     try {
       setUploading(true);
 
+      const contentType = getSupportedContentType(currentFile.type);
+
+      if (!contentType) {
+        setUploading(false);
+        toast.error(
+          "Unsupported file format. Please upload a PDF or Excel file.",
+        );
+        return;
+      }
+
       const { type, data, numPages } = await putFile({
         file: currentFile,
         teamId,
@@ -70,6 +83,7 @@ export default function Upload() {
         name: currentFile.name,
         key: data!,
         storageType: type!,
+        contentType: contentType,
       };
       // create a document in the database
       const response = await createDocument({ documentData, teamId, numPages });
@@ -85,7 +99,7 @@ export default function Upload() {
           name: document.name,
           numPages: document.numPages,
           path: router.asPath,
-          type: "pdf",
+          type: document.type,
           teamId: teamInfo?.currentTeam?.id,
         });
         analytics.capture("Link Added", {
@@ -148,7 +162,7 @@ export default function Upload() {
     }
 
     copyToClipboard(
-      `${process.env.NEXT_PUBLIC_BASE_URL}/view/${currentLinkId}`,
+      `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${currentLinkId}`,
       "Link copied to clipboard. Redirecting to document page...",
     );
 
@@ -181,7 +195,7 @@ export default function Upload() {
             className="flex flex-col items-center space-y-10 text-center"
           >
             <h1 className="font-display text-3xl font-semibold text-foreground transition-colors sm:text-4xl">
-              {`Upload your ${router.query.type}`}
+              {`Upload your ${router.query.type === "sales-document" ? "document" : `${router.query.type}`}`}
             </h1>
           </motion.div>
           <motion.div variants={STAGGER_CHILD_VARIANTS}>
@@ -288,7 +302,7 @@ export default function Upload() {
                     <div className="flex py-8">
                       <div className="flex w-full max-w-xs focus-within:z-10 sm:max-w-lg">
                         <p className="block w-full overflow-y-scroll rounded-md border-0 bg-secondary px-4 py-1.5 text-left leading-6 text-secondary-foreground md:min-w-[500px]">
-                          {`${process.env.NEXT_PUBLIC_BASE_URL}/view/${currentLinkId}`}
+                          {`${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${currentLinkId}`}
                         </p>
                       </div>
                     </div>
@@ -301,8 +315,12 @@ export default function Upload() {
                             Configure Link Options
                           </span>
                         </AccordionTrigger>
-                        <AccordionContent className="first:pt-5">
-                          <LinkOptions data={linkData} setData={setLinkData} />
+                        <AccordionContent className="text-left first:pt-5">
+                          <LinkOptions
+                            data={linkData}
+                            setData={setLinkData}
+                            linkType={LinkType.DOCUMENT_LINK}
+                          />
                         </AccordionContent>
                       </AccordionItem>
                     </Accordion>
