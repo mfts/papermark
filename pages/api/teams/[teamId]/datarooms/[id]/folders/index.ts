@@ -23,7 +23,13 @@ export default async function handle(
       teamId,
       id: dataroomId,
       root,
-    } = req.query as { teamId: string; id: string; root?: string };
+      include_documents,
+    } = req.query as {
+      teamId: string;
+      id: string;
+      root?: string;
+      include_documents?: string;
+    };
 
     try {
       // Check if the user is part of the team
@@ -61,6 +67,60 @@ export default async function handle(
             },
           },
         });
+
+        return res.status(200).json(folders);
+      }
+
+      if (include_documents === "true") {
+        const dataroomFolders = await prisma.dataroom.findUnique({
+          where: {
+            id: dataroomId,
+          },
+          select: {
+            documents: {
+              where: { folderId: null },
+              orderBy: [{ orderIndex: "asc" }, { document: { name: "asc" } }],
+              select: {
+                id: true,
+                folderId: true,
+                document: {
+                  select: {
+                    id: true,
+                    name: true,
+                    type: true,
+                  },
+                },
+              },
+            },
+            folders: {
+              include: {
+                documents: {
+                  select: {
+                    id: true,
+                    folderId: true,
+                    document: {
+                      select: {
+                        id: true,
+                        name: true,
+                        type: true,
+                      },
+                    },
+                  },
+                  orderBy: [
+                    { orderIndex: "asc" },
+                    { document: { name: "asc" } },
+                  ],
+                },
+              },
+              orderBy: [{ orderIndex: "asc" }, { name: "asc" }],
+            },
+          },
+        });
+
+        const folders = [
+          ...(dataroomFolders?.documents ?? []),
+          ...(dataroomFolders?.folders ?? []),
+        ];
 
         return res.status(200).json(folders);
       }

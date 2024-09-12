@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
+import { LinkAudienceType } from "@prisma/client";
 import { getServerSession } from "next-auth/next";
 
 import { errorhandler } from "@/lib/errorHandler";
@@ -121,6 +122,15 @@ export default async function handler(
         });
       }
 
+      if (
+        linkData.audienceType === LinkAudienceType.GROUP &&
+        !linkData.groupId
+      ) {
+        return res.status(400).json({
+          error: "No group selected.",
+        });
+      }
+
       // Fetch the link and its related document from the database
       const link = await prisma.link.create({
         data: {
@@ -129,7 +139,10 @@ export default async function handler(
           linkType,
           password: hashedPassword,
           name: linkData.name || null,
-          emailProtected: linkData.emailProtected,
+          emailProtected:
+            linkData.audienceType === LinkAudienceType.GROUP
+              ? true
+              : linkData.emailProtected,
           emailAuthenticated: linkData.emailAuthenticated,
           expiresAt: exat,
           allowDownload: linkData.allowDownload,
@@ -145,6 +158,11 @@ export default async function handler(
           metaImage: linkData.metaImage || null,
           allowList: linkData.allowList,
           denyList: linkData.denyList,
+          audienceType: linkData.audienceType,
+          groupId:
+            linkData.audienceType === LinkAudienceType.GROUP
+              ? linkData.groupId
+              : null,
           ...(linkData.enableQuestion && {
             enableQuestion: linkData.enableQuestion,
             feedback: {
@@ -173,6 +191,8 @@ export default async function handler(
         _count: { views: 0 },
         views: [],
       };
+
+      console.log("linkWithView", linkWithView);
 
       if (!linkWithView) {
         return res.status(404).json({ error: "Link not found" });

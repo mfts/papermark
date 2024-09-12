@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
-import { Brand, DataroomBrand } from "@prisma/client";
+import { Brand, DataroomBrand, LinkAudienceType } from "@prisma/client";
 
 import {
   fetchDataroomLinkData,
@@ -64,6 +64,8 @@ export default async function handle(
           showBanner: true,
           enableWatermark: true,
           watermarkConfig: true,
+          groupId: true,
+          audienceType: true,
           document: {
             select: {
               team: {
@@ -131,7 +133,13 @@ export default async function handle(
         linkData = data.linkData;
         brand = data.brand;
       } else if (linkType === "DATAROOM_LINK") {
-        const data = await fetchDataroomLinkData({ linkId: link.id });
+        const data = await fetchDataroomLinkData({
+          linkId: link.id,
+          ...(link.audienceType === LinkAudienceType.GROUP &&
+            link.groupId && {
+              groupId: link.groupId,
+            }),
+        });
         linkData = data.linkData;
         brand = data.brand;
       }

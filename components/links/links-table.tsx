@@ -40,7 +40,7 @@ import ProcessStatusBar from "../documents/process-status-bar";
 import BarChart from "../shared/icons/bar-chart";
 import ChevronDown from "../shared/icons/chevron-down";
 import MoreHorizontal from "../shared/icons/more-horizontal";
-import { BadgeTooltip, ButtonTooltip } from "../ui/tooltip";
+import { ButtonTooltip } from "../ui/tooltip";
 import LinkSheet, {
   DEFAULT_LINK_PROPS,
   type DEFAULT_LINK_TYPE,
@@ -104,6 +104,8 @@ export default function LinksTable({
       showBanner: link.showBanner ?? false,
       enableWatermark: link.enableWatermark ?? false,
       watermarkConfig: link.watermarkConfig as WatermarkConfig | null,
+      audienceType: link.audienceType,
+      groupId: link.groupId,
     });
     //wait for dropdown to close before opening the link sheet
     setTimeout(() => {
@@ -231,7 +233,7 @@ export default function LinksTable({
                 </TableHead>
                 <TableHead className="w-[250px] sm:w-auto">Views</TableHead>
                 <TableHead>Last Viewed</TableHead>
-                <TableHead className="ftext-center sm:text-right"></TableHead>
+                <TableHead className="text-center sm:text-right"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -242,8 +244,9 @@ export default function LinksTable({
                     <Collapsible key={link.id} asChild>
                       <>
                         <TableRow key={link.id} className="group/row">
-                          <TableCell className="w-[220px] truncate font-medium">
-                            {link.name || `Link #${link.id.slice(-5)}`}{" "}
+                          <TableCell className="w-[250px] truncate font-medium">
+                            {link.name || `Link #${link.id.slice(-5)}`}
+
                             {link.domainId && hasFreePlan ? (
                               <span className="ml-2 rounded-full bg-destructive px-2.5 py-0.5 text-xs text-foreground ring-1 ring-destructive">
                                 Inactive

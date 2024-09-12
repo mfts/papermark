@@ -3,14 +3,23 @@ import { useRouter } from "next/router";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
-import { LinkType } from "@prisma/client";
+import { LinkAudienceType, LinkType } from "@prisma/client";
+import { RefreshCwIcon } from "lucide-react";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
+import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import {
   Sheet,
@@ -19,9 +28,12 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ButtonTooltip } from "@/components/ui/tooltip";
 
 import { useAnalytics } from "@/lib/analytics";
 import { usePlan } from "@/lib/swr/use-billing";
+import useDataroomGroups from "@/lib/swr/use-dataroom-groups";
 import { useDomains } from "@/lib/swr/use-domains";
 import { LinkWithViews, WatermarkConfig } from "@/lib/types";
 import { convertDataUrlToFile, uploadImage } from "@/lib/utils";
@@ -56,6 +68,8 @@ export const DEFAULT_LINK_PROPS = (linkType: LinkType) => ({
   showBanner: linkType === LinkType.DOCUMENT_LINK ? true : false,
   enableWatermark: false,
   watermarkConfig: null,
+  audienceType: LinkAudienceType.GENERAL,
+  groupId: null,
 });
 
 export type DEFAULT_LINK_TYPE = {
@@ -85,6 +99,8 @@ export type DEFAULT_LINK_TYPE = {
   showBanner: boolean;
   enableWatermark: boolean;
   watermarkConfig: WatermarkConfig | null;
+  audienceType: LinkAudienceType;
+  groupId: string | null;
 };
 
 export default function LinkSheet({
@@ -101,8 +117,13 @@ export default function LinkSheet({
   existingLinks?: LinkWithViews[];
 }) {
   const { domains } = useDomains();
+  const {
+    viewerGroups,
+    loading: isLoadingGroups,
+    mutate: mutateGroups,
+  } = useDataroomGroups();
   const teamInfo = useTeam();
-  const { plan } = usePlan();
+  const { plan, trial } = usePlan();
   const analytics = useAnalytics();
   const [data, setData] = useState<DEFAULT_LINK_TYPE>(
     DEFAULT_LINK_PROPS(linkType),
@@ -211,7 +232,9 @@ export default function LinkSheet({
       <SheetContent className="flex w-[90%] flex-col justify-between border-l border-gray-200 bg-background px-4 text-foreground dark:border-gray-800 dark:bg-gray-900 sm:w-[600px] sm:max-w-2xl md:px-5">
         <SheetHeader className="text-start">
           <SheetTitle>
-            {currentLink ? "Edit link" : "Create a new link"}
+            {currentLink
+              ? `Edit ${currentLink.audienceType === LinkAudienceType.GROUP ? "group" : ""} link`
+              : "Create a new link"}
           </SheetTitle>
         </SheetHeader>
 
@@ -220,49 +243,195 @@ export default function LinkSheet({
             <div className="h-0 flex-1">
               <div className="flex flex-1 flex-col justify-between">
                 <div className="divide-y divide-gray-200">
-                  <div className="space-y-6 pb-5 pt-2">
-                    <div className="space-y-2">
-                      <Label htmlFor="link-name">Link Name</Label>
-                      <div className="mt-2">
-                        <Input
-                          type="text"
-                          name="link-name"
-                          id="link-name"
-                          placeholder="Recipient's Organization"
-                          value={data.name || ""}
-                          className="focus:ring-inset"
-                          onChange={(e) =>
-                            setData({ ...data, name: e.target.value })
-                          }
+                  <Tabs
+                    value={data.audienceType}
+                    onValueChange={(value) =>
+                      setData({
+                        ...data,
+                        audienceType: value as LinkAudienceType,
+                      })
+                    }
+                  >
+                    {linkType === LinkType.DATAROOM_LINK && !!!currentLink ? (
+                      <TabsList className="grid w-full grid-cols-2">
+                        <TabsTrigger value={LinkAudienceType.GENERAL}>
+                          General
+                        </TabsTrigger>
+                        {plan === "datarooms" || trial ? (
+                          <TabsTrigger value={LinkAudienceType.GROUP}>
+                            Group
+                          </TabsTrigger>
+                        ) : (
+                          <UpgradePlanModal
+                            clickedPlan="Data Rooms"
+                            trigger="add_group_link"
+                          >
+                            <div className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all">
+                              Group
+                            </div>
+                          </UpgradePlanModal>
+                        )}
+                      </TabsList>
+                    ) : null}
+
+                    <TabsContent value={LinkAudienceType.GENERAL}>
+                      {/* GENERAL LINK */}
+                      <div className="space-y-6 pb-5 pt-2">
+                        <div className="space-y-2">
+                          <Label htmlFor="link-name">Link Name</Label>
+
+                          <Input
+                            type="text"
+                            name="link-name"
+                            id="link-name"
+                            placeholder="Recipient's Organization"
+                            value={data.name || ""}
+                            className="focus:ring-inset"
+                            onChange={(e) =>
+                              setData({ ...data, name: e.target.value })
+                            }
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <DomainSection
+                            {...{ data, setData, domains }}
+                            plan={plan}
+                            linkType={linkType}
+                            editLink={!!currentLink}
+                          />
+                        </div>
+
+                        <div className="relative flex items-center">
+                          <Separator className="absolute bg-muted-foreground" />
+                          <div className="relative mx-auto">
+                            <span className="bg-background px-2 text-sm text-muted-foreground dark:bg-gray-900">
+                              Link Options
+                            </span>
+                          </div>
+                        </div>
+
+                        <LinkOptions
+                          data={data}
+                          setData={setData}
+                          linkType={linkType}
+                          editLink={!!currentLink}
                         />
                       </div>
-                    </div>
+                    </TabsContent>
 
-                    <div className="space-y-2">
-                      <DomainSection
-                        {...{ data, setData, domains }}
-                        plan={plan}
-                        linkType={linkType}
-                        editLink={!!currentLink}
-                      />
-                    </div>
+                    <TabsContent value={LinkAudienceType.GROUP}>
+                      {/* GROUP LINK */}
+                      <div className="space-y-6 pb-5 pt-2">
+                        <div className="space-y-2">
+                          <div className="flex w-full items-center justify-between">
+                            <Label htmlFor="group-id">Group </Label>
+                            <ButtonTooltip content="Refresh groups">
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-6"
+                                onClick={async (e) => {
+                                  e.stopPropagation();
+                                  e.preventDefault();
+                                  await mutateGroups();
+                                }}
+                              >
+                                <RefreshCwIcon className="h-4 w-4" />
+                              </Button>
+                            </ButtonTooltip>
+                          </div>
+                          <Select
+                            onValueChange={(value) => {
+                              if (value === "add_group") {
+                                // Open the group sheet
+                                console.log("add_group redirect");
+                                return;
+                              }
 
-                    <div className="relative flex items-center">
-                      <Separator className="absolute bg-muted-foreground" />
-                      <div className="relative mx-auto">
-                        <span className="bg-background px-2 text-sm text-muted-foreground dark:bg-gray-900">
-                          Link Options
-                        </span>
+                              setData({ ...data, groupId: value });
+                            }}
+                            defaultValue={data.groupId ?? undefined}
+                          >
+                            <SelectTrigger className="focus:ring-offset-3 flex w-full rounded-md border-0 bg-background py-1.5 text-foreground shadow-sm ring-1 ring-inset ring-input placeholder:text-muted-foreground focus:ring-2 focus:ring-gray-400 sm:text-sm sm:leading-6">
+                              <SelectValue placeholder="Select an group" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {isLoadingGroups ? (
+                                <SelectItem value="loading" disabled>
+                                  Loading groups...
+                                </SelectItem>
+                              ) : viewerGroups && viewerGroups.length > 0 ? (
+                                viewerGroups.map(({ id, name, _count }) => (
+                                  <SelectItem key={id} value={id}>
+                                    {name}{" "}
+                                    <span className="text-muted-foreground">
+                                      ({_count.members} members)
+                                    </span>
+                                  </SelectItem>
+                                ))
+                              ) : (
+                                <SelectItem value="no-groups" disabled>
+                                  No groups available
+                                </SelectItem>
+                              )}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="link-name">Link Name</Label>
+
+                          <Input
+                            type="text"
+                            name="link-name"
+                            id="link-name"
+                            placeholder={
+                              viewerGroups?.find(
+                                (group) => group.id === data.groupId,
+                              )?.name
+                                ? `${
+                                    viewerGroups?.find(
+                                      (group) => group.id === data.groupId,
+                                    )?.name
+                                  } Link`
+                                : "Group Link"
+                            }
+                            value={data.name || ""}
+                            className="focus:ring-inset"
+                            onChange={(e) =>
+                              setData({ ...data, name: e.target.value })
+                            }
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <DomainSection
+                            {...{ data, setData, domains }}
+                            plan={plan}
+                            linkType={linkType}
+                            editLink={!!currentLink}
+                          />
+                        </div>
+
+                        <div className="relative flex items-center">
+                          <Separator className="absolute bg-muted-foreground" />
+                          <div className="relative mx-auto">
+                            <span className="bg-background px-2 text-sm text-muted-foreground dark:bg-gray-900">
+                              Link Options
+                            </span>
+                          </div>
+                        </div>
+
+                        <LinkOptions
+                          data={data}
+                          setData={setData}
+                          linkType={linkType}
+                          editLink={!!currentLink}
+                        />
                       </div>
-                    </div>
-
-                    <LinkOptions
-                      data={data}
-                      setData={setData}
-                      linkType={linkType}
-                      editLink={!!currentLink}
-                    />
-                  </div>
+                    </TabsContent>
+                  </Tabs>
                 </div>
               </div>
             </div>

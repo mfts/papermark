@@ -1,7 +1,37 @@
+import { ItemType, ViewerGroupAccessControls } from "@prisma/client";
+
 import prisma from "@/lib/prisma";
 import { sortItemsByIndexAndName } from "@/lib/utils/sort-items-by-index-name";
 
-export async function fetchDataroomLinkData({ linkId }: { linkId: string }) {
+export async function fetchDataroomLinkData({
+  linkId,
+  groupId,
+}: {
+  linkId: string;
+  groupId?: string;
+}) {
+  let groupPermissions: ViewerGroupAccessControls[] = [];
+  let documentIds: string[] = [];
+  let folderIds: string[] = [];
+
+  if (groupId) {
+    groupPermissions = await prisma.viewerGroupAccessControls.findMany({
+      where: {
+        groupId,
+        OR: [{ canView: true }, { canDownload: true }],
+      },
+    });
+
+    documentIds = groupPermissions
+      .filter(
+        (permission) => permission.itemType === ItemType.DATAROOM_DOCUMENT,
+      )
+      .map((permission) => permission.itemId);
+    folderIds = groupPermissions
+      .filter((permission) => permission.itemType === ItemType.DATAROOM_FOLDER)
+      .map((permission) => permission.itemId);
+  }
+
   const linkData = await prisma.link.findUnique({
     where: { id: linkId },
     select: {
@@ -11,6 +41,10 @@ export async function fetchDataroomLinkData({ linkId }: { linkId: string }) {
           name: true,
           teamId: true,
           documents: {
+            where:
+              groupPermissions.length > 0 || groupId
+                ? { id: { in: documentIds } }
+                : undefined,
             select: {
               id: true,
               folderId: true,
@@ -38,19 +72,16 @@ export async function fetchDataroomLinkData({ linkId }: { linkId: string }) {
             orderBy: [
               { orderIndex: "asc" },
               {
-                document: {
-                  name: "asc",
-                },
+                document: { name: "asc" },
               },
             ],
           },
           folders: {
-            orderBy: [
-              { orderIndex: "asc" },
-              {
-                name: "asc",
-              },
-            ],
+            where:
+              groupPermissions.length > 0 || groupId
+                ? { id: { in: folderIds } }
+                : undefined,
+            orderBy: [{ orderIndex: "asc" }, { name: "asc" }],
           },
         },
       },

@@ -58,17 +58,19 @@ model User {
 }
 
 model Team {
-  id          String       @id @default(cuid())
-  name        String
-  users       UserTeam[]
-  documents   Document[]
-  folders     Folder[]
-  domains     Domain[]
-  invitations Invitation[]
-  sentEmails  SentEmail[]
-  brand       Brand?
-  datarooms   Dataroom[]
-  agreements  Agreement[]
+  id           String        @id @default(cuid())
+  name         String
+  users        UserTeam[]
+  documents    Document[]
+  folders      Folder[]
+  domains      Domain[]
+  invitations  Invitation[]
+  sentEmails   SentEmail[]
+  brand        Brand?
+  datarooms    Dataroom[]
+  agreements   Agreement[]
+  viewerGroups ViewerGroup[]
+  viewers      Viewer[]
 
   plan           String    @default("free")
   stripeId       String?   @unique // Stripe customer ID
@@ -200,13 +202,19 @@ enum LinkType {
   DATAROOM_LINK
 }
 
+enum LinkAudienceType {
+  GENERAL
+  GROUP
+  TEAM
+}
+
 model Link {
   id                         String     @id @default(cuid())
   document                   Document?  @relation(fields: [documentId], references: [id], onDelete: Cascade)
   documentId                 String? // This can be nullable, representing links without documents
   dataroom                   Dataroom?  @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
   dataroomId                 String? // This can be nullable, representing links without datarooms
-  linkType                   LinkType   @default(DOCUMENT_LINK)
+  linkType                   LinkType   @default(DOCUMENT_LINK) // This will store the type of the link
   url                        String?    @unique
   name                       String? // Link name
   slug                       String? // Link slug for pretty URLs
@@ -234,7 +242,12 @@ model Link {
   agreementId                String? // This can be nullable, representing links without agreements
   showBanner                 Boolean?   @default(false) // Optional give user a option to show the banner and end of document signup form
   enableWatermark            Boolean?   @default(false) // Optional give user a option to enable the watermark
-  watermarkConfig            Json?      // This will store the watermark configuration: {text: "Confidential", isTiled: false, color: "#000000", fontSize: 12, opacity: 0.5, rotation: 30, position: "top-right"}
+  watermarkConfig            Json? // This will store the watermark configuration: {text: "Confidential", isTiled: false, color: "#000000", fontSize: 12, opacity: 0.5, rotation: 30, position: "top-right"}
+
+  // group links
+  audienceType LinkAudienceType @default(GENERAL) // This will store the audience type of the link
+  groupId      String?
+  group        ViewerGroup?     @relation(fields: [groupId], references: [id], onDelete: SetNull)
 
   // custom metatags
   metaTitle           String? // This will be the meta title of the link
@@ -247,11 +260,11 @@ model Link {
 }
 
 model LinkPreset {
-  id          String   @id @default(cuid())
-  name        String
-  teamId      String
-  team        Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  
+  id     String @id @default(cuid())
+  name   String
+  teamId String
+  team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
   enableCustomMetaTag Boolean? @default(false) // Optional give user a option to enable the custom metatag
   metaTitle           String? // This will be the meta title of the link
   metaDescription     String? // This will be the meta description of the link
@@ -299,6 +312,8 @@ model View {
   viewType          ViewType           @default(DOCUMENT_VIEW)
   viewerId          String? // This is the viewer ID from the dataroom
   viewer            Viewer?            @relation(fields: [viewerId], references: [id], onDelete: Cascade)
+  groupId           String? // This is the group ID from the dataroom
+  group             ViewerGroup?       @relation(fields: [groupId], references: [id], onDelete: SetNull)
   feedbackResponse  FeedbackResponse?
   agreementResponse AgreementResponse?
 
@@ -321,12 +336,17 @@ model Viewer {
 
   dataroomId String
   dataroom   Dataroom @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
-  views      View[]
+  teamId     String?
+  team       Team?    @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  views  View[]
+  groups ViewerGroupMembership[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@unique([dataroomId, email])
+  @@index([teamId])
   @@index([dataroomId])
 }
 
@@ -407,17 +427,18 @@ model Folder {
 }
 
 model Dataroom {
-  id        String             @id @default(cuid())
-  pId       String             @unique // This is the generated public ID for the dataroom dr_1234
-  name      String
-  teamId    String
-  team      Team               @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  documents DataroomDocument[]
-  folders   DataroomFolder[]
-  links     Link[]
-  views     View[]
-  viewers   Viewer[]
-  brand     DataroomBrand?
+  id           String             @id @default(cuid())
+  pId          String             @unique // This is the generated public ID for the dataroom dr_1234
+  name         String
+  teamId       String
+  team         Team               @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  documents    DataroomDocument[]
+  folders      DataroomFolder[]
+  links        Link[]
+  views        View[]
+  viewers      Viewer[]
+  viewerGroups ViewerGroup[]
+  brand        DataroomBrand?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -433,7 +454,7 @@ model DataroomDocument {
   document   Document        @relation(fields: [documentId], references: [id], onDelete: Cascade)
   folderId   String?
   folder     DataroomFolder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
-  orderIndex Int?             
+  orderIndex Int?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -453,7 +474,7 @@ model DataroomFolder {
   parentFolder DataroomFolder?    @relation("SubFolders", fields: [parentId], references: [id], onDelete: SetNull)
   dataroomId   String
   dataroom     Dataroom           @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
-  orderIndex   Int?                
+  orderIndex   Int?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -513,7 +534,7 @@ model Agreement {
   links     Link[]
   responses AgreementResponse[]
 
-  requireName    Boolean @default(true) // Optional require name field
+  requireName Boolean @default(true) // Optional require name field
 
   teamId String
   team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
@@ -536,4 +557,65 @@ model AgreementResponse {
 
   @@index([agreementId])
   @@index([viewId])
+}
+
+model ViewerGroup {
+  id             String                      @id @default(cuid())
+  name           String
+  members        ViewerGroupMembership[]
+  links          Link[]
+  accessControls ViewerGroupAccessControls[]
+
+  dataroomId String
+  dataroom   Dataroom @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
+  teamId     String
+  team       Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  views View[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([dataroomId])
+  @@index([teamId])
+}
+
+model ViewerGroupMembership {
+  id       String      @id @default(cuid())
+  viewerId String
+  viewer   Viewer      @relation(fields: [viewerId], references: [id], onDelete: Cascade)
+  groupId  String
+  group    ViewerGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([viewerId, groupId])
+  @@index([viewerId])
+  @@index([groupId])
+}
+
+model ViewerGroupAccessControls {
+  id      String      @id @default(cuid())
+  groupId String
+  group   ViewerGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  // Access control for items (documents or dataroom items)
+  itemId   String // This can be a document ID or a dataroom item ID
+  itemType ItemType // Enum: DATAROOM_DOCUMENT, DATAROOM_FOLDER
+
+  // Granular permissions
+  canView     Boolean @default(true)
+  canDownload Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([groupId, itemId])
+  @@index([groupId])
+}
+
+enum ItemType {
+  DATAROOM_DOCUMENT
+  DATAROOM_FOLDER
 }

@@ -9,7 +9,6 @@ import {
 } from "react";
 
 import { useTeam } from "@/context/team-context";
-import { signOut } from "next-auth/react";
 import { toast } from "sonner";
 import { mutate } from "swr";
 

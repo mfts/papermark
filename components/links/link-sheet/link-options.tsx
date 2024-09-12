@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { LinkType } from "@prisma/client";
+import { LinkAudienceType, LinkType } from "@prisma/client";
 
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { DEFAULT_LINK_TYPE } from "@/components/links/link-sheet";
@@ -93,26 +93,30 @@ export const LinkOptions = ({
         isAllowed={isTrial || isPro || isBusiness || isDatarooms}
         handleUpgradeStateChange={handleUpgradeStateChange}
       />
-      <AllowListSection
-        {...{ data, setData }}
-        isAllowed={
-          isTrial ||
-          (isPro && allowAdvancedLinkControls) ||
-          isBusiness ||
-          isDatarooms
-        }
-        handleUpgradeStateChange={handleUpgradeStateChange}
-      />
-      <DenyListSection
-        {...{ data, setData }}
-        isAllowed={
-          isTrial ||
-          (isPro && allowAdvancedLinkControls) ||
-          isBusiness ||
-          isDatarooms
-        }
-        handleUpgradeStateChange={handleUpgradeStateChange}
-      />
+      {data.audienceType === LinkAudienceType.GENERAL ? (
+        <AllowListSection
+          {...{ data, setData }}
+          isAllowed={
+            isTrial ||
+            (isPro && allowAdvancedLinkControls) ||
+            isBusiness ||
+            isDatarooms
+          }
+          handleUpgradeStateChange={handleUpgradeStateChange}
+        />
+      ) : null}
+      {data.audienceType === LinkAudienceType.GENERAL ? (
+        <DenyListSection
+          {...{ data, setData }}
+          isAllowed={
+            isTrial ||
+            (isPro && allowAdvancedLinkControls) ||
+            isBusiness ||
+            isDatarooms
+          }
+          handleUpgradeStateChange={handleUpgradeStateChange}
+        />
+      ) : null}
       <PasswordSection {...{ data, setData }} />
       <ScreenshotProtectionSection
         {...{ data, setData }}

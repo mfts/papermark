@@ -3,24 +3,18 @@ import { useRouter } from "next/router";
 import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
-import {
-  ArrowUpDownIcon,
-  FileIcon,
-  FolderIcon,
-  FolderPlusIcon,
-  PlusIcon,
-} from "lucide-react";
+import { ArrowUpDownIcon, FolderPlusIcon, PlusIcon } from "lucide-react";
 
 import { BreadcrumbComponent } from "@/components/datarooms/dataroom-breadcrumb";
 import { DataroomHeader } from "@/components/datarooms/dataroom-header";
 import { DataroomItemsList } from "@/components/datarooms/dataroom-items-list";
+import { DataroomNavigation } from "@/components/datarooms/dataroom-navigation";
 import { SidebarFolderTree } from "@/components/datarooms/folders";
 import { DataroomSortableList } from "@/components/datarooms/sortable/sortable-list";
 import { AddDocumentModal } from "@/components/documents/add-document-modal";
 import { LoadingDocuments } from "@/components/documents/loading-document";
 import { AddFolderModal } from "@/components/folders/add-folder-modal";
 import AppLayout from "@/components/layouts/app";
-import { NavMenu } from "@/components/navigation-menu";
 import { Button } from "@/components/ui/button";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
@@ -79,35 +73,7 @@ export default function Documents() {
             ]}
           />
 
-          <NavMenu
-            navigation={[
-              {
-                label: "Overview",
-                href: `/datarooms/${dataroom?.id}`,
-                segment: `${dataroom?.id}`,
-              },
-              {
-                label: "Documents",
-                href: `/datarooms/${dataroom?.id}/documents`,
-                segment: "documents",
-              },
-              {
-                label: "Users",
-                href: `/datarooms/${dataroom?.id}/users`,
-                segment: "users",
-              },
-              {
-                label: "Customization",
-                href: `/datarooms/${dataroom?.id}/branding`,
-                segment: "branding",
-              },
-              {
-                label: "Settings",
-                href: `/datarooms/${dataroom?.id}/settings`,
-                segment: "settings",
-              },
-            ]}
-          />
+          <DataroomNavigation dataroomId={dataroom?.id} />
         </header>
 
         <div className="grid h-full gap-4 pb-2 md:grid-cols-4">

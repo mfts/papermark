@@ -52,7 +52,14 @@ const NavItem: React.FC<Props["navigation"][0]> = ({
   tag,
 }) => {
   const router = useRouter();
-  const active = segment === router.asPath.split("/").pop();
+  // active is true if the segment included in the pathname, but not if it's the root pathname. unless the segment is the root pathname.
+  let active =
+    router.pathname.includes(segment as string) &&
+    segment !== "/datarooms/[id]";
+
+  if (segment === "/datarooms/[id]") {
+    active = router.pathname === "/datarooms/[id]";
+  }
 
   return (
     <li
