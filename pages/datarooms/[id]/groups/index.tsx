@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { UsersIcon } from "lucide-react";
 
+import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { DataroomHeader } from "@/components/datarooms/dataroom-header";
 import { DataroomNavigation } from "@/components/datarooms/dataroom-navigation";
 import { AddGroupModal } from "@/components/datarooms/groups/add-group-modal";
@@ -12,11 +13,13 @@ import { GroupCardPlaceholder } from "@/components/datarooms/groups/group-card-p
 import AppLayout from "@/components/layouts/app";
 import { Button } from "@/components/ui/button";
 
+import { usePlan } from "@/lib/swr/use-billing";
 import { useDataroom } from "@/lib/swr/use-dataroom";
 import useDataroomGroups from "@/lib/swr/use-dataroom-groups";
 import { cn } from "@/lib/utils";
 
 export default function DataroomGroupPage() {
+  const { plan, trial } = usePlan();
   const { dataroom } = useDataroom();
   const { viewerGroups, loading } = useDataroomGroups();
 
@@ -25,6 +28,17 @@ export default function DataroomGroupPage() {
   if (!dataroom) {
     return <div>Loading...</div>;
   }
+
+  const ButtonComponent = () => {
+    if (plan === "datarooms" || trial) {
+      return <Button onClick={() => setModalOpen(true)}>Create group</Button>;
+    }
+    return (
+      <UpgradePlanModal clickedPlan="Data Rooms" trigger="create_group_button">
+        <Button>Upgrade to create group</Button>
+      </UpgradePlanModal>
+    );
+  };
 
   return (
     <AppLayout>
@@ -49,7 +63,7 @@ export default function DataroomGroupPage() {
                 </h1>
               </div>
               <div className="flex w-full flex-wrap items-center gap-3 sm:w-auto">
-                <Button onClick={() => setModalOpen(true)}>Create group</Button>
+                <ButtonComponent />
               </div>
             </div>
             <div className="animate-fade-in">
@@ -78,9 +92,7 @@ export default function DataroomGroupPage() {
                       </div>
                     </div>
                     <p>No groups found for this dataroom</p>
-                    <Button onClick={() => setModalOpen(true)}>
-                      Create group
-                    </Button>
+                    <ButtonComponent />
                   </div>
                 )
               ) : (

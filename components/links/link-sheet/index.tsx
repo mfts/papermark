@@ -4,11 +4,11 @@ import { Dispatch, SetStateAction, useEffect, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { LinkAudienceType, LinkType } from "@prisma/client";
-import { PlusIcon, RefreshCwIcon } from "lucide-react";
-import { Link } from "mupdf";
+import { RefreshCwIcon } from "lucide-react";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
+import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -123,7 +123,7 @@ export default function LinkSheet({
     mutate: mutateGroups,
   } = useDataroomGroups();
   const teamInfo = useTeam();
-  const { plan } = usePlan();
+  const { plan, trial } = usePlan();
   const analytics = useAnalytics();
   const [data, setData] = useState<DEFAULT_LINK_TYPE>(
     DEFAULT_LINK_PROPS(linkType),
@@ -257,9 +257,20 @@ export default function LinkSheet({
                         <TabsTrigger value={LinkAudienceType.GENERAL}>
                           General
                         </TabsTrigger>
-                        <TabsTrigger value={LinkAudienceType.GROUP}>
-                          Group
-                        </TabsTrigger>
+                        {plan === "datarooms" || trial ? (
+                          <TabsTrigger value={LinkAudienceType.GROUP}>
+                            Group
+                          </TabsTrigger>
+                        ) : (
+                          <UpgradePlanModal
+                            clickedPlan="Data Rooms"
+                            trigger="add_group_link"
+                          >
+                            <div className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all">
+                              Group
+                            </div>
+                          </UpgradePlanModal>
+                        )}
                       </TabsList>
                     ) : null}
 
