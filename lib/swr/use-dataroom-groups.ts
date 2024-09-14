@@ -12,8 +12,12 @@ import useSWR from "swr";
 import { fetcher } from "@/lib/utils";
 
 export default function useDataroomGroups() {
-  const teamInfo = useTeam();
+  // if not on dataroom page, return
   const router = useRouter();
+  const isDataroom = router.pathname.includes("datarooms");
+  if (!isDataroom) return { viewerGroups: [], loading: false, error: null };
+
+  const teamInfo = useTeam();
   const { id } = router.query as {
     id: string;
   };
