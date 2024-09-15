@@ -5,6 +5,7 @@ import { client } from "@/trigger";
 import { DocumentStorageType } from "@prisma/client";
 import { getServerSession } from "next-auth/next";
 
+import { copyFileToBucketServer } from "@/lib/files/copy-file-to-bucket-server";
 import prisma from "@/lib/prisma";
 import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
 import { CustomUser } from "@/lib/types";
@@ -15,7 +16,7 @@ export default async function handle(
   res: NextApiResponse,
 ) {
   if (req.method === "POST") {
-    // GET /api/teams/:teamId/documents/:id/versions
+    // POST /api/teams/:teamId/documents/:id/versions
     const session = await getServerSession(req, res, authOptions);
     if (!session) {
       return res.status(401).end("Unauthorized");
@@ -44,6 +45,7 @@ export default async function handle(
         options: {
           select: {
             id: true,
+            advancedExcelEnabled: true,
             versions: {
               orderBy: { createdAt: "desc" },
               take: 1,
@@ -52,20 +54,6 @@ export default async function handle(
           },
         },
       });
-
-      // get the latest version number for this document
-      // const result = await prisma.document.findUnique({
-      //   where: {
-      //     id: documentId,
-      //   },
-      //   select: {
-      //     versions: {
-      //       orderBy: { createdAt: "desc" },
-      //       take: 1,
-      //       select: { versionNumber: true },
-      //     },
-      //   },
-      // });
 
       // create a new document version
       const currentVersionNumber = document?.versions
@@ -83,17 +71,40 @@ export default async function handle(
         },
       });
 
-      // trigger document uploaded event to trigger convert-pdf-to-image job
-      await client.sendEvent({
-        id: version.id,
-        name: "document.uploaded",
-        payload: {
-          documentVersionId: version.id,
-          versionNumber: version.versionNumber,
+      // turn off isPrimary flag for all other versions
+      await prisma.documentVersion.updateMany({
+        where: {
           documentId: documentId,
-          teamId: teamId,
+          id: {
+            not: version.id,
+          },
+        },
+        data: {
+          isPrimary: false,
         },
       });
+
+      // trigger document uploaded event to trigger convert-pdf-to-image job
+      if (type === "pdf") {
+        await client.sendEvent({
+          id: version.id,
+          name: "document.uploaded",
+          payload: {
+            documentVersionId: version.id,
+            versionNumber: version.versionNumber,
+            documentId: documentId,
+            teamId: teamId,
+          },
+        });
+      }
+
+      if (type === "sheet" && document?.advancedExcelEnabled) {
+        console.log("copying file to bucket server");
+        await copyFileToBucketServer({
+          filePath: version.file,
+          storageType: version.storageType,
+        });
+      }
 
       res.status(200).json({ id: documentId });
     } catch (error) {

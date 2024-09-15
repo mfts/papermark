@@ -65,7 +65,8 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
         recordMap = await notion.getPage(pageId);
       }
 
-      const { team, teamId, ...linkDocument } = link.document;
+      const { team, teamId, advancedExcelEnabled, ...linkDocument } =
+        link.document;
       const teamPlan = team?.plan || "free";
 
       return {
@@ -94,9 +95,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
           },
           showPoweredByBanner: link.showBanner || teamPlan === "free",
           showAccountCreationSlide: link.showBanner || teamPlan === "free",
-          useAdvancedExcelViewer:
-            teamId === "clwt1qwt00000qz39aqra71w6" ||
-            teamId === "clup33by90000oewh4rfvp2eg",
+          useAdvancedExcelViewer: advancedExcelEnabled,
         },
         revalidate: brand ? 10 : false,
       };
@@ -146,9 +145,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
           },
           showPoweredByBanner: false,
           showAccountCreationSlide: false,
-          useAdvancedExcelViewer:
-            teamId === "clwt1qwt00000qz39aqra71w6" ||
-            teamId === "clup33by90000oewh4rfvp2eg",
+          useAdvancedExcelViewer: false, // INFO: this is managed in the API route
         },
         revalidate: 10,
       };
