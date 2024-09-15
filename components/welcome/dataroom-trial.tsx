@@ -1,6 +1,10 @@
 import { useRouter } from "next/router";
 
+
+
 import { useState } from "react";
+
+
 
 import { useTeam } from "@/context/team-context";
 import { motion } from "framer-motion";
@@ -8,22 +12,23 @@ import { E164Number } from "libphonenumber-js";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
+
+
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { PhoneInput } from "@/components/ui/phone-input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+
 
 import { useAnalytics } from "@/lib/analytics";
 import { STAGGER_CHILD_VARIANTS } from "@/lib/constants";
 
+
+
 import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
 import { Input } from "../ui/input";
+
 
 export default function DataroomTrial() {
   const teamInfo = useTeam();
@@ -57,7 +62,7 @@ export default function DataroomTrial() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            name: "Dataroom Demo Trial",
+            name: "Dataroom #1",
             fullName: name,
             companyName,
             industry,
@@ -81,7 +86,7 @@ export default function DataroomTrial() {
       }
 
       analytics.capture("Dataroom Trial Created", {
-        dataroomName: "Dataroom Demo Trial",
+        dataroomName: "Dataroom #1",
         industry,
         companySize,
         dataroomId,
