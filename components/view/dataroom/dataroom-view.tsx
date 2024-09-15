@@ -63,6 +63,7 @@ export type DEFAULT_DOCUMENT_VIEW_TYPE = {
   notionData?: { recordMap: ExtendedRecordMap | null };
   fileType?: string;
   ipAddress?: string;
+  useAdvancedExcelViewer?: boolean;
 };
 
 export default function DataroomView({
@@ -162,6 +163,7 @@ export default function DataroomView({
           fileType,
           isPreview,
           ipAddress,
+          useAdvancedExcelViewer,
         } = fetchData as DEFAULT_DOCUMENT_VIEW_TYPE;
         plausible("dataroomViewed"); // track the event
         analytics.identify(
@@ -186,6 +188,7 @@ export default function DataroomView({
           fileType,
           isPreview,
           ipAddress,
+          useAdvancedExcelViewer,
         }));
         setSubmitted(true);
         setVerificationRequested(false);
@@ -321,7 +324,7 @@ export default function DataroomView({
           allowDownload={link.allowDownload!}
         />
       </div>
-    ) : viewData.fileType === "sheet" && useAdvancedExcelViewer ? (
+    ) : viewData.fileType === "sheet" && viewData.useAdvancedExcelViewer ? (
       <div className="bg-gray-950">
         <AdvancedExcelViewer
           linkId={link.id}

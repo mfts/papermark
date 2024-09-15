@@ -76,7 +76,7 @@ export default async function handle(
   };
 
   // INFO: for using the advanced excel viewer
-  const { useAdvancedExcelViewer } = data as {
+  let { useAdvancedExcelViewer } = data as {
     useAdvancedExcelViewer: boolean;
   };
 
@@ -518,14 +518,26 @@ export default async function handle(
         recordMap = await notion.getPage(pageId);
       }
 
-      if (documentVersion.type === "sheet" && !useAdvancedExcelViewer) {
-        const fileUrl = await getFile({
-          data: documentVersion.file,
-          type: documentVersion.storageType,
+      if (documentVersion.type === "sheet") {
+        const document = await prisma.document.findUnique({
+          where: { id: documentId },
+          select: { advancedExcelEnabled: true },
         });
+        useAdvancedExcelViewer = document?.advancedExcelEnabled ?? false;
 
-        const data = await parseSheet({ fileUrl });
-        sheetData = data;
+        if (useAdvancedExcelViewer) {
+          documentVersion.file = documentVersion.file.includes("https://")
+            ? documentVersion.file
+            : `https://${process.env.NEXT_PRIVATE_ADVANCED_UPLOAD_DISTRIBUTION_HOST}/${documentVersion.file}`;
+        } else {
+          const fileUrl = await getFile({
+            data: documentVersion.file,
+            type: documentVersion.storageType,
+          });
+
+          const data = await parseSheet({ fileUrl });
+          sheetData = data;
+        }
       }
       console.timeEnd("get-file");
     }
@@ -562,6 +574,12 @@ export default async function handle(
           "{{ipAddress}}",
         )
           ? getIpAddress(req.headers)
+          : undefined,
+      useAdvancedExcelViewer:
+        documentVersion &&
+        documentVersion.type === "sheet" &&
+        useAdvancedExcelViewer
+          ? useAdvancedExcelViewer
           : undefined,
     };
 
