@@ -63,10 +63,17 @@ export default async function handle(
         storageType: documentVersion.storageType,
       });
 
-      await prisma.document.update({
+      const documentPromise = prisma.document.update({
         where: { id: docId },
         data: { advancedExcelEnabled: true },
       });
+
+      const documentVersionPromise = prisma.documentVersion.update({
+        where: { id: documentVersion.id },
+        data: { numPages: 1 },
+      });
+
+      await Promise.all([documentPromise, documentVersionPromise]);
 
       await fetch(
         `${process.env.NEXTAUTH_URL}/api/revalidate?secret=${process.env.REVALIDATE_TOKEN}&documentId=${docId}`,

@@ -65,7 +65,7 @@ export default async function handle(
           file: url,
           type: type,
           storageType,
-          numPages: numPages,
+          numPages: document?.advancedExcelEnabled ? 1 : numPages,
           isPrimary: true,
           versionNumber: currentVersionNumber + 1,
         },
@@ -75,9 +75,7 @@ export default async function handle(
       await prisma.documentVersion.updateMany({
         where: {
           documentId: documentId,
-          id: {
-            not: version.id,
-          },
+          id: { not: version.id },
         },
         data: {
           isPrimary: false,
