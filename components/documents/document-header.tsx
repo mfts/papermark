@@ -31,6 +31,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+import { usePlan } from "@/lib/swr/use-billing";
 import { DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
 import { cn, getExtension } from "@/lib/utils";
 
@@ -57,6 +58,7 @@ export default function DocumentHeader({
   const { theme, systemTheme } = useTheme();
   const isLight =
     theme === "light" || (theme === "system" && systemTheme === "light");
+  const { plan, trial } = usePlan();
 
   const [isEditingName, setIsEditingName] = useState<boolean>(false);
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
@@ -239,6 +241,9 @@ export default function DocumentHeader({
         toast.error(message);
       } else {
         const { message } = await response.json();
+        plausible("advancedExcelEnabled", {
+          props: { documentId: document.id },
+        }); // track the event
         toast.success(message);
       }
     } catch (error) {
@@ -502,7 +507,8 @@ export default function DocumentHeader({
               ))}
 
             {prismaDocument.type === "sheet" &&
-              !prismaDocument.advancedExcelEnabled && (
+              !prismaDocument.advancedExcelEnabled &&
+              (plan === "business" || plan === "datarooms" || trial) && (
                 <DropdownMenuItem
                   onClick={() => enableAdvancedExcel(prismaDocument)}
                 >
