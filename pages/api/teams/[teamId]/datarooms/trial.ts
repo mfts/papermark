@@ -109,7 +109,7 @@ export default async function handle(
       waitUntil(
         sendDataroomTrialInfoEmailTask.trigger(
           { to: email! },
-          { delay: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000) },
+          { delay: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000) },
         ),
       );
       waitUntil(
