@@ -1,7 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
-// @ts-ignore
-import mupdf from "mupdf";
+import * as mupdf from "mupdf";
 
 export default async (req: NextApiRequest, res: NextApiResponse) => {
   // check if post method
@@ -17,7 +16,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     // Convert the response to an ArrayBuffer
     const pdfData = await response.arrayBuffer();
     // Create a MuPDF instance
-    var doc = mupdf.Document.openDocument(pdfData, "application/pdf");
+    var doc = new mupdf.PDFDocument(pdfData);
 
     var n = doc.countPages();
 
