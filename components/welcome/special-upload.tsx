@@ -81,9 +81,10 @@ export default function DeckGeneratorUpload() {
     try {
       setUploading(true);
 
-      const contentType = getSupportedContentType(currentFile.type);
+      const contentType = currentFile.type;
+      const supportedFileType = getSupportedContentType(contentType);
 
-      if (!contentType) {
+      if (!supportedFileType) {
         setUploading(false);
         toast.error(
           "Unsupported file format. Please upload a PDF or Excel file.",
@@ -104,6 +105,7 @@ export default function DeckGeneratorUpload() {
         key: data!,
         storageType: type!,
         contentType: contentType,
+        supportedFileType: supportedFileType,
       };
       // create a document in the database
       const response = await createDocument({ documentData, teamId, numPages });
