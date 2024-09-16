@@ -4,14 +4,6 @@ import { useCallback, useRef, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { DocumentStorageType } from "@prisma/client";
-import {
-  Upload as ArrowUpTrayIcon,
-  File as DocumentIcon,
-  FileText as DocumentTextIcon,
-  FileSpreadsheetIcon,
-  Image as PhotoIcon,
-  Presentation as PresentationChartBarIcon,
-} from "lucide-react";
 import { useSession } from "next-auth/react";
 import { FileRejection, useDropzone } from "react-dropzone";
 import { mutate } from "swr";
@@ -35,30 +27,6 @@ const fileSizeLimits: { [key: string]: number } = {
   "text/csv": 30, // 30 MB
   "application/vnd.oasis.opendocument.spreadsheet": 30, // 30 MB
 };
-
-function fileIcon(fileType: string) {
-  switch (fileType) {
-    case "application/pdf":
-      return <DocumentTextIcon className="mx-auto h-6 w-6" />;
-    case "image/png":
-    case "image/jpeg":
-    case "image/gif":
-    case "image/jpg":
-      return <PhotoIcon className="mx-auto h-6 w-6" />;
-    case "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-    case "application/vnd.openxmlformats-officedocument.presentationml.presentation":
-    case "application/vnd.ms-powerpoint":
-    case "application/msword":
-      return <PresentationChartBarIcon className="mx-auto h-6 w-6" />;
-    case "application/vnd.ms-excel":
-    case "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
-    case "text/csv":
-    case "application/vnd.oasis.opendocument.spreadsheet":
-      return <FileSpreadsheetIcon className="mx-auto h-6 w-6" />;
-    default:
-      return <DocumentIcon className="mx-auto h-6 w-6" />;
-  }
-}
 
 export default function UploadZone({
   children,

@@ -18,7 +18,6 @@ import { mutate } from "swr";
 
 import FileUp from "@/components/shared/icons/file-up";
 import MoreVertical from "@/components/shared/icons/more-vertical";
-import NotionIcon from "@/components/shared/icons/notion";
 import PapermarkSparkle from "@/components/shared/icons/papermark-sparkle";
 import { Button } from "@/components/ui/button";
 import {
@@ -34,6 +33,7 @@ import {
 import { usePlan } from "@/lib/swr/use-billing";
 import { DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
 import { cn, getExtension } from "@/lib/utils";
+import { fileIcon } from "@/lib/utils/get-file-icon";
 
 import AdvancedSheet from "../shared/icons/advanced-sheet";
 import PortraitLandscape from "../shared/icons/portrait-landscape";
@@ -329,18 +329,11 @@ export default function DocumentHeader({
   return (
     <header className="!mb-16 flex items-center justify-between gap-x-8">
       <div className="flex items-center space-x-2">
-        {primaryVersion.type === "notion" ? (
-          <NotionIcon className="h-7 w-7 lg:h-8 lg:w-8" />
-        ) : (
-          <div className="h-[25px] w-[25px] lg:h-[32px] lg:w-[32px]">
-            <Image
-              src={`/_icons/${primaryVersion.type}${isLight ? "-light" : ""}.svg`}
-              alt="File icon"
-              width={50}
-              height={50}
-            />
-          </div>
-        )}
+        {fileIcon({
+          fileType: prismaDocument.type ?? "",
+          className: "size-7 sm:size-8",
+          isLight,
+        })}
 
         <div className="mt-1 flex flex-col lg:mt-0">
           <h2

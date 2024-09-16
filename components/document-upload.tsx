@@ -1,18 +1,13 @@
 import { useMemo } from "react";
 
-import {
-  Upload as ArrowUpTrayIcon,
-  File as DocumentIcon,
-  FileText as DocumentTextIcon,
-  FileSpreadsheetIcon,
-  Image as PhotoIcon,
-  Presentation as PresentationChartBarIcon,
-} from "lucide-react";
+import { UploadIcon } from "lucide-react";
+import { useTheme } from "next-themes";
 import { useDropzone } from "react-dropzone";
 import { toast } from "sonner";
 
 import { usePlan } from "@/lib/swr/use-billing";
 import { bytesToSize } from "@/lib/utils";
+import { fileIcon } from "@/lib/utils/get-file-icon";
 import { getPagesCount } from "@/lib/utils/get-page-number-count";
 
 const fileSizeLimits: { [key: string]: number } = {
@@ -22,30 +17,6 @@ const fileSizeLimits: { [key: string]: number } = {
   "application/vnd.oasis.opendocument.spreadsheet": 30, // 30 MB
 };
 
-function fileIcon(fileType: string) {
-  switch (fileType) {
-    case "application/pdf":
-      return <DocumentTextIcon className="mx-auto h-6 w-6" />;
-    case "image/png":
-    case "image/jpeg":
-    case "image/gif":
-    case "image/jpg":
-      return <PhotoIcon className="mx-auto h-6 w-6" />;
-    case "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-    case "application/vnd.openxmlformats-officedocument.presentationml.presentation":
-    case "application/vnd.ms-powerpoint":
-    case "application/msword":
-      return <PresentationChartBarIcon className="mx-auto h-6 w-6" />;
-    case "application/vnd.ms-excel":
-    case "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
-    case "text/csv":
-    case "application/vnd.oasis.opendocument.spreadsheet":
-      return <FileSpreadsheetIcon className="mx-auto h-6 w-6" />;
-    default:
-      return <DocumentIcon className="mx-auto h-6 w-6" />;
-  }
-}
-
 export default function DocumentUpload({
   currentFile,
   setCurrentFile,
@@ -53,7 +24,10 @@ export default function DocumentUpload({
   currentFile: File | null;
   setCurrentFile: React.Dispatch<React.SetStateAction<File | null>>;
 }) {
-  const { plan, loading } = usePlan();
+  const { theme, systemTheme } = useTheme();
+  const isLight =
+    theme === "light" || (theme === "system" && systemTheme === "light");
+  const { plan } = usePlan();
   const maxSize = plan === "business" || plan === "datarooms" ? 100 : 30;
   const maxNumPages = plan === "business" || plan === "datarooms" ? 500 : 100;
 
@@ -138,13 +112,18 @@ export default function DocumentUpload({
           ) : null}
           <div className="text-center">
             {currentFile ? (
-              <div className="flex flex-col items-center space-y-1 text-foreground sm:flex-row sm:space-x-2">
-                <div>{fileIcon(currentFile.type)}</div>
+              <div className="flex flex-col items-center text-foreground sm:flex-row sm:space-x-2">
+                <div>
+                  {fileIcon({
+                    fileType: currentFile.type,
+                    isLight,
+                  })}
+                </div>
                 <p>{currentFile.name}</p>
                 <p className="text-gray-500">{bytesToSize(currentFile.size)}</p>
               </div>
             ) : (
-              <ArrowUpTrayIcon
+              <UploadIcon
                 className="mx-auto h-10 w-10 text-gray-500"
                 aria-hidden="true"
               />

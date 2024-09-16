@@ -4,7 +4,7 @@ import React from "react";
 
 import { useTheme } from "next-themes";
 
-import NotionIcon from "@/components/shared/icons/notion";
+import { fileIcon } from "@/lib/utils/get-file-icon";
 
 import { TDocumentData } from "./dataroom-view";
 
@@ -40,16 +40,11 @@ export default function DocumentCard({
       <li className="group/row relative flex items-center justify-between rounded-lg border-0 p-3 ring-1 ring-gray-200 transition-all hover:bg-secondary hover:ring-gray-300 dark:bg-secondary dark:ring-gray-700 hover:dark:ring-gray-500 sm:p-4">
         <div className="flex min-w-0 shrink items-center space-x-2 sm:space-x-4">
           <div className="mx-0.5 flex w-8 items-center justify-center text-center sm:mx-1">
-            {document.versions[0].type === "notion" ? (
-              <NotionIcon className="h-8 w-8" />
-            ) : (
-              <Image
-                src={`/_icons/${document.versions[0].type}${isLight ? "-light" : ""}.svg`}
-                alt="File icon"
-                width={50}
-                height={50}
-              />
-            )}
+            {fileIcon({
+              fileType: document.versions[0].type ?? "",
+              className: "h-8 w-8",
+              isLight,
+            })}
           </div>
 
           <div className="flex-col">
