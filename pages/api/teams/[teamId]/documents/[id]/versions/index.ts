@@ -97,6 +97,21 @@ export default async function handle(
         },
       });
 
+      if (type === "docs" || type === "slides") {
+        console.log("converting docx or pptx to pdf");
+        // Trigger convert-files-to-pdf task
+        await convertFilesToPdfTask.trigger(
+          {
+            documentVersionId: version.id,
+            teamId,
+            documentId,
+          },
+          {
+            idempotencyKey: `${teamId}-${version.id}`,
+            tags: [`team_${teamId}`, `document_${documentId}`],
+          },
+        );
+      }
       // trigger document uploaded event to trigger convert-pdf-to-image job
       if (type === "pdf") {
         await client.sendEvent({

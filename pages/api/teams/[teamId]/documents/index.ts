@@ -158,6 +158,22 @@ export default async function handle(
         },
       });
 
+      if (type === "docs" || type === "slides") {
+        console.log("converting docx or pptx to pdf");
+        // Trigger convert-files-to-pdf task
+        await convertFilesToPdfTask.trigger(
+          {
+            documentId: document.id,
+            documentVersionId: document.versions[0].id,
+            teamId,
+          },
+          {
+            idempotencyKey: `${teamId}-${document.versions[0].id}`,
+            tags: [`team_${teamId}`, `document_${document.id}`],
+          },
+        );
+      }
+
       // skip triggering convert-pdf-to-image job for "notion" / "excel" documents
       if (type === "pdf") {
         // trigger document uploaded event to trigger convert-pdf-to-image job
