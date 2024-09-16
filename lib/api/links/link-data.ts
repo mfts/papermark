@@ -54,6 +54,7 @@ export async function fetchDataroomLinkData({
                 select: {
                   id: true,
                   name: true,
+                  advancedExcelEnabled: true,
                   versions: {
                     where: { isPrimary: true },
                     select: {
@@ -120,6 +121,7 @@ export async function fetchDocumentLinkData({ linkId }: { linkId: string }) {
           id: true,
           name: true,
           assistantEnabled: true,
+          advancedExcelEnabled: true,
           teamId: true,
           ownerId: true,
           team: {

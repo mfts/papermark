@@ -364,14 +364,20 @@ export default async function handle(
         });
       }
 
-      if (documentVersion.type === "sheet" && !useAdvancedExcelViewer) {
-        const fileUrl = await getFile({
-          data: documentVersion.file,
-          type: documentVersion.storageType,
-        });
+      if (documentVersion.type === "sheet") {
+        if (useAdvancedExcelViewer) {
+          documentVersion.file = documentVersion.file.includes("https://")
+            ? documentVersion.file
+            : `https://${process.env.NEXT_PRIVATE_ADVANCED_UPLOAD_DISTRIBUTION_HOST}/${documentVersion.file}`;
+        } else {
+          const fileUrl = await getFile({
+            data: documentVersion.file,
+            type: documentVersion.storageType,
+          });
 
-        const data = await parseSheet({ fileUrl });
-        sheetData = data;
+          const data = await parseSheet({ fileUrl });
+          sheetData = data;
+        }
       }
       console.timeEnd("get-file");
     }

@@ -58,6 +58,13 @@ function prepareRemotePatterns() {
     });
   }
 
+  if (process.env.NEXT_PRIVATE_ADVANCED_UPLOAD_DISTRIBUTION_HOST) {
+    patterns.push({
+      protocol: "https",
+      hostname: process.env.NEXT_PRIVATE_ADVANCED_UPLOAD_DISTRIBUTION_HOST,
+    });
+  }
+
   if (process.env.VERCEL_ENV === "production") {
     patterns.push({
       // production vercel blob

@@ -5,7 +5,12 @@ import { useEffect, useRef, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { Document, DocumentVersion } from "@prisma/client";
-import { BetweenHorizontalStartIcon, Sparkles, TrashIcon } from "lucide-react";
+import {
+  BetweenHorizontalStartIcon,
+  SheetIcon,
+  Sparkles,
+  TrashIcon,
+} from "lucide-react";
 import { usePlausible } from "next-plausible";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
@@ -26,9 +31,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+import { usePlan } from "@/lib/swr/use-billing";
 import { DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
 import { cn, getExtension } from "@/lib/utils";
 
+import AdvancedSheet from "../shared/icons/advanced-sheet";
 import PortraitLandscape from "../shared/icons/portrait-landscape";
 import LoadingSpinner from "../ui/loading-spinner";
 import { ButtonTooltip } from "../ui/tooltip";
@@ -51,6 +58,7 @@ export default function DocumentHeader({
   const { theme, systemTheme } = useTheme();
   const isLight =
     theme === "light" || (theme === "system" && systemTheme === "light");
+  const { plan, trial } = usePlan();
 
   const [isEditingName, setIsEditingName] = useState<boolean>(false);
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
@@ -222,6 +230,28 @@ export default function DocumentHeader({
     }
   };
 
+  const enableAdvancedExcel = async (document: Document) => {
+    try {
+      const response = await fetch(
+        `/api/teams/${teamId}/documents/${document.id}/advanced-mode`,
+        { method: "POST", headers: { "Content-Type": "application/json" } },
+      );
+      if (!response.ok) {
+        const { message } = await response.json();
+        toast.error(message);
+      } else {
+        const { message } = await response.json();
+        plausible("advancedExcelEnabled", {
+          props: { documentId: document.id },
+        }); // track the event
+        toast.success(message);
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      toast.error("An error occurred. Please try again.");
+    }
+  };
+
   useEffect(() => {
     function handleClickOutside(event: { target: any }) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -329,6 +359,15 @@ export default function DocumentHeader({
             </span>
           )}
         </div>
+
+        {prismaDocument.type === "sheet" &&
+          prismaDocument.advancedExcelEnabled && (
+            <ButtonTooltip content="Advanced Excel mode">
+              <span className="mt-1 text-xs">
+                <AdvancedSheet className="h-6 w-6" />
+              </span>
+            </ButtonTooltip>
+          )}
       </div>
 
       <div className="flex items-center gap-x-4 md:gap-x-2 lg:gap-x-4">
@@ -362,6 +401,7 @@ export default function DocumentHeader({
         )}
 
         {prismaDocument.type !== "notion" &&
+          prismaDocument.type !== "sheet" &&
           prismaDocument.assistantEnabled && (
             <Button
               className="group hidden h-8 space-x-1 whitespace-nowrap bg-gradient-to-r from-[#16222A] via-emerald-500 to-[#16222A] text-xs duration-200 ease-linear hover:bg-right md:flex lg:h-9 lg:text-sm"
@@ -400,7 +440,7 @@ export default function DocumentHeader({
           </DropdownMenuTrigger>
           <DropdownMenuContent
             align="end"
-            className="w-[180px]"
+            className="w-[240px]"
             ref={dropdownRef}
           >
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
@@ -433,19 +473,21 @@ export default function DocumentHeader({
                 {" Change orientation"}
               </DropdownMenuItem>
 
-              {prismaDocument.type !== "notion" && (
-                <DropdownMenuItem
-                  onClick={() => activateOrRedirectAssistant(prismaDocument)}
-                >
-                  <PapermarkSparkle className="mr-2 h-4 w-4" />
-                  Open AI Assistant
-                </DropdownMenuItem>
-              )}
+              {prismaDocument.type !== "notion" &&
+                prismaDocument.type !== "sheet" && (
+                  <DropdownMenuItem
+                    onClick={() => activateOrRedirectAssistant(prismaDocument)}
+                  >
+                    <PapermarkSparkle className="mr-2 h-4 w-4" />
+                    Open AI Assistant
+                  </DropdownMenuItem>
+                )}
 
               <DropdownMenuSeparator />
             </DropdownMenuGroup>
 
             {primaryVersion.type !== "notion" &&
+              primaryVersion.type !== "sheet" &&
               (!prismaDocument.assistantEnabled ? (
                 <DropdownMenuItem
                   onClick={() =>
@@ -463,6 +505,17 @@ export default function DocumentHeader({
                   <Sparkles className="mr-2 h-4 w-4" /> Disable Assistant
                 </DropdownMenuItem>
               ))}
+
+            {prismaDocument.type === "sheet" &&
+              !prismaDocument.advancedExcelEnabled &&
+              (plan === "business" || plan === "datarooms" || trial) && (
+                <DropdownMenuItem
+                  onClick={() => enableAdvancedExcel(prismaDocument)}
+                >
+                  <SheetIcon className="mr-2 h-4 w-4" />
+                  Enable Advanced Mode
+                </DropdownMenuItem>
+              )}
 
             <DropdownMenuItem onClick={() => setAddDataroomOpen(true)}>
               <BetweenHorizontalStartIcon className="mr-2 h-4 w-4" />
