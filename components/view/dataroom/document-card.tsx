@@ -1,12 +1,10 @@
-import Image from "next/image";
-
 import React from "react";
 
 import { useTheme } from "next-themes";
 
 import { fileIcon } from "@/lib/utils/get-file-icon";
 
-import { TDocumentData } from "./dataroom-view";
+import { TDocumentData, TSupportedDocumentSimpleType } from "./dataroom-view";
 
 type DRDocument = {
   dataroomDocumentId: string;
@@ -57,10 +55,8 @@ export default function DocumentCard({
                       id: document.id,
                       name: document.name,
                       hasPages: document.versions[0].hasPages,
-                      documentType: document.versions[0].type as
-                        | "pdf"
-                        | "notion"
-                        | "sheet",
+                      documentType: document.versions[0]
+                        .type as TSupportedDocumentSimpleType,
                       documentVersionId: document.versions[0].id,
                       documentVersionNumber: document.versions[0].versionNumber,
                       isVertical: document.versions[0].isVertical,

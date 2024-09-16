@@ -73,8 +73,8 @@ const putFileInS3 = async ({
     docId = newId("doc");
   }
 
-  if (!SUPPORTED_DOCUMENT_TYPES.includes(file.type)) {
-    throw new Error("Only PDF and Excel files are supported");
+  if (!SUPPORTED_DOCUMENT_MIME_TYPES.includes(file.type)) {
+    throw new Error("Only PDF, Powerpoint, Word, and Excel files are supported");
   }
 
   const presignedResponse = await fetch(

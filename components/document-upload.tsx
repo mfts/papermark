@@ -11,10 +11,16 @@ import { fileIcon } from "@/lib/utils/get-file-icon";
 import { getPagesCount } from "@/lib/utils/get-page-number-count";
 
 const fileSizeLimits: { [key: string]: number } = {
-  "application/vnd.ms-excel": 100, // 30 MB
+  "application/vnd.ms-excel": 30, // 30 MB
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": 30, // 30 MB
-  "text/csv": 30, // 30 MB
   "application/vnd.oasis.opendocument.spreadsheet": 30, // 30 MB
+  "application/vnd.ms-powerpoint": 30, // 30 MB
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation": 30, // 30 MB
+  "application/vnd.oasis.opendocument.presentation": 30, // 30 MB
+  "application/msword": 30, // 30 MB
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document": 30, // 30 MB
+  "application/vnd.oasis.opendocument.text": 30, // 30 MB
+  "text/csv": 30, // 30 MB
 };
 
 export default function DocumentUpload({
@@ -38,6 +44,14 @@ export default function DocumentUpload({
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [], // ".xlsx"
       "text/csv": [], // ".csv"
       "application/vnd.oasis.opendocument.spreadsheet": [], // ".ods"
+      "application/vnd.ms-powerpoint": [], // ".ppt"
+      "application/vnd.openxmlformats-officedocument.presentationml.presentation":
+        [], // ".pptx"
+      "application/vnd.oasis.opendocument.presentation": [], // ".odp"
+      "application/msword": [], // ".doc"
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+        [], // ".docx"
+      "application/vnd.oasis.opendocument.text": [], // ".odt"
     },
     multiple: false,
     maxSize: maxSize * 1024 * 1024, // 30 MB
