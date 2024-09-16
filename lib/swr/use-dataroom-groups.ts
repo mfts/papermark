@@ -15,7 +15,8 @@ export default function useDataroomGroups() {
   // if not on dataroom page, return
   const router = useRouter();
   const isDataroom = router.pathname.includes("datarooms");
-  if (!isDataroom) return { viewerGroups: [], loading: false, error: null };
+  if (!isDataroom)
+    return { viewerGroups: [], loading: false, error: null, mutate: null };
 
   const teamInfo = useTeam();
   const { id } = router.query as {

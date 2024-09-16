@@ -334,7 +334,7 @@ export default function LinkSheet({
                                 onClick={async (e) => {
                                   e.stopPropagation();
                                   e.preventDefault();
-                                  await mutateGroups();
+                                  mutateGroups && (await mutateGroups());
                                 }}
                               >
                                 <RefreshCwIcon className="h-4 w-4" />
