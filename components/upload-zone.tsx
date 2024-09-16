@@ -9,7 +9,7 @@ import { FileRejection, useDropzone } from "react-dropzone";
 import { mutate } from "swr";
 
 import { useAnalytics } from "@/lib/analytics";
-import { createDocument } from "@/lib/documents/create-document";
+import { DocumentData, createDocument } from "@/lib/documents/create-document";
 import { resumableUpload } from "@/lib/files/tus-upload";
 import { usePlan } from "@/lib/swr/use-billing";
 import { CustomUser } from "@/lib/types";
@@ -135,12 +135,12 @@ export default function UploadZone({
 
         const uploadResult = await complete;
 
-        const documentData = {
+        const documentData: DocumentData = {
           key: uploadResult.id,
-          contentType: getSupportedContentType(uploadResult.fileType)!,
+          supportedFileType: getSupportedContentType(uploadResult.fileType)!,
           name: file.name,
           storageType: DocumentStorageType.S3_PATH,
-          numPages: uploadResult.numPages,
+          contentType: uploadResult.fileType,
         };
         const response = await createDocument({
           documentData,
@@ -206,6 +206,7 @@ export default function UploadZone({
           numPages: document.numPages,
           path: router.asPath,
           type: document.type,
+          contentType: document.contentType,
           teamId: teamInfo?.currentTeam?.id,
           bulkupload: true,
           dataroomId: dataroomId,

@@ -8,13 +8,7 @@ import {
   getSheetsCount,
 } from "@/lib/utils/get-page-number-count";
 
-import { SUPPORTED_DOCUMENT_TYPES } from "../constants";
-
-// type File = {
-//   name: string;
-//   type: string;
-//   arrayBuffer: () => Promise<ArrayBuffer>;
-// };
+import { SUPPORTED_DOCUMENT_MIME_TYPES } from "../constants";
 
 export const putFile = async ({
   file,
@@ -125,13 +119,13 @@ const putFileInS3 = async ({
     numPages = await getPagesCount(body);
   }
   // get sheet count for excel files
-  else if (
-    SUPPORTED_DOCUMENT_TYPES.includes(file.type) &&
-    file.type !== "application/pdf"
-  ) {
-    const body = await file.arrayBuffer();
-    numPages = getSheetsCount(body);
-  }
+  // else if (
+  //   SUPPORTED_DOCUMENT_MIME_TYPES.includes(file.type) &&
+  //   file.type !== "application/pdf"
+  // ) {
+  //   const body = await file.arrayBuffer();
+  //   numPages = getSheetsCount(body);
+  // }
 
   return {
     type: DocumentStorageType.S3_PATH,
