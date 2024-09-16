@@ -15,6 +15,8 @@ import { usePlan } from "@/lib/swr/use-billing";
 import { bytesToSize } from "@/lib/utils";
 import { getPagesCount } from "@/lib/utils/get-page-number-count";
 
+import DropboxChooser from "./documents/DropboxChooser";
+
 const fileSizeLimits: { [key: string]: number } = {
   "application/vnd.ms-excel": 100, // 30 MB
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": 30, // 30 MB
@@ -69,35 +71,7 @@ export default function DocumentUpload({
     maxSize: maxSize * 1024 * 1024, // 30 MB
     onDropAccepted: (acceptedFiles) => {
       const file = acceptedFiles[0];
-      const fileType = file.type;
-      const fileSizeLimit = fileSizeLimits[fileType] * 1024 * 1024;
-
-      if (file.size > fileSizeLimit) {
-        toast.error(
-          `File size too big for ${fileType} (max. ${fileSizeLimits[fileType]} MB)`,
-        );
-        return;
-      }
-
-      if (file.type !== "application/pdf") {
-        setCurrentFile(file);
-        return;
-      }
-      file
-        .arrayBuffer()
-        .then((buffer) => {
-          getPagesCount(buffer).then((numPages) => {
-            if (numPages > maxNumPages) {
-              toast.error(`File has too many pages (max. ${maxNumPages})`);
-            } else {
-              setCurrentFile(file);
-            }
-          });
-        })
-        .catch((error) => {
-          console.error("Error reading file:", error);
-          toast.error("Failed to read the file");
-        });
+      fileValidations(file);
     },
     onDropRejected: (fileRejections) => {
       const { errors } = fileRejections[0];
@@ -112,6 +86,38 @@ export default function DocumentUpload({
       toast.error(message);
     },
   });
+
+  const fileValidations = (file) => {
+    const fileType = file.type;
+    const fileSizeLimit = fileSizeLimits[fileType] * 1024 * 1024;
+
+    if (file.size > fileSizeLimit) {
+      toast.error(
+        `File size too big for ${fileType} (max. ${fileSizeLimits[fileType]} MB)`,
+      );
+      return;
+    }
+
+    if (file.type !== "application/pdf") {
+      setCurrentFile(file);
+      return;
+    }
+    file
+      .arrayBuffer()
+      .then((buffer) => {
+        getPagesCount(buffer).then((numPages) => {
+          if (numPages > maxNumPages) {
+            toast.error(`File has too many pages (max. ${maxNumPages})`);
+          } else {
+            setCurrentFile(file);
+          }
+        });
+      })
+      .catch((error) => {
+        console.error("Error reading file:", error);
+        toast.error("Failed to read the file");
+      });
+  };
 
   const imageBlobUrl = useMemo(
     () => (currentFile ? URL.createObjectURL(currentFile) : ""),
@@ -160,6 +166,18 @@ export default function DocumentUpload({
                 ? "Replace file?"
                 : `Only *.xls, *.xlsx, *.csv, *.ods, *.pdf & ${maxSize} MB limit`}
             </p>
+            {currentFile ? (
+              <></>
+            ) : (
+              <>
+                <p className="mb-2 mt-4 text-xs leading-5 text-gray-500">
+                  Or import from
+                </p>
+                <div>
+                  <DropboxChooser fileValidations={fileValidations} />
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
