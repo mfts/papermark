@@ -15,7 +15,7 @@ export const config: TriggerConfig = {
       randomize: true,
     },
   },
-  dependenciesToBundle: ["nanoid"],
+  dependenciesToBundle: ["nanoid", /@sindresorhus/, "escape-string-regexp"],
   additionalFiles: ["./prisma/schema.prisma"],
   additionalPackages: ["prisma@5.19.1"],
   postInstall: "npm exec --package prisma -- prisma generate",

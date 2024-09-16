@@ -40,7 +40,7 @@ client.defineJob({
     );
 
     // 1. get file url from document version
-    const documentUrl = await io.runTask("get-document-url", async () => {
+    const documentVersion = await io.runTask("get-document-url", async () => {
       return prisma.documentVersion.findUnique({
         where: {
           id: documentVersionId,
@@ -53,8 +53,8 @@ client.defineJob({
       });
     });
 
-    // if documentUrl is null, log error and return
-    if (!documentUrl) {
+    // if documentVersion is null, log error and return
+    if (!documentVersion) {
       await io.logger.error("File not found", { payload });
       await processingDocumentStatus.update("error", {
         //set data, this overrides the previous value
@@ -72,8 +72,8 @@ client.defineJob({
     // 2. get signed url from file
     const signedUrl = await io.runTask("get-signed-url", async () => {
       return await getFile({
-        type: documentUrl.storageType,
-        data: documentUrl.file,
+        type: documentVersion.storageType,
+        data: documentVersion.file,
       });
     });
 
@@ -92,23 +92,31 @@ client.defineJob({
       return;
     }
 
-    let numPages = documentUrl.numPages;
+    let numPages = documentVersion.numPages;
 
     // skip if the numPages are already defined
-    if (!numPages) {
+    if (!numPages || numPages === 1) {
       // 3. send file to api/convert endpoint in a task and get back number of pages
       const muDocument = await io.runTask("get-number-of-pages", async () => {
         const response = await fetch(
           `${process.env.NEXT_PUBLIC_BASE_URL}/api/mupdf/get-pages`,
           {
             method: "POST",
-            body: JSON.stringify({ url: documentUrl.file }),
+            body: JSON.stringify({ url: signedUrl }),
             headers: {
               "Content-Type": "application/json",
             },
           },
         );
         await io.logger.info("log response", { response });
+
+        if (!response.ok) {
+          await io.logger.error("Failed to get number of pages", {
+            signedUrl,
+            response,
+          });
+          throw new Error("Failed to get number of pages");
+        }
 
         const { numPages } = (await response.json()) as { numPages: number };
         return { numPages };
@@ -221,6 +229,7 @@ client.defineJob({
           id: documentVersionId,
         },
         data: {
+          numPages: numPages,
           hasPages: true,
           isPrimary: true,
         },

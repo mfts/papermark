@@ -76,10 +76,24 @@ export const LIMITS = {
   views: 20,
 };
 
-export const SUPPORTED_DOCUMENT_TYPES = [
-  "application/pdf",
-  "application/vnd.ms-excel",
-  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  "text/csv",
-  "application/vnd.oasis.opendocument.spreadsheet",
+export const SUPPORTED_DOCUMENT_MIME_TYPES = [
+  "application/pdf", // .pdf
+  "application/vnd.ms-excel", // .xls
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", // .xlsx
+  "text/csv", // .csv
+  "application/vnd.oasis.opendocument.spreadsheet", // .ods
+  "application/vnd.ms-powerpoint", // .ppt
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation", // .pptx
+  "application/vnd.oasis.opendocument.presentation", // .odp
+  "application/msword", // .doc
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // .docx
+  "application/vnd.oasis.opendocument.text", // .odt
+];
+
+export const SUPPORTED_DOCUMENT_SIMPLE_TYPES = [
+  "pdf",
+  "notion",
+  "sheet",
+  "slides",
+  "docs",
 ];

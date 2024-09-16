@@ -16,6 +16,7 @@ import AccessForm, {
 } from "@/components/view/access-form";
 
 import { useAnalytics } from "@/lib/analytics";
+import { SUPPORTED_DOCUMENT_SIMPLE_TYPES } from "@/lib/constants";
 import { LinkWithDataroom, WatermarkConfig } from "@/lib/types";
 
 import DataroomViewer from "../DataroomViewer";
@@ -35,11 +36,14 @@ type SheetData = {
   rowData: RowData[];
 };
 
+export type TSupportedDocumentSimpleType =
+  (typeof SUPPORTED_DOCUMENT_SIMPLE_TYPES)[number];
+
 export type TDocumentData = {
   id: string;
   name: string;
   hasPages: boolean;
-  documentType: "pdf" | "notion" | "sheet";
+  documentType: TSupportedDocumentSimpleType;
   documentVersionId: string;
   documentVersionNumber: number;
   isVertical?: boolean;

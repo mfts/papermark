@@ -11,7 +11,6 @@ import { toast } from "sonner";
 import { mutate } from "swr";
 
 import BarChart from "@/components/shared/icons/bar-chart";
-import NotionIcon from "@/components/shared/icons/notion";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -25,6 +24,7 @@ import {
 import { type DataroomFolderDocument } from "@/lib/swr/use-dataroom";
 import { type DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
 import { cn, nFormatter, timeAgo } from "@/lib/utils";
+import { fileIcon } from "@/lib/utils/get-file-icon";
 
 import { MoveToDataroomFolderModal } from "./move-dataroom-folder-modal";
 
@@ -171,16 +171,11 @@ export default function DataroomDocumentCard({
         <div className="flex min-w-0 shrink items-center space-x-2 sm:space-x-4">
           {!isSelected && !isHovered ? (
             <div className="mx-0.5 flex w-8 items-center justify-center text-center sm:mx-1">
-              {dataroomDocument.document.type === "notion" ? (
-                <NotionIcon className="h-8 w-8" />
-              ) : (
-                <Image
-                  src={`/_icons/${dataroomDocument.document.type}${isLight ? "-light" : ""}.svg`}
-                  alt="File icon"
-                  width={50}
-                  height={50}
-                />
-              )}
+              {fileIcon({
+                fileType: dataroomDocument.document.type ?? "",
+                className: "h-8 w-8",
+                isLight,
+              })}
             </div>
           ) : (
             <div className="mx-0.5 w-8 sm:mx-1"></div>

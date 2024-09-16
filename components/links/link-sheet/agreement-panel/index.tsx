@@ -59,9 +59,10 @@ export default function AgreementSheet({
     try {
       setIsLoading(true);
 
-      const contentType = getSupportedContentType(currentFile.type);
+      const contentType = currentFile.type;
+      const supportedFileType = getSupportedContentType(contentType);
 
-      if (!contentType || currentFile.type !== "application/pdf") {
+      if (!supportedFileType || contentType !== "application/pdf") {
         toast.error("Unsupported file format. Please upload a PDF file.");
         return;
       }
@@ -76,6 +77,7 @@ export default function AgreementSheet({
         key: data!,
         storageType: type!,
         contentType: contentType,
+        supportedFileType: supportedFileType,
       };
       // create a document in the database
       const response = await createAgreementDocument({

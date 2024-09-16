@@ -72,12 +72,13 @@ export function AddDocumentModal({
     try {
       setUploading(true);
 
-      const contentType = getSupportedContentType(currentFile.type);
+      const contentType = currentFile.type;
+      const supportedFileType = getSupportedContentType(contentType);
 
-      if (!contentType) {
+      if (!supportedFileType) {
         setUploading(false);
         toast.error(
-          "Unsupported file format. Please upload a PDF or Excel file.",
+          "Unsupported file format. Please upload a PDF, Powerpoint, Excel, or Word file.",
         );
         return;
       }
@@ -92,6 +93,7 @@ export function AddDocumentModal({
         key: data!,
         storageType: type!,
         contentType: contentType,
+        supportedFileType: supportedFileType,
       };
       let response: Response | undefined;
       // create a document or new version in the database

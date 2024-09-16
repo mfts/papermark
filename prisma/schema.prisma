@@ -129,7 +129,9 @@ model Document {
   name             String
   description      String?
   file             String // This should be a reference to where the file is stored (S3, Google Cloud Storage, etc.)
+  originalFile     String? // This should be a reference to the original file like pptx, xlsx, etc. (S3, Google Cloud Storage, etc.)
   type             String? // This should be a reference to the file type (pdf, sheet, etc.)
+  contentType      String? // This should be the actual contentType of the file like application/pdf, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, etc.
   storageType      DocumentStorageType @default(VERCEL_BLOB)
   numPages         Int? // This should be a reference to the number of pages in the document
   owner            User?               @relation(fields: [ownerId], references: [id], onDelete: SetNull)
@@ -161,7 +163,9 @@ model DocumentVersion {
   document      Document            @relation(fields: [documentId], references: [id], onDelete: Cascade)
   documentId    String
   file          String // This should be a reference to where the file is stored (S3, Google Cloud Storage, etc.)
+  originalFile  String? // This should be a reference to the original file like pptx, xlsx, etc. (S3, Google Cloud Storage, etc.)
   type          String? // This should be a reference to the file type (pdf, docx, etc.)
+  contentType   String? // This should be the actual contentType of the file like application/pdf, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, etc.
   storageType   DocumentStorageType @default(VERCEL_BLOB)
   numPages      Int? // This should be a reference to the number of pages in the document
   isPrimary     Boolean             @default(false) // Indicates if this is the primary version

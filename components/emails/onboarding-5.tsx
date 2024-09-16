@@ -47,7 +47,7 @@ const Onboarding3Email = () => {
               <Text className="text-sm">
                 All about Papermark{" "}
                 <a
-                  href="https://cal.com/marcseitz/papermark"
+                  href="https://www.papermark.io/data-room"
                   className="text-blue-500 underline"
                 >
                   Data Rooms
