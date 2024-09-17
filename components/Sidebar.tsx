@@ -64,7 +64,8 @@ export default function Sidebar() {
 export const SidebarComponent = ({ className }: { className?: string }) => {
   const [showProBanner, setShowProBanner] = useState<boolean | null>(null);
   const { data: session, status } = useSession();
-  const { plan, trial: userTrial, loading } = usePlan();
+  const { plan: userPlan, trial: userTrial, loading } = usePlan();
+  const isTrial = !!userTrial;
 
   const router = useRouter();
   const { currentTeam, teams, isLoading }: TeamContextType =
@@ -77,9 +78,6 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
       setShowProBanner(false);
     }
   }, []);
-
-  const userPlan = plan;
-  const isTrial = !!userTrial;
 
   const navigation = [
     // {
