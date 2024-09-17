@@ -18,7 +18,7 @@ const statusBadgeVariants = cva(
         neutral: "bg-gray-500/[.15] text-gray-600",
         success: "bg-green-500/[.15] text-green-600",
         pending: "bg-orange-500/[.15] text-orange-600",
-        error: "bg-red-500/[.15] text-red-600",
+        error: "bg-destructive text-destructive-foreground",
       },
     },
     defaultVariants: {
