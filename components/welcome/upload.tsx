@@ -61,12 +61,13 @@ export default function Upload() {
     try {
       setUploading(true);
 
-      const contentType = getSupportedContentType(currentFile.type);
+      const contentType = currentFile.type;
+      const supportedFileType = getSupportedContentType(currentFile.type);
 
-      if (!contentType) {
+      if (!supportedFileType) {
         setUploading(false);
         toast.error(
-          "Unsupported file format. Please upload a PDF or Excel file.",
+          "Unsupported file format. Please upload a PDF, Powerpoint, Excel, or Word file.",
         );
         return;
       }
@@ -84,6 +85,7 @@ export default function Upload() {
         key: data!,
         storageType: type!,
         contentType: contentType,
+        supportedFileType: supportedFileType,
       };
       // create a document in the database
       const response = await createDocument({ documentData, teamId, numPages });
@@ -100,6 +102,7 @@ export default function Upload() {
           numPages: document.numPages,
           path: router.asPath,
           type: document.type,
+          contentType: document.contentType,
           teamId: teamInfo?.currentTeam?.id,
         });
         analytics.capture("Link Added", {

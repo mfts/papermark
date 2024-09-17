@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
+import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { client } from "@/trigger";
 import { DocumentStorageType } from "@prisma/client";
 import { getServerSession } from "next-auth/next";
@@ -9,10 +10,9 @@ import { errorhandler } from "@/lib/errorHandler";
 import notion from "@/lib/notion";
 import prisma from "@/lib/prisma";
 import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
+import { convertFilesToPdfTask } from "@/lib/trigger/convert-files";
 import { CustomUser } from "@/lib/types";
 import { getExtension, log } from "@/lib/utils";
-
-import { authOptions } from "../../../auth/[...nextauth]";
 
 export default async function handle(
   req: NextApiRequest,
@@ -78,6 +78,7 @@ export default async function handle(
       numPages,
       type: fileType,
       folderPathName,
+      contentType,
     } = req.body as {
       name: string;
       url: string;
@@ -85,6 +86,7 @@ export default async function handle(
       numPages?: number;
       type?: string;
       folderPathName?: string;
+      contentType: string;
     };
 
     try {
@@ -127,6 +129,8 @@ export default async function handle(
           name: name,
           numPages: numPages,
           file: fileUrl,
+          originalFile: fileUrl,
+          contentType: contentType,
           type: type,
           storageType,
           ownerId: (session.user as CustomUser).id,
@@ -137,6 +141,8 @@ export default async function handle(
           versions: {
             create: {
               file: fileUrl,
+              originalFile: fileUrl,
+              contentType: contentType,
               type: type,
               storageType,
               numPages: numPages,
@@ -151,6 +157,22 @@ export default async function handle(
           versions: true,
         },
       });
+
+      if (type === "docs" || type === "slides") {
+        console.log("converting docx or pptx to pdf");
+        // Trigger convert-files-to-pdf task
+        await convertFilesToPdfTask.trigger(
+          {
+            documentId: document.id,
+            documentVersionId: document.versions[0].id,
+            teamId,
+          },
+          {
+            idempotencyKey: `${teamId}-${document.versions[0].id}`,
+            tags: [`team_${teamId}`, `document_${document.id}`],
+          },
+        );
+      }
 
       // skip triggering convert-pdf-to-image job for "notion" / "excel" documents
       if (type === "pdf") {

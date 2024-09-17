@@ -63,9 +63,10 @@ export default function DataroomUpload({ dataroomId }: DataroomUploadProps) {
     try {
       setUploading(true);
 
-      const contentType = getSupportedContentType(currentFile.type);
+      const contentType = currentFile.type;
+      const supportedFileType = getSupportedContentType(contentType);
 
-      if (!contentType) {
+      if (!supportedFileType) {
         setUploading(false);
         toast.error(
           "Unsupported file format. Please upload a PDF or Excel file.",
@@ -86,6 +87,7 @@ export default function DataroomUpload({ dataroomId }: DataroomUploadProps) {
         key: data!,
         storageType: type!,
         contentType: contentType,
+        supportedFileType: supportedFileType,
       };
 
       const response = await createDocument({ documentData, teamId, numPages });

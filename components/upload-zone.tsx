@@ -4,20 +4,12 @@ import { useCallback, useRef, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { DocumentStorageType } from "@prisma/client";
-import {
-  Upload as ArrowUpTrayIcon,
-  File as DocumentIcon,
-  FileText as DocumentTextIcon,
-  FileSpreadsheetIcon,
-  Image as PhotoIcon,
-  Presentation as PresentationChartBarIcon,
-} from "lucide-react";
 import { useSession } from "next-auth/react";
 import { FileRejection, useDropzone } from "react-dropzone";
 import { mutate } from "swr";
 
 import { useAnalytics } from "@/lib/analytics";
-import { createDocument } from "@/lib/documents/create-document";
+import { DocumentData, createDocument } from "@/lib/documents/create-document";
 import { resumableUpload } from "@/lib/files/tus-upload";
 import { usePlan } from "@/lib/swr/use-billing";
 import { CustomUser } from "@/lib/types";
@@ -35,30 +27,6 @@ const fileSizeLimits: { [key: string]: number } = {
   "text/csv": 30, // 30 MB
   "application/vnd.oasis.opendocument.spreadsheet": 30, // 30 MB
 };
-
-function fileIcon(fileType: string) {
-  switch (fileType) {
-    case "application/pdf":
-      return <DocumentTextIcon className="mx-auto h-6 w-6" />;
-    case "image/png":
-    case "image/jpeg":
-    case "image/gif":
-    case "image/jpg":
-      return <PhotoIcon className="mx-auto h-6 w-6" />;
-    case "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-    case "application/vnd.openxmlformats-officedocument.presentationml.presentation":
-    case "application/vnd.ms-powerpoint":
-    case "application/msword":
-      return <PresentationChartBarIcon className="mx-auto h-6 w-6" />;
-    case "application/vnd.ms-excel":
-    case "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
-    case "text/csv":
-    case "application/vnd.oasis.opendocument.spreadsheet":
-      return <FileSpreadsheetIcon className="mx-auto h-6 w-6" />;
-    default:
-      return <DocumentIcon className="mx-auto h-6 w-6" />;
-  }
-}
 
 export default function UploadZone({
   children,
@@ -167,12 +135,12 @@ export default function UploadZone({
 
         const uploadResult = await complete;
 
-        const documentData = {
+        const documentData: DocumentData = {
           key: uploadResult.id,
-          contentType: getSupportedContentType(uploadResult.fileType)!,
+          supportedFileType: getSupportedContentType(uploadResult.fileType)!,
           name: file.name,
           storageType: DocumentStorageType.S3_PATH,
-          numPages: uploadResult.numPages,
+          contentType: uploadResult.fileType,
         };
         const response = await createDocument({
           documentData,
@@ -238,6 +206,7 @@ export default function UploadZone({
           numPages: document.numPages,
           path: router.asPath,
           type: document.type,
+          contentType: document.contentType,
           teamId: teamInfo?.currentTeam?.id,
           bulkupload: true,
           dataroomId: dataroomId,
@@ -274,6 +243,14 @@ export default function UploadZone({
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [], // ".xlsx"
       "text/csv": [], // ".csv"
       "application/vnd.oasis.opendocument.spreadsheet": [], // ".ods"
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+        [], // ".docx"
+      "application/vnd.openxmlformats-officedocument.presentationml.presentation":
+        [], // ".pptx"
+      "application/vnd.ms-powerpoint": [], // ".ppt"
+      "application/msword": [], // ".doc"
+      "application/vnd.oasis.opendocument.text": [], // ".odt"
+      "application/vnd.oasis.opendocument.presentation": [], // ".odp"
     },
     multiple: true,
     maxSize: maxSize * 1024 * 1024, // 30 MB

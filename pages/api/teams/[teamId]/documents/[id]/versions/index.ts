@@ -8,6 +8,7 @@ import { getServerSession } from "next-auth/next";
 import { copyFileToBucketServer } from "@/lib/files/copy-file-to-bucket-server";
 import prisma from "@/lib/prisma";
 import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
+import { convertFilesToPdfTask } from "@/lib/trigger/convert-files";
 import { CustomUser } from "@/lib/types";
 import { log } from "@/lib/utils";
 
@@ -27,11 +28,12 @@ export default async function handle(
       teamId: string;
       id: string;
     };
-    const { url, type, numPages, storageType } = req.body as {
+    const { url, type, numPages, storageType, contentType } = req.body as {
       url: string;
       type: string;
       numPages: number;
       storageType: DocumentStorageType;
+      contentType: string;
     };
 
     const userId = (session.user as CustomUser).id;
@@ -63,11 +65,13 @@ export default async function handle(
         data: {
           documentId: documentId,
           file: url,
+          originalFile: url,
           type: type,
           storageType,
           numPages: document?.advancedExcelEnabled ? 1 : numPages,
           isPrimary: true,
           versionNumber: currentVersionNumber + 1,
+          contentType,
         },
       });
 
@@ -82,6 +86,32 @@ export default async function handle(
         },
       });
 
+      // turn off isPrimary flag for all other versions
+      await prisma.documentVersion.updateMany({
+        where: {
+          documentId: documentId,
+          id: { not: version.id },
+        },
+        data: {
+          isPrimary: false,
+        },
+      });
+
+      if (type === "docs" || type === "slides") {
+        console.log("converting docx or pptx to pdf");
+        // Trigger convert-files-to-pdf task
+        await convertFilesToPdfTask.trigger(
+          {
+            documentVersionId: version.id,
+            teamId,
+            documentId,
+          },
+          {
+            idempotencyKey: `${teamId}-${version.id}`,
+            tags: [`team_${teamId}`, `document_${documentId}`],
+          },
+        );
+      }
       // trigger document uploaded event to trigger convert-pdf-to-image job
       if (type === "pdf") {
         await client.sendEvent({
