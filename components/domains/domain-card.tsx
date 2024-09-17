@@ -103,13 +103,13 @@ export default function DomainCard({
     <>
       <div
         ref={domainRef}
-        className="hover:drop-shadow-card-hover group rounded-xl border border-gray-200 bg-white p-4 transition-[filter] sm:p-5"
+        className="hover:drop-shadow-card-hover group rounded-xl border border-gray-200 bg-white p-4 transition-[filter] dark:border-gray-400 dark:bg-secondary sm:p-5"
         onPointerEnter={() => setGroupHover(true)}
         onPointerLeave={() => setGroupHover(false)}
       >
         <div className="flex items-center justify-between gap-3 sm:gap-4">
           <div className="flex min-w-0 items-center gap-4">
-            <div className="hidden rounded-full border border-gray-200 sm:block">
+            <div className="hidden rounded-full border border-gray-200 dark:border-gray-400 sm:block">
               <div
                 className={cn(
                   "rounded-full",
@@ -161,7 +161,7 @@ export default function DomainCard({
                       : "Invalid"}
                 </StatusBadge>
               ) : (
-                <div className="h-6 w-16 animate-pulse rounded-md bg-gray-200" />
+                <div className="h-6 w-16 animate-pulse rounded-md bg-gray-200 dark:bg-gray-400" />
               )}
             </div>
             <Button
@@ -180,13 +180,15 @@ export default function DomainCard({
                   <SettingsIcon
                     className={cn(
                       "h-4 w-4",
-                      showDetails ? "text-gray-800" : "text-gray-600",
+                      showDetails
+                        ? "text-gray-800 dark:text-gray-200"
+                        : "text-gray-600 dark:text-gray-400",
                     )}
                   />
                   {/* Error indicator */}
                   {status && isInvalid && (
-                    <div className="absolute -right-px -top-px h-[5px] w-[5px] rounded-full bg-red-500">
-                      <div className="h-full w-full animate-pulse rounded-full ring-2 ring-red-500/30" />
+                    <div className="absolute -right-px -top-px h-[5px] w-[5px] rounded-full bg-destructive">
+                      <div className="h-full w-full animate-pulse rounded-full ring-2 ring-destructive/30" />
                     </div>
                   )}
                 </div>
@@ -203,7 +205,7 @@ export default function DomainCard({
                 <Button
                   // size="icon"
                   variant="outline"
-                  className="z-20 h-8 w-8 border-gray-200 bg-transparent p-0 hover:bg-gray-200 dark:border-gray-700 hover:dark:bg-gray-700 lg:h-9 lg:w-9"
+                  className="z-20 h-8 w-8 border-gray-200 bg-transparent p-0 hover:bg-gray-200 dark:border-gray-400 hover:dark:border-gray-400 hover:dark:bg-gray-700 lg:h-9 lg:w-9"
                 >
                   <span className="sr-only">Open menu</span>
                   <MoreVertical className="h-4 w-4" />
@@ -257,7 +259,7 @@ export default function DomainCard({
               />
             )
           ) : (
-            <div className="mt-6 h-6 w-32 animate-pulse rounded-md bg-gray-200" />
+            <div className="mt-6 h-6 w-32 animate-pulse rounded-md bg-gray-200 dark:bg-gray-400" />
           )}
         </motion.div>
       </div>
