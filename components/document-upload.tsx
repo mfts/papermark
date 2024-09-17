@@ -11,16 +11,10 @@ import { fileIcon } from "@/lib/utils/get-file-icon";
 import { getPagesCount } from "@/lib/utils/get-page-number-count";
 
 const fileSizeLimits: { [key: string]: number } = {
-  "application/vnd.ms-excel": 30, // 30 MB
-  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": 30, // 30 MB
-  "application/vnd.oasis.opendocument.spreadsheet": 30, // 30 MB
-  "application/vnd.ms-powerpoint": 30, // 30 MB
-  "application/vnd.openxmlformats-officedocument.presentationml.presentation": 30, // 30 MB
-  "application/vnd.oasis.opendocument.presentation": 30, // 30 MB
-  "application/msword": 30, // 30 MB
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document": 30, // 30 MB
-  "application/vnd.oasis.opendocument.text": 30, // 30 MB
-  "text/csv": 30, // 30 MB
+  "application/vnd.ms-excel": 40, // 40 MB
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": 40, // 40 MB
+  "application/vnd.oasis.opendocument.spreadsheet": 40, // 40 MB
+  "text/csv": 40, // 40 MB
 };
 
 export default function DocumentUpload({
@@ -33,26 +27,39 @@ export default function DocumentUpload({
   const { theme, systemTheme } = useTheme();
   const isLight =
     theme === "light" || (theme === "system" && systemTheme === "light");
-  const { plan } = usePlan();
+  const { plan, trial } = usePlan();
+  const isFreePlan = plan === "free";
+  const isTrial = !!trial;
   const maxSize = plan === "business" || plan === "datarooms" ? 100 : 30;
   const maxNumPages = plan === "business" || plan === "datarooms" ? 500 : 100;
 
   const { getRootProps, getInputProps } = useDropzone({
-    accept: {
-      "application/pdf": [], // ".pdf"
-      "application/vnd.ms-excel": [], // ".xls"
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [], // ".xlsx"
-      "text/csv": [], // ".csv"
-      "application/vnd.oasis.opendocument.spreadsheet": [], // ".ods"
-      "application/vnd.ms-powerpoint": [], // ".ppt"
-      "application/vnd.openxmlformats-officedocument.presentationml.presentation":
-        [], // ".pptx"
-      "application/vnd.oasis.opendocument.presentation": [], // ".odp"
-      "application/msword": [], // ".doc"
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-        [], // ".docx"
-      "application/vnd.oasis.opendocument.text": [], // ".odt"
-    },
+    accept:
+      isFreePlan && !isTrial
+        ? {
+            "application/pdf": [], // ".pdf"
+            "application/vnd.ms-excel": [], // ".xls"
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
+              [], // ".xlsx"
+            "text/csv": [], // ".csv"
+            "application/vnd.oasis.opendocument.spreadsheet": [], // ".ods"
+          }
+        : {
+            "application/pdf": [], // ".pdf"
+            "application/vnd.ms-excel": [], // ".xls"
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
+              [], // ".xlsx"
+            "text/csv": [], // ".csv"
+            "application/vnd.oasis.opendocument.spreadsheet": [], // ".ods"
+            "application/vnd.ms-powerpoint": [], // ".ppt"
+            "application/vnd.openxmlformats-officedocument.presentationml.presentation":
+              [], // ".pptx"
+            "application/vnd.oasis.opendocument.presentation": [], // ".odp"
+            "application/msword": [], // ".doc"
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+              [], // ".docx"
+            "application/vnd.oasis.opendocument.text": [], // ".odt"
+          },
     multiple: false,
     maxSize: maxSize * 1024 * 1024, // 30 MB
     onDropAccepted: (acceptedFiles) => {
@@ -151,7 +158,9 @@ export default function DocumentUpload({
             <p className="text-xs leading-5 text-gray-500">
               {currentFile
                 ? "Replace file?"
-                : `Only *.xls, *.xlsx, *.csv, *.ods, *.pdf & ${maxSize} MB limit`}
+                : isFreePlan && !isTrial
+                  ? `Only *.pdf, *.xls, *.xlsx, *.csv, *.ods & ${maxSize} MB limit`
+                  : `Only *.pdf, *.pptx, *.docx, *.xlsx, *.xls, *.csv, *.ods, *.ppt, *.odp, *.doc, *.odt & ${maxSize} MB limit`}
             </p>
           </div>
         </div>
