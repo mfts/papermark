@@ -96,6 +96,9 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
           showPoweredByBanner: link.showBanner || teamPlan === "free",
           showAccountCreationSlide: link.showBanner || teamPlan === "free",
           useAdvancedExcelViewer: advancedExcelEnabled,
+          useCustomAccessForm:
+            teamId === "cm0154tiv0000lr2t6nr5c6kp" ||
+            teamId === "clup33by90000oewh4rfvp2eg",
         },
         revalidate: brand ? 10 : false,
       };
@@ -146,6 +149,9 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
           showPoweredByBanner: false,
           showAccountCreationSlide: false,
           useAdvancedExcelViewer: false, // INFO: this is managed in the API route
+          useCustomAccessForm:
+            teamId === "cm0154tiv0000lr2t6nr5c6kp" ||
+            teamId === "clup33by90000oewh4rfvp2eg",
         },
         revalidate: 10,
       };
@@ -170,6 +176,7 @@ export default function ViewPage({
   showPoweredByBanner,
   showAccountCreationSlide,
   useAdvancedExcelViewer,
+  useCustomAccessForm,
 }: {
   linkData: DocumentLinkData | DataroomLinkData;
   notionData: {
@@ -186,6 +193,7 @@ export default function ViewPage({
   showPoweredByBanner: boolean;
   showAccountCreationSlide: boolean;
   useAdvancedExcelViewer: boolean;
+  useCustomAccessForm: boolean;
 }) {
   const router = useRouter();
   const { data: session, status } = useSession();
@@ -284,6 +292,7 @@ export default function ViewPage({
           useAdvancedExcelViewer={useAdvancedExcelViewer}
           previewToken={previewToken}
           disableEditEmail={!!disableEditEmail}
+          useCustomAccessForm={useCustomAccessForm}
         />
       </>
     );
@@ -359,6 +368,7 @@ export default function ViewPage({
           useAdvancedExcelViewer={useAdvancedExcelViewer}
           previewToken={previewToken}
           disableEditEmail={!!disableEditEmail}
+          useCustomAccessForm={useCustomAccessForm}
         />
       </>
     );

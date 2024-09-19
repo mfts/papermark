@@ -81,6 +81,7 @@ export default function DataroomView({
   useAdvancedExcelViewer,
   previewToken,
   disableEditEmail,
+  useCustomAccessForm,
 }: {
   link: LinkWithDataroom;
   userEmail: string | null | undefined;
@@ -92,6 +93,7 @@ export default function DataroomView({
   useAdvancedExcelViewer?: boolean;
   previewToken?: string;
   disableEditEmail?: boolean;
+  useCustomAccessForm?: boolean;
 }) {
   const {
     linkType,
@@ -284,6 +286,7 @@ export default function DataroomView({
         requireName={link.agreement?.requireName}
         isLoading={isLoading}
         disableEditEmail={disableEditEmail}
+        useCustomAccessForm={useCustomAccessForm}
       />
     );
   }
