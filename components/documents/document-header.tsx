@@ -327,7 +327,7 @@ export default function DocumentHeader({
   };
 
   return (
-    <header className="!mb-16 flex items-center justify-between gap-x-8">
+    <header className="flex items-center justify-between gap-x-8">
       <div className="flex items-center space-x-2">
         {fileIcon({
           fileType: prismaDocument.type ?? "",

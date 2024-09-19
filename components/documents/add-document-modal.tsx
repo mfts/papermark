@@ -140,11 +140,7 @@ export function AddDocumentModal({
         }
 
         if (!newVersion) {
-          // copy the link to the clipboard
-          copyToClipboard(
-            `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${document.links[0].id}`,
-            "Document uploaded and link copied to clipboard. Redirecting to document page...",
-          );
+          toast.success("Document uploaded. Redirecting to document page...");
 
           // track the event
           plausible("documentUploaded");
@@ -154,12 +150,6 @@ export function AddDocumentModal({
             numPages: document.numPages,
             path: router.asPath,
             type: document.type,
-            teamId: teamId,
-          });
-          analytics.capture("Link Added", {
-            linkId: document.links[0].id,
-            documentId: document.id,
-            customDomain: null,
             teamId: teamId,
           });
 
@@ -283,6 +273,7 @@ export function AddDocumentModal({
             url: notionLink,
             numPages: 1,
             type: "notion",
+            createLink: false,
           }),
         },
       );
@@ -312,10 +303,8 @@ export function AddDocumentModal({
         }
 
         if (!newVersion) {
-          // copy the link to the clipboard
-          copyToClipboard(
-            `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${document.links[0].id}`,
-            "Notion Page processed and link copied to clipboard. Redirecting to document page...",
+          toast.success(
+            "Notion Page processed. Redirecting to document page...",
           );
 
           // track the event
@@ -327,12 +316,6 @@ export function AddDocumentModal({
             fileSize: null,
             path: router.asPath,
             type: "notion",
-            teamId: teamId,
-          });
-          analytics.capture("Link Added", {
-            linkId: document.links[0].id,
-            documentId: document.id,
-            customDomain: null,
             teamId: teamId,
           });
 

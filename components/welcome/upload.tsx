@@ -88,7 +88,12 @@ export default function Upload() {
         supportedFileType: supportedFileType,
       };
       // create a document in the database
-      const response = await createDocument({ documentData, teamId, numPages });
+      const response = await createDocument({
+        documentData,
+        teamId,
+        numPages,
+        createLink: true,
+      });
 
       if (response) {
         const document = await response.json();
@@ -152,7 +157,7 @@ export default function Upload() {
         ...linkData,
         metaImage: blobUrl,
         targetId: currentDocId,
-        linkType: "DOCUMENT_LINK",
+        linkType: LinkType.DOCUMENT_LINK,
       }),
     });
 
