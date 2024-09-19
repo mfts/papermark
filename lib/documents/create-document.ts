@@ -13,11 +13,13 @@ export const createDocument = async ({
   teamId,
   numPages,
   folderPathName,
+  createLink = false,
 }: {
   documentData: DocumentData;
   teamId: string;
   numPages?: number;
   folderPathName?: string;
+  createLink?: boolean;
 }) => {
   // create a document in the database with the blob url
   const response = await fetch(`/api/teams/${teamId}/documents`, {
@@ -33,6 +35,7 @@ export const createDocument = async ({
       folderPathName: folderPathName,
       type: documentData.supportedFileType,
       contentType: documentData.contentType,
+      createLink: createLink,
     }),
   });
 
