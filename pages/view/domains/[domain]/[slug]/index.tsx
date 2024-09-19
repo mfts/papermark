@@ -293,6 +293,8 @@ export default function ViewPage({
           previewToken={previewToken}
           disableEditEmail={!!disableEditEmail}
           useCustomAccessForm={useCustomAccessForm}
+          token={token}
+          verifiedEmail={verifiedEmail}
         />
       </>
     );
@@ -369,6 +371,8 @@ export default function ViewPage({
           previewToken={previewToken}
           disableEditEmail={!!disableEditEmail}
           useCustomAccessForm={useCustomAccessForm}
+          token={token}
+          verifiedEmail={verifiedEmail}
         />
       </>
     );
