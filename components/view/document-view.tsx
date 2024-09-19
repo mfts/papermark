@@ -58,6 +58,7 @@ export default function DocumentView({
   useAdvancedExcelViewer,
   previewToken,
   disableEditEmail,
+  useCustomAccessForm,
 }: {
   link: LinkWithDocument;
   userEmail: string | null | undefined;
@@ -75,6 +76,7 @@ export default function DocumentView({
   useAdvancedExcelViewer?: boolean;
   previewToken?: string;
   disableEditEmail?: boolean;
+  useCustomAccessForm?: boolean;
 }) {
   const {
     document,
@@ -230,6 +232,7 @@ export default function DocumentView({
         isLoading={isLoading}
         brand={brand}
         disableEditEmail={disableEditEmail}
+        useCustomAccessForm={useCustomAccessForm}
       />
     );
   }

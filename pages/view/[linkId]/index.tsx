@@ -96,6 +96,9 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
           showPoweredByBanner: link.showBanner || teamPlan === "free",
           showAccountCreationSlide: link.showBanner || teamPlan === "free",
           useAdvancedExcelViewer: advancedExcelEnabled,
+          useCustomAccessForm:
+            teamId === "cm0154tiv0000lr2t6nr5c6kp" ||
+            teamId === "clup33by90000oewh4rfvp2eg",
         },
         revalidate: brand ? 10 : false,
       };
@@ -146,6 +149,9 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
           showPoweredByBanner: false,
           showAccountCreationSlide: false,
           useAdvancedExcelViewer: false, // INFO: this is managed in the API route
+          useCustomAccessForm:
+            teamId === "cm0154tiv0000lr2t6nr5c6kp" ||
+            teamId === "clup33by90000oewh4rfvp2eg",
         },
         revalidate: 10,
       };
@@ -170,6 +176,7 @@ export default function ViewPage({
   showPoweredByBanner,
   showAccountCreationSlide,
   useAdvancedExcelViewer,
+  useCustomAccessForm,
 }: {
   linkData: DocumentLinkData | DataroomLinkData;
   notionData: {
@@ -186,6 +193,7 @@ export default function ViewPage({
   showPoweredByBanner: boolean;
   showAccountCreationSlide: boolean;
   useAdvancedExcelViewer: boolean;
+  useCustomAccessForm: boolean;
 }) {
   const router = useRouter();
   const { data: session, status } = useSession();
@@ -259,39 +267,6 @@ export default function ViewPage({
       );
     }
 
-    if (emailProtected || linkPassword || enableAgreement) {
-      return (
-        <>
-          <CustomMetatag
-            enableBranding={meta.enableCustomMetatag ?? false}
-            title={
-              meta.metaTitle ??
-              `${link?.document?.name} | Powered by Papermark` ??
-              "Document powered by Papermark"
-            }
-            description={meta.metaDescription ?? null}
-            imageUrl={meta.metaImage ?? null}
-            url={meta.metaUrl ?? ""}
-          />
-          <DocumentView
-            link={link}
-            userEmail={verifiedEmail ?? userEmail}
-            userId={userId}
-            isProtected={true}
-            notionData={notionData}
-            brand={brand}
-            token={token}
-            verifiedEmail={verifiedEmail}
-            showPoweredByBanner={showPoweredByBanner}
-            showAccountCreationSlide={showAccountCreationSlide}
-            useAdvancedExcelViewer={useAdvancedExcelViewer}
-            previewToken={previewToken}
-            disableEditEmail={!!disableEditEmail}
-          />
-        </>
-      );
-    }
-
     return (
       <>
         <CustomMetatag
@@ -309,7 +284,7 @@ export default function ViewPage({
           link={link}
           userEmail={verifiedEmail ?? userEmail}
           userId={userId}
-          isProtected={false}
+          isProtected={!!(emailProtected || linkPassword || enableAgreement)}
           notionData={notionData}
           brand={brand}
           showPoweredByBanner={showPoweredByBanner}
@@ -317,6 +292,7 @@ export default function ViewPage({
           useAdvancedExcelViewer={useAdvancedExcelViewer}
           previewToken={previewToken}
           disableEditEmail={!!disableEditEmail}
+          useCustomAccessForm={useCustomAccessForm}
         />
       </>
     );
@@ -350,6 +326,7 @@ export default function ViewPage({
       emailProtected,
       emailAuthenticated,
       password: linkPassword,
+      enableAgreement,
       isArchived,
     } = link;
 
@@ -366,36 +343,6 @@ export default function ViewPage({
     if (isArchived) {
       return (
         <NotFound message="Sorry, the link you're looking for is archived." />
-      );
-    }
-
-    if (emailProtected || linkPassword) {
-      return (
-        <>
-          <CustomMetatag
-            enableBranding={meta.enableCustomMetatag ?? false}
-            title={
-              meta.metaTitle ??
-              `${link?.dataroom?.name} | Powered by Papermark` ??
-              "Dataroom powered by Papermark"
-            }
-            description={meta.metaDescription ?? null}
-            imageUrl={meta.metaImage ?? null}
-            url={meta.metaUrl ?? ""}
-          />
-          <DataroomView
-            link={link}
-            userEmail={verifiedEmail ?? userEmail}
-            userId={userId}
-            isProtected={true}
-            brand={brand}
-            token={token}
-            verifiedEmail={verifiedEmail}
-            useAdvancedExcelViewer={useAdvancedExcelViewer}
-            previewToken={previewToken}
-            disableEditEmail={!!disableEditEmail}
-          />
-        </>
       );
     }
 
@@ -416,11 +363,12 @@ export default function ViewPage({
           link={link}
           userEmail={verifiedEmail ?? userEmail}
           userId={userId}
-          isProtected={false}
+          isProtected={!!(emailProtected || linkPassword || enableAgreement)}
           brand={brand}
           useAdvancedExcelViewer={useAdvancedExcelViewer}
           previewToken={previewToken}
           disableEditEmail={!!disableEditEmail}
+          useCustomAccessForm={useCustomAccessForm}
         />
       </>
     );
