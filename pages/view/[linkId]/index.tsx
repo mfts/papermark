@@ -259,39 +259,6 @@ export default function ViewPage({
       );
     }
 
-    if (emailProtected || linkPassword || enableAgreement) {
-      return (
-        <>
-          <CustomMetatag
-            enableBranding={meta.enableCustomMetatag ?? false}
-            title={
-              meta.metaTitle ??
-              `${link?.document?.name} | Powered by Papermark` ??
-              "Document powered by Papermark"
-            }
-            description={meta.metaDescription ?? null}
-            imageUrl={meta.metaImage ?? null}
-            url={meta.metaUrl ?? ""}
-          />
-          <DocumentView
-            link={link}
-            userEmail={verifiedEmail ?? userEmail}
-            userId={userId}
-            isProtected={true}
-            notionData={notionData}
-            brand={brand}
-            token={token}
-            verifiedEmail={verifiedEmail}
-            showPoweredByBanner={showPoweredByBanner}
-            showAccountCreationSlide={showAccountCreationSlide}
-            useAdvancedExcelViewer={useAdvancedExcelViewer}
-            previewToken={previewToken}
-            disableEditEmail={!!disableEditEmail}
-          />
-        </>
-      );
-    }
-
     return (
       <>
         <CustomMetatag
@@ -309,7 +276,7 @@ export default function ViewPage({
           link={link}
           userEmail={verifiedEmail ?? userEmail}
           userId={userId}
-          isProtected={false}
+          isProtected={!!(emailProtected || linkPassword || enableAgreement)}
           notionData={notionData}
           brand={brand}
           showPoweredByBanner={showPoweredByBanner}
@@ -350,6 +317,7 @@ export default function ViewPage({
       emailProtected,
       emailAuthenticated,
       password: linkPassword,
+      enableAgreement,
       isArchived,
     } = link;
 
@@ -366,36 +334,6 @@ export default function ViewPage({
     if (isArchived) {
       return (
         <NotFound message="Sorry, the link you're looking for is archived." />
-      );
-    }
-
-    if (emailProtected || linkPassword) {
-      return (
-        <>
-          <CustomMetatag
-            enableBranding={meta.enableCustomMetatag ?? false}
-            title={
-              meta.metaTitle ??
-              `${link?.dataroom?.name} | Powered by Papermark` ??
-              "Dataroom powered by Papermark"
-            }
-            description={meta.metaDescription ?? null}
-            imageUrl={meta.metaImage ?? null}
-            url={meta.metaUrl ?? ""}
-          />
-          <DataroomView
-            link={link}
-            userEmail={verifiedEmail ?? userEmail}
-            userId={userId}
-            isProtected={true}
-            brand={brand}
-            token={token}
-            verifiedEmail={verifiedEmail}
-            useAdvancedExcelViewer={useAdvancedExcelViewer}
-            previewToken={previewToken}
-            disableEditEmail={!!disableEditEmail}
-          />
-        </>
       );
     }
 
@@ -416,7 +354,7 @@ export default function ViewPage({
           link={link}
           userEmail={verifiedEmail ?? userEmail}
           userId={userId}
-          isProtected={false}
+          isProtected={!!(emailProtected || linkPassword || enableAgreement)}
           brand={brand}
           useAdvancedExcelViewer={useAdvancedExcelViewer}
           previewToken={previewToken}
