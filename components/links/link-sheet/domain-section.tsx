@@ -62,9 +62,7 @@ export default function DomainSection({
   };
 
   useEffect(() => {
-    console.log("data.domain", data.domain);
     if (domains && !editLink) {
-      console.log("data.domain", data.domain);
       const defaultDomain = domains.find((domain) => domain.isDefault);
       setData({
         ...data,
