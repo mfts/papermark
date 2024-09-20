@@ -67,6 +67,7 @@ export default async function handle(
         data: emails.map((email) => ({
           email,
           dataroomId,
+          teamId,
           invitedAt: new Date(),
         })),
         skipDuplicates: true,
