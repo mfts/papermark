@@ -42,7 +42,6 @@ export default async function handle(
     viewer = await prisma.viewer.findUnique({
       where: {
         id: viewerId,
-        dataroomId: dataroomId,
       },
       select: {
         email: true,
