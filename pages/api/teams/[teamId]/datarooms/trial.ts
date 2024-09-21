@@ -102,7 +102,7 @@ export default async function handle(
       /** Emails
        *
        * 1. Send welcome email
-       * 2. Send dataroom info email after 3 days
+       * 2. Send dataroom info email after 1 day
        * 3. Send expired trial email after 7 days
        */
       waitUntil(sendDataroomTrialWelcome({ fullName, to: email! }));

@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { DocumentVersion } from "@prisma/client";
-import { EyeIcon, Settings2Icon } from "lucide-react";
+import { EyeIcon, LinkIcon, Settings2Icon } from "lucide-react";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
@@ -237,7 +237,7 @@ export default function LinksTable({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {links ? (
+              {links && links.length > 0 ? (
                 links
                   .filter((link) => !link.isArchived)
                   .map((link) => (
@@ -414,17 +414,22 @@ export default function LinksTable({
                   ))
               ) : (
                 <TableRow>
-                  <TableCell className="min-w-[100px]">
-                    <Skeleton className="h-6 w-full" />
-                  </TableCell>
-                  <TableCell className="min-w-[450px]">
-                    <Skeleton className="h-6 w-full" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-6 w-24" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-6 w-24" />
+                  <TableCell colSpan={5}>
+                    <div className="flex w-full flex-col items-center justify-center gap-4 rounded-xl py-4">
+                      <div className="hidden rounded-full sm:block">
+                        <div
+                          className={cn(
+                            "rounded-full border border-white bg-gradient-to-t from-gray-100 p-1 md:p-3",
+                          )}
+                        >
+                          <LinkIcon className="size-6" />
+                        </div>
+                      </div>
+                      <p>No links found for this {targetType.toLowerCase()}</p>
+                      <Button onClick={() => setIsLinkSheetVisible(true)}>
+                        Create link to share
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               )}
@@ -436,7 +441,7 @@ export default function LinksTable({
           isOpen={isLinkSheetVisible}
           setIsOpen={setIsLinkSheetVisible}
           linkType={`${targetType}_LINK`}
-          currentLink={selectedLink}
+          currentLink={selectedLink.id ? selectedLink : undefined}
           existingLinks={links}
         />
 

@@ -21,13 +21,6 @@ interface FileWithPath extends File {
   path?: string;
 }
 
-const fileSizeLimits: { [key: string]: number } = {
-  "application/vnd.ms-excel": 100, // 30 MB
-  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": 30, // 30 MB
-  "text/csv": 30, // 30 MB
-  "application/vnd.oasis.opendocument.spreadsheet": 30, // 30 MB
-};
-
 export default function UploadZone({
   children,
   onUploadStart,
@@ -60,10 +53,12 @@ export default function UploadZone({
   dataroomId?: string;
 }) {
   const analytics = useAnalytics();
-  const { plan, loading } = usePlan();
+  const { plan, trial } = usePlan();
   const router = useRouter();
   const teamInfo = useTeam();
   const { data: session } = useSession();
+  const isFreePlan = plan === "free";
+  const isTrial = !!trial;
   const maxSize = plan === "business" || plan === "datarooms" ? 250 : 30;
   const maxNumPages = plan === "business" || plan === "datarooms" ? 500 : 100;
 
@@ -237,21 +232,32 @@ export default function UploadZone({
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    accept: {
-      "application/pdf": [], // ".pdf"
-      "application/vnd.ms-excel": [], // ".xls"
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [], // ".xlsx"
-      "text/csv": [], // ".csv"
-      "application/vnd.oasis.opendocument.spreadsheet": [], // ".ods"
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-        [], // ".docx"
-      "application/vnd.openxmlformats-officedocument.presentationml.presentation":
-        [], // ".pptx"
-      "application/vnd.ms-powerpoint": [], // ".ppt"
-      "application/msword": [], // ".doc"
-      "application/vnd.oasis.opendocument.text": [], // ".odt"
-      "application/vnd.oasis.opendocument.presentation": [], // ".odp"
-    },
+    accept:
+      isFreePlan && !isTrial
+        ? {
+            "application/pdf": [], // ".pdf"
+            "application/vnd.ms-excel": [], // ".xls"
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
+              [], // ".xlsx"
+            "text/csv": [], // ".csv"
+            "application/vnd.oasis.opendocument.spreadsheet": [], // ".ods"
+          }
+        : {
+            "application/pdf": [], // ".pdf"
+            "application/vnd.ms-excel": [], // ".xls"
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
+              [], // ".xlsx"
+            "text/csv": [], // ".csv"
+            "application/vnd.oasis.opendocument.spreadsheet": [], // ".ods"
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+              [], // ".docx"
+            "application/vnd.openxmlformats-officedocument.presentationml.presentation":
+              [], // ".pptx"
+            "application/vnd.ms-powerpoint": [], // ".ppt"
+            "application/msword": [], // ".doc"
+            "application/vnd.oasis.opendocument.text": [], // ".odt"
+            "application/vnd.oasis.opendocument.presentation": [], // ".odp"
+          },
     multiple: true,
     maxSize: maxSize * 1024 * 1024, // 30 MB
     onDrop,
@@ -285,7 +291,9 @@ export default function UploadZone({
           <div className="mt-4 flex flex-col text-sm leading-6 text-gray-800">
             <span className="mx-auto">Drop your file(s) to upload here</span>
             <p className="text-xs leading-5 text-gray-800">
-              {`Only *.pdf, *.xls, *.xlsx, *.csv, *.ods & ${maxSize} MB limit`}
+              {isFreePlan && !isTrial
+                ? `Only *.pdf, *.xls, *.xlsx, *.csv, *.ods & ${maxSize} MB limit`
+                : `Only *.pdf, *.pptx, *.docx, *.xlsx, *.xls, *.csv, *.ods, *.ppt, *.odp, *.doc, *.odt & ${maxSize} MB limit`}
             </p>
           </div>
         </div>

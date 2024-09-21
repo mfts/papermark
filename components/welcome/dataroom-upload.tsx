@@ -169,7 +169,7 @@ export default function DataroomUpload({ dataroomId }: DataroomUploadProps) {
         ...linkData,
         metaImage: blobUrl,
         targetId: dataroomId,
-        linkType: "DATAROOM_LINK",
+        linkType: LinkType.DATAROOM_LINK,
       }),
     });
 

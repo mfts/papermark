@@ -40,6 +40,7 @@ export default function AccessForm({
   isLoading,
   linkId,
   disableEditEmail,
+  useCustomAccessForm,
 }: {
   data: DEFAULT_ACCESS_FORM_TYPE;
   email: string | null | undefined;
@@ -54,6 +55,7 @@ export default function AccessForm({
   isLoading: boolean;
   linkId?: string;
   disableEditEmail?: boolean;
+  useCustomAccessForm?: boolean;
 }) {
   useEffect(() => {
     const userEmail = email;
@@ -120,6 +122,7 @@ export default function AccessForm({
               <EmailSection
                 {...{ data, setData, brand }}
                 disableEditEmail={disableEditEmail}
+                useCustomAccessForm={useCustomAccessForm}
               />
             ) : null}
             {requirePassword ? (
@@ -129,6 +132,7 @@ export default function AccessForm({
               <AgreementSection
                 {...{ data, setData, brand }}
                 agreementContent={agreementContent}
+                useCustomAccessForm={useCustomAccessForm}
               />
             ) : null}
 
@@ -159,14 +163,16 @@ export default function AccessForm({
           </form>
         </div>
       </div>
-      {/* <div className="flex justify-center">
-        <p className="text-sm leading-9 tracking-tight text-gray-500">
-          <a href="/" target="_blank" rel="noopener noreferrer">
-            This document is securely shared with you using{" "}
-            <span className="font-semibold">Papermark</span>
-          </a>
-        </p>
-      </div> */}
+      {!useCustomAccessForm ? (
+        <div className="flex justify-center">
+          <p className="text-sm leading-9 tracking-tight text-gray-500">
+            <a href="/" target="_blank" rel="noopener noreferrer">
+              This document is securely shared with you using{" "}
+              <span className="font-semibold">Papermark</span>
+            </a>
+          </p>
+        </div>
+      ) : null}
     </div>
   );
 }

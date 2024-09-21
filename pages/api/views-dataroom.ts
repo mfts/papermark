@@ -106,6 +106,11 @@ export default async function handle(
       watermarkConfig: true,
       groupId: true,
       audienceType: true,
+      dataroom: {
+        select: {
+          teamId: true,
+        },
+      },
     },
   });
 
@@ -326,12 +331,10 @@ export default async function handle(
   if (email && !isPreview) {
     // find or create a viewer
     console.time("find-viewer");
-    viewer = await prisma.viewer.findUnique({
+    viewer = await prisma.viewer.findFirst({
       where: {
-        dataroomId_email: {
-          email: email,
-          dataroomId: dataroomId!,
-        },
+        email: email,
+        teamId: link.dataroom?.teamId,
       },
       select: { id: true },
     });
@@ -344,6 +347,7 @@ export default async function handle(
           email: email,
           dataroomId: dataroomId!,
           verified: isEmailVerified,
+          teamId: link.dataroom?.teamId!,
         },
         select: { id: true },
       });

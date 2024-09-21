@@ -55,7 +55,7 @@ export default function DataroomsPage() {
                   className="group flex flex-1 items-center justify-start gap-x-3 px-3 text-left"
                   title="Add New Document"
                 >
-                  <span>Upgrade to Create Dataroom</span>
+                  <span>Upgrade to Add Data Room</span>
                 </Button>
               </UpgradePlanModal>
             ) : isTrialDatarooms && datarooms && !isBusiness && !isDatarooms ? (
@@ -66,12 +66,12 @@ export default function DataroomsPage() {
                     {daysLeft(new Date(datarooms[0].createdAt), 7)} days left
                   </span>
                 </div>
-                <UpgradePlanModal clickedPlan="Business" trigger="datarooms">
+                <UpgradePlanModal clickedPlan="Data Rooms" trigger="datarooms">
                   <Button
                     className="group flex flex-1 items-center justify-start gap-x-3 px-3 text-left"
                     title="Add New Document"
                   >
-                    <span>Upgrade to Create Dataroom</span>
+                    <span>Upgrade to Add Data Room</span>
                   </Button>
                 </UpgradePlanModal>
               </div>
@@ -105,7 +105,7 @@ export default function DataroomsPage() {
             {datarooms &&
               datarooms.map((dataroom) => (
                 <Link key={dataroom.id} href={`/datarooms/${dataroom.id}`}>
-                  <Card className="group relative overflow-hidden duration-500 hover:border-primary/50 ">
+                  <Card className="group relative overflow-hidden duration-500 hover:border-primary/50">
                     <CardHeader>
                       <div className="flex items-center justify-between">
                         <CardTitle className="truncate">
@@ -115,7 +115,7 @@ export default function DataroomsPage() {
                       {/* <CardDescription>{dataroom.pId}</CardDescription> */}
                     </CardHeader>
                     <CardContent>
-                      <dl className="divide-y divide-gray-100 text-sm leading-6 ">
+                      <dl className="divide-y divide-gray-100 text-sm leading-6">
                         <div className="flex justify-between gap-x-4 py-3">
                           <dt className="text-gray-500 dark:text-gray-400">
                             Documents

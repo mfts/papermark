@@ -47,7 +47,7 @@ export default function DomainConfiguration({
     return (
       <div className="pt-5">
         <div className="flex justify-start space-x-4">
-          <div className="ease border-b-2 border-black pb-1 text-sm text-black transition-all duration-150">
+          <div className="ease border-b-2 border-black pb-1 text-sm text-foreground transition-all duration-150">
             {configJson?.conflicts.some((x: any) => x.type === "A")
               ? "A Record (recommended)"
               : "CNAME Record (recommended)"}
@@ -97,7 +97,7 @@ export default function DomainConfiguration({
 
   return (
     <div className="pt-2">
-      <div className="-ml-1.5 border-b border-gray-200">
+      <div className="-ml-1.5 border-b border-gray-200 dark:border-gray-400">
         <TabSelect
           options={[
             { id: "A", label: `A Record${!subdomain ? " (recommended)" : ""}` },
@@ -152,12 +152,12 @@ const DnsRecord = ({
 
   return (
     <div className="mt-3 text-left text-gray-600">
-      <div className="my-5">
+      <div className="my-5 text-gray-600 dark:text-gray-400">
         <MarkdownText text={instructions} />
       </div>
       <div
         className={cn(
-          "scrollbar-hide grid items-end gap-x-10 gap-y-1 overflow-x-auto rounded-lg bg-gray-100/80 p-4 text-sm",
+          "grid items-end gap-x-10 gap-y-1 overflow-x-auto rounded-lg bg-gray-100/80 p-4 text-sm scrollbar-hide",
           hasTtl
             ? "grid-cols-[repeat(4,min-content)]"
             : "grid-cols-[repeat(3,min-content)]",

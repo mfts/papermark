@@ -79,6 +79,7 @@ export default async function handle(
       type: fileType,
       folderPathName,
       contentType,
+      createLink,
     } = req.body as {
       name: string;
       url: string;
@@ -87,6 +88,7 @@ export default async function handle(
       type?: string;
       folderPathName?: string;
       contentType: string;
+      createLink?: boolean;
     };
 
     try {
@@ -135,9 +137,11 @@ export default async function handle(
           storageType,
           ownerId: (session.user as CustomUser).id,
           teamId: teamId,
-          links: {
-            create: {},
-          },
+          ...(createLink && {
+            links: {
+              create: {},
+            },
+          }),
           versions: {
             create: {
               file: fileUrl,

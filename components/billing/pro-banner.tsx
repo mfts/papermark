@@ -6,8 +6,6 @@ import { usePlausible } from "next-plausible";
 import X from "@/components/shared/icons/x";
 import { Button } from "@/components/ui/button";
 
-import { useAnalytics } from "@/lib/analytics";
-
 import { UpgradePlanModal } from "./upgrade-plan-modal";
 
 export default function ProBanner({
@@ -16,7 +14,6 @@ export default function ProBanner({
   setShowProBanner: Dispatch<SetStateAction<boolean | null>>;
 }) {
   const plausible = usePlausible();
-  const analytics = useAnalytics();
 
   const handleHideBanner = () => {
     setShowProBanner(false);

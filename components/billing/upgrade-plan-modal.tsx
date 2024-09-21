@@ -51,8 +51,10 @@ export function UpgradePlanModal({
       return [
         "2 users included",
         "Custom branding",
-        "1-year analytics retention",
         "Folder organization",
+        "Require email verification",
+        "Papermark branding removed",
+        "1-year analytics retention",
       ];
     }
 
@@ -65,6 +67,7 @@ export function UpgradePlanModal({
           Custom domain <b>for documents</b>
         </span>,
         "Advanced link controls",
+        "Allow/Block list",
         "Unlimited documents",
         "Unlimited subfolder levels",
         "Large file uploads",
@@ -78,9 +81,10 @@ export function UpgradePlanModal({
         <span key="custom-dataroom">
           Custom domain <b>for data rooms</b>
         </span>,
-        "Unlimited documents",
-        "Unlimited folders and subfolders",
+
         "NDA agreements",
+        "Dynamic watermark",
+        "Granular user/group permisssions",
         "Advanced data rooms analytics",
         "24h priority support",
         "Custom onboarding",

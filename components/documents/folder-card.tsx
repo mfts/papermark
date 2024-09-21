@@ -267,7 +267,13 @@ export default function FolderCard({
                   >
                     Create dataroom from folder
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setAddDataroomOpen(true)}>
+                  <DropdownMenuItem
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setAddDataroomOpen(true);
+                    }}
+                  >
                     <BetweenHorizontalStartIcon className="mr-2 h-4 w-4" />
                     Add folder to dataroom
                   </DropdownMenuItem>

@@ -28,8 +28,8 @@ export function TabSelect<T extends string>({
               className={cn(
                 "p-4 transition-colors duration-75",
                 id === selected
-                  ? "text-black"
-                  : "text-gray-400 hover:text-gray-500",
+                  ? "text-foreground"
+                  : "text-muted-foreground hover:text-foreground",
               )}
               aria-selected={id === selected}
             >
@@ -43,7 +43,7 @@ export function TabSelect<T extends string>({
                 }}
                 className="absolute bottom-0 w-full px-1.5"
               >
-                <div className="h-0.5 bg-black" />
+                <div className="h-0.5 bg-black dark:bg-white" />
               </motion.div>
             )}
           </div>

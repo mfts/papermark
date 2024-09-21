@@ -70,7 +70,7 @@ export function DataroomTrialModal({
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            name: "Dataroom Demo Trial",
+            name: "Dataroom #1",
             fullName: name,
             companyName,
             industry,
@@ -88,7 +88,7 @@ export function DataroomTrialModal({
       }
 
       analytics.capture("Dataroom Trial Created", {
-        dataroomName: "Dataroom Demo Trial",
+        dataroomName: "Dataroom #1",
         industry,
         companySize,
       });
