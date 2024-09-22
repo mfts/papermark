@@ -1,16 +1,18 @@
 import Head from "next/head";
 
-const CustomMetatag = ({
+const CustomMetaTag = ({
   enableBranding,
   title,
   description,
   imageUrl,
   url,
+  favicon,
 }: {
   enableBranding: boolean;
   title: string | null;
   description: string | null;
   imageUrl: string | null;
+  favicon: string | null;
   url: string | null;
 }) => {
   return (
@@ -20,6 +22,23 @@ const CustomMetatag = ({
         <>
           <link rel="canonical" href={url} key="canonical" />
           <meta property="og:url" content={url} key="og-url" />
+        </>
+      )}
+
+      {favicon && (
+        <>
+          <link rel="icon" type="image/x-icon" href={favicon} />
+          {favicon.endsWith(".ico") && (
+            <link rel="icon" type="image/x-icon" href={favicon} />
+          )}
+          <meta name="theme-color" content="#ffffff" />
+          {favicon.endsWith(".png") && (
+            <link rel="icon" type="image/png" href={favicon} sizes="32x32" />
+          )}
+          {favicon.endsWith(".svg") && (
+            <link rel="icon" type="image/svg+xml" href={favicon} />
+          )}
+          <link rel="apple-touch-icon" href={favicon} />
         </>
       )}
 
@@ -60,4 +79,4 @@ const CustomMetatag = ({
   );
 };
 
-export default CustomMetatag;
+export default CustomMetaTag;

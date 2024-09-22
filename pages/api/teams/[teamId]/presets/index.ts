@@ -56,10 +56,11 @@ export default async function handle(
     return res.status(200).json(presets[0]);
   } else if (req.method === "POST") {
     // POST /api/teams/:teamId/presets
-    const { metaImage, metaTitle, metaDescription } = req.body as {
+    const { metaImage, metaTitle, metaDescription, metaFavicon } = req.body as {
       metaImage?: string;
       metaTitle?: string;
       metaDescription?: string;
+      metaFavicon?: string;
     };
 
     // update team with new preset
@@ -68,6 +69,7 @@ export default async function handle(
         metaImage,
         metaTitle,
         metaDescription,
+        metaFavicon,
         enableCustomMetaTag: true,
         name: "Default Link Metatag",
         teamId: teamId,
@@ -77,10 +79,11 @@ export default async function handle(
     return res.status(200).json(preset);
   } else if (req.method === "PUT") {
     // PUT /api/teams/:teamId/presets
-    const { metaImage, metaTitle, metaDescription } = req.body as {
+    const { metaImage, metaTitle, metaDescription, metaFavicon } = req.body as {
       metaImage?: string;
       metaTitle?: string;
       metaDescription?: string;
+      metaFavicon?: string;
     };
 
     const presets = await prisma.linkPreset.findMany({
@@ -100,6 +103,7 @@ export default async function handle(
         metaImage,
         metaTitle,
         metaDescription,
+        metaFavicon,
       },
     });
 

@@ -41,6 +41,7 @@ export default async function handle(
           metaTitle: true,
           metaDescription: true,
           metaImage: true,
+          metaFavicon: true,
           enableQuestion: true,
           linkType: true,
           feedback: {
@@ -204,6 +205,7 @@ export default async function handle(
         metaTitle: linkData.metaTitle || null,
         metaDescription: linkData.metaDescription || null,
         metaImage: linkData.metaImage || null,
+        metaFavicon: linkData.metaFavicon || null,
         enableQuestion: linkData.enableQuestion,
         feedback: {
           upsert: {

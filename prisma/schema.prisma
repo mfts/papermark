@@ -258,6 +258,7 @@ model Link {
   metaTitle           String? // This will be the meta title of the link
   metaDescription     String? // This will be the meta description of the link
   metaImage           String? // This will be the meta image of the link
+  metaFavicon         String? // This will be the meta favicon of the link
   enableCustomMetatag Boolean? @default(false) // Optional give user a option to enable the custom metatag
 
   @@unique([domainSlug, slug])
@@ -273,7 +274,8 @@ model LinkPreset {
   enableCustomMetaTag Boolean? @default(false) // Optional give user a option to enable the custom metatag
   metaTitle           String? // This will be the meta title of the link
   metaDescription     String? // This will be the meta description of the link
-  metaImage           String? // This will be the meta image of the link
+  metaImage           String? // This will be the meta image of the link 
+  metaFavicon         String? // This will be the meta favicon of the link
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

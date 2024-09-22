@@ -60,6 +60,7 @@ export const DEFAULT_LINK_PROPS = (linkType: LinkType) => ({
   metaTitle: null,
   metaDescription: null,
   metaImage: null,
+  metaFavicon: null,
   enabledQuestion: false,
   questionText: null,
   questionType: null,
@@ -91,6 +92,7 @@ export type DEFAULT_LINK_TYPE = {
   metaTitle: string | null; // metatags
   metaDescription: string | null; // metatags
   metaImage: string | null; // metatags
+  metaFavicon: string | null; // metaFavicon
   enableQuestion?: boolean; // feedback question
   questionText: string | null;
   questionType: string | null;
