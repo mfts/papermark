@@ -73,9 +73,6 @@ export function usePlan() {
   const { data: plan, error } = useSWR<PlanResponse>(
     teamId && `/api/teams/${teamId}/billing/plan`,
     fetcher,
-    {
-      dedupingInterval: 60000,
-    },
   );
 
   // Parse the plan using the parsing function
