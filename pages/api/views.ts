@@ -357,7 +357,7 @@ export default async function handle(
         return;
       }
 
-      if (documentVersion.type === "pdf") {
+      if (documentVersion.type === "pdf" || documentVersion.type === "image") {
         documentVersion.file = await getFile({
           data: documentVersion.file,
           type: documentVersion.storageType,
@@ -393,7 +393,9 @@ export default async function handle(
       viewId: !isPreview && newView ? newView.id : undefined,
       isPreview: isPreview ? true : undefined,
       file:
-        (documentVersion && documentVersion.type === "pdf") ||
+        (documentVersion &&
+          (documentVersion.type === "pdf" ||
+            documentVersion.type === "image")) ||
         (documentVersion && useAdvancedExcelViewer)
           ? documentVersion.file
           : undefined,

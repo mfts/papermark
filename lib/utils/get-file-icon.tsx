@@ -1,6 +1,8 @@
-import { FileIcon, ImageIcon } from "lucide-react";
+import { FileIcon } from "lucide-react";
 
+import CadIcon from "@/components/shared/icons/files/cad";
 import DocsIcon from "@/components/shared/icons/files/docs";
+import ImageFileIcon from "@/components/shared/icons/files/image";
 import NotionIcon from "@/components/shared/icons/files/notion";
 import PdfIcon from "@/components/shared/icons/files/pdf";
 import SheetIcon from "@/components/shared/icons/files/sheet";
@@ -21,9 +23,9 @@ export function fileIcon({
       return <PdfIcon className={className} isLight={isLight} />;
     case "image/png":
     case "image/jpeg":
-    case "image/gif":
     case "image/jpg":
-      return <ImageIcon className={className} />;
+    case "image":
+      return <ImageFileIcon className={className} isLight={isLight} />;
     case "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
     case "application/msword":
     case "application/vnd.oasis.opendocument.text":
@@ -42,6 +44,10 @@ export function fileIcon({
       return <SheetIcon className={className} isLight={isLight} />;
     case "notion":
       return <NotionIcon className={className} />;
+    case "image/vnd.dwg":
+    case "image/vnd.dxf":
+    case "cad":
+      return <CadIcon className={className} isLight={isLight} />;
     default:
       return <FileIcon className={className} />;
   }
