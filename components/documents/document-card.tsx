@@ -214,7 +214,7 @@ export default function DocumentsCard({
                   <span className="absolute inset-0" />
                 </Link>
               </h2>
-              <div className="ml-2 flex">
+              {/* <div className="ml-2 flex">
                 <button
                   className="group z-10 rounded-md bg-gray-200 p-1 transition-all duration-75 hover:scale-105 hover:bg-emerald-100 active:scale-95 dark:bg-gray-700 hover:dark:bg-emerald-200"
                   onClick={() =>
@@ -228,7 +228,7 @@ export default function DocumentsCard({
                     <Copy className="size-3 text-muted-foreground group-hover:text-emerald-700" />
                   )}
                 </button>
-              </div>
+              </div> */}
             </div>
             <div className="mt-1 flex items-center space-x-1 text-xs leading-5 text-muted-foreground">
               <p className="truncate">{timeAgo(prismaDocument.createdAt)}</p>
