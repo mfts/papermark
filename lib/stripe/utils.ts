@@ -58,10 +58,29 @@ export const PLANS = [
         },
       },
       yearly: {
-        amount: 25,
+        amount: 29,
         priceIds: {
           test: "price_1P3JlWFJyGSZ96lhddEsPKGg",
           production: "price_1P6VTgFJyGSZ96lhshdgZ1it",
+        },
+      },
+    },
+  },
+  {
+    name: "Pro with Custom Domain",
+    price: {
+      monthly: {
+        amount: 59,
+        priceIds: {
+          test: "price_1Q05u4FJyGSZ96lhDFRzhFgj",
+          production: "price_prod_id_pro_custom_domain_monthly",
+        },
+      },
+      yearly: {
+        amount: 49,
+        priceIds: {
+          test: "price_1Q16E9FJyGSZ96lhhepSttFn",
+          production: "price_prod_id_pro_custom_domain_yearly",
         },
       },
     },
@@ -73,15 +92,34 @@ export const PLANS = [
       monthly: {
         amount: 79,
         priceIds: {
-          test: "price_1OuYgCFJyGSZ96lhF2gFs7Rs",
+          test: "price_1Q16AsFJyGSZ96lhkjNBhOJd",
           production: "price_1OuYeIFJyGSZ96lhwH58Y1kU",
         },
       },
       yearly: {
-        amount: 45,
+        amount: 59,
         priceIds: {
           test: "price_1PTn5iFJyGSZ96lhMbSVkntM",
           production: "price_1PThmeFJyGSZ96lh1cY3Klrq",
+        },
+      },
+    },
+  },
+  {
+    name: "Business with Custom Domain",
+    price: {
+      monthly: {
+        amount: 109,
+        priceIds: {
+          test: "price_1Q16CLFJyGSZ96lhYxMLSJm0",
+          production: "price_prod_id_pro_custom_domain_monthly",
+        },
+      },
+      yearly: {
+        amount: 79,
+        priceIds: {
+          test: "price_1Q16DHFJyGSZ96lhDxFnXdNh",
+          production: "price_prod_id_pro_custom_domain_yearly",
         },
       },
     },
@@ -91,7 +129,7 @@ export const PLANS = [
     slug: "datarooms",
     price: {
       monthly: {
-        amount: 199,
+        amount: 149,
         priceIds: {
           test: "price_1PAtTfFJyGSZ96lhbi4XZU2d",
           production: "price_1PAtQOFJyGSZ96lhJNZO2LHx",
