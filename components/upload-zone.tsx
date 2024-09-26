@@ -158,12 +158,23 @@ export default function UploadZone({
 
         const uploadResult = await complete;
 
+        let contentType = uploadResult.fileType;
+        let supportedFileType = getSupportedContentType(contentType) ?? "";
+
+        if (
+          uploadResult.fileName.endsWith(".dwg") ||
+          uploadResult.fileName.endsWith(".dxf")
+        ) {
+          supportedFileType = "cad";
+          contentType = `image/vnd.${uploadResult.fileName.split(".").pop()}`;
+        }
+
         const documentData: DocumentData = {
           key: uploadResult.id,
-          supportedFileType: getSupportedContentType(uploadResult.fileType)!,
+          supportedFileType: supportedFileType,
           name: file.name,
           storageType: DocumentStorageType.S3_PATH,
-          contentType: uploadResult.fileType,
+          contentType: contentType,
         };
         const response = await createDocument({
           documentData,
