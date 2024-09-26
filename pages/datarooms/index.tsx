@@ -39,9 +39,6 @@ export default function DataroomsPage() {
   const canCreateUnlimitedDatarooms =
     isDatarooms || (isBusiness && numDatarooms < limitDatarooms);
 
-    console.log(plan,trial);
-    
-
     useEffect(()=>{
       if(trial == null && plan == 'free') router.push('/documents')
     },[trial,plan])  
