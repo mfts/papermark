@@ -21,6 +21,15 @@ interface FileWithPath extends File {
   path?: string;
 }
 
+const fileSizeLimits: { [key: string]: number } = {
+  "application/vnd.ms-excel": 40, // 40 MB
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": 40, // 40 MB
+  "application/vnd.oasis.opendocument.spreadsheet": 40, // 40 MB
+  "image/png": 100, // 100 MB
+  "image/jpeg": 100, // 100 MB
+  "image/jpg": 100, // 100 MB
+};
+
 export default function UploadZone({
   children,
   onUploadStart,
@@ -76,6 +85,8 @@ export default function UploadZone({
 
       const uploadPromises = acceptedFiles.map(async (file, index) => {
         const path = (file as any).path || file.webkitRelativePath || file.name;
+
+        // count the number of pages in the file
         let numPages = 1;
         if (file.type === "application/pdf") {
           const buffer = await file.arrayBuffer();
@@ -94,6 +105,23 @@ export default function UploadZone({
               ...prev,
             ]);
           }
+        }
+
+        // check dynamic file size
+        const fileType = file.type;
+        const fileSizeLimit = fileSizeLimits[fileType] * 1024 * 1024;
+        if (file.size > fileSizeLimit) {
+          setUploads((prev) =>
+            prev.filter((upload) => upload.fileName !== file.name),
+          );
+
+          return setRejectedFiles((prev) => [
+            {
+              fileName: file.name,
+              message: `File size too big (max. ${fileSizeLimit} MB)`,
+            },
+            ...prev,
+          ]);
         }
 
         const { complete } = await resumableUpload({

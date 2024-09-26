@@ -14,7 +14,9 @@ const fileSizeLimits: { [key: string]: number } = {
   "application/vnd.ms-excel": 40, // 40 MB
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": 40, // 40 MB
   "application/vnd.oasis.opendocument.spreadsheet": 40, // 40 MB
-  "text/csv": 40, // 40 MB
+  "image/png": 100, // 100 MB
+  "image/jpeg": 100, // 100 MB
+  "image/jpg": 100, // 100 MB
 };
 
 export default function DocumentUpload({
