@@ -257,6 +257,8 @@ export default function UploadZone({
             "application/msword": [], // ".doc"
             "application/vnd.oasis.opendocument.text": [], // ".odt"
             "application/vnd.oasis.opendocument.presentation": [], // ".odp"
+            "image/vnd.dwg": [".dwg"], // ".dwg"
+            "image/vnd.dxf": [".dxf"], // ".dxf"
           },
     multiple: true,
     maxSize: maxSize * 1024 * 1024, // 30 MB

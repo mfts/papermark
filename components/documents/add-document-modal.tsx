@@ -72,8 +72,16 @@ export function AddDocumentModal({
     try {
       setUploading(true);
 
-      const contentType = currentFile.type;
-      const supportedFileType = getSupportedContentType(contentType);
+      let contentType = currentFile.type;
+      let supportedFileType = getSupportedContentType(contentType);
+
+      if (
+        currentFile.name.endsWith(".dwg") ||
+        currentFile.name.endsWith(".dxf")
+      ) {
+        supportedFileType = "cad";
+        contentType = `image/vnd.${currentFile.name.split(".").pop()}`;
+      }
 
       if (!supportedFileType) {
         setUploading(false);

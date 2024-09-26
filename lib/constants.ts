@@ -88,6 +88,8 @@ export const SUPPORTED_DOCUMENT_MIME_TYPES = [
   "application/msword", // .doc
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // .docx
   "application/vnd.oasis.opendocument.text", // .odt
+  "image/vnd.dwg", // .dwg
+  "image/vnd.dxf", // .dxf
 ];
 
 export const SUPPORTED_DOCUMENT_SIMPLE_TYPES = [
@@ -96,4 +98,5 @@ export const SUPPORTED_DOCUMENT_SIMPLE_TYPES = [
   "sheet",
   "slides",
   "docs",
+  "cad",
 ];

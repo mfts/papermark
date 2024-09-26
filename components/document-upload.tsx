@@ -59,6 +59,8 @@ export default function DocumentUpload({
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
               [], // ".docx"
             "application/vnd.oasis.opendocument.text": [], // ".odt"
+            "image/vnd.dwg": [".dwg"], // ".dwg"
+            "image/vnd.dxf": [".dxf"], // ".dxf"
           },
     multiple: false,
     maxSize: maxSize * 1024 * 1024, // 30 MB
