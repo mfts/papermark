@@ -86,7 +86,7 @@ export function AddDocumentModal({
       if (!supportedFileType) {
         setUploading(false);
         toast.error(
-          "Unsupported file format. Please upload a PDF, Powerpoint, Excel, or Word file.",
+          "Unsupported file format. Please upload a PDF, Powerpoint, Excel, Word or image file.",
         );
         return;
       }

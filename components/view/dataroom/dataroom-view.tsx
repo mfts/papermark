@@ -23,6 +23,7 @@ import DataroomViewer from "../DataroomViewer";
 import PagesViewerNew from "../PagesViewerNew";
 import EmailVerificationMessage from "../email-verification-form";
 import AdvancedExcelViewer from "../viewer/advanced-excel-viewer";
+import ImageViewer from "../viewer/image-viewer";
 
 const ExcelViewer = dynamic(
   () => import("@/components/view/viewer/excel-viewer"),
@@ -345,6 +346,31 @@ export default function DataroomView({
           brand={brand}
           dataroomId={dataroom.id}
           setDocumentData={setDocumentData}
+        />
+      </div>
+    ) : viewData.fileType === "image" ? (
+      <div className="bg-gray-950">
+        <ImageViewer
+          file={viewData.file!}
+          linkId={link.id}
+          viewId={viewData.viewId}
+          isPreview={viewData.isPreview}
+          documentId={documentData.id}
+          documentName={documentData.name}
+          allowDownload={link.allowDownload!}
+          feedbackEnabled={link.enableFeedback!}
+          screenshotProtectionEnabled={link.enableScreenshotProtection!}
+          versionNumber={documentData.documentVersionNumber}
+          brand={brand}
+          dataroomId={dataroom.id}
+          setDocumentData={setDocumentData}
+          watermarkConfig={
+            link.enableWatermark
+              ? (link.watermarkConfig as WatermarkConfig)
+              : null
+          }
+          ipAddress={viewData.ipAddress}
+          linkName={link.name ?? `Link #${link.id.slice(-5)}`}
         />
       </div>
     ) : viewData.pages ? (

@@ -90,6 +90,9 @@ export const SUPPORTED_DOCUMENT_MIME_TYPES = [
   "application/vnd.oasis.opendocument.text", // .odt
   "image/vnd.dwg", // .dwg
   "image/vnd.dxf", // .dxf
+  "image/png", // .png
+  "image/jpeg", // .jpeg
+  "image/jpg", // .jpg
 ];
 
 export const SUPPORTED_DOCUMENT_SIMPLE_TYPES = [
@@ -99,4 +102,5 @@ export const SUPPORTED_DOCUMENT_SIMPLE_TYPES = [
   "slides",
   "docs",
   "cad",
+  "image",
 ];

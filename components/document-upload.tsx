@@ -43,6 +43,9 @@ export default function DocumentUpload({
               [], // ".xlsx"
             "text/csv": [], // ".csv"
             "application/vnd.oasis.opendocument.spreadsheet": [], // ".ods"
+            "image/png": [], // ".png"
+            "image/jpeg": [], // ".jpeg"
+            "image/jpg": [], // ".jpg"
           }
         : {
             "application/pdf": [], // ".pdf"
@@ -61,6 +64,9 @@ export default function DocumentUpload({
             "application/vnd.oasis.opendocument.text": [], // ".odt"
             "image/vnd.dwg": [".dwg"], // ".dwg"
             "image/vnd.dxf": [".dxf"], // ".dxf"
+            "image/png": [], // ".png"
+            "image/jpeg": [], // ".jpeg"
+            "image/jpg": [], // ".jpg"
           },
     multiple: false,
     maxSize: maxSize * 1024 * 1024, // 30 MB

@@ -11,6 +11,7 @@ import { DEFAULT_DOCUMENT_VIEW_TYPE } from "@/components/view/document-view";
 import { LinkWithDocument, WatermarkConfig } from "@/lib/types";
 
 import AdvancedExcelViewer from "./viewer/advanced-excel-viewer";
+import ImageViewer from "./viewer/image-viewer";
 
 const ExcelViewer = dynamic(
   () => import("@/components/view/viewer/excel-viewer"),
@@ -75,6 +76,30 @@ export default function ViewData({
       file={viewData.file!}
       allowDownload={link.allowDownload!}
       brand={brand}
+    />
+  ) : viewData.fileType === "image" ? (
+    <ImageViewer
+      file={viewData.file!}
+      linkId={link.id}
+      documentId={document.id}
+      viewId={viewData.viewId}
+      assistantEnabled={document.assistantEnabled}
+      allowDownload={link.allowDownload!}
+      feedbackEnabled={link.enableFeedback!}
+      screenshotProtectionEnabled={link.enableScreenshotProtection!}
+      versionNumber={document.versions[0].versionNumber}
+      brand={brand}
+      showPoweredByBanner={showPoweredByBanner}
+      showAccountCreationSlide={showAccountCreationSlide}
+      enableQuestion={link.enableQuestion}
+      feedback={link.feedback}
+      isVertical={document.versions[0].isVertical}
+      viewerEmail={viewerEmail}
+      watermarkConfig={
+        link.enableWatermark ? (link.watermarkConfig as WatermarkConfig) : null
+      }
+      ipAddress={viewData.ipAddress}
+      linkName={link.name ?? `Link #${link.id.slice(-5)}`}
     />
   ) : viewData.pages ? (
     <PagesViewerNew
