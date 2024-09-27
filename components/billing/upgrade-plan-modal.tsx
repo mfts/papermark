@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { useRouter } from "next/router";
 
 import { useEffect, useMemo, useState } from "react";
@@ -252,12 +253,12 @@ export function UpgradePlanModal({
           ))}
         </div>
         <div className="text-center">
-          <a
+          <Link
             href="/settings/upgrade"
             className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
           >
             See all plans
-          </a>
+          </Link>
         </div>
       </DialogContent>
     </Dialog>
