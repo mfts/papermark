@@ -50,45 +50,56 @@ export function UpgradePlanModal({
 
   const planFeatures = useMemo(
     () => ({
-      Pro: [
-        "2 users included",
-        "Custom branding",
-        "Folder organization",
-        "Unlimited links",
-        "Unlimited documents",
-        "Require email verification",
-        "More file types: pppt, docx, excel",
-        "Papermark branding removed",
-        "1-year analytics retention",
-      ],
-      Business: [
-        "3 users included",
-        "1 dataroom",
-        "Multi-file sharing",
-
-        "Allow/Block list",
-        <span key="custom-dataroom">
-          Custom domain <b>for documents</b>
-        </span>,
-        "Custom social media cards",
-        "Unlimited folder and subfolder levels",
-        "Large file uploads",
-        "More file types: .dmg for AutoCad",
-        "2-year analytics retention",
-      ],
-      "Data Rooms": [
-        "3 users included",
-        "Unlimited data rooms",
-        <span key="custom-dataroom">
-          Custom domain <b>for data rooms</b>
-        </span>,
-        "NDA agreements",
-        "Dynamic Watermarking",
-        "Granular user/group permisssions",
-        "Access Screen Customizatiion",
-        "Advanced Data Rooms analytics",
-        "24h priority support",
-      ],
+      Pro: {
+        featureIntro: "Everything in Free, plus:",
+        features: [
+          "2 users included",
+          "100 documents",
+          "Unlimited links",
+          "Custom branding",
+          "Folder organization",
+          "Require email verification",
+          "More file types: pppt, docx, excel",
+          "Papermark branding removed",
+          "1-year analytics retention",
+        ],
+      },
+      Business: {
+        featureIntro: "Everything in Pro, plus:",
+        features: [
+          "3 users included",
+          "1 dataroom",
+          <span key="custom-dataroom">
+            Custom domain <b>for documents</b>
+          </span>,
+          "Unlimited folder levels",
+          "Unlimited documents",
+          "Large file uploads",
+          "Multi-file sharing",
+          "Allow/Block list",
+          "Dataroom branding",
+          "More file types: dmg (cad)",
+          "2-year analytics retention",
+        ],
+      },
+      "Data Rooms": {
+        featureIntro: "Everything in Business, plus:",
+        features: [
+          "3 users included",
+          "Unlimited data rooms",
+          <span key="custom-dataroom">
+            Custom domain <b>for data rooms</b>
+          </span>,
+          "Advanced data rooms analytics",
+          "NDA agreements",
+          "Dynamic Watermark",
+          "Granular user/group permisssions",
+          "Invite users directly from Papermark",
+          "Audit log",
+          "24h priority support",
+          "Custom onboarding ",
+        ],
+      },
     }),
     [],
   );
@@ -105,6 +116,12 @@ export function UpgradePlanModal({
         return ["Pro", "Business"];
     }
   }, [clickedPlan]);
+
+  // Add this new constant to determine if only Data Rooms plan is shown
+  const isOnlyDataRooms = useMemo(
+    () => plansToShow.length === 1 && plansToShow[0] === "Data Rooms",
+    [plansToShow],
+  );
 
   // Track analytics event when modal is opened
   useEffect(() => {
@@ -136,7 +153,10 @@ export function UpgradePlanModal({
       <DialogTrigger asChild>{buttonChild}</DialogTrigger>
       <DialogContent
         className="max-h-[90vh] overflow-y-auto bg-gray-50 text-foreground"
-        style={{ width: "90vw", maxWidth: "900px" }} // Adjusted maxWidth
+        style={{
+          width: isOnlyDataRooms ? "550px" : "90vw", // Adjust width based on plans shown
+          maxWidth: isOnlyDataRooms ? "550px" : "900px", // Adjust maxWidth based on plans shown
+        }}
       >
         <div className="flex items-center justify-center">
           <span className="mr-2 text-sm">Monthly</span>
@@ -147,7 +167,7 @@ export function UpgradePlanModal({
             }
           />
           <span className="ml-2 text-sm">
-            Annually <span className="text-orange-500">(Save up to 25%)</span>
+            Annually <span className="text-[#fb7a00]">(Save up to 25%)</span>
           </span>
         </div>
 
@@ -157,43 +177,62 @@ export function UpgradePlanModal({
               key={planOption}
               className={`relative flex flex-col rounded-lg border ${
                 planOption === "Business"
-                  ? "border-orange-500"
+                  ? "border-[#fb7a00]"
                   : "border-gray-200"
-              } bg-white p-6 shadow-sm`}
+              } bg-white p-6 shadow-sm ${
+                isOnlyDataRooms
+                  ? "mx-auto w-[450px] max-w-full md:col-span-2"
+                  : ""
+              }`}
             >
               <div className="mb-4 border-b border-gray-200 pb-2">
                 <h3 className="text-balance text-xl font-medium text-foreground text-gray-900">
                   Papermark {planOption}
                 </h3>
                 {planOption === "Business" && (
-                  <span className="absolute right-2 top-2 rounded bg-orange-500 px-2 py-1 text-xs text-white">
+                  <span className="absolute right-2 top-2 rounded bg-[#fb7a00] px-2 py-1 text-xs text-white">
                     Most popular
                   </span>
                 )}
               </div>
 
-              <div className="mb-6 text-balance text-4xl font-medium text-foreground">
-                €
-                {PLANS.find((p) => p.name === planOption)!.price[period].amount}
-                <span className="text-base font-normal">/month</span>
+              {/* Add pricing information here */}
+              <div className="mb-2">
+                <span className="text-balance text-4xl font-medium text-gray-900">
+                  $
+                  {
+                    PLANS.find((p) => p.name === planOption)?.price[period]
+                      .amount
+                  }
+                </span>
+                <span className="text-gray-500">/month</span>
               </div>
-              <ul className="mb-8 mt-4 space-y-3 text-sm leading-6 text-gray-600 dark:text-muted-foreground">
-                {planFeatures[planOption as keyof typeof planFeatures].map(
-                  (feature, i) => (
-                    <li key={i} className="flex items-center text-sm">
-                      <CheckIcon className="mr-3 h-5 w-5 flex-shrink-0 text-orange-500" />
-                      <span>{feature}</span>
-                    </li>
-                  ),
-                )}
+
+              <p className="mt-4 text-sm text-gray-600">
+                {
+                  planFeatures[planOption as keyof typeof planFeatures]
+                    .featureIntro
+                }
+              </p>
+
+              <ul className="mb-6 mt-2 space-y-2 text-sm leading-6 text-gray-600 dark:text-muted-foreground">
+                {planFeatures[
+                  planOption as keyof typeof planFeatures
+                ].features.map((feature, i) => (
+                  <li key={i} className="flex items-center text-sm">
+                    <CheckIcon className="mr-3 h-5 w-5 flex-shrink-0 text-[#fb7a00]" />
+                    <span>{feature}</span>
+                  </li>
+                ))}
               </ul>
+
               <div className="mt-auto">
                 <Button
                   variant={planOption === "Business" ? "default" : "outline"}
                   className={`w-full py-2 text-sm ${
                     planOption === "Business"
-                      ? "bg-orange-500 hover:bg-orange-600"
-                      : "bg-gray-800 text-white hover:bg-gray-900"
+                      ? "bg-[#fb7a00] hover:bg-[#fb7a00]"
+                      : "bg-gray-800 text-white hover:bg-gray-900 hover:text-white"
                   }`}
                   onClick={() => {
                     setClicked(true);

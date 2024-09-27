@@ -25,49 +25,59 @@ export default function UpgradePage() {
 
   const planFeatures = useMemo(
     () => ({
-      Pro: [
-        "2 users included",
-        "Custom branding",
-        "Folder organization",
-        "Unlimited links",
-        "Unlimited documents",
-        "Require email verification",
-        "More file types: pppt, docx, excel",
-        "Papermark branding removed",
-        "1-year analytics retention",
-      ],
-      Business: [
-        "3 users included",
-        "1 dataroom",
-        "Multi-file sharing",
-
-        "Allow/Block list",
-        <span key="custom-dataroom">
-          Custom domain <b>for documents</b>
-        </span>,
-        "Custom social media cards",
-        "Unlimited folder and subfolder levels",
-        "Large file uploads",
-        "More file types: .dmg for AutoCad",
-        "2-year analytics retention",
-      ],
-      "Data Rooms": [
-        "3 users included",
-        "Unlimited data rooms",
-        <span key="custom-dataroom">
-          Custom domain <b>for data rooms</b>
-        </span>,
-        "NDA agreements",
-        "Dynamic Watermarking",
-        "Granular user/group permisssions",
-        "Access Screen Customizatiion",
-        "Advanced Data Rooms analytics",
-        "24h priority support",
-      ],
+      Pro: {
+        featureIntro: "Everything in Free, plus:",
+        features: [
+          "2 users included",
+          "100 documents",
+          "Unlimited links",
+          "Custom branding",
+          "Folder organization",
+          "Require email verification",
+          "More file types: pppt, docx, excel",
+          "Papermark branding removed",
+          "1-year analytics retention",
+        ],
+      },
+      Business: {
+        featureIntro: "Everything in Pro, plus:",
+        features: [
+          "3 users included",
+          "1 dataroom",
+          <span key="custom-dataroom">
+            Custom domain <b>for documents</b>
+          </span>,
+          "Unlimited folder levels",
+          "Unlimited documents",
+          "Large file uploads",
+          "Multi-file sharing",
+          "Allow/Block list",
+          "Dataroom branding",
+          "More file types: dmg (cad)",
+          "2-year analytics retention",
+        ],
+      },
+      "Data Rooms": {
+        featureIntro: "Everything in Business, plus:",
+        features: [
+          "3 users included",
+          "Unlimited data rooms",
+          <span key="custom-dataroom">
+            Custom domain <b>for data rooms</b>
+          </span>,
+          "Advanced data rooms analytics",
+          "NDA agreements",
+          "Dynamic Watermark",
+          "Granular user/group permisssions",
+          "Invite users directly from Papermark",
+          "Audit log",
+          "24h priority support",
+          "Custom onboarding ",
+        ],
+      },
     }),
     [],
   );
-
   const plansToShow = ["Pro", "Business", "Data Rooms"];
 
   // Remove the useEffect hook that was causing the error
@@ -87,7 +97,7 @@ export default function UpgradePage() {
           }
         />
         <span className="ml-2 text-sm">
-          Annually <span className="text-orange-500">(Save up to 25%)</span>
+          Annually <span className="text-[#fb7a00]">(Save up to 25%)</span>
         </span>
       </div>
 
@@ -96,9 +106,7 @@ export default function UpgradePage() {
           <div
             key={planOption}
             className={`relative flex flex-col rounded-lg border ${
-              planOption === "Business"
-                ? "border-orange-500"
-                : "border-gray-200"
+              planOption === "Business" ? "border-[#fb7a00]" : "border-gray-200"
             } bg-white p-6 shadow-sm`}
           >
             <div className="mb-4 border-b border-gray-200 pb-2">
@@ -106,32 +114,39 @@ export default function UpgradePage() {
                 Papermark {planOption}
               </h3>
               {planOption === "Business" && (
-                <span className="absolute right-2 top-2 rounded bg-orange-500 px-2 py-1 text-xs text-white">
+                <span className="absolute right-2 top-2 rounded bg-[#fb7a00] px-2 py-1 text-xs text-white">
                   Most popular
                 </span>
               )}
             </div>
 
-            <div className="mb-6 text-balance text-4xl font-medium text-foreground">
+            <div className="mb-2 text-balance text-4xl font-medium text-foreground">
               €{PLANS.find((p) => p.name === planOption)!.price[period].amount}
               <span className="text-base font-normal">/month</span>
             </div>
-            <ul className="mb-8 mt-4 space-y-3 text-sm leading-6 text-gray-600 dark:text-muted-foreground">
-              {planFeatures[planOption as keyof typeof planFeatures].map(
-                (feature, i) => (
-                  <li key={i} className="flex items-center text-sm">
-                    <CheckIcon className="mr-3 h-5 w-5 flex-shrink-0 text-orange-500" />
-                    <span>{feature}</span>
-                  </li>
-                ),
-              )}
+            <p className="mt-4 text-sm text-gray-600">
+              {
+                planFeatures[planOption as keyof typeof planFeatures]
+                  .featureIntro
+              }
+            </p>
+
+            <ul className="mb-4 mt-4 space-y-3 text-sm leading-6 text-gray-600 dark:text-muted-foreground">
+              {planFeatures[
+                planOption as keyof typeof planFeatures
+              ].features.map((feature, i) => (
+                <li key={i} className="flex items-center text-sm">
+                  <CheckIcon className="mr-3 h-5 w-5 flex-shrink-0 text-[#fb7a00]" />
+                  <span>{feature}</span>
+                </li>
+              ))}
             </ul>
             <div className="mt-auto">
               <Button
                 variant={planOption === "Business" ? "default" : "outline"}
                 className={`w-full py-2 text-sm ${
                   planOption === "Business"
-                    ? "bg-orange-500 hover:bg-orange-600"
+                    ? "bg-[#fb7a00] hover:bg-[#fb7a00]"
                     : "bg-gray-800 text-white hover:bg-gray-900"
                 }`}
                 onClick={() => {
