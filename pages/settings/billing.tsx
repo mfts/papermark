@@ -235,7 +235,7 @@ export default function Billing() {
                 </p>
                 <Link
                   href="/settings/upgrade"
-                  className="text-sm text-gray-700 underline-offset-4 hover:text-foreground hover:underline"
+                  className="text-sm text-foreground underline-offset-4 hover:underline"
                 >
                   See all plans
                 </Link>

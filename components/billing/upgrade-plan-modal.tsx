@@ -152,7 +152,7 @@ export function UpgradePlanModal({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{buttonChild}</DialogTrigger>
       <DialogContent
-        className="max-h-[90vh] overflow-y-auto bg-gray-50 text-foreground"
+        className="max-h-[90vh] overflow-y-auto bg-gray-50 text-foreground dark:bg-gray-900"
         style={{
           width: isOnlyDataRooms ? "550px" : "90vw", // Adjust width based on plans shown
           maxWidth: isOnlyDataRooms ? "550px" : "900px", // Adjust maxWidth based on plans shown
@@ -186,7 +186,7 @@ export function UpgradePlanModal({
               }`}
             >
               <div className="mb-4 border-b border-gray-200 pb-2">
-                <h3 className="text-balance text-xl font-medium text-foreground text-gray-900">
+                <h3 className="text-balance text-xl font-medium text-gray-900">
                   Papermark {planOption}
                 </h3>
                 {planOption === "Business" && (
@@ -198,8 +198,8 @@ export function UpgradePlanModal({
 
               {/* Add pricing information here */}
               <div className="mb-2">
-                <span className="text-balance text-4xl font-medium text-gray-900">
-                  $
+                <span className="text-balance text-4xl font-medium tabular-nums text-gray-900">
+                  €
                   {
                     PLANS.find((p) => p.name === planOption)?.price[period]
                       .amount
@@ -255,7 +255,6 @@ export function UpgradePlanModal({
                         setClicked(false);
                       });
                   } else {
-
                     fetch(
                       `/api/teams/${
                         teamInfo?.currentTeam?.id

@@ -83,7 +83,7 @@ export default function UpgradePage() {
   // Remove the useEffect hook that was causing the error
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
+    <div className="min-h-screen bg-gray-50 p-8 dark:bg-gray-900">
       <h1 className="mb-8 text-center text-3xl font-bold">
         Select best plan for your business
       </h1>
@@ -120,7 +120,7 @@ export default function UpgradePage() {
               )}
             </div>
 
-            <div className="mb-2 text-balance text-4xl font-medium text-foreground">
+            <div className="mb-2 text-balance text-4xl font-medium tabular-nums text-foreground">
               €{PLANS.find((p) => p.name === planOption)!.price[period].amount}
               <span className="text-base font-normal">/month</span>
             </div>
@@ -143,10 +143,10 @@ export default function UpgradePage() {
             </ul>
             <div className="mt-auto">
               <Button
-                variant={planOption === "Business" ? "default" : "outline"}
+                variant={planOption === "Business" ? "default" : "default"}
                 className={`w-full py-2 text-sm ${
                   planOption === "Business"
-                    ? "bg-[#fb7a00] hover:bg-[#fb7a00]"
+                    ? "bg-[#fb7a00] hover:bg-[#fb7a00]/80"
                     : "bg-gray-800 text-white hover:bg-gray-900"
                 }`}
                 onClick={() => {
