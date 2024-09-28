@@ -407,7 +407,9 @@ export default function DataroomView({
       <div className="bg-gray-950">
         <DataroomViewer
           brand={brand!}
-          viewId={viewData.viewId}
+          viewId={
+            viewData.viewId !== "" ? viewData.viewId : viewData.dataroomViewId
+          }
           isPreview={viewData.isPreview}
           linkId={link.id}
           dataroomViewId={viewData.dataroomViewId!}
