@@ -92,8 +92,6 @@ export default function Nav({
         const pdfBlob = await response.blob();
         const blobUrl = URL.createObjectURL(pdfBlob);
 
-        console.log("Blob URL:", blobUrl);
-
         const a = document.createElement("a");
         a.href = blobUrl;
         a.download = "watermarked_document.pdf";
