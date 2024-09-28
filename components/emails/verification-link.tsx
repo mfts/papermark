@@ -20,7 +20,7 @@ const VerificationLinkEmail = ({
   return (
     <Html>
       <Head />
-      <Preview>Your Papermark Login Link</Preview>
+      <Preview>Login to your Papermark account with a link</Preview>
       <Tailwind>
         <Body className="mx-auto my-auto bg-white font-sans">
           <Container className="mx-auto my-10 max-w-[500px] rounded border border-solid border-gray-200 px-10 py-5">
@@ -32,7 +32,7 @@ const VerificationLinkEmail = ({
             </Text>
 
             <Text className="text-sm leading-6 text-black">
-              Welcome to Papermark!
+              Your Papermark Login Link
             </Text>
             <Text className="text-sm leading-6 text-black">
               Please click the magic link below to sign in to your account.
