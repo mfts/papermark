@@ -4,7 +4,8 @@ export type DocumentData = {
   name: string;
   key: string;
   storageType: DocumentStorageType;
-  contentType: string; // papermark types: "pdf", "sheet"
+  contentType: string; // actual file mime type
+  supportedFileType: string; // papermark types: "pdf", "sheet", "docs", "slides"
 };
 
 export const createDocument = async ({
@@ -12,11 +13,13 @@ export const createDocument = async ({
   teamId,
   numPages,
   folderPathName,
+  createLink = false,
 }: {
   documentData: DocumentData;
   teamId: string;
   numPages?: number;
   folderPathName?: string;
+  createLink?: boolean;
 }) => {
   // create a document in the database with the blob url
   const response = await fetch(`/api/teams/${teamId}/documents`, {
@@ -30,7 +33,9 @@ export const createDocument = async ({
       storageType: documentData.storageType,
       numPages: numPages,
       folderPathName: folderPathName,
-      type: documentData.contentType,
+      type: documentData.supportedFileType,
+      contentType: documentData.contentType,
+      createLink: createLink,
     }),
   });
 
@@ -64,7 +69,8 @@ export const createAgreementDocument = async ({
       storageType: documentData.storageType,
       numPages: numPages,
       folderPathName: folderPathName,
-      type: documentData.contentType,
+      type: documentData.supportedFileType,
+      contentType: documentData.contentType,
     }),
   });
 
@@ -98,7 +104,8 @@ export const createNewDocumentVersion = async ({
         url: documentData.key,
         storageType: documentData.storageType,
         numPages: numPages,
-        type: documentData.contentType,
+        type: documentData.supportedFileType,
+        contentType: documentData.contentType,
       }),
     },
   );

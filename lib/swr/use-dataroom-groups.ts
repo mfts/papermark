@@ -14,6 +14,8 @@ import { fetcher } from "@/lib/utils";
 export default function useDataroomGroups() {
   const teamInfo = useTeam();
   const router = useRouter();
+
+  const isDataroom = router.pathname.includes("datarooms");
   const { id } = router.query as {
     id: string;
   };
@@ -32,6 +34,7 @@ export default function useDataroomGroups() {
   } = useSWR<ViewerGroupWithCount[]>(
     teamInfo?.currentTeam?.id &&
       id &&
+      isDataroom &&
       `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${id}/groups`,
     fetcher,
     { dedupingInterval: 30000 },

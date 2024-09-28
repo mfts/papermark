@@ -102,14 +102,14 @@ export default async function handle(
       /** Emails
        *
        * 1. Send welcome email
-       * 2. Send dataroom info email after 3 days
+       * 2. Send dataroom info email after 1 day
        * 3. Send expired trial email after 7 days
        */
       waitUntil(sendDataroomTrialWelcome({ fullName, to: email! }));
       waitUntil(
         sendDataroomTrialInfoEmailTask.trigger(
           { to: email! },
-          { delay: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000) },
+          { delay: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000) },
         ),
       );
       waitUntil(

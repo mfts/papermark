@@ -192,8 +192,6 @@ export default async function handler(
         views: [],
       };
 
-      console.log("linkWithView", linkWithView);
-
       if (!linkWithView) {
         return res.status(404).json({ error: "Link not found" });
       }

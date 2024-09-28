@@ -12,11 +12,13 @@ export default function EmailSection({
   setData,
   brand,
   disableEditEmail,
+  useCustomAccessForm,
 }: {
   data: DEFAULT_ACCESS_FORM_TYPE;
   setData: Dispatch<SetStateAction<DEFAULT_ACCESS_FORM_TYPE>>;
   brand?: Partial<Brand> | Partial<DataroomBrand> | null;
   disableEditEmail?: boolean;
+  useCustomAccessForm?: boolean;
 }) {
   const { email } = data;
 
@@ -79,7 +81,9 @@ export default function EmailSection({
           data-1p-ignore
         />
         <p className="text-sm text-gray-500">
-          This data will be shared with the sender.
+          {useCustomAccessForm
+            ? "This data will be shared with the content provider."
+            : "This data will be shared with the sender."}
         </p>
       </div>
     </div>

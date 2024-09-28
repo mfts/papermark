@@ -1,13 +1,7 @@
 import { useRouter } from "next/router";
 
 import { motion } from "framer-motion";
-import {
-  File as DocumentIcon,
-  Presentation as PresentationChartBarIcon,
-  ServerIcon,
-} from "lucide-react";
-
-import NotionIcon from "@/components/shared/icons/notion";
+import { FileIcon, ServerIcon } from "lucide-react";
 
 import { STAGGER_CHILD_VARIANTS } from "@/lib/constants";
 
@@ -57,7 +51,7 @@ export default function Next() {
           }
           className="flex min-h-[200px] flex-col items-center justify-center space-y-5 overflow-hidden p-5 transition-colors hover:bg-gray-200 hover:dark:bg-gray-800 md:p-10"
         >
-          <DocumentIcon className="pointer-events-none h-auto w-12 sm:w-12" />
+          <FileIcon className="pointer-events-none h-auto w-12 sm:w-12" />
           <p>Document</p>
         </button>
         <button

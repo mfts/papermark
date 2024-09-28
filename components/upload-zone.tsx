@@ -4,20 +4,12 @@ import { useCallback, useRef, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { DocumentStorageType } from "@prisma/client";
-import {
-  Upload as ArrowUpTrayIcon,
-  File as DocumentIcon,
-  FileText as DocumentTextIcon,
-  FileSpreadsheetIcon,
-  Image as PhotoIcon,
-  Presentation as PresentationChartBarIcon,
-} from "lucide-react";
 import { useSession } from "next-auth/react";
 import { FileRejection, useDropzone } from "react-dropzone";
 import { mutate } from "swr";
 
 import { useAnalytics } from "@/lib/analytics";
-import { createDocument } from "@/lib/documents/create-document";
+import { DocumentData, createDocument } from "@/lib/documents/create-document";
 import { resumableUpload } from "@/lib/files/tus-upload";
 import { usePlan } from "@/lib/swr/use-billing";
 import { CustomUser } from "@/lib/types";
@@ -30,35 +22,13 @@ interface FileWithPath extends File {
 }
 
 const fileSizeLimits: { [key: string]: number } = {
-  "application/vnd.ms-excel": 100, // 30 MB
-  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": 30, // 30 MB
-  "text/csv": 30, // 30 MB
-  "application/vnd.oasis.opendocument.spreadsheet": 30, // 30 MB
+  "application/vnd.ms-excel": 40, // 40 MB
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": 40, // 40 MB
+  "application/vnd.oasis.opendocument.spreadsheet": 40, // 40 MB
+  "image/png": 100, // 100 MB
+  "image/jpeg": 100, // 100 MB
+  "image/jpg": 100, // 100 MB
 };
-
-function fileIcon(fileType: string) {
-  switch (fileType) {
-    case "application/pdf":
-      return <DocumentTextIcon className="mx-auto h-6 w-6" />;
-    case "image/png":
-    case "image/jpeg":
-    case "image/gif":
-    case "image/jpg":
-      return <PhotoIcon className="mx-auto h-6 w-6" />;
-    case "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-    case "application/vnd.openxmlformats-officedocument.presentationml.presentation":
-    case "application/vnd.ms-powerpoint":
-    case "application/msword":
-      return <PresentationChartBarIcon className="mx-auto h-6 w-6" />;
-    case "application/vnd.ms-excel":
-    case "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
-    case "text/csv":
-    case "application/vnd.oasis.opendocument.spreadsheet":
-      return <FileSpreadsheetIcon className="mx-auto h-6 w-6" />;
-    default:
-      return <DocumentIcon className="mx-auto h-6 w-6" />;
-  }
-}
 
 export default function UploadZone({
   children,
@@ -92,10 +62,12 @@ export default function UploadZone({
   dataroomId?: string;
 }) {
   const analytics = useAnalytics();
-  const { plan, loading } = usePlan();
+  const { plan, trial } = usePlan();
   const router = useRouter();
   const teamInfo = useTeam();
   const { data: session } = useSession();
+  const isFreePlan = plan === "free";
+  const isTrial = !!trial;
   const maxSize = plan === "business" || plan === "datarooms" ? 250 : 30;
   const maxNumPages = plan === "business" || plan === "datarooms" ? 500 : 100;
 
@@ -113,6 +85,8 @@ export default function UploadZone({
 
       const uploadPromises = acceptedFiles.map(async (file, index) => {
         const path = (file as any).path || file.webkitRelativePath || file.name;
+
+        // count the number of pages in the file
         let numPages = 1;
         if (file.type === "application/pdf") {
           const buffer = await file.arrayBuffer();
@@ -131,6 +105,23 @@ export default function UploadZone({
               ...prev,
             ]);
           }
+        }
+
+        // check dynamic file size
+        const fileType = file.type;
+        const fileSizeLimit = fileSizeLimits[fileType] * 1024 * 1024;
+        if (file.size > fileSizeLimit) {
+          setUploads((prev) =>
+            prev.filter((upload) => upload.fileName !== file.name),
+          );
+
+          return setRejectedFiles((prev) => [
+            {
+              fileName: file.name,
+              message: `File size too big (max. ${fileSizeLimit} MB)`,
+            },
+            ...prev,
+          ]);
         }
 
         const { complete } = await resumableUpload({
@@ -167,12 +158,23 @@ export default function UploadZone({
 
         const uploadResult = await complete;
 
-        const documentData = {
+        let contentType = uploadResult.fileType;
+        let supportedFileType = getSupportedContentType(contentType) ?? "";
+
+        if (
+          uploadResult.fileName.endsWith(".dwg") ||
+          uploadResult.fileName.endsWith(".dxf")
+        ) {
+          supportedFileType = "cad";
+          contentType = `image/vnd.${uploadResult.fileName.split(".").pop()}`;
+        }
+
+        const documentData: DocumentData = {
           key: uploadResult.id,
-          contentType: getSupportedContentType(uploadResult.fileType)!,
+          supportedFileType: supportedFileType,
           name: file.name,
           storageType: DocumentStorageType.S3_PATH,
-          numPages: uploadResult.numPages,
+          contentType: contentType,
         };
         const response = await createDocument({
           documentData,
@@ -238,6 +240,7 @@ export default function UploadZone({
           numPages: document.numPages,
           path: router.asPath,
           type: document.type,
+          contentType: document.contentType,
           teamId: teamInfo?.currentTeam?.id,
           bulkupload: true,
           dataroomId: dataroomId,
@@ -268,13 +271,40 @@ export default function UploadZone({
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    accept: {
-      "application/pdf": [], // ".pdf"
-      "application/vnd.ms-excel": [], // ".xls"
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [], // ".xlsx"
-      "text/csv": [], // ".csv"
-      "application/vnd.oasis.opendocument.spreadsheet": [], // ".ods"
-    },
+    accept:
+      isFreePlan && !isTrial
+        ? {
+            "application/pdf": [], // ".pdf"
+            "application/vnd.ms-excel": [], // ".xls"
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
+              [], // ".xlsx"
+            "text/csv": [], // ".csv"
+            "application/vnd.oasis.opendocument.spreadsheet": [], // ".ods"
+            "image/png": [], // ".png"
+            "image/jpeg": [], // ".jpeg"
+            "image/jpg": [], // ".jpg"
+          }
+        : {
+            "application/pdf": [], // ".pdf"
+            "application/vnd.ms-excel": [], // ".xls"
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
+              [], // ".xlsx"
+            "text/csv": [], // ".csv"
+            "application/vnd.oasis.opendocument.spreadsheet": [], // ".ods"
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+              [], // ".docx"
+            "application/vnd.openxmlformats-officedocument.presentationml.presentation":
+              [], // ".pptx"
+            "application/vnd.ms-powerpoint": [], // ".ppt"
+            "application/msword": [], // ".doc"
+            "application/vnd.oasis.opendocument.text": [], // ".odt"
+            "application/vnd.oasis.opendocument.presentation": [], // ".odp"
+            "image/vnd.dwg": [".dwg"], // ".dwg"
+            "image/vnd.dxf": [".dxf"], // ".dxf"
+            "image/png": [], // ".png"
+            "image/jpeg": [], // ".jpeg"
+            "image/jpg": [], // ".jpg"
+          },
     multiple: true,
     maxSize: maxSize * 1024 * 1024, // 30 MB
     onDrop,
@@ -308,7 +338,9 @@ export default function UploadZone({
           <div className="mt-4 flex flex-col text-sm leading-6 text-gray-800">
             <span className="mx-auto">Drop your file(s) to upload here</span>
             <p className="text-xs leading-5 text-gray-800">
-              {`Only *.pdf, *.xls, *.xlsx, *.csv, *.ods & ${maxSize} MB limit`}
+              {isFreePlan && !isTrial
+                ? `Only *.pdf, *.xls, *.xlsx, *.csv, *.ods & ${maxSize} MB limit`
+                : `Only *.pdf, *.pptx, *.docx, *.xlsx, *.xls, *.csv, *.ods, *.ppt, *.odp, *.doc, *.odt & ${maxSize} MB limit`}
             </p>
           </div>
         </div>

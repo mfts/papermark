@@ -91,6 +91,7 @@ export default function NotionForm() {
             url: notionLink,
             numPages: 1,
             type: "notion",
+            createLink: true,
           }),
         },
       );
@@ -165,7 +166,8 @@ export default function NotionForm() {
       body: JSON.stringify({
         ...linkData,
         metaImage: blobUrl,
-        documentId: currentDocId,
+        targetId: currentDocId,
+        linkType: LinkType.DOCUMENT_LINK,
       }),
     });
 

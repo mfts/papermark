@@ -61,10 +61,11 @@ export default async function handle(
       }
 
       // First, create or connect viewers
-      const something = await prisma.viewer.createMany({
+      await prisma.viewer.createMany({
         data: emails.map((email) => ({
           email,
           dataroomId,
+          teamId,
         })),
         skipDuplicates: true,
       });

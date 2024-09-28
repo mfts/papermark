@@ -125,25 +125,27 @@ model VerificationToken {
 }
 
 model Document {
-  id               String              @id @default(cuid())
-  name             String
-  description      String?
-  file             String // This should be a reference to where the file is stored (S3, Google Cloud Storage, etc.)
-  type             String? // This should be a reference to the file type (pdf, sheet, etc.)
-  storageType      DocumentStorageType @default(VERCEL_BLOB)
-  numPages         Int? // This should be a reference to the number of pages in the document
-  owner            User?               @relation(fields: [ownerId], references: [id], onDelete: SetNull)
-  teamId           String
-  team             Team                @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  ownerId          String? // This field holds the foreign key.
-  assistantEnabled Boolean             @default(false) // This indicates if assistant is enabled for this document
+  id                   String              @id @default(cuid())
+  name                 String
+  description          String?
+  file                 String // This should be a reference to where the file is stored (S3, Google Cloud Storage, etc.)
+  originalFile         String? // This should be a reference to the original file like pptx, xlsx, etc. (S3, Google Cloud Storage, etc.)
+  type                 String? // This should be a reference to the file type (pdf, sheet, etc.)
+  contentType          String? // This should be the actual contentType of the file like application/pdf, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, etc.
+  storageType          DocumentStorageType @default(VERCEL_BLOB)
+  numPages             Int? // This should be a reference to the number of pages in the document
+  owner                User?               @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  teamId               String
+  team                 Team                @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  ownerId              String? // This field holds the foreign key.
+  assistantEnabled     Boolean             @default(false) // This indicates if assistant is enabled for this document
   advancedExcelEnabled Boolean             @default(false) // This indicates if advanced Excel is enabled for this document
-  createdAt        DateTime            @default(now())
-  updatedAt        DateTime            @updatedAt
-  links            Link[]
-  views            View[]
-  versions         DocumentVersion[]
-  conversations    Conversation[]
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+  links                Link[]
+  views                View[]
+  versions             DocumentVersion[]
+  conversations        Conversation[]
 
   folderId String? // Optional Folder ID for documents in folders
   folder   Folder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
@@ -161,7 +163,9 @@ model DocumentVersion {
   document      Document            @relation(fields: [documentId], references: [id], onDelete: Cascade)
   documentId    String
   file          String // This should be a reference to where the file is stored (S3, Google Cloud Storage, etc.)
+  originalFile  String? // This should be a reference to the original file like pptx, xlsx, etc. (S3, Google Cloud Storage, etc.)
   type          String? // This should be a reference to the file type (pdf, docx, etc.)
+  contentType   String? // This should be the actual contentType of the file like application/pdf, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, etc.
   storageType   DocumentStorageType @default(VERCEL_BLOB)
   numPages      Int? // This should be a reference to the number of pages in the document
   isPrimary     Boolean             @default(false) // Indicates if this is the primary version
@@ -335,10 +339,10 @@ model Viewer {
   verified  Boolean   @default(false) // Whether the viewer email has been verified
   invitedAt DateTime? // This is the time the viewer was invited
 
-  dataroomId String
-  dataroom   Dataroom @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
-  teamId     String?
-  team       Team?    @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  dataroomId String?
+  dataroom   Dataroom? @relation(fields: [dataroomId], references: [id], onDelete: SetNull)
+  teamId     String
+  team       Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
 
   views  View[]
   groups ViewerGroupMembership[]
@@ -346,7 +350,7 @@ model Viewer {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([dataroomId, email])
+  @@unique([teamId, email])
   @@index([teamId])
   @@index([dataroomId])
 }
