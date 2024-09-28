@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
-import { LinkAudienceType } from "@prisma/client";
+import { ItemType, LinkAudienceType } from "@prisma/client";
 import { waitUntil } from "@vercel/functions";
 import { getServerSession } from "next-auth/next";
 import { parsePageId } from "notion-utils";
@@ -106,6 +106,7 @@ export default async function handle(
       watermarkConfig: true,
       groupId: true,
       audienceType: true,
+      allowDownload: true,
       dataroom: {
         select: {
           teamId: true,
@@ -546,6 +547,42 @@ export default async function handle(
       console.timeEnd("get-file");
     }
 
+    // check if viewer can download the document based on group permissions
+    let canDownload: boolean = link.allowDownload ?? false;
+    if (
+      link.allowDownload &&
+      link.audienceType === LinkAudienceType.GROUP &&
+      link.groupId &&
+      documentId &&
+      dataroomId
+    ) {
+      const dataroomDocument = await prisma.dataroomDocument.findUnique({
+        where: {
+          dataroomId_documentId: {
+            dataroomId: dataroomId,
+            documentId: documentId,
+          },
+        },
+        select: { id: true },
+      });
+      if (!dataroomDocument) {
+        canDownload = false;
+      } else {
+        const groupDocumentPermission =
+          await prisma.viewerGroupAccessControls.findUnique({
+            where: {
+              groupId_itemId: {
+                groupId: link.groupId,
+                itemId: dataroomDocument.id,
+              },
+              itemType: ItemType.DATAROOM_DOCUMENT,
+            },
+            select: { canDownload: true },
+          });
+        canDownload = groupDocumentPermission?.canDownload ?? false;
+      }
+    }
+
     const returnObject = {
       message: "View recorded",
       viewId: !isPreview && newView ? newView.id : undefined,
@@ -587,6 +624,7 @@ export default async function handle(
         useAdvancedExcelViewer
           ? useAdvancedExcelViewer
           : undefined,
+      canDownload: canDownload,
     };
 
     return res.status(200).json(returnObject);

@@ -69,6 +69,7 @@ export type DEFAULT_DOCUMENT_VIEW_TYPE = {
   fileType?: string;
   ipAddress?: string;
   useAdvancedExcelViewer?: boolean;
+  canDownload?: boolean;
 };
 
 export default function DataroomView({
@@ -171,6 +172,7 @@ export default function DataroomView({
           isPreview,
           ipAddress,
           useAdvancedExcelViewer,
+          canDownload,
         } = fetchData as DEFAULT_DOCUMENT_VIEW_TYPE;
         plausible("dataroomViewed"); // track the event
         analytics.identify(
@@ -196,6 +198,7 @@ export default function DataroomView({
           isPreview,
           ipAddress,
           useAdvancedExcelViewer,
+          canDownload,
         }));
         setSubmitted(true);
         setVerificationRequested(false);
@@ -329,7 +332,7 @@ export default function DataroomView({
           brand={brand}
           dataroomId={dataroom.id}
           setDocumentData={setDocumentData}
-          allowDownload={link.allowDownload!}
+          allowDownload={viewData.canDownload ?? link.allowDownload!}
         />
       </div>
     ) : viewData.fileType === "sheet" && viewData.useAdvancedExcelViewer ? (
@@ -342,7 +345,7 @@ export default function DataroomView({
           documentName={documentData.name}
           versionNumber={documentData.documentVersionNumber}
           file={viewData.file!}
-          allowDownload={link.allowDownload!}
+          allowDownload={viewData.canDownload ?? link.allowDownload!}
           brand={brand}
           dataroomId={dataroom.id}
           setDocumentData={setDocumentData}
@@ -357,7 +360,7 @@ export default function DataroomView({
           isPreview={viewData.isPreview}
           documentId={documentData.id}
           documentName={documentData.name}
-          allowDownload={link.allowDownload!}
+          allowDownload={viewData.canDownload ?? link.allowDownload!}
           feedbackEnabled={link.enableFeedback!}
           screenshotProtectionEnabled={link.enableScreenshotProtection!}
           versionNumber={documentData.documentVersionNumber}
@@ -382,7 +385,7 @@ export default function DataroomView({
           linkId={link.id}
           documentId={documentData.id}
           documentName={documentData.name}
-          allowDownload={link.allowDownload!}
+          allowDownload={viewData.canDownload ?? link.allowDownload!}
           feedbackEnabled={link.enableFeedback!}
           screenshotProtectionEnabled={link.enableScreenshotProtection!}
           versionNumber={documentData.documentVersionNumber}
