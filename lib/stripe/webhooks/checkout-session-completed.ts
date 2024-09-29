@@ -47,7 +47,10 @@ export async function checkoutSessionCompleted(event: Stripe.Event) {
   const stripeId = checkoutSession.customer.toString();
   const teamId = checkoutSession.client_reference_id;
 
-  let planLimits = structuredClone(PRO_PLAN_LIMITS);
+  let planLimits:
+    | typeof PRO_PLAN_LIMITS
+    | typeof BUSINESS_PLAN_LIMITS
+    | typeof DATAROOMS_PLAN_LIMITS = structuredClone(PRO_PLAN_LIMITS);
   if (plan.slug === "pro") {
     planLimits = structuredClone(PRO_PLAN_LIMITS);
   } else if (plan.slug === "business") {

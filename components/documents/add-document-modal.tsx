@@ -261,7 +261,7 @@ export function AddDocumentModal({
   ): Promise<void> => {
     event.preventDefault();
 
-    if (!canUploadDocuments) {
+    if (!canAddDocuments) {
       toast.error("You have reached the maximum number of documents.");
       return;
     }

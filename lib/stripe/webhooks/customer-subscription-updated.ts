@@ -54,7 +54,10 @@ export async function customerSubsciptionUpdated(
   // If a team upgrades/downgrades their subscription, update their plan
   if (team.plan !== newPlan) {
     // Choose the correct plan limits
-    let planLimits = structuredClone(PRO_PLAN_LIMITS);
+    let planLimits:
+      | typeof PRO_PLAN_LIMITS
+      | typeof BUSINESS_PLAN_LIMITS
+      | typeof DATAROOMS_PLAN_LIMITS = structuredClone(PRO_PLAN_LIMITS);
     if (plan.slug === "pro") {
       planLimits = structuredClone(PRO_PLAN_LIMITS);
     } else if (plan.slug === "business") {

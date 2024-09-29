@@ -47,7 +47,6 @@ export default function DocumentPage() {
     } else {
       return (
         <Button
-          key={"create-link"}
           className="flex h-8 whitespace-nowrap text-xs lg:h-9 lg:text-sm"
           onClick={() => setIsLinkSheetOpen(true)}
         >
@@ -67,7 +66,7 @@ export default function DocumentPage() {
               primaryVersion={primaryVersion}
               prismaDocument={prismaDocument}
               teamId={teamInfo?.currentTeam?.id!}
-              actions={[<AddLinkButton />]}
+              actions={[<AddLinkButton key={"create-link"} />]}
             />
 
             {/* <NavMenu
