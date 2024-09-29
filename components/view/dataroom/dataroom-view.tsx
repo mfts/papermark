@@ -218,6 +218,7 @@ export default function DataroomView({
         delete currentQuery.email;
         delete currentQuery.domain;
         delete currentQuery.slug;
+        delete currentQuery.linkId;
 
         const currentPath = router.asPath.split("?")[0];
 
