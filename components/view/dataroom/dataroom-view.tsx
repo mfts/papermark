@@ -4,6 +4,7 @@ import { useRouter } from "next/router";
 import React, { useEffect, useRef, useState } from "react";
 
 import { DataroomBrand } from "@prisma/client";
+import Cookies from "js-cookie";
 import { usePlausible } from "next-plausible";
 import { ExtendedRecordMap } from "notion-types";
 import { toast } from "sonner";
@@ -122,6 +123,9 @@ export default function DataroomView({
     useState<boolean>(false);
   const [dataroomVerified, setDataroomVerified] = useState<boolean>(false);
   const [documentData, setDocumentData] = useState<TDocumentData | null>(null);
+  const [verificationToken, setVerificationToken] = useState<string | null>(
+    token ?? null,
+  );
 
   const [viewType, setViewType] = useState<"DOCUMENT_VIEW" | "DATAROOM_VIEW">(
     "DATAROOM_VIEW",
@@ -143,7 +147,7 @@ export default function DataroomView({
         userId: userId ?? null,
         documentVersionId: documentData?.documentVersionId,
         hasPages: documentData?.hasPages,
-        token: token ?? null,
+        token: verificationToken ?? null,
         verifiedEmail: verifiedEmail ?? null,
         dataroomVerified: dataroomVerified,
         dataroomId: dataroom?.id,
@@ -212,15 +216,22 @@ export default function DataroomView({
         const currentQuery = { ...router.query };
         delete currentQuery.token;
         delete currentQuery.email;
+        delete currentQuery.domain;
+        delete currentQuery.slug;
+
+        const currentPath = router.asPath.split("?")[0];
 
         router.replace(
           {
-            pathname: router.pathname,
+            pathname: currentPath,
             query: currentQuery,
           },
           undefined,
           { shallow: true },
         );
+
+        Cookies.remove("pm_vft", { path: currentPath });
+        setVerificationToken(null);
       }
       setIsLoading(false);
     }
@@ -257,7 +268,7 @@ export default function DataroomView({
       ...prev,
       pages: undefined,
       file: undefined,
-      viewId: "",
+      viewId: prev.dataroomViewId,
       notionData: undefined,
       ipAddress: undefined,
     }));
@@ -410,9 +421,7 @@ export default function DataroomView({
       <div className="bg-gray-950">
         <DataroomViewer
           brand={brand!}
-          viewId={
-            viewData.viewId !== "" ? viewData.viewId : viewData.dataroomViewId
-          }
+          viewId={viewData.viewId}
           isPreview={viewData.isPreview}
           linkId={link.id}
           dataroomViewId={viewData.dataroomViewId!}

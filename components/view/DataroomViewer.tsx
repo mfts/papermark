@@ -107,10 +107,14 @@ export default function DataroomViewer({
       setDataroomVerified(true);
       delete currentQuery.token;
       delete currentQuery.email;
+      delete currentQuery.domain;
+      delete currentQuery.slug;
+
+      const currentPath = router.asPath.split("?")[0];
 
       router.replace(
         {
-          pathname: router.pathname,
+          pathname: currentPath,
           query: currentQuery,
         },
         undefined,

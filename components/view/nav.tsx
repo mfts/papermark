@@ -78,7 +78,11 @@ export default function Nav({
   hasWatermark?: boolean;
 }) {
   const downloadFile = async () => {
-    if (!allowDownload || type === "notion" || isPreview) return;
+    if (isPreview) {
+      toast.error("You cannot download documents in preview mode.");
+      return;
+    }
+    if (!allowDownload || type === "notion") return;
     try {
       const response = await fetch(`/api/links/download`, {
         method: "POST",

@@ -215,11 +215,12 @@ export default function ImageViewer({
     // Remove token and email query parameters on component mount
     const removeQueryParams = (queries: string[]) => {
       const currentQuery = { ...router.query };
+      const currentPath = router.asPath.split("?")[0];
       queries.map((query) => delete currentQuery[query]);
 
       router.replace(
         {
-          pathname: router.pathname,
+          pathname: currentPath,
           query: currentQuery,
         },
         undefined,
@@ -228,7 +229,7 @@ export default function ImageViewer({
     };
 
     if (!dataroomId && router.query.token) {
-      removeQueryParams(["token", "email"]);
+      removeQueryParams(["token", "email", "domain", "slug"]);
     }
   }, []); // Run once on mount
 
