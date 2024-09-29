@@ -3,6 +3,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { waitUntil } from "@vercel/functions";
 import { getServerSession } from "next-auth/next";
 
+import { hashToken } from "@/lib/api/auth/token";
 import sendNotification from "@/lib/api/notification-helper";
 import { sendVerificationEmail } from "@/lib/emails/send-email-verification";
 import { getFile } from "@/lib/files/get-file";
@@ -180,25 +181,28 @@ export default async function handle(
   // Check if email verification is required for visiting the link
   if (link.emailAuthenticated && !token) {
     const token = newId("email");
+    const hashedToken = hashToken(token);
     const expiresAt = new Date();
-    expiresAt.setMinutes(expiresAt.getMinutes() + 20); // token expires in 20 minutes
+    expiresAt.setHours(expiresAt.getHours() + 23); // token expires at 23 hours
+
+    const ipAddress = getIpAddress(req.headers);
 
     await prisma.verificationToken.create({
       data: {
-        token,
-        identifier: `${linkId}:${email}`,
+        token: hashedToken,
+        identifier: `${linkId}:${hashToken(ipAddress)}:${email}`,
         expires: expiresAt,
       },
     });
 
     // set the default verification url
     let verificationUrl: string =
-      `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${linkId}/?token=${token}&email=${encodeURIComponent(email)}` +
+      `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${linkId}?token=${hashedToken}&email=${encodeURIComponent(email)}` +
       (previewToken ? `&previewToken=${previewToken}` : "");
 
     if (link.domainSlug && link.slug && !previewToken) {
       // if custom domain is enabled, use the custom domain
-      verificationUrl = `https://${link.domainSlug}/${link.slug}/?token=${token}&email=${encodeURIComponent(email)}`;
+      verificationUrl = `https://${link.domainSlug}/${link.slug}?token=${hashedToken}&email=${encodeURIComponent(email)}`;
     }
 
     await sendVerificationEmail(email, verificationUrl);
@@ -211,10 +215,12 @@ export default async function handle(
 
   let isEmailVerified: boolean = false;
   if (link.emailAuthenticated && token) {
+    const hashedToken = token; // INFO: token is already hashed
+    const ipAddress = getIpAddress(req.headers);
     const verification = await prisma.verificationToken.findUnique({
       where: {
-        token: token,
-        identifier: `${linkId}:${verifiedEmail}`,
+        token: hashedToken,
+        identifier: `${linkId}:${hashToken(ipAddress)}:${email}`,
       },
     });
 
@@ -232,12 +238,12 @@ export default async function handle(
       return;
     }
 
-    // delete the token after verification
-    await prisma.verificationToken.delete({
-      where: {
-        token: token,
-      },
-    });
+    // // delete the token after verification
+    // await prisma.verificationToken.delete({
+    //   where: {
+    //     token: hashedToken,
+    //   },
+    // });
 
     isEmailVerified = true;
   }

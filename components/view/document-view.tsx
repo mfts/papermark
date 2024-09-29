@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 import React, { useEffect, useRef, useState } from "react";
 
 import { Brand } from "@prisma/client";
+import Cookies from "js-cookie";
 import { usePlausible } from "next-plausible";
 import { ExtendedRecordMap } from "notion-types";
 import { toast } from "sonner";
@@ -100,6 +101,9 @@ export default function DocumentView({
   );
   const [verificationRequested, setVerificationRequested] =
     useState<boolean>(false);
+  const [verificationToken, setVerificationToken] = useState<string | null>(
+    token ?? null,
+  );
 
   const handleSubmission = async (): Promise<void> => {
     setIsLoading(true);
@@ -118,7 +122,7 @@ export default function DocumentView({
         userId: userId ?? null,
         documentVersionId: document.versions[0].id,
         hasPages: document.versions[0].hasPages,
-        token: token ?? null,
+        token: verificationToken ?? null,
         verifiedEmail: verifiedEmail ?? null,
         useAdvancedExcelViewer,
         previewToken,
@@ -186,6 +190,9 @@ export default function DocumentView({
           undefined,
           { shallow: true },
         );
+
+        Cookies.remove("pm_vft", { path: currentPath });
+        setVerificationToken(null);
       }
       setIsLoading(false);
     }
