@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 
+import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import DocumentHeader from "@/components/documents/document-header";
 import { StatsComponent } from "@/components/documents/stats";
 import AppLayout from "@/components/layouts/app";
@@ -15,22 +16,45 @@ import LoadingSpinner from "@/components/ui/loading-spinner";
 import VisitorsTable from "@/components/visitors/visitors-table";
 
 import { useDocument, useDocumentLinks } from "@/lib/swr/use-document";
+import useLimits from "@/lib/swr/use-limits";
 
 export default function DocumentPage() {
   const { document: prismaDocument, primaryVersion, error } = useDocument();
-  
   const { links } = useDocumentLinks();
   const teamInfo = useTeam();
-  
+
+  const { canAddLinks } = useLimits();
+
   const [isLinkSheetOpen, setIsLinkSheetOpen] = useState<boolean>(false);
 
   if (error && error.status === 404) {
     return <ErrorPage statusCode={404} />;
   }
-  
+
   if (error && error.status === 400) {
     return <ErrorPage statusCode={400} />;
   }
+
+  const AddLinkButton = () => {
+    if (!canAddLinks) {
+      return (
+        <UpgradePlanModal clickedPlan="Pro" trigger={"limit_add_link"}>
+          <Button className="flex h-8 whitespace-nowrap text-xs lg:h-9 lg:text-sm">
+            Upgrade to Create Link
+          </Button>
+        </UpgradePlanModal>
+      );
+    } else {
+      return (
+        <Button
+          className="flex h-8 whitespace-nowrap text-xs lg:h-9 lg:text-sm"
+          onClick={() => setIsLinkSheetOpen(true)}
+        >
+          Create Link
+        </Button>
+      );
+    }
+  };
 
   return (
     <AppLayout>
@@ -42,15 +66,7 @@ export default function DocumentPage() {
               primaryVersion={primaryVersion}
               prismaDocument={prismaDocument}
               teamId={teamInfo?.currentTeam?.id!}
-              actions={[
-                <Button
-                  key={"create-link"}
-                  className="flex h-8 whitespace-nowrap text-xs lg:h-9 lg:text-sm"
-                  onClick={() => setIsLinkSheetOpen(true)}
-                >
-                  Create Link
-                </Button>,
-              ]}
+              actions={[<AddLinkButton key={"create-link"} />]}
             />
 
             {/* <NavMenu

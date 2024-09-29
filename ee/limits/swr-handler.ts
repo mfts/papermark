@@ -5,11 +5,17 @@ import { fetcher } from "@/lib/utils";
 
 export type LimitProps = {
   datarooms: number;
+  links: number | undefined | null;
+  documents: number | undefined | null;
   users: number;
   domains: number;
   customDomainOnPro: boolean;
   customDomainInDataroom: boolean;
-  advancedLinkControlsOnPro: boolean;
+  advancedLinkControlsOnPro: boolean | undefined | null;
+  usage: {
+    documents: number;
+    links: number;
+  };
 };
 
 export function useLimits() {
@@ -24,8 +30,15 @@ export function useLimits() {
     },
   );
 
+  const canAddDocuments = data?.documents
+    ? data?.usage?.documents < data?.documents
+    : true;
+  const canAddLinks = data?.links ? data?.usage?.links < data?.links : true;
+
   return {
     limits: data,
+    canAddDocuments,
+    canAddLinks,
     error,
     loading: !data && !error,
   };
