@@ -6,12 +6,14 @@ import { useTeam } from "@/context/team-context";
 import { DocumentStorageType } from "@prisma/client";
 import { useSession } from "next-auth/react";
 import { FileRejection, useDropzone } from "react-dropzone";
+import { toast } from "sonner";
 import { mutate } from "swr";
 
 import { useAnalytics } from "@/lib/analytics";
 import { DocumentData, createDocument } from "@/lib/documents/create-document";
 import { resumableUpload } from "@/lib/files/tus-upload";
 import { usePlan } from "@/lib/swr/use-billing";
+import useLimits from "@/lib/swr/use-limits";
 import { CustomUser } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { getSupportedContentType } from "@/lib/utils/get-content-type";
@@ -70,6 +72,10 @@ export default function UploadZone({
   const isTrial = !!trial;
   const maxSize = plan === "business" || plan === "datarooms" ? 250 : 30;
   const maxNumPages = plan === "business" || plan === "datarooms" ? 500 : 100;
+  const { limits, canAddDocuments } = useLimits();
+  const remainingDocuments = limits?.documents
+    ? limits?.documents - limits?.usage?.documents
+    : 0;
 
   const [progress, setProgress] = useState<number>(0);
   const [showProgress, setShowProgress] = useState(false);
@@ -77,6 +83,10 @@ export default function UploadZone({
 
   const onDrop = useCallback(
     (acceptedFiles: FileWithPath[]) => {
+      if (!canAddDocuments && acceptedFiles.length > remainingDocuments) {
+        toast.error("You have reached the maximum number of documents.");
+        return;
+      }
       const newUploads = acceptedFiles.map((file) => ({
         fileName: file.name,
         progress: 0,
