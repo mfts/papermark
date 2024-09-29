@@ -229,7 +229,7 @@ export default function ImageViewer({
     };
 
     if (!dataroomId && router.query.token) {
-      removeQueryParams(["token", "email", "domain", "slug"]);
+      removeQueryParams(["token", "email", "domain", "slug", "linkId"]);
     }
   }, []); // Run once on mount
 
