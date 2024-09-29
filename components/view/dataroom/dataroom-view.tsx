@@ -268,7 +268,7 @@ export default function DataroomView({
       ...prev,
       pages: undefined,
       file: undefined,
-      viewId: "",
+      viewId: prev.dataroomViewId,
       notionData: undefined,
       ipAddress: undefined,
     }));
@@ -421,9 +421,7 @@ export default function DataroomView({
       <div className="bg-gray-950">
         <DataroomViewer
           brand={brand!}
-          viewId={
-            viewData.viewId !== "" ? viewData.viewId : viewData.dataroomViewId
-          }
+          viewId={viewData.viewId}
           isPreview={viewData.isPreview}
           linkId={link.id}
           dataroomViewId={viewData.dataroomViewId!}
