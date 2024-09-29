@@ -335,22 +335,7 @@ function UsageProgress(data: {
       <div className="mt-2 flex flex-col space-y-2">
         {usage !== undefined && usageLimit !== undefined ? (
           <p className="text-sm text-foreground">
-            <span
-              className={cn(
-                usagePercentage > 100 && "text-destructive dark:text-red-600",
-              )}
-            >
-              {nFormatter(usage)}
-            </span>{" "}
-            / {nFormatter(usageLimit)} {unit}{" "}
-            <span
-              className={cn(
-                usagePercentage > 100 && "text-destructive dark:text-red-600",
-              )}
-            >
-              ({usagePercentage.toFixed(0)}
-              %)
-            </span>
+            <span>{nFormatter(usage)}</span> / {nFormatter(usageLimit)} {unit}
           </p>
         ) : (
           <div className="h-5 w-32 animate-pulse rounded-md bg-muted" />
