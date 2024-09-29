@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { DocumentVersion } from "@prisma/client";
-import { EyeIcon, LinkIcon, Settings2Icon } from "lucide-react";
+import { BoxesIcon, EyeIcon, LinkIcon, Settings2Icon } from "lucide-react";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
@@ -245,13 +245,20 @@ export default function LinksTable({
                       <>
                         <TableRow key={link.id} className="group/row">
                           <TableCell className="w-[250px] truncate font-medium">
-                            {link.name || `Link #${link.id.slice(-5)}`}
+                            <div className="flex items-center gap-x-2">
+                              {link.groupId ? (
+                                <ButtonTooltip content="Group Link">
+                                  <BoxesIcon className="size-4" />
+                                </ButtonTooltip>
+                              ) : null}
+                              {link.name || `Link #${link.id.slice(-5)}`}
 
-                            {link.domainId && hasFreePlan ? (
-                              <span className="ml-2 rounded-full bg-destructive px-2.5 py-0.5 text-xs text-foreground ring-1 ring-destructive">
-                                Inactive
-                              </span>
-                            ) : null}
+                              {link.domainId && hasFreePlan ? (
+                                <span className="ml-2 rounded-full bg-destructive px-2.5 py-0.5 text-xs text-foreground ring-1 ring-destructive">
+                                  Inactive
+                                </span>
+                              ) : null}
+                            </div>
                           </TableCell>
                           <TableCell className="flex items-center gap-x-2 sm:min-w-[300px] md:min-w-[400px] lg:min-w-[450px]">
                             <div
