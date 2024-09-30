@@ -43,7 +43,7 @@ export function UpgradePlanModal({
   const [period, setPeriod] = useState<"yearly" | "monthly">("yearly");
   const [clicked, setClicked] = useState<boolean>(false);
   const teamInfo = useTeam();
-  const { plan: teamPlan, trial } = usePlan();
+  const { plan: teamPlan, trial, isCustomer } = usePlan();
   const analytics = useAnalytics();
 
   const isTrial = !!trial;
@@ -234,58 +234,61 @@ export function UpgradePlanModal({
                       ? "bg-[#fb7a00] hover:bg-[#fb7a00]"
                       : "bg-gray-800 text-white hover:bg-gray-900 hover:text-white"
                   }`}
+                  loading={clicked}
                   onClick={() => {
                     setClicked(true);
-                    // @ts-ignore
-                    // prettier-ignore
-
-                    if (teamPlan !== "free") {
-                    fetch(
-                      `/api/teams/${teamInfo?.currentTeam?.id}/billing/manage`,
-                      {
-                        method: "POST",
-                      },
-                    )
-                      .then(async (res) => {
-                        const url = await res.json();
-                        router.push(url);
-                      })
-                      .catch((err) => {
-                        alert(err);
-                        setClicked(false);
-                      });
-                  } else {
-                    fetch(
-                      `/api/teams/${
-                        teamInfo?.currentTeam?.id
-                      }/billing/upgrade?priceId=${
-                        PLANS.find((p) => p.name === planOption)!.price[period]
-                          .priceIds[
-                          process.env.NEXT_PUBLIC_VERCEL_ENV === "production"
-                            ? "production"
-                            : "test"
-                        ]
-                      }`,
-                      {
-                        method: "POST",
-                        headers: {
-                          "Content-Type": "application/json",
+                    if (isCustomer && teamPlan !== "free") {
+                      fetch(
+                        `/api/teams/${teamInfo?.currentTeam?.id}/billing/manage`,
+                        {
+                          method: "POST",
                         },
-                      },
-                    )
-                      .then(async (res) => {
-                        const data = await res.json();
-                        const { id: sessionId } = data;
-                        const stripe = await getStripe();
-                        stripe?.redirectToCheckout({ sessionId });
-                      })
-                      .catch((err) => {
-                        alert(err);
-                        setClicked(false);
-                      });
+                      )
+                        .then(async (res) => {
+                          const url = await res.json();
+                          router.push(url);
+                        })
+                        .catch((err) => {
+                          alert(err);
+                          setClicked(false);
+                        });
+                    } else {
+                      fetch(
+                        `/api/teams/${
+                          teamInfo?.currentTeam?.id
+                        }/billing/upgrade?priceId=${
+                          PLANS.find((p) => p.name === planOption)!.price[
+                            period
+                          ].priceIds[
+                            process.env.NEXT_PUBLIC_VERCEL_ENV === "production"
+                              ? "production"
+                              : "test"
+                          ]
+                        }`,
+                        {
+                          method: "POST",
+                          headers: {
+                            "Content-Type": "application/json",
+                          },
+                        },
+                      )
+                        .then(async (res) => {
+                          const data = await res.json();
+                          const { id: sessionId } = data;
+                          const stripe = await getStripe();
+                          stripe?.redirectToCheckout({ sessionId });
+                        })
+                        .catch((err) => {
+                          alert(err);
+                          setClicked(false);
+                        });
                     }
                   }}
-                >{`Upgrade to ${planOption} ${capitalize(period)}`}</Button>
+                >
+                  {clicked
+                    ? "Redirecting to Stripe..."
+                    : `Upgrade to ${planOption} ${capitalize(period)}`}
+                </Button>
               </div>
             </div>
           ))}

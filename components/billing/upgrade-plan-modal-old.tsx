@@ -41,7 +41,7 @@ export function UpgradePlanModal({
   const [period, setPeriod] = useState<"yearly" | "monthly">("yearly");
   const [clicked, setClicked] = useState<boolean>(false);
   const teamInfo = useTeam();
-  const { plan: teamPlan, trial } = usePlan();
+  const { plan: teamPlan, trial, isCustomer } = usePlan();
   const analytics = useAnalytics();
 
   const isTrial = !!trial;
@@ -227,7 +227,7 @@ export function UpgradePlanModal({
               // @ts-ignore
               // prettier-ignore
 
-              if (teamPlan !== "free") {
+              if (isCustomer && teamPlan !== "free") {
                 fetch(
                   `/api/teams/${teamInfo?.currentTeam?.id}/billing/manage`,
                   {

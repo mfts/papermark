@@ -20,7 +20,7 @@ export default function UpgradePage() {
   const [period, setPeriod] = useState<"yearly" | "monthly">("yearly");
   const [clicked, setClicked] = useState<boolean>(false);
   const teamInfo = useTeam();
-  const { plan: teamPlan, trial } = usePlan();
+  const { plan: teamPlan, trial, isCustomer } = usePlan();
   const analytics = useAnalytics();
 
   const planFeatures = useMemo(
@@ -149,12 +149,10 @@ export default function UpgradePage() {
                     ? "bg-[#fb7a00] hover:bg-[#fb7a00]/80"
                     : "bg-gray-800 text-white hover:bg-gray-900"
                 }`}
+                loading={clicked}
                 onClick={() => {
                   setClicked(true);
-                  // @ts-ignore
-                  // prettier-ignore
-
-                  if (teamPlan !== "free") {
+                  if (isCustomer && teamPlan !== "free") {
                     fetch(
                       `/api/teams/${teamInfo?.currentTeam?.id}/billing/manage`,
                       {
@@ -170,7 +168,6 @@ export default function UpgradePage() {
                         setClicked(false);
                       });
                   } else {
-
                     fetch(
                       `/api/teams/${
                         teamInfo?.currentTeam?.id
@@ -199,9 +196,13 @@ export default function UpgradePage() {
                         alert(err);
                         setClicked(false);
                       });
-                    }
+                  }
                 }}
-              >{`Upgrade to ${planOption} ${capitalize(period)}`}</Button>
+              >
+                {clicked
+                  ? "Redirecting to Stripe..."
+                  : `Upgrade to ${planOption} ${capitalize(period)}`}
+              </Button>
             </div>
           </div>
         ))}

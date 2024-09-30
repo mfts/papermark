@@ -48,6 +48,7 @@ type PlanWithTrial = `${BasePlan}+drtrial`;
 
 type PlanResponse = {
   plan: BasePlan | PlanWithTrial;
+  isCustomer: boolean;
 };
 
 interface PlanDetails {
@@ -81,6 +82,7 @@ export function usePlan() {
   return {
     plan: parsedPlan.plan,
     trial: parsedPlan.trial,
+    isCustomer: plan?.isCustomer,
     loading: !plan && !error,
     error,
   };
