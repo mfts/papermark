@@ -3,18 +3,49 @@ import Script from "next/script";
 
 import React from "react";
 
-export default function DropboxChooser({ fileValidations }) {
+interface DropBoxFile {
+  id: string;
+  name: string;
+  bytes: Number;
+  isDir: Boolean;
+  link: string;
+  linkType: string;
+  icon: string;
+}
+
+export default function DropboxChooser({ clearModelStates }) {
   const dropboxChoserOptions = {
-    success: async function (files: any) {
-      const url = files[0].link;
-      const blobData = await downloadFile(url);
+    success: async function (files: DropBoxFile[]) {
+      const filePromises = files.map(async (file: DropBoxFile) => {
+        const url = file.link;
+        const blobData = await downloadFile(url);
 
-      const file = new File([blobData], files[0].name, { type: blobData.type });
+        return new File([blobData], file.name, { type: blobData.type });
+      });
 
-      fileValidations(file);
+      const fileList = await Promise.all(filePromises);
+
+      // Create a DataTransfer object and append the files
+      const dataTransfer = new DataTransfer();
+
+      fileList.forEach((f) => dataTransfer.items.add(f));
+
+      // Simulate a drop event
+      const dropEvent = new DragEvent("drop", {
+        bubbles: true,
+        cancelable: true,
+        dataTransfer: dataTransfer,
+      });
+
+      document
+        .getElementById("upload-multi-files-zone")
+        ?.dispatchEvent(dropEvent);
+
+      clearModelStates();
     },
     linkType: "direct",
     extensions: [".pdf"],
+    multiselect: true,
   };
 
   async function downloadFile(url: string) {

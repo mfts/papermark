@@ -51,9 +51,11 @@ function fileIcon(fileType: string) {
 export default function DocumentUpload({
   currentFile,
   setCurrentFile,
+  clearModelStates,
 }: {
   currentFile: File | null;
   setCurrentFile: React.Dispatch<React.SetStateAction<File | null>>;
+  clearModelStates: () => void;
 }) {
   const { plan, loading } = usePlan();
   const maxSize = plan === "business" || plan === "datarooms" ? 100 : 30;
@@ -71,7 +73,35 @@ export default function DocumentUpload({
     maxSize: maxSize * 1024 * 1024, // 30 MB
     onDropAccepted: (acceptedFiles) => {
       const file = acceptedFiles[0];
-      fileValidations(file);
+      const fileType = file.type;
+      const fileSizeLimit = fileSizeLimits[fileType] * 1024 * 1024;
+
+      if (file.size > fileSizeLimit) {
+        toast.error(
+          `File size too big for ${fileType} (max. ${fileSizeLimits[fileType]} MB)`,
+        );
+        return;
+      }
+
+      if (file.type !== "application/pdf") {
+        setCurrentFile(file);
+        return;
+      }
+      file
+        .arrayBuffer()
+        .then((buffer) => {
+          getPagesCount(buffer).then((numPages) => {
+            if (numPages > maxNumPages) {
+              toast.error(`File has too many pages (max. ${maxNumPages})`);
+            } else {
+              setCurrentFile(file);
+            }
+          });
+        })
+        .catch((error) => {
+          console.error("Error reading file:", error);
+          toast.error("Failed to read the file");
+        });
     },
     onDropRejected: (fileRejections) => {
       const { errors } = fileRejections[0];
@@ -86,38 +116,6 @@ export default function DocumentUpload({
       toast.error(message);
     },
   });
-
-  const fileValidations = (file) => {
-    const fileType = file.type;
-    const fileSizeLimit = fileSizeLimits[fileType] * 1024 * 1024;
-
-    if (file.size > fileSizeLimit) {
-      toast.error(
-        `File size too big for ${fileType} (max. ${fileSizeLimits[fileType]} MB)`,
-      );
-      return;
-    }
-
-    if (file.type !== "application/pdf") {
-      setCurrentFile(file);
-      return;
-    }
-    file
-      .arrayBuffer()
-      .then((buffer) => {
-        getPagesCount(buffer).then((numPages) => {
-          if (numPages > maxNumPages) {
-            toast.error(`File has too many pages (max. ${maxNumPages})`);
-          } else {
-            setCurrentFile(file);
-          }
-        });
-      })
-      .catch((error) => {
-        console.error("Error reading file:", error);
-        toast.error("Failed to read the file");
-      });
-  };
 
   const imageBlobUrl = useMemo(
     () => (currentFile ? URL.createObjectURL(currentFile) : ""),
@@ -174,7 +172,7 @@ export default function DocumentUpload({
                   Or import from
                 </p>
                 <div>
-                  <DropboxChooser fileValidations={fileValidations} />
+                  <DropboxChooser clearModelStates={clearModelStates} />
                 </div>
               </>
             )}
