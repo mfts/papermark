@@ -183,10 +183,10 @@ export function UpgradePlanModal({
                 isOnlyDataRooms
                   ? "mx-auto w-[450px] max-w-full md:col-span-2"
                   : ""
-              }`}
+              } dark:bg-gray-900`}
             >
               <div className="mb-4 border-b border-gray-200 pb-2">
-                <h3 className="text-balance text-xl font-medium text-gray-900">
+                <h3 className="text-balance text-xl font-medium text-gray-900 dark:text-white">
                   Papermark {planOption}
                 </h3>
                 {planOption === "Business" && (
@@ -198,24 +198,24 @@ export function UpgradePlanModal({
 
               {/* Add pricing information here */}
               <div className="mb-2">
-                <span className="text-balance text-4xl font-medium tabular-nums text-gray-900">
+                <span className="text-balance text-4xl font-medium tabular-nums text-gray-900 dark:text-white">
                   €
                   {
                     PLANS.find((p) => p.name === planOption)?.price[period]
                       .amount
                   }
                 </span>
-                <span className="text-gray-500">/month</span>
+                <span className="text-gray-500 dark:text-white/75">/month</span>
               </div>
 
-              <p className="mt-4 text-sm text-gray-600">
+              <p className="mt-4 text-sm text-gray-600 dark:text-white">
                 {
                   planFeatures[planOption as keyof typeof planFeatures]
                     .featureIntro
                 }
               </p>
 
-              <ul className="mb-6 mt-2 space-y-2 text-sm leading-6 text-gray-600 dark:text-muted-foreground">
+              <ul className="mb-6 mt-2 space-y-2 text-sm leading-6 text-gray-600 dark:text-muted-foreground dark:text-white/75">
                 {planFeatures[
                   planOption as keyof typeof planFeatures
                 ].features.map((feature, i) => (
