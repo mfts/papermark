@@ -30,7 +30,7 @@ const frequencies: {
 export default function Billing() {
   const router = useRouter();
   const analytics = useAnalytics();
-  const { plan } = usePlan();
+  const { plan, isCustomer } = usePlan();
   const [clicked, setClicked] = useState<boolean>(false);
   const frequency = frequencies[1];
   const [toggleProYear, setToggleProYear] = useState<boolean>(true);
@@ -298,9 +298,10 @@ export default function Billing() {
                     <div className="p-6">
                       {tier.id !==
                       "tier-free" /** hide button on free tier */ ? (
-                        tier.currentPlan ? (
+                        tier.currentPlan && isCustomer ? (
                           <Button
                             className="rounded-3xl"
+                            loading={clicked}
                             onClick={() => {
                               setClicked(true);
                               fetch(
@@ -318,16 +319,18 @@ export default function Billing() {
                                   setClicked(false);
                                 });
                             }}
-                            loading={clicked}
                           >
-                            Manage Subscription
+                            {clicked
+                              ? "Redirecting to Customer Portal..."
+                              : "Manage Subscription"}
                           </Button>
-                        ) : plan !== "free" ? (
+                        ) : plan !== "free" && isCustomer ? (
                           <Button
                             className="rounded-3xl"
                             variant={
                               tier.id === "tier-business" ? "orange" : "default"
                             }
+                            loading={clicked}
                             onClick={() => {
                               setClicked(true);
                               fetch(
@@ -345,9 +348,10 @@ export default function Billing() {
                                   setClicked(false);
                                 });
                             }}
-                            loading={clicked}
                           >
-                            {tier.buttonText}
+                            {clicked
+                              ? "Redirecting to Customer Portal..."
+                              : tier.buttonText}
                           </Button>
                         ) : (
                           <UpgradePlanModal

@@ -34,10 +34,13 @@ export default async function handle(
         },
         select: {
           plan: true,
+          stripeId: true,
         },
       });
 
-      return res.status(200).json(team);
+      const isCustomer = !!team?.stripeId;
+
+      return res.status(200).json({ plan: team?.plan, isCustomer });
     } catch (error) {
       errorhandler(error, res);
     }
