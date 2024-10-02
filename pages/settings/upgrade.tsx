@@ -107,10 +107,10 @@ export default function UpgradePage() {
             key={planOption}
             className={`relative flex flex-col rounded-lg border ${
               planOption === "Business" ? "border-[#fb7a00]" : "border-gray-200"
-            } bg-white p-6 shadow-sm`}
+            } bg-white p-6 shadow-sm dark:bg-gray-900`}
           >
             <div className="mb-4 border-b border-gray-200 pb-2">
-              <h3 className="text-balance text-xl font-medium text-foreground text-gray-900">
+              <h3 className="text-balance text-xl font-medium text-foreground text-gray-900 dark:text-white">
                 Papermark {planOption}
               </h3>
               {planOption === "Business" && (
@@ -122,16 +122,16 @@ export default function UpgradePage() {
 
             <div className="mb-2 text-balance text-4xl font-medium tabular-nums text-foreground">
               €{PLANS.find((p) => p.name === planOption)!.price[period].amount}
-              <span className="text-base font-normal">/month</span>
+              <span className="text-base font-normal dark:text-white/75">/month</span>
             </div>
-            <p className="mt-4 text-sm text-gray-600">
+            <p className="mt-4 text-sm text-gray-600 dark:text-white">
               {
                 planFeatures[planOption as keyof typeof planFeatures]
                   .featureIntro
               }
             </p>
 
-            <ul className="mb-4 mt-4 space-y-3 text-sm leading-6 text-gray-600 dark:text-muted-foreground">
+            <ul className="mb-4 mt-4 space-y-3 text-sm leading-6 text-gray-600 dark:text-muted-foreground dark:text-white/75">
               {planFeatures[
                 planOption as keyof typeof planFeatures
               ].features.map((feature, i) => (
