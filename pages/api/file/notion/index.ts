@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import notion from "@/lib/notion";
+import { log } from "@/lib/utils";
 
 export default async function handle(
   req: NextApiRequest,
@@ -8,12 +9,16 @@ export default async function handle(
 ) {
   // We only allow POST requests
   if (req.method !== "POST") {
-    console.log("Method Not Allowed because method is", req.method);
+    await log({
+      message: `Method Not Allowed: ${req.method}`,
+      type: "error",
+    });
+
     res.status(405).json({ message: "Method Not Allowed" });
     return;
   }
 
-  // POST /api/notion
+  // POST /api/file/notion
 
   const { pageId } = req.body as { pageId: string };
 
