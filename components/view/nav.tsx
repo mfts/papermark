@@ -149,6 +149,7 @@ export default function Nav({
                 </Link>
               )}
             </div>
+            <div id="view-breadcrump-portal"></div>
             {isDataroom && setDocumentData ? (
               <Breadcrumb>
                 <BreadcrumbList>

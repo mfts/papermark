@@ -94,6 +94,7 @@
     "nodemailer": "^6.9.15",
     "notion-client": "^6.16.0",
     "notion-utils": "^6.16.0",
+    "nuqs": "^1.19.3",
     "openai": "4.20.1",
     "pdf-lib": "^1.17.1",
     "postcss": "^8.4.47",
