@@ -8,6 +8,7 @@ export default async function handle(
 ) {
   // We only allow POST requests
   if (req.method !== "POST") {
+    console.log("Method Not Allowed because method is", req.method);
     res.status(405).json({ message: "Method Not Allowed" });
     return;
   }

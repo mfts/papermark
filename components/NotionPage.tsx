@@ -120,7 +120,7 @@ export const NotionPage = ({
         setLoading(true);
         console.log("Fetching subPageId", pageId);
         try {
-          const response = await fetch(`/api/file/notion`, {
+          const response = await fetch("/api/file/notion", {
             method: "POST",
             body: JSON.stringify({ pageId }),
             headers: {
@@ -158,32 +158,32 @@ export const NotionPage = ({
     fetchSubPage(subPageId);
   }, [subPageId, fetchSubPage]);
 
-  useEffect(() => {
-    const fetchSubPage = async () => {
-      if (subPageId) {
-        setLoading(true);
-        console.log("subPageId", subPageId);
-        const recordMap = await fetch(`/api/file/notion`, {
-          method: "POST",
-          body: JSON.stringify({ pageId: subPageId }),
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-        setRecordMapState(await recordMap.json());
-        setLoading(false);
-      } else {
-        console.log("subPageId is", subPageId);
-        setRecordMapState(recordMap);
-      }
+  // useEffect(() => {
+  //   const fetchSubPage = async () => {
+  //     if (subPageId) {
+  //       setLoading(true);
+  //       console.log("subPageId", subPageId);
+  //       const recordMap = await fetch("/api/file/notion", {
+  //         method: "POST",
+  //         body: JSON.stringify({ pageId: subPageId }),
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //         },
+  //       });
+  //       setRecordMapState(await recordMap.json());
+  //       setLoading(false);
+  //     } else {
+  //       console.log("subPageId is", subPageId);
+  //       setRecordMapState(recordMap);
+  //     }
 
-      const duration = Date.now() - startTimeRef.current;
-      trackPageView(duration);
-      startTimeRef.current = Date.now();
-    };
+  //     const duration = Date.now() - startTimeRef.current;
+  //     trackPageView(duration);
+  //     startTimeRef.current = Date.now();
+  //   };
 
-    fetchSubPage();
-  }, [subPageId]);
+  //   fetchSubPage();
+  // }, [subPageId]);
 
   useEffect(() => {
     const handleBeforeUnload = () => {
