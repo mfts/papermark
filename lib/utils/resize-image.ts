@@ -62,8 +62,11 @@ export const resizeImage = (
           targetHeight,
         );
 
+        // Determine the original mime image type
+        const originalType = file.type || "image/png";
+
         // Convert the canvas to a base64 string
-        const base64Image = canvas.toDataURL("image/jpeg", opts.quality);
+        const base64Image = canvas.toDataURL(originalType, opts.quality);
         resolve(base64Image);
       };
       img.onerror = (error) =>

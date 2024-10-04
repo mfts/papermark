@@ -233,7 +233,8 @@ export default function OGSection({
                       setFileError("File size too big (max 5MB)");
                     } else if (
                       file.type !== "image/png" &&
-                      file.type !== "image/jpeg"
+                      file.type !== "image/jpeg" &&
+                      file.type !== "image/jpg"
                     ) {
                       setFileError(
                         "File type not supported (.png or .jpg only)",
@@ -285,7 +286,7 @@ export default function OGSection({
                 id="image"
                 name="image"
                 type="file"
-                accept="image/*"
+                accept="image/png,image/jpeg,image/jpg"
                 className="sr-only"
                 onChange={onChangePicture}
               />

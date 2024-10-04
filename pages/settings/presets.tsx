@@ -75,7 +75,11 @@ export default function Presets() {
       if (file) {
         if (file.size / 1024 / 1024 > 5) {
           setFileError("File size too big (max 5MB)");
-        } else if (file.type !== "image/png" && file.type !== "image/jpeg") {
+        } else if (
+          file.type !== "image/png" &&
+          file.type !== "image/jpeg" &&
+          file.type !== "image/jpg"
+        ) {
           setFileError("File type not supported (.png or .jpg only)");
         } else {
           const image = await resizeImage(file);
@@ -269,7 +273,8 @@ export default function Presets() {
                             setFileError("File size too big (max 5MB)");
                           } else if (
                             file.type !== "image/png" &&
-                            file.type !== "image/jpeg"
+                            file.type !== "image/jpeg" &&
+                            file.type !== "image/jpg"
                           ) {
                             setFileError(
                               "File type not supported (.png or .jpg only)",
@@ -321,7 +326,7 @@ export default function Presets() {
                       id="mainImage"
                       name="image"
                       type="file"
-                      accept="image/*"
+                      accept="image/png,image/jpeg,image/jpg"
                       className="sr-only"
                       onChange={onChangePicture}
                     />
