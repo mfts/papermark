@@ -249,7 +249,7 @@ export default async function handle(
       verificationUrl = `https://${link.domainSlug}/${link.slug}?token=${hashedToken}&email=${encodeURIComponent(email)}`;
     }
 
-    await sendVerificationEmail(email, verificationUrl);
+    waitUntil(sendVerificationEmail(email, verificationUrl, true));
     res.status(200).json({
       type: "email-verification",
       message: "Verification email sent.",
