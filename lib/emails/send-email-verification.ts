@@ -18,7 +18,7 @@ export const sendVerificationEmail = async (
       subject: `Verify your email address to access the ${isDataroom ? "dataroom" : "document"}.`,
       react: emailTemplate,
       test: process.env.NODE_ENV === "development",
-      system: true,
+      verify: true,
     });
   } catch (e) {
     console.error(e);
