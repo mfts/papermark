@@ -21,4 +21,6 @@ Your turn 👇
 
 » 04-October-2024 by [@Ionfinisher](https://oss.gg/Ionfinisher/) Video Link: [onboarding-video](https://www.loom.com/share/3190223108594d6fa10ccfdd9cab6f4e?sid=aabdf87d-12c4-4486-a2b5-c9a6feac6f43)
 
+» 04 October 2024 by [@thefool76](https://oss.gg/thefool76/) Video Link: [onboarding-video](https://drive.google.com/drive/folders/1jcwaaxBxoL9c3sYmoQT3hGcmN6oob_hn?usp=share_link)
+
 ---
