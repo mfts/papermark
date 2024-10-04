@@ -97,32 +97,33 @@ export default function Presets() {
     e.preventDefault();
     setIsLoading(true);
 
+    // Upload meta image if it's a data URL
     let blobUrlImage: string | null =
       data.metaImage && data.metaImage.startsWith("data:")
         ? null
         : data.metaImage;
+    if (data.metaImage && data.metaImage.startsWith("data:")) {
+      const blobImage = convertDataUrlToFile({ dataUrl: data.metaImage });
+      blobUrlImage = await uploadImage(blobImage);
+      setData({
+        ...data,
+        metaImage: blobUrlImage,
+      });
+    }
+
+    // Upload meta favicon if it's a data URL
     let blobUrlFavicon: string | null =
       data.metaFavicon && data.metaFavicon.startsWith("data:")
         ? null
         : data.metaFavicon;
-    if (
-      data.metaImage &&
-      data.metaImage.startsWith("data:") &&
-      data.metaFavicon &&
-      data.metaFavicon.startsWith("data:")
-    ) {
-      const blobImage = convertDataUrlToFile({ dataUrl: data.metaImage });
+    if (data.metaFavicon && data.metaFavicon.startsWith("data:")) {
       const blobFavicon = convertDataUrlToFile({ dataUrl: data.metaFavicon });
-      blobUrlImage = await uploadImage(blobImage);
       blobUrlFavicon = await uploadImage(blobFavicon);
       setData({
         ...data,
-        metaImage: blobUrlImage,
         metaFavicon: blobUrlFavicon,
       });
     }
-
-    console.log("JSON.stringify(data)", JSON.stringify(data));
 
     const res = await fetch(`/api/teams/${teamInfo?.currentTeam?.id}/presets`, {
       method: presets ? "PUT" : "POST",
