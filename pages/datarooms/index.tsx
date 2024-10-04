@@ -21,11 +21,14 @@ import { usePlan } from "@/lib/swr/use-billing";
 import useDatarooms from "@/lib/swr/use-datarooms";
 import useLimits from "@/lib/swr/use-limits";
 import { daysLeft } from "@/lib/utils";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export default function DataroomsPage() {
   const { datarooms } = useDatarooms();
   const { plan, trial } = usePlan();
   const { limits } = useLimits();
+  const router = useRouter()
 
   const numDatarooms = datarooms?.length ?? 0;
   const limitDatarooms = limits?.datarooms ?? 1;
@@ -35,6 +38,10 @@ export default function DataroomsPage() {
   const isTrialDatarooms = trial === "drtrial";
   const canCreateUnlimitedDatarooms =
     isDatarooms || (isBusiness && numDatarooms < limitDatarooms);
+
+    useEffect(()=>{
+      if(trial == null && plan == 'free') router.push('/documents')
+    },[trial,plan])  
 
   return (
     <AppLayout>
