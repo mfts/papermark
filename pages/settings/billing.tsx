@@ -30,7 +30,7 @@ const frequencies: {
 export default function Billing() {
   const router = useRouter();
   const analytics = useAnalytics();
-  const { plan } = usePlan();
+  const { plan, isCustomer } = usePlan();
   const [clicked, setClicked] = useState<boolean>(false);
   const frequency = frequencies[1];
   const [toggleProYear, setToggleProYear] = useState<boolean>(true);
@@ -106,10 +106,12 @@ export default function Billing() {
       featureIntro: "What's included:",
       features: [
         "1 user",
-        "Unlimited links",
+        "10 links",
+        "10 documents",
         "Unlimited visitors",
         "Page-by-page analytics",
         "Document sharing controls",
+        "Password protection",
         "30-day analytics retention",
       ],
 
@@ -129,9 +131,12 @@ export default function Billing() {
       featureIntro: "Everything in Free, plus:",
       features: [
         "2 users included",
+        "Unlimited links",
+        "100 documents",
         "Custom branding",
         "Folder organization",
         "Require email verification",
+        "More file types: pppt, docx, excel",
         "Papermark branding removed",
         "1-year analytics retention",
       ],
@@ -153,13 +158,16 @@ export default function Billing() {
       features: [
         "3 users included",
         "1 dataroom",
-        "Multi-file sharing",
-        "Advanced link controls",
-        "Allow/Block list",
-        "Custom domain for documents",
         "Unlimited documents",
+        "Custom domain for documents",
         "Unlimited folder and subfolder levels",
         "Large file uploads",
+        "Multi-file sharing",
+        "Allow/Block list",
+        "Dataroom branding",
+
+        "More file types: dmg (cad)",
+        "2-year analytics retention",
       ],
       bgColor: "#bg-gray-500",
       borderColor: "#fb7a00",
@@ -181,12 +189,14 @@ export default function Billing() {
         "3 users included",
         "Unlimited data rooms",
         "Custom domain for data rooms",
+        "Advanced data rooms analytics",
         "NDA agreements",
         "Dynamic Watermark",
         "Granular user/group permisssions",
-        "Advanced Data rooms analytics",
+        "Invite users directly from Papermark",
+        "Audit log",
         "24h priority support",
-        "Custom onboarding",
+        "Custom onboarding ",
       ],
       bgColor: "#fb7a00",
       borderColor: "#fb7a00",
@@ -219,9 +229,17 @@ export default function Billing() {
               <h3 className="text-2xl font-semibold tracking-tight text-foreground">
                 Billing
               </h3>
-              <p className="text-sm text-muted-foreground">
-                Manage your subscription and billing information.
-              </p>
+              <div className="flex items-center space-x-2">
+                <p className="text-sm text-muted-foreground">
+                  Manage your subscription and billing information.
+                </p>
+                <Link
+                  href="/settings/upgrade"
+                  className="text-sm text-foreground underline-offset-4 hover:underline"
+                >
+                  See all plans
+                </Link>
+              </div>
             </div>
           </div>
 
@@ -246,159 +264,7 @@ export default function Billing() {
                         </h3>
                       </div>
                       <div className="p-6">
-                        <div className="mt-2 min-h-20">
-                          {tier.id === "tier-free" ? (
-                            <div className="min-h-12">
-                              <div className="flex flex-col text-sm">
-                                <div className="h-6"></div>
-                                <h4>No credit card required</h4>
-                              </div>
-                            </div>
-                          ) : null}
-                          {tier.id === "tier-pro" ? (
-                            <div className="min-h-12">
-                              <Switch
-                                className="h-5 w-10 *:size-4"
-                                checked={toggleProYear}
-                                onCheckedChange={() =>
-                                  setToggleProYear(!toggleProYear)
-                                }
-                              />
-                              <div className="mb-1 flex items-center gap-x-1 text-sm">
-                                <span
-                                  className={cn(
-                                    toggleProYear
-                                      ? "text-gray-400"
-                                      : "text-foreground",
-                                  )}
-                                >
-                                  Monthly
-                                </span>
-                                <span>|</span>
-                                <span
-                                  className={cn(
-                                    toggleProYear
-                                      ? "text-foreground"
-                                      : "text-gray-400",
-                                  )}
-                                >
-                                  Annually
-                                </span>
-                              </div>
-                              <div
-                                className={cn(
-                                  "relative w-fit rounded-3xl border border-[#fb7a00] px-1.5 py-0.5 text-xs uppercase text-[#fb7a00]",
-                                  !toggleProYear &&
-                                    "border-gray-400 text-gray-400 opacity-40",
-                                )}
-                              >
-                                <span
-                                  className={cn(
-                                    !toggleProYear
-                                      ? "absolute top-1/2 h-px w-[90%] bg-gray-400"
-                                      : "hidden",
-                                  )}
-                                />
-                                35% Saving
-                              </div>
-                            </div>
-                          ) : null}
-                          {tier.id === "tier-business" ? (
-                            <div className="min-h-12">
-                              <Switch
-                                className="h-5 w-10 *:size-4"
-                                checked={toggleBusinessYear}
-                                onCheckedChange={() =>
-                                  setToggleBusinessYear(!toggleBusinessYear)
-                                }
-                              />
-                              <div className="mb-1 flex items-center gap-x-1 text-sm">
-                                <span
-                                  className={cn(
-                                    toggleBusinessYear
-                                      ? "text-gray-400"
-                                      : "text-foreground",
-                                  )}
-                                >
-                                  Monthly
-                                </span>
-                                <span>|</span>
-                                <span
-                                  className={cn(
-                                    toggleBusinessYear
-                                      ? "text-foreground"
-                                      : "text-gray-400",
-                                  )}
-                                >
-                                  Annually
-                                </span>
-                              </div>
-                              <div
-                                className={cn(
-                                  "relative w-fit rounded-3xl border border-[#fb7a00] px-1.5 py-0.5 text-xs uppercase text-[#fb7a00]",
-                                  !toggleBusinessYear &&
-                                    "border-gray-400 text-gray-400 opacity-40",
-                                )}
-                              >
-                                <span
-                                  className={cn(
-                                    !toggleBusinessYear
-                                      ? "absolute top-1/2 h-px w-[90%] bg-gray-400"
-                                      : "hidden",
-                                  )}
-                                />
-                                43% Saving
-                              </div>
-                            </div>
-                          ) : null}
-                          {tier.id === "tier-datarooms" ? (
-                            <div className="min-h-12">
-                              <Switch
-                                className="h-5 w-10 *:size-4"
-                                checked={toggleDataroomsYear}
-                                onCheckedChange={() =>
-                                  setToggleDataroomsYear(!toggleDataroomsYear)
-                                }
-                              />
-                              <div className="mb-1 flex items-center gap-x-1 text-sm">
-                                <span
-                                  className={cn(
-                                    toggleDataroomsYear
-                                      ? "text-gray-400"
-                                      : "text-foreground",
-                                  )}
-                                >
-                                  Monthly
-                                </span>
-                                <span>|</span>
-                                <span
-                                  className={cn(
-                                    toggleDataroomsYear
-                                      ? "text-foreground"
-                                      : "text-gray-400",
-                                  )}
-                                >
-                                  Annually
-                                </span>
-                              </div>
-                              <div
-                                className={cn(
-                                  "relative w-fit rounded-3xl border border-[#fb7a00] px-1.5 py-0.5 text-xs uppercase text-[#fb7a00]",
-                                  !toggleDataroomsYear &&
-                                    "border-gray-400 text-gray-400 opacity-40",
-                                )}
-                              >
-                                <span
-                                  className={cn(
-                                    !toggleDataroomsYear
-                                      ? "absolute top-1/2 h-px w-[90%] bg-gray-400"
-                                      : "hidden",
-                                  )}
-                                />
-                                50% Saving
-                              </div>
-                            </div>
-                          ) : null}
+                        <div className="mt-2">
                           {tier.id === "tier-enterprise" ? (
                             <div className="min-h-12">
                               <div className="flex flex-col text-sm">
@@ -408,35 +274,10 @@ export default function Billing() {
                             </div>
                           ) : null}
                         </div>
-                        <p className="mt-6 flex items-baseline gap-x-1">
-                          <span
-                            className="text-balance text-4xl font-medium text-foreground"
-                            style={{ fontVariantNumeric: "tabular-nums" }}
-                          >
-                            {tier.id === "tier-pro"
-                              ? tier.price[frequencyPro.value]
-                              : tier.id === "tier-business"
-                                ? tier.price[frequencyBusiness.value]
-                                : tier.id === "tier-datarooms"
-                                  ? tier.price[frequencyDatarooms.value]
-                                  : tier.price[frequency.value]}
-                          </span>
-                          {/* <span
-                          className={cn(
-                            "text-sm font-semibold leading-6 text-gray-600",
-                            tier.id === "tier-enterprise" ? "hidden" : "",
-                          )}
-                        >
-                          {tier.id === "tier-pro"
-                            ? frequencyPro.priceSuffix
-                            : tier.id === "tier-business"
-                              ? frequencyBusiness.priceSuffix
-                              : frequency.priceSuffix}
-                        </span> */}
-                        </p>
-                        <p className="mt-4 text-balance text-sm leading-6 text-gray-600 dark:text-muted-foreground">
+
+                        {/* <p className="mt-4 text-balance text-sm leading-6 text-gray-600 dark:text-muted-foreground">
                           {tier.description}
-                        </p>
+                        </p> */}
                         <ul
                           role="list"
                           className="mt-8 space-y-3 text-sm leading-6 text-gray-600 dark:text-muted-foreground"
@@ -457,9 +298,10 @@ export default function Billing() {
                     <div className="p-6">
                       {tier.id !==
                       "tier-free" /** hide button on free tier */ ? (
-                        tier.currentPlan ? (
+                        tier.currentPlan && isCustomer ? (
                           <Button
                             className="rounded-3xl"
+                            loading={clicked}
                             onClick={() => {
                               setClicked(true);
                               fetch(
@@ -477,16 +319,18 @@ export default function Billing() {
                                   setClicked(false);
                                 });
                             }}
-                            loading={clicked}
                           >
-                            Manage Subscription
+                            {clicked
+                              ? "Redirecting to Customer Portal..."
+                              : "Manage Subscription"}
                           </Button>
-                        ) : plan !== "free" ? (
+                        ) : plan !== "free" && isCustomer ? (
                           <Button
                             className="rounded-3xl"
                             variant={
                               tier.id === "tier-business" ? "orange" : "default"
                             }
+                            loading={clicked}
                             onClick={() => {
                               setClicked(true);
                               fetch(
@@ -504,9 +348,10 @@ export default function Billing() {
                                   setClicked(false);
                                 });
                             }}
-                            loading={clicked}
                           >
-                            {tier.buttonText}
+                            {clicked
+                              ? "Redirecting to Customer Portal..."
+                              : tier.buttonText}
                           </Button>
                         ) : (
                           <UpgradePlanModal

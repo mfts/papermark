@@ -10,7 +10,10 @@ import { errorhandler } from "@/lib/errorHandler";
 import notion from "@/lib/notion";
 import prisma from "@/lib/prisma";
 import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
-import { convertFilesToPdfTask } from "@/lib/trigger/convert-files";
+import {
+  convertCadToPdfTask,
+  convertFilesToPdfTask,
+} from "@/lib/trigger/convert-files";
 import { CustomUser } from "@/lib/types";
 import { getExtension, log } from "@/lib/utils";
 
@@ -166,6 +169,22 @@ export default async function handle(
         console.log("converting docx or pptx to pdf");
         // Trigger convert-files-to-pdf task
         await convertFilesToPdfTask.trigger(
+          {
+            documentId: document.id,
+            documentVersionId: document.versions[0].id,
+            teamId,
+          },
+          {
+            idempotencyKey: `${teamId}-${document.versions[0].id}`,
+            tags: [`team_${teamId}`, `document_${document.id}`],
+          },
+        );
+      }
+
+      if (type === "cad") {
+        console.log("converting cad to pdf");
+        // Trigger convert-files-to-pdf task
+        await convertCadToPdfTask.trigger(
           {
             documentId: document.id,
             documentVersionId: document.versions[0].id,

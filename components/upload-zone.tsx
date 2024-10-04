@@ -6,12 +6,14 @@ import { useTeam } from "@/context/team-context";
 import { DocumentStorageType } from "@prisma/client";
 import { useSession } from "next-auth/react";
 import { FileRejection, useDropzone } from "react-dropzone";
+import { toast } from "sonner";
 import { mutate } from "swr";
 
 import { useAnalytics } from "@/lib/analytics";
 import { DocumentData, createDocument } from "@/lib/documents/create-document";
 import { resumableUpload } from "@/lib/files/tus-upload";
 import { usePlan } from "@/lib/swr/use-billing";
+import useLimits from "@/lib/swr/use-limits";
 import { CustomUser } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { getSupportedContentType } from "@/lib/utils/get-content-type";
@@ -20,6 +22,15 @@ import { getPagesCount } from "@/lib/utils/get-page-number-count";
 interface FileWithPath extends File {
   path?: string;
 }
+
+const fileSizeLimits: { [key: string]: number } = {
+  "application/vnd.ms-excel": 40, // 40 MB
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": 40, // 40 MB
+  "application/vnd.oasis.opendocument.spreadsheet": 40, // 40 MB
+  "image/png": 100, // 100 MB
+  "image/jpeg": 100, // 100 MB
+  "image/jpg": 100, // 100 MB
+};
 
 export default function UploadZone({
   children,
@@ -61,6 +72,10 @@ export default function UploadZone({
   const isTrial = !!trial;
   const maxSize = plan === "business" || plan === "datarooms" ? 250 : 30;
   const maxNumPages = plan === "business" || plan === "datarooms" ? 500 : 100;
+  const { limits, canAddDocuments } = useLimits();
+  const remainingDocuments = limits?.documents
+    ? limits?.documents - limits?.usage?.documents
+    : 0;
 
   const [progress, setProgress] = useState<number>(0);
   const [showProgress, setShowProgress] = useState(false);
@@ -68,6 +83,10 @@ export default function UploadZone({
 
   const onDrop = useCallback(
     (acceptedFiles: FileWithPath[]) => {
+      if (!canAddDocuments && acceptedFiles.length > remainingDocuments) {
+        toast.error("You have reached the maximum number of documents.");
+        return;
+      }
       const newUploads = acceptedFiles.map((file) => ({
         fileName: file.name,
         progress: 0,
@@ -76,6 +95,8 @@ export default function UploadZone({
 
       const uploadPromises = acceptedFiles.map(async (file, index) => {
         const path = (file as any).path || file.webkitRelativePath || file.name;
+
+        // count the number of pages in the file
         let numPages = 1;
         if (file.type === "application/pdf") {
           const buffer = await file.arrayBuffer();
@@ -94,6 +115,23 @@ export default function UploadZone({
               ...prev,
             ]);
           }
+        }
+
+        // check dynamic file size
+        const fileType = file.type;
+        const fileSizeLimit = fileSizeLimits[fileType] * 1024 * 1024;
+        if (file.size > fileSizeLimit) {
+          setUploads((prev) =>
+            prev.filter((upload) => upload.fileName !== file.name),
+          );
+
+          return setRejectedFiles((prev) => [
+            {
+              fileName: file.name,
+              message: `File size too big (max. ${fileSizeLimit} MB)`,
+            },
+            ...prev,
+          ]);
         }
 
         const { complete } = await resumableUpload({
@@ -130,12 +168,23 @@ export default function UploadZone({
 
         const uploadResult = await complete;
 
+        let contentType = uploadResult.fileType;
+        let supportedFileType = getSupportedContentType(contentType) ?? "";
+
+        if (
+          uploadResult.fileName.endsWith(".dwg") ||
+          uploadResult.fileName.endsWith(".dxf")
+        ) {
+          supportedFileType = "cad";
+          contentType = `image/vnd.${uploadResult.fileName.split(".").pop()}`;
+        }
+
         const documentData: DocumentData = {
           key: uploadResult.id,
-          supportedFileType: getSupportedContentType(uploadResult.fileType)!,
+          supportedFileType: supportedFileType,
           name: file.name,
           storageType: DocumentStorageType.S3_PATH,
-          contentType: uploadResult.fileType,
+          contentType: contentType,
         };
         const response = await createDocument({
           documentData,
@@ -241,6 +290,9 @@ export default function UploadZone({
               [], // ".xlsx"
             "text/csv": [], // ".csv"
             "application/vnd.oasis.opendocument.spreadsheet": [], // ".ods"
+            "image/png": [], // ".png"
+            "image/jpeg": [], // ".jpeg"
+            "image/jpg": [], // ".jpg"
           }
         : {
             "application/pdf": [], // ".pdf"
@@ -257,6 +309,11 @@ export default function UploadZone({
             "application/msword": [], // ".doc"
             "application/vnd.oasis.opendocument.text": [], // ".odt"
             "application/vnd.oasis.opendocument.presentation": [], // ".odp"
+            "image/vnd.dwg": [".dwg"], // ".dwg"
+            "image/vnd.dxf": [".dxf"], // ".dxf"
+            "image/png": [], // ".png"
+            "image/jpeg": [], // ".jpeg"
+            "image/jpg": [], // ".jpg"
           },
     multiple: true,
     maxSize: maxSize * 1024 * 1024, // 30 MB

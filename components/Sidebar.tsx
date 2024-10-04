@@ -17,7 +17,8 @@ import MenuIcon from "@/components/shared/icons/menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 import { usePlan } from "@/lib/swr/use-billing";
-import { cn } from "@/lib/utils";
+import useLimits from "@/lib/swr/use-limits";
+import { cn, nFormatter } from "@/lib/utils";
 
 import Banner from "./banner";
 import ProBanner from "./billing/pro-banner";
@@ -26,6 +27,7 @@ import ProfileMenu from "./profile-menu";
 import SiderbarFolders from "./sidebar-folders";
 import { AddTeamModal } from "./teams/add-team-modal";
 import SelectTeam from "./teams/select-team";
+import { Progress } from "./ui/progress";
 import { ScrollArea } from "./ui/scroll-area";
 
 export default function Sidebar() {
@@ -66,6 +68,9 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
   const { data: session, status } = useSession();
   const { plan: userPlan, trial: userTrial, loading } = usePlan();
   const isTrial = !!userTrial;
+  const { limits } = useLimits();
+  const linksLimit = limits?.links;
+  const documentsLimit = limits?.documents;
 
   const router = useRouter();
   const { currentTeam, teams, isLoading }: TeamContextType =
@@ -281,6 +286,25 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
             <ProBanner setShowProBanner={setShowProBanner} />
           ) : null}
 
+          <div className="mb-2">
+            {linksLimit ? (
+              <UsageProgress
+                title="Links"
+                unit="links"
+                usage={limits?.usage?.links}
+                usageLimit={linksLimit}
+              />
+            ) : null}
+            {documentsLimit ? (
+              <UsageProgress
+                title="Documents"
+                unit="documents"
+                usage={limits?.usage?.documents}
+                usageLimit={documentsLimit}
+              />
+            ) : null}
+          </div>
+
           <div className="hidden w-full lg:block">
             <ProfileMenu size="large" />
           </div>
@@ -289,3 +313,35 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
     </div>
   );
 };
+
+function UsageProgress(data: {
+  title: string;
+  unit: string;
+  usage?: number;
+  usageLimit?: number;
+}) {
+  let { title, unit, usage, usageLimit } = data;
+  let usagePercentage = 0;
+  if (usage !== undefined && usageLimit !== undefined) {
+    usagePercentage = (usage / usageLimit) * 100;
+  }
+
+  return (
+    <div className="p-2">
+      {/* <div className="flex items-center space-x-2">
+        <h3 className="font-medium">{title}</h3>
+      </div> */}
+
+      <div className="mt-2 flex flex-col space-y-2">
+        {usage !== undefined && usageLimit !== undefined ? (
+          <p className="text-sm text-foreground">
+            <span>{nFormatter(usage)}</span> / {nFormatter(usageLimit)} {unit}
+          </p>
+        ) : (
+          <div className="h-5 w-32 animate-pulse rounded-md bg-muted" />
+        )}
+        <Progress value={usagePercentage} className="h-2 bg-muted" max={100} />
+      </div>
+    </div>
+  );
+}

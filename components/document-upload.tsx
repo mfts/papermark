@@ -14,7 +14,9 @@ const fileSizeLimits: { [key: string]: number } = {
   "application/vnd.ms-excel": 40, // 40 MB
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": 40, // 40 MB
   "application/vnd.oasis.opendocument.spreadsheet": 40, // 40 MB
-  "text/csv": 40, // 40 MB
+  "image/png": 100, // 100 MB
+  "image/jpeg": 100, // 100 MB
+  "image/jpg": 100, // 100 MB
 };
 
 export default function DocumentUpload({
@@ -43,6 +45,9 @@ export default function DocumentUpload({
               [], // ".xlsx"
             "text/csv": [], // ".csv"
             "application/vnd.oasis.opendocument.spreadsheet": [], // ".ods"
+            "image/png": [], // ".png"
+            "image/jpeg": [], // ".jpeg"
+            "image/jpg": [], // ".jpg"
           }
         : {
             "application/pdf": [], // ".pdf"
@@ -59,6 +64,11 @@ export default function DocumentUpload({
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
               [], // ".docx"
             "application/vnd.oasis.opendocument.text": [], // ".odt"
+            "image/vnd.dwg": [".dwg"], // ".dwg"
+            "image/vnd.dxf": [".dxf"], // ".dxf"
+            "image/png": [], // ".png"
+            "image/jpeg": [], // ".jpeg"
+            "image/jpg": [], // ".jpg"
           },
     multiple: false,
     maxSize: maxSize * 1024 * 1024, // 30 MB

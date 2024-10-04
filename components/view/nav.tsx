@@ -78,7 +78,11 @@ export default function Nav({
   hasWatermark?: boolean;
 }) {
   const downloadFile = async () => {
-    if (!allowDownload || type === "notion" || isPreview) return;
+    if (isPreview) {
+      toast.error("You cannot download documents in preview mode.");
+      return;
+    }
+    if (!allowDownload || type === "notion") return;
     try {
       const response = await fetch(`/api/links/download`, {
         method: "POST",
@@ -91,8 +95,6 @@ export default function Nav({
       if (hasWatermark) {
         const pdfBlob = await response.blob();
         const blobUrl = URL.createObjectURL(pdfBlob);
-
-        console.log("Blob URL:", blobUrl);
 
         const a = document.createElement("a");
         a.href = blobUrl;
@@ -147,6 +149,7 @@ export default function Nav({
                 </Link>
               )}
             </div>
+            <div id="view-breadcrump-portal"></div>
             {isDataroom && setDocumentData ? (
               <Breadcrumb>
                 <BreadcrumbList>

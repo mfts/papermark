@@ -232,6 +232,15 @@ export default async function handle(
             (doc) => doc.document.versions[0].storageType !== "VERCEL_BLOB",
           );
 
+        folderDocs &&
+          folderDocs.forEach((doc) =>
+            addFileToStructure(
+              folder.path,
+              doc.document.name,
+              doc.document.versions[0].file,
+            ),
+          );
+
         // If the folder is empty, ensure it's still added to the structure
         if (folderDocs && folderDocs.length === 0) {
           addFileToStructure(folder.path, "", "");

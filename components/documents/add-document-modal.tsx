@@ -28,8 +28,11 @@ import {
   createNewDocumentVersion,
 } from "@/lib/documents/create-document";
 import { putFile } from "@/lib/files/put-file";
+import useLimits from "@/lib/swr/use-limits";
 import { copyToClipboard } from "@/lib/utils";
 import { getSupportedContentType } from "@/lib/utils/get-content-type";
+
+import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
 
 export function AddDocumentModal({
   newVersion,
@@ -52,6 +55,7 @@ export function AddDocumentModal({
   const [currentFile, setCurrentFile] = useState<File | null>(null);
   const [notionLink, setNotionLink] = useState<string | null>(null);
   const teamInfo = useTeam();
+  const { canAddDocuments } = useLimits();
 
   const teamId = teamInfo?.currentTeam?.id as string;
 
@@ -69,16 +73,29 @@ export function AddDocumentModal({
       return; // prevent form from submitting
     }
 
+    if (!canAddDocuments) {
+      toast.error("You have reached the maximum number of documents.");
+      return;
+    }
+
     try {
       setUploading(true);
 
-      const contentType = currentFile.type;
-      const supportedFileType = getSupportedContentType(contentType);
+      let contentType = currentFile.type;
+      let supportedFileType = getSupportedContentType(contentType);
+
+      if (
+        currentFile.name.endsWith(".dwg") ||
+        currentFile.name.endsWith(".dxf")
+      ) {
+        supportedFileType = "cad";
+        contentType = `image/vnd.${currentFile.name.split(".").pop()}`;
+      }
 
       if (!supportedFileType) {
         setUploading(false);
         toast.error(
-          "Unsupported file format. Please upload a PDF, Powerpoint, Excel, or Word file.",
+          "Unsupported file format. Please upload a PDF, Powerpoint, Excel, Word or image file.",
         );
         return;
       }
@@ -243,6 +260,12 @@ export function AddDocumentModal({
     event: FormEvent<HTMLFormElement>,
   ): Promise<void> => {
     event.preventDefault();
+
+    if (!canAddDocuments) {
+      toast.error("You have reached the maximum number of documents.");
+      return;
+    }
+
     const validateNotionPageURL = parsePageId(notionLink);
     // Check if it's a valid URL or not by Regx
     const isValidURL =
@@ -344,6 +367,24 @@ export function AddDocumentModal({
     setIsOpen(!isOpen);
     setAddDocumentModalOpen && setAddDocumentModalOpen(!isOpen);
   };
+
+  if (!canAddDocuments && children) {
+    if (newVersion) {
+      return (
+        <UpgradePlanModal
+          clickedPlan="Pro"
+          trigger={"limit_upload_document_version"}
+        >
+          {children}
+        </UpgradePlanModal>
+      );
+    }
+    return (
+      <UpgradePlanModal clickedPlan="Pro" trigger={"limit_upload_documents"}>
+        <Button>Upgrade to Add Documents</Button>
+      </UpgradePlanModal>
+    );
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={clearModelStates}>

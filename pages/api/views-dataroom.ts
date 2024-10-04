@@ -1,10 +1,11 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
-import { LinkAudienceType } from "@prisma/client";
+import { ItemType, LinkAudienceType } from "@prisma/client";
 import { waitUntil } from "@vercel/functions";
 import { getServerSession } from "next-auth/next";
 import { parsePageId } from "notion-utils";
 
+import { hashToken } from "@/lib/api/auth/token";
 import sendNotification from "@/lib/api/notification-helper";
 import { sendVerificationEmail } from "@/lib/emails/send-email-verification";
 import { getFile } from "@/lib/files/get-file";
@@ -106,6 +107,7 @@ export default async function handle(
       watermarkConfig: true,
       groupId: true,
       audienceType: true,
+      allowDownload: true,
       dataroom: {
         select: {
           teamId: true,
@@ -223,23 +225,28 @@ export default async function handle(
   // Check if email verification is required for visiting the link
   if (link.emailAuthenticated && !token && !dataroomVerified) {
     const token = newId("email");
+    const hashedToken = hashToken(token);
     const expiresAt = new Date();
-    expiresAt.setMinutes(expiresAt.getMinutes() + 20); // token expires in 20 minutes
+    expiresAt.setHours(expiresAt.getHours() + 23); // token expires at 23 hours
+
+    const ipAddress = getIpAddress(req.headers);
 
     await prisma.verificationToken.create({
       data: {
-        token,
-        identifier: `${linkId}:${email}`,
+        token: hashedToken,
+        identifier: `${linkId}:${hashToken(ipAddress)}:${email}`,
         expires: expiresAt,
       },
     });
 
     // set the default verification url
-    let verificationUrl: string = `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${linkId}/?token=${token}&email=${encodeURIComponent(email)}`;
+    let verificationUrl: string =
+      `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${linkId}?token=${hashedToken}&email=${encodeURIComponent(email)}` +
+      (previewToken ? `&previewToken=${previewToken}` : "");
 
     if (link.domainSlug && link.slug) {
       // if custom domain is enabled, use the custom domain
-      verificationUrl = `https://${link.domainSlug}/${link.slug}/?token=${token}&email=${encodeURIComponent(email)}`;
+      verificationUrl = `https://${link.domainSlug}/${link.slug}?token=${hashedToken}&email=${encodeURIComponent(email)}`;
     }
 
     await sendVerificationEmail(email, verificationUrl);
@@ -252,10 +259,12 @@ export default async function handle(
 
   let isEmailVerified: boolean = false;
   if (link.emailAuthenticated && token && !dataroomVerified) {
+    const hashedToken = token; // INFO: token is already hashed
+    const ipAddress = getIpAddress(req.headers);
     const verification = await prisma.verificationToken.findUnique({
       where: {
-        token: token,
-        identifier: `${linkId}:${verifiedEmail}`,
+        token: hashedToken,
+        identifier: `${linkId}:${hashToken(ipAddress)}:${email}`,
       },
     });
 
@@ -273,12 +282,12 @@ export default async function handle(
       return;
     }
 
-    // delete the token after verification
-    await prisma.verificationToken.delete({
-      where: {
-        token: token,
-      },
-    });
+    // // delete the token after verification
+    // await prisma.verificationToken.delete({
+    //   where: {
+    //     token: hashedToken,
+    //   },
+    // });
 
     isEmailVerified = true;
   }
@@ -505,7 +514,7 @@ export default async function handle(
         return;
       }
 
-      if (documentVersion.type === "pdf") {
+      if (documentVersion.type === "pdf" || documentVersion.type === "image") {
         documentVersion.file = await getFile({
           data: documentVersion.file,
           type: documentVersion.storageType,
@@ -546,12 +555,50 @@ export default async function handle(
       console.timeEnd("get-file");
     }
 
+    // check if viewer can download the document based on group permissions
+    let canDownload: boolean = link.allowDownload ?? false;
+    if (
+      link.allowDownload &&
+      link.audienceType === LinkAudienceType.GROUP &&
+      link.groupId &&
+      documentId &&
+      dataroomId
+    ) {
+      const dataroomDocument = await prisma.dataroomDocument.findUnique({
+        where: {
+          dataroomId_documentId: {
+            dataroomId: dataroomId,
+            documentId: documentId,
+          },
+        },
+        select: { id: true },
+      });
+      if (!dataroomDocument) {
+        canDownload = false;
+      } else {
+        const groupDocumentPermission =
+          await prisma.viewerGroupAccessControls.findUnique({
+            where: {
+              groupId_itemId: {
+                groupId: link.groupId,
+                itemId: dataroomDocument.id,
+              },
+              itemType: ItemType.DATAROOM_DOCUMENT,
+            },
+            select: { canDownload: true },
+          });
+        canDownload = groupDocumentPermission?.canDownload ?? false;
+      }
+    }
+
     const returnObject = {
       message: "View recorded",
       viewId: !isPreview && newView ? newView.id : undefined,
       isPreview: isPreview ? true : undefined,
       file:
-        (documentVersion && documentVersion.type === "pdf") ||
+        (documentVersion &&
+          (documentVersion.type === "pdf" ||
+            documentVersion.type === "image")) ||
         (documentVersion && useAdvancedExcelViewer)
           ? documentVersion.file
           : undefined,
@@ -585,6 +632,7 @@ export default async function handle(
         useAdvancedExcelViewer
           ? useAdvancedExcelViewer
           : undefined,
+      canDownload: canDownload,
     };
 
     return res.status(200).json(returnObject);

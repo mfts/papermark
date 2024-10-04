@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { useRouter } from "next/router";
 
 import { useEffect, useMemo, useState } from "react";
@@ -8,8 +9,9 @@ import { motion } from "framer-motion";
 import { CheckIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
 
 import { useAnalytics } from "@/lib/analytics";
 import { STAGGER_CHILD_VARIANTS } from "@/lib/constants";
@@ -28,7 +30,7 @@ export function UpgradePlanModal({
   setOpen,
   children,
 }: {
-  clickedPlan: "Data Rooms" | "Business" | "Pro";
+  clickedPlan: "Pro" | "Business" | "Data Rooms";
   trigger?: string;
   open?: boolean;
   setOpen?: React.Dispatch<React.SetStateAction<boolean>>;
@@ -41,63 +43,85 @@ export function UpgradePlanModal({
   const [period, setPeriod] = useState<"yearly" | "monthly">("yearly");
   const [clicked, setClicked] = useState<boolean>(false);
   const teamInfo = useTeam();
-  const { plan: teamPlan, trial } = usePlan();
+  const { plan: teamPlan, trial, isCustomer } = usePlan();
   const analytics = useAnalytics();
 
   const isTrial = !!trial;
 
-  const features = useMemo(() => {
-    if (plan === "Pro") {
-      return [
-        "2 users included",
-        "Custom branding",
-        "Folder organization",
-        "Require email verification",
-        "Papermark branding removed",
-        "1-year analytics retention",
-      ];
-    }
+  const planFeatures = useMemo(
+    () => ({
+      Pro: {
+        featureIntro: "Everything in Free, plus:",
+        features: [
+          "2 users included",
+          "100 documents",
+          "Unlimited links",
+          "Custom branding",
+          "Folder organization",
+          "Require email verification",
+          "More file types: pppt, docx, excel",
+          "Papermark branding removed",
+          "1-year analytics retention",
+        ],
+      },
+      Business: {
+        featureIntro: "Everything in Pro, plus:",
+        features: [
+          "3 users included",
+          "1 dataroom",
+          <span key="custom-dataroom">
+            Custom domain <b>for documents</b>
+          </span>,
+          "Unlimited folder levels",
+          "Unlimited documents",
+          "Large file uploads",
+          "Multi-file sharing",
+          "Allow/Block list",
+          "Dataroom branding",
+          "More file types: dmg (cad)",
+          "2-year analytics retention",
+        ],
+      },
+      "Data Rooms": {
+        featureIntro: "Everything in Business, plus:",
+        features: [
+          "3 users included",
+          "Unlimited data rooms",
+          <span key="custom-dataroom">
+            Custom domain <b>for data rooms</b>
+          </span>,
+          "Advanced data rooms analytics",
+          "NDA agreements",
+          "Dynamic Watermark",
+          "Granular user/group permisssions",
+          "Invite users directly from Papermark",
+          "Audit log",
+          "24h priority support",
+          "Custom onboarding ",
+        ],
+      },
+    }),
+    [],
+  );
 
-    if (plan === "Business") {
-      return [
-        "3 users included",
-        "1 dataroom",
-        "Multi-file sharing",
-        <span key="custom-domain">
-          Custom domain <b>for documents</b>
-        </span>,
-        "Advanced link controls",
-        "Allow/Block list",
-        "Unlimited documents",
-        "Unlimited subfolder levels",
-        "Large file uploads",
-        "48h priority support",
-      ];
+  const plansToShow = useMemo(() => {
+    switch (clickedPlan) {
+      case "Pro":
+        return ["Pro", "Business"];
+      case "Business":
+        return ["Business", "Data Rooms"];
+      case "Data Rooms":
+        return ["Data Rooms"];
+      default:
+        return ["Pro", "Business"];
     }
-    if (plan === "Data Rooms") {
-      return [
-        "3 users included",
-        "Unlimited data rooms",
-        <span key="custom-dataroom">
-          Custom domain <b>for data rooms</b>
-        </span>,
+  }, [clickedPlan]);
 
-        "NDA agreements",
-        "Dynamic watermark",
-        "Granular user/group permisssions",
-        "Advanced data rooms analytics",
-        "24h priority support",
-        "Custom onboarding",
-      ];
-    }
-
-    return [
-      "2 users",
-      "Custom branding",
-      "1-year analytics retention",
-      "Folders",
-    ];
-  }, [plan]);
+  // Add this new constant to determine if only Data Rooms plan is shown
+  const isOnlyDataRooms = useMemo(
+    () => plansToShow.length === 1 && plansToShow[0] === "Data Rooms",
+    [plansToShow],
+  );
 
   // Track analytics event when modal is opened
   useEffect(() => {
@@ -127,196 +151,155 @@ export function UpgradePlanModal({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{buttonChild}</DialogTrigger>
-      <DialogContent className="bg-background text-foreground">
-        <motion.div
-          variants={{
-            show: {
-              transition: {
-                staggerChildren: 0.15,
-              },
-            },
-          }}
-          initial="hidden"
-          animate="show"
-          className="flex flex-col items-center justify-center space-y-3 border-b border-border py-8 sm:px-12"
-        >
-          <motion.div variants={STAGGER_CHILD_VARIANTS}>
-            <p className="text-2xl font-bold tracking-tighter text-foreground">
-              Papermark
-            </p>
-          </motion.div>
-          <motion.h3
-            className="text-lg font-medium"
-            variants={STAGGER_CHILD_VARIANTS}
-          >
-            Upgrade to {plan}
-          </motion.h3>
-          <motion.p
-            className="text-center text-sm text-muted-foreground"
-            variants={STAGGER_CHILD_VARIANTS}
-          >
-            Enjoy higher limits and extra features with our {plan} plan.
-          </motion.p>
-        </motion.div>
+      <DialogContent
+        className="max-h-[90vh] overflow-y-auto bg-gray-50 text-foreground dark:bg-gray-900"
+        style={{
+          width: isOnlyDataRooms ? "550px" : "90vw", // Adjust width based on plans shown
+          maxWidth: isOnlyDataRooms ? "550px" : "900px", // Adjust maxWidth based on plans shown
+        }}
+      >
+        <div className="flex items-center justify-center">
+          <span className="mr-2 text-sm">Monthly</span>
+          <Switch
+            checked={period === "yearly"}
+            onCheckedChange={() =>
+              setPeriod(period === "monthly" ? "yearly" : "monthly")
+            }
+          />
+          <span className="ml-2 text-sm">
+            Annually <span className="text-[#fb7a00]">(Save up to 25%)</span>
+          </span>
+        </div>
 
-        <div className="bg-background pb-8 text-left sm:px-8">
-          <Tabs className="pb-4" defaultValue={plan}>
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="Pro" onClick={() => setPlan("Pro")}>
-                Pro
-              </TabsTrigger>
-              <TabsTrigger value="Business" onClick={() => setPlan("Business")}>
-                Business
-              </TabsTrigger>
-              <TabsTrigger
-                value="Data Rooms"
-                onClick={() => setPlan("Data Rooms")}
-              >
-                Data Rooms
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-          <motion.div
-            className="flex flex-col space-y-3"
-            variants={STAGGER_CHILD_VARIANTS}
-            initial="hidden"
-            animate="show"
-          >
-            <div className="mb-4">
-              <div className="mb-4 flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <h4 className="font-medium text-foreground">
-                    {plan} {capitalize(period)}
-                  </h4>
-                  <Badge
-                    variant="outline"
-                    className="text-sm font-normal normal-case"
-                  >
-                    {`€${
-                      PLANS.find((p) => p.name === plan)!.price[period].amount
-                    }/month`}{" "}
-                    {period === "yearly" ? (
-                      <span className="ml-1 text-xs">(billed yearly)</span>
-                    ) : null}
-                  </Badge>
-                </div>
-                <button
-                  onClick={() => {
-                    setPeriod(period === "monthly" ? "yearly" : "monthly");
-                  }}
-                  className="text-xs text-muted-foreground underline underline-offset-4 transition-colors hover:text-gray-800 hover:dark:text-muted-foreground/80"
-                >
-                  {period === "monthly"
-                    ? plan === "Business"
-                      ? "Want 43% off?"
-                      : plan === "Data Rooms"
-                        ? "Want 50% off?"
-                        : "Want 35% off?"
-                    : "Switch to monthly"}
-                </button>
+        <div className="isolate grid grid-cols-1 gap-4 overflow-hidden rounded-xl p-4 md:grid-cols-2">
+          {plansToShow.map((planOption) => (
+            <div
+              key={planOption}
+              className={`relative flex flex-col rounded-lg border ${
+                planOption === "Business"
+                  ? "border-[#fb7a00]"
+                  : "border-gray-200"
+              } bg-white p-6 shadow-sm ${
+                isOnlyDataRooms
+                  ? "mx-auto w-[450px] max-w-full md:col-span-2"
+                  : ""
+              } dark:bg-gray-900`}
+            >
+              <div className="mb-4 border-b border-gray-200 pb-2">
+                <h3 className="text-balance text-xl font-medium text-gray-900 dark:text-white">
+                  Papermark {planOption}
+                </h3>
+                {planOption === "Business" && (
+                  <span className="absolute right-2 top-2 rounded bg-[#fb7a00] px-2 py-1 text-xs text-white">
+                    Most popular
+                  </span>
+                )}
               </div>
-              <motion.div
-                variants={{
-                  show: {
-                    transition: {
-                      staggerChildren: 0.08,
-                    },
-                  },
-                }}
-                initial="hidden"
-                animate="show"
-                className="flex flex-col space-y-2"
-              >
-                {features.map((feature, i) => (
-                  <motion.div
-                    key={i}
-                    variants={STAGGER_CHILD_VARIANTS}
-                    className="flex items-center gap-x-3 text-sm text-muted-foreground"
-                  >
-                    <CheckIcon
-                      className="h-5 w-5 flex-none text-[#fb7a00]"
-                      aria-hidden="true"
-                    />
-                    <span>{feature}</span>
-                  </motion.div>
-                ))}
-              </motion.div>
-            </div>
-            <Button
-              loading={clicked}
-              onClick={() => {
-                setClicked(true);
-                // @ts-ignore
-                // prettier-ignore
 
-                if (teamPlan !== "free") {
-                  fetch(
-                    `/api/teams/${teamInfo?.currentTeam?.id}/billing/manage`,
-                    {
-                      method: "POST",
-                    },
-                  )
-                    .then(async (res) => {
-                      const url = await res.json();
-                      router.push(url);
-                    })
-                    .catch((err) => {
-                      alert(err);
-                      setClicked(false);
-                    });
-                } else {
-
-                fetch(
-                  `/api/teams/${
-                    teamInfo?.currentTeam?.id
-                  }/billing/upgrade?priceId=${
-                    PLANS.find((p) => p.name === plan)!.price[period].priceIds[
-                      process.env.NEXT_PUBLIC_VERCEL_ENV === "production"
-                        ? "production"
-                        : "test"
-                    ]
-                  }`,
+              {/* Add pricing information here */}
+              <div className="mb-2">
+                <span className="text-balance text-4xl font-medium tabular-nums text-gray-900 dark:text-white">
+                  €
                   {
-                    method: "POST",
-                    headers: {
-                      "Content-Type": "application/json",
-                    },
-                  },
-                )
-                  .then(async (res) => {
-                    const data = await res.json();
-                    const { id: sessionId } = data;
-                    const stripe = await getStripe();
-                    stripe?.redirectToCheckout({ sessionId });
-                  })
-                  .catch((err) => {
-                    alert(err);
-                    setClicked(false);
-                  });
+                    PLANS.find((p) => p.name === planOption)?.price[period]
+                      .amount
+                  }
+                </span>
+                <span className="text-gray-500 dark:text-white/75">/month</span>
+              </div>
+
+              <p className="mt-4 text-sm text-gray-600 dark:text-white">
+                {
+                  planFeatures[planOption as keyof typeof planFeatures]
+                    .featureIntro
                 }
-              }}
-            >{`Upgrade to ${plan} ${capitalize(period)}`}</Button>
-            <div className="flex items-center justify-center space-x-2">
-              {plan === "Business" && !isTrial ? (
-                <DataroomTrialModal>
-                  <button
-                    className="text-center text-xs text-muted-foreground underline-offset-4 transition-all hover:text-gray-800 hover:underline hover:dark:text-muted-foreground/80"
-                    onClick={() => analytics.capture("Dataroom Trial Clicked")}
-                  >
-                    Looking for a trial?
-                  </button>
-                </DataroomTrialModal>
-              ) : (
-                <a
-                  href="https://cal.com/marcseitz/papermark"
-                  target="_blank"
-                  className="text-center text-xs text-muted-foreground underline-offset-4 transition-all hover:text-gray-800 hover:underline hover:dark:text-muted-foreground/80"
+              </p>
+
+              <ul className="mb-6 mt-2 space-y-2 text-sm leading-6 text-gray-600 dark:text-muted-foreground dark:text-white/75">
+                {planFeatures[
+                  planOption as keyof typeof planFeatures
+                ].features.map((feature, i) => (
+                  <li key={i} className="flex items-center text-sm">
+                    <CheckIcon className="mr-3 h-5 w-5 flex-shrink-0 text-[#fb7a00]" />
+                    <span>{feature}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <div className="mt-auto">
+                <Button
+                  variant={planOption === "Business" ? "default" : "outline"}
+                  className={`w-full py-2 text-sm ${
+                    planOption === "Business"
+                      ? "bg-[#fb7a00] hover:bg-[#fb7a00]"
+                      : "bg-gray-800 text-white hover:bg-gray-900 hover:text-white"
+                  }`}
+                  loading={clicked}
+                  onClick={() => {
+                    setClicked(true);
+                    if (isCustomer && teamPlan !== "free") {
+                      fetch(
+                        `/api/teams/${teamInfo?.currentTeam?.id}/billing/manage`,
+                        {
+                          method: "POST",
+                        },
+                      )
+                        .then(async (res) => {
+                          const url = await res.json();
+                          router.push(url);
+                        })
+                        .catch((err) => {
+                          alert(err);
+                          setClicked(false);
+                        });
+                    } else {
+                      fetch(
+                        `/api/teams/${
+                          teamInfo?.currentTeam?.id
+                        }/billing/upgrade?priceId=${
+                          PLANS.find((p) => p.name === planOption)!.price[
+                            period
+                          ].priceIds[
+                            process.env.NEXT_PUBLIC_VERCEL_ENV === "production"
+                              ? "production"
+                              : "test"
+                          ]
+                        }`,
+                        {
+                          method: "POST",
+                          headers: {
+                            "Content-Type": "application/json",
+                          },
+                        },
+                      )
+                        .then(async (res) => {
+                          const data = await res.json();
+                          const { id: sessionId } = data;
+                          const stripe = await getStripe();
+                          stripe?.redirectToCheckout({ sessionId });
+                        })
+                        .catch((err) => {
+                          alert(err);
+                          setClicked(false);
+                        });
+                    }
+                  }}
                 >
-                  Looking for Papermark Enterprise?
-                </a>
-              )}
+                  {clicked
+                    ? "Redirecting to Stripe..."
+                    : `Upgrade to ${planOption} ${capitalize(period)}`}
+                </Button>
+              </div>
             </div>
-          </motion.div>
+          ))}
+        </div>
+        <div className="text-center">
+          <Link
+            href="/settings/upgrade"
+            className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+          >
+            See all plans
+          </Link>
         </div>
       </DialogContent>
     </Dialog>

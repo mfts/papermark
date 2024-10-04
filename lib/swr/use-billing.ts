@@ -48,6 +48,7 @@ type PlanWithTrial = `${BasePlan}+drtrial`;
 
 type PlanResponse = {
   plan: BasePlan | PlanWithTrial;
+  isCustomer: boolean;
 };
 
 interface PlanDetails {
@@ -73,9 +74,6 @@ export function usePlan() {
   const { data: plan, error } = useSWR<PlanResponse>(
     teamId && `/api/teams/${teamId}/billing/plan`,
     fetcher,
-    {
-      dedupingInterval: 60000,
-    },
   );
 
   // Parse the plan using the parsing function
@@ -84,6 +82,7 @@ export function usePlan() {
   return {
     plan: parsedPlan.plan,
     trial: parsedPlan.trial,
+    isCustomer: plan?.isCustomer,
     loading: !plan && !error,
     error,
   };

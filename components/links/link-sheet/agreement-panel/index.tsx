@@ -62,8 +62,13 @@ export default function AgreementSheet({
       const contentType = currentFile.type;
       const supportedFileType = getSupportedContentType(contentType);
 
-      if (!supportedFileType || contentType !== "application/pdf") {
-        toast.error("Unsupported file format. Please upload a PDF file.");
+      if (
+        !supportedFileType ||
+        (supportedFileType !== "pdf" && supportedFileType !== "docs")
+      ) {
+        toast.error(
+          "Unsupported file format. Please upload a PDF or Word file.",
+        );
         return;
       }
 

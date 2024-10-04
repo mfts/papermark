@@ -1,5 +1,5 @@
 import { useTeam } from "@/context/team-context";
-import { FileIcon, FolderIcon, FolderPlusIcon, PlusIcon } from "lucide-react";
+import { FolderPlusIcon, PlusIcon } from "lucide-react";
 
 import { AddDocumentModal } from "@/components/documents/add-document-modal";
 import { DocumentsList } from "@/components/documents/documents-list";

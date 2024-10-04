@@ -15,6 +15,13 @@ export function getSupportedContentType(contentType: string): string | null {
     case "application/vnd.openxmlformats-officedocument.presentationml.presentation":
     case "application/vnd.oasis.opendocument.presentation":
       return "slides";
+    case "image/vnd.dwg":
+    case "image/vnd.dxf":
+      return "cad";
+    case "image/png":
+    case "image/jpeg":
+    case "image/jpg":
+      return "image";
     default:
       return null;
   }
@@ -46,6 +53,16 @@ export function getExtensionFromContentType(
       return "ppt";
     case "application/msword":
       return "doc";
+    case "image/vnd.dwg":
+      return "dwg";
+    case "image/vnd.dxf":
+      return "dxf";
+    case "image/png":
+      return "png";
+    case "image/jpeg":
+      return "jpeg";
+    case "image/jpg":
+      return "jpg";
     default:
       return null;
   }

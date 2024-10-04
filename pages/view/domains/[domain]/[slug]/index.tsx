@@ -1,8 +1,11 @@
 import { GetStaticPropsContext } from "next";
 import { useRouter } from "next/router";
 
+import { useEffect, useState } from "react";
+
 import NotFound from "@/pages/404";
 import { Brand, DataroomBrand } from "@prisma/client";
+import Cookies from "js-cookie";
 import { useSession } from "next-auth/react";
 import { ExtendedRecordMap } from "notion-types";
 import { parsePageId } from "notion-utils";
@@ -201,6 +204,35 @@ export default function ViewPage({
 }) {
   const router = useRouter();
   const { data: session, status } = useSession();
+  const [storedToken, setStoredToken] = useState<string | undefined>(undefined);
+  const [storedEmail, setStoredEmail] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    // Retrieve token from cookie on component mount
+    const cookieToken = Cookies.get("pm_vft");
+    const storedEmail = window.localStorage.getItem("papermark.email");
+    if (cookieToken) {
+      setStoredToken(cookieToken);
+      if (storedEmail) {
+        setStoredEmail(storedEmail.toLowerCase());
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    const { token } = router.query as { token?: string };
+    // Store token in cookie when it's available from the query
+    if (token) {
+      // set the cookie to expire in 24 hours
+      Cookies.set("pm_vft", token, {
+        path: router.asPath.split("?")[0],
+        expires: 1,
+        sameSite: "strict",
+        secure: true,
+      });
+      setStoredToken(token);
+    }
+  }, [router.query]);
 
   if (router.isFallback) {
     return (
@@ -287,7 +319,7 @@ export default function ViewPage({
         />
         <DocumentView
           link={link}
-          userEmail={verifiedEmail ?? userEmail}
+          userEmail={verifiedEmail ?? storedEmail ?? userEmail}
           userId={userId}
           isProtected={!!(emailProtected || linkPassword || enableAgreement)}
           notionData={notionData}
@@ -297,7 +329,7 @@ export default function ViewPage({
           previewToken={previewToken}
           disableEditEmail={!!disableEditEmail}
           useCustomAccessForm={useCustomAccessForm}
-          token={token}
+          token={storedToken ?? token}
           verifiedEmail={verifiedEmail}
         />
       </>
@@ -369,7 +401,7 @@ export default function ViewPage({
         />
         <DataroomView
           link={link}
-          userEmail={verifiedEmail ?? userEmail}
+          userEmail={verifiedEmail ?? storedEmail ?? userEmail}
           userId={userId}
           isProtected={!!(emailProtected || linkPassword || enableAgreement)}
           brand={brand}
@@ -377,7 +409,7 @@ export default function ViewPage({
           previewToken={previewToken}
           disableEditEmail={!!disableEditEmail}
           useCustomAccessForm={useCustomAccessForm}
-          token={token}
+          token={storedToken ?? token}
           verifiedEmail={verifiedEmail}
         />
       </>

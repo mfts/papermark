@@ -72,7 +72,7 @@ export function UploadNotificationDrawer({
                   href={`/documents/${upload.documentId}`}
                   className="flex items-center justify-between"
                 >
-                  <span>{upload.fileName}</span>
+                  <span className="w-72 truncate">{upload.fileName}</span>
                   {upload.progress === 100 ? (
                     <CheckIcon
                       className="h-6 w-6 rounded-full bg-emerald-500 p-1 text-background"
