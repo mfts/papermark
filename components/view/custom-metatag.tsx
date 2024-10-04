@@ -27,11 +27,10 @@ const CustomMetaTag = ({
 
       {favicon && (
         <>
-          <link rel="icon" type="image/x-icon" href={favicon} />
+          <link rel="icon" type="image/x-icon" href={favicon} key="favicon" />
           {favicon.endsWith(".ico") && (
             <link rel="icon" type="image/x-icon" href={favicon} />
           )}
-          <meta name="theme-color" content="#ffffff" />
           {favicon.endsWith(".png") && (
             <link rel="icon" type="image/png" href={favicon} sizes="32x32" />
           )}
