@@ -1,7 +1,5 @@
 **Side Quest**: Record your first user experience of onboarding on papermark
-
 **Points**: 150-300 Points
-
 **Proof**: Record yourself going through the setup of Papermark for the first time and provide
 feedback. Add your handle to the list below.
 
