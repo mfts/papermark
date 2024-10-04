@@ -69,7 +69,7 @@ export default function App({
           content="https://www.papermark.io/_static/meta-image.png"
           key="tw-image"
         />
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" href="/favicon.ico" key="favicon" />
       </Head>
       <SessionProvider session={session}>
         <PostHogCustomProvider>

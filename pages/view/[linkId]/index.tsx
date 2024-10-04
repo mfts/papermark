@@ -11,7 +11,7 @@ import { ExtendedRecordMap } from "notion-types";
 import { parsePageId } from "notion-utils";
 
 import LoadingSpinner from "@/components/ui/loading-spinner";
-import CustomMetatag from "@/components/view/custom-metatag";
+import CustomMetaTag from "@/components/view/custom-metatag";
 import DataroomView from "@/components/view/dataroom/dataroom-view";
 import DocumentView from "@/components/view/document-view";
 
@@ -94,6 +94,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
             metaTitle: link.metaTitle,
             metaDescription: link.metaDescription,
             metaImage: link.metaImage,
+            metaFavicon: link.metaFavicon ?? "/favicon.ico",
             metaUrl: `https://www.papermark.io/view/${linkId}`,
           },
           showPoweredByBanner: link.showBanner || teamPlan === "free",
@@ -147,6 +148,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
             metaTitle: link.metaTitle,
             metaDescription: link.metaDescription,
             metaImage: link.metaImage,
+            metaFavicon: link.metaFavicon ?? "/favicon.ico",
             metaUrl: `https://www.papermark.io/view/${linkId}`,
           },
           showPoweredByBanner: false,
@@ -192,6 +194,7 @@ export default function ViewPage({
     metaDescription: string | null;
     metaImage: string | null;
     metaUrl: string | null;
+    metaFavicon: string | null;
   };
   showPoweredByBanner: boolean;
   showAccountCreationSlide: boolean;
@@ -256,7 +259,8 @@ export default function ViewPage({
     if (!linkData || status === "loading" || router.isFallback) {
       return (
         <>
-          <CustomMetatag
+          <CustomMetaTag
+            favicon={meta.metaFavicon}
             enableBranding={meta.enableCustomMetatag ?? false}
             title={
               meta.metaTitle ??
@@ -301,7 +305,8 @@ export default function ViewPage({
 
     return (
       <>
-        <CustomMetatag
+        <CustomMetaTag
+          favicon={meta.metaFavicon}
           enableBranding={meta.enableCustomMetatag ?? false}
           title={
             meta.metaTitle ??
@@ -337,7 +342,8 @@ export default function ViewPage({
     if (!link || status === "loading" || router.isFallback) {
       return (
         <>
-          <CustomMetatag
+          <CustomMetaTag
+            favicon={meta.metaFavicon}
             enableBranding={meta.enableCustomMetatag ?? false}
             title={
               meta.metaTitle ??
@@ -382,7 +388,8 @@ export default function ViewPage({
 
     return (
       <>
-        <CustomMetatag
+        <CustomMetaTag
+          favicon={meta.metaFavicon}
           enableBranding={meta.enableCustomMetatag ?? false}
           title={
             meta.metaTitle ??

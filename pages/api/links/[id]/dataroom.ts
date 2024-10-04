@@ -36,6 +36,7 @@ export default async function handle(
           metaTitle: true,
           metaDescription: true,
           metaImage: true,
+          metaFavicon: true,
           linkType: true,
           dataroom: {
             select: {

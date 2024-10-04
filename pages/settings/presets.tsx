@@ -2,7 +2,8 @@ import { ChangeEvent, useCallback, useEffect, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { LinkPreset } from "@prisma/client";
-import { Upload as ArrowUpTrayIcon } from "lucide-react";
+import { Upload as ArrowUpTrayIcon, PlusIcon } from "lucide-react";
+import { DropEvent } from "react-dropzone";
 import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
 import useSWRImmutable from "swr/immutable";
@@ -13,11 +14,18 @@ import Preview from "@/components/settings/og-preview";
 import { SettingsHeader } from "@/components/settings/settings-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import { Textarea } from "@/components/ui/textarea";
 
 import { usePlan } from "@/lib/swr/use-billing";
-import { cn, convertDataUrlToFile, fetcher, uploadImage } from "@/lib/utils";
+import {
+  cn,
+  convertDataUrlToFile,
+  fetcher,
+  uploadImage,
+  validateImageDimensions,
+} from "@/lib/utils";
 import { resizeImage } from "@/lib/utils/resize-image";
 
 export default function Presets() {
@@ -29,6 +37,7 @@ export default function Presets() {
   );
 
   const [data, setData] = useState<{
+    metaFavicon: string | null;
     metaImage: string | null;
     metaTitle: string | null;
     metaDescription: string | null;
@@ -36,12 +45,15 @@ export default function Presets() {
   }>({
     metaImage: null,
     metaTitle: null,
+    metaFavicon: null,
     metaDescription: null,
     enableCustomMetatag: false,
   });
 
   const [fileError, setFileError] = useState<string | null>(null);
+  const [faviconFileError, setFaviconFileError] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
+  const [faviconDragActive, setFaviconDragActive] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -51,6 +63,7 @@ export default function Presets() {
         metaImage: presets.metaImage,
         metaTitle: presets.metaTitle,
         metaDescription: presets.metaDescription,
+        metaFavicon: presets.metaFavicon,
       });
     }
   }, [presets]);
@@ -62,7 +75,11 @@ export default function Presets() {
       if (file) {
         if (file.size / 1024 / 1024 > 5) {
           setFileError("File size too big (max 5MB)");
-        } else if (file.type !== "image/png" && file.type !== "image/jpeg") {
+        } else if (
+          file.type !== "image/png" &&
+          file.type !== "image/jpeg" &&
+          file.type !== "image/jpg"
+        ) {
           setFileError("File type not supported (.png or .jpg only)");
         } else {
           const image = await resizeImage(file);
@@ -78,17 +95,34 @@ export default function Presets() {
 
   const handleSavePreset = async (e: any) => {
     e.preventDefault();
-
     setIsLoading(true);
 
-    let blobUrl: string | null =
+    // Upload meta image if it's a data URL
+    let blobUrlImage: string | null =
       data.metaImage && data.metaImage.startsWith("data:")
         ? null
         : data.metaImage;
     if (data.metaImage && data.metaImage.startsWith("data:")) {
-      const blob = convertDataUrlToFile({ dataUrl: data.metaImage });
-      blobUrl = await uploadImage(blob);
-      setData({ ...data, metaImage: blobUrl });
+      const blobImage = convertDataUrlToFile({ dataUrl: data.metaImage });
+      blobUrlImage = await uploadImage(blobImage);
+      setData({
+        ...data,
+        metaImage: blobUrlImage,
+      });
+    }
+
+    // Upload meta favicon if it's a data URL
+    let blobUrlFavicon: string | null =
+      data.metaFavicon && data.metaFavicon.startsWith("data:")
+        ? null
+        : data.metaFavicon;
+    if (data.metaFavicon && data.metaFavicon.startsWith("data:")) {
+      const blobFavicon = convertDataUrlToFile({ dataUrl: data.metaFavicon });
+      blobUrlFavicon = await uploadImage(blobFavicon);
+      setData({
+        ...data,
+        metaFavicon: blobUrlFavicon,
+      });
     }
 
     const res = await fetch(`/api/teams/${teamInfo?.currentTeam?.id}/presets`, {
@@ -122,12 +156,55 @@ export default function Presets() {
         metaTitle: null,
         metaDescription: null,
         enableCustomMetatag: false,
+        metaFavicon: null,
       });
       setIsLoading(false);
       toast.success("Preset reset successfully");
       mutatePreset();
     }
   };
+
+  const onChangeFavicon = useCallback(
+    async (e: ChangeEvent<HTMLInputElement>) => {
+      setFaviconFileError(null);
+      const file = e.target.files && e.target.files[0];
+      if (file) {
+        if (file.size / 1024 / 1024 > 1) {
+          setFaviconFileError("File size too big (max 1MB)");
+        } else if (
+          file.type !== "image/png" &&
+          file.type !== "image/x-icon" &&
+          file.type !== "image/svg+xml"
+        ) {
+          setFaviconFileError(
+            "File type not supported (.png, .ico, .svg only)",
+          );
+        } else {
+          const image = await resizeImage(file, {
+            width: 36,
+            height: 36,
+            quality: 1,
+          });
+          const isValidDimensions = await validateImageDimensions(
+            image,
+            16,
+            48,
+          );
+          if (!isValidDimensions) {
+            setFaviconFileError(
+              "Image dimensions must be between 16x16 and 48x48",
+            );
+          } else {
+            setData((prev) => ({
+              ...prev,
+              metaFavicon: image,
+            }));
+          }
+        }
+      }
+    },
+    [setData],
+  );
 
   return (
     <AppLayout>
@@ -144,12 +221,12 @@ export default function Presets() {
               </p>
             </div>
           </div>
-          <div className="grid w-full gap-x-8 divide-x divide-border overflow-auto scrollbar-hide md:grid-cols-2 md:overflow-hidden">
-            <div className="scrollbar-hide md:max-h-[95vh] md:overflow-auto">
-              <div className="sticky top-0 z-10 flex h-10 items-center justify-center border-b border-border px-5 sm:h-14">
+          <div className="grid w-full divide-x divide-border overflow-auto scrollbar-hide md:grid-cols-2 md:overflow-hidden">
+            <div className="px-4 scrollbar-hide md:max-h-[95svh] md:overflow-auto">
+              <div className="sticky top-0 z-10 flex h-10 items-center justify-center border-b border-border bg-white px-5 dark:bg-gray-900 sm:h-14">
                 <h2 className="text-lg font-medium">Social Media Card</h2>
               </div>
-              <div className="relative mt-4 space-y-3 rounded-md">
+              <div className="relative mt-5 space-y-3 rounded-md px-5">
                 <div>
                   <div className="flex items-center justify-between">
                     <p className="block text-sm font-medium text-foreground">
@@ -160,8 +237,8 @@ export default function Presets() {
                     ) : null}
                   </div>
                   <label
-                    htmlFor="image"
-                    className="group relative mt-1 flex aspect-[1200/630] h-full min-h-[250px] cursor-pointer flex-col items-center justify-center rounded-md border border-input bg-white shadow-sm transition-all hover:border-muted-foreground hover:bg-gray-50 hover:ring-muted-foreground dark:bg-gray-800 hover:dark:bg-transparent"
+                    htmlFor="mainImage"
+                    className="group relative mt-1 flex aspect-[1200/630] h-full cursor-pointer flex-col items-center justify-center rounded-md border border-input bg-white shadow-sm transition-all hover:border-muted-foreground hover:bg-gray-50 hover:ring-muted-foreground dark:bg-gray-800 hover:dark:bg-transparent"
                   >
                     {false && (
                       <div className="absolute z-[5] flex h-full w-full items-center justify-center rounded-md bg-white">
@@ -197,7 +274,8 @@ export default function Presets() {
                             setFileError("File size too big (max 5MB)");
                           } else if (
                             file.type !== "image/png" &&
-                            file.type !== "image/jpeg"
+                            file.type !== "image/jpeg" &&
+                            file.type !== "image/jpg"
                           ) {
                             setFileError(
                               "File type not supported (.png or .jpg only)",
@@ -240,18 +318,139 @@ export default function Presets() {
                       <img
                         src={data.metaImage}
                         alt="Preview"
-                        className="aspect-[1200/630] h-full w-full rounded-md object-cover"
+                        className="h-full w-full rounded-md object-cover"
                       />
                     )}
                   </label>
-                  <div className="mt-1 flex rounded-md shadow-sm">
+                  <div className="mt-1 hidden rounded-md shadow-sm">
                     <input
-                      id="image"
+                      id="mainImage"
                       name="image"
                       type="file"
-                      accept="image/*"
+                      accept="image/png,image/jpeg,image/jpg"
                       className="sr-only"
                       onChange={onChangePicture}
+                    />
+                  </div>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="faviconIcon">
+                      Favicon Icon{" "}
+                      <span className="text-sm italic text-muted-foreground">
+                        (max 1 MB)
+                      </span>
+                    </Label>
+                    {faviconFileError ? (
+                      <p className="text-sm text-red-500">{faviconFileError}</p>
+                    ) : null}
+                  </div>
+                  <label
+                    htmlFor="faviconIcon"
+                    className="group relative mt-1 flex h-[4rem] w-[12rem] cursor-pointer flex-col items-center justify-center rounded-md border border-gray-300 bg-white shadow-sm transition-all hover:bg-gray-50"
+                    style={{
+                      backgroundImage:
+                        "linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(135deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(135deg, transparent 75%, #ccc 75%)",
+                      backgroundSize: "20px 20px",
+                      backgroundPosition: "0 0, 10px 0, 10px -10px, 0px 10px",
+                    }}
+                  >
+                    {false && (
+                      <div className="absolute z-[5] flex h-full w-full items-center justify-center rounded-md bg-white">
+                        <LoadingSpinner />
+                      </div>
+                    )}
+                    <div
+                      className="absolute z-[5] h-full w-full rounded-md"
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setFaviconDragActive(true);
+                      }}
+                      onDragEnter={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setFaviconDragActive(true);
+                      }}
+                      onDragLeave={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setFaviconDragActive(false);
+                      }}
+                      onDrop={async (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setFaviconDragActive(false);
+                        setFaviconFileError(null);
+                        const file =
+                          e.dataTransfer.files && e.dataTransfer.files[0];
+                        if (file) {
+                          if (file.size / 1024 / 1024 > 1) {
+                            setFaviconFileError("File size too big (max 1MB)");
+                          } else if (
+                            file.type !== "image/png" &&
+                            file.type !== "image/x-icon" &&
+                            file.type !== "image/svg+xml"
+                          ) {
+                            setFaviconFileError(
+                              "File type not supported (.png, .ico, .svg only)",
+                            );
+                          } else {
+                            const image = await resizeImage(file, {
+                              width: 36,
+                              height: 36,
+                              quality: 1,
+                            });
+                            const isValidDimensions =
+                              await validateImageDimensions(image, 16, 48);
+                            if (!isValidDimensions) {
+                              setFaviconFileError(
+                                "Image dimensions must be between 16x16 and 48x48",
+                              );
+                            } else {
+                              setData((prev) => ({
+                                ...prev,
+                                metaFavicon: image,
+                              }));
+                            }
+                          }
+                        }
+                      }}
+                    />
+                    <div
+                      className={`${
+                        faviconDragActive
+                          ? "cursor-copy border-2 border-black bg-gray-50 opacity-100"
+                          : ""
+                      } absolute z-[3] flex h-full w-full flex-col items-center justify-center rounded-md bg-white transition-all ${
+                        data.metaFavicon
+                          ? "opacity-0 group-hover:opacity-100"
+                          : "group-hover:bg-gray-50"
+                      }`}
+                    >
+                      <PlusIcon
+                        className={`${
+                          faviconDragActive ? "scale-110" : "scale-100"
+                        } h-7 w-7 text-gray-500 transition-all duration-75 group-hover:scale-110 group-active:scale-95`}
+                      />
+                      <span className="sr-only">OG image upload</span>
+                    </div>
+                    {data.metaFavicon && (
+                      <img
+                        src={data.metaFavicon}
+                        alt="Preview"
+                        className="h-full w-full rounded-md object-contain"
+                      />
+                    )}
+                  </label>
+                  <div className="mt-1 hidden rounded-md shadow-sm">
+                    <input
+                      id="faviconIcon"
+                      name="favicon"
+                      type="file"
+                      accept="image/png,image/x-icon,image/svg+xml"
+                      className="sr-only"
+                      onChange={onChangeFavicon}
                     />
                   </div>
                 </div>
@@ -347,7 +546,7 @@ export default function Presets() {
                 </div>
               </div>
             </div>
-            <div className="scrollbar-hide md:max-h-[95vh] md:overflow-auto">
+            <div className="px-4 scrollbar-hide md:max-h-[95svh] md:overflow-auto">
               <Preview data={data} setData={setData} />
             </div>
           </div>
