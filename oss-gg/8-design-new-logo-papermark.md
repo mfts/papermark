@@ -16,6 +16,6 @@ Your turn 👇
 
 ////////////////////////////
 
-» 02-October-2024 by [yourhandle](https://oss.gg/yourhandle) Logo Link: [logo](https://papermark.io)
+» 06-October-2024 by [Ionfinisher](https://oss.gg/Ionfinisher) Logo Link: [logo](https://drive.google.com/drive/folders/1-HI4AYMGrruscHXsDnlzmiTq-LtjS3eL?usp=drive_link)
 
 ---
