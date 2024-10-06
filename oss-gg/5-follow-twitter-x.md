@@ -1,6 +1,7 @@
 **Side Quest**: Follow us on twitter/X
 **Points**: 50 Points
-**Proof**: Add a screenshot of you following our twitter/X profile to the PR description. Add your name to the list below.
+**Proof**: ![image](https://github.com/user-attachments/assets/628d287f-0d84-4cd9-b8c8-611f874ef3c5)
+
 
 Please follow the following schema:
 
@@ -16,6 +17,6 @@ Your turn 👇
 
 ////////////////////////////
 
-» 01-October-2024 by YOUR NAME
+» 07-October-2024 by [@shatanikmahanty]
 
 ---
