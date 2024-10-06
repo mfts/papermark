@@ -25,11 +25,15 @@ export default function DataroomPage() {
           <DataroomHeader
             title={dataroom.name}
             description={dataroom.pId}
-            actions={[
-              <Button onClick={() => setModalOpen(true)} key={1}>
-                Invite users
-              </Button>,
-            ]}
+            // actions={[
+            //   <Button
+            //     disabled={true}
+            //     onClick={() => setModalOpen(true)}
+            //     key={1}
+            //   >
+            //     Invite users
+            //   </Button>,
+            // ]}
           />
 
           <DataroomNavigation dataroomId={dataroom.id} />
@@ -39,11 +43,11 @@ export default function DataroomPage() {
           {/* Visitors */}
           <DataroomViewersTable dataroomId={dataroom.id} />
 
-          <AddViewerModal
+          {/* <AddViewerModal
             dataroomId={dataroom.id}
             open={modalOpen}
             setOpen={setModalOpen}
-          />
+          /> */}
         </div>
       </div>
     </AppLayout>

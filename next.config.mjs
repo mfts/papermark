@@ -41,6 +41,15 @@ const nextConfig = {
           },
         ],
       },
+      {
+        source: "/view/:path*",
+        headers: [
+          {
+            key: "X-Robots-Tag",
+            value: "noindex",
+          },
+        ],
+      },
     ];
   },
   experimental: {
