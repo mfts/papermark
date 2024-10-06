@@ -16,6 +16,6 @@ Your turn 👇
 
 ////////////////////////////
 
-» 07-October-2024 by [@shatanikmahanty]
+» 07-October-2024 by [yourhandle](https://oss.gg/shatanikmahanty)
 
 ---
