@@ -1,6 +1,6 @@
 **Side Quest**: Follow us on LinkedIn
 **Points**: 50 Points
-**Proof**: Add a screenshot of you following our LinkedIn profile to the PR description. Add your name to the list below.
+**Proof**: ![image](https://github.com/user-attachments/assets/1db31851-44b2-4623-8dbf-f46c25662e36)
 
 Please follow the following schema:
 
@@ -16,6 +16,6 @@ Your turn 👇
 
 ////////////////////////////
 
-» 01-October-2024 by YOUR NAME
+» 07-October-2024 by [@shatanikmahanty]
 
 ---
