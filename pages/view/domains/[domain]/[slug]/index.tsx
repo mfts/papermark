@@ -99,6 +99,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
             metaTitle: link.metaTitle,
             metaDescription: link.metaDescription,
             metaImage: link.metaImage,
+            metaFavicon: link.metaFavicon || "/favicon.ico",
             metaUrl: `https://${domain}/${slug}` || null,
           },
           showAccountCreationSlide: link.showBanner || teamPlan === "free",
