@@ -16,6 +16,10 @@ Your turn 👇
 
 ////////////////////////////
 
-» 07-October-2024 by [yourhandle](https://oss.gg/shatanikmahanty) Logo Link: [logo](https://github.com/user-attachments/assets/1ed00635-07eb-4bdf-a62a-98a4d84ccfef)
+
+» 07-October-2024 by [shatanikmahanty](https://oss.gg/shatanikmahanty) Logo Link: [logo](https://github.com/user-attachments/assets/1ed00635-07eb-4bdf-a62a-98a4d84ccfef)
+
+» 04-October-2024 by [harshsbhat](https://oss.gg/harshsbhat) Logo Link: [logo](https://dub.sh/GAsHMmo)
+
 
 ---
