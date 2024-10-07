@@ -16,6 +16,10 @@ Your turn 👇
 
 ////////////////////////////
 
+
 » 06-October-2024 by [Ionfinisher](https://oss.gg/Ionfinisher) Logo Link: [logo](https://drive.google.com/drive/folders/1-HI4AYMGrruscHXsDnlzmiTq-LtjS3eL?usp=drive_link)
+
+» 04-October-2024 by [harshsbhat](https://oss.gg/harshsbhat) Logo Link: [logo](https://dub.sh/GAsHMmo)
+
 
 ---
