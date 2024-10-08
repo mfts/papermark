@@ -72,6 +72,7 @@ export default function DocumentHeader({
   const [orientationLoading, setOrientationLoading] = useState<boolean>(false);
   const [addDataRoomOpen, setAddDataRoomOpen] = useState<boolean>(false);
   const [addDocumentVersion, setAddDocumentVersion] = useState<boolean>(false);
+  const [openAddDocModal, setOpenAddDocModal] = useState<boolean>(false);
   const [createDataRoomOpen, setCreateDataRoomOpen] = useState<boolean>(false);
   const [trialModalOpen, setTrialModalOpen] = useState<boolean>(false);
   const [planModalOpen, setPlanModalOpen] = useState<boolean>(false);
@@ -441,9 +442,20 @@ export default function DocumentHeader({
         )}
 
         {primaryVersion.type !== "notion" && (
-          <AddDocumentModal newVersion>
+          <AddDocumentModal
+            newVersion
+            openModal={openAddDocModal}
+            setAddDocumentModalOpen={setOpenAddDocModal}
+          >
             <ButtonTooltip content="Upload a new version">
-              <button title="Upload a new version" className="hidden md:flex">
+              <button
+                title="Upload a new version"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setOpenAddDocModal(true);
+                }}
+                className="hidden md:flex"
+              >
                 <FileUp className="h-6 w-6" />
               </button>
             </ButtonTooltip>
