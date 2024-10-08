@@ -117,6 +117,11 @@ export default async function handle(
       dataroom: {
         select: {
           teamId: true,
+          team: {
+            select: {
+              plan: true,
+            },
+          },
         },
       },
     },
@@ -572,8 +577,8 @@ export default async function handle(
           file: true,
           storageType: true,
           pageNumber: true,
-          embeddedLinks: true,
-          pageLinks: true,
+          embeddedLinks: !link.dataroom?.team.plan.includes("free"),
+          pageLinks: !link.dataroom?.team.plan.includes("free"),
           metadata: true,
         },
       });
