@@ -40,6 +40,9 @@ export default async function handle(
       const team = await prisma.team.findUnique({
         where: {
           id: teamId,
+          plan: {
+            notIn: ["free", "free+drtrial"],
+          },
           users: {
             some: {
               userId: (session.user as CustomUser).id,
