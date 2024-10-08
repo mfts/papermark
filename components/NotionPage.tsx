@@ -13,6 +13,9 @@ import "react-notion-x/src/styles.css";
 
 import { determineTextColor } from "@/lib/utils/determine-text-color";
 
+// custom styles for notion
+import "@/styles/custom-notion-styles.css";
+
 import {
   Breadcrumb,
   BreadcrumbItem,
