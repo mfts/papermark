@@ -1,5 +1,6 @@
 import { JSXElementConstructor, ReactElement } from "react";
 
+import { render } from "@react-email/components";
 import { Resend } from "resend";
 
 import { log, nanoid } from "@/lib/utils";
@@ -34,6 +35,8 @@ export const sendEmail = async ({
     throw new Error("Resend not initialized");
   }
 
+  const plainText = await render(react, { plainText: true });
+
   try {
     const { data, error } = await resend.emails.send({
       from: marketing
@@ -51,6 +54,7 @@ export const sendEmail = async ({
       subject,
       react,
       scheduledAt,
+      text: plainText,
       headers: {
         "X-Entity-Ref-ID": nanoid(),
       },
