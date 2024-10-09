@@ -69,7 +69,7 @@ export default function Settings() {
                   headers: {
                     "Content-Type": "application/json",
                   },
-                  body: JSON.stringify(updateData),
+                  body: JSON.stringify({ name: updateData.name.trim() }),
                 }).then(async (res) => {
                   if (res.status === 200) {
                     await Promise.all([

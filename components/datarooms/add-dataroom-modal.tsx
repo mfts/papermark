@@ -48,7 +48,7 @@ export function AddDataroomModal({ children }: { children?: React.ReactNode }) {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            name: dataroomName,
+            name: dataroomName.trim(),
           }),
         },
       );

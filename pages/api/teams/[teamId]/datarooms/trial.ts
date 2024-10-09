@@ -88,7 +88,7 @@ export default async function handle(
 
       const dataroom = await prisma.dataroom.create({
         data: {
-          name: name.trim(),
+          name: name,
           teamId: teamId,
           pId: pId,
         },
