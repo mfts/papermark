@@ -21,5 +21,6 @@ Your turn 👇
 
 » 04-October-2024 by [harshsbhat](https://oss.gg/harshsbhat) Logo Link: [logo](https://dub.sh/GAsHMmo)
 
+» 08-October-2024 by [adityadeshlahre](https://oss.gg/adityadeshlahre) Logo Link: [logo](https://drive.google.com/drive/folders/13k22xMnX2fhnWK94vas_hO1t-ImqXcHZ?usp=drive_link)
 
 ---

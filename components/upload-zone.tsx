@@ -324,7 +324,7 @@ export default function UploadZone({
   return (
     <div
       {...getRootProps({ onClick: (evt) => evt.stopPropagation() })}
-      className="relative h-full min-h-[(calc(100vh-350px))]"
+      className="relative h-full min-h-[calc(100vh-350px)]"
     >
       <div
         className={cn(

@@ -95,6 +95,15 @@ export default async function handle(
       agreementId: true,
       enableWatermark: true,
       watermarkConfig: true,
+      document: {
+        select: {
+          team: {
+            select: {
+              plan: true,
+            },
+          },
+        },
+      },
     },
   });
 
@@ -419,8 +428,8 @@ export default async function handle(
           file: true,
           storageType: true,
           pageNumber: true,
-          embeddedLinks: true,
-          pageLinks: true,
+          embeddedLinks: !link.document?.team.plan.includes("free"),
+          pageLinks: !link.document?.team.plan.includes("free"),
           metadata: true,
         },
       });

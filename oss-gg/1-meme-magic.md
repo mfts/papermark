@@ -17,7 +17,6 @@ Your turn 👇
 
 ////////////////////////////
 
-» 01-October-2024 by YOUR NAME
-» Link to Tweet: https://x.com/...
+» 08-October-2024 by [@adityadeshlahre](https://oss.gg/adityadeshlahre) » Link to Tweet: [tweet](https://x.com/adityadeshlahre/status/1843361110864654598)
 
 ---

@@ -1,6 +1,6 @@
 import { useTeam } from "@/context/team-context";
 import { FolderPlusIcon, PlusIcon } from "lucide-react";
-
+import ErrorPage from "next/error";
 import { AddDocumentModal } from "@/components/documents/add-document-modal";
 import { DocumentsList } from "@/components/documents/documents-list";
 import { AddFolderModal } from "@/components/folders/add-folder-modal";
@@ -11,9 +11,16 @@ import { Separator } from "@/components/ui/separator";
 import useDocuments, { useRootFolders } from "@/lib/swr/use-documents";
 
 export default function Documents() {
-  const { documents } = useDocuments();
+  const { documents,error } = useDocuments();
   const { folders } = useRootFolders();
   const teamInfo = useTeam();
+
+  if (error && error.status === 404) {
+    return <ErrorPage statusCode={404} />;
+  }
+  if (error && error.status === 500) {
+    return <ErrorPage statusCode={500} />;
+  }
 
   return (
     <AppLayout>
