@@ -58,9 +58,7 @@ export default function DataroomGroupPage() {
           <div className="grid gap-5">
             <div className="flex flex-wrap justify-between gap-6">
               <div className="flex items-center gap-x-2">
-                <h1 className="text-xl font-semibold tracking-tight text-black">
-                  Groups
-                </h1>
+                <h1 className="text-xl font-semibold tracking-tight">Groups</h1>
               </div>
               <div className="flex w-full flex-wrap items-center gap-3 sm:w-auto">
                 <ButtonComponent />
