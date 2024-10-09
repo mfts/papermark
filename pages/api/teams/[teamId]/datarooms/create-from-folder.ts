@@ -186,7 +186,7 @@ export default async function handle(
       const dataroom = await prisma.dataroom.create({
         data: {
           pId: pId,
-          name: folderContents.name,
+          name: folderContents.name.trim(),
           teamId: teamId,
           documents: {
             create: folderContents.documents.map((doc) => ({
