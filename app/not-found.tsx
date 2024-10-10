@@ -24,7 +24,7 @@ const NotFound = () => {
         className="hidden dark:block"
       />
       <h2 className="text-xl font-medium">
-        Something went wrong!
+        Oops! We couldn't find the page you're looking for.
       </h2>
       <Button asChild>
         <Link href="/">
