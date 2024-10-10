@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
+
 import { useState } from "react";
+
 import { signInWithPasskey } from "@teamhanko/passkeys-next-auth-provider/client";
 import { signIn } from "next-auth/react";
 import { toast } from "sonner";
@@ -100,7 +102,9 @@ export default function Login() {
               type="submit"
               loading={clickedMethod === "email"}
               className={`${
-                clickedMethod ? "bg-black" : "bg-gray-800 hover:bg-gray-900"
+                clickedMethod === "email"
+                  ? "bg-black"
+                  : "bg-gray-800 hover:bg-gray-900"
               } focus:shadow-outline transform rounded px-4 py-2 text-white transition-colors duration-300 ease-in-out focus:outline-none`}
             >
               {emailButtonText}
