@@ -29,6 +29,43 @@ export default function Login() {
     "Continue with Email",
   );
 
+
+   // Email validation check and submit
+   const handleEmailSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // Email validation: Check if the email is valid
+    if (!email) {
+      toast.error("Please enter a vaild email!");
+      return;
+    }
+
+    // Simple regex for email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      toast.error("Invalid email format!");
+      return;
+    }
+
+    setIsLoginWithEmail(true);
+
+    signIn("email", {
+      email: email,
+      redirect: false,
+      ...(next && next.length > 0 ? { callbackUrl: next } : {}),
+    }).then((res) => {
+      if (res?.ok && !res?.error) {
+        setEmail("");
+        setEmailButtonText("Email sent - check your inbox!");
+        toast.success("Email sent - check your inbox!");
+      } else {
+        setEmailButtonText("Error sending email - try again?");
+        toast.error("Error sending email - try again?");
+      }
+      setIsLoginWithEmail(false);
+    });
+  };
+
   return (
     <div className="flex h-screen w-full flex-wrap ">
       {/* Left part */}
@@ -50,36 +87,12 @@ export default function Login() {
           </div>
           <form
             className="flex flex-col gap-4 px-4 pt-8 sm:px-16"
-            onSubmit={(e) => {
-              e.preventDefault();
-              setIsLoginWithEmail(true);
-              signIn("email", {
-                email: email,
-                redirect: false,
-                ...(next && next.length > 0 ? { callbackUrl: next } : {}),
-              }).then((res) => {
-                if (res?.ok && !res?.error) {
-                  setEmail("");
-                  setEmailButtonText("Email sent - check your inbox!");
-                  toast.success("Email sent - check your inbox!");
-                } else {
-                  setEmailButtonText("Error sending email - try again?");
-                  toast.error("Error sending email - try again?");
-                }
-                setIsLoginWithEmail(false);
-              });
-            }}
+            onSubmit={handleEmailSubmit}
           >
-            {/* <Input
-              className="border-1 bg-white border-gray-200 hover:border-gray-200 text-gray-800"
-              placeholder="jsmith@company.co"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            /> */}
-            <Label className="sr-only" htmlFor="email">
+            <label className="sr-only" htmlFor="email">
               Email
-            </Label>
-            <Input
+            </label>
+            <input
               id="email"
               placeholder="name@example.com"
               type="email"
@@ -91,17 +104,11 @@ export default function Login() {
               onChange={(e) => setEmail(e.target.value)}
               className="flex h-10 w-full rounded-md border-0 bg-background bg-white px-3 py-2 text-sm text-gray-900 ring-1 ring-gray-200 transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
             />
-            {/* <Button type="submit" disabled={isLoginWithEmail}>
-              {isLoginWithEmail && (
-                <Loader className="h-5 w-5 mr-2 animate-spin bg-gray-800 hover:bg-gray-900" />
-              )}
-              Continue with Email
-            </Button> */}
             <Button
               type="submit"
-              loading={isLoginWithEmail}
+              disabled={isLoginWithEmail}
               className={`${
-                isLoginWithEmail ? "bg-black" : "bg-gray-800 hover:bg-gray-900 "
+                isLoginWithEmail ? "bg-black" : "bg-gray-800 hover:bg-gray-900"
               } focus:shadow-outline transform rounded px-4 py-2 text-white transition-colors duration-300 ease-in-out focus:outline-none`}
             >
               {emailButtonText}
