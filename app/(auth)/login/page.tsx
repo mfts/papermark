@@ -2,11 +2,8 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-
 import { useState } from "react";
-
 import { signInWithPasskey } from "@teamhanko/passkeys-next-auth-provider/client";
-import { Loader } from "lucide-react";
 import { signIn } from "next-auth/react";
 import { toast } from "sonner";
 
