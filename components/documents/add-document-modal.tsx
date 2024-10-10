@@ -1,6 +1,6 @@
 import { useRouter } from "next/router";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { usePlausible } from "next-plausible";
@@ -40,10 +40,12 @@ export function AddDocumentModal({
   isDataroom,
   dataroomId,
   setAddDocumentModalOpen,
+  openModal,
 }: {
   newVersion?: boolean;
   children: React.ReactNode;
   isDataroom?: boolean;
+  openModal?: boolean;
   dataroomId?: string;
   setAddDocumentModalOpen?: (isOpen: boolean) => void;
 }) {
@@ -58,6 +60,10 @@ export function AddDocumentModal({
   const { canAddDocuments } = useLimits();
 
   const teamId = teamInfo?.currentTeam?.id as string;
+
+  useEffect(() => {
+    if (openModal) setIsOpen(openModal);
+  }, [openModal]);
 
   /** current folder name */
   const currentFolderPath = router.query.name as string[] | undefined;
