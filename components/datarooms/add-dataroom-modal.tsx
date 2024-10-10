@@ -22,10 +22,18 @@ import { usePlan } from "@/lib/swr/use-billing";
 
 import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
 
-export function AddDataroomModal({ children }: { children?: React.ReactNode }) {
+export function AddDataroomModal({
+  children,
+  openModal = false,
+  setOpenModal,
+}: {
+  children?: React.ReactNode;
+  openModal?: boolean;
+  setOpenModal?: React.Dispatch<React.SetStateAction<boolean>>;
+}) {
   const [dataroomName, setDataroomName] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
-  const [open, setOpen] = useState<boolean>(false);
+  const [open, setOpen] = useState<boolean>(openModal);
 
   const teamInfo = useTeam();
   const { plan } = usePlan();
@@ -71,6 +79,7 @@ export function AddDataroomModal({ children }: { children?: React.ReactNode }) {
     } finally {
       setLoading(false);
       setOpen(false);
+      if (openModal && setOpenModal) setOpenModal(false);
     }
   };
 
@@ -88,8 +97,17 @@ export function AddDataroomModal({ children }: { children?: React.ReactNode }) {
     }
   }
 
+  const onOpenChange = (open: boolean) => {
+    if (!open) {
+      setOpen(false);
+    } else {
+      setOpen(true);
+    }
+    if (openModal && setOpenModal) setOpenModal(false);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader className="text-start">
