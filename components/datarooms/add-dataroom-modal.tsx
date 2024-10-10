@@ -48,7 +48,7 @@ export function AddDataroomModal({ children }: { children?: React.ReactNode }) {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            name: dataroomName,
+            name: dataroomName.trim(),
           }),
         },
       );
@@ -106,7 +106,7 @@ export function AddDataroomModal({ children }: { children?: React.ReactNode }) {
             id="dataroom-name"
             placeholder="ACME Aquisition"
             className="mb-4 mt-1 w-full"
-            onChange={(e) => setDataroomName(e.target.value.trim())}
+            onChange={(e) => setDataroomName(e.target.value)}
           />
           <DialogFooter>
             <Button type="submit" className="h-9 w-full" loading={loading}>
