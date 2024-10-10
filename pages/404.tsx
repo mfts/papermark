@@ -10,7 +10,7 @@ export default function NotFound({ message }: { message?: string }) {
               <p className="text-sm font-semibold uppercase tracking-wide text-indigo-600">
                 404 error
               </p>
-              <h1 className="mt-2 text-4xl font-extrabold tracking-tight text-gray-100 sm:text-5xl">
+              <h1 className="mt-2 text-4xl font-extrabold tracking-tight text-slate-950 dark:text-gray-100 sm:text-5xl">
                 Page not found.
               </h1>
               <p className="mt-2 text-base text-gray-600">
