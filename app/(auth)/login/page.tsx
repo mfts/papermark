@@ -16,6 +16,7 @@ import Passkey from "@/components/shared/icons/passkey";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { LastUsed, useLastUsed } from "@/components/hooks/useLastUsed";
 
 export default function Login() {
   const { next } = useParams as { next?: string };
@@ -24,10 +25,13 @@ export default function Login() {
   const [isLoginWithGoogle, setIsLoginWithGoogle] = useState<boolean>(false);
   const [isLoginWithLinkedIn, setIsLoginWithLinkedIn] =
     useState<boolean>(false);
+  const [lastUsed, setLastUsed] = useLastUsed();
   const [email, setEmail] = useState<string>("");
   const [emailButtonText, setEmailButtonText] = useState<string>(
     "Continue with Email",
   );
+
+  console.log(lastUsed, lastUsed)
 
   return (
     <div className="flex h-screen w-full flex-wrap ">
@@ -60,6 +64,7 @@ export default function Login() {
               }).then((res) => {
                 if (res?.ok && !res?.error) {
                   setEmail("");
+                  setLastUsed("credentials")
                   setEmailButtonText("Email sent - check your inbox!");
                   toast.success("Email sent - check your inbox!");
                 } else {
@@ -100,17 +105,19 @@ export default function Login() {
             <Button
               type="submit"
               loading={isLoginWithEmail}
-              className={`${
-                isLoginWithEmail ? "bg-black" : "bg-gray-800 hover:bg-gray-900 "
-              } focus:shadow-outline transform rounded px-4 py-2 text-white transition-colors duration-300 ease-in-out focus:outline-none`}
+              className={`${isLoginWithEmail ? "bg-black" : "bg-gray-800 hover:bg-gray-900 "
+                } relative focus:shadow-outline transform rounded px-4 py-2 text-white transition-colors duration-300 ease-in-out focus:outline-none`}
             >
               {emailButtonText}
+              {lastUsed === "saml" && <LastUsed />}
+
             </Button>
           </form>
           <p className="py-4 text-center">or</p>
           <div className="flex flex-col space-y-2 px-4 sm:px-16">
             <Button
               onClick={() => {
+                setLastUsed("google")
                 setIsLoginWithGoogle(true);
                 signIn("google", {
                   ...(next && next.length > 0 ? { callbackUrl: next } : {}),
@@ -121,7 +128,7 @@ export default function Login() {
                 });
               }}
               disabled={isLoginWithGoogle}
-              className="flex items-center justify-center space-x-2  border border-gray-200 bg-gray-100 font-normal text-gray-900 hover:bg-gray-200 "
+              className="relative flex items-center justify-center space-x-2  border border-gray-200 bg-gray-100 font-normal text-gray-900 hover:bg-gray-200 "
             >
               {isLoginWithGoogle ? (
                 <Loader className="mr-2 h-5 w-5 animate-spin" />
@@ -129,9 +136,11 @@ export default function Login() {
                 <Google className="h-5 w-5" />
               )}
               <span>Continue with Google</span>
+              {lastUsed === "google" && <LastUsed />}
             </Button>
             <Button
               onClick={() => {
+                setLastUsed("linkedin")
                 setIsLoginWithLinkedIn(true);
                 signIn("linkedin", {
                   ...(next && next.length > 0 ? { callbackUrl: next } : {}),
@@ -142,7 +151,7 @@ export default function Login() {
                 });
               }}
               disabled={isLoginWithLinkedIn}
-              className="flex items-center justify-center space-x-2 border border-gray-200 bg-gray-100 font-normal text-gray-900 hover:bg-gray-200"
+              className="relative flex items-center justify-center space-x-2 border border-gray-200 bg-gray-100 font-normal text-gray-900 hover:bg-gray-200"
             >
               {isLoginWithLinkedIn ? (
                 <Loader className="mr-2 h-5 w-5 animate-spin " />
@@ -150,18 +159,22 @@ export default function Login() {
                 <LinkedIn />
               )}
               <span>Continue with LinkedIn</span>
+              {lastUsed === "linkedin" && <LastUsed />}
             </Button>
             <Button
-              onClick={() =>
+              onClick={() => {
+                setLastUsed("saml")
                 signInWithPasskey({
                   tenantId: process.env.NEXT_PUBLIC_HANKO_TENANT_ID as string,
                 })
               }
+              }
               variant="outline"
-              className="flex items-center justify-center space-x-2 border border-gray-200 bg-gray-100  font-normal text-gray-900 hover:bg-gray-200 hover:text-gray-900"
+              className="relative flex items-center justify-center space-x-2 border border-gray-200 bg-gray-100  font-normal text-gray-900 hover:bg-gray-200 hover:text-gray-900"
             >
               <Passkey className="h-4 w-4 " />
               <span>Continue with a passkey</span>
+              {lastUsed === "saml" && <LastUsed />}
             </Button>
           </div>
           <p className=" mt-10 w-full max-w-md px-4 text-xs text-muted-foreground sm:px-16">
@@ -215,6 +228,6 @@ export default function Login() {
           </div>
         </div>
       </div>
-    </div>
+    </div >
   );
 }
