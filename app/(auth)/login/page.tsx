@@ -17,20 +17,21 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
+export const authMethods = ["google", "email", "linkedin", "passkey"] as const;
+
+export type AuthMethod = (typeof authMethods)[number];
+
 export default function Login() {
   const { next } = useParams as { next?: string };
-
-  const [isLoginWithEmail, setIsLoginWithEmail] = useState<boolean>(false);
-  const [isLoginWithGoogle, setIsLoginWithGoogle] = useState<boolean>(false);
-  const [isLoginWithLinkedIn, setIsLoginWithLinkedIn] =
-    useState<boolean>(false);
+  const [clickedMethod, setClickedMethod] = useState<AuthMethod | undefined>(
+    undefined,
+  );
   const [email, setEmail] = useState<string>("");
   const [emailButtonText, setEmailButtonText] = useState<string>(
     "Continue with Email",
   );
-
   return (
-    <div className="flex h-screen w-full flex-wrap ">
+    <div className="flex h-screen w-full flex-wrap">
       {/* Left part */}
       <div className="flex w-full justify-center bg-white md:w-1/2 lg:w-2/5">
         <div
@@ -40,11 +41,11 @@ export default function Login() {
         <div className="z-10 mx-5 mt-[calc(20vh)] h-fit w-full max-w-md overflow-hidden rounded-lg sm:mx-0">
           <div className="flex flex-col items-center justify-center space-y-3 px-4 py-6 pt-8 text-center sm:px-16">
             <Link href="/">
-              <span className=" text-balance text-2xl font-semibold text-gray-800 ">
+              <span className="text-balance text-2xl font-semibold text-gray-800">
                 Welcome to Papermark
               </span>
             </Link>
-            <h3 className="text-balance text-sm text-gray-800 ">
+            <h3 className="text-balance text-sm text-gray-800">
               Share documents. Not attachments.
             </h3>
           </div>
@@ -52,7 +53,7 @@ export default function Login() {
             className="flex flex-col gap-4 px-4 pt-8 sm:px-16"
             onSubmit={(e) => {
               e.preventDefault();
-              setIsLoginWithEmail(true);
+              setClickedMethod("email");
               signIn("email", {
                 email: email,
                 redirect: false,
@@ -66,7 +67,8 @@ export default function Login() {
                   setEmailButtonText("Error sending email - try again?");
                   toast.error("Error sending email - try again?");
                 }
-                setIsLoginWithEmail(false);
+                // setIsLoginWithEmail(false);
+                setClickedMethod(undefined);
               });
             }}
           >
@@ -86,7 +88,7 @@ export default function Login() {
               autoCapitalize="none"
               autoComplete="email"
               autoCorrect="off"
-              disabled={isLoginWithEmail}
+              disabled={clickedMethod === "email"}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="flex h-10 w-full rounded-md border-0 bg-background bg-white px-3 py-2 text-sm text-gray-900 ring-1 ring-gray-200 transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
@@ -99,9 +101,9 @@ export default function Login() {
             </Button> */}
             <Button
               type="submit"
-              loading={isLoginWithEmail}
+              loading={clickedMethod === "email"}
               className={`${
-                isLoginWithEmail ? "bg-black" : "bg-gray-800 hover:bg-gray-900 "
+                clickedMethod ? "bg-black" : "bg-gray-800 hover:bg-gray-900"
               } focus:shadow-outline transform rounded px-4 py-2 text-white transition-colors duration-300 ease-in-out focus:outline-none`}
             >
               {emailButtonText}
@@ -111,60 +113,55 @@ export default function Login() {
           <div className="flex flex-col space-y-2 px-4 sm:px-16">
             <Button
               onClick={() => {
-                setIsLoginWithGoogle(true);
+                setClickedMethod("google");
                 signIn("google", {
                   ...(next && next.length > 0 ? { callbackUrl: next } : {}),
                 }).then((res) => {
                   if (res?.status) {
-                    setIsLoginWithGoogle(false);
+                    setClickedMethod(undefined);
                   }
                 });
               }}
-              disabled={isLoginWithGoogle}
-              className="flex items-center justify-center space-x-2  border border-gray-200 bg-gray-100 font-normal text-gray-900 hover:bg-gray-200 "
+              loading={clickedMethod === "google"}
+              disabled={clickedMethod && clickedMethod !== "google"}
+              className="flex items-center justify-center space-x-2 border border-gray-200 bg-gray-100 font-normal text-gray-900 hover:bg-gray-200"
             >
-              {isLoginWithGoogle ? (
-                <Loader className="mr-2 h-5 w-5 animate-spin" />
-              ) : (
-                <Google className="h-5 w-5" />
-              )}
+              <Google className="h-5 w-5" />
               <span>Continue with Google</span>
             </Button>
             <Button
               onClick={() => {
-                setIsLoginWithLinkedIn(true);
+                setClickedMethod("linkedin");
                 signIn("linkedin", {
                   ...(next && next.length > 0 ? { callbackUrl: next } : {}),
                 }).then((res) => {
                   if (res?.status) {
-                    setIsLoginWithLinkedIn(false);
+                    setClickedMethod(undefined);
                   }
                 });
               }}
-              disabled={isLoginWithLinkedIn}
+              loading={clickedMethod === "linkedin"}
+              disabled={clickedMethod && clickedMethod !== "linkedin"}
               className="flex items-center justify-center space-x-2 border border-gray-200 bg-gray-100 font-normal text-gray-900 hover:bg-gray-200"
             >
-              {isLoginWithLinkedIn ? (
-                <Loader className="mr-2 h-5 w-5 animate-spin " />
-              ) : (
-                <LinkedIn />
-              )}
+              <LinkedIn />
               <span>Continue with LinkedIn</span>
             </Button>
             <Button
-              onClick={() =>
+              onClick={() => {
                 signInWithPasskey({
                   tenantId: process.env.NEXT_PUBLIC_HANKO_TENANT_ID as string,
-                })
-              }
+                });
+              }}
+              disabled={clickedMethod && clickedMethod !== "passkey"}
               variant="outline"
-              className="flex items-center justify-center space-x-2 border border-gray-200 bg-gray-100  font-normal text-gray-900 hover:bg-gray-200 hover:text-gray-900"
+              className="flex items-center justify-center space-x-2 border border-gray-200 bg-gray-100 font-normal text-gray-900 hover:bg-gray-200 hover:text-gray-900"
             >
-              <Passkey className="h-4 w-4 " />
+              <Passkey className="h-4 w-4" />
               <span>Continue with a passkey</span>
             </Button>
           </div>
-          <p className=" mt-10 w-full max-w-md px-4 text-xs text-muted-foreground sm:px-16">
+          <p className="mt-10 w-full max-w-md px-4 text-xs text-muted-foreground sm:px-16">
             By clicking continue, you acknowledge that you have read and agree
             to Papermark&apos;s{" "}
             <Link href="/terms" className="underline">
@@ -181,7 +178,7 @@ export default function Login() {
       <div className="hidden w-full justify-center bg-gray-800 md:flex md:w-1/2 lg:w-3/5">
         <div className="flex w-full max-w-5xl px-4 py-20 md:px-8">
           <div
-            className="mx-auto flex w-full max-w-5xl justify-center rounded-3xl bg-gray-800 px-4 py-20  md:px-8"
+            className="mx-auto flex w-full max-w-5xl justify-center rounded-3xl bg-gray-800 px-4 py-20 md:px-8"
             id="features"
           >
             <div className="flex flex-col items-center">
@@ -203,10 +200,10 @@ export default function Login() {
                   </p>
                 </blockquote>
                 <figcaption className="mt-4">
-                  <div className="text-balance font-semibold text-white ">
+                  <div className="text-balance font-semibold text-white">
                     Jaski
                   </div>
-                  <div className="text-balance text-gray-400 ">
+                  <div className="text-balance text-gray-400">
                     Founder, Townhall Network
                   </div>
                 </figcaption>
