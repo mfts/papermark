@@ -103,6 +103,9 @@ export interface Geo {
   longitude?: string | undefined;
 }
 
+// Custom Auth Types
+export type AuthMethod = "email" | "google" | "linkedin" | "passkey";
+
 // Custom Domain Types
 
 export type DomainVerificationStatusProps =
