@@ -12,12 +12,14 @@ export default function AgreementSection({
   data,
   setData,
   agreementContent,
+  agreementName,
   brand,
   useCustomAccessForm,
 }: {
   data: DEFAULT_ACCESS_FORM_TYPE;
   setData: Dispatch<SetStateAction<DEFAULT_ACCESS_FORM_TYPE>>;
   agreementContent: string;
+  agreementName: string;
   brand?: Partial<Brand> | Partial<DataroomBrand> | null;
   useCustomAccessForm?: boolean;
 }) {
@@ -55,9 +57,7 @@ export default function AgreementSection({
                   : "white",
             }}
           >
-            {useCustomAccessForm
-              ? "Privacy Policy"
-              : "Non-Disclosure Agreement"}
+            {agreementName}
           </a>
           .
         </label>

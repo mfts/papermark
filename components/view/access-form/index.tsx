@@ -35,6 +35,7 @@ export default function AccessForm({
   requireEmail,
   requirePassword,
   requireAgreement,
+  agreementName,
   agreementContent,
   requireName,
   isLoading,
@@ -50,6 +51,7 @@ export default function AccessForm({
   requireEmail: boolean;
   requirePassword: boolean;
   requireAgreement?: boolean;
+  agreementName?: string;
   agreementContent?: string;
   requireName?: boolean;
   isLoading: boolean;
@@ -128,10 +130,11 @@ export default function AccessForm({
             {requirePassword ? (
               <PasswordSection {...{ data, setData, brand }} />
             ) : null}
-            {requireAgreement && agreementContent ? (
+            {requireAgreement && agreementContent && agreementName ? (
               <AgreementSection
                 {...{ data, setData, brand }}
                 agreementContent={agreementContent}
+                agreementName={agreementName}
                 useCustomAccessForm={useCustomAccessForm}
               />
             ) : null}
