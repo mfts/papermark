@@ -20,6 +20,7 @@ import { Label } from "@/components/ui/label";
 export default function Login() {
   const { next } = useParams as { next?: string };
 
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [isLoginWithEmail, setIsLoginWithEmail] = useState<boolean>(false);
   const [isLoginWithGoogle, setIsLoginWithGoogle] = useState<boolean>(false);
   const [isLoginWithLinkedIn, setIsLoginWithLinkedIn] =
@@ -53,6 +54,7 @@ export default function Login() {
             onSubmit={(e) => {
               e.preventDefault();
               setIsLoginWithEmail(true);
+              setIsSubmitting(true);
               signIn("email", {
                 email: email,
                 redirect: false,
@@ -67,6 +69,7 @@ export default function Login() {
                   toast.error("Error sending email - try again?");
                 }
                 setIsLoginWithEmail(false);
+                setIsSubmitting(false);
               });
             }}
           >
@@ -86,7 +89,7 @@ export default function Login() {
               autoCapitalize="none"
               autoComplete="email"
               autoCorrect="off"
-              disabled={isLoginWithEmail}
+              disabled={isSubmitting}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="flex h-10 w-full rounded-md border-0 bg-background bg-white px-3 py-2 text-sm text-gray-900 ring-1 ring-gray-200 transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
@@ -99,6 +102,7 @@ export default function Login() {
             </Button> */}
             <Button
               type="submit"
+              disabled={isSubmitting}
               loading={isLoginWithEmail}
               className={`${
                 isLoginWithEmail ? "bg-black" : "bg-gray-800 hover:bg-gray-900 "
@@ -112,15 +116,17 @@ export default function Login() {
             <Button
               onClick={() => {
                 setIsLoginWithGoogle(true);
+                setIsSubmitting(true);
                 signIn("google", {
                   ...(next && next.length > 0 ? { callbackUrl: next } : {}),
                 }).then((res) => {
                   if (res?.status) {
                     setIsLoginWithGoogle(false);
+                    setIsSubmitting(false);
                   }
                 });
               }}
-              disabled={isLoginWithGoogle}
+              disabled={isSubmitting}
               className="flex items-center justify-center space-x-2  border border-gray-200 bg-gray-100 font-normal text-gray-900 hover:bg-gray-200 "
             >
               {isLoginWithGoogle ? (
@@ -133,15 +139,17 @@ export default function Login() {
             <Button
               onClick={() => {
                 setIsLoginWithLinkedIn(true);
+                setIsSubmitting(true);
                 signIn("linkedin", {
                   ...(next && next.length > 0 ? { callbackUrl: next } : {}),
                 }).then((res) => {
                   if (res?.status) {
                     setIsLoginWithLinkedIn(false);
+                    setIsSubmitting(false);
                   }
                 });
               }}
-              disabled={isLoginWithLinkedIn}
+              disabled={isSubmitting}
               className="flex items-center justify-center space-x-2 border border-gray-200 bg-gray-100 font-normal text-gray-900 hover:bg-gray-200"
             >
               {isLoginWithLinkedIn ? (
@@ -157,6 +165,7 @@ export default function Login() {
                   tenantId: process.env.NEXT_PUBLIC_HANKO_TENANT_ID as string,
                 })
               }
+              disabled={isSubmitting}
               variant="outline"
               className="flex items-center justify-center space-x-2 border border-gray-200 bg-gray-100  font-normal text-gray-900 hover:bg-gray-200 hover:text-gray-900"
             >
