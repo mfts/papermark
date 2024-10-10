@@ -16,18 +16,56 @@ import Passkey from "@/components/shared/icons/passkey";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { AuthMethod } from "@/lib/types";
 
 export default function Login() {
   const { next } = useParams as { next?: string };
 
-  const [isLoginWithEmail, setIsLoginWithEmail] = useState<boolean>(false);
-  const [isLoginWithGoogle, setIsLoginWithGoogle] = useState<boolean>(false);
-  const [isLoginWithLinkedIn, setIsLoginWithLinkedIn] =
-    useState<boolean>(false);
   const [email, setEmail] = useState<string>("");
   const [emailButtonText, setEmailButtonText] = useState<string>(
-    "Continue with Email",
+    "Continue with Email"
   );
+  const [clickedMethod, setClickedMethod] = useState<AuthMethod | null>(null);
+
+  const handleLogin = async (provider: AuthMethod) => {
+    setClickedMethod(provider);
+
+    try {
+      if (provider === "email") {
+        if (!email) {
+          toast.error("Please enter a valid email address.");
+          return;
+        }
+        const res = await signIn("email", {
+          email: email,
+          redirect: false,
+          ...(next && next.length > 0 ? { callbackUrl: next } : {}),
+        });
+
+        if (res?.ok && !res?.error) {
+          setEmail("");
+          setEmailButtonText("Email sent - check your inbox!");
+          toast.success("Email sent - check your inbox!");
+        } else {
+          setEmailButtonText("Error sending email - try again?");
+          toast.error("Error sending email - try again?");
+        }
+      } else if (provider === "google" || provider === "linkedin") {
+        await signIn(provider, {
+          ...(next && next.length > 0 ? { callbackUrl: next } : {}),
+        });
+      } else if (provider === "passkey") {
+        await signInWithPasskey({
+          tenantId: process.env.NEXT_PUBLIC_HANKO_TENANT_ID as string,
+        });
+      }
+    } catch (error) {
+      console.error("Error during sign-in:", error);
+      toast.error("Error occurred. Please try again.");
+    } finally {
+      setClickedMethod(null);
+    }
+  };
 
   return (
     <div className="flex h-screen w-full flex-wrap ">
@@ -52,22 +90,7 @@ export default function Login() {
             className="flex flex-col gap-4 px-4 pt-8 sm:px-16"
             onSubmit={(e) => {
               e.preventDefault();
-              setIsLoginWithEmail(true);
-              signIn("email", {
-                email: email,
-                redirect: false,
-                ...(next && next.length > 0 ? { callbackUrl: next } : {}),
-              }).then((res) => {
-                if (res?.ok && !res?.error) {
-                  setEmail("");
-                  setEmailButtonText("Email sent - check your inbox!");
-                  toast.success("Email sent - check your inbox!");
-                } else {
-                  setEmailButtonText("Error sending email - try again?");
-                  toast.error("Error sending email - try again?");
-                }
-                setIsLoginWithEmail(false);
-              });
+              handleLogin("email");
             }}
           >
             {/* <Input
@@ -86,7 +109,7 @@ export default function Login() {
               autoCapitalize="none"
               autoComplete="email"
               autoCorrect="off"
-              disabled={isLoginWithEmail}
+              disabled={!!clickedMethod}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="flex h-10 w-full rounded-md border-0 bg-background bg-white px-3 py-2 text-sm text-gray-900 ring-1 ring-gray-200 transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
@@ -99,9 +122,12 @@ export default function Login() {
             </Button> */}
             <Button
               type="submit"
-              loading={isLoginWithEmail}
+              loading={clickedMethod === "email"}
+              disabled={!!clickedMethod}
               className={`${
-                isLoginWithEmail ? "bg-black" : "bg-gray-800 hover:bg-gray-900 "
+                clickedMethod === "email"
+                  ? "bg-black"
+                  : "bg-gray-800 hover:bg-gray-900"
               } focus:shadow-outline transform rounded px-4 py-2 text-white transition-colors duration-300 ease-in-out focus:outline-none`}
             >
               {emailButtonText}
@@ -110,20 +136,11 @@ export default function Login() {
           <p className="py-4 text-center">or</p>
           <div className="flex flex-col space-y-2 px-4 sm:px-16">
             <Button
-              onClick={() => {
-                setIsLoginWithGoogle(true);
-                signIn("google", {
-                  ...(next && next.length > 0 ? { callbackUrl: next } : {}),
-                }).then((res) => {
-                  if (res?.status) {
-                    setIsLoginWithGoogle(false);
-                  }
-                });
-              }}
-              disabled={isLoginWithGoogle}
-              className="flex items-center justify-center space-x-2  border border-gray-200 bg-gray-100 font-normal text-gray-900 hover:bg-gray-200 "
+              onClick={() => handleLogin("google")}
+              disabled={!!clickedMethod}
+              className="flex items-center justify-center space-x-2 border border-gray-200 bg-gray-100 font-normal text-gray-900 hover:bg-gray-200"
             >
-              {isLoginWithGoogle ? (
+              {clickedMethod === "google" ? (
                 <Loader className="mr-2 h-5 w-5 animate-spin" />
               ) : (
                 <Google className="h-5 w-5" />
@@ -131,36 +148,27 @@ export default function Login() {
               <span>Continue with Google</span>
             </Button>
             <Button
-              onClick={() => {
-                setIsLoginWithLinkedIn(true);
-                signIn("linkedin", {
-                  ...(next && next.length > 0 ? { callbackUrl: next } : {}),
-                }).then((res) => {
-                  if (res?.status) {
-                    setIsLoginWithLinkedIn(false);
-                  }
-                });
-              }}
-              disabled={isLoginWithLinkedIn}
+              onClick={() => handleLogin("linkedin")}
+              disabled={!!clickedMethod}
               className="flex items-center justify-center space-x-2 border border-gray-200 bg-gray-100 font-normal text-gray-900 hover:bg-gray-200"
             >
-              {isLoginWithLinkedIn ? (
-                <Loader className="mr-2 h-5 w-5 animate-spin " />
+              {clickedMethod === "linkedin" ? (
+                <Loader className="mr-2 h-5 w-5 animate-spin" />
               ) : (
                 <LinkedIn />
               )}
               <span>Continue with LinkedIn</span>
             </Button>
             <Button
-              onClick={() =>
-                signInWithPasskey({
-                  tenantId: process.env.NEXT_PUBLIC_HANKO_TENANT_ID as string,
-                })
-              }
-              variant="outline"
-              className="flex items-center justify-center space-x-2 border border-gray-200 bg-gray-100  font-normal text-gray-900 hover:bg-gray-200 hover:text-gray-900"
+              onClick={() => handleLogin("passkey")}
+              disabled={!!clickedMethod}
+              className="flex items-center justify-center space-x-2 border border-gray-200 bg-gray-100 font-normal text-gray-900 hover:bg-gray-200 hover:text-gray-900"
             >
-              <Passkey className="h-4 w-4 " />
+              {clickedMethod === "passkey" ? (
+                <Loader className="mr-2 h-5 w-5 animate-spin" />
+              ) : (
+                <Passkey className="h-4 w-4" />
+              )}
               <span>Continue with a passkey</span>
             </Button>
           </div>
