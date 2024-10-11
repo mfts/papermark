@@ -16,9 +16,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-export const authMethods = ["google", "email", "linkedin", "passkey"] as const;
+const authMethods = ["google", "email", "linkedin", "passkey"] as const;
 
-export type AuthMethod = (typeof authMethods)[number];
+type AuthMethod = (typeof authMethods)[number];
 
 export default function Login() {
   const { next } = useParams as { next?: string };
