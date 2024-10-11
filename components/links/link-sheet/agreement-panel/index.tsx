@@ -162,7 +162,7 @@ export default function AgreementSheet({
         <form className="flex grow flex-col" onSubmit={handleSubmit}>
           <div className="flex-grow space-y-6">
             <div className="w-full space-y-2">
-              <Label htmlFor="name">Name</Label>
+              <Label htmlFor="name">Display name</Label>
               <Input
                 className="flex w-full rounded-md border-0 bg-background py-1.5 text-foreground shadow-sm ring-1 ring-inset ring-input placeholder:text-muted-foreground focus:ring-2 focus:ring-inset focus:ring-gray-400 sm:text-sm sm:leading-6"
                 id="name"
