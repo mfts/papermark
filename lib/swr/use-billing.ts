@@ -65,7 +65,7 @@ function parsePlan(plan: BasePlan | PlanWithTrial | PlanWithOld): PlanDetails {
   const parts = plan.split("+");
   return {
     plan: parts[0] as BasePlan, // Always the base plan
-    trial: parts.includes("drtrial") ? parts[1] : null, // 'drtrial' if present, otherwise null
+    trial: parts.includes("drtrial") ? "drtrial" : null, // 'drtrial' if present, otherwise null
     old: parts.includes("old"), // true if 'old' is present, otherwise false
   };
 }
