@@ -80,8 +80,7 @@ cp .env.example .env
 ### 4. Initialize the database
 
 ```shell
-npx prisma generate
-npx prisma migrate deploy
+npm run dev:prisma
 ```
 
 ### 5. Run the dev server
