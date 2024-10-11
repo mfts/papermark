@@ -10,12 +10,18 @@ export const getStripe = (account: boolean = false) => {
         process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY_LIVE_OLD ??
           process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY_OLD ??
           "",
+        {
+          apiVersion: "2024-06-20",
+        },
       );
     } else {
       stripePromise = loadStripe(
         process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY_LIVE ??
           process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ??
           "",
+        {
+          apiVersion: "2024-06-20",
+        },
       );
     }
   }
