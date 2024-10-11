@@ -63,7 +63,10 @@ export const PLANS = [
             old: "price_1Q3bcHFJyGSZ96lhElXBA5C1",
             new: "price_1Q8aUBBYvhH6u7U7LPIVxYpz",
           },
-          production: { old: "price_1P3FK4FJyGSZ96lhD67yF3lj", new: "" },
+          production: {
+            old: "price_1P3FK4FJyGSZ96lhD67yF3lj",
+            new: "price_1Q8egtBYvhH6u7U7gq1Pbp5Z",
+          },
         },
       },
       yearly: {
@@ -74,7 +77,10 @@ export const PLANS = [
             old: "price_1Q3bV9FJyGSZ96lhCYWIcmg5",
             new: "price_1Q8aTkBYvhH6u7U7kUiNTSLX",
           },
-          production: { old: "price_1Q3gfNFJyGSZ96lh2jGhEadm", new: "" },
+          production: {
+            old: "price_1Q3gfNFJyGSZ96lh2jGhEadm",
+            new: "price_1Q8egtBYvhH6u7U7T4ehn7SM",
+          },
         },
       },
     },
@@ -92,7 +98,10 @@ export const PLANS = [
             old: "price_1Q3bPhFJyGSZ96lhnxpiJMwz",
             new: "price_1Q8aWlBYvhH6u7U7gTeKJJ0Y",
           },
-          production: { old: "price_1Q3gbVFJyGSZ96lhf7hsZciQ", new: "" },
+          production: {
+            old: "price_1Q3gbVFJyGSZ96lhf7hsZciQ",
+            new: "price_1Q8egwBYvhH6u7U7XKLGjgHL",
+          },
         },
       },
       yearly: {
@@ -103,7 +112,10 @@ export const PLANS = [
             old: "price_1Q3bQ5FJyGSZ96lhoS8QbYXr",
             new: "price_1Q8aVSBYvhH6u7U72mn6iPfK",
           },
-          production: { old: "price_1Q3gbVFJyGSZ96lhqqLhBNDv", new: "" },
+          production: {
+            old: "price_1Q3gbVFJyGSZ96lhqqLhBNDv",
+            new: "price_1Q8egwBYvhH6u7U7wRU6iPcW",
+          },
         },
       },
     },
@@ -121,7 +133,10 @@ export const PLANS = [
             old: "price_1Q3bHPFJyGSZ96lhpQD0lMdU",
             new: "price_1Q8aYLBYvhH6u7U7RUqHnsBh",
           },
-          production: { old: "price_1Q3gbbFJyGSZ96lhvmEwjZtm", new: "" },
+          production: {
+            old: "price_1Q3gbbFJyGSZ96lhvmEwjZtm",
+            new: "price_1Q8egzBYvhH6u7U7IQUGzwoZ",
+          },
         },
       },
       yearly: {
@@ -132,7 +147,10 @@ export const PLANS = [
             old: "price_1Q3bJUFJyGSZ96lhLiEJlXlt",
             new: "price_1Q8aXWBYvhH6u7U7unPGTnfy",
           },
-          production: { old: "price_1Q3gbbFJyGSZ96lhnk1CtnIZ", new: "" },
+          production: {
+            old: "price_1Q3gbbFJyGSZ96lhnk1CtnIZ",
+            new: "price_1Q8egzBYvhH6u7U7M2uoROMa",
+          },
         },
       },
     },
