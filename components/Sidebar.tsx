@@ -303,6 +303,9 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
                 usageLimit={documentsLimit}
               />
             ) : null}
+            <p className="mt-2 px-2 text-xs text-muted-foreground">
+              Change plan to increase usage limits
+            </p>
           </div>
 
           <div className="hidden w-full lg:block">
@@ -332,15 +335,15 @@ function UsageProgress(data: {
         <h3 className="font-medium">{title}</h3>
       </div> */}
 
-      <div className="mt-2 flex flex-col space-y-2">
+      <div className="mt-1 flex flex-col space-y-1">
         {usage !== undefined && usageLimit !== undefined ? (
-          <p className="text-sm text-foreground">
+          <p className="text-xs text-foreground">
             <span>{nFormatter(usage)}</span> / {nFormatter(usageLimit)} {unit}
           </p>
         ) : (
           <div className="h-5 w-32 animate-pulse rounded-md bg-muted" />
         )}
-        <Progress value={usagePercentage} className="h-2 bg-muted" max={100} />
+        <Progress value={usagePercentage} className="h-1 bg-muted" max={100} />
       </div>
     </div>
   );

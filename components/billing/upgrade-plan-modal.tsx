@@ -59,6 +59,7 @@ export function UpgradePlanModal({
           "Custom branding",
           "Folder organization",
           "Require email verification",
+          "Clickable links inside documents",
           "More file types: pppt, docx, excel",
           "Papermark branding removed",
           "1-year analytics retention",
