@@ -1,13 +1,21 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
+import { waitUntil } from "@vercel/functions";
 import { getServerSession } from "next-auth/next";
 
+import { identifyUser, trackAnalytics } from "@/lib/analytics";
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
-import { stripe } from "@/lib/stripe";
+import { stripeInstance } from "@/lib/stripe";
+import { isOldAccount } from "@/lib/stripe/utils";
 import { CustomUser } from "@/lib/types";
 
 import { authOptions } from "../../../auth/[...nextauth]";
+
+export const config = {
+  // in order to enable `waitUntil` function
+  supportsResponseStreaming: true,
+};
 
 export default async function handle(
   req: NextApiRequest,
@@ -22,18 +30,21 @@ export default async function handle(
     }
 
     const { teamId } = req.query as { teamId: string };
+    const userId = (session.user as CustomUser).id;
+    const userEmail = (session.user as CustomUser).email;
     try {
       const team = await prisma.team.findUnique({
         where: {
           id: teamId,
           users: {
             some: {
-              userId: (session.user as CustomUser).id,
+              userId: userId,
             },
           },
         },
         select: {
           stripeId: true,
+          plan: true,
         },
       });
 
@@ -44,10 +55,20 @@ export default async function handle(
         return res.status(400).json({ error: "No Stripe customer ID" });
       }
 
+      const stripe = stripeInstance(isOldAccount(team.plan));
       const { url } = await stripe.billingPortal.sessions.create({
         customer: team.stripeId,
         return_url: `${process.env.NEXTAUTH_URL}/settings/billing`,
       });
+
+      waitUntil(identifyUser(userEmail ?? userId));
+      waitUntil(
+        trackAnalytics({
+          event: "Stripe Billing Portal Clicked",
+          teamId,
+        }),
+      );
+
       return res.status(200).json(url);
     } catch (error) {
       errorhandler(error, res);

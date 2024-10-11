@@ -43,7 +43,7 @@ export function UpgradePlanModal({
   const [period, setPeriod] = useState<"yearly" | "monthly">("yearly");
   const [clicked, setClicked] = useState<boolean>(false);
   const teamInfo = useTeam();
-  const { plan: teamPlan, trial, isCustomer } = usePlan();
+  const { plan: teamPlan, trial, isCustomer, isOldAccount } = usePlan();
   const analytics = useAnalytics();
 
   const isTrial = !!trial;
@@ -215,7 +215,7 @@ export function UpgradePlanModal({
                 }
               </p>
 
-              <ul className="mb-6 mt-2 space-y-2 text-sm leading-6 text-gray-600 dark:text-muted-foreground dark:text-white/75">
+              <ul className="mb-6 mt-2 space-y-2 text-sm leading-6 text-gray-600 dark:text-white/75">
                 {planFeatures[
                   planOption as keyof typeof planFeatures
                 ].features.map((feature, i) => (
@@ -263,7 +263,7 @@ export function UpgradePlanModal({
                             process.env.NEXT_PUBLIC_VERCEL_ENV === "production"
                               ? "production"
                               : "test"
-                          ]
+                          ][isOldAccount ? "old" : "new"]
                         }`,
                         {
                           method: "POST",
@@ -275,7 +275,7 @@ export function UpgradePlanModal({
                         .then(async (res) => {
                           const data = await res.json();
                           const { id: sessionId } = data;
-                          const stripe = await getStripe();
+                          const stripe = await getStripe(isOldAccount);
                           stripe?.redirectToCheckout({ sessionId });
                         })
                         .catch((err) => {
