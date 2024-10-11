@@ -33,6 +33,9 @@ export default async function handle(
     const userId = (session.user as CustomUser).id;
 
     try {
+      console.log("teamId", teamId);
+      console.log("userId", userId);
+
       const { team } = await getTeamWithUsersAndDocument({
         teamId,
         userId,
