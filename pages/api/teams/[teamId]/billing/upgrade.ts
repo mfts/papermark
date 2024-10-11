@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
+import { waitUntil } from "@vercel/functions";
 import { getServerSession } from "next-auth/next";
 
 import { identifyUser, trackAnalytics } from "@/lib/analytics";
@@ -9,6 +10,11 @@ import { getPlanFromPriceId, isOldAccount } from "@/lib/stripe/utils";
 import { CustomUser } from "@/lib/types";
 
 import { authOptions } from "../../../auth/[...nextauth]";
+
+export const config = {
+  // in order to enable `waitUntil` function
+  supportsResponseStreaming: true,
+};
 
 export default async function handle(
   req: NextApiRequest,
@@ -104,13 +110,14 @@ export default async function handle(
       });
     }
 
-    await identifyUser(userEmail ?? userId);
-    await trackAnalytics({
-      event: "Stripe Checkout Clicked",
-      teamId,
-      priceId: priceId,
-      referral: req.body.referral ? true : undefined,
-    });
+    waitUntil(identifyUser(userEmail ?? userId));
+    waitUntil(
+      trackAnalytics({
+        event: "Stripe Checkout Clicked",
+        teamId,
+        priceId: priceId,
+      }),
+    );
 
     return res.status(200).json(stripeSession);
   } else {
