@@ -16,9 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-const authMethods = ["google", "email", "linkedin", "passkey"] as const;
 
-type AuthMethod = (typeof authMethods)[number];
 
 export default function Login() {
   const { next } = useParams as { next?: string };
@@ -29,6 +27,8 @@ export default function Login() {
   const [emailButtonText, setEmailButtonText] = useState<string>(
     "Continue with Email",
   );
+  const authMethods = ["google", "email", "linkedin", "passkey"] as const;
+  type AuthMethod = (typeof authMethods)[number];
   return (
     <div className="flex h-screen w-full flex-wrap">
       {/* Left part */}
