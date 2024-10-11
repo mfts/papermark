@@ -53,8 +53,13 @@ export async function customerSubsciptionUpdated(
   const endsAt = new Date(subscriptionUpdated.current_period_end * 1000);
   const quantity = subscriptionUpdated.items.data[0].quantity;
 
+  let teamPlan = team.plan;
+  if (isOldAccount) {
+    // remove +old from plan
+    teamPlan = teamPlan.replace("+old", "");
+  }
   // If a team upgrades/downgrades their subscription, update their plan
-  if (team.plan !== newPlan) {
+  if (teamPlan !== newPlan) {
     // Choose the correct plan limits
     let planLimits:
       | typeof PRO_PLAN_LIMITS
@@ -83,6 +88,27 @@ export async function customerSubsciptionUpdated(
         startsAt,
         endsAt,
         limits: planLimits,
+      },
+    });
+  }
+
+  // If new account, and the plan is the same, but the quantity is different, update the quantity
+  if (
+    !isOldAccount &&
+    teamPlan === newPlan &&
+    (team.limits as any)?.users !== quantity
+  ) {
+    // Update the user limit in planLimits based on the subscription quantity
+    const newLimits = team.limits as any;
+    newLimits.users = quantity;
+    await prisma.team.update({
+      where: { stripeId },
+      data: {
+        plan: plan.slug,
+        subscriptionId,
+        startsAt,
+        endsAt,
+        limits: newLimits,
       },
     });
   }
