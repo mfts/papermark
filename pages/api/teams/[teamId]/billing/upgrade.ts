@@ -4,7 +4,8 @@ import { getServerSession } from "next-auth/next";
 
 import { identifyUser, trackAnalytics } from "@/lib/analytics";
 import prisma from "@/lib/prisma";
-import { stripe } from "@/lib/stripe";
+import { stripeInstance } from "@/lib/stripe";
+import { getPlanFromPriceId, isOldAccount } from "@/lib/stripe/utils";
 import { CustomUser } from "@/lib/types";
 
 import { authOptions } from "../../../auth/[...nextauth]";
@@ -37,7 +38,7 @@ export default async function handle(
           },
         },
       },
-      select: { stripeId: true },
+      select: { stripeId: true, plan: true },
     });
 
     if (!team) {
@@ -45,8 +46,25 @@ export default async function handle(
       return;
     }
 
+    const oldAccount = isOldAccount(team.plan);
+    const plan = getPlanFromPriceId(priceId, oldAccount);
+    const minimumQuantity = plan.minQuantity;
+
     let stripeSession;
 
+    const lineItem = {
+      price: priceId,
+      quantity: oldAccount ? 1 : minimumQuantity,
+      ...(!oldAccount && {
+        adjustable_quantity: {
+          enabled: true,
+          minimum: minimumQuantity,
+          maximum: 99,
+        },
+      }),
+    };
+
+    const stripe = stripeInstance(oldAccount);
     if (team.stripeId) {
       // if the team already has a stripeId (i.e. is a customer) let's use as a customer
       stripeSession = await stripe.checkout.sessions.create({
@@ -55,7 +73,7 @@ export default async function handle(
         billing_address_collection: "required",
         success_url: `${process.env.NEXTAUTH_URL}/settings/billing?success=true`,
         cancel_url: `${process.env.NEXTAUTH_URL}/settings/billing?cancel=true`,
-        line_items: [{ price: priceId, quantity: 1 }],
+        line_items: [lineItem],
         automatic_tax: {
           enabled: true,
         },
@@ -73,7 +91,7 @@ export default async function handle(
         billing_address_collection: "required",
         success_url: `${process.env.NEXTAUTH_URL}/settings/billing?success=true`,
         cancel_url: `${process.env.NEXTAUTH_URL}/settings/billing?cancel=true`,
-        line_items: [{ price: priceId, quantity: 1 }],
+        line_items: [lineItem],
         automatic_tax: {
           enabled: true,
         },

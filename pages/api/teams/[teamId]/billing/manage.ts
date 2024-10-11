@@ -4,7 +4,8 @@ import { getServerSession } from "next-auth/next";
 
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
-import { stripe } from "@/lib/stripe";
+import { stripeInstance } from "@/lib/stripe";
+import { isOldAccount } from "@/lib/stripe/utils";
 import { CustomUser } from "@/lib/types";
 
 import { authOptions } from "../../../auth/[...nextauth]";
@@ -34,6 +35,7 @@ export default async function handle(
         },
         select: {
           stripeId: true,
+          plan: true,
         },
       });
 
@@ -44,6 +46,7 @@ export default async function handle(
         return res.status(400).json({ error: "No Stripe customer ID" });
       }
 
+      const stripe = stripeInstance(isOldAccount(team.plan));
       const { url } = await stripe.billingPortal.sessions.create({
         customer: team.stripeId,
         return_url: `${process.env.NEXTAUTH_URL}/settings/billing`,

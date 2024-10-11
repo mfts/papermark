@@ -15,11 +15,12 @@ import { getPlanFromPriceId } from "../utils";
 export async function customerSubsciptionUpdated(
   event: Stripe.Event,
   res: NextApiResponse,
+  isOldAccount: boolean = false,
 ) {
   const subscriptionUpdated = event.data.object as Stripe.Subscription;
   const priceId = subscriptionUpdated.items.data[0].price.id;
 
-  const plan = getPlanFromPriceId(priceId);
+  const plan = getPlanFromPriceId(priceId, isOldAccount);
 
   if (!plan) {
     await log({
@@ -50,6 +51,7 @@ export async function customerSubsciptionUpdated(
   const subscriptionId = subscriptionUpdated.id;
   const startsAt = new Date(subscriptionUpdated.current_period_start * 1000);
   const endsAt = new Date(subscriptionUpdated.current_period_end * 1000);
+  const quantity = subscriptionUpdated.items.data[0].quantity;
 
   // If a team upgrades/downgrades their subscription, update their plan
   if (team.plan !== newPlan) {
@@ -65,6 +67,12 @@ export async function customerSubsciptionUpdated(
     } else if (plan.slug === "datarooms") {
       planLimits = structuredClone(DATAROOMS_PLAN_LIMITS);
     }
+
+    // Update the user limit in planLimits based on the subscription quantity
+    planLimits.users =
+      typeof quantity === "number" && quantity > 1
+        ? quantity
+        : planLimits.users;
 
     // Update the user with the subscription information and stripeId
     await prisma.team.update({
