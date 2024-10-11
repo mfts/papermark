@@ -109,35 +109,37 @@ export default function Login() {
                 } relative focus:shadow-outline transform rounded px-4 py-2 text-white transition-colors duration-300 ease-in-out focus:outline-none`}
             >
               {emailButtonText}
-              {lastUsed === "saml" && <LastUsed />}
+              {lastUsed === "credentials" && <LastUsed />}
 
             </Button>
           </form>
           <p className="py-4 text-center">or</p>
           <div className="flex flex-col space-y-2 px-4 sm:px-16">
-            <Button
-              onClick={() => {
-                setLastUsed("google")
-                setIsLoginWithGoogle(true);
-                signIn("google", {
-                  ...(next && next.length > 0 ? { callbackUrl: next } : {}),
-                }).then((res) => {
-                  if (res?.status) {
-                    setIsLoginWithGoogle(false);
-                  }
-                });
-              }}
-              disabled={isLoginWithGoogle}
-              className="relative flex items-center justify-center space-x-2  border border-gray-200 bg-gray-100 font-normal text-gray-900 hover:bg-gray-200 "
-            >
-              {isLoginWithGoogle ? (
-                <Loader className="mr-2 h-5 w-5 animate-spin" />
-              ) : (
-                <Google className="h-5 w-5" />
-              )}
-              <span>Continue with Google</span>
-              {lastUsed === "google" && <LastUsed />}
-            </Button>
+            <div className="relative">
+              <Button
+                onClick={() => {
+                  setLastUsed("google")
+                  setIsLoginWithGoogle(true);
+                  signIn("google", {
+                    ...(next && next.length > 0 ? { callbackUrl: next } : {}),
+                  }).then((res) => {
+                    if (res?.status) {
+                      setIsLoginWithGoogle(false);
+                    }
+                  });
+                }}
+                disabled={isLoginWithGoogle}
+                className="w-full flex items-center justify-center space-x-2 border border-gray-200 bg-gray-100 font-normal text-gray-900 hover:bg-gray-200 "
+              >
+                {isLoginWithGoogle ? (
+                  <Loader className="mr-2 h-5 w-5 animate-spin" />
+                ) : (
+                  <Google className="h-5 w-5" />
+                )}
+                <span>Continue with Google</span>
+                {lastUsed === "google" && <LastUsed />}
+              </Button>
+            </div>
             <Button
               onClick={() => {
                 setLastUsed("linkedin")
