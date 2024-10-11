@@ -17,6 +17,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
+
+const validateEmail = (email: string): boolean => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
+
+
 export default function Login() {
   const { next } = useParams as { next?: string };
 
@@ -51,6 +58,14 @@ export default function Login() {
           <form
             className="flex flex-col gap-4 px-4 pt-8 sm:px-16"
             onSubmit={(e) => {
+              e.preventDefault();
+
+              if(!validateEmail(email)){
+                toast.error("Invalid Email !");
+
+                return 
+              }
+
               e.preventDefault();
               setIsLoginWithEmail(true);
               signIn("email", {
