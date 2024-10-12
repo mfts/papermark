@@ -80,7 +80,6 @@ export default function NotFound({ message }: { message?: string }) {
           <Users className="text-blue-500 w-6 h-6 mr-3" />
           <span className="text-gray-800">Settings</span>
         </Link>
-      </div>
 
       <p className="text-center text-gray-600 max-w-md">
       {message ||

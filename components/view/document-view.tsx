@@ -43,6 +43,7 @@ export type DEFAULT_DOCUMENT_VIEW_TYPE = {
   fileType?: string;
   isPreview?: boolean;
   ipAddress?: string;
+  verificationToken?: string;
 };
 
 export default function DocumentView({
@@ -104,6 +105,8 @@ export default function DocumentView({
   const [verificationToken, setVerificationToken] = useState<string | null>(
     token ?? null,
   );
+  const [code, setCode] = useState<string | null>(null);
+  const [isInvalidCode, setIsInvalidCode] = useState<boolean>(false);
 
   const handleSubmission = async (): Promise<void> => {
     setIsLoading(true);
@@ -122,10 +125,11 @@ export default function DocumentView({
         userId: userId ?? null,
         documentVersionId: document.versions[0].id,
         hasPages: document.versions[0].hasPages,
-        token: verificationToken ?? null,
-        verifiedEmail: verifiedEmail ?? null,
         useAdvancedExcelViewer,
         previewToken,
+        code: code ?? undefined,
+        token: verificationToken ?? undefined,
+        verifiedEmail: verifiedEmail ?? undefined,
       }),
     });
 
@@ -144,6 +148,7 @@ export default function DocumentView({
           fileType,
           isPreview,
           ipAddress,
+          verificationToken,
         } = fetchData as DEFAULT_DOCUMENT_VIEW_TYPE;
         plausible("documentViewed"); // track the event
         analytics.identify(
@@ -156,6 +161,18 @@ export default function DocumentView({
           viewerId: viewId,
           viewerEmail: data.email ?? verifiedEmail ?? userEmail,
         });
+
+        // set the verification token to the cookie
+        if (verificationToken) {
+          Cookies.set("pm_vft", verificationToken, {
+            path: router.asPath.split("?")[0],
+            expires: 1,
+            sameSite: "strict",
+            secure: true,
+          });
+          setCode(null);
+        }
+
         setViewData({
           viewId,
           file,
@@ -174,26 +191,12 @@ export default function DocumentView({
       toast.error(data.message);
 
       if (data.resetVerification) {
-        const currentQuery = { ...router.query };
-        delete currentQuery.token;
-        delete currentQuery.email;
-        delete currentQuery.domain;
-        delete currentQuery.slug;
-        delete currentQuery.linkId;
-
         const currentPath = router.asPath.split("?")[0];
-
-        router.replace(
-          {
-            pathname: currentPath,
-            query: currentQuery,
-          },
-          undefined,
-          { shallow: true },
-        );
 
         Cookies.remove("pm_vft", { path: currentPath });
         setVerificationToken(null);
+        setCode(null);
+        setIsInvalidCode(true);
       }
       setIsLoading(false);
     }
@@ -224,6 +227,10 @@ export default function DocumentView({
         onSubmitHandler={handleSubmit}
         data={data}
         isLoading={isLoading}
+        code={code}
+        setCode={setCode}
+        isInvalidCode={isInvalidCode}
+        setIsInvalidCode={setIsInvalidCode}
       />
     );
   }
@@ -239,6 +246,7 @@ export default function DocumentView({
         requireEmail={emailProtected}
         requirePassword={!!linkPassword}
         requireAgreement={enableAgreement!}
+        agreementName={link.agreement?.name}
         agreementContent={link.agreement?.content}
         requireName={link.agreement?.requireName}
         isLoading={isLoading}

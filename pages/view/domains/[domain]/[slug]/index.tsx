@@ -11,7 +11,7 @@ import { ExtendedRecordMap } from "notion-types";
 import { parsePageId } from "notion-utils";
 
 import LoadingSpinner from "@/components/ui/loading-spinner";
-import CustomMetatag from "@/components/view/custom-metatag";
+import CustomMetaTag from "@/components/view/custom-metatag";
 import DataroomView from "@/components/view/dataroom/dataroom-view";
 import DocumentView from "@/components/view/document-view";
 
@@ -99,6 +99,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
             metaTitle: link.metaTitle,
             metaDescription: link.metaDescription,
             metaImage: link.metaImage,
+            metaFavicon: link.metaFavicon || "/favicon.ico",
             metaUrl: `https://${domain}/${slug}` || null,
           },
           showAccountCreationSlide: link.showBanner || teamPlan === "free",
@@ -151,6 +152,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
             metaTitle: link.metaTitle,
             metaDescription: link.metaDescription,
             metaImage: link.metaImage,
+            metaFavicon: link.metaFavicon || "/favicon.ico",
             metaUrl: `https://${domain}/${slug}` || null,
           },
           showPoweredByBanner: false,
@@ -192,6 +194,7 @@ export default function ViewPage({
   meta: {
     enableCustomMetatag: boolean;
     metaTitle: string | null;
+    metaFavicon: string | null;
     metaDescription: string | null;
     metaImage: string | null;
     metaUrl: string | null;
@@ -217,21 +220,6 @@ export default function ViewPage({
     }
   }, []);
 
-  useEffect(() => {
-    const { token } = router.query as { token?: string };
-    // Store token in cookie when it's available from the query
-    if (token) {
-      // set the cookie to expire in 24 hours
-      Cookies.set("pm_vft", token, {
-        path: router.asPath.split("?")[0],
-        expires: 1,
-        sameSite: "strict",
-        secure: true,
-      });
-      setStoredToken(token);
-    }
-  }, [router.query]);
-
   if (router.isFallback) {
     return (
       <div className="flex h-screen items-center justify-center bg-black">
@@ -241,12 +229,10 @@ export default function ViewPage({
   }
 
   const {
-    token,
     email: verifiedEmail,
     d: disableEditEmail,
     previewToken,
   } = router.query as {
-    token: string;
     email: string;
     d: string;
     previewToken?: string;
@@ -258,7 +244,8 @@ export default function ViewPage({
     if (!link || status === "loading") {
       return (
         <>
-          <CustomMetatag
+          <CustomMetaTag
+            favicon={meta.metaFavicon}
             enableBranding={meta.enableCustomMetatag ?? false}
             title={
               meta.metaTitle ??
@@ -302,7 +289,8 @@ export default function ViewPage({
 
     return (
       <>
-        <CustomMetatag
+        <CustomMetaTag
+          favicon={meta.metaFavicon}
           enableBranding={meta.enableCustomMetatag ?? false}
           title={
             meta.metaTitle ??
@@ -325,7 +313,7 @@ export default function ViewPage({
           previewToken={previewToken}
           disableEditEmail={!!disableEditEmail}
           useCustomAccessForm={useCustomAccessForm}
-          token={storedToken ?? token}
+          token={storedToken}
           verifiedEmail={verifiedEmail}
         />
       </>
@@ -337,7 +325,8 @@ export default function ViewPage({
     if (!link || status === "loading" || router.isFallback) {
       return (
         <>
-          <CustomMetatag
+          <CustomMetaTag
+            favicon={meta.metaFavicon}
             enableBranding={meta.enableCustomMetatag ?? false}
             title={
               meta.metaTitle ??
@@ -382,7 +371,8 @@ export default function ViewPage({
 
     return (
       <>
-        <CustomMetatag
+        <CustomMetaTag
+          favicon={meta.metaFavicon}
           enableBranding={meta.enableCustomMetatag ?? false}
           title={
             meta.metaTitle ??
@@ -403,7 +393,7 @@ export default function ViewPage({
           previewToken={previewToken}
           disableEditEmail={!!disableEditEmail}
           useCustomAccessForm={useCustomAccessForm}
-          token={storedToken ?? token}
+          token={storedToken}
           verifiedEmail={verifiedEmail}
         />
       </>

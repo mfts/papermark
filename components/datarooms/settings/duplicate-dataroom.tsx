@@ -1,8 +1,10 @@
 import { useState } from "react";
 
+import { useLimits } from "@/ee/limits/swr-handler";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
+import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -13,6 +15,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
+import { usePlan } from "@/lib/swr/use-billing";
+import useDatarooms from "@/lib/swr/use-datarooms";
+
 export default function DuplicateDataroom({
   dataroomId,
   teamId,
@@ -21,6 +26,18 @@ export default function DuplicateDataroom({
   teamId?: string;
 }) {
   const [loading, setLoading] = useState<boolean>(false);
+  const [planModalOpen, setPlanModalOpen] = useState<boolean>(false);
+  const { limits } = useLimits();
+  const { plan, trial } = usePlan();
+  const { datarooms: dataRooms } = useDatarooms();
+  const numDatarooms = dataRooms?.length ?? 0;
+  const limitDatarooms = limits?.datarooms ?? 1;
+
+  const isBusiness = plan === "business";
+  const isDatarooms = plan === "datarooms";
+  const isTrialDatarooms = trial === "drtrial";
+  const canCreateUnlimitedDatarooms =
+    isDatarooms || (isBusiness && numDatarooms < limitDatarooms);
 
   const handleDuplicateDataroom = async (
     e: React.MouseEvent<HTMLButtonElement>,
@@ -41,6 +58,14 @@ export default function DuplicateDataroom({
           headers: {
             "Content-Type": "application/json",
           },
+        }).then(async (response) => {
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(
+              errorData.message || "An error occurred while copying dataroom.",
+            );
+          }
+          return response.json();
         }),
         {
           loading: "Copying dataroom...",
@@ -49,8 +74,7 @@ export default function DuplicateDataroom({
             return "Dataroom copied successfully.";
           },
           error: (error) => {
-            console.log(error);
-            return error.message || "An error occurred while copying dataroom.";
+            return error.message;
           },
         },
       );
@@ -58,6 +82,25 @@ export default function DuplicateDataroom({
       console.error(error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const ButtonList = () => {
+    if (
+      (isBusiness && !canCreateUnlimitedDatarooms) ||
+      (isTrialDatarooms && dataRooms && !isBusiness && !isDatarooms)
+    ) {
+      return (
+        <Button onClick={(e) => setPlanModalOpen(true)} loading={loading}>
+          Upgrade to Add Datarooms
+        </Button>
+      );
+    } else {
+      return (
+        <Button onClick={(e) => handleDuplicateDataroom(e)} loading={loading}>
+          Duplicate Dataroom
+        </Button>
+      );
     }
   };
 
@@ -73,16 +116,17 @@ export default function DuplicateDataroom({
         </CardHeader>
         <CardContent></CardContent>
         <CardFooter className="flex items-center justify-end rounded-b-lg border-t px-6 py-3">
-          <div className="shrink-0">
-            <Button
-              onClick={(e) => handleDuplicateDataroom(e)}
-              loading={loading}
-            >
-              Duplicate Dataroom
-            </Button>
-          </div>
+          <div className="shrink-0">{ButtonList()}</div>
         </CardFooter>
       </Card>
+      {planModalOpen ? (
+        <UpgradePlanModal
+          clickedPlan="Data Rooms"
+          trigger="datarooms"
+          open={planModalOpen}
+          setOpen={setPlanModalOpen}
+        />
+      ) : null}
     </div>
   );
 }

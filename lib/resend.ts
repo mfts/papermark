@@ -1,5 +1,6 @@
 import { JSXElementConstructor, ReactElement } from "react";
 
+import { render } from "@react-email/components";
 import { Resend } from "resend";
 
 import { log, nanoid } from "@/lib/utils";
@@ -14,6 +15,7 @@ export const sendEmail = async ({
   react,
   marketing,
   system,
+  verify,
   test,
   cc,
   scheduledAt,
@@ -23,6 +25,7 @@ export const sendEmail = async ({
   react: ReactElement<any, string | JSXElementConstructor<any>>;
   marketing?: boolean;
   system?: boolean;
+  verify?: boolean;
   test?: boolean;
   cc?: string | string[];
   scheduledAt?: string;
@@ -32,21 +35,26 @@ export const sendEmail = async ({
     throw new Error("Resend not initialized");
   }
 
+  const plainText = await render(react, { plainText: true });
+
   try {
     const { data, error } = await resend.emails.send({
       from: marketing
         ? "Marc from Papermark <marc@ship.papermark.io>"
         : system
           ? "Papermark <system@papermark.io>"
-          : !!scheduledAt
-            ? "Marc Seitz <marc@papermark.io>"
-            : "Marc from Papermark <marc@papermark.io>",
+          : verify
+            ? "Papermark <system@verify.papermark.io>"
+            : !!scheduledAt
+              ? "Marc Seitz <marc@papermark.io>"
+              : "Marc from Papermark <marc@papermark.io>",
       to: test ? "delivered@resend.dev" : to,
       cc: cc,
       replyTo: marketing ? "marc@papermark.io" : undefined,
       subject,
       react,
       scheduledAt,
+      text: plainText,
       headers: {
         "X-Entity-Ref-ID": nanoid(),
       },

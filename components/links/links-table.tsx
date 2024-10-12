@@ -99,6 +99,7 @@ export default function LinksTable({
       metaTitle: link.metaTitle,
       metaDescription: link.metaDescription,
       metaImage: link.metaImage,
+      metaFavicon: link.metaFavicon,
       enableAgreement: link.enableAgreement ? link.enableAgreement : false,
       agreementId: link.agreementId,
       showBanner: link.showBanner ?? false,

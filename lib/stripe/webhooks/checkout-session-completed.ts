@@ -7,12 +7,15 @@ import Stripe from "stripe";
 
 import { sendUpgradePlanEmail } from "@/lib/emails/send-upgrade-plan";
 import prisma from "@/lib/prisma";
-import { stripe } from "@/lib/stripe";
+import { stripeInstance } from "@/lib/stripe";
 import { log } from "@/lib/utils";
 
 import { getPlanFromPriceId } from "../utils";
 
-export async function checkoutSessionCompleted(event: Stripe.Event) {
+export async function checkoutSessionCompleted(
+  event: Stripe.Event,
+  isOldAccount: boolean = false,
+) {
   const checkoutSession = event.data.object as Stripe.Checkout.Session;
 
   if (
@@ -26,6 +29,7 @@ export async function checkoutSessionCompleted(event: Stripe.Event) {
     return;
   }
 
+  const stripe = stripeInstance(isOldAccount);
   const subscription = await stripe.subscriptions.retrieve(
     checkoutSession.subscription as string,
   );
@@ -33,8 +37,12 @@ export async function checkoutSessionCompleted(event: Stripe.Event) {
   const subscriptionId = subscription.id;
   const subscriptionStart = new Date(subscription.current_period_start * 1000);
   const subscriptionEnd = new Date(subscription.current_period_end * 1000);
+  const quantity = subscription.items.data[0].quantity;
 
-  const plan = getPlanFromPriceId(priceId);
+  console.log("subscription", subscription);
+  console.log("subscription items", subscription.items.data);
+
+  const plan = getPlanFromPriceId(priceId, isOldAccount);
 
   if (!plan) {
     await log({
@@ -58,6 +66,10 @@ export async function checkoutSessionCompleted(event: Stripe.Event) {
   } else if (plan.slug === "datarooms") {
     planLimits = structuredClone(DATAROOMS_PLAN_LIMITS);
   }
+
+  // Update the user limit in planLimits based on the subscription quantity
+  planLimits.users =
+    typeof quantity === "number" && quantity > 1 ? quantity : planLimits.users;
 
   // Update the user with the subscription information and stripeId
   const team = await prisma.team.update({

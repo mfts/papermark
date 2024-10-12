@@ -71,6 +71,7 @@ export type DEFAULT_DOCUMENT_VIEW_TYPE = {
   ipAddress?: string;
   useAdvancedExcelViewer?: boolean;
   canDownload?: boolean;
+  verificationToken?: string;
 };
 
 export default function DataroomView({
@@ -127,6 +128,9 @@ export default function DataroomView({
     token ?? null,
   );
 
+  const [code, setCode] = useState<string | null>(null);
+  const [isInvalidCode, setIsInvalidCode] = useState<boolean>(false);
+
   const [viewType, setViewType] = useState<"DOCUMENT_VIEW" | "DATAROOM_VIEW">(
     "DATAROOM_VIEW",
   );
@@ -147,8 +151,6 @@ export default function DataroomView({
         userId: userId ?? null,
         documentVersionId: documentData?.documentVersionId,
         hasPages: documentData?.hasPages,
-        token: verificationToken ?? null,
-        verifiedEmail: verifiedEmail ?? null,
         dataroomVerified: dataroomVerified,
         dataroomId: dataroom?.id,
         linkType: linkType,
@@ -156,6 +158,9 @@ export default function DataroomView({
         viewType: viewType,
         useAdvancedExcelViewer,
         previewToken,
+        code: code ?? undefined,
+        token: verificationToken ?? undefined,
+        verifiedEmail: verifiedEmail ?? undefined,
       }),
     });
 
@@ -177,6 +182,7 @@ export default function DataroomView({
           ipAddress,
           useAdvancedExcelViewer,
           canDownload,
+          verificationToken,
         } = fetchData as DEFAULT_DOCUMENT_VIEW_TYPE;
         plausible("dataroomViewed"); // track the event
         analytics.identify(
@@ -190,6 +196,18 @@ export default function DataroomView({
           viewerId: viewId,
           viewerEmail: data.email ?? verifiedEmail ?? userEmail,
         });
+
+        // set the verification token to the cookie
+        if (verificationToken) {
+          Cookies.set("pm_vft", verificationToken, {
+            path: router.asPath.split("?")[0],
+            expires: 1,
+            sameSite: "strict",
+            secure: true,
+          });
+          setCode(null);
+        }
+
         setViewData((prev) => ({
           viewId,
           dataroomViewId:
@@ -206,6 +224,7 @@ export default function DataroomView({
         }));
         setSubmitted(true);
         setVerificationRequested(false);
+        viewType === "DATAROOM_VIEW" && setDataroomVerified(true);
         setIsLoading(false);
       }
     } else {
@@ -213,26 +232,13 @@ export default function DataroomView({
       toast.error(data.message);
 
       if (data.resetVerification) {
-        const currentQuery = { ...router.query };
-        delete currentQuery.token;
-        delete currentQuery.email;
-        delete currentQuery.domain;
-        delete currentQuery.slug;
-        delete currentQuery.linkId;
-
         const currentPath = router.asPath.split("?")[0];
-
-        router.replace(
-          {
-            pathname: currentPath,
-            query: currentQuery,
-          },
-          undefined,
-          { shallow: true },
-        );
 
         Cookies.remove("pm_vft", { path: currentPath });
         setVerificationToken(null);
+        setCode(null);
+        setIsInvalidCode(true);
+        setDataroomVerified(false);
       }
       setIsLoading(false);
     }
@@ -283,6 +289,10 @@ export default function DataroomView({
         onSubmitHandler={handleSubmit}
         data={data}
         isLoading={isLoading}
+        code={code}
+        setCode={setCode}
+        isInvalidCode={isInvalidCode}
+        setIsInvalidCode={setIsInvalidCode}
       />
     );
   }
@@ -298,6 +308,7 @@ export default function DataroomView({
         requireEmail={emailProtected}
         requirePassword={!!linkPassword}
         requireAgreement={enableAgreement!}
+        agreementName={link.agreement?.name}
         agreementContent={link.agreement?.content}
         requireName={link.agreement?.requireName}
         isLoading={isLoading}

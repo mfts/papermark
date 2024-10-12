@@ -35,7 +35,7 @@ export default async function handler(
 
     try {
       if (documentLink) {
-        // check if the the team that own the document has the current user
+        // check if the team that own the document has the current user
         await getDocumentWithTeamAndUser({
           docId: targetId,
           userId,
@@ -156,6 +156,7 @@ export default async function handler(
           metaTitle: linkData.metaTitle || null,
           metaDescription: linkData.metaDescription || null,
           metaImage: linkData.metaImage || null,
+          metaFavicon: linkData.metaFavicon || null,
           allowList: linkData.allowList,
           denyList: linkData.denyList,
           audienceType: linkData.audienceType,

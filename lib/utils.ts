@@ -419,6 +419,33 @@ export const convertDataUrlToFile = ({
   return new File([u8arr], filename, { type: mime });
 };
 
+export const validateImageDimensions = (
+  image: string,
+  minSize: number,
+  maxSize: number,
+): Promise<boolean> => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.src = image;
+    img.onload = () => {
+      const { width, height } = img;
+      if (
+        width >= minSize &&
+        height >= minSize &&
+        width <= maxSize &&
+        height <= maxSize
+      ) {
+        resolve(true);
+      } else {
+        resolve(false);
+      }
+    };
+    img.onerror = () => {
+      resolve(false);
+    };
+  });
+};
+
 export const uploadImage = async (file: File) => {
   const newBlob = await upload(file.name, file, {
     access: "public",

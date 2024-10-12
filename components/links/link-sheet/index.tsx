@@ -60,6 +60,7 @@ export const DEFAULT_LINK_PROPS = (linkType: LinkType) => ({
   metaTitle: null,
   metaDescription: null,
   metaImage: null,
+  metaFavicon: null,
   enabledQuestion: false,
   questionText: null,
   questionType: null,
@@ -91,6 +92,7 @@ export type DEFAULT_LINK_TYPE = {
   metaTitle: string | null; // metatags
   metaDescription: string | null; // metatags
   metaImage: string | null; // metatags
+  metaFavicon: string | null; // metaFavicon
   enableQuestion?: boolean; // feedback question
   questionText: string | null;
   questionType: string | null;
@@ -155,6 +157,20 @@ export default function LinkSheet({
       setData({ ...data, metaImage: blobUrl });
     }
 
+    // Upload meta favicon if it's a data URL
+    let blobUrlFavicon: string | null =
+      data.metaFavicon && data.metaFavicon.startsWith("data:")
+        ? null
+        : data.metaFavicon;
+    if (data.metaFavicon && data.metaFavicon.startsWith("data:")) {
+      const blobFavicon = convertDataUrlToFile({ dataUrl: data.metaFavicon });
+      blobUrlFavicon = await uploadImage(blobFavicon);
+      setData({
+        ...data,
+        metaFavicon: blobUrlFavicon,
+      });
+    }
+
     let endpoint = "/api/links";
     let method = "POST";
 
@@ -172,6 +188,7 @@ export default function LinkSheet({
       body: JSON.stringify({
         ...data,
         metaImage: blobUrl,
+        metaFavicon: blobUrlFavicon,
         targetId: targetId,
         linkType: linkType,
         teamId: teamInfo?.currentTeam?.id,

@@ -90,7 +90,7 @@ export default async function handle(
           id: dataroomId,
           teamId,
         },
-        data: { name },
+        data: { name: name },
       });
 
       return res.status(200).json(dataroom);

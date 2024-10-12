@@ -15,7 +15,8 @@
     "email": "email dev --dir ./components/emails --port 3001",
     "trigger:dev": "npx @trigger.dev/cli@latest dev",
     "stripe:webhook": "pkgx stripe listen --forward-to localhost:3000/api/stripe/webhook",
-    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,mdx}\""
+    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,mdx}\"",
+    "dev:prisma":"npx prisma generate && npx prisma migrate deploy"
   },
   "dependencies": {
     "@aws-sdk/client-lambda": "^3.658.1",
@@ -53,7 +54,7 @@
     "@radix-ui/react-tooltip": "^1.1.2",
     "@react-email/components": "^0.0.25",
     "@sindresorhus/slugify": "^2.2.1",
-    "@stripe/stripe-js": "^4.5.0",
+    "@stripe/stripe-js": "^4.8.0",
     "@tailwindcss/typography": "^0.5.15",
     "@tanstack/react-table": "^8.20.5",
     "@teamhanko/passkeys-next-auth-provider": "^0.2.7",
@@ -81,6 +82,7 @@
     "eslint-config-next": "^14.2.13",
     "framer-motion": "^11.8.0",
     "handlebars": "^4.7.8",
+    "input-otp": "^1.2.4",
     "js-cookie": "^3.0.5",
     "lucide-react": "^0.446.0",
     "mime-types": "^2.1.35",
@@ -94,6 +96,7 @@
     "nodemailer": "^6.9.15",
     "notion-client": "^6.16.0",
     "notion-utils": "^6.16.0",
+    "nuqs": "^1.19.3",
     "openai": "4.20.1",
     "pdf-lib": "^1.17.1",
     "postcss": "^8.4.47",

@@ -16,9 +16,11 @@ import {
 export default function EmailVerification({
   verificationURL = "papermark.io",
   email = "test@test.com",
+  isDataroom = false,
 }: {
   verificationURL: string;
   email: string;
+  isDataroom: boolean;
 }) {
   return (
     <Html>
@@ -34,7 +36,8 @@ export default function EmailVerification({
               Please verify your email
             </Text>
             <Text className="text-sm leading-6 text-black">
-              Please click the verification link below to view the document.
+              Please click the verification link below to view the{" "}
+              {isDataroom ? "dataroom" : "document"}.
             </Text>
             <Section className="my-8 text-center">
               <Button
