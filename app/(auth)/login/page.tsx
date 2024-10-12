@@ -15,9 +15,17 @@ import Passkey from "@/components/shared/icons/passkey";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { LastUsed, useLastUsed } from "@/components/hooks/useLastUsed";
+import { Loader } from "lucide-react";
 
 export default function Login() {
   const { next } = useParams as { next?: string };
+
+  const [isLoginWithEmail, setIsLoginWithEmail] = useState<boolean>(false);
+  const [isLoginWithGoogle, setIsLoginWithGoogle] = useState<boolean>(false);
+  const [isLoginWithLinkedIn, setIsLoginWithLinkedIn] =
+    useState<boolean>(false);
+  const [lastUsed, setLastUsed] = useLastUsed();
   const authMethods = ["google", "email", "linkedin", "passkey"] as const;
   type AuthMethod = (typeof authMethods)[number];
   const [clickedMethod, setClickedMethod] = useState<AuthMethod | undefined>(
@@ -27,6 +35,7 @@ export default function Login() {
   const [emailButtonText, setEmailButtonText] = useState<string>(
     "Continue with Email",
   );
+
 
   return (
     <div className="flex h-screen w-full flex-wrap">
@@ -59,6 +68,7 @@ export default function Login() {
               }).then((res) => {
                 if (res?.ok && !res?.error) {
                   setEmail("");
+                  setLastUsed("credentials")
                   setEmailButtonText("Email sent - check your inbox!");
                   toast.success("Email sent - check your inbox!");
                 } else {
@@ -97,69 +107,86 @@ export default function Login() {
               )}
               Continue with Email
             </Button> */}
-            <Button
-              type="submit"
-              loading={clickedMethod === "email"}
-              className={`${
-                clickedMethod === "email"
+            <div className="relative">
+              <Button
+                type="submit"
+                loading={clickedMethod === "email"}
+                className={`${clickedMethod === "email"
                   ? "bg-black"
                   : "bg-gray-800 hover:bg-gray-900"
-              } focus:shadow-outline transform rounded px-4 py-2 text-white transition-colors duration-300 ease-in-out focus:outline-none`}
-            >
-              {emailButtonText}
-            </Button>
+                  } w-full focus:shadow-outline transform rounded px-4 py-2 text-white transition-colors duration-300 ease-in-out focus:outline-none`}
+              >
+                {emailButtonText}
+                {lastUsed === "credentials" && <LastUsed />}
+              </Button>
+            </div>
           </form>
           <p className="py-4 text-center">or</p>
           <div className="flex flex-col space-y-2 px-4 sm:px-16">
-            <Button
-              onClick={() => {
-                setClickedMethod("google");
-                signIn("google", {
-                  ...(next && next.length > 0 ? { callbackUrl: next } : {}),
-                }).then((res) => {
-                  if (res?.status) {
-                    setClickedMethod(undefined);
-                  }
-                });
-              }}
-              loading={clickedMethod === "google"}
-              disabled={clickedMethod && clickedMethod !== "google"}
-              className="flex items-center justify-center space-x-2 border border-gray-200 bg-gray-100 font-normal text-gray-900 hover:bg-gray-200"
-            >
-              <Google className="h-5 w-5" />
-              <span>Continue with Google</span>
-            </Button>
-            <Button
-              onClick={() => {
-                setClickedMethod("linkedin");
-                signIn("linkedin", {
-                  ...(next && next.length > 0 ? { callbackUrl: next } : {}),
-                }).then((res) => {
-                  if (res?.status) {
-                    setClickedMethod(undefined);
-                  }
-                });
-              }}
-              loading={clickedMethod === "linkedin"}
-              disabled={clickedMethod && clickedMethod !== "linkedin"}
-              className="flex items-center justify-center space-x-2 border border-gray-200 bg-gray-100 font-normal text-gray-900 hover:bg-gray-200"
-            >
-              <LinkedIn />
-              <span>Continue with LinkedIn</span>
-            </Button>
-            <Button
-              onClick={() => {
-                signInWithPasskey({
-                  tenantId: process.env.NEXT_PUBLIC_HANKO_TENANT_ID as string,
-                });
-              }}
-              disabled={clickedMethod && clickedMethod !== "passkey"}
-              variant="outline"
-              className="flex items-center justify-center space-x-2 border border-gray-200 bg-gray-100 font-normal text-gray-900 hover:bg-gray-200 hover:text-gray-900"
-            >
-              <Passkey className="h-4 w-4" />
-              <span>Continue with a passkey</span>
-            </Button>
+            <div className="relative">
+              <Button
+                onClick={() => {
+                  setLastUsed("google")
+                  setIsLoginWithGoogle(true);
+                  signIn("google", {
+                    ...(next && next.length > 0 ? { callbackUrl: next } : {}),
+                  }).then((res) => {
+                    if (res?.status) {
+                      setIsLoginWithGoogle(false);
+                    }
+                  });
+                }}
+                disabled={isLoginWithGoogle}
+                className="w-full flex items-center justify-center space-x-2 border border-gray-200 bg-gray-100 font-normal text-gray-900 hover:bg-gray-200 "
+              >
+                {isLoginWithGoogle ? (
+                  <Loader className="mr-2 h-5 w-5 animate-spin" />
+                ) : (
+                  <Google className="h-5 w-5" />
+                )}
+                <span>Continue with Google</span>
+                {lastUsed === "google" && <LastUsed />}
+              </Button>
+            </div>
+            <div className="relative">
+              <Button
+                onClick={() => {
+                  setClickedMethod("linkedin");
+                  signIn("linkedin", {
+                    ...(next && next.length > 0 ? { callbackUrl: next } : {}),
+                  }).then((res) => {
+                    if (res?.status) {
+                      setClickedMethod(undefined);
+                    }
+                  });
+                }}
+                loading={clickedMethod === "linkedin"}
+                disabled={clickedMethod && clickedMethod !== "linkedin"}
+                className="w-full flex items-center justify-center space-x-2 border border-gray-200 bg-gray-100 font-normal text-gray-900 hover:bg-gray-200"
+              >
+                <LinkedIn />
+                <span>Continue with LinkedIn</span>
+                {lastUsed === "linkedin" && <LastUsed />}
+              </Button>
+            </div>
+            <div className="relative">
+              <Button
+                onClick={() => {
+                  setLastUsed("saml")
+                  signInWithPasskey({
+                    tenantId: process.env.NEXT_PUBLIC_HANKO_TENANT_ID as string,
+                  })
+                }
+                }
+                variant="outline"
+                disabled={clickedMethod && clickedMethod !== "passkey"}
+                className="w-full flex items-center justify-center space-x-2 border border-gray-200 bg-gray-100 font-normal text-gray-900 hover:bg-gray-200 hover:text-gray-900"
+              >
+                <Passkey className="h-4 w-4" />
+                <span>Continue with a passkey</span>
+                {lastUsed === "saml" && <LastUsed />}
+              </Button>
+            </div>
           </div>
           <p className="mt-10 w-full max-w-md px-4 text-xs text-muted-foreground sm:px-16">
             By clicking continue, you acknowledge that you have read and agree
@@ -212,6 +239,6 @@ export default function Login() {
           </div>
         </div>
       </div>
-    </div>
+    </div >
   );
 }
