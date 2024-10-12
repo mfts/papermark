@@ -4,7 +4,7 @@
 /*
     NOTE: DO NOT PUSH TO CODEBASE
     A simple page to calculate pricing based on user inputs
-    Check the figma file attached with the PR for UI design
+    Check the figma file here: https://www.figma.com/design/XSJTbBuormBLtVjFd8fhhd/Untitled?node-id=4-222&t=P7SmrYzw9fmmyL7R-1
 */
 
 // function App() {
