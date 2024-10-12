@@ -222,7 +222,10 @@ export type AnalyticsEvents =
       event: "Stripe Checkout Clicked";
       teamId: string;
       priceId: string;
-      referral: boolean | undefined;
+    }
+  | {
+      event: "Stripe Billing Portal Clicked";
+      teamId: string;
     };
 
 export interface Team {

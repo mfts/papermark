@@ -29,9 +29,8 @@ export default function Login() {
     "Continue with Email",
   );
 
-
-   // Email validation check and submit
-   const handleEmailSubmit = (e: React.FormEvent) => {
+  // Email validation check and submit
+  const handleEmailSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     // Email validation: Check if the email is valid
@@ -67,7 +66,7 @@ export default function Login() {
   };
 
   return (
-    <div className="flex h-screen w-full flex-wrap ">
+    <div className="flex h-screen w-full flex-wrap">
       {/* Left part */}
       <div className="flex w-full justify-center bg-white md:w-1/2 lg:w-2/5">
         <div
@@ -77,11 +76,11 @@ export default function Login() {
         <div className="z-10 mx-5 mt-[calc(20vh)] h-fit w-full max-w-md overflow-hidden rounded-lg sm:mx-0">
           <div className="flex flex-col items-center justify-center space-y-3 px-4 py-6 pt-8 text-center sm:px-16">
             <Link href="/">
-              <span className=" text-balance text-2xl font-semibold text-gray-800 ">
+              <span className="text-balance text-2xl font-semibold text-gray-800">
                 Welcome to Papermark
               </span>
             </Link>
-            <h3 className="text-balance text-sm text-gray-800 ">
+            <h3 className="text-balance text-sm text-gray-800">
               Share documents. Not attachments.
             </h3>
           </div>
@@ -128,7 +127,7 @@ export default function Login() {
                 });
               }}
               disabled={isLoginWithGoogle}
-              className="flex items-center justify-center space-x-2  border border-gray-200 bg-gray-100 font-normal text-gray-900 hover:bg-gray-200 "
+              className="flex items-center justify-center space-x-2 border border-gray-200 bg-gray-100 font-normal text-gray-900 hover:bg-gray-200"
             >
               {isLoginWithGoogle ? (
                 <Loader className="mr-2 h-5 w-5 animate-spin" />
@@ -152,7 +151,7 @@ export default function Login() {
               className="flex items-center justify-center space-x-2 border border-gray-200 bg-gray-100 font-normal text-gray-900 hover:bg-gray-200"
             >
               {isLoginWithLinkedIn ? (
-                <Loader className="mr-2 h-5 w-5 animate-spin " />
+                <Loader className="mr-2 h-5 w-5 animate-spin" />
               ) : (
                 <LinkedIn />
               )}
@@ -165,13 +164,13 @@ export default function Login() {
                 })
               }
               variant="outline"
-              className="flex items-center justify-center space-x-2 border border-gray-200 bg-gray-100  font-normal text-gray-900 hover:bg-gray-200 hover:text-gray-900"
+              className="flex items-center justify-center space-x-2 border border-gray-200 bg-gray-100 font-normal text-gray-900 hover:bg-gray-200 hover:text-gray-900"
             >
-              <Passkey className="h-4 w-4 " />
+              <Passkey className="h-4 w-4" />
               <span>Continue with a passkey</span>
             </Button>
           </div>
-          <p className=" mt-10 w-full max-w-md px-4 text-xs text-muted-foreground sm:px-16">
+          <p className="mt-10 w-full max-w-md px-4 text-xs text-muted-foreground sm:px-16">
             By clicking continue, you acknowledge that you have read and agree
             to Papermark&apos;s{" "}
             <Link href="/terms" className="underline">
@@ -188,7 +187,7 @@ export default function Login() {
       <div className="hidden w-full justify-center bg-gray-800 md:flex md:w-1/2 lg:w-3/5">
         <div className="flex w-full max-w-5xl px-4 py-20 md:px-8">
           <div
-            className="mx-auto flex w-full max-w-5xl justify-center rounded-3xl bg-gray-800 px-4 py-20  md:px-8"
+            className="mx-auto flex w-full max-w-5xl justify-center rounded-3xl bg-gray-800 px-4 py-20 md:px-8"
             id="features"
           >
             <div className="flex flex-col items-center">
@@ -210,10 +209,10 @@ export default function Login() {
                   </p>
                 </blockquote>
                 <figcaption className="mt-4">
-                  <div className="text-balance font-semibold text-white ">
+                  <div className="text-balance font-semibold text-white">
                     Jaski
                   </div>
-                  <div className="text-balance text-gray-400 ">
+                  <div className="text-balance text-gray-400">
                     Founder, Townhall Network
                   </div>
                 </figcaption>
@@ -225,3 +224,4 @@ export default function Login() {
     </div>
   );
 }
+
