@@ -34,15 +34,15 @@ export default async function webhookHandler(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
-  // POST /api/stripe/webhook – listen to Stripe webhooks
+  // POST /api/stripe/webhook-old – listen to Stripe webhooks
   if (req.method === "POST") {
     const buf = await buffer(req);
     const sig = req.headers["stripe-signature"];
-    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET_OLD;
     let event: Stripe.Event;
     try {
       if (!sig || !webhookSecret) return;
-      const stripe = stripeInstance();
+      const stripe = stripeInstance(true);
       event = stripe.webhooks.constructEvent(buf, sig, webhookSecret);
     } catch (err: any) {
       return res.status(400).send(`Webhook Error: ${err.message}`);
@@ -56,10 +56,10 @@ export default async function webhookHandler(
     try {
       switch (event.type) {
         case "checkout.session.completed":
-          await checkoutSessionCompleted(event);
+          await checkoutSessionCompleted(event, true);
           break;
         case "customer.subscription.updated":
-          await customerSubsciptionUpdated(event, res);
+          await customerSubsciptionUpdated(event, res, true);
           break;
         case "customer.subscription.deleted":
           await customerSubscriptionDeleted(event, res);
