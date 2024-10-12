@@ -71,6 +71,7 @@ export interface LinkWithDataroom extends Link {
   dataroom: {
     id: string;
     name: string;
+    description: string;
     teamId: string;
     documents: {
       id: string;

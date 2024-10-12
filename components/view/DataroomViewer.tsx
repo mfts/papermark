@@ -26,6 +26,7 @@ import {
 
 import { cn } from "@/lib/utils";
 
+import { DataroomHeader } from "../datarooms/dataroom-header";
 import { TDocumentData } from "./dataroom/dataroom-view";
 import DocumentCard from "./dataroom/document-card";
 import FolderCard from "./dataroom/folder-card";
@@ -149,8 +150,15 @@ export default function DataroomViewer({
       />
       <div
         style={{ height: "calc(100vh - 64px)" }}
-        className="relative flex items-center bg-white dark:bg-black"
+        className="relative flex flex-col items-center bg-white dark:bg-black"
       >
+        <div className="mb-[-20px] mt-4 flex w-full items-center md:mt-5 md:px-5 lg:px-7 xl:px-10">
+          <DataroomHeader
+            about={dataroom?.description}
+            title={dataroom?.name}
+            description={dataroom?.description}
+          />
+        </div>
         <div className="relative mx-auto flex h-full w-full items-start justify-center">
           {/* Tree view */}
           <div className="mb-10 mt-4 hidden h-full w-1/4 space-y-8 overflow-auto py-3 md:mx-5 md:mt-5 md:flex lg:mx-7 lg:mt-8 xl:mx-10">

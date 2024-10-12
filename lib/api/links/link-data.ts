@@ -39,6 +39,7 @@ export async function fetchDataroomLinkData({
         select: {
           id: true,
           name: true,
+          description: true,
           teamId: true,
           documents: {
             where:

@@ -31,6 +31,7 @@ export default function Settings() {
       <main className="relative mx-2 mb-10 mt-4 space-y-8 overflow-hidden px-1 sm:mx-3 md:mx-5 md:mt-5 lg:mx-7 lg:mt-8 xl:mx-10">
         <header>
           <DataroomHeader
+            about={dataroom.description || ""}
             title={dataroom.name}
             description={dataroom.pId}
             actions={[]}
@@ -54,6 +55,7 @@ export default function Settings() {
           </nav>
           <div className="grid gap-6">
             <Form
+              type="text"
               title="Dataroom Name"
               description="This is the name of your data room on Papermark."
               inputAttrs={{
@@ -62,7 +64,7 @@ export default function Settings() {
                 placeholder: "My Dataroom",
                 maxLength: 32,
               }}
-              helpText="Max 32 characters"
+              maxCharacter={32}
               handleSubmit={(updateData) =>
                 fetch(`/api/teams/${teamId}/datarooms/${dataroom.id}`, {
                   method: "PATCH",
@@ -77,6 +79,39 @@ export default function Settings() {
                       mutate(`/api/teams/${teamId}/datarooms/${dataroom.id}`),
                     ]);
                     toast.success("Successfully updated dataroom name!");
+                  } else {
+                    const { error } = await res.json();
+                    toast.error(error.message);
+                  }
+                })
+              }
+            />
+            <Form
+              title="Dataroom Description"
+              description="This is the description of your data room on Papermark."
+              inputAttrs={{
+                name: "description",
+                defaultValue: dataroom.description || "",
+                placeholder:
+                  "Add a description to help others understand this data room...",
+              }}
+              type="textarea"
+              handleSubmit={(updateData) =>
+                fetch(`/api/teams/${teamId}/datarooms/${dataroom.id}`, {
+                  method: "PATCH",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({
+                    description: updateData.description,
+                  }),
+                }).then(async (res) => {
+                  if (res.status === 200) {
+                    await Promise.all([
+                      mutate(`/api/teams/${teamId}/datarooms`),
+                      mutate(`/api/teams/${teamId}/datarooms/${dataroom.id}`),
+                    ]);
+                    toast.success("Successfully updated dataroom description!");
                   } else {
                     const { error } = await res.json();
                     toast.error(error.message);

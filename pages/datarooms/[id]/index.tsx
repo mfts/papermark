@@ -28,6 +28,7 @@ export default function DataroomPage() {
           <DataroomHeader
             title={dataroom.name}
             description={dataroom.pId}
+            about={dataroom.description || ""}
             actions={[
               <Button onClick={() => setIsLinkSheetOpen(true)} key={1}>
                 Create Link

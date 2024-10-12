@@ -58,6 +58,7 @@ export default function General() {
         </div>
         <div className="space-y-6">
           <Form
+            type="text"
             title="Team Name"
             description="This is the name of your team on Papermark."
             inputAttrs={{
@@ -66,7 +67,7 @@ export default function General() {
               placeholder: "My Personal Team",
               maxLength: 32,
             }}
-            helpText="Max 32 characters."
+            maxCharacter={32}
             handleSubmit={(updateData) =>
               fetch(`/api/teams/${teamInfo?.currentTeam?.id}/update-name`, {
                 method: "PATCH",

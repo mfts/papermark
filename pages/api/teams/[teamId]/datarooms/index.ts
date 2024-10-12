@@ -67,7 +67,10 @@ export default async function handle(
     const userId = (session.user as CustomUser).id;
 
     const { teamId } = req.query as { teamId: string };
-    const { name } = req.body as { name: string };
+    const { name, description } = req.body as {
+      name: string;
+      description: string;
+    };
 
     try {
       // Check if the user is part of the team
@@ -109,9 +112,10 @@ export default async function handle(
 
       const dataroom = await prisma.dataroom.create({
         data: {
-          name: name,
-          teamId: teamId,
-          pId: pId,
+          name,
+          description,
+          teamId,
+          pId,
         },
       });
 

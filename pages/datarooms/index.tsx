@@ -1,5 +1,9 @@
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
+import { useEffect } from "react";
+
+import { Dataroom } from "@prisma/client";
 import { PlusIcon } from "lucide-react";
 
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
@@ -18,17 +22,15 @@ import {
 import { Separator } from "@/components/ui/separator";
 
 import { usePlan } from "@/lib/swr/use-billing";
-import useDatarooms from "@/lib/swr/use-datarooms";
+import useDatarooms, { DataroomWithCount } from "@/lib/swr/use-datarooms";
 import useLimits from "@/lib/swr/use-limits";
 import { daysLeft } from "@/lib/utils";
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
 
 export default function DataroomsPage() {
   const { datarooms } = useDatarooms();
   const { plan, trial } = usePlan();
   const { limits } = useLimits();
-  const router = useRouter()
+  const router = useRouter();
 
   const numDatarooms = datarooms?.length ?? 0;
   const limitDatarooms = limits?.datarooms ?? 1;
@@ -39,9 +41,9 @@ export default function DataroomsPage() {
   const canCreateUnlimitedDatarooms =
     isDatarooms || (isBusiness && numDatarooms < limitDatarooms);
 
-    useEffect(()=>{
-      if(trial == null && plan == 'free') router.push('/documents')
-    },[trial,plan])  
+  useEffect(() => {
+    if (trial == null && plan == "free") router.push("/documents");
+  }, [trial, plan]);
 
   return (
     <AppLayout>
@@ -110,16 +112,22 @@ export default function DataroomsPage() {
         <div className="space-y-4">
           <ul className="grid grid-cols-1 gap-x-6 gap-y-8 lg:grid-cols-2 xl:grid-cols-3">
             {datarooms &&
-              datarooms.map((dataroom) => (
-                <Link key={dataroom.id} href={`/datarooms/${dataroom.id}`}>
-                  <Card className="group relative overflow-hidden duration-500 hover:border-primary/50">
+              datarooms.map((dataroom: DataroomWithCount) => (
+                <Link
+                  key={dataroom.id}
+                  href={`/datarooms/${dataroom.id}`}
+                  className="h-full"
+                >
+                  <Card className="group relative flex h-full flex-col justify-between overflow-hidden duration-500 hover:border-primary/50">
                     <CardHeader>
                       <div className="flex items-center justify-between">
                         <CardTitle className="truncate">
                           {dataroom.name}
                         </CardTitle>
                       </div>
-                      {/* <CardDescription>{dataroom.pId}</CardDescription> */}
+                      <CardDescription className="line-clamp-2 text-muted-foreground">
+                        {dataroom.description}
+                      </CardDescription>
                     </CardHeader>
                     <CardContent>
                       <dl className="divide-y divide-gray-100 text-sm leading-6">
