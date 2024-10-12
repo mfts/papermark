@@ -153,10 +153,11 @@ export default async function handle(
       }
 
       const limits = await getLimits({ teamId, userId });
+      const stripedTeamPlan = team.plan.replace("+old", "");
 
       if (
         !team.plan.includes("drtrial") &&
-        ["business", "datarooms"].includes(team.plan) &&
+        ["business", "datarooms"].includes(stripedTeamPlan) &&
         limits &&
         team._count.datarooms >= limits.datarooms
       ) {
