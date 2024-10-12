@@ -10,6 +10,7 @@ import {
   FolderOpenIcon,
   PaletteIcon,
   ServerIcon,
+  ArchiveIcon
 } from "lucide-react";
 import { useSession } from "next-auth/react";
 
@@ -127,6 +128,13 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
       href: "/settings/branding",
       icon: PaletteIcon,
       current: router.pathname.includes("branding"),
+      active: false,
+      disabled: false,
+    },{
+      name: "Archive",
+      href: "/archive",
+      icon: ArchiveIcon,
+      current: router.pathname.includes("archive"),
       active: false,
       disabled: false,
     },

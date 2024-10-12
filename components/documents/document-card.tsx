@@ -11,6 +11,7 @@ import {
   Layers2Icon,
   MoreVertical,
   TrashIcon,
+  ArchiveIcon
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
@@ -275,7 +276,10 @@ export default function DocumentsCard({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" ref={dropdownRef}>
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem onClick={() => setMoveFolderOpen(true)}>
+              <DropdownMenuItem>
+                <ArchiveIcon className="mr-2 h-4 w-4" />
+                Archive document
+              </DropdownMenuItem><DropdownMenuItem onClick={() => setMoveFolderOpen(true)}>
                 <FolderInputIcon className="mr-2 h-4 w-4" />
                 Move to folder
               </DropdownMenuItem>
