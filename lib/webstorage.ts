@@ -27,7 +27,7 @@ export const localStorage = {
     },
     removeItem: (key: string) => {
         try {
-            // eslint-disable-next-line @calcom/eslint/avoid-web-storage
+            // eslint-disable-next-line
             window.localStorage.removeItem(key);
         } catch (e) {
             return;
