@@ -7,7 +7,8 @@ import { DocumentVersion } from "@prisma/client";
 import { BoxesIcon, EyeIcon, LinkIcon, Settings2Icon } from "lucide-react";
 import { toast } from "sonner";
 import { mutate } from "swr";
-
+import useLimits from "@/lib/swr/use-limits";
+import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { Button } from "@/components/ui/button";
 import {
   Collapsible,
@@ -59,6 +60,8 @@ export default function LinksTable({
   const router = useRouter();
   const { plan } = usePlan();
   const teamInfo = useTeam();
+
+  const { canAddLinks } = useLimits();
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isLinkSheetVisible, setIsLinkSheetVisible] = useState<boolean>(false);
@@ -169,6 +172,24 @@ export default function LinksTable({
 
     toast.success("Link duplicated successfully");
     setIsLoading(false);
+  };
+
+  const AddLinkButton = () => {
+    if (!canAddLinks) {
+      return (
+        <UpgradePlanModal clickedPlan="Pro" trigger={"limit_add_link"}>
+          <Button>
+            Upgrade to Create Link
+          </Button>
+        </UpgradePlanModal>
+      );
+    } else {
+      return (
+        <Button onClick={() => setIsLinkSheetVisible(true)}>
+          Create link to share
+        </Button>
+      );
+    }
   };
 
   const handleArchiveLink = async (
@@ -434,9 +455,7 @@ export default function LinksTable({
                         </div>
                       </div>
                       <p>No links found for this {targetType.toLowerCase()}</p>
-                      <Button onClick={() => setIsLinkSheetVisible(true)}>
-                        Create link to share
-                      </Button>
+                     <AddLinkButton/>
                     </div>
                   </TableCell>
                 </TableRow>
