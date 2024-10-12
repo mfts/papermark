@@ -73,7 +73,6 @@ export default function DocumentHeader({
   const [addDataRoomOpen, setAddDataRoomOpen] = useState<boolean>(false);
   const [addDocumentVersion, setAddDocumentVersion] = useState<boolean>(false);
   const [openAddDocModal, setOpenAddDocModal] = useState<boolean>(false);
-  const [createDataRoomOpen, setCreateDataRoomOpen] = useState<boolean>(false);
   const [trialModalOpen, setTrialModalOpen] = useState<boolean>(false);
   const [planModalOpen, setPlanModalOpen] = useState<boolean>(false);
   const nameRef = useRef<HTMLHeadingElement>(null);
@@ -365,15 +364,6 @@ export default function DocumentHeader({
       );
     }
 
-    if (isBusiness || isDatarooms) {
-      return (
-        <DropdownMenuItem onClick={() => setCreateDataRoomOpen(true)}>
-          <PlusIcon className="mr-2 h-4 w-4" aria-hidden="true" />
-          <span>Create New Dataroom</span>
-        </DropdownMenuItem>
-      );
-    }
-
     return (
       <DropdownMenuItem onClick={() => setTrialModalOpen(true)}>
         <PlusIcon className="mr-2 h-4 w-4" aria-hidden="true" />
@@ -604,12 +594,7 @@ export default function DocumentHeader({
           documentName={prismaDocument.name}
         />
       ) : null}
-      {createDataRoomOpen ? (
-        <AddDataroomModal
-          openModal={createDataRoomOpen}
-          setOpenModal={setCreateDataRoomOpen}
-        />
-      ) : null}
+
       {trialModalOpen ? (
         <DataroomTrialModal
           openModal={trialModalOpen}

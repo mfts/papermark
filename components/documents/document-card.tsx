@@ -69,8 +69,6 @@ export default function DocumentsCard({
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
   const [moveFolderOpen, setMoveFolderOpen] = useState<boolean>(false);
   const [addDataroomOpen, setAddDataroomOpen] = useState<boolean>(false);
-
-  const [createDataRoomOpen, setCreateDataRoomOpen] = useState<boolean>(false);
   const [trialModalOpen, setTrialModalOpen] = useState<boolean>(false);
   const [planModalOpen, setPlanModalOpen] = useState<boolean>(false);
 
@@ -227,15 +225,6 @@ export default function DocumentsCard({
       );
     }
 
-    if (isBusiness || isDatarooms) {
-      return (
-        <DropdownMenuItem onClick={() => setCreateDataRoomOpen(true)}>
-          <PlusIcon className="mr-2 h-4 w-4" aria-hidden="true" />
-          <span>Create New Dataroom</span>
-        </DropdownMenuItem>
-      );
-    }
-
     return (
       <DropdownMenuItem onClick={() => setTrialModalOpen(true)}>
         <PlusIcon className="mr-2 h-4 w-4" aria-hidden="true" />
@@ -386,12 +375,7 @@ export default function DocumentsCard({
           documentName={prismaDocument.name}
         />
       ) : null}
-      {createDataRoomOpen ? (
-        <AddDataroomModal
-          openModal={createDataRoomOpen}
-          setOpenModal={setCreateDataRoomOpen}
-        />
-      ) : null}
+      
       {trialModalOpen ? (
         <DataroomTrialModal
           openModal={trialModalOpen}
