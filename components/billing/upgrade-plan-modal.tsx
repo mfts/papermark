@@ -117,11 +117,13 @@ export function UpgradePlanModal({
     }
   }, [clickedPlan]);
 
+  // Add this new constant to determine if only Data Rooms plan is shown
   const isOnlyDataRooms = useMemo(
     () => plansToShow.length === 1 && plansToShow[0] === "Data Rooms",
     [plansToShow],
   );
 
+  // Track analytics event when modal is opened
   useEffect(() => {
     if (open) {
       analytics.capture("Upgrade Button Clicked", {
@@ -138,6 +140,7 @@ export function UpgradePlanModal({
     });
   };
 
+  // If button is present, clone it and add onClick handler
   const buttonChild = React.isValidElement<{
     onClick?: React.MouseEventHandler<HTMLButtonElement>;
   }>(children)
