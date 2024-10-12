@@ -26,6 +26,7 @@ export default function Login() {
   const [isLoginWithLinkedIn, setIsLoginWithLinkedIn] =
     useState<boolean>(false);
   const [lastUsed, setLastUsed] = useLastUsed();
+  const [hasInteracted, setHasInteracted] = useState<boolean>(false);
   const authMethods = ["google", "email", "linkedin", "passkey"] as const;
   type AuthMethod = (typeof authMethods)[number];
   const [clickedMethod, setClickedMethod] = useState<AuthMethod | undefined>(
@@ -61,6 +62,7 @@ export default function Login() {
             onSubmit={(e) => {
               e.preventDefault();
               setClickedMethod("email");
+              setHasInteracted(true);
               signIn("email", {
                 email: email,
                 redirect: false,
@@ -117,7 +119,7 @@ export default function Login() {
                   } w-full focus:shadow-outline transform rounded px-4 py-2 text-white transition-colors duration-300 ease-in-out focus:outline-none`}
               >
                 {emailButtonText}
-                {lastUsed === "credentials" && <LastUsed />}
+                {lastUsed === "credentials" && hasInteracted && <LastUsed />}
               </Button>
             </div>
           </form>
@@ -126,8 +128,9 @@ export default function Login() {
             <div className="relative">
               <Button
                 onClick={() => {
-                  setLastUsed("google")
                   setIsLoginWithGoogle(true);
+                  setLastUsed("google");
+                  setHasInteracted(true);
                   signIn("google", {
                     ...(next && next.length > 0 ? { callbackUrl: next } : {}),
                   }).then((res) => {
@@ -145,13 +148,15 @@ export default function Login() {
                   <Google className="h-5 w-5" />
                 )}
                 <span>Continue with Google</span>
-                {lastUsed === "google" && <LastUsed />}
+                {lastUsed === "google" && hasInteracted && <LastUsed />}
               </Button>
             </div>
             <div className="relative">
               <Button
                 onClick={() => {
                   setClickedMethod("linkedin");
+                  setLastUsed("linkedin");
+                  setHasInteracted(true);
                   signIn("linkedin", {
                     ...(next && next.length > 0 ? { callbackUrl: next } : {}),
                   }).then((res) => {
@@ -166,25 +171,25 @@ export default function Login() {
               >
                 <LinkedIn />
                 <span>Continue with LinkedIn</span>
-                {lastUsed === "linkedin" && <LastUsed />}
+                {lastUsed === "linkedin" && hasInteracted && <LastUsed />}
               </Button>
             </div>
             <div className="relative">
               <Button
                 onClick={() => {
-                  setLastUsed("saml")
+                  setLastUsed("saml");
+                  setHasInteracted(true);
                   signInWithPasskey({
                     tenantId: process.env.NEXT_PUBLIC_HANKO_TENANT_ID as string,
-                  })
-                }
-                }
+                  });
+                }}
                 variant="outline"
                 disabled={clickedMethod && clickedMethod !== "passkey"}
                 className="w-full flex items-center justify-center space-x-2 border border-gray-200 bg-gray-100 font-normal text-gray-900 hover:bg-gray-200 hover:text-gray-900"
               >
                 <Passkey className="h-4 w-4" />
                 <span>Continue with a passkey</span>
-                {lastUsed === "saml" && <LastUsed />}
+                {lastUsed === "saml" && hasInteracted && <LastUsed />}
               </Button>
             </div>
           </div>
