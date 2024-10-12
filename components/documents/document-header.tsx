@@ -1,12 +1,14 @@
 import Image from "next/image";
 import { useRouter } from "next/router";
 
+import { Parser } from "json2csv";
 import { useEffect, useRef, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { Document, DocumentVersion } from "@prisma/client";
 import {
   BetweenHorizontalStartIcon,
+  FileDownIcon,
   SheetIcon,
   Sparkles,
   TrashIcon,
@@ -77,6 +79,20 @@ export default function DocumentHeader({
       actionRows.push(actions.slice(i, i + 3));
     }
   }
+
+  const currentTime = new Date();
+  const formattedTime =
+    currentTime.getFullYear() +
+    "-" +
+    String(currentTime.getMonth() + 1).padStart(2, "0") +
+    "-" +
+    String(currentTime.getDate()).padStart(2, "0") +
+    "_" +
+    String(currentTime.getHours()).padStart(2, "0") +
+    "-" +
+    String(currentTime.getMinutes()).padStart(2, "0");
+  "-" + String(currentTime.getSeconds()).padStart(2, "0");
+
 
   const plausible = usePlausible();
 
@@ -249,6 +265,49 @@ export default function DocumentHeader({
     } catch (error) {
       console.error("Error:", error);
       toast.error("An error occurred. Please try again.");
+    }
+  };
+  // export method to fetch the visits data and convert to csv.
+  const exportVisitCounts = async (document: Document) => {
+    try {
+      const response = await fetch(
+        `/api/teams/${teamId}/documents/${document.id}/export-visits`,
+        { method: "GET" }
+      );
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+
+      // appending JSON data as per their field names.
+      const fields = [
+        { label: 'Viewed at', value: 'viewedAt' },
+        { label: 'Name', value: 'viewerName' },
+        { label: 'Email', value: 'viewerEmail' },
+        { label: 'Link Name', value: 'linkName' },
+        { label: 'Total Visit Duration', value: 'totalVisitDuration' },
+        { label: '% (Visit) Completion', value: 'visitCompletion' },
+        { label: 'Document version', value: 'documentVersion' },
+        { label: 'Downloaded at', value: 'downloadedAt' },
+        { label: 'Verified', value: 'verified' }
+      ];
+      const json2csvParser = new Parser({ fields });
+      const csv = json2csvParser.parse(data.visits);
+
+      // Creating csv as per the time stamp.
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = window.document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `${data.documentName}_visits_${formattedTime}.csv`);
+      window.document.body.appendChild(link);
+      link.click();
+      window.document.body.removeChild(link);
+
+      toast.success("CSV file downloaded successfully");
+    } catch (error) {
+      console.error("Error:", error);
+      toast.error("An error occurred while downloading the CSV. Please try again.");
     }
   };
 
@@ -515,6 +574,14 @@ export default function DocumentHeader({
               Add to dataroom
             </DropdownMenuItem>
 
+            <DropdownMenuSeparator />
+
+            {/* Export views in CSV */}
+            <DropdownMenuItem onClick={() => exportVisitCounts(prismaDocument)}>
+              <FileDownIcon className="mr-2 h-4 w-4" />
+              Export visits
+            </DropdownMenuItem>
+            
             <DropdownMenuSeparator />
 
             <DropdownMenuItem
