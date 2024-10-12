@@ -4,9 +4,9 @@ import { NextRequest } from "next/server";
 
 import { Brand, DataroomBrand } from "@prisma/client";
 
-import { CustomUser, LinkWithDataroom, LinkWithDocument } from "@/lib/types";
+import { LinkWithDataroom, LinkWithDocument } from "@/lib/types";
 
-// import { fileIcon } from "@/lib/utils/get-file-icon";
+import { ogFileIcon } from "@/components/og/icons/og-file-icon";
 
 export const runtime = "edge";
 
@@ -32,7 +32,6 @@ export async function GET(
 ) {
   const linkId = params.linkId;
   let fileName = "Papermark";
-  let fileFormat = "Document";
   let fileType = "";
   try {
     const res = await fetch(`${process.env.NEXTAUTH_URL}/api/links/${linkId}`);
@@ -42,31 +41,58 @@ export async function GET(
     const data = (await res.json()) as DocumentLinkData | DataroomLinkData;
     if (data.linkType === "DOCUMENT_LINK") {
       fileName = data.link.document.name;
-      fileFormat = data.link.document.name.split(".").pop() ?? "Document";
-      fileType = data.link.document.type ?? "";
-      //   console.log(data.link.document);
+      fileType =
+        data.link.document.versions[data.link.document.versions.length - 1]
+          .type ?? "";
+      console.log(data.link);
+    }
+    if (data.linkType === "DATAROOM_LINK") {
+      fileName = data.link.dataroom.name;
+      fileType = "folder";
     }
   } catch (error) {
     console.error(error);
   }
-  const searchParams = request.nextUrl.searchParams;
-  const title = searchParams.get("title") || "Papermark Document";
-  const Inter = await fetch(
+  const InterMedium = await fetch(
+    new URL("@/public/_static/Inter-Medium.ttf", import.meta.url),
+  ).then((res) => res.arrayBuffer());
+  const InterBold = await fetch(
     new URL("@/public/_static/Inter-Bold.ttf", import.meta.url),
   ).then((res) => res.arrayBuffer());
 
   return new ImageResponse(
     (
-      <div tw="flex flex-col items-center justify-between w-full h-full bg-white text-gray-900 p-12">
-        <div tw="flex text-[32px] justify-between w-full items-center">
-          <div tw="flex-grow text-gray-800/75">{fileName}</div>
-          <div tw="text-[32px] flex items-center tracking-tighter flex-shrink-0 text-black">
+      <div tw="flex flex-col items-center justify-between w-full h-full bg-white text-gray-900 p-12 pb-6 font-medium">
+        <div tw="flex text-[42px] justify-between w-full items-center pr-6">
+          <div
+            style={{
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+            tw="flex-grow overflow-hidden"
+          >
+            {fileName}
+          </div>
+          <div tw="text-[32px] font-bold flex items-center tracking-tighter flex-shrink-0 text-black">
             Papermark
           </div>
         </div>
-        <div tw="text-[42px] flex-grow flex text-center p-12">
+        <div tw="text-[42px] flex-grow flex text-center p-6 pt-12">
           <div tw="bg-gray-200 text-gray-500 w-full h-full rounded-3xl flex flex-col items-center justify-center">
-            .{fileFormat}
+            <div tw="flex">
+              {ogFileIcon({
+                fileType: fileType,
+              })}
+            </div>
+            <div
+              style={{
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+              tw="w-full overflow-hidden text-center flex justify-center p-6 font-bold"
+            >
+              {fileName}
+            </div>
           </div>
         </div>
         <div tw="text-[24px] flex items-center">
@@ -83,7 +109,13 @@ export async function GET(
       fonts: [
         {
           name: "Inter",
-          data: Inter,
+          data: InterBold,
+          weight: 700,
+        },
+        {
+          name: "Inter",
+          data: InterMedium,
+          weight: 500,
         },
       ],
     },
