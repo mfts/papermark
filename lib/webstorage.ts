@@ -16,7 +16,7 @@ export const localStorage = {
     },
     setItem(key: string, value: string) {
         try {
-            // eslint-disable-next-line @calcom/eslint/avoid-web-storage
+            // eslint-disable-next-line
             window.localStorage.setItem(key, value);
         } catch (e) {
             // In case storage is restricted. Possible reasons
