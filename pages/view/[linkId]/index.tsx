@@ -10,6 +10,7 @@ import { useSession } from "next-auth/react";
 import { ExtendedRecordMap } from "notion-types";
 import { parsePageId } from "notion-utils";
 
+import { PreviewType } from "@/components/links/links-table";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import CustomMetaTag from "@/components/view/custom-metatag";
 import DataroomView from "@/components/view/dataroom/dataroom-view";
@@ -230,10 +231,12 @@ export default function ViewPage({
     email: verifiedEmail,
     d: disableEditEmail,
     previewToken,
+    viewAs,
   } = router.query as {
     email: string;
     d: string;
     previewToken?: string;
+    viewAs?: PreviewType;
   };
   const { linkType, link, brand } = linkData;
 
@@ -304,7 +307,11 @@ export default function ViewPage({
           link={link}
           userEmail={verifiedEmail ?? storedEmail ?? userEmail}
           userId={userId}
-          isProtected={!!(emailProtected || linkPassword || enableAgreement)}
+          isProtected={
+            viewAs === "QUICK_PREVIEW"
+              ? false
+              : !!(emailProtected || linkPassword || enableAgreement)
+          }
           notionData={notionData}
           brand={brand}
           showPoweredByBanner={showPoweredByBanner}
@@ -387,7 +394,11 @@ export default function ViewPage({
           link={link}
           userEmail={verifiedEmail ?? storedEmail ?? userEmail}
           userId={userId}
-          isProtected={!!(emailProtected || linkPassword || enableAgreement)}
+          isProtected={
+            viewAs === "QUICK_PREVIEW"
+              ? false
+              : !!(emailProtected || linkPassword || enableAgreement)
+          }
           brand={brand}
           useAdvancedExcelViewer={useAdvancedExcelViewer}
           previewToken={previewToken}

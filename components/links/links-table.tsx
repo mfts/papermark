@@ -47,6 +47,8 @@ import LinkSheet, {
 } from "./link-sheet";
 import LinksVisitors from "./links-visitors";
 
+export type PreviewType = "QUICK_PREVIEW" | "COMPLETE_PREVIEW";
+
 export default function LinksTable({
   targetType,
   links,
@@ -114,7 +116,10 @@ export default function LinksTable({
     }, 0);
   };
 
-  const handlePreviewLink = async (link: LinkWithViews) => {
+  const handlePreviewLink = async (
+    link: LinkWithViews,
+    viewAs: PreviewType,
+  ) => {
     if (link.domainId && plan === "free") {
       toast.error("You need to upgrade to preview this link");
       return;
@@ -133,7 +138,7 @@ export default function LinksTable({
     }
 
     const { previewToken } = await response.json();
-    const previewLink = `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${link.id}?previewToken=${previewToken}`;
+    const previewLink = `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${link.id}?previewToken=${previewToken}&viewAs=${viewAs}`;
 
     window.open(previewLink, "_blank");
   };
@@ -313,15 +318,38 @@ export default function LinksTable({
                               )}
                             </div>
                             <ButtonTooltip content="Preview link">
-                              <Button
-                                variant={"link"}
-                                size={"icon"}
-                                className="group h-7 w-8"
-                                onClick={() => handlePreviewLink(link)}
-                              >
-                                <span className="sr-only">Preview link</span>
-                                <EyeIcon className="h-5 w-5 text-gray-400 group-hover:text-gray-500" />
-                              </Button>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    className="h-8 w-8 p-0 group-hover/row:ring-1 group-hover/row:ring-gray-200 group-hover/row:dark:ring-gray-700"
+                                  >
+                                    <span className="sr-only">Open menu</span>
+                                    <EyeIcon className="h-5 w-5 text-gray-400 group-hover:text-gray-500" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuLabel>View As</DropdownMenuLabel>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem
+                                    onClick={() =>
+                                      handlePreviewLink(link, "QUICK_PREVIEW")
+                                    }
+                                  >
+                                    Quick Preview
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() =>
+                                      handlePreviewLink(
+                                        link,
+                                        "COMPLETE_PREVIEW",
+                                      )
+                                    }
+                                  >
+                                    Complete Preview
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
                             </ButtonTooltip>
                             <ButtonTooltip content="Edit link">
                               <Button
