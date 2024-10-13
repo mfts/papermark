@@ -349,8 +349,8 @@ export default function UploadZone({
             <span className="mx-auto">Drop your file(s) to upload here</span>
             <p className="text-xs leading-5 text-gray-800">
               {isFreePlan && !isTrial
-                ? `Only *.pdf, *.xls, *.xlsx, *.csv, *.ods & ${maxSize} MB limit`
-                : `Only *.pdf, *.pptx, *.docx, *.xlsx, *.xls, *.csv, *.ods, *.ppt, *.odp, *.doc, *.odt & ${maxSize} MB limit`}
+                ? `Only *.pdf, *.xls, *.xlsx, *.csv, *.ods, *.png, *.jpeg, *.jpg & ${maxSize} MB limit`
+                : `Only *.pdf, *.pptx, *.docx, *.xlsx, *.xls, *.csv, *.ods, *.ppt, *.odp, *.doc, *.odt, *.dwg, *.dxf, *.png, *.jpg, *.jpeg & ${maxSize} MB limit`}
             </p>
           </div>
         </div>
