@@ -149,6 +149,8 @@ export function UpgradePlanModal({
     ? React.cloneElement(children, { onClick: handleUpgradeClick })
     : children;
 
+  const [clickedPlanIndex, setClickedPlanIndex] = useState<number | null>(null); // Track the clicked button index
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{buttonChild}</DialogTrigger>
@@ -173,7 +175,7 @@ export function UpgradePlanModal({
         </div>
 
         <div className="isolate grid grid-cols-1 gap-4 overflow-hidden rounded-xl p-4 md:grid-cols-2">
-          {plansToShow.map((planOption) => (
+          {plansToShow.map((planOption, index) => (
             <div
               key={planOption}
               className={`relative flex flex-col rounded-lg border ${
@@ -235,9 +237,10 @@ export function UpgradePlanModal({
                       ? "bg-[#fb7a00] hover:bg-[#fb7a00]"
                       : "bg-gray-800 text-white hover:bg-gray-900 hover:text-white"
                   }`}
-                  loading={clicked}
+                  loading={clickedPlanIndex === index} // Show loading only for the clicked button
+                  disabled={clickedPlanIndex !== null && clickedPlanIndex !== index} // Disable other buttons
                   onClick={() => {
-                    setClicked(true);
+                    setClickedPlanIndex(index); // Set the clicked button index
                     if (isCustomer && teamPlan !== "free") {
                       fetch(
                         `/api/teams/${teamInfo?.currentTeam?.id}/billing/manage`,
@@ -251,7 +254,7 @@ export function UpgradePlanModal({
                         })
                         .catch((err) => {
                           alert(err);
-                          setClicked(false);
+                          setClickedPlanIndex(null);
                         });
                     } else {
                       fetch(
@@ -281,12 +284,12 @@ export function UpgradePlanModal({
                         })
                         .catch((err) => {
                           alert(err);
-                          setClicked(false);
+                          setClickedPlanIndex(null);
                         });
                     }
                   }}
                 >
-                  {clicked
+                  {clickedPlanIndex === index
                     ? "Redirecting to Stripe..."
                     : `Upgrade to ${planOption} ${capitalize(period)}`}
                 </Button>

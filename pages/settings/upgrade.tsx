@@ -18,7 +18,7 @@ import { capitalize } from "@/lib/utils";
 export default function UpgradePage() {
   const router = useRouter();
   const [period, setPeriod] = useState<"yearly" | "monthly">("yearly");
-  const [clicked, setClicked] = useState<boolean>(false);
+  const [clickedPlanIndex, setClickedPlanIndex] = useState<number | null>(null); // Track the clicked button index
   const teamInfo = useTeam();
   const { plan: teamPlan, trial, isCustomer, isOldAccount } = usePlan();
   const analytics = useAnalytics();
@@ -80,8 +80,6 @@ export default function UpgradePage() {
   );
   const plansToShow = ["Pro", "Business", "Data Rooms"];
 
-  // Remove the useEffect hook that was causing the error
-
   return (
     <div className="min-h-screen bg-gray-50 p-8 dark:bg-gray-900">
       <h1 className="mb-8 text-center text-3xl font-bold">
@@ -102,7 +100,7 @@ export default function UpgradePage() {
       </div>
 
       <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
-        {plansToShow.map((planOption) => (
+        {plansToShow.map((planOption, index) => (
           <div
             key={planOption}
             className={`relative flex flex-col rounded-lg border ${
@@ -151,9 +149,10 @@ export default function UpgradePage() {
                     ? "bg-[#fb7a00] hover:bg-[#fb7a00]/80"
                     : "bg-gray-800 text-white hover:bg-gray-900"
                 }`}
-                loading={clicked}
+                loading={clickedPlanIndex === index}
+                disabled={clickedPlanIndex !== null && clickedPlanIndex !== index}
                 onClick={() => {
-                  setClicked(true);
+                  setClickedPlanIndex(index);
                   if (isCustomer && teamPlan !== "free") {
                     fetch(
                       `/api/teams/${teamInfo?.currentTeam?.id}/billing/manage`,
@@ -167,13 +166,11 @@ export default function UpgradePage() {
                       })
                       .catch((err) => {
                         alert(err);
-                        setClicked(false);
+                        setClickedPlanIndex(null);
                       });
                   } else {
                     fetch(
-                      `/api/teams/${
-                        teamInfo?.currentTeam?.id
-                      }/billing/upgrade?priceId=${
+                      `/api/teams/${teamInfo?.currentTeam?.id}/billing/upgrade?priceId=${
                         PLANS.find((p) => p.name === planOption)!.price[period]
                           .priceIds[
                           process.env.NEXT_PUBLIC_VERCEL_ENV === "production"
@@ -196,12 +193,12 @@ export default function UpgradePage() {
                       })
                       .catch((err) => {
                         alert(err);
-                        setClicked(false);
+                        setClickedPlanIndex(null);
                       });
                   }
                 }}
               >
-                {clicked
+                {clickedPlanIndex === index
                   ? "Redirecting to Stripe..."
                   : `Upgrade to ${planOption} ${capitalize(period)}`}
               </Button>
