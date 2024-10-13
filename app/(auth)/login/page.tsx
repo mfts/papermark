@@ -6,7 +6,6 @@ import { useParams } from "next/navigation";
 import { useState } from "react";
 
 import { signInWithPasskey } from "@teamhanko/passkeys-next-auth-provider/client";
-import { Loader } from "lucide-react";
 import { signIn } from "next-auth/react";
 import { toast } from "sonner";
 
@@ -16,6 +15,8 @@ import Passkey from "@/components/shared/icons/passkey";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { LastUsed, useLastUsed } from "@/components/hooks/useLastUsed";
+import { Loader } from "lucide-react";
 
 export default function Login() {
   const { next } = useParams as { next?: string };
@@ -24,6 +25,12 @@ export default function Login() {
   const [isLoginWithGoogle, setIsLoginWithGoogle] = useState<boolean>(false);
   const [isLoginWithLinkedIn, setIsLoginWithLinkedIn] =
     useState<boolean>(false);
+  const [lastUsed, setLastUsed] = useLastUsed();
+  const authMethods = ["google", "email", "linkedin", "passkey"] as const;
+  type AuthMethod = (typeof authMethods)[number];
+  const [clickedMethod, setClickedMethod] = useState<AuthMethod | undefined>(
+    undefined,
+  );
   const [email, setEmail] = useState<string>("");
   const [emailButtonText, setEmailButtonText] = useState<string>(
     "Continue with Email",
@@ -98,7 +105,7 @@ export default function Login() {
               autoCapitalize="none"
               autoComplete="email"
               autoCorrect="off"
-              disabled={isLoginWithEmail}
+              disabled={clickedMethod === "email"}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="flex h-10 w-full rounded-md border-0 bg-background bg-white px-3 py-2 text-sm text-gray-900 ring-1 ring-gray-200 transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
@@ -221,6 +228,6 @@ export default function Login() {
           </div>
         </div>
       </div>
-    </div>
+    </div >
   );
 }
