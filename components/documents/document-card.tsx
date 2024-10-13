@@ -33,7 +33,7 @@ import { DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
 import { cn, nFormatter, timeAgo } from "@/lib/utils";
 import { fileIcon } from "@/lib/utils/get-file-icon";
 import { useCopyToClipboard } from "@/lib/utils/use-copy-to-clipboard";
-
+import useLimits from "@/lib/swr/use-limits";
 import { AddToDataroomModal } from "./add-document-to-dataroom-modal";
 import { MoveToFolderModal } from "./move-folder-modal";
 
@@ -62,6 +62,7 @@ export default function DocumentsCard({
   const [moveFolderOpen, setMoveFolderOpen] = useState<boolean>(false);
   const [addDataroomOpen, setAddDataroomOpen] = useState<boolean>(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
+  const { canAddDocuments } = useLimits();
 
   /** current folder name */
   const currentFolderPath = router.query.name as string[] | undefined;
@@ -279,7 +280,7 @@ export default function DocumentsCard({
                 <FolderInputIcon className="mr-2 h-4 w-4" />
                 Move to folder
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={(e) => handleDuplicateDocument(e)}>
+              <DropdownMenuItem onClick={(e) => handleDuplicateDocument(e)} disabled={!canAddDocuments}>
                 <Layers2Icon className="mr-2 h-4 w-4" />
                 Duplicate document
               </DropdownMenuItem>
