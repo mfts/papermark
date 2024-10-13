@@ -412,6 +412,7 @@ export default function LinksTable({
                                   Edit Link
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
+                                  disabled={!canAddLinks}
                                   onClick={() => handleDuplicateLink(link)}
                                 >
                                   Duplicate Link
