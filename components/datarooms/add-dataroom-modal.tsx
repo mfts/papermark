@@ -40,7 +40,7 @@ export function AddDataroomModal({
     description: "",
   });
   const [loading, setLoading] = useState<boolean>(false);
-  const [open, setOpen] = useState<boolean>(false);
+  const [open, setOpen] = useState<boolean>(openModal);
 
   const teamInfo = useTeam();
   const { plan } = usePlan();
@@ -78,7 +78,6 @@ export function AddDataroomModal({
           toast.error(message);
           return;
         }
-
         analytics.capture("Dataroom Created", { dataroomName: formData.name });
         toast.success("Dataroom successfully created! 🎉");
 
@@ -99,6 +98,7 @@ export function AddDataroomModal({
     },
     [formData, teamInfo?.currentTeam?.id, analytics, openModal, setOpenModal],
   );
+
 
   // If the team is on a free plan, show the upgrade modal
   if (plan === "free" || plan === "pro") {
@@ -121,6 +121,7 @@ export function AddDataroomModal({
       setOpen(true);
     }
     if (openModal && setOpenModal) setOpenModal(false);
+
     // TODO
     // setFormData({
     //   description: "",
