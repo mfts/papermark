@@ -4,9 +4,11 @@ import { useRouter } from "next/router";
 import { useEffect, useRef, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
+import { useLimits } from "@/ee/limits/swr-handler";
 import { Document, DocumentVersion } from "@prisma/client";
 import {
   BetweenHorizontalStartIcon,
+  PlusIcon,
   SheetIcon,
   Sparkles,
   TrashIcon,
@@ -31,10 +33,14 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 import { usePlan } from "@/lib/swr/use-billing";
+import useDatarooms from "@/lib/swr/use-datarooms";
 import { DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
 import { cn, getExtension } from "@/lib/utils";
 import { fileIcon } from "@/lib/utils/get-file-icon";
 
+import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
+import { AddDataroomModal } from "../datarooms/add-dataroom-modal";
+import { DataroomTrialModal } from "../datarooms/dataroom-trial-modal";
 import AdvancedSheet from "../shared/icons/advanced-sheet";
 import PortraitLandscape from "../shared/icons/portrait-landscape";
 import LoadingSpinner from "../ui/loading-spinner";
@@ -55,23 +61,36 @@ export default function DocumentHeader({
 }) {
   const router = useRouter();
   const teamInfo = useTeam();
+  const { datarooms: dataRooms } = useDatarooms();
   const { theme, systemTheme } = useTheme();
   const isLight =
     theme === "light" || (theme === "system" && systemTheme === "light");
   const { plan, trial } = usePlan();
-
   const [isEditingName, setIsEditingName] = useState<boolean>(false);
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
   const [isFirstClick, setIsFirstClick] = useState<boolean>(false);
   const [orientationLoading, setOrientationLoading] = useState<boolean>(false);
-  const [addDataroomOpen, setAddDataroomOpen] = useState<boolean>(false);
+  const [addDataRoomOpen, setAddDataRoomOpen] = useState<boolean>(false);
   const [addDocumentVersion, setAddDocumentVersion] = useState<boolean>(false);
-
+  const [openAddDocModal, setOpenAddDocModal] = useState<boolean>(false);
+  const [trialModalOpen, setTrialModalOpen] = useState<boolean>(false);
+  const [planModalOpen, setPlanModalOpen] = useState<boolean>(false);
   const nameRef = useRef<HTMLHeadingElement>(null);
   const enterPressedRef = useRef<boolean>(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
+  const { limits } = useLimits();
+
+  const numDatarooms = dataRooms?.length ?? 0;
+  const limitDatarooms = limits?.datarooms ?? 1;
+
+  const isBusiness = plan === "business";
+  const isDatarooms = plan === "datarooms";
+  const isTrialDatarooms = trial === "drtrial";
+  const canCreateUnlimitedDatarooms =
+    isDatarooms || (isBusiness && numDatarooms < limitDatarooms);
   const actionRows: React.ReactNode[][] = [];
+
   if (actions) {
     for (let i = 0; i < actions.length; i += 3) {
       actionRows.push(actions.slice(i, i + 3));
@@ -82,12 +101,12 @@ export default function DocumentHeader({
 
   // https://github.com/radix-ui/primitives/issues/1241#issuecomment-1888232392
   useEffect(() => {
-    if (!addDataroomOpen || !addDocumentVersion) {
+    if (!addDataRoomOpen || !addDocumentVersion) {
       setTimeout(() => {
         document.body.style.pointerEvents = "";
       });
     }
-  }, [addDataroomOpen, addDocumentVersion]);
+  }, [addDataRoomOpen, addDocumentVersion]);
 
   const handleNameSubmit = async () => {
     if (enterPressedRef.current) {
@@ -326,6 +345,33 @@ export default function DocumentHeader({
     }
   };
 
+  const renderDropdownMenuItem = () => {
+    if (isBusiness && !canCreateUnlimitedDatarooms) {
+      return (
+        <DropdownMenuItem onClick={() => setPlanModalOpen(true)}>
+          <PlusIcon className="mr-2 h-4 w-4" aria-hidden="true" />
+          <span>Upgrade to Add Datarooms</span>
+        </DropdownMenuItem>
+      );
+    }
+
+    if (isTrialDatarooms && dataRooms && !isBusiness && !isDatarooms) {
+      return (
+        <DropdownMenuItem onClick={() => setPlanModalOpen(true)}>
+          <PlusIcon className="mr-2 h-4 w-4" aria-hidden="true" />
+          <span>Upgrade to Add Datarooms</span>
+        </DropdownMenuItem>
+      );
+    }
+
+    return (
+      <DropdownMenuItem onClick={() => setTrialModalOpen(true)}>
+        <PlusIcon className="mr-2 h-4 w-4" aria-hidden="true" />
+        <span>Start Data Room Trial</span>
+      </DropdownMenuItem>
+    );
+  };
+
   return (
     <header className="flex items-center justify-between gap-x-8">
       <div className="flex items-center space-x-2">
@@ -386,10 +432,23 @@ export default function DocumentHeader({
         )}
 
         {primaryVersion.type !== "notion" && (
-          <AddDocumentModal newVersion>
-            <button title="Upload a new version" className="hidden md:flex">
-              <FileUp className="h-6 w-6" />
-            </button>
+          <AddDocumentModal
+            newVersion
+            openModal={openAddDocModal}
+            setAddDocumentModalOpen={setOpenAddDocModal}
+          >
+            <ButtonTooltip content="Upload a new version">
+              <button
+                title="Upload a new version"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setOpenAddDocModal(true);
+                }}
+                className="hidden md:flex"
+              >
+                <FileUp className="h-6 w-6" />
+              </button>
+            </ButtonTooltip>
           </AddDocumentModal>
         )}
 
@@ -478,7 +537,6 @@ export default function DocumentHeader({
 
               <DropdownMenuSeparator />
             </DropdownMenuGroup>
-
             {primaryVersion.type !== "notion" &&
               primaryVersion.type !== "sheet" &&
               (!prismaDocument.assistantEnabled ? (
@@ -498,7 +556,6 @@ export default function DocumentHeader({
                   <Sparkles className="mr-2 h-4 w-4" /> Disable Assistant
                 </DropdownMenuItem>
               ))}
-
             {prismaDocument.type === "sheet" &&
               !prismaDocument.advancedExcelEnabled &&
               (plan === "business" || plan === "datarooms" || trial) && (
@@ -509,14 +566,14 @@ export default function DocumentHeader({
                   Enable Advanced Mode
                 </DropdownMenuItem>
               )}
-
-            <DropdownMenuItem onClick={() => setAddDataroomOpen(true)}>
-              <BetweenHorizontalStartIcon className="mr-2 h-4 w-4" />
-              Add to dataroom
-            </DropdownMenuItem>
-
+            {dataRooms && dataRooms.length !== 0 && (
+              <DropdownMenuItem onClick={() => setAddDataRoomOpen(true)}>
+                <BetweenHorizontalStartIcon className="mr-2 h-4 w-4" />
+                Add to dataroom
+              </DropdownMenuItem>
+            )}
+            {renderDropdownMenuItem()}
             <DropdownMenuSeparator />
-
             <DropdownMenuItem
               className="text-destructive focus:bg-destructive focus:text-destructive-foreground"
               onClick={(event) => handleButtonClick(event, prismaDocument.id)}
@@ -529,12 +586,27 @@ export default function DocumentHeader({
         </DropdownMenu>
       </div>
 
-      {addDataroomOpen ? (
+      {addDataRoomOpen ? (
         <AddToDataroomModal
-          open={addDataroomOpen}
-          setOpen={setAddDataroomOpen}
+          open={addDataRoomOpen}
+          setOpen={setAddDataRoomOpen}
           documentId={prismaDocument.id}
           documentName={prismaDocument.name}
+        />
+      ) : null}
+
+      {trialModalOpen ? (
+        <DataroomTrialModal
+          openModal={trialModalOpen}
+          setOpenModal={setTrialModalOpen}
+        />
+      ) : null}
+      {planModalOpen ? (
+        <UpgradePlanModal
+          clickedPlan="Data Rooms"
+          trigger="datarooms"
+          open={planModalOpen}
+          setOpen={setPlanModalOpen}
         />
       ) : null}
     </header>

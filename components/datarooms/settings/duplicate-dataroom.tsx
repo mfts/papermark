@@ -92,7 +92,7 @@ export default function DuplicateDataroom({
     ) {
       return (
         <Button onClick={(e) => setPlanModalOpen(true)} loading={loading}>
-          Upgrade to Add Datarooms
+          Upgrade to Duplicate Datarooms
         </Button>
       );
     } else {
