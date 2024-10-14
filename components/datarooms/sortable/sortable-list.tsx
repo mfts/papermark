@@ -128,6 +128,9 @@ export function DataroomSortableList({
         `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}/folders${folderPathName ? `/${folderPathName.join(" / ")}` : "?root=true"}`,
       );
       mutate(
+        `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}/folders`,
+      );
+      mutate(
         `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}${folderPathName ? `/folders/documents/${folderPathName.join("/")}` : "/documents"}`,
       );
       setIsReordering(false);

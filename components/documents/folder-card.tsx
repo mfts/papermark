@@ -26,6 +26,7 @@ import { DataroomFolderWithCount } from "@/lib/swr/use-dataroom";
 import { FolderWithCount } from "@/lib/swr/use-documents";
 import { timeAgo } from "@/lib/utils";
 
+import { GroupNavigation } from "../datarooms/group-navigation";
 import { EditFolderModal } from "../folders/edit-folder-modal";
 import { AddFolderToDataroomModal } from "./add-folder-to-dataroom-modal";
 
@@ -50,6 +51,8 @@ export default function FolderCard({
   const [isFirstClick, setIsFirstClick] = useState<boolean>(false);
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
   const [addDataroomOpen, setAddDataroomOpen] = useState<boolean>(false);
+  const [groupPermissionOpen, setGroupPermissionOpen] =
+    useState<boolean>(false);
 
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
@@ -253,6 +256,14 @@ export default function FolderCard({
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
               <DropdownMenuItem
                 onClick={(e) => {
+                  e.stopPropagation();
+                  setGroupPermissionOpen(true);
+                }}
+              >
+                Set Permission
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
                   setOpenFolder(true);
@@ -323,6 +334,13 @@ export default function FolderCard({
           setOpen={setAddDataroomOpen}
           folderId={folder.id}
           folderName={folder.name}
+        />
+      ) : null}
+      {groupPermissionOpen ? (
+        <GroupNavigation
+          open={groupPermissionOpen}
+          setOpen={setGroupPermissionOpen}
+          dataroomId={dataroomId as string}
         />
       ) : null}
     </>

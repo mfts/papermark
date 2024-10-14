@@ -4,7 +4,7 @@ import { useMemo } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { Dataroom, DataroomDocument, DataroomFolder } from "@prisma/client";
-import useSWR from "swr";
+import useSWR, { mutate } from "swr";
 
 import { LinkWithViews } from "@/lib/types";
 import { fetcher } from "@/lib/utils";
@@ -102,6 +102,7 @@ export function useDataroomItems({
       dedupingInterval: 30000,
     },
   );
+  mutate(`/api/teams/${teamId}/datarooms/${id}/folders}`);
 
   const isLoading =
     !folderData && !documentData && !folderError && !documentError;

@@ -61,6 +61,7 @@ export const moveDataroomDocumentToFolder = async ({
     mutate(
       `/api/teams/${teamId}/datarooms/${dataroomId}/folders${folderPathName ? `/${folderPathName.join("/")}` : "?root=true"}`,
     );
+    mutate(`/api/teams/${teamId}/datarooms/${dataroomId}/folders`);
     // update folder document counts in home
     !newPath &&
       mutate(`/api/teams/${teamId}/datarooms/${dataroomId}/folders?root=true`);

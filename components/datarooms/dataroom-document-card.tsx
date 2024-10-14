@@ -5,7 +5,12 @@ import { useRouter } from "next/router";
 import { useEffect, useRef, useState } from "react";
 
 import { TeamContextType } from "@/context/team-context";
-import { ArchiveXIcon, FolderInputIcon, MoreVertical } from "lucide-react";
+import {
+  ArchiveXIcon,
+  FileSlidersIcon,
+  FolderInputIcon,
+  MoreVertical,
+} from "lucide-react";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
 import { mutate } from "swr";
@@ -26,6 +31,7 @@ import { type DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
 import { cn, nFormatter, timeAgo } from "@/lib/utils";
 import { fileIcon } from "@/lib/utils/get-file-icon";
 
+import { GroupNavigation } from "./group-navigation";
 import { MoveToDataroomFolderModal } from "./move-dataroom-folder-modal";
 
 type DocumentsCardProps = {
@@ -53,7 +59,8 @@ export default function DataroomDocumentCard({
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
   const [moveFolderOpen, setMoveFolderOpen] = useState<boolean>(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
-
+  const [groupPermissionOpen, setGroupPermissionOpen] =
+    useState<boolean>(false);
   /** current folder name */
   const currentFolderPath = router.query.name as string[] | undefined;
 
@@ -230,6 +237,15 @@ export default function DataroomDocumentCard({
               <DropdownMenuItem
                 onClick={(e) => {
                   e.stopPropagation();
+                  setGroupPermissionOpen(true);
+                }}
+              >
+                <FileSlidersIcon className="mr-2 h-4 w-4" />
+                Set permission
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation();
                   setMoveFolderOpen(true);
                 }}
               >
@@ -263,6 +279,13 @@ export default function DataroomDocumentCard({
           dataroomId={dataroomDocument.dataroomId}
           documentIds={[dataroomDocument.id]}
           documentName={dataroomDocument.document.name}
+        />
+      ) : null}
+      {groupPermissionOpen ? (
+        <GroupNavigation
+          open={groupPermissionOpen}
+          setOpen={setGroupPermissionOpen}
+          dataroomId={dataroomId as string}
         />
       ) : null}
     </>
