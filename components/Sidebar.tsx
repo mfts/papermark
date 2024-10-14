@@ -304,9 +304,11 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
                 usageLimit={documentsLimit}
               />
             ) : null}
-            <p className="mt-2 px-2 text-xs text-muted-foreground">
-              Change plan to increase usage limits
-            </p>
+            {linksLimit || documentsLimit ? (
+              <p className="mt-2 px-2 text-xs text-muted-foreground">
+                Change plan to increase usage limits
+              </p>
+            ) : null}
           </div>
 
           <div className="hidden w-full lg:block">
