@@ -25,5 +25,6 @@ Your turn 👇
 
 » 10-October-2024 by Piyush Mishra [@PiyushXmishra](https://www.linkedin.com/in/piyushXmishra/)
 
+» 14-October-2024 by Yash Parmar [@YashParmar](https://www.linkedin.com/in/yashmlengineer/)
 
 ---
