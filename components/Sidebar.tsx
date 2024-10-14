@@ -155,7 +155,7 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
         {/* Sidebar component, swap this element with another sidebar if you like */}
 
         <div className="flex h-16 shrink-0 items-center space-x-3">
-          <p className="flex items-center text-2xl font-bold tracking-tighter text-black dark:text-white">
+          <p className="flex items-center text-2xl font-bold tracking-tighter text-black dark:text-white" onClick={() => router.push("/documents")}>
             Papermark{" "}
             {userPlan && userPlan != "free" ? (
               <span className="ml-4 rounded-full bg-background px-2.5 py-1 text-xs tracking-normal text-foreground ring-1 ring-gray-800">
