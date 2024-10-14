@@ -5,7 +5,6 @@ import { useRouter } from "next/router";
 import { useEffect, useRef, useState } from "react";
 
 import { TeamContextType } from "@/context/team-context";
-import { useLimits } from "@/ee/limits/swr-handler";
 import {
   BetweenHorizontalStartIcon,
   FolderInputIcon,
@@ -33,6 +32,7 @@ import {
 
 import { usePlan } from "@/lib/swr/use-billing";
 import useDatarooms from "@/lib/swr/use-datarooms";
+import useLimits from "@/lib/swr/use-limits";
 import { DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
 import { cn, nFormatter, timeAgo } from "@/lib/utils";
 import { fileIcon } from "@/lib/utils/get-file-icon";
@@ -86,6 +86,7 @@ export default function DocumentsCard({
     isDatarooms || (isBusiness && numDatarooms < limitDatarooms);
 
   const dropdownRef = useRef<HTMLDivElement | null>(null);
+  const { canAddDocuments } = useLimits();
 
   /** current folder name */
   const currentFolderPath = router.query.name as string[] | undefined;
@@ -330,7 +331,10 @@ export default function DocumentsCard({
                 <FolderInputIcon className="mr-2 h-4 w-4" />
                 Move to folder
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={(e) => handleDuplicateDocument(e)}>
+              <DropdownMenuItem
+                onClick={(e) => handleDuplicateDocument(e)}
+                disabled={!canAddDocuments}
+              >
                 <Layers2Icon className="mr-2 h-4 w-4" />
                 Duplicate document
               </DropdownMenuItem>
@@ -375,7 +379,7 @@ export default function DocumentsCard({
           documentName={prismaDocument.name}
         />
       ) : null}
-      
+
       {trialModalOpen ? (
         <DataroomTrialModal
           openModal={trialModalOpen}
