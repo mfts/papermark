@@ -40,11 +40,12 @@ import { useDeleteDocumentsModal } from "./actions/delete-documents-modal";
 import DocumentCard from "./document-card";
 import { DraggableItem } from "./drag-and-drop/draggable-item";
 import { DroppableFolder } from "./drag-and-drop/droppable-folder";
-import { EmptyDocuments } from "./empty-document";
 import FolderCard from "./folder-card";
 import { MoveToFolderModal } from "./move-folder-modal";
+import ArchivedDocumentsCard from "./archived-document-card";
+import { ArchivedEmptyDocuments } from "./archived-empty-document";
 
-export function DocumentsList({
+export function ArchivedDocumentsList({
   folders,
   documents,
   teamInfo,
@@ -227,9 +228,9 @@ export function DocumentsList({
               <FileIcon className="h-5 w-5" />
               <span>
                 {
-                  documents.filter((document) => !document.isArchived).length
+                  documents.filter((document) => document.isArchived).length
                 }{" "}
-                document{documents.filter((document) => !document.isArchived).length !== 1 ? "s" : ""}
+                document{documents.filter((document) => document.isArchived).length !== 1 ? "s" : ""}
     </span>
             </p>
           )}
@@ -297,11 +298,11 @@ export function DocumentsList({
             <ul role="list" className="space-y-4">
               {documents
                 ? documents
-                .filter((document) => !document.isArchived)
+                .filter((document) => document.isArchived)
                 .map((document) => {
 
                     return (
-                      <DocumentCard
+                      <ArchivedDocumentsCard
                         key={document.id}
                         document={document}
                         teamInfo={teamInfo}
@@ -333,12 +334,11 @@ export function DocumentsList({
               <HeaderContent />
             </Portal>
 
-            {documents && documents.filter((document) => !document.isArchived).length === 0 && (
-               <div className="flex items-center justify-center">
-                 <EmptyDocuments />
-                </div>
+            {documents && documents.filter((document) => document.isArchived).length === 0 && (
+              <div className="flex items-center justify-center">
+                <ArchivedEmptyDocuments />
+              </div>
             )}
-
           </div>
         ) : (
           <>
@@ -391,7 +391,7 @@ export function DocumentsList({
                 <ul role="list" className="space-y-4">
                   {documents
                     ? documents
-                    .filter((document) => !document.isArchived)
+                    .filter((document) => document.isArchived)
                     .map((document) => {
                         return (
                           <DraggableItem
@@ -401,7 +401,7 @@ export function DocumentsList({
                             onSelect={handleSelect}
                             isDraggingSelected={isDragging}
                           >
-                            <DocumentCard
+                            <ArchivedDocumentsCard
                               key={document.id}
                               document={document}
                               teamInfo={teamInfo}
@@ -462,12 +462,11 @@ export function DocumentsList({
                   <HeaderContent />
                 </Portal>
 
-                {documents && documents.filter((document) => !document.isArchived).length === 0 && (
+                {documents && documents.filter((document) => document.isArchived).length === 0 && (
                   <div className="flex items-center justify-center">
-                    <EmptyDocuments />
+                    <ArchivedEmptyDocuments />
                   </div>
                 )}
-
               </div>
             </DndContext>
             {moveFolderOpen ? (

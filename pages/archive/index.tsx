@@ -2,13 +2,13 @@ import { useTeam } from "@/context/team-context";
 import { FolderPlusIcon, PlusIcon } from "lucide-react";
 import ErrorPage from "next/error";
 import { AddDocumentModal } from "@/components/documents/add-document-modal";
-import { DocumentsList } from "@/components/documents/documents-list";
 import { AddFolderModal } from "@/components/folders/add-folder-modal";
 import AppLayout from "@/components/layouts/app";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 
 import useDocuments, { useRootFolders } from "@/lib/swr/use-documents";
+import { ArchivedDocumentsList } from "@/components/documents/archived-document-list";
 
 export default function Documents() {
   const { documents,error } = useDocuments();
@@ -42,7 +42,13 @@ export default function Documents() {
 
         <Separator className="mb-5 bg-gray-200 dark:bg-gray-800" />
       </div>
-
+      <div className="p-4 pt-0 sm:mx-4 sm:mt-4 ">
+        <ArchivedDocumentsList
+          documents={documents}
+          folders={folders}
+          teamInfo={teamInfo}
+        />
+      </div>
       
     </AppLayout>
   );

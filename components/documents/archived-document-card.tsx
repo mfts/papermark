@@ -45,7 +45,7 @@ type DocumentsCardProps = {
   isSelected?: boolean;
   isHovered?: boolean;
 };
-export default function DocumentsCard({
+export default function ArchivedDocumentsCard({
   document: prismaDocument,
   teamInfo,
   isDragging,
@@ -144,37 +144,36 @@ export default function DocumentsCard({
   };
 
   const handleArchiveDocument = async (documentId: string, archive: boolean) => {
-  const endpoint = currentFolderPath
-    ? `/folders/documents/${currentFolderPath.join("/")}`
-    : "/documents";
-
-  toast.promise(
-    fetch(`/api/teams/${teamInfo?.currentTeam?.id}/documents/${documentId}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ isArchived: archive }), // Set isArchived to true or false
-    }).then(() => {
-      // Update the cache to reflect the change
-      mutate(`/api/teams/${teamInfo?.currentTeam?.id}${endpoint}`, null, {
-        populateCache: (_, docs) => {
-          return docs.map((doc: DocumentWithLinksAndLinkCountAndViewCount) =>
-            doc.id === documentId ? { ...doc, isArchived: archive } : doc,
-          );
-        },
-        revalidate: false,
-      });
-    }),
-    {
-      loading: `${archive ? "Archiving" : "Unarchiving"} document...`,
-      success: `Document ${archive ? "archived" : "unarchived"} successfully.`,
-      error: `Failed to ${archive ? "archive" : "unarchive"} document. Try again.`,
-    },
-  );
-};
-
+    const endpoint = currentFolderPath
+      ? `/folders/documents/${currentFolderPath.join("/")}`
+      : "/documents";
   
+    toast.promise(
+      fetch(`/api/teams/${teamInfo?.currentTeam?.id}/documents/${documentId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ isArchived: archive }), // Set isArchived to true or false
+      }).then(() => {
+        // Update the cache to reflect the change
+        mutate(`/api/teams/${teamInfo?.currentTeam?.id}${endpoint}`, null, {
+          populateCache: (_, docs) => {
+            return docs.map((doc: DocumentWithLinksAndLinkCountAndViewCount) =>
+              doc.id === documentId ? { ...doc, isArchived: archive } : doc,
+            );
+          },
+          revalidate: false,
+        });
+      }),
+      {
+        loading: `${archive ? "Archiving" : "Unarchiving"} document...`,
+        success: `Document ${archive ? "archived" : "unarchived"} successfully.`,
+        error: `Failed to ${archive ? "archive" : "unarchive"} document. Try again.`,
+      },
+    );
+  };
+
   const handleMenuStateChange = (open: boolean) => {
     // If the document is selected, don't open the dropdown
     if (isSelected) return;
@@ -308,21 +307,10 @@ export default function DocumentsCard({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" ref={dropdownRef}>
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem onClick={() => handleArchiveDocument(prismaDocument.id, true)}>
-                <ArchiveIcon className="mr-2 h-4 w-4"  />
-                Archive document
-              </DropdownMenuItem><DropdownMenuItem onClick={() => setMoveFolderOpen(true)}>
-                <FolderInputIcon className="mr-2 h-4 w-4" />
-                Move to folder
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={(e) => handleDuplicateDocument(e)}>
-                <Layers2Icon className="mr-2 h-4 w-4" />
-                Duplicate document
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setAddDataroomOpen(true)}>
-                <BetweenHorizontalStartIcon className="mr-2 h-4 w-4" />
-                Add to dataroom
-              </DropdownMenuItem>
+              <DropdownMenuItem onClick={()=>handleArchiveDocument(prismaDocument.id, false)}>
+                <ArchiveIcon className="mr-2 h-4 w-4" />
+                Retrieve document
+                </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={(event) => handleButtonClick(event, prismaDocument.id)}
