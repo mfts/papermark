@@ -8,6 +8,6 @@ logo 2:
 
 logo 3:
 ![paperMark (2)](https://github.com/user-attachments/assets/859f83e0-bedd-4ba9-94e6-4a35961b6334)
-Please follow the following schema:
+
 
 ---
