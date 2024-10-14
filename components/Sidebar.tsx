@@ -157,7 +157,7 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
 
         <div className="flex h-16 shrink-0 items-center space-x-3">
           <p className="flex items-center text-2xl font-bold tracking-tighter text-black dark:text-white">
-        <Link href="/documents">  Papermark{" "}</Link> 
+            <Link href="/documents">Papermark{" "}</Link> 
             {userPlan && userPlan != "free" ? (
               <span className="ml-4 rounded-full bg-background px-2.5 py-1 text-xs tracking-normal text-foreground ring-1 ring-gray-800">
                 {userPlan.charAt(0).toUpperCase() + userPlan.slice(1)}

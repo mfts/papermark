@@ -10,6 +10,7 @@ import {
   FolderInputIcon,
   Layers2Icon,
   MoreVertical,
+  PlusIcon,
   TrashIcon,
 } from "lucide-react";
 import { useTheme } from "next-themes";
@@ -29,11 +30,17 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+import { usePlan } from "@/lib/swr/use-billing";
+import useDatarooms from "@/lib/swr/use-datarooms";
+import useLimits from "@/lib/swr/use-limits";
 import { DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
 import { cn, nFormatter, timeAgo } from "@/lib/utils";
 import { fileIcon } from "@/lib/utils/get-file-icon";
 import { useCopyToClipboard } from "@/lib/utils/use-copy-to-clipboard";
 
+import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
+import { AddDataroomModal } from "../datarooms/add-dataroom-modal";
+import { DataroomTrialModal } from "../datarooms/dataroom-trial-modal";
 import { AddToDataroomModal } from "./add-document-to-dataroom-modal";
 import { MoveToFolderModal } from "./move-folder-modal";
 
@@ -55,13 +62,31 @@ export default function DocumentsCard({
   const { theme, systemTheme } = useTheme();
   const isLight =
     theme === "light" || (theme === "system" && systemTheme === "light");
+  const { plan, trial } = usePlan();
 
   const { isCopied, copyToClipboard } = useCopyToClipboard({});
   const [isFirstClick, setIsFirstClick] = useState<boolean>(false);
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
   const [moveFolderOpen, setMoveFolderOpen] = useState<boolean>(false);
   const [addDataroomOpen, setAddDataroomOpen] = useState<boolean>(false);
+  const [trialModalOpen, setTrialModalOpen] = useState<boolean>(false);
+  const [planModalOpen, setPlanModalOpen] = useState<boolean>(false);
+
+  const { datarooms: dataRooms } = useDatarooms();
+
+  const { limits } = useLimits();
+
+  const numDatarooms = dataRooms?.length ?? 0;
+  const limitDatarooms = limits?.datarooms ?? 1;
+
+  const isBusiness = plan === "business";
+  const isDatarooms = plan === "datarooms";
+  const isTrialDatarooms = trial === "drtrial";
+  const canCreateUnlimitedDatarooms =
+    isDatarooms || (isBusiness && numDatarooms < limitDatarooms);
+
   const dropdownRef = useRef<HTMLDivElement | null>(null);
+  const { canAddDocuments } = useLimits();
 
   /** current folder name */
   const currentFolderPath = router.query.name as string[] | undefined;
@@ -182,6 +207,33 @@ export default function DocumentsCard({
     );
   };
 
+  const renderDropdownMenuItem = () => {
+    if (isBusiness && !canCreateUnlimitedDatarooms) {
+      return (
+        <DropdownMenuItem onClick={() => setPlanModalOpen(true)}>
+          <PlusIcon className="mr-2 h-4 w-4" aria-hidden="true" />
+          <span>Upgrade to Add Datarooms</span>
+        </DropdownMenuItem>
+      );
+    }
+
+    if (isTrialDatarooms && dataRooms && !isBusiness && !isDatarooms) {
+      return (
+        <DropdownMenuItem onClick={() => setPlanModalOpen(true)}>
+          <PlusIcon className="mr-2 h-4 w-4" aria-hidden="true" />
+          <span>Upgrade to Add Datarooms</span>
+        </DropdownMenuItem>
+      );
+    }
+
+    return (
+      <DropdownMenuItem onClick={() => setTrialModalOpen(true)}>
+        <PlusIcon className="mr-2 h-4 w-4" aria-hidden="true" />
+        <span>Start Data Room Trial</span>
+      </DropdownMenuItem>
+    );
+  };
+
   return (
     <>
       <div
@@ -279,14 +331,20 @@ export default function DocumentsCard({
                 <FolderInputIcon className="mr-2 h-4 w-4" />
                 Move to folder
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={(e) => handleDuplicateDocument(e)}>
+              <DropdownMenuItem
+                onClick={(e) => handleDuplicateDocument(e)}
+                disabled={!canAddDocuments}
+              >
                 <Layers2Icon className="mr-2 h-4 w-4" />
                 Duplicate document
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setAddDataroomOpen(true)}>
-                <BetweenHorizontalStartIcon className="mr-2 h-4 w-4" />
-                Add to dataroom
-              </DropdownMenuItem>
+              {dataRooms && dataRooms.length !== 0 && (
+                <DropdownMenuItem onClick={() => setAddDataroomOpen(true)}>
+                  <BetweenHorizontalStartIcon className="mr-2 h-4 w-4" />
+                  Add to dataroom
+                </DropdownMenuItem>
+              )}
+              {renderDropdownMenuItem()}
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={(event) => handleButtonClick(event, prismaDocument.id)}
@@ -319,6 +377,21 @@ export default function DocumentsCard({
           setOpen={setAddDataroomOpen}
           documentId={prismaDocument.id}
           documentName={prismaDocument.name}
+        />
+      ) : null}
+
+      {trialModalOpen ? (
+        <DataroomTrialModal
+          openModal={trialModalOpen}
+          setOpenModal={setTrialModalOpen}
+        />
+      ) : null}
+      {planModalOpen ? (
+        <UpgradePlanModal
+          clickedPlan="Data Rooms"
+          trigger="datarooms"
+          open={planModalOpen}
+          setOpen={setPlanModalOpen}
         />
       ) : null}
     </>
