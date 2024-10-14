@@ -1,7 +1,5 @@
 import { useRouter } from "next/router";
-
 import { useEffect, useState } from "react";
-
 import { TeamContextType, initialState, useTeam } from "@/context/team-context";
 import Cookies from "js-cookie";
 import {
@@ -12,14 +10,11 @@ import {
   ServerIcon,
 } from "lucide-react";
 import { useSession } from "next-auth/react";
-
 import MenuIcon from "@/components/shared/icons/menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-
 import { usePlan } from "@/lib/swr/use-billing";
 import useLimits from "@/lib/swr/use-limits";
 import { cn, nFormatter } from "@/lib/utils";
-
 import Banner from "./banner";
 import ProBanner from "./billing/pro-banner";
 import { UpgradePlanModal } from "./billing/upgrade-plan-modal";
@@ -156,7 +151,7 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
 
         <div className="flex h-16 shrink-0 items-center space-x-3">
           <p
-            className="flex items-center text-2xl font-bold tracking-tighter text-black dark:text-white"
+            className="flex items-center text-2xl font-bold tracking-tighter text-black dark:text-white cursor-pointer"
             onClick={() => router.push("/documents")}
           >
             Papermark{" "}
