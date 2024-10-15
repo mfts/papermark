@@ -3,10 +3,10 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import { signInWithPasskey } from "@teamhanko/passkeys-next-auth-provider/client";
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import { toast } from "sonner";
 
 import Google from "@/components/shared/icons/google";
@@ -20,13 +20,14 @@ import { Loader } from "lucide-react";
 
 export default function Login() {
   const { next } = useParams as { next?: string };
+  const { data: session, status } = useSession();
 
   const [isLoginWithEmail, setIsLoginWithEmail] = useState<boolean>(false);
   const [isLoginWithGoogle, setIsLoginWithGoogle] = useState<boolean>(false);
   const [isLoginWithLinkedIn, setIsLoginWithLinkedIn] =
     useState<boolean>(false);
   const [lastUsed, setLastUsed] = useLastUsed();
-  const [hasInteracted, setHasInteracted] = useState<boolean>(false);
+  const [showLastUsed, setShowLastUsed] = useState<boolean>(false);
   const authMethods = ["google", "email", "linkedin", "passkey"] as const;
   type AuthMethod = (typeof authMethods)[number];
   const [clickedMethod, setClickedMethod] = useState<AuthMethod | undefined>(
@@ -37,6 +38,11 @@ export default function Login() {
     "Continue with Email",
   );
 
+  useEffect(() => {
+    if (status === "authenticated" || (status === "unauthenticated" && lastUsed)) {
+      setShowLastUsed(true);
+    }
+  }, [status, lastUsed]);
 
   return (
     <div className="flex h-screen w-full flex-wrap">
@@ -62,7 +68,6 @@ export default function Login() {
             onSubmit={(e) => {
               e.preventDefault();
               setClickedMethod("email");
-              setHasInteracted(true);
               signIn("email", {
                 email: email,
                 redirect: false,
@@ -77,17 +82,10 @@ export default function Login() {
                   setEmailButtonText("Error sending email - try again?");
                   toast.error("Error sending email - try again?");
                 }
-                // setIsLoginWithEmail(false);
                 setClickedMethod(undefined);
               });
             }}
           >
-            {/* <Input
-              className="border-1 bg-white border-gray-200 hover:border-gray-200 text-gray-800"
-              placeholder="jsmith@company.co"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            /> */}
             <Label className="sr-only" htmlFor="email">
               Email
             </Label>
@@ -103,12 +101,6 @@ export default function Login() {
               onChange={(e) => setEmail(e.target.value)}
               className="flex h-10 w-full rounded-md border-0 bg-background bg-white px-3 py-2 text-sm text-gray-900 ring-1 ring-gray-200 transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
             />
-            {/* <Button type="submit" disabled={isLoginWithEmail}>
-              {isLoginWithEmail && (
-                <Loader className="h-5 w-5 mr-2 animate-spin bg-gray-800 hover:bg-gray-900" />
-              )}
-              Continue with Email
-            </Button> */}
             <div className="relative">
               <Button
                 type="submit"
@@ -119,7 +111,7 @@ export default function Login() {
                   } w-full focus:shadow-outline transform rounded px-4 py-2 text-white transition-colors duration-300 ease-in-out focus:outline-none`}
               >
                 {emailButtonText}
-                {lastUsed === "credentials" && hasInteracted && <LastUsed />}
+                {lastUsed === "credentials" && showLastUsed && <LastUsed />}
               </Button>
             </div>
           </form>
@@ -130,7 +122,6 @@ export default function Login() {
                 onClick={() => {
                   setIsLoginWithGoogle(true);
                   setLastUsed("google");
-                  setHasInteracted(true);
                   signIn("google", {
                     ...(next && next.length > 0 ? { callbackUrl: next } : {}),
                   }).then((res) => {
@@ -148,7 +139,7 @@ export default function Login() {
                   <Google className="h-5 w-5" />
                 )}
                 <span>Continue with Google</span>
-                {lastUsed === "google" && hasInteracted && <LastUsed />}
+                {lastUsed === "google" && showLastUsed && <LastUsed />}
               </Button>
             </div>
             <div className="relative">
@@ -156,7 +147,6 @@ export default function Login() {
                 onClick={() => {
                   setClickedMethod("linkedin");
                   setLastUsed("linkedin");
-                  setHasInteracted(true);
                   signIn("linkedin", {
                     ...(next && next.length > 0 ? { callbackUrl: next } : {}),
                   }).then((res) => {
@@ -171,14 +161,13 @@ export default function Login() {
               >
                 <LinkedIn />
                 <span>Continue with LinkedIn</span>
-                {lastUsed === "linkedin" && hasInteracted && <LastUsed />}
+                {lastUsed === "linkedin" && showLastUsed && <LastUsed />}
               </Button>
             </div>
             <div className="relative">
               <Button
                 onClick={() => {
                   setLastUsed("saml");
-                  setHasInteracted(true);
                   signInWithPasskey({
                     tenantId: process.env.NEXT_PUBLIC_HANKO_TENANT_ID as string,
                   });
@@ -189,7 +178,7 @@ export default function Login() {
               >
                 <Passkey className="h-4 w-4" />
                 <span>Continue with a passkey</span>
-                {lastUsed === "saml" && hasInteracted && <LastUsed />}
+                {lastUsed === "saml" && showLastUsed && <LastUsed />}
               </Button>
             </div>
           </div>
