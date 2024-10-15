@@ -8,6 +8,7 @@ import { Brand, DataroomBrand } from "@prisma/client";
 import {
   ArrowUpRight,
   Download,
+  Flag,
   Minimize2Icon,
   Slash,
   ZoomInIcon,
@@ -39,6 +40,7 @@ import {
 } from "../ui/breadcrumb";
 import { Button } from "../ui/button";
 import { TDocumentData } from "./dataroom/dataroom-view";
+import ReportForm from "./report-form";
 
 export default function Nav({
   pageNumber,
@@ -58,6 +60,7 @@ export default function Nav({
   isMobile,
   isPreview,
   hasWatermark,
+  documentId
 }: {
   pageNumber?: number;
   numPages?: number;
@@ -76,7 +79,9 @@ export default function Nav({
   isMobile?: boolean;
   isPreview?: boolean;
   hasWatermark?: boolean;
+  documentId?: string
 }) {
+
   const downloadFile = async () => {
     if (isPreview) {
       toast.error("You cannot download documents in preview mode.");
@@ -135,9 +140,9 @@ export default function Nav({
                   className="h-16 w-36 object-contain"
                   src={brand.logo}
                   alt="Logo"
-                  // fill
-                  // quality={100}
-                  // priority
+                // fill
+                // quality={100}
+                // priority
                 />
               ) : (
                 <Link
@@ -243,6 +248,11 @@ export default function Nav({
                 <Download className="h-5 w-5" />
               </Button>
             ) : null}
+            <ReportForm
+              linkId={linkId}
+              documentId={documentId}
+              viewId={viewId}
+            />
             {!(isVertical && isMobile) && documentRefs ? (
               <div className="flex gap-1">
                 <Button
