@@ -16,7 +16,7 @@
     "trigger:dev": "npx @trigger.dev/cli@latest dev",
     "stripe:webhook": "pkgx stripe listen --forward-to localhost:3000/api/stripe/webhook",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,mdx}\"",
-    "dev:prisma": "npx prisma generate && npx prisma migrate deploy"
+    "dev:prisma":"npx prisma generate && npx prisma migrate deploy"
   },
   "dependencies": {
     "@aws-sdk/client-lambda": "^3.658.1",
@@ -84,7 +84,6 @@
     "handlebars": "^4.7.8",
     "input-otp": "^1.2.4",
     "js-cookie": "^3.0.5",
-    "json2csv": "^6.0.0-alpha.2",
     "lucide-react": "^0.446.0",
     "mime-types": "^2.1.35",
     "ms": "^2.1.3",
@@ -136,7 +135,6 @@
     "@trivago/prettier-plugin-sort-imports": "^4.3.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/js-cookie": "^3.0.6",
-    "@types/json2csv": "^5.0.7",
     "@types/mime-types": "^2.1.4",
     "@types/ms": "^0.7.34",
     "@types/node": "^20",

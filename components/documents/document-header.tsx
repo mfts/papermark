@@ -286,6 +286,7 @@ export default function DocumentHeader({
       toast.error("An error occurred. Please try again.");
     }
   };
+  
   // export method to fetch the visits data and convert to csv.
   const exportVisitCounts = async (document: Document) => {
     try {
@@ -298,23 +299,20 @@ export default function DocumentHeader({
       }
       const data = await response.json();
 
-      // appending JSON data as per their field names.
-      const fields = [
-        { label: 'Viewed at', value: 'viewedAt' },
-        { label: 'Name', value: 'viewerName' },
-        { label: 'Email', value: 'viewerEmail' },
-        { label: 'Link Name', value: 'linkName' },
-        { label: 'Total Visit Duration', value: 'totalVisitDuration' },
-        { label: '% (Visit) Completion', value: 'visitCompletion' },
-        { label: 'Document version', value: 'documentVersion' },
-        { label: 'Downloaded at', value: 'downloadedAt' },
-        { label: 'Verified', value: 'verified' }
-      ];
-      const json2csvParser = new Parser({ fields });
-      const csv = json2csvParser.parse(data.visits);
+      // Converting the json Array into CSV without using parser.
+      const csvString = [
+        ['Viewed at', 'Name', 'Email', 'Link Name', 'Total Visit',
+          '% (Visit)', 'Document version', 'Downloaded at', 'Verified'],
+        ...data.visits.map((item: any) => [
+          item.viewedAt, item.viewerName, item.viewerEmail,
+          item.linkName, item.totalVisitDuration, item.visitCompletion,
+          item.documentVersion, item.downloadedAt, item.verified])
+
+      ].map(row => row.join(","))
+        .join("\n");
 
       // Creating csv as per the time stamp.
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const link = window.document.createElement('a');
       link.href = url;
@@ -322,7 +320,7 @@ export default function DocumentHeader({
       window.document.body.appendChild(link);
       link.click();
       window.document.body.removeChild(link);
-
+      URL.revokeObjectURL(url);
       toast.success("CSV file downloaded successfully");
     } catch (error) {
       console.error("Error:", error);
