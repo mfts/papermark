@@ -1,7 +1,5 @@
 import Image from "next/image";
 import { useRouter } from "next/router";
-
-import { Parser } from "json2csv";
 import { useEffect, useRef, useState } from "react";
 
 import { useTeam } from "@/context/team-context";

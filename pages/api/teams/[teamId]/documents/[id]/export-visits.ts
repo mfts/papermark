@@ -1,8 +1,6 @@
 // CREATED API to fetch the data in json and convert to csv.
 
 import { NextApiRequest, NextApiResponse } from "next";
-
-import { Parser } from "json2csv";
 import { getServerSession } from "next-auth/next";
 
 import { LIMITS } from "@/lib/constants";
