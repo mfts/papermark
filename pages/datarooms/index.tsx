@@ -1,4 +1,7 @@
 import Link from "next/link";
+import { useRouter } from "next/router";
+
+import { useEffect } from "react";
 
 import { PlusIcon } from "lucide-react";
 
@@ -21,27 +24,25 @@ import { usePlan } from "@/lib/swr/use-billing";
 import useDatarooms from "@/lib/swr/use-datarooms";
 import useLimits from "@/lib/swr/use-limits";
 import { daysLeft } from "@/lib/utils";
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
 
 export default function DataroomsPage() {
   const { datarooms } = useDatarooms();
   const { plan, trial } = usePlan();
   const { limits } = useLimits();
-  const router = useRouter()
+  const router = useRouter();
 
   const numDatarooms = datarooms?.length ?? 0;
   const limitDatarooms = limits?.datarooms ?? 1;
 
+  const isTrial = !!trial;
   const isBusiness = plan === "business";
   const isDatarooms = plan === "datarooms";
-  const isTrialDatarooms = trial === "drtrial";
   const canCreateUnlimitedDatarooms =
     isDatarooms || (isBusiness && numDatarooms < limitDatarooms);
 
-    useEffect(()=>{
-      if(trial == null && plan == 'free') router.push('/documents')
-    },[trial,plan])  
+  useEffect(() => {
+    if (plan == "free" && !isTrial) router.push("/documents");
+  }, [isTrial, plan]);
 
   return (
     <AppLayout>
@@ -65,7 +66,7 @@ export default function DataroomsPage() {
                   <span>Upgrade to Add Data Room</span>
                 </Button>
               </UpgradePlanModal>
-            ) : isTrialDatarooms && datarooms && !isBusiness && !isDatarooms ? (
+            ) : isTrial && datarooms && !isBusiness && !isDatarooms ? (
               <div className="flex items-center gap-x-4">
                 <div className="text-sm text-destructive">
                   <span>Dataroom Trial: </span>

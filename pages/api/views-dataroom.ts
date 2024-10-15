@@ -8,7 +8,6 @@ import { parsePageId } from "notion-utils";
 import { hashToken } from "@/lib/api/auth/token";
 import sendNotification from "@/lib/api/notification-helper";
 import { sendOtpVerificationEmail } from "@/lib/emails/send-email-otp-verification";
-import { sendVerificationEmail } from "@/lib/emails/send-email-verification";
 import { getFile } from "@/lib/files/get-file";
 import { newId } from "@/lib/id-helper";
 import notion from "@/lib/notion";
