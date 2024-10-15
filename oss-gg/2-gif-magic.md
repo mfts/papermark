@@ -21,6 +21,7 @@ Your turn 👇
 
 » 10-October-2024 by [@PiyushXmishra](https://oss.gg/PiyushXmishra) » Link to Tweet: [tweet](https://x.com/Piyuxh1501/status/1844238424334795050) » Link to giphy: [gif](https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExc2VuajFmbDMzc3k3cXZ6NW16ODk0cGZwN3cyZHZua2s4azZvazh1ZyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/aQ9THuYpYVmgZ89FiX/giphy.gif)
 
+» 15-October-2024 by [@Chirag8023](https://oss.gg/Chirag8023) » Link to Tweet: [tweet](https://x.com/Chirag8023/status/1846054099839865049) » Link to giphy: [gif](https://giphy.com/gifs/eF2OexZNtby5Z6v1RA)
 
 ---
 
