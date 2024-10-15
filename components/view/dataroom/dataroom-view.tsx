@@ -110,6 +110,7 @@ export default function DataroomView({
   const plausible = usePlausible();
   const analytics = useAnalytics();
   const router = useRouter();
+  const [folderId, setFolderId] = useState<string | null>(null);
 
   const didMount = useRef<boolean>(false);
   const [submitted, setSubmitted] = useState<boolean>(false);
@@ -442,6 +443,8 @@ export default function DataroomView({
           setDocumentData={setDocumentData}
           setViewType={setViewType}
           setDataroomVerified={setDataroomVerified}
+          folderId={folderId}
+          setFolderId={setFolderId}
         />
       </div>
     );
