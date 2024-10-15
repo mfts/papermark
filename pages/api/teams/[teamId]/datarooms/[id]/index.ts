@@ -64,7 +64,13 @@ export default async function handle(
       teamId: string;
       id: string;
     };
-    const { name } = req.body as { name: string };
+    const { name, description } = req.body as {
+      name?: string;
+      description?: string;
+    };
+    const body: { name?: string; description?: string } = {};
+    if (name) body.name = name;
+    if (description) body.description = description;
 
     const userId = (session.user as CustomUser).id;
 
@@ -90,7 +96,7 @@ export default async function handle(
           id: dataroomId,
           teamId,
         },
-        data: { name: name },
+        data: { ...body },
       });
 
       return res.status(200).json(dataroom);

@@ -437,6 +437,7 @@ model Dataroom {
   id           String             @id @default(cuid())
   pId          String             @unique // This is the generated public ID for the dataroom dr_1234
   name         String
+  description  String?
   teamId       String
   team         Team               @relation(fields: [teamId], references: [id], onDelete: Cascade)
   documents    DataroomDocument[]

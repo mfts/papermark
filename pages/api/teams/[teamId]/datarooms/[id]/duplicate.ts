@@ -178,6 +178,7 @@ export default async function handle(
         data: {
           pId: pId,
           name: dataroomContents.name + " (Copy)",
+          description: dataroomContents.description,
           teamId: dataroomContents.teamId,
           documents: {
             create: dataroomContents.documents.map((doc) => ({

@@ -12,21 +12,24 @@ import {
   CardTitle,
 } from "./card";
 import { Input } from "./input";
+import { Textarea } from "./textarea";
 
 export function Form({
   title,
   description,
   inputAttrs,
-  helpText,
+  maxCharacter,
   buttonText = "Save Changes",
   disabledTooltip,
   handleSubmit,
+  type,
 }: {
   title: string;
   description: string;
-  inputAttrs: InputHTMLAttributes<HTMLInputElement>;
-  helpText?: string | ReactNode;
+  inputAttrs: InputHTMLAttributes<HTMLInputElement | HTMLTextAreaElement>;
+  maxCharacter?: number;
   buttonText?: string;
+  type: "text" | "textarea";
   disabledTooltip?: string | ReactNode;
   handleSubmit: (data: any) => Promise<any>;
 }) {
@@ -54,7 +57,7 @@ export function Form({
           <CardDescription>{description}</CardDescription>
         </CardHeader>
         <CardContent>
-          {typeof inputAttrs.defaultValue === "string" ? (
+          {type === "text" && typeof inputAttrs.defaultValue === "string" ? (
             <Input
               {...inputAttrs}
               type={inputAttrs.type || "text"}
@@ -70,15 +73,26 @@ export function Form({
               )}
               data-1p-ignore
             />
+          ) : type === "textarea" ? (
+            <Textarea
+              {...inputAttrs}
+              rows={3}
+              // maxLength={1024}
+              className="max-w-screen-sm focus:border-none focus:outline-none focus:ring-muted-foreground dark:border-gray-500 dark:bg-gray-800 focus:dark:bg-transparent dark:focus:ring-muted-foreground"
+              placeholder={`Add a description to help others understand this data room...`}
+              onChange={(e) => setValue(e.target.value)}
+              aria-invalid="true"
+            />
           ) : (
             <div className="h-[2.35rem] w-full max-w-md animate-pulse rounded-md bg-gray-200" />
           )}
         </CardContent>
         <CardFooter className="flex items-center justify-between rounded-b-lg border-t bg-muted px-6 py-3">
           <p className="text-sm text-muted-foreground transition-colors">
-            {helpText || ""}
+            {maxCharacter
+              ? `Max ${(value as string)?.length || 0} / ${maxCharacter} characters`
+              : "N/A"}
           </p>
-
           <div className="shrink-0">
             <Button loading={saving} disabled={saveDisabled}>
               {buttonText}

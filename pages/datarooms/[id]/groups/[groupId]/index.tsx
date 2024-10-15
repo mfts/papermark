@@ -28,6 +28,7 @@ export default function DataroomGroupPage() {
       <div className="relative mx-2 mb-10 mt-4 space-y-8 overflow-hidden px-1 sm:mx-3 md:mx-5 md:mt-5 lg:mx-7 lg:mt-8 xl:mx-10">
         <header>
           <DataroomHeader
+            about={dataroom.description || ""}
             title={dataroom.name}
             description={dataroom.pId}
             actions={[]}
@@ -44,6 +45,7 @@ export default function DataroomGroupPage() {
           />
           <div className="grid gap-6">
             <Form
+              type="text"
               title="Group Name"
               description="This is the name of your data room group on Papermark."
               inputAttrs={{
@@ -52,7 +54,7 @@ export default function DataroomGroupPage() {
                 placeholder: "e.g. Management Team",
                 maxLength: 32,
               }}
-              helpText="Max 32 characters"
+              maxCharacter={32}
               handleSubmit={(updateData) =>
                 fetch(
                   `/api/teams/${teamId}/datarooms/${dataroom.id}/groups/${viewerGroup.id}`,
@@ -61,7 +63,7 @@ export default function DataroomGroupPage() {
                     headers: {
                       "Content-Type": "application/json",
                     },
-                    body: JSON.stringify(updateData),
+                    body: JSON.stringify({ name: updateData?.name.trim() }),
                   },
                 ).then(async (res) => {
                   if (res.status === 200) {
