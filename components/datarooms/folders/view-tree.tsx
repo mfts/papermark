@@ -30,15 +30,34 @@ type DataroomFolderWithDocuments = DataroomFolder & {
   }[];
 };
 
+type FolderPath = Set<string> | null
+
+function findFolderPath(folder: DataroomFolderWithDocuments, folderId: string, currentPath: Set<string> = new Set<string>()):FolderPath {
+  if (folder.id === folderId) {
+    return currentPath.add(folder.id);
+  }
+
+  for (const child of folder.childFolders) {
+    const path = findFolderPath(child, folderId, currentPath.add(folder.id));
+    if (path) {
+      return path;
+    }
+  }
+
+  return null;
+}
+
 const FolderComponent = memo(
   ({
     folder,
     folderId,
     setFolderId,
+    folderPath
   }: {
     folder: DataroomFolderWithDocuments;
     folderId: string | null;
     setFolderId: React.Dispatch<React.SetStateAction<string | null>>;
+    folderPath: Set<string> | null;
   }) => {
     const router = useRouter();
 
@@ -64,13 +83,14 @@ const FolderComponent = memo(
             folder={childFolder}
             folderId={folderId}
             setFolderId={setFolderId}
+            folderPath={folderPath}
           />
         )),
       [folder.childFolders, folderId, setFolderId],
     );
 
     const isActive = folder.id === folderId;
-    const isChildActive = folder.childFolders.some(
+    const isChildActive = folderPath?.has(folder.id) || folder.childFolders.some(
       (childFolder) => childFolder.id === folderId,
     );
 
@@ -116,6 +136,21 @@ const SidebarFolders = ({
     return [];
   }, [folders, documents]);
 
+  const folderPath = useMemo(() => {
+    if (!folderId) {
+      return null;
+    }
+
+    for (let i = 0; i < nestedFolders.length; i++) {
+      const path = findFolderPath(nestedFolders[i], folderId);
+      if (path) {
+        return path;
+      }
+    }
+
+    return null;
+  }, [folders, documents, folderId])
+
   return (
     <FileTree>
       {nestedFolders.map((folder) => (
@@ -124,6 +159,7 @@ const SidebarFolders = ({
           folder={folder}
           folderId={folderId}
           setFolderId={setFolderId}
+          folderPath={folderPath}
         />
       ))}
     </FileTree>
