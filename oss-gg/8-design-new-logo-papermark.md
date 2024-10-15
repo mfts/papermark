@@ -25,4 +25,6 @@ Your turn 👇
 
 » 10-October-2024 by [PiyushXmishra](https://oss.gg/PiyushXmishra) Logo Link:[logo](https://drive.google.com/file/d/18X4S1rQgltp9j0o5aX3-bO8FmemWjgVC/view)
 
+» 15-October-2024 by [Chirag8023](https://oss.gg/Chirag8023) Logo Link:[logo](https://drive.google.com/file/d/1y4XeuLWeexMo8t8NhMDNzJ48389gfzQj/view?usp=sharing)
+
 ---
