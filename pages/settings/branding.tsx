@@ -351,7 +351,7 @@ export default function Branding() {
                   <TabsContent value="account">
                     <div className="flex justify-center">
                       <div className="relative h-[450px] w-[698px] rounded-lg bg-gray-200 p-1 shadow-lg">
-                        <div className="relative h-[442px] overflow-hidden rounded-lg bg-gray-100">
+                      <div className="relative h-[442px] lg:overflow-x-hidden overflow-x-auto rounded-lg bg-gray-100">
                           <div className="mx-auto flex h-7 items-center justify-center">
                             <div className="pointer-events-none absolute left-3">
                               <div className="flex flex-row flex-nowrap justify-start">
@@ -425,7 +425,7 @@ export default function Branding() {
                   <TabsContent value="password">
                     <div className="flex justify-center">
                       <div className="relative h-[450px] w-[698px] rounded-lg bg-gray-200 p-1 shadow-lg">
-                        <div className="relative h-[442px] overflow-hidden rounded-lg bg-gray-100">
+                        <div className="relative h-[442px] lg:overflow-x-hidden overflow-x-auto rounded-lg bg-gray-100">
                           <div className="mx-auto flex h-7 items-center justify-center">
                             <div className="pointer-events-none absolute left-3">
                               <div className="flex flex-row flex-nowrap justify-start">
