@@ -1,15 +1,12 @@
-import Image from "next/image";
 import { useRouter } from "next/router";
 
 import { useEffect, useRef, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
-import { useLimits } from "@/ee/limits/swr-handler";
 import { Document, DocumentVersion } from "@prisma/client";
 import {
   BetweenHorizontalStartIcon,
   FileDownIcon,
-  PlusIcon,
   SheetIcon,
   Sparkles,
   TrashIcon,
@@ -36,13 +33,11 @@ import {
 import { usePlan } from "@/lib/swr/use-billing";
 import useDatarooms from "@/lib/swr/use-datarooms";
 import { DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
-import { cn, getExtension } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { fileIcon } from "@/lib/utils/get-file-icon";
 
 import PlanBadge from "../billing/plan-badge";
 import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
-import { AddDataroomModal } from "../datarooms/add-dataroom-modal";
-import { DataroomTrialModal } from "../datarooms/dataroom-trial-modal";
 import AdvancedSheet from "../shared/icons/advanced-sheet";
 import PortraitLandscape from "../shared/icons/portrait-landscape";
 import LoadingSpinner from "../ui/loading-spinner";
@@ -63,7 +58,7 @@ export default function DocumentHeader({
 }) {
   const router = useRouter();
   const teamInfo = useTeam();
-  const { datarooms: dataRooms } = useDatarooms();
+  const { datarooms: datarooms } = useDatarooms();
   const { theme, systemTheme } = useTheme();
   const isLight =
     theme === "light" || (theme === "system" && systemTheme === "light");
@@ -75,23 +70,13 @@ export default function DocumentHeader({
   const [addDataRoomOpen, setAddDataRoomOpen] = useState<boolean>(false);
   const [addDocumentVersion, setAddDocumentVersion] = useState<boolean>(false);
   const [openAddDocModal, setOpenAddDocModal] = useState<boolean>(false);
-  const [trialModalOpen, setTrialModalOpen] = useState<boolean>(false);
   const [planModalOpen, setPlanModalOpen] = useState<boolean>(false);
   const nameRef = useRef<HTMLHeadingElement>(null);
   const enterPressedRef = useRef<boolean>(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
-  const { limits } = useLimits();
-
-  const numDatarooms = dataRooms?.length ?? 0;
-  const limitDatarooms = limits?.datarooms ?? 1;
-
   const isFree = plan === "free";
-  const isBusiness = plan === "business";
-  const isDatarooms = plan === "datarooms";
-  const isTrialDatarooms = trial === "drtrial";
-  const canCreateUnlimitedDatarooms =
-    isDatarooms || (isBusiness && numDatarooms < limitDatarooms);
+  const isTrial = !!trial;
   const actionRows: React.ReactNode[][] = [];
 
   if (actions) {
@@ -431,33 +416,6 @@ export default function DocumentHeader({
     }
   };
 
-  const renderDropdownMenuItem = () => {
-    if (isBusiness && !canCreateUnlimitedDatarooms) {
-      return (
-        <DropdownMenuItem onClick={() => setPlanModalOpen(true)}>
-          <PlusIcon className="mr-2 h-4 w-4" aria-hidden="true" />
-          <span>Upgrade to Add Datarooms</span>
-        </DropdownMenuItem>
-      );
-    }
-
-    if (isTrialDatarooms && dataRooms && !isBusiness && !isDatarooms) {
-      return (
-        <DropdownMenuItem onClick={() => setPlanModalOpen(true)}>
-          <PlusIcon className="mr-2 h-4 w-4" aria-hidden="true" />
-          <span>Upgrade to Add Datarooms</span>
-        </DropdownMenuItem>
-      );
-    }
-
-    return (
-      <DropdownMenuItem onClick={() => setTrialModalOpen(true)}>
-        <PlusIcon className="mr-2 h-4 w-4" aria-hidden="true" />
-        <span>Start Data Room Trial</span>
-      </DropdownMenuItem>
-    );
-  };
-
   return (
     <header className="flex items-center justify-between gap-x-8">
       <div className="flex items-center space-x-2">
@@ -644,7 +602,7 @@ export default function DocumentHeader({
               ))}
             {prismaDocument.type === "sheet" &&
               !prismaDocument.advancedExcelEnabled &&
-              (plan === "business" || plan === "datarooms" || trial) && (
+              (plan === "business" || plan === "datarooms" || isTrial) && (
                 <DropdownMenuItem
                   onClick={() => enableAdvancedExcel(prismaDocument)}
                 >
@@ -652,13 +610,12 @@ export default function DocumentHeader({
                   Enable Advanced Mode
                 </DropdownMenuItem>
               )}
-            {dataRooms && dataRooms.length !== 0 && (
+            {datarooms && datarooms.length !== 0 && (
               <DropdownMenuItem onClick={() => setAddDataRoomOpen(true)}>
                 <BetweenHorizontalStartIcon className="mr-2 h-4 w-4" />
                 Add to dataroom
               </DropdownMenuItem>
             )}
-            {renderDropdownMenuItem()}
             <DropdownMenuSeparator />
 
             {/* Export views in CSV */}
@@ -692,12 +649,6 @@ export default function DocumentHeader({
         />
       ) : null}
 
-      {trialModalOpen ? (
-        <DataroomTrialModal
-          openModal={trialModalOpen}
-          setOpenModal={setTrialModalOpen}
-        />
-      ) : null}
       {planModalOpen ? (
         <UpgradePlanModal
           clickedPlan="Data Rooms"
