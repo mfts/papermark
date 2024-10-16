@@ -213,7 +213,7 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
                           item.current
                             ? "bg-gray-200 font-semibold text-foreground dark:bg-secondary"
                             : "duration-200 hover:bg-gray-200 hover:dark:bg-muted",
-                          "group flex w-full items-center gap-x-2 rounded-md px-3 py-2 text-sm leading-6 disabled:cursor-default disabled:text-muted-foreground disabled:hover:bg-transparent",
+                          "group flex w-full items-center gap-x-2 rounded-md px-3 py-2 text-sm leading-6 disabled:cursor-default disabled:text-muted-foreground disabled:hover:bg-transparent outline-none shadow-none",
                         )}
                       >
                         <item.icon
@@ -238,7 +238,7 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
                       clickedPlan={"Business"}
                       trigger={"datarooms"}
                     >
-                      <div className="group flex w-full items-center gap-x-2 rounded-md px-3 py-2 text-sm leading-6 text-muted-foreground hover:bg-transparent">
+                      <div className="group flex w-full items-center gap-x-2 rounded-md px-3 py-2 text-sm leading-6 text-muted-foreground hover:bg-transparent shadow-none outline-none">
                         <item.icon
                           className="h-5 w-5 shrink-0"
                           aria-hidden="true"
@@ -257,7 +257,7 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
                       item.current
                         ? "bg-gray-200 font-semibold text-foreground dark:bg-secondary"
                         : "duration-200 hover:bg-gray-200 hover:dark:bg-muted",
-                      "group flex w-full items-center gap-x-2 rounded-md px-3 py-2 text-sm leading-6 disabled:cursor-default disabled:text-muted-foreground disabled:hover:bg-transparent",
+                      "group flex w-full items-center gap-x-2 rounded-md px-3 py-2 text-sm leading-6 disabled:cursor-default disabled:text-muted-foreground disabled:hover:bg-transparent shadow-none outline-none ",
                     )}
                   >
                     <item.icon
