@@ -39,6 +39,7 @@ import {
   BreadcrumbSeparator,
 } from "../ui/breadcrumb";
 import { Button } from "../ui/button";
+import { Separator } from "../ui/separator";
 import { TDocumentData } from "./dataroom/dataroom-view";
 import ReportForm from "./report-form";
 
@@ -60,7 +61,7 @@ export default function Nav({
   isMobile,
   isPreview,
   hasWatermark,
-  documentId
+  documentId,
 }: {
   pageNumber?: number;
   numPages?: number;
@@ -79,9 +80,8 @@ export default function Nav({
   isMobile?: boolean;
   isPreview?: boolean;
   hasWatermark?: boolean;
-  documentId?: string
+  documentId?: string;
 }) {
-
   const downloadFile = async () => {
     if (isPreview) {
       toast.error("You cannot download documents in preview mode.");
@@ -140,9 +140,9 @@ export default function Nav({
                   className="h-16 w-36 object-contain"
                   src={brand.logo}
                   alt="Logo"
-                // fill
-                // quality={100}
-                // priority
+                  // fill
+                  // quality={100}
+                  // priority
                 />
               ) : (
                 <Link
@@ -248,11 +248,7 @@ export default function Nav({
                 <Download className="h-5 w-5" />
               </Button>
             ) : null}
-            <ReportForm
-              linkId={linkId}
-              documentId={documentId}
-              viewId={viewId}
-            />
+
             {!(isVertical && isMobile) && documentRefs ? (
               <div className="flex gap-1">
                 <Button
@@ -313,6 +309,13 @@ export default function Nav({
                 </span>
               </div>
             ) : null}
+            {/* add a separator that doesn't use radix or shadcn  */}
+            <div className="h-6 w-px bg-gray-800" />
+            <ReportForm
+              linkId={linkId}
+              documentId={documentId}
+              viewId={viewId}
+            />
           </div>
         </div>
       </div>
