@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { useRouter } from "next/router";
+
 import { useEffect, useRef, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
@@ -109,7 +110,6 @@ export default function DocumentHeader({
     "-" +
     String(currentTime.getMinutes()).padStart(2, "0");
   "-" + String(currentTime.getSeconds()).padStart(2, "0");
-
 
   const plausible = usePlausible();
 
@@ -284,13 +284,13 @@ export default function DocumentHeader({
       toast.error("An error occurred. Please try again.");
     }
   };
-  
+
   // export method to fetch the visits data and convert to csv.
   const exportVisitCounts = async (document: Document) => {
     try {
       const response = await fetch(
         `/api/teams/${teamId}/documents/${document.id}/export-visits`,
-        { method: "GET" }
+        { method: "GET" },
       );
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -299,22 +299,45 @@ export default function DocumentHeader({
 
       // Converting the json Array into CSV without using parser.
       const csvString = [
-        ['Viewed at', 'Name', 'Email', 'Link Name', 'Total Visit',
-          '% (Visit)', 'Document version', 'Downloaded at', 'Verified'],
+        [
+          "Viewed at",
+          "Name",
+          "Email",
+          "Link Name",
+          "Total Visit Duration (s)",
+          "Total Document Completion (%)",
+          "Document version",
+          "Downloaded at",
+          "Verified",
+          "Agreement accepted",
+          "Viewed from dataroom",
+        ],
         ...data.visits.map((item: any) => [
-          item.viewedAt, item.viewerName, item.viewerEmail,
-          item.linkName, item.totalVisitDuration, item.visitCompletion,
-          item.documentVersion, item.downloadedAt, item.verified])
-
-      ].map(row => row.join(","))
+          item.viewedAt,
+          item.viewerName,
+          item.viewerEmail,
+          item.linkName,
+          item.totalVisitDuration / 1000.0,
+          item.visitCompletion,
+          item.documentVersion,
+          item.downloadedAt,
+          item.verified,
+          item.agreement,
+          item.dataroom,
+        ]),
+      ]
+        .map((row) => row.join(","))
         .join("\n");
 
       // Creating csv as per the time stamp.
-      const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+      const blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
       const url = URL.createObjectURL(blob);
-      const link = window.document.createElement('a');
+      const link = window.document.createElement("a");
       link.href = url;
-      link.setAttribute('download', `${data.documentName}_visits_${formattedTime}.csv`);
+      link.setAttribute(
+        "download",
+        `${data.documentName}_visits_${formattedTime}.csv`,
+      );
       window.document.body.appendChild(link);
       link.click();
       window.document.body.removeChild(link);
@@ -322,7 +345,9 @@ export default function DocumentHeader({
       toast.success("CSV file downloaded successfully");
     } catch (error) {
       console.error("Error:", error);
-      toast.error("An error occurred while downloading the CSV. Please try again.");
+      toast.error(
+        "An error occurred while downloading the CSV. Please try again.",
+      );
     }
   };
 
@@ -629,15 +654,14 @@ export default function DocumentHeader({
             )}
             {renderDropdownMenuItem()}
             <DropdownMenuSeparator />
-            
+
             {/* Export views in CSV */}
             <DropdownMenuItem onClick={() => exportVisitCounts(prismaDocument)}>
               <FileDownIcon className="mr-2 h-4 w-4" />
               Export visits
             </DropdownMenuItem>
-            
-            <DropdownMenuSeparator />
 
+            <DropdownMenuSeparator />
 
             <DropdownMenuItem
               className="text-destructive focus:bg-destructive focus:text-destructive-foreground"

@@ -1,15 +1,11 @@
-// CREATED API to fetch the data in json and convert to csv.
-
 import { NextApiRequest, NextApiResponse } from "next";
+
+import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth/next";
 
-import { LIMITS } from "@/lib/constants";
-// Library to convert JSON to CSV
 import prisma from "@/lib/prisma";
 import { getViewPageDuration } from "@/lib/tinybird";
 import { CustomUser } from "@/lib/types";
-
-import { authOptions } from "../../../../auth/[...nextauth]";
 
 export default async function handler(
   req: NextApiRequest,
@@ -49,6 +45,12 @@ export default async function handler(
       return res.status(404).end("Team not found");
     }
 
+    if (team.plan.includes("free")) {
+      return res
+        .status(403)
+        .json({ message: "This feature is not available for your plan" });
+    }
+
     // Fetching Document based on document.id
     const document = await prisma.document.findUnique({
       where: { id: docId, teamId: teamId },
@@ -76,6 +78,7 @@ export default async function handler(
       where: { documentId: docId },
       include: {
         link: { select: { name: true } },
+        agreementResponse: true,
       },
     });
 
@@ -83,12 +86,8 @@ export default async function handler(
       return res.status(404).end("Document has no views");
     }
 
-    // filter the last 20 views based on plan
-    const limitedViews =
-      team?.plan === "free" ? views.slice(0, LIMITS.views) : views;
-
     // Fetching durations from tinyBird function
-    const durationsPromises = limitedViews?.map((view) =>
+    const durationsPromises = views?.map((view) =>
       getViewPageDuration({
         documentId: docId,
         viewId: view.id,
@@ -98,17 +97,8 @@ export default async function handler(
 
     const durations = await Promise.all(durationsPromises);
 
-    // Calculating total duration as per each view
-    // const summedDurations = durations.map((duration) => {
-    //   return duration.data.reduce(
-    //     (totalDuration: number, data: { sum_duration: number }) =>
-    //       totalDuration + data.sum_duration,
-    //     0,
-    //   );
-    // });
-
-    const exportData = limitedViews?.map((view: any, index: number) => {
-      // Identifying the document version as per the time we Viewed it. 
+    const exportData = views?.map((view: any, index: number) => {
+      // Identifying the document version as per the time we Viewed it.
       const relevantDocumentVersion = document.versions.find(
         (version) => version.createdAt <= view.viewedAt,
       );
@@ -123,23 +113,30 @@ export default async function handler(
 
       return {
         viewedAt: view.viewedAt.toISOString(),
-        viewerName: view.viewerName || 'NaN', // If the value is not available we are showing NaN as per csv
-        viewerEmail: view.viewerEmail || 'NaN',
-        linkName: view.link?.name || 'NaN',
+        viewerName: view.viewerName || "NaN", // If the value is not available we are showing NaN as per csv
+        viewerEmail: view.viewerEmail || "NaN",
+        linkName: view.link?.name || "NaN",
         totalVisitDuration: durations[index].data.reduce(
           (total, data) => total + data.sum_duration,
           0,
         ),
         visitCompletion: completionRate.toFixed(2) + "%",
-        documentVersion: relevantDocumentVersion?.versionNumber || document.versions[0]?.versionNumber || 'NaN',
-        downloadedAt: view.downloadedAt ? view.downloadedAt.toISOString() : 'NaN',
+        documentVersion:
+          relevantDocumentVersion?.versionNumber ||
+          document.versions[0]?.versionNumber ||
+          "NaN",
+        downloadedAt: view.downloadedAt
+          ? view.downloadedAt.toISOString()
+          : "NaN",
         verified: view.verified ? "Yes" : "No",
+        agreement: view.agreementResponse ? "Yes" : "NaN",
+        dataroom: view.dataroomId ? "Yes" : "No",
       };
     });
 
     return res.status(200).json({
-        documentName: document.name,
-        visits: exportData,
+      documentName: document.name,
+      visits: exportData,
     });
   } catch (error) {
     console.error(error);
