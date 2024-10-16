@@ -4,6 +4,10 @@ title: "[🕹️]"
 labels: 🕹️ oss.gg, player submission, hacktoberfest
 assignees: []
 body:
+  - type: markdown
+    attributes:
+      value: |
+        🚨 **Warning**: If you are submitting as a "starry-eyed supporter" and are playing unfair by creating multiple accounts, we reserve the right to ban you from the competition. Please ensure fair play. 🚨
   - type: textarea
     id: contribution-name
     attributes:
