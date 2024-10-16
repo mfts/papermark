@@ -22,6 +22,12 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
+  // We only allow POST requests
+  if (req.method !== "POST") {
+    res.status(405).json({ message: "Method Not Allowed" });
+    return;
+  }
+
   const { linkId, documentId, viewId, abuseType } = req.body as {
     linkId: string;
     documentId: string;
