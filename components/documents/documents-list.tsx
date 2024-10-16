@@ -17,6 +17,7 @@ import {
 } from "@dnd-kit/core";
 import { motion } from "framer-motion";
 import {
+  ArchiveIcon,
   FileIcon,
   FolderIcon,
   FolderInputIcon,
@@ -43,6 +44,7 @@ import { DroppableFolder } from "./drag-and-drop/droppable-folder";
 import { EmptyDocuments } from "./empty-document";
 import FolderCard from "./folder-card";
 import { MoveToFolderModal } from "./move-folder-modal";
+import Link from "next/link";
 
 export function DocumentsList({
   folders,
@@ -213,7 +215,7 @@ export function DocumentsList({
       );
     } else {
       return (
-        <div className="mb-2 flex items-center gap-x-2 pt-5">
+        <div className="mb-2 flex justify-between items-center gap-x-2 pt-5 relative">
           {folders && folders.length > 0 && (
             <p className="flex items-center gap-x-1 text-sm text-gray-400">
               <FolderIcon className="h-5 w-5" />
@@ -233,6 +235,10 @@ export function DocumentsList({
     </span>
             </p>
           )}
+          <Link href="/archive" className=" absolute m-auto right-0 flex items-center gap-2 duration-300 transition-all px-3 py-2 text-sm rounded-md">
+            <ArchiveIcon className="h-5 w-5" />
+             Archive
+          </Link>
         </div>
       );
     }

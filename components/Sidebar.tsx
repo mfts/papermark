@@ -130,13 +130,6 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
       current: router.pathname.includes("branding"),
       active: false,
       disabled: false,
-    },{
-      name: "Archive",
-      href: "/archive",
-      icon: ArchiveIcon,
-      current: router.pathname.includes("archive"),
-      active: false,
-      disabled: false,
     },
     {
       name: "Settings",
