@@ -25,5 +25,7 @@ Your turn 👇
 
 » 10 October 2024 by [@PiyushXmishra](https://oss.gg/PiyushXmishra/) Video Link: [onboarding-video](https://youtu.be/X9uQQLdhjeI)
 
+» 17 October 2024 by [@sateshcharan](https://oss.gg/sateshcharan/) Video Link: [onboarding-video](https://drive.google.com/file/d/17z6kzm-U23gKUFyq4Rfxz9c-pLXui2XH/view?usp=sharing)
+
 
 ---
