@@ -8,6 +8,7 @@ import { useLimits } from "@/ee/limits/swr-handler";
 import { Document, DocumentVersion } from "@prisma/client";
 import {
   BetweenHorizontalStartIcon,
+  FileDownIcon,
   PlusIcon,
   SheetIcon,
   Sparkles,
@@ -38,6 +39,7 @@ import { DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
 import { cn, getExtension } from "@/lib/utils";
 import { fileIcon } from "@/lib/utils/get-file-icon";
 
+import PlanBadge from "../billing/plan-badge";
 import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
 import { AddDataroomModal } from "../datarooms/add-dataroom-modal";
 import { DataroomTrialModal } from "../datarooms/dataroom-trial-modal";
@@ -84,6 +86,7 @@ export default function DocumentHeader({
   const numDatarooms = dataRooms?.length ?? 0;
   const limitDatarooms = limits?.datarooms ?? 1;
 
+  const isFree = plan === "free";
   const isBusiness = plan === "business";
   const isDatarooms = plan === "datarooms";
   const isTrialDatarooms = trial === "drtrial";
@@ -96,6 +99,19 @@ export default function DocumentHeader({
       actionRows.push(actions.slice(i, i + 3));
     }
   }
+
+  const currentTime = new Date();
+  const formattedTime =
+    currentTime.getFullYear() +
+    "-" +
+    String(currentTime.getMonth() + 1).padStart(2, "0") +
+    "-" +
+    String(currentTime.getDate()).padStart(2, "0") +
+    "_" +
+    String(currentTime.getHours()).padStart(2, "0") +
+    "-" +
+    String(currentTime.getMinutes()).padStart(2, "0");
+  "-" + String(currentTime.getSeconds()).padStart(2, "0");
 
   const plausible = usePlausible();
 
@@ -268,6 +284,76 @@ export default function DocumentHeader({
     } catch (error) {
       console.error("Error:", error);
       toast.error("An error occurred. Please try again.");
+    }
+  };
+
+  // export method to fetch the visits data and convert to csv.
+  const exportVisitCounts = async (document: Document) => {
+    if (isFree) {
+      toast.error("This feature is not available for your plan");
+      return;
+    }
+    try {
+      const response = await fetch(
+        `/api/teams/${teamId}/documents/${document.id}/export-visits`,
+        { method: "GET" },
+      );
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+
+      // Converting the json Array into CSV without using parser.
+      const csvString = [
+        [
+          "Viewed at",
+          "Name",
+          "Email",
+          "Link Name",
+          "Total Visit Duration (s)",
+          "Total Document Completion (%)",
+          "Document version",
+          "Downloaded at",
+          "Verified",
+          "Agreement accepted",
+          "Viewed from dataroom",
+        ],
+        ...data.visits.map((item: any) => [
+          item.viewedAt,
+          item.viewerName,
+          item.viewerEmail,
+          item.linkName,
+          item.totalVisitDuration / 1000.0,
+          item.visitCompletion,
+          item.documentVersion,
+          item.downloadedAt,
+          item.verified,
+          item.agreement,
+          item.dataroom,
+        ]),
+      ]
+        .map((row) => row.join(","))
+        .join("\n");
+
+      // Creating csv as per the time stamp.
+      const blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = window.document.createElement("a");
+      link.href = url;
+      link.setAttribute(
+        "download",
+        `${data.documentName}_visits_${formattedTime}.csv`,
+      );
+      window.document.body.appendChild(link);
+      link.click();
+      window.document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      toast.success("CSV file downloaded successfully");
+    } catch (error) {
+      console.error("Error:", error);
+      toast.error(
+        "An error occurred while downloading the CSV. Please try again.",
+      );
     }
   };
 
@@ -574,6 +660,18 @@ export default function DocumentHeader({
             )}
             {renderDropdownMenuItem()}
             <DropdownMenuSeparator />
+
+            {/* Export views in CSV */}
+            <DropdownMenuItem
+              onClick={() => exportVisitCounts(prismaDocument)}
+              disabled={isFree}
+            >
+              <FileDownIcon className="mr-2 h-4 w-4" />
+              Export visits {isFree ? <PlanBadge plan="pro" /> : ""}
+            </DropdownMenuItem>
+
+            <DropdownMenuSeparator />
+
             <DropdownMenuItem
               className="text-destructive focus:bg-destructive focus:text-destructive-foreground"
               onClick={(event) => handleButtonClick(event, prismaDocument.id)}
@@ -581,7 +679,6 @@ export default function DocumentHeader({
               <TrashIcon className="mr-2 h-4 w-4" />
               {isFirstClick ? "Really delete?" : "Delete document"}
             </DropdownMenuItem>
-            {/* create a dropdownmenuitem that onclick calls a post request to /api/assistants with the documentId */}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
