@@ -230,6 +230,7 @@ export default function ExcelViewer({
         isPreview={isPreview}
         allowDownload={allowDownload}
         linkId={linkId}
+        documentId={documentId}
         viewId={viewId}
       />
       <div
@@ -246,7 +247,7 @@ export default function ExcelViewer({
                 className={cn(
                   "mb-1 rounded-none rounded-b-sm bg-[#f0f0f0] font-normal text-gray-950 hover:bg-gray-50",
                   index === selectedSheetIndex &&
-                    "bg-white font-medium text-black ring-1 ring-gray-500 hover:bg-white",
+                  "bg-white font-medium text-black ring-1 ring-gray-500 hover:bg-white",
                 )}
               >
                 {sheet.sheetName}
