@@ -44,29 +44,25 @@ export default async function handler(
             });
         }
 
-        // Add the viewId to the Redis set for this documentId and linkId
-        await redis.sadd(reportKey, viewId);
+        // Perform all non-dependent Redis operations in parallel
+        await Promise.all([
+            // Add the viewId to the Redis set for this documentId and linkId
+            redis.sadd(reportKey, viewId),
 
-        // Increment the report count for the documentId and linkId
-        const updatedCount = await redis.hincrby(
-            "reportCounts",
-            `${documentId}:${linkId}`,
-            1
-        );
+            // Increment the report count for the documentId and linkId
+            redis.hincrby("reportCounts", `${documentId}:${linkId}`, 1),
 
-        // Store the abuse type report under a Redis hash for future analysis
-        await redis.hset(
-            `report:${documentId}:${linkId}:details`,
-            {
+            // Store the abuse type report under a Redis hash for future analysis
+            redis.hset(`report:${documentId}:${linkId}:details`, {
                 [viewId]: abuseType // Store the abuseType as a number for this viewId
-            }
-        );
+            })
+        ]);
+
 
 
         return res.status(200).json({
             status: "success",
             message: "Report submitted successfully",
-            reportCount: updatedCount,
         });
     } catch (err) {
         console.error(err);

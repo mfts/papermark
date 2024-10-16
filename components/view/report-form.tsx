@@ -1,23 +1,15 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from "@/components/ui/dialog"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Flag } from "lucide-react"
 import { toast } from "sonner"
 
 
 export default function ReportForm({ linkId, documentId, viewId }: { linkId: string | undefined, documentId: string | undefined, viewId: string | undefined }) {
     const [abuseType, setAbuseType] = useState("")
-    const [isDialogOpen, setIsDialogOpen] = useState(false)
+    const [open, setOpen] = useState(false)
 
     enum AbuseTypeEnum {
         "spam" = 1,
@@ -56,60 +48,60 @@ export default function ReportForm({ linkId, documentId, viewId }: { linkId: str
         }
 
         toast.success("Report submitted successfully");
-        setIsDialogOpen(false);
+        setOpen(false)
     };
 
 
     return (
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-                <Button
-                    className="m-1 bg-gray-900 text-white hover:bg-gray-900/80"
-                    size="icon"
-                    title="Report abuse"
-                >
-                    <Flag className="h-5 w-5" />
-                </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                    <DialogTitle>Report an Issue</DialogTitle>
-                    <DialogDescription>
-                        What kind of issue would you like to report? Please select the most appropriate option.
-                    </DialogDescription>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                    <RadioGroup onValueChange={setAbuseType} className="grid gap-2">
-                        <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="spam" id="spam" />
-                            <Label htmlFor="spam">Spam, Fraud, or Scam</Label>
+        <>
+            <Popover open={open} onOpenChange={setOpen}>
+                <PopoverTrigger asChild>
+                    <Button
+                        className="m-1 bg-gray-900 text-white hover:bg-gray-900/80"
+                        size="icon"
+                        title="Report abuse"
+                    >
+                        <Flag className="h-5 w-5" />
+                    </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-80">
+                    <div className="grid gap-4">
+                        <div className="space-y-2">
+                            <h4 className="font-medium leading-none">Report an Issue</h4>
+                            <p className="text-sm text-muted-foreground">
+                                What kind of issue is it?
+                            </p>
+                            <RadioGroup onValueChange={setAbuseType} className="grid gap-2">
+                                <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="spam" id="spam" />
+                                    <Label htmlFor="spam">Spam, Fraud, or Scam</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="malware" id="malware" />
+                                    <Label htmlFor="malware">Malware or virus</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="copyright" id="copyright" />
+                                    <Label htmlFor="copyright">Copyright violation</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="harmful" id="harmful" />
+                                    <Label htmlFor="harmful">Harmful content</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="not-working" id="not-working" />
+                                    <Label htmlFor="not-working">Content is not working properly</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="other" id="other" />
+                                    <Label htmlFor="other">Other</Label>
+                                </div>
+                            </RadioGroup>
+                            <Button onClick={handleSubmit} disabled={!abuseType}>Submit Report</Button>
                         </div>
-                        <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="malware" id="malware" />
-                            <Label htmlFor="malware">Malware or virus</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="copyright" id="copyright" />
-                            <Label htmlFor="copyright">Copyright violation</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="harmful" id="harmful" />
-                            <Label htmlFor="harmful">Harmful content</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="not-working" id="not-working" />
-                            <Label htmlFor="not-working">Content is not working properly</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="other" id="other" />
-                            <Label htmlFor="other">Other</Label>
-                        </div>
-                    </RadioGroup>
-                </div>
-                <DialogFooter>
-                    <Button onClick={handleSubmit} disabled={!abuseType}>Submit Report</Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
+                    </div>
+                </PopoverContent>
+            </Popover >
+        </>
     )
 }
