@@ -417,6 +417,7 @@ export default function DataroomView({
           dataroomId={dataroom.id}
           setDocumentData={setDocumentData}
           isVertical={documentData.isVertical}
+          viewerEmail={data.email ?? verifiedEmail ?? userEmail ?? undefined}
           watermarkConfig={
             link.enableWatermark
               ? (link.watermarkConfig as WatermarkConfig)
