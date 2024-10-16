@@ -39,6 +39,7 @@ import { DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
 import { cn, getExtension } from "@/lib/utils";
 import { fileIcon } from "@/lib/utils/get-file-icon";
 
+import PlanBadge from "../billing/plan-badge";
 import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
 import { AddDataroomModal } from "../datarooms/add-dataroom-modal";
 import { DataroomTrialModal } from "../datarooms/dataroom-trial-modal";
@@ -85,6 +86,7 @@ export default function DocumentHeader({
   const numDatarooms = dataRooms?.length ?? 0;
   const limitDatarooms = limits?.datarooms ?? 1;
 
+  const isFree = plan === "free";
   const isBusiness = plan === "business";
   const isDatarooms = plan === "datarooms";
   const isTrialDatarooms = trial === "drtrial";
@@ -287,6 +289,10 @@ export default function DocumentHeader({
 
   // export method to fetch the visits data and convert to csv.
   const exportVisitCounts = async (document: Document) => {
+    if (isFree) {
+      toast.error("This feature is not available for your plan");
+      return;
+    }
     try {
       const response = await fetch(
         `/api/teams/${teamId}/documents/${document.id}/export-visits`,
@@ -656,9 +662,12 @@ export default function DocumentHeader({
             <DropdownMenuSeparator />
 
             {/* Export views in CSV */}
-            <DropdownMenuItem onClick={() => exportVisitCounts(prismaDocument)}>
+            <DropdownMenuItem
+              onClick={() => exportVisitCounts(prismaDocument)}
+              disabled={isFree}
+            >
               <FileDownIcon className="mr-2 h-4 w-4" />
-              Export visits
+              Export visits {isFree ? <PlanBadge plan="pro" /> : ""}
             </DropdownMenuItem>
 
             <DropdownMenuSeparator />
@@ -670,7 +679,6 @@ export default function DocumentHeader({
               <TrashIcon className="mr-2 h-4 w-4" />
               {isFirstClick ? "Really delete?" : "Delete document"}
             </DropdownMenuItem>
-            {/* create a dropdownmenuitem that onclick calls a post request to /api/assistants with the documentId */}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
