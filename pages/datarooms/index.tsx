@@ -10,14 +10,9 @@ import { AddDataroomModal } from "@/components/datarooms/add-dataroom-modal";
 import { DataroomTrialModal } from "@/components/datarooms/dataroom-trial-modal";
 import { EmptyDataroom } from "@/components/datarooms/empty-dataroom";
 import AppLayout from "@/components/layouts/app";
+import { NavMenu } from "@/components/navigation-menu";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 
 import { usePlan } from "@/lib/swr/use-billing";
@@ -36,7 +31,7 @@ export default function DataroomsPage() {
 
   const isBusiness = plan === "business";
   const isDatarooms = plan === "datarooms";
-  const isTrialDatarooms = trial === "drtrial";
+  const isTrialDatarooms = trial === "trial";
   const canCreateUnlimitedDatarooms =
     isDatarooms || (isBusiness && numDatarooms < limitDatarooms);
 
@@ -66,7 +61,7 @@ export default function DataroomsPage() {
                   <span>Upgrade to Add Data Room</span>
                 </Button>
               </UpgradePlanModal>
-            ) : isTrialDatarooms && datarooms && !isBusiness && !isDatarooms ? (
+            ) : isTrialDatarooms && datarooms && datarooms.length > 0 && !isBusiness && !isDatarooms ? (
               <div className="flex items-center gap-x-4">
                 <div className="text-sm text-destructive">
                   <span>Dataroom Trial: </span>
@@ -106,9 +101,24 @@ export default function DataroomsPage() {
           </div>
         </section>
 
-        <Separator className="mb-5 bg-gray-200 dark:bg-gray-800" />
+        <NavMenu
+          navigation={[
+            {
+              label: "Datarooms",
+              href: `/datarooms`,
+              segment: `datarooms`,
+            },
+            {
+              label: "Archived",
+              href: `/datarooms/archived`,
+              segment: "archived",
+            },
+          ]}
+        />
 
-        <div className="space-y-4">
+        {/* <Separator className="mb-5 bg-gray-200 dark:bg-gray-800" /> */}
+
+        <div className="space-y-4 mt-8">
           <ul className="grid grid-cols-1 gap-x-6 gap-y-8 lg:grid-cols-2 xl:grid-cols-3">
             {datarooms &&
               datarooms.map((dataroom) => (

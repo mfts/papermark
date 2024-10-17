@@ -61,8 +61,10 @@ function TrialBannerComponent({
         <div className="flex flex-col space-y-2">
           <div className="text-sm font-bold">
             Data Room trial:{" "}
-            {datarooms && daysLeft(new Date(datarooms[0].createdAt), 7)} days
-            left
+            {datarooms &&
+              datarooms.length > 0 &&
+              daysLeft(new Date(datarooms[0].createdAt), 7)}{" "}
+            days left
           </div>
 
           <div className="text-sm">
