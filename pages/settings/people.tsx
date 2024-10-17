@@ -217,8 +217,8 @@ export default function Billing() {
             </div>
           </div>
           <div>
-            <div className="flex items-center justify-between rounded-lg border border-border bg-secondary p-10">
-              <div className="flex flex-col space-y-3">
+            <div className="flex items-center justify-between rounded-lg border border-border bg-secondary p-4 sm:p-10 gap-x-1">
+              <div className="flex flex-col space-y-1 sm:space-y-3">
                 <h2 className="text-xl font-medium">People</h2>
                 <p className="text-sm text-secondary-foreground">
                   Teammates that have access to this project.
@@ -237,7 +237,7 @@ export default function Billing() {
                   clickedPlan={"Pro"}
                   trigger={"invite_team_members"}
                 >
-                  <Button>Upgrade to invite members</Button>
+                  <Button  className="text-xs sm:text-sm whitespace-nowrap px-1 sm:px-4">Upgrade to invite members</Button>
                 </UpgradePlanModal>
               )}
             </div>
