@@ -2,13 +2,13 @@ import { useTeam } from "@/context/team-context";
 import { FolderPlusIcon, PlusIcon } from "lucide-react";
 import ErrorPage from "next/error";
 import { AddDocumentModal } from "@/components/documents/add-document-modal";
-import { DocumentsList } from "@/components/documents/documents-list";
 import { AddFolderModal } from "@/components/folders/add-folder-modal";
 import AppLayout from "@/components/layouts/app";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 
 import useDocuments, { useRootFolders } from "@/lib/swr/use-documents";
+import { ArchivedDocumentsList } from "@/components/documents/archived-document-list";
 
 export default function Documents() {
   const { documents,error } = useDocuments();
@@ -28,35 +28,13 @@ export default function Documents() {
         <section className="mb-4 flex items-center justify-between space-x-2 sm:space-x-0 md:mb-8 lg:mb-12">
           <div className="space-y-0 sm:space-y-1">
             <h2 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
-              All Documents
+              Archived Documents
             </h2>
             <p className="text-xs text-muted-foreground leading-4 sm:leading-none sm:text-sm">
-              Manage all your documents in one place.
+              Manage all your archived documents in one place.
             </p>
           </div>
-          <div className="flex items-center gap-x-1">
-            <AddDocumentModal>
-              <Button
-                className="group flex flex-1 items-center justify-start whitespace-nowrap gap-x-1 sm:gap-x-3 px-1 sm:px-3 text-left"
-                title="Add New Document"
-              >
-                <PlusIcon className="h-5 w-5 shrink-0" aria-hidden="true" />
-                <span className=" text-xs sm:text-base">Add New Document</span>
-              </Button>
-            </AddDocumentModal>
-            <AddFolderModal>
-              <Button
-                size="icon"
-                variant="outline"
-                className="border-gray-500 bg-gray-50 hover:bg-gray-200 dark:bg-black hover:dark:bg-muted"
-              >
-                <FolderPlusIcon
-                  className="h-5 w-5 shrink-0"
-                  aria-hidden="true"
-                />
-              </Button>
-            </AddFolderModal>
-          </div>
+          
         </section>
 
         {/* Portaled in from DocumentsList component */}
@@ -64,14 +42,14 @@ export default function Documents() {
 
         <Separator className="mb-5 bg-gray-200 dark:bg-gray-800" />
       </div>
-
       <div className="p-4 pt-0 sm:mx-4 sm:mt-4 ">
-        <DocumentsList
+        <ArchivedDocumentsList
           documents={documents}
           folders={folders}
           teamInfo={teamInfo}
         />
       </div>
+      
     </AppLayout>
   );
 }

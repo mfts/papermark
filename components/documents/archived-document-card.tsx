@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
 
@@ -17,6 +18,8 @@ import { toast } from "sonner";
 import { mutate } from "swr";
 
 import BarChart from "@/components/shared/icons/bar-chart";
+import Check from "@/components/shared/icons/check";
+import Copy from "@/components/shared/icons/copy";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -27,15 +30,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-import useDatarooms from "@/lib/swr/use-datarooms";
-import useLimits from "@/lib/swr/use-limits";
 import { DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
 import { cn, nFormatter, timeAgo } from "@/lib/utils";
 import { fileIcon } from "@/lib/utils/get-file-icon";
 import { useCopyToClipboard } from "@/lib/utils/use-copy-to-clipboard";
 
-import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
-import { DataroomTrialModal } from "../datarooms/dataroom-trial-modal";
 import { AddToDataroomModal } from "./add-document-to-dataroom-modal";
 import { MoveToFolderModal } from "./move-folder-modal";
 
@@ -46,7 +45,7 @@ type DocumentsCardProps = {
   isSelected?: boolean;
   isHovered?: boolean;
 };
-export default function DocumentsCard({
+export default function ArchivedDocumentsCard({
   document: prismaDocument,
   teamInfo,
   isDragging,
@@ -63,13 +62,7 @@ export default function DocumentsCard({
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
   const [moveFolderOpen, setMoveFolderOpen] = useState<boolean>(false);
   const [addDataroomOpen, setAddDataroomOpen] = useState<boolean>(false);
-  const [trialModalOpen, setTrialModalOpen] = useState<boolean>(false);
-  const [planModalOpen, setPlanModalOpen] = useState<boolean>(false);
-
-  const { datarooms } = useDatarooms();
-
   const dropdownRef = useRef<HTMLDivElement | null>(null);
-  const { canAddDocuments } = useLimits();
 
   /** current folder name */
   const currentFolderPath = router.query.name as string[] | undefined;
@@ -151,37 +144,36 @@ export default function DocumentsCard({
   };
 
   const handleArchiveDocument = async (documentId: string, archive: boolean) => {
-  const endpoint = currentFolderPath
-    ? `/folders/documents/${currentFolderPath.join("/")}`
-    : "/documents";
-
-  toast.promise(
-    fetch(`/api/teams/${teamInfo?.currentTeam?.id}/documents/${documentId}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ isArchived: archive }), // Set isArchived to true or false
-    }).then(() => {
-      // Update the cache to reflect the change
-      mutate(`/api/teams/${teamInfo?.currentTeam?.id}${endpoint}`, null, {
-        populateCache: (_, docs) => {
-          return docs.map((doc: DocumentWithLinksAndLinkCountAndViewCount) =>
-            doc.id === documentId ? { ...doc, isArchived: archive } : doc,
-          );
-        },
-        revalidate: false,
-      });
-    }),
-    {
-      loading: `${archive ? "Archiving" : "Unarchiving"} document...`,
-      success: `Document ${archive ? "archived" : "unarchived"} successfully.`,
-      error: `Failed to ${archive ? "archive" : "unarchive"} document. Try again.`,
-    },
-  );
-};
-
+    const endpoint = currentFolderPath
+      ? `/folders/documents/${currentFolderPath.join("/")}`
+      : "/documents";
   
+    toast.promise(
+      fetch(`/api/teams/${teamInfo?.currentTeam?.id}/documents/${documentId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ isArchived: archive }), // Set isArchived to true or false
+      }).then(() => {
+        // Update the cache to reflect the change
+        mutate(`/api/teams/${teamInfo?.currentTeam?.id}${endpoint}`, null, {
+          populateCache: (_, docs) => {
+            return docs.map((doc: DocumentWithLinksAndLinkCountAndViewCount) =>
+              doc.id === documentId ? { ...doc, isArchived: archive } : doc,
+            );
+          },
+          revalidate: false,
+        });
+      }),
+      {
+        loading: `${archive ? "Archiving" : "Unarchiving"} document...`,
+        success: `Document ${archive ? "archived" : "unarchived"} successfully.`,
+        error: `Failed to ${archive ? "archive" : "unarchive"} document. Try again.`,
+      },
+    );
+  };
+
   const handleMenuStateChange = (open: boolean) => {
     // If the document is selected, don't open the dropdown
     if (isSelected) return;
@@ -315,26 +307,10 @@ export default function DocumentsCard({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" ref={dropdownRef}>
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem onClick={() => handleArchiveDocument(prismaDocument.id, true)}>
-                <ArchiveIcon className="mr-2 h-4 w-4"  />
-                Archive document
-              </DropdownMenuItem><DropdownMenuItem onClick={() => setMoveFolderOpen(true)}>
-                <FolderInputIcon className="mr-2 h-4 w-4" />
-                Move to folder
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={(e) => handleDuplicateDocument(e)}
-                disabled={!canAddDocuments}
-              >
-                <Layers2Icon className="mr-2 h-4 w-4" />
-                Duplicate document
-              </DropdownMenuItem>
-              {datarooms && datarooms.length !== 0 && (
-                <DropdownMenuItem onClick={() => setAddDataroomOpen(true)}>
-                  <BetweenHorizontalStartIcon className="mr-2 h-4 w-4" />
-                  Add to dataroom
+              <DropdownMenuItem onClick={()=>handleArchiveDocument(prismaDocument.id, false)}>
+                <ArchiveIcon className="mr-2 h-4 w-4" />
+                Retrieve document
                 </DropdownMenuItem>
-              )}
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={(event) => handleButtonClick(event, prismaDocument.id)}
@@ -367,21 +343,6 @@ export default function DocumentsCard({
           setOpen={setAddDataroomOpen}
           documentId={prismaDocument.id}
           documentName={prismaDocument.name}
-        />
-      ) : null}
-
-      {trialModalOpen ? (
-        <DataroomTrialModal
-          openModal={trialModalOpen}
-          setOpenModal={setTrialModalOpen}
-        />
-      ) : null}
-      {planModalOpen ? (
-        <UpgradePlanModal
-          clickedPlan="Data Rooms"
-          trigger="datarooms"
-          open={planModalOpen}
-          setOpen={setPlanModalOpen}
         />
       ) : null}
     </>
