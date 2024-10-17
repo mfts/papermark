@@ -29,9 +29,11 @@ export default function DataroomsPage() {
   const numDatarooms = datarooms?.length ?? 0;
   const limitDatarooms = limits?.datarooms ?? 1;
 
+  const isFree = plan === "free";
+  const isPro = plan === "pro";
   const isBusiness = plan === "business";
   const isDatarooms = plan === "datarooms";
-  const isTrialDatarooms = trial === "trial";
+  const isTrial = !!trial;
   const canCreateUnlimitedDatarooms =
     isDatarooms || (isBusiness && numDatarooms < limitDatarooms);
 
@@ -56,12 +58,12 @@ export default function DataroomsPage() {
               <UpgradePlanModal clickedPlan="Data Rooms" trigger="datarooms">
                 <Button
                   className="group flex flex-1 items-center justify-start gap-x-3 px-3 text-left"
-                  title="Add New Document"
+                  title="Upgrade to Add Data Room"
                 >
                   <span>Upgrade to Add Data Room</span>
                 </Button>
               </UpgradePlanModal>
-            ) : isTrialDatarooms && datarooms && datarooms.length > 0 && !isBusiness && !isDatarooms ? (
+            ) : isTrial && datarooms && datarooms.length > 0 && !isBusiness && !isDatarooms ? (
               <div className="flex items-center gap-x-4">
                 <div className="text-sm text-destructive">
                   <span>Dataroom Trial: </span>
@@ -72,7 +74,7 @@ export default function DataroomsPage() {
                 <UpgradePlanModal clickedPlan="Data Rooms" trigger="datarooms">
                   <Button
                     className="group flex flex-1 items-center justify-start gap-x-3 px-3 text-left"
-                    title="Add New Document"
+                    title="Upgrade to Add Data Room"
                   >
                     <span>Upgrade to Add Data Room</span>
                   </Button>
@@ -82,7 +84,7 @@ export default function DataroomsPage() {
               <AddDataroomModal>
                 <Button
                   className="group flex flex-1 items-center justify-start gap-x-3 px-3 text-left"
-                  title="Add New Document"
+                  title="Create New Document"
                 >
                   <PlusIcon className="h-5 w-5 shrink-0" aria-hidden="true" />
                   <span>Create New Dataroom</span>
@@ -92,7 +94,7 @@ export default function DataroomsPage() {
               <DataroomTrialModal>
                 <Button
                   className="group flex flex-1 items-center justify-start gap-x-3 px-3 text-left"
-                  title="Add New Document"
+                  title="Start Data Room Trial"
                 >
                   <span>Start Data Room Trial</span>
                 </Button>
