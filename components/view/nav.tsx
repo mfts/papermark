@@ -8,6 +8,7 @@ import { Brand, DataroomBrand } from "@prisma/client";
 import {
   ArrowUpRight,
   Download,
+  Flag,
   Minimize2Icon,
   Slash,
   ZoomInIcon,
@@ -38,7 +39,9 @@ import {
   BreadcrumbSeparator,
 } from "../ui/breadcrumb";
 import { Button } from "../ui/button";
+import { Separator } from "../ui/separator";
 import { TDocumentData } from "./dataroom/dataroom-view";
+import ReportForm from "./report-form";
 
 export default function Nav({
   pageNumber,
@@ -58,6 +61,7 @@ export default function Nav({
   isMobile,
   isPreview,
   hasWatermark,
+  documentId,
 }: {
   pageNumber?: number;
   numPages?: number;
@@ -76,6 +80,7 @@ export default function Nav({
   isMobile?: boolean;
   isPreview?: boolean;
   hasWatermark?: boolean;
+  documentId?: string;
 }) {
   const downloadFile = async () => {
     if (isPreview) {
@@ -243,6 +248,7 @@ export default function Nav({
                 <Download className="h-5 w-5" />
               </Button>
             ) : null}
+
             {!(isVertical && isMobile) && documentRefs ? (
               <div className="flex gap-1">
                 <Button
@@ -303,6 +309,13 @@ export default function Nav({
                 </span>
               </div>
             ) : null}
+            {/* add a separator that doesn't use radix or shadcn  */}
+            <div className="h-6 w-px bg-gray-800" />
+            <ReportForm
+              linkId={linkId}
+              documentId={documentId}
+              viewId={viewId}
+            />
           </div>
         </div>
       </div>

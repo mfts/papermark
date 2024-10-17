@@ -50,10 +50,12 @@ export const BadgeTooltip = ({
 export const ButtonTooltip = ({
   content,
   sideOffset = 0,
+  className,
   children,
 }: {
   content: string;
   sideOffset?: number;
+  className?: string;
   children: React.ReactNode;
 }) => {
   return (
@@ -62,7 +64,7 @@ export const ButtonTooltip = ({
       <TooltipPortal>
         <TooltipContent
           sideOffset={sideOffset}
-          className="bg-[#474e5a] px-2 py-1 text-white"
+          className={cn("bg-[#474e5a] px-2 py-1 text-white", className)}
         >
           <p>{content}</p>
         </TooltipContent>

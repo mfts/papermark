@@ -1,4 +1,4 @@
-**Side Quest**: GIF Magic - Craft a GIF where a brick plays a role. Upload it to GIPHY with tags 'open source', 'foss', 'papermarkio'.
+**Side Quest**: GIF Magic - Create a branded gif related to Papermark. Upload it to GIPHY with tags 'open source', 'foss', 'papermarkio'.
 **Points**: 150 Points
 **Proof**: Add a screenshot of GIF on Giphy to the PR description. Add a link to your GIPHY in the list below.
 
