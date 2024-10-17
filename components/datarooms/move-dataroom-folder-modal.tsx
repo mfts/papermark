@@ -79,7 +79,7 @@ export function MoveToDataroomFolderModal({
           <DialogDescription>Move your document to a folder.</DialogDescription>
         </DialogHeader>
         <form>
-          <div className="mb-2">
+          <div className="mb-2 max-h-[75vh] overflow-y-scroll">
             <SidebarFolderTreeSelection
               dataroomId={dataroomId}
               selectedFolder={selectedFolder}
