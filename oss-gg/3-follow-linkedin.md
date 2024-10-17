@@ -16,7 +16,6 @@ Your turn 👇
 
 ////////////////////////////
 
-
 » 06-October-2024 by [@Ionfinisher]
 
 » 04-October-2024 by Harsh Bhat [harshsbhat](https://www.linkedin.com/in/harshsbhat/)
@@ -25,5 +24,6 @@ Your turn 👇
 
 » 10-October-2024 by Piyush Mishra [@PiyushXmishra](https://www.linkedin.com/in/piyushXmishra/)
 
+» 15-October-2024 by Satesh Charan [@sateshcharan](https://www.linkedin.com/in/sateshcharan/)
 
 ---
