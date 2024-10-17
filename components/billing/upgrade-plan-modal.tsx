@@ -41,7 +41,7 @@ export function UpgradePlanModal({
     clickedPlan,
   );
   const [period, setPeriod] = useState<"yearly" | "monthly">("yearly");
-  const [clicked, setClicked] = useState<boolean>(false);
+  const [clicked, setClicked] = useState<Number>();
   const teamInfo = useTeam();
   const { plan: teamPlan, trial, isCustomer, isOldAccount } = usePlan();
   const analytics = useAnalytics();
@@ -173,7 +173,7 @@ export function UpgradePlanModal({
         </div>
 
         <div className="isolate grid grid-cols-1 gap-4 overflow-hidden rounded-xl p-4 md:grid-cols-2">
-          {plansToShow.map((planOption) => (
+          {plansToShow.map((planOption,index) => (
             <div
               key={planOption}
               className={`relative flex flex-col rounded-lg border ${
@@ -232,12 +232,12 @@ export function UpgradePlanModal({
                   variant={planOption === "Business" ? "default" : "outline"}
                   className={`w-full py-2 text-sm ${
                     planOption === "Business"
-                      ? "bg-[#fb7a00] hover:bg-[#fb7a00]"
-                      : "bg-gray-800 text-white hover:bg-gray-900 hover:text-white"
+                      ? "bg-[#fb7a00]/95 hover:bg-[#fb7a00]"
+                      : "bg-gray-800 text-white hover:bg-gray-900 hover:text-white dark:hover:bg-gray-700"
                   }`}
-                  loading={clicked}
+                  loading={index==clicked}
                   onClick={() => {
-                    setClicked(true);
+                    setClicked(index);
                     if (isCustomer && teamPlan !== "free") {
                       fetch(
                         `/api/teams/${teamInfo?.currentTeam?.id}/billing/manage`,
@@ -251,7 +251,7 @@ export function UpgradePlanModal({
                         })
                         .catch((err) => {
                           alert(err);
-                          setClicked(false);
+                          setClicked(NaN);
                         });
                     } else {
                       fetch(
@@ -281,12 +281,12 @@ export function UpgradePlanModal({
                         })
                         .catch((err) => {
                           alert(err);
-                          setClicked(false);
+                          setClicked(NaN);
                         });
                     }
                   }}
                 >
-                  {clicked
+                  {clicked==index
                     ? "Redirecting to Stripe..."
                     : `Upgrade to ${planOption} ${capitalize(period)}`}
                 </Button>
