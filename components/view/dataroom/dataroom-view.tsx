@@ -18,7 +18,7 @@ import AccessForm, {
 
 import { useAnalytics } from "@/lib/analytics";
 import { SUPPORTED_DOCUMENT_SIMPLE_TYPES } from "@/lib/constants";
-import { LinkWithDataroom, WatermarkConfig } from "@/lib/types";
+import { LinkWithDataroom, Theme, WatermarkConfig } from "@/lib/types";
 
 import DataroomViewer from "../DataroomViewer";
 import PagesViewerNew from "../PagesViewerNew";
@@ -86,6 +86,7 @@ export default function DataroomView({
   previewToken,
   disableEditEmail,
   useCustomAccessForm,
+  theme,
 }: {
   link: LinkWithDataroom;
   userEmail: string | null | undefined;
@@ -98,6 +99,7 @@ export default function DataroomView({
   previewToken?: string;
   disableEditEmail?: boolean;
   useCustomAccessForm?: boolean;
+  theme?: Theme;
 }) {
   const {
     linkType,
@@ -341,6 +343,7 @@ export default function DataroomView({
           brand={brand}
           dataroomId={dataroom.id}
           setDocumentData={setDocumentData}
+          theme={theme}
         />
       </div>
     ) : viewData.fileType === "sheet" && viewData.sheetData ? (

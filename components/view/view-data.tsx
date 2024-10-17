@@ -8,7 +8,7 @@ import PDFViewer from "@/components/view/PDFViewer";
 import PagesViewerNew from "@/components/view/PagesViewerNew";
 import { DEFAULT_DOCUMENT_VIEW_TYPE } from "@/components/view/document-view";
 
-import { LinkWithDocument, WatermarkConfig } from "@/lib/types";
+import { LinkWithDocument, Theme, WatermarkConfig } from "@/lib/types";
 
 import AdvancedExcelViewer from "./viewer/advanced-excel-viewer";
 import ImageViewer from "./viewer/image-viewer";
@@ -27,6 +27,7 @@ export default function ViewData({
   showAccountCreationSlide,
   useAdvancedExcelViewer,
   viewerEmail,
+  theme,
 }: {
   viewData: DEFAULT_DOCUMENT_VIEW_TYPE;
   link: LinkWithDocument;
@@ -39,6 +40,7 @@ export default function ViewData({
   showAccountCreationSlide?: boolean;
   useAdvancedExcelViewer?: boolean;
   viewerEmail?: string;
+  theme?: Theme;
 }) {
   const { document } = link;
 
@@ -52,6 +54,7 @@ export default function ViewData({
       documentId={document.id}
       versionNumber={document.versions[0].versionNumber}
       brand={brand}
+      theme={theme}
     />
   ) : viewData.fileType === "sheet" && viewData.sheetData ? (
     <ExcelViewer
