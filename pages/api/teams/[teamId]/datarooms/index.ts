@@ -43,6 +43,7 @@ export default async function handle(
       const datarooms = await prisma.dataroom.findMany({
         where: {
           teamId: teamId,
+          isArchived: false,
         },
         include: {
           _count: {
