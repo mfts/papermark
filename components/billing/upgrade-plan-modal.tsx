@@ -41,9 +41,9 @@ export function UpgradePlanModal({
     clickedPlan,
   );
   const [period, setPeriod] = useState<"yearly" | "monthly">("yearly");
-  const [clicked, setClicked] = useState<boolean>(false);
+  const [selectedPlan, setSelectedPlan] = useState<string | null>(null); // Track the clicked plan
   const teamInfo = useTeam();
-  const { plan: teamPlan, trial, isCustomer, isOldAccount } = usePlan();
+  const { plan: teamPlan, trial, isCustomer } = usePlan();
   const analytics = useAnalytics();
 
   const isTrial = !!trial;
@@ -59,7 +59,6 @@ export function UpgradePlanModal({
           "Custom branding",
           "Folder organization",
           "Require email verification",
-          "Clickable links inside documents",
           "More file types: pppt, docx, excel",
           "Papermark branding removed",
           "1-year analytics retention",
@@ -94,7 +93,7 @@ export function UpgradePlanModal({
           "Advanced data rooms analytics",
           "NDA agreements",
           "Dynamic Watermark",
-          "Granular user/group permisssions",
+          "Granular user/group permissions",
           "Invite users directly from Papermark",
           "Audit log",
           "24h priority support",
@@ -134,7 +133,6 @@ export function UpgradePlanModal({
     }
   }, [open, trigger]);
 
-  // Track analytics event when child button is present
   const handleUpgradeClick = () => {
     analytics.capture("Upgrade Button Clicked", {
       trigger: trigger,
@@ -155,8 +153,8 @@ export function UpgradePlanModal({
       <DialogContent
         className="max-h-[90vh] overflow-y-auto bg-gray-50 text-foreground dark:bg-gray-900"
         style={{
-          width: isOnlyDataRooms ? "550px" : "90vw", // Adjust width based on plans shown
-          maxWidth: isOnlyDataRooms ? "550px" : "900px", // Adjust maxWidth based on plans shown
+          width: isOnlyDataRooms ? "550px" : "90vw",      // Adjust width based on plans shown
+          maxWidth: isOnlyDataRooms ? "550px" : "900px",  // Adjust maxWidth based on plans shown
         }}
       >
         <div className="flex items-center justify-center">
@@ -177,13 +175,9 @@ export function UpgradePlanModal({
             <div
               key={planOption}
               className={`relative flex flex-col rounded-lg border ${
-                planOption === "Business"
-                  ? "border-[#fb7a00]"
-                  : "border-gray-200"
+                planOption === "Business" ? "border-[#fb7a00]" : "border-gray-200"
               } bg-white p-6 shadow-sm ${
-                isOnlyDataRooms
-                  ? "mx-auto w-[450px] max-w-full md:col-span-2"
-                  : ""
+                isOnlyDataRooms ? "mx-auto w-[450px] max-w-full md:col-span-2" : ""
               } dark:bg-gray-900`}
             >
               <div className="mb-4 border-b border-gray-200 pb-2">
@@ -197,29 +191,20 @@ export function UpgradePlanModal({
                 )}
               </div>
 
-              {/* Add pricing information here */}
+                {/* Add pricing information here */}
               <div className="mb-2">
                 <span className="text-balance text-4xl font-medium tabular-nums text-gray-900 dark:text-white">
-                  €
-                  {
-                    PLANS.find((p) => p.name === planOption)?.price[period]
-                      .amount
-                  }
+                  €{PLANS.find((p) => p.name === planOption)?.price[period].amount}
                 </span>
                 <span className="text-gray-500 dark:text-white/75">/month</span>
               </div>
 
               <p className="mt-4 text-sm text-gray-600 dark:text-white">
-                {
-                  planFeatures[planOption as keyof typeof planFeatures]
-                    .featureIntro
-                }
+                {planFeatures[planOption as keyof typeof planFeatures].featureIntro}
               </p>
 
-              <ul className="mb-6 mt-2 space-y-2 text-sm leading-6 text-gray-600 dark:text-white/75">
-                {planFeatures[
-                  planOption as keyof typeof planFeatures
-                ].features.map((feature, i) => (
+              <ul className="mb-6 mt-2 space-y-2 text-sm leading-6 text-gray-600 dark:text-muted-foreground">
+                {planFeatures[planOption as keyof typeof planFeatures].features.map((feature, i) => (
                   <li key={i} className="flex items-center text-sm">
                     <CheckIcon className="mr-3 h-5 w-5 flex-shrink-0 text-[#fb7a00]" />
                     <span>{feature}</span>
@@ -232,63 +217,46 @@ export function UpgradePlanModal({
                   variant={planOption === "Business" ? "default" : "outline"}
                   className={`w-full py-2 text-sm ${
                     planOption === "Business"
-                      ? "bg-[#fb7a00] hover:bg-[#fb7a00]"
+                      ? "bg-[#fb7a00] hover:bg-[#fb7a00] text-white"
                       : "bg-gray-800 text-white hover:bg-gray-900 hover:text-white"
                   }`}
-                  loading={clicked}
+                  loading={selectedPlan === planOption} // Show loading only for the clicked plan
+                  disabled={selectedPlan !== null}
                   onClick={() => {
-                    setClicked(true);
+                    setSelectedPlan(planOption); // Set the clicked plan
                     if (isCustomer && teamPlan !== "free") {
-                      fetch(
-                        `/api/teams/${teamInfo?.currentTeam?.id}/billing/manage`,
-                        {
-                          method: "POST",
-                        },
-                      )
+                      fetch(`/api/teams/${teamInfo?.currentTeam?.id}/billing/manage`, {
+                        method: "POST",
+                      })
                         .then(async (res) => {
                           const url = await res.json();
                           router.push(url);
                         })
                         .catch((err) => {
                           alert(err);
-                          setClicked(false);
+                          setSelectedPlan(null); // Reset loading state on error
                         });
                     } else {
-                      fetch(
-                        `/api/teams/${
-                          teamInfo?.currentTeam?.id
-                        }/billing/upgrade?priceId=${
-                          PLANS.find((p) => p.name === planOption)!.price[
-                            period
-                          ].priceIds[
-                            process.env.NEXT_PUBLIC_VERCEL_ENV === "production"
-                              ? "production"
-                              : "test"
-                          ][isOldAccount ? "old" : "new"]
-                        }`,
-                        {
-                          method: "POST",
-                          headers: {
-                            "Content-Type": "application/json",
-                          },
+                      fetch(`/api/teams/${teamInfo?.currentTeam?.id}/billing/upgrade?priceId=${PLANS.find((p) => p.name === planOption)!.price[period].priceIds[process.env.NEXT_PUBLIC_VERCEL_ENV === "production" ? "production" : "test"]}`, {
+                        method: "POST",
+                        headers: {
+                          "Content-Type": "application/json",
                         },
-                      )
+                      })
                         .then(async (res) => {
                           const data = await res.json();
                           const { id: sessionId } = data;
-                          const stripe = await getStripe(isOldAccount);
+                          const stripe = await getStripe();
                           stripe?.redirectToCheckout({ sessionId });
                         })
                         .catch((err) => {
                           alert(err);
-                          setClicked(false);
+                          setSelectedPlan(null); // Reset loading state on error
                         });
                     }
                   }}
                 >
-                  {clicked
-                    ? "Redirecting to Stripe..."
-                    : `Upgrade to ${planOption} ${capitalize(period)}`}
+                  {selectedPlan === planOption ? "Redirecting to Stripe..." : `Upgrade to ${planOption} ${capitalize(period)}`}
                 </Button>
               </div>
             </div>
