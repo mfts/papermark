@@ -282,3 +282,5 @@ export const WatermarkConfigSchema = z.object({
 });
 
 export type WatermarkConfig = z.infer<typeof WatermarkConfigSchema>;
+
+export type Theme = "light" | "dark";

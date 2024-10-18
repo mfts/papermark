@@ -16,7 +16,12 @@ import DataroomView from "@/components/view/dataroom/dataroom-view";
 import DocumentView from "@/components/view/document-view";
 
 import notion from "@/lib/notion";
-import { CustomUser, LinkWithDataroom, LinkWithDocument } from "@/lib/types";
+import {
+  CustomUser,
+  LinkWithDataroom,
+  LinkWithDocument,
+  Theme,
+} from "@/lib/types";
 
 type DocumentLinkData = {
   linkType: "DOCUMENT_LINK";
@@ -230,10 +235,12 @@ export default function ViewPage({
     email: verifiedEmail,
     d: disableEditEmail,
     previewToken,
+    mode: theme,
   } = router.query as {
     email: string;
     d: string;
     previewToken?: string;
+    mode?: Theme;
   };
   const { linkType, link, brand } = linkData;
 
@@ -315,6 +322,7 @@ export default function ViewPage({
           useCustomAccessForm={useCustomAccessForm}
           token={storedToken}
           verifiedEmail={verifiedEmail}
+          theme={theme}
         />
       </>
     );
@@ -395,6 +403,7 @@ export default function ViewPage({
           useCustomAccessForm={useCustomAccessForm}
           token={storedToken}
           verifiedEmail={verifiedEmail}
+          theme={theme}
         />
       </>
     );
