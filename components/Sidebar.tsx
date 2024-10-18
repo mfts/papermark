@@ -29,6 +29,7 @@ import { AddTeamModal } from "./teams/add-team-modal";
 import SelectTeam from "./teams/select-team";
 import { Progress } from "./ui/progress";
 import { ScrollArea } from "./ui/scroll-area";
+import Link from "next/link";
 
 export default function Sidebar() {
   return (
@@ -156,7 +157,7 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
 
         <div className="flex h-16 shrink-0 items-center space-x-3">
           <p className="flex items-center text-2xl font-bold tracking-tighter text-black dark:text-white">
-            Papermark{" "}
+            <Link href="/documents">Papermark{" "}</Link> 
             {userPlan && userPlan != "free" ? (
               <span className="ml-4 rounded-full bg-background px-2.5 py-1 text-xs tracking-normal text-foreground ring-1 ring-gray-800">
                 {userPlan.charAt(0).toUpperCase() + userPlan.slice(1)}
@@ -303,6 +304,11 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
                 usageLimit={documentsLimit}
               />
             ) : null}
+            {linksLimit || documentsLimit ? (
+              <p className="mt-2 px-2 text-xs text-muted-foreground">
+                Change plan to increase usage limits
+              </p>
+            ) : null}
           </div>
 
           <div className="hidden w-full lg:block">
@@ -332,15 +338,15 @@ function UsageProgress(data: {
         <h3 className="font-medium">{title}</h3>
       </div> */}
 
-      <div className="mt-2 flex flex-col space-y-2">
+      <div className="mt-1 flex flex-col space-y-1">
         {usage !== undefined && usageLimit !== undefined ? (
-          <p className="text-sm text-foreground">
+          <p className="text-xs text-foreground">
             <span>{nFormatter(usage)}</span> / {nFormatter(usageLimit)} {unit}
           </p>
         ) : (
           <div className="h-5 w-32 animate-pulse rounded-md bg-muted" />
         )}
-        <Progress value={usagePercentage} className="h-2 bg-muted" max={100} />
+        <Progress value={usagePercentage} className="h-1 bg-muted" max={100} />
       </div>
     </div>
   );

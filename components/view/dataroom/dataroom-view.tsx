@@ -110,6 +110,7 @@ export default function DataroomView({
   const plausible = usePlausible();
   const analytics = useAnalytics();
   const router = useRouter();
+  const [folderId, setFolderId] = useState<string | null>(null);
 
   const didMount = useRef<boolean>(false);
   const [submitted, setSubmitted] = useState<boolean>(false);
@@ -308,6 +309,7 @@ export default function DataroomView({
         requireEmail={emailProtected}
         requirePassword={!!linkPassword}
         requireAgreement={enableAgreement!}
+        agreementName={link.agreement?.name}
         agreementContent={link.agreement?.content}
         requireName={link.agreement?.requireName}
         isLoading={isLoading}
@@ -389,6 +391,7 @@ export default function DataroomView({
           brand={brand}
           dataroomId={dataroom.id}
           setDocumentData={setDocumentData}
+          viewerEmail={data.email ?? verifiedEmail ?? userEmail ?? undefined}
           watermarkConfig={
             link.enableWatermark
               ? (link.watermarkConfig as WatermarkConfig)
@@ -415,6 +418,7 @@ export default function DataroomView({
           dataroomId={dataroom.id}
           setDocumentData={setDocumentData}
           isVertical={documentData.isVertical}
+          viewerEmail={data.email ?? verifiedEmail ?? userEmail ?? undefined}
           watermarkConfig={
             link.enableWatermark
               ? (link.watermarkConfig as WatermarkConfig)
@@ -441,6 +445,8 @@ export default function DataroomView({
           setDocumentData={setDocumentData}
           setViewType={setViewType}
           setDataroomVerified={setDataroomVerified}
+          folderId={folderId}
+          setFolderId={setFolderId}
         />
       </div>
     );

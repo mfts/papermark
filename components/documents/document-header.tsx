@@ -1,4 +1,3 @@
-import Image from "next/image";
 import { useRouter } from "next/router";
 
 import { useEffect, useRef, useState } from "react";
@@ -7,6 +6,7 @@ import { useTeam } from "@/context/team-context";
 import { Document, DocumentVersion } from "@prisma/client";
 import {
   BetweenHorizontalStartIcon,
+  FileDownIcon,
   SheetIcon,
   Sparkles,
   TrashIcon,
@@ -31,10 +31,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 import { usePlan } from "@/lib/swr/use-billing";
+import useDatarooms from "@/lib/swr/use-datarooms";
 import { DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
-import { cn, getExtension } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { fileIcon } from "@/lib/utils/get-file-icon";
 
+import PlanBadge from "../billing/plan-badge";
+import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
 import AdvancedSheet from "../shared/icons/advanced-sheet";
 import PortraitLandscape from "../shared/icons/portrait-landscape";
 import LoadingSpinner from "../ui/loading-spinner";
@@ -55,39 +58,56 @@ export default function DocumentHeader({
 }) {
   const router = useRouter();
   const teamInfo = useTeam();
+  const { datarooms: datarooms } = useDatarooms();
   const { theme, systemTheme } = useTheme();
   const isLight =
     theme === "light" || (theme === "system" && systemTheme === "light");
   const { plan, trial } = usePlan();
-
   const [isEditingName, setIsEditingName] = useState<boolean>(false);
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
   const [isFirstClick, setIsFirstClick] = useState<boolean>(false);
   const [orientationLoading, setOrientationLoading] = useState<boolean>(false);
-  const [addDataroomOpen, setAddDataroomOpen] = useState<boolean>(false);
+  const [addDataRoomOpen, setAddDataRoomOpen] = useState<boolean>(false);
   const [addDocumentVersion, setAddDocumentVersion] = useState<boolean>(false);
-
+  const [openAddDocModal, setOpenAddDocModal] = useState<boolean>(false);
+  const [planModalOpen, setPlanModalOpen] = useState<boolean>(false);
   const nameRef = useRef<HTMLHeadingElement>(null);
   const enterPressedRef = useRef<boolean>(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
+  const isFree = plan === "free";
+  const isTrial = !!trial;
   const actionRows: React.ReactNode[][] = [];
+
   if (actions) {
     for (let i = 0; i < actions.length; i += 3) {
       actionRows.push(actions.slice(i, i + 3));
     }
   }
 
+  const currentTime = new Date();
+  const formattedTime =
+    currentTime.getFullYear() +
+    "-" +
+    String(currentTime.getMonth() + 1).padStart(2, "0") +
+    "-" +
+    String(currentTime.getDate()).padStart(2, "0") +
+    "_" +
+    String(currentTime.getHours()).padStart(2, "0") +
+    "-" +
+    String(currentTime.getMinutes()).padStart(2, "0");
+  "-" + String(currentTime.getSeconds()).padStart(2, "0");
+
   const plausible = usePlausible();
 
   // https://github.com/radix-ui/primitives/issues/1241#issuecomment-1888232392
   useEffect(() => {
-    if (!addDataroomOpen || !addDocumentVersion) {
+    if (!addDataRoomOpen || !addDocumentVersion) {
       setTimeout(() => {
         document.body.style.pointerEvents = "";
       });
     }
-  }, [addDataroomOpen, addDocumentVersion]);
+  }, [addDataRoomOpen, addDocumentVersion]);
 
   const handleNameSubmit = async () => {
     if (enterPressedRef.current) {
@@ -252,6 +272,76 @@ export default function DocumentHeader({
     }
   };
 
+  // export method to fetch the visits data and convert to csv.
+  const exportVisitCounts = async (document: Document) => {
+    if (isFree) {
+      toast.error("This feature is not available for your plan");
+      return;
+    }
+    try {
+      const response = await fetch(
+        `/api/teams/${teamId}/documents/${document.id}/export-visits`,
+        { method: "GET" },
+      );
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+
+      // Converting the json Array into CSV without using parser.
+      const csvString = [
+        [
+          "Viewed at",
+          "Name",
+          "Email",
+          "Link Name",
+          "Total Visit Duration (s)",
+          "Total Document Completion (%)",
+          "Document version",
+          "Downloaded at",
+          "Verified",
+          "Agreement accepted",
+          "Viewed from dataroom",
+        ],
+        ...data.visits.map((item: any) => [
+          item.viewedAt,
+          item.viewerName,
+          item.viewerEmail,
+          item.linkName,
+          item.totalVisitDuration / 1000.0,
+          item.visitCompletion,
+          item.documentVersion,
+          item.downloadedAt,
+          item.verified,
+          item.agreement,
+          item.dataroom,
+        ]),
+      ]
+        .map((row) => row.join(","))
+        .join("\n");
+
+      // Creating csv as per the time stamp.
+      const blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = window.document.createElement("a");
+      link.href = url;
+      link.setAttribute(
+        "download",
+        `${data.documentName}_visits_${formattedTime}.csv`,
+      );
+      window.document.body.appendChild(link);
+      link.click();
+      window.document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      toast.success("CSV file downloaded successfully");
+    } catch (error) {
+      console.error("Error:", error);
+      toast.error(
+        "An error occurred while downloading the CSV. Please try again.",
+      );
+    }
+  };
+
   useEffect(() => {
     function handleClickOutside(event: { target: any }) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -386,10 +476,23 @@ export default function DocumentHeader({
         )}
 
         {primaryVersion.type !== "notion" && (
-          <AddDocumentModal newVersion>
-            <button title="Upload a new version" className="hidden md:flex">
-              <FileUp className="h-6 w-6" />
-            </button>
+          <AddDocumentModal
+            newVersion
+            openModal={openAddDocModal}
+            setAddDocumentModalOpen={setOpenAddDocModal}
+          >
+            <ButtonTooltip content="Upload a new version">
+              <button
+                title="Upload a new version"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setOpenAddDocModal(true);
+                }}
+                className="hidden md:flex"
+              >
+                <FileUp className="h-6 w-6" />
+              </button>
+            </ButtonTooltip>
           </AddDocumentModal>
         )}
 
@@ -478,7 +581,6 @@ export default function DocumentHeader({
 
               <DropdownMenuSeparator />
             </DropdownMenuGroup>
-
             {primaryVersion.type !== "notion" &&
               primaryVersion.type !== "sheet" &&
               (!prismaDocument.assistantEnabled ? (
@@ -498,10 +600,9 @@ export default function DocumentHeader({
                   <Sparkles className="mr-2 h-4 w-4" /> Disable Assistant
                 </DropdownMenuItem>
               ))}
-
             {prismaDocument.type === "sheet" &&
               !prismaDocument.advancedExcelEnabled &&
-              (plan === "business" || plan === "datarooms" || trial) && (
+              (plan === "business" || plan === "datarooms" || isTrial) && (
                 <DropdownMenuItem
                   onClick={() => enableAdvancedExcel(prismaDocument)}
                 >
@@ -509,10 +610,21 @@ export default function DocumentHeader({
                   Enable Advanced Mode
                 </DropdownMenuItem>
               )}
+            {datarooms && datarooms.length !== 0 && (
+              <DropdownMenuItem onClick={() => setAddDataRoomOpen(true)}>
+                <BetweenHorizontalStartIcon className="mr-2 h-4 w-4" />
+                Add to dataroom
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuSeparator />
 
-            <DropdownMenuItem onClick={() => setAddDataroomOpen(true)}>
-              <BetweenHorizontalStartIcon className="mr-2 h-4 w-4" />
-              Add to dataroom
+            {/* Export views in CSV */}
+            <DropdownMenuItem
+              onClick={() => exportVisitCounts(prismaDocument)}
+              disabled={isFree}
+            >
+              <FileDownIcon className="mr-2 h-4 w-4" />
+              Export visits {isFree ? <PlanBadge plan="pro" /> : ""}
             </DropdownMenuItem>
 
             <DropdownMenuSeparator />
@@ -524,17 +636,25 @@ export default function DocumentHeader({
               <TrashIcon className="mr-2 h-4 w-4" />
               {isFirstClick ? "Really delete?" : "Delete document"}
             </DropdownMenuItem>
-            {/* create a dropdownmenuitem that onclick calls a post request to /api/assistants with the documentId */}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
 
-      {addDataroomOpen ? (
+      {addDataRoomOpen ? (
         <AddToDataroomModal
-          open={addDataroomOpen}
-          setOpen={setAddDataroomOpen}
+          open={addDataRoomOpen}
+          setOpen={setAddDataRoomOpen}
           documentId={prismaDocument.id}
           documentName={prismaDocument.name}
+        />
+      ) : null}
+
+      {planModalOpen ? (
+        <UpgradePlanModal
+          clickedPlan="Data Rooms"
+          trigger="datarooms"
+          open={planModalOpen}
+          setOpen={setPlanModalOpen}
         />
       ) : null}
     </header>

@@ -20,7 +20,7 @@ export default function UpgradePage() {
   const [period, setPeriod] = useState<"yearly" | "monthly">("yearly");
   const [clicked, setClicked] = useState<boolean>(false);
   const teamInfo = useTeam();
-  const { plan: teamPlan, trial, isCustomer } = usePlan();
+  const { plan: teamPlan, trial, isCustomer, isOldAccount } = usePlan();
   const analytics = useAnalytics();
 
   const planFeatures = useMemo(
@@ -122,7 +122,9 @@ export default function UpgradePage() {
 
             <div className="mb-2 text-balance text-4xl font-medium tabular-nums text-foreground">
               €{PLANS.find((p) => p.name === planOption)!.price[period].amount}
-              <span className="text-base font-normal dark:text-white/75">/month</span>
+              <span className="text-base font-normal dark:text-white/75">
+                /month
+              </span>
             </div>
             <p className="mt-4 text-sm text-gray-600 dark:text-white">
               {
@@ -131,7 +133,7 @@ export default function UpgradePage() {
               }
             </p>
 
-            <ul className="mb-4 mt-4 space-y-3 text-sm leading-6 text-gray-600 dark:text-muted-foreground dark:text-white/75">
+            <ul className="mb-4 mt-4 space-y-3 text-sm leading-6 text-gray-600 dark:text-white/75">
               {planFeatures[
                 planOption as keyof typeof planFeatures
               ].features.map((feature, i) => (
@@ -177,7 +179,7 @@ export default function UpgradePage() {
                           process.env.NEXT_PUBLIC_VERCEL_ENV === "production"
                             ? "production"
                             : "test"
-                        ]
+                        ][isOldAccount ? "old" : "new"]
                       }`,
                       {
                         method: "POST",
@@ -189,7 +191,7 @@ export default function UpgradePage() {
                       .then(async (res) => {
                         const data = await res.json();
                         const { id: sessionId } = data;
-                        const stripe = await getStripe();
+                        const stripe = await getStripe(isOldAccount);
                         stripe?.redirectToCheckout({ sessionId });
                       })
                       .catch((err) => {

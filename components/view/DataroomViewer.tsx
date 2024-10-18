@@ -76,6 +76,8 @@ export default function DataroomViewer({
   setDocumentData,
   setDataroomVerified,
   isPreview,
+  folderId,
+  setFolderId
 }: {
   brand: Partial<DataroomBrand>;
   viewId?: string;
@@ -89,8 +91,9 @@ export default function DataroomViewer({
   setDocumentData: React.Dispatch<React.SetStateAction<TDocumentData | null>>;
   setDataroomVerified: React.Dispatch<React.SetStateAction<boolean>>;
   isPreview?: boolean;
+  folderId: string | null;
+  setFolderId: React.Dispatch<React.SetStateAction<string | null>>;
 }) {
-  const [folderId, setFolderId] = useState<string | null>(null);
   const { documents, folders } = dataroom as {
     documents: DataroomDocument[];
     folders: DataroomFolder[];

@@ -3,13 +3,12 @@ import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import Cookies from "js-cookie";
 import { usePlausible } from "next-plausible";
 
+import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import X from "@/components/shared/icons/x";
 
 import { usePlan } from "@/lib/swr/use-billing";
 import useDatarooms from "@/lib/swr/use-datarooms";
 import { daysLeft } from "@/lib/utils";
-
-import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
 
 export default function TrialBanner() {
   const { trial } = usePlan();
@@ -17,7 +16,7 @@ export default function TrialBanner() {
   const [showTrialBanner, setShowTrialBanner] = useState<boolean | null>(null);
 
   useEffect(() => {
-    if (Cookies.get("hideTrialBanner") !== "trial-banner") {
+    if (Cookies.get("hideTrialBanner") !== "trial-banner" && isTrial) {
       setShowTrialBanner(true);
     } else {
       setShowTrialBanner(false);

@@ -40,7 +40,7 @@ Papermark is the open-source document sharing alternative to DocSend with built-
 - [Tailwind](https://tailwindcss.com/) – CSS
 - [shadcn/ui](https://ui.shadcn.com) - UI Components
 - [Prisma](https://prisma.io) - ORM [![Made with Prisma](https://made-with.prisma.io/dark.svg)](https://prisma.io)
-- PostgreSQL - Database
+- [PostgreSQL](https://www.postgresql.org/) - Database
 - [NextAuth.js](https://next-auth.js.org/) – Authentication
 - [Tinybird](https://tinybird.co) – Analytics
 - [Resend](https://resend.com) – Email
@@ -80,8 +80,7 @@ cp .env.example .env
 ### 4. Initialize the database
 
 ```shell
-npx prisma generate
-npx prisma migrate deploy
+npm run dev:prisma
 ```
 
 ### 5. Run the dev server

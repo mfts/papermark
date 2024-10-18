@@ -7,6 +7,14 @@ import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: "4mb",
+    },
+  },
+};
+
 export default async function handle(
   req: NextApiRequest,
   res: NextApiResponse,
@@ -76,7 +84,7 @@ export default async function handle(
       },
     });
 
-    return res.status(200).json(preset);
+    return res.status(200).json({ message: "Preset created successfully" });
   } else if (req.method === "PUT") {
     // PUT /api/teams/:teamId/presets
     const { metaImage, metaTitle, metaDescription, metaFavicon } = req.body as {
@@ -107,7 +115,7 @@ export default async function handle(
       },
     });
 
-    return res.status(200).json(preset);
+    return res.status(200).json({ message: "Preset updated successfully" });
   } else if (req.method === "DELETE") {
     // DELETE /api/teams/:teamId/presets
     const preset = await prisma.linkPreset.findFirst({
