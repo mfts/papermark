@@ -1,7 +1,7 @@
-**Side Quest**: Follow us on LinkedIn
+**Side Quest**: Follow us on YouTube
 **Points**: 50 Points
 **Proof**: Add a screenshot of you following our LinkedIn profile to the PR description. Add your name to the list below.
-
+https://github.com/user-attachments/assets/4171317d-92cc-427a-b7e1-c422f36da939
 Please follow the following schema:
 
 ---
@@ -25,6 +25,5 @@ Your turn 👇
 
 » 10-October-2024 by Piyush Mishra [@PiyushXmishra](https://www.linkedin.com/in/piyushXmishra/)
 
-» 18-October-2024 by Danish Ali [Danish Ali](https://www.linkedin.com/in/danish-umar/)
 
 ---
