@@ -83,11 +83,11 @@ export default function ReportForm({
         >
           <PopoverTrigger asChild>
             <Button
-              className="m-1 bg-gray-900 text-gray-300 hover:bg-gray-900/80 hover:text-gray-50"
+              className="h-8 w-8 bg-gray-900 text-xs text-gray-300 hover:bg-gray-900/80 hover:text-gray-50 sm:h-10 sm:w-10 sm:text-sm"
               size="icon"
               title="Report abuse"
             >
-              <Flag className="h-4 w-4" />
+              <Flag className="size-3 sm:size-4" />
             </Button>
           </PopoverTrigger>
         </ButtonTooltip>
