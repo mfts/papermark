@@ -1,3 +1,5 @@
+import { useRouter } from "next/router";
+
 import { useTeam } from "@/context/team-context";
 import { Folder } from "@prisma/client";
 import useSWR from "swr";
@@ -6,23 +8,33 @@ import { DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
 import { fetcher } from "@/lib/utils";
 
 export default function useDocuments() {
+  const router = useRouter();
   const teamInfo = useTeam();
+  const teamId = teamInfo?.currentTeam?.id;
 
-  const { data: documents, error } = useSWR<
-    DocumentWithLinksAndLinkCountAndViewCount[]
-  >(
-    teamInfo?.currentTeam?.id &&
-      `/api/teams/${teamInfo?.currentTeam?.id}/documents`,
+  const queryParams = router.query;
+  const searchQuery = queryParams["search"];
+
+  const {
+    data: documents,
+    isValidating,
+    error,
+  } = useSWR<DocumentWithLinksAndLinkCountAndViewCount[]>(
+    teamId &&
+      `/api/teams/${teamId}/documents${searchQuery ? `/search?query=${searchQuery}` : ""}`,
     fetcher,
     {
       revalidateOnFocus: false,
       dedupingInterval: 30000,
+      keepPreviousData: true,
     },
   );
 
   return {
     documents,
+    isValidating,
     loading: !documents && !error,
+    isSearchResult: !!searchQuery,
     error,
   };
 }
