@@ -28,7 +28,7 @@ type SearchBoxProps = {
   inputClassName?: string;
 };
 
-export const SearchBox = forwardRef(
+const SearchBox = forwardRef(
   (
     {
       value,
@@ -109,6 +109,7 @@ export const SearchBox = forwardRef(
     );
   },
 );
+SearchBox.displayName = "SearchBox";
 
 export function SearchBoxPersisted({
   urlParam = "search",
