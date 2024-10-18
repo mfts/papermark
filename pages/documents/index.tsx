@@ -64,6 +64,7 @@ export default function Documents() {
 
         <Separator className="mb-5 bg-gray-200 dark:bg-gray-800" />
 
+      <div className="p-4 pt-0 sm:mx-4 sm:mt-4 ">
         <DocumentsList
           documents={documents}
           folders={isSearchResult ? [] : folders}
