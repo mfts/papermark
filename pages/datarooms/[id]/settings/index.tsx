@@ -13,6 +13,7 @@ import { Form } from "@/components/ui/form";
 
 import { usePlan } from "@/lib/swr/use-billing";
 import { useDataroom } from "@/lib/swr/use-dataroom";
+import ArchiveDataroom from "@/components/datarooms/settings/archive-dataroom";
 
 export default function Settings() {
   const { dataroom } = useDataroom();
@@ -85,6 +86,9 @@ export default function Settings() {
               }
             />
             <DuplicateDataroom dataroomId={dataroom.id} teamId={teamId} />
+
+            <ArchiveDataroom dataroomId={dataroom.id} teamId={teamId} />
+
             {isDataroomsPlan ? (
               <DeleteDataroom
                 dataroomId={dataroom.id}

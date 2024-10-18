@@ -50,6 +50,11 @@ export default async function handle(
               data: true,
             },
           },
+          dataroom: {
+            select: {
+              isArchived: true,
+            },
+          },
           enableAgreement: true,
           agreement: true,
           showBanner: true,
@@ -96,7 +101,12 @@ export default async function handle(
         ...linkData,
       };
 
-      return res.status(200).json({ linkType, link: returnLink, brand });
+      return res.status(200).json({
+        linkType,
+        link: returnLink,
+        brand,
+        dataroomIsArchived: link.dataroom?.isArchived || false,
+      });
     } catch (error) {
       return res.status(500).json({
         message: "Internal Server Error",

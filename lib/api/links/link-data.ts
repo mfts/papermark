@@ -40,6 +40,7 @@ export async function fetchDataroomLinkData({
           id: true,
           name: true,
           teamId: true,
+          isArchived: true,
           documents: {
             where:
               groupPermissions.length > 0 || groupId
