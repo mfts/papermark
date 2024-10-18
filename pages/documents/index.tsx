@@ -1,93 +1,42 @@
-import { useRouter } from "next/router";
-
-import { useCallback, useMemo, useState } from "react";
-
 import { useTeam } from "@/context/team-context";
-import { Search } from "lucide-react";
-import { FileIcon, FolderIcon, FolderPlusIcon, PlusIcon } from "lucide-react";
-import useSWR from "swr";
-import { useDebounce } from "use-debounce";
+import { FolderPlusIcon, PlusIcon } from "lucide-react";
 
 import { AddDocumentModal } from "@/components/documents/add-document-modal";
-import { BreadcrumbComponent } from "@/components/documents/breadcrumb";
 import { DocumentsList } from "@/components/documents/documents-list";
 import { AddFolderModal } from "@/components/folders/add-folder-modal";
 import AppLayout from "@/components/layouts/app";
+import { SearchBoxPersisted } from "@/components/search-box";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 
-import { useDocuments, useFolder } from "@/lib/swr/use-documents";
-import { DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
-import { fetcher } from "@/lib/utils";
+import useDocuments, { useRootFolders } from "@/lib/swr/use-documents";
 
 export default function Documents() {
-  const router = useRouter();
   const teamInfo = useTeam();
 
-  const { folders } = useFolder({});
-  const { documents: allDocuments, isLoading: isLoadingDocuments } =
-    useDocuments();
-
-  const [searchTerm, setSearchTerm] = useState("");
-  const [debouncedSearchTerm] = useDebounce(searchTerm, 300);
-
-  const fetchSearchResults = useCallback(async () => {
-    if (!debouncedSearchTerm || !teamInfo?.currentTeam?.id) return null;
-    const response = await fetch(
-      `/api/teams/${teamInfo.currentTeam.id}/documents/search?query=${encodeURIComponent(debouncedSearchTerm)}`,
-    );
-    if (!response.ok) throw new Error("Failed to fetch search results");
-    return response.json();
-  }, [debouncedSearchTerm, teamInfo?.currentTeam?.id]);
-
-  const { data: searchResults, error: searchError } = useSWR<
-    DocumentWithLinksAndLinkCountAndViewCount[]
-  >(
-    debouncedSearchTerm ? ["searchDocuments", debouncedSearchTerm] : null,
-    fetchSearchResults,
-  );
-
-  const displayedDocuments = useMemo(() => {
-    if (debouncedSearchTerm && searchResults) {
-      return searchResults;
-    }
-    return allDocuments;
-  }, [debouncedSearchTerm, searchResults, allDocuments]);
-
-  const isLoading =
-    isLoadingDocuments || (!searchResults && debouncedSearchTerm);
+  const { folders } = useRootFolders();
+  const { documents, isValidating, isSearchResult } = useDocuments();
 
   return (
     <AppLayout>
       <div className="sticky top-0 z-50 bg-white p-4 pb-0 dark:bg-gray-900 sm:mx-4 sm:pt-8">
-        <section className="mb-4 flex items-center justify-between space-x-2 sm:space-x-0 md:mb-8 lg:mb-12">
+        <section className="mb-4 flex items-center justify-between space-x-2 sm:space-x-0">
           <div className="space-y-0 sm:space-y-1">
             <h2 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
               All Documents
             </h2>
-            <p className="text-xs text-muted-foreground leading-4 sm:leading-none sm:text-sm">
+            <p className="text-xs leading-4 text-muted-foreground sm:text-sm sm:leading-none">
               Manage all your documents in one place.
             </p>
           </div>
           <div className="flex items-center gap-x-2">
-            <div className="relative">
-              <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
-              <Input
-                type="text"
-                placeholder="Search documents..."
-                className="w-64 pl-8 pr-4"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
             <AddDocumentModal>
               <Button
-                className="group flex flex-1 items-center justify-start whitespace-nowrap gap-x-1 sm:gap-x-3 px-1 sm:px-3 text-left"
+                className="group flex flex-1 items-center justify-start gap-x-1 whitespace-nowrap px-1 text-left sm:gap-x-3 sm:px-3"
                 title="Add New Document"
               >
                 <PlusIcon className="h-5 w-5 shrink-0" aria-hidden="true" />
-                <span className=" text-xs sm:text-base">Add New Document</span>
+                <span className="text-xs sm:text-base">Add New Document</span>
               </Button>
             </AddDocumentModal>
             <AddFolderModal>
@@ -105,16 +54,20 @@ export default function Documents() {
           </div>
         </section>
 
+        <div className="flex justify-end">
+          <div className="relative w-full sm:max-w-xs">
+            <SearchBoxPersisted loading={isValidating} inputClassName="h-10" />
+          </div>
+        </div>
+
         <section id="documents-header-count" />
 
         <Separator className="mb-5 bg-gray-200 dark:bg-gray-800" />
 
         <DocumentsList
-          documents={displayedDocuments}
-          folders={debouncedSearchTerm ? [] : folders}
+          documents={documents}
+          folders={isSearchResult ? [] : folders}
           teamInfo={teamInfo}
-          isLoading={isLoading}
-          searchTerm={debouncedSearchTerm}
         />
       </div>
     </AppLayout>

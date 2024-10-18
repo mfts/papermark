@@ -21,6 +21,21 @@ export default async function handle(
     const userId = (session.user as CustomUser).id;
 
     try {
+      const team = await prisma.team.findUnique({
+        where: {
+          id: teamId,
+          users: {
+            some: {
+              userId: userId,
+            },
+          },
+        },
+      });
+
+      if (!team) {
+        return res.status(404).end("Team not found");
+      }
+
       const documents = await prisma.document.findMany({
         where: {
           teamId: teamId,
@@ -33,19 +48,8 @@ export default async function handle(
           createdAt: "desc",
         },
         include: {
-          folder: {
-            select: {
-              id: true,
-              name: true,
-              path: true,
-            },
-          },
           _count: {
             select: { links: true, views: true, versions: true },
-          },
-          links: {
-            take: 1,
-            select: { id: true },
           },
         },
       });

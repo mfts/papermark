@@ -212,7 +212,7 @@ export default function DocumentsCard({
 
           <div className="flex-col">
             <div className="flex items-center">
-              <h2 className="min-w-0 max-w-[150px] truncate text-sm font-semibold leading-6 text-foreground sm:max-w-md">
+              <h2 className="min-w-0 max-w-[250px] truncate text-sm font-semibold leading-6 text-foreground sm:max-w-md">
                 <Link
                   href={`/documents/${prismaDocument.id}`}
                   className="w-full truncate"
