@@ -1,0 +1,19 @@
+# make sure that you have cloned repo. and now on current directory
+
+tasks:
+  - init: |
+      npm install
+      pip3 install -r
+      cp .env.example .env
+      npm run dev:prisma
+      pipenv install tinybird-cli
+      cd lib/tinybird
+      tb push datasources/*
+      tb push endpoints/get_*
+      echo "TINYBIRD_TOKEN=your_token_here" >> ../.env
+
+    image: gitpod/workspace-postgres  
+
+
+    command: |
+      npm run dev
