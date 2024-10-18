@@ -72,7 +72,7 @@ export default async function handle(
 
       const viewers = await prisma.viewer.findMany({
         where: {
-          dataroomId: dataroomId,
+          teamId: teamId,
           email: {
             in: emails,
           },

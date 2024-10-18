@@ -104,7 +104,10 @@ export default async function handle(
         isDownload: true,
       });
 
-      if (view.link.enableWatermark) {
+      if (
+        view.document!.versions[0].type === "pdf" &&
+        view.link.enableWatermark
+      ) {
         const response = await fetch(
           `${process.env.NEXTAUTH_URL}/api/mupdf/annotate-document`,
           {
