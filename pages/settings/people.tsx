@@ -261,7 +261,7 @@ export default function Billing() {
             )}
             {team?.users.map((member, index) => (
               <li
-                className="flex items-center justify-between px-10 py-4"
+                className="flex items-center justify-between px-10 py-4 overflow-auto gap-12"
                 key={index}
               >
                 <div className="flex items-center gap-12">
@@ -276,7 +276,7 @@ export default function Billing() {
                   <div className="text-sm">
                     <div className="flex items-center gap-2">
                       <Folder />
-                      <span className="text-xs text-foreground">
+                      <span className="text-xs text-foreground text-nowrap">
                         {getUserDocumentCount(member.userId)}{" "}
                         {getUserDocumentCount(member.userId) === 1
                           ? "document"
