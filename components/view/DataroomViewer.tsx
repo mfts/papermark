@@ -160,93 +160,88 @@ export default function DataroomViewer({
                 folderId={folderId}
               />
               <ScrollBar orientation="horizontal" />
-              <ScrollBar orientation="horizontal" />
+              <ScrollBar orientation="vertical" />
             </ScrollArea>
           </div>
 
           {/* Detail view */}
-          <div className="h-full flex-grow overflow-hidden">
-            <div className="h-full space-y-8 overflow-auto px-3 pb-4 pt-4 md:px-6 md:pt-6 lg:px-8 lg:pt-9 xl:px-14">
-              <ScrollArea showScrollbar>
-                <div className="flex items-center gap-x-2">
-                  {/* sidebar for mobile */}
-                  <div className="flex md:hidden">
-                    <Sheet>
-                      <SheetTrigger asChild>
-                        <button className="text-muted-foreground hover:text-white lg:hidden">
-                          <PanelLeftIcon
-                            className="h-5 w-5"
-                            aria-hidden="true"
+          <ScrollArea showScrollbar className="h-full flex-grow overflow-auto">
+            <div className="h-full space-y-8 px-3 pb-4 pt-4 md:px-6 md:pt-6 lg:px-8 lg:pt-9 xl:px-14">
+              <div className="flex items-center gap-x-2">
+                {/* sidebar for mobile */}
+                <div className="flex md:hidden">
+                  <Sheet>
+                    <SheetTrigger asChild>
+                      <button className="text-muted-foreground hover:text-white lg:hidden">
+                        <PanelLeftIcon className="h-5 w-5" aria-hidden="true" />
+                      </button>
+                    </SheetTrigger>
+                    <SheetPortal>
+                      <SheetOverlay className="fixed top-[35dvh] z-50 bg-background/80 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
+                      <SheetPrimitive.Content
+                        className={cn(
+                          "fixed top-[35dvh] z-50 gap-4 bg-background p-6 shadow-lg transition ease-in-out data-[state=closed]:duration-300 data-[state=open]:duration-500 data-[state=open]:animate-in data-[state=closed]:animate-out",
+                          "left-0 h-full w-3/4 border-r data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left sm:max-w-lg",
+                          "m-0 w-[280px] p-0 sm:w-[300px] lg:hidden",
+                        )}
+                      >
+                        <div className="mt-8 h-full space-y-8 overflow-auto px-2 py-3">
+                          <ViewFolderTree
+                            folders={folders}
+                            documents={documents}
+                            setFolderId={setFolderId}
+                            folderId={folderId}
                           />
-                        </button>
-                      </SheetTrigger>
-                      <SheetPortal>
-                        <SheetOverlay className="fixed top-[35dvh] z-50 bg-background/80 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
-                        <SheetPrimitive.Content
-                          className={cn(
-                            "fixed top-[35dvh] z-50 gap-4 bg-background p-6 shadow-lg transition ease-in-out data-[state=closed]:duration-300 data-[state=open]:duration-500 data-[state=open]:animate-in data-[state=closed]:animate-out",
-                            "left-0 h-full w-3/4 border-r data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left sm:max-w-lg",
-                            "m-0 w-[280px] p-0 sm:w-[300px] lg:hidden",
-                          )}
-                        >
-                          <div className="mt-8 h-full space-y-8 overflow-auto px-2 py-3">
-                            <ViewFolderTree
-                              folders={folders}
-                              documents={documents}
-                              setFolderId={setFolderId}
-                              folderId={folderId}
-                            />
-                          </div>
-                          <SheetPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary">
-                            <XIcon className="h-4 w-4" />
-                            <span className="sr-only">Close</span>
-                          </SheetPrimitive.Close>
-                        </SheetPrimitive.Content>
-                      </SheetPortal>
-                    </Sheet>
-                  </div>
-
-                  <Breadcrumb>
-                    <BreadcrumbList>
-                      <BreadcrumbItem key={"root"}>
-                        <BreadcrumbLink
-                          onClick={() => setFolderId(null)}
-                          className="cursor-pointer"
-                        >
-                          Home
-                        </BreadcrumbLink>
-                      </BreadcrumbItem>
-
-                      {breadcrumbFolders.map((folder, index) => (
-                        <React.Fragment key={folder.id}>
-                          <BreadcrumbSeparator />
-                          <BreadcrumbItem>
-                            {index === breadcrumbFolders.length - 1 ? (
-                              <BreadcrumbPage className="capitalize">
-                                {folder.name}
-                              </BreadcrumbPage>
-                            ) : (
-                              <BreadcrumbLink
-                                onClick={() => setFolderId(folder.id)}
-                                className="cursor-pointer capitalize"
-                              >
-                                {folder.name}
-                              </BreadcrumbLink>
-                            )}
-                          </BreadcrumbItem>
-                        </React.Fragment>
-                      ))}
-                    </BreadcrumbList>
-                  </Breadcrumb>
+                        </div>
+                        <SheetPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary">
+                          <XIcon className="h-4 w-4" />
+                          <span className="sr-only">Close</span>
+                        </SheetPrimitive.Close>
+                      </SheetPrimitive.Content>
+                    </SheetPortal>
+                  </Sheet>
                 </div>
-                <ul role="list" className="space-y-4 overflow-auto p-4">
-                  {mixedItems.map(renderItem)}
-                </ul>
-                <ScrollBar orientation="horizontal" />
-                <ScrollBar orientation="horizontal" />
-              </ScrollArea>
+
+                <Breadcrumb>
+                  <BreadcrumbList>
+                    <BreadcrumbItem key={"root"}>
+                      <BreadcrumbLink
+                        onClick={() => setFolderId(null)}
+                        className="cursor-pointer"
+                      >
+                        Home
+                      </BreadcrumbLink>
+                    </BreadcrumbItem>
+
+                    {breadcrumbFolders.map((folder, index) => (
+                      <React.Fragment key={folder.id}>
+                        <BreadcrumbSeparator />
+                        <BreadcrumbItem>
+                          {index === breadcrumbFolders.length - 1 ? (
+                            <BreadcrumbPage className="capitalize">
+                              {folder.name}
+                            </BreadcrumbPage>
+                          ) : (
+                            <BreadcrumbLink
+                              onClick={() => setFolderId(folder.id)}
+                              className="cursor-pointer capitalize"
+                            >
+                              {folder.name}
+                            </BreadcrumbLink>
+                          )}
+                        </BreadcrumbItem>
+                      </React.Fragment>
+                    ))}
+                  </BreadcrumbList>
+                </Breadcrumb>
+              </div>
+              <ul role="list" className="space-y-4 overflow-auto p-4">
+                {mixedItems.map(renderItem)}
+              </ul>
             </div>
-          </div>
+            <ScrollBar orientation="vertical" />
+            <ScrollBar orientation="horizontal" />
+          </ScrollArea>
         </div>
       </div>
     </>
