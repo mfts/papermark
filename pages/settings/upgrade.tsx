@@ -1,6 +1,6 @@
 import { useRouter } from "next/router";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import React from "react";
 
 import { useTeam } from "@/context/team-context";
@@ -20,7 +20,7 @@ export default function UpgradePage() {
   const [period, setPeriod] = useState<"yearly" | "monthly">("yearly");
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null); // Track the clicked plan
   const teamInfo = useTeam();
-  const { plan: teamPlan, trial, isCustomer } = usePlan();
+  const { plan: teamPlan, trial, isCustomer, isOldAccount } = usePlan();
   const analytics = useAnalytics();
 
   const planFeatures = useMemo(
@@ -121,7 +121,9 @@ export default function UpgradePage() {
 
             <div className="mb-2 text-balance text-4xl font-medium tabular-nums text-foreground">
               €{PLANS.find((p) => p.name === planOption)!.price[period].amount}
-              <span className="text-base font-normal dark:text-white/75">/month</span>
+              <span className="text-base font-normal dark:text-white/75">
+                /month
+              </span>
             </div>
             <p className="mt-4 text-sm text-gray-600 dark:text-white">
               {
@@ -131,7 +133,9 @@ export default function UpgradePage() {
             </p>
 
             <ul className="mb-4 mt-4 space-y-3 text-sm leading-6 text-gray-600 dark:text-muted-foreground">
-              {planFeatures[planOption as keyof typeof planFeatures].features.map((feature, i) => (
+              {planFeatures[
+                planOption as keyof typeof planFeatures
+              ].features.map((feature, i) => (
                 <li key={i} className="flex items-center text-sm">
                   <CheckIcon className="mr-3 h-5 w-5 flex-shrink-0 text-[#fb7a00]" />
                   <span>{feature}</span>
@@ -143,7 +147,7 @@ export default function UpgradePage() {
                 variant={planOption === "Business" ? "default" : "default"}
                 className={`w-full py-2 text-sm ${
                   planOption === "Business"
-                    ? "bg-[#fb7a00] hover:bg-[#fb7a00]/80 text-white"
+                    ? "bg-[#fb7a00] text-white hover:bg-[#fb7a00]/80"
                     : "bg-gray-800 text-white hover:bg-gray-900"
                 }`}
                 loading={selectedPlan === planOption} // Show loading only for the clicked plan
@@ -175,7 +179,7 @@ export default function UpgradePage() {
                           process.env.NEXT_PUBLIC_VERCEL_ENV === "production"
                             ? "production"
                             : "test"
-                        ]
+                        ][isOldAccount ? "old" : "new"]
                       }`,
                       {
                         method: "POST",
@@ -187,7 +191,7 @@ export default function UpgradePage() {
                       .then(async (res) => {
                         const data = await res.json();
                         const { id: sessionId } = data;
-                        const stripe = await getStripe();
+                        const stripe = await getStripe(isOldAccount);
                         stripe?.redirectToCheckout({ sessionId });
                       })
                       .catch((err) => {
