@@ -1,6 +1,6 @@
 import { useRouter } from "next/router";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import React from "react";
 
 import { useTeam } from "@/context/team-context";
@@ -18,7 +18,7 @@ import { capitalize } from "@/lib/utils";
 export default function UpgradePage() {
   const router = useRouter();
   const [period, setPeriod] = useState<"yearly" | "monthly">("yearly");
-  const [clicked, setClicked] = useState<boolean>(false);
+  const [selectedPlan, setSelectedPlan] = useState<string | null>(null); // Track the clicked plan
   const teamInfo = useTeam();
   const { plan: teamPlan, trial, isCustomer, isOldAccount } = usePlan();
   const analytics = useAnalytics();
@@ -68,7 +68,7 @@ export default function UpgradePage() {
           "Advanced data rooms analytics",
           "NDA agreements",
           "Dynamic Watermark",
-          "Granular user/group permisssions",
+          "Granular user/group permissions",
           "Invite users directly from Papermark",
           "Audit log",
           "24h priority support",
@@ -78,9 +78,8 @@ export default function UpgradePage() {
     }),
     [],
   );
-  const plansToShow = ["Pro", "Business", "Data Rooms"];
 
-  // Remove the useEffect hook that was causing the error
+  const plansToShow = ["Pro", "Business", "Data Rooms"];
 
   return (
     <div className="min-h-screen bg-gray-50 p-8 dark:bg-gray-900">
@@ -133,7 +132,7 @@ export default function UpgradePage() {
               }
             </p>
 
-            <ul className="mb-4 mt-4 space-y-3 text-sm leading-6 text-gray-600 dark:text-white/75">
+            <ul className="mb-4 mt-4 space-y-3 text-sm leading-6 text-gray-600 dark:text-muted-foreground">
               {planFeatures[
                 planOption as keyof typeof planFeatures
               ].features.map((feature, i) => (
@@ -148,12 +147,13 @@ export default function UpgradePage() {
                 variant={planOption === "Business" ? "default" : "default"}
                 className={`w-full py-2 text-sm ${
                   planOption === "Business"
-                    ? "bg-[#fb7a00] hover:bg-[#fb7a00]/80"
+                    ? "bg-[#fb7a00] text-white hover:bg-[#fb7a00]/80"
                     : "bg-gray-800 text-white hover:bg-gray-900"
                 }`}
-                loading={clicked}
+                loading={selectedPlan === planOption} // Show loading only for the clicked plan
+                disabled={selectedPlan !== null}
                 onClick={() => {
-                  setClicked(true);
+                  setSelectedPlan(planOption); // Set the clicked plan
                   if (isCustomer && teamPlan !== "free") {
                     fetch(
                       `/api/teams/${teamInfo?.currentTeam?.id}/billing/manage`,
@@ -167,7 +167,7 @@ export default function UpgradePage() {
                       })
                       .catch((err) => {
                         alert(err);
-                        setClicked(false);
+                        setSelectedPlan(null); // Reset loading state on error
                       });
                   } else {
                     fetch(
@@ -196,12 +196,12 @@ export default function UpgradePage() {
                       })
                       .catch((err) => {
                         alert(err);
-                        setClicked(false);
+                        setSelectedPlan(null); // Reset loading state on error
                       });
                   }
                 }}
               >
-                {clicked
+                {selectedPlan === planOption
                   ? "Redirecting to Stripe..."
                   : `Upgrade to ${planOption} ${capitalize(period)}`}
               </Button>
