@@ -230,8 +230,8 @@ export function UpgradePlanModal({
                   variant={planOption === "Business" ? "default" : "outline"}
                   className={`w-full py-2 text-sm ${
                     planOption === "Business"
-                      ? "bg-[#fb7a00] text-white hover:bg-[#fb7a00]"
-                      : "bg-gray-800 text-white hover:bg-gray-900 hover:text-white"
+                      ? "bg-[#fb7a00]/90 text-white hover:bg-[#fb7a00]"
+                      : "bg-gray-800 text-white hover:bg-gray-900 hover:text-white dark:hover:bg-gray-700/80"
                   }`}
                   loading={selectedPlan === planOption} // Show loading only for the clicked plan
                   disabled={selectedPlan !== null}
