@@ -2,6 +2,7 @@ import { useRouter } from "next/router";
 
 import {
   Dispatch,
+  FormEvent,
   SetStateAction,
   useCallback,
   useMemo,
@@ -39,6 +40,7 @@ function DeleteGroupModal({
   const analytics = useAnalytics();
 
   const [deleting, setDeleting] = useState(false);
+  const [groupNameValue, setGroupNameValue] = useState('');
 
   async function deleteGroup() {
     return new Promise((resolve, reject) => {
@@ -64,6 +66,23 @@ function DeleteGroupModal({
       });
     });
   }
+
+  const handleChange = (event: FormEvent<HTMLInputElement>) => {
+    const inputValue = (event.target as HTMLInputElement).value;
+    const trimmedValue = inputValue.replace(/\s+$/, ''); // Trim spaces at the end
+
+    // Check if the trimmed value matches the groupName
+    if (trimmedValue === groupName) {
+      // If it matches the groupName, prevent further spaces
+      setGroupNameValue(trimmedValue);
+    } else if (groupName.startsWith(trimmedValue)) {
+      // Allow spaces only when partially matching
+      setGroupNameValue(inputValue);
+    } else {
+      // If it doesn't match or partially match, set the trimmed value
+      setGroupNameValue(trimmedValue);
+    }
+  };
 
   const { isMobile } = useMediaQuery();
 
@@ -108,7 +127,8 @@ function DeleteGroupModal({
               autoFocus={!isMobile}
               autoComplete="off"
               required
-              pattern={groupName}
+              value={groupNameValue}
+              onChange={handleChange}
               className="bg-white dark:border-gray-500 dark:bg-gray-800 focus:dark:bg-transparent"
             />
           </div>

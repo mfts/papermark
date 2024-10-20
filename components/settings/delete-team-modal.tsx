@@ -34,6 +34,24 @@ function DeleteTeamModal({
 
   const [deleting, setDeleting] = useState(false);
   const [isValid, setIsValid] = useState(false);
+  const [teamNameValue, setTeamNameValue] = useState('');
+  
+  const handleTeamInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const inputValue = (e.target as HTMLInputElement).value;
+    const trimmedValue = inputValue.replace(/\s+$/, ''); // Trim spaces at the end
+
+    // Check if the trimmed value matches the groupName
+    if (trimmedValue === teamInfo?.currentTeam?.name) {
+      // If it matches the groupName, prevent further spaces
+      setTeamNameValue(trimmedValue);
+    } else if ((teamInfo?.currentTeam?.name!).startsWith(trimmedValue)) {
+      // Allow spaces only when partially matching
+      setTeamNameValue(inputValue);
+    } else {
+      // If it doesn't match or partially match, set the trimmed value
+      setTeamNameValue(trimmedValue);
+    }
+  }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = e.target;
@@ -120,7 +138,9 @@ function DeleteTeamModal({
               autoFocus={!isMobile}
               autoComplete="off"
               required
-              pattern={teamInfo?.currentTeam?.name}
+              value={teamNameValue}
+              onChange={handleTeamInputChange}
+              // pattern={teamInfo?.currentTeam?.name}
               className="bg-white dark:border-gray-500 dark:bg-gray-800 focus:dark:bg-transparent"
             />
           </div>
