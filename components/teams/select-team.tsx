@@ -11,6 +11,11 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+} from "@/components/ui/sidebar";
 
 import { Team } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -32,9 +37,15 @@ const SelectTeam = ({ teams, currentTeam, isLoading }: TeamContextType) => {
           <Loader className="h-5 w-5 animate-spin" /> Loading teams...
         </div>
       ) : (
+        <SidebarMenu>
+      <SidebarMenuItem>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <div className="flex w-full cursor-pointer items-center justify-between rounded-md border px-[10px] py-2 opacity-90 duration-200 hover:bg-muted">
+          {/* <SidebarMenuButton
+              size="lg"
+              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+            >
+            <div className="flex cursor-pointer items-center justify-between rounded-md border px-[10px] py-2 opacity-90 duration-200 hover:bg-muted">
               <div className="flex items-center space-x-2">
                 <Avatar className="h-[25px] w-[25px] text-[10px]">
                   <AvatarFallback>
@@ -46,8 +57,30 @@ const SelectTeam = ({ teams, currentTeam, isLoading }: TeamContextType) => {
               </div>
               <ChevronUpDownIcon className="h-4 w-4" />
             </div>
+            </SidebarMenuButton> */}
+
+<SidebarMenuButton
+              size="lg"
+              className=" p-5 data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+            >
+              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+              <Avatar className="h-[25px] w-[25px] text-[10px]">
+              <AvatarFallback>
+                    {currentTeam?.name?.slice(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                  </Avatar>
+              </div>
+              
+              <div className="grid flex-1 text-left text-sm leading-tight">
+                <span className="truncate font-semibold">
+                 Sample Value
+                </span>
+                <span className="truncate text-xs">Dummy</span>
+              </div>
+              <ChevronUpDownIcon className="ml-auto" />
+            </SidebarMenuButton>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-[250px] px-0 pb-1.5 pt-2 sm:w-[270px] lg:w-[240px] xl:w-[270px]">
+          <DropdownMenuContent sideOffset={4} className="w-64">
             {teams.map((team) => (
               <div
                 key={team.id}
@@ -85,6 +118,8 @@ const SelectTeam = ({ teams, currentTeam, isLoading }: TeamContextType) => {
             </Link>
           </DropdownMenuContent>
         </DropdownMenu>
+        </SidebarMenuItem>
+        </SidebarMenu>
       )}
     </>
   );
