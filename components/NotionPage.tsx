@@ -267,6 +267,9 @@ export const NotionPage = ({
         setDocumentData={setDocumentData}
         type="notion"
         isPreview={isPreview}
+        linkId={linkId}
+        documentId={documentId}
+        viewId={viewId}
       />
 
       <Portal containerId="view-breadcrump-portal">
@@ -321,16 +324,16 @@ export const NotionPage = ({
               className: string;
               href: any;
               children:
-                | string
-                | number
-                | boolean
-                | React.ReactElement<
-                    any,
-                    string | React.JSXElementConstructor<any>
-                  >
-                | React.ReactPortal
-                | null
-                | undefined;
+              | string
+              | number
+              | boolean
+              | React.ReactElement<
+                any,
+                string | React.JSXElementConstructor<any>
+              >
+              | React.ReactPortal
+              | null
+              | undefined;
             }) => {
               return (
                 <div

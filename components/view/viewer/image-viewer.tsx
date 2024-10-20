@@ -258,6 +258,7 @@ export default function ImageViewer({
         brand={brand}
         viewId={viewId}
         linkId={linkId}
+        documentId={documentId}
         documentName={documentName}
         isDataroom={dataroomId ? true : false}
         setDocumentData={setDocumentData}

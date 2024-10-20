@@ -108,7 +108,7 @@ const Folder = memo<FolderProps>(
     const isFolderOpen = open === undefined ? isOpen : open;
 
     return (
-      <li className="flex w-full list-none flex-col">
+      <li className="flex w-full list-none flex-col py-0.5">
         <div
           title={name}
           className={cn(
@@ -145,7 +145,7 @@ const Folder = memo<FolderProps>(
           </span>
         </div>
         {isFolderOpen && (
-          <ul>
+          <ul className="py-0.5">
             <ctx.Provider value={indent + 1}>{children}</ctx.Provider>
           </ul>
         )}

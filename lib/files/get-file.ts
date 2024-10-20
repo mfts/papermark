@@ -13,8 +13,6 @@ export const getFile = async ({
   data,
   isDownload = false,
 }: GetFileOptions) => {
-  console.log("type", type);
-
   const url = await match(type)
     .with(DocumentStorageType.VERCEL_BLOB, () => {
       if (isDownload) {

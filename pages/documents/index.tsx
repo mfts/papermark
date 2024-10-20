@@ -1,47 +1,42 @@
 import { useTeam } from "@/context/team-context";
 import { FolderPlusIcon, PlusIcon } from "lucide-react";
-import ErrorPage from "next/error";
+
 import { AddDocumentModal } from "@/components/documents/add-document-modal";
 import { DocumentsList } from "@/components/documents/documents-list";
 import { AddFolderModal } from "@/components/folders/add-folder-modal";
 import AppLayout from "@/components/layouts/app";
+import { SearchBoxPersisted } from "@/components/search-box";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 
 import useDocuments, { useRootFolders } from "@/lib/swr/use-documents";
 
 export default function Documents() {
-  const { documents,error } = useDocuments();
-  const { folders } = useRootFolders();
   const teamInfo = useTeam();
 
-  if (error && error.status === 404) {
-    return <ErrorPage statusCode={404} />;
-  }
-  if (error && error.status === 500) {
-    return <ErrorPage statusCode={500} />;
-  }
+  const { folders } = useRootFolders();
+  const { documents, isValidating, isSearchResult } = useDocuments();
 
   return (
     <AppLayout>
       <div className="sticky top-0 z-50 bg-white p-4 pb-0 dark:bg-gray-900 sm:mx-4 sm:pt-8">
-        <section className="mb-4 flex items-center justify-between space-x-2 sm:space-x-0 md:mb-8 lg:mb-12">
+        <section className="mb-4 flex items-center justify-between space-x-2 sm:space-x-0">
           <div className="space-y-0 sm:space-y-1">
             <h2 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
               All Documents
             </h2>
-            <p className="text-xs text-muted-foreground leading-4 sm:leading-none sm:text-sm">
+            <p className="text-xs leading-4 text-muted-foreground sm:text-sm sm:leading-none">
               Manage all your documents in one place.
             </p>
           </div>
-          <div className="flex items-center gap-x-1">
+          <div className="flex items-center gap-x-2">
             <AddDocumentModal>
               <Button
-                className="group flex flex-1 items-center justify-start whitespace-nowrap gap-x-1 sm:gap-x-3 px-1 sm:px-3 text-left"
+                className="group flex flex-1 items-center justify-start gap-x-1 whitespace-nowrap px-1 text-left sm:gap-x-3 sm:px-3"
                 title="Add New Document"
               >
                 <PlusIcon className="h-5 w-5 shrink-0" aria-hidden="true" />
-                <span className=" text-xs sm:text-base">Add New Document</span>
+                <span className="text-xs sm:text-base">Add New Document</span>
               </Button>
             </AddDocumentModal>
             <AddFolderModal>
@@ -59,16 +54,19 @@ export default function Documents() {
           </div>
         </section>
 
-        {/* Portaled in from DocumentsList component */}
+        <div className="flex justify-end mb-2">
+          <div className="relative w-full sm:max-w-xs">
+            <SearchBoxPersisted loading={isValidating} inputClassName="h-10" />
+          </div>
+        </div>
+
         <section id="documents-header-count" />
 
         <Separator className="mb-5 bg-gray-200 dark:bg-gray-800" />
-      </div>
 
-      <div className="p-4 pt-0 sm:mx-4 sm:mt-4">
         <DocumentsList
           documents={documents}
-          folders={folders}
+          folders={isSearchResult ? [] : folders}
           teamInfo={teamInfo}
         />
       </div>

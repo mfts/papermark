@@ -293,7 +293,7 @@ export default function LinkSheet({
 
                     <TabsContent value={LinkAudienceType.GENERAL}>
                       {/* GENERAL LINK */}
-                      <div className="space-y-6 pb-5 pt-2">
+                      <div className="space-y-6 pb-[35%] pt-2">
                         <div className="space-y-2">
                           <Label htmlFor="link-name">Link Name</Label>
 
@@ -339,7 +339,7 @@ export default function LinkSheet({
 
                     <TabsContent value={LinkAudienceType.GROUP}>
                       {/* GROUP LINK */}
-                      <div className="space-y-6 pb-5 pt-2">
+                      <div className="space-y-6 pb-[35%] pt-2">
                         <div className="space-y-2">
                           <div className="flex w-full items-center justify-between">
                             <Label htmlFor="group-id">Group </Label>
@@ -455,7 +455,7 @@ export default function LinkSheet({
           </ScrollArea>
 
           <SheetFooter>
-            <div className="flex items-center">
+            <div className="flex items-center pt-2">
               <Button type="submit" loading={isLoading}>
                 {currentLink ? "Update Link" : "Save Link"}
               </Button>
