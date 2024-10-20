@@ -1,7 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import slugify from "@sindresorhus/slugify";
 import { getServerSession } from "next-auth/next";
 
 import { errorhandler } from "@/lib/errorHandler";
@@ -57,10 +56,34 @@ export default async function handle(
         },
       });
 
-      if (folder?._count.documents! > 0 || folder?._count.childFolders! > 0) {
-        return res.status(401).json({
-          message: "Folder contains documents or folders. Move them first",
+      const deleteFolderWithChildren = async (folderId: string) => {
+        const children = await prisma.folder.findMany({
+          where: {
+            parentId: folderId,
+          },
         });
+
+        for (const child of children) {
+          await deleteFolderWithChildren(child.id);
+        }
+
+        await prisma.document.deleteMany({
+          where: {
+            folderId: folderId,
+          },
+        });
+
+        await prisma.folder.delete({
+          where: {
+            id: folderId,
+          },
+        });
+      };
+
+      if (folder?._count.documents! > 0 || folder?._count.childFolders! > 0) {
+        await deleteFolderWithChildren(folderId);
+
+        return res.status(204).end();
       }
 
       await prisma.folder.delete({
