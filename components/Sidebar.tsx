@@ -10,6 +10,7 @@ import {
   FolderOpenIcon,
   PaletteIcon,
   ServerIcon,
+  ArchiveIcon
 } from "lucide-react";
 import { useSession } from "next-auth/react";
 
