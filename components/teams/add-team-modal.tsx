@@ -37,7 +37,7 @@ export function AddTeamModal({ children }: { children: React.ReactNode }) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        team: teamName,
+        team: teamName.trim(),
       }),
     });
 
