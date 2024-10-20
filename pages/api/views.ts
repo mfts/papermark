@@ -97,6 +97,7 @@ export default async function handle(
       watermarkConfig: true,
       document: {
         select: {
+          teamId: true,
           team: {
             select: {
               plan: true,
@@ -397,6 +398,7 @@ export default async function handle(
           viewerEmail: email,
           viewerName: name,
           documentId: documentId,
+          teamId: link.document?.teamId,
           verified: isEmailVerified,
           ...(link.enableAgreement &&
             link.agreementId &&

@@ -14,6 +14,7 @@ export default function useDocuments() {
 
   const queryParams = router.query;
   const searchQuery = queryParams["search"];
+  const sortQuery = queryParams["sort"];
 
   const {
     data: documents,
@@ -21,7 +22,7 @@ export default function useDocuments() {
     error,
   } = useSWR<DocumentWithLinksAndLinkCountAndViewCount[]>(
     teamId &&
-      `/api/teams/${teamId}/documents${searchQuery ? `/search?query=${searchQuery}` : ""}`,
+      `/api/teams/${teamId}/documents${searchQuery ? `?query=${searchQuery}` : ""}${sortQuery ? (searchQuery ? `&sort=${sortQuery}` : `?sort=${sortQuery}`) : ""}`,
     fetcher,
     {
       revalidateOnFocus: false,
@@ -34,7 +35,7 @@ export default function useDocuments() {
     documents,
     isValidating,
     loading: !documents && !error,
-    isSearchResult: !!searchQuery,
+    isFiltered: !!searchQuery || !!sortQuery,
     error,
   };
 }
