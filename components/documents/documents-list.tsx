@@ -347,7 +347,7 @@ export function DocumentsList({
                 },
               }}
             >
-              <div className="space-y-4">
+              <div className="space-y-4 pb-3">
                 {/* Folders list */}
                 <ul role="list" className="space-y-4">
                   {folders

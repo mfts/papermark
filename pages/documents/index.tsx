@@ -54,7 +54,7 @@ export default function Documents() {
           </div>
         </section>
 
-        <div className="flex justify-end">
+        <div className="flex justify-end mb-2">
           <div className="relative w-full sm:max-w-xs">
             <SearchBoxPersisted loading={isValidating} inputClassName="h-10" />
           </div>
