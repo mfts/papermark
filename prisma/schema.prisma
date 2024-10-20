@@ -47,6 +47,7 @@ model User {
   accounts       Account[]
   sessions       Session[]
   documents      Document[]
+  pitchdecks   Pitchdeck[]
   teams          UserTeam[]
   domains        Domain[]
   conversations  Conversation[]
@@ -62,6 +63,7 @@ model Team {
   name         String
   users        UserTeam[]
   documents    Document[]
+  pitchdecks   Pitchdeck[]
   folders      Folder[]
   domains      Domain[]
   invitations  Invitation[]
@@ -260,6 +262,9 @@ model Link {
   metaImage           String? // This will be the meta image of the link
   metaFavicon         String? // This will be the meta favicon of the link
   enableCustomMetatag Boolean? @default(false) // Optional give user a option to enable the custom metatag
+  pitchdeckId         String?  // Add relation to Pitchdeck for shared links (optional)
+  pitchdeck           Pitchdeck? @relation(fields: [pitchdeckId], references: [id], onDelete: Cascade)
+  
 
   @@unique([domainSlug, slug])
   @@index([documentId])
@@ -323,6 +328,9 @@ model View {
   group             ViewerGroup?       @relation(fields: [groupId], references: [id], onDelete: SetNull)
   feedbackResponse  FeedbackResponse?
   agreementResponse AgreementResponse?
+  pitchdeckId       String?  // Add relation for Pitchdeck views
+  pitchdeck         Pitchdeck? @relation(fields: [pitchdeckId], references: [id], onDelete: Cascade)
+  
 
   @@index([linkId])
   @@index([documentId])
@@ -445,6 +453,7 @@ model Dataroom {
   views        View[]
   viewers      Viewer[]
   viewerGroups ViewerGroup[]
+  Pitchdeck    Pitchdeck[]
   brand        DataroomBrand?
 
   createdAt DateTime @default(now())
@@ -625,4 +634,29 @@ model ViewerGroupAccessControls {
 enum ItemType {
   DATAROOM_DOCUMENT
   DATAROOM_FOLDER
+}
+
+model Pitchdeck {
+  id           String   @id @default(cuid())
+  title        String   // Name of the company/startup
+  description  String?  // Short description of the pitch deck
+
+  fileUrl      String   // URL to the deck hosted on Papermark
+
+  userId     String   // Foreign key to Team
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  teamId     String   // Foreign key to Team
+  team       Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  
+  dataroomId   String?  // Relation to Dataroom (if needed)
+  dataroom     Dataroom? @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
+
+  sharedLinks  Link[]   // Link sharing feature like Document
+  views        View[]   // Tracking how the deck is viewed by users
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([dataroomId])
 }

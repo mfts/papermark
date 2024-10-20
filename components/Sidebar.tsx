@@ -8,6 +8,7 @@ import {
   CogIcon,
   FolderIcon as FolderLucideIcon,
   FolderOpenIcon,
+  Frame,
   PaletteIcon,
   ServerIcon,
 } from "lucide-react";
@@ -135,6 +136,18 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
       name: "Settings",
       href: "/settings/general",
       icon: CogIcon,
+      current:
+        router.pathname.includes("settings") &&
+        !router.pathname.includes("branding") &&
+        !router.pathname.includes("datarooms") &&
+        !router.pathname.includes("documents"),
+      active: false,
+      disabled: false,
+    },
+    {
+      name: "Pitch Decks",
+      href: "/pitchdecks",
+      icon: Frame,
       current:
         router.pathname.includes("settings") &&
         !router.pathname.includes("branding") &&
