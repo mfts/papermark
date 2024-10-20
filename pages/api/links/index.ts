@@ -29,6 +29,7 @@ export default async function handler(
       req.body;
 
     const userId = (session.user as CustomUser).id;
+    let teamId: string | null = null;
 
     const dataroomLink = linkType === "DATAROOM_LINK";
     const documentLink = linkType === "DOCUMENT_LINK";
@@ -36,7 +37,7 @@ export default async function handler(
     try {
       if (documentLink) {
         // check if the team that own the document has the current user
-        await getDocumentWithTeamAndUser({
+        const { document } = await getDocumentWithTeamAndUser({
           docId: targetId,
           userId,
           options: {
@@ -51,6 +52,9 @@ export default async function handler(
             },
           },
         });
+
+        // set teamId to the teamId of the document
+        teamId = document.teamId;
       }
 
       if (dataroomLink) {
@@ -65,12 +69,15 @@ export default async function handler(
               },
             },
           },
-          select: { id: true },
+          select: { id: true, teamId: true },
         });
 
         if (!dataroom) {
           return res.status(400).json({ error: "Dataroom not found." });
         }
+
+        // set teamId to the teamId of the dataroom
+        teamId = dataroom.teamId;
       }
 
       const hashedPassword =
@@ -137,6 +144,7 @@ export default async function handler(
           documentId: documentLink ? targetId : null,
           dataroomId: dataroomLink ? targetId : null,
           linkType,
+          teamId,
           password: hashedPassword,
           name: linkData.name || null,
           emailProtected:
