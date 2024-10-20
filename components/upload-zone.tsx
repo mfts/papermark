@@ -345,12 +345,14 @@ export default function UploadZone({
   );
 
   const getFilesFromEvent = useCallback(async (event:DropEvent) => {
-    /**
-     * The files that `onDrop` receive will be the files that `getFilesFromEvent` returns.
-     * So, A good place to handle the folder upload. 
-     */
+    // This callback also run when event.type =`dragenter`. We only need to compute files when the event.type is `drop`.
+    if (event.type !== "drop") {
+      return []; 
+    }
+
     let filesToBePassedToOnDrop : FileWithPaths[] = [];
 
+    /** *********** START OF `traverseFolder` *********** */
     const traverseFolder = async (entry: FileSystemEntry, parentPathOfThisEntry ?: string) : Promise<FileWithPaths[]> => {
       /**
        * Summary of this function:
@@ -440,25 +442,25 @@ export default function UploadZone({
               `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}${parentFolderPath}`,
             );
 
+            // Now we are sure that folder is created at the backend and we can continue to traverse its child folders/files. 
             const dirReader = (entry as FileSystemDirectoryEntry).createReader();
-            const entries = await  new Promise<FileSystemEntry[]>(
+            const subEntries = await  new Promise<FileSystemEntry[]>(
                 resolve => dirReader.readEntries(resolve)
             );
             
-            for (const entry of entries) {
+            for (const subEntry of subEntries) {
               files.push(
-                ...(await traverseFolder(
-                  entry,
-                  slugifiedPathNameOfThisEntryAfterFolderCreation
-                ))
+                ...(
+                  await traverseFolder(
+                    subEntry,
+                    slugifiedPathNameOfThisEntryAfterFolderCreation
+                  )
+                )
               )
             };
 
           }
         } catch (error) {
-          if (error instanceof Error) {
-            console.log("Error during file creation ", error.message)
-          }
           setRejectedFiles(
             prev => [
               {
@@ -477,7 +479,7 @@ export default function UploadZone({
           ).file(resolve)
         );
 
-        /** In some browsers e.g firebox is not able to detect the file type. (This only happens when user upload folder) */
+        /** In some browsers e.g firefox is not able to detect the file type. (This only happens when user upload folder) */
         const browserFileTypeCompatibilityIssue = file.type === "";
 
         if (browserFileTypeCompatibilityIssue){
@@ -508,25 +510,24 @@ export default function UploadZone({
     
       return files;
     };
+    /** *********** END OF `traverseFolder` *********** */
 
     if ('dataTransfer' in event && event.dataTransfer){
         const items  = event.dataTransfer.items;
+        
+        const fileResults = await Promise.all(
+            Array.from(items, (item) => {
+                // MDN Note: This function is implemented as webkitGetAsEntry() in non-WebKit browsers including Firefox at this time; it may be renamed to getAsEntry() in the future, so you should code defensively, looking for both.
+                const entry = (
+                    typeof item?.webkitGetAsEntry === "function" && item.webkitGetAsEntry()
+                ) ?? (
+                    typeof (item as any)?.getAsEntry === "function" && (item as any).getAsEntry()
+                ) ?? null;
+                return entry ? traverseFolder(entry) : [];
+            })
+        );
+        fileResults.forEach(fileResult => filesToBePassedToOnDrop.push(...fileResult));
 
-        for(let i = 0; i < items.length; i++){
-            
-            // MDN : webkitGetAsEntry() in non-WebKit browsers including Firefox at this time; it may be renamed to getAsEntry() in the future
-            let item: FileSystemEntry | null = 
-                items[0]?.webkitGetAsEntry() 
-                //@ts-ignore
-                ?? items[0]?.getAsEntry() 
-                ?? null;
-            
-            if (item){
-              filesToBePassedToOnDrop.push(
-                ...(await traverseFolder(item))
-              )
-            }
-        }
     } else if (
         event.target && event.target instanceof HTMLInputElement && event.target.files
     ){
