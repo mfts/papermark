@@ -81,6 +81,7 @@ export default function NotFound({ message }: { message?: string }) {
           <span className="text-gray-800">Settings</span>
         </Link>
       </div>
+
       <p className="text-center text-gray-600 max-w-md">
       {message ||
                   "Sorry, we couldn’t find the page you’re looking for."}
