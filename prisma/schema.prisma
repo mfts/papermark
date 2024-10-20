@@ -84,6 +84,8 @@ model Team {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  inviteLink String? @unique // Add this line for the unique share link
 }
 
 model Brand {
