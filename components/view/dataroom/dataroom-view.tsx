@@ -52,6 +52,7 @@ export type TDocumentData = {
 };
 
 export type DEFAULT_DOCUMENT_VIEW_TYPE = {
+  viewerId?: string;
   viewId?: string;
   isPreview?: boolean;
   dataroomViewId?: string;
@@ -173,6 +174,7 @@ export default function DataroomView({
         setIsLoading(false);
       } else {
         const {
+          viewerId,
           viewId,
           file,
           pages,
@@ -210,6 +212,7 @@ export default function DataroomView({
         }
 
         setViewData((prev) => ({
+          viewerId,
           viewId,
           dataroomViewId:
             viewType === "DATAROOM_VIEW" ? viewId : prev.dataroomViewId,
@@ -433,7 +436,11 @@ export default function DataroomView({
     return (
       <div className="bg-gray-950">
         <DataroomViewer
+          key={crypto.randomUUID()}
+          visitorId={viewData.viewerId}
+          name={(data.name || data.email) as string}
           brand={brand!}
+          allowDocUpload={link.allowDocUpload || false}
           viewId={viewData.viewId}
           isPreview={viewData.isPreview}
           linkId={link.id}

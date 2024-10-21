@@ -25,6 +25,7 @@ export default async function handle(
           link: {
             select: {
               allowDownload: true,
+              allowDocUpload: true,
               expiresAt: true,
               isArchived: true,
               enableWatermark: true,

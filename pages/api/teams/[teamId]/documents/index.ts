@@ -83,7 +83,9 @@ export default async function handle(
       folderPathName,
       contentType,
       createLink,
+      ownerViewerId,
     } = req.body as {
+      ownerViewerId?: string;
       name: string;
       url: string;
       storageType: DocumentStorageType;
@@ -138,7 +140,9 @@ export default async function handle(
           contentType: contentType,
           type: type,
           storageType,
-          ownerId: (session.user as CustomUser).id,
+          ownerId: ownerViewerId ? undefined : (session.user as CustomUser).id,
+          ownerViewerId: ownerViewerId || undefined,
+          ownerType: ownerViewerId ? "VIEWER" : "USER",
           teamId: teamId,
           ...(createLink && {
             links: {

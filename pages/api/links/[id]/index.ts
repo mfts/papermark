@@ -33,6 +33,7 @@ export default async function handle(
           emailProtected: true,
           emailAuthenticated: true,
           allowDownload: true,
+          allowDocUpload: true,
           enableFeedback: true,
           enableScreenshotProtection: true,
           password: true,
@@ -59,9 +60,9 @@ export default async function handle(
           audienceType: true,
         },
       });
+      console.log("🚀 ~ link:", link);
 
       console.timeEnd("get-link");
-
       if (!link) {
         return res.status(404).json({ error: "Link not found" });
       }
@@ -199,6 +200,7 @@ export default async function handle(
         domainSlug: domain || null,
         slug: slug || null,
         enableNotification: linkData.enableNotification,
+        allowDocUpload: linkData.allowDocUpload,
         enableFeedback: linkData.enableFeedback,
         enableScreenshotProtection: linkData.enableScreenshotProtection,
         enableCustomMetatag: linkData.enableCustomMetatag,

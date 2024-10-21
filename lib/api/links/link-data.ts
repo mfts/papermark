@@ -6,9 +6,15 @@ import { sortItemsByIndexAndName } from "@/lib/utils/sort-items-by-index-name";
 export async function fetchDataroomLinkData({
   linkId,
   groupId,
+  type = "USER",
+  viewerId,
+  ownerId,
 }: {
   linkId: string;
   groupId?: string;
+  type?: "USER" | "VIEWER";
+  viewerId?: string;
+  ownerId?: string | null;
 }) {
   let groupPermissions: ViewerGroupAccessControls[] = [];
   let documentIds: string[] = [];
@@ -43,8 +49,27 @@ export async function fetchDataroomLinkData({
           documents: {
             where:
               groupPermissions.length > 0 || groupId
-                ? { id: { in: documentIds } }
-                : undefined,
+                ? {
+                    id: {
+                      in: documentIds,
+                    },
+                    document: {
+                      ownerType: type,
+                      ...(ownerId && { ownerId: ownerId }),
+                      ...(viewerId !== "undefined" && {
+                        ownerViewerId: viewerId,
+                      }),
+                    },
+                  }
+                : {
+                    document: {
+                      ...(ownerId && { ownerId: ownerId }),
+                      ...(viewerId !== "undefined" && {
+                        ownerViewerId: viewerId,
+                      }),
+                      ownerType: type,
+                    },
+                  },
             select: {
               id: true,
               folderId: true,
@@ -52,6 +77,9 @@ export async function fetchDataroomLinkData({
               orderIndex: true,
               document: {
                 select: {
+                  ownerType: true,
+                  ownerViewerId: true,
+                  ownerId: true,
                   id: true,
                   name: true,
                   advancedExcelEnabled: true,

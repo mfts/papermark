@@ -24,6 +24,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 
+import { useViewerDocuments } from "@/lib/swr/use-documents";
 import { cn } from "@/lib/utils";
 
 import { TDocumentData } from "./dataroom/dataroom-view";
@@ -72,19 +73,25 @@ export default function DataroomViewer({
   dataroomViewId,
   dataroom,
   allowDownload,
+  allowDocUpload,
   setViewType,
   setDocumentData,
   setDataroomVerified,
   isPreview,
   folderId,
-  setFolderId
+  setFolderId,
+  name,
+  visitorId,
 }: {
   brand: Partial<DataroomBrand>;
   viewId?: string;
+  visitorId?: string;
   linkId: string;
   dataroomViewId: string;
   dataroom: any;
+  name: string;
   allowDownload: boolean;
+  allowDocUpload: boolean;
   setViewType: React.Dispatch<
     React.SetStateAction<"DOCUMENT_VIEW" | "DATAROOM_VIEW">
   >;
@@ -94,6 +101,8 @@ export default function DataroomViewer({
   folderId: string | null;
   setFolderId: React.Dispatch<React.SetStateAction<string | null>>;
 }) {
+  const { data: viewerData } = useViewerDocuments({ linkId, visitorId });
+
   const { documents, folders } = dataroom as {
     documents: DataroomDocument[];
     folders: DataroomFolder[];
@@ -106,17 +115,24 @@ export default function DataroomViewer({
 
   // create a mixedItems array with folders and documents of the current folder and memoize it
   const mixedItems = useMemo(() => {
+    const documentArray = [
+      ...(Array.isArray(documents) ? documents : []),
+      ...(Array.isArray(viewerData) ? viewerData : []),
+    ] as DataroomDocument[];
+    const uniqueDocuments = Array.from(
+      new Map(documentArray.map((doc) => [doc.id, doc])).values(),
+    );
     const mixedItems: FolderOrDocument[] = [
-      ...(folders || [])
+      ...(Array.isArray(folders) ? folders : [])
         .filter((folder) => folder.parentId === folderId)
         .map((folder) => ({ ...folder, itemType: "folder" })),
-      ...(documents || [])
+      ...(uniqueDocuments || [])
         .filter((doc) => doc.folderId === folderId)
         .map((doc) => ({ ...doc, itemType: "document" })),
     ];
 
     return mixedItems.sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
-  }, [folders, documents, folderId]);
+  }, [folders, documents, folderId, viewerData]);
 
   const renderItem = (item: FolderOrDocument) => {
     if ("versions" in item) {
@@ -143,12 +159,19 @@ export default function DataroomViewer({
   return (
     <>
       <DataroomNav
+        name={
+          breadcrumbFolders?.length
+            ? (breadcrumbFolders[breadcrumbFolders.length - 1].path as string)
+            : null
+        }
         brand={brand}
         linkId={linkId}
         viewId={viewId}
         dataroom={dataroom}
         allowDownload={allowDownload}
+        allowDocUpload={allowDocUpload}
         isPreview={isPreview}
+        visitorId={visitorId}
       />
       <div
         style={{ height: "calc(100vh - 64px)" }}

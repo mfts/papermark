@@ -43,6 +43,7 @@ export default async function handle(
           expiresAt: true,
           emailProtected: true,
           allowDownload: true,
+          allowDocUpload: true,
           password: true,
           isArchived: true,
           enableCustomMetatag: true,

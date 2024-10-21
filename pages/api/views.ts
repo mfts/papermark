@@ -84,6 +84,7 @@ export default async function handle(
     select: {
       emailProtected: true,
       enableNotification: true,
+      allowDocUpload: true,
       emailAuthenticated: true,
       password: true,
       domainSlug: true,

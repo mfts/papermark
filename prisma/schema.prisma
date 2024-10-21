@@ -135,9 +135,12 @@ model Document {
   storageType          DocumentStorageType @default(VERCEL_BLOB)
   numPages             Int? // This should be a reference to the number of pages in the document
   owner                User?               @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  ownerViewer          Viewer?             @relation(fields: [ownerViewerId], references: [id], onDelete: SetNull)
   teamId               String
   team                 Team                @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  ownerId              String? // This field holds the foreign key.
+  ownerId              String? // This field holds the foreign key for the User
+  ownerViewerId        String? // This field holds the foreign key for the Viewer
+  ownerType            OwnerType           @default(USER) // This indicates if the owner is a User or a Viewer
   assistantEnabled     Boolean             @default(false) // This indicates if assistant is enabled for this document
   advancedExcelEnabled Boolean             @default(false) // This indicates if advanced Excel is enabled for this document
   createdAt            DateTime            @default(now())
@@ -153,8 +156,14 @@ model Document {
   datarooms DataroomDocument[] // Datarooms associated with this document
 
   @@index([ownerId])
+  @@index([ownerViewerId])
   @@index([teamId])
   @@index([folderId])
+}
+
+enum OwnerType {
+  USER
+  VIEWER
 }
 
 model DocumentVersion {
@@ -228,6 +237,7 @@ model Link {
   allowList                  String[] // Array of emails and domains allowed to view the document
   denyList                   String[] // Array of emails and domains denied to view the document
   emailProtected             Boolean    @default(true) // Optional email protection
+  allowDocUpload             Boolean    @default(true) // Optional email protection
   emailAuthenticated         Boolean    @default(false) // Optional email authentication flag
   allowDownload              Boolean?   @default(false) // Optional give user a option to allow to download the document
   isArchived                 Boolean    @default(false) // Indicates if the link is archived
@@ -349,8 +359,9 @@ model Viewer {
   views  View[]
   groups ViewerGroupMembership[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  Document  Document[]
 
   @@unique([teamId, email])
   @@index([teamId])

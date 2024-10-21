@@ -143,7 +143,7 @@
     "@types/ua-parser-js": "^0.7.39",
     "prettier": "^3.3.3",
     "prettier-plugin-tailwindcss": "^0.6.8",
-    "prisma": "^5.20.0",
+    "prisma": "^5.21.1",
     "typescript": "^5"
   },
   "trigger.dev": {

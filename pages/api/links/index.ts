@@ -150,6 +150,7 @@ export default async function handler(
           domainSlug: domain || null,
           slug: slug || null,
           enableNotification: linkData.enableNotification,
+          allowDocUpload: linkData.allowDocUpload,
           enableFeedback: linkData.enableFeedback,
           enableScreenshotProtection: linkData.enableScreenshotProtection,
           enableCustomMetatag: linkData.enableCustomMetatag,
