@@ -152,8 +152,6 @@ export default async function handle(
         views: groupedViews,
       };
 
-      console.log("newViewer", newViewer);
-
       return res.status(200).json(newViewer);
     } catch (error) {
       errorhandler(error, res);
