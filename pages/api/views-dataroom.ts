@@ -535,7 +535,7 @@ export default async function handle(
           dataroomId: dataroomId,
           viewType: "DOCUMENT_VIEW",
           viewerId: viewer?.id ?? undefined,
-          teamId: link.dataroom?.teamId,
+          teamId: link.teamId,
           ...(link.enableAgreement &&
             link.agreementId &&
             hasConfirmedAgreement && {
