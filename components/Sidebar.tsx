@@ -124,14 +124,14 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
           ? false
           : true,
     },
-    {
-      name: "Visitors",
-      href: "/visitors",
-      icon: ContactIcon,
-      current: router.pathname.includes("visitors"),
-      active: false,
-      disabled: userPlan === "free" ? true : false,
-    },
+    // {
+    //   name: "Visitors",
+    //   href: "/visitors",
+    //   icon: ContactIcon,
+    //   current: router.pathname.includes("visitors"),
+    //   active: false,
+    //   disabled: userPlan === "free" ? true : false,
+    // },
     {
       name: "Branding",
       href: "/settings/branding",
