@@ -25,59 +25,32 @@ export default async function handler(
       return res.status(401).end("Unauthorized");
     }
 
-    const { targetId, linkType, password, expiresAt, ...linkDomainData } =
-      req.body;
+    const {
+      targetId,
+      linkType,
+      password,
+      expiresAt,
+      teamId,
+      ...linkDomainData
+    } = req.body;
 
     const userId = (session.user as CustomUser).id;
-    let teamId: string | null = null;
 
     const dataroomLink = linkType === "DATAROOM_LINK";
     const documentLink = linkType === "DOCUMENT_LINK";
 
     try {
-      if (documentLink) {
-        // check if the team that own the document has the current user
-        const { document } = await getDocumentWithTeamAndUser({
-          docId: targetId,
-          userId,
-          options: {
-            team: {
-              select: {
-                users: {
-                  select: {
-                    userId: true,
-                  },
-                },
-              },
-            },
+      const team = await prisma.team.findUnique({
+        where: {
+          id: teamId,
+          users: {
+            some: { userId },
           },
-        });
+        },
+      });
 
-        // set teamId to the teamId of the document
-        teamId = document.teamId;
-      }
-
-      if (dataroomLink) {
-        const dataroom = await prisma.dataroom.findUnique({
-          where: {
-            id: targetId,
-            team: {
-              users: {
-                some: {
-                  userId: userId,
-                },
-              },
-            },
-          },
-          select: { id: true, teamId: true },
-        });
-
-        if (!dataroom) {
-          return res.status(400).json({ error: "Dataroom not found." });
-        }
-
-        // set teamId to the teamId of the dataroom
-        teamId = dataroom.teamId;
+      if (!team) {
+        return res.status(400).json({ error: "Team not found." });
       }
 
       const hashedPassword =
