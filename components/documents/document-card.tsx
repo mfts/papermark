@@ -286,13 +286,14 @@ export default function DocumentsCard({
                 <FolderInputIcon className="mr-2 h-4 w-4" />
                 Move to folder
               </DropdownMenuItem>
-              <DropdownMenuItem
+              {/* INFO: Duplicate document is disabled for now */}
+              {/* <DropdownMenuItem
                 onClick={(e) => handleDuplicateDocument(e)}
                 disabled={!canAddDocuments}
               >
                 <Layers2Icon className="mr-2 h-4 w-4" />
                 Duplicate document
-              </DropdownMenuItem>
+              </DropdownMenuItem> */}
               {datarooms && datarooms.length !== 0 && (
                 <DropdownMenuItem onClick={() => setAddDataroomOpen(true)}>
                   <BetweenHorizontalStartIcon className="mr-2 h-4 w-4" />

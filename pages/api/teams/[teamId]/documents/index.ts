@@ -188,7 +188,9 @@ export default async function handle(
           teamId: teamId,
           ...(createLink && {
             links: {
-              create: {},
+              create: {
+                teamId,
+              },
             },
           }),
           versions: {
