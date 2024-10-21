@@ -1,3 +1,5 @@
+import { useRouter } from "next/navigation";
+
 import { useState } from "react";
 
 import { Separator } from "@radix-ui/react-dropdown-menu";
@@ -18,6 +20,7 @@ interface CardProps {
   id: string;
   image: string;
   title: string;
+  description: string;
   views: number;
   category: string;
 }
@@ -28,6 +31,7 @@ const data: CardProps[] = [
     image:
       "https://cdn.prod.website-files.com/6179a66d5f9cc70024c61878/665668c982d4b3e168b1f4af_Slidebean-Pitch-Deck-Template-Airbnb-p-500.webp",
     title: "Airbnb Pitch Deck",
+    description: "Airbnb Pitch Deck",
     views: 980300,
     category: "Pitch Decks",
   },
@@ -36,6 +40,7 @@ const data: CardProps[] = [
     image:
       "https://cdn.prod.website-files.com/6179a66d5f9cc70024c61878/665668e3883d43cd52b61816_Slidebean-Pitch-Deck-Template-Uber.webp",
     title: "Uber Pitch Deck",
+    description: "Uber Pitch Deck",
     views: 839900,
     category: "Business",
   },
@@ -44,6 +49,7 @@ const data: CardProps[] = [
     image:
       "https://cdn.prod.website-files.com/6179a66d5f9cc70024c61878/6658b124f408c8e1f783eb15_Slidebean-Investor-Deck-Template-1.webp",
     title: "Investor Deck Template",
+    description: "Investor Deck Template",
     views: 625500,
     category: "Marketing",
   },
@@ -52,6 +58,7 @@ const data: CardProps[] = [
     image:
       "https://cdn.prod.website-files.com/6179a66d5f9cc70024c61878/6657a1cb41281e9a76833473_Slidebean-Pitch-Deck-Template-The-Startup-Template-2024-Update.webp",
     title: "Startup Pitch Deck",
+    description: "Startup Pitch Deck",
     views: 980200,
     category: "New",
   },
@@ -60,6 +67,7 @@ const data: CardProps[] = [
     image:
       "https://cdn.prod.website-files.com/6179a66d5f9cc70024c61878/665668c982d4b3e168b1f4af_Slidebean-Pitch-Deck-Template-Airbnb-p-500.webp",
     title: "Airbnb Pitch Deck",
+    description: "Airbnb Pitch Deck",
     views: 980300,
     category: "Pitch Decks",
   },
@@ -68,6 +76,7 @@ const data: CardProps[] = [
     image:
       "https://cdn.prod.website-files.com/6179a66d5f9cc70024c61878/665668e3883d43cd52b61816_Slidebean-Pitch-Deck-Template-Uber.webp",
     title: "Uber Pitch Deck",
+    description: "Uber Pitch Deck",
     views: 839900,
     category: "Business",
   },
@@ -76,6 +85,7 @@ const data: CardProps[] = [
     image:
       "https://cdn.prod.website-files.com/6179a66d5f9cc70024c61878/6658b124f408c8e1f783eb15_Slidebean-Investor-Deck-Template-1.webp",
     title: "Investor Deck Template",
+    description: "Investor Deck Template",
     views: 625500,
     category: "Marketing",
   },
@@ -84,6 +94,7 @@ const data: CardProps[] = [
     image:
       "https://cdn.prod.website-files.com/6179a66d5f9cc70024c61878/6657a1cb41281e9a76833473_Slidebean-Pitch-Deck-Template-The-Startup-Template-2024-Update.webp",
     title: "Startup Pitch Deck",
+    description: "Startup Pitch Deck",
     views: 980200,
     category: "New",
   },
@@ -92,6 +103,7 @@ const data: CardProps[] = [
     image:
       "https://cdn.prod.website-files.com/6179a66d5f9cc70024c61878/665668c982d4b3e168b1f4af_Slidebean-Pitch-Deck-Template-Airbnb-p-500.webp",
     title: "Airbnb Pitch Deck",
+    description: "Airbnb Pitch Deck",
     views: 980300,
     category: "Pitch Decks",
   },
@@ -100,6 +112,7 @@ const data: CardProps[] = [
     image:
       "https://cdn.prod.website-files.com/6179a66d5f9cc70024c61878/665668e3883d43cd52b61816_Slidebean-Pitch-Deck-Template-Uber.webp",
     title: "Uber Pitch Deck",
+    description: "Uber Pitch Deck",
     views: 839900,
     category: "Business",
   },
@@ -108,6 +121,7 @@ const data: CardProps[] = [
     image:
       "https://cdn.prod.website-files.com/6179a66d5f9cc70024c61878/6658b124f408c8e1f783eb15_Slidebean-Investor-Deck-Template-1.webp",
     title: "Investor Deck Template",
+    description: "Investor Deck Template",
     views: 625500,
     category: "Marketing",
   },
@@ -116,6 +130,7 @@ const data: CardProps[] = [
     image:
       "https://cdn.prod.website-files.com/6179a66d5f9cc70024c61878/6657a1cb41281e9a76833473_Slidebean-Pitch-Deck-Template-The-Startup-Template-2024-Update.webp",
     title: "Startup Pitch Deck",
+    description: "Startup Pitch Deck",
     views: 980200,
     category: "New",
   },
@@ -130,9 +145,15 @@ const categories: string[] = [
   "Academic",
 ];
 
-const Card: React.FC<CardProps> = ({ image, title, views }) => {
+const Card: React.FC<CardProps> = ({ id, image, title, views }) => {
+  const router = useRouter();
   return (
-    <div className="relative transform overflow-hidden rounded-lg bg-white shadow-md transition-transform hover:scale-105 dark:bg-gray-800">
+    <div
+      className="relative transform overflow-hidden rounded-lg bg-white shadow-md transition-transform hover:scale-105 dark:bg-gray-800"
+      onClick={() => {
+        router.push(`${window.location.pathname}/${id}`);
+      }}
+    >
       <img src={image} alt={title} className="h-48 w-full object-cover" />
       <div className="p-4">
         <h3 className="text-lg font-semibold text-black dark:text-white">
@@ -150,6 +171,8 @@ const Card: React.FC<CardProps> = ({ image, title, views }) => {
 };
 
 export default function Pitchdesk() {
+  const router = useRouter();
+
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [templates, setTemplates] = useState<CardProps[]>(data);
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -265,6 +288,7 @@ export default function Pitchdesk() {
                   key={template.id}
                   image={template.image}
                   title={template.title}
+                  description={template.description}
                   views={template.views}
                   category={template.category}
                   id={template.id}
