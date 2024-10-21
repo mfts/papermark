@@ -234,7 +234,9 @@ export function AddDocumentModal({
         toast.error(message);
         return;
       }
-
+      mutate(
+        `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}/folders`,
+      );
       mutate(
         `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}/documents`,
       );
