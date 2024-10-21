@@ -4,9 +4,10 @@ import Link from "next/link";
 import React, { useState } from "react";
 
 import { DataroomBrand } from "@prisma/client";
-import { ArrowUpRight, Download } from "lucide-react";
+import { ArrowUpRight, Download, PlusIcon } from "lucide-react";
 import { toast } from "sonner";
 
+import { AddDocumentModal } from "@/components/documents/add-document-modal";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,6 +28,7 @@ export default function DataroomNav({
   pageNumber,
   numPages,
   allowDownload,
+  allowDocUpload,
   assistantEnabled,
   brand,
   viewId,
@@ -37,10 +39,14 @@ export default function DataroomNav({
   setDocumentData,
   dataroom,
   isPreview,
+  visitorId,
+  name,
 }: {
+  visitorId?: string;
   pageNumber?: number;
   numPages?: number;
   allowDownload?: boolean;
+  allowDocUpload?: boolean;
   assistantEnabled?: boolean;
   brand?: Partial<DataroomBrand>;
   embeddedLinks?: string[];
@@ -51,6 +57,7 @@ export default function DataroomNav({
   setDocumentData?: React.Dispatch<React.SetStateAction<TDocumentData | null>>;
   dataroom?: any;
   isPreview?: boolean;
+  name?: string | null;
 }) {
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -135,6 +142,27 @@ export default function DataroomNav({
             ) : null}
           </div>
           <div className="absolute inset-y-0 right-0 flex items-center space-x-4 pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
+            {allowDocUpload && (
+              <>
+                <AddDocumentModal
+                  isDataroom={true}
+                  dataroomId={dataroom?.id}
+                  key={1}
+                  folderPathName={name?.slice(1)}
+                  visitorId={visitorId}
+                  linkId={linkId}
+                  multiUpload={false}
+                >
+                  <Button
+                    className="group flex flex-1 items-center justify-start gap-x-3 px-3 text-left"
+                    title="Add New Document"
+                  >
+                    <PlusIcon className="h-5 w-5 shrink-0" aria-hidden="true" />
+                    <span>Upload Document</span>
+                  </Button>
+                </AddDocumentModal>
+              </>
+            )}
             {embeddedLinks && embeddedLinks.length > 0 ? (
               <DropdownMenu>
                 <DropdownMenuTrigger>

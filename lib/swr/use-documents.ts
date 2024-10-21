@@ -1,7 +1,7 @@
 import { useRouter } from "next/router";
 
 import { useTeam } from "@/context/team-context";
-import { Folder } from "@prisma/client";
+import { DataroomDocument, Folder } from "@prisma/client";
 import useSWR from "swr";
 
 import { DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
@@ -136,6 +136,31 @@ export function useRootFolders() {
   return {
     folders,
     loading: !folders && !error,
+    error,
+  };
+}
+
+export function useViewerDocuments({
+  linkId,
+  visitorId,
+}: {
+  linkId: string;
+  visitorId?: string;
+}) {
+  console.log("🚀 ~ useViewerDocuments ~ linkId:", linkId, visitorId);
+  const { data, error } = useSWR(
+    linkId
+      ? `/api/getViewerDoc?linkId=${linkId}&viewerId=${visitorId}&type=${visitorId ? "VIEWER" : "USER"}`
+      : null, // null disables the fetch if linkId is undefined
+    fetcher,
+    {
+      revalidateOnFocus: false,
+      dedupingInterval: 30000,
+    },
+  );
+  return {
+    data,
+    loading: !data && !error,
     error,
   };
 }

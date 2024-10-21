@@ -51,6 +51,7 @@ export const DEFAULT_LINK_PROPS = (linkType: LinkType) => ({
   emailProtected: true,
   emailAuthenticated: false,
   allowDownload: false,
+  allowDocUpload: linkType === LinkType.DATAROOM_LINK ? true : false,
   allowList: [],
   denyList: [],
   enableNotification: true,
@@ -83,6 +84,7 @@ export type DEFAULT_LINK_TYPE = {
   emailProtected: boolean;
   emailAuthenticated: boolean;
   allowDownload: boolean;
+  allowDocUpload: boolean;
   allowList: string[];
   denyList: string[];
   enableNotification: boolean;

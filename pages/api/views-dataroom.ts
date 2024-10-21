@@ -97,8 +97,10 @@ export default async function handle(
       id: linkId,
     },
     select: {
+      id: true,
       emailProtected: true,
       enableNotification: true,
+      allowDocUpload: true,
       emailAuthenticated: true,
       password: true,
       domainSlug: true,
@@ -461,7 +463,8 @@ export default async function handle(
 
   if (viewType === "DATAROOM_VIEW") {
     try {
-      let newDataroomView: { id: string } | null = null;
+      let newDataroomView: { id: string; viewerId: string | null } | null =
+        null;
       if (!isPreview) {
         console.time("create-view");
         newDataroomView = await prisma.view.create({
@@ -488,18 +491,21 @@ export default async function handle(
                 groupId: link.groupId,
               }),
           },
-          select: { id: true },
+          select: { id: true, viewerId: true },
         });
         console.timeEnd("create-view");
 
         if (link.enableNotification) {
           console.time("sendemail");
-          waitUntil(sendNotification({ viewId: newDataroomView.id }));
+          if (newDataroomView?.id) {
+            waitUntil(sendNotification({ viewId: newDataroomView.id }));
+          }
           console.timeEnd("sendemail");
         }
       }
 
       const returnObject = {
+        viewerId: newDataroomView?.viewerId,
         message: "Dataroom View recorded",
         viewId: !isPreview && newDataroomView ? newDataroomView.id : undefined,
         isPreview: isPreview ? true : undefined,
@@ -521,7 +527,7 @@ export default async function handle(
   }
 
   try {
-    let newView: { id: string } | null = null;
+    let newView: { id: string; viewerId: string | null } | null = null;
     if (!isPreview) {
       console.time("create-view");
       newView = await prisma.view.create({
@@ -550,7 +556,7 @@ export default async function handle(
               groupId: link.groupId,
             }),
         },
-        select: { id: true },
+        select: { id: true, viewerId: true },
       });
       console.timeEnd("create-view");
     }
@@ -685,6 +691,7 @@ export default async function handle(
     }
 
     const returnObject = {
+      viewerId: newView?.viewerId,
       message: "View recorded",
       viewId: !isPreview && newView ? newView.id : undefined,
       isPreview: isPreview ? true : undefined,
@@ -726,6 +733,7 @@ export default async function handle(
           ? useAdvancedExcelViewer
           : undefined,
       canDownload: canDownload,
+      allowDownload: link.allowDownload,
     };
 
     return res.status(200).json(returnObject);
