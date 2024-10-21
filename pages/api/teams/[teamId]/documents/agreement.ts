@@ -85,6 +85,7 @@ export default async function handle(
               emailProtected: false,
               enableFeedback: false,
               enableNotification: false,
+              teamId,
             },
           },
           versions: {
