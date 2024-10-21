@@ -113,14 +113,10 @@ export default async function handle(
       groupId: true,
       audienceType: true,
       allowDownload: true,
-      dataroom: {
+      teamId: true,
+      team: {
         select: {
-          teamId: true,
-          team: {
-            select: {
-              plan: true,
-            },
-          },
+          plan: true,
         },
       },
     },
@@ -438,7 +434,7 @@ export default async function handle(
     viewer = await prisma.viewer.findFirst({
       where: {
         email: email,
-        teamId: link.dataroom?.teamId,
+        teamId: link.teamId!,
       },
       select: { id: true },
     });
@@ -449,9 +445,8 @@ export default async function handle(
       viewer = await prisma.viewer.create({
         data: {
           email: email,
-          dataroomId: dataroomId!,
           verified: isEmailVerified,
-          teamId: link.dataroom?.teamId!,
+          teamId: link.teamId!,
         },
         select: { id: true },
       });
@@ -478,7 +473,7 @@ export default async function handle(
             dataroomId: dataroomId,
             viewType: "DATAROOM_VIEW",
             viewerId: viewer?.id ?? undefined,
-            teamId: link.dataroom?.teamId,
+            teamId: link.teamId!,
             ...(link.enableAgreement &&
               link.agreementId &&
               hasConfirmedAgreement && {
@@ -578,8 +573,8 @@ export default async function handle(
           file: true,
           storageType: true,
           pageNumber: true,
-          embeddedLinks: !link.dataroom?.team.plan.includes("free"),
-          pageLinks: !link.dataroom?.team.plan.includes("free"),
+          embeddedLinks: !link.team?.plan.includes("free"),
+          pageLinks: !link.team?.plan.includes("free"),
           metadata: true,
         },
       });
