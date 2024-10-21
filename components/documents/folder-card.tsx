@@ -28,6 +28,7 @@ import { timeAgo } from "@/lib/utils";
 
 import { EditFolderModal } from "../folders/edit-folder-modal";
 import { AddFolderToDataroomModal } from "./add-folder-to-dataroom-modal";
+import { DeleteFolderModal } from "./delete-folder-modal";
 
 type FolderCardProps = {
   folder: FolderWithCount | DataroomFolderWithCount;
@@ -50,7 +51,7 @@ export default function FolderCard({
   const [isFirstClick, setIsFirstClick] = useState<boolean>(false);
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
   const [addDataroomOpen, setAddDataroomOpen] = useState<boolean>(false);
-
+  const [deleteModalOpen, setDeleteModalOpen] = useState<boolean>(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
   const folderPath =
@@ -78,33 +79,23 @@ export default function FolderCard({
 
   // https://github.com/radix-ui/primitives/issues/1241#issuecomment-1888232392
   useEffect(() => {
-    if (!openFolder || !addDataroomOpen) {
+    if (!openFolder || !addDataroomOpen || !deleteModalOpen) {
       setTimeout(() => {
         document.body.style.pointerEvents = "";
       });
     }
-  }, [openFolder, addDataroomOpen]);
+  }, [openFolder, addDataroomOpen, deleteModalOpen]);
 
   const handleButtonClick = (event: any, documentId: string) => {
     event.stopPropagation();
     event.preventDefault();
 
-    if (isFirstClick) {
-      handleDeleteFolder(documentId);
-      setIsFirstClick(false);
-      setMenuOpen(false); // Close the dropdown after deleting
-    } else {
-      setIsFirstClick(true);
-    }
+    setDeleteModalOpen(false);
+    handleDeleteFolder(documentId);
+    setMenuOpen(false);
   };
 
   const handleDeleteFolder = async (folderId: string) => {
-    // Prevent the first click from deleting the document
-    if (!isFirstClick) {
-      setIsFirstClick(true);
-      return;
-    }
-
     const endpointTargetType =
       isDataroom && dataroomId ? `datarooms/${dataroomId}/folders` : "folders";
 
@@ -129,7 +120,7 @@ export default function FolderCard({
           );
           return isDataroom
             ? "Folder removed successfully."
-            : "Folder deleted successfully.";
+            : `Folder deleted successfully with ${folder._count.documents} documents and ${folder._count.childFolders} folders`;
         },
         error: isDataroom
           ? "Failed to remove folder."
@@ -194,11 +185,11 @@ export default function FolderCard({
     <>
       <div
         onClick={handleCardClick}
-        className="group/row relative flex items-center justify-between rounded-lg border-0 bg-white p-3 ring-1 ring-gray-400 transition-all hover:bg-secondary hover:ring-gray-500 dark:bg-secondary dark:ring-gray-500 hover:dark:ring-gray-400 sm:p-4"
+        className="relative flex items-center justify-between p-3 transition-all bg-white border-0 rounded-lg group/row ring-1 ring-gray-400 hover:bg-secondary hover:ring-gray-500 dark:bg-secondary dark:ring-gray-500 hover:dark:ring-gray-400 sm:p-4"
       >
-        <div className="flex min-w-0 shrink items-center space-x-2 sm:space-x-4">
+        <div className="flex items-center min-w-0 space-x-2 shrink sm:space-x-4">
           <div className="mx-0.5 flex w-8 items-center justify-center text-center sm:mx-1">
-            <FolderIcon className="h-8 w-8" strokeWidth={1} />
+            <FolderIcon className="w-8 h-8" strokeWidth={1} />
           </div>
 
           <div className="flex-col">
@@ -207,7 +198,7 @@ export default function FolderCard({
                 {folder.name}
               </h2>
             </div>
-            <div className="mt-1 flex items-center space-x-1 text-xs leading-5 text-muted-foreground">
+            <div className="flex items-center mt-1 space-x-1 text-xs leading-5 text-muted-foreground">
               <p className="truncate">{timeAgo(folder.createdAt)}</p>
               <p>•</p>
               <p className="truncate">
@@ -231,10 +222,10 @@ export default function FolderCard({
           href={`/documents/${prismaDocument.id}`}
           className="flex items-center z-10 space-x-1 rounded-md bg-gray-200 dark:bg-gray-700 px-1.5 sm:px-2 py-0.5 transition-all duration-75 hover:scale-105 active:scale-100"
         >
-          <BarChart className="h-3 sm:h-4 w-3 sm:w-4 text-muted-foreground" />
-          <p className="whitespace-nowrap text-xs sm:text-sm text-muted-foreground">
+          <BarChart className="w-3 h-3 sm:h-4 sm:w-4 text-muted-foreground" />
+          <p className="text-xs whitespace-nowrap sm:text-sm text-muted-foreground">
             {nFormatter(prismaDocument._count.views)}
-            <span className="ml-1 hidden sm:inline-block">views</span>
+            <span className="hidden ml-1 sm:inline-block">views</span>
           </p>
         </Link> */}
 
@@ -243,10 +234,10 @@ export default function FolderCard({
               <Button
                 // size="icon"
                 variant="outline"
-                className="z-10 h-8 w-8 border-gray-200 bg-transparent p-0 hover:bg-gray-200 dark:border-gray-700 hover:dark:bg-gray-700 lg:h-9 lg:w-9"
+                className="z-10 w-8 h-8 p-0 bg-transparent border-gray-200 hover:bg-gray-200 dark:border-gray-700 hover:dark:bg-gray-700 lg:h-9 lg:w-9"
               >
                 <span className="sr-only">Open menu</span>
-                <MoreVertical className="h-4 w-4" />
+                <MoreVertical className="w-4 h-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" ref={dropdownRef}>
@@ -274,7 +265,7 @@ export default function FolderCard({
                       setAddDataroomOpen(true);
                     }}
                   >
-                    <BetweenHorizontalStartIcon className="mr-2 h-4 w-4" />
+                    <BetweenHorizontalStartIcon className="w-4 h-4 mr-2" />
                     Add folder to dataroom
                   </DropdownMenuItem>
                 </>
@@ -282,14 +273,18 @@ export default function FolderCard({
               <DropdownMenuSeparator />
 
               <DropdownMenuItem
-                onClick={(event) => handleButtonClick(event, folder.id)}
-                className="text-destructive duration-200 focus:bg-destructive focus:text-destructive-foreground"
+                onClick={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  setDeleteModalOpen(true);
+                }}
+                className="duration-200 text-destructive focus:bg-destructive focus:text-destructive-foreground"
               >
                 {isFirstClick ? (
                   `Really ${isDataroom ? "remove" : "delete"}?`
                 ) : (
                   <>
-                    <TrashIcon className="mr-2 h-4 w-4" />{" "}
+                    <TrashIcon className="w-4 h-4 mr-2" />{" "}
                     {isDataroom ? "Remove Folder" : "Delete Folder"}
                   </>
                 )}
@@ -299,7 +294,7 @@ export default function FolderCard({
         </div>
         {/* only used for drag and drop */}
         {isOver && !isDragging && (
-          <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-black bg-opacity-20 dark:bg-white dark:bg-opacity-20">
+          <div className="absolute inset-0 flex items-center justify-center bg-black rounded-lg bg-opacity-20 dark:bg-white dark:bg-opacity-20">
             <span className="font-semibold text-black dark:text-gray-100">
               Drop to move
             </span>
@@ -323,6 +318,17 @@ export default function FolderCard({
           setOpen={setAddDataroomOpen}
           folderId={folder.id}
           folderName={folder.name}
+        />
+      ) : null}
+      {deleteModalOpen ? (
+        <DeleteFolderModal
+          folderId={folder.id}
+          open={deleteModalOpen}
+          setOpen={setDeleteModalOpen}
+          folderName={folder.name}
+          documents={folder._count.documents}
+          childFolders={folder._count.childFolders}
+          handleButtonClick={handleButtonClick}
         />
       ) : null}
     </>
