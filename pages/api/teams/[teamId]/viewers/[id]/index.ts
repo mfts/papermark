@@ -35,12 +35,15 @@ export default async function handle(
         },
       });
 
-      if (!team) {
-        return res.status(404).json({ error: "Team not found" });
+      if (
+        !team ||
+        (team.plan.includes("free") && !team.plan.includes("trial"))
+      ) {
+        return res.status(404).json({ message: "Team not found" });
       }
 
       const viewer = await prisma.viewer.findUnique({
-        where: { id },
+        where: { id, teamId },
         include: {
           views: {
             where: {
@@ -148,6 +151,8 @@ export default async function handle(
         ...viewer,
         views: groupedViews,
       };
+
+      console.log("newViewer", newViewer);
 
       return res.status(200).json(newViewer);
     } catch (error) {

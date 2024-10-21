@@ -1,6 +1,6 @@
 import { useRouter } from "next/router";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 import AppLayout from "@/components/layouts/app";
 import { Separator } from "@/components/ui/separator";
@@ -30,11 +30,11 @@ export default function Visitors() {
               All visitors
             </h2>
             <p className="text-xs text-muted-foreground sm:text-sm">
-              Manage all your visitors in one place.
+              See all your visitors in one place.
             </p>
           </div>
         </section>
-        <Separator className="mb-2 bg-gray-200 dark:bg-gray-800" />
+        <Separator className="bg-gray-200 dark:bg-gray-800" />
       </div>
 
       <div className="relative p-4 pt-0 sm:mx-4 sm:mt-4">

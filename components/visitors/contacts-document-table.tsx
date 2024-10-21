@@ -350,7 +350,7 @@ export function ContactsDocumentsTable({
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  No results.
+                  No visits yet.
                 </TableCell>
               </TableRow>
             )}
