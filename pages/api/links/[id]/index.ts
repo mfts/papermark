@@ -57,6 +57,7 @@ export default async function handle(
           watermarkConfig: true,
           groupId: true,
           audienceType: true,
+          teamId: true,
         },
       });
 
@@ -76,12 +77,16 @@ export default async function handle(
       let linkData: any;
 
       if (linkType === "DOCUMENT_LINK") {
-        const data = await fetchDocumentLinkData({ linkId: id });
+        const data = await fetchDocumentLinkData({
+          linkId: id,
+          teamId: link.teamId!,
+        });
         linkData = data.linkData;
         brand = data.brand;
       } else if (linkType === "DATAROOM_LINK") {
         const data = await fetchDataroomLinkData({
           linkId: id,
+          teamId: link.teamId!,
           ...(link.audienceType === LinkAudienceType.GROUP &&
             link.groupId && {
               groupId: link.groupId,
@@ -110,12 +115,39 @@ export default async function handle(
       return res.status(401).end("Unauthorized");
     }
 
+    const userId = (session.user as CustomUser).id;
     const { id } = req.query as { id: string };
-    const { targetId, linkType, password, expiresAt, ...linkDomainData } =
-      req.body;
+    const {
+      targetId,
+      linkType,
+      password,
+      expiresAt,
+      teamId,
+      ...linkDomainData
+    } = req.body;
 
     const dataroomLink = linkType === "DATAROOM_LINK";
     const documentLink = linkType === "DOCUMENT_LINK";
+
+    try {
+      const team = await prisma.team.findUnique({
+        where: {
+          id: teamId,
+          users: {
+            some: { userId },
+          },
+        },
+      });
+
+      if (!team) {
+        return res.status(400).json({ error: "Team not found." });
+      }
+    } catch (error) {
+      return res.status(500).json({
+        message: "Internal Server Error",
+        error: (error as Error).message,
+      });
+    }
 
     const hashedPassword =
       password && password.length > 0
@@ -180,7 +212,7 @@ export default async function handle(
 
     // Update the link in the database
     const updatedLink = await prisma.link.update({
-      where: { id: id },
+      where: { id, teamId },
       data: {
         documentId: documentLink ? targetId : null,
         dataroomId: dataroomLink ? targetId : null,

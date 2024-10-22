@@ -8,7 +8,6 @@ import { parsePageId } from "notion-utils";
 import { hashToken } from "@/lib/api/auth/token";
 import sendNotification from "@/lib/api/notification-helper";
 import { sendOtpVerificationEmail } from "@/lib/emails/send-email-otp-verification";
-import { sendVerificationEmail } from "@/lib/emails/send-email-verification";
 import { getFile } from "@/lib/files/get-file";
 import { newId } from "@/lib/id-helper";
 import notion from "@/lib/notion";
@@ -114,14 +113,10 @@ export default async function handle(
       groupId: true,
       audienceType: true,
       allowDownload: true,
-      dataroom: {
+      teamId: true,
+      team: {
         select: {
-          teamId: true,
-          team: {
-            select: {
-              plan: true,
-            },
-          },
+          plan: true,
         },
       },
     },
@@ -439,7 +434,7 @@ export default async function handle(
     viewer = await prisma.viewer.findFirst({
       where: {
         email: email,
-        teamId: link.dataroom?.teamId,
+        teamId: link.teamId!,
       },
       select: { id: true },
     });
@@ -450,9 +445,8 @@ export default async function handle(
       viewer = await prisma.viewer.create({
         data: {
           email: email,
-          dataroomId: dataroomId!,
           verified: isEmailVerified,
-          teamId: link.dataroom?.teamId!,
+          teamId: link.teamId!,
         },
         select: { id: true },
       });
@@ -479,6 +473,7 @@ export default async function handle(
             dataroomId: dataroomId,
             viewType: "DATAROOM_VIEW",
             viewerId: viewer?.id ?? undefined,
+            teamId: link.teamId!,
             ...(link.enableAgreement &&
               link.agreementId &&
               hasConfirmedAgreement && {
@@ -540,6 +535,7 @@ export default async function handle(
           dataroomId: dataroomId,
           viewType: "DOCUMENT_VIEW",
           viewerId: viewer?.id ?? undefined,
+          teamId: link.teamId,
           ...(link.enableAgreement &&
             link.agreementId &&
             hasConfirmedAgreement && {
@@ -577,8 +573,8 @@ export default async function handle(
           file: true,
           storageType: true,
           pageNumber: true,
-          embeddedLinks: !link.dataroom?.team.plan.includes("free"),
-          pageLinks: !link.dataroom?.team.plan.includes("free"),
+          embeddedLinks: !link.team?.plan.includes("free"),
+          pageLinks: !link.team?.plan.includes("free"),
           metadata: true,
         },
       });

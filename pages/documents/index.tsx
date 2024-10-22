@@ -3,6 +3,7 @@ import { FolderPlusIcon, PlusIcon } from "lucide-react";
 
 import { AddDocumentModal } from "@/components/documents/add-document-modal";
 import { DocumentsList } from "@/components/documents/documents-list";
+import SortButton from "@/components/documents/filters/sort-button";
 import { AddFolderModal } from "@/components/folders/add-folder-modal";
 import AppLayout from "@/components/layouts/app";
 import { SearchBoxPersisted } from "@/components/search-box";
@@ -15,7 +16,7 @@ export default function Documents() {
   const teamInfo = useTeam();
 
   const { folders } = useRootFolders();
-  const { documents, isValidating, isSearchResult } = useDocuments();
+  const { documents, isValidating, isFiltered } = useDocuments();
 
   return (
     <AppLayout>
@@ -54,10 +55,11 @@ export default function Documents() {
           </div>
         </section>
 
-        <div className="flex justify-end">
+        <div className="mb-2 flex justify-end gap-x-2">
           <div className="relative w-full sm:max-w-xs">
             <SearchBoxPersisted loading={isValidating} inputClassName="h-10" />
           </div>
+          <SortButton />
         </div>
 
         <section id="documents-header-count" />
@@ -66,7 +68,7 @@ export default function Documents() {
 
         <DocumentsList
           documents={documents}
-          folders={isSearchResult ? [] : folders}
+          folders={isFiltered ? [] : folders}
           teamInfo={teamInfo}
         />
       </div>

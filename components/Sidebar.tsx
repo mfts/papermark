@@ -17,21 +17,6 @@ import {
   ServerIcon,
 } from "lucide-react";
 import {
-  BookOpen,
-  Bot,
-  Command,
-  Frame,
-  LeafyGreen,
-  LifeBuoy,
-  Map,
-  PieChart,
-  Send,
-  Settings2,
-  SquareTerminal,
-} from "lucide-react";
-import { useSession } from "next-auth/react";
-
-import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
@@ -230,10 +215,10 @@ export default function AppSidebar({
                       className="cursor-pointer"
                       onClick={() => router.push(item.href)}
                     >
-                      <a>
+                      <span>
                         <item.icon />
-                        <span>{item.name}</span>
-                      </a>
+                        {item.name}
+                      </span>
                     </SidebarMenuButton>
                     {open && item.active ? <SiderbarFolders /> : null}
                   </SidebarMenuItem>
@@ -258,14 +243,14 @@ export default function AppSidebar({
                         tooltip={item.name}
                         isActive={item.current}
                       >
-                        <a>
+                        <span>
                           {/* <div className="group flex w-full items-center gap-x-2 rounded-md py-2 ml-2 text-sm leading-6 text-muted-foreground hover:bg-transparent"> */}
                           <item.icon
                             className="h-5 w-5 shrink-0"
                             aria-hidden="true"
                           />
                           {item.name}
-                        </a>
+                        </span>
                         {/* </div> */}
                       </SidebarMenuButton>
                     </SidebarMenuItem>
@@ -285,13 +270,13 @@ export default function AppSidebar({
                       tooltip={item.name}
                       isActive={item.current}
                     >
-                      <a>
+                      <span>
                         <item.icon
                           className="h-5 w-5 shrink-0"
                           aria-hidden="true"
                         />
                         {item.name}
-                      </a>
+                      </span>
                     </SidebarMenuButton>
                   </UpgradePlanModal>
                 );
@@ -306,13 +291,13 @@ export default function AppSidebar({
                     onClick={() => router.push(item.href)}
                     className="cursor-pointer"
                   >
-                    <a>
+                    <span>
                       <item.icon
                         className="h-5 w-5 shrink-0"
                         aria-hidden="true"
                       />
                       {item.name}
-                    </a>
+                    </span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               );

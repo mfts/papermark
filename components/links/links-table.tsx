@@ -7,7 +7,7 @@ import { DocumentVersion } from "@prisma/client";
 import { BoxesIcon, EyeIcon, LinkIcon, Settings2Icon } from "lucide-react";
 import { toast } from "sonner";
 import { mutate } from "swr";
-import useLimits from "@/lib/swr/use-limits";
+
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { Button } from "@/components/ui/button";
 import {
@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/table";
 
 import { usePlan } from "@/lib/swr/use-billing";
+import useLimits from "@/lib/swr/use-limits";
 import { LinkWithViews, WatermarkConfig } from "@/lib/types";
 import { cn, copyToClipboard, nFormatter, timeAgo } from "@/lib/utils";
 
@@ -144,15 +145,15 @@ export default function LinksTable({
   const handleDuplicateLink = async (link: LinkWithViews) => {
     setIsLoading(true);
 
-    const response = await fetch(
-      `/api/links/${link.id}/duplicate?teamId=${teamInfo?.currentTeam?.id}`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+    const response = await fetch(`/api/links/${link.id}/duplicate`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
       },
-    );
+      body: JSON.stringify({
+        teamId: teamInfo?.currentTeam?.id,
+      }),
+    });
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -178,9 +179,7 @@ export default function LinksTable({
     if (!canAddLinks) {
       return (
         <UpgradePlanModal clickedPlan="Pro" trigger={"limit_add_link"}>
-          <Button>
-            Upgrade to Create Link
-          </Button>
+          <Button>Upgrade to Create Link</Button>
         </UpgradePlanModal>
       );
     } else {
@@ -456,7 +455,7 @@ export default function LinksTable({
                         </div>
                       </div>
                       <p>No links found for this {targetType.toLowerCase()}</p>
-                     <AddLinkButton/>
+                      <AddLinkButton />
                     </div>
                   </TableCell>
                 </TableRow>
