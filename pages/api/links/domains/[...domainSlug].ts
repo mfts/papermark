@@ -111,8 +111,8 @@ export default async function handle(
         });
       }
 
-      const teamPlan = link.team?.plan || "free";
-      const teamId = link.teamId;
+      const teamPlan = link.document?.team.plan || "free";
+      const teamId = link.document?.team.id;
       // if owner of document is on free plan, return 404
       if (teamPlan.includes("free")) {
         log({
@@ -133,14 +133,14 @@ export default async function handle(
       if (linkType === "DOCUMENT_LINK") {
         const data = await fetchDocumentLinkData({
           linkId: link.id,
-          teamId: link.teamId!,
+          teamId: link.document?.team.id!,
         });
         linkData = data.linkData;
         brand = data.brand;
       } else if (linkType === "DATAROOM_LINK") {
         const data = await fetchDataroomLinkData({
           linkId: link.id,
-          teamId: link.teamId!,
+          teamId: link.dataroom?.team.id!,
           ...(link.audienceType === LinkAudienceType.GROUP &&
             link.groupId && {
               groupId: link.groupId,
@@ -165,14 +165,12 @@ export default async function handle(
         ...linkData,
       };
 
-      res
-        .status(200)
-        .json({
-          linkType,
-          link: returnLink,
-          brand,
-          dataroomIsArchived: link.dataroom?.isArchived || false,
-        });
+      res.status(200).json({
+        linkType,
+        link: returnLink,
+        brand,
+        dataroomIsArchived: link.dataroom?.isArchived || false,
+      });
     } catch (error) {
       log({
         message: `Cannot get link for custom domain _${domainSlug}_ \n\n${error}`,
