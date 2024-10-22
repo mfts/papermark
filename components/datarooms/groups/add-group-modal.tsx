@@ -54,7 +54,7 @@ export function AddGroupModal({
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            name: groupName,
+            name: groupName.trim(),
           }),
         },
       );

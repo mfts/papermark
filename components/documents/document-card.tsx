@@ -212,7 +212,7 @@ export default function DocumentsCard({
 
           <div className="flex-col">
             <div className="flex items-center">
-              <h2 className="min-w-0 max-w-[150px] truncate text-sm font-semibold leading-6 text-foreground sm:max-w-md">
+              <h2 className="min-w-0 max-w-[250px] truncate text-sm font-semibold leading-6 text-foreground sm:max-w-md">
                 <Link
                   href={`/documents/${prismaDocument.id}`}
                   className="w-full truncate"
@@ -286,13 +286,14 @@ export default function DocumentsCard({
                 <FolderInputIcon className="mr-2 h-4 w-4" />
                 Move to folder
               </DropdownMenuItem>
-              <DropdownMenuItem
+              {/* INFO: Duplicate document is disabled for now */}
+              {/* <DropdownMenuItem
                 onClick={(e) => handleDuplicateDocument(e)}
                 disabled={!canAddDocuments}
               >
                 <Layers2Icon className="mr-2 h-4 w-4" />
                 Duplicate document
-              </DropdownMenuItem>
+              </DropdownMenuItem> */}
               {datarooms && datarooms.length !== 0 && (
                 <DropdownMenuItem onClick={() => setAddDataroomOpen(true)}>
                   <BetweenHorizontalStartIcon className="mr-2 h-4 w-4" />
