@@ -4,7 +4,6 @@ import NextAuth, { type NextAuthOptions } from "next-auth";
 import EmailProvider from "next-auth/providers/email";
 import GoogleProvider from "next-auth/providers/google";
 import LinkedInProvider from "next-auth/providers/linkedin";
-import { User as NextAuthUser } from "next-auth"; // Import the NextAuth User type
 
 import { identifyUser, trackAnalytics } from "@/lib/analytics";
 import { sendVerificationRequestEmail } from "@/lib/emails/send-verification-request";
@@ -12,11 +11,6 @@ import { sendWelcomeEmail } from "@/lib/emails/send-welcome";
 import hanko from "@/lib/hanko";
 import prisma from "@/lib/prisma";
 import { CreateUserEmailProps, CustomUser } from "@/lib/types";
-
-// Extend the User type to include inviteCode
-interface User extends NextAuthUser {
-  inviteCode?: string; 
-}
 
 const VERCEL_DEPLOYMENT = !!process.env.VERCEL_URL;
 
@@ -120,30 +114,6 @@ export const authOptions: NextAuthOptions = {
         },
       };
 
-      // Check for invite code in the message
-      const inviteCode = (message.user as User).inviteCode; 
-
-      if (inviteCode) {
-        // Validate invite code and associate with team
-        const team = await prisma.team.findFirst({
-          where: { inviteCode: inviteCode }, 
-        });
-
-        if (team) {
-          // Associate the user with the team
-          await prisma.user.update({
-            where: { id: message.user.id },
-            data: {
-              teams: {
-                connect: { id: team.id } as any,
-              },
-            },
-          });
-        } else {
-          console.error("Invalid invite code:", inviteCode);
-        }
-      }
-
       await identifyUser(message.user.email ?? message.user.id);
       await trackAnalytics({
         event: "User Signed Up",
@@ -154,18 +124,6 @@ export const authOptions: NextAuthOptions = {
       await sendWelcomeEmail(params);
     },
     async signIn(message) {
-      // Check for invite code in the message
-      const inviteCode = (message.user as User).inviteCode; 
-
-      if (inviteCode) {
-        // Check if the user exists
-        const user = await prisma.user.findUnique({ where: { email: message.user.email ?? undefined } });
-        if (!user) {
-          // Redirect to login/sign-up page if the user does not exist
-          throw new Error("User not found, Please sign up.");
-        }
-      }
-
       await identifyUser(message.user.email ?? message.user.id);
       await trackAnalytics({
         event: "User Signed In",

@@ -25,7 +25,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         where: { id: teamId },
         data: { inviteCode: newInviteCode }, // Store the unique code in inviteCode
       });
-      return res.json({ inviteLink: `https://papermark.com/teams/invite/${newInviteCode}` }); // Return the full invite link
+      return res.json({ inviteLink: `${process.env.NEXTAUTH_URL}/teams/invite/${newInviteCode}` }); // Return the full invite link
 
     case "GET":
       // Get the current invite code
@@ -41,11 +41,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           where: { id: teamId },
           data: { inviteCode: newCode }, // Store the unique code in inviteCode
         });
-        return res.json({ inviteLink: `https://papermark.com/teams/invite/${newCode}` }); // Return the full invite link
+        return res.json({ inviteLink: `${process.env.NEXTAUTH_URL}/teams/invite/${newCode}` }); // Return the full invite link
       }
       
       // Here, team.inviteCode should only contain the unique code
-      return res.json({ inviteLink: `https://papermark.com/teams/invite/${team.inviteCode}` }); // Return the full invite link
+      return res.json({ inviteLink: `${process.env.NEXTAUTH_URL}/teams/invite/${team.inviteCode}` }); // Return the full invite link
 
     default:
       res.setHeader("Allow", ["POST", "GET"]);
