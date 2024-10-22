@@ -13,7 +13,6 @@ import {
   PaletteIcon,
   ServerIcon,
 } from "lucide-react";
-import { useSession } from "next-auth/react";
 
 import MenuIcon from "@/components/shared/icons/menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -22,7 +21,6 @@ import { usePlan } from "@/lib/swr/use-billing";
 import useLimits from "@/lib/swr/use-limits";
 import { cn, nFormatter } from "@/lib/utils";
 
-import Banner from "./banner";
 import ProBanner from "./billing/pro-banner";
 import { UpgradePlanModal } from "./billing/upgrade-plan-modal";
 import ProfileMenu from "./profile-menu";
@@ -67,8 +65,7 @@ export default function Sidebar() {
 
 export const SidebarComponent = ({ className }: { className?: string }) => {
   const [showProBanner, setShowProBanner] = useState<boolean | null>(null);
-  const { data: session, status } = useSession();
-  const { plan: userPlan, trial: userTrial, loading } = usePlan();
+  const { plan: userPlan, trial: userTrial } = usePlan();
   const isTrial = !!userTrial;
   const { limits } = useLimits();
   const linksLimit = limits?.links;
@@ -118,20 +115,18 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
       current: router.pathname.includes("datarooms"),
       active: false,
       disabled:
-        userPlan === "business" ||
-        userPlan === "datarooms" ||
-        userTrial === "drtrial"
+        userPlan === "business" || userPlan === "datarooms" || isTrial
           ? false
           : true,
     },
-    // {
-    //   name: "Visitors",
-    //   href: "/visitors",
-    //   icon: ContactIcon,
-    //   current: router.pathname.includes("visitors"),
-    //   active: false,
-    //   disabled: userPlan === "free" ? true : false,
-    // },
+    {
+      name: "Visitors",
+      href: "/visitors",
+      icon: ContactIcon,
+      current: router.pathname.includes("visitors"),
+      active: false,
+      disabled: userPlan === "free" && !isTrial ? true : false,
+    },
     {
       name: "Branding",
       href: "/settings/branding",
@@ -238,14 +233,35 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
                 if (
                   userPlan !== "business" &&
                   userPlan !== "datarooms" &&
-                  userTrial !== "drtrial" &&
+                  !isTrial &&
                   item.name === "Datarooms"
                 ) {
                   return (
                     <UpgradePlanModal
                       key={item.name}
                       clickedPlan={"Business"}
-                      trigger={"datarooms"}
+                      trigger={"sidebar_datarooms"}
+                    >
+                      <div className="group flex w-full items-center gap-x-2 rounded-md px-3 py-2 text-sm leading-6 text-muted-foreground hover:bg-transparent">
+                        <item.icon
+                          className="h-5 w-5 shrink-0"
+                          aria-hidden="true"
+                        />
+                        {item.name}
+                      </div>
+                    </UpgradePlanModal>
+                  );
+                }
+                if (
+                  userPlan == "free" &&
+                  !isTrial &&
+                  item.name === "Visitors"
+                ) {
+                  return (
+                    <UpgradePlanModal
+                      key={item.name}
+                      clickedPlan={"Pro"}
+                      trigger={"sidebar_visitors"}
                     >
                       <div className="group flex w-full items-center gap-x-2 rounded-md px-3 py-2 text-sm leading-6 text-muted-foreground hover:bg-transparent">
                         <item.icon
@@ -281,17 +297,9 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
           </section>
         </ScrollArea>
         <div className="mb-4">
-          {/* if user is on trial show banner,
-           * if user is pro show nothing,
+          {/*
            * if user is free and showProBanner is true show pro banner
            */}
-          {userPlan === "trial" && session ? (
-            <Banner session={session} />
-          ) : null}
-          {(userPlan === "pro" ||
-            userPlan === "business" ||
-            userPlan === "datarooms") &&
-            null}
           {userPlan === "free" && showProBanner ? (
             <ProBanner setShowProBanner={setShowProBanner} />
           ) : null}
