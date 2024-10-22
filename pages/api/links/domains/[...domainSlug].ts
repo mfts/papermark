@@ -79,6 +79,7 @@ export default async function handle(
           },
           dataroom: {
             select: {
+              isArchived: true,
               team: {
                 select: {
                   id: true,
@@ -158,7 +159,14 @@ export default async function handle(
         ...linkData,
       };
 
-      res.status(200).json({ linkType, link: returnLink, brand });
+      res
+        .status(200)
+        .json({
+          linkType,
+          link: returnLink,
+          brand,
+          dataroomIsArchived: link.dataroom?.isArchived || false,
+        });
     } catch (error) {
       log({
         message: `Cannot get link for custom domain _${domainSlug}_ \n\n${error}`,
