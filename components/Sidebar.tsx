@@ -16,6 +16,7 @@ import {
   PaletteIcon,
   ServerIcon,
 } from "lucide-react";
+
 import {
   Sidebar,
   SidebarContent,
@@ -203,7 +204,7 @@ export default function AppSidebar({
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarMenu>
+          <SidebarMenu className="overflow-x-hidden">
             {navigation.map((item) => {
               if (item.name === "Documents") {
                 return (
