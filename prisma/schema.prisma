@@ -85,7 +85,7 @@ model Team {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  inviteLink String? @unique // Add this line for the unique share link
+  inviteCode String? @unique 
 }
 
 model Brand {
@@ -628,3 +628,4 @@ enum ItemType {
   DATAROOM_DOCUMENT
   DATAROOM_FOLDER
 }
+

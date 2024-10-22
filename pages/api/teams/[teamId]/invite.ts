@@ -16,16 +16,15 @@ export default async function handle(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
-  const session = await getServerSession(req, res, authOptions);
-  
-  if (!session) {
-    return res.status(401).end("Unauthorized");
-  }
-
-  const { teamId } = req.query as { teamId: string };
-
   if (req.method === "POST") {
-    // Handle sending invitation
+    // POST /api/teams/:teamId/invite
+    const session = await getServerSession(req, res, authOptions);
+    if (!session) {
+      return res.status(401).end("Unauhorized");
+    }
+
+    const { teamId } = req.query as { teamId: string };
+
     const { email } = req.body;
 
     if (!email) {
@@ -34,14 +33,18 @@ export default async function handle(
 
     try {
       const team = await prisma.team.findUnique({
-        where: { id: teamId },
+        where: {
+          id: teamId,
+        },
         include: {
           users: {
             select: {
               userId: true,
               role: true,
               user: {
-                select: { email: true },
+                select: {
+                  email: true,
+                },
               },
             },
           },
@@ -49,17 +52,20 @@ export default async function handle(
       });
 
       if (!team) {
-        return res.status(404).json("Team not found");
+        res.status(404).json("Team not found");
+        return;
       }
 
-      // Check if the user is admin of the team
+      // check that the user is admin of the team, otherwise return 403
       const teamUsers = team.users;
       const isUserAdmin = teamUsers.some(
-        (user) => user.role === "ADMIN" && user.userId === (session.user as CustomUser).id,
+        (user) =>
+          user.role === "ADMIN" &&
+          user.userId === (session.user as CustomUser).id,
       );
-
       if (!isUserAdmin) {
-        return res.status(403).json("Only admins can send the invitation!");
+        res.status(403).json("Only admins can send the invitation!");
+        return;
       }
 
       // Check if the user has reached the limit of users in the team
@@ -75,16 +81,17 @@ export default async function handle(
         return;
       }
 
-      // Check if user is already in the team
+      // check if user is already in the team
       const isExistingMember = teamUsers?.some(
         (user) => user.user.email === email,
       );
 
       if (isExistingMember) {
-        return res.status(400).json("User is already a member of this team");
+        res.status(400).json("User is already a member of this team");
+        return;
       }
 
-      // Check if invitation already exists
+      // check if invitation already exists
       const invitationExists = await prisma.invitation.findUnique({
         where: {
           email_teamId: {
@@ -95,14 +102,15 @@ export default async function handle(
       });
 
       if (invitationExists) {
-        return res.status(400).json("Invitation already sent to this email");
+        res.status(400).json("Invitation already sent to this email");
+        return;
       }
 
       const token = newId("inv");
       const expiresAt = new Date();
-      expiresAt.setHours(expiresAt.getHours() + 24); // invitation expires in 24 hours
+      expiresAt.setHours(expiresAt.getHours() + 24); // invitation expires in 24 hour
 
-      // Create invitation
+      // create invitation
       await prisma.invitation.create({
         data: {
           email,
@@ -112,7 +120,17 @@ export default async function handle(
         },
       });
 
-      // Send invite email
+      await prisma.verificationToken.create({
+        data: {
+          token: hashToken(token),
+          identifier: email,
+          expires: expiresAt,
+        },
+      });
+
+      // send invite email
+      const sender = session.user as CustomUser;
+
       const params = new URLSearchParams({
         callbackUrl: `${process.env.NEXTAUTH_URL}/api/teams/${teamId}/invitations/accept`,
         email,
@@ -122,8 +140,8 @@ export default async function handle(
       const url = `${process.env.NEXTAUTH_URL}/api/auth/callback/email?${params}`;
 
       sendTeammateInviteEmail({
-        senderName: (session.user as CustomUser).name || "",
-        senderEmail: (session.user as CustomUser).email || "",
+        senderName: sender.name || "",
+        senderEmail: sender.email || "",
         teamName: team?.name || "",
         to: email,
         url: url,
@@ -133,45 +151,5 @@ export default async function handle(
     } catch (error) {
       errorhandler(error, res);
     }
-  } else if (req.method === "GET") {
-    // Handle accepting invitation
-    const { action, token } = req.query;
-
-    if (action === "accept" && token) {
-      try {
-        const invitation = await prisma.invitation.findUnique({
-          where: { token: token as string },
-        });
-
-        if (!invitation) {
-          return res.status(404).json("Invitation not found");
-        }
-
-        // Add the user to the team
-        await prisma.team.update({
-          where: { id: invitation.teamId },
-          data: {
-            users: {
-              create: {
-                userId: (session.user as CustomUser).id,
-                role: "MEMBER", // or whatever role you want to assign
-              },
-            },
-          },
-        });
-
-        // Optionally, delete the invitation after acceptance
-        await prisma.invitation.delete({
-          where: { token: token as string },
-        });
-
-        return res.status(200).json("Invitation accepted!");
-      } catch (error) {
-        console.error(error);
-        return res.status(500).json("An error occurred while accepting the invitation");
-      }
-    }
   }
-
-  return res.status(405).end("Method Not Allowed");
 }

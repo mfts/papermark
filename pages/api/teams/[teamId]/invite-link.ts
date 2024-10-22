@@ -2,10 +2,11 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth/next";
 import prisma from "@/lib/prisma";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import { v4 as uuidv4 } from 'uuid';
+import { nanoid } from 'nanoid';
 
-const generateUniqueInviteLink = (): string => {
-  return `https://papermark.com/teams/invite/${uuidv4()}`;
+// Customize nanoid to generate a unique code of length 15
+const generateUniqueInviteCode = (): string => {
+  return nanoid(15); // Generate a unique code of length 15
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -18,34 +19,33 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   switch (req.method) {
     case "POST":
-      // Generate a new invite link
-      const newInviteLink = generateUniqueInviteLink();
-      const updatedTeam = await prisma.team.update({
+      // Generate a new invite code
+      const newInviteCode = generateUniqueInviteCode();
+      await prisma.team.update({
         where: { id: teamId },
-        data: { inviteLink: newInviteLink },
-        select: { inviteLink: true },
+        data: { inviteCode: newInviteCode }, // Store the unique code in inviteCode
       });
-      return res.json({ inviteLink: updatedTeam.inviteLink });
+      return res.json({ inviteLink: `https://papermark.com/teams/invite/${newInviteCode}` }); // Return the full invite link
 
     case "GET":
-      // Get the current invite link
+      // Get the current invite code
       const team = await prisma.team.findUnique({
         where: { id: teamId },
-        select: { inviteLink: true },
+        select: { inviteCode: true }, // Change to inviteCode
       });
       
-      if (!team?.inviteLink) {
-        // If no invite link exists, create one
-        const newLink = generateUniqueInviteLink();
-        const updatedTeam = await prisma.team.update({
+      if (!team?.inviteCode) {
+        // If no invite code exists, create one
+        const newCode = generateUniqueInviteCode();
+        await prisma.team.update({
           where: { id: teamId },
-          data: { inviteLink: newLink },
-          select: { inviteLink: true },
+          data: { inviteCode: newCode }, // Store the unique code in inviteCode
         });
-        return res.json({ inviteLink: updatedTeam.inviteLink });
+        return res.json({ inviteLink: `https://papermark.com/teams/invite/${newCode}` }); // Return the full invite link
       }
       
-      return res.json({ inviteLink: team.inviteLink });
+      // Here, team.inviteCode should only contain the unique code
+      return res.json({ inviteLink: `https://papermark.com/teams/invite/${team.inviteCode}` }); // Return the full invite link
 
     default:
       res.setHeader("Allow", ["POST", "GET"]);
