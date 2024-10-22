@@ -49,7 +49,6 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
       | DocumentLinkData
       | DataroomLinkData;
 
-
     if (!link || !linkType) {
       return {
         notFound: true,
@@ -92,7 +91,6 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
               },
             },
             brand,
-            dataroomIsArchived,
           },
           notionData: {
             rootNotionPageId: null, // do not pass rootNotionPageId to the client
@@ -111,6 +109,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
           useCustomAccessForm:
             teamId === "cm0154tiv0000lr2t6nr5c6kp" ||
             teamId === "clup33by90000oewh4rfvp2eg",
+          dataroomIsArchived,
         },
         revalidate: 10,
       };
@@ -150,7 +149,6 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
               },
             },
             brand,
-            dataroomIsArchived,
           },
           meta: {
             enableCustomMetatag: link.enableCustomMetatag || false,
@@ -166,6 +164,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
           useCustomAccessForm:
             teamId === "cm0154tiv0000lr2t6nr5c6kp" ||
             teamId === "clup33by90000oewh4rfvp2eg",
+          dataroomIsArchived,
         },
         revalidate: 10,
       };
