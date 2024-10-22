@@ -13,22 +13,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  SidebarGroup,
-  SidebarGroupLabel,
   SidebarMenu,
-  SidebarMenuAction,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem,
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
 
-import { cn } from "@/lib/utils";
-
-import UserRound from "./shared/icons/user-round";
 import { ModeToggle } from "./theme-toggle";
 
 type ProfileMenuProps = {
@@ -84,7 +75,7 @@ const ProfileMenu = ({ className, size }: ProfileMenuProps) => {
                 {session ? (
                   <>
                     <DropdownMenuLabel className="p-0 font-normal">
-                      <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+                      <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm font-medium">
                         <div className="grid flex-1 text-left text-sm leading-tight">
                           <span className="truncate text-xs">
                             {session?.user?.email}

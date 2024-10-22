@@ -30,6 +30,7 @@ import {
   SquareTerminal,
 } from "lucide-react";
 import { useSession } from "next-auth/react";
+
 import {
   Sidebar,
   SidebarContent,
@@ -46,7 +47,6 @@ import { usePlan } from "@/lib/swr/use-billing";
 import useLimits from "@/lib/swr/use-limits";
 import { cn, nFormatter } from "@/lib/utils";
 
-import Banner from "./banner";
 import ProBanner from "./billing/pro-banner";
 import { UpgradePlanModal } from "./billing/upgrade-plan-modal";
 import ProfileMenu from "./profile-menu";
@@ -90,8 +90,7 @@ export default function AppSidebar({
   ...props
 }: React.ComponentProps<typeof Sidebar>) {
   const [showProBanner, setShowProBanner] = useState<boolean | null>(null);
-  const { data: session, status } = useSession();
-  const { plan: userPlan, trial: userTrial, loading } = usePlan();
+  const { plan: userPlan, trial: userTrial } = usePlan();
   const isTrial = !!userTrial;
   const { limits } = useLimits();
   const linksLimit = limits?.links;
@@ -141,9 +140,7 @@ export default function AppSidebar({
       current: router.pathname.includes("datarooms"),
       active: false,
       disabled:
-        userPlan === "business" ||
-        userPlan === "datarooms" ||
-        userTrial === "drtrial"
+        userPlan === "business" || userPlan === "datarooms" || isTrial
           ? false
           : true,
     },
@@ -325,14 +322,11 @@ export default function AppSidebar({
       </SidebarContent>
       <SidebarFooter>
         <div className="mb-1">
-          {/* if user is on trial show banner,
-           * if user is pro show nothing,
+          {/*
            * if user is free and showProBanner is true show pro banner
            */}
           {open && (
             <>
-              {userPlan === "trial" && session && <Banner session={session} />}
-
               {userPlan === "free" && showProBanner && (
                 <ProBanner setShowProBanner={setShowProBanner} />
               )}
