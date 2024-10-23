@@ -16,11 +16,7 @@ import DataroomView from "@/components/view/dataroom/dataroom-view";
 import DocumentView from "@/components/view/document-view";
 
 import notion from "@/lib/notion";
-import {
-  CustomUser,
-  LinkWithDataroom,
-  LinkWithDocument,
-} from "@/lib/types";
+import { CustomUser, LinkWithDataroom, LinkWithDocument } from "@/lib/types";
 
 type DocumentLinkData = {
   linkType: "DOCUMENT_LINK";
