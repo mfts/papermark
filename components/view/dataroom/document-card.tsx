@@ -2,6 +2,7 @@ import React from "react";
 
 import { useTheme } from "next-themes";
 
+import { Theme } from "@/lib/types";
 import { fileIcon } from "@/lib/utils/get-file-icon";
 
 import { TDocumentData, TSupportedDocumentSimpleType } from "./dataroom-view";
@@ -10,6 +11,7 @@ type DRDocument = {
   dataroomDocumentId: string;
   id: string;
   name: string;
+  theme?: Theme;
   versions: {
     id: string;
     type: string;
@@ -33,7 +35,7 @@ export default function DocumentCard({
   const isLight =
     theme === "light" || (theme === "system" && systemTheme === "light");
 
-  return (
+    return (
     <>
       <li className="group/row relative flex items-center justify-between rounded-lg border-0 p-3 ring-1 ring-gray-200 transition-all hover:bg-secondary hover:ring-gray-300 dark:bg-secondary dark:ring-gray-700 hover:dark:ring-gray-500 sm:p-4">
         <div className="flex min-w-0 shrink items-center space-x-2 sm:space-x-4">
@@ -60,6 +62,7 @@ export default function DocumentCard({
                       documentVersionId: document.versions[0].id,
                       documentVersionNumber: document.versions[0].versionNumber,
                       isVertical: document.versions[0].isVertical,
+                      theme: document.theme,
                     });
                   }}
                   className="w-full truncate"

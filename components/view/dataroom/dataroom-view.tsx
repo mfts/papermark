@@ -49,6 +49,7 @@ export type TDocumentData = {
   documentVersionId: string;
   documentVersionNumber: number;
   isVertical?: boolean;
+  theme?: Theme;
 };
 
 export type DEFAULT_DOCUMENT_VIEW_TYPE = {
@@ -86,7 +87,6 @@ export default function DataroomView({
   previewToken,
   disableEditEmail,
   useCustomAccessForm,
-  theme,
 }: {
   link: LinkWithDataroom;
   userEmail: string | null | undefined;
@@ -99,7 +99,6 @@ export default function DataroomView({
   previewToken?: string;
   disableEditEmail?: boolean;
   useCustomAccessForm?: boolean;
-  theme?: Theme;
 }) {
   const {
     linkType,
@@ -342,8 +341,8 @@ export default function DataroomView({
           versionNumber={documentData.documentVersionNumber}
           brand={brand}
           dataroomId={dataroom.id}
+          theme={documentData.theme}
           setDocumentData={setDocumentData}
-          theme={theme}
         />
       </div>
     ) : viewData.fileType === "sheet" && viewData.sheetData ? (

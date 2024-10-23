@@ -20,7 +20,6 @@ import {
   CustomUser,
   LinkWithDataroom,
   LinkWithDocument,
-  Theme,
 } from "@/lib/types";
 
 type DocumentLinkData = {
@@ -61,6 +60,8 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
       const { type, file, ...versionWithoutTypeAndFile } =
         link.document.versions[0];
 
+      const theme = new URL(file).searchParams.get("mode");
+
       if (type === "notion") {
         const notionPageId = parsePageId(file, { uuid: false });
         if (!notionPageId) {
@@ -85,6 +86,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
               ...link,
               document: {
                 ...linkDocument,
+                theme,
                 versions: [versionWithoutTypeAndFile],
               },
             },
@@ -121,11 +123,13 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
         const { file, ...versionWithoutTypeAndFile } =
           document.document.versions[0];
 
+        const theme = new URL(file).searchParams.get("mode");
         const newDocument = {
           ...document.document,
           dataroomDocumentId: document.id,
           folderId: document.folderId,
           orderIndex: document.orderIndex,
+          theme,
           versions: [versionWithoutTypeAndFile],
         };
 
@@ -235,12 +239,10 @@ export default function ViewPage({
     email: verifiedEmail,
     d: disableEditEmail,
     previewToken,
-    mode: theme,
   } = router.query as {
     email: string;
     d: string;
     previewToken?: string;
-    mode?: Theme;
   };
   const { linkType, link, brand } = linkData;
 
@@ -322,7 +324,6 @@ export default function ViewPage({
           useCustomAccessForm={useCustomAccessForm}
           token={storedToken}
           verifiedEmail={verifiedEmail}
-          theme={theme}
         />
       </>
     );
@@ -403,7 +404,6 @@ export default function ViewPage({
           useCustomAccessForm={useCustomAccessForm}
           token={storedToken}
           verifiedEmail={verifiedEmail}
-          theme={theme}
         />
       </>
     );

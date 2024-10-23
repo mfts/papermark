@@ -15,7 +15,7 @@ import AccessForm, {
 } from "@/components/view/access-form";
 
 import { useAnalytics } from "@/lib/analytics";
-import { LinkWithDocument, Theme, WatermarkConfig } from "@/lib/types";
+import { LinkWithDocument, WatermarkConfig } from "@/lib/types";
 
 import EmailVerificationMessage from "./email-verification-form";
 import ViewData from "./view-data";
@@ -61,7 +61,6 @@ export default function DocumentView({
   previewToken,
   disableEditEmail,
   useCustomAccessForm,
-  theme,
 }: {
   link: LinkWithDocument;
   userEmail: string | null | undefined;
@@ -80,7 +79,6 @@ export default function DocumentView({
   previewToken?: string;
   disableEditEmail?: boolean;
   useCustomAccessForm?: boolean;
-  theme?: Theme;
 }) {
   const {
     document,
@@ -284,7 +282,6 @@ export default function DocumentView({
           showAccountCreationSlide={showAccountCreationSlide}
           useAdvancedExcelViewer={useAdvancedExcelViewer}
           viewerEmail={data.email ?? verifiedEmail ?? userEmail ?? undefined}
-          theme={theme}
         />
       ) : (
         <div className="flex h-screen items-center justify-center">
