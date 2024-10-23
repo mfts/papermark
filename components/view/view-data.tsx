@@ -52,6 +52,7 @@ export default function ViewData({
       documentId={document.id}
       versionNumber={document.versions[0].versionNumber}
       brand={brand}
+      theme={document.theme}
     />
   ) : viewData.fileType === "sheet" && viewData.sheetData ? (
     <ExcelViewer
