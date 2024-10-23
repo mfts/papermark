@@ -70,6 +70,8 @@ export default function WatermarkSection({
     <div className="pb-5">
       <LinkItem
         title="Apply Watermark"
+        link="https://www.papermark.io/help/article/document-watermark"
+        tooltipContent="Add a watermark to your content for copyright protection."
         enabled={enabled}
         action={handleWatermarkToggle}
         isAllowed={isAllowed}

@@ -481,7 +481,10 @@ export default function DocumentHeader({
             openModal={openAddDocModal}
             setAddDocumentModalOpen={setOpenAddDocModal}
           >
-            <ButtonTooltip content="Upload a new version">
+            <ButtonTooltip
+              content="Upload a new version"
+              link="https://www.papermark.io/help/article/document-versions"
+            >
               <button
                 title="Upload a new version"
                 onClick={(e) => {
