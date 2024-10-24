@@ -3,11 +3,13 @@ import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 
 import {
+  ArrowDownAZ,
   ArrowDownWideNarrowIcon,
   CalendarArrowDownIcon,
   CheckIcon,
   ClockArrowDownIcon,
   Eye,
+  Link,
   XCircleIcon,
 } from "lucide-react";
 
@@ -28,7 +30,12 @@ export default function SortButton() {
 
   useEffect(() => {
     const { sort } = router.query;
-    if (sort && ["createdAt", "views", "lastViewed"].includes(sort as string)) {
+    if (
+      sort &&
+      ["name", "createdAt", "views", "lastViewed", "links"].includes(
+        sort as string,
+      )
+    ) {
       setSortBy(sort as string);
     } else {
       setSortBy(null);
@@ -64,6 +71,10 @@ export default function SortButton() {
         return "Recently Viewed";
       case "views":
         return "Number of Views";
+      case "name":
+        return "Name";
+      case "links":
+        return "Number of Links";
       default:
         return "";
     }
@@ -91,6 +102,11 @@ export default function SortButton() {
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-48" align="end">
           <DropdownMenuLabel>Sort by</DropdownMenuLabel>
+          <DropdownMenuItem onClick={() => setSortBy("name")}>
+            <ArrowDownAZ className="mr-2 h-4 w-4" />
+            Name
+            {sortBy === "name" && <CheckIcon className="ml-auto h-4 w-4" />}
+          </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => setSortBy("createdAt")}
             disabled={sortBy === "createdAt"}
@@ -112,6 +128,11 @@ export default function SortButton() {
             <Eye className="mr-2 h-4 w-4" />
             Number of Views
             {sortBy === "views" && <CheckIcon className="ml-auto h-4 w-4" />}
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setSortBy("links")}>
+            <Link className="mr-2 h-4 w-4" />
+            Number of Links
+            {sortBy === "links" && <CheckIcon className="ml-auto h-4 w-4" />}
           </DropdownMenuItem>
           {sortBy !== null && (
             <DropdownMenuItem
