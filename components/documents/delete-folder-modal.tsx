@@ -1,14 +1,10 @@
 import { Files, Folder } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Modal } from "../ui/modal";
+import { CardDescription, CardTitle } from "../ui/card";
+import { Input } from "../ui/input";
+import { useMediaQuery } from "@/lib/utils/use-media-query";
 
 export type TSelectedDataroom = { id: string; name: string } | null;
 
@@ -29,37 +25,93 @@ export function DeleteFolderModal({
   handleButtonClick?: any;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
+
+  const { isMobile } = useMediaQuery();
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="border-destructive sm:max-w-[425px]">
-        <DialogHeader className="text-start">
-          <DialogTitle className="mb-1 text-2xl font-semibold leading-snug tracking-tight text-center">Delete Folder</DialogTitle>
-          <DialogDescription className="text-sm text-muted-foreground">
-            Warning: Deleting this folder will permanently remove all its contents, including any associated files or folders. If the files are part of a data room, all related data and metrics will also be deleted.
+    <Modal
+    showModal={open}
+    setShowModal={setOpen}
+  >
+    <div className="flex flex-col items-center justify-center px-4 py-4 pt-8 space-y-3 bg-white border-b border-border dark:border-gray-900 dark:bg-gray-900 sm:px-8">
+      <CardTitle>Delete Folder</CardTitle>
+      <CardDescription>
+        Warning: This will permanently delete your folder, all associated
+        folders and their respective documents.
 
-            <div className="flex items-center gap-5 mt-3">
-              <span className="flex items-center block gap-1 text-xs font-medium">
-                <Files size={15} /> {documents} {documents > 1 ? "documents" : "document"}
-              </span>
-              <span className="flex items-center block gap-1 text-xs font-medium">
-                <Folder size={15} /> {childFolders} {childFolders > 1 ? "folders" : "folder"}
-              </span>
-            </div>
-          </DialogDescription>
-        </DialogHeader>
-        <form>
-          <div className="mb-2"></div>
 
-          <DialogFooter>
-            <Button
-              onClick={(e) => handleButtonClick(e, folderId)}
-              className="inline-flex items-center justify-center w-full h-10 px-4 py-2 text-sm font-medium transition-colors rounded-md bg-destructive text-destructive-foreground ring-offset-background hover:bg-destructive/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
-            >
-              Confirm delete folder
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+        <div className="flex items-center gap-5 mt-3">
+          <span className="flex items-center block gap-1 text-xs font-medium text-destructive">
+            <Files size={15} /> {documents} {documents > 1 ? "documents" : "document"}
+          </span>
+          <span className="flex items-center block gap-1 text-xs font-medium text-destructive">
+            <Folder size={15} /> {childFolders} {childFolders > 1 ? "folders" : "folder"}
+          </span>
+        </div>     
+
+      </CardDescription>
+    </div>
+
+    <form
+      onSubmit={async (e) => {
+        e.preventDefault();
+        handleButtonClick(e, folderId)
+      }}
+      className="flex flex-col px-4 py-8 space-y-6 text-left bg-muted dark:bg-gray-900 sm:px-8"
+    >
+      <div>
+        <label
+          htmlFor="dataroom-name"
+          className="block text-sm font-medium text-muted-foreground"
+        >
+          Enter the folder name{" "}
+          <span className="font-semibold text-foreground">
+            {folderName}
+          </span>{" "}
+          to continue:
+        </label>
+
+        <div className="relative mt-1 rounded-md shadow-sm">
+          <Input
+            type="text"
+            name="dataroom-name"
+            id="dataroom-name"
+            autoFocus={!isMobile}
+            autoComplete="off"
+            required
+            pattern={folderName}
+            className="bg-white dark:border-gray-500 dark:bg-gray-800 focus:dark:bg-transparent"
+          />
+        </div>
+      </div>
+
+      <div>
+        <label
+          htmlFor="verification"
+          className="block text-sm text-muted-foreground"
+        >
+          To verify, type{" "}
+          <span className="font-semibold text-foreground">
+            confirm delete folder
+          </span>{" "}
+          below
+        </label>
+        <div className="relative mt-1 rounded-md shadow-sm">
+          <Input
+            type="text"
+            name="verification"
+            id="verification"
+            pattern="confirm delete folder"
+            required
+            autoComplete="off"
+            className="bg-white dark:border-gray-500 dark:bg-gray-800 focus:dark:bg-transparent"
+          />
+        </div>
+      </div>
+      <Button variant="destructive" >
+        Confirm delete folder
+      </Button>
+    </form>
+  </Modal>
   );
 }

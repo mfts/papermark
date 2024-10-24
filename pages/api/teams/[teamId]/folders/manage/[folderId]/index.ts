@@ -4,6 +4,7 @@ import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth/next";
 
 import { errorhandler } from "@/lib/errorHandler";
+import { deleteFile } from "@/lib/files/delete-file-server";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 
@@ -56,6 +57,39 @@ export default async function handle(
         },
       });
 
+      const deleteDocuments = async () => {
+        const documents = await prisma.document.findMany({
+          where: {
+            folderId: folderId,
+            type: {
+              not: "notion",
+            },
+          },
+          include: {
+            versions: {
+              select: {
+                id: true,
+                file: true,
+                type: true,
+                storageType: true,
+              },
+            },
+          },
+        });
+
+        documents.map(async (documentVersions: { versions: any }) => {
+          for (const version of documentVersions.versions) {
+            await deleteFile({ type: version.storageType, data: version.file });
+          }
+        });
+
+        await prisma.document.deleteMany({
+          where: {
+            folderId: folderId,
+          },
+        });
+      };
+
       const deleteFolderWithChildren = async (folderId: string) => {
         const children = await prisma.folder.findMany({
           where: {
@@ -67,11 +101,7 @@ export default async function handle(
           await deleteFolderWithChildren(child.id);
         }
 
-        await prisma.document.deleteMany({
-          where: {
-            folderId: folderId,
-          },
-        });
+        await deleteDocuments();
 
         await prisma.folder.delete({
           where: {
