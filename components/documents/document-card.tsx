@@ -9,6 +9,8 @@ import {
   FolderInputIcon,
   Layers2Icon,
   MoreVertical,
+  Move3dIcon,
+  MoveIcon,
   TrashIcon,
 } from "lucide-react";
 import { useTheme } from "next-themes";
@@ -62,6 +64,7 @@ export default function DocumentsCard({
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
   const [moveFolderOpen, setMoveFolderOpen] = useState<boolean>(false);
   const [addDataroomOpen, setAddDataroomOpen] = useState<boolean>(false);
+  const [isMoving, setIsMoving] = useState<boolean>(false);
   const [trialModalOpen, setTrialModalOpen] = useState<boolean>(false);
   const [planModalOpen, setPlanModalOpen] = useState<boolean>(false);
 
@@ -118,7 +121,7 @@ export default function DocumentsCard({
 
   const handleDeleteDocument = async (documentId: string) => {
     // Prevent the first click from deleting the document
-    if (!isFirstClick) {
+    if (!isMoving && !isFirstClick) {
       setIsFirstClick(true);
       return;
     }
@@ -126,7 +129,13 @@ export default function DocumentsCard({
     const endpoint = currentFolderPath
       ? `/folders/documents/${currentFolderPath.join("/")}`
       : "/documents";
-
+    const toastOptions = isMoving
+      ? {}
+      : {
+          loading: "Deleting document...",
+          success: "Document deleted successfully.",
+          error: "Failed to delete document. Try again.",
+        };
     toast.promise(
       fetch(`/api/teams/${teamInfo?.currentTeam?.id}/documents/${documentId}`, {
         method: "DELETE",
@@ -141,11 +150,7 @@ export default function DocumentsCard({
           revalidate: false,
         });
       }),
-      {
-        loading: "Deleting document...",
-        success: "Document deleted successfully.",
-        error: "Failed to delete document. Try again.",
-      },
+      toastOptions,
     );
   };
 
@@ -295,9 +300,25 @@ export default function DocumentsCard({
                 Duplicate document
               </DropdownMenuItem> */}
               {datarooms && datarooms.length !== 0 && (
-                <DropdownMenuItem onClick={() => setAddDataroomOpen(true)}>
+                <DropdownMenuItem
+                  onClick={() => {
+                    setAddDataroomOpen(true);
+                    setIsMoving(false);
+                  }}
+                >
                   <BetweenHorizontalStartIcon className="mr-2 h-4 w-4" />
                   Add to dataroom
+                </DropdownMenuItem>
+              )}
+              {datarooms && datarooms.length !== 0 && (
+                <DropdownMenuItem
+                  onClick={() => {
+                    setAddDataroomOpen(true);
+                    setIsMoving(true);
+                  }}
+                >
+                  <MoveIcon className="mr-2 h-4 w-4" />
+                  Move to dataroom
                 </DropdownMenuItem>
               )}
               <DropdownMenuSeparator />
@@ -332,6 +353,8 @@ export default function DocumentsCard({
           setOpen={setAddDataroomOpen}
           documentId={prismaDocument.id}
           documentName={prismaDocument.name}
+          isMoving={isMoving}
+          handleDeleteDocument={handleDeleteDocument}
         />
       ) : null}
 

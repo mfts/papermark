@@ -32,10 +32,14 @@ export function AddFolderToDataroomModal({
   setOpen,
   folderId,
   folderName,
+  isMoving,
+  handleDeleteFolder,
 }: {
   open: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
   folderId?: string;
+  handleDeleteFolder?: (folderId: string) => Promise<void>;
+  isMoving?: boolean;
   folderName?: string;
 }) {
   const router = useRouter();
@@ -74,11 +78,20 @@ export function AddFolderToDataroomModal({
         toast.error(message);
         return;
       }
-
-      toast.success("Folder added to dataroom successfully!");
+      if (isMoving && folderId && handleDeleteFolder) {
+        handleDeleteFolder(folderId);
+      }
+      toast.success(
+        `Folder ${isMoving ? "moved" : "added"} to dataroom successfully!`,
+      );
     } catch (error) {
-      console.error("Error adding folder to dataroom", error);
-      toast.error("Failed to add folder to dataroom. Try again.");
+      console.error(
+        `Error ${isMoving ? "moving" : "adding"} folder to dataroom`,
+        error,
+      );
+      toast.error(
+        `Failed to ${isMoving ? "move" : "add"} folder to dataroom. Try again.`,
+      );
     } finally {
       setLoading(false);
       setOpen(false);
@@ -92,7 +105,9 @@ export function AddFolderToDataroomModal({
           <DialogTitle>
             <span className="font-bold">{folderName}</span>
           </DialogTitle>
-          <DialogDescription>Add your folder to a dataroom.</DialogDescription>
+          <DialogDescription>
+            {isMoving ? "Move" : "Add"} your folder to a dataroom.
+          </DialogDescription>
         </DialogHeader>
         <Select onValueChange={(value) => setSelectedDataroom(value)}>
           <SelectTrigger className="min-w-fit">
@@ -120,7 +135,7 @@ export function AddFolderToDataroomModal({
                 "Select a dataroom"
               ) : (
                 <>
-                  Add to{" "}
+                  {isMoving ? "Move" : "Add"} to{" "}
                   <span className="font-medium">
                     {
                       datarooms?.filter((d) => d.id === selectedDataroom)[0]

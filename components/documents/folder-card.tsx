@@ -7,6 +7,7 @@ import {
   BetweenHorizontalStartIcon,
   FolderIcon,
   MoreVertical,
+  MoveIcon,
   TrashIcon,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -50,6 +51,7 @@ export default function FolderCard({
   const [isFirstClick, setIsFirstClick] = useState<boolean>(false);
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
   const [addDataroomOpen, setAddDataroomOpen] = useState<boolean>(false);
+  const [isMoving, setIsMoving] = useState<boolean>(false);
 
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
@@ -61,6 +63,17 @@ export default function FolderCard({
     0,
     folder.path.lastIndexOf("/"),
   );
+  const endpointTargetType =
+    isDataroom && dataroomId ? `datarooms/${dataroomId}/folders` : "folders";
+  const baseUrl = `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}`;
+  const rootUrl = `${baseUrl}?root=true`;
+  const pathUrl = `${baseUrl}${parentFolderPath}`;
+
+  const commonMutateCalls = () => {
+    mutate(rootUrl);
+    mutate(baseUrl);
+    mutate(pathUrl);
+  };
 
   useEffect(() => {
     function handleClickOutside(event: { target: any }) {
@@ -100,13 +113,25 @@ export default function FolderCard({
 
   const handleDeleteFolder = async (folderId: string) => {
     // Prevent the first click from deleting the document
-    if (!isFirstClick) {
+    if (!isMoving && !isFirstClick) {
       setIsFirstClick(true);
       return;
     }
 
-    const endpointTargetType =
-      isDataroom && dataroomId ? `datarooms/${dataroomId}/folders` : "folders";
+    const toastOptions = isMoving
+      ? {}
+      : {
+          loading: isDataroom ? "Removing folder..." : "Deleting folder...",
+          success: () => {
+            commonMutateCalls();
+            return isDataroom
+              ? "Folder removed successfully."
+              : "Folder deleted successfully.";
+          },
+          error: isDataroom
+            ? "Failed to remove folder."
+            : "Failed to delete folder. Move documents first.",
+        };
 
     toast.promise(
       fetch(
@@ -115,27 +140,11 @@ export default function FolderCard({
           method: "DELETE",
         },
       ),
-      {
-        loading: isDataroom ? "Removing folder..." : "Deleting folder...",
-        success: () => {
-          mutate(
-            `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}?root=true`,
-          );
-          mutate(
-            `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}`,
-          );
-          mutate(
-            `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}${parentFolderPath}`,
-          );
-          return isDataroom
-            ? "Folder removed successfully."
-            : "Folder deleted successfully.";
-        },
-        error: isDataroom
-          ? "Failed to remove folder."
-          : "Failed to delete folder. Move documents first.",
-      },
+      toastOptions,
     );
+    if (!!isMoving) {
+      commonMutateCalls();
+    }
   };
 
   const handleMenuStateChange = (open: boolean) => {
@@ -272,10 +281,22 @@ export default function FolderCard({
                       e.preventDefault();
                       e.stopPropagation();
                       setAddDataroomOpen(true);
+                      setIsMoving(false);
                     }}
                   >
                     <BetweenHorizontalStartIcon className="mr-2 h-4 w-4" />
                     Add folder to dataroom
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setAddDataroomOpen(true);
+                      setIsMoving(true);
+                    }}
+                  >
+                    <MoveIcon className="mr-2 h-4 w-4" />
+                    Move folder to dataroom
                   </DropdownMenuItem>
                 </>
               ) : null}
@@ -323,6 +344,8 @@ export default function FolderCard({
           setOpen={setAddDataroomOpen}
           folderId={folder.id}
           folderName={folder.name}
+          isMoving={isMoving}
+          handleDeleteFolder={handleDeleteFolder}
         />
       ) : null}
     </>

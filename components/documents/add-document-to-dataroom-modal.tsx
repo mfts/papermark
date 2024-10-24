@@ -32,7 +32,11 @@ export function AddToDataroomModal({
   setOpen,
   documentId,
   documentName,
+  isMoving,
+  handleDeleteDocument,
 }: {
+  handleDeleteDocument?: (documentId: string) => Promise<void>;
+  isMoving?: boolean;
   open: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
   documentId?: string;
@@ -74,11 +78,20 @@ export function AddToDataroomModal({
         toast.error(message);
         return;
       }
-
-      toast.success("Document added to dataroom successfully!");
+      if (isMoving && documentId && handleDeleteDocument) {
+        handleDeleteDocument(documentId);
+      }
+      toast.success(
+        `Document ${isMoving ? "moved" : "added"} to dataroom successfully!`,
+      );
     } catch (error) {
-      console.error("Error adding document to dataroom", error);
-      toast.error("Failed to add document to dataroom. Try again.");
+      console.error(
+        `Error ${isMoving ? "moving" : "adding"} document to dataroom`,
+        error,
+      );
+      toast.error(
+        `Failed to ${isMoving ? "move" : "add"} document to dataroom. Try again.`,
+      );
     } finally {
       setLoading(false);
       setOpen(false);
@@ -93,7 +106,7 @@ export function AddToDataroomModal({
             <span className="font-bold">{documentName}</span>
           </DialogTitle>
           <DialogDescription>
-            Add your document to a dataroom.
+            {isMoving ? "Move" : "Add"} your document to a dataroom.
           </DialogDescription>
         </DialogHeader>
         <Select onValueChange={(value) => setSelectedDataroom(value)}>
@@ -122,7 +135,7 @@ export function AddToDataroomModal({
                 "Select a dataroom"
               ) : (
                 <>
-                  Add to{" "}
+                  {isMoving ? "Move" : "Add"} to{" "}
                   <span className="font-medium">
                     {
                       datarooms?.filter((d) => d.id === selectedDataroom)[0]
