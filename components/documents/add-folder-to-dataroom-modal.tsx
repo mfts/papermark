@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { toast } from "sonner";
+import { mutate } from "swr";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -39,6 +40,7 @@ export function AddFolderToDataroomModal({
   folderName?: string;
 }) {
   const router = useRouter();
+
   const [selectedDataroom, setSelectedDataroom] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -55,8 +57,11 @@ export function AddFolderToDataroomModal({
 
     setLoading(true);
     try {
+      const id = router.query.id;
       const response = await fetch(
-        `/api/teams/${teamId}/folders/manage/${folderId}/add-to-dataroom`,
+        !!id
+          ? `/api/teams/${teamId}/datarooms/${id}/folders/manage/${folderId}/dataroom-to-dataroom`
+          : `/api/teams/${teamId}/folders/manage/${folderId}/add-to-dataroom`,
         {
           method: "POST",
           headers: {
@@ -74,6 +79,7 @@ export function AddFolderToDataroomModal({
         toast.error(message);
         return;
       }
+      mutate(`/api/teams/${teamId}/datarooms/${id}/folders`);
 
       toast.success("Folder added to dataroom successfully!");
     } catch (error) {
