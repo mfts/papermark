@@ -2,7 +2,6 @@ import React from "react";
 
 import { useTheme } from "next-themes";
 
-import { Theme } from "@/lib/types";
 import { fileIcon } from "@/lib/utils/get-file-icon";
 
 import { TDocumentData, TSupportedDocumentSimpleType } from "./dataroom-view";
@@ -11,7 +10,6 @@ type DRDocument = {
   dataroomDocumentId: string;
   id: string;
   name: string;
-  theme?: Theme;
   versions: {
     id: string;
     type: string;
@@ -62,7 +60,6 @@ export default function DocumentCard({
                       documentVersionId: document.versions[0].id,
                       documentVersionNumber: document.versions[0].versionNumber,
                       isVertical: document.versions[0].isVertical,
-                      theme: document.theme,
                     });
                   }}
                   className="w-full truncate"
