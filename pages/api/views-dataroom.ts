@@ -561,10 +561,10 @@ export default async function handle(
 
     // if document version has pages, then return pages
     // otherwise, check if notion document,
-    // if notion, return recordMap from document version file
+    // if notion, return recordMap and theme from document version file
     // otherwise, return file from document version
     let documentPages, documentVersion;
-    let recordMap;
+    let recordMap, theme;
     let sheetData;
 
     if (hasPages) {
@@ -619,6 +619,10 @@ export default async function handle(
       }
 
       if (documentVersion.type === "notion") {
+        // get theme `mode` param from document version file
+        const modeMatch = documentVersion.file.match(/[?&]mode=(dark|light)/);
+        theme = modeMatch ? modeMatch[1] : undefined;
+
         let notionPageId = parsePageId(documentVersion.file, { uuid: false });
         if (!notionPageId) {
           notionPageId = "";
@@ -700,7 +704,7 @@ export default async function handle(
           ? documentVersion.file
           : undefined,
       pages: documentPages ? documentPages : undefined,
-      notionData: recordMap ? { recordMap } : undefined,
+      notionData: recordMap ? { recordMap, theme } : undefined,
       sheetData:
         documentVersion &&
         documentVersion.type === "sheet" &&

@@ -56,7 +56,6 @@ export interface LinkWithDocument extends Link {
     team: {
       plan: string;
     } | null;
-    theme?: Theme
   };
   feedback: {
     id: string;
@@ -284,4 +283,4 @@ export const WatermarkConfigSchema = z.object({
 
 export type WatermarkConfig = z.infer<typeof WatermarkConfigSchema>;
 
-export type Theme = "light" | "dark";
+export type NotionTheme = "light" | "dark";
