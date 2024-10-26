@@ -16,7 +16,12 @@ import DataroomView from "@/components/view/dataroom/dataroom-view";
 import DocumentView from "@/components/view/document-view";
 
 import notion from "@/lib/notion";
-import { CustomUser, LinkWithDataroom, LinkWithDocument } from "@/lib/types";
+import {
+  CustomUser,
+  LinkWithDataroom,
+  LinkWithDocument,
+  NotionTheme,
+} from "@/lib/types";
 
 type DocumentLinkData = {
   linkType: "DOCUMENT_LINK";
@@ -52,11 +57,13 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
     if (linkType === "DOCUMENT_LINK") {
       let pageId = null;
       let recordMap = null;
+      let theme = undefined;
 
       const { type, file, ...versionWithoutTypeAndFile } =
         link.document.versions[0];
 
       if (type === "notion") {
+        theme = new URL(file).searchParams.get("mode");
         const notionPageId = parsePageId(file, { uuid: false });
         if (!notionPageId) {
           return {
@@ -88,6 +95,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
           notionData: {
             rootNotionPageId: null, // do not pass rootNotionPageId to the client
             recordMap,
+            theme,
           },
           meta: {
             enableCustomMetatag: link.enableCustomMetatag || false,
@@ -187,6 +195,7 @@ export default function ViewPage({
   notionData: {
     rootNotionPageId: string | null;
     recordMap: ExtendedRecordMap | null;
+    theme: NotionTheme | undefined;
   };
   meta: {
     enableCustomMetatag: boolean;

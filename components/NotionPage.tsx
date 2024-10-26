@@ -11,6 +11,7 @@ import { NotionRenderer } from "react-notion-x";
 // core styles shared by all of react-notion-x (required)
 import "react-notion-x/src/styles.css";
 
+import { NotionTheme } from "@/lib/types";
 import { determineTextColor } from "@/lib/utils/determine-text-color";
 
 // custom styles for notion
@@ -46,6 +47,7 @@ export const NotionPage = ({
   dataroomId,
   setDocumentData,
   isPreview,
+  theme,
 }: {
   recordMap: ExtendedRecordMap;
   rootPageId?: string;
@@ -58,6 +60,7 @@ export const NotionPage = ({
   dataroomId?: string;
   setDocumentData?: React.Dispatch<React.SetStateAction<TDocumentData | null>>;
   isPreview?: boolean;
+  theme?: NotionTheme;
 }) => {
   const [pageNumber, setPageNumber] = useState<number>(1); // start on first page
   const [maxScrollPercentage, setMaxScrollPercentage] = useState<number>(0);
@@ -315,7 +318,7 @@ export const NotionPage = ({
         <NotionRenderer
           recordMap={recordMapState}
           fullPage={true}
-          darkMode={false}
+          darkMode={theme ? theme === "dark" : false}
           rootPageId={rootPageId}
           disableHeader={true}
           components={{
@@ -324,16 +327,16 @@ export const NotionPage = ({
               className: string;
               href: any;
               children:
-              | string
-              | number
-              | boolean
-              | React.ReactElement<
-                any,
-                string | React.JSXElementConstructor<any>
-              >
-              | React.ReactPortal
-              | null
-              | undefined;
+                | string
+                | number
+                | boolean
+                | React.ReactElement<
+                    any,
+                    string | React.JSXElementConstructor<any>
+                  >
+                | React.ReactPortal
+                | null
+                | undefined;
             }) => {
               return (
                 <div
