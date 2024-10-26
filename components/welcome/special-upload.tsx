@@ -177,6 +177,7 @@ export default function DeckGeneratorUpload() {
         metaImage: blobUrl,
         targetId: currentDocId,
         linkType: LinkType.DOCUMENT_LINK,
+        teamId: teamId,
       }),
     });
 
