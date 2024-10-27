@@ -102,7 +102,10 @@ export default function SortButton() {
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-48" align="end">
           <DropdownMenuLabel>Sort by</DropdownMenuLabel>
-          <DropdownMenuItem onClick={() => setSortBy("name")}>
+          <DropdownMenuItem
+            onClick={() => setSortBy("name")}
+            disabled={sortBy === "name"}
+          >
             <ArrowDownAZ className="mr-2 h-4 w-4" />
             Name
             {sortBy === "name" && <CheckIcon className="ml-auto h-4 w-4" />}
@@ -117,19 +120,28 @@ export default function SortButton() {
               <CheckIcon className="ml-auto h-4 w-4" />
             )}
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setSortBy("lastViewed")}>
+          <DropdownMenuItem
+            onClick={() => setSortBy("lastViewed")}
+            disabled={sortBy === "lastViewed"}
+          >
             <ClockArrowDownIcon className="mr-2 h-4 w-4" />
             Recently Viewed
             {sortBy === "lastViewed" && (
               <CheckIcon className="ml-auto h-4 w-4" />
             )}
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setSortBy("views")}>
+          <DropdownMenuItem
+            onClick={() => setSortBy("views")}
+            disabled={sortBy === "views"}
+          >
             <Eye className="mr-2 h-4 w-4" />
             Number of Views
             {sortBy === "views" && <CheckIcon className="ml-auto h-4 w-4" />}
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setSortBy("links")}>
+          <DropdownMenuItem
+            onClick={() => setSortBy("links")}
+            disabled={sortBy === "links"}
+          >
             <Link className="mr-2 h-4 w-4" />
             Number of Links
             {sortBy === "links" && <CheckIcon className="ml-auto h-4 w-4" />}
