@@ -33,7 +33,7 @@ export default function ViewData({
   notionData?: {
     rootNotionPageId: string | null;
     recordMap: ExtendedRecordMap | null;
-    theme: NotionTheme | undefined;
+    theme: NotionTheme | null;
   };
   brand?: Partial<Brand> | null;
   showPoweredByBanner?: boolean;

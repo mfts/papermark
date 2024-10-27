@@ -60,7 +60,7 @@ export const NotionPage = ({
   dataroomId?: string;
   setDocumentData?: React.Dispatch<React.SetStateAction<TDocumentData | null>>;
   isPreview?: boolean;
-  theme?: NotionTheme;
+  theme?: NotionTheme | null;
 }) => {
   const [pageNumber, setPageNumber] = useState<number>(1); // start on first page
   const [maxScrollPercentage, setMaxScrollPercentage] = useState<number>(0);

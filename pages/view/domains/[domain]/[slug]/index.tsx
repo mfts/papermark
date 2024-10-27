@@ -62,7 +62,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
     if (linkType === "DOCUMENT_LINK") {
       let pageId = null;
       let recordMap = null;
-      let theme = undefined;
+      let theme = null;
 
       const { type, file, ...versionWithoutTypeAndFile } =
         link.document.versions[0];
@@ -198,7 +198,7 @@ export default function ViewPage({
   notionData: {
     rootNotionPageId: string | null;
     recordMap: ExtendedRecordMap | null;
-    theme: NotionTheme | undefined;
+    theme: NotionTheme | null;
   };
   meta: {
     enableCustomMetatag: boolean;

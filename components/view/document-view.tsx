@@ -69,7 +69,7 @@ export default function DocumentView({
   notionData?: {
     rootNotionPageId: string | null;
     recordMap: ExtendedRecordMap | null;
-    theme: NotionTheme | undefined;
+    theme: NotionTheme | null;
   };
   brand?: Partial<Brand> | null;
   token?: string;

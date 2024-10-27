@@ -68,7 +68,7 @@ export type DEFAULT_DOCUMENT_VIEW_TYPE = {
   sheetData?: SheetData[] | null;
   notionData?: {
     recordMap: ExtendedRecordMap | null;
-    theme: NotionTheme | undefined;
+    theme: NotionTheme | null | undefined;
   };
   fileType?: string;
   ipAddress?: string;
