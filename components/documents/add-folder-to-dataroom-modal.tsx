@@ -1,9 +1,8 @@
-import { useRouter } from "next/router";
-
 import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { toast } from "sonner";
+import { mutate } from "swr";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -32,13 +31,14 @@ export function AddFolderToDataroomModal({
   setOpen,
   folderId,
   folderName,
+  dataroomId,
 }: {
   open: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
   folderId?: string;
   folderName?: string;
+  dataroomId?: string;
 }) {
-  const router = useRouter();
   const [selectedDataroom, setSelectedDataroom] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -56,7 +56,9 @@ export function AddFolderToDataroomModal({
     setLoading(true);
     try {
       const response = await fetch(
-        `/api/teams/${teamId}/folders/manage/${folderId}/add-to-dataroom`,
+        !!dataroomId
+          ? `/api/teams/${teamId}/datarooms/${dataroomId}/folders/manage/${folderId}/dataroom-to-dataroom`
+          : `/api/teams/${teamId}/folders/manage/${folderId}/add-to-dataroom`,
         {
           method: "POST",
           headers: {
@@ -74,6 +76,8 @@ export function AddFolderToDataroomModal({
         toast.error(message);
         return;
       }
+      dataroomId &&
+        mutate(`/api/teams/${teamId}/datarooms/${dataroomId}/folders`);
 
       toast.success("Folder added to dataroom successfully!");
     } catch (error) {
@@ -100,8 +104,13 @@ export function AddFolderToDataroomModal({
           </SelectTrigger>
           <SelectContent>
             {datarooms?.map((dataroom) => (
-              <SelectItem key={dataroom.id} value={dataroom.id}>
+              <SelectItem
+                key={dataroom.id}
+                value={dataroom.id}
+                disabled={dataroom.id === dataroomId}
+              >
                 {dataroom.name}
+                {dataroom.id === dataroomId ? " (current)" : ""}
               </SelectItem>
             ))}
           </SelectContent>
