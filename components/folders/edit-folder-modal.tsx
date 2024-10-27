@@ -94,8 +94,13 @@ export function EditFolderModal({
     }
   };
 
+  const clearModelState = () => {
+    setOpen(!open);
+    folderName !== null && setFolderName("");
+  };
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={clearModelState}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader className="text-start">
@@ -108,14 +113,19 @@ export function EditFolderModal({
           </Label>
           <Input
             id="folder-name-update"
-            value={folderName}
+            value={folderName || ""}
             placeholder="folder-123"
             className="mb-4 mt-1 w-full"
             onChange={(e) => setFolderName(e.target.value)}
           />
           <DialogFooter>
-            <Button type="submit" className="h-9 w-full" loading={loading}>
-              Update folder
+            <Button
+              type="submit"
+              className="h-9 w-full"
+              loading={loading}
+              disabled={folderName?.trim() == "" || loading}
+            >
+              {loading? "Updating":"Update folder"}
             </Button>
           </DialogFooter>
         </form>
