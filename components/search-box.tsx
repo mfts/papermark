@@ -121,10 +121,6 @@ export function SearchBoxPersisted({
   const [value, setValue] = useState(queryParams[urlParam] ?? "");
   const [debouncedValue, setDebouncedValue] = useState(value);
 
-  console.log("queryParams", queryParams);
-  console.log("debouncedValue", debouncedValue);
-  console.log("value", value);
-
   // Set URL param when debounced value changes
   useEffect(() => {
     if (queryParams[urlParam] ?? "" !== debouncedValue)
@@ -140,7 +136,6 @@ export function SearchBoxPersisted({
         );
       } else {
         queryParams[urlParam] = debouncedValue;
-        console.log("queryParams", queryParams);
         router.push(
           {
             pathname: router.pathname,

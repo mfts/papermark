@@ -270,6 +270,18 @@ export default function FolderCard({
                   </DropdownMenuItem>
                 </>
               ) : null}
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setAddDataroomOpen(true);
+                }}
+              >
+                <BetweenHorizontalStartIcon className="mr-2 h-4 w-4" />
+                {isDataroom
+                  ? "Copy folder to other dataroom"
+                  : "Add folder to dataroom"}
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
 
               <DropdownMenuItem
@@ -318,6 +330,7 @@ export default function FolderCard({
           setOpen={setAddDataroomOpen}
           folderId={folder.id}
           folderName={folder.name}
+          dataroomId={dataroomId}
         />
       ) : null}
       {deleteModalOpen ? (

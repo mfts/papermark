@@ -168,6 +168,7 @@ export default function NotionForm() {
         metaImage: blobUrl,
         targetId: currentDocId,
         linkType: LinkType.DOCUMENT_LINK,
+        teamId: teamInfo?.currentTeam?.id,
       }),
     });
 

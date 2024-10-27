@@ -2,7 +2,7 @@ import { ChangeEvent, useCallback, useEffect, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { LinkPreset } from "@prisma/client";
-import { Upload as ArrowUpTrayIcon, PlusIcon } from "lucide-react";
+import { Upload as ArrowUpTrayIcon, InfoIcon, PlusIcon } from "lucide-react";
 import { DropEvent } from "react-dropzone";
 import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import { Textarea } from "@/components/ui/textarea";
+import { BadgeTooltip } from "@/components/ui/tooltip";
 
 import { usePlan } from "@/lib/swr/use-billing";
 import {
@@ -213,11 +214,18 @@ export default function Presets() {
         <div>
           <div className="mb-4 flex items-center justify-between md:mb-8 lg:mb-12">
             <div className="space-y-1">
-              <h3 className="text-2xl font-semibold tracking-tight text-foreground">
+              <h3 className="flex flex-row items-center gap-2 text-2xl font-semibold tracking-tight text-foreground">
                 Link Presets
               </h3>
-              <p className="text-sm text-muted-foreground">
+              <p className="flex flex-row items-center gap-2 text-sm text-muted-foreground">
                 Configure your default link settings.
+                <BadgeTooltip
+                  content="Customize how your content appears when shared on social media."
+                  key="verified"
+                  link="https://www.papermark.io/help/article/change-social-media-cards"
+                >
+                  <InfoIcon className="h-4 w-4 shrink-0 cursor-pointer text-foreground" />
+                </BadgeTooltip>
               </p>
             </div>
           </div>

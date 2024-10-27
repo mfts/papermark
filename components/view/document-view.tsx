@@ -15,7 +15,7 @@ import AccessForm, {
 } from "@/components/view/access-form";
 
 import { useAnalytics } from "@/lib/analytics";
-import { LinkWithDocument, WatermarkConfig } from "@/lib/types";
+import { LinkWithDocument, NotionTheme, WatermarkConfig } from "@/lib/types";
 
 import EmailVerificationMessage from "./email-verification-form";
 import ViewData from "./view-data";
@@ -69,6 +69,7 @@ export default function DocumentView({
   notionData?: {
     rootNotionPageId: string | null;
     recordMap: ExtendedRecordMap | null;
+    theme: NotionTheme | null;
   };
   brand?: Partial<Brand> | null;
   token?: string;

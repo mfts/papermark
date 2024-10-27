@@ -53,16 +53,37 @@ TooltipContent.displayName = TooltipPrimitive.Content.displayName;
 export const BadgeTooltip = ({
   content,
   children,
+  linkText,
+  link,
 }: {
+  link?: string;
   content: string;
   children: React.ReactNode;
+  linkText?: string;
 }) => {
   return (
     <Tooltip>
-      <TooltipTrigger asChild>{children}</TooltipTrigger>
+      <TooltipTrigger asChild onClick={(e) => e.stopPropagation()}>
+        {children}
+      </TooltipTrigger>
       <TooltipPortal>
-        <TooltipContent>
-          <p>{content}</p>
+        <TooltipContent className="max-w-72 text-center">
+          {link ? (
+            <p>
+              {content}{" "}
+              <a
+                href={link}
+                className="underline underline-offset-4 transition-all hover:text-gray-800 hover:dark:text-muted-foreground/80"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {linkText || "Learn more"}
+              </a>
+            </p>
+          ) : (
+            <p>{content}</p>
+          )}
         </TooltipContent>
       </TooltipPortal>
     </Tooltip>
@@ -74,11 +95,13 @@ export const ButtonTooltip = ({
   sideOffset = 0,
   className,
   children,
+  link,
 }: {
   content: string;
   sideOffset?: number;
   className?: string;
   children: React.ReactNode;
+  link?: string;
 }) => {
   return (
     <Tooltip>
@@ -86,9 +109,26 @@ export const ButtonTooltip = ({
       <TooltipPortal>
         <TooltipContent
           sideOffset={sideOffset}
-          className={cn("bg-[#474e5a] px-2 py-1 text-white", className)}
+          className={cn(
+            "max-w-72 bg-[#474e5a] text-center text-white",
+            className,
+          )}
         >
-          <p>{content}</p>
+          {link ? (
+            <p>
+              {content}{" "}
+              <a
+                href={link}
+                className="underline underline-offset-4 transition-all hover:text-gray-800 hover:dark:text-muted-foreground/80"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Learn more
+              </a>
+            </p>
+          ) : (
+            <p>{content}</p>
+          )}
         </TooltipContent>
       </TooltipPortal>
     </Tooltip>

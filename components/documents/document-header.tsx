@@ -453,10 +453,12 @@ export default function DocumentHeader({
           )}
       </div>
 
-      <div className="flex items-center gap-x-4 md:gap-x-2 lg:gap-x-4">
+      <div className="flex items-center gap-x-4 md:gap-x-2">
         {!orientationLoading ? (
           <ButtonTooltip content="Change orientation">
-            <button
+            <Button
+              variant="ghost"
+              size="icon"
               className="hidden md:flex"
               onClick={changeDocumentOrientation}
               title={`Change document orientation to ${primaryVersion.isVertical ? "landscape" : "portrait"}`}
@@ -467,7 +469,7 @@ export default function DocumentHeader({
                   !primaryVersion.isVertical && "-rotate-90 transform",
                 )}
               />
-            </button>
+            </Button>
           </ButtonTooltip>
         ) : (
           <div className="hidden md:flex">
@@ -481,9 +483,13 @@ export default function DocumentHeader({
             openModal={openAddDocModal}
             setAddDocumentModalOpen={setOpenAddDocModal}
           >
-            <ButtonTooltip content="Upload a new version">
-              <button
-                title="Upload a new version"
+            <ButtonTooltip
+              content="Upload a new version"
+              link="https://www.papermark.io/help/article/document-versions"
+            >
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={(e) => {
                   e.stopPropagation();
                   setOpenAddDocModal(true);
@@ -491,7 +497,7 @@ export default function DocumentHeader({
                 className="hidden md:flex"
               >
                 <FileUp className="h-6 w-6" />
-              </button>
+              </Button>
             </ButtonTooltip>
           </AddDocumentModal>
         )}
