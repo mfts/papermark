@@ -278,6 +278,7 @@ export default function DataroomDocumentCard({
           setOpen={setAddDataRoomOpen}
           documentId={dataroomDocument.document.id}
           documentName={dataroomDocument.document.name}
+          dataroomId={dataroomId}
         />
       ) : null}
       {moveFolderOpen ? (
