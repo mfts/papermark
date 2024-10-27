@@ -19,6 +19,7 @@ export default async function handle(
 
     const userId = (session.user as CustomUser).id;
     const { teamId, name } = req.query as { teamId: string; name: string[] };
+    const { query } = req.query as { query?: string };
 
     const path = "/" + name.join("/"); // construct the materialized path
 
@@ -60,6 +61,12 @@ export default async function handle(
         where: {
           teamId: teamId,
           parentId: parentFolder.id,
+          ...(query && {
+            name: {
+              contains: query,
+              mode: "insensitive",
+            },
+          }),
         },
         orderBy: {
           name: "asc",
