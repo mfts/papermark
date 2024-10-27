@@ -18,6 +18,7 @@ import { CustomUser, WatermarkConfigSchema } from "@/lib/types";
 import { checkPassword, decryptEncrpytedPassword, log } from "@/lib/utils";
 import { generateOTP } from "@/lib/utils/generate-otp";
 import { getIpAddress } from "@/lib/utils/ip";
+import { validateEmail } from "@/lib/utils/validate-email";
 
 import { authOptions } from "./auth/[...nextauth]";
 
@@ -136,6 +137,12 @@ export default async function handle(
   if (link.emailProtected) {
     if (!email || email.trim() === "") {
       res.status(400).json({ message: "Email is required." });
+      return;
+    }
+
+    // validate email
+    if (!validateEmail(email)) {
+      res.status(400).json({ message: "Invalid email address." });
       return;
     }
   }

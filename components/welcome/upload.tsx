@@ -158,6 +158,7 @@ export default function Upload() {
         metaImage: blobUrl,
         targetId: currentDocId,
         linkType: LinkType.DOCUMENT_LINK,
+        teamId: teamId,
       }),
     });
 
