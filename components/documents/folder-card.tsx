@@ -261,13 +261,11 @@ export default function FolderCard({
                 Rename
               </DropdownMenuItem>
               {!isDataroom ? (
-                <>
-                  <DropdownMenuItem
-                    onClick={(e) => handleCreateDataroom(e, folder.id)}
-                  >
-                    Create dataroom from folder
-                  </DropdownMenuItem>
-                </>
+                <DropdownMenuItem
+                  onClick={(e) => handleCreateDataroom(e, folder.id)}
+                >
+                  Create dataroom from folder
+                </DropdownMenuItem>
               ) : null}
               <DropdownMenuItem
                 onClick={(e) => {
@@ -277,7 +275,9 @@ export default function FolderCard({
                 }}
               >
                 <BetweenHorizontalStartIcon className="mr-2 h-4 w-4" />
-                Add folder to dataroom
+                {isDataroom
+                  ? "Copy folder to other dataroom"
+                  : "Add folder to dataroom"}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
 
@@ -323,6 +323,7 @@ export default function FolderCard({
           setOpen={setAddDataroomOpen}
           folderId={folder.id}
           folderName={folder.name}
+          dataroomId={dataroomId}
         />
       ) : null}
     </>
