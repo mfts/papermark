@@ -56,6 +56,12 @@ export default async function handle(
         case "views":
           orderBy = { views: { _count: "desc" } };
           break;
+        case "name":
+          orderBy = { name: "asc" };
+          break;
+        case "links":
+          orderBy = { links: { _count: "desc" } };
+          break;
         default:
           orderBy = { createdAt: "desc" };
       }
@@ -101,6 +107,12 @@ export default async function handle(
 
           return bLastView.getTime() - aLastView.getTime();
         });
+      }
+
+      if (sort === "name") {
+        sortedDocuments = documents.sort((a, b) =>
+          a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
+        );
       }
 
       return res.status(200).json(sortedDocuments);
