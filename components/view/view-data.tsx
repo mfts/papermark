@@ -54,6 +54,7 @@ export default function ViewData({
       versionNumber={document.versions[0].versionNumber}
       brand={brand}
       theme={notionData.theme}
+      screenshotProtectionEnabled={link.enableScreenshotProtection!}
     />
   ) : viewData.fileType === "sheet" && viewData.sheetData ? (
     <ExcelViewer
@@ -66,6 +67,7 @@ export default function ViewData({
       sheetData={viewData.sheetData}
       brand={brand}
       allowDownload={link.allowDownload!}
+      screenshotProtectionEnabled={link.enableScreenshotProtection!}
     />
   ) : viewData.fileType === "sheet" && useAdvancedExcelViewer ? (
     <AdvancedExcelViewer

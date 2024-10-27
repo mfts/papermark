@@ -345,6 +345,7 @@ export default function DataroomView({
           dataroomId={dataroom.id}
           theme={viewData.notionData.theme}
           setDocumentData={setDocumentData}
+          screenshotProtectionEnabled={link.enableScreenshotProtection!}
         />
       </div>
     ) : viewData.fileType === "sheet" && viewData.sheetData ? (
@@ -361,6 +362,7 @@ export default function DataroomView({
           dataroomId={dataroom.id}
           setDocumentData={setDocumentData}
           allowDownload={viewData.canDownload ?? link.allowDownload!}
+          screenshotProtectionEnabled={link.enableScreenshotProtection!}
         />
       </div>
     ) : viewData.fileType === "sheet" && viewData.useAdvancedExcelViewer ? (
