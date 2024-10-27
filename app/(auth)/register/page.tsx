@@ -22,7 +22,7 @@ export default function Register() {
   return (
     <div className="flex h-screen w-full justify-center">
       <div
-        className="absolute inset-x-0 top-10 -z-10 flex transform-gpu justify-center overflow-hidden blur-3xl"
+        className="absolute inset-x-0 top-10 -z-10 flex max-h-[calc(100%-40px)] transform-gpu justify-center overflow-hidden blur-3xl"
         aria-hidden="true"
       >
         <div
@@ -66,7 +66,7 @@ export default function Register() {
           }}
         >
           <Input
-            className=" border-4"
+            className="border-4"
             placeholder="jsmith@company.co"
             value={email}
             onChange={(e) => setEmail(e.target.value)}

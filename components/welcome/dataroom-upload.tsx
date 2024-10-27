@@ -277,7 +277,7 @@ export default function DataroomUpload({ dataroomId }: DataroomUploadProps) {
 
       {currentBlob && (
         <motion.div
-          className="z-10 flex flex-col space-y-10 text-center"
+          className="z-10 flex max-h-[60vh] flex-col space-y-10 text-center"
           variants={{
             hidden: { opacity: 0, scale: 0.95 },
             show: {
@@ -344,7 +344,7 @@ export default function DataroomUpload({ dataroomId }: DataroomUploadProps) {
                       </AccordionItem>
                     </Accordion>
                   </div>
-                  <div className="mb-4 flex items-center justify-center">
+                  <div className="mb-16 flex items-center justify-center">
                     <Button onClick={handleSubmit} loading={isLoading}>
                       Share Dataroom
                     </Button>

@@ -29,7 +29,7 @@ export default function Welcome() {
   return (
     <div className="mx-auto flex h-screen max-w-3xl flex-col items-center justify-center overflow-x-hidden">
       <div
-        className="absolute inset-x-0 top-10 -z-10 flex transform-gpu justify-center overflow-hidden blur-3xl"
+        className="absolute inset-x-0 top-10 -z-10 flex max-h-[calc(100%-40px)] transform-gpu justify-center overflow-hidden blur-3xl"
         aria-hidden="true"
       >
         <div

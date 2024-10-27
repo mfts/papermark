@@ -6,17 +6,17 @@ import { useParams } from "next/navigation";
 import { useState } from "react";
 
 import { signInWithPasskey } from "@teamhanko/passkeys-next-auth-provider/client";
+import { Loader } from "lucide-react";
 import { signIn } from "next-auth/react";
 import { toast } from "sonner";
 
+import { LastUsed, useLastUsed } from "@/components/hooks/useLastUsed";
 import Google from "@/components/shared/icons/google";
 import LinkedIn from "@/components/shared/icons/linkedin";
 import Passkey from "@/components/shared/icons/passkey";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { LastUsed, useLastUsed } from "@/components/hooks/useLastUsed";
-import { Loader } from "lucide-react";
 
 export default function Login() {
   const { next } = useParams as { next?: string };
@@ -36,13 +36,12 @@ export default function Login() {
     "Continue with Email",
   );
 
-
   return (
     <div className="flex h-screen w-full flex-wrap">
       {/* Left part */}
       <div className="flex w-full justify-center bg-white md:w-1/2 lg:w-2/5">
         <div
-          className="absolute inset-x-0 top-10 -z-10 flex transform-gpu justify-center overflow-hidden blur-3xl"
+          className="absolute inset-x-0 top-10 -z-10 flex max-h-[calc(100%-40px)] transform-gpu justify-center overflow-hidden blur-3xl"
           aria-hidden="true"
         ></div>
         <div className="z-10 mx-5 mt-[calc(20vh)] h-fit w-full max-w-md overflow-hidden rounded-lg sm:mx-0">
@@ -68,7 +67,7 @@ export default function Login() {
               }).then((res) => {
                 if (res?.ok && !res?.error) {
                   setEmail("");
-                  setLastUsed("credentials")
+                  setLastUsed("credentials");
                   setEmailButtonText("Email sent - check your inbox!");
                   toast.success("Email sent - check your inbox!");
                 } else {
@@ -111,10 +110,11 @@ export default function Login() {
               <Button
                 type="submit"
                 loading={clickedMethod === "email"}
-                className={`${clickedMethod === "email"
-                  ? "bg-black"
-                  : "bg-gray-800 hover:bg-gray-900"
-                  } w-full focus:shadow-outline transform rounded px-4 py-2 text-white transition-colors duration-300 ease-in-out focus:outline-none`}
+                className={`${
+                  clickedMethod === "email"
+                    ? "bg-black"
+                    : "bg-gray-800 hover:bg-gray-900"
+                } focus:shadow-outline w-full transform rounded px-4 py-2 text-white transition-colors duration-300 ease-in-out focus:outline-none`}
               >
                 {emailButtonText}
                 {lastUsed === "credentials" && <LastUsed />}
@@ -126,7 +126,7 @@ export default function Login() {
             <div className="relative">
               <Button
                 onClick={() => {
-                  setLastUsed("google")
+                  setLastUsed("google");
                   setIsLoginWithGoogle(true);
                   signIn("google", {
                     ...(next && next.length > 0 ? { callbackUrl: next } : {}),
@@ -137,7 +137,7 @@ export default function Login() {
                   });
                 }}
                 disabled={isLoginWithGoogle}
-                className="w-full flex items-center justify-center space-x-2 border border-gray-200 bg-gray-100 font-normal text-gray-900 hover:bg-gray-200 "
+                className="flex w-full items-center justify-center space-x-2 border border-gray-200 bg-gray-100 font-normal text-gray-900 hover:bg-gray-200"
               >
                 {isLoginWithGoogle ? (
                   <Loader className="mr-2 h-5 w-5 animate-spin" />
@@ -162,7 +162,7 @@ export default function Login() {
                 }}
                 loading={clickedMethod === "linkedin"}
                 disabled={clickedMethod && clickedMethod !== "linkedin"}
-                className="w-full flex items-center justify-center space-x-2 border border-gray-200 bg-gray-100 font-normal text-gray-900 hover:bg-gray-200"
+                className="flex w-full items-center justify-center space-x-2 border border-gray-200 bg-gray-100 font-normal text-gray-900 hover:bg-gray-200"
               >
                 <LinkedIn />
                 <span>Continue with LinkedIn</span>
@@ -172,15 +172,14 @@ export default function Login() {
             <div className="relative">
               <Button
                 onClick={() => {
-                  setLastUsed("saml")
+                  setLastUsed("saml");
                   signInWithPasskey({
                     tenantId: process.env.NEXT_PUBLIC_HANKO_TENANT_ID as string,
-                  })
-                }
-                }
+                  });
+                }}
                 variant="outline"
                 disabled={clickedMethod && clickedMethod !== "passkey"}
-                className="w-full flex items-center justify-center space-x-2 border border-gray-200 bg-gray-100 font-normal text-gray-900 hover:bg-gray-200 hover:text-gray-900"
+                className="flex w-full items-center justify-center space-x-2 border border-gray-200 bg-gray-100 font-normal text-gray-900 hover:bg-gray-200 hover:text-gray-900"
               >
                 <Passkey className="h-4 w-4" />
                 <span>Continue with a passkey</span>
@@ -239,6 +238,6 @@ export default function Login() {
           </div>
         </div>
       </div>
-    </div >
+    </div>
   );
 }
