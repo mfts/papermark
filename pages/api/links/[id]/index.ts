@@ -130,17 +130,22 @@ export default async function handle(
     const documentLink = linkType === "DOCUMENT_LINK";
 
     try {
-      const team = await prisma.team.findUnique({
+      const existingLink = await prisma.link.findUnique({
         where: {
-          id: teamId,
-          users: {
-            some: { userId },
+          id: id,
+          teamId: teamId,
+          team: {
+            users: {
+              some: { userId },
+            },
           },
         },
       });
 
-      if (!team) {
-        return res.status(400).json({ error: "Team not found." });
+      if (!existingLink) {
+        return res
+          .status(404)
+          .json({ error: "Link not found or unauthorized" });
       }
     } catch (error) {
       return res.status(500).json({
@@ -239,22 +244,24 @@ export default async function handle(
         metaImage: linkData.metaImage || null,
         metaFavicon: linkData.metaFavicon || null,
         enableQuestion: linkData.enableQuestion,
-        feedback: {
-          upsert: {
-            create: {
-              data: {
-                question: linkData.questionText,
-                type: linkData.questionType,
+        ...(linkData.enableQuestion && {
+          feedback: {
+            upsert: {
+              create: {
+                data: {
+                  question: linkData.questionText,
+                  type: linkData.questionType,
+                },
               },
-            },
-            update: {
-              data: {
-                question: linkData.questionText,
-                type: linkData.questionType,
+              update: {
+                data: {
+                  question: linkData.questionText,
+                  type: linkData.questionType,
+                },
               },
             },
           },
-        },
+        }),
         enableAgreement: linkData.enableAgreement,
         agreementId: linkData.agreementId || null,
         showBanner: linkData.showBanner,
