@@ -250,7 +250,7 @@ export default function DataroomDocumentCard({
                 }}
               >
                 <BetweenHorizontalStartIcon className="mr-2 h-4 w-4" />
-                Add to dataroom
+                Copy to other dataroom
               </DropdownMenuItem>
               <DropdownMenuSeparator />
 
