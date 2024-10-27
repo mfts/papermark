@@ -32,8 +32,12 @@ export function AddFolderToDataroomModal({
   folderId,
   folderName,
   dataroomId,
+  isMoving,
+  handleDeleteFolder,
 }: {
   open: boolean;
+  handleDeleteFolder?: (folderId: string) => Promise<void>;
+  isMoving?: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
   folderId?: string;
   folderName?: string;
@@ -76,13 +80,22 @@ export function AddFolderToDataroomModal({
         toast.error(message);
         return;
       }
+      if (isMoving && folderId && handleDeleteFolder) {
+        handleDeleteFolder(folderId);
+      }
       dataroomId &&
         mutate(`/api/teams/${teamId}/datarooms/${dataroomId}/folders`);
-
-      toast.success("Folder added to dataroom successfully!");
+      if (!isMoving) {
+        toast.success(`Folder added to dataroom successfully!`);
+      }
     } catch (error) {
-      console.error("Error adding folder to dataroom", error);
-      toast.error("Failed to add folder to dataroom. Try again.");
+      console.error(
+        `Error ${isMoving ? "moving" : "adding"} folder to dataroom`,
+        error,
+      );
+      toast.error(
+        `Failed to ${isMoving ? "move" : "add"} folder to dataroom. Try again.`,
+      );
     } finally {
       setLoading(false);
       setOpen(false);
@@ -96,7 +109,9 @@ export function AddFolderToDataroomModal({
           <DialogTitle>
             <span className="font-bold">{folderName}</span>
           </DialogTitle>
-          <DialogDescription>Add your folder to a dataroom.</DialogDescription>
+          <DialogDescription>
+            {isMoving ? "Move" : "Add"} your folder to a dataroom.
+          </DialogDescription>
         </DialogHeader>
         <Select onValueChange={(value) => setSelectedDataroom(value)}>
           <SelectTrigger className="min-w-fit">
@@ -129,7 +144,7 @@ export function AddFolderToDataroomModal({
                 "Select a dataroom"
               ) : (
                 <>
-                  Add to{" "}
+                  {isMoving ? "Move" : "Add"} to{" "}
                   <span className="font-medium">
                     {
                       datarooms?.filter((d) => d.id === selectedDataroom)[0]

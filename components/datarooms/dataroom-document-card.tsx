@@ -10,6 +10,7 @@ import {
   BetweenHorizontalStartIcon,
   FolderInputIcon,
   MoreVertical,
+  Move,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
@@ -60,6 +61,7 @@ export default function DataroomDocumentCard({
   const [moveFolderOpen, setMoveFolderOpen] = useState<boolean>(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
   const [addDataRoomOpen, setAddDataRoomOpen] = useState<boolean>(false);
+  const [isMoving, setIsMoving] = useState<boolean>(false);
 
   /** current folder name */
   const currentFolderPath = router.query.name as string[] | undefined;
@@ -91,7 +93,6 @@ export default function DataroomDocumentCard({
     event.stopPropagation();
     event.preventDefault();
 
-    console.log("isFirstClick", isFirstClick);
     if (isFirstClick) {
       handleRemoveDocument(documentId);
       setIsFirstClick(false);
@@ -103,11 +104,19 @@ export default function DataroomDocumentCard({
 
   const handleRemoveDocument = async (documentId: string) => {
     // Prevent the first click from deleting the document
-    if (!isFirstClick) {
+    if (!isMoving && !isFirstClick) {
       setIsFirstClick(true);
       return;
     }
-
+    const toastOptions = isMoving
+      ? {
+          success: "Document moved to dataroom successfully!",
+        }
+      : {
+          loading: "Deleting document...",
+          success: "Document deleted successfully.",
+          error: "Failed to delete document. Try again.",
+        };
     const endpoint = currentFolderPath
       ? `/folders/documents/${currentFolderPath.join("/")}`
       : "/documents";
@@ -133,11 +142,7 @@ export default function DataroomDocumentCard({
           },
         );
       }),
-      {
-        loading: "Removing document...",
-        success: "Document removed successfully.",
-        error: "Failed to remove document. Try again.",
-      },
+      toastOptions,
     );
   };
 
@@ -247,11 +252,25 @@ export default function DataroomDocumentCard({
                 onClick={(e) => {
                   e.stopPropagation();
                   setAddDataRoomOpen(true);
+                  setIsMoving(false);
                 }}
               >
                 <BetweenHorizontalStartIcon className="mr-2 h-4 w-4" />
                 Copy to other dataroom
               </DropdownMenuItem>
+              {!!dataroomId && (
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setAddDataRoomOpen(true);
+                    setIsMoving(true);
+                  }}
+                >
+                  <Move className="mr-2 h-4 w-4" />
+                  Move to other dataroom
+                </DropdownMenuItem>
+              )}
+
               <DropdownMenuSeparator />
 
               <DropdownMenuItem
@@ -276,9 +295,12 @@ export default function DataroomDocumentCard({
         <AddToDataroomModal
           open={addDataRoomOpen}
           setOpen={setAddDataRoomOpen}
+          dataroomDocumentId={dataroomDocument.id}
           documentId={dataroomDocument.document.id}
           documentName={dataroomDocument.document.name}
           dataroomId={dataroomId}
+          isMoving={isMoving}
+          handleRemoveDocument={handleRemoveDocument}
         />
       ) : null}
       {moveFolderOpen ? (
