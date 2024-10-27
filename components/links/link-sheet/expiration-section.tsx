@@ -37,7 +37,9 @@ export default function ExpirationSection({
       <LinkItem
         title="Expiration Date"
         enabled={enabled}
+        link="https://www.papermark.io/help/article/expiration-date"
         action={handleEnableExpiration}
+        tooltipContent="Set a date after which the link will no longer be accessible."
       />
 
       {enabled && (

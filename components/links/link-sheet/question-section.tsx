@@ -51,6 +51,7 @@ export default function QuestionSection({
     <div className="pb-5">
       <LinkItem
         title="Feedback Question"
+        tooltipContent="Create a concise question for visitor feedback."
         enabled={enabled}
         action={handleQuestion}
         isAllowed={isAllowed}
