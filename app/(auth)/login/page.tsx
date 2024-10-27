@@ -2,9 +2,7 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-
 import { useState } from "react";
-
 import { signInWithPasskey } from "@teamhanko/passkeys-next-auth-provider/client";
 import { signIn } from "next-auth/react";
 import { toast } from "sonner";
@@ -20,21 +18,89 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { simpleEmailRegex, validateEmail } from "@/lib/utils/validate-email";
 
-export default function Login() {
-  const { next } = useParams as { next?: string };
+type AuthMethod = "google" | "email" | "linkedin" | "passkey";
 
+export default function Login() {
+  const { next: nextParam } = useParams() as { next?: string };
   const [lastUsed, setLastUsed] = useLastUsed();
-  const authMethods = ["google", "email", "linkedin", "passkey"] as const;
-  type AuthMethod = (typeof authMethods)[number];
-  const [clickedMethod, setClickedMethod] = useState<AuthMethod | undefined>(
-    undefined,
-  );
+  const [clickedMethod, setClickedMethod] = useState<AuthMethod | undefined>(undefined);
   const [email, setEmail] = useState<string>("");
-  const [emailButtonText, setEmailButtonText] = useState<string>(
-    "Continue with Email",
-  );
+  const [emailButtonText, setEmailButtonText] = useState<string>("Continue with Email");
+  const [error, setError] = useState<string | null>(null);
 
   const isValidEmail = email.length > 0 && validateEmail(email);
+
+  const handleEmailSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!isValidEmail) return;
+
+    setClickedMethod("email");
+    try {
+      const res = await signIn("email", {
+        email,
+        redirect: false,
+        ...(nextParam && nextParam.length > 0 ? { callbackUrl: nextParam } : {}),
+      });
+      if (res?.ok && !res?.error) {
+        setEmail("");
+        setLastUsed("credentials");
+        setEmailButtonText("Email sent - check your inbox!");
+        toast.success("Email sent - check your inbox!");
+      } else {
+        setEmailButtonText("Error sending email - try again?");
+        toast.error("Error sending email - try again?");
+        setError("Error sending email");
+      }
+    } catch (e) {
+      setError("Error sending email");
+    } finally {
+      setClickedMethod(undefined);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setClickedMethod("google");
+    setLastUsed("google");
+    try {
+      const res = await signIn("google", {
+        ...(nextParam && nextParam.length > 0 ? { callbackUrl: nextParam } : {}),
+      });
+      if (res?.status) {
+        setClickedMethod(undefined);
+      }
+    } catch (e) {
+      setError("Error signing in with Google");
+    }
+  };
+
+  const handleLinkedInSignIn = async () => {
+    setClickedMethod("linkedin");
+    setLastUsed("linkedin");
+    try {
+      const res = await signIn("linkedin", {
+        ...(nextParam && nextParam.length > 0 ? { callbackUrl: nextParam } : {}),
+      });
+      if (res?.status) {
+        setClickedMethod(undefined);
+      }
+    } catch (e) {
+      setError("Error signing in with LinkedIn");
+    }
+  };
+
+  const handlePasskeySignIn = async () => {
+    setLastUsed("passkey");
+    setClickedMethod("passkey");
+    try {
+      await signInWithPasskey({
+        tenantId: process.env.NEXT_PUBLIC_HANKO_TENANT_ID as string,
+      });
+    } catch (e) {
+      setError("Error signing in with Passkey");
+    } finally {
+      setClickedMethod(undefined);
+    }
+  };
 
   return (
     <div className="flex h-screen w-full flex-wrap">
@@ -57,28 +123,7 @@ export default function Login() {
           </div>
           <form
             className="flex flex-col gap-4 px-4 pt-8 sm:px-16"
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (!isValidEmail) return;
-
-              setClickedMethod("email");
-              signIn("email", {
-                email: email,
-                redirect: false,
-                ...(next && next.length > 0 ? { callbackUrl: next } : {}),
-              }).then((res) => {
-                if (res?.ok && !res?.error) {
-                  setEmail("");
-                  setLastUsed("credentials");
-                  setEmailButtonText("Email sent - check your inbox!");
-                  toast.success("Email sent - check your inbox!");
-                } else {
-                  setEmailButtonText("Error sending email - try again?");
-                  toast.error("Error sending email - try again?");
-                }
-                setClickedMethod(undefined);
-              });
-            }}
+            onSubmit={handleEmailSubmit}
           >
             <Label className="sr-only" htmlFor="email">
               Email
@@ -101,6 +146,7 @@ export default function Login() {
                   : "ring-gray-200",
               )}
             />
+            {error && <p className="text-red-500">{error}</p>}
             <div className="relative">
               <Button
                 type="submit"
@@ -122,17 +168,7 @@ export default function Login() {
           <div className="flex flex-col space-y-2 px-4 sm:px-16">
             <div className="relative">
               <Button
-                onClick={() => {
-                  setClickedMethod("google");
-                  setLastUsed("google");
-                  signIn("google", {
-                    ...(next && next.length > 0 ? { callbackUrl: next } : {}),
-                  }).then((res) => {
-                    if (res?.status) {
-                      setClickedMethod(undefined);
-                    }
-                  });
-                }}
+                onClick={handleGoogleSignIn}
                 loading={clickedMethod === "google"}
                 disabled={clickedMethod && clickedMethod !== "google"}
                 className="flex w-full items-center justify-center space-x-2 border border-gray-200 bg-gray-100 font-normal text-gray-900 hover:bg-gray-200"
@@ -146,17 +182,7 @@ export default function Login() {
             </div>
             <div className="relative">
               <Button
-                onClick={() => {
-                  setClickedMethod("linkedin");
-                  setLastUsed("linkedin");
-                  signIn("linkedin", {
-                    ...(next && next.length > 0 ? { callbackUrl: next } : {}),
-                  }).then((res) => {
-                    if (res?.status) {
-                      setClickedMethod(undefined);
-                    }
-                  });
-                }}
+                onClick={handleLinkedInSignIn}
                 loading={clickedMethod === "linkedin"}
                 disabled={clickedMethod && clickedMethod !== "linkedin"}
                 className="flex w-full items-center justify-center space-x-2 border border-gray-200 bg-gray-100 font-normal text-gray-900 hover:bg-gray-200"
@@ -170,13 +196,7 @@ export default function Login() {
             </div>
             <div className="relative">
               <Button
-                onClick={() => {
-                  setLastUsed("passkey");
-                  setClickedMethod("passkey");
-                  signInWithPasskey({
-                    tenantId: process.env.NEXT_PUBLIC_HANKO_TENANT_ID as string,
-                  });
-                }}
+                onClick={handlePasskeySignIn}
                 variant="outline"
                 loading={clickedMethod === "passkey"}
                 disabled={clickedMethod && clickedMethod !== "passkey"}
@@ -211,41 +231,7 @@ export default function Login() {
         </div>
       </div>
       <div className="hidden w-full justify-center bg-gray-800 md:flex md:w-1/2 lg:w-3/5">
-        <div className="flex w-full max-w-5xl px-4 py-20 md:px-8">
-          <div
-            className="mx-auto flex w-full max-w-5xl justify-center rounded-3xl bg-gray-800 px-4 py-20 md:px-8"
-            id="features"
-          >
-            <div className="flex flex-col items-center">
-              {/* Image container */}
-              <div className="mb-4 h-64 w-64">
-                <img
-                  className="h-full w-full rounded-2xl object-cover shadow-2xl"
-                  src="https://www.papermark.io/_static/testimonials/jaski.jpeg"
-                  alt="Jaski"
-                />
-              </div>
-              {/* Text content */}
-              <div className="max-w-xl text-center">
-                <blockquote className="text-l text-balance leading-8 text-gray-100 sm:text-xl sm:leading-9">
-                  <p>
-                    True builders listen to their users and build what they
-                    need. Thanks Papermark team for solving a big pain point.
-                    DocSend monopoly will end soon!
-                  </p>
-                </blockquote>
-                <figcaption className="mt-4">
-                  <div className="text-balance font-semibold text-white">
-                    Jaski
-                  </div>
-                  <div className="text-balance text-gray-400">
-                    Founder, Townhall Network
-                  </div>
-                </figcaption>
-              </div>
-            </div>
-          </div>
-        </div>
+        {/* Right part content */}
       </div>
     </div>
   );
