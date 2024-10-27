@@ -40,15 +40,25 @@ export default function useDocuments() {
   };
 }
 
-export function useFolderDocuments({ name }: { name: string[] }) {
+export function useFolderDocuments({
+  name,
+  sort,
+  query,
+}: {
+  name: string[];
+  sort?: string;
+  query?: string;
+}) {
   const teamInfo = useTeam();
 
-  const { data: documents, error } = useSWR<
-    DocumentWithLinksAndLinkCountAndViewCount[]
-  >(
+  const {
+    data: documents,
+    error,
+    isValidating,
+  } = useSWR<DocumentWithLinksAndLinkCountAndViewCount[]>(
     teamInfo?.currentTeam?.id &&
       name &&
-      `/api/teams/${teamInfo?.currentTeam?.id}/folders/documents/${name.join("/")}`,
+      `/api/teams/${teamInfo?.currentTeam?.id}/folders/documents/${name.join("/")}${query ? `?query=${query}` : ""}${sort ? (query ? `&sort=${sort}` : `?sort=${sort}`) : ""}`,
     fetcher,
     {
       revalidateOnFocus: false,
@@ -60,6 +70,8 @@ export function useFolderDocuments({ name }: { name: string[] }) {
     documents,
     loading: !documents && !error,
     error,
+    isValidating,
+    isFiltered: !!query || !!sort,
   };
 }
 

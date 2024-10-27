@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import {
   ArrowDownAZ,
   ArrowDownWideNarrowIcon,
+  ArrowDownZA,
   CalendarArrowDownIcon,
   CheckIcon,
   ClockArrowDownIcon,
@@ -32,9 +33,14 @@ export default function SortButton() {
     const { sort } = router.query;
     if (
       sort &&
-      ["name", "createdAt", "views", "lastViewed", "links"].includes(
-        sort as string,
-      )
+      [
+        "nameAtoZ",
+        "nameZtoA",
+        "createdAt",
+        "views",
+        "lastViewed",
+        "links",
+      ].includes(sort as string)
     ) {
       setSortBy(sort as string);
     } else {
@@ -44,21 +50,26 @@ export default function SortButton() {
 
   useEffect(() => {
     const currentQuery = { ...router.query };
-
     if (sortBy === null) {
       delete currentQuery.sort;
     } else {
       currentQuery.sort = sortBy;
     }
+    const shouldUpdateQuery = router.pathname.includes("[...name]")
+      ? Object.keys(currentQuery).length > 0
+      : true;
 
-    router.push(
-      {
-        pathname: router.pathname,
-        query: currentQuery,
-      },
-      undefined,
-      { shallow: true },
-    );
+    if (shouldUpdateQuery) {
+      console.log("sortBy === null", sortBy === null);
+      router.push(
+        {
+          pathname: router.pathname,
+          query: currentQuery,
+        },
+        undefined,
+        { shallow: true },
+      );
+    }
   }, [sortBy]);
 
   const resetSort = () => setSortBy(null);
@@ -103,12 +114,20 @@ export default function SortButton() {
         <DropdownMenuContent className="w-48" align="end">
           <DropdownMenuLabel>Sort by</DropdownMenuLabel>
           <DropdownMenuItem
-            onClick={() => setSortBy("name")}
-            disabled={sortBy === "name"}
+            onClick={() => setSortBy("nameAtoZ")}
+            disabled={sortBy === "nameAtoZ"}
           >
             <ArrowDownAZ className="mr-2 h-4 w-4" />
-            Name
-            {sortBy === "name" && <CheckIcon className="ml-auto h-4 w-4" />}
+            Name A to Z
+            {sortBy === "nameAtoZ" && <CheckIcon className="ml-auto h-4 w-4" />}
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => setSortBy("nameZtoA")}
+            disabled={sortBy === "nameZtoA"}
+          >
+            <ArrowDownZA className="mr-2 h-4 w-4" />
+            Name Z to A
+            {sortBy === "nameZtoA" && <CheckIcon className="ml-auto h-4 w-4" />}
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => setSortBy("createdAt")}

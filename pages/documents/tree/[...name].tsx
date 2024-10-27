@@ -6,8 +6,10 @@ import { FileIcon, FolderIcon, FolderPlusIcon, PlusIcon } from "lucide-react";
 import { AddDocumentModal } from "@/components/documents/add-document-modal";
 import { BreadcrumbComponent } from "@/components/documents/breadcrumb";
 import { DocumentsList } from "@/components/documents/documents-list";
+import SortButton from "@/components/documents/filters/sort-button";
 import { AddFolderModal } from "@/components/folders/add-folder-modal";
 import AppLayout from "@/components/layouts/app";
+import { SearchBoxPersisted } from "@/components/search-box";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 
@@ -15,10 +17,18 @@ import { useFolder, useFolderDocuments } from "@/lib/swr/use-documents";
 
 export default function DocumentTreePage() {
   const router = useRouter();
-  const { name } = router.query as { name: string[] };
+  const { name, search, sort } = router.query as {
+    name: string[];
+    sort?: string;
+    search?: string;
+  };
 
   const { folders } = useFolder({ name });
-  const { documents } = useFolderDocuments({ name });
+  const { documents, isValidating, isFiltered } = useFolderDocuments({
+    name,
+    sort,
+    query: search,
+  });
   const teamInfo = useTeam();
 
   return (
@@ -26,7 +36,7 @@ export default function DocumentTreePage() {
       <main className="p-4 sm:m-4 sm:px-4 sm:py-4">
         <BreadcrumbComponent />
 
-        <section className="mb-4 mt-4 flex items-center justify-between md:mb-8 lg:mb-12">
+        <section className="mb-4 flex items-center justify-between space-x-2 sm:space-x-0">
           <div className="space-y-1">
             <h2 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
               All Documents
@@ -73,6 +83,12 @@ export default function DocumentTreePage() {
           </div>
         </section>
 
+        <div className="mb-2 flex justify-end gap-x-2">
+          <div className="relative w-full sm:max-w-xs">
+            <SearchBoxPersisted loading={isValidating} inputClassName="h-10" />
+          </div>
+          <SortButton />
+        </div>
         {/* Portaled in from DocumentsList component */}
         <section id="documents-header-count" />
 
@@ -80,7 +96,7 @@ export default function DocumentTreePage() {
 
         <DocumentsList
           documents={documents}
-          folders={folders}
+          folders={isFiltered ? [] : folders}
           teamInfo={teamInfo}
           folderPathName={name}
         />

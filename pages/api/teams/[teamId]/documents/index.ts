@@ -56,8 +56,11 @@ export default async function handle(
         case "views":
           orderBy = { views: { _count: "desc" } };
           break;
-        case "name":
+        case "nameAtoZ":
           orderBy = { name: "asc" };
+          break;
+        case "nameZtoA":
+          orderBy = { name: "desc" };
           break;
         case "links":
           orderBy = { links: { _count: "desc" } };
