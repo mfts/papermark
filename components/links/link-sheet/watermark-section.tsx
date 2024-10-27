@@ -71,7 +71,7 @@ export default function WatermarkSection({
       <LinkItem
         title="Apply Watermark"
         link="https://www.papermark.io/help/article/document-watermark"
-        tooltipContent="Add a watermark to your content for copyright protection."
+        tooltipContent="Add a dynamic watermark to your content."
         enabled={enabled}
         action={handleWatermarkToggle}
         isAllowed={isAllowed}

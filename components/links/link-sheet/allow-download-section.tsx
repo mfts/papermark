@@ -30,7 +30,7 @@ export default function AllowDownloadSection({
         enabled={enabled}
         link="https://www.papermark.io/help/article/link-settings"
         action={handleAllowDownload}
-        tooltipContent="Permit viewers to download the content."
+        tooltipContent="Allow visitors to download the content."
       />
     </div>
   );

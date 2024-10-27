@@ -150,8 +150,7 @@ export default function Branding() {
                 <BadgeTooltip
                   linkText="Click here"
                   content="How to customize data room branding?"
-                  key="verified"
-                  link="https://www.papermark.io/help/article/how-to-add-custom-domain-to-link"
+                  key="branding"
                 >
                   <InfoIcon className="h-4 w-4 shrink-0 text-foreground" />
                 </BadgeTooltip>
@@ -360,7 +359,7 @@ export default function Branding() {
                   <TabsContent value="account">
                     <div className="flex justify-center">
                       <div className="relative h-[450px] w-[698px] rounded-lg bg-gray-200 p-1 shadow-lg">
-                      <div className="relative h-[442px] lg:overflow-x-hidden overflow-x-auto rounded-lg bg-gray-100">
+                        <div className="relative h-[442px] overflow-x-auto rounded-lg bg-gray-100 lg:overflow-x-hidden">
                           <div className="mx-auto flex h-7 items-center justify-center">
                             <div className="pointer-events-none absolute left-3">
                               <div className="flex flex-row flex-nowrap justify-start">
@@ -434,7 +433,7 @@ export default function Branding() {
                   <TabsContent value="password">
                     <div className="flex justify-center">
                       <div className="relative h-[450px] w-[698px] rounded-lg bg-gray-200 p-1 shadow-lg">
-                        <div className="relative h-[442px] lg:overflow-x-hidden overflow-x-auto rounded-lg bg-gray-100">
+                        <div className="relative h-[442px] overflow-x-auto rounded-lg bg-gray-100 lg:overflow-x-hidden">
                           <div className="mx-auto flex h-7 items-center justify-center">
                             <div className="pointer-events-none absolute left-3">
                               <div className="flex flex-row flex-nowrap justify-start">

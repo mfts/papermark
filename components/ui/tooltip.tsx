@@ -63,7 +63,9 @@ export const BadgeTooltip = ({
 }) => {
   return (
     <Tooltip>
-      <TooltipTrigger asChild>{children}</TooltipTrigger>
+      <TooltipTrigger asChild onClick={(e) => e.stopPropagation()}>
+        {children}
+      </TooltipTrigger>
       <TooltipPortal>
         <TooltipContent className="max-w-72 text-center">
           {link ? (
@@ -74,6 +76,7 @@ export const BadgeTooltip = ({
                 className="underline underline-offset-4 transition-all hover:text-gray-800 hover:dark:text-muted-foreground/80"
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
               >
                 {linkText || "Learn more"}
               </a>
@@ -106,7 +109,10 @@ export const ButtonTooltip = ({
       <TooltipPortal>
         <TooltipContent
           sideOffset={sideOffset}
-          className={cn("bg-[#474e5a] px-2 py-1 text-white", className)}
+          className={cn(
+            "max-w-72 bg-[#474e5a] text-center text-white",
+            className,
+          )}
         >
           {link ? (
             <p>

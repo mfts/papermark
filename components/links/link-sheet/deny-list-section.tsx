@@ -76,7 +76,7 @@ export default function DenyListSection({
       <div className="flex flex-col space-y-4">
         <LinkItem
           title="Block specified viewers"
-          tooltipContent="Prevent certain users from accessing the content. Enter allowed emails or domains."
+          tooltipContent="Prevent certain users from accessing the content. Enter blocked emails or domains."
           enabled={enabled}
           link="https://www.papermark.io/help/article/block-list"
           action={handleEnableDenyList}

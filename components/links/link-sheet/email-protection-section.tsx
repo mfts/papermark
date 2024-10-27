@@ -37,7 +37,7 @@ export default function EmailProtectionSection({
         link="https://www.papermark.io/help/article/require-email-to-view-document"
         enabled={enabled}
         action={handleEnableProtection}
-        tooltipContent="Users must provide their email to access this content"
+        tooltipContent="Users must provide an email to access this content"
       />
     </div>
   );

@@ -39,12 +39,16 @@ export default function LinkItem({
           onClick={isAllowed ? action : () => upgradeAction?.()}
         >
           <span>{title}</span>
-          {!isAllowed && requiredPlan && <PlanBadge plan={requiredPlan} />}
           {!!tooltipContent && (
-            <BadgeTooltip content={tooltipContent} key="verified" link={link}>
-              <InfoIcon className="h-4 w-4 shrink-0 text-foreground" />
+            <BadgeTooltip
+              content={tooltipContent}
+              key="link_tooltip"
+              link={link}
+            >
+              <InfoIcon className="h-4 w-4 shrink-0 text-muted-foreground hover:text-foreground" />
             </BadgeTooltip>
           )}
+          {!isAllowed && requiredPlan && <PlanBadge plan={requiredPlan} />}
         </h2>
         {enabled && resetAction && (
           <ButtonTooltip content="Reset to defaults">

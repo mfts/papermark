@@ -69,7 +69,7 @@ export default function AgreementSection({
       <LinkItem
         title="Require NDA to view"
         link="https://www.papermark.io/help/article/require-nda-to-view"
-        tooltipContent="Users must sign a Non-Disclosure Agreement to access the content."
+        tooltipContent="Users must acknowledge an agreement to access the content."
         enabled={enabled}
         action={handleAgreement}
         isAllowed={isAllowed}
