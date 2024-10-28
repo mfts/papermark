@@ -1,9 +1,9 @@
-import { InfoIcon, RotateCcwIcon } from "lucide-react";
+import { CircleHelpIcon, RotateCcwIcon } from "lucide-react";
 
 import PlanBadge from "@/components/billing/plan-badge";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { BadgeTooltip, ButtonTooltip, Tooltip } from "@/components/ui/tooltip";
+import { BadgeTooltip, ButtonTooltip } from "@/components/ui/tooltip";
 
 import { cn } from "@/lib/utils";
 
@@ -45,7 +45,7 @@ export default function LinkItem({
               key="link_tooltip"
               link={link}
             >
-              <InfoIcon className="h-4 w-4 shrink-0 text-muted-foreground hover:text-foreground" />
+              <CircleHelpIcon className="h-4 w-4 shrink-0 text-muted-foreground hover:text-foreground" />
             </BadgeTooltip>
           )}
           {!isAllowed && requiredPlan && <PlanBadge plan={requiredPlan} />}
