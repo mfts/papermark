@@ -7,6 +7,7 @@ import { Document, DocumentVersion } from "@prisma/client";
 import {
   BetweenHorizontalStartIcon,
   FileDownIcon,
+  PencilLineIcon,
   SheetIcon,
   Sparkles,
   TrashIcon,
@@ -587,6 +588,20 @@ export default function DocumentHeader({
 
               <DropdownMenuSeparator />
             </DropdownMenuGroup>
+            <DropdownMenuItem
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsEditingName(true);
+                setTimeout(() => {
+                  if (nameRef.current) {
+                    nameRef.current.focus();
+                  }
+                }, 500);
+              }}
+            >
+              <PencilLineIcon className="mr-2 h-4 w-4" />
+              Rename
+            </DropdownMenuItem>
             {primaryVersion.type !== "notion" &&
               primaryVersion.type !== "sheet" &&
               (!prismaDocument.assistantEnabled ? (
