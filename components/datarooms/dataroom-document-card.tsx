@@ -5,7 +5,12 @@ import { useRouter } from "next/router";
 import { useEffect, useRef, useState } from "react";
 
 import { TeamContextType } from "@/context/team-context";
-import { ArchiveXIcon, FolderInputIcon, MoreVertical } from "lucide-react";
+import {
+  ArchiveXIcon,
+  BetweenHorizontalStartIcon,
+  FolderInputIcon,
+  MoreVertical,
+} from "lucide-react";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
 import { mutate } from "swr";
@@ -26,6 +31,7 @@ import { type DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
 import { cn, nFormatter, timeAgo } from "@/lib/utils";
 import { fileIcon } from "@/lib/utils/get-file-icon";
 
+import { AddToDataroomModal } from "../documents/add-document-to-dataroom-modal";
 import { MoveToDataroomFolderModal } from "./move-dataroom-folder-modal";
 
 type DocumentsCardProps = {
@@ -53,6 +59,7 @@ export default function DataroomDocumentCard({
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
   const [moveFolderOpen, setMoveFolderOpen] = useState<boolean>(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
+  const [addDataRoomOpen, setAddDataRoomOpen] = useState<boolean>(false);
 
   /** current folder name */
   const currentFolderPath = router.query.name as string[] | undefined;
@@ -236,6 +243,15 @@ export default function DataroomDocumentCard({
                 <FolderInputIcon className="mr-2 h-4 w-4" />
                 Move to folder
               </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setAddDataRoomOpen(true);
+                }}
+              >
+                <BetweenHorizontalStartIcon className="mr-2 h-4 w-4" />
+                Copy to other dataroom
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
 
               <DropdownMenuItem
@@ -256,6 +272,15 @@ export default function DataroomDocumentCard({
           </DropdownMenu>
         </div>
       </div>
+      {addDataRoomOpen ? (
+        <AddToDataroomModal
+          open={addDataRoomOpen}
+          setOpen={setAddDataRoomOpen}
+          documentId={dataroomDocument.document.id}
+          documentName={dataroomDocument.document.name}
+          dataroomId={dataroomId}
+        />
+      ) : null}
       {moveFolderOpen ? (
         <MoveToDataroomFolderModal
           open={moveFolderOpen}

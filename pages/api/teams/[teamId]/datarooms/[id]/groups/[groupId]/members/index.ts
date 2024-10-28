@@ -64,7 +64,6 @@ export default async function handle(
       await prisma.viewer.createMany({
         data: emails.map((email) => ({
           email,
-          dataroomId,
           teamId,
         })),
         skipDuplicates: true,
@@ -72,7 +71,7 @@ export default async function handle(
 
       const viewers = await prisma.viewer.findMany({
         where: {
-          dataroomId: dataroomId,
+          teamId: teamId,
           email: {
             in: emails,
           },

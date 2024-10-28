@@ -108,7 +108,7 @@ export default function WatermarkConfigSheet({
                 onChange={handleInputChange}
                 className="focus:ring-inset"
               />
-              <div className="space-x-1">
+              <div className="space-x-1 space-y-1">
                 {["email", "date", "time", "link", "ipAddress"].map((item) => (
                   <Button
                     key={item}

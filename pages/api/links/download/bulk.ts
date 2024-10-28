@@ -59,6 +59,8 @@ export default async function handle(
                           type: true,
                           file: true,
                           storageType: true,
+                          originalFile: true,
+                          contentType: true,
                         },
                         take: 1,
                       },
@@ -220,7 +222,8 @@ export default async function handle(
           addFileToStructure(
             "/",
             doc.document.name,
-            doc.document.versions[0].file,
+            doc.document.versions[0].originalFile ??
+              doc.document.versions[0].file,
           ),
         );
 
@@ -238,7 +241,8 @@ export default async function handle(
             addFileToStructure(
               folder.path,
               doc.document.name,
-              doc.document.versions[0].file,
+              doc.document.versions[0].originalFile ??
+                doc.document.versions[0].file,
             ),
           );
 

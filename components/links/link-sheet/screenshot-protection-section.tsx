@@ -39,6 +39,7 @@ export default function ScreenshotProtectionSection({
     <div className="pb-5">
       <LinkItem
         title="Enable screenshot protection"
+        tooltipContent="Prevent users from taking screenshots of your content."
         enabled={enabled}
         action={handleEnableScreenshotProtection}
         isAllowed={isAllowed}

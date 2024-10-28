@@ -316,6 +316,7 @@ export function AddDocumentModal({
             type: "notion",
             createLink: false,
             ...(visitorId && { ownerViewerId: visitorId }),
+            folderPathName: currentFolderPath?.join("/"),
           }),
         },
       );

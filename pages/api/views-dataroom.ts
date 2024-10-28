@@ -8,7 +8,6 @@ import { parsePageId } from "notion-utils";
 import { hashToken } from "@/lib/api/auth/token";
 import sendNotification from "@/lib/api/notification-helper";
 import { sendOtpVerificationEmail } from "@/lib/emails/send-email-otp-verification";
-import { sendVerificationEmail } from "@/lib/emails/send-email-verification";
 import { getFile } from "@/lib/files/get-file";
 import { newId } from "@/lib/id-helper";
 import notion from "@/lib/notion";
@@ -19,6 +18,7 @@ import { CustomUser, WatermarkConfigSchema } from "@/lib/types";
 import { checkPassword, decryptEncrpytedPassword, log } from "@/lib/utils";
 import { generateOTP } from "@/lib/utils/generate-otp";
 import { getIpAddress } from "@/lib/utils/ip";
+import { validateEmail } from "@/lib/utils/validate-email";
 
 import { authOptions } from "./auth/[...nextauth]";
 
@@ -116,14 +116,10 @@ export default async function handle(
       groupId: true,
       audienceType: true,
       allowDownload: true,
-      dataroom: {
+      teamId: true,
+      team: {
         select: {
-          teamId: true,
-          team: {
-            select: {
-              plan: true,
-            },
-          },
+          plan: true,
         },
       },
     },
@@ -143,6 +139,12 @@ export default async function handle(
   if (link.emailProtected) {
     if (!email || email.trim() === "") {
       res.status(400).json({ message: "Email is required." });
+      return;
+    }
+
+    // validate email
+    if (!validateEmail(email)) {
+      res.status(400).json({ message: "Invalid email address." });
       return;
     }
   }
@@ -441,7 +443,7 @@ export default async function handle(
     viewer = await prisma.viewer.findFirst({
       where: {
         email: email,
-        teamId: link.dataroom?.teamId,
+        teamId: link.teamId!,
       },
       select: { id: true },
     });
@@ -452,9 +454,8 @@ export default async function handle(
       viewer = await prisma.viewer.create({
         data: {
           email: email,
-          dataroomId: dataroomId!,
           verified: isEmailVerified,
-          teamId: link.dataroom?.teamId!,
+          teamId: link.teamId!,
         },
         select: { id: true },
       });
@@ -482,6 +483,7 @@ export default async function handle(
             dataroomId: dataroomId,
             viewType: "DATAROOM_VIEW",
             viewerId: viewer?.id ?? undefined,
+            teamId: link.teamId!,
             ...(link.enableAgreement &&
               link.agreementId &&
               hasConfirmedAgreement && {
@@ -546,6 +548,7 @@ export default async function handle(
           dataroomId: dataroomId,
           viewType: "DOCUMENT_VIEW",
           viewerId: viewer?.id ?? undefined,
+          teamId: link.teamId,
           ...(link.enableAgreement &&
             link.agreementId &&
             hasConfirmedAgreement && {
@@ -567,10 +570,10 @@ export default async function handle(
 
     // if document version has pages, then return pages
     // otherwise, check if notion document,
-    // if notion, return recordMap from document version file
+    // if notion, return recordMap and theme from document version file
     // otherwise, return file from document version
     let documentPages, documentVersion;
-    let recordMap;
+    let recordMap, theme;
     let sheetData;
 
     if (hasPages) {
@@ -583,8 +586,8 @@ export default async function handle(
           file: true,
           storageType: true,
           pageNumber: true,
-          embeddedLinks: !link.dataroom?.team.plan.includes("free"),
-          pageLinks: !link.dataroom?.team.plan.includes("free"),
+          embeddedLinks: !link.team?.plan.includes("free"),
+          pageLinks: !link.team?.plan.includes("free"),
           metadata: true,
         },
       });
@@ -625,6 +628,10 @@ export default async function handle(
       }
 
       if (documentVersion.type === "notion") {
+        // get theme `mode` param from document version file
+        const modeMatch = documentVersion.file.match(/[?&]mode=(dark|light)/);
+        theme = modeMatch ? modeMatch[1] : undefined;
+
         let notionPageId = parsePageId(documentVersion.file, { uuid: false });
         if (!notionPageId) {
           notionPageId = "";
@@ -707,7 +714,7 @@ export default async function handle(
           ? documentVersion.file
           : undefined,
       pages: documentPages ? documentPages : undefined,
-      notionData: recordMap ? { recordMap } : undefined,
+      notionData: recordMap ? { recordMap, theme } : undefined,
       sheetData:
         documentVersion &&
         documentVersion.type === "sheet" &&

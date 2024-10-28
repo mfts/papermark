@@ -15,6 +15,7 @@ import { CustomUser, WatermarkConfigSchema } from "@/lib/types";
 import { checkPassword, decryptEncrpytedPassword, log } from "@/lib/utils";
 import { generateOTP } from "@/lib/utils/generate-otp";
 import { getIpAddress } from "@/lib/utils/ip";
+import { validateEmail } from "@/lib/utils/validate-email";
 
 import { authOptions } from "./auth/[...nextauth]";
 
@@ -96,13 +97,10 @@ export default async function handle(
       agreementId: true,
       enableWatermark: true,
       watermarkConfig: true,
-      document: {
+      teamId: true,
+      team: {
         select: {
-          team: {
-            select: {
-              plan: true,
-            },
-          },
+          plan: true,
         },
       },
     },
@@ -122,6 +120,12 @@ export default async function handle(
   if (link.emailProtected) {
     if (!email || email.trim() === "") {
       res.status(400).json({ message: "Email is required." });
+      return;
+    }
+
+    // validate email
+    if (!validateEmail(email)) {
+      res.status(400).json({ message: "Invalid email address." });
       return;
     }
   }
@@ -389,6 +393,33 @@ export default async function handle(
   }
 
   try {
+    let viewer: { id: string } | null = null;
+    if (email && !isPreview) {
+      // find or create a viewer
+      console.time("find-viewer");
+      viewer = await prisma.viewer.findFirst({
+        where: {
+          email: email,
+          teamId: link.teamId!,
+        },
+        select: { id: true },
+      });
+      console.timeEnd("find-viewer");
+
+      if (!viewer) {
+        console.time("create-viewer");
+        viewer = await prisma.viewer.create({
+          data: {
+            email: email,
+            verified: isEmailVerified,
+            teamId: link.teamId!,
+          },
+          select: { id: true },
+        });
+        console.timeEnd("create-viewer");
+      }
+    }
+
     let newView: { id: string } | null = null;
     if (!isPreview) {
       console.time("create-view");
@@ -398,6 +429,8 @@ export default async function handle(
           viewerEmail: email,
           viewerName: name,
           documentId: documentId,
+          teamId: link.teamId!,
+          viewerId: viewer?.id ?? undefined,
           verified: isEmailVerified,
           ...(link.enableAgreement &&
             link.agreementId &&
@@ -429,8 +462,8 @@ export default async function handle(
           file: true,
           storageType: true,
           pageNumber: true,
-          embeddedLinks: !link.document?.team.plan.includes("free"),
-          pageLinks: !link.document?.team.plan.includes("free"),
+          embeddedLinks: !link.team?.plan.includes("free"),
+          pageLinks: !link.team?.plan.includes("free"),
           metadata: true,
         },
       });

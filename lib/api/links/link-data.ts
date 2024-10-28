@@ -5,12 +5,14 @@ import { sortItemsByIndexAndName } from "@/lib/utils/sort-items-by-index-name";
 
 export async function fetchDataroomLinkData({
   linkId,
+  teamId,
   groupId,
   type = "USER",
   viewerId,
   ownerId,
 }: {
   linkId: string;
+  teamId: string;
   groupId?: string;
   type?: "USER" | "VIEWER";
   viewerId?: string;
@@ -39,7 +41,7 @@ export async function fetchDataroomLinkData({
   }
 
   const linkData = await prisma.link.findUnique({
-    where: { id: linkId },
+    where: { id: linkId, teamId },
     select: {
       dataroom: {
         select: {
@@ -140,9 +142,15 @@ export async function fetchDataroomLinkData({
   return { linkData, brand };
 }
 
-export async function fetchDocumentLinkData({ linkId }: { linkId: string }) {
+export async function fetchDocumentLinkData({
+  linkId,
+  teamId,
+}: {
+  linkId: string;
+  teamId: string;
+}) {
   const linkData = await prisma.link.findUnique({
-    where: { id: linkId },
+    where: { id: linkId, teamId },
     select: {
       document: {
         select: {

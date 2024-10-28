@@ -164,6 +164,8 @@ export default function PagesViewer({
   const [viewedPages, setViewedPages] =
     useState<{ pageNumber: number; duration: number }[]>(initialViewedPages);
 
+  const [isWindowFocused, setIsWindowFocused] = useState(true);
+
   const startTimeRef = useRef(Date.now());
   const pageNumberRef = useRef<number>(pageNumber);
   const visibilityRef = useRef<boolean>(true);
@@ -307,6 +309,22 @@ export default function PagesViewer({
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
   }, [pageNumber, numPages]);
+
+  // Add this effect near your other useEffect hooks
+  useEffect(() => {
+    if (!screenshotProtectionEnabled) return;
+
+    const handleFocus = () => setIsWindowFocused(true);
+    const handleBlur = () => setIsWindowFocused(false);
+
+    window.addEventListener("focus", handleFocus);
+    window.addEventListener("blur", handleBlur);
+
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+      window.removeEventListener("blur", handleBlur);
+    };
+  }, [screenshotProtectionEnabled]);
 
   useEffect(() => {
     setLoadedImages((prev) =>
@@ -674,6 +692,7 @@ export default function PagesViewer({
         brand={brand}
         viewId={viewId}
         linkId={linkId}
+        documentId={documentId}
         documentName={documentName}
         embeddedLinks={pages[pageNumber - 1]?.embeddedLinks}
         isDataroom={dataroomId ? true : false}
@@ -689,13 +708,20 @@ export default function PagesViewer({
         className={cn("relative flex items-center", isVertical && "h-dvh")}
       >
         <div
-          className={`relative flex h-full w-full ${
-            isVertical ? "flex-col overflow-y-auto" : "flex-row"
-          }`}
+          className={cn(
+            "relative flex h-full w-full",
+            isVertical ? "flex-col overflow-y-auto" : "flex-row",
+            !isWindowFocused &&
+              screenshotProtectionEnabled &&
+              "blur-xl transition-all duration-300",
+          )}
           ref={containerRef}
         >
           <div
-            className={`flex ${isVertical ? "flex-col items-center" : "flex-row justify-center"} w-full`}
+            className={cn(
+              "flex w-full",
+              isVertical ? "flex-col items-center" : "flex-row justify-center",
+            )}
             onContextMenu={handleContextMenu}
           >
             {pageNumber <= numPagesWithAccountCreation &&

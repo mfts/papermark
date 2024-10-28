@@ -158,6 +158,7 @@ export default function Upload() {
         metaImage: blobUrl,
         targetId: currentDocId,
         linkType: LinkType.DOCUMENT_LINK,
+        teamId: teamId,
       }),
     });
 
@@ -304,7 +305,7 @@ export default function Upload() {
               </main>
             )}
             {currentLinkId && currentDocId && (
-              <main className="min-h-[300px]">
+              <main className="max-h-[calc(100dvh-10rem)] min-h-[300px] overflow-y-scroll scrollbar-hide">
                 <div className="flex flex-col justify-center">
                   <div className="relative">
                     <div className="flex py-8">

@@ -2,10 +2,13 @@ import { ChangeEvent, useCallback, useEffect, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { LinkPreset } from "@prisma/client";
-import { Upload as ArrowUpTrayIcon, PlusIcon } from "lucide-react";
-import { DropEvent } from "react-dropzone";
+import {
+  Upload as ArrowUpTrayIcon,
+  CircleHelpIcon,
+  PlusIcon,
+} from "lucide-react";
 import { toast } from "sonner";
-import useSWR, { mutate } from "swr";
+import { mutate } from "swr";
 import useSWRImmutable from "swr/immutable";
 
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
@@ -17,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import { Textarea } from "@/components/ui/textarea";
+import { BadgeTooltip } from "@/components/ui/tooltip";
 
 import { usePlan } from "@/lib/swr/use-billing";
 import {
@@ -213,11 +217,18 @@ export default function Presets() {
         <div>
           <div className="mb-4 flex items-center justify-between md:mb-8 lg:mb-12">
             <div className="space-y-1">
-              <h3 className="text-2xl font-semibold tracking-tight text-foreground">
+              <h3 className="flex flex-row items-center gap-2 text-2xl font-semibold tracking-tight text-foreground">
                 Link Presets
               </h3>
-              <p className="text-sm text-muted-foreground">
+              <p className="flex flex-row items-center gap-2 text-sm text-muted-foreground">
                 Configure your default link settings.
+                <BadgeTooltip
+                  content="Customize how your content appears when shared on social media."
+                  key="verified"
+                  link="https://www.papermark.io/help/article/change-social-media-cards"
+                >
+                  <CircleHelpIcon className="h-4 w-4 shrink-0 cursor-pointer text-muted-foreground hover:text-foreground" />
+                </BadgeTooltip>
               </p>
             </div>
           </div>
@@ -347,7 +358,7 @@ export default function Presets() {
                   </div>
                   <label
                     htmlFor="faviconIcon"
-                    className="group relative mt-1 flex h-[4rem] w-[12rem] cursor-pointer flex-col items-center justify-center rounded-md border border-gray-300 bg-white shadow-sm transition-all hover:bg-gray-50"
+                    className="group relative mt-1 flex size-14 cursor-pointer flex-col items-center justify-center rounded-md border border-gray-300 bg-white shadow-sm transition-all hover:bg-gray-50"
                     style={{
                       backgroundImage:
                         "linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(135deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(135deg, transparent 75%, #ccc 75%)",
