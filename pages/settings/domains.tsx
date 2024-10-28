@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
-import { InfoIcon } from "lucide-react";
+import { CircleHelpIcon } from "lucide-react";
 import { mutate } from "swr";
 
 import { AddDomainModal } from "@/components/domains/add-domain-modal";
@@ -53,7 +53,7 @@ export default function Domains() {
                   linkText="Click here"
                   link="https://www.papermark.io/help/article/how-to-add-custom-domain-to-link"
                 >
-                  <InfoIcon className="h-4 w-4 shrink-0 text-foreground" />
+                  <CircleHelpIcon className="h-4 w-4 shrink-0 text-muted-foreground hover:text-foreground" />
                 </BadgeTooltip>
               </p>
             </div>
