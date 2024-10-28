@@ -87,7 +87,11 @@ export function AddDocumentModal({
     }
 
     if (!canAddDocuments) {
-      toast.error("You have reached the maximum number of documents.");
+      toast.error(
+        !!visitorId
+          ? "This dataroom reached the maximum number of documents upload limit."
+          : "You have reached the maximum number of documents.",
+      );
       return;
     }
 
@@ -280,7 +284,11 @@ export function AddDocumentModal({
     event.preventDefault();
 
     if (!canAddDocuments) {
-      toast.error("You have reached the maximum number of documents.");
+      toast.error(
+        !!visitorId
+          ? "This dataroom reached the maximum number of documents upload limit."
+          : "You have reached the maximum number of documents.",
+      );
       return;
     }
 
@@ -388,7 +396,7 @@ export function AddDocumentModal({
     setAddDocumentModalOpen && setAddDocumentModalOpen(!isOpen);
   };
 
-  if (!canAddDocuments && children) {
+  if (!canAddDocuments && children && !visitorId) {
     if (newVersion) {
       return (
         <UpgradePlanModal
