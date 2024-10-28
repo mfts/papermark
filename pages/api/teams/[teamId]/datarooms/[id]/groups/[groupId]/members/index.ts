@@ -64,7 +64,6 @@ export default async function handle(
       await prisma.viewer.createMany({
         data: emails.map((email) => ({
           email,
-          dataroomId,
           teamId,
         })),
         skipDuplicates: true,

@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { client } from "@/trigger";
-import { DocumentStorageType } from "@prisma/client";
+import { DocumentStorageType, Prisma } from "@prisma/client";
 import { getServerSession } from "next-auth/next";
 import { parsePageId } from "notion-utils";
 
@@ -29,35 +29,93 @@ export default async function handle(
     }
 
     const { teamId } = req.query as { teamId: string };
-
+    const { query, sort } = req.query as { query?: string; sort?: string };
     const userId = (session.user as CustomUser).id;
 
     try {
-      const { team } = await getTeamWithUsersAndDocument({
-        teamId,
-        userId,
-        options: {
-          where: {
-            folderId: null,
-          },
-          orderBy: {
-            createdAt: "desc",
-          },
-          include: {
-            _count: {
-              select: { links: true, views: true, versions: true },
-            },
-            links: {
-              take: 1,
-              select: { id: true },
+      const team = await prisma.team.findUnique({
+        where: {
+          id: teamId,
+          users: {
+            some: {
+              userId: userId,
             },
           },
         },
       });
 
-      const documents = team.documents;
+      if (!team) {
+        return res.status(404).end("Team not found");
+      }
 
-      return res.status(200).json(documents);
+      let orderBy: Prisma.DocumentOrderByWithRelationInput;
+      switch (sort) {
+        case "createdAt":
+          orderBy = { createdAt: "desc" };
+          break;
+        case "views":
+          orderBy = { views: { _count: "desc" } };
+          break;
+        case "name":
+          orderBy = { name: "asc" };
+          break;
+        case "links":
+          orderBy = { links: { _count: "desc" } };
+          break;
+        default:
+          orderBy = { createdAt: "desc" };
+      }
+
+      const documents = await prisma.document.findMany({
+        where: {
+          teamId: teamId,
+          ...(query && {
+            name: {
+              contains: query,
+              mode: "insensitive",
+            },
+          }),
+          ...(!(query || sort) && {
+            folderId: null,
+          }),
+        },
+        orderBy,
+        include: {
+          ...(sort &&
+            sort === "lastViewed" && {
+              views: {
+                select: { viewedAt: true },
+                orderBy: { viewedAt: "desc" },
+                take: 1,
+              },
+            }),
+          _count: {
+            select: { links: true, views: true, versions: true },
+          },
+        },
+      });
+
+      let sortedDocuments = documents;
+
+      if (sort === "lastViewed") {
+        sortedDocuments = documents.sort((a, b) => {
+          const aLastView = a.views[0]?.viewedAt;
+          const bLastView = b.views[0]?.viewedAt;
+
+          if (!aLastView) return 1;
+          if (!bLastView) return -1;
+
+          return bLastView.getTime() - aLastView.getTime();
+        });
+      }
+
+      if (sort === "name") {
+        sortedDocuments = documents.sort((a, b) =>
+          a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
+        );
+      }
+
+      return res.status(200).json(sortedDocuments);
     } catch (error) {
       errorhandler(error, res);
     }
@@ -142,7 +200,9 @@ export default async function handle(
           teamId: teamId,
           ...(createLink && {
             links: {
-              create: {},
+              create: {
+                teamId,
+              },
             },
           }),
           versions: {

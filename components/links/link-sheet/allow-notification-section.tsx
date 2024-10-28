@@ -27,8 +27,10 @@ export default function AllowNotificationSection({
     <div className="pb-5">
       <LinkItem
         title="Receive email notification"
+        link="https://www.papermark.io/help/article/link-settings"
         enabled={enabled}
         action={handleEnableNotification}
+        tooltipContent="Get notified via email when someone views your content."
       />
     </div>
   );

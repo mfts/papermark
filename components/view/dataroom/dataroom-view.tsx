@@ -18,7 +18,7 @@ import AccessForm, {
 
 import { useAnalytics } from "@/lib/analytics";
 import { SUPPORTED_DOCUMENT_SIMPLE_TYPES } from "@/lib/constants";
-import { LinkWithDataroom, WatermarkConfig } from "@/lib/types";
+import { LinkWithDataroom, NotionTheme, WatermarkConfig } from "@/lib/types";
 
 import DataroomViewer from "../DataroomViewer";
 import PagesViewerNew from "../PagesViewerNew";
@@ -66,7 +66,10 @@ export type DEFAULT_DOCUMENT_VIEW_TYPE = {
       }[]
     | null;
   sheetData?: SheetData[] | null;
-  notionData?: { recordMap: ExtendedRecordMap | null };
+  notionData?: {
+    recordMap: ExtendedRecordMap | null;
+    theme: NotionTheme | null | undefined;
+  };
   fileType?: string;
   ipAddress?: string;
   useAdvancedExcelViewer?: boolean;
@@ -340,7 +343,9 @@ export default function DataroomView({
           versionNumber={documentData.documentVersionNumber}
           brand={brand}
           dataroomId={dataroom.id}
+          theme={viewData.notionData.theme}
           setDocumentData={setDocumentData}
+          screenshotProtectionEnabled={link.enableScreenshotProtection!}
         />
       </div>
     ) : viewData.fileType === "sheet" && viewData.sheetData ? (
@@ -357,6 +362,7 @@ export default function DataroomView({
           dataroomId={dataroom.id}
           setDocumentData={setDocumentData}
           allowDownload={viewData.canDownload ?? link.allowDownload!}
+          screenshotProtectionEnabled={link.enableScreenshotProtection!}
         />
       </div>
     ) : viewData.fileType === "sheet" && viewData.useAdvancedExcelViewer ? (

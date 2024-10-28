@@ -102,6 +102,7 @@ export default function ImageViewer({
   const [pageNumber, setPageNumber] = useState<number>(1); // start on first page
 
   const [scale, setScale] = useState<number>(1);
+  const [isWindowFocused, setIsWindowFocused] = useState(true);
 
   const startTimeRef = useRef(Date.now());
   const visibilityRef = useRef<boolean>(true);
@@ -211,6 +212,22 @@ export default function ImageViewer({
     };
   }, [pageNumber, numPages]);
 
+  // Add this effect near your other useEffect hooks
+  useEffect(() => {
+    if (!screenshotProtectionEnabled) return;
+
+    const handleFocus = () => setIsWindowFocused(true);
+    const handleBlur = () => setIsWindowFocused(false);
+
+    window.addEventListener("focus", handleFocus);
+    window.addEventListener("blur", handleBlur);
+
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+      window.removeEventListener("blur", handleBlur);
+    };
+  }, [screenshotProtectionEnabled]);
+
   useEffect(() => {
     // Remove token and email query parameters on component mount
     const removeQueryParams = (queries: string[]) => {
@@ -272,7 +289,12 @@ export default function ImageViewer({
         className="relative flex items-center"
       >
         <div
-          className="relative flex h-full w-full flex-row"
+          className={cn(
+            "relative flex h-full w-full flex-row",
+            !isWindowFocused &&
+              screenshotProtectionEnabled &&
+              "blur-xl transition-all duration-300",
+          )}
           ref={containerRef}
         >
           <div

@@ -60,3 +60,14 @@ export const getTotalDataroomDuration = tb.buildPipe({
     sum_duration: z.number(),
   }),
 });
+
+export const getDocumentDurationPerViewer = tb.buildPipe({
+  pipe: "get_document_duration_per_viewer__v1",
+  parameters: z.object({
+    documentId: z.string(),
+    viewIds: z.string().describe("Comma separated viewIds"),
+  }),
+  data: z.object({
+    sum_duration: z.number(),
+  }),
+});

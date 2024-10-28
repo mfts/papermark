@@ -283,3 +283,5 @@ export const WatermarkConfigSchema = z.object({
 });
 
 export type WatermarkConfig = z.infer<typeof WatermarkConfigSchema>;
+
+export type NotionTheme = "light" | "dark";

@@ -72,6 +72,9 @@ model Team {
   viewerGroups ViewerGroup[]
   viewers      Viewer[]
 
+  links        Link[]
+  views        View[]
+
   plan           String    @default("free")
   stripeId       String?   @unique // Stripe customer ID
   subscriptionId String?   @unique // Stripe subscription ID
@@ -262,8 +265,12 @@ model Link {
   metaFavicon         String? // This will be the meta favicon of the link
   enableCustomMetatag Boolean? @default(false) // Optional give user a option to enable the custom metatag
 
+  teamId String?
+  team   Team?   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
   @@unique([domainSlug, slug])
   @@index([documentId])
+  @@index([teamId])
 }
 
 model LinkPreset {
@@ -325,10 +332,14 @@ model View {
   feedbackResponse  FeedbackResponse?
   agreementResponse AgreementResponse?
 
+  teamId String?
+  team   Team?   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
   @@index([linkId])
   @@index([documentId])
   @@index([dataroomId])
   @@index([dataroomViewId])
+  @@index([teamId])
 }
 
 enum ViewType {

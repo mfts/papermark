@@ -51,6 +51,7 @@ export default function DataroomUpload({ dataroomId }: DataroomUploadProps) {
   );
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id as string;
+  console.log("🚀 ~ DataroomUpload ~ teamId:", teamId);
 
   const handleFileUpload = async (event: any) => {
     event.preventDefault();
@@ -125,6 +126,7 @@ export default function DataroomUpload({ dataroomId }: DataroomUploadProps) {
             ...linkData,
             targetId: dataroomId,
             linkType: "DATAROOM_LINK",
+            teamId,
           }),
         });
 
@@ -170,6 +172,7 @@ export default function DataroomUpload({ dataroomId }: DataroomUploadProps) {
         metaImage: blobUrl,
         targetId: dataroomId,
         linkType: LinkType.DATAROOM_LINK,
+        teamId,
       }),
     });
 
