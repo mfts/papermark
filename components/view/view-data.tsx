@@ -12,6 +12,7 @@ import { LinkWithDocument, NotionTheme, WatermarkConfig } from "@/lib/types";
 
 import AdvancedExcelViewer from "./viewer/advanced-excel-viewer";
 import ImageViewer from "./viewer/image-viewer";
+import FigmaViewer from "./FigmaViewer";
 
 const ExcelViewer = dynamic(
   () => import("@/components/view/viewer/excel-viewer"),
@@ -104,6 +105,10 @@ export default function ViewData({
       }
       ipAddress={viewData.ipAddress}
       linkName={link.name ?? `Link #${link.id.slice(-5)}`}
+    />
+  ) : viewData.fileType === "figma" ? (
+    <FigmaViewer
+      file={viewData.file}
     />
   ) : viewData.pages ? (
     <PagesViewerNew

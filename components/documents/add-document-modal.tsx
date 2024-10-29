@@ -56,6 +56,7 @@ export function AddDocumentModal({
   const [isOpen, setIsOpen] = useState<boolean | undefined>(undefined);
   const [currentFile, setCurrentFile] = useState<File | null>(null);
   const [notionLink, setNotionLink] = useState<string | null>(null);
+  const [figmaLink, setFigmaLink] = useState<string | null>(null);
   const teamInfo = useTeam();
   const { canAddDocuments } = useLimits();
 
@@ -371,6 +372,7 @@ export function AddDocumentModal({
   const clearModelStates = () => {
     currentFile !== null && setCurrentFile(null);
     notionLink !== null && setNotionLink(null);
+    figmaLink !== null && setFigmaLink(null);
     setIsOpen(!isOpen);
     setAddDocumentModalOpen && setAddDocumentModalOpen(!isOpen);
   };
@@ -402,9 +404,10 @@ export function AddDocumentModal({
       >
         <Tabs defaultValue="document">
           {!newVersion ? (
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="document">Document</TabsTrigger>
               <TabsTrigger value="notion">Notion Page</TabsTrigger>
+              <TabsTrigger value="figma">Figma File</TabsTrigger>
             </TabsList>
           ) : (
             <TabsList className="grid w-full grid-cols-1">
@@ -516,6 +519,22 @@ export function AddDocumentModal({
                       </Button>
                     </div>
                   </form>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          )}
+          {!newVersion && (
+            <TabsContent value="figma">
+              <Card>
+                <CardHeader className="space-y-3">
+                  <CardTitle>Share a Figma File</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <form
+                    encType="multipart/form-data"
+                    onSubmit={handleNotionUpload}
+                    className="flex flex-col"
+                  ></form>
                 </CardContent>
               </Card>
             </TabsContent>
