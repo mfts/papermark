@@ -5,7 +5,7 @@ import { useRouter } from "next/router";
 
 import { useEffect, useState } from "react";
 import * as React from "react";
-
+import { useIsMobile } from "@/hooks/use-mobile";
 import { TeamContextType, initialState, useTeam } from "@/context/team-context";
 import Cookies from "js-cookie";
 import {
@@ -81,6 +81,7 @@ export default function AppSidebar({
   const { limits } = useLimits();
   const linksLimit = limits?.links;
   const documentsLimit = limits?.documents;
+  const isMobile=useIsMobile();
 
   const router = useRouter();
   const { currentTeam, teams, isLoading }: TeamContextType =
@@ -166,16 +167,22 @@ export default function AppSidebar({
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" asChild>
+            <SidebarMenuButton size="lg" asChild className="hover:bg-inherit">
               <Link href="/documents">
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                  P {/*should be replaced by actual logo*/}
-                </div>
+                {!open && (
+                  <span className="round flex aspect-square size-8 items-center justify-center text-2xl font-bold tracking-tighter text-black dark:text-white">
+                    {/* <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground"> */}
+                    P {/*should be replaced by actual logo*/}
+                    {/* </div> */}
+                  </span>
+                )}
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <div className="flex h-16 shrink-0 items-center space-x-3">
+                  {open && 
                     <span className="flex items-center text-2xl font-bold tracking-tighter text-black dark:text-white">
                       Papermark
                     </span>
+}
                     {userPlan && userPlan != "free" ? (
                       <span className="ml-4 rounded-full bg-background px-2.5 py-1 text-xs tracking-normal text-foreground ring-1 ring-gray-800">
                         {userPlan.charAt(0).toUpperCase() + userPlan.slice(1)}
@@ -213,10 +220,10 @@ export default function AppSidebar({
                       asChild
                       tooltip={item.name}
                       isActive={item.current}
-                      className="cursor-pointer"
+                      className="mt-1 h-fit w-full cursor-pointer gap-3 py-2.5 pe-3 ps-3 text-sm group-data-[collapsible=icon]:ps-4 group-data-[collapsible=icon]:[&>span:last-child]:hidden"
                       onClick={() => router.push(item.href)}
                     >
-                      <span>
+                      <span className="sidebar-icon">
                         <item.icon />
                         {item.name}
                       </span>
@@ -239,12 +246,12 @@ export default function AppSidebar({
                   >
                     <SidebarMenuItem key={item.name}>
                       <SidebarMenuButton
-                        className="text-sm leading-6 text-muted-foreground hover:bg-inherit hover:text-muted-foreground"
+                        className="hover:text-muted-foregroundh-fit w-full gap-3 p-2 ps-3 text-base text-sm leading-6 text-muted-foreground hover:bg-inherit group-data-[collapsible=icon]:ps-4 group-data-[collapsible=icon]:[&>span:last-child]:hidden"
                         asChild
                         tooltip={item.name}
                         isActive={item.current}
                       >
-                        <span>
+                        <span className="sidebar-icon">
                           {/* <div className="group flex w-full items-center gap-x-2 rounded-md py-2 ml-2 text-sm leading-6 text-muted-foreground hover:bg-transparent"> */}
                           <item.icon
                             className="h-5 w-5 shrink-0"
@@ -266,12 +273,12 @@ export default function AppSidebar({
                     trigger={"sidebar_visitors"}
                   >
                     <SidebarMenuButton
-                      className="text-sm leading-6 text-muted-foreground hover:bg-inherit hover:text-muted-foreground"
                       asChild
                       tooltip={item.name}
                       isActive={item.current}
+                      className="hover:text-muted-foregroundh-fit w-full gap-3 p-2 ps-3 text-base text-sm leading-6 text-muted-foreground hover:bg-inherit group-data-[collapsible=icon]:ps-4 group-data-[collapsible=icon]:[&>span:last-child]:hidden"
                     >
-                      <span>
+                      <span className="sidebar-icon">
                         <item.icon
                           className="h-5 w-5 shrink-0"
                           aria-hidden="true"
@@ -290,9 +297,9 @@ export default function AppSidebar({
                     tooltip={item.name}
                     isActive={item.current}
                     onClick={() => router.push(item.href)}
-                    className="cursor-pointer"
+                    className="mt-1 h-fit w-full cursor-pointer gap-3 p-2 py-2.5 ps-3 text-sm group-data-[collapsible=icon]:ps-4 group-data-[collapsible=icon]:[&>span:last-child]:hidden"
                   >
-                    <span>
+                    <span className="sidebar-icon">
                       <item.icon
                         className="h-5 w-5 shrink-0"
                         aria-hidden="true"
@@ -343,7 +350,9 @@ export default function AppSidebar({
             </>
           )}
           {/* <div className="hidden w-full lg:block"> */}
+          {!isMobile  &&
           <ProfileMenu size="large" />
+          }
           {/* </div> */}
         </div>
       </SidebarFooter>

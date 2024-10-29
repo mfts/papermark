@@ -59,12 +59,16 @@ const ProfileMenu = ({ className, size }: ProfileMenuProps) => {
                       {session?.user?.name?.slice(0, 2)?.toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
-                  <div className="grid flex-1 text-left text-sm leading-tight">
-                    <span className="truncate font-semibold">
-                      {session?.user?.name}
-                    </span>
-                  </div>
-                  <ChevronUp className="ml-auto size-4" />
+                  {isSize && (
+                    <>
+                      <div className="grid flex-1 text-left text-sm leading-tight">
+                        <span className="truncate font-semibold">
+                          {session?.user?.name}
+                        </span>
+                      </div>
+                      <ChevronUp className="ml-auto size-4" />
+                    </>
+                  )}
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
               <DropdownMenuContent
