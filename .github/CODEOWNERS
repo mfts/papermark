@@ -1,8 +1,0 @@
-# Learn how to add code owners here:
-# https://help.github.com/en/articles/about-code-owners
-
-# These owners will be the default owners for everything in the repo.
-# Order is important; the last matching pattern takes the most precedence.
-
-*             @mfts
-/.github/     @mfts
