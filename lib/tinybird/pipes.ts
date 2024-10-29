@@ -7,8 +7,8 @@ export const getTotalAvgPageDuration = tb.buildPipe({
   pipe: "get_total_average_page_duration__v5",
   parameters: z.object({
     documentId: z.string(),
-    excludedLinkIds: z.array(z.string()),
-    excludedViewIds: z.array(z.string()),
+    excludedLinkIds: z.string().describe("Comma separated linkIds"),
+    excludedViewIds: z.string().describe("Comma separated viewIds"),
     since: z.number(),
   }),
   data: z.object({

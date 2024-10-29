@@ -3,8 +3,7 @@ import { useRouter } from "next/router";
 import { useCallback, useEffect, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
-import { PlusIcon } from "lucide-react";
-import { encode } from "next-auth/jwt";
+import { CircleHelpIcon, PlusIcon } from "lucide-react";
 import { HexColorInput, HexColorPicker } from "react-colorful";
 import { toast } from "sonner";
 import { mutate } from "swr";
@@ -22,6 +21,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { BadgeTooltip } from "@/components/ui/tooltip";
 
 import { usePlan } from "@/lib/swr/use-billing";
 import { useBrand } from "@/lib/swr/use-brand";
@@ -143,9 +143,17 @@ export default function Branding() {
               <h3 className="text-2xl font-semibold tracking-tight text-foreground">
                 Branding
               </h3>
-              <p className="text-sm text-muted-foreground">
+              <p className="flex flex-row items-center gap-2 text-sm text-muted-foreground">
                 Customize how your brand appears globally across Papermark
                 documents your visitors see.
+                <BadgeTooltip
+                  linkText="Click here"
+                  content="How to customize document branding?"
+                  key="branding"
+                  link="https://www.papermark.io/help/article/document-branding"
+                >
+                  <CircleHelpIcon className="h-4 w-4 shrink-0 text-muted-foreground hover:text-foreground" />
+                </BadgeTooltip>
               </p>
             </div>
           </div>
@@ -351,7 +359,7 @@ export default function Branding() {
                   <TabsContent value="account">
                     <div className="flex justify-center">
                       <div className="relative h-[450px] w-[698px] rounded-lg bg-gray-200 p-1 shadow-lg">
-                      <div className="relative h-[442px] lg:overflow-x-hidden overflow-x-auto rounded-lg bg-gray-100">
+                        <div className="relative h-[442px] overflow-x-auto rounded-lg bg-gray-100 lg:overflow-x-hidden">
                           <div className="mx-auto flex h-7 items-center justify-center">
                             <div className="pointer-events-none absolute left-3">
                               <div className="flex flex-row flex-nowrap justify-start">
@@ -425,7 +433,7 @@ export default function Branding() {
                   <TabsContent value="password">
                     <div className="flex justify-center">
                       <div className="relative h-[450px] w-[698px] rounded-lg bg-gray-200 p-1 shadow-lg">
-                        <div className="relative h-[442px] lg:overflow-x-hidden overflow-x-auto rounded-lg bg-gray-100">
+                        <div className="relative h-[442px] overflow-x-auto rounded-lg bg-gray-100 lg:overflow-x-hidden">
                           <div className="mx-auto flex h-7 items-center justify-center">
                             <div className="pointer-events-none absolute left-3">
                               <div className="flex flex-row flex-nowrap justify-start">

@@ -303,6 +303,7 @@ export function AddDocumentModal({
             numPages: 1,
             type: "notion",
             createLink: false,
+            folderPathName: currentFolderPath?.join("/"),
           }),
         },
       );
