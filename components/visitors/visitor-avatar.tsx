@@ -1,13 +1,19 @@
+import { ArchiveIcon } from "lucide-react";
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 import { generateGravatarHash } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 
+import { BadgeTooltip } from "../ui/tooltip";
+
 export const VisitorAvatar = ({
   viewerEmail,
+  isArchived,
   className,
 }: {
   viewerEmail: string | null;
+  isArchived?: boolean;
   className?: string;
 }) => {
   // Convert email string to a simple hash
@@ -38,6 +44,22 @@ export const VisitorAvatar = ({
     return colors[index];
   };
 
+  if (isArchived) {
+    return (
+      <BadgeTooltip
+        key="archived"
+        content="Visit is archived and excluded from the document statistics"
+      >
+        <Avatar
+          className={cn("hidden flex-shrink-0 sm:inline-flex", className)}
+        >
+          <AvatarFallback className="bg-gray-200/50 dark:bg-gray-200/50">
+            <ArchiveIcon className="h-4 w-4" />
+          </AvatarFallback>
+        </Avatar>
+      </BadgeTooltip>
+    );
+  }
   if (!viewerEmail) {
     return (
       <Avatar className={cn("hidden flex-shrink-0 sm:inline-flex", className)}>

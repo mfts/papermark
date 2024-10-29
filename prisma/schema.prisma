@@ -73,6 +73,8 @@ model Team {
   viewers      Viewer[]
 
   joinCode       String?   @unique
+  links          Link[]
+  views          View[]
   plan           String    @default("free")
   stripeId       String?   @unique // Stripe customer ID
   subscriptionId String?   @unique // Stripe subscription ID
@@ -262,8 +264,12 @@ model Link {
   metaFavicon         String? // This will be the meta favicon of the link
   enableCustomMetatag Boolean? @default(false) // Optional give user a option to enable the custom metatag
 
+  teamId String?
+  team   Team?   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
   @@unique([domainSlug, slug])
   @@index([documentId])
+  @@index([teamId])
 }
 
 model LinkPreset {
@@ -325,10 +331,16 @@ model View {
   feedbackResponse  FeedbackResponse?
   agreementResponse AgreementResponse?
 
+  isArchived Boolean @default(false) // Indicates if the view is archived and not counted in the analytics
+
+  teamId String?
+  team   Team?   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
   @@index([linkId])
   @@index([documentId])
   @@index([dataroomId])
   @@index([dataroomViewId])
+  @@index([teamId])
 }
 
 enum ViewType {

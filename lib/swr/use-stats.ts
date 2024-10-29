@@ -23,6 +23,7 @@ export function useStats({
   // this gets the data for a document's graph of all views
   const router = useRouter();
   const teamInfo = useTeam();
+  const teamId = teamInfo?.currentTeam?.id;
 
   const { id } = router.query as {
     id: string;
@@ -30,10 +31,8 @@ export function useStats({
 
   const { data: stats, error } = useSWR<TStatsData>(
     id &&
-      teamInfo?.currentTeam &&
-      `/api/teams/${teamInfo.currentTeam.id}/documents/${encodeURIComponent(
-        id,
-      )}/stats${excludeTeamMembers ? "?excludeTeamMembers=true" : ""}`,
+      teamId &&
+      `/api/teams/${teamId}/documents/${encodeURIComponent(id)}/stats${excludeTeamMembers ? "?excludeTeamMembers=true" : ""}`,
     fetcher,
     {
       dedupingInterval: 10000,

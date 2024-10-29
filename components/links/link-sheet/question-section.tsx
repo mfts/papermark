@@ -51,6 +51,7 @@ export default function QuestionSection({
     <div className="pb-5">
       <LinkItem
         title="Feedback Question"
+        tooltipContent="Create a concise question for visitor feedback."
         enabled={enabled}
         action={handleQuestion}
         isAllowed={isAllowed}
@@ -76,7 +77,7 @@ export default function QuestionSection({
                 <SelectTrigger className="flex w-full rounded-md border border-input bg-white text-foreground placeholder-muted-foreground focus:border-muted-foreground focus:outline-none focus:ring-inset focus:ring-muted-foreground dark:border-gray-500 dark:bg-gray-800 focus:dark:bg-transparent sm:text-sm">
                   <SelectValue placeholder="Select a question type" />
                 </SelectTrigger>
-                <SelectContent className="flex w-full rounded-md border border-input bg-white text-foreground placeholder-muted-foreground focus:border-muted-foreground focus:outline-none focus:ring-inset focus:ring-muted-foreground dark:border-gray-500 dark:bg-gray-800 focus:dark:bg-transparent sm:text-sm">
+                <SelectContent className="z-50 flex w-full rounded-md border border-input bg-white text-foreground placeholder-muted-foreground focus:border-muted-foreground focus:outline-none focus:ring-inset focus:ring-muted-foreground dark:border-gray-500 dark:bg-gray-800 focus:dark:bg-gray-900 sm:text-sm">
                   <SelectItem value="yes-no">Yes / No</SelectItem>
                 </SelectContent>
               </Select>

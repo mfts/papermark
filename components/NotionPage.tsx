@@ -11,6 +11,8 @@ import { NotionRenderer } from "react-notion-x";
 // core styles shared by all of react-notion-x (required)
 import "react-notion-x/src/styles.css";
 
+import { NotionTheme } from "@/lib/types";
+import { cn } from "@/lib/utils";
 import { determineTextColor } from "@/lib/utils/determine-text-color";
 
 // custom styles for notion
@@ -25,6 +27,7 @@ import {
   BreadcrumbSeparator,
 } from "./ui/breadcrumb";
 import { Portal } from "./ui/portal";
+import { ScreenProtector } from "./view/ScreenProtection";
 import { TDocumentData } from "./view/dataroom/dataroom-view";
 import Nav from "./view/nav";
 
@@ -46,6 +49,8 @@ export const NotionPage = ({
   dataroomId,
   setDocumentData,
   isPreview,
+  theme,
+  screenshotProtectionEnabled,
 }: {
   recordMap: ExtendedRecordMap;
   rootPageId?: string;
@@ -58,6 +63,8 @@ export const NotionPage = ({
   dataroomId?: string;
   setDocumentData?: React.Dispatch<React.SetStateAction<TDocumentData | null>>;
   isPreview?: boolean;
+  theme?: NotionTheme | null;
+  screenshotProtectionEnabled: boolean;
 }) => {
   const [pageNumber, setPageNumber] = useState<number>(1); // start on first page
   const [maxScrollPercentage, setMaxScrollPercentage] = useState<number>(0);
@@ -68,6 +75,8 @@ export const NotionPage = ({
   });
   const [subTitle, setSubTitle] = useState<string>("");
   const [title, setTitle] = useState<string>("");
+
+  const [isWindowFocused, setIsWindowFocused] = useState(true);
 
   const [recordMapState, setRecordMapState] =
     useState<ExtendedRecordMap>(recordMap);
@@ -103,6 +112,22 @@ export const NotionPage = ({
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, []);
+
+  // Add this effect near your other useEffect hooks
+  useEffect(() => {
+    if (!screenshotProtectionEnabled) return;
+
+    const handleFocus = () => setIsWindowFocused(true);
+    const handleBlur = () => setIsWindowFocused(false);
+
+    window.addEventListener("focus", handleFocus);
+    window.addEventListener("blur", handleBlur);
+
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+      window.removeEventListener("blur", handleBlur);
+    };
+  }, [screenshotProtectionEnabled]);
 
   // Memoize the fetchSubPage function
   const fetchSubPage = useCallback(
@@ -267,6 +292,9 @@ export const NotionPage = ({
         setDocumentData={setDocumentData}
         type="notion"
         isPreview={isPreview}
+        linkId={linkId}
+        documentId={documentId}
+        viewId={viewId}
       />
 
       <Portal containerId="view-breadcrump-portal">
@@ -308,11 +336,17 @@ export const NotionPage = ({
 
       {loading && <div>Loading...</div>}
 
-      <div>
+      <div
+        className={cn(
+          !isWindowFocused &&
+            screenshotProtectionEnabled &&
+            "blur-xl transition-all duration-300",
+        )}
+      >
         <NotionRenderer
           recordMap={recordMapState}
           fullPage={true}
-          darkMode={false}
+          darkMode={theme ? theme === "dark" : false}
           rootPageId={rootPageId}
           disableHeader={true}
           components={{
@@ -344,6 +378,7 @@ export const NotionPage = ({
           }}
         />
       </div>
+      {screenshotProtectionEnabled ? <ScreenProtector /> : null}
     </div>
   );
 };

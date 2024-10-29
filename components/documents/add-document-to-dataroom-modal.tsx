@@ -32,13 +32,14 @@ export function AddToDataroomModal({
   setOpen,
   documentId,
   documentName,
+  dataroomId,
 }: {
   open: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
   documentId?: string;
   documentName?: string;
+  dataroomId?: string;
 }) {
-  const router = useRouter();
   const [selectedDataroom, setSelectedDataroom] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -102,8 +103,13 @@ export function AddToDataroomModal({
           </SelectTrigger>
           <SelectContent>
             {datarooms?.map((dataroom) => (
-              <SelectItem key={dataroom.id} value={dataroom.id}>
+              <SelectItem
+                key={dataroom.id}
+                value={dataroom.id}
+                disabled={dataroom.id === dataroomId}
+              >
                 {dataroom.name}
+                {dataroom.id === dataroomId ? " (current)" : ""}
               </SelectItem>
             ))}
           </SelectContent>

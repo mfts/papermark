@@ -6,7 +6,6 @@
 export const localStorage = {
     getItem(key: string) {
         try {
-            // eslint-disable-next-line
             return window.localStorage.getItem(key);
         } catch (e) {
             // In case storage is restricted. Possible reasons
@@ -16,7 +15,6 @@ export const localStorage = {
     },
     setItem(key: string, value: string) {
         try {
-            // eslint-disable-next-line
             window.localStorage.setItem(key, value);
         } catch (e) {
             // In case storage is restricted. Possible reasons
@@ -27,7 +25,6 @@ export const localStorage = {
     },
     removeItem: (key: string) => {
         try {
-            // eslint-disable-next-line
             window.localStorage.removeItem(key);
         } catch (e) {
             return;

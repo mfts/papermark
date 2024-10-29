@@ -8,6 +8,7 @@ import { Brand, DataroomBrand } from "@prisma/client";
 import {
   ArrowUpRight,
   Download,
+  Flag,
   Minimize2Icon,
   Slash,
   ZoomInIcon,
@@ -38,7 +39,9 @@ import {
   BreadcrumbSeparator,
 } from "../ui/breadcrumb";
 import { Button } from "../ui/button";
+import { Separator } from "../ui/separator";
 import { TDocumentData } from "./dataroom/dataroom-view";
+import ReportForm from "./report-form";
 
 export default function Nav({
   pageNumber,
@@ -58,6 +61,7 @@ export default function Nav({
   isMobile,
   isPreview,
   hasWatermark,
+  documentId,
 }: {
   pageNumber?: number;
   numPages?: number;
@@ -76,6 +80,7 @@ export default function Nav({
   isMobile?: boolean;
   isPreview?: boolean;
   hasWatermark?: boolean;
+  documentId?: string;
 }) {
   const downloadFile = async () => {
     if (isPreview) {
@@ -187,7 +192,7 @@ export default function Nav({
               </Breadcrumb>
             ) : null}
           </div>
-          <div className="absolute inset-y-0 right-0 flex items-center space-x-4 pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
+          <div className="absolute inset-y-0 right-0 flex items-center space-x-2 pr-2 sm:static sm:inset-auto sm:ml-6 sm:space-x-4 sm:pr-0">
             {embeddedLinks && embeddedLinks.length > 0 ? (
               <DropdownMenu>
                 <DropdownMenuTrigger>
@@ -236,14 +241,15 @@ export default function Nav({
             {allowDownload ? (
               <Button
                 onClick={downloadFile}
-                className="m-1 bg-gray-900 text-white hover:bg-gray-900/80"
+                className="size-8 bg-gray-900 text-white hover:bg-gray-900/80 sm:size-10"
                 size="icon"
                 title="Download document"
               >
-                <Download className="h-5 w-5" />
+                <Download className="size-4 sm:size-5" />
               </Button>
             ) : null}
-            {!(isVertical && isMobile) && documentRefs ? (
+
+            {!isMobile && documentRefs ? (
               <div className="flex gap-1">
                 <Button
                   onClick={() => {
@@ -290,19 +296,26 @@ export default function Nav({
               </div>
             ) : null}
             {pageNumber && numPages ? (
-              <div className="flex h-10 items-center rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white">
+              <div className="flex h-8 items-center space-x-1 rounded-md bg-gray-900 px-3 py-1.5 text-xs font-medium text-white sm:h-10 sm:px-4 sm:py-2 sm:text-sm">
                 <span style={{ fontVariantNumeric: "tabular-nums" }}>
                   {pageNumber}
                 </span>
+                <span className="text-gray-400">/</span>
                 <span
                   className="text-gray-400"
                   style={{ fontVariantNumeric: "tabular-nums" }}
                 >
-                  {" "}
-                  / {numPages}
+                  {numPages}
                 </span>
               </div>
             ) : null}
+            {/* add a separator that doesn't use radix or shadcn  */}
+            <div className="h-6 w-px bg-gray-800" />
+            <ReportForm
+              linkId={linkId}
+              documentId={documentId}
+              viewId={viewId}
+            />
           </div>
         </div>
       </div>

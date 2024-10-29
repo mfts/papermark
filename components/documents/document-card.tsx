@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
 
@@ -10,7 +9,6 @@ import {
   FolderInputIcon,
   Layers2Icon,
   MoreVertical,
-  PlusIcon,
   TrashIcon,
 } from "lucide-react";
 import { useTheme } from "next-themes";
@@ -18,8 +16,6 @@ import { toast } from "sonner";
 import { mutate } from "swr";
 
 import BarChart from "@/components/shared/icons/bar-chart";
-import Check from "@/components/shared/icons/check";
-import Copy from "@/components/shared/icons/copy";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -30,7 +26,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-import { usePlan } from "@/lib/swr/use-billing";
 import useDatarooms from "@/lib/swr/use-datarooms";
 import useLimits from "@/lib/swr/use-limits";
 import { DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
@@ -39,7 +34,6 @@ import { fileIcon } from "@/lib/utils/get-file-icon";
 import { useCopyToClipboard } from "@/lib/utils/use-copy-to-clipboard";
 
 import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
-import { AddDataroomModal } from "../datarooms/add-dataroom-modal";
 import { DataroomTrialModal } from "../datarooms/dataroom-trial-modal";
 import { AddToDataroomModal } from "./add-document-to-dataroom-modal";
 import { MoveToFolderModal } from "./move-folder-modal";
@@ -62,7 +56,6 @@ export default function DocumentsCard({
   const { theme, systemTheme } = useTheme();
   const isLight =
     theme === "light" || (theme === "system" && systemTheme === "light");
-  const { plan, trial } = usePlan();
 
   const { isCopied, copyToClipboard } = useCopyToClipboard({});
   const [isFirstClick, setIsFirstClick] = useState<boolean>(false);
@@ -72,18 +65,7 @@ export default function DocumentsCard({
   const [trialModalOpen, setTrialModalOpen] = useState<boolean>(false);
   const [planModalOpen, setPlanModalOpen] = useState<boolean>(false);
 
-  const { datarooms: dataRooms } = useDatarooms();
-
-  const { limits } = useLimits();
-
-  const numDatarooms = dataRooms?.length ?? 0;
-  const limitDatarooms = limits?.datarooms ?? 1;
-
-  const isBusiness = plan === "business";
-  const isDatarooms = plan === "datarooms";
-  const isTrialDatarooms = trial === "drtrial";
-  const canCreateUnlimitedDatarooms =
-    isDatarooms || (isBusiness && numDatarooms < limitDatarooms);
+  const { datarooms } = useDatarooms();
 
   const dropdownRef = useRef<HTMLDivElement | null>(null);
   const { canAddDocuments } = useLimits();
@@ -207,33 +189,6 @@ export default function DocumentsCard({
     );
   };
 
-  const renderDropdownMenuItem = () => {
-    if (isBusiness && !canCreateUnlimitedDatarooms) {
-      return (
-        <DropdownMenuItem onClick={() => setPlanModalOpen(true)}>
-          <PlusIcon className="mr-2 h-4 w-4" aria-hidden="true" />
-          <span>Upgrade to Add Datarooms</span>
-        </DropdownMenuItem>
-      );
-    }
-
-    if (isTrialDatarooms && dataRooms && !isBusiness && !isDatarooms) {
-      return (
-        <DropdownMenuItem onClick={() => setPlanModalOpen(true)}>
-          <PlusIcon className="mr-2 h-4 w-4" aria-hidden="true" />
-          <span>Upgrade to Add Datarooms</span>
-        </DropdownMenuItem>
-      );
-    }
-
-    return (
-      <DropdownMenuItem onClick={() => setTrialModalOpen(true)}>
-        <PlusIcon className="mr-2 h-4 w-4" aria-hidden="true" />
-        <span>Start Data Room Trial</span>
-      </DropdownMenuItem>
-    );
-  };
-
   return (
     <>
       <div
@@ -257,7 +212,7 @@ export default function DocumentsCard({
 
           <div className="flex-col">
             <div className="flex items-center">
-              <h2 className="min-w-0 max-w-[150px] truncate text-sm font-semibold leading-6 text-foreground sm:max-w-md">
+              <h2 className="min-w-0 max-w-[250px] truncate text-sm font-semibold leading-6 text-foreground sm:max-w-md">
                 <Link
                   href={`/documents/${prismaDocument.id}`}
                   className="w-full truncate"
@@ -331,20 +286,20 @@ export default function DocumentsCard({
                 <FolderInputIcon className="mr-2 h-4 w-4" />
                 Move to folder
               </DropdownMenuItem>
-              <DropdownMenuItem
+              {/* INFO: Duplicate document is disabled for now */}
+              {/* <DropdownMenuItem
                 onClick={(e) => handleDuplicateDocument(e)}
                 disabled={!canAddDocuments}
               >
                 <Layers2Icon className="mr-2 h-4 w-4" />
                 Duplicate document
-              </DropdownMenuItem>
-              {dataRooms && dataRooms.length !== 0 && (
+              </DropdownMenuItem> */}
+              {datarooms && datarooms.length !== 0 && (
                 <DropdownMenuItem onClick={() => setAddDataroomOpen(true)}>
                   <BetweenHorizontalStartIcon className="mr-2 h-4 w-4" />
                   Add to dataroom
                 </DropdownMenuItem>
               )}
-              {renderDropdownMenuItem()}
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={(event) => handleButtonClick(event, prismaDocument.id)}

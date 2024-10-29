@@ -169,6 +169,7 @@ export default function PDFViewer(props: any) {
         assistantEnabled={props.assistantEnabled}
         viewId={props.viewId}
         linkId={props.linkId}
+        documentId={props.documentId}
       />
       <div
         hidden={loading}

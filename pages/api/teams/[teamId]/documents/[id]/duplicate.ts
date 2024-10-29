@@ -121,9 +121,6 @@ export default async function handle(
               },
             },
           },
-          links: {
-            create: {},
-          },
         },
       });
 
