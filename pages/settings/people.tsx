@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { mutate } from "swr";
 
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
+import { InviteLinkModal } from "@/components/datarooms/settings/invite-link-modal";
 import AppLayout from "@/components/layouts/app";
 import { SettingsHeader } from "@/components/settings/settings-header";
 import Folder from "@/components/shared/icons/folder";
@@ -215,6 +216,10 @@ export default function Billing() {
                 Manage your team members
               </p>
             </div>
+
+            <InviteLinkModal >
+              <Button>Invite Link</Button>
+            </InviteLinkModal>
           </div>
           <div>
             <div className="flex items-center justify-between rounded-lg border border-border bg-secondary p-10">

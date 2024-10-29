@@ -527,3 +527,9 @@ export function hexToRgb(hex: string) {
   let b = (bigint & 255) / 255; // Convert to 0-1 range
   return rgb(r, g, g);
 }
+
+export const generateCode = () => {
+  const code = Array.from({ length: 6 }, () => '0123456789abcdefghijklmnopqrstuvwxyz'[Math.floor(Math.random() * 36)]).join('')
+
+  return code
+}
