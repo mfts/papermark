@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
+import { DialogClose } from "@radix-ui/react-dialog";
 import { CopyIcon, Loader2, RefreshCcw } from "lucide-react";
 import { toast } from "sonner";
 import { mutate } from "swr";
@@ -12,11 +13,11 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger
+  DialogTrigger,
 } from "@/components/ui/dialog";
 
 import { useAnalytics } from "@/lib/analytics";
-import { DialogClose } from "@radix-ui/react-dialog";
+import { useJoinCode } from "@/lib/swr/use-joincode";
 
 export function InviteLinkModal({
   dataroomId,
@@ -31,27 +32,23 @@ export function InviteLinkModal({
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
   children?: React.ReactNode;
 }) {
-  const [isPending, setIsPending] = useState<boolean>(false);
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
-  const analytics = useAnalytics();
 
-  const joinCode = useJoinCode(dataroomId, groupId);
-
+  const { joinCode, isPending, error, generateNewJoinCode, isGeneratingNewCode } =
+    useJoinCode();
 
   const handleCopy = () => {
-    const inviteLink = `${window.location.origin}/join/${workspaceId}`
+    const inviteLink = `${window.location.origin}/join/${teamId}`;
 
-    navigator.clipboard.writeText(inviteLink).then(() => toast.success('Link copied to clipboard'))
-  }
+    navigator.clipboard
+      .writeText(inviteLink)
+      .then(() => toast.success("Link copied to clipboard"));
+  };
 
   const handleNewJoinCode = async () => {
-    const ok = await confirm()
-
-    if (!ok) return
-
-    mutate({ workspaceId }, { onSuccess: () => toast.success('Invite code regenerated'), onError: () => toast.error('Failed to regenerate invite code') })
-  }
+    await generateNewJoinCode();
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -68,7 +65,7 @@ export function InviteLinkModal({
 
         <div className="flex flex-col items-center justify-center gap-y-4 py-10">
           <p className="text-4xl font-bold uppercase tracking-widest">
-            {joinCode}
+            {isPending ? "Loading code" : joinCode}
           </p>
 
           <Button onClick={handleCopy} variant="ghost" size="sm">
@@ -80,9 +77,9 @@ export function InviteLinkModal({
           <Button
             variant="outline"
             onClick={handleNewJoinCode}
-            disabled={isPending}
+            disabled={isPending || isGeneratingNewCode}
           >
-            {isPending ? (
+            {isPending || isGeneratingNewCode ? (
               <>
                 generating
                 <Loader2 className="ml-2 size-4 animate-spin" />

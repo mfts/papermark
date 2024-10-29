@@ -69,6 +69,7 @@ export const EXCLUDED_PATHS = [
   "/investors",
   "/blog",
   "/view",
+  "/join/[teamId]",
 ];
 
 // free limits
