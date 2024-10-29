@@ -72,7 +72,7 @@ model Team {
   viewerGroups ViewerGroup[]
   viewers      Viewer[]
 
-  joinCode       String?
+  joinCode       String?   @unique
   plan           String    @default("free")
   stripeId       String?   @unique // Stripe customer ID
   subscriptionId String?   @unique // Stripe subscription ID

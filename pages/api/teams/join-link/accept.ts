@@ -1,8 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
-
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth";
-
 import { identifyUser, trackAnalytics } from "@/lib/analytics";
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
@@ -13,14 +11,13 @@ export default async function handle(
   res: NextApiResponse,
 ) {
   if (req.method === "GET") {
-    // GET /api/teams/:teamId/joincode/accept
+    // GET /api/teams/join-link/accept
     const session = await getServerSession(req, res, authOptions);
 
-    const { teamId } = req.query as { teamId: string };
     const { joinCode } = req.query as { joinCode: string };
 
     if (!session) {
-      res.redirect(`/login?next=/joincode/accept`);
+      res.redirect(`/login?next=/api/teams/join-link/accept?joinCode=${joinCode}`);
       return;
     }
 
@@ -28,18 +25,15 @@ export default async function handle(
 
     try {
       const team = await prisma.team.findUnique({
-        where: {
-          id: teamId,
-        },
+        where: { joinCode },
+        select: { id: true },
       });
 
       if (!team) {
-        return res.status(404).json("Team not found");
+        return res.status(404).json("Invalid join link");
       }
 
-      if (team.joinCode !== joinCode) {
-        return res.status(403).json("Invalid join code");
-      }
+      const teamId = team.id;
 
       const userTeam = await prisma.userTeam.findFirst({
         where: {
@@ -66,7 +60,7 @@ export default async function handle(
         },
       });
 
-      await identifyUser((session?.user as CustomUser).email!);
+      await identifyUser(session.user?.email ?? "");
       await trackAnalytics({
         event: "Team Member Invitation Accepted",
         teamId: teamId,
@@ -78,3 +72,4 @@ export default async function handle(
     }
   }
 }
+
