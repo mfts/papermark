@@ -45,6 +45,7 @@ import { EmptyDocuments } from "./empty-document";
 import FolderCard from "./folder-card";
 import { MoveToFolderModal } from "./move-folder-modal";
 import Link from "next/link";
+import { useRouter } from "next/router";
 
 export function DocumentsList({
   folders,
@@ -58,6 +59,7 @@ export function DocumentsList({
   folderPathName?: string[];
 }) {
   const { isMobile } = useMediaQuery();
+  const router = useRouter();
 
   const [uploads, setUploads] = useState<
     { fileName: string; progress: number; documentId?: string }[]
@@ -173,7 +175,7 @@ export function DocumentsList({
     setSelectedDocuments([]);
     setIsOverFolder(false);
   };
-
+  const endpoint = router.asPath.split('/').pop();
   const HeaderContent = memo(() => {
     if (selectedDocuments.length > 0) {
       return (
@@ -229,16 +231,21 @@ export function DocumentsList({
               <FileIcon className="h-5 w-5" />
               <span>
                 {
-                  documents.filter((document) => !document.isArchived).length
+                  documents.length
                 }{" "}
-                document{documents.filter((document) => !document.isArchived).length !== 1 ? "s" : ""}
+                document{documents.length !== 1 ? "s" : ""}
     </span>
             </p>
           )}
-          <Link href="/archive" className=" absolute m-auto right-0 flex items-center gap-2 duration-300 transition-all px-3 py-2 text-sm rounded-md">
+          {
+            endpoint == "documents" &&
+            (
+              <Link href="/documents/archive" className=" absolute right-0 flex items-center gap-2 px-3 py-2 text-sm mb-2">
             <ArchiveIcon className="h-5 w-5" />
              Archive
           </Link>
+            )
+          }
         </div>
       );
     }
@@ -302,10 +309,7 @@ export function DocumentsList({
             {/* Documents list */}
             <ul role="list" className="space-y-4">
               {documents
-                ? documents
-                .filter((document) => !document.isArchived)
-                .map((document) => {
-
+                ? documents.map((document) => {
                     return (
                       <DocumentCard
                         key={document.id}
@@ -339,7 +343,7 @@ export function DocumentsList({
               <HeaderContent />
             </Portal>
 
-            {documents && documents.filter((document) => !document.isArchived).length === 0 && (
+            {documents && documents.length === 0 && (
                <div className="flex items-center justify-center">
                  <EmptyDocuments />
                 </div>
@@ -396,9 +400,7 @@ export function DocumentsList({
                 {/* Documents list */}
                 <ul role="list" className="space-y-4">
                   {documents
-                    ? documents
-                    .filter((document) => !document.isArchived)
-                    .map((document) => {
+                    ? documents.map((document) => {
                         return (
                           <DraggableItem
                             key={document.id}
@@ -468,7 +470,7 @@ export function DocumentsList({
                   <HeaderContent />
                 </Portal>
 
-                {documents && documents.filter((document) => !document.isArchived).length === 0 && (
+                {documents && documents.length === 0 && (
                   <div className="flex items-center justify-center">
                     <EmptyDocuments />
                   </div>

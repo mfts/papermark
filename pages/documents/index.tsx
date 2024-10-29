@@ -16,7 +16,7 @@ export default function Documents() {
   const teamInfo = useTeam();
 
   const { folders } = useRootFolders();
-  const { documents, isValidating, isFiltered } = useDocuments();
+  const { documents, isValidating, isFiltered } = useDocuments(false);
 
   return (
     <AppLayout>
@@ -73,6 +73,7 @@ export default function Documents() {
           teamInfo={teamInfo}
         />
       </div>
+    </div>
     </AppLayout>
   );
 }

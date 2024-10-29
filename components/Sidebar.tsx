@@ -12,7 +12,6 @@ import {
   FolderOpenIcon,
   PaletteIcon,
   ServerIcon,
-  ArchiveIcon
 } from "lucide-react";
 
 import MenuIcon from "@/components/shared/icons/menu";

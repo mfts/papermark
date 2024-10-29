@@ -69,6 +69,12 @@ export default function DocumentsCard({
   const { datarooms } = useDatarooms();
 
   const dropdownRef = useRef<HTMLDivElement | null>(null);
+  const endpoint = router.asPath.split('/').pop(); // Get last part of URL path
+
+  // Determine action text and archive status based on endpoint
+  const isArchivePage = endpoint === "archive";
+  const actionText = isArchivePage ? "Retrieve document" : "Archive document";
+  const archiveStatus = !isArchivePage;
   const { canAddDocuments } = useLimits();
 
   /** current folder name */
@@ -134,6 +140,7 @@ export default function DocumentsCard({
       }).then(() => {
         mutate(`/api/teams/${teamInfo?.currentTeam?.id}${endpoint}`, null, {
           populateCache: (_, docs) => {
+            if(!docs) return [];
             return docs.filter(
               (doc: DocumentWithLinksAndLinkCountAndViewCount) =>
                 doc.id !== documentId,
@@ -141,6 +148,7 @@ export default function DocumentsCard({
           },
           revalidate: false,
         });
+        mutate(`/api/teams/${teamInfo?.currentTeam?.id}${endpoint}?isArchived=${!archiveStatus}`, null, { revalidate: true });
       }),
       {
         loading: "Deleting document...",
@@ -151,35 +159,39 @@ export default function DocumentsCard({
   };
 
   const handleArchiveDocument = async (documentId: string, archive: boolean) => {
-  const endpoint = currentFolderPath
-    ? `/folders/documents/${currentFolderPath.join("/")}`
-    : "/documents";
-
-  toast.promise(
-    fetch(`/api/teams/${teamInfo?.currentTeam?.id}/documents/${documentId}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ isArchived: archive }), // Set isArchived to true or false
-    }).then(() => {
-      // Update the cache to reflect the change
-      mutate(`/api/teams/${teamInfo?.currentTeam?.id}${endpoint}`, null, {
-        populateCache: (_, docs) => {
-          return docs.map((doc: DocumentWithLinksAndLinkCountAndViewCount) =>
-            doc.id === documentId ? { ...doc, isArchived: archive } : doc,
-          );
+    const endpoint = currentFolderPath
+      ? `/folders/documents/${currentFolderPath.join("/")}`
+      : "/documents";
+  
+    toast.promise(
+      fetch(`/api/teams/${teamInfo?.currentTeam?.id}/documents/${documentId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
         },
-        revalidate: false,
-      });
-    }),
-    {
-      loading: `${archive ? "Archiving" : "Unarchiving"} document...`,
-      success: `Document ${archive ? "archived" : "unarchived"} successfully.`,
-      error: `Failed to ${archive ? "archive" : "unarchive"} document. Try again.`,
-    },
-  );
-};
+        body: JSON.stringify({ isArchived: archive }), // Set isArchived to true or false
+      }).then(() => {
+        mutate(`/api/teams/${teamInfo?.currentTeam?.id}${endpoint}?isArchived=${archive}`, null, {
+          populateCache: (_, docs) => {
+            if (!docs) return [];
+            return docs.map((doc: DocumentWithLinksAndLinkCountAndViewCount) =>
+              doc.id === documentId ? { ...doc, isArchived: archive } : doc
+            );
+          },
+          revalidate: false,
+        });
+  
+        mutate(`/api/teams/${teamInfo?.currentTeam?.id}${endpoint}?isArchived=${!archive}`, null, {
+          revalidate: true, 
+        });
+      }),
+      {
+        loading: `${archive ? "Archiving" : "Retrieving"} document...`,
+        success: `Document ${archive ? "archived" : "retrieved"} successfully.`,
+        error: `Failed to ${archive ? "archive" : "retrieve"} document. Try again.`,
+      }
+    );
+  };
 
   
   const handleMenuStateChange = (open: boolean) => {
@@ -315,10 +327,14 @@ export default function DocumentsCard({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" ref={dropdownRef}>
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem onClick={() => handleArchiveDocument(prismaDocument.id, true)}>
+              <DropdownMenuItem onClick={() => handleArchiveDocument(prismaDocument.id, archiveStatus)}>
                 <ArchiveIcon className="mr-2 h-4 w-4"  />
-                Archive document
-              </DropdownMenuItem><DropdownMenuItem onClick={() => setMoveFolderOpen(true)}>
+                {actionText}
+              </DropdownMenuItem>
+              {
+                endpoint == "documents" && (
+                  <>
+                  <DropdownMenuItem onClick={() => setMoveFolderOpen(true)}>
                 <FolderInputIcon className="mr-2 h-4 w-4" />
                 Move to folder
               </DropdownMenuItem>
@@ -336,6 +352,9 @@ export default function DocumentsCard({
                   Add to dataroom
                 </DropdownMenuItem>
               )}
+                  </>
+                )
+              }
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={(event) => handleButtonClick(event, prismaDocument.id)}

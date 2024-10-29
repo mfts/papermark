@@ -8,10 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 
 import useDocuments, { useRootFolders } from "@/lib/swr/use-documents";
-import { ArchivedDocumentsList } from "@/components/documents/archived-document-list";
+import { DocumentsList } from "@/components/documents/documents-list";
 
 export default function Documents() {
-  const { documents,error } = useDocuments();
+  const { documents,error } = useDocuments(true);
   const { folders } = useRootFolders();
   const teamInfo = useTeam();
 
@@ -43,7 +43,7 @@ export default function Documents() {
         <Separator className="mb-5 bg-gray-200 dark:bg-gray-800" />
       </div>
       <div className="p-4 pt-0 sm:mx-4 sm:mt-4 ">
-        <ArchivedDocumentsList
+        <DocumentsList
           documents={documents}
           folders={folders}
           teamInfo={teamInfo}

@@ -29,7 +29,6 @@ export interface DocumentWithLinksAndLinkCountAndViewCount extends Document {
     versions: number;
   };
   links: Link[];
-  isArchived: boolean;
 }
 
 export interface DocumentWithVersion extends Document {
