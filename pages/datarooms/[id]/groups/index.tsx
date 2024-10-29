@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { useState } from "react";
 
-import { InfoIcon, UsersIcon } from "lucide-react";
+import { CircleHelpIcon, InfoIcon, UsersIcon } from "lucide-react";
 
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { DataroomHeader } from "@/components/datarooms/dataroom-header";
@@ -72,7 +72,7 @@ export default function DataroomGroupPage() {
                       key="groups"
                       link="https://www.papermark.io/help/article/granular-permissions"
                     >
-                      <InfoIcon className="h-4 w-4 shrink-0 text-foreground" />
+                      <CircleHelpIcon className="h-4 w-4 shrink-0 text-muted-foreground hover:text-foreground" />
                     </BadgeTooltip>
                   </p>
                 </div>

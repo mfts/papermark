@@ -3,11 +3,11 @@ import { useRouter } from "next/router";
 import { useCallback, useEffect, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
-import { PlusIcon,InfoIcon } from "lucide-react";
-import { BadgeTooltip } from "@/components/ui/tooltip";
+import { CircleHelpIcon, InfoIcon, PlusIcon } from "lucide-react";
 import { HexColorInput, HexColorPicker } from "react-colorful";
 import { toast } from "sonner";
 import { mutate } from "swr";
+
 import { DataroomHeader } from "@/components/datarooms/dataroom-header";
 import { DataroomNavigation } from "@/components/datarooms/dataroom-navigation";
 import AppLayout from "@/components/layouts/app";
@@ -20,6 +20,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { BadgeTooltip } from "@/components/ui/tooltip";
 
 import { useDataroomBrand } from "@/lib/swr/use-brand";
 import { useDataroom } from "@/lib/swr/use-dataroom";
@@ -187,17 +188,18 @@ export default function DataroomBrandPage() {
         <div className="mb-4 flex items-center justify-between md:mb-8 lg:mb-12">
           <div className="space-y-1">
             <h3 className="text-2xl font-semibold tracking-tight text-foreground">
-             Customization
+              Customization
             </h3>
             <p className="flex flex-row items-center gap-2 text-sm text-muted-foreground">
-              Customize your data room's branding for a cohesive user experience.
+              Customize your data room's branding for a cohesive user
+              experience.
               <BadgeTooltip
                 linkText="Click here"
                 content="How to customize data room branding?"
                 key="branding"
                 link="https://www.papermark.io/help/article/dataroom-branding"
               >
-                <InfoIcon className="h-4 w-4 shrink-0 text-foreground" />
+                <CircleHelpIcon className="h-4 w-4 shrink-0 text-muted-foreground hover:text-foreground" />
               </BadgeTooltip>
             </p>
           </div>

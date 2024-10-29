@@ -3,8 +3,7 @@ import { useRouter } from "next/router";
 import { useCallback, useEffect, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
-import { InfoIcon, PlusIcon } from "lucide-react";
-import { encode } from "next-auth/jwt";
+import { CircleHelpIcon, PlusIcon } from "lucide-react";
 import { HexColorInput, HexColorPicker } from "react-colorful";
 import { toast } from "sonner";
 import { mutate } from "swr";
@@ -151,9 +150,9 @@ export default function Branding() {
                   linkText="Click here"
                   content="How to customize document branding?"
                   key="branding"
-                  link="https://www.papermark.io/help/category/branding"
+                  link="https://www.papermark.io/help/article/document-branding"
                 >
-                  <InfoIcon className="h-4 w-4 shrink-0 text-foreground" />
+                  <CircleHelpIcon className="h-4 w-4 shrink-0 text-muted-foreground hover:text-foreground" />
                 </BadgeTooltip>
               </p>
             </div>
