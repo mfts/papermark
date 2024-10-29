@@ -331,6 +331,8 @@ model View {
   feedbackResponse  FeedbackResponse?
   agreementResponse AgreementResponse?
 
+  isArchived Boolean @default(false) // Indicates if the view is archived and not counted in the analytics
+
   teamId String?
   team   Team?   @relation(fields: [teamId], references: [id], onDelete: Cascade)
 

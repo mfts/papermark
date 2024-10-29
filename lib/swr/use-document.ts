@@ -112,15 +112,19 @@ export function useDocumentVisits(page: number, limit: number) {
       ? `/api/teams/${teamId}/documents/${id}/views?page=${page}&limit=${limit}`
       : null;
 
-  const { data: views, error } = useSWR<TStatsData>(cacheKey, fetcher, {
+  const {
+    data: views,
+    error,
+    mutate,
+  } = useSWR<TStatsData>(cacheKey, fetcher, {
     dedupingInterval: 20000,
-    revalidateOnFocus: false,
   });
 
   return {
     views,
     loading: !error && !views,
     error,
+    mutate,
   };
 }
 
