@@ -191,7 +191,7 @@ export default function DataroomBrandPage() {
               Customization
             </h3>
             <p className="flex flex-row items-center gap-2 text-sm text-muted-foreground">
-              Customize your data room's branding for a cohesive user
+              Customize your data room&apos;s branding for a cohesive user
               experience.
               <BadgeTooltip
                 linkText="Click here"
