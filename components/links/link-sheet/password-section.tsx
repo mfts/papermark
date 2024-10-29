@@ -40,6 +40,7 @@ export default function PasswordSection({
         title="Require password to view"
         enabled={enabled}
         action={handleEnablePassword}
+        tooltipContent="Users must enter a password to access the content."
       />
 
       {enabled && (

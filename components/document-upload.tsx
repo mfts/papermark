@@ -141,6 +141,7 @@ export default function DocumentUpload({
               }}
             />
           ) : null}
+
           <div className="text-center">
             {currentFile ? (
               <div className="flex flex-col items-center text-foreground sm:flex-row sm:space-x-2">
@@ -150,7 +151,9 @@ export default function DocumentUpload({
                     isLight,
                   })}
                 </div>
-                <p>{currentFile.name}</p>
+                <p className="max-w-[280px] truncate">
+                  {(currentFile.name)}
+                </p>
                 <p className="text-gray-500">{bytesToSize(currentFile.size)}</p>
               </div>
             ) : (

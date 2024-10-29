@@ -98,7 +98,7 @@ export default function DocumentPage() {
             />
 
             {/* Visitors */}
-            <VisitorsTable numPages={primaryVersion.numPages!} />
+            <VisitorsTable />
 
             <LinkSheet
               isOpen={isLinkSheetOpen}

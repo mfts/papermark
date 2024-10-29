@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 
 import { cn } from "@/lib/utils";
 
+import { ScreenProtector } from "../ScreenProtection";
 import { TDocumentData } from "../dataroom/dataroom-view";
 import Nav from "../nav";
 
@@ -49,6 +50,7 @@ export default function ExcelViewer({
   versionNumber,
   sheetData,
   allowDownload,
+  screenshotProtectionEnabled,
   brand,
   dataroomId,
   setDocumentData,
@@ -61,6 +63,7 @@ export default function ExcelViewer({
   versionNumber: number;
   sheetData: SheetData[];
   allowDownload: boolean;
+  screenshotProtectionEnabled: boolean;
   brand?: Partial<Brand> | Partial<DataroomBrand> | null;
   dataroomId?: string;
   setDocumentData?: React.Dispatch<React.SetStateAction<TDocumentData | null>>;
@@ -70,6 +73,8 @@ export default function ExcelViewer({
   const [availableHeight, setAvailableHeight] = useState<number>(200);
   const [handsontableLoaded, setHandsontableLoaded] = useState<boolean>(false);
   const [selectedSheetIndex, setSelectedSheetIndex] = useState<number>(0);
+
+  const [isWindowFocused, setIsWindowFocused] = useState(true);
 
   useEffect(() => {
     const script = document.createElement("script");
@@ -115,6 +120,22 @@ export default function ExcelViewer({
 
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  // Add this effect near your other useEffect hooks
+  useEffect(() => {
+    if (!screenshotProtectionEnabled) return;
+
+    const handleFocus = () => setIsWindowFocused(true);
+    const handleBlur = () => setIsWindowFocused(false);
+
+    window.addEventListener("focus", handleFocus);
+    window.addEventListener("blur", handleBlur);
+
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+      window.removeEventListener("blur", handleBlur);
+    };
+  }, [screenshotProtectionEnabled]);
 
   useEffect(() => {
     const handleVisibilityChange = () => {
@@ -235,7 +256,12 @@ export default function ExcelViewer({
       />
       <div
         style={{ height: "calc(100dvh - 64px)" }}
-        className="mx-2 flex h-dvh flex-col sm:mx-6 lg:mx-8"
+        className={cn(
+          "mx-2 flex h-dvh flex-col sm:mx-6 lg:mx-8",
+          !isWindowFocused &&
+            screenshotProtectionEnabled &&
+            "blur-xl transition-all duration-300",
+        )}
         ref={containerRef}
       >
         <div className="" ref={hotRef}></div>
@@ -247,7 +273,7 @@ export default function ExcelViewer({
                 className={cn(
                   "mb-1 rounded-none rounded-b-sm bg-[#f0f0f0] font-normal text-gray-950 hover:bg-gray-50",
                   index === selectedSheetIndex &&
-                  "bg-white font-medium text-black ring-1 ring-gray-500 hover:bg-white",
+                    "bg-white font-medium text-black ring-1 ring-gray-500 hover:bg-white",
                 )}
               >
                 {sheet.sheetName}
@@ -255,6 +281,7 @@ export default function ExcelViewer({
             </div>
           ))}
         </div>
+        {screenshotProtectionEnabled ? <ScreenProtector /> : null}
       </div>
     </>
   );

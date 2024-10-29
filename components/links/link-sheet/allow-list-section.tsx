@@ -76,6 +76,8 @@ export default function AllowListSection({
       <div className="flex flex-col space-y-4">
         <LinkItem
           title="Allow specified viewers"
+          link="https://www.papermark.io/help/article/allow-list"
+          tooltipContent="Restrict access to a selected group of viewers. Enter allowed emails or domains."
           enabled={enabled}
           isAllowed={isAllowed}
           action={handleEnableAllowList}

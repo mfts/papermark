@@ -140,7 +140,6 @@ export function SearchBoxPersisted({
         );
       } else {
         queryParams[urlParam] = debouncedValue;
-        console.log("queryParams", queryParams);
         router.push(
           {
             pathname: router.pathname,

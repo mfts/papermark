@@ -67,24 +67,10 @@ export default async function handle(
           watermarkConfig: true,
           groupId: true,
           audienceType: true,
-          document: {
+          teamId: true,
+          team: {
             select: {
-              team: {
-                select: {
-                  id: true,
-                  plan: true,
-                },
-              },
-            },
-          },
-          dataroom: {
-            select: {
-              team: {
-                select: {
-                  id: true,
-                  plan: true,
-                },
-              },
+              plan: true,
             },
           },
         },
@@ -110,10 +96,10 @@ export default async function handle(
         });
       }
 
-      const teamPlan = link.document?.team?.plan || link.dataroom?.team.plan;
-      const teamId = link.document?.team?.id || link.dataroom?.team.id;
+      const teamPlan = link.team?.plan || "free";
+      const teamId = link.teamId;
       // if owner of document is on free plan, return 404
-      if (teamPlan === "free") {
+      if (teamPlan.includes("free")) {
         log({
           message: `Link is from a free team _${teamId}_ for custom domain _${domain}/${slug}_`,
           type: "info",
@@ -130,12 +116,16 @@ export default async function handle(
       let linkData: any;
 
       if (linkType === "DOCUMENT_LINK") {
-        const data = await fetchDocumentLinkData({ linkId: link.id });
+        const data = await fetchDocumentLinkData({
+          linkId: link.id,
+          teamId: link.teamId!,
+        });
         linkData = data.linkData;
         brand = data.brand;
       } else if (linkType === "DATAROOM_LINK") {
         const data = await fetchDataroomLinkData({
           linkId: link.id,
+          teamId: link.teamId!,
           ...(link.audienceType === LinkAudienceType.GROUP &&
             link.groupId && {
               groupId: link.groupId,
@@ -148,6 +138,8 @@ export default async function handle(
       // remove document and domain from link
       const sanitizedLink = {
         ...link,
+        teamId: undefined,
+        team: undefined,
         document: undefined,
         dataroom: undefined,
       };
@@ -171,7 +163,7 @@ export default async function handle(
       });
     }
   } else {
-    // We only allow GET and POST requests
+    // We only allow GET requests
     res.setHeader("Allow", ["GET"]);
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }

@@ -1,4 +1,4 @@
-VERSION 4
+VERSION 5
 
 NODE endpoint
 SQL >
@@ -10,8 +10,8 @@ SQL >
             WHERE
                 documentId = {{ String(documentId, required=true) }}
                 AND time >= {{ Int64(since, required=true) }}
-                AND linkId NOT IN {{ Array(excludedLinkIds, String) }}
-                AND viewId NOT IN {{ Array(excludedViewIds, String) }}
+                AND linkId NOT IN splitByChar(',', {{ String(excludedLinkIds, required=True) }})
+                AND viewId NOT IN splitByChar(',', {{ String(excludedViewIds, required=True) }})
             GROUP BY versionNumber, pageNumber, viewId
         )
     SELECT versionNumber, pageNumber, AVG(distinct_duration) AS avg_duration
