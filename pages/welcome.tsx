@@ -1,7 +1,10 @@
 import { useRouter } from "next/router";
 
+import { useEffect, useRef } from "react";
+
 import { AnimatePresence } from "framer-motion";
 import { ArrowLeft as ArrowLeftIcon } from "lucide-react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import Dataroom from "@/components/welcome/dataroom";
@@ -13,9 +16,12 @@ import NotionForm from "@/components/welcome/notion-form";
 import Select from "@/components/welcome/select";
 import Upload from "@/components/welcome/upload";
 
+import { usePlan } from "@/lib/swr/use-billing";
+
 export default function Welcome() {
   const router = useRouter();
-
+  const { plan, trial } = usePlan();
+  const toastShownRef = useRef(false);
   const isDataroomUpload = router.query.type === "dataroom-upload";
 
   const skipButtonText = isDataroomUpload
@@ -25,6 +31,20 @@ export default function Welcome() {
     isDataroomUpload && router.query.dataroomId
       ? `/datarooms/${router.query.dataroomId}`
       : "/documents";
+
+  if (
+    router?.query?.type?.includes("dataroom") &&
+    plan &&
+    !plan.includes("free")
+  ) {
+    if (!toastShownRef.current) {
+      toast.info(`You already have a ${plan} ${trial && "trial "}plan`);
+      toastShownRef.current = true;
+    }
+
+    router.replace("/documents");
+    return <></>;
+  }
 
   return (
     <div className="mx-auto flex h-screen max-w-3xl flex-col items-center justify-center overflow-x-hidden">
@@ -52,7 +72,10 @@ export default function Welcome() {
 
             <Button
               variant={"link"}
-              onClick={() => router.push(skipButtonPath)}
+              onClick={(e) => {
+                e.preventDefault();
+                router.push(skipButtonPath);
+              }}
               className="absolute right-2 top-10 z-40 p-2 text-muted-foreground sm:right-10"
             >
               {skipButtonText}
