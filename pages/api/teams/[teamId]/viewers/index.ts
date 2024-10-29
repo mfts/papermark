@@ -34,7 +34,10 @@ export default async function handle(
         },
       });
 
-      if (!team || team.plan.includes("free")) {
+      if (
+        !team ||
+        (team.plan.includes("free") && !team.plan.includes("drtrial "))
+      ) {
         return res.status(404).json({ error: "Team not found" });
       }
 
