@@ -146,13 +146,14 @@ export default function Branding() {
               <p className="flex flex-row items-center gap-2 text-sm text-muted-foreground">
                 Customize how your brand appears globally across Papermark
                 documents your visitors see.
-                {/* <BadgeTooltip
+                <BadgeTooltip
                   linkText="Click here"
                   content="How to customize document branding?"
                   key="branding"
+                  link="https://www.papermark.io/help/article/document-branding"
                 >
                   <CircleHelpIcon className="h-4 w-4 shrink-0 text-muted-foreground hover:text-foreground" />
-                </BadgeTooltip> */}
+                </BadgeTooltip>
               </p>
             </div>
           </div>
