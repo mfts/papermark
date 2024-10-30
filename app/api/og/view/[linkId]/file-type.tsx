@@ -12,7 +12,7 @@ export function ogFileType({ fileType }: { fileType: string }): string {
     case "application/msword":
     case "application/vnd.oasis.opendocument.text":
     case "docs":
-      return "Document";
+      return "Text Document";
     case "application/vnd.openxmlformats-officedocument.presentationml.presentation":
     case "application/vnd.ms-powerpoint":
     case "application/vnd.oasis.opendocument.presentation":
