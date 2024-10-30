@@ -109,7 +109,7 @@ export async function GET(
               textOverflow: "ellipsis",
               whiteSpace: "nowrap",
             }}
-            tw="flex-grow text-[56px] overflow-hidden"
+            tw="flex-grow text-[56px] overflow-hidden w-[90%]"
           >
             {fileName}
           </div>
