@@ -119,6 +119,8 @@ export function bytesToSize(bytes: number) {
 }
 
 const isValidUrl = (url: string) => {
+  if ("canParse" in URL) return URL.canParse(url);
+
   try {
     new URL(url);
     return true;
