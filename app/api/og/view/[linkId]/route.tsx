@@ -34,8 +34,6 @@ export async function GET(
 
   let fileName = "No Name";
   let fileType = "File";
-  let hasBrand = false;
-  let brandLogo = "";
 
   try {
     const res = await fetch(`${process.env.NEXTAUTH_URL}/api/links/${linkId}`);
@@ -43,11 +41,6 @@ export async function GET(
       throw new Error("Failed to fetch data");
     }
     const data = (await res.json()) as DocumentLinkData | DataroomLinkData;
-
-    if (data.brand) {
-      hasBrand = true;
-      brandLogo = data.brand.logo ?? "";
-    }
 
     if (data.linkType === "DOCUMENT_LINK") {
       fileName = data.link.document.name;
@@ -89,18 +82,6 @@ export async function GET(
               Open-Source Document Sharing
             </div>
           </div>
-          {hasBrand && (
-            <>
-              <div tw="text-[125px] pr-[10px] pl-[30px] text-gray-500">/</div>
-              <div tw="flex items-center justify-center">
-                <img
-                  src={brandLogo}
-                  alt="Brand Logo"
-                  tw="w-[125px] h-[125px] rounded-full border-gray-400 border-[5px] bg-gray-200"
-                />
-              </div>
-            </>
-          )}
         </div>
 
         <div tw="flex flex-col text-[42px] justify-center w-full items-start p-12 bg-white bg-opacity-50">
