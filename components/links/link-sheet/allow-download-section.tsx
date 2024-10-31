@@ -5,8 +5,10 @@ import LinkItem from "./link-item";
 
 export default function AllowDownloadSection({
   data,
+  isAllowed,
   setData,
 }: {
+  isAllowed?: boolean;
   data: DEFAULT_LINK_TYPE;
   setData: React.Dispatch<React.SetStateAction<DEFAULT_LINK_TYPE>>;
 }) {
@@ -26,6 +28,8 @@ export default function AllowDownloadSection({
   return (
     <div className="pb-5">
       <LinkItem
+        switcherTooltipContent='"Notion" files cannot be downloaded.'
+        isAllowed={isAllowed}
         title="Allow downloading"
         enabled={enabled}
         link="https://www.papermark.io/help/article/link-settings"

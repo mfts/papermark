@@ -101,6 +101,7 @@ export default function DocumentPage() {
             <VisitorsTable />
 
             <LinkSheet
+              isNotionLink={primaryVersion.type === "notion"}
               isOpen={isLinkSheetOpen}
               linkType="DOCUMENT_LINK"
               setIsOpen={setIsLinkSheetOpen}
