@@ -57,70 +57,14 @@ export default async function handle(
         },
       });
 
-      const deleteDocuments = async () => {
-        const documents = await prisma.document.findMany({
-          where: {
-            folderId: folderId,
-            type: {
-              not: "notion",
-            },
-          },
-          include: {
-            versions: {
-              select: {
-                id: true,
-                file: true,
-                type: true,
-                storageType: true,
-              },
-            },
-          },
+      if (!folder) {
+        return res.status(404).json({
+          message: "Folder not found",
         });
-
-        documents.map(async (documentVersions: { versions: any }) => {
-          for (const version of documentVersions.versions) {
-            await deleteFile({ type: version.storageType, data: version.file });
-          }
-        });
-
-        await prisma.document.deleteMany({
-          where: {
-            folderId: folderId,
-          },
-        });
-      };
-
-      const deleteFolderWithChildren = async (folderId: string) => {
-        const children = await prisma.folder.findMany({
-          where: {
-            parentId: folderId,
-          },
-        });
-
-        for (const child of children) {
-          await deleteFolderWithChildren(child.id);
-        }
-
-        await deleteDocuments();
-
-        await prisma.folder.delete({
-          where: {
-            id: folderId,
-          },
-        });
-      };
-
-      if (folder?._count.documents! > 0 || folder?._count.childFolders! > 0) {
-        await deleteFolderWithChildren(folderId);
-
-        return res.status(204).end();
       }
 
-      await prisma.folder.delete({
-        where: {
-          id: folderId,
-        },
-      });
+      // Delete the folder and its contents
+      await deleteFolderAndContents(folderId);
 
       return res.status(204).end(); // 204 No Content response for successful deletes
     } catch (error) {
@@ -131,4 +75,55 @@ export default async function handle(
     res.setHeader("Allow", ["DELETE"]);
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
+}
+
+async function deleteFolderAndContents(folderId: string) {
+  const childFoldersToDelete = await prisma.folder.findMany({
+    where: {
+      parentId: folderId,
+    },
+  });
+
+  for (const childFolder of childFoldersToDelete) {
+    await deleteFolderAndContents(childFolder.id);
+  }
+
+  // Delete all documents in the folder
+  const documents = await prisma.document.findMany({
+    where: {
+      folderId: folderId,
+      type: {
+        not: "notion",
+      },
+    },
+    include: {
+      versions: {
+        select: {
+          id: true,
+          file: true,
+          type: true,
+          storageType: true,
+        },
+      },
+    },
+  });
+
+  documents.map(async (documentVersions: { versions: any }) => {
+    for (const version of documentVersions.versions) {
+      await deleteFile({ type: version.storageType, data: version.file });
+    }
+  });
+
+  await prisma.document.deleteMany({
+    where: {
+      folderId: folderId,
+    },
+  });
+
+  // Delete the folder itself
+  await prisma.folder.delete({
+    where: {
+      id: folderId,
+    },
+  });
 }

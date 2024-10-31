@@ -6,7 +6,9 @@ import { TeamContextType } from "@/context/team-context";
 import {
   BetweenHorizontalStartIcon,
   FolderIcon,
+  FolderPenIcon,
   MoreVertical,
+  PackagePlusIcon,
   TrashIcon,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -48,7 +50,6 @@ export default function FolderCard({
 }: FolderCardProps) {
   const router = useRouter();
   const [openFolder, setOpenFolder] = useState<boolean>(false);
-  const [isFirstClick, setIsFirstClick] = useState<boolean>(false);
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
   const [addDataroomOpen, setAddDataroomOpen] = useState<boolean>(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState<boolean>(false);
@@ -62,20 +63,6 @@ export default function FolderCard({
     0,
     folder.path.lastIndexOf("/"),
   );
-
-  useEffect(() => {
-    function handleClickOutside(event: { target: any }) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setMenuOpen(false);
-        setIsFirstClick(false);
-      }
-    }
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
 
   // https://github.com/radix-ui/primitives/issues/1241#issuecomment-1888232392
   useEffect(() => {
@@ -129,21 +116,6 @@ export default function FolderCard({
     );
   };
 
-  const handleMenuStateChange = (open: boolean) => {
-    if (isFirstClick) {
-      setMenuOpen(true); // Keep the dropdown open on the first click
-      return;
-    }
-
-    // If the menu is closed, reset the isFirstClick state
-    if (!open) {
-      setIsFirstClick(false);
-      setMenuOpen(false); // Ensure the dropdown is closed
-    } else {
-      setMenuOpen(true); // Open the dropdown
-    }
-  };
-
   const handleCreateDataroom = (e: any, folderId: string) => {
     e.stopPropagation();
     e.preventDefault();
@@ -185,11 +157,11 @@ export default function FolderCard({
     <>
       <div
         onClick={handleCardClick}
-        className="relative flex items-center justify-between p-3 transition-all bg-white border-0 rounded-lg group/row ring-1 ring-gray-400 hover:bg-secondary hover:ring-gray-500 dark:bg-secondary dark:ring-gray-500 hover:dark:ring-gray-400 sm:p-4"
+        className="group/row relative flex items-center justify-between rounded-lg border-0 bg-white p-3 ring-1 ring-gray-400 transition-all hover:bg-secondary hover:ring-gray-500 dark:bg-secondary dark:ring-gray-500 hover:dark:ring-gray-400 sm:p-4"
       >
-        <div className="flex items-center min-w-0 space-x-2 shrink sm:space-x-4">
+        <div className="flex min-w-0 shrink items-center space-x-2 sm:space-x-4">
           <div className="mx-0.5 flex w-8 items-center justify-center text-center sm:mx-1">
-            <FolderIcon className="w-8 h-8" strokeWidth={1} />
+            <FolderIcon className="h-8 w-8" strokeWidth={1} />
           </div>
 
           <div className="flex-col">
@@ -198,7 +170,7 @@ export default function FolderCard({
                 {folder.name}
               </h2>
             </div>
-            <div className="flex items-center mt-1 space-x-1 text-xs leading-5 text-muted-foreground">
+            <div className="mt-1 flex items-center space-x-1 text-xs leading-5 text-muted-foreground">
               <p className="truncate">{timeAgo(folder.createdAt)}</p>
               <p>•</p>
               <p className="truncate">
@@ -229,15 +201,15 @@ export default function FolderCard({
           </p>
         </Link> */}
 
-          <DropdownMenu open={menuOpen} onOpenChange={handleMenuStateChange}>
+          <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
             <DropdownMenuTrigger asChild>
               <Button
                 // size="icon"
                 variant="outline"
-                className="z-10 w-8 h-8 p-0 bg-transparent border-gray-200 hover:bg-gray-200 dark:border-gray-700 hover:dark:bg-gray-700 lg:h-9 lg:w-9"
+                className="z-10 h-8 w-8 border-gray-200 bg-transparent p-0 hover:bg-gray-200 dark:border-gray-700 hover:dark:bg-gray-700 lg:h-9 lg:w-9"
               >
                 <span className="sr-only">Open menu</span>
-                <MoreVertical className="w-4 h-4" />
+                <MoreVertical className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" ref={dropdownRef}>
@@ -249,26 +221,16 @@ export default function FolderCard({
                   setOpenFolder(true);
                 }}
               >
+                <FolderPenIcon className="mr-2 h-4 w-4" />
                 Rename
               </DropdownMenuItem>
               {!isDataroom ? (
-                <>
-                  <DropdownMenuItem
-                    onClick={(e) => handleCreateDataroom(e, folder.id)}
-                  >
-                    Create dataroom from folder
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      setAddDataroomOpen(true);
-                    }}
-                  >
-                    <BetweenHorizontalStartIcon className="w-4 h-4 mr-2" />
-                    Add folder to dataroom
-                  </DropdownMenuItem>
-                </>
+                <DropdownMenuItem
+                  onClick={(e) => handleCreateDataroom(e, folder.id)}
+                >
+                  <PackagePlusIcon className="mr-2 h-4 w-4" />
+                  Create dataroom from folder
+                </DropdownMenuItem>
               ) : null}
               <DropdownMenuItem
                 onClick={(e) => {
@@ -290,23 +252,17 @@ export default function FolderCard({
                   event.stopPropagation();
                   setDeleteModalOpen(true);
                 }}
-                className="duration-200 text-destructive focus:bg-destructive focus:text-destructive-foreground"
+                className="text-destructive duration-200 focus:bg-destructive focus:text-destructive-foreground"
               >
-                {isFirstClick ? (
-                  `Really ${isDataroom ? "remove" : "delete"}?`
-                ) : (
-                  <>
-                    <TrashIcon className="w-4 h-4 mr-2" />{" "}
-                    {isDataroom ? "Remove Folder" : "Delete Folder"}
-                  </>
-                )}
+                <TrashIcon className="mr-2 h-4 w-4" />{" "}
+                {isDataroom ? "Remove Folder" : "Delete Folder"}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
         {/* only used for drag and drop */}
         {isOver && !isDragging && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black rounded-lg bg-opacity-20 dark:bg-white dark:bg-opacity-20">
+          <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-black bg-opacity-20 dark:bg-white dark:bg-opacity-20">
             <span className="font-semibold text-black dark:text-gray-100">
               Drop to move
             </span>
@@ -341,6 +297,7 @@ export default function FolderCard({
           folderName={folder.name}
           documents={folder._count.documents}
           childFolders={folder._count.childFolders}
+          isDataroom={isDataroom}
           handleButtonClick={handleButtonClick}
         />
       ) : null}
