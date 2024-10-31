@@ -41,12 +41,20 @@ export function AddDocumentModal({
   dataroomId,
   setAddDocumentModalOpen,
   openModal,
+  folderPathName,
+  visitorId,
+  linkId,
+  multiUpload = true,
 }: {
+  visitorId?: string;
+  folderPathName?: string | null;
   newVersion?: boolean;
   children: React.ReactNode;
   isDataroom?: boolean;
   openModal?: boolean;
   dataroomId?: string;
+  linkId?: string;
+  multiUpload?: boolean;
   setAddDocumentModalOpen?: (isOpen: boolean) => void;
 }) {
   const router = useRouter();
@@ -60,7 +68,6 @@ export function AddDocumentModal({
   const { canAddDocuments } = useLimits();
 
   const teamId = teamInfo?.currentTeam?.id as string;
-
   useEffect(() => {
     if (openModal) setIsOpen(openModal);
   }, [openModal]);
@@ -80,7 +87,11 @@ export function AddDocumentModal({
     }
 
     if (!canAddDocuments) {
-      toast.error("You have reached the maximum number of documents.");
+      toast.error(
+        !!visitorId
+          ? "This dataroom reached the maximum number of documents upload limit."
+          : "You have reached the maximum number of documents.",
+      );
       return;
     }
 
@@ -126,7 +137,8 @@ export function AddDocumentModal({
           documentData,
           teamId,
           numPages,
-          folderPathName: currentFolderPath?.join("/"),
+          folderPathName: folderPathName || currentFolderPath?.join("/"),
+          visitorId,
         });
       } else {
         // create a new version for existing document in the database
@@ -145,7 +157,7 @@ export function AddDocumentModal({
         if (isDataroom && dataroomId) {
           await addDocumentToDataroom({
             documentId: document.id,
-            folderPathName: currentFolderPath?.join("/"),
+            folderPathName: folderPathName || currentFolderPath?.join("/"),
           });
 
           plausible("documentUploaded");
@@ -242,6 +254,10 @@ export function AddDocumentModal({
         `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}/folders/documents/${folderPathName}`,
       );
 
+      mutate(
+        `/api/getViewerDoc?linkId=${linkId}&viewerId=${visitorId}&type=${visitorId ? "VIEWER" : "USER"}`,
+      );
+
       toast.success("Document added to dataroom successfully! 🎉");
     } catch (error) {
       toast.error("Error adding document to dataroom.");
@@ -268,7 +284,11 @@ export function AddDocumentModal({
     event.preventDefault();
 
     if (!canAddDocuments) {
-      toast.error("You have reached the maximum number of documents.");
+      toast.error(
+        !!visitorId
+          ? "This dataroom reached the maximum number of documents upload limit."
+          : "You have reached the maximum number of documents.",
+      );
       return;
     }
 
@@ -303,6 +323,7 @@ export function AddDocumentModal({
             numPages: 1,
             type: "notion",
             createLink: false,
+            ...(visitorId && { ownerViewerId: visitorId }),
             folderPathName: currentFolderPath?.join("/"),
           }),
         },
@@ -314,7 +335,7 @@ export function AddDocumentModal({
         if (isDataroom && dataroomId) {
           await addDocumentToDataroom({
             documentId: document.id,
-            folderPathName: currentFolderPath?.join("/"),
+            folderPathName: folderPathName || currentFolderPath?.join("/"),
           });
 
           plausible("documentUploaded");
@@ -375,7 +396,7 @@ export function AddDocumentModal({
     setAddDocumentModalOpen && setAddDocumentModalOpen(!isOpen);
   };
 
-  if (!canAddDocuments && children) {
+  if (!canAddDocuments && children && !visitorId) {
     if (newVersion) {
       return (
         <UpgradePlanModal
@@ -439,7 +460,7 @@ export function AddDocumentModal({
                     </div>
                   </div>
 
-                  {!newVersion ? (
+                  {!newVersion && multiUpload ? (
                     <div className="flex justify-center">
                       <button
                         type="button"

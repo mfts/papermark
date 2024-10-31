@@ -14,29 +14,34 @@ export const createDocument = async ({
   numPages,
   folderPathName,
   createLink = false,
+  visitorId,
 }: {
   documentData: DocumentData;
   teamId: string;
   numPages?: number;
   folderPathName?: string;
   createLink?: boolean;
+  visitorId?: string;
 }) => {
+  const bodyData = {
+    name: documentData.name,
+    url: documentData.key,
+    storageType: documentData.storageType,
+    numPages: numPages,
+    folderPathName: folderPathName,
+    type: documentData.supportedFileType,
+    contentType: documentData.contentType,
+    createLink: createLink,
+    ...(visitorId && { ownerViewerId: visitorId }),
+  };
+
   // create a document in the database with the blob url
   const response = await fetch(`/api/teams/${teamId}/documents`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      name: documentData.name,
-      url: documentData.key,
-      storageType: documentData.storageType,
-      numPages: numPages,
-      folderPathName: folderPathName,
-      type: documentData.supportedFileType,
-      contentType: documentData.contentType,
-      createLink: createLink,
-    }),
+    body: JSON.stringify(bodyData),
   });
 
   if (!response.ok) {

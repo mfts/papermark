@@ -19,6 +19,7 @@ import { ProBannerSection } from "@/components/links/link-sheet/pro-banner-secti
 import { usePlan } from "@/lib/swr/use-billing";
 import useLimits from "@/lib/swr/use-limits";
 
+import AllowDocumentUploadSection from "./AllowDocumentUploadSection";
 import AgreementSection from "./agreement-section";
 import QuestionSection from "./question-section";
 import ScreenshotProtectionSection from "./screenshot-protection-section";
@@ -74,6 +75,9 @@ export const LinkOptions = ({
     <div>
       <EmailProtectionSection {...{ data, setData }} />
       <AllowNotificationSection {...{ data, setData }} />
+      {linkType === LinkType.DATAROOM_LINK && (
+        <AllowDocumentUploadSection {...{ data, setData }} />
+      )}
       <AllowDownloadSection {...{ data, setData }} />
       <ExpirationSection {...{ data, setData }} />
       <OGSection

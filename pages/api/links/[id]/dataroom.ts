@@ -28,6 +28,7 @@ export default async function handle(
           emailProtected: true,
           emailAuthenticated: true,
           allowDownload: true,
+          allowDocUpload: true,
           enableFeedback: true,
           password: true,
           isArchived: true,
