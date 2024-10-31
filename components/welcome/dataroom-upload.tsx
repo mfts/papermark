@@ -51,6 +51,7 @@ export default function DataroomUpload({ dataroomId }: DataroomUploadProps) {
   );
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id as string;
+  console.log("🚀 ~ DataroomUpload ~ teamId:", teamId);
 
   const handleFileUpload = async (event: any) => {
     event.preventDefault();
@@ -125,6 +126,7 @@ export default function DataroomUpload({ dataroomId }: DataroomUploadProps) {
             ...linkData,
             targetId: dataroomId,
             linkType: "DATAROOM_LINK",
+            teamId,
           }),
         });
 
@@ -316,7 +318,7 @@ export default function DataroomUpload({ dataroomId }: DataroomUploadProps) {
               </main>
             )}
             {currentLinkId && (
-              <main className="min-h-[300px]">
+              <main className="max-h-[calc(100dvh-10rem)] min-h-[300px] overflow-y-scroll scrollbar-hide">
                 <div className="flex flex-col justify-center">
                   <div className="relative">
                     <div className="flex py-8">

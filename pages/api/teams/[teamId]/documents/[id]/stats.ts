@@ -6,7 +6,6 @@ import { getServerSession } from "next-auth/next";
 import { LIMITS } from "@/lib/constants";
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
-import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
 import { getTotalAvgPageDuration } from "@/lib/tinybird";
 import { CustomUser } from "@/lib/types";
 
@@ -51,19 +50,6 @@ export default async function handle(
         },
       });
 
-      // const { document } = await getTeamWithUsersAndDocument({
-      //   teamId,
-      //   userId,
-      //   docId,
-      //   checkOwner: true,
-      //   options: {
-      //     include: {
-      //       views: true,
-      //       team: true,
-      //     },
-      //   },
-      // });
-
       const users = await prisma.user.findMany({
         where: {
           teams: {
@@ -89,22 +75,26 @@ export default async function handle(
         });
       }
 
-      const totalViews = views.length;
+      const activeViews = views.filter((view) => !view.isArchived);
+      const archivedViews = views.filter((view) => view.isArchived);
 
       // limit the number of views to 20 on free plan
       const limitedViews =
         document?.team?.plan === "free" ? views.slice(0, LIMITS.views) : views;
 
       // exclude views from the team's members
-      let excludedViews: View[] = [];
+      let internalViews: View[] = [];
       if (excludeTeamMembers) {
-        excludedViews = limitedViews.filter((view) => {
+        internalViews = limitedViews.filter((view) => {
           return users.some((user) => user.email === view.viewerEmail);
         });
       }
 
+      // combined archived and internal views
+      const allExcludedViews = [...internalViews, ...archivedViews];
+
       const filteredViews = limitedViews.filter(
-        (view) => !excludedViews.map((view) => view.id).includes(view.id),
+        (view) => !allExcludedViews.map((view) => view.id).includes(view.id),
       );
 
       const groupedReactions = await prisma.reaction.groupBy({
@@ -112,7 +102,7 @@ export default async function handle(
         where: {
           view: {
             documentId: docId,
-            id: { notIn: excludedViews.map((view) => view.id) },
+            id: { notIn: allExcludedViews.map((view) => view.id) },
           },
         },
         _count: { type: true },
@@ -120,8 +110,8 @@ export default async function handle(
 
       const duration = await getTotalAvgPageDuration({
         documentId: docId,
-        excludedLinkIds: [],
-        excludedViewIds: excludedViews.map((view) => view.id),
+        excludedLinkIds: "",
+        excludedViewIds: allExcludedViews.map((view) => view.id).join(","),
         since: 0,
       });
 
@@ -135,7 +125,7 @@ export default async function handle(
         duration,
         total_duration,
         groupedReactions,
-        totalViews,
+        totalViews: activeViews.length,
       };
 
       return res.status(200).json(stats);
