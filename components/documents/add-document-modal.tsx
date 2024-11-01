@@ -29,7 +29,6 @@ import {
 } from "@/lib/documents/create-document";
 import { putFile } from "@/lib/files/put-file";
 import useLimits from "@/lib/swr/use-limits";
-import { copyToClipboard } from "@/lib/utils";
 import { getSupportedContentType } from "@/lib/utils/get-content-type";
 
 import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
