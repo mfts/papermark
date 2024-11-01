@@ -483,22 +483,22 @@ export default function DocumentHeader({
             openModal={openAddDocModal}
             setAddDocumentModalOpen={setOpenAddDocModal}
           >
-            <ButtonTooltip
+            {/* <ButtonTooltip
               content="Upload a new version"
               link="https://www.papermark.io/help/article/document-versions"
+            > */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={(e) => {
+                e.stopPropagation();
+                setOpenAddDocModal(true);
+              }}
+              className="hidden md:flex"
             >
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setOpenAddDocModal(true);
-                }}
-                className="hidden md:flex"
-              >
-                <FileUp className="h-6 w-6" />
-              </Button>
-            </ButtonTooltip>
+              <FileUp className="h-6 w-6" />
+            </Button>
+            {/* </ButtonTooltip> */}
           </AddDocumentModal>
         )}
 
