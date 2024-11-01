@@ -5,6 +5,7 @@ import { useTheme } from "next-themes";
 import { useDropzone } from "react-dropzone";
 import { toast } from "sonner";
 
+import { SUPPORTED_DOCUMENT_MIME_TYPES } from "@/lib/constants";
 import { usePlan } from "@/lib/swr/use-billing";
 import { bytesToSize } from "@/lib/utils";
 import { fileIcon } from "@/lib/utils/get-file-icon";
@@ -105,12 +106,20 @@ export default function DocumentUpload({
         });
     },
     onDropRejected: (fileRejections) => {
-      const { errors } = fileRejections[0];
+      console.log("fileRejections", fileRejections);
+      const { errors, file } = fileRejections[0];
       let message;
       if (errors[0].code === "file-too-large") {
-        message = `File size too big (max. ${maxSize} MB)`;
+        message = `File size too big (max. ${maxSize} MB)${
+          isFreePlan && !isTrial
+            ? `. Upgrade to a paid plan to increase the limit.`
+            : ""
+        }`;
       } else if (errors[0].code === "file-invalid-type") {
-        message = "File type not supported";
+        const isSupported = SUPPORTED_DOCUMENT_MIME_TYPES.includes(file.type);
+        message = `File type not supported ${
+          isFreePlan && !isTrial && isSupported ? `on free plan` : ""
+        }`;
       } else {
         message = errors[0].message;
       }
@@ -151,9 +160,7 @@ export default function DocumentUpload({
                     isLight,
                   })}
                 </div>
-                <p className="max-w-[280px] truncate">
-                  {(currentFile.name)}
-                </p>
+                <p className="max-w-[280px] truncate">{currentFile.name}</p>
                 <p className="text-gray-500">{bytesToSize(currentFile.size)}</p>
               </div>
             ) : (
