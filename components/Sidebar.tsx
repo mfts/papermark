@@ -167,7 +167,10 @@ export default function AppSidebar({
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" asChild className="hover:bg-inherit">
+
+
+
+            <SidebarMenuButton size="lg" asChild className="hover:bg-inherit pt-0">
               <Link href="/documents">
                 {!open && (
                   <span className="round flex aspect-square size-8 items-center justify-center text-2xl font-bold tracking-tighter text-black dark:text-white">
@@ -183,7 +186,7 @@ export default function AppSidebar({
                       Papermark
                     </span>
 }
-                    {userPlan && userPlan != "free" ? (
+                    {/* {userPlan && userPlan != "free" ? (
                       <span className="ml-4 rounded-full bg-background px-2.5 py-1 text-xs tracking-normal text-foreground ring-1 ring-gray-800">
                         {userPlan.charAt(0).toUpperCase() + userPlan.slice(1)}
                       </span>
@@ -192,14 +195,14 @@ export default function AppSidebar({
                       <span className="ml-4 rounded-sm bg-foreground px-2 py-0.5 text-xs tracking-normal text-background ring-1 ring-gray-800">
                         Trial
                       </span>
-                    ) : null}
+                    ) : null} */}
                   </div>
                 </div>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
-        <div className="mt-4">
+        <div className="mt-1">
           <SelectTeam
             currentTeam={currentTeam}
             teams={teams}
