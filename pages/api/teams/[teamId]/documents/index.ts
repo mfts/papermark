@@ -166,6 +166,9 @@ export default async function handle(
         try {
           const pageId = parsePageId(fileUrl, { uuid: false });
           // if the page isn't accessible then end the process here.
+          if (!pageId) {
+            throw new Error("Notion page not found");
+          }
           await notion.getPage(pageId);
         } catch (error) {
           return res
