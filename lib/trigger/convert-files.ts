@@ -1,5 +1,5 @@
 import { client } from "@/trigger";
-import { envvars, logger, retry, task } from "@trigger.dev/sdk/v3";
+import { logger, retry, task } from "@trigger.dev/sdk/v3";
 
 import { getFile } from "@/lib/files/get-file";
 import { putFileServer } from "@/lib/files/put-file-server";

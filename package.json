@@ -14,6 +14,7 @@
     "vercel-build": "prisma migrate deploy && next build",
     "email": "email dev --dir ./components/emails --port 3001",
     "trigger:dev": "npx @trigger.dev/cli@latest dev",
+    "trigger:v3:dev": "npx trigger.dev@latest dev",
     "stripe:webhook": "pkgx stripe listen --forward-to localhost:3000/api/stripe/webhook",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,mdx}\"",
     "dev:prisma": "npx prisma generate && npx prisma migrate deploy"
@@ -60,9 +61,9 @@
     "@tanstack/react-table": "^8.20.5",
     "@teamhanko/passkeys-next-auth-provider": "^0.2.7",
     "@tremor/react": "^3.18.3",
-    "@trigger.dev/nextjs": "3.0.0-beta.56",
-    "@trigger.dev/react": "3.0.0-beta.56",
-    "@trigger.dev/sdk": "3.0.0-beta.56",
+    "@trigger.dev/nextjs": "^3.1.1",
+    "@trigger.dev/react": "^3.1.1",
+    "@trigger.dev/sdk": "^3.1.1",
     "@tus/s3-store": "^1.6.0",
     "@tus/server": "^1.9.0",
     "@tus/utils": "^0.4.0",
@@ -133,6 +134,7 @@
   },
   "devDependencies": {
     "@tailwindcss/forms": "^0.5.9",
+    "@trigger.dev/build": "^3.1.1",
     "@trivago/prettier-plugin-sort-imports": "^4.3.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/js-cookie": "^3.0.6",
