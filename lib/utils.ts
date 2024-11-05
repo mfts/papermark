@@ -477,7 +477,15 @@ export const generateGravatarHash = (email: string | null): string => {
 export async function generateEncrpytedPassword(
   password: string,
 ): Promise<string> {
+  // If the password is empty, return an empty string
   if (!password) return "";
+  // If the password is already encrypted, return it
+  const textParts: string[] = password.split(":");
+  console.log("textparts in encryption", textParts);
+  if (textParts.length === 2) {
+    return password;
+  }
+  // Otherwise, encrypt the password
   const encryptedKey: string = crypto
     .createHash("sha256")
     .update(String(process.env.NEXT_PRIVATE_DOCUMENT_PASSWORD_KEY))
