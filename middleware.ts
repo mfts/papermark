@@ -50,7 +50,7 @@ export default async function middleware(req: NextRequest, ev: NextFetchEvent) {
     return DomainMiddleware(req);
   }
 
-  if (!path.startsWith("/view/")) {
+  if (!path.startsWith("/view/") && !path.startsWith("/verify")) {
     return AppMiddleware(req);
   }
 
