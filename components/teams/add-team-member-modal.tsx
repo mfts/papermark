@@ -1,6 +1,6 @@
 import { useRouter } from "next/router";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { toast } from "sonner";
@@ -21,6 +21,8 @@ import { Label } from "@/components/ui/label";
 
 import { useAnalytics } from "@/lib/analytics";
 
+import { CopyInviteLinkButton } from "./copy-invite-link-button";
+
 export function AddTeamMembers({
   open,
   setOpen,
@@ -32,8 +34,56 @@ export function AddTeamMembers({
 }) {
   const [email, setEmail] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
+  const [joinLink, setJoinLink] = useState<string | null>(null);
+  const [joinLinkLoading, setJoinLinkLoading] = useState<boolean>(true);
   const teamInfo = useTeam();
   const analytics = useAnalytics();
+
+  useEffect(() => {
+    const fetchJoinLink = async () => {
+      setJoinLinkLoading(true);
+      try {
+        const response = await fetch(
+          `/api/teams/${teamInfo?.currentTeam?.id}/join-link`,
+        );
+        if (response.ok) {
+          const data = await response.json();
+          setJoinLink(data.joinLink || null);
+        } else {
+          console.error("Failed to fetch join link:", response.status);
+        }
+      } catch (error) {
+        console.error("Error fetching join link:", error);
+      } finally {
+        setJoinLinkLoading(false);
+      }
+    };
+    fetchJoinLink();
+  }, [teamInfo]);
+
+  const handleResetJoinLink = async () => {
+    setJoinLinkLoading(true);
+    try {
+      const linkResponse = await fetch(
+        `/api/teams/${teamInfo?.currentTeam?.id}/join-link`,
+        {
+          method: "POST",
+        },
+      );
+
+      if (!linkResponse.ok) {
+        throw new Error("Failed to reset join link");
+      }
+
+      const linkData = await linkResponse.json();
+      setJoinLink(linkData.joinLink || null);
+      toast.success("Join link has been reset!");
+    } catch (error) {
+      toast.error("Error resetting join link.");
+    } finally {
+      setJoinLinkLoading(false);
+    }
+  };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -42,37 +92,31 @@ export function AddTeamMembers({
     if (!email) return;
 
     setLoading(true);
-    const response = await fetch(
-      `/api/teams/${teamInfo?.currentTeam?.id}/invite`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+
+    try {
+      const response = await fetch(
+        `/api/teams/${teamInfo?.currentTeam?.id}/invite`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email }),
         },
-        body: JSON.stringify({
-          email: email,
-        }),
-      },
-    );
+      );
 
-    if (!response.ok) {
-      const error = await response.json();
-      setLoading(false);
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error);
+      }
+
+      toast.success("A join email has been sent!");
       setOpen(false);
-      toast.error(error);
-      return;
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
     }
-
-    analytics.capture("Team Member Invitation Sent", {
-      email: email,
-      teamId: teamInfo?.currentTeam?.id,
-    });
-
-    mutate(`/api/teams/${teamInfo?.currentTeam?.id}/invitations`);
-
-    toast.success("An invitation email has been sent!");
-    setOpen(false);
-    setLoading(false);
   };
 
   return (
@@ -82,26 +126,41 @@ export function AddTeamMembers({
         <DialogHeader className="text-start">
           <DialogTitle>Add Member</DialogTitle>
           <DialogDescription>
-            You can easily add team members.
+            Invite team members via email or share the join link.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
-          <Label htmlFor="domain" className="opacity-80">
+          <Label htmlFor="email" className="opacity-80">
             Email
           </Label>
           <Input
             id="email"
             placeholder="team@member.com"
-            className="mb-8 mt-1 w-full"
+            className="mb-4 mt-1 w-full"
             onChange={(e) => setEmail(e.target.value)}
           />
-
-          <DialogFooter>
-            <Button type="submit" className="h-9 w-full">
-              {loading ? "Sending email..." : "Add member"}
-            </Button>
-          </DialogFooter>
+          <Button type="submit" className="mb-6 w-full" disabled={loading}>
+            {loading ? "Sending invitation..." : "Send Invitation"}
+          </Button>
         </form>
+
+        <div className="mb-4">
+          <Label className="opacity-80">Or share join link</Label>
+          <Input value={joinLink || ""} readOnly className="mt-1 w-full" />
+          <div className="mt-2 flex space-x-2">
+            <CopyInviteLinkButton
+              inviteLink={joinLink}
+              className="flex-1"
+            />
+            <Button
+              onClick={handleResetJoinLink}
+              disabled={joinLinkLoading}
+              className="flex-1"
+            >
+              Reset Link
+            </Button>
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   );

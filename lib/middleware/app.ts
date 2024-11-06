@@ -15,8 +15,8 @@ export default async function AppMiddleware(req: NextRequest) {
     };
   };
 
-  // UNAUTHENTICATED if there's no token and the path isn't /login, redirect to /login
-  if (!token?.email && path !== "/login") {
+  // UNAUTHENTICATED if there's no token and the path isn't /login or /join/[teamId], redirect to /login
+  if (!token?.email && path !== "/login" && !path.startsWith("/join/")) {
     const loginUrl = new URL(`/login`, req.url);
     // Append "next" parameter only if not navigating to the root
     if (path !== "/") {
