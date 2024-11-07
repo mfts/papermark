@@ -230,7 +230,7 @@ export default async function handle(
                 // total count includes child folders whose path has got updated
                 updatedTotalCount: updatedFolders.length,
                 // leading path of new parent
-                newPath: destinationParentPath,
+                pathOfNewParent: destinationParentPath,
             });
         } catch {
             return res.status(500).end("Oops! Failed to perform the DB transaction to move the folder location")
