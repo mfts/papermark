@@ -10,6 +10,7 @@ type Props = {
 
 const apiEndpoint = (teamId:string) => `/api/teams/${teamId}/folders/move`;
 const isPlural = (n:number) => n > 1;
+const isString = (val:unknown) => typeof val === 'string';
 
 export const moveFoldersIntoFolder = async({
     selectedFolderIds, newParentFolderId, selectedFoldersPathName, teamId
@@ -23,9 +24,9 @@ export const moveFoldersIntoFolder = async({
     const selectedFoldersExistAtRoot = selectedFoldersPathName === undefined;
 
     const apiEndpointThatPointsToPathFromWhereFolderAreSelected = selectedFoldersExistAtRoot ? (
-        `api/teams/${teamId}/folders`
+        `/api/teams/${teamId}/folders`
     ) : (
-        `api/teams/${teamId}/folders/${selectedFoldersPathName.join("/")}`
+        `/api/teams/${teamId}/folders/${selectedFoldersPathName.join("/")}`
     );
 
     if (typeof selectedFolderIds === "string"){
@@ -55,16 +56,17 @@ export const moveFoldersIntoFolder = async({
             updatedCount,
             updatedTotalCount,
             //message,
-            //pathOfNewParent
+            pathOfNewParent
         } = await response.json();
 
-        [
-            apiEndpointThatPointsToPathFromWhereFolderAreSelected,   
-            `/api/teams/${teamId}/folders?root=true`,
-            `/api/teams/${teamId}/folders`
-        ].forEach(
-            path => mutate(path)
-        );
+        Array.from(
+            new Set([
+                apiEndpointThatPointsToPathFromWhereFolderAreSelected,   
+                `/api/teams/${teamId}/folders?root=true`,
+                `/api/teams/${teamId}/folders`,
+                isString(pathOfNewParent) && `/api/teams/${teamId}/folders` + pathOfNewParent
+            ])
+        ).forEach(path => path && mutate(path));
 
         let successMessage = isPlural(updatedCount) ? (
             `${updatedCount} folders moved successfully`
