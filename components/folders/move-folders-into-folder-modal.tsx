@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dialog";
 
 import { moveFoldersIntoFolder } from "@/lib/folders/move-folders-into-folder";
+import { FolderWithDocuments } from "@/lib/swr/use-documents";
 
 type ModalProps = {
     open: boolean,
@@ -73,7 +74,14 @@ export function MoveFoldersInToFolderModal({
         setLoading(false);
         setOpen(false); // Close the modal
         setSelectedFolders?.([]); // Clear the selected folders
-      };
+    };
+
+    //In the folder tree selection, this func will exclude some folders which are invalid to be selected.
+    const filterFoldersFn = (folders: FolderWithDocuments[]) => {
+        const pathsOfSelectedFolderIds = folders.filter(f => folderIds.includes(f.id)).map(sf => sf.path);
+        // From the Tree selection exclude the selected folders and their corresponding child folders.
+        return folders.filter(f => !pathsOfSelectedFolderIds.some(path => f.path.startsWith(path)))
+    }
 
 
     return (
@@ -93,7 +101,7 @@ export function MoveFoldersInToFolderModal({
                 <SidebarFolderTreeSelection
                   selectedFolder={selectedDestinationFolder}
                   setSelectedFolder={setSelectedDestinationFolder}
-                  excludeFolderIds={folderIds}
+                  filterFoldersFn={filterFoldersFn}
                 />
               </div>
     
