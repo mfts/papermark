@@ -91,7 +91,7 @@ const moveFolder = async({
         const totalFoldersThatAreUpdated = parseInt(updatedTotalCount)
         if (Number.isInteger(totalFoldersThatAreUpdated) && totalFoldersThatAreUpdated > selectedFolderIds.length){
             const noOfSubFoldersUpdated = totalFoldersThatAreUpdated - selectedFolderIds.length;
-            successMessage += (" " + `including their ${noOfSubFoldersUpdated} sub folder${isPlural(noOfSubFoldersUpdated) ? "s" : ""}`)
+            successMessage += (" " + `including ${noOfSubFoldersUpdated} sub folder${isPlural(noOfSubFoldersUpdated) ? "s" : ""}`)
         }
 
         toast.success(successMessage);
