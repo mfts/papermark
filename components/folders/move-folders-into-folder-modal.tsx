@@ -5,6 +5,7 @@ import { useTeam } from "@/context/team-context";
 import { toast } from "sonner";
 
 import { SidebarFolderTreeSelection } from "@/components/sidebar-folders";
+import { SidebarFolderTreeSelection as SidebarDataroomFolderTreeSelection } from "../datarooms/folders";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -15,13 +16,15 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-import { moveFoldersIntoFolder } from "@/lib/folders/move-folders-into-folder";
+import { moveDataroomFolderIntoDataroomFolder, moveFoldersIntoFolder } from "@/lib/folders/move-folders-into-folder";
 import { FolderWithDocuments } from "@/lib/swr/use-documents";
+import { DataroomFolderWithDocuments } from "@/lib/swr/use-dataroom";
 
 type ModalProps = {
     open: boolean,
     setOpen: React.Dispatch<React.SetStateAction<boolean>>;
     setSelectedFolders?: React.Dispatch<React.SetStateAction<string[]>>;
+    dataroomId?: string;
     folderIds: string[];
     folderName?: string;
 };
@@ -31,7 +34,7 @@ export type TSelectedFolder = { id: string | null; name: string } | null;
 const isString = (val:unknown) => typeof val === 'string';
 
 export function MoveFoldersInToFolderModal({
-    open, setOpen, setSelectedFolders, folderIds, folderName
+    open, setOpen, setSelectedFolders, folderIds, folderName, dataroomId
 }:ModalProps){
 
     const router = useRouter();
@@ -64,25 +67,37 @@ export function MoveFoldersInToFolderModal({
     
         setLoading(true);
 
-        await moveFoldersIntoFolder({
+        if (dataroomId){
+          await moveDataroomFolderIntoDataroomFolder({
             selectedFolderIds: folderIds,
             newParentFolderId: selectedDestinationFolder.id!,
             selectedFoldersPathName: currPath ? currPath.split("/") : undefined,
-            teamId
-        });
+            teamId,
+            dataroomId
+          })
+        } else {
+          await moveFoldersIntoFolder({
+              selectedFolderIds: folderIds,
+              newParentFolderId: selectedDestinationFolder.id!,
+              selectedFoldersPathName: currPath ? currPath.split("/") : undefined,
+              teamId
+          });
+        }
+
     
         setLoading(false);
         setOpen(false); // Close the modal
         setSelectedFolders?.([]); // Clear the selected folders
     };
-
+    
     //In the folder tree selection, this func will exclude some folders which are invalid to be selected.
-    const filterFoldersFn = (folders: FolderWithDocuments[]) => {
+    const filterFoldersFn = (
+      folders: any[] // FolderWithDocuments[] or DataroomFolderWithDocuments[]
+    ) => {
         const pathsOfSelectedFolderIds = folders.filter(f => folderIds.includes(f.id)).map(sf => sf.path);
         // From the Tree selection exclude the selected folders and their corresponding child folders.
         return folders.filter(f => !pathsOfSelectedFolderIds.some(path => f.path.startsWith(path)))
-    }
-
+    };
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
@@ -98,11 +113,24 @@ export function MoveFoldersInToFolderModal({
             </DialogHeader>
             <form>
               <div className="mb-2 max-h-[75vh] overflow-y-scroll">
-                <SidebarFolderTreeSelection
-                  selectedFolder={selectedDestinationFolder}
-                  setSelectedFolder={setSelectedDestinationFolder}
-                  filterFoldersFn={filterFoldersFn}
-                />
+                {
+                  dataroomId ? (
+                    <SidebarDataroomFolderTreeSelection
+                      key="sidebar-dataroom-folder-tree-selection"
+                      dataroomId={dataroomId}
+                      selectedFolder={selectedDestinationFolder}
+                      setSelectedFolder={setSelectedDestinationFolder}
+                      filterFoldersFn={filterFoldersFn}
+                    />
+                  ) : (
+                    <SidebarFolderTreeSelection
+                      key="sidebar-folder-tree-selection"
+                      selectedFolder={selectedDestinationFolder}
+                      setSelectedFolder={setSelectedDestinationFolder}
+                      filterFoldersFn={filterFoldersFn}
+                    />
+                  )
+                }
               </div>
     
               <DialogFooter>
@@ -126,4 +154,4 @@ export function MoveFoldersInToFolderModal({
           </DialogContent>
         </Dialog>
       );
-}
+};

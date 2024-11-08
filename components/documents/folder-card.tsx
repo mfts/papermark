@@ -324,6 +324,7 @@ export default function FolderCard({
           setOpen={setMoveFolderToFolderModalOpen}
           folderIds={[folder.id]}
           folderName={folder.name}
+          dataroomId={dataroomId}
         />
       ): null
       }
