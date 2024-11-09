@@ -106,7 +106,6 @@ export default function DocumentUpload({
         });
     },
     onDropRejected: (fileRejections) => {
-      console.log("fileRejections", fileRejections);
       const { errors, file } = fileRejections[0];
       let message;
       if (errors[0].code === "file-too-large") {
@@ -151,7 +150,7 @@ export default function DocumentUpload({
             />
           ) : null}
 
-          <div className="text-center">
+          <div className="max-w-md text-center">
             {currentFile ? (
               <div className="flex flex-col items-center text-foreground sm:flex-row sm:space-x-2">
                 <div>
@@ -160,7 +159,7 @@ export default function DocumentUpload({
                     isLight,
                   })}
                 </div>
-                <p className="max-w-[280px] truncate">{currentFile.name}</p>
+                <p className="max-w-md truncate">{currentFile.name}</p>
                 <p className="text-gray-500">{bytesToSize(currentFile.size)}</p>
               </div>
             ) : (
