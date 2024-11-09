@@ -144,7 +144,7 @@ export default function TokenSettings() {
               {token && (
                 <div className="rounded-lg bg-gray-50 p-4">
                   <Label>
-                    Your API Token (copy it now, it won't be shown again)
+                    Your API Token (copy it now, it won&apos;t be shown again)
                   </Label>
                   <code className="mt-2 block break-all rounded bg-gray-100 p-2 font-mono text-sm">
                     {token}
