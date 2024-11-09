@@ -15,6 +15,7 @@ type Props = {
     href: string;
     segment: string | null;
     tag?: string;
+    disabled?: boolean;
   }[];
   className?: string;
 };
@@ -29,13 +30,14 @@ export const NavMenu: React.FC<React.PropsWithChildren<Props>> = ({
     >
       <div className="flex w-full items-center overflow-x-auto pl-1">
         <ul className="flex flex-row gap-4">
-          {navigation.map(({ label, href, segment, tag }) => (
+          {navigation.map(({ label, href, segment, tag, disabled }) => (
             <NavItem
               key={label}
               label={label}
               href={href}
               segment={segment}
               tag={tag}
+              disabled={disabled}
             />
           ))}
         </ul>
@@ -50,6 +52,7 @@ const NavItem: React.FC<Props["navigation"][0]> = ({
   href,
   segment,
   tag,
+  disabled,
 }) => {
   const router = useRouter();
   // active is true if the segment included in the pathname, but not if it's the root pathname. unless the segment is the root pathname.
@@ -68,6 +71,7 @@ const NavItem: React.FC<Props["navigation"][0]> = ({
         {
           "border-primary": active,
           // "animate-pulse": isPending,
+          hidden: disabled,
         },
       )}
     >

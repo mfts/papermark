@@ -55,6 +55,8 @@ model User {
   subscriptionId String?        @unique // Stripe subscription ID
   startsAt       DateTime? // Stripe subscription start date
   endsAt         DateTime? // Stripe subscription end date
+
+  restrictedTokens RestrictedToken[]
 }
 
 model Team {
@@ -72,8 +74,8 @@ model Team {
   viewerGroups ViewerGroup[]
   viewers      Viewer[]
 
-  links        Link[]
-  views        View[]
+  links Link[]
+  views View[]
 
   plan           String    @default("free")
   stripeId       String?   @unique // Stripe customer ID
@@ -84,6 +86,9 @@ model Team {
   linkPresets LinkPreset[] // Link presets for the team
 
   limits Json? // Plan limits // {datarooms: 1, users: 1, domains: 1, customDomainOnPro: boolean, customDomainInDataroom: boolean}
+
+  incomingWebhooks IncomingWebhook[]
+  restrictedTokens RestrictedToken[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -638,4 +643,46 @@ model ViewerGroupAccessControls {
 enum ItemType {
   DATAROOM_DOCUMENT
   DATAROOM_FOLDER
+}
+
+model IncomingWebhook {
+  id                  String    @id @default(cuid())
+  externalId          String    @unique
+  name                String
+  secret              String? // Webhook signing secret for verification
+  source              String? // Allowed source URL/domain
+  actions             String? // comma separated (Eg: "documents:write,documentVersions:write")
+  consecutiveFailures Int       @default(0)
+  lastFailedAt        DateTime?
+  disabledAt          DateTime?
+
+  teamId String
+  team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([teamId])
+}
+
+model RestrictedToken {
+  id         String    @id @default(cuid())
+  name       String
+  hashedKey  String    @unique
+  partialKey String
+  scopes     String? // comma separated (Eg: "documents:write,links:write")
+  expires    DateTime?
+  lastUsed   DateTime?
+  rateLimit  Int       @default(60) // rate limit per minute
+
+  userId String
+  teamId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([teamId])
 }
