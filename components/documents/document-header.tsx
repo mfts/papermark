@@ -626,11 +626,15 @@ export default function DocumentHeader({
 
             {/* Export views in CSV */}
             <DropdownMenuItem
-              onClick={() => exportVisitCounts(prismaDocument)}
-              disabled={isFree}
+              onClick={() =>
+                isFree
+                  ? setPlanModalOpen(true)
+                  : exportVisitCounts(prismaDocument)
+              }
             >
               <FileDownIcon className="mr-2 h-4 w-4" />
-              Export visits {isFree ? <PlanBadge plan="pro" /> : ""}
+              Export visits{" "}
+              {isFree && <PlanBadge className="ml-2" plan="pro" />}
             </DropdownMenuItem>
 
             <DropdownMenuSeparator />
@@ -657,8 +661,8 @@ export default function DocumentHeader({
 
       {planModalOpen ? (
         <UpgradePlanModal
-          clickedPlan="Data Rooms"
-          trigger="datarooms"
+          clickedPlan="Pro"
+          trigger="export-document-visits"
           open={planModalOpen}
           setOpen={setPlanModalOpen}
         />
