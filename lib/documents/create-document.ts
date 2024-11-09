@@ -14,30 +14,36 @@ export const createDocument = async ({
   numPages,
   folderPathName,
   createLink = false,
+  token,
 }: {
   documentData: DocumentData;
   teamId: string;
   numPages?: number;
   folderPathName?: string;
   createLink?: boolean;
+  token?: string;
 }) => {
   // create a document in the database with the blob url
-  const response = await fetch(`/api/teams/${teamId}/documents`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_BASE_URL}/api/teams/${teamId}/documents`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({
+        name: documentData.name,
+        url: documentData.key,
+        storageType: documentData.storageType,
+        numPages: numPages,
+        folderPathName: folderPathName,
+        type: documentData.supportedFileType,
+        contentType: documentData.contentType,
+        createLink: createLink,
+      }),
     },
-    body: JSON.stringify({
-      name: documentData.name,
-      url: documentData.key,
-      storageType: documentData.storageType,
-      numPages: numPages,
-      folderPathName: folderPathName,
-      type: documentData.supportedFileType,
-      contentType: documentData.contentType,
-      createLink: createLink,
-    }),
-  });
+  );
 
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`);

@@ -7,6 +7,7 @@ import { match } from "ts-pattern";
 
 import { newId } from "@/lib/id-helper";
 
+import { SUPPORTED_DOCUMENT_MIME_TYPES } from "../constants";
 import { getS3Client } from "./aws-client";
 
 // `File` is a web API type and not available server-side, so we need to define our own type
@@ -20,15 +21,19 @@ export const putFileServer = async ({
   file,
   teamId,
   docId,
+  restricted = true,
 }: {
   file: File;
   teamId: string;
   docId?: string;
+  restricted?: boolean;
 }) => {
   const NEXT_PUBLIC_UPLOAD_TRANSPORT = process.env.NEXT_PUBLIC_UPLOAD_TRANSPORT;
 
   const { type, data } = await match(NEXT_PUBLIC_UPLOAD_TRANSPORT)
-    .with("s3", async () => putFileInS3Server({ file, teamId, docId }))
+    .with("s3", async () =>
+      putFileInS3Server({ file, teamId, docId, restricted }),
+    )
     .with("vercel", async () => putFileInVercelServer(file))
     .otherwise(() => {
       return {
@@ -58,21 +63,28 @@ const putFileInS3Server = async ({
   file,
   teamId,
   docId,
+  restricted = true,
 }: {
   file: File;
   teamId: string;
   docId?: string;
+  restricted?: boolean;
 }) => {
   if (!docId) {
     docId = newId("doc");
   }
 
   if (
+    restricted &&
     file.type !== "image/png" &&
     file.type !== "image/jpeg" &&
     file.type !== "application/pdf"
   ) {
     throw new Error("Only PNG, JPEG or PDF files are supported");
+  }
+
+  if (!restricted && !SUPPORTED_DOCUMENT_MIME_TYPES.includes(file.type)) {
+    throw new Error("Unsupported file type");
   }
 
   const client = getS3Client();
