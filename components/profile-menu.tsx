@@ -66,9 +66,6 @@ const ProfileMenu = ({ className, size }: ProfileMenuProps) => {
                           <span className="truncate font-semibold">
                             {session?.user?.name}
                           </span>
-                          <span className="truncate text-xs">
-                            {session?.user?.email}
-                          </span>
                         </div>
                         <ChevronsUpDown className="ml-auto size-4" />
                       </>
@@ -78,7 +75,7 @@ const ProfileMenu = ({ className, size }: ProfileMenuProps) => {
                 <DropdownMenuContent
                   className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
                   align="end"
-                  side="right"
+                  side={isMobile?"bottom":"right"}
                   sideOffset={4}
                 >
                   {session ? (

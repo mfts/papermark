@@ -18,15 +18,20 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
 
+import { usePlan } from "@/lib/swr/use-billing";
 import { Team } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const SelectTeam = ({ teams, currentTeam, isLoading }: TeamContextType) => {
   const router = useRouter();
   const userTeam = useTeam();
+  const { isMobile } = useSidebar();
+  const { plan: userPlan, trial: userTrial } = usePlan();
+  const isTrial = !!userTrial;
 
   const switchTeam = (team: Team) => {
     localStorage.setItem("currentTeamId", team.id);
@@ -73,9 +78,9 @@ const SelectTeam = ({ teams, currentTeam, isLoading }: TeamContextType) => {
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 sideOffset={4}
-                className="z-50 w-64 w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
+                className="z-50 w-[--radix-dropdown-menu-trigger-width] min-w-64 rounded-lg"
                 align="start"
-                side="right"
+                side={isMobile ? "bottom" : "right"}
               >
                 <DropdownMenuLabel className="text-xs text-muted-foreground">
                   Teams
@@ -85,18 +90,33 @@ const SelectTeam = ({ teams, currentTeam, isLoading }: TeamContextType) => {
                     key={team.id}
                     onClick={() => switchTeam(team)}
                     className={cn(
-                      `flex w-full cursor-pointer items-center justify-between truncate px-3 py-2 text-sm font-normal transition-all duration-75 hover:bg-gray-200 hover:dark:bg-gray-900`,
+                      "flex w-full cursor-pointer items-center justify-between gap-2 truncate p-2 text-sm transition-all duration-75 hover:bg-gray-200 hover:dark:bg-gray-900",
                       team.id === currentTeam?.id && "font-medium",
                     )}
                   >
                     <div className="flex items-center space-x-2">
-                      <Avatar className="h-7 w-7 text-xs">
+                      <Avatar className="h-6 w-6 text-xs">
                         <AvatarFallback>
                           {team.name?.slice(0, 2).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
 
-                      <p>{team.name}</p>
+                      <div className="flex min-w-0 flex-col">
+                        <p className="whitespace-normal break-words">
+                          {team.name}
+                          {userPlan && userPlan != "free" ? (
+                            <span className="ml-2 rounded-full bg-background px-1 text-xs tracking-normal text-foreground ring-1 ring-gray-800">
+                              {userPlan.charAt(0).toUpperCase() +
+                                userPlan.slice(1)}
+                            </span>
+                          ) : null}
+                          {!isTrial ? (
+                            <span className="ml-2 rounded-sm bg-foreground px-2 text-xs tracking-normal text-background ring-1 ring-gray-800">
+                              Trial
+                            </span>
+                          ) : null}
+                        </p>
+                      </div>
                     </div>
 
                     {team.id === currentTeam?.id && (

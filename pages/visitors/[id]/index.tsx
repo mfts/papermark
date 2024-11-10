@@ -40,7 +40,7 @@ export default function VisitorDetailPage() {
 
   return (
     <AppLayout>
-      <div className="p-4 pb-0 sm:m-4 sm:py-4">
+      <div className="p-4 pb-0 sm:m-4 sm:mt-0 sm:py-4">
         {viewer ? (
           <section className="mb-4 flex flex-col justify-between md:mb-8 lg:mb-12">
             <Breadcrumb className="hidden md:flex">

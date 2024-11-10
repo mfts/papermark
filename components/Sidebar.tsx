@@ -163,7 +163,7 @@ export default function AppSidebar({
   const { open } = useSidebar();
 
   return (
-    <Sidebar variant="inset" collapsible="icon" {...props}>
+    <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
@@ -202,7 +202,7 @@ export default function AppSidebar({
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
-        <div className="mt-1">
+        <div>
           <SelectTeam
             currentTeam={currentTeam}
             teams={teams}
@@ -211,7 +211,7 @@ export default function AppSidebar({
           />
         </div>
       </SidebarHeader>
-
+                      
       <SidebarContent>
         <SidebarGroup>
           <SidebarMenu className="overflow-x-hidden">
