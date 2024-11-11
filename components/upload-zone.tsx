@@ -350,7 +350,7 @@ export default function UploadZone({
   const getFilesFromEvent = useCallback(
     async (event: DropEvent) => {
       // This callback also run when event.type =`dragenter`. We only need to compute files when the event.type is `drop`.
-      if (event.type !== "drop") {
+      if (event.type !== "drop" && event.type !== "change") {
         return [];
       }
 
