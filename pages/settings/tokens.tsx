@@ -131,25 +131,27 @@ export default function TokenSettings() {
 
           <div className="p-5 sm:p-10">
             <div className="flex flex-col space-y-4">
-              <div>
+              <div className="  dark:bg-gray-800   ">
                 <Label htmlFor="token-name">Token Name</Label>
                 <Input
                   id="token-name"
                   placeholder="Enter a name for your token"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
+                  className=" text-gray-500"
                 />
               </div>
 
               {token && (
-                <div className="rounded-lg bg-gray-50 p-4">
-                  <Label>
+              <div className=" rounded-lg bg-gray-200 dark:bg-gray-800">
+              <Label className="text-gray-800 dark:text-white">
                     Your API Token (copy it now, it won&apos;t be shown again)
-                  </Label>
-                  <code className="mt-2 block break-all rounded bg-gray-100 p-2 font-mono text-sm">
-                    {token}
-                  </code>
-                </div>
+              </Label>
+              <code className="mt-2 block break-all rounded bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-white p-2 font-mono text-sm">
+                {token}
+              </code>
+            </div>
+            
               )}
 
               <Button
