@@ -49,6 +49,12 @@ export function AddDomainModal({
 
     if (domain == "") return;
 
+    // Add validation for papermark
+    if (domain.toLowerCase().includes("papermark")) {
+      toast.error("Domain cannot contain 'papermark'");
+      return;
+    }
+
     setLoading(true);
     const response = await fetch(
       `/api/teams/${teamInfo?.currentTeam?.id}/domains`,
