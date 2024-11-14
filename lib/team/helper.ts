@@ -17,6 +17,7 @@ interface ITeamWithDomain {
   teamId: string;
   userId: string;
   domain?: string;
+  teamOptions?: {};
   options?: {};
 }
 
@@ -97,6 +98,7 @@ export async function getTeamWithDomain({
   teamId,
   userId,
   domain: domainSlug,
+  teamOptions,
   options,
 }: ITeamWithDomain) {
   const team = await prisma.team.findUnique({
@@ -124,6 +126,12 @@ export async function getTeamWithDomain({
   const teamHasUser = team?.users.some((user) => user.userId === userId);
   if (!teamHasUser) {
     throw new TeamError("You are not a member of the team");
+  }
+
+  // check if the team has a paid plan
+  const teamHasPaidPlan = team?.plan !== "free";
+  if (!teamHasPaidPlan) {
+    throw new TeamError("Team doesn't have a paid plan");
   }
 
   // check if the domain exists in the team
