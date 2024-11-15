@@ -53,7 +53,7 @@ export default function DocumentHeader({
   teamId,
   actions,
 }: {
-  prismaDocument: Document & { hasPageLinks: boolean };
+  prismaDocument: Document & { hasPageLinks?: boolean };
   primaryVersion: DocumentVersion;
   teamId: string;
   actions?: React.ReactNode[];
