@@ -29,6 +29,7 @@ import {
   createNewDocumentVersion,
 } from "@/lib/documents/create-document";
 import { putFile } from "@/lib/files/put-file";
+import { usePlan } from "@/lib/swr/use-billing";
 import useLimits from "@/lib/swr/use-limits";
 import { getSupportedContentType } from "@/lib/utils/get-content-type";
 
@@ -58,6 +59,9 @@ export function AddDocumentModal({
   const [notionLink, setNotionLink] = useState<string | null>(null);
   const teamInfo = useTeam();
   const { canAddDocuments } = useLimits();
+  const { plan, trial } = usePlan();
+  const isFreePlan = plan === "free";
+  const isTrial = !!trial;
 
   const teamId = teamInfo?.currentTeam?.id as string;
 
@@ -422,15 +426,20 @@ export function AddDocumentModal({
                     `After you upload a new version, the existing links will remain the unchanged.`
                   ) : (
                     <span>
-                      After you upload the document, create a shareable link on
-                      the document page.{" "}
-                      <Link
-                        href="https://www.papermark.io/help/article/document-types"
-                        target="_blank"
-                        className="underline underline-offset-4 transition-all hover:text-muted-foreground/80 hover:dark:text-muted-foreground/80"
-                      >
-                        Learn more about what file types are supported.
-                      </Link>
+                      After you upload the document, create a shareable link.{" "}
+                      {isFreePlan && !isTrial ? (
+                        <>
+                          Upload larger files and more{" "}
+                          <Link
+                            href="https://www.papermark.io/help/article/document-types"
+                            target="_blank"
+                            className="underline underline-offset-4 transition-all hover:text-muted-foreground/80 hover:dark:text-muted-foreground/80"
+                          >
+                            file types
+                          </Link>{" "}
+                          with a higher plan.
+                        </>
+                      ) : null}
                     </span>
                   )}
                 </CardDescription>

@@ -105,8 +105,8 @@ export default function UploadZone({
   const { data: session } = useSession();
   const isFreePlan = plan === "free";
   const isTrial = !!trial;
-  const maxSize = plan === "business" || plan === "datarooms" ? 250 : 30;
-  const maxNumPages = plan === "business" || plan === "datarooms" ? 500 : 100;
+  const maxSize = isFreePlan && !isTrial ? 30 : 250;
+  const maxNumPages = isFreePlan && !isTrial ? 100 : 500;
   const { limits, canAddDocuments } = useLimits();
   const remainingDocuments = limits?.documents
     ? limits?.documents - limits?.usage?.documents
@@ -131,7 +131,7 @@ export default function UploadZone({
       const rejected = rejectedFiles.map(({ file, errors }) => {
         let message = "";
         if (errors.find(({ code }) => code === "file-too-large")) {
-          message = `File size too big (max. ${maxSize} MB)`;
+          message = `File size too big (max. ${maxSize} MB). Upgrade to a paid plan to increase the limit.`;
         } else if (errors.find(({ code }) => code === "file-invalid-type")) {
           const isSupported = SUPPORTED_DOCUMENT_MIME_TYPES.includes(file.type);
           message = `File type not supported ${

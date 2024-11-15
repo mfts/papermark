@@ -104,6 +104,7 @@ export default function ViewData({
       }
       ipAddress={viewData.ipAddress}
       linkName={link.name ?? `Link #${link.id.slice(-5)}`}
+      isPreview={viewData.isPreview}
     />
   ) : viewData.pages ? (
     <PagesViewerNew

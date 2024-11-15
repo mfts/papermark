@@ -33,8 +33,8 @@ export default function DocumentUpload({
   const { plan, trial } = usePlan();
   const isFreePlan = plan === "free";
   const isTrial = !!trial;
-  const maxSize = plan === "business" || plan === "datarooms" ? 100 : 30;
-  const maxNumPages = plan === "business" || plan === "datarooms" ? 500 : 100;
+  const maxSize = isFreePlan && !isTrial ? 30 : 100;
+  const maxNumPages = isFreePlan && !isTrial ? 100 : 500;
 
   const { getRootProps, getInputProps } = useDropzone({
     accept:

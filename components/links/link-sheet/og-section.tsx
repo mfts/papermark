@@ -118,9 +118,9 @@ export default function OGSection({
   const resetMetatags = () => {
     setData({
       ...data,
-      metaImage: null || (presets?.metaImage ?? null),
-      metaTitle: null || (presets?.metaTitle ?? null),
-      metaDescription: null || (presets?.metaDescription ?? null),
+      metaImage: presets?.metaImage ?? null,
+      metaTitle: presets?.metaTitle ?? null,
+      metaDescription: presets?.metaDescription ?? null,
     });
   };
 
