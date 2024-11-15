@@ -11,8 +11,8 @@ import { CustomUser } from "@/lib/types";
 import { authOptions } from "../../../../auth/[...nextauth]";
 
 export default async function handle(
-  req: NextApiRequest,
-  res: NextApiResponse,
+  req: NextApiRequest, 
+  res: NextApiResponse
 ) {
   if (req.method === "GET") {
     // GET /api/teams/:teamId/documents/:id
@@ -22,7 +22,6 @@ export default async function handle(
     }
 
     const { teamId, id: docId } = req.query as { teamId: string; id: string };
-
     const userId = (session.user as CustomUser).id;
 
     try {
@@ -52,7 +51,7 @@ export default async function handle(
       errorhandler(error, res);
     }
   } else if (req.method === "PUT") {
-    // PUT /api/teams/:teamId/document/:id
+    // PUT /api/teams/:teamId/documents/:id
     const session = await getServerSession(req, res, authOptions);
     if (!session) {
       res.status(401).end("Unauthorized");
@@ -60,10 +59,41 @@ export default async function handle(
     }
     const userId = (session.user as CustomUser).id;
     const { teamId, id: docId } = req.query as { teamId: string; id: string };
-    const { folderId, currentPathName } = req.body as {
-      folderId: string;
-      currentPathName: string;
+    const { folderId, currentPathName, isArchived } = req.body as {
+      folderId?: string;
+      currentPathName?: string;
+      isArchived?: boolean; // To handle archiving
     };
+
+    try {
+      // Handle document archiving/unarchiving
+      if (typeof isArchived !== "undefined") {
+        const updatedDocument = await prisma.document.update({
+          where: {
+            id: docId,
+            teamId: teamId,
+            team: {
+              users: {
+                some: {
+                  userId: userId,
+                  role: "ADMIN", // Ensure the user has admin rights
+                },
+              },
+            },
+          },
+          data: {
+            isArchived: isArchived, // Update the archive state
+          },
+        });
+
+        return res.status(200).json({
+          message: `Document ${isArchived ? "archived" : "unarchived"} successfully.`,
+          document: updatedDocument,
+        });
+      }
+    } catch (error) {
+      errorhandler(error, res);
+    }
 
     const document = await prisma.document.update({
       where: {
@@ -100,15 +130,14 @@ export default async function handle(
       oldPath: currentPathName,
     });
   } else if (req.method === "DELETE") {
-    // DELETE /api/teams/:teamId/document/:id
+    // DELETE /api/teams/:teamId/documents/:id
     const session = await getServerSession(req, res, authOptions);
     if (!session) {
-      res.status(401).end("Unauthorized");
-      return;
+      return res.status(401).end("Unauthorized");
     }
 
     const { teamId, id: docId } = req.query as { teamId: string; id: string };
-
+    
     const userId = (session.user as CustomUser).id;
 
     try {

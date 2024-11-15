@@ -17,6 +17,7 @@ import {
 } from "@dnd-kit/core";
 import { motion } from "framer-motion";
 import {
+  ArchiveIcon,
   FileIcon,
   FolderIcon,
   FolderInputIcon,
@@ -43,6 +44,8 @@ import { DroppableFolder } from "./drag-and-drop/droppable-folder";
 import { EmptyDocuments } from "./empty-document";
 import FolderCard from "./folder-card";
 import { MoveToFolderModal } from "./move-folder-modal";
+import Link from "next/link";
+import { useRouter } from "next/router";
 
 export function DocumentsList({
   folders,
@@ -56,6 +59,7 @@ export function DocumentsList({
   folderPathName?: string[];
 }) {
   const { isMobile } = useMediaQuery();
+  const router = useRouter();
 
   const [uploads, setUploads] = useState<
     { fileName: string; progress: number; documentId?: string }[]
@@ -171,7 +175,7 @@ export function DocumentsList({
     setSelectedDocuments([]);
     setIsOverFolder(false);
   };
-
+  const endpoint = router.asPath.split('/').pop();
   const HeaderContent = memo(() => {
     if (selectedDocuments.length > 0) {
       return (
@@ -213,7 +217,7 @@ export function DocumentsList({
       );
     } else {
       return (
-        <div className="mb-2 flex items-center gap-x-2 pt-5">
+        <div className="mb-2 flex justify-between items-center gap-x-2 pt-5 relative">
           {folders && folders.length > 0 && (
             <p className="flex items-center gap-x-1 text-sm text-gray-400">
               <FolderIcon className="h-5 w-5" />
@@ -226,10 +230,22 @@ export function DocumentsList({
             <p className="flex items-center gap-x-1 text-sm text-gray-400">
               <FileIcon className="h-5 w-5" />
               <span>
-                {documents.length} document{documents.length > 1 ? "s" : ""}
-              </span>
+                {
+                  documents.length
+                }{" "}
+                document{documents.length !== 1 ? "s" : ""}
+    </span>
             </p>
           )}
+          {
+            endpoint == "documents" &&
+            (
+              <Link href="/documents/archive" className=" absolute right-0 flex items-center gap-2 px-3 py-2 text-sm mb-2">
+            <ArchiveIcon className="h-5 w-5" />
+             Archive
+          </Link>
+            )
+          }
         </div>
       );
     }
@@ -328,10 +344,11 @@ export function DocumentsList({
             </Portal>
 
             {documents && documents.length === 0 && (
-              <div className="flex items-center justify-center">
-                <EmptyDocuments />
-              </div>
+               <div className="flex items-center justify-center">
+                 <EmptyDocuments />
+                </div>
             )}
+
           </div>
         ) : (
           <>
@@ -458,6 +475,7 @@ export function DocumentsList({
                     <EmptyDocuments />
                   </div>
                 )}
+
               </div>
             </DndContext>
             {moveFolderOpen ? (

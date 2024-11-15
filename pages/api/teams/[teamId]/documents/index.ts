@@ -29,10 +29,10 @@ export default async function handle(
       return res.status(401).end("Unauthorized");
     }
 
-    const { teamId } = req.query as { teamId: string };
+    const { teamId, isArchived } = req.query as { teamId: string, isArchived: string };
     const { query, sort } = req.query as { query?: string; sort?: string };
     const userId = (session.user as CustomUser).id;
-
+    const archivedFilter = isArchived === "true";
     try {
       const team = await prisma.team.findUnique({
         where: {
@@ -70,6 +70,7 @@ export default async function handle(
       const documents = await prisma.document.findMany({
         where: {
           teamId: teamId,
+          isArchived: archivedFilter,
           ...(query && {
             name: {
               contains: query,

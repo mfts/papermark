@@ -7,7 +7,7 @@ import useSWR from "swr";
 import { DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
 import { fetcher } from "@/lib/utils";
 
-export default function useDocuments() {
+export default function useDocuments(isArchived: boolean) {
   const router = useRouter();
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
@@ -22,7 +22,7 @@ export default function useDocuments() {
     error,
   } = useSWR<DocumentWithLinksAndLinkCountAndViewCount[]>(
     teamId &&
-      `/api/teams/${teamId}/documents${searchQuery ? `?query=${searchQuery}` : ""}${sortQuery ? (searchQuery ? `&sort=${sortQuery}` : `?sort=${sortQuery}`) : ""}`,
+      `/api/teams/${teamId}/documents${searchQuery ? `?query=${searchQuery}` : ""}${sortQuery ? (searchQuery ? `&sort=${sortQuery}` : `?sort=${sortQuery}`) : ""}?isArchived=${isArchived}`,
     fetcher,
     {
       revalidateOnFocus: false,
