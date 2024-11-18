@@ -344,6 +344,16 @@ export function useDataroomVisits({ dataroomId }: { dataroomId: string }) {
   };
 }
 
+type DataroomDocumentViewHistory = {
+  id: string;
+  downloadedAt: string;
+  viewedAt: string;
+  document: {
+    id: string;
+    name: string;
+  };
+};
+
 export function useDataroomVisitHistory({
   viewId,
   dataroomId,
@@ -354,7 +364,7 @@ export function useDataroomVisitHistory({
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
 
-  const { data: documentViews, error } = useSWR<any[]>(
+  const { data: documentViews, error } = useSWR<DataroomDocumentViewHistory[]>(
     teamId &&
       dataroomId &&
       `/api/teams/${teamId}/datarooms/${dataroomId}/views/${viewId}/history`,
