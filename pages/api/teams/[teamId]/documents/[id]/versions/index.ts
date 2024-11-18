@@ -28,13 +28,15 @@ export default async function handle(
       teamId: string;
       id: string;
     };
-    const { url, type, numPages, storageType, contentType } = req.body as {
-      url: string;
-      type: string;
-      numPages: number;
-      storageType: DocumentStorageType;
-      contentType: string;
-    };
+    const { url, type, numPages, storageType, contentType, fileSize } =
+      req.body as {
+        url: string;
+        type: string;
+        numPages: number;
+        storageType: DocumentStorageType;
+        contentType: string;
+        fileSize: number | undefined;
+      };
 
     const userId = (session.user as CustomUser).id;
 
@@ -72,6 +74,7 @@ export default async function handle(
           isPrimary: true,
           versionNumber: currentVersionNumber + 1,
           contentType,
+          fileSize,
         },
       });
 

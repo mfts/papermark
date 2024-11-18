@@ -37,6 +37,7 @@ type DataroomDocument = {
   id: string;
   name: string;
   orderIndex: number | null;
+  downloadOnly: boolean;
   versions: {
     id: string;
     type: string;
@@ -75,7 +76,7 @@ export default function DataroomViewer({
   setDataroomVerified,
   isPreview,
   folderId,
-  setFolderId
+  setFolderId,
 }: {
   brand: Partial<DataroomBrand>;
   viewId?: string;

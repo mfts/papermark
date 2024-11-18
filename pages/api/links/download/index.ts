@@ -35,6 +35,7 @@ export default async function handle(
           document: {
             select: {
               teamId: true,
+              downloadOnly: true,
               versions: {
                 where: { isPrimary: true },
                 select: {
@@ -58,7 +59,7 @@ export default async function handle(
       }
 
       // if link does not allow download, we should not allow the download
-      if (!view.link.allowDownload) {
+      if (!view.link.allowDownload && !view.document?.downloadOnly) {
         return res.status(403).json({ error: "Error downloading" });
       }
 

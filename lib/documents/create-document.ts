@@ -6,6 +6,7 @@ export type DocumentData = {
   storageType: DocumentStorageType;
   contentType: string; // actual file mime type
   supportedFileType: string; // papermark types: "pdf", "sheet", "docs", "slides"
+  fileSize: number | undefined; // file size in bytes
 };
 
 export const createDocument = async ({
@@ -41,6 +42,7 @@ export const createDocument = async ({
         type: documentData.supportedFileType,
         contentType: documentData.contentType,
         createLink: createLink,
+        fileSize: documentData.fileSize,
       }),
     },
   );
@@ -77,6 +79,7 @@ export const createAgreementDocument = async ({
       folderPathName: folderPathName,
       type: documentData.supportedFileType,
       contentType: documentData.contentType,
+      fileSize: documentData.fileSize,
     }),
   });
 
@@ -112,6 +115,7 @@ export const createNewDocumentVersion = async ({
         numPages: numPages,
         type: documentData.supportedFileType,
         contentType: documentData.contentType,
+        fileSize: documentData.fileSize,
       }),
     },
   );

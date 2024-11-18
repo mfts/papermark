@@ -11,6 +11,7 @@ import { DEFAULT_DOCUMENT_VIEW_TYPE } from "@/components/view/document-view";
 import { LinkWithDocument, NotionTheme, WatermarkConfig } from "@/lib/types";
 
 import AdvancedExcelViewer from "./viewer/advanced-excel-viewer";
+import DownloadOnlyViewer from "./viewer/download-only-viewer";
 import ImageViewer from "./viewer/image-viewer";
 
 const ExcelViewer = dynamic(
@@ -130,6 +131,18 @@ export default function ViewData({
       }
       ipAddress={viewData.ipAddress}
       linkName={link.name ?? `Link #${link.id.slice(-5)}`}
+    />
+  ) : document.downloadOnly ? (
+    <DownloadOnlyViewer
+      file={viewData.file!}
+      linkId={link.id}
+      viewId={viewData.viewId}
+      documentId={document.id}
+      allowDownload={true}
+      versionNumber={document.versions[0].versionNumber}
+      brand={brand}
+      documentName={document.name}
+      isPreview={viewData.isPreview}
     />
   ) : (
     <PDFViewer

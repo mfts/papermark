@@ -169,6 +169,7 @@ export default async function handle(
       folderPathName,
       contentType,
       createLink,
+      fileSize,
     } = req.body as {
       name: string;
       url: string;
@@ -178,6 +179,7 @@ export default async function handle(
       folderPathName?: string;
       contentType: string;
       createLink?: boolean;
+      fileSize?: number;
     };
 
     try {
@@ -217,6 +219,9 @@ export default async function handle(
         },
       });
 
+      // determine if the document is download only
+      const isDownloadOnly = type === "zip";
+
       // Save data to the database
       const document = await prisma.document.create({
         data: {
@@ -229,6 +234,7 @@ export default async function handle(
           storageType,
           ownerId: userId,
           teamId: teamId,
+          downloadOnly: isDownloadOnly,
           ...(createLink && {
             links: {
               create: {
@@ -246,6 +252,7 @@ export default async function handle(
               numPages: numPages,
               isPrimary: true,
               versionNumber: 1,
+              fileSize: fileSize,
             },
           },
           folderId: folder?.id ? folder.id : null,

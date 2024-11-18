@@ -51,6 +51,8 @@ const allAcceptableDropZoneMimeTypes = {
   "image/png": [], // ".png"
   "image/jpeg": [], // ".jpeg"
   "image/jpg": [], // ".jpg"
+  "application/zip": [], // ".zip"
+  "application/x-zip-compressed": [], // ".zip"
 };
 
 interface FileWithPaths extends File {
@@ -251,6 +253,7 @@ export default function UploadZone({
           name: file.name,
           storageType: DocumentStorageType.S3_PATH,
           contentType: contentType,
+          fileSize: file.size,
         };
 
         const fileUploadPathName = file?.whereToUploadPath;
