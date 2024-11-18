@@ -478,7 +478,7 @@ export default function Branding() {
                             key={`branding-${brandColor}-${accentColor}`}
                             name="checkout-demo"
                             id="checkout-demo"
-                            src={`/entrance_ppreview_demo?brandColor=${encodeURIComponent(brandColor)}&accentColor=${encodeURIComponent(accentColor)}&brandLogo=${logo ? encodeURIComponent(logo) : ""}`}
+                            src={`/entrance_ppreview_demo?brandColor=${encodeURIComponent(brandColor)}&accentColor=${encodeURIComponent(accentColor)}&brandLogo=${blobUrl ? encodeURIComponent(blobUrl) : logo ? encodeURIComponent(logo) : ""}`}
                             style={{
                               width: "1390px",
                               height: "831px",
