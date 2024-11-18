@@ -129,9 +129,11 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
     },
     {
       name: "Branding",
-      href: "/settings/branding",
+      href: "/branding",
       icon: PaletteIcon,
-      current: router.pathname.includes("branding"),
+      current:
+        router.pathname.includes("branding") &&
+        !router.pathname.includes("datarooms"),
       active: false,
       disabled: false,
     },
