@@ -6,7 +6,10 @@ import { getServerSession } from "next-auth/next";
 import { LIMITS } from "@/lib/constants";
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
-import { getTotalAvgPageDuration } from "@/lib/tinybird";
+import {
+  getTotalAvgPageDuration,
+  getTotalDocumentDuration,
+} from "@/lib/tinybird";
 import { CustomUser } from "@/lib/types";
 
 import { authOptions } from "../../../../auth/[...nextauth]";
@@ -115,15 +118,19 @@ export default async function handle(
         since: 0,
       });
 
-      const total_duration = duration.data.reduce(
-        (totalDuration, data) => totalDuration + data.avg_duration,
-        0,
-      );
+      const totalDocumentDuration = await getTotalDocumentDuration({
+        documentId: docId,
+        excludedLinkIds: "",
+        excludedViewIds: allExcludedViews.map((view) => view.id).join(","),
+        since: 0,
+      });
 
       const stats = {
         views: filteredViews,
         duration,
-        total_duration,
+        total_duration:
+          (totalDocumentDuration.data[0].sum_duration * 1.0) /
+          filteredViews.length,
         groupedReactions,
         totalViews: activeViews.length,
       };
