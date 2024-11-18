@@ -60,7 +60,7 @@ export function UploadContainer({
         return;
       }
 
-      const { type, data, numPages } = await putFile({
+      const { type, data, numPages, fileSize } = await putFile({
         file: currentFile,
         teamId,
       });
@@ -74,6 +74,7 @@ export function UploadContainer({
         storageType: type!,
         contentType: contentType,
         supportedFileType: supportedFileType,
+        fileSize: fileSize,
       };
       // create a document in the database
       const response = await createDocument({

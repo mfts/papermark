@@ -79,6 +79,7 @@ export const createAgreementDocument = async ({
       folderPathName: folderPathName,
       type: documentData.supportedFileType,
       contentType: documentData.contentType,
+      fileSize: documentData.fileSize,
     }),
   });
 

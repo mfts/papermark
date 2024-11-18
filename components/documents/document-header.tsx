@@ -7,6 +7,7 @@ import { Document, DocumentVersion } from "@prisma/client";
 import {
   AlertCircleIcon,
   BetweenHorizontalStartIcon,
+  CloudDownloadIcon,
   FileDownIcon,
   SheetIcon,
   Sparkles,
@@ -455,6 +456,15 @@ export default function DocumentHeader({
                 </span>
               </ButtonTooltip>
             )}
+
+          {prismaDocument.downloadOnly && (
+            <ButtonTooltip content="Download only">
+              <span className="text-xs">
+                <CloudDownloadIcon className="h-6 w-6" />
+                <span className="sr-only">This document is download only</span>
+              </span>
+            </ButtonTooltip>
+          )}
         </div>
 
         <div className="flex items-center gap-x-4 md:gap-x-2">
@@ -508,6 +518,7 @@ export default function DocumentHeader({
 
           {prismaDocument.type !== "notion" &&
             prismaDocument.type !== "sheet" &&
+            prismaDocument.type !== "zip" &&
             prismaDocument.assistantEnabled && (
               <Button
                 className="group hidden h-8 space-x-1 whitespace-nowrap bg-gradient-to-r from-[#16222A] via-emerald-500 to-[#16222A] text-xs duration-200 ease-linear hover:bg-right md:flex lg:h-9 lg:text-sm"
@@ -580,7 +591,8 @@ export default function DocumentHeader({
                 </DropdownMenuItem>
 
                 {prismaDocument.type !== "notion" &&
-                  prismaDocument.type !== "sheet" && (
+                  prismaDocument.type !== "sheet" &&
+                  prismaDocument.type !== "zip" && (
                     <DropdownMenuItem
                       onClick={() =>
                         activateOrRedirectAssistant(prismaDocument)
@@ -595,6 +607,7 @@ export default function DocumentHeader({
               </DropdownMenuGroup>
               {primaryVersion.type !== "notion" &&
                 primaryVersion.type !== "sheet" &&
+                primaryVersion.type !== "zip" &&
                 (!prismaDocument.assistantEnabled ? (
                   <DropdownMenuItem
                     onClick={() =>
