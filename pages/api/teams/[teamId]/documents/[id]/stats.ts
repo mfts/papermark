@@ -3,7 +3,6 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { View } from "@prisma/client";
 import { getServerSession } from "next-auth/next";
 
-import { LIMITS } from "@/lib/constants";
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
 import {
@@ -81,14 +80,10 @@ export default async function handle(
       const activeViews = views.filter((view) => !view.isArchived);
       const archivedViews = views.filter((view) => view.isArchived);
 
-      // limit the number of views to 20 on free plan
-      const limitedViews =
-        document?.team?.plan === "free" ? views.slice(0, LIMITS.views) : views;
-
       // exclude views from the team's members
       let internalViews: View[] = [];
       if (excludeTeamMembers) {
-        internalViews = limitedViews.filter((view) => {
+        internalViews = activeViews.filter((view) => {
           return users.some((user) => user.email === view.viewerEmail);
         });
       }
@@ -96,10 +91,12 @@ export default async function handle(
       // combined archived and internal views
       const allExcludedViews = [...internalViews, ...archivedViews];
 
-      const filteredViews = limitedViews.filter(
+      // filter out the excluded views
+      const filteredViews = views.filter(
         (view) => !allExcludedViews.map((view) => view.id).includes(view.id),
       );
 
+      // get the reactions for the filtered views
       const groupedReactions = await prisma.reaction.groupBy({
         by: ["type"],
         where: {
@@ -132,7 +129,7 @@ export default async function handle(
           (totalDocumentDuration.data[0].sum_duration * 1.0) /
           filteredViews.length,
         groupedReactions,
-        totalViews: activeViews.length,
+        totalViews: filteredViews.length,
       };
 
       return res.status(200).json(stats);
