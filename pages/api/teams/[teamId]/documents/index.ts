@@ -169,6 +169,7 @@ export default async function handle(
       folderPathName,
       contentType,
       createLink,
+      fileSize,
     } = req.body as {
       name: string;
       url: string;
@@ -178,6 +179,7 @@ export default async function handle(
       folderPathName?: string;
       contentType: string;
       createLink?: boolean;
+      fileSize?: number;
     };
 
     try {
@@ -250,6 +252,7 @@ export default async function handle(
               numPages: numPages,
               isPrimary: true,
               versionNumber: 1,
+              fileSize: fileSize,
             },
           },
           folderId: folder?.id ? folder.id : null,

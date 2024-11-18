@@ -18,10 +18,17 @@ export const putFile = async ({
   file: File;
   teamId: string;
   docId?: string;
-}) => {
+}): Promise<{
+  type: DocumentStorageType | null;
+  data: string | null;
+  numPages: number | undefined;
+  fileSize: number | undefined;
+}> => {
   const NEXT_PUBLIC_UPLOAD_TRANSPORT = process.env.NEXT_PUBLIC_UPLOAD_TRANSPORT;
 
-  const { type, data, numPages } = await match(NEXT_PUBLIC_UPLOAD_TRANSPORT)
+  const { type, data, numPages, fileSize } = await match(
+    NEXT_PUBLIC_UPLOAD_TRANSPORT,
+  )
     .with("s3", async () => putFileInS3({ file, teamId, docId }))
     .with("vercel", async () => putFileInVercel(file))
     .otherwise(() => {
@@ -29,10 +36,11 @@ export const putFile = async ({
         type: null,
         data: null,
         numPages: undefined,
+        fileSize: undefined,
       };
     });
 
-  return { type, data, numPages };
+  return { type, data, numPages, fileSize };
 };
 
 const putFileInVercel = async (file: File) => {
@@ -51,6 +59,7 @@ const putFileInVercel = async (file: File) => {
     type: DocumentStorageType.VERCEL_BLOB,
     data: newBlob.url,
     numPages: numPages,
+    fileSize: file.size,
   };
 };
 
@@ -73,7 +82,7 @@ const putFileInS3 = async ({
     !file.name.endsWith(".dxf")
   ) {
     throw new Error(
-      "Only PDF, Powerpoint, Word, and Excel files are supported",
+      "Only PDF, Powerpoint, Word, and Excel, ZIP files are supported",
     );
   }
 
@@ -137,5 +146,6 @@ const putFileInS3 = async ({
     type: DocumentStorageType.S3_PATH,
     data: key,
     numPages: numPages,
+    fileSize: file.size,
   };
 };

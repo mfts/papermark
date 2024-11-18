@@ -110,7 +110,7 @@ export function AddDocumentModal({
         return;
       }
 
-      const { type, data, numPages } = await putFile({
+      const { type, data, numPages, fileSize } = await putFile({
         file: currentFile,
         teamId,
       });
@@ -121,6 +121,7 @@ export function AddDocumentModal({
         storageType: type!,
         contentType: contentType,
         supportedFileType: supportedFileType,
+        fileSize: fileSize,
       };
       let response: Response | undefined;
       // create a document or new version in the database
