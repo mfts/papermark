@@ -22,6 +22,9 @@ export function getSupportedContentType(contentType: string): string | null {
     case "image/jpeg":
     case "image/jpg":
       return "image";
+    case "application/zip":
+    case "application/x-zip-compressed":
+      return "zip";
     default:
       return null;
   }
@@ -63,32 +66,6 @@ export function getExtensionFromContentType(
       return "jpeg";
     case "image/jpg":
       return "jpg";
-    default:
-      return null;
-  }
-}
-
-export function getExtensionFromSupportedType(
-  supportedType: string,
-): string | null {
-  switch (supportedType) {
-    case "pdf":
-      return "pdf";
-    case "sheet":
-      return "xlsx";
-    default:
-      return null;
-  }
-}
-
-export function getMimeTypeFromSupportedType(
-  supportedType: string,
-): string | null {
-  switch (supportedType) {
-    case "pdf":
-      return "application/pdf";
-    case "sheet":
-      return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
     default:
       return null;
   }

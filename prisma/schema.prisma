@@ -148,6 +148,7 @@ model Document {
   ownerId              String? // This field holds the foreign key.
   assistantEnabled     Boolean             @default(false) // This indicates if assistant is enabled for this document
   advancedExcelEnabled Boolean             @default(false) // This indicates if advanced Excel is enabled for this document
+  downloadOnly         Boolean             @default(false) // Indicates if the document is download only
   createdAt            DateTime            @default(now())
   updatedAt            DateTime            @updatedAt
   links                Link[]

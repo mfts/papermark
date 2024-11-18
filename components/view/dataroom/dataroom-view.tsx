@@ -24,6 +24,7 @@ import DataroomViewer from "../DataroomViewer";
 import PagesViewerNew from "../PagesViewerNew";
 import EmailVerificationMessage from "../email-verification-form";
 import AdvancedExcelViewer from "../viewer/advanced-excel-viewer";
+import DownloadOnlyViewer from "../viewer/download-only-viewer";
 import ImageViewer from "../viewer/image-viewer";
 
 const ExcelViewer = dynamic(
@@ -48,6 +49,7 @@ export type TDocumentData = {
   documentType: TSupportedDocumentSimpleType;
   documentVersionId: string;
   documentVersionNumber: number;
+  downloadOnly: boolean;
   isVertical?: boolean;
 };
 
@@ -434,6 +436,20 @@ export default function DataroomView({
           linkName={link.name ?? `Link #${link.id.slice(-5)}`}
         />
       </div>
+    ) : documentData?.downloadOnly ? (
+      <DownloadOnlyViewer
+        file={viewData.file!}
+        linkId={link.id}
+        documentId={documentData.id}
+        viewId={viewData.viewId}
+        allowDownload={true}
+        versionNumber={documentData.documentVersionNumber}
+        brand={brand}
+        documentName={documentData.name}
+        isPreview={viewData.isPreview}
+        dataroomId={dataroom.id}
+        setDocumentData={setDocumentData}
+      />
     ) : null;
   }
 

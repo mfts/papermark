@@ -217,6 +217,9 @@ export default async function handle(
         },
       });
 
+      // determine if the document is download only
+      const isDownloadOnly = type === "zip";
+
       // Save data to the database
       const document = await prisma.document.create({
         data: {
@@ -229,6 +232,7 @@ export default async function handle(
           storageType,
           ownerId: userId,
           teamId: teamId,
+          downloadOnly: isDownloadOnly,
           ...(createLink && {
             links: {
               create: {

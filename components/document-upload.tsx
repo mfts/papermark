@@ -70,6 +70,8 @@ export default function DocumentUpload({
             "image/png": [], // ".png"
             "image/jpeg": [], // ".jpeg"
             "image/jpg": [], // ".jpg"
+            "application/zip": [], // ".zip"
+            "application/x-zip-compressed": [], // ".zip"
           },
     multiple: false,
     maxSize: maxSize * 1024 * 1024, // 30 MB

@@ -93,6 +93,8 @@ export const SUPPORTED_DOCUMENT_MIME_TYPES = [
   "image/png", // .png
   "image/jpeg", // .jpeg
   "image/jpg", // .jpg
+  "application/zip", // .zip
+  "application/x-zip-compressed", // .zip
 ];
 
 export const SUPPORTED_DOCUMENT_SIMPLE_TYPES = [
@@ -103,6 +105,7 @@ export const SUPPORTED_DOCUMENT_SIMPLE_TYPES = [
   "docs",
   "cad",
   "image",
+  "zip",
 ];
 
 export const COUNTRIES: { [key: string]: string } = {

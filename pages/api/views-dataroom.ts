@@ -702,7 +702,8 @@ export default async function handle(
       file:
         (documentVersion &&
           (documentVersion.type === "pdf" ||
-            documentVersion.type === "image")) ||
+            documentVersion.type === "image" ||
+            documentVersion.type === "zip")) ||
         (documentVersion && useAdvancedExcelViewer)
           ? documentVersion.file
           : undefined,
