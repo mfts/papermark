@@ -158,6 +158,7 @@ export default async function incomingWebhookHandler(
         storageType: storageType,
         contentType: contentType,
         supportedFileType: supportedContentType,
+        fileSize: fileBuffer.byteLength,
       },
       teamId: incomingWebhook.teamId,
       numPages: 1,
