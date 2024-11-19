@@ -10,7 +10,6 @@ import { mutate } from "swr";
 
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import AppLayout from "@/components/layouts/app";
-import { SettingsHeader } from "@/components/settings/settings-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -28,9 +27,9 @@ import { useBrand } from "@/lib/swr/use-brand";
 import { convertDataUrlToFile, uploadImage } from "@/lib/utils";
 
 export default function Branding() {
-  const { brand } = useBrand();
   const teamInfo = useTeam();
   const router = useRouter();
+  const { brand } = useBrand();
   const { plan } = usePlan();
 
   const [brandColor, setBrandColor] = useState<string>("#000000");
@@ -136,12 +135,11 @@ export default function Branding() {
   return (
     <AppLayout>
       <main className="relative mx-2 mb-10 mt-4 space-y-8 overflow-hidden px-1 sm:mx-3 md:mx-5 md:mt-5 lg:mx-7 lg:mt-8 xl:mx-10">
-        <SettingsHeader />
         <div>
           <div className="mb-4 flex items-center justify-between md:mb-8 lg:mb-12">
             <div className="space-y-1">
               <h3 className="text-2xl font-semibold tracking-tight text-foreground">
-                Branding
+                Document Branding
               </h3>
               <p className="flex flex-row items-center gap-2 text-sm text-muted-foreground">
                 Customize how your brand appears globally across Papermark
@@ -351,12 +349,14 @@ export default function Branding() {
                     </Button>
                   </CardFooter>
                 </Card>
-                <Tabs defaultValue="account" className="w-full">
+                <Tabs defaultValue="document-view" className="w-full">
                   <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="account">Navbar</TabsTrigger>
-                    <TabsTrigger value="password">Front page</TabsTrigger>
+                    <TabsTrigger value="document-view">
+                      Document View
+                    </TabsTrigger>
+                    <TabsTrigger value="front-page">Front page</TabsTrigger>
                   </TabsList>
-                  <TabsContent value="account">
+                  <TabsContent value="document-view">
                     <div className="flex justify-center">
                       <div className="relative h-[450px] w-[698px] rounded-lg bg-gray-200 p-1 shadow-lg">
                         <div className="relative h-[442px] overflow-x-auto rounded-lg bg-gray-100 lg:overflow-x-hidden">
@@ -401,9 +401,9 @@ export default function Branding() {
                             </div>
                           </div>
                           <iframe
-                            key={`branding-${brandColor}-${accentColor}`}
-                            name="checkout-demo"
-                            id="checkout-demo"
+                            key={`document-view-${brandColor}-${accentColor}`}
+                            name="document-view"
+                            id="document-view"
                             src={`/nav_ppreview_demo?brandColor=${encodeURIComponent(brandColor)}&accentColor=${encodeURIComponent(accentColor)}&brandLogo=${blobUrl ? encodeURIComponent(blobUrl) : logo ? encodeURIComponent(logo) : ""}`}
                             style={{
                               width: "1390px",
@@ -430,7 +430,7 @@ export default function Branding() {
                       </div>
                     </div>
                   </TabsContent>
-                  <TabsContent value="password">
+                  <TabsContent value="front-page">
                     <div className="flex justify-center">
                       <div className="relative h-[450px] w-[698px] rounded-lg bg-gray-200 p-1 shadow-lg">
                         <div className="relative h-[442px] overflow-x-auto rounded-lg bg-gray-100 lg:overflow-x-hidden">
@@ -475,10 +475,10 @@ export default function Branding() {
                             </div>
                           </div>
                           <iframe
-                            key={`branding-${brandColor}-${accentColor}`}
-                            name="checkout-demo"
-                            id="checkout-demo"
-                            src={`/entrance_ppreview_demo?brandColor=${encodeURIComponent(brandColor)}&accentColor=${encodeURIComponent(accentColor)}&brandLogo=${logo ? encodeURIComponent(logo) : ""}`}
+                            key={`access-screen-${accentColor}`}
+                            name="access-screen"
+                            id="access-screen"
+                            src={`/entrance_ppreview_demo?accentColor=${encodeURIComponent(accentColor)}`}
                             style={{
                               width: "1390px",
                               height: "831px",
