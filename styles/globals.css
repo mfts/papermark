@@ -31,6 +31,9 @@
     --destructive: 0 84.2% 60.2%; /* red-500 */
     --destructive-foreground: 210 20% 98%; /* gray-50 */
 
+    --warning: 38 92% 50%; /* amber-500 */
+    --warning-foreground: 210 20% 98%; /* gray-50 */
+
     --ring: 217.9 10.6% 64.9%; /* gray-400 */
 
     --radius: 0.5rem; /* md */
@@ -63,6 +66,9 @@
 
     --destructive: 0 62.8% 30.6%; /* red-900 */
     --destructive-foreground: 0 85.7% 97.3%; /* red-50 */
+
+    --warning: 38 92% 30%; /* amber-800 */
+    --warning-foreground: 38 92% 95%; /* amber-50 */
 
     --ring: 215 27.9% 16.9%; /* gray-800 */
   }
