@@ -8,6 +8,7 @@ import {
   AlertCircleIcon,
   BetweenHorizontalStartIcon,
   CloudDownloadIcon,
+  DownloadIcon,
   FileDownIcon,
   SheetIcon,
   Sparkles,
@@ -32,6 +33,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+import { getFile } from "@/lib/files/get-file";
 import { usePlan } from "@/lib/swr/use-billing";
 import useDatarooms from "@/lib/swr/use-datarooms";
 import { DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
@@ -420,6 +422,41 @@ export default function DocumentHeader({
     }
   };
 
+  const downloadDocument = async (documentVersion: DocumentVersion) => {
+    if (documentVersion.type === "notion") {
+      toast.error("Notion documents cannot be downloaded.");
+      return;
+    }
+    toast.promise(
+      (async () => {
+        const downloadUrl = await getFile({
+          type: documentVersion.storageType,
+          data: documentVersion.originalFile ?? documentVersion.file,
+          isDownload: true,
+        });
+
+        // Fetch the file from the S3 URL and create blob
+        const response = await fetch(downloadUrl);
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = prismaDocument.name;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      })(),
+      {
+        loading: "Downloading document...",
+        success: "Document downloaded successfully",
+        error: "Failed to download document",
+      },
+    );
+  };
+
+  console.log("Primary version", primaryVersion);
+
   return (
     <header className="flex flex-col gap-y-4">
       <div className="flex items-center justify-between gap-x-8">
@@ -468,28 +505,31 @@ export default function DocumentHeader({
         </div>
 
         <div className="flex items-center gap-x-4 md:gap-x-2">
-          {!orientationLoading ? (
-            <ButtonTooltip content="Change orientation">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="hidden md:flex"
-                onClick={changeDocumentOrientation}
-                title={`Change document orientation to ${primaryVersion.isVertical ? "landscape" : "portrait"}`}
-              >
-                <PortraitLandscape
-                  className={cn(
-                    "h-6 w-6",
-                    !primaryVersion.isVertical && "-rotate-90 transform",
-                  )}
-                />
-              </Button>
-            </ButtonTooltip>
-          ) : (
-            <div className="hidden md:flex">
-              <LoadingSpinner className="h-6 w-6" />
-            </div>
-          )}
+          {primaryVersion.type !== "notion" &&
+            primaryVersion.type !== "sheet" &&
+            primaryVersion.type !== "zip" &&
+            (!orientationLoading ? (
+              <ButtonTooltip content="Change orientation">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="hidden md:flex"
+                  onClick={changeDocumentOrientation}
+                  title={`Change document orientation to ${primaryVersion.isVertical ? "landscape" : "portrait"}`}
+                >
+                  <PortraitLandscape
+                    className={cn(
+                      "h-6 w-6",
+                      !primaryVersion.isVertical && "-rotate-90 transform",
+                    )}
+                  />
+                </Button>
+              </ButtonTooltip>
+            ) : (
+              <div className="hidden md:flex">
+                <LoadingSpinner className="h-6 w-6" />
+              </div>
+            ))}
 
           {primaryVersion.type !== "notion" && (
             <AddDocumentModal
@@ -497,10 +537,6 @@ export default function DocumentHeader({
               openModal={openAddDocModal}
               setAddDocumentModalOpen={setOpenAddDocModal}
             >
-              {/* <ButtonTooltip
-              content="Upload a new version"
-              link="https://www.papermark.io/help/article/document-versions"
-            > */}
               <Button
                 variant="ghost"
                 size="icon"
@@ -512,7 +548,6 @@ export default function DocumentHeader({
               >
                 <FileUp className="h-6 w-6" />
               </Button>
-              {/* </ButtonTooltip> */}
             </AddDocumentModal>
           )}
 
@@ -562,45 +597,52 @@ export default function DocumentHeader({
             >
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
               <DropdownMenuGroup className="block md:hidden">
-                <DropdownMenuItem>
-                  <AddDocumentModal
-                    newVersion
-                    setAddDocumentModalOpen={setAddDocumentVersion}
-                  >
-                    <button
-                      title="Add a new version"
-                      className="flex items-center"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setAddDocumentVersion(true);
-                      }}
+                {prismaDocument.type !== "notion" && (
+                  <DropdownMenuItem>
+                    <AddDocumentModal
+                      newVersion
+                      setAddDocumentModalOpen={setAddDocumentVersion}
                     >
-                      <FileUp className="mr-2 h-4 w-4" /> Add new version
-                    </button>
-                  </AddDocumentModal>
-                </DropdownMenuItem>
-
-                <DropdownMenuItem onClick={() => changeDocumentOrientation()}>
-                  <PortraitLandscape
-                    className={cn(
-                      "mr-2 h-4 w-4",
-                      !primaryVersion.isVertical && "-rotate-90 transform",
-                    )}
-                  />
-                  {" Change orientation"}
-                </DropdownMenuItem>
+                      <button
+                        title="Add a new version"
+                        className="flex items-center"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setAddDocumentVersion(true);
+                        }}
+                      >
+                        <FileUp className="mr-2 h-4 w-4" /> Add new version
+                      </button>
+                    </AddDocumentModal>
+                  </DropdownMenuItem>
+                )}
 
                 {prismaDocument.type !== "notion" &&
                   prismaDocument.type !== "sheet" &&
                   prismaDocument.type !== "zip" && (
-                    <DropdownMenuItem
-                      onClick={() =>
-                        activateOrRedirectAssistant(prismaDocument)
-                      }
-                    >
-                      <PapermarkSparkle className="mr-2 h-4 w-4" />
-                      Open AI Assistant
-                    </DropdownMenuItem>
+                    <>
+                      <DropdownMenuItem
+                        onClick={() => changeDocumentOrientation()}
+                      >
+                        <PortraitLandscape
+                          className={cn(
+                            "mr-2 h-4 w-4",
+                            !primaryVersion.isVertical &&
+                              "-rotate-90 transform",
+                          )}
+                        />
+                        Change orientation
+                      </DropdownMenuItem>
+
+                      <DropdownMenuItem
+                        onClick={() =>
+                          activateOrRedirectAssistant(prismaDocument)
+                        }
+                      >
+                        <PapermarkSparkle className="mr-2 h-4 w-4" />
+                        Open AI Assistant
+                      </DropdownMenuItem>
+                    </>
                   )}
 
                 <DropdownMenuSeparator />
@@ -656,6 +698,16 @@ export default function DocumentHeader({
                 Export visits{" "}
                 {isFree && <PlanBadge className="ml-2" plan="pro" />}
               </DropdownMenuItem>
+
+              {/* Download latest version */}
+              {primaryVersion.type !== "notion" ? (
+                <DropdownMenuItem
+                  onClick={() => downloadDocument(primaryVersion)}
+                >
+                  <DownloadIcon className="mr-2 h-4 w-4" />
+                  Download latest version
+                </DropdownMenuItem>
+              ) : null}
 
               <DropdownMenuSeparator />
 
