@@ -537,6 +537,9 @@ export default function PagesViewer({
       return;
     }
 
+    // Preload previous pages every 4 pages in advanced
+    preloadImage(pageNumber - 4);
+
     const duration = Date.now() - startTimeRef.current;
     trackPageView({
       linkId,
@@ -584,7 +587,8 @@ export default function PagesViewer({
       return;
     }
 
-    preloadImage(DEFAULT_PRELOADED_IMAGES_NUM - 1 + pageNumber);
+    // Preload the next page every 2 pages in advanced
+    preloadImage(pageNumber + 2);
 
     const duration = Date.now() - startTimeRef.current;
     trackPageView({
@@ -656,6 +660,57 @@ export default function PagesViewer({
           break;
         default:
           break;
+      }
+    }
+  };
+
+  const handleLinkClick = (href: string, event: React.MouseEvent) => {
+    // Check if it's an internal page link or external link
+    const pageMatch = href.match(/#page=(\d+)/);
+    if (pageMatch) {
+      event.preventDefault();
+      const targetPage = parseInt(pageMatch[1]);
+      if (targetPage >= 1 && targetPage <= numPages) {
+        // Track the current page before jumping
+        const duration = Date.now() - startTimeRef.current;
+        trackPageView({
+          linkId,
+          documentId,
+          viewId,
+          duration,
+          pageNumber: pageNumber,
+          versionNumber,
+          dataroomId,
+          setViewedPages,
+          isPreview,
+        });
+
+        // Preload target page and 2 pages on either side
+        const startPage = Math.max(0, targetPage - 2 - 1);
+        const endPage = Math.min(numPages - 1, targetPage + 2 - 1);
+
+        setLoadedImages((prev) => {
+          const newLoadedImages = [...prev];
+          for (let i = startPage; i <= endPage; i++) {
+            newLoadedImages[i] = true;
+          }
+          return newLoadedImages;
+        });
+
+        setPageNumber(targetPage);
+        if (isVertical && containerRef.current) {
+          scrollActionRef.current = true;
+          const newScrollPosition =
+            ((targetPage - 1) * containerRef.current.scrollHeight) /
+            numPagesWithAccountCreation;
+          containerRef.current.scrollTo({
+            top: newScrollPosition,
+            behavior: "smooth",
+          });
+        }
+
+        // Reset the start time for the new page
+        startTimeRef.current = Date.now();
       }
     }
   };
@@ -849,8 +904,17 @@ export default function PagesViewer({
                                     }),
                                   )}
                                   href={link.href}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
+                                  onClick={(e) => handleLinkClick(link.href, e)}
+                                  target={
+                                    link.href.startsWith("#")
+                                      ? "_self"
+                                      : "_blank"
+                                  }
+                                  rel={
+                                    link.href.startsWith("#")
+                                      ? undefined
+                                      : "noopener noreferrer"
+                                  }
                                 />
                               ))}
                           </map>
