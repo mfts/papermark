@@ -29,8 +29,6 @@ export function DeleteFolderModal({
   handleButtonClick?: any;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
-  const { isMobile } = useMediaQuery();
-
   return (
     <Modal showModal={open} setShowModal={setOpen}>
       <div className="flex flex-col items-center justify-center space-y-3 border-b border-border bg-white px-4 py-4 pt-8 dark:border-gray-900 dark:bg-gray-900 sm:px-8">
@@ -39,6 +37,9 @@ export function DeleteFolderModal({
           {isDataroom
             ? "This will remove the folder and its contents from this dataroom. The original documents will remain in your workspace."
             : "This will permanently delete the folder and all its contents, including subfolders, documents, dataroom references, and any visitor analytics."}
+          <div className="mt-3 text-sm font-medium text-foreground">
+            {folderName}
+          </div>
           <div className="mt-3 flex items-center gap-5">
             <span className="flex items-center gap-1 text-xs font-medium text-destructive">
               <FileIcon size={15} /> {documents}{" "}
@@ -59,30 +60,6 @@ export function DeleteFolderModal({
         }}
         className="flex flex-col space-y-6 bg-muted px-4 py-8 text-left dark:bg-gray-900 sm:px-8"
       >
-        <div>
-          <label
-            htmlFor="dataroom-name"
-            className="block text-sm font-medium text-muted-foreground"
-          >
-            Enter the folder name{" "}
-            <span className="font-semibold text-foreground">{folderName}</span>{" "}
-            to continue:
-          </label>
-
-          <div className="relative mt-1 rounded-md shadow-sm">
-            <Input
-              type="text"
-              name="dataroom-name"
-              id="dataroom-name"
-              autoFocus={!isMobile}
-              autoComplete="off"
-              required
-              pattern={folderName}
-              className="bg-white dark:border-gray-500 dark:bg-gray-800 focus:dark:bg-transparent"
-            />
-          </div>
-        </div>
-
         <div>
           <label
             htmlFor="verification"
