@@ -80,6 +80,7 @@ export const SUPPORTED_DOCUMENT_MIME_TYPES = [
   "application/pdf", // .pdf
   "application/vnd.ms-excel", // .xls
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", // .xlsx
+  "application/vnd.ms-excel.sheet.macroEnabled.12", // .xlsm
   "text/csv", // .csv
   "application/vnd.oasis.opendocument.spreadsheet", // .ods
   "application/vnd.ms-powerpoint", // .ppt
