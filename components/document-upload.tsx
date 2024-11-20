@@ -55,6 +55,7 @@ export default function DocumentUpload({
             "application/vnd.ms-excel": [], // ".xls"
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
               [], // ".xlsx"
+            "application/vnd.ms-excel.sheet.macroEnabled.12": [".xlsm"], // ".xlsm"
             "text/csv": [], // ".csv"
             "application/vnd.oasis.opendocument.spreadsheet": [], // ".ods"
             "application/vnd.ms-powerpoint": [], // ".ppt"
@@ -181,7 +182,7 @@ export default function DocumentUpload({
                 ? "Replace file?"
                 : isFreePlan && !isTrial
                   ? `Only *.pdf, *.xls, *.xlsx, *.csv, *.ods, *.png, *.jpeg, *.jpg & ${maxSize} MB limit`
-                  : `Only *.pdf, *.pptx, *.docx, *.xlsx, *.xls, *.csv, *.ods, *.ppt, *.odp, *.doc, *.odt, *.dwg, *.dxf, *.png, *.jpg, *.jpeg & ${maxSize} MB limit`}
+                  : `Only *.pdf, *.pptx, *.docx, *.xlsx, *.xls, *.xlsm, *.csv, *.ods, *.ppt, *.odp, *.doc, *.odt, *.dwg, *.dxf, *.png, *.jpg, *.jpeg & ${maxSize} MB limit`}
             </p>
           </div>
         </div>

@@ -79,7 +79,8 @@ const putFileInS3 = async ({
   if (
     !SUPPORTED_DOCUMENT_MIME_TYPES.includes(file.type) &&
     !file.name.endsWith(".dwg") &&
-    !file.name.endsWith(".dxf")
+    !file.name.endsWith(".dxf") &&
+    !file.name.endsWith(".xlsm")
   ) {
     throw new Error(
       "Only PDF, Powerpoint, Word, and Excel, ZIP files are supported",

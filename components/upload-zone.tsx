@@ -37,6 +37,7 @@ const allAcceptableDropZoneMimeTypes = {
   "application/pdf": [], // ".pdf"
   "application/vnd.ms-excel": [], // ".xls"
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [], // ".xlsx"
+  "application/vnd.ms-excel.sheet.macroEnabled.12": [".xlsm"], // ".xlsm"
   "text/csv": [], // ".csv"
   "application/vnd.oasis.opendocument.spreadsheet": [], // ".ods"
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [], // ".docx"
@@ -245,6 +246,11 @@ export default function UploadZone({
         ) {
           supportedFileType = "cad";
           contentType = `image/vnd.${uploadResult.fileName.split(".").pop()}`;
+        }
+
+        if (uploadResult.fileName.endsWith(".xlsm")) {
+          supportedFileType = "sheet";
+          contentType = "application/vnd.ms-excel.sheet.macroEnabled.12";
         }
 
         const documentData: DocumentData = {

@@ -102,6 +102,11 @@ export function AddDocumentModal({
         contentType = `image/vnd.${currentFile.name.split(".").pop()}`;
       }
 
+      if (currentFile.name.endsWith(".xlsm")) {
+        supportedFileType = "sheet";
+        contentType = "application/vnd.ms-excel.sheet.macroEnabled.12";
+      }
+
       if (!supportedFileType) {
         setUploading(false);
         toast.error(
