@@ -109,15 +109,17 @@ const putFileInS3 = async ({
     );
   }
 
-  const { url, key } = (await presignedResponse.json()) as {
+  const { url, key, fileName } = (await presignedResponse.json()) as {
     url: string;
     key: string;
+    fileName: string;
   };
 
   const response = await fetch(url, {
     method: "PUT",
     headers: {
       "Content-Type": file.type,
+      "Content-Disposition": `attachment; filename="${fileName}"`,
     },
     body: file,
   });

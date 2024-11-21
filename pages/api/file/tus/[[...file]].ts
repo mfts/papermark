@@ -1,11 +1,13 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
+import { CopyObjectCommand } from "@aws-sdk/client-s3";
 import slugify from "@sindresorhus/slugify";
 import { S3Store } from "@tus/s3-store";
 import { Server } from "@tus/server";
 import { getServerSession } from "next-auth/next";
 import path from "node:path";
 
+import { getS3Client } from "@/lib/files/aws-client";
 import { RedisLocker } from "@/lib/files/tus-redis-locker";
 import { newId } from "@/lib/id-helper";
 import { lockerRedisClient } from "@/lib/redis";
@@ -22,6 +24,8 @@ export const config = {
 const locker = new RedisLocker({
   redisClient: lockerRedisClient,
 });
+
+const client = getS3Client();
 
 const tusServer = new Server({
   // `path` needs to match the route declared by the next file router
@@ -69,6 +73,34 @@ const tusServer = new Server({
       type: "error",
     });
     return { status_code: 500, body: "Internal Server Error" };
+  },
+  async onUploadFinish(req, res, upload) {
+    try {
+      const metadata = upload.metadata || {};
+      const contentType = metadata.contentType || "application/octet-stream";
+      const { name, ext } = path.parse(metadata.fileName!);
+      const contentDisposition = `attachment; filename="${slugify(name)}${ext}"`;
+
+      // The Key (object path) where the file was uploaded
+      const objectKey = upload.id;
+
+      // Copy the object onto itself, replacing the metadata
+      const params = {
+        Bucket: process.env.NEXT_PRIVATE_UPLOAD_BUCKET,
+        CopySource: `${process.env.NEXT_PRIVATE_UPLOAD_BUCKET}/${objectKey}`,
+        Key: objectKey,
+        ContentType: contentType,
+        ContentDisposition: contentDisposition,
+        MetadataDirective: "REPLACE" as const,
+      };
+
+      const copyCommand = new CopyObjectCommand(params);
+      await client.send(copyCommand);
+
+      return res;
+    } catch (error) {
+      throw { status_code: 500, body: "Error updating metadata" };
+    }
   },
 });
 
