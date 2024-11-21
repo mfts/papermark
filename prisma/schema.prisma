@@ -194,7 +194,7 @@ model DocumentPage {
   id            String              @id @default(cuid())
   version       DocumentVersion     @relation(fields: [versionId], references: [id], onDelete: Cascade)
   versionId     String
-  pageNumber    Int // e.g., 1, 2, 3 for 
+  pageNumber    Int // e.g., 1, 2, 3 for
   embeddedLinks String[]
   pageLinks     Json? // This will store the page links data: [{href: "https://example.com", coords: "0,0,100,100"}]
   metadata      Json? // This will store the page metadata: {originalWidth: 100, origianlHeight: 100, scaledWidth: 50, scaledHeight: 50, scaleFactor: 2}
@@ -288,7 +288,7 @@ model LinkPreset {
   enableCustomMetaTag Boolean? @default(false) // Optional give user a option to enable the custom metatag
   metaTitle           String? // This will be the meta title of the link
   metaDescription     String? // This will be the meta description of the link
-  metaImage           String? // This will be the meta image of the link 
+  metaImage           String? // This will be the meta image of the link
   metaFavicon         String? // This will be the meta favicon of the link
 
   createdAt DateTime @default(now())
@@ -467,8 +467,9 @@ model Dataroom {
   viewerGroups ViewerGroup[]
   brand        DataroomBrand?
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  isArchived Boolean  @default(false) // Indicates if the dataroom is archived
 
   @@index([teamId])
 }

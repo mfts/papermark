@@ -27,12 +27,14 @@ type DocumentLinkData = {
   linkType: "DOCUMENT_LINK";
   link: LinkWithDocument;
   brand: Brand | null;
+  dataroomIsArchived: boolean;
 };
 
 type DataroomLinkData = {
   linkType: "DATAROOM_LINK";
   link: LinkWithDataroom;
   brand: DataroomBrand | null;
+  dataroomIsArchived: boolean;
 };
 
 export const getStaticProps = async (context: GetStaticPropsContext) => {
@@ -48,7 +50,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
     if (!res.ok) {
       throw new Error(`Failed to fetch: ${res.status}`);
     }
-    const { linkType, link, brand } = (await res.json()) as
+    const { linkType, link, brand, dataroomIsArchived } = (await res.json()) as
       | DocumentLinkData
       | DataroomLinkData;
 
@@ -115,6 +117,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
           useCustomAccessForm:
             teamId === "cm0154tiv0000lr2t6nr5c6kp" ||
             teamId === "clup33by90000oewh4rfvp2eg",
+          dataroomIsArchived,
         },
         revalidate: 10,
       };
@@ -169,6 +172,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
           useCustomAccessForm:
             teamId === "cm0154tiv0000lr2t6nr5c6kp" ||
             teamId === "clup33by90000oewh4rfvp2eg",
+          dataroomIsArchived,
         },
         revalidate: 10,
       };
@@ -193,6 +197,7 @@ export default function ViewPage({
   showAccountCreationSlide,
   useAdvancedExcelViewer,
   useCustomAccessForm,
+  dataroomIsArchived,
 }: {
   linkData: DocumentLinkData | DataroomLinkData;
   notionData: {
@@ -211,6 +216,7 @@ export default function ViewPage({
   showAccountCreationSlide: boolean;
   useAdvancedExcelViewer: boolean;
   useCustomAccessForm: boolean;
+  dataroomIsArchived: boolean;
 }) {
   const router = useRouter();
   const { data: session, status } = useSession();
@@ -247,6 +253,12 @@ export default function ViewPage({
     previewToken?: string;
   };
   const { linkType, link, brand } = linkData;
+
+  if (dataroomIsArchived) {
+    return (
+      <NotFound message="Sorry, the link you're looking for is archived." />
+    );
+  }
 
   // Render the document view for DOCUMENT_LINK
   if (linkType === "DOCUMENT_LINK") {
