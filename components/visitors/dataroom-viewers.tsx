@@ -39,7 +39,7 @@ export default function DataroomViewersTable({
   return (
     <div className="w-full">
       <div>
-        <h2 className="mb-2 md:mb-4">All dataroom viewers</h2>
+        <h2 className="mb-2 md:mb-4">All dataroom visitors</h2>
       </div>
       <div className="rounded-md border">
         <Table>

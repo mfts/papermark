@@ -356,10 +356,11 @@ enum ViewType {
 }
 
 model Viewer {
-  id        String    @id @default(cuid())
-  email     String
-  verified  Boolean   @default(false) // Whether the viewer email has been verified
-  invitedAt DateTime? // This is the time the viewer was invited
+  id                      String    @id @default(cuid())
+  email                   String
+  verified                Boolean   @default(false) // Whether the viewer email has been verified
+  invitedAt               DateTime? // This is the time the viewer was invited
+  notificationPreferences Json? // Format: { dataroom: {"dr_123": { "enabled": false }, "dr_456": { "enabled": true } } }
 
   dataroomId String?
   dataroom   Dataroom? @relation(fields: [dataroomId], references: [id], onDelete: SetNull)

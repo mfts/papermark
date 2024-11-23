@@ -30,9 +30,7 @@ export default async function handle(
         where: {
           id: teamId,
           users: {
-            some: {
-              userId: (session.user as CustomUser).id,
-            },
+            some: { userId },
           },
         },
         select: {
@@ -46,6 +44,7 @@ export default async function handle(
 
       const viewers = await prisma.viewer.findMany({
         where: {
+          teamId: teamId,
           views: {
             some: {
               dataroomId: dataroomId,
@@ -57,6 +56,7 @@ export default async function handle(
           id: true,
           teamId: true,
           email: true,
+          verified: true,
           views: {
             where: {
               dataroomId: dataroomId,
@@ -64,13 +64,6 @@ export default async function handle(
             },
             orderBy: {
               viewedAt: "desc",
-            },
-            include: {
-              link: {
-                select: {
-                  name: true,
-                },
-              },
             },
           },
         },
