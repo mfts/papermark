@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
+import { runs } from "@trigger.dev/sdk/v3";
 import { waitUntil } from "@vercel/functions";
 import { getServerSession } from "next-auth/next";
 
@@ -164,6 +165,17 @@ export default async function handle(
       ).then((res) => res.json());
 
       if (featureFlags.roomChangeNotifications) {
+        // Get all delayed and queued runs for this dataroom
+        const allRuns = await runs.list({
+          taskIdentifier: ["send-dataroom-change-notification"],
+          tag: [`dataroom_${dataroomId}`],
+          status: ["DELAYED", "QUEUED"],
+          period: "10m",
+        });
+
+        // Cancel any existing unsent notification runs for this dataroom
+        await Promise.all(allRuns.data.map((run) => runs.cancel(run.id)));
+
         waitUntil(
           sendDataroomChangeNotificationTask.trigger(
             {
