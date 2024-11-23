@@ -331,6 +331,7 @@ export default function NotionForm() {
                         </AccordionTrigger>
                         <AccordionContent className="first:pt-5">
                           <LinkOptions
+                            isNotionLink={!notionLink}
                             data={linkData}
                             setData={setLinkData}
                             linkType={LinkType.DOCUMENT_LINK}
