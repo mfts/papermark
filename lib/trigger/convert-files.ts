@@ -69,20 +69,18 @@ export const convertFilesToPdfTask = task({
       data: document.versions[0].originalFile,
       type: document.versions[0].storageType,
     });
-    const fileResponse = await fetch(fileUrl);
-    const fileBuffer = Buffer.from(await fileResponse.arrayBuffer());
 
     // Prepare form data
     const formData = new FormData();
     formData.append(
-      "files",
-      new Blob([fileBuffer], {
-        type: document.versions[0].contentType,
-      }),
-      document.name,
+      "downloadFrom",
+      JSON.stringify([
+        {
+          url: fileUrl,
+        },
+      ]),
     );
     formData.append("quality", "50");
-    console.log("formData", formData);
 
     // Make the conversion request
     const conversionResponse = await retry.fetch(
