@@ -79,6 +79,15 @@ const nextConfig = {
           },
         ],
       },
+      {
+        source: "/unsubscribe",
+        headers: [
+          {
+            key: "X-Robots-Tag",
+            value: "noindex",
+          },
+        ],
+      },
     ];
   },
   experimental: {

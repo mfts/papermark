@@ -284,3 +284,14 @@ export const WatermarkConfigSchema = z.object({
 export type WatermarkConfig = z.infer<typeof WatermarkConfigSchema>;
 
 export type NotionTheme = "light" | "dark";
+
+export const ZNotificationPreferencesSchema = z
+  .object({
+    dataroom: z.record(
+      z.object({
+        enabled: z.boolean(),
+      }),
+    ),
+  })
+  .optional()
+  .default({ dataroom: {} });
