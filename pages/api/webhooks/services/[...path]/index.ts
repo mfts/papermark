@@ -107,10 +107,24 @@ export default async function incomingWebhookHandler(
     }
 
     // 3. Validate request body
-    const { fileUrl, name, contentType } = req.body;
+    const { fileUrl, name, contentType, dataroomId } = req.body;
 
     if (!fileUrl) {
       return res.status(400).json({ error: "File URL is required" });
+    }
+
+    if (dataroomId) {
+      // Verify dataroom exists and belongs to team
+      const dataroom = await prisma.dataroom.findUnique({
+        where: {
+          id: dataroomId,
+          teamId: incomingWebhook.teamId,
+        },
+      });
+
+      if (!dataroom) {
+        return res.status(400).json({ error: "Invalid dataroom ID" });
+      }
     }
 
     // Check if the content type is supported
@@ -171,9 +185,22 @@ export default async function incomingWebhookHandler(
 
     const document = await documentCreationResponse.json();
 
+    // If dataroomId was provided, create the relationship
+    if (dataroomId) {
+      await prisma.dataroomDocument.create({
+        data: {
+          dataroomId,
+          documentId: document.id,
+        },
+      });
+    }
+
     return res.status(200).json({
-      message: "Document created successfully",
+      message: `Document created successfully${
+        dataroomId ? ` and added to dataroom` : ""
+      }`,
       documentId: document.id,
+      dataroomId: dataroomId ?? undefined,
     });
   } catch (error) {
     console.error("Webhook error:", error);
