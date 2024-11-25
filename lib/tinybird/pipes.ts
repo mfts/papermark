@@ -31,6 +31,19 @@ export const getViewPageDuration = tb.buildPipe({
   }),
 });
 
+export const getTotalDocumentDuration = tb.buildPipe({
+  pipe: "get_total_document_duration__v1",
+  parameters: z.object({
+    documentId: z.string(),
+    excludedLinkIds: z.string().describe("Comma separated linkIds"),
+    excludedViewIds: z.string().describe("Comma separated viewIds"),
+    since: z.number(),
+  }),
+  data: z.object({
+    sum_duration: z.number(),
+  }),
+});
+
 export const getViewUserAgent = tb.buildPipe({
   pipe: "get_useragent_per_view__v2",
   parameters: z.object({

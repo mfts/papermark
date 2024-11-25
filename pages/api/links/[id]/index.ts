@@ -9,7 +9,10 @@ import {
 } from "@/lib/api/links/link-data";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
-import { generateEncrpytedPassword } from "@/lib/utils";
+import {
+  decryptEncrpytedPassword,
+  generateEncrpytedPassword,
+} from "@/lib/utils";
 
 import { authOptions } from "../../auth/[...nextauth]";
 
@@ -289,6 +292,11 @@ export default async function handle(
     await fetch(
       `${process.env.NEXTAUTH_URL}/api/revalidate?secret=${process.env.REVALIDATE_TOKEN}&linkId=${id}&hasDomain=${updatedLink.domainId ? "true" : "false"}`,
     );
+
+    // Decrypt the password for the updated link
+    if (updatedLink.password !== null) {
+      updatedLink.password = decryptEncrpytedPassword(updatedLink.password);
+    }
 
     return res.status(200).json(updatedLink);
   } else if (req.method == "DELETE") {

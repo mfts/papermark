@@ -1,6 +1,19 @@
+import { useTeam } from "@/context/team-context";
+import useSWR from "swr";
+
+import { fetcher } from "@/lib/utils";
+
 import { NavMenu } from "../navigation-menu";
 
 export function SettingsHeader() {
+  const teamInfo = useTeam();
+  const { data: features } = useSWR<{ tokens: boolean; webhooks: boolean }>(
+    teamInfo?.currentTeam?.id
+      ? `/api/feature-flags?teamId=${teamInfo.currentTeam.id}`
+      : null,
+    fetcher,
+  );
+
   return (
     <header>
       <section className="mb-4 flex items-center justify-between md:mb-8 lg:mb-12">
@@ -32,11 +45,6 @@ export function SettingsHeader() {
             segment: "domains",
           },
           {
-            label: "Branding",
-            href: `/settings/branding`,
-            segment: "branding",
-          },
-          {
             label: "Presets",
             href: `/settings/presets`,
             segment: "presets",
@@ -45,6 +53,18 @@ export function SettingsHeader() {
             label: "Billing",
             href: `/settings/billing`,
             segment: "billing",
+          },
+          {
+            label: "Tokens",
+            href: `/settings/tokens`,
+            segment: "tokens",
+            disabled: !features?.tokens,
+          },
+          {
+            label: "Webhooks",
+            href: `/settings/webhooks`,
+            segment: "webhooks",
+            disabled: !features?.webhooks,
           },
         ]}
       />

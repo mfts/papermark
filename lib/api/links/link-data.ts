@@ -57,6 +57,7 @@ export async function fetchDataroomLinkData({
                   id: true,
                   name: true,
                   advancedExcelEnabled: true,
+                  downloadOnly: true,
                   versions: {
                     where: { isPrimary: true },
                     select: {
@@ -130,6 +131,7 @@ export async function fetchDocumentLinkData({
           name: true,
           assistantEnabled: true,
           advancedExcelEnabled: true,
+          downloadOnly: true,
           teamId: true,
           ownerId: true,
           team: {

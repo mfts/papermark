@@ -5,7 +5,7 @@ import { getServerSession } from "next-auth/next";
 import { errorhandler } from "@/lib/errorHandler";
 import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
 import { CustomUser } from "@/lib/types";
-import { log } from "@/lib/utils";
+import { decryptEncrpytedPassword, log } from "@/lib/utils";
 
 import { authOptions } from "../../../../auth/[...nextauth]";
 
@@ -60,6 +60,14 @@ export default async function handle(
       });
 
       const links = document!.links;
+
+      // Decrypt the password for each link
+      links?.forEach((link) => {
+        if (link.password !== null) {
+          link.password = decryptEncrpytedPassword(link.password);
+        }
+      });
+
       return res.status(200).json(links);
     } catch (error) {
       log({

@@ -121,12 +121,7 @@ export default async function handle(
         },
       });
 
-      const response = await Promise.all([
-        updateDefaultPromise,
-        updateNonDefaultPromise,
-      ]);
-
-      console.log("promise response", response);
+      await Promise.all([updateDefaultPromise, updateNonDefaultPromise]);
 
       return res.status(200).json({ message: "Domain set to default" }); // 204 No Content response for successful deletes
     } catch (error) {

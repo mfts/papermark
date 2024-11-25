@@ -4,6 +4,9 @@ import AppMiddleware from "@/lib/middleware/app";
 import DomainMiddleware from "@/lib/middleware/domain";
 
 import { BLOCKED_PATHNAMES } from "./lib/constants";
+import IncomingWebhookMiddleware, {
+  isWebhookPath,
+} from "./lib/middleware/incoming-webhooks";
 import PostHogMiddleware from "./lib/middleware/posthog";
 
 function isAnalyticsPath(path: string) {
@@ -38,6 +41,11 @@ export default async function middleware(req: NextRequest, ev: NextFetchEvent) {
     return PostHogMiddleware(req);
   }
 
+  // Handle incoming webhooks
+  if (isWebhookPath(host)) {
+    return IncomingWebhookMiddleware(req);
+  }
+
   if (
     (process.env.NODE_ENV === "development" && host?.includes(".local")) ||
     (process.env.NODE_ENV !== "development" &&
@@ -50,7 +58,11 @@ export default async function middleware(req: NextRequest, ev: NextFetchEvent) {
     return DomainMiddleware(req);
   }
 
-  if (!path.startsWith("/view/")) {
+  if (
+    !path.startsWith("/view/") &&
+    !path.startsWith("/verify") &&
+    !path.startsWith("/unsubscribe")
+  ) {
     return AppMiddleware(req);
   }
 

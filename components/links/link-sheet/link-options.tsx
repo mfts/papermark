@@ -128,6 +128,16 @@ export const LinkOptions = ({
         }
         handleUpgradeStateChange={handleUpgradeStateChange}
       />
+      <WatermarkSection
+        {...{ data, setData }}
+        isAllowed={isTrial || isDatarooms}
+        handleUpgradeStateChange={handleUpgradeStateChange}
+      />
+      <AgreementSection
+        {...{ data, setData }}
+        isAllowed={isTrial || isDatarooms}
+        handleUpgradeStateChange={handleUpgradeStateChange}
+      />
       <FeedbackSection {...{ data, setData }} />
       <QuestionSection
         {...{ data, setData }}
@@ -137,16 +147,6 @@ export const LinkOptions = ({
           isBusiness ||
           isDatarooms
         }
-        handleUpgradeStateChange={handleUpgradeStateChange}
-      />
-      <WatermarkSection
-        {...{ data, setData }}
-        isAllowed={isTrial || isDatarooms}
-        handleUpgradeStateChange={handleUpgradeStateChange}
-      />
-      <AgreementSection
-        {...{ data, setData }}
-        isAllowed={isTrial || isDatarooms}
         handleUpgradeStateChange={handleUpgradeStateChange}
       />
       {linkType === LinkType.DOCUMENT_LINK ? (

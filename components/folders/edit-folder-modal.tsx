@@ -61,7 +61,7 @@ export function EditFolderModal({
           },
           body: JSON.stringify({
             folderId: folderId,
-            name: folderName,
+            name: folderName.trim(),
           }),
         },
       );

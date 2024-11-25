@@ -19,6 +19,7 @@ export const sendEmail = async ({
   test,
   cc,
   scheduledAt,
+  unsubscribeUrl,
 }: {
   to: string;
   subject: string;
@@ -29,6 +30,7 @@ export const sendEmail = async ({
   test?: boolean;
   cc?: string | string[];
   scheduledAt?: string;
+  unsubscribeUrl?: string;
 }) => {
   if (!resend) {
     // Throw an error if resend is not initialized
@@ -57,6 +59,7 @@ export const sendEmail = async ({
       text: plainText,
       headers: {
         "X-Entity-Ref-ID": nanoid(),
+        ...(unsubscribeUrl ? { "List-Unsubscribe": unsubscribeUrl } : {}),
       },
     });
 

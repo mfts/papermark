@@ -40,4 +40,8 @@ export const newId = new IdGenerator({
   page: "page",
   dataroom: "dr",
   preview: "preview",
+  webhook: "wh",
+  webhookEvent: "evt",
+  webhookSecret: "whsec",
+  token: "pmk",
 }).id;

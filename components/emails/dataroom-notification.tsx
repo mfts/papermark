@@ -18,16 +18,18 @@ export default function DataroomNotification({
   documentName,
   senderEmail,
   url,
+  unsubscribeUrl,
 }: {
   dataroomName: string;
   documentName: string | undefined;
   senderEmail: string;
   url: string;
+  unsubscribeUrl: string;
 }) {
   return (
     <Html>
       <Head />
-      <Preview>View dataroom on Papermark</Preview>
+      <Preview>Dataroom update available</Preview>
       <Tailwind>
         <Body className="mx-auto my-auto bg-white font-sans">
           <Container className="mx-auto my-10 w-[465px] p-5">
@@ -37,7 +39,6 @@ export default function DataroomNotification({
             <Text className="font-seminbold mx-0 mb-8 mt-4 p-0 text-center text-xl">
               {`New document available for ${dataroomName}`}
             </Text>
-            <Text className="text-sm leading-6 text-black">Hey!</Text>
             <Text className="text-sm leading-6 text-black">
               A new document{" "}
               <span className="font-semibold">{documentName}</span> has been
@@ -71,8 +72,20 @@ export default function DataroomNotification({
                 </a>
               </Text>
               <Text className="text-xs">
-                If you have any feedback or questions about this email, simply
-                reply to it.
+                You received this email from{" "}
+                <span className="font-semibold">{senderEmail}</span> because you
+                viewed the dataroom{" "}
+                <span className="font-semibold">{dataroomName}</span> on
+                Papermark. If you have any feedback or questions about this
+                email, simply reply to it. To unsubscribe from updates about
+                this dataroom,{" "}
+                <a
+                  href={unsubscribeUrl}
+                  className="text-gray-400 underline underline-offset-2 visited:text-gray-400 hover:text-gray-400"
+                >
+                  click here
+                </a>
+                .
               </Text>
             </Section>
           </Container>

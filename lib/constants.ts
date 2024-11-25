@@ -53,23 +53,7 @@ export const BLOCKED_PATHNAMES = [
 ];
 
 // list of paths that should be excluded from team checks
-export const EXCLUDED_PATHS = [
-  "/",
-  "/register",
-  "/privacy",
-  "/oss-friends",
-  "/pricing",
-  "/docsend-alternatives",
-  "/launch-week",
-  "/open-source-investors",
-  "/investors",
-  "/ai",
-  "/share-notion-page",
-  "/alternatives",
-  "/investors",
-  "/blog",
-  "/view",
-];
+export const EXCLUDED_PATHS = ["/", "/register", "/privacy", "/view"];
 
 // free limits
 export const LIMITS = {
@@ -80,6 +64,7 @@ export const SUPPORTED_DOCUMENT_MIME_TYPES = [
   "application/pdf", // .pdf
   "application/vnd.ms-excel", // .xls
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", // .xlsx
+  "application/vnd.ms-excel.sheet.macroEnabled.12", // .xlsm
   "text/csv", // .csv
   "application/vnd.oasis.opendocument.spreadsheet", // .ods
   "application/vnd.ms-powerpoint", // .ppt
@@ -93,6 +78,8 @@ export const SUPPORTED_DOCUMENT_MIME_TYPES = [
   "image/png", // .png
   "image/jpeg", // .jpeg
   "image/jpg", // .jpg
+  "application/zip", // .zip
+  "application/x-zip-compressed", // .zip
 ];
 
 export const SUPPORTED_DOCUMENT_SIMPLE_TYPES = [
@@ -103,6 +90,7 @@ export const SUPPORTED_DOCUMENT_SIMPLE_TYPES = [
   "docs",
   "cad",
   "image",
+  "zip",
 ];
 
 export const COUNTRIES: { [key: string]: string } = {

@@ -6,7 +6,7 @@ import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
 import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
 import { CustomUser } from "@/lib/types";
-import { log } from "@/lib/utils";
+import { decryptEncrpytedPassword, log } from "@/lib/utils";
 
 import { authOptions } from "../../../../auth/[...nextauth]";
 
@@ -66,6 +66,13 @@ export default async function handle(
             select: { views: { where: { viewType: "DATAROOM_VIEW" } } },
           },
         },
+      });
+
+      // Decrypt the password for each link
+      links.forEach((link) => {
+        if (link.password !== null) {
+          link.password = decryptEncrpytedPassword(link.password);
+        }
       });
 
       return res.status(200).json(links);
