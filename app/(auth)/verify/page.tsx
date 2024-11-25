@@ -94,7 +94,7 @@ export default function VerifyPage({
               <div className="mb-4 h-64 w-64">
                 <img
                   className="h-full w-full rounded-2xl object-cover shadow-2xl"
-                  src="https://www.papermark.io/_static/testimonials/jaski.jpeg"
+                  src="/_static/testimonials/jaski.jpeg"
                   alt="Jaski"
                 />
               </div>
