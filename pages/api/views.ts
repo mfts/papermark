@@ -202,7 +202,7 @@ export default async function handle(
   if (link.emailAuthenticated && !code && !token) {
     const ipAddress = getIpAddress(req.headers);
 
-    const { success } = await ratelimit(2, "1 m").limit(
+    const { success } = await ratelimit(10, "1 m").limit(
       `send-otp:${ipAddress}`,
     );
     if (!success) {
@@ -214,7 +214,7 @@ export default async function handle(
 
     await prisma.verificationToken.deleteMany({
       where: {
-        identifier: `otp:${linkId}:${hashToken(ipAddress)}:${email}`,
+        identifier: `otp:${linkId}:${email}`,
       },
     });
 
@@ -225,7 +225,7 @@ export default async function handle(
     await prisma.verificationToken.create({
       data: {
         token: otpCode,
-        identifier: `otp:${linkId}:${hashToken(ipAddress)}:${email}`,
+        identifier: `otp:${linkId}:${email}`,
         expires: expiresAt,
       },
     });
@@ -242,7 +242,7 @@ export default async function handle(
   let hashedVerificationToken: string | null = null;
   if (link.emailAuthenticated && code) {
     const ipAddress = getIpAddress(req.headers);
-    const { success } = await ratelimit(2, "1 m").limit(
+    const { success } = await ratelimit(10, "1 m").limit(
       `verify-otp:${ipAddress}`,
     );
     if (!success) {
@@ -256,7 +256,7 @@ export default async function handle(
     const verification = await prisma.verificationToken.findUnique({
       where: {
         token: code,
-        identifier: `otp:${linkId}:${hashToken(ipAddress)}:${email}`,
+        identifier: `otp:${linkId}:${email}`,
       },
     });
 
@@ -297,7 +297,7 @@ export default async function handle(
     await prisma.verificationToken.create({
       data: {
         token: hashedVerificationToken,
-        identifier: `link-verification:${linkId}:${hashToken(ipAddress)}:${email}`,
+        identifier: `link-verification:${linkId}:${link.teamId}:${email}`,
         expires: tokenExpiresAt,
       },
     });
@@ -307,7 +307,7 @@ export default async function handle(
 
   if (link.emailAuthenticated && token) {
     const ipAddress = getIpAddress(req.headers);
-    const { success } = await ratelimit(5, "1 m").limit(
+    const { success } = await ratelimit(10, "1 m").limit(
       `verify-email:${ipAddress}`,
     );
     if (!success) {
@@ -321,7 +321,7 @@ export default async function handle(
     const verification = await prisma.verificationToken.findUnique({
       where: {
         token: token,
-        identifier: `link-verification:${linkId}:${hashToken(ipAddress)}:${email}`,
+        identifier: `link-verification:${linkId}:${link.teamId}:${email}`,
       },
     });
 
