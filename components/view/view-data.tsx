@@ -92,6 +92,7 @@ export default function ViewData({
       allowDownload={link.allowDownload!}
       feedbackEnabled={link.enableFeedback!}
       screenshotProtectionEnabled={link.enableScreenshotProtection!}
+      screenShieldPercentage={link.screenShieldPercentage}
       versionNumber={document.versions[0].versionNumber}
       brand={brand}
       showPoweredByBanner={showPoweredByBanner}
@@ -118,6 +119,7 @@ export default function ViewData({
       allowDownload={link.allowDownload!}
       feedbackEnabled={link.enableFeedback!}
       screenshotProtectionEnabled={link.enableScreenshotProtection!}
+      screenShieldPercentage={link.screenShieldPercentage}
       versionNumber={document.versions[0].versionNumber}
       brand={brand}
       showPoweredByBanner={showPoweredByBanner}

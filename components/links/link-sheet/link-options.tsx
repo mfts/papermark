@@ -21,6 +21,7 @@ import useLimits from "@/lib/swr/use-limits";
 
 import AgreementSection from "./agreement-section";
 import QuestionSection from "./question-section";
+import ScreenShieldSection from "./screen-shield-section";
 import ScreenshotProtectionSection from "./screenshot-protection-section";
 import WatermarkSection from "./watermark-section";
 
@@ -126,6 +127,11 @@ export const LinkOptions = ({
           isBusiness ||
           isDatarooms
         }
+        handleUpgradeStateChange={handleUpgradeStateChange}
+      />
+      <ScreenShieldSection
+        {...{ data, setData }}
+        isAllowed={isTrial || isBusiness || isDatarooms}
         handleUpgradeStateChange={handleUpgradeStateChange}
       />
       <WatermarkSection
