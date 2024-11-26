@@ -48,6 +48,7 @@ export default async function handle(
           enableCustomMetatag: true,
           enableFeedback: true,
           enableScreenshotProtection: true,
+          screenShieldPercentage: true,
           metaTitle: true,
           metaDescription: true,
           metaImage: true,

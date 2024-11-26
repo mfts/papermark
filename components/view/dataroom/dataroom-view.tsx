@@ -395,6 +395,7 @@ export default function DataroomView({
           allowDownload={viewData.canDownload ?? link.allowDownload!}
           feedbackEnabled={link.enableFeedback!}
           screenshotProtectionEnabled={link.enableScreenshotProtection!}
+          screenShieldPercentage={link.screenShieldPercentage}
           versionNumber={documentData.documentVersionNumber}
           brand={brand}
           dataroomId={dataroom.id}
@@ -421,6 +422,7 @@ export default function DataroomView({
           allowDownload={viewData.canDownload ?? link.allowDownload!}
           feedbackEnabled={link.enableFeedback!}
           screenshotProtectionEnabled={link.enableScreenshotProtection!}
+          screenShieldPercentage={link.screenShieldPercentage}
           versionNumber={documentData.documentVersionNumber}
           brand={brand}
           dataroomId={dataroom.id}
