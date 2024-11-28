@@ -91,6 +91,7 @@ export default function DataroomView({
   previewToken,
   disableEditEmail,
   useCustomAccessForm,
+  isEmbedded,
 }: {
   link: LinkWithDataroom;
   userEmail: string | null | undefined;
@@ -103,6 +104,7 @@ export default function DataroomView({
   previewToken?: string;
   disableEditEmail?: boolean;
   useCustomAccessForm?: boolean;
+  isEmbedded?: boolean;
 }) {
   const {
     linkType,
@@ -201,6 +203,7 @@ export default function DataroomView({
           linkType: linkType,
           viewerId: viewId,
           viewerEmail: data.email ?? verifiedEmail ?? userEmail,
+          isEmbedded,
         });
 
         // set the verification token to the cookie
