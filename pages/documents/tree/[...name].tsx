@@ -23,15 +23,13 @@ export default function DocumentTreePage() {
 
   return (
     <AppLayout>
-      <main className="p-4 sm:m-4 sm:px-4 sm:py-4">
-        <BreadcrumbComponent />
-
+      <main className="p-4 pt-0 sm:m-4 sm:mt-0 sm:px-4 sm:pb-4">
         <section className="mb-4 mt-4 flex items-center justify-between md:mb-8 lg:mb-12">
           <div className="space-y-1">
             <h2 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
               All Documents
             </h2>
-            <p className="text-xs text-muted-foreground sm:text-sm">
+            <p  className="text-xs leading-4 text-muted-foreground sm:text-sm sm:leading-none">
               Manage all your documents in one place.
             </p>
           </div>

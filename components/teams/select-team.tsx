@@ -2,22 +2,36 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 
 import { TeamContextType, useTeam } from "@/context/team-context";
-import { Check, Loader, PlusIcon } from "lucide-react";
+import { DropdownMenuSeparator } from "@radix-ui/react-dropdown-menu";
+import { Check, Plus } from "lucide-react";
 import { ChevronsUpDown as ChevronUpDownIcon } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  useSidebar,
+} from "@/components/ui/sidebar";
+import { Skeleton } from "@/components/ui/skeleton";
 
+import { usePlan } from "@/lib/swr/use-billing";
 import { Team } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const SelectTeam = ({ teams, currentTeam, isLoading }: TeamContextType) => {
   const router = useRouter();
   const userTeam = useTeam();
+  const { isMobile } = useSidebar();
+  const { plan: userPlan, trial: userTrial } = usePlan();
+  const isTrial = !!userTrial;
 
   const switchTeam = (team: Team) => {
     localStorage.setItem("currentTeamId", team.id);
@@ -28,63 +42,110 @@ const SelectTeam = ({ teams, currentTeam, isLoading }: TeamContextType) => {
   return (
     <>
       {isLoading ? (
-        <div className="flex items-center gap-2 text-sm">
-          <Loader className="h-5 w-5 animate-spin" /> Loading teams...
-        </div>
-      ) : (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <div className="flex w-full cursor-pointer items-center justify-between rounded-md border px-[10px] py-2 opacity-90 duration-200 hover:bg-muted">
-              <div className="flex items-center space-x-2">
-                <Avatar className="h-[25px] w-[25px] text-[10px]">
-                  <AvatarFallback>
-                    {currentTeam?.name?.slice(0, 2).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-
-                <p className="text-sm">{currentTeam?.name}</p>
-              </div>
-              <ChevronUpDownIcon className="h-4 w-4" />
+        <SidebarMenuButton
+          size="sm"
+          className="flex cursor-pointer items-center justify-between p-5 px-[10px] opacity-90 hover:bg-muted"
+        >
+          <div className="flex aspect-square items-center space-x-4">
+            <Skeleton className="h-6 w-6 rounded-full" />
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-[150px]" />
             </div>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-[250px] px-0 pb-1.5 pt-2 sm:w-[270px] lg:w-[240px] xl:w-[270px]">
-            {teams.map((team) => (
-              <div
-                key={team.id}
-                onClick={() => switchTeam(team)}
-                className={cn(
-                  `flex w-full cursor-pointer items-center justify-between truncate px-3 py-2 text-sm font-normal transition-all duration-75 hover:bg-gray-200 hover:dark:bg-gray-800`,
-                  team.id === currentTeam?.id && "font-medium",
-                )}
+          </div>
+        </SidebarMenuButton>
+      ) : (
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <SidebarMenuButton
+                  size="lg"
+                  className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+                >
+                  <div className="flex aspect-square size-8 items-center justify-center rounded-lg">
+                    <Avatar className="h-[25px] w-[25px] text-[10px]">
+                      <AvatarFallback>
+                        {currentTeam?.name?.slice(0, 2).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                  </div>
+
+                  <div className="grid flex-1 text-left text-sm leading-tight">
+                    <p className="text-sm">{currentTeam?.name}</p>
+                  </div>
+                  <ChevronUpDownIcon className="h-4 w-4" />
+                </SidebarMenuButton>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                sideOffset={4}
+                className="z-50 w-[--radix-dropdown-menu-trigger-width] min-w-64 rounded-lg"
+                align="start"
+                side={isMobile ? "bottom" : "right"}
               >
-                <div className="flex items-center space-x-2">
-                  <Avatar className="h-7 w-7 text-xs">
-                    <AvatarFallback>
-                      {team.name?.slice(0, 2).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
+                <DropdownMenuLabel className="text-xs text-muted-foreground">
+                  Teams
+                </DropdownMenuLabel>
+                {teams.map((team) => (
+                  <div
+                    key={team.id}
+                    onClick={() => switchTeam(team)}
+                    className={cn(
+                      "flex w-full cursor-pointer items-center justify-between gap-2 truncate p-2 text-sm transition-all duration-75 hover:bg-gray-200 hover:dark:bg-gray-900",
+                      team.id === currentTeam?.id && "font-medium",
+                    )}
+                  >
+                    <div className="flex items-center space-x-2">
+                      <Avatar className="h-6 w-6 text-xs">
+                        <AvatarFallback>
+                          {team.name?.slice(0, 2).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
 
-                  <p>{team.name}</p>
-                </div>
+                      <div className="flex min-w-0 flex-col">
+                        <p className="whitespace-normal break-words">
+                          {team.name}
+                          {userPlan && userPlan != "free" ? (
+                            <span className="ml-2 rounded-full bg-background px-1 text-xs tracking-normal text-foreground ring-1 ring-gray-800">
+                              {userPlan.charAt(0).toUpperCase() +
+                                userPlan.slice(1)}
+                            </span>
+                          ) : null}
+                          {!isTrial ? (
+                            <span className="ml-2 rounded-sm bg-foreground px-2 text-xs tracking-normal text-background ring-1 ring-gray-800">
+                              Trial
+                            </span>
+                          ) : null}
+                        </p>
+                      </div>
+                    </div>
 
-                {team.id === currentTeam?.id && (
-                  <Check
-                    className="h-4 w-4 text-black dark:text-white"
-                    aria-hidden="true"
-                  />
-                )}
-              </div>
-            ))}
+                    {team.id === currentTeam?.id && (
+                      <Check
+                        className="h-4 w-4 text-black dark:text-white"
+                        aria-hidden="true"
+                      />
+                    )}
+                  </div>
+                ))}
 
-            <Link
-              href="/settings/people"
-              className="mx-auto mb-1 mt-3 flex w-[92%] items-center rounded-sm border px-[10px] py-2 text-sm duration-100 hover:cursor-pointer hover:bg-gray-200 hover:dark:bg-gray-800"
-            >
-              <PlusIcon className="mr-2 h-4 w-4" />
-              Invite Members
-            </Link>
-          </DropdownMenuContent>
-        </DropdownMenu>
+                <DropdownMenuSeparator className="-mx-1 my-1 h-px bg-muted" />
+                <DropdownMenuItem className="gap-2 p-2">
+                  <Link
+                    href="/settings/people"
+                    className="flex items-center gap-2 text-sm hover:cursor-pointer"
+                  >
+                    <div className="flex size-6 items-center justify-center rounded-md border bg-background">
+                      <Plus className="size-4" />
+                    </div>
+                    <div className="font-medium text-muted-foreground">
+                      Invite Members
+                    </div>
+                  </Link>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </SidebarMenuItem>
+        </SidebarMenu>
       )}
     </>
   );
