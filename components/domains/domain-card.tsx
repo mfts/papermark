@@ -1,5 +1,3 @@
-import Link from "next/link";
-
 import { useRef, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
@@ -16,18 +14,19 @@ import {
 } from "lucide-react";
 import { mutate } from "swr";
 
-import { useAnalytics } from "@/lib/analytics";
-import { cn } from "@/lib/utils";
-
-import { Button } from "../ui/button";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
-import { StatusBadge } from "../ui/status-badge";
+} from "@/components/ui/dropdown-menu";
+import { StatusBadge } from "@/components/ui/status-badge";
+
+import { cn } from "@/lib/utils";
+
+import { useDeleteDomainModal } from "./delete-domain-modal";
 import DomainConfiguration from "./domain-configuration";
 import { useDomainStatus } from "./use-domain-status";
 
@@ -40,7 +39,6 @@ export default function DomainCard({
   isDefault: boolean;
   onDelete: (deletedDomain: string) => void;
 }) {
-  const [deleting, setDeleting] = useState<boolean>(false);
   const [showDetails, setShowDetails] = useState(false);
   const [groupHover, setGroupHover] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -57,46 +55,27 @@ export default function DomainCard({
     domain,
   });
   const teamInfo = useTeam();
-  const analytics = useAnalytics();
+  const teamId = teamInfo?.currentTeam?.id;
 
   const isInvalid =
     status && !["Valid Configuration", "Pending Verification"].includes(status);
 
-  const handleDelete = async () => {
-    setDeleting(true);
-    const response = await fetch(
-      `/api/teams/${teamInfo?.currentTeam?.id}/domains/${domain}`,
-      {
-        method: "DELETE",
-      },
-    );
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    analytics.capture("Domain Deleted", {
-      slug: domain,
-      teamId: teamInfo?.currentTeam?.id,
-    });
-
-    // Update local data by filtering out the deleted domain
-    onDelete(domain);
-    setDeleting(false);
-  };
+  const { setShowDeleteDomainModal, DeleteDomainModal } = useDeleteDomainModal({
+    domain,
+    onDelete,
+  });
 
   const handleMakeDefault = async () => {
-    const response = await fetch(
-      `/api/teams/${teamInfo?.currentTeam?.id}/domains/${domain}`,
-      { method: "PATCH" },
-    );
+    const response = await fetch(`/api/teams/${teamId}/domains/${domain}`, {
+      method: "PATCH",
+    });
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
     // Update domains by refetching
-    mutate(`/api/teams/${teamInfo?.currentTeam?.id}/domains`);
+    mutate(`/api/teams/${teamId}/domains`);
   };
 
   return (
@@ -229,7 +208,7 @@ export default function DomainCard({
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   className="text-destructive transition-colors duration-200 focus:bg-destructive focus:text-destructive-foreground"
-                  onClick={handleDelete}
+                  onClick={() => setShowDeleteDomainModal(true)}
                 >
                   <TrashIcon className="mr-2 h-4 w-4" />
                   Delete domain
@@ -263,6 +242,7 @@ export default function DomainCard({
           )}
         </motion.div>
       </div>
+      <DeleteDomainModal />
     </>
   );
 }
