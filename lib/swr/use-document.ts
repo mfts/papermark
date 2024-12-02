@@ -17,7 +17,11 @@ export function useDocument() {
     id: string;
   };
 
-  const { data: document, error } = useSWR<DocumentWithVersion>(
+  const {
+    data: document,
+    error,
+    mutate,
+  } = useSWR<DocumentWithVersion>(
     teamInfo?.currentTeam?.id &&
       id &&
       `/api/teams/${teamInfo?.currentTeam?.id}/documents/${encodeURIComponent(
@@ -34,6 +38,7 @@ export function useDocument() {
     primaryVersion: document?.versions[0],
     loading: !error && !document,
     error,
+    mutate,
   };
 }
 
