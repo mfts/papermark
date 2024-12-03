@@ -108,7 +108,7 @@ export default function UploadZone({
   const { data: session } = useSession();
   const isFreePlan = plan === "free";
   const isTrial = !!trial;
-  const maxSize = isFreePlan && !isTrial ? 30 : 250;
+  const maxSize = isFreePlan && !isTrial ? 30 : 350;
   const maxNumPages = isFreePlan && !isTrial ? 100 : 500;
   const { limits, canAddDocuments } = useLimits();
   const remainingDocuments = limits?.documents
