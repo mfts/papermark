@@ -4,9 +4,18 @@ import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { DocumentVersion } from "@prisma/client";
-import { BoxesIcon, EyeIcon, LinkIcon, Settings2Icon } from "lucide-react";
+import {
+  ArchiveIcon,
+  BoxesIcon,
+  Code2Icon,
+  CopyIcon,
+  CopyPlusIcon,
+  EyeIcon,
+  LinkIcon,
+  Settings2Icon,
+} from "lucide-react";
 import { toast } from "sonner";
-import { mutate } from "swr";
+import useSWR, { mutate } from "swr";
 
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { Button } from "@/components/ui/button";
@@ -36,13 +45,14 @@ import {
 import { usePlan } from "@/lib/swr/use-billing";
 import useLimits from "@/lib/swr/use-limits";
 import { LinkWithViews, WatermarkConfig } from "@/lib/types";
-import { cn, copyToClipboard, nFormatter, timeAgo } from "@/lib/utils";
+import { cn, copyToClipboard, fetcher, nFormatter, timeAgo } from "@/lib/utils";
 
 import ProcessStatusBar from "../documents/process-status-bar";
 import BarChart from "../shared/icons/bar-chart";
 import ChevronDown from "../shared/icons/chevron-down";
 import MoreHorizontal from "../shared/icons/more-horizontal";
 import { ButtonTooltip } from "../ui/tooltip";
+import EmbedCodeModal from "./embed-code-modal";
 import LinkSheet, {
   DEFAULT_LINK_PROPS,
   type DEFAULT_LINK_TYPE,
@@ -63,12 +73,25 @@ export default function LinksTable({
   const teamInfo = useTeam();
 
   const { canAddLinks } = useLimits();
+  const { data: features } = useSWR<{
+    embedding: boolean;
+  }>(
+    teamInfo?.currentTeam?.id
+      ? `/api/feature-flags?teamId=${teamInfo.currentTeam.id}`
+      : null,
+    fetcher,
+  );
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isLinkSheetVisible, setIsLinkSheetVisible] = useState<boolean>(false);
   const [selectedLink, setSelectedLink] = useState<DEFAULT_LINK_TYPE>(
     DEFAULT_LINK_PROPS(`${targetType}_LINK`),
   );
+  const [embedModalOpen, setEmbedModalOpen] = useState(false);
+  const [selectedEmbedLink, setSelectedEmbedLink] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
 
   const handleCopyToClipboard = (linkString: string) => {
     copyToClipboard(`${linkString}`, "Link copied to clipboard.");
@@ -111,6 +134,7 @@ export default function LinksTable({
       watermarkConfig: link.watermarkConfig as WatermarkConfig | null,
       audienceType: link.audienceType,
       groupId: link.groupId,
+      screenShieldPercentage: link.screenShieldPercentage,
     });
     //wait for dropdown to close before opening the link sheet
     setTimeout(() => {
@@ -408,14 +432,32 @@ export default function LinksTable({
                                 <DropdownMenuItem
                                   onClick={() => handleEditLink(link)}
                                 >
+                                  <Settings2Icon className="mr-2 h-4 w-4" />
                                   Edit Link
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   disabled={!canAddLinks}
                                   onClick={() => handleDuplicateLink(link)}
                                 >
+                                  <CopyPlusIcon className="mr-2 h-4 w-4" />
                                   Duplicate Link
                                 </DropdownMenuItem>
+                                {features?.embedding ? (
+                                  <DropdownMenuItem
+                                    onClick={() => {
+                                      setSelectedEmbedLink({
+                                        id: link.id,
+                                        name:
+                                          link.name ||
+                                          `Link #${link.id.slice(-5)}`,
+                                      });
+                                      setEmbedModalOpen(true);
+                                    }}
+                                  >
+                                    <Code2Icon className="mr-2 h-4 w-4" />
+                                    Get Embed Code
+                                  </DropdownMenuItem>
+                                ) : null}
                                 <DropdownMenuItem
                                   className="text-destructive focus:bg-destructive focus:text-destructive-foreground"
                                   onClick={() =>
@@ -426,6 +468,7 @@ export default function LinksTable({
                                     )
                                   }
                                 >
+                                  <ArchiveIcon className="mr-2 h-4 w-4" />
                                   Archive
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
@@ -471,6 +514,15 @@ export default function LinksTable({
           currentLink={selectedLink.id ? selectedLink : undefined}
           existingLinks={links}
         />
+
+        {selectedEmbedLink && (
+          <EmbedCodeModal
+            isOpen={embedModalOpen}
+            setIsOpen={setEmbedModalOpen}
+            linkId={selectedEmbedLink.id}
+            linkName={selectedEmbedLink.name}
+          />
+        )}
 
         {archivedLinksCount > 0 && (
           <Collapsible asChild>

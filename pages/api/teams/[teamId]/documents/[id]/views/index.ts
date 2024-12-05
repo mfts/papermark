@@ -6,7 +6,6 @@ import { getServerSession } from "next-auth/next";
 import { LIMITS } from "@/lib/constants";
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
-import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
 import { getViewPageDuration } from "@/lib/tinybird";
 import { CustomUser } from "@/lib/types";
 import { log } from "@/lib/utils";

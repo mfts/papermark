@@ -1,13 +1,21 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
+import { runs } from "@trigger.dev/sdk/v3";
+import { waitUntil } from "@vercel/functions";
 import { getServerSession } from "next-auth/next";
 
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
+import { sendDataroomChangeNotificationTask } from "@/lib/trigger/dataroom-change-notification";
 import { CustomUser } from "@/lib/types";
 import { log } from "@/lib/utils";
 import { sortItemsByIndexAndName } from "@/lib/utils/sort-items-by-index-name";
+
+export const config = {
+  // in order to enable `waitUntil` function
+  supportsResponseStreaming: true,
+};
 
 export default async function handle(
   req: NextApiRequest,
@@ -151,16 +159,43 @@ export default async function handle(
         },
       });
 
-      // trigger `dataroom.new_document` event to notify existing viewers
-      // await client.sendEvent({
-      //   name: "dataroom.new_document",
-      //   payload: {
-      //     dataroomId: dataroomId,
-      //     dataroomDocumentId: document.id,
-      //     linkId: document.dataroom.links[0].id ?? "",
-      //     senderUserId: userId,
-      //   },
-      // });
+      // Check if the team has the change notification feature flag enabled
+      const featureFlags = await fetch(
+        `${process.env.NEXTAUTH_URL}/api/feature-flags?teamId=${teamId}`,
+      ).then((res) => res.json());
+
+      if (featureFlags.roomChangeNotifications) {
+        // Get all delayed and queued runs for this dataroom
+        const allRuns = await runs.list({
+          taskIdentifier: ["send-dataroom-change-notification"],
+          tag: [`dataroom_${dataroomId}`],
+          status: ["DELAYED", "QUEUED"],
+          period: "10m",
+        });
+
+        // Cancel any existing unsent notification runs for this dataroom
+        await Promise.all(allRuns.data.map((run) => runs.cancel(run.id)));
+
+        waitUntil(
+          sendDataroomChangeNotificationTask.trigger(
+            {
+              dataroomId,
+              dataroomDocumentId: document.id,
+              senderUserId: userId,
+              teamId,
+            },
+            {
+              idempotencyKey: `dataroom-notification-${teamId}-${dataroomId}-${document.id}`,
+              tags: [
+                `team_${teamId}`,
+                `dataroom_${dataroomId}`,
+                `document_${document.id}`,
+              ],
+              delay: new Date(Date.now() + 10 * 60 * 1000), // 10 minute delay
+            },
+          ),
+        );
+      }
 
       return res.status(201).json(document);
     } catch (error) {
@@ -172,7 +207,7 @@ export default async function handle(
     }
   } else {
     // We only allow GET requests
-    res.setHeader("Allow", ["GET"]);
+    res.setHeader("Allow", ["GET", "POST"]);
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 }

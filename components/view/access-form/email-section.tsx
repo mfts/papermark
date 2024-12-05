@@ -5,7 +5,7 @@ import { useDebouncedCallback } from "use-debounce";
 
 import { cn } from "@/lib/utils";
 import { determineTextColor } from "@/lib/utils/determine-text-color";
-import { simpleEmailRegex, validateEmail } from "@/lib/utils/validate-email";
+import { validateEmail } from "@/lib/utils/validate-email";
 
 import { DEFAULT_ACCESS_FORM_TYPE } from ".";
 
@@ -133,7 +133,6 @@ export default function EmailSection({
           onBlur={handleBlur}
           onFocus={handleFocus}
           disabled={disableEditEmail}
-          pattern={simpleEmailRegex.source}
           data-1p-ignore
           aria-invalid={emailError ? "true" : "false"}
           aria-describedby={emailError ? "email-error" : undefined}

@@ -9,6 +9,7 @@ import { errorhandler } from "@/lib/errorHandler";
 import notion from "@/lib/notion";
 import prisma from "@/lib/prisma";
 import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
+import { convertFilesToPdfTask } from "@/lib/trigger/convert-files";
 import { CustomUser } from "@/lib/types";
 import { getExtension, log } from "@/lib/utils";
 
@@ -38,6 +39,7 @@ export default async function handle(
       numPages,
       type: fileType,
       folderPathName,
+      fileSize,
     } = req.body as {
       name: string;
       url: string;
@@ -45,6 +47,7 @@ export default async function handle(
       numPages?: number;
       type?: string;
       folderPathName?: string;
+      fileSize?: number;
     };
 
     try {
@@ -94,6 +97,7 @@ export default async function handle(
               type: type,
               storageType,
               numPages: numPages,
+              fileSize: fileSize,
               isPrimary: true,
               versionNumber: 1,
             },
@@ -105,6 +109,22 @@ export default async function handle(
           versions: true,
         },
       });
+
+      if (type === "docs") {
+        console.log("converting docx to pdf");
+        // Trigger convert-files-to-pdf task
+        await convertFilesToPdfTask.trigger(
+          {
+            documentId: document.id,
+            documentVersionId: document.versions[0].id,
+            teamId,
+          },
+          {
+            idempotencyKey: `${teamId}-${document.versions[0].id}`,
+            tags: [`team_${teamId}`, `document_${document.id}`],
+          },
+        );
+      }
 
       // skip triggering convert-pdf-to-image job for "notion" / "excel" documents
       if (type === "pdf") {

@@ -21,6 +21,7 @@ import useLimits from "@/lib/swr/use-limits";
 
 import AgreementSection from "./agreement-section";
 import QuestionSection from "./question-section";
+import ScreenShieldSection from "./screen-shield-section";
 import ScreenshotProtectionSection from "./screenshot-protection-section";
 import WatermarkSection from "./watermark-section";
 
@@ -128,15 +129,9 @@ export const LinkOptions = ({
         }
         handleUpgradeStateChange={handleUpgradeStateChange}
       />
-      <FeedbackSection {...{ data, setData }} />
-      <QuestionSection
+      <ScreenShieldSection
         {...{ data, setData }}
-        isAllowed={
-          isTrial ||
-          (isPro && allowAdvancedLinkControls) ||
-          isBusiness ||
-          isDatarooms
-        }
+        isAllowed={isTrial || isBusiness || isDatarooms}
         handleUpgradeStateChange={handleUpgradeStateChange}
       />
       <WatermarkSection
@@ -147,6 +142,17 @@ export const LinkOptions = ({
       <AgreementSection
         {...{ data, setData }}
         isAllowed={isTrial || isDatarooms}
+        handleUpgradeStateChange={handleUpgradeStateChange}
+      />
+      <FeedbackSection {...{ data, setData }} />
+      <QuestionSection
+        {...{ data, setData }}
+        isAllowed={
+          isTrial ||
+          (isPro && allowAdvancedLinkControls) ||
+          isBusiness ||
+          isDatarooms
+        }
         handleUpgradeStateChange={handleUpgradeStateChange}
       />
       {linkType === LinkType.DOCUMENT_LINK ? (

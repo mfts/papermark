@@ -61,6 +61,7 @@ export default function DocumentView({
   previewToken,
   disableEditEmail,
   useCustomAccessForm,
+  isEmbedded,
 }: {
   link: LinkWithDocument;
   userEmail: string | null | undefined;
@@ -80,6 +81,7 @@ export default function DocumentView({
   previewToken?: string;
   disableEditEmail?: boolean;
   useCustomAccessForm?: boolean;
+  isEmbedded?: boolean;
 }) {
   const {
     document,
@@ -161,6 +163,7 @@ export default function DocumentView({
           linkType: "DOCUMENT_LINK",
           viewerId: viewId,
           viewerEmail: data.email ?? verifiedEmail ?? userEmail,
+          isEmbedded,
         });
 
         // set the verification token to the cookie

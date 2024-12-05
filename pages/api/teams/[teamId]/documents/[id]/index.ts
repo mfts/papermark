@@ -42,12 +42,32 @@ export default async function handle(
         },
       });
 
+      if (!document || !document.versions || document.versions.length === 0) {
+        return res.status(404).end("Document not found");
+      }
+
+      const pages = await prisma.documentPage.findMany({
+        where: {
+          versionId: document.versions[0].id,
+        },
+        select: {
+          pageLinks: true,
+        },
+      });
+
+      const hasPageLinks = pages.some(
+        (page) =>
+          page.pageLinks &&
+          Array.isArray(page.pageLinks) &&
+          (page.pageLinks as any[]).length > 0,
+      );
+
       // Check that the user is owner of the document, otherwise return 401
       // if (document.ownerId !== (session.user as CustomUser).id) {
       //   return res.status(401).end("Unauthorized to access this document");
       // }
 
-      return res.status(200).json(document);
+      return res.status(200).json({ ...document, hasPageLinks });
     } catch (error) {
       errorhandler(error, res);
     }

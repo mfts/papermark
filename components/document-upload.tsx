@@ -5,6 +5,7 @@ import { useTheme } from "next-themes";
 import { useDropzone } from "react-dropzone";
 import { toast } from "sonner";
 
+import { SUPPORTED_DOCUMENT_MIME_TYPES } from "@/lib/constants";
 import { usePlan } from "@/lib/swr/use-billing";
 import { bytesToSize } from "@/lib/utils";
 import { fileIcon } from "@/lib/utils/get-file-icon";
@@ -32,8 +33,8 @@ export default function DocumentUpload({
   const { plan, trial } = usePlan();
   const isFreePlan = plan === "free";
   const isTrial = !!trial;
-  const maxSize = plan === "business" || plan === "datarooms" ? 100 : 30;
-  const maxNumPages = plan === "business" || plan === "datarooms" ? 500 : 100;
+  const maxSize = isFreePlan && !isTrial ? 30 : 100;
+  const maxNumPages = isFreePlan && !isTrial ? 100 : 500;
 
   const { getRootProps, getInputProps } = useDropzone({
     accept:
@@ -54,6 +55,7 @@ export default function DocumentUpload({
             "application/vnd.ms-excel": [], // ".xls"
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
               [], // ".xlsx"
+            "application/vnd.ms-excel.sheet.macroEnabled.12": [".xlsm"], // ".xlsm"
             "text/csv": [], // ".csv"
             "application/vnd.oasis.opendocument.spreadsheet": [], // ".ods"
             "application/vnd.ms-powerpoint": [], // ".ppt"
@@ -69,6 +71,8 @@ export default function DocumentUpload({
             "image/png": [], // ".png"
             "image/jpeg": [], // ".jpeg"
             "image/jpg": [], // ".jpg"
+            "application/zip": [], // ".zip"
+            "application/x-zip-compressed": [], // ".zip"
           },
     multiple: false,
     maxSize: maxSize * 1024 * 1024, // 30 MB
@@ -105,12 +109,19 @@ export default function DocumentUpload({
         });
     },
     onDropRejected: (fileRejections) => {
-      const { errors } = fileRejections[0];
+      const { errors, file } = fileRejections[0];
       let message;
       if (errors[0].code === "file-too-large") {
-        message = `File size too big (max. ${maxSize} MB)`;
+        message = `File size too big (max. ${maxSize} MB)${
+          isFreePlan && !isTrial
+            ? `. Upgrade to a paid plan to increase the limit.`
+            : ""
+        }`;
       } else if (errors[0].code === "file-invalid-type") {
-        message = "File type not supported";
+        const isSupported = SUPPORTED_DOCUMENT_MIME_TYPES.includes(file.type);
+        message = `File type not supported ${
+          isFreePlan && !isTrial && isSupported ? `on free plan` : ""
+        }`;
       } else {
         message = errors[0].message;
       }
@@ -142,7 +153,7 @@ export default function DocumentUpload({
             />
           ) : null}
 
-          <div className="text-center">
+          <div className="max-w-md text-center">
             {currentFile ? (
               <div className="flex flex-col items-center text-foreground sm:flex-row sm:space-x-2">
                 <div>
@@ -151,9 +162,7 @@ export default function DocumentUpload({
                     isLight,
                   })}
                 </div>
-                <p className="max-w-[280px] truncate">
-                  {(currentFile.name)}
-                </p>
+                <p className="max-w-md truncate">{currentFile.name}</p>
                 <p className="text-gray-500">{bytesToSize(currentFile.size)}</p>
               </div>
             ) : (
@@ -173,7 +182,7 @@ export default function DocumentUpload({
                 ? "Replace file?"
                 : isFreePlan && !isTrial
                   ? `Only *.pdf, *.xls, *.xlsx, *.csv, *.ods, *.png, *.jpeg, *.jpg & ${maxSize} MB limit`
-                  : `Only *.pdf, *.pptx, *.docx, *.xlsx, *.xls, *.csv, *.ods, *.ppt, *.odp, *.doc, *.odt, *.dwg, *.dxf, *.png, *.jpg, *.jpeg & ${maxSize} MB limit`}
+                  : `Only *.pdf, *.pptx, *.docx, *.xlsx, *.xls, *.xlsm, *.csv, *.ods, *.ppt, *.odp, *.doc, *.odt, *.dwg, *.dxf, *.png, *.jpg, *.jpeg & ${maxSize} MB limit`}
             </p>
           </div>
         </div>

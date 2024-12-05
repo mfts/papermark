@@ -24,6 +24,7 @@ import DataroomViewer from "../DataroomViewer";
 import PagesViewerNew from "../PagesViewerNew";
 import EmailVerificationMessage from "../email-verification-form";
 import AdvancedExcelViewer from "../viewer/advanced-excel-viewer";
+import DownloadOnlyViewer from "../viewer/download-only-viewer";
 import ImageViewer from "../viewer/image-viewer";
 
 const ExcelViewer = dynamic(
@@ -48,6 +49,7 @@ export type TDocumentData = {
   documentType: TSupportedDocumentSimpleType;
   documentVersionId: string;
   documentVersionNumber: number;
+  downloadOnly: boolean;
   isVertical?: boolean;
 };
 
@@ -89,6 +91,7 @@ export default function DataroomView({
   previewToken,
   disableEditEmail,
   useCustomAccessForm,
+  isEmbedded,
 }: {
   link: LinkWithDataroom;
   userEmail: string | null | undefined;
@@ -101,6 +104,7 @@ export default function DataroomView({
   previewToken?: string;
   disableEditEmail?: boolean;
   useCustomAccessForm?: boolean;
+  isEmbedded?: boolean;
 }) {
   const {
     linkType,
@@ -199,6 +203,7 @@ export default function DataroomView({
           linkType: linkType,
           viewerId: viewId,
           viewerEmail: data.email ?? verifiedEmail ?? userEmail,
+          isEmbedded,
         });
 
         // set the verification token to the cookie
@@ -393,6 +398,7 @@ export default function DataroomView({
           allowDownload={viewData.canDownload ?? link.allowDownload!}
           feedbackEnabled={link.enableFeedback!}
           screenshotProtectionEnabled={link.enableScreenshotProtection!}
+          screenShieldPercentage={link.screenShieldPercentage}
           versionNumber={documentData.documentVersionNumber}
           brand={brand}
           dataroomId={dataroom.id}
@@ -419,6 +425,7 @@ export default function DataroomView({
           allowDownload={viewData.canDownload ?? link.allowDownload!}
           feedbackEnabled={link.enableFeedback!}
           screenshotProtectionEnabled={link.enableScreenshotProtection!}
+          screenShieldPercentage={link.screenShieldPercentage}
           versionNumber={documentData.documentVersionNumber}
           brand={brand}
           dataroomId={dataroom.id}
@@ -434,6 +441,20 @@ export default function DataroomView({
           linkName={link.name ?? `Link #${link.id.slice(-5)}`}
         />
       </div>
+    ) : documentData?.downloadOnly ? (
+      <DownloadOnlyViewer
+        file={viewData.file!}
+        linkId={link.id}
+        documentId={documentData.id}
+        viewId={viewData.viewId}
+        allowDownload={true}
+        versionNumber={documentData.documentVersionNumber}
+        brand={brand}
+        documentName={documentData.name}
+        isPreview={viewData.isPreview}
+        dataroomId={dataroom.id}
+        setDocumentData={setDocumentData}
+      />
     ) : null;
   }
 

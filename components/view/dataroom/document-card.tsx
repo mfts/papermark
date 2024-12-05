@@ -10,6 +10,7 @@ type DRDocument = {
   dataroomDocumentId: string;
   id: string;
   name: string;
+  downloadOnly: boolean;
   versions: {
     id: string;
     type: string;
@@ -59,6 +60,7 @@ export default function DocumentCard({
                         .type as TSupportedDocumentSimpleType,
                       documentVersionId: document.versions[0].id,
                       documentVersionNumber: document.versions[0].versionNumber,
+                      downloadOnly: document.downloadOnly,
                       isVertical: document.versions[0].isVertical,
                     });
                   }}

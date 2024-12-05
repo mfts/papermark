@@ -11,6 +11,7 @@ import { sendWelcomeEmail } from "@/lib/emails/send-welcome";
 import hanko from "@/lib/hanko";
 import prisma from "@/lib/prisma";
 import { CreateUserEmailProps, CustomUser } from "@/lib/types";
+import { generateChecksum } from "@/lib/utils/generate-checksum";
 
 const VERCEL_DEPLOYMENT = !!process.env.VERCEL_URL;
 
@@ -52,7 +53,13 @@ export const authOptions: NextAuthOptions = {
     EmailProvider({
       async sendVerificationRequest({ identifier, url }) {
         if (process.env.NODE_ENV === "development") {
-          console.log("[Login URL]", url);
+          const checksum = generateChecksum(url);
+          const verificationUrlParams = new URLSearchParams({
+            verification_url: url,
+            checksum,
+          });
+          const verificationUrl = `${process.env.NEXTAUTH_URL}/verify?${verificationUrlParams}`;
+          console.log("[Login URL]", verificationUrl);
           return;
         } else {
           await sendVerificationRequestEmail({

@@ -71,6 +71,7 @@ export const DEFAULT_LINK_PROPS = (linkType: LinkType) => ({
   watermarkConfig: null,
   audienceType: LinkAudienceType.GENERAL,
   groupId: null,
+  screenShieldPercentage: null,
 });
 
 export type DEFAULT_LINK_TYPE = {
@@ -103,6 +104,7 @@ export type DEFAULT_LINK_TYPE = {
   watermarkConfig: WatermarkConfig | null;
   audienceType: LinkAudienceType;
   groupId: string | null;
+  screenShieldPercentage: number | null;
 };
 
 export default function LinkSheet({

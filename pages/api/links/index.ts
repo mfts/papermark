@@ -5,12 +5,11 @@ import { getServerSession } from "next-auth/next";
 
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
-import {
-  getDocumentWithTeamAndUser,
-  getTeamWithUsersAndDocument,
-} from "@/lib/team/helper";
 import { CustomUser } from "@/lib/types";
-import { generateEncrpytedPassword } from "@/lib/utils";
+import {
+  decryptEncrpytedPassword,
+  generateEncrpytedPassword,
+} from "@/lib/utils";
 
 import { authOptions } from "../auth/[...nextauth]";
 
@@ -133,6 +132,7 @@ export default async function handler(
           enableNotification: linkData.enableNotification,
           enableFeedback: linkData.enableFeedback,
           enableScreenshotProtection: linkData.enableScreenshotProtection,
+          screenShieldPercentage: linkData.screenShieldPercentage,
           enableCustomMetatag: linkData.enableCustomMetatag,
           metaTitle: linkData.metaTitle || null,
           metaDescription: linkData.metaDescription || null,
@@ -176,6 +176,11 @@ export default async function handler(
 
       if (!linkWithView) {
         return res.status(404).json({ error: "Link not found" });
+      }
+
+      // Decrypt the password for the new link
+      if (linkWithView.password !== null) {
+        linkWithView.password = decryptEncrpytedPassword(linkWithView.password);
       }
 
       return res.status(200).json(linkWithView);

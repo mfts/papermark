@@ -71,7 +71,7 @@ export function AddFolderModal({
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            name: folderName,
+            name: folderName.trim(),
             path: currentFolderPath?.join("/"),
           }),
         },
@@ -86,7 +86,7 @@ export function AddFolderModal({
 
       const { parentFolderPath } = await response.json();
 
-      analytics.capture("Folder Added", { folderName: folderName });
+      analytics.capture("Folder Added", { folderName: folderName.trim() });
       toast.success("Folder added successfully! 🎉");
 
       mutate(

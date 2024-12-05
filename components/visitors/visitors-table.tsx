@@ -7,12 +7,10 @@ import {
   ArchiveRestoreIcon,
   BadgeCheckIcon,
   BadgeInfoIcon,
-  ChevronRightIcon,
   DownloadCloudIcon,
   FileBadgeIcon,
   FileDigitIcon,
   MoreHorizontalIcon,
-  RefreshCw,
   ServerIcon,
   ThumbsDownIcon,
   ThumbsUpIcon,
@@ -40,7 +38,7 @@ import { BadgeTooltip } from "@/components/ui/tooltip";
 
 import { usePlan } from "@/lib/swr/use-billing";
 import { useDocumentVisits } from "@/lib/swr/use-document";
-import { cn, durationFormat, timeAgo } from "@/lib/utils";
+import { durationFormat, timeAgo } from "@/lib/utils";
 
 import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
 import { Button } from "../ui/button";
@@ -55,7 +53,6 @@ import {
 import {
   Pagination,
   PaginationContent,
-  PaginationEllipsis,
   PaginationItem,
   PaginationLink,
   PaginationNext,
@@ -64,6 +61,7 @@ import {
 import { VisitorAvatar } from "./visitor-avatar";
 import VisitorChart from "./visitor-chart";
 import VisitorUserAgent from "./visitor-useragent";
+import VisitorUserAgentPlaceholder from "./visitor-useragent-placeholder";
 
 export default function VisitorsTable() {
   const teamInfo = useTeam();
@@ -396,7 +394,9 @@ export default function VisitorsTable() {
                             <TableCell colSpan={5}>
                               {!isFreePlan ? (
                                 <VisitorUserAgent viewId={view.id} />
-                              ) : null}
+                              ) : (
+                                <VisitorUserAgentPlaceholder />
+                              )}
                               <div className="pb-0.5 pl-0.5 md:pb-1 md:pl-1">
                                 <div className="flex items-center gap-x-1 px-1">
                                   <FileDigitIcon className="size-4" /> Document

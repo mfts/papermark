@@ -35,6 +35,27 @@ type DataroomLinkData = {
   brand: DataroomBrand | null;
 };
 
+export interface ViewPageProps {
+  linkData: DocumentLinkData | DataroomLinkData;
+  notionData: {
+    rootNotionPageId: string | null;
+    recordMap: ExtendedRecordMap | null;
+    theme: NotionTheme | null;
+  };
+  meta: {
+    enableCustomMetatag: boolean;
+    metaTitle: string | null;
+    metaDescription: string | null;
+    metaImage: string | null;
+    metaUrl: string | null;
+    metaFavicon: string | null;
+  };
+  showPoweredByBanner: boolean;
+  showAccountCreationSlide: boolean;
+  useAdvancedExcelViewer: boolean;
+  useCustomAccessForm: boolean;
+}
+
 export const getStaticProps = async (context: GetStaticPropsContext) => {
   const { linkId } = context.params as { linkId: string };
 
@@ -190,26 +211,7 @@ export default function ViewPage({
   showAccountCreationSlide,
   useAdvancedExcelViewer,
   useCustomAccessForm,
-}: {
-  linkData: DocumentLinkData | DataroomLinkData;
-  notionData: {
-    rootNotionPageId: string | null;
-    recordMap: ExtendedRecordMap | null;
-    theme: NotionTheme | null;
-  };
-  meta: {
-    enableCustomMetatag: boolean;
-    metaTitle: string | null;
-    metaDescription: string | null;
-    metaImage: string | null;
-    metaUrl: string | null;
-    metaFavicon: string | null;
-  };
-  showPoweredByBanner: boolean;
-  showAccountCreationSlide: boolean;
-  useAdvancedExcelViewer: boolean;
-  useCustomAccessForm: boolean;
-}) {
+}: ViewPageProps) {
   const router = useRouter();
   const { data: session, status } = useSession();
   const [storedToken, setStoredToken] = useState<string | undefined>(undefined);

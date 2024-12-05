@@ -11,6 +11,7 @@ import { DEFAULT_DOCUMENT_VIEW_TYPE } from "@/components/view/document-view";
 import { LinkWithDocument, NotionTheme, WatermarkConfig } from "@/lib/types";
 
 import AdvancedExcelViewer from "./viewer/advanced-excel-viewer";
+import DownloadOnlyViewer from "./viewer/download-only-viewer";
 import ImageViewer from "./viewer/image-viewer";
 
 const ExcelViewer = dynamic(
@@ -91,6 +92,34 @@ export default function ViewData({
       allowDownload={link.allowDownload!}
       feedbackEnabled={link.enableFeedback!}
       screenshotProtectionEnabled={link.enableScreenshotProtection!}
+      screenShieldPercentage={link.screenShieldPercentage}
+      versionNumber={document.versions[0].versionNumber}
+      brand={brand}
+      showPoweredByBanner={showPoweredByBanner}
+      showAccountCreationSlide={showAccountCreationSlide}
+      enableQuestion={link.enableQuestion}
+      feedback={link.feedback}
+      isVertical={document.versions[0].isVertical}
+      viewerEmail={viewerEmail}
+      watermarkConfig={
+        link.enableWatermark ? (link.watermarkConfig as WatermarkConfig) : null
+      }
+      ipAddress={viewData.ipAddress}
+      linkName={link.name ?? `Link #${link.id.slice(-5)}`}
+      isPreview={viewData.isPreview}
+    />
+  ) : viewData.pages ? (
+    <PagesViewerNew
+      pages={viewData.pages}
+      viewId={viewData.viewId}
+      isPreview={viewData.isPreview}
+      linkId={link.id}
+      documentId={document.id}
+      assistantEnabled={document.assistantEnabled}
+      allowDownload={link.allowDownload!}
+      feedbackEnabled={link.enableFeedback!}
+      screenshotProtectionEnabled={link.enableScreenshotProtection!}
+      screenShieldPercentage={link.screenShieldPercentage}
       versionNumber={document.versions[0].versionNumber}
       brand={brand}
       showPoweredByBanner={showPoweredByBanner}
@@ -105,30 +134,17 @@ export default function ViewData({
       ipAddress={viewData.ipAddress}
       linkName={link.name ?? `Link #${link.id.slice(-5)}`}
     />
-  ) : viewData.pages ? (
-    <PagesViewerNew
-      pages={viewData.pages}
-      viewId={viewData.viewId}
-      isPreview={viewData.isPreview}
+  ) : document.downloadOnly ? (
+    <DownloadOnlyViewer
+      file={viewData.file!}
       linkId={link.id}
+      viewId={viewData.viewId}
       documentId={document.id}
-      assistantEnabled={document.assistantEnabled}
-      allowDownload={link.allowDownload!}
-      feedbackEnabled={link.enableFeedback!}
-      screenshotProtectionEnabled={link.enableScreenshotProtection!}
+      allowDownload={true}
       versionNumber={document.versions[0].versionNumber}
       brand={brand}
-      showPoweredByBanner={showPoweredByBanner}
-      showAccountCreationSlide={showAccountCreationSlide}
-      enableQuestion={link.enableQuestion}
-      feedback={link.feedback}
-      isVertical={document.versions[0].isVertical}
-      viewerEmail={viewerEmail}
-      watermarkConfig={
-        link.enableWatermark ? (link.watermarkConfig as WatermarkConfig) : null
-      }
-      ipAddress={viewData.ipAddress}
-      linkName={link.name ?? `Link #${link.id.slice(-5)}`}
+      documentName={document.name}
+      isPreview={viewData.isPreview}
     />
   ) : (
     <PDFViewer

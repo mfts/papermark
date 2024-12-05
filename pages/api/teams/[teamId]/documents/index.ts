@@ -6,6 +6,7 @@ import { DocumentStorageType, Prisma } from "@prisma/client";
 import { getServerSession } from "next-auth/next";
 import { parsePageId } from "notion-utils";
 
+import { hashToken } from "@/lib/api/auth/token";
 import { errorhandler } from "@/lib/errorHandler";
 import notion from "@/lib/notion";
 import prisma from "@/lib/prisma";
@@ -121,15 +122,42 @@ export default async function handle(
     }
   } else if (req.method === "POST") {
     // POST /api/teams/:teamId/documents
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      res.status(401).end("Unauthorized");
-      return;
-    }
 
     const { teamId } = req.query as { teamId: string };
 
-    const userId = (session.user as CustomUser).id;
+    // Check for API token first
+    const authHeader = req.headers.authorization;
+    let userId: string;
+
+    if (authHeader?.startsWith("Bearer ")) {
+      const token = authHeader.replace("Bearer ", "");
+      const hashedToken = hashToken(token);
+
+      // Look up token in database
+      const restrictedToken = await prisma.restrictedToken.findUnique({
+        where: { hashedKey: hashedToken },
+        select: { userId: true, teamId: true },
+      });
+
+      // Check if token exists
+      if (!restrictedToken) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
+      // Check if token is for the correct team
+      if (restrictedToken.teamId !== teamId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
+      userId = restrictedToken.userId;
+    } else {
+      // Fall back to session auth
+      const session = await getServerSession(req, res, authOptions);
+      if (!session) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      userId = (session.user as CustomUser).id;
+    }
 
     // Assuming data is an object with `name` and `description` properties
     const {
@@ -141,6 +169,7 @@ export default async function handle(
       folderPathName,
       contentType,
       createLink,
+      fileSize,
     } = req.body as {
       name: string;
       url: string;
@@ -150,6 +179,7 @@ export default async function handle(
       folderPathName?: string;
       contentType: string;
       createLink?: boolean;
+      fileSize?: number;
     };
 
     try {
@@ -166,6 +196,9 @@ export default async function handle(
         try {
           const pageId = parsePageId(fileUrl, { uuid: false });
           // if the page isn't accessible then end the process here.
+          if (!pageId) {
+            throw new Error("Notion page not found");
+          }
           await notion.getPage(pageId);
         } catch (error) {
           return res
@@ -186,6 +219,9 @@ export default async function handle(
         },
       });
 
+      // determine if the document is download only
+      const isDownloadOnly = type === "zip";
+
       // Save data to the database
       const document = await prisma.document.create({
         data: {
@@ -196,8 +232,9 @@ export default async function handle(
           contentType: contentType,
           type: type,
           storageType,
-          ownerId: (session.user as CustomUser).id,
+          ownerId: userId,
           teamId: teamId,
+          downloadOnly: isDownloadOnly,
           ...(createLink && {
             links: {
               create: {
@@ -215,6 +252,7 @@ export default async function handle(
               numPages: numPages,
               isPrimary: true,
               versionNumber: 1,
+              fileSize: fileSize,
             },
           },
           folderId: folder?.id ? folder.id : null,
