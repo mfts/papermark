@@ -4,7 +4,7 @@ import { Progress } from "@/components/ui/progress";
 
 import { cn } from "@/lib/utils";
 
-export default function ProcessStatusBar({
+export default function FileProcessStatusBar({
   documentVersionId,
   className,
 }: {
@@ -18,7 +18,7 @@ export default function ProcessStatusBar({
     return (
       <Progress
         value={0}
-        text="Processing document..."
+        text="Processing file..."
         className={cn(
           "w-full rounded-none text-[8px] font-semibold",
           className,
@@ -31,7 +31,8 @@ export default function ProcessStatusBar({
     return (
       <Progress
         value={0}
-        text={error.message}
+        text={error?.message || "Error processing file"}
+        error={true}
         className={cn(
           "w-full rounded-none text-[8px] font-semibold",
           className,
@@ -45,13 +46,13 @@ export default function ProcessStatusBar({
   }
 
   const progress = Number(statuses[0]?.data?.progress) * 100 || 0;
-  const text = String(statuses[0]?.data?.text) || "";
+  const text = String(statuses[0]?.data?.text) || "Processing file...";
 
   if (run.status === "FAILURE") {
     return (
       <Progress
         value={progress}
-        text={`Error processing document page ${Number(statuses[0]?.data?.currentPage)}`}
+        text="Error processing file"
         error={true}
         className={cn(
           "w-full rounded-none text-[8px] font-semibold",
