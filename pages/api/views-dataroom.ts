@@ -7,6 +7,7 @@ import { parsePageId } from "notion-utils";
 
 import { hashToken } from "@/lib/api/auth/token";
 import sendNotification from "@/lib/api/notification-helper";
+import { recordVisit } from "@/lib/api/views/record-visit";
 import { sendOtpVerificationEmail } from "@/lib/emails/send-email-otp-verification";
 import { getFile } from "@/lib/files/get-file";
 import { newId } from "@/lib/id-helper";
@@ -504,6 +505,19 @@ export default async function handle(
           waitUntil(sendNotification({ viewId: newDataroomView.id }));
           console.timeEnd("sendemail");
         }
+      }
+
+      // Prepare webhook for dataroom view
+      if (newDataroomView) {
+        waitUntil(
+          recordVisit({
+            viewId: newDataroomView.id,
+            linkId,
+            teamId: link.teamId!,
+            dataroomId,
+            headers: req.headers,
+          }),
+        );
       }
 
       const returnObject = {
