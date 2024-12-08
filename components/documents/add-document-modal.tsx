@@ -461,6 +461,7 @@ export function AddDocumentModal({
                       <DocumentUpload
                         currentFile={currentFile}
                         setCurrentFile={setCurrentFile}
+                        clearModelStates={clearModelStates}
                       />
                     </div>
                   </div>
