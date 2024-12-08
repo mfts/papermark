@@ -1,6 +1,8 @@
 import { Tinybird } from "@chronark/zod-bird";
 import { z } from "zod";
 
+import { WEBHOOK_TRIGGERS } from "../webhook/constants";
+
 const tb = new Tinybird({ token: process.env.TINYBIRD_TOKEN! });
 
 export const publishPageView = tb.buildIngestEndpoint({
@@ -34,5 +36,19 @@ export const publishPageView = tb.buildIngestEndpoint({
     bot: z.boolean().optional(),
     referer: z.string().optional().default("(direct)"),
     referer_url: z.string().optional().default("(direct)"),
+  }),
+});
+
+export const recordWebhookEvent = tb.buildIngestEndpoint({
+  datasource: "webhook_events__v1",
+  event: z.object({
+    event_id: z.string(),
+    webhook_id: z.string(),
+    message_id: z.string(), // QStash message ID
+    event: z.enum(WEBHOOK_TRIGGERS),
+    url: z.string(),
+    http_status: z.number(),
+    request_body: z.string(),
+    response_body: z.string(),
   }),
 });

@@ -5,6 +5,7 @@ import { getServerSession } from "next-auth/next";
 
 import { hashToken } from "@/lib/api/auth/token";
 import sendNotification from "@/lib/api/notification-helper";
+import { recordVisit } from "@/lib/api/views/record-visit";
 import { sendOtpVerificationEmail } from "@/lib/emails/send-email-otp-verification";
 import { getFile } from "@/lib/files/get-file";
 import { newId } from "@/lib/id-helper";
@@ -524,6 +525,19 @@ export default async function handle(
       console.time("sendemail");
       waitUntil(sendNotification({ viewId: newView.id }));
       console.timeEnd("sendemail");
+    }
+
+    // Prepare webhook for view
+    if (newView) {
+      waitUntil(
+        recordVisit({
+          viewId: newView.id,
+          linkId,
+          teamId: link.teamId!,
+          documentId,
+          headers: req.headers,
+        }),
+      );
     }
 
     const returnObject = {

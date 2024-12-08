@@ -89,6 +89,7 @@ model Team {
 
   incomingWebhooks IncomingWebhook[]
   restrictedTokens RestrictedToken[]
+  webhooks       Webhook[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -688,5 +689,22 @@ model RestrictedToken {
   updatedAt DateTime @updatedAt
 
   @@index([userId])
+  @@index([teamId])
+}
+
+model Webhook {
+  id         String    @id @default(cuid())
+  pId        String    @unique // public ID for the webhook
+  name       String
+  url        String
+  secret     String // signing secret for the webhook
+  triggers   Json
+
+  teamId     String
+  team       Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([teamId])
 }
