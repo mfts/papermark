@@ -6,6 +6,7 @@ import { waitUntil } from "@vercel/functions";
 import { getServerSession } from "next-auth/next";
 
 import { errorhandler } from "@/lib/errorHandler";
+import { getFeatureFlags } from "@/lib/featureFlags";
 import prisma from "@/lib/prisma";
 import { sendDataroomChangeNotificationTask } from "@/lib/trigger/dataroom-change-notification";
 import { CustomUser } from "@/lib/types";
@@ -160,9 +161,7 @@ export default async function handle(
       });
 
       // Check if the team has the change notification feature flag enabled
-      const featureFlags = await fetch(
-        `${process.env.NEXTAUTH_URL}/api/feature-flags?teamId=${teamId}`,
-      ).then((res) => res.json());
+      const featureFlags = await getFeatureFlags({ teamId });
 
       if (featureFlags.roomChangeNotifications) {
         // Get all delayed and queued runs for this dataroom
