@@ -1,4 +1,4 @@
-// lib/webhooks.ts
+// lib/incoming-webhooks.ts
 import crypto from "crypto";
 
 import { newId } from "../id-helper";
