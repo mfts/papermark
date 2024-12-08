@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
 
+import { useEffect } from "react";
+
 import { useTeam } from "@/context/team-context";
 import { format } from "date-fns";
 import { CircleHelpIcon, CopyIcon, WebhookIcon } from "lucide-react";
@@ -26,6 +28,20 @@ export default function WebhookSettings() {
   const router = useRouter();
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
+
+  // Feature flag check
+  const { data: features } = useSWR<{ webhooks: boolean }>(
+    teamId ? `/api/feature-flags?teamId=${teamId}` : null,
+    fetcher,
+  );
+
+  // Redirect if feature is not enabled
+  useEffect(() => {
+    if (features && !features.webhooks) {
+      router.push("/settings/general");
+      toast.error("This feature is not available for your team");
+    }
+  }, [features, router]);
 
   const { data: webhooks } = useSWR<Webhook[]>(
     teamId ? `/api/teams/${teamId}/webhooks` : null,

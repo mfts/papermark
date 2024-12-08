@@ -36,6 +36,20 @@ export default function WebhookDetail() {
   const [isEditing, setIsEditing] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
 
+  // Feature flag check
+  const { data: features } = useSWR<{ webhooks: boolean }>(
+    teamId ? `/api/feature-flags?teamId=${teamId}` : null,
+    fetcher,
+  );
+
+  // Redirect if feature is not enabled
+  useEffect(() => {
+    if (features && !features.webhooks) {
+      router.push("/settings/general");
+      toast.error("This feature is not available for your team");
+    }
+  }, [features, router]);
+
   const { data: webhook, mutate } = useSWR<Webhook>(
     teamId && id ? `/api/teams/${teamId}/webhooks/${id}` : null,
     fetcher,

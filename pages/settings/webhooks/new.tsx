@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { useTeam } from "@/context/team-context";
 import { ArrowLeft, Check } from "lucide-react";
 import { toast } from "sonner";
+import useSWR from "swr";
 
 import AppLayout from "@/components/layouts/app";
 import { SettingsHeader } from "@/components/settings/settings-header";
@@ -18,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 import { newId } from "@/lib/id-helper";
+import { fetcher } from "@/lib/utils";
 
 interface WebhookEvent {
   id: string;
@@ -76,6 +78,20 @@ export default function NewWebhook() {
     const generatedSecret = newId("webhookSecret");
     setFormData((prev) => ({ ...prev, secret: generatedSecret }));
   }, []);
+
+  // Feature flag check
+  const { data: features } = useSWR<{ webhooks: boolean }>(
+    teamId ? `/api/feature-flags?teamId=${teamId}` : null,
+    fetcher,
+  );
+
+  // Redirect if feature is not enabled
+  useEffect(() => {
+    if (features && !features.webhooks) {
+      router.push("/settings/general");
+      toast.error("This feature is not available for your team");
+    }
+  }, [features, router]);
 
   const createWebhook = async () => {
     try {
