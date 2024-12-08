@@ -1,176 +1,74 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import { getServerSession } from "next-auth";
+import { getServerSession } from "next-auth/next";
 
-import { getFeatureFlags } from "@/lib/featureFlags";
+import { newId } from "@/lib/id-helper";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
-import { generateWebhookId } from "@/lib/webhooks";
+import { createWebhookSchema } from "@/lib/zod/schemas/webhooks";
 
 export default async function handle(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
-  const { teamId } = req.query as { teamId: string };
+  const session = await getServerSession(req, res, authOptions);
+  if (!session) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
 
-  // Check feature flag
-  const features = await getFeatureFlags({ teamId });
-  if (!features.webhooks) {
-    return res
-      .status(403)
-      .json({ error: "This feature is not available for your team" });
+  const { teamId } = req.query as { teamId: string };
+  const userId = (session.user as CustomUser).id;
+
+  const userTeam = await prisma.userTeam.findFirst({
+    where: {
+      userId: userId,
+      teamId: teamId,
+    },
+  });
+
+  if (!userTeam) {
+    return res.status(404).json({ error: "Team not found" });
   }
 
   if (req.method === "GET") {
+    // GET /api/teams/:teamId/webhooks
     try {
-      const session = await getServerSession(req, res, authOptions);
-      if (!session) {
-        return res.status(401).json({ error: "Unauthorized" });
-      }
-
-      const userId = (session.user as CustomUser).id;
-
-      // Check if user is in team
-      const { role } = await prisma.userTeam.findUniqueOrThrow({
+      const webhooks = await prisma.webhook.findMany({
         where: {
-          userId_teamId: {
-            userId,
-            teamId,
-          },
-        },
-        select: {
-          role: true,
+          teamId: teamId,
         },
       });
 
-      if (!role || role !== "ADMIN") {
-        return res.status(403).json({ error: "Unauthorized" });
-      }
-
-      // Fetch webhooks
-      const webhooks = await prisma.incomingWebhook.findMany({
-        where: {
-          teamId,
-        },
-        select: {
-          id: true,
-          name: true,
-          externalId: true,
-          createdAt: true,
-        },
-        orderBy: {
-          createdAt: "desc",
-        },
-      });
-
-      // Transform the response to match the interface
-      const transformedWebhooks = webhooks.map((webhook) => ({
-        id: webhook.id,
-        name: webhook.name,
-        webhookId: webhook.externalId,
-        createdAt: webhook.createdAt,
-      }));
-
-      return res.status(200).json(transformedWebhooks);
+      return res.status(200).json(webhooks);
     } catch (error) {
-      console.error(error);
-      return res.status(500).json({ error: "Error fetching webhooks" });
+      console.error("Error fetching webhooks:", error);
+      return res.status(500).json({ error: "Failed to fetch webhooks" });
     }
-  }
-
-  if (req.method === "POST") {
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      return res.status(401).json({ error: "Unauthorized" });
-    }
-
-    const { teamId } = req.query as { teamId: string };
-    const userId = (session.user as CustomUser).id;
-
+  } else if (req.method === "POST") {
+    // POST /api/teams/:teamId/webhooks
     try {
-      // Check if user has access to team
-      const userTeam = await prisma.userTeam.findFirst({
-        where: {
-          teamId,
-          userId,
-        },
-      });
+      const { name, url, secret, triggers } = createWebhookSchema.parse(
+        req.body,
+      );
 
-      if (!userTeam) {
-        return res.status(401).json({ error: "Unauthorized" });
-      }
+      const webhookId = newId("webhook");
 
-      const { name } = req.body;
-      if (!name) {
-        return res.status(400).json({ error: "Name is required" });
-      }
-
-      // Generate webhook ID and secret
-      const webhookId = generateWebhookId(teamId);
-
-      // Create incoming webhook
-      const incomingWebhook = await prisma.incomingWebhook.create({
+      const webhook = await prisma.webhook.create({
         data: {
-          name: "New Incoming Webhook",
-          externalId: webhookId,
-          teamId,
+          pId: webhookId,
+          name: name,
+          url: url,
+          secret: secret,
+          triggers: triggers,
+          teamId: teamId,
         },
       });
 
-      return res.status(200).json({
-        name: incomingWebhook.name,
-        webhookId: incomingWebhook.externalId,
-      });
+      return res.status(201).json(webhook);
     } catch (error) {
       console.error("Error creating webhook:", error);
-      return res.status(500).json({ error: "Internal server error" });
-    }
-  }
-
-  if (req.method === "DELETE") {
-    try {
-      const session = await getServerSession(req, res, authOptions);
-      if (!session) {
-        return res.status(401).json({ error: "Unauthorized" });
-      }
-
-      const { teamId } = req.query as { teamId: string };
-      const { webhookId } = req.body;
-      const userId = (session.user as CustomUser).id;
-
-      // Check if user is in team and has admin role
-      const { role } = await prisma.userTeam.findUniqueOrThrow({
-        where: {
-          userId_teamId: {
-            userId,
-            teamId,
-          },
-        },
-        select: {
-          role: true,
-        },
-      });
-
-      // Only admins can delete webhooks
-      if (role !== "ADMIN") {
-        return res
-          .status(403)
-          .json({ error: "Forbidden: Admin access required" });
-      }
-
-      // Delete the webhook
-      await prisma.incomingWebhook.delete({
-        where: {
-          id: webhookId,
-          teamId, // Ensure webhook belongs to the team
-        },
-      });
-
-      return res.status(200).json({ message: "Webhook deleted successfully" });
-    } catch (error) {
-      console.error(error);
-      return res.status(500).json({ error: "Error deleting webhook" });
+      return res.status(500).json({ error: "Failed to create webhook" });
     }
   }
 

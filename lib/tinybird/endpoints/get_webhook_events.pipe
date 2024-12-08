@@ -1,0 +1,14 @@
+VERSION 1
+
+NODE endpoint
+SQL >
+    %
+    SELECT
+        *
+    FROM
+        webhook_events__v1
+    WHERE
+        webhook_id = {{ String(webhookId, required=True) }}
+    ORDER BY
+        timestamp DESC
+    LIMIT 100
