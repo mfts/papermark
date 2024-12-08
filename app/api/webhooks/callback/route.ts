@@ -9,7 +9,6 @@ import {
 export const POST = async (req: Request) => {
   const rawBody = await req.json();
 
-  console.log("Upstash-Signature", req.headers.get("Upstash-Signature"));
   const isValid = await receiver.verify({
     signature: req.headers.get("Upstash-Signature") || "",
     body: JSON.stringify(rawBody),
