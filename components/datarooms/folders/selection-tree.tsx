@@ -109,14 +109,21 @@ export function SidebarFolderTreeSelection({
   dataroomId,
   selectedFolder,
   setSelectedFolder,
+  filterFoldersFn
 }: {
   dataroomId: string;
   selectedFolder: TSelectedFolder;
   setSelectedFolder: React.Dispatch<React.SetStateAction<TSelectedFolder>>;
+  filterFoldersFn ?: (folders: DataroomFolderWithDocuments[]) => DataroomFolderWithDocuments[]
 }) {
-  const { folders, error } = useDataroomFoldersTree({ dataroomId });
+  let { folders, error } = useDataroomFoldersTree({ dataroomId });
 
   if (!folders || error) return null;
+
+  if (folders && folders.length && filterFoldersFn && typeof filterFoldersFn === 'function'){
+    folders = filterFoldersFn(folders)
+  }
+
 
   return (
     <SidebarFoldersSelection
