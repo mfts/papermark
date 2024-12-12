@@ -3,9 +3,6 @@ import { NextRequest } from "next/server";
 
 export const runtime = "edge";
 
-export const alt = "Papermark Year in Review";
-export const contentType = "image/png";
-
 export async function GET(req: NextRequest) {
   const InterBold = await fetch(
     new URL("@/public/_static/Inter-Bold.ttf", import.meta.url),
