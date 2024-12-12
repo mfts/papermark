@@ -147,7 +147,7 @@ export default function PapermarkYearInReviewEmail({
                 Your top document
               </Heading>
               <Text className="my-4 text-2xl font-bold leading-none text-gray-900">
-                "{topDocumentName}"
+                &quot;{topDocumentName}&quot;
               </Text>
               <Text className="mb-4 text-5xl font-medium text-gray-900">
                 {topDocumentViews} views
