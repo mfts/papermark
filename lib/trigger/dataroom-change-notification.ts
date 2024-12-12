@@ -1,8 +1,7 @@
 import { logger, task } from "@trigger.dev/sdk/v3";
 
 import prisma from "@/lib/prisma";
-
-import { ZNotificationPreferencesSchema } from "../types";
+import { ZViewerNotificationPreferencesSchema } from "@/lib/zod/schemas/notifications";
 
 type NotificationPayload = {
   dataroomId: string;
@@ -79,9 +78,10 @@ export const sendDataroomChangeNotificationTask = task({
         }
 
         // Skip if notifications are disabled for this dataroom
-        const parsedPreferences = ZNotificationPreferencesSchema.safeParse(
-          viewer.notificationPreferences,
-        );
+        const parsedPreferences =
+          ZViewerNotificationPreferencesSchema.safeParse(
+            viewer.notificationPreferences,
+          );
         if (
           parsedPreferences.success &&
           parsedPreferences.data.dataroom[payload.dataroomId]?.enabled === false
