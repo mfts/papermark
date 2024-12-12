@@ -64,9 +64,9 @@ export default function PapermarkYearInReviewEmail({
                 Your Year with Papermark
               </Heading>
               <Text className="mb-8 text-lg leading-8">
-                What a year it's been! Let's take a look at how you've used
-                Papermark to share your important documents and connect with
-                your audience.
+                What a year it&apos;s been! Let&apos;s take a look at how
+                you&apos;ve used Papermark to share your important documents and
+                connect with your audience.
               </Text>
               <Link
                 href="https://www.papermark.io"
@@ -103,8 +103,8 @@ export default function PapermarkYearInReviewEmail({
                 minutes on your documents
               </Text>
               <Text className="text-sm leading-5 text-gray-900">
-                That's a lot of engagement! Your documents are resonating with
-                your audience.
+                That&apos;s a lot of engagement! Your documents are resonating
+                with your audience.
               </Text>
 
               <Hr className="mt-6" style={{ borderColor: "#fb7a00" }} />
@@ -153,7 +153,7 @@ export default function PapermarkYearInReviewEmail({
                 {topDocumentViews} views
               </Text>
               <Text className="text-sm leading-5 text-gray-900">
-                This document really caught your audience's attention!
+                This document really caught your audience&apos;s attention!
               </Text>
             </Section>
 
@@ -174,7 +174,7 @@ export default function PapermarkYearInReviewEmail({
 
               <Hr className="mt-6" style={{ borderColor: "#e4c5a0" }} />
               <Heading className="pt-5 text-xs font-medium uppercase tracking-wider text-gray-900">
-                You're in the top
+                You&apos;re in the top
               </Heading>
               <Text className="my-4 text-7xl font-bold leading-none text-gray-900">
                 {sharerPercentile}%
@@ -183,8 +183,8 @@ export default function PapermarkYearInReviewEmail({
                 of sharers on Papermark
               </Text>
               <Text className="text-sm leading-5 text-gray-900">
-                You're one of our most active users. Thank you for sharing with
-                Papermark!
+                You&apos;re one of our most active users. Thank you for sharing
+                with Papermark!
               </Text>
             </Section>
 
@@ -215,7 +215,7 @@ export default function PapermarkYearInReviewEmail({
 
             <Section className="pb-6 text-center">
               <Text className="text-xl leading-8 text-gray-900">
-                We're excited to support you in the coming year!
+                We&apos;re excited to support you in the coming year!
               </Text>
               <Link
                 href="https://www.papermark.io"
