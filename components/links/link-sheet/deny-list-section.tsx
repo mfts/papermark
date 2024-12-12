@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 
 import { Textarea } from "@/components/ui/textarea";
 

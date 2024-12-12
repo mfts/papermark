@@ -1,7 +1,6 @@
 import { useRef, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
-import { motion } from "framer-motion";
 import {
   ChevronDownIcon,
   CircleCheckIcon,
@@ -12,6 +11,7 @@ import {
   SettingsIcon,
   TrashIcon,
 } from "lucide-react";
+import { motion } from "motion/react";
 import { mutate } from "swr";
 
 import { Button } from "@/components/ui/button";

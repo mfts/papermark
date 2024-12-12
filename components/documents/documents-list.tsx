@@ -15,7 +15,6 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import { motion } from "framer-motion";
 import {
   FileIcon,
   FolderIcon,
@@ -23,6 +22,7 @@ import {
   Trash2Icon,
   XIcon,
 } from "lucide-react";
+import { motion } from "motion/react";
 
 import { Skeleton } from "@/components/ui/skeleton";
 import { UploadNotificationDrawer } from "@/components/upload-notification";

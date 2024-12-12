@@ -1,6 +1,6 @@
 import { Dispatch, SetStateAction, useId } from "react";
 
-import { LayoutGroup, motion } from "framer-motion";
+import { LayoutGroup, motion } from "motion/react";
 
 import { cn } from "@/lib/utils";
 

@@ -3,8 +3,8 @@ import { ChangeEvent, useCallback, useEffect, useState } from "react";
 import { useTeam } from "@/context/team-context";
 import { LinkPreset } from "@prisma/client";
 import { Label } from "@radix-ui/react-label";
-import { motion } from "framer-motion";
 import { Upload as ArrowUpTrayIcon, PlusIcon } from "lucide-react";
+import { motion } from "motion/react";
 import useSWRImmutable from "swr/immutable";
 
 import { Input } from "@/components/ui/input";

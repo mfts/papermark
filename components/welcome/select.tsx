@@ -1,7 +1,7 @@
 import { useRouter } from "next/router";
 
-import { motion } from "framer-motion";
 import { FileChartPieIcon, FileIcon, PresentationIcon } from "lucide-react";
+import { motion } from "motion/react";
 
 import NotionIcon from "@/components/shared/icons/files/notion";
 
