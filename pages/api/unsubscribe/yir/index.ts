@@ -3,7 +3,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/lib/prisma";
 import { ratelimit } from "@/lib/redis";
 import { verifyUnsubscribeToken } from "@/lib/utils/unsubscribe";
-import { ZViewerNotificationPreferencesSchema } from "@/lib/zod/schemas/notifications";
+import { ZUserNotificationPreferencesSchema } from "@/lib/zod/schemas/notifications";
 
 export default async function handle(
   req: NextApiRequest,
@@ -24,7 +24,7 @@ export default async function handle(
 
     if (req.method === "GET") {
       // For GET requests, redirect to the unsubscribe page
-      return res.redirect(`/unsubscribe?type=dataroom&token=${token}`);
+      return res.redirect(`/unsubscribe?type=yir&token=${token}`);
     }
 
     // Rate limit the unsubscribe request
@@ -57,67 +57,61 @@ export default async function handle(
       return;
     }
 
-    const { viewerId, dataroomId, teamId } = payload;
-
-    if (!dataroomId) {
-      res.status(400).json({ message: "Dataroom ID is required" });
-      return;
-    }
+    const { viewerId, teamId } = payload;
 
     // Fetch the current notification preferences
-    const viewer = await prisma.viewer.findUnique({
-      where: { id: viewerId, teamId },
+    const userTeam = await prisma.userTeam.findUnique({
+      where: {
+        userId_teamId: {
+          userId: viewerId,
+          teamId,
+        },
+      },
       select: { notificationPreferences: true },
     });
 
-    if (!viewer) {
-      res.status(404).json({ message: "Viewer not found" });
+    if (!userTeam) {
+      res.status(404).json({ message: "User not found" });
       return;
     }
 
-    // Parse the existing preferences or initialize an empty object
-    // Example preferences object:
-    // {
-    //   "dataroom": {
-    //     "123": { enabled: true, frequency: "instant" },
-    //     "456": { enabled: false, frequency: "daily" }
-    //   },
-    //   "document": {
-    //     "789": { enabled: true, frequency: "weekly" }
-    //   }
-    // }
+    // Parse existing preferences or initialize empty object
     let updatedPreferences;
 
-    if (viewer.notificationPreferences) {
+    if (userTeam.notificationPreferences) {
       // Parse the existing preferences
-      const defaultPreferences = ZViewerNotificationPreferencesSchema.safeParse(
-        viewer.notificationPreferences,
+      const defaultPreferences = ZUserNotificationPreferencesSchema.safeParse(
+        userTeam.notificationPreferences,
       );
 
-      // Update the preferences for the specific dataroom
+      // Update the preferences to opt out of year in review
       updatedPreferences = {
         ...defaultPreferences.data,
-        dataroom: {
-          ...defaultPreferences.data?.dataroom,
-          [dataroomId]: { enabled: false },
-        },
+        yearInReview: { enabled: false },
       };
     } else {
-      // If no preferences exist, initialize with the dataroom preference
+      // If no preferences exist, initialize with year in review preference
       updatedPreferences = {
-        dataroom: { [dataroomId]: { enabled: false } },
+        yearInReview: { enabled: false },
       };
     }
 
-    // Update the viewer's notification preferences in the database
-    await prisma.viewer.update({
-      where: { id: viewerId, teamId },
-      data: { notificationPreferences: updatedPreferences },
+    // Update the user's notification preferences in the database
+    await prisma.userTeam.update({
+      where: {
+        userId_teamId: {
+          userId: viewerId,
+          teamId,
+        },
+      },
+      data: {
+        notificationPreferences: updatedPreferences,
+      },
     });
 
-    res
-      .status(200)
-      .json({ message: "Successfully unsubscribed from notifications." });
+    res.status(200).json({
+      message: "Successfully unsubscribed from Year in Review emails.",
+    });
   } catch (error) {
     res.status(500).json({ message: (error as Error).message });
   }
