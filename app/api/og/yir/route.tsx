@@ -4,10 +4,6 @@ import { NextRequest } from "next/server";
 export const runtime = "edge";
 
 export const alt = "Papermark Year in Review";
-export const size = {
-  width: 1200,
-  height: 630,
-};
 export const contentType = "image/png";
 
 export async function GET(req: NextRequest) {
@@ -15,6 +11,10 @@ export async function GET(req: NextRequest) {
     new URL("@/public/_static/Inter-Bold.ttf", import.meta.url),
   ).then((res) => res.arrayBuffer());
 
+  const size = {
+    width: 1200,
+    height: 630,
+  };
   const year = req.nextUrl.searchParams.get("year") || "2024";
   const minutesSpentOnDocs =
     req.nextUrl.searchParams.get("minutesSpentOnDocs") || "1000";
