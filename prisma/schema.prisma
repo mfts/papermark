@@ -120,6 +120,8 @@ model UserTeam {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
 
+  notificationPreferences Json? // Format: { yearInReview: { "enabled": false } }
+
   @@id([userId, teamId])
   @@index([userId])
   @@index([teamId])
@@ -706,5 +708,23 @@ model Webhook {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@index([teamId])
+}
+
+
+model YearInReview {
+  id String @id @default(cuid())
+  teamId String
+  status        String   @default("pending") // pending, processing, completed, failed
+  attempts      Int      @default(0)
+  lastAttempted DateTime?
+  error         String?
+
+  stats Json
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, attempts])
   @@index([teamId])
 }
