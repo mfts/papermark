@@ -36,11 +36,13 @@ export const LinkOptions = ({
   setData,
   linkType,
   editLink,
+  isNotionLink,
 }: {
   data: DEFAULT_LINK_TYPE;
   setData: React.Dispatch<React.SetStateAction<DEFAULT_LINK_TYPE>>;
   linkType: LinkType;
   editLink?: boolean;
+  isNotionLink?: boolean;
 }) => {
   const { plan, trial } = usePlan();
   const { limits } = useLimits();
@@ -75,7 +77,7 @@ export const LinkOptions = ({
     <div>
       <EmailProtectionSection {...{ data, setData }} />
       <AllowNotificationSection {...{ data, setData }} />
-      <AllowDownloadSection {...{ data, setData }} />
+      <AllowDownloadSection {...{ data, setData }} isAllowed={!isNotionLink} />
       <ExpirationSection {...{ data, setData }} />
       <OGSection
         {...{ data, setData }}
