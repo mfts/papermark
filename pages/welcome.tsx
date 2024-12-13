@@ -3,8 +3,8 @@ import { useRouter } from "next/router";
 import { useEffect } from "react";
 import { useState } from "react";
 
-import { AnimatePresence } from "framer-motion";
 import { ArrowLeft as ArrowLeftIcon } from "lucide-react";
+import { AnimatePresence } from "motion/react";
 
 import { Button } from "@/components/ui/button";
 import Dataroom from "@/components/welcome/dataroom";

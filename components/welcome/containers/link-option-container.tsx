@@ -4,7 +4,7 @@ import { Dispatch, SetStateAction, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { LinkType } from "@prisma/client";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { toast } from "sonner";
 
 import { DEFAULT_LINK_TYPE } from "@/components/links/link-sheet";

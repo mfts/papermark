@@ -1,7 +1,7 @@
 import { useRouter } from "next/router";
 
-import { motion } from "framer-motion";
 import { File as DocumentIcon, ServerIcon } from "lucide-react";
+import { motion } from "motion/react";
 
 import { STAGGER_CHILD_VARIANTS } from "@/lib/constants";
 

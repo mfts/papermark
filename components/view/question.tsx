@@ -1,7 +1,7 @@
 import { useState } from "react";
 
-import { motion } from "framer-motion";
 import { ThumbsDownIcon, ThumbsUpIcon } from "lucide-react";
+import { motion } from "motion/react";
 
 import { STAGGER_CHILD_VARIANTS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
