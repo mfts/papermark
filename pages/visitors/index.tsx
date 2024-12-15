@@ -23,7 +23,7 @@ export default function Visitors() {
 
   return (
     <AppLayout>
-      <div className="p-4 pb-0 sm:m-4 sm:py-4">
+      <div className="p-4 pb-0 sm:m-4 sm:mt-0 sm:py-4">
         <section className="mb-4 flex items-center justify-between md:mb-8 lg:mb-12">
           <div className="space-y-1">
             <h2 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
