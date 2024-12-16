@@ -40,6 +40,7 @@ export default async function handle(
       type: fileType,
       folderPathName,
       fileSize,
+      contentType,
     } = req.body as {
       name: string;
       url: string;
@@ -48,6 +49,7 @@ export default async function handle(
       type?: string;
       folderPathName?: string;
       fileSize?: number;
+      contentType: string;
     };
 
     try {
@@ -77,6 +79,8 @@ export default async function handle(
           name: name,
           numPages: numPages,
           file: fileUrl,
+          originalFile: fileUrl,
+          contentType,
           type: type,
           storageType,
           ownerId: (session.user as CustomUser).id,
@@ -96,6 +100,8 @@ export default async function handle(
               file: fileUrl,
               type: type,
               storageType,
+              originalFile: fileUrl,
+              contentType,
               numPages: numPages,
               fileSize: fileSize,
               isPrimary: true,
