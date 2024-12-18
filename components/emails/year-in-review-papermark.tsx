@@ -49,7 +49,7 @@ export default function PapermarkYearInReviewEmail({
   return (
     <Html>
       <Head />
-      <Preview>Your Year in Review with Papermark</Preview>
+      <Preview>See your stats from 2024</Preview>
       <Tailwind>
         <Body className="bg-white font-sans">
           <Container className="mx-auto w-full max-w-[600px] p-0">
@@ -65,11 +65,10 @@ export default function PapermarkYearInReviewEmail({
               </Heading>
               <Text className="mb-8 text-lg leading-8">
                 What a year it&apos;s been! Let&apos;s take a look at how
-                you&apos;ve used Papermark to share your important documents and
-                connect with your audience.
+                you&apos;ve used Papermark to share your important documents.
               </Text>
               <Link
-                href="https://www.papermark.io"
+                href={`https://x.com/intent/post?text=In%202024%2C%20my%20documents%20have%20been%20viewed%20${minutesSpentOnDocs}%20minutes%20on%20%40papermarkio%2C%20by%3A%0A%0A%E2%80%A2%20Uploading%20${uploadedDocuments}%20documents%0A%E2%80%A2%20Sharing%20${sharedLinks}%20links%0A%E2%80%A2%20Receiving%20${receivedViews}%20views%0A%0A&url=https%3A%2F%2Fwww.papermark.io%2Fyear-in-review`}
                 className="inline-flex items-center rounded-full bg-gray-900 px-12 py-4 text-center text-sm font-bold text-white no-underline"
               >
                 <svg
@@ -79,9 +78,9 @@ export default function PapermarkYearInReviewEmail({
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                   className="lucide lucide-upload mr-2 h-4 w-4"
                 >
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
@@ -104,7 +103,7 @@ export default function PapermarkYearInReviewEmail({
               </Text>
               <Text className="text-sm leading-5 text-gray-900">
                 That&apos;s a lot of engagement! Your documents are resonating
-                with your audience.
+                with your visitors.
               </Text>
 
               <Hr className="mt-6" style={{ borderColor: "#fb7a00" }} />
@@ -153,7 +152,7 @@ export default function PapermarkYearInReviewEmail({
                 {topDocumentViews} views
               </Text>
               <Text className="text-sm leading-5 text-gray-900">
-                This document really caught your audience&apos;s attention!
+                This document really caught your visitor&apos;s attention!
               </Text>
             </Section>
 
@@ -173,19 +172,32 @@ export default function PapermarkYearInReviewEmail({
               </Text>
 
               <Hr className="mt-6" style={{ borderColor: "#e4c5a0" }} />
-              <Heading className="pt-5 text-xs font-medium uppercase tracking-wider text-gray-900">
-                You&apos;re in the top
-              </Heading>
-              <Text className="my-4 text-7xl font-bold leading-none text-gray-900">
-                {sharerPercentile}%
-              </Text>
-              <Text className="mb-4 text-xl font-medium text-gray-900">
-                of sharers on Papermark
-              </Text>
-              <Text className="text-sm leading-5 text-gray-900">
-                You&apos;re one of our most active users. Thank you for sharing
-                with Papermark!
-              </Text>
+              {sharerPercentile <= 10 ? (
+                <>
+                  <Heading className="pt-5 text-xs font-medium uppercase tracking-wider text-gray-900">
+                    You&apos;re in the top
+                  </Heading>
+                  <Text className="my-4 text-7xl font-bold leading-none text-gray-900">
+                    {sharerPercentile}%
+                  </Text>
+                  <Text className="mb-4 text-xl font-medium text-gray-900">
+                    of sharers on Papermark
+                  </Text>
+                  <Text className="text-sm leading-5 text-gray-900">
+                    You&apos;re one of our most active users. Thank you for
+                    sharing with Papermark!
+                  </Text>
+                </>
+              ) : (
+                <>
+                  <Heading className="pt-5 text-xs font-medium uppercase tracking-wider text-gray-900">
+                    So close to the top 10%
+                  </Heading>
+                  <Text className="my-4 text-2xl font-medium text-gray-900">
+                    Keep up sharing in 2025!
+                  </Text>
+                </>
+              )}
             </Section>
 
             <Section className="my-6 rounded-2xl bg-[#10b981]/10 bg-[radial-gradient(circle_at_bottom_right,#10b981_0%,transparent_60%)] p-8 text-center">
@@ -209,16 +221,17 @@ export default function PapermarkYearInReviewEmail({
                 </Column>
               </Row>
               <Text className="mt-4 text-sm leading-5 text-[#065f46]">
-                Your content is making waves across the globe!
+                Your documents get attention from all over the world!
               </Text>
             </Section>
 
             <Section className="pb-6 text-center">
               <Text className="text-xl leading-8 text-gray-900">
-                We&apos;re excited to support you in the coming year!
+                We&apos;re excited to support you next year! <br />
+                Happy Holidays from the Papermark team :)
               </Text>
               <Link
-                href="https://www.papermark.io"
+                href={`https://x.com/intent/post?text=In%202024%2C%20my%20documents%20have%20been%20viewed%20${minutesSpentOnDocs}%20minutes%20on%20%40papermarkio%2C%20by%3A%0A%0A%E2%80%A2%20Uploading%20${uploadedDocuments}%20documents%0A%E2%80%A2%20Sharing%20${sharedLinks}%20links%0A%E2%80%A2%20Receiving%20${receivedViews}%20views%0A%0A&url=https%3A%2F%2Fwww.papermark.io%2Fyear-in-review`}
                 className="mt-4 inline-flex items-center rounded-full bg-gray-900 px-12 py-4 text-center text-sm font-bold text-white no-underline"
               >
                 <svg
@@ -228,9 +241,9 @@ export default function PapermarkYearInReviewEmail({
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                   className="lucide lucide-upload mr-2 h-4 w-4"
                 >
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
@@ -240,10 +253,10 @@ export default function PapermarkYearInReviewEmail({
                 Share your stats
               </Link>
               <Link
-                href="https://www.papermark.io"
+                href="https://app.papermark.io/documents"
                 className="mt-4 block items-center text-center text-sm font-bold text-gray-900 no-underline"
               >
-                Share on LinkedIn
+                Go to your dashboard
               </Link>
             </Section>
 
