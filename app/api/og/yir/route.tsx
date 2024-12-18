@@ -4,14 +4,14 @@ import { NextRequest } from "next/server";
 export const runtime = "edge";
 
 export async function GET(req: NextRequest) {
-  const InterBold = await fetch(
+  const inter = await fetch(
+    new URL("@/styles/Inter-Regular.ttf", import.meta.url),
+  ).then((res) => res.arrayBuffer());
+
+  const interBold = await fetch(
     new URL("@/public/_static/Inter-Bold.ttf", import.meta.url),
   ).then((res) => res.arrayBuffer());
 
-  const size = {
-    width: 1200,
-    height: 630,
-  };
   const year = req.nextUrl.searchParams.get("year") || "2024";
   const minutesSpentOnDocs =
     req.nextUrl.searchParams.get("minutesSpentOnDocs") || "1000";
@@ -23,90 +23,76 @@ export async function GET(req: NextRequest) {
   return new ImageResponse(
     (
       <div
-        tw="flex flex-col bg-gray-50 w-full h-full"
+        tw="flex bg-black w-full h-full items-center justify-between"
         style={{ padding: "48px" }}
       >
-        {/* Header */}
-        <div tw="flex flex-col items-center mb-16">
-          <div tw="flex text-5xl font-bold mb-2">Papermark</div>
-          <div tw="flex text-4xl mb-2">Year in Review</div>
-          <div tw="flex text-5xl font-bold">{year}</div>
+        {/* Left Side Text */}
+        <div tw="flex flex-col text-white" style={{ marginLeft: "48px" }}>
+          <div tw="flex text-7xl font-bold mb-4 tracking-tighter">
+            Papermark
+          </div>
+          <div tw="flex text-5xl mb-4">Year in Review</div>
+          <div tw="flex text-7xl font-bold">{year}</div>
         </div>
 
-        {/* Stats Grid */}
-        <div tw="flex w-full justify-between">
-          {/* Minutes Spent */}
-          <div
-            tw="flex flex-col items-center justify-center rounded-3xl p-8"
-            style={{
-              width: "260px",
-              height: "260px",
-              background:
-                "linear-gradient(135deg, rgba(251, 122, 0, 0.2), rgba(251, 122, 0, 0.7))",
-            }}
-          >
-            <div tw="flex text-2xl text-[#a63b00] mb-2">Minutes Spent</div>
-            <div tw="flex text-4xl font-bold">{minutesSpentOnDocs}</div>
+        {/* Ticket Container */}
+        <div
+          tw="flex flex-col bg-[#fb7a00] rounded-3xl relative overflow-hidden justify-between"
+          style={{
+            width: "400px",
+            height: "480px",
+            marginRight: "48px",
+            boxShadow: "0 0 100px -15px rgba(251, 122, 0, 0.3)",
+            border: "1px solid rgba(255, 255, 255, 0.1)",
+          }}
+        >
+          {/* Header Section */}
+          <div tw="flex items-start p-8 items-center">
+            <div tw="flex text-2xl font-bold text-white tracking-tighter">
+              Papermark
+            </div>
           </div>
 
-          {/* Documents */}
-          <div
-            tw="flex flex-col items-center justify-center rounded-3xl p-8"
-            style={{
-              width: "260px",
-              height: "260px",
-              background:
-                "linear-gradient(135deg, rgba(75, 85, 99, 0.2), rgba(75, 85, 99, 0.7))",
-            }}
-          >
-            <div tw="flex text-2xl text-gray-600 mb-2">Documents</div>
-            <div tw="flex text-4xl font-bold">{uploadedDocuments}</div>
+          {/* Main Content */}
+          <div tw="flex flex-col p-8 border-t border-white/20 h-[240px] justify-center">
+            <div tw="flex text-7xl font-bold text-white mb-2">
+              {minutesSpentOnDocs}
+            </div>
+            <div tw="flex text-2xl font-normal text-white/80">
+              minutes viewed
+            </div>
           </div>
 
-          {/* Links Shared */}
-          <div
-            tw="flex flex-col items-center justify-center rounded-3xl p-8"
-            style={{
-              width: "260px",
-              height: "260px",
-              background:
-                "linear-gradient(135deg, rgba(228, 197, 160, 0.2), rgba(228, 197, 160, 0.7))",
-            }}
-          >
-            <div tw="flex text-2xl text-[#9c7b4a] mb-2">Links Shared</div>
-            <div tw="flex text-4xl font-bold">{sharedLinks}</div>
+          {/* Year */}
+          <div tw="flex p-8 text-xl text-white/80 border-t border-white/20 items-center">
+            {year}
           </div>
 
-          {/* Total Views */}
-          <div
-            tw="flex flex-col items-center justify-center rounded-3xl p-8"
-            style={{
-              width: "260px",
-              height: "260px",
-              background:
-                "linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(16, 185, 129, 0.7))",
-            }}
-          >
-            <div tw="flex text-2xl text-[#065f46] mb-2">Total Views</div>
-            <div tw="flex text-4xl font-bold">{receivedViews}</div>
+          {/* Footer */}
+          <div tw="flex p-8 text-sm text-white/60 border-t border-white/20 items-center">
+            YEAR IN REVIEW
           </div>
-        </div>
-
-        {/* Footer */}
-        <div tw="flex w-full justify-center mt-16">
-          <div tw="flex text-xl text-gray-400">papermark.io</div>
         </div>
       </div>
     ),
     {
-      ...size,
+      width: 1200,
+      height: 630,
       headers: {
         "Cache-Control": "public, max-age=3600, immutable",
       },
       fonts: [
         {
-          name: "Inter Bold",
-          data: InterBold,
+          name: "Inter",
+          data: inter,
+          weight: 400,
+          style: "normal",
+        },
+        {
+          name: "Inter",
+          data: interBold,
+          weight: 700,
+          style: "normal",
         },
       ],
     },

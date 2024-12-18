@@ -8,7 +8,7 @@ import { resend } from "@/lib/resend";
 import { log } from "@/lib/utils";
 import { generateUnsubscribeUrl } from "@/lib/utils/unsubscribe";
 
-const BATCH_SIZE = 5; // Maximum number of emails Resend supports in one batch
+const BATCH_SIZE = 100; // Maximum number of emails Resend supports in one batch
 const MAX_ATTEMPTS = 3;
 const RATE_LIMIT_DELAY = 10000; // 10 seconds
 
@@ -52,57 +52,63 @@ function msToMinutes(ms: number): number {
 }
 
 export async function processEmailQueue() {
-  if (!resend) return;
+  if (!resend) {
+    console.log("❌ Resend client not initialized");
+    return;
+  }
+
   const jobs = await prisma.yearInReview.findMany({
     where: {
-      AND: [{ status: "pending" }, { attempts: { lt: MAX_ATTEMPTS } }],
+      AND: [
+        { teamId: "cluqtfmcr0001zkza4xcgqatw" },
+        { status: "pending" },
+        { attempts: { lt: MAX_ATTEMPTS } },
+        { stats: { path: ["totalViews"], gt: 1 } },
+      ],
     },
     take: BATCH_SIZE,
     orderBy: { createdAt: "asc" },
   });
 
-  if (jobs.length === 0) return;
+  if (jobs.length === 0) {
+    console.log("ℹ️ No jobs to process");
+    return;
+  }
 
-  // Mark all jobs as processing
-  await prisma.yearInReview.updateMany({
-    where: {
-      id: {
-        in: jobs.map((job) => job.id),
-      },
-    },
-    data: {
-      status: "processing",
-      attempts: { increment: 1 },
-      lastAttempted: new Date(),
-    },
-  });
+  console.log(
+    `📬 Processing ${jobs.length} jobs:`,
+    jobs.map((job) => job.id),
+  );
 
   try {
-    // Fetch team data for all jobs in parallel
-    const teamsData = await Promise.all(
-      jobs.map(async (job) => {
-        const team = await prisma.team.findUnique({
-          where: { id: job.teamId },
-          include: {
-            users: {
-              where: { role: { in: ["ADMIN", "MANAGER"] } },
-              include: {
-                user: {
-                  select: {
-                    email: true,
+    // Fetch team data for all jobs
+    const teamsData = await prisma.$transaction(async (tx) => {
+      return Promise.all(
+        jobs.map(async (job) => {
+          const team = await tx.team.findUnique({
+            where: { id: job.teamId },
+            include: {
+              users: {
+                where: { role: { in: ["ADMIN", "MANAGER"] } },
+                include: {
+                  user: {
+                    select: {
+                      email: true,
+                    },
                   },
                 },
               },
             },
-          },
-        });
+          });
 
-        return {
-          job,
-          team,
-        };
-      }),
-    );
+          return {
+            job,
+            team,
+          };
+        }),
+      );
+    });
+    console.log(`📋 Found ${teamsData.length} teams with valid data`);
 
     // Prepare batch of emails
     const emailsWithMetadata: EmailWithMetadata[] = (
@@ -159,15 +165,31 @@ export async function processEmailQueue() {
           }),
       )
     ).flat();
+    console.log(`📧 Preparing to send ${emailsWithMetadata.length} emails`);
 
     // Process emails in batches
     for (let i = 0; i < emailsWithMetadata.length; i += BATCH_SIZE) {
       const batch = emailsWithMetadata.slice(i, i + BATCH_SIZE);
+      console.log(
+        `\n🚀 Sending batch ${Math.floor(i / BATCH_SIZE) + 1} of ${Math.ceil(emailsWithMetadata.length / BATCH_SIZE)}`,
+      );
+      console.log(
+        `📨 Recipients:`,
+        batch.map((b) => b.email.to),
+      );
 
       try {
-        // Extract just the email objects for the batch request
         const emailBatch = batch.map((item) => item.email);
         const { data, error } = await resend.batch.send(emailBatch);
+
+        if (error) {
+          console.log(`❌ Batch send failed:`, error);
+        } else {
+          console.log(`✅ Batch sent successfully:`, {
+            sent: data?.data.length,
+            total: batch.length,
+          });
+        }
 
         // Track success/failure counts by job
         const jobCounts = new Map<
@@ -233,49 +255,16 @@ export async function processEmailQueue() {
 
         // Respect rate limit between batches
         if (i + BATCH_SIZE < emailsWithMetadata.length) {
+          console.log(
+            `⏳ Waiting ${RATE_LIMIT_DELAY / 1000}s before next batch...`,
+          );
           await new Promise((resolve) => setTimeout(resolve, RATE_LIMIT_DELAY));
         }
       } catch (error) {
-        log({
-          message: `Batch send failed: ${error instanceof Error ? error.message : "Unknown error"}`,
-          type: "error",
-          mention: true,
-        });
-
-        // If the entire batch fails, mark affected jobs for retry
-        const jobIds = new Set(batch.map((item) => item.jobId));
-
-        await prisma.yearInReview.updateMany({
-          where: {
-            id: {
-              in: Array.from(jobIds),
-            },
-          },
-          data: {
-            status: "pending",
-            error: error instanceof Error ? error.message : "Unknown error",
-          },
-        });
+        console.log(`❌ Error processing batch:`, error);
       }
     }
   } catch (error) {
-    log({
-      message: `Email queue processing failed: ${error instanceof Error ? error.message : "Unknown error"}`,
-      type: "error",
-      mention: true,
-    });
-
-    // Reset all jobs to pending or failed
-    await prisma.yearInReview.updateMany({
-      where: {
-        id: {
-          in: jobs.map((job) => job.id),
-        },
-      },
-      data: {
-        status: "pending",
-        error: error instanceof Error ? error.message : "Unknown error",
-      },
-    });
+    console.log(`❌ Fatal error processing email queue:`, error);
   }
 }
