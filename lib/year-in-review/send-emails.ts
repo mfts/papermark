@@ -60,7 +60,15 @@ export async function processEmailQueue() {
   const jobs = await prisma.yearInReview.findMany({
     where: {
       AND: [
-        { teamId: "cluqtfmcr0001zkza4xcgqatw" },
+        {
+          teamId: {
+            in: [
+              "cluqtfmcr0001zkza4xcgqatw",
+              "clopqa2mm0002etseyjkza9hw",
+              "clwc059tk00047xqu0zfhcy7n",
+            ],
+          },
+        },
         { status: "pending" },
         { attempts: { lt: MAX_ATTEMPTS } },
         { stats: { path: ["totalViews"], gt: 1 } },
