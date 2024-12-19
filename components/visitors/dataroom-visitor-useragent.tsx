@@ -1,9 +1,9 @@
-import { useVisitorUserAgent } from "@/lib/swr/use-stats";
+import { useDataroomVisitorUserAgent } from "@/lib/swr/use-dataroom-stats";
 
 import VisitorUserAgentBase from "./visitor-useragent-base";
 
-export default function VisitorUserAgent({ viewId }: { viewId: string }) {
-  const { userAgent, error } = useVisitorUserAgent(viewId);
+export function DataroomVisitorUserAgent({ viewId }: { viewId: string }) {
+  const { userAgent, error } = useDataroomVisitorUserAgent(viewId);
 
   if (error) {
     return <div>No useragent info</div>;
