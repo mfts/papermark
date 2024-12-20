@@ -9,6 +9,7 @@ export type TPlanLimits = {
   customDomainOnPro: boolean;
   customDomainInDataroom: boolean;
   advancedLinkControlsOnPro: boolean | null;
+  watermarkOnBusiness?: boolean | null;
 };
 
 export const FREE_PLAN_LIMITS = {

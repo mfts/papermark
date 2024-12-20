@@ -52,6 +52,7 @@ export const LinkOptions = ({
   const allowAdvancedLinkControls = limits
     ? limits?.advancedLinkControlsOnPro
     : false;
+  const allowWatermarkOnBusiness = limits?.watermarkOnBusiness ?? false;
 
   const [openUpgradeModal, setOpenUpgradeModal] = useState<boolean>(false);
   const [trigger, setTrigger] = useState<string>("");
@@ -136,7 +137,7 @@ export const LinkOptions = ({
       />
       <WatermarkSection
         {...{ data, setData }}
-        isAllowed={isTrial || isDatarooms}
+        isAllowed={isTrial || isDatarooms || allowWatermarkOnBusiness}
         handleUpgradeStateChange={handleUpgradeStateChange}
       />
       <AgreementSection
