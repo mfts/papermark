@@ -12,6 +12,7 @@ export type LimitProps = {
   customDomainOnPro: boolean;
   customDomainInDataroom: boolean;
   advancedLinkControlsOnPro: boolean | undefined | null;
+  watermarkOnBusiness: boolean | undefined | null;
   usage: {
     documents: number;
     links: number;
