@@ -294,40 +294,8 @@ export default function DocumentHeader({
       }
       const data = await response.json();
 
-      // Converting the json Array into CSV without using parser.
-      const csvString = [
-        [
-          "Viewed at",
-          "Name",
-          "Email",
-          "Link Name",
-          "Total Visit Duration (s)",
-          "Total Document Completion (%)",
-          "Document version",
-          "Downloaded at",
-          "Verified",
-          "Agreement accepted",
-          "Viewed from dataroom",
-        ],
-        ...data.visits.map((item: any) => [
-          item.viewedAt,
-          item.viewerName,
-          item.viewerEmail,
-          item.linkName,
-          item.totalVisitDuration / 1000.0,
-          item.visitCompletion,
-          item.documentVersion,
-          item.downloadedAt,
-          item.verified,
-          item.agreement,
-          item.dataroom,
-        ]),
-      ]
-        .map((row) => row.join(","))
-        .join("\n");
-
-      // Creating csv as per the time stamp.
-      const blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
+      // Create and download the CSV file
+      const blob = new Blob([data.visits], { type: "text/csv;charset=utf-8;" });
       const url = URL.createObjectURL(blob);
       const link = window.document.createElement("a");
       link.href = url;
@@ -339,6 +307,7 @@ export default function DocumentHeader({
       link.click();
       window.document.body.removeChild(link);
       URL.revokeObjectURL(url);
+
       toast.success("CSV file downloaded successfully");
     } catch (error) {
       console.error("Error:", error);
