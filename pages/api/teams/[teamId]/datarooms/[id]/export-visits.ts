@@ -98,12 +98,7 @@ export default async function handler(
             agreement: {
               select: {
                 name: true,
-                links: {
-                  select: {
-                    id: true,
-                  },
-                  take: 1,
-                },
+                content: true,
               },
             },
           },
@@ -204,10 +199,8 @@ export default async function handler(
             dataroomView.agreementResponse?.agreement.name || "NaN",
           agreementAcceptedAt:
             dataroomView.agreementResponse?.createdAt.toISOString() || "NaN",
-          // prettier-ignore
-          agreementContent: dataroomView.agreementResponse?.agreement.links[0]?.id
-            ? `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${dataroomView.agreementResponse?.agreement.links[0]?.id}`
-            : "NaN",
+          agreementContent:
+            dataroomView.agreementResponse?.agreement.content || "NaN",
 
           // Document view details
           documentViews: documentViewDetails,
