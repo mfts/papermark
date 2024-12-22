@@ -83,12 +83,7 @@ export default async function handler(
             agreement: {
               select: {
                 name: true,
-                links: {
-                  select: {
-                    id: true,
-                  },
-                  take: 1,
-                },
+                content: true,
               },
             },
           },
@@ -167,9 +162,7 @@ export default async function handler(
           view.verified ? "Yes" : "No",
           view.agreementResponse ? "Yes" : "NaN",
           view.agreementResponse?.agreement.name || "NaN",
-          view.agreementResponse?.agreement.links[0]?.id
-            ? `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${view.agreementResponse?.agreement.links[0]?.id}`
-            : "NaN",
+          view.agreementResponse?.agreement.content || "NaN",
           view.agreementResponse?.createdAt.toISOString() || "NaN",
           view.dataroomId ? "Yes" : "No",
         ].join(","),
