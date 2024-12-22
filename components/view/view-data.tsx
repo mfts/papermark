@@ -57,6 +57,18 @@ export default function ViewData({
       theme={notionData.theme}
       screenshotProtectionEnabled={link.enableScreenshotProtection!}
     />
+  ) : document.downloadOnly ? (
+    <DownloadOnlyViewer
+      file={viewData.file!}
+      linkId={link.id}
+      viewId={viewData.viewId}
+      documentId={document.id}
+      allowDownload={true}
+      versionNumber={document.versions[0].versionNumber}
+      brand={brand}
+      documentName={document.name}
+      isPreview={viewData.isPreview}
+    />
   ) : viewData.fileType === "sheet" && viewData.sheetData ? (
     <ExcelViewer
       linkId={link.id}
@@ -133,18 +145,6 @@ export default function ViewData({
       }
       ipAddress={viewData.ipAddress}
       linkName={link.name ?? `Link #${link.id.slice(-5)}`}
-    />
-  ) : document.downloadOnly ? (
-    <DownloadOnlyViewer
-      file={viewData.file!}
-      linkId={link.id}
-      viewId={viewData.viewId}
-      documentId={document.id}
-      allowDownload={true}
-      versionNumber={document.versions[0].versionNumber}
-      brand={brand}
-      documentName={document.name}
-      isPreview={viewData.isPreview}
     />
   ) : (
     <PDFViewer

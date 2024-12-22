@@ -353,6 +353,20 @@ export default function DataroomView({
           screenshotProtectionEnabled={link.enableScreenshotProtection!}
         />
       </div>
+    ) : documentData?.downloadOnly ? (
+      <DownloadOnlyViewer
+        file={viewData.file!}
+        linkId={link.id}
+        documentId={documentData.id}
+        viewId={viewData.viewId}
+        allowDownload={true}
+        versionNumber={documentData.documentVersionNumber}
+        brand={brand}
+        documentName={documentData.name}
+        isPreview={viewData.isPreview}
+        dataroomId={dataroom.id}
+        setDocumentData={setDocumentData}
+      />
     ) : viewData.fileType === "sheet" && viewData.sheetData ? (
       <div className="bg-gray-950">
         <ExcelViewer
@@ -441,20 +455,6 @@ export default function DataroomView({
           linkName={link.name ?? `Link #${link.id.slice(-5)}`}
         />
       </div>
-    ) : documentData?.downloadOnly ? (
-      <DownloadOnlyViewer
-        file={viewData.file!}
-        linkId={link.id}
-        documentId={documentData.id}
-        viewId={viewData.viewId}
-        allowDownload={true}
-        versionNumber={documentData.documentVersionNumber}
-        brand={brand}
-        documentName={documentData.name}
-        isPreview={viewData.isPreview}
-        dataroomId={dataroom.id}
-        setDocumentData={setDocumentData}
-      />
     ) : null;
   }
 

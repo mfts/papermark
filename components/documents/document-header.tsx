@@ -13,6 +13,7 @@ import {
   SheetIcon,
   Sparkles,
   TrashIcon,
+  ViewIcon,
 } from "lucide-react";
 import { usePlausible } from "next-plausible";
 import { useTheme } from "next-themes";
@@ -315,6 +316,33 @@ export default function DocumentHeader({
         "An error occurred while downloading the CSV. Please try again.",
       );
     }
+  };
+
+  // Make a document download only or viewable
+  const toggleDownloadOnly = async () => {
+    toast.promise(
+      fetch(
+        `/api/teams/${teamId}/documents/${prismaDocument.id}/toggle-download-only`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            downloadOnly: !prismaDocument.downloadOnly,
+          }),
+        },
+      ).then(() => {
+        mutate(`/api/teams/${teamId}/documents/${prismaDocument.id}`);
+      }),
+      {
+        loading: "Updating document...",
+        success: `Document is now ${
+          !prismaDocument.downloadOnly ? "download only" : "viewable"
+        }`,
+        error: "Failed to update document",
+      },
+    );
   };
 
   useEffect(() => {
@@ -652,6 +680,32 @@ export default function DocumentHeader({
                   Add to dataroom
                 </DropdownMenuItem>
               )}
+
+              {primaryVersion.type !== "notion" &&
+                primaryVersion.type !== "zip" && (
+                  <DropdownMenuItem
+                    onClick={() =>
+                      isFree
+                        ? (setPlanModalTrigger("download-only-document"),
+                          setPlanModalOpen(true))
+                        : toggleDownloadOnly()
+                    }
+                  >
+                    {prismaDocument.downloadOnly ? (
+                      <>
+                        <ViewIcon className="mr-2 h-4 w-4" />
+                        Set viewable
+                      </>
+                    ) : (
+                      <>
+                        <CloudDownloadIcon className="mr-2 h-4 w-4" />
+                        Set download only{" "}
+                        {isFree && <PlanBadge className="ml-2" plan="pro" />}
+                      </>
+                    )}
+                  </DropdownMenuItem>
+                )}
+
               <DropdownMenuSeparator />
 
               {/* Export views in CSV */}
