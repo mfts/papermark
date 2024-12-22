@@ -1,9 +1,17 @@
+.dark-mode {
+  --bg-color: rgb(25, 25, 25);
+}
+
 .notion-simple-table {
   width: 100%;
 }
 
 .notion-simple-table-row td {
   vertical-align: top;
+}
+
+.notion-hr {
+  border-top: 1px solid var(--fg-color-0);
 }
 
 .notion-link {
