@@ -34,6 +34,7 @@ import useLimits from "@/lib/swr/use-limits";
 import { getSupportedContentType } from "@/lib/utils/get-content-type";
 
 import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
+import { DialogDescription, DialogTitle } from "@radix-ui/react-dialog";
 
 export function AddDocumentModal({
   newVersion,
@@ -410,6 +411,10 @@ export function AddDocumentModal({
         className="border-none bg-transparent text-foreground shadow-none"
         isDocumentDialog
       >
+        <DialogTitle className="sr-only">Add Document</DialogTitle>
+        <DialogDescription className="sr-only">
+          An overlayed modal that can be clicked to upload a document
+        </DialogDescription>
         <Tabs defaultValue="document">
           {!newVersion ? (
             <TabsList className="grid w-full grid-cols-2">
