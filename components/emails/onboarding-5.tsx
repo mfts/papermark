@@ -59,7 +59,7 @@ const Onboarding3Email = () => {
             <Section className="mb-[32px] mt-[32px] text-center">
               <Button
                 className="rounded bg-black text-center text-xs font-semibold text-white no-underline"
-                href={`https://app.papermark.io/datarooms?utm_source=dataroom-info&utm_medium=email&utm_campaign=20240723&utm_content=upload_documents`}
+                href={`${process.env.NEXT_PUBLIC_BASE_URL}/datarooms?utm_source=dataroom-info&utm_medium=email&utm_campaign=20240723&utm_content=upload_documents`}
                 style={{ padding: "12px 20px" }}
               >
                 Create new data room

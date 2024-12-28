@@ -51,7 +51,7 @@ export default function InvalidDomain({
             <Section className="my-8 text-center">
               <Button
                 className="rounded bg-black text-center text-xs font-semibold text-white no-underline"
-                href={`https://app.papermark.io/settings/domains`}
+                href={`${process.env.NEXT_PUBLIC_BASE_URL}/settings/domains`}
                 style={{ padding: "12px 20px" }}
               >
                 Configure domain
@@ -60,21 +60,19 @@ export default function InvalidDomain({
             <Text className="text-sm leading-6 text-black">
               If you do not want to keep this domain on Papermark, you can{" "}
               <Link
-                href={`https://app.papermark.io/settings/domains`}
+                href={`${process.env.NEXT_PUBLIC_BASE_URL}/settings/domains`}
                 className="font-medium text-blue-600 no-underline"
               >
                 delete it
               </Link>{" "}
               or simply ignore this email.{" "}
               {invalidDays >= 14
-                ? `To respect your inbox,${" "} 
-                  ${
-                    invalidDays < 28
-                      ? `we will only send you one more email about this in ${
-                          28 - invalidDays
-                        } days.`
-                      : `this will be the last time we will email you about this.`
-                  }`
+                ? `To respect your inbox,${" "}
+                  ${invalidDays < 28
+                  ? `we will only send you one more email about this in ${28 - invalidDays
+                  } days.`
+                  : `this will be the last time we will email you about this.`
+                }`
                 : ""}
             </Text>
             <Hr />
