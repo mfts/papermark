@@ -6,6 +6,7 @@ import ReactTextareaAutosize from "react-textarea-autosize";
 import { Facebook } from "../shared/icons/facebook";
 import LinkedIn from "../shared/icons/linkedin";
 import Twitter from "../shared/icons/twitter";
+import { getApexDomain } from "@/lib/domains";
 
 export default function Preview({
   data,
@@ -33,7 +34,7 @@ export default function Preview({
     metaFavicon: favicon,
   } = data;
 
-  const hostname = "papermark.io";
+  const hostname = getApexDomain(process.env.NEXT_PUBLIC_MARKETING_URL ?? "papermark.io");
 
   return (
     <div>
