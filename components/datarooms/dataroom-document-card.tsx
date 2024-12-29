@@ -10,6 +10,7 @@ import {
   BetweenHorizontalStartIcon,
   FolderInputIcon,
   MoreVertical,
+  PencilLineIcon,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
@@ -32,6 +33,7 @@ import { cn, nFormatter, timeAgo } from "@/lib/utils";
 import { fileIcon } from "@/lib/utils/get-file-icon";
 
 import { AddToDataroomModal } from "../documents/add-document-to-dataroom-modal";
+import { EditDocumentModal } from "../documents/edit-document-modal";
 import { MoveToDataroomFolderModal } from "./move-dataroom-folder-modal";
 
 type DocumentsCardProps = {
@@ -60,6 +62,7 @@ export default function DataroomDocumentCard({
   const [moveFolderOpen, setMoveFolderOpen] = useState<boolean>(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
   const [addDataRoomOpen, setAddDataRoomOpen] = useState<boolean>(false);
+  const [isEditingName, setIsEditingName] = useState<boolean>(false);
 
   /** current folder name */
   const currentFolderPath = router.query.name as string[] | undefined;
@@ -91,7 +94,6 @@ export default function DataroomDocumentCard({
     event.stopPropagation();
     event.preventDefault();
 
-    console.log("isFirstClick", isFirstClick);
     if (isFirstClick) {
       handleRemoveDocument(documentId);
       setIsFirstClick(false);
@@ -237,6 +239,15 @@ export default function DataroomDocumentCard({
               <DropdownMenuItem
                 onClick={(e) => {
                   e.stopPropagation();
+                  setIsEditingName(true);
+                }}
+              >
+                <PencilLineIcon className="mr-2 h-4 w-4" />
+                Rename
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation();
                   setMoveFolderOpen(true);
                 }}
               >
@@ -288,6 +299,16 @@ export default function DataroomDocumentCard({
           dataroomId={dataroomDocument.dataroomId}
           documentIds={[dataroomDocument.id]}
           documentName={dataroomDocument.document.name}
+        />
+      ) : null}
+      {isEditingName ? (
+        <EditDocumentModal
+          open={isEditingName}
+          setOpen={setIsEditingName}
+          documentId={dataroomDocument.document.id}
+          name={dataroomDocument.document.name}
+          dataroomId={dataroomDocument.dataroomId}
+          isDataroom={!!dataroomDocument.dataroomId}
         />
       ) : null}
     </>
