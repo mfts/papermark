@@ -333,6 +333,10 @@ export default function UploadZone({
           teamId: teamInfo?.currentTeam?.id,
           bulkupload: true,
           dataroomId: dataroomId,
+          $set: {
+            teamId: teamInfo?.currentTeam?.id,
+            teamPlan: plan,
+          },
         });
 
         return document;
