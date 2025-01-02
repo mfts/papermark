@@ -10,8 +10,10 @@ import {
   CloudDownloadIcon,
   DownloadIcon,
   FileDownIcon,
+  MoonIcon,
   SheetIcon,
   Sparkles,
+  SunIcon,
   TrashIcon,
   ViewIcon,
 } from "lucide-react";
@@ -341,6 +343,36 @@ export default function DocumentHeader({
           !prismaDocument.downloadOnly ? "download only" : "viewable"
         }`,
         error: "Failed to update document",
+      },
+    );
+  };
+
+  // Toggle dark mode for Notion documents
+  const toggleNotionDarkMode = async (darkMode: boolean) => {
+    if (prismaDocument.type !== "notion") {
+      toast.error("This feature is not available for your document type");
+      return;
+    }
+
+    toast.promise(
+      fetch(
+        `/api/teams/${teamId}/documents/${prismaDocument.id}/toggle-dark-mode`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            darkMode: darkMode,
+          }),
+        },
+      ).then(() => {
+        mutate(`/api/teams/${teamId}/documents/${prismaDocument.id}`);
+      }),
+      {
+        loading: "Updating Notion theme...",
+        success: `Notion theme changed to ${darkMode ? "dark" : "light"} mode`,
+        error: "Failed to update Notion theme",
       },
     );
   };
@@ -705,6 +737,26 @@ export default function DocumentHeader({
                     )}
                   </DropdownMenuItem>
                 )}
+
+              {prismaDocument.type === "notion" && (
+                <>
+                  {primaryVersion.file.includes("mode=dark") ? (
+                    <DropdownMenuItem
+                      onClick={() => toggleNotionDarkMode(false)}
+                    >
+                      <MoonIcon className="mr-2 h-4 w-4" />
+                      Disable dark mode
+                    </DropdownMenuItem>
+                  ) : (
+                    <DropdownMenuItem
+                      onClick={() => toggleNotionDarkMode(true)}
+                    >
+                      <SunIcon className="mr-2 h-4 w-4" />
+                      Enable dark mode
+                    </DropdownMenuItem>
+                  )}
+                </>
+              )}
 
               <DropdownMenuSeparator />
 
