@@ -21,7 +21,7 @@ export const getTotalAvgPageDuration = tb.buildPipe({
 });
 
 export const getViewPageDuration = tb.buildPipe({
-  pipe: "get_page_duration_per_view__v5",
+  pipe: "get_page_duration_per_view__v4",
   parameters: z.object({
     documentId: z.string(),
     viewId: z.string(),
@@ -47,7 +47,7 @@ export const getTotalDocumentDuration = tb.buildPipe({
 });
 
 export const getViewUserAgent = tb.buildPipe({
-  pipe: "get_useragent_per_view__v2",
+  pipe: "get_useragent_per_view__v1",
   parameters: z.object({
     documentId: z.string(),
     viewId: z.string(),
