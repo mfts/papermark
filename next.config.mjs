@@ -10,7 +10,7 @@ const nextConfig = {
   skipTrailingSlashRedirect: true,
   assetPrefix:
     process.env.NODE_ENV === "production" &&
-    process.env.VERCEL_ENV === "production"
+      process.env.VERCEL_ENV === "production"
       ? process.env.NEXT_PUBLIC_BASE_URL
       : undefined,
   async redirects() {
@@ -159,6 +159,7 @@ function prepareRemotePatterns() {
     // papermark img
     { protocol: "https", hostname: "www.papermark.io" },
     { protocol: "https", hostname: "app.papermark.io" },
+    { protocol: "https", hostname: process.env.NEXT_PUBLIC_BASE_URL.replace(/^https?:\/\//, "") },
     // useragent img
     { protocol: "https", hostname: "faisalman.github.io" },
     // special document pages
