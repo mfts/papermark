@@ -16,7 +16,7 @@ export default async function handle(
 
   // Check feature flag
   const features = await getFeatureFlags({ teamId });
-  if (!features.webhooks) {
+  if (!features.incomingWebhooks) {
     return res
       .status(403)
       .json({ error: "This feature is not available for your team" });
