@@ -15,6 +15,7 @@ import {
   convertCadToPdfTask,
   convertFilesToPdfTask,
 } from "@/lib/trigger/convert-files";
+import { processVideo } from "@/lib/trigger/optimize-video-files";
 import { CustomUser } from "@/lib/types";
 import { getExtension, log } from "@/lib/utils";
 
@@ -287,6 +288,21 @@ export default async function handle(
             documentId: document.id,
             documentVersionId: document.versions[0].id,
             teamId,
+          },
+          {
+            idempotencyKey: `${teamId}-${document.versions[0].id}`,
+            tags: [`team_${teamId}`, `document_${document.id}`],
+          },
+        );
+      }
+
+      if (type === "video") {
+        await processVideo.trigger(
+          {
+            videoUrl: fileUrl,
+            teamId,
+            docId: fileUrl.split("/")[1], // Extract doc_xxxx from teamId/doc_xxxx/filename
+            documentVersionId: document.versions[0].id,
           },
           {
             idempotencyKey: `${teamId}-${document.versions[0].id}`,
