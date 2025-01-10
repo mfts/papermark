@@ -186,6 +186,7 @@ model DocumentVersion {
   fileId        String? // This is the file ID of the OpenAI File API
   pages         DocumentPage[]
   hasPages      Boolean             @default(false) // Indicates if the document has pages
+  length        Int? // This is the length of the video in seconds
   createdAt     DateTime            @default(now())
   updatedAt     DateTime            @updatedAt
 
