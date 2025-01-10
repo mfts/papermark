@@ -99,6 +99,28 @@ export const SUPPORTED_DOCUMENT_SIMPLE_TYPES = [
   "video",
 ] as const;
 
+export const VIDEO_EVENT_TYPES = [
+  // Playback events
+  "loaded", // Initial load
+  "played", // Play pressed
+  "seeked", // User seeked to position
+
+  // Speed events
+  "rate_changed", // Playback speed changed
+
+  // Volume events
+  "volume_up", // Volume increased
+  "volume_down", // Volume decreased
+  "muted", // Muted
+  "unmuted", // Unmuted
+
+  // View state events
+  "focus", // Window/tab gained focus
+  "blur", // Window/tab lost focus
+  "enterfullscreen", // Entered fullscreen
+  "exitfullscreen", // Exited fullscreen
+] as const;
+
 export const COUNTRIES: { [key: string]: string } = {
   AF: "Afghanistan",
   AL: "Albania",
@@ -353,3 +375,37 @@ export const COUNTRIES: { [key: string]: string } = {
 };
 
 export const COUNTRY_CODES = Object.keys(COUNTRIES) as [string, ...string[]];
+
+export const EU_COUNTRY_CODES = [
+  "AT",
+  "BE",
+  "BG",
+  "CY",
+  "CZ",
+  "DE",
+  "DK",
+  "EE",
+  "ES",
+  "FI",
+  "FR",
+  "GB",
+  "GR",
+  "HR",
+  "HU",
+  "IE",
+  "IS",
+  "IT",
+  "LI",
+  "LT",
+  "LU",
+  "LV",
+  "MT",
+  "NL",
+  "NO",
+  "PL",
+  "PT",
+  "RO",
+  "SE",
+  "SI",
+  "SK",
+];
