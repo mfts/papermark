@@ -80,6 +80,11 @@ export const SUPPORTED_DOCUMENT_MIME_TYPES = [
   "image/jpg", // .jpg
   "application/zip", // .zip
   "application/x-zip-compressed", // .zip
+  "video/mp4", // .mp4
+  "video/quicktime", // .mov
+  "video/x-msvideo", // .avi
+  "video/webm", // .webm
+  "video/ogg", // .ogg
 ];
 
 export const SUPPORTED_DOCUMENT_SIMPLE_TYPES = [
@@ -91,7 +96,8 @@ export const SUPPORTED_DOCUMENT_SIMPLE_TYPES = [
   "cad",
   "image",
   "zip",
-];
+  "video",
+] as const;
 
 export const COUNTRIES: { [key: string]: string } = {
   AF: "Afghanistan",

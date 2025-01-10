@@ -54,6 +54,11 @@ const allAcceptableDropZoneMimeTypes = {
   "image/jpg": [], // ".jpg"
   "application/zip": [], // ".zip"
   "application/x-zip-compressed": [], // ".zip"
+  "video/mp4": [], // ".mp4"
+  "video/webm": [], // ".webm"
+  "video/quicktime": [], // ".mov"
+  "video/x-msvideo": [], // ".avi"
+  "video/ogg": [], // ".ogg"
 };
 
 interface FileWithPaths extends File {
@@ -68,6 +73,11 @@ const fileSizeLimits: { [key: string]: number } = {
   "image/png": 100, // 100 MB
   "image/jpeg": 100, // 100 MB
   "image/jpg": 100, // 100 MB
+  "video/mp4": 500, // 500 MB
+  "video/quicktime": 500, // 500 MB
+  "video/x-msvideo": 500, // 500 MB
+  "video/webm": 500, // 500 MB
+  "video/ogg": 500, // 500 MB
 };
 
 export default function UploadZone({

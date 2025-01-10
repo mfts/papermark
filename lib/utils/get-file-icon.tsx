@@ -7,6 +7,7 @@ import NotionIcon from "@/components/shared/icons/files/notion";
 import PdfIcon from "@/components/shared/icons/files/pdf";
 import SheetIcon from "@/components/shared/icons/files/sheet";
 import SlidesIcon from "@/components/shared/icons/files/slides";
+import VideoIcon from "@/components/shared/icons/files/video";
 
 export function fileIcon({
   fileType,
@@ -48,6 +49,13 @@ export function fileIcon({
     case "image/vnd.dxf":
     case "cad":
       return <CadIcon className={className} isLight={isLight} />;
+    case "video/mp4":
+    case "video/quicktime":
+    case "video/webm":
+    case "video/ogg":
+    case "video/x-msvideo":
+    case "video":
+      return <VideoIcon className={className} isLight={isLight} />;
     default:
       return <FileIcon className={className} />;
   }

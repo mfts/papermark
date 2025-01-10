@@ -80,7 +80,7 @@ const putFileInS3Server = async ({
     file.type !== "image/jpeg" &&
     file.type !== "application/pdf"
   ) {
-    throw new Error("Only PNG, JPEG or PDF files are supported");
+    throw new Error("Only PNG, JPEG, PDF or MP4 files are supported");
   }
 
   if (!restricted && !SUPPORTED_DOCUMENT_MIME_TYPES.includes(file.type)) {

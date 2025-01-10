@@ -26,6 +26,12 @@ export function getSupportedContentType(contentType: string): string | null {
     case "application/zip":
     case "application/x-zip-compressed":
       return "zip";
+    case "video/mp4":
+    case "video/quicktime":
+    case "video/x-msvideo":
+    case "video/webm":
+    case "video/ogg":
+      return "video";
     default:
       return null;
   }
@@ -69,6 +75,16 @@ export function getExtensionFromContentType(
       return "jpeg";
     case "image/jpg":
       return "jpg";
+    case "video/mp4":
+      return "mp4";
+    case "video/quicktime":
+      return "mov";
+    case "video/x-msvideo":
+      return "avi";
+    case "video/webm":
+      return "webm";
+    case "video/ogg":
+      return "ogg";
     default:
       return null;
   }
