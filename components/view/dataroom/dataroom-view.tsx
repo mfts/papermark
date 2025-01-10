@@ -26,6 +26,7 @@ import EmailVerificationMessage from "../email-verification-form";
 import AdvancedExcelViewer from "../viewer/advanced-excel-viewer";
 import DownloadOnlyViewer from "../viewer/download-only-viewer";
 import ImageViewer from "../viewer/image-viewer";
+import VideoViewer from "../viewer/video-viewer";
 
 const ExcelViewer = dynamic(
   () => import("@/components/view/viewer/excel-viewer"),
@@ -425,6 +426,23 @@ export default function DataroomView({
           }
           ipAddress={viewData.ipAddress}
           linkName={link.name ?? `Link #${link.id.slice(-5)}`}
+        />
+      </div>
+    ) : viewData.fileType === "video" ? (
+      <div className="bg-gray-950">
+        <VideoViewer
+          file={viewData.file!}
+          linkId={link.id}
+          documentId={documentData.id}
+          viewId={viewData.viewId}
+          documentName={documentData.name}
+          allowDownload={viewData.canDownload ?? link.allowDownload!}
+          screenshotProtectionEnabled={link.enableScreenshotProtection!}
+          versionNumber={documentData.documentVersionNumber}
+          brand={brand}
+          dataroomId={dataroom.id}
+          setDocumentData={setDocumentData}
+          isPreview={viewData.isPreview}
         />
       </div>
     ) : viewData.pages ? (

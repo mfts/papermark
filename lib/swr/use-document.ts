@@ -2,7 +2,6 @@ import { useRouter } from "next/router";
 
 import { useTeam } from "@/context/team-context";
 import { View } from "@prisma/client";
-import { version } from "os";
 import useSWR from "swr";
 import useSWRImmutable from "swr/immutable";
 

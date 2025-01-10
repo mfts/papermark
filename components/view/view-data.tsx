@@ -13,6 +13,7 @@ import { LinkWithDocument, NotionTheme, WatermarkConfig } from "@/lib/types";
 import AdvancedExcelViewer from "./viewer/advanced-excel-viewer";
 import DownloadOnlyViewer from "./viewer/download-only-viewer";
 import ImageViewer from "./viewer/image-viewer";
+import VideoViewer from "./viewer/video-viewer";
 
 const ExcelViewer = dynamic(
   () => import("@/components/view/viewer/excel-viewer"),
@@ -145,6 +146,19 @@ export default function ViewData({
       }
       ipAddress={viewData.ipAddress}
       linkName={link.name ?? `Link #${link.id.slice(-5)}`}
+    />
+  ) : viewData.fileType === "video" ? (
+    <VideoViewer
+      file={viewData.file!}
+      linkId={link.id}
+      viewId={viewData.viewId}
+      documentId={document.id}
+      documentName={link.document?.name}
+      allowDownload={link.allowDownload!}
+      screenshotProtectionEnabled={link.enableScreenshotProtection!}
+      versionNumber={document.versions[0].versionNumber}
+      brand={brand}
+      isPreview={viewData.isPreview}
     />
   ) : (
     <PDFViewer

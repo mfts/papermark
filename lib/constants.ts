@@ -80,6 +80,11 @@ export const SUPPORTED_DOCUMENT_MIME_TYPES = [
   "image/jpg", // .jpg
   "application/zip", // .zip
   "application/x-zip-compressed", // .zip
+  "video/mp4", // .mp4
+  "video/quicktime", // .mov
+  "video/x-msvideo", // .avi
+  "video/webm", // .webm
+  "video/ogg", // .ogg
 ];
 
 export const SUPPORTED_DOCUMENT_SIMPLE_TYPES = [
@@ -91,7 +96,30 @@ export const SUPPORTED_DOCUMENT_SIMPLE_TYPES = [
   "cad",
   "image",
   "zip",
-];
+  "video",
+] as const;
+
+export const VIDEO_EVENT_TYPES = [
+  // Playback events
+  "loaded", // Initial load
+  "played", // Play pressed
+  "seeked", // User seeked to position
+
+  // Speed events
+  "rate_changed", // Playback speed changed
+
+  // Volume events
+  "volume_up", // Volume increased
+  "volume_down", // Volume decreased
+  "muted", // Muted
+  "unmuted", // Unmuted
+
+  // View state events
+  "focus", // Window/tab gained focus
+  "blur", // Window/tab lost focus
+  "enterfullscreen", // Entered fullscreen
+  "exitfullscreen", // Exited fullscreen
+] as const;
 
 export const COUNTRIES: { [key: string]: string } = {
   AF: "Afghanistan",
@@ -347,3 +375,37 @@ export const COUNTRIES: { [key: string]: string } = {
 };
 
 export const COUNTRY_CODES = Object.keys(COUNTRIES) as [string, ...string[]];
+
+export const EU_COUNTRY_CODES = [
+  "AT",
+  "BE",
+  "BG",
+  "CY",
+  "CZ",
+  "DE",
+  "DK",
+  "EE",
+  "ES",
+  "FI",
+  "FR",
+  "GB",
+  "GR",
+  "HR",
+  "HU",
+  "IE",
+  "IS",
+  "IT",
+  "LI",
+  "LT",
+  "LU",
+  "LV",
+  "MT",
+  "NL",
+  "NO",
+  "PL",
+  "PT",
+  "RO",
+  "SE",
+  "SI",
+  "SK",
+];

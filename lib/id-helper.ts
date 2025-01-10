@@ -34,6 +34,7 @@ export class IdGenerator<TPrefixes extends string> {
 
 export const newId = new IdGenerator({
   view: "view",
+  videoView: "vview",
   inv: "inv", // invitation
   email: "email",
   doc: "doc",
