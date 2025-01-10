@@ -15,6 +15,7 @@
     "email": "email dev --dir ./components/emails --port 3001",
     "trigger:dev": "npx @trigger.dev/cli@latest dev",
     "trigger:v3:dev": "npx trigger.dev@latest dev",
+    "trigger:v3:deploy": "npx trigger.dev@latest deploy",
     "stripe:webhook": "pkgx stripe listen --forward-to localhost:3000/api/stripe/webhook",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,mdx}\"",
     "dev:prisma": "npx prisma generate && npx prisma migrate deploy"
