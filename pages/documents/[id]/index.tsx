@@ -7,6 +7,7 @@ import { useTeam } from "@/context/team-context";
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import DocumentHeader from "@/components/documents/document-header";
 import { StatsComponent } from "@/components/documents/stats";
+import VideoAnalytics from "@/components/documents/video-analytics";
 import AppLayout from "@/components/layouts/app";
 import LinkSheet from "@/components/links/link-sheet";
 import LinksTable from "@/components/links/links-table";
@@ -69,26 +70,22 @@ export default function DocumentPage() {
               actions={[<AddLinkButton key={"create-link"} />]}
             />
 
-            {/* <NavMenu
-              navigation={[
-                {
-                  label: "Overview",
-                  href: `/documents/${prismaDocument.id}`,
-                  segment: `${prismaDocument.id}`,
-                },
-                {
-                  label: "Settings",
-                  href: `/documents/${prismaDocument.id}/settings`,
-                  segment: "settings",
-                },
-              ]}
-            /> */}
+            {/* Document Analytics */}
+            {primaryVersion.type !== "video" && (
+              <StatsComponent
+                documentId={prismaDocument.id}
+                numPages={primaryVersion.numPages!}
+              />
+            )}
 
-            {/* Stats */}
-            <StatsComponent
-              documentId={prismaDocument.id}
-              numPages={primaryVersion.numPages!}
-            />
+            {/* Video Analytics */}
+            {primaryVersion.type === "video" && (
+              <VideoAnalytics
+                documentId={prismaDocument.id}
+                primaryVersion={primaryVersion}
+                teamId={teamInfo?.currentTeam?.id!}
+              />
+            )}
 
             {/* Links */}
             <LinksTable
@@ -98,7 +95,7 @@ export default function DocumentPage() {
             />
 
             {/* Visitors */}
-            <VisitorsTable />
+            <VisitorsTable isVideo={primaryVersion.type === "video"} />
 
             <LinkSheet
               isOpen={isLinkSheetOpen}

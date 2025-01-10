@@ -537,6 +537,7 @@ export default function DocumentHeader({
           {primaryVersion.type !== "notion" &&
             primaryVersion.type !== "sheet" &&
             primaryVersion.type !== "zip" &&
+            primaryVersion.type !== "video" &&
             (!orientationLoading ? (
               <ButtonTooltip content="Change orientation">
                 <Button
@@ -560,29 +561,31 @@ export default function DocumentHeader({
               </div>
             ))}
 
-          {primaryVersion.type !== "notion" && (
-            <AddDocumentModal
-              newVersion
-              openModal={openAddDocModal}
-              setAddDocumentModalOpen={setOpenAddDocModal}
-            >
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setOpenAddDocModal(true);
-                }}
-                className="hidden md:flex"
+          {primaryVersion.type !== "notion" &&
+            primaryVersion.type !== "video" && (
+              <AddDocumentModal
+                newVersion
+                openModal={openAddDocModal}
+                setAddDocumentModalOpen={setOpenAddDocModal}
               >
-                <FileUp className="h-6 w-6" />
-              </Button>
-            </AddDocumentModal>
-          )}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setOpenAddDocModal(true);
+                  }}
+                  className="hidden md:flex"
+                >
+                  <FileUp className="h-6 w-6" />
+                </Button>
+              </AddDocumentModal>
+            )}
 
           {prismaDocument.type !== "notion" &&
             prismaDocument.type !== "sheet" &&
             prismaDocument.type !== "zip" &&
+            prismaDocument.type !== "video" &&
             prismaDocument.assistantEnabled && (
               <Button
                 className="group hidden h-8 space-x-1 whitespace-nowrap bg-gradient-to-r from-[#16222A] via-emerald-500 to-[#16222A] text-xs duration-200 ease-linear hover:bg-right md:flex lg:h-9 lg:text-sm"
@@ -626,29 +629,31 @@ export default function DocumentHeader({
             >
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
               <DropdownMenuGroup className="block md:hidden">
-                {prismaDocument.type !== "notion" && (
-                  <DropdownMenuItem>
-                    <AddDocumentModal
-                      newVersion
-                      setAddDocumentModalOpen={setAddDocumentVersion}
-                    >
-                      <button
-                        title="Add a new version"
-                        className="flex items-center"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setAddDocumentVersion(true);
-                        }}
+                {prismaDocument.type !== "notion" &&
+                  primaryVersion.type !== "video" && (
+                    <DropdownMenuItem>
+                      <AddDocumentModal
+                        newVersion
+                        setAddDocumentModalOpen={setAddDocumentVersion}
                       >
-                        <FileUp className="mr-2 h-4 w-4" /> Add new version
-                      </button>
-                    </AddDocumentModal>
-                  </DropdownMenuItem>
-                )}
+                        <button
+                          title="Add a new version"
+                          className="flex items-center"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setAddDocumentVersion(true);
+                          }}
+                        >
+                          <FileUp className="mr-2 h-4 w-4" /> Add new version
+                        </button>
+                      </AddDocumentModal>
+                    </DropdownMenuItem>
+                  )}
 
                 {prismaDocument.type !== "notion" &&
                   prismaDocument.type !== "sheet" &&
-                  prismaDocument.type !== "zip" && (
+                  prismaDocument.type !== "zip" &&
+                  primaryVersion.type !== "video" && (
                     <>
                       <DropdownMenuItem
                         onClick={() => changeDocumentOrientation()}
@@ -679,6 +684,7 @@ export default function DocumentHeader({
               {primaryVersion.type !== "notion" &&
                 primaryVersion.type !== "sheet" &&
                 primaryVersion.type !== "zip" &&
+                primaryVersion.type !== "video" &&
                 (!prismaDocument.assistantEnabled ? (
                   <DropdownMenuItem
                     onClick={() =>
@@ -775,14 +781,15 @@ export default function DocumentHeader({
               </DropdownMenuItem>
 
               {/* Download latest version */}
-              {primaryVersion.type !== "notion" ? (
-                <DropdownMenuItem
-                  onClick={() => downloadDocument(primaryVersion)}
-                >
-                  <DownloadIcon className="mr-2 h-4 w-4" />
-                  Download latest version
-                </DropdownMenuItem>
-              ) : null}
+              {primaryVersion.type !== "notion" &&
+                primaryVersion.type !== "video" && (
+                  <DropdownMenuItem
+                    onClick={() => downloadDocument(primaryVersion)}
+                  >
+                    <DownloadIcon className="mr-2 h-4 w-4" />
+                    Download latest version
+                  </DropdownMenuItem>
+                )}
 
               <DropdownMenuSeparator />
 
