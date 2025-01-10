@@ -1,0 +1,25 @@
+VERSION 1
+
+DESCRIPTION >
+    Get all video views for a specific document
+
+NODE get_document_video_views
+SQL >
+    %
+    SELECT
+        timestamp,
+        view_id,
+        event_type,
+        start_time,
+        end_time,
+        playback_rate,
+        volume,
+        is_muted,
+        is_focused,
+        is_fullscreen
+    FROM video_views
+    WHERE document_id = {{String(document_id, required=True)}}
+    ORDER BY timestamp ASC
+
+
+

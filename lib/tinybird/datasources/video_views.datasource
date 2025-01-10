@@ -1,0 +1,49 @@
+VERSION 1
+
+DESCRIPTION >
+  Video views are events when a user views a video
+
+SCHEMA >
+  `timestamp` DateTime64(3) `json:$.timestamp`,
+  `id` String `json:$.id`,
+  `link_id` String `json:$.link_id`,
+  `document_id` String `json:$.document_id`,
+  `view_id` String `json:$.view_id`,
+  `dataroom_id` Nullable(String) `json:$.dataroom_id`,
+  `version_number` UInt16 `json:$.version_number`,
+  `event_type` LowCardinality(String) `json:$.event_type`,
+  # Video specific fields
+  `start_time` UInt32 `json:$.start_time`,
+  `end_time` UInt32 `json:$.end_time`,
+  # Store as 100, 150, 200 instead of 1.0, 1.5, 2.0
+  `playback_rate` UInt16 `json:$.playback_rate`,  
+  # Store as 0-100 instead of 0.0-1.0
+  `volume` UInt8 `json:$.volume`,                 
+  `is_muted` UInt8 `json:$.is_muted`,
+  `is_focused` UInt8 `json:$.is_focused`,
+  `is_fullscreen` UInt8 `json:$.is_fullscreen`,
+  # User agent fields
+  `country` LowCardinality(String) `json:$.country`,
+  `city` String `json:$.city`,
+  `region` String `json:$.region`,
+  `latitude` String `json:$.latitude`,
+  `longitude` String `json:$.longitude`,
+  `ua` String `json:$.ua`,
+  `browser` LowCardinality(String) `json:$.browser`,
+  `browser_version` String `json:$.browser_version`,
+  `engine` LowCardinality(String) `json:$.engine`,
+  `engine_version` String `json:$.engine_version`,
+  `os` LowCardinality(String) `json:$.os`,
+  `os_version` String `json:$.os_version`,
+  `device` LowCardinality(String) `json:$.device`,
+  `device_vendor` LowCardinality(String) `json:$.device_vendor`,
+  `device_model` LowCardinality(String) `json:$.device_model`,
+  `cpu_architecture` LowCardinality(String) `json:$.cpu_architecture`,
+  `bot` UInt8 `json:$.bot`,
+  `referer` String `json:$.referer`,
+  `referer_url` String `json:$.referer_url`,
+  `ip_address` Nullable(String) `json:$.ip_address`
+
+ENGINE "MergeTree"
+ENGINE_SORTING_KEY "timestamp,link_id,document_id,view_id,version_number,event_type"
+

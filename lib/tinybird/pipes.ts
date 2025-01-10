@@ -1,6 +1,7 @@
 import { Tinybird } from "@chronark/zod-bird";
 import { z } from "zod";
 
+import { VIDEO_EVENT_TYPES } from "../constants";
 import { WEBHOOK_TRIGGERS } from "../webhook/constants";
 
 const tb = new Tinybird({ token: process.env.TINYBIRD_TOKEN! });
@@ -21,7 +22,7 @@ export const getTotalAvgPageDuration = tb.buildPipe({
 });
 
 export const getViewPageDuration = tb.buildPipe({
-  pipe: "get_page_duration_per_view__v5",
+  pipe: "get_page_duration_per_view__v4",
   parameters: z.object({
     documentId: z.string(),
     viewId: z.string(),
@@ -102,5 +103,38 @@ export const getWebhookEvents = tb.buildPipe({
     request_body: z.string(),
     response_body: z.string(),
     timestamp: z.string(),
+  }),
+});
+
+export const getVideoEventsByDocument = tb.buildPipe({
+  pipe: "get_video_events_by_document__v1",
+  parameters: z.object({
+    document_id: z.string(),
+  }),
+  data: z.object({
+    timestamp: z.string(),
+    view_id: z.string(),
+    event_type: z.string(),
+    start_time: z.number(),
+    end_time: z.number(),
+    playback_rate: z.number(),
+    volume: z.number(),
+    is_muted: z.number(),
+    is_focused: z.number(),
+    is_fullscreen: z.number(),
+  }),
+});
+
+export const getVideoEventsByView = tb.buildPipe({
+  pipe: "get_video_events_by_view__v1",
+  parameters: z.object({
+    document_id: z.string(),
+    view_id: z.string(),
+  }),
+  data: z.object({
+    timestamp: z.string(),
+    event_type: z.string(),
+    start_time: z.number(),
+    end_time: z.number(),
   }),
 });
