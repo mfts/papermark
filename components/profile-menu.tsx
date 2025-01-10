@@ -28,7 +28,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 import { cn } from "@/lib/utils";
 
-import { SearchCommand } from "./ search-command";
+import { SearchCommand } from "./search-command";
 import UserRound from "./shared/icons/user-round";
 import { ModeToggle } from "./theme-toggle";
 
@@ -183,7 +183,10 @@ const ProfileMenu = ({ className, size }: ProfileMenuProps) => {
                     key={article.data.slug}
                     value={article.data.title}
                     onSelect={() => {
-                      window.location.href = `${process.env.NEXT_PUBLIC_HELP_CENTER_URL}/help/article/${article.data.slug}`;
+                      window.open(
+                        `${process.env.NEXT_PUBLIC_MARKETING_URL}/help/article/${article.data.slug}`,
+                        "_blank",
+                      );
                       setSearchOpen(false);
                     }}
                   >

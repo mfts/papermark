@@ -61,11 +61,11 @@ export function SearchCommand({
                   key={article.data.slug}
                   value={article.data.title}
                   onSelect={() => {
-                    const path =
-                      locale === "en"
-                        ? `/help/article/${article.data.slug}`
-                        : `/${locale}/help/article/${article.data.slug}`;
-                    window.location.href = `${process.env.NEXT_PUBLIC_HELP_CENTER_URL}${path}`;
+                    const path = `/help/article/${article.data.slug}`;
+                    window.open(
+                      `${process.env.NEXT_PUBLIC_MARKETING_URL}${path}`,
+                      "_blank",
+                    );
                     onOpenChange?.(false);
                   }}
                   className="cursor-pointer rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
