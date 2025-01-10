@@ -6,7 +6,7 @@ export async function GET(request: Request) {
 
   try {
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_HELP_CENTER_URL}/api/help`,
+      `${process.env.NEXT_PUBLIC_MARKETING_URL}/api/help`,
     );
 
     if (!response.ok) {
