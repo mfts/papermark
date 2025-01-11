@@ -94,12 +94,10 @@ const putFileInS3Server = async ({
 
   const key = `${teamId}/${docId}/${slugify(name)}${ext}`;
 
-  const buffer = file.buffer;
-
   const params = {
     Bucket: process.env.NEXT_PRIVATE_UPLOAD_BUCKET,
     Key: key,
-    Body: buffer,
+    Body: file.buffer,
     ContentType: file.type,
   };
 
