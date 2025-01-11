@@ -120,7 +120,6 @@ export const processVideo = task({
             `-keyint_min ${keyframeInterval}`,
             "-sc_threshold 0",
             "-movflags +faststart",
-            "-memory_limit 1000M",
           ])
           .output(outputPath)
           .on("start", (cmd) => {
