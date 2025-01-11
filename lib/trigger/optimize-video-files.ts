@@ -14,7 +14,7 @@ import prisma from "@/lib/prisma";
 export const processVideo = task({
   id: "process-video",
   machine: {
-    preset: "small-2x",
+    preset: "medium-1x",
   },
   run: async (payload: {
     videoUrl: string;
@@ -115,11 +115,12 @@ export const processVideo = task({
             `-b:v ${bitrate}`,
             `-maxrate ${maxBitrate}k`,
             `-bufsize ${maxBitrate}k`,
-            "-preset slow",
+            "-preset medium",
             `-g ${keyframeInterval}`,
             `-keyint_min ${keyframeInterval}`,
             "-sc_threshold 0",
             "-movflags +faststart",
+            "-memory_limit 1000M",
           ])
           .output(outputPath)
           .on("start", (cmd) => {
