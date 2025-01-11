@@ -21,11 +21,11 @@
     "dev:prisma": "npx prisma generate && npx prisma migrate deploy"
   },
   "dependencies": {
-    "@aws-sdk/client-lambda": "^3.721.0",
+    "@aws-sdk/client-lambda": "^3.726.1",
     "@aws-sdk/client-s3": "^3.722.0",
-    "@aws-sdk/cloudfront-signer": "^3.709.0",
+    "@aws-sdk/cloudfront-signer": "^3.723.0",
     "@aws-sdk/lib-storage": "^3.726.1",
-    "@aws-sdk/s3-request-presigner": "^3.722.0",
+    "@aws-sdk/s3-request-presigner": "^3.726.1",
     "@chronark/zod-bird": "^0.3.10",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
