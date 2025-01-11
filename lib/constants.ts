@@ -85,6 +85,8 @@ export const SUPPORTED_DOCUMENT_MIME_TYPES = [
   "video/x-msvideo", // .avi
   "video/webm", // .webm
   "video/ogg", // .ogg
+  "application/vnd.google-earth.kml+xml", // .kml
+  "application/vnd.google-earth.kmz", // .kmz
 ];
 
 export const SUPPORTED_DOCUMENT_SIMPLE_TYPES = [
@@ -97,6 +99,7 @@ export const SUPPORTED_DOCUMENT_SIMPLE_TYPES = [
   "image",
   "zip",
   "video",
+  "map",
 ] as const;
 
 export const VIDEO_EVENT_TYPES = [
