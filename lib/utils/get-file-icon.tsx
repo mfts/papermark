@@ -3,6 +3,7 @@ import { FileIcon } from "lucide-react";
 import CadIcon from "@/components/shared/icons/files/cad";
 import DocsIcon from "@/components/shared/icons/files/docs";
 import ImageFileIcon from "@/components/shared/icons/files/image";
+import MapIcon from "@/components/shared/icons/files/map";
 import NotionIcon from "@/components/shared/icons/files/notion";
 import PdfIcon from "@/components/shared/icons/files/pdf";
 import SheetIcon from "@/components/shared/icons/files/sheet";
@@ -56,6 +57,10 @@ export function fileIcon({
     case "video/x-msvideo":
     case "video":
       return <VideoIcon className={className} isLight={isLight} />;
+    case "application/vnd.google-earth.kml+xml":
+    case "application/vnd.google-earth.kmz":
+    case "map":
+      return <MapIcon className={className} isLight={isLight} />;
     default:
       return <FileIcon className={className} />;
   }

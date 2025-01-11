@@ -83,6 +83,8 @@ export default function DocumentUpload({
             "video/x-msvideo": [], // ".avi"
             "video/webm": [], // ".webm"
             "video/ogg": [], // ".ogg"
+            "application/vnd.google-earth.kml+xml": [".kml"], // ".kml"
+            "application/vnd.google-earth.kmz": [".kmz"], // ".kmz"
           },
     multiple: false,
     onDropAccepted: (acceptedFiles) => {

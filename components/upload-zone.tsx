@@ -59,6 +59,8 @@ const allAcceptableDropZoneMimeTypes = {
   "video/quicktime": [], // ".mov"
   "video/x-msvideo": [], // ".avi"
   "video/ogg": [], // ".ogg"
+  "application/vnd.google-earth.kml+xml": [".kml"], // ".kml"
+  "application/vnd.google-earth.kmz": [".kmz"], // ".kmz"
 };
 
 interface FileWithPaths extends File {
@@ -261,6 +263,14 @@ export default function UploadZone({
         if (uploadResult.fileName.endsWith(".xlsm")) {
           supportedFileType = "sheet";
           contentType = "application/vnd.ms-excel.sheet.macroEnabled.12";
+        }
+
+        if (
+          uploadResult.fileName.endsWith(".kml") ||
+          uploadResult.fileName.endsWith(".kmz")
+        ) {
+          supportedFileType = "map";
+          contentType = `application/vnd.google-earth.${uploadResult.fileName.endsWith(".kml") ? "kml+xml" : "kmz"}`;
         }
 
         const documentData: DocumentData = {
