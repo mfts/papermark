@@ -1,16 +1,21 @@
 import { logger, task } from "@trigger.dev/sdk/v3";
 import ffmpeg from "fluent-ffmpeg";
+import { createReadStream, createWriteStream } from "fs";
 import fs from "fs/promises";
 import fetch from "node-fetch";
 import os from "os";
 import path from "path";
+import { pipeline } from "stream/promises";
 
 import { getFile } from "@/lib/files/get-file";
-import { putFileServer } from "@/lib/files/put-file-server";
+import { streamFileServer } from "@/lib/files/stream-file-server";
 import prisma from "@/lib/prisma";
 
 export const processVideo = task({
   id: "process-video",
+  machine: {
+    preset: "small-2x",
+  },
   run: async (payload: {
     videoUrl: string;
     teamId: string;
@@ -27,16 +32,20 @@ export const processVideo = task({
 
       logger.info("Starting video optimization", { fileUrl });
 
-      // Create temp directory and paths
+      // Create temp directory for input and output
       const tempDirectory = path.join(os.tmpdir(), `video_${Date.now()}`);
       await fs.mkdir(tempDirectory, { recursive: true });
-      const inputPath = path.join(tempDirectory, "input");
+      const inputPath = path.join(tempDirectory, "input.mp4");
       const outputPath = path.join(tempDirectory, "output.mp4");
 
-      // Download and save video
+      // Stream video to temporary file
       const response = await fetch(fileUrl);
-      const buffer = Buffer.from(await response.arrayBuffer());
-      await fs.writeFile(inputPath, buffer);
+      if (!response.body) {
+        throw new Error("Failed to fetch video stream");
+      }
+
+      logger.info("Streaming video to temporary file");
+      await pipeline(response.body, createWriteStream(inputPath));
 
       // Get input metadata first
       const metadata = await new Promise<{
@@ -91,7 +100,7 @@ export const processVideo = task({
         willScale: !!scaleFilter,
       });
 
-      // Optimize video
+      // Process video to temporary file first
       await new Promise<void>((resolve, reject) => {
         const ffmpegCommand = ffmpeg(inputPath)
           .inputOptions(["-y"])
@@ -106,7 +115,7 @@ export const processVideo = task({
             `-b:v ${bitrate}`,
             `-maxrate ${maxBitrate}k`,
             `-bufsize ${maxBitrate}k`,
-            "-preset veryslow",
+            "-preset slow",
             `-g ${keyframeInterval}`,
             `-keyint_min ${keyframeInterval}`,
             "-sc_threshold 0",
@@ -138,20 +147,35 @@ export const processVideo = task({
         ffmpegCommand.run();
       });
 
-      // Upload optimized video
-      const fileContent = await fs.readFile(outputPath);
+      // Create read stream from output file
+      const fileStream = createReadStream(outputPath);
 
-      logger.info("Uploading optimized video to S3");
-      await putFileServer({
+      // Add error handling for the file stream
+      fileStream.on("error", (err) => {
+        logger.error("Stream error:", {
+          error: err.message,
+          stack: err.stack,
+        });
+      });
+
+      // Start the upload process using streamFileServer
+      const uploadPromise = streamFileServer({
         file: {
           name: "optimized.mp4",
           type: "video/mp4",
-          buffer: fileContent,
+          stream: fileStream,
         },
         teamId,
         docId,
-        restricted: false, // allow all supported file types
       });
+
+      // Wait for the upload to complete
+      const { type, data } = await uploadPromise;
+      logger.info("Upload completed", { type, data });
+
+      if (!data) {
+        throw new Error("Upload failed: No file path returned");
+      }
 
       // Update the document version with the new file and length
       await prisma.documentVersion.update({
@@ -159,7 +183,7 @@ export const processVideo = task({
           id: documentVersionId,
         },
         data: {
-          file: `${teamId}/${docId}/optimized.mp4`,
+          file: data,
           length: metadata.duration,
         },
       });
