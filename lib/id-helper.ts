@@ -45,4 +45,5 @@ export const newId = new IdGenerator({
   webhookEvent: "evt",
   webhookSecret: "whsec",
   token: "pmk",
+  clickEvent: "click",
 }).id;
