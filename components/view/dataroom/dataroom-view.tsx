@@ -324,6 +324,7 @@ export default function DataroomView({
         isLoading={isLoading}
         disableEditEmail={disableEditEmail}
         useCustomAccessForm={useCustomAccessForm}
+        brand={brand}
       />
     );
   }

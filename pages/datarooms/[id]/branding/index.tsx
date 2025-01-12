@@ -34,6 +34,7 @@ export default function DataroomBrandPage() {
   const { brand } = useDataroomBrand({ dataroomId: dataroom?.id });
 
   const [brandColor, setBrandColor] = useState<string>("#000000");
+  const [accentColor, setAccentColor] = useState<string>("#FFFFFF");
   const [logo, setLogo] = useState<string | null>(null);
   const [banner, setBanner] = useState<string | null>(null);
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
@@ -98,6 +99,7 @@ export default function DataroomBrandPage() {
   useEffect(() => {
     if (brand) {
       setBrandColor(brand.brandColor || "#000000");
+      setAccentColor(brand.accentColor || "#FFFFFF");
       setLogo(brand.logo || null);
       setBanner(brand.banner || null);
     }
@@ -134,6 +136,7 @@ export default function DataroomBrandPage() {
 
     const data = {
       brandColor: brandColor,
+      accentColor: accentColor,
       logo: blobUrl,
       banner: bannerBlobUrl,
     };
@@ -424,6 +427,40 @@ export default function DataroomBrandPage() {
                           />
                         </div>
                       </div>
+                      <div className="flex flex-col gap-2">
+                        <Label htmlFor="accent-color">
+                          Background Color
+                          <span className="ml-2 text-sm text-muted-foreground">
+                            (front page)
+                          </span>
+                        </Label>
+                        <div className="flex space-x-1">
+                          <div
+                            className="h-9 w-9 cursor-pointer rounded-md bg-white shadow-sm ring-1 ring-muted-foreground hover:ring-1 hover:ring-gray-300"
+                            onClick={() => setAccentColor("#ffffff")}
+                          />
+                          <div
+                            className="h-9 w-9 cursor-pointer rounded-md bg-gray-50 shadow-sm ring-1 ring-muted-foreground hover:ring-1 hover:ring-gray-300"
+                            onClick={() => setAccentColor("#f9fafb")}
+                          />
+                          <div
+                            className="h-9 w-9 cursor-pointer rounded-md bg-gray-200 shadow-sm ring-1 ring-muted-foreground hover:ring-1 hover:ring-gray-300"
+                            onClick={() => setAccentColor("#e5e7eb")}
+                          />
+                          <div
+                            className="h-9 w-9 cursor-pointer rounded-md bg-gray-400 shadow-sm ring-1 ring-muted-foreground hover:ring-1 hover:ring-gray-300"
+                            onClick={() => setAccentColor("#9ca3af")}
+                          />
+                          <div
+                            className="h-9 w-9 cursor-pointer rounded-md bg-gray-800 shadow-sm ring-1 ring-muted-foreground hover:ring-1 hover:ring-gray-300"
+                            onClick={() => setAccentColor("#1f2937")}
+                          />
+                          <div
+                            className="h-9 w-9 cursor-pointer rounded-md bg-gray-950 shadow-sm ring-1 ring-muted-foreground hover:ring-1 hover:ring-gray-300"
+                            onClick={() => setAccentColor("#030712")}
+                          />
+                        </div>
+                      </div>
                     </div>
                   </CardContent>
                   <CardFooter className="border-t p-6">
@@ -646,10 +683,10 @@ export default function DataroomBrandPage() {
                             </div>
                           </div>
                           <iframe
-                            key={`access-screen-${brandColor}`}
+                            key={`access-screen-${accentColor}`}
                             name="access-screen"
                             id="access-screen"
-                            src={`/entrance_ppreview_demo?brandColor=${encodeURIComponent(brandColor)}&brandLogo=${blobUrl ? encodeURIComponent(blobUrl) : logo ? encodeURIComponent(logo) : ""}`}
+                            src={`/entrance_ppreview_demo?accentColor=${encodeURIComponent(accentColor)}&brandLogo=${blobUrl ? encodeURIComponent(blobUrl) : logo ? encodeURIComponent(logo) : ""}`}
                             style={{
                               width: "1390px",
                               height: "831px",
