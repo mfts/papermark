@@ -3,7 +3,7 @@ import { useRouter } from "next/router";
 import { useCallback, useEffect, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
-import { CircleHelpIcon, InfoIcon, PlusIcon } from "lucide-react";
+import { Check, CircleHelpIcon, InfoIcon, PlusIcon } from "lucide-react";
 import { HexColorInput, HexColorPicker } from "react-colorful";
 import { toast } from "sonner";
 import { mutate } from "swr";
@@ -436,29 +436,53 @@ export default function DataroomBrandPage() {
                         </Label>
                         <div className="flex space-x-1">
                           <div
-                            className="h-9 w-9 cursor-pointer rounded-md bg-white shadow-sm ring-1 ring-muted-foreground hover:ring-1 hover:ring-gray-300"
+                            className="relative h-9 w-9 cursor-pointer rounded-md bg-white shadow-sm ring-1 ring-muted-foreground hover:ring-gray-300"
                             onClick={() => setAccentColor("#ffffff")}
-                          />
+                          >
+                            {accentColor === "#ffffff" && (
+                              <Check className="absolute left-1/2 top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 text-gray-600" />
+                            )}
+                          </div>
                           <div
-                            className="h-9 w-9 cursor-pointer rounded-md bg-gray-50 shadow-sm ring-1 ring-muted-foreground hover:ring-1 hover:ring-gray-300"
+                            className="relative h-9 w-9 cursor-pointer rounded-md bg-gray-50 shadow-sm ring-1 ring-muted-foreground hover:ring-gray-300"
                             onClick={() => setAccentColor("#f9fafb")}
-                          />
+                          >
+                            {accentColor === "#f9fafb" && (
+                              <Check className="absolute left-1/2 top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 text-gray-600" />
+                            )}
+                          </div>
                           <div
-                            className="h-9 w-9 cursor-pointer rounded-md bg-gray-200 shadow-sm ring-1 ring-muted-foreground hover:ring-1 hover:ring-gray-300"
+                            className="relative h-9 w-9 cursor-pointer rounded-md bg-gray-200 shadow-sm ring-1 ring-muted-foreground hover:ring-gray-300"
                             onClick={() => setAccentColor("#e5e7eb")}
-                          />
+                          >
+                            {accentColor === "#e5e7eb" && (
+                              <Check className="absolute left-1/2 top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 text-gray-600" />
+                            )}
+                          </div>
                           <div
-                            className="h-9 w-9 cursor-pointer rounded-md bg-gray-400 shadow-sm ring-1 ring-muted-foreground hover:ring-1 hover:ring-gray-300"
+                            className="relative h-9 w-9 cursor-pointer rounded-md bg-gray-400 shadow-sm ring-1 ring-muted-foreground hover:ring-gray-300"
                             onClick={() => setAccentColor("#9ca3af")}
-                          />
+                          >
+                            {accentColor === "#9ca3af" && (
+                              <Check className="absolute left-1/2 top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 text-white" />
+                            )}
+                          </div>
                           <div
-                            className="h-9 w-9 cursor-pointer rounded-md bg-gray-800 shadow-sm ring-1 ring-muted-foreground hover:ring-1 hover:ring-gray-300"
+                            className="relative h-9 w-9 cursor-pointer rounded-md bg-gray-800 shadow-sm ring-1 ring-muted-foreground hover:ring-gray-300"
                             onClick={() => setAccentColor("#1f2937")}
-                          />
+                          >
+                            {accentColor === "#1f2937" && (
+                              <Check className="absolute left-1/2 top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 text-white" />
+                            )}
+                          </div>
                           <div
-                            className="h-9 w-9 cursor-pointer rounded-md bg-gray-950 shadow-sm ring-1 ring-muted-foreground hover:ring-1 hover:ring-gray-300"
+                            className="relative h-9 w-9 cursor-pointer rounded-md bg-gray-950 shadow-sm ring-1 ring-muted-foreground hover:ring-gray-300"
                             onClick={() => setAccentColor("#030712")}
-                          />
+                          >
+                            {accentColor === "#030712" && (
+                              <Check className="absolute left-1/2 top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 text-white" />
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -534,10 +558,10 @@ export default function DataroomBrandPage() {
                             </div>
                           </div>
                           <iframe
-                            key={`dataroom-view-${brandColor}`}
+                            key={`dataroom-view-${brandColor}-${accentColor}`}
                             name="dataroom-view"
                             id="dataroom-view"
-                            src={`/room_ppreview_demo?brandColor=${encodeURIComponent(brandColor)}&brandLogo=${blobUrl ? encodeURIComponent(blobUrl) : logo ? encodeURIComponent(logo) : ""}&brandBanner=${bannerBlobUrl ? encodeURIComponent(bannerBlobUrl) : banner ? encodeURIComponent(banner) : ""}`}
+                            src={`/room_ppreview_demo?brandColor=${encodeURIComponent(brandColor)}&accentColor=${encodeURIComponent(accentColor)}&brandLogo=${blobUrl ? encodeURIComponent(blobUrl) : logo ? encodeURIComponent(logo) : ""}&brandBanner=${bannerBlobUrl ? encodeURIComponent(bannerBlobUrl) : banner ? encodeURIComponent(banner) : ""}`}
                             style={{
                               width: "1390px",
                               height: "831px",
@@ -609,10 +633,10 @@ export default function DataroomBrandPage() {
                             </div>
                           </div>
                           <iframe
-                            key={`document-view-${brandColor}`}
+                            key={`document-view-${brandColor}-${accentColor}`}
                             name="document-view"
                             id="document-view"
-                            src={`/nav_ppreview_demo?brandColor=${encodeURIComponent(brandColor)}&brandLogo=${blobUrl ? encodeURIComponent(blobUrl) : logo ? encodeURIComponent(logo) : ""}`}
+                            src={`/nav_ppreview_demo?brandColor=${encodeURIComponent(brandColor)}&accentColor=${encodeURIComponent(accentColor)}&brandLogo=${blobUrl ? encodeURIComponent(blobUrl) : logo ? encodeURIComponent(logo) : ""}`}
                             style={{
                               width: "1390px",
                               height: "831px",
@@ -683,10 +707,10 @@ export default function DataroomBrandPage() {
                             </div>
                           </div>
                           <iframe
-                            key={`access-screen-${accentColor}`}
+                            key={`access-screen-${brandColor}-${accentColor}`}
                             name="access-screen"
                             id="access-screen"
-                            src={`/entrance_ppreview_demo?accentColor=${encodeURIComponent(accentColor)}&brandLogo=${blobUrl ? encodeURIComponent(blobUrl) : logo ? encodeURIComponent(logo) : ""}`}
+                            src={`/entrance_ppreview_demo?brandColor=${encodeURIComponent(brandColor)}&accentColor=${encodeURIComponent(accentColor)}&brandLogo=${blobUrl ? encodeURIComponent(blobUrl) : logo ? encodeURIComponent(logo) : ""}`}
                             style={{
                               width: "1390px",
                               height: "831px",
