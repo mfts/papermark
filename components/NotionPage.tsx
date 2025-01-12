@@ -142,6 +142,8 @@ export const NotionPage = ({
           setSubTitle(
             firstBlock?.value?.properties?.title?.[0]?.[0] || "Untitled",
           );
+          // Scroll to top when changing subpages
+          window.scrollTo({ top: 0, behavior: "smooth" });
           return;
         }
 
@@ -164,6 +166,8 @@ export const NotionPage = ({
           setSubTitle(
             firstBlock?.value?.properties?.title?.[0]?.[0] || "Untitled",
           );
+          // Scroll to top after loading new subpage
+          window.scrollTo({ top: 0, behavior: "smooth" });
         } catch (error) {
           console.error("Error fetching subpage:", error);
         } finally {
@@ -176,6 +180,8 @@ export const NotionPage = ({
         const firstBlockId = Object.keys(recordMap.block)[0];
         const firstBlock = recordMap.block[firstBlockId];
         setTitle(firstBlock?.value?.properties?.title?.[0]?.[0] || "Untitled");
+        // Scroll to top when returning to main page
+        window.scrollTo({ top: 0, behavior: "smooth" });
       }
     },
     [subPageId, recordMap],
