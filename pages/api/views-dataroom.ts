@@ -12,6 +12,7 @@ import { sendOtpVerificationEmail } from "@/lib/emails/send-email-otp-verificati
 import { getFile } from "@/lib/files/get-file";
 import { newId } from "@/lib/id-helper";
 import notion from "@/lib/notion";
+import { addSignedUrls } from "@/lib/notion/utils";
 import prisma from "@/lib/prisma";
 import { ratelimit } from "@/lib/redis";
 import { parseSheet } from "@/lib/sheet";
@@ -650,7 +651,9 @@ export default async function handle(
         }
 
         const pageId = notionPageId;
-        recordMap = await notion.getPage(pageId);
+        recordMap = await notion.getPage(pageId, { signFileUrls: false });
+        // TODO: separately sign the file urls until PR merged and published; ref: https://github.com/NotionX/react-notion-x/issues/580#issuecomment-2542823817
+        await addSignedUrls({ recordMap });
       }
 
       if (documentVersion.type === "sheet") {
