@@ -94,3 +94,20 @@ export const recordVideoView = tb.buildIngestEndpoint({
     ip_address: z.string().nullable(),
   }),
 });
+
+// Click event tracking when user clicks a link within a document
+export const recordClickEvent = tb.buildIngestEndpoint({
+  datasource: "click_events__v1",
+  event: z.object({
+    timestamp: z.string(),
+    event_id: z.string(),
+    session_id: z.string(),
+    link_id: z.string(),
+    document_id: z.string(),
+    view_id: z.string(),
+    page_number: z.string(),
+    href: z.string(),
+    version_number: z.number(),
+    dataroom_id: z.string().nullable(),
+  }),
+});

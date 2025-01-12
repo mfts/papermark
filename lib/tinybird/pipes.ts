@@ -114,7 +114,7 @@ export const getVideoEventsByDocument = tb.buildPipe({
   data: z.object({
     timestamp: z.string(),
     view_id: z.string(),
-    event_type: z.string(),
+    event_type: z.enum(VIDEO_EVENT_TYPES),
     start_time: z.number(),
     end_time: z.number(),
     playback_rate: z.number(),
@@ -136,5 +136,22 @@ export const getVideoEventsByView = tb.buildPipe({
     event_type: z.string(),
     start_time: z.number(),
     end_time: z.number(),
+  }),
+});
+
+export const getClickEventsByView = tb.buildPipe({
+  pipe: "get_click_events_by_view__v1",
+  parameters: z.object({
+    document_id: z.string(),
+    view_id: z.string(),
+  }),
+  data: z.object({
+    timestamp: z.string(),
+    document_id: z.string(),
+    dataroom_id: z.string().nullable(),
+    view_id: z.string(),
+    page_number: z.string(),
+    version_number: z.number(),
+    href: z.string(),
   }),
 });

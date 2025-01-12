@@ -60,6 +60,7 @@ import {
 } from "../ui/pagination";
 import { VisitorAvatar } from "./visitor-avatar";
 import VisitorChart from "./visitor-chart";
+import VisitorClicks from "./visitor-clicks";
 import VisitorUserAgent from "./visitor-useragent";
 import VisitorUserAgentPlaceholder from "./visitor-useragent-placeholder";
 import VisitorVideoChart from "./visitor-video-chart";
@@ -424,6 +425,13 @@ export default function VisitorsTable({
                                   versionNumber={view.versionNumber}
                                 />
                               )}
+                              {!isFreePlan ? (
+                                <VisitorClicks
+                                  teamId={view.teamId!}
+                                  documentId={view.documentId!}
+                                  viewId={view.id}
+                                />
+                              ) : null}
                             </TableCell>
                           </TableRow>
                         </>
