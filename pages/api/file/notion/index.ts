@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import notion from "@/lib/notion";
+import { addSignedUrls } from "@/lib/notion/utils";
 import { log } from "@/lib/utils";
 
 export default async function handle(
@@ -23,7 +24,9 @@ export default async function handle(
   const { pageId } = req.body as { pageId: string };
 
   try {
-    const recordMap = await notion.getPage(pageId);
+    const recordMap = await notion.getPage(pageId, { signFileUrls: false });
+    // TODO: separately sign the file urls until PR merged and published; ref: https://github.com/NotionX/react-notion-x/issues/580#issuecomment-2542823817
+    await addSignedUrls({ recordMap });
 
     if (!recordMap) {
       res.status(500).json({ message: "Internal Server Error" });
