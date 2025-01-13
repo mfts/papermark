@@ -50,6 +50,19 @@ export default async function handle(
                     data: true,
                   },
                 },
+                customFields: {
+                  select: {
+                    orderIndex: true,
+                    label: true,
+                    identifier: true,
+                    placeholder: true,
+                    type: true,
+                    required: true,
+                  },
+                  orderBy: {
+                    orderIndex: "asc",
+                  },
+                },
                 _count: {
                   select: { views: true },
                 },

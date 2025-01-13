@@ -1,5 +1,6 @@
 import {
   Agreement,
+  CustomField,
   Dataroom,
   DataroomDocument,
   DataroomFolder,
@@ -41,6 +42,7 @@ export interface LinkWithViews extends Link {
   };
   views: View[];
   feedback: { id: true; data: { question: string; type: string } } | null;
+  customFields: CustomField[];
 }
 
 export interface LinkWithDocument extends Link {
@@ -65,6 +67,7 @@ export interface LinkWithDocument extends Link {
     };
   } | null;
   agreement: Agreement | null;
+  customFields: CustomField[];
 }
 
 export interface LinkWithDataroom extends Link {
@@ -93,6 +96,7 @@ export interface LinkWithDataroom extends Link {
     lastUpdatedAt: Date;
   };
   agreement: Agreement | null;
+  customFields: CustomField[];
 }
 
 export interface Geo {
