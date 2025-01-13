@@ -202,21 +202,21 @@ export default function VideoAnalytics({
             </defs>
             <Area
               type="monotone"
-              dataKey="unique_views"
-              stroke="#10b981"
-              strokeWidth={2}
-              fill="url(#uniqueViewsGradient)"
-              dot={false}
-              name="Unique Viewers"
-            />
-            <Area
-              type="monotone"
               dataKey="total_views"
               stroke="#3B82F6"
               strokeWidth={2}
               fill="url(#playbackGradient)"
               dot={false}
               name="Playback Count"
+            />
+            <Area
+              type="monotone"
+              dataKey="unique_views"
+              stroke="#10b981"
+              strokeWidth={2}
+              fill="url(#uniqueViewsGradient)"
+              dot={false}
+              name="Unique Viewers"
             />
           </AreaChart>
         </ResponsiveContainer>
