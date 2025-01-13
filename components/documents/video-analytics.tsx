@@ -105,8 +105,8 @@ export default function VideoAnalytics({
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
-      const uniqueViews = payload[0].value;
-      const playbackCount = payload[1].value;
+      const uniqueViews = payload[1].value;
+      const playbackCount = payload[0].value;
       const intensity = playbackCount / uniqueViews || 1;
 
       return (
