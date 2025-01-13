@@ -61,6 +61,11 @@ export default async function handle(
     hasConfirmedAgreement?: boolean;
   };
 
+  // Add customFields to the data extraction
+  const { customFields } = data as {
+    customFields?: { [key: string]: string };
+  };
+
   // INFO: for using the advanced excel viewer
   const { useAdvancedExcelViewer } = data as {
     useAdvancedExcelViewer: boolean;
@@ -101,6 +106,12 @@ export default async function handle(
       team: {
         select: {
           plan: true,
+        },
+      },
+      customFields: {
+        select: {
+          identifier: true,
+          label: true,
         },
       },
     },
@@ -438,6 +449,18 @@ export default async function handle(
               agreementResponse: {
                 create: {
                   agreementId: link.agreementId,
+                },
+              },
+            }),
+          ...(customFields &&
+            link.customFields.length > 0 && {
+              customFieldResponse: {
+                create: {
+                  data: link.customFields.map((field) => ({
+                    identifier: field.identifier,
+                    label: field.label,
+                    response: customFields[field.identifier] || "",
+                  })),
                 },
               },
             }),

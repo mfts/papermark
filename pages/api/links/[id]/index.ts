@@ -62,6 +62,26 @@ export default async function handle(
           groupId: true,
           audienceType: true,
           teamId: true,
+          team: {
+            select: {
+              plan: true,
+            },
+          },
+          customFields: {
+            select: {
+              id: true,
+              type: true,
+              identifier: true,
+              label: true,
+              placeholder: true,
+              required: true,
+              disabled: true,
+              orderIndex: true,
+            },
+            orderBy: {
+              orderIndex: "asc",
+            },
+          },
         },
       });
 
@@ -100,9 +120,16 @@ export default async function handle(
         brand = data.brand;
       }
 
+      const teamPlan = link.team?.plan || "free";
+
       const returnLink = {
         ...link,
         ...linkData,
+        ...(teamPlan === "free" && {
+          customFields: [], // reset custom fields for free plan
+          enableAgreement: false,
+          enableWatermark: false,
+        }),
       };
 
       return res.status(200).json({ linkType, link: returnLink, brand });

@@ -257,6 +257,7 @@ export default function DocumentView({
         brand={brand}
         disableEditEmail={disableEditEmail}
         useCustomAccessForm={useCustomAccessForm}
+        customFields={link.customFields}
       />
     );
   }
