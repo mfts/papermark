@@ -49,8 +49,24 @@ export default function CustomFieldsSection({
             <InputComponent
               name={field.identifier || ""}
               id={field.id || ""}
-              type={field.type === "NUMBER" ? "number" : "text"}
+              type={
+                field.type === "NUMBER"
+                  ? "number"
+                  : field.type === "URL"
+                    ? "url"
+                    : "text"
+              }
+              pattern={field.type === "URL" ? "https://.*" : undefined}
+              onInvalid={(e) => {
+                if (field.type === "URL") {
+                  e.currentTarget.setCustomValidity(
+                    "Please enter a valid URL starting with https://",
+                  );
+                }
+              }}
+              onInput={(e) => e.currentTarget.setCustomValidity("")}
               autoComplete="off"
+              data-1p-ignore
               required={field.required}
               disabled={field.disabled}
               className={cn(
