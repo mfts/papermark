@@ -42,10 +42,7 @@ export default function NameSection({
         htmlFor="name"
         className="block text-sm font-medium leading-6 text-white"
         style={{
-          color:
-            brand && brand.accentColor
-              ? determineTextColor(brand.accentColor)
-              : "white",
+          color: determineTextColor(brand?.accentColor),
         }}
       >
         Name
@@ -61,10 +58,7 @@ export default function NameSection({
         style={{
           backgroundColor:
             brand && brand.accentColor ? brand.accentColor : "black",
-          color:
-            brand && brand.accentColor
-              ? determineTextColor(brand.accentColor)
-              : "white",
+          color: determineTextColor(brand?.accentColor),
         }}
         value={name || ""}
         placeholder="Enter your full name"

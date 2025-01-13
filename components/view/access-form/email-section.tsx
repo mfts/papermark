@@ -96,10 +96,7 @@ export default function EmailSection({
         htmlFor="email"
         className="block text-sm font-medium leading-6 text-white"
         style={{
-          color:
-            brand && brand.accentColor
-              ? determineTextColor(brand.accentColor)
-              : "white",
+          color: determineTextColor(brand?.accentColor),
         }}
       >
         Email address
@@ -121,9 +118,7 @@ export default function EmailSection({
             brand && brand.accentColor ? brand.accentColor : "black",
           color: disableEditEmail
             ? "hsl(var(--muted-foreground))"
-            : brand && brand.accentColor
-              ? determineTextColor(brand.accentColor)
-              : "white",
+            : determineTextColor(brand?.accentColor),
         }}
         value={email || ""}
         placeholder="Enter email"
@@ -141,9 +136,7 @@ export default function EmailSection({
           id="email-error"
           className="mt-1 text-sm text-red-500"
           style={{
-            color: brand?.accentColor
-              ? determineTextColor(brand.accentColor)
-              : "rgb(239 68 68)",
+            color: determineTextColor(brand?.accentColor),
           }}
         >
           {emailError}

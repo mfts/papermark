@@ -27,10 +27,7 @@ export default function PasswordSection({
         htmlFor="password"
         className="block text-sm font-medium leading-6 text-white"
         style={{
-          color:
-            brand && brand.accentColor
-              ? determineTextColor(brand.accentColor)
-              : "white",
+          color: determineTextColor(brand?.accentColor),
         }}
       >
         Passcode
@@ -46,10 +43,7 @@ export default function PasswordSection({
           style={{
             backgroundColor:
               brand && brand.accentColor ? brand.accentColor : "black",
-            color:
-              brand && brand.accentColor
-                ? determineTextColor(brand.accentColor)
-                : "white",
+            color: determineTextColor(brand?.accentColor),
           }}
           value={password || ""}
           placeholder="Enter passcode"

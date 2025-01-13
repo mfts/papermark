@@ -41,10 +41,7 @@ export default function CustomFieldsSection({
               htmlFor={field.identifier}
               className="block text-sm font-medium leading-6 text-white"
               style={{
-                color:
-                  brand && brand.accentColor
-                    ? determineTextColor(brand.accentColor)
-                    : "white",
+                color: determineTextColor(brand?.accentColor),
               }}
             >
               {field.label}
@@ -63,10 +60,7 @@ export default function CustomFieldsSection({
               style={{
                 backgroundColor:
                   brand && brand.accentColor ? brand.accentColor : "black",
-                color:
-                  brand && brand.accentColor
-                    ? determineTextColor(brand.accentColor)
-                    : "white",
+                color: determineTextColor(brand?.accentColor),
               }}
               value={value}
               placeholder={field.placeholder || ""}

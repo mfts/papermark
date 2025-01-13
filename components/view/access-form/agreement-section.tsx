@@ -37,10 +37,7 @@ export default function AgreementSection({
       <label
         className="text-sm font-normal leading-5 text-white peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
         style={{
-          color:
-            brand && brand.accentColor
-              ? determineTextColor(brand.accentColor)
-              : "white",
+          color: determineTextColor(brand?.accentColor),
         }}
       >
         I have reviewed and agree to the terms of this{" "}
@@ -50,10 +47,7 @@ export default function AgreementSection({
           rel="noreferrer noopener"
           className="underline hover:text-gray-200"
           style={{
-            color:
-              brand && brand.accentColor
-                ? determineTextColor(brand.accentColor)
-                : "white",
+            color: determineTextColor(brand?.accentColor),
           }}
         >
           {agreementName}
