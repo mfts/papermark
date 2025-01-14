@@ -95,7 +95,10 @@ export default function DocumentPage() {
             />
 
             {/* Visitors */}
-            <VisitorsTable isVideo={primaryVersion.type === "video"} />
+            <VisitorsTable
+              primaryVersion={primaryVersion}
+              isVideo={primaryVersion.type === "video"}
+            />
 
             <LinkSheet
               isOpen={isLinkSheetOpen}
