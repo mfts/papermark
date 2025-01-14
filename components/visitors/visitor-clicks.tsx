@@ -50,20 +50,8 @@ export default function VisitorClicks({
     );
   }
 
-  if (!clickEvents) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base font-medium">Link Clicks</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-3/4" />
-          </div>
-        </CardContent>
-      </Card>
-    );
+  if (!clickEvents || clickEvents.data.length === 0) {
+    return null;
   }
 
   return (
@@ -72,36 +60,29 @@ export default function VisitorClicks({
         <CardTitle className="text-base font-medium">Link Clicks</CardTitle>
       </CardHeader>
       <CardContent>
-        {clickEvents.data.length === 0 ? (
-          <div className="text-sm text-gray-500">No links clicked yet</div>
-        ) : (
-          <div className="space-y-4">
-            {clickEvents.data.map((event, index) => (
-              <div key={index} className="flex items-start space-x-3">
-                <ExternalLink className="mt-0.5 h-4 w-4 flex-shrink-0 text-gray-400" />
-                <div className="space-y-1">
-                  <div className="text-sm">
-                    <span className="font-medium">
-                      Page {event.page_number}
-                    </span>
-                    :{" "}
-                    <a
-                      href={event.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:underline"
-                    >
-                      {event.href}
-                    </a>
-                  </div>
-                  <div className="text-xs text-gray-500">
-                    {format(new Date(event.timestamp), "MMM d, yyyy HH:mm:ss")}
-                  </div>
+        <div className="space-y-4">
+          {clickEvents.data.map((event, index) => (
+            <div key={index} className="flex items-start space-x-3">
+              <ExternalLink className="mt-0.5 h-4 w-4 flex-shrink-0 text-gray-400" />
+              <div className="space-y-1">
+                <div className="text-sm">
+                  <span className="font-medium">Page {event.page_number}</span>:{" "}
+                  <a
+                    href={event.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline"
+                  >
+                    {event.href}
+                  </a>
+                </div>
+                <div className="text-xs text-gray-500">
+                  {format(new Date(event.timestamp), "MMM d, yyyy HH:mm:ss")}
                 </div>
               </div>
-            ))}
-          </div>
-        )}
+            </div>
+          ))}
+        </div>
       </CardContent>
     </Card>
   );
