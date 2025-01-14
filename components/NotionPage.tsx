@@ -311,10 +311,7 @@ export const NotionPage = ({
                 className="cursor-pointer underline underline-offset-4 hover:font-medium"
                 onClick={() => setSubPageId(null)}
                 style={{
-                  color:
-                    brand && brand.brandColor
-                      ? determineTextColor(brand.brandColor)
-                      : "white",
+                  color: determineTextColor(brand?.brandColor),
                 }}
               >
                 {title}
@@ -327,10 +324,7 @@ export const NotionPage = ({
               <BreadcrumbPage
                 className="font-medium"
                 style={{
-                  color:
-                    brand && brand.brandColor
-                      ? determineTextColor(brand.brandColor)
-                      : "white",
+                  color: determineTextColor(brand?.brandColor),
                 }}
               >
                 {subTitle}

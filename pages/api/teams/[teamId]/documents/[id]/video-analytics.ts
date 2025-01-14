@@ -189,12 +189,9 @@ export default async function handle(
 
     try {
       // Fetch video events from Tinybird
-      console.log("Fetching video events for document:", documentId);
       const response = await getVideoEventsByDocument({
         document_id: documentId,
       });
-
-      console.log("Tinybird response:", JSON.stringify(response, null, 2));
 
       if (!response || !response.data) {
         console.error("Invalid response from Tinybird:", response);

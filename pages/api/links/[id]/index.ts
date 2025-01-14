@@ -62,6 +62,26 @@ export default async function handle(
           groupId: true,
           audienceType: true,
           teamId: true,
+          team: {
+            select: {
+              plan: true,
+            },
+          },
+          customFields: {
+            select: {
+              id: true,
+              type: true,
+              identifier: true,
+              label: true,
+              placeholder: true,
+              required: true,
+              disabled: true,
+              orderIndex: true,
+            },
+            orderBy: {
+              orderIndex: "asc",
+            },
+          },
         },
       });
 
@@ -100,9 +120,16 @@ export default async function handle(
         brand = data.brand;
       }
 
+      const teamPlan = link.team?.plan || "free";
+
       const returnLink = {
         ...link,
         ...linkData,
+        ...(teamPlan === "free" && {
+          customFields: [], // reset custom fields for free plan
+          enableAgreement: false,
+          enableWatermark: false,
+        }),
       };
 
       return res.status(200).json({ linkType, link: returnLink, brand });
@@ -248,6 +275,23 @@ export default async function handle(
         metaDescription: linkData.metaDescription || null,
         metaImage: linkData.metaImage || null,
         metaFavicon: linkData.metaFavicon || null,
+        ...(linkData.customFields && {
+          customFields: {
+            deleteMany: {}, // Delete all existing custom fields
+            createMany: {
+              data: linkData.customFields.map((field: any, index: number) => ({
+                type: field.type,
+                identifier: field.identifier,
+                label: field.label,
+                placeholder: field.placeholder,
+                required: field.required,
+                disabled: field.disabled,
+                orderIndex: index,
+              })),
+              skipDuplicates: true,
+            },
+          },
+        }),
         enableQuestion: linkData.enableQuestion,
         ...(linkData.enableQuestion && {
           feedback: {
