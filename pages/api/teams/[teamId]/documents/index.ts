@@ -16,6 +16,7 @@ import {
   convertFilesToPdfTask,
 } from "@/lib/trigger/convert-files";
 import { processVideo } from "@/lib/trigger/optimize-video-files";
+import { convertPdfToImage } from "@/lib/trigger/pdf-to-image";
 import { CustomUser } from "@/lib/types";
 import { getExtension, log } from "@/lib/utils";
 
@@ -314,15 +315,33 @@ export default async function handle(
       // skip triggering convert-pdf-to-image job for "notion" / "excel" documents
       if (type === "pdf") {
         // trigger document uploaded event to trigger convert-pdf-to-image job
-        await client.sendEvent({
-          id: document.versions[0].id, // unique eventId for the run
-          name: "document.uploaded",
-          payload: {
-            documentVersionId: document.versions[0].id,
-            teamId: teamId,
-            documentId: document.id,
-          },
-        });
+        if (teamId === "cluqtfmcr0001zkza4xcgqatw") {
+          await convertPdfToImage.trigger(
+            {
+              documentVersionId: document.versions[0].id,
+              teamId,
+              docId: fileUrl.split("/")[1],
+            },
+            {
+              idempotencyKey: `${teamId}-${document.versions[0].id}`,
+              tags: [
+                `team_${teamId}`,
+                `document_${document.id}`,
+                `version_${document.versions[0].id}`,
+              ],
+            },
+          );
+        } else {
+          await client.sendEvent({
+            id: document.versions[0].id, // unique eventId for the run
+            name: "document.uploaded",
+            payload: {
+              documentVersionId: document.versions[0].id,
+              teamId: teamId,
+              documentId: document.id,
+            },
+          });
+        }
       }
 
       return res.status(201).json(document);
