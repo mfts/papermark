@@ -135,6 +135,7 @@ export default function LinksTable({
       audienceType: link.audienceType,
       groupId: link.groupId,
       screenShieldPercentage: link.screenShieldPercentage,
+      customFields: link.customFields || [],
     });
     //wait for dropdown to close before opening the link sheet
     setTimeout(() => {

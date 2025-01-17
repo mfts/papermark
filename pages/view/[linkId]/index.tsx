@@ -16,6 +16,7 @@ import DataroomView from "@/components/view/dataroom/dataroom-view";
 import DocumentView from "@/components/view/document-view";
 
 import notion from "@/lib/notion";
+import { addSignedUrls } from "@/lib/notion/utils";
 import {
   CustomUser,
   LinkWithDataroom,
@@ -93,7 +94,9 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
         }
 
         pageId = notionPageId;
-        recordMap = await notion.getPage(pageId);
+        recordMap = await notion.getPage(pageId, { signFileUrls: false });
+        // TODO: separately sign the file urls until PR merged and published; ref: https://github.com/NotionX/react-notion-x/issues/580#issuecomment-2542823817
+        await addSignedUrls({ recordMap });
       }
 
       const { team, teamId, advancedExcelEnabled, ...linkDocument } =
@@ -133,7 +136,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
             teamId === "cm0154tiv0000lr2t6nr5c6kp" ||
             teamId === "clup33by90000oewh4rfvp2eg",
         },
-        revalidate: brand ? 10 : false,
+        revalidate: brand || recordMap ? 10 : false,
       };
     }
 

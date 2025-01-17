@@ -1,4 +1,6 @@
 /** @type {import('tailwindcss').Config} */
+import scrollbarHide from "tailwind-scrollbar-hide";
+
 module.exports = {
   darkMode: ["class"],
   content: [
@@ -250,6 +252,6 @@ module.exports = {
     require("@tailwindcss/forms"),
     require("tailwindcss-animate"),
     require("@tailwindcss/typography"),
-    require("tailwind-scrollbar-hide"),
+    scrollbarHide,
   ],
 };

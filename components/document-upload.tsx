@@ -18,6 +18,11 @@ const fileSizeLimits: { [key: string]: number } = {
   "image/png": 100, // 100 MB
   "image/jpeg": 100, // 100 MB
   "image/jpg": 100, // 100 MB
+  "video/mp4": 500, // 500 MB
+  "video/quicktime": 500, // 500 MB
+  "video/x-msvideo": 500, // 500 MB
+  "video/webm": 500, // 500 MB
+  "video/ogg": 500, // 500 MB
 };
 
 export default function DocumentUpload({
@@ -73,17 +78,23 @@ export default function DocumentUpload({
             "image/jpg": [], // ".jpg"
             "application/zip": [], // ".zip"
             "application/x-zip-compressed": [], // ".zip"
+            "video/mp4": [], // ".mp4"
+            "video/quicktime": [], // ".mov"
+            "video/x-msvideo": [], // ".avi"
+            "video/webm": [], // ".webm"
+            "video/ogg": [], // ".ogg"
+            "application/vnd.google-earth.kml+xml": [".kml"], // ".kml"
+            "application/vnd.google-earth.kmz": [".kmz"], // ".kmz"
           },
     multiple: false,
-    maxSize: maxSize * 1024 * 1024, // 30 MB
     onDropAccepted: (acceptedFiles) => {
       const file = acceptedFiles[0];
       const fileType = file.type;
-      const fileSizeLimit = fileSizeLimits[fileType] * 1024 * 1024;
+      const fileSizeLimit = (fileSizeLimits[fileType] || maxSize) * 1024 * 1024;
 
       if (file.size > fileSizeLimit) {
         toast.error(
-          `File size too big for ${fileType} (max. ${fileSizeLimits[fileType]} MB)`,
+          `File size too big for ${fileType} (max. ${fileSizeLimits[fileType] || maxSize} MB)`,
         );
         return;
       }

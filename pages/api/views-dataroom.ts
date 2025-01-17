@@ -12,6 +12,7 @@ import { sendOtpVerificationEmail } from "@/lib/emails/send-email-otp-verificati
 import { getFile } from "@/lib/files/get-file";
 import { newId } from "@/lib/id-helper";
 import notion from "@/lib/notion";
+import { addSignedUrls } from "@/lib/notion/utils";
 import prisma from "@/lib/prisma";
 import { ratelimit } from "@/lib/redis";
 import { parseSheet } from "@/lib/sheet";
@@ -76,6 +77,11 @@ export default async function handle(
     hasConfirmedAgreement?: boolean;
   };
 
+  // Add customFields to the data extraction
+  const { customFields } = data as {
+    customFields?: { [key: string]: string };
+  };
+
   // INFO: for using the advanced excel viewer
   let { useAdvancedExcelViewer } = data as {
     useAdvancedExcelViewer: boolean;
@@ -119,6 +125,12 @@ export default async function handle(
       team: {
         select: {
           plan: true,
+        },
+      },
+      customFields: {
+        select: {
+          identifier: true,
+          label: true,
         },
       },
     },
@@ -495,6 +507,18 @@ export default async function handle(
               link.groupId && {
                 groupId: link.groupId,
               }),
+            ...(customFields &&
+              link.customFields.length > 0 && {
+                customFieldResponse: {
+                  create: {
+                    data: link.customFields.map((field) => ({
+                      identifier: field.identifier,
+                      label: field.label,
+                      response: customFields[field.identifier] || "",
+                    })),
+                  },
+                },
+              }),
           },
           select: { id: true },
         });
@@ -628,7 +652,11 @@ export default async function handle(
         return;
       }
 
-      if (documentVersion.type === "pdf" || documentVersion.type === "image") {
+      if (
+        documentVersion.type === "pdf" ||
+        documentVersion.type === "image" ||
+        documentVersion.type === "video"
+      ) {
         documentVersion.file = await getFile({
           data: documentVersion.file,
           type: documentVersion.storageType,
@@ -646,7 +674,9 @@ export default async function handle(
         }
 
         const pageId = notionPageId;
-        recordMap = await notion.getPage(pageId);
+        recordMap = await notion.getPage(pageId, { signFileUrls: false });
+        // TODO: separately sign the file urls until PR merged and published; ref: https://github.com/NotionX/react-notion-x/issues/580#issuecomment-2542823817
+        await addSignedUrls({ recordMap });
       }
 
       if (documentVersion.type === "sheet") {
@@ -717,7 +747,8 @@ export default async function handle(
         (documentVersion &&
           (documentVersion.type === "pdf" ||
             documentVersion.type === "image" ||
-            documentVersion.type === "zip")) ||
+            documentVersion.type === "zip" ||
+            documentVersion.type === "video")) ||
         (documentVersion && useAdvancedExcelViewer)
           ? documentVersion.file
           : undefined,

@@ -54,6 +54,13 @@ const allAcceptableDropZoneMimeTypes = {
   "image/jpg": [], // ".jpg"
   "application/zip": [], // ".zip"
   "application/x-zip-compressed": [], // ".zip"
+  "video/mp4": [], // ".mp4"
+  "video/webm": [], // ".webm"
+  "video/quicktime": [], // ".mov"
+  "video/x-msvideo": [], // ".avi"
+  "video/ogg": [], // ".ogg"
+  "application/vnd.google-earth.kml+xml": [".kml"], // ".kml"
+  "application/vnd.google-earth.kmz": [".kmz"], // ".kmz"
 };
 
 interface FileWithPaths extends File {
@@ -68,6 +75,11 @@ const fileSizeLimits: { [key: string]: number } = {
   "image/png": 100, // 100 MB
   "image/jpeg": 100, // 100 MB
   "image/jpg": 100, // 100 MB
+  "video/mp4": 500, // 500 MB
+  "video/quicktime": 500, // 500 MB
+  "video/x-msvideo": 500, // 500 MB
+  "video/webm": 500, // 500 MB
+  "video/ogg": 500, // 500 MB
 };
 
 export default function UploadZone({
@@ -253,6 +265,14 @@ export default function UploadZone({
           contentType = "application/vnd.ms-excel.sheet.macroEnabled.12";
         }
 
+        if (
+          uploadResult.fileName.endsWith(".kml") ||
+          uploadResult.fileName.endsWith(".kmz")
+        ) {
+          supportedFileType = "map";
+          contentType = `application/vnd.google-earth.${uploadResult.fileName.endsWith(".kml") ? "kml+xml" : "kmz"}`;
+        }
+
         const documentData: DocumentData = {
           key: uploadResult.id,
           supportedFileType: supportedFileType,
@@ -333,6 +353,10 @@ export default function UploadZone({
           teamId: teamInfo?.currentTeam?.id,
           bulkupload: true,
           dataroomId: dataroomId,
+          $set: {
+            teamId: teamInfo?.currentTeam?.id,
+            teamPlan: plan,
+          },
         });
 
         return document;

@@ -14,6 +14,7 @@ import DocumentUpload from "@/components/document-upload";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Sheet,
   SheetContent,
@@ -151,7 +152,7 @@ export default function AgreementSheet({
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
-      <SheetContent className="flex w-[85%] flex-col justify-between bg-background px-4 text-foreground sm:w-[500px] md:px-5">
+      <SheetContent className="flex h-full w-[85%] flex-col justify-between bg-background px-4 text-foreground sm:w-[500px] md:px-5">
         <SheetHeader className="text-start">
           <SheetTitle>Create a new agreement</SheetTitle>
           <SheetDescription>
@@ -160,89 +161,91 @@ export default function AgreementSheet({
           </SheetDescription>
         </SheetHeader>
 
-        <form className="flex grow flex-col" onSubmit={handleSubmit}>
-          <div className="flex-grow space-y-6">
-            <div className="w-full space-y-2">
-              <Label htmlFor="name">Display name</Label>
-              <Input
-                className="flex w-full rounded-md border-0 bg-background py-1.5 text-foreground shadow-sm ring-1 ring-inset ring-input placeholder:text-muted-foreground focus:ring-2 focus:ring-inset focus:ring-gray-400 sm:text-sm sm:leading-6"
-                id="name"
-                type="text"
-                name="name"
-                required
-                autoComplete="off"
-                data-1p-ignore
-                placeholder="Standard NDA"
-                value={data.name || ""}
-                onChange={(e) =>
-                  setData({
-                    ...data,
-                    name: e.target.value,
-                  })
-                }
-              />
-            </div>
-
-            <div>
-              <LinkItem
-                title="Require viewer's name"
-                enabled={data.requireName}
-                action={() =>
-                  setData({ ...data, requireName: !data.requireName })
-                }
-              />
-            </div>
-
-            <div className="space-y-4">
+        <ScrollArea className="flex-1">
+          <form className="flex grow flex-col" onSubmit={handleSubmit}>
+            <div className="flex-grow space-y-6">
               <div className="w-full space-y-2">
-                <Label htmlFor="link">Link to an agreement</Label>
+                <Label htmlFor="name">Display name</Label>
                 <Input
                   className="flex w-full rounded-md border-0 bg-background py-1.5 text-foreground shadow-sm ring-1 ring-inset ring-input placeholder:text-muted-foreground focus:ring-2 focus:ring-inset focus:ring-gray-400 sm:text-sm sm:leading-6"
-                  id="link"
-                  type="url"
-                  pattern="https://.*"
-                  name="link"
+                  id="name"
+                  type="text"
+                  name="name"
                   required
                   autoComplete="off"
                   data-1p-ignore
-                  placeholder="https://www.papermark.io/nda"
-                  value={data.link || ""}
+                  placeholder="Standard NDA"
+                  value={data.name || ""}
                   onChange={(e) =>
                     setData({
                       ...data,
-                      link: e.target.value,
+                      name: e.target.value,
                     })
-                  }
-                  onInvalid={(e) =>
-                    e.currentTarget.setCustomValidity(
-                      "Please enter a valid URL starting with https://",
-                    )
                   }
                 />
               </div>
 
-              <div className="space-y-12">
-                <div className="space-y-2 pb-6">
-                  <Label>Or upload an agreement</Label>
-                  <div className="grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
-                    <DocumentUpload
-                      currentFile={currentFile}
-                      setCurrentFile={setCurrentFile}
-                    />
+              <div>
+                <LinkItem
+                  title="Require viewer's name"
+                  enabled={data.requireName}
+                  action={() =>
+                    setData({ ...data, requireName: !data.requireName })
+                  }
+                />
+              </div>
+
+              <div className="space-y-4">
+                <div className="w-full space-y-2">
+                  <Label htmlFor="link">Link to an agreement</Label>
+                  <Input
+                    className="flex w-full rounded-md border-0 bg-background py-1.5 text-foreground shadow-sm ring-1 ring-inset ring-input placeholder:text-muted-foreground focus:ring-2 focus:ring-inset focus:ring-gray-400 sm:text-sm sm:leading-6"
+                    id="link"
+                    type="url"
+                    pattern="https://.*"
+                    name="link"
+                    required
+                    autoComplete="off"
+                    data-1p-ignore
+                    placeholder="https://www.papermark.io/nda"
+                    value={data.link || ""}
+                    onChange={(e) =>
+                      setData({
+                        ...data,
+                        link: e.target.value,
+                      })
+                    }
+                    onInvalid={(e) =>
+                      e.currentTarget.setCustomValidity(
+                        "Please enter a valid URL starting with https://",
+                      )
+                    }
+                  />
+                </div>
+
+                <div className="space-y-12">
+                  <div className="space-y-2 pb-6">
+                    <Label>Or upload an agreement</Label>
+                    <div className="grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
+                      <DocumentUpload
+                        currentFile={currentFile}
+                        setCurrentFile={setCurrentFile}
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          <SheetFooter>
-            <div className="flex items-center">
-              <Button type="submit" loading={isLoading}>
-                Create Agreement
-              </Button>
-            </div>
-          </SheetFooter>
-        </form>
+            <SheetFooter className="flex-shrink-0">
+              <div className="flex items-center">
+                <Button type="submit" loading={isLoading}>
+                  Create Agreement
+                </Button>
+              </div>
+            </SheetFooter>
+          </form>
+        </ScrollArea>
       </SheetContent>
     </Sheet>
   );

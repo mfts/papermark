@@ -1,0 +1,20 @@
+VERSION 1
+
+DESCRIPTION >
+    Click events track when a user clicks a link within a document
+
+SCHEMA >
+    `timestamp` DateTime64(3) `json:$.timestamp`,
+    `event_id` String `json:$.event_id`,
+    `session_id` String `json:$.session_id`,
+    `link_id` String `json:$.link_id`,
+    `document_id` String `json:$.document_id`,
+    `dataroom_id` Nullable(String) `json:$.dataroom_id`,
+    `view_id` String `json:$.view_id`,
+    `page_number` LowCardinality(String) `json:$.page_number`,
+    `version_number` UInt16 `json:$.version_number`,
+    `href` String `json:$.href`
+
+ENGINE "MergeTree"
+ENGINE_SORTING_KEY "document_id,view_id,link_id,timestamp"
+ENGINE_PARTITION_KEY "toYYYYMM(timestamp)" 

@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 import { useEffect } from "react";
 
 import AppLayout from "@/components/layouts/app";
+import { SearchBoxPersisted } from "@/components/search-box";
 import { Separator } from "@/components/ui/separator";
 import { ContactsTable } from "@/components/visitors/contacts-table";
 
@@ -12,7 +13,7 @@ import useViewers from "@/lib/swr/use-viewers";
 export default function Visitors() {
   const router = useRouter();
   const { plan, trial } = usePlan();
-  const { viewers } = useViewers();
+  const { viewers, isValidating, isFiltered } = useViewers();
 
   const isTrial = !!trial;
   const isFree = plan == "free";
@@ -34,6 +35,17 @@ export default function Visitors() {
             </p>
           </div>
         </section>
+
+        <div className="mb-2 flex justify-end gap-x-2">
+          <div className="relative w-full sm:max-w-xs">
+            <SearchBoxPersisted
+              loading={isValidating}
+              placeholder="Search visitors..."
+              inputClassName="h-10"
+            />
+          </div>
+        </div>
+
         <Separator className="bg-gray-200 dark:bg-gray-800" />
       </div>
 

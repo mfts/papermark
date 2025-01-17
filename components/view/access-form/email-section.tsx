@@ -91,71 +91,62 @@ export default function EmailSection({
   };
 
   return (
-    <div className="pb-5">
-      <div className="relative space-y-2">
-        <label
-          htmlFor="email"
-          className="block text-sm font-medium leading-6 text-white"
+    <div className="relative space-y-2">
+      <label
+        htmlFor="email"
+        className="block text-sm font-medium leading-6 text-white"
+        style={{
+          color: determineTextColor(brand?.accentColor),
+        }}
+      >
+        Email address
+      </label>
+      <input
+        name="email"
+        id="email"
+        type="email"
+        autoCorrect="off"
+        autoComplete="email"
+        autoFocus
+        required
+        className={cn(
+          "flex w-full rounded-md border-0 bg-black py-1.5 text-gray-500 shadow-sm ring-1 ring-inset ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-gray-300 sm:text-sm sm:leading-6",
+          emailError && isDirty && "ring-red-500",
+        )}
+        style={{
+          backgroundColor:
+            brand && brand.accentColor ? brand.accentColor : "black",
+          color: disableEditEmail
+            ? "hsl(var(--muted-foreground))"
+            : determineTextColor(brand?.accentColor),
+        }}
+        value={email || ""}
+        placeholder="Enter email"
+        onChange={handleEmailChange}
+        onInvalid={handleInvalid}
+        onBlur={handleBlur}
+        onFocus={handleFocus}
+        disabled={disableEditEmail}
+        data-1p-ignore
+        aria-invalid={emailError ? "true" : "false"}
+        aria-describedby={emailError ? "email-error" : undefined}
+      />
+      {emailError && (
+        <p
+          id="email-error"
+          className="mt-1 text-sm text-red-500"
           style={{
-            color:
-              brand && brand.accentColor
-                ? determineTextColor(brand.accentColor)
-                : "white",
+            color: determineTextColor(brand?.accentColor),
           }}
         >
-          Email address
-        </label>
-        <input
-          name="email"
-          id="email"
-          type="email"
-          autoCorrect="off"
-          autoComplete="email"
-          autoFocus
-          required
-          className={cn(
-            "flex w-full rounded-md border-0 bg-black py-1.5 text-gray-500 shadow-sm ring-1 ring-inset ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-gray-300 sm:text-sm sm:leading-6",
-            emailError && isDirty && "ring-red-500",
-          )}
-          style={{
-            backgroundColor:
-              brand && brand.accentColor ? brand.accentColor : "black",
-            color: disableEditEmail
-              ? "hsl(var(--muted-foreground))"
-              : brand && brand.accentColor
-                ? determineTextColor(brand.accentColor)
-                : "white",
-          }}
-          value={email || ""}
-          placeholder="Enter email"
-          onChange={handleEmailChange}
-          onInvalid={handleInvalid}
-          onBlur={handleBlur}
-          onFocus={handleFocus}
-          disabled={disableEditEmail}
-          data-1p-ignore
-          aria-invalid={emailError ? "true" : "false"}
-          aria-describedby={emailError ? "email-error" : undefined}
-        />
-        {emailError && (
-          <p
-            id="email-error"
-            className="mt-1 text-sm text-red-500"
-            style={{
-              color: brand?.accentColor
-                ? determineTextColor(brand.accentColor)
-                : "rgb(239 68 68)",
-            }}
-          >
-            {emailError}
-          </p>
-        )}
-        <p className="text-sm text-gray-500">
-          {useCustomAccessForm
-            ? "This data will be shared with the content provider."
-            : "This data will be shared with the sender."}
+          {emailError}
         </p>
-      </div>
+      )}
+      <p className="text-sm text-gray-500">
+        {useCustomAccessForm
+          ? "This data will be shared with the content provider."
+          : "This data will be shared with the sender."}
+      </p>
     </div>
   );
 }

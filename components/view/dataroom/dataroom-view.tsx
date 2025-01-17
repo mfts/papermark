@@ -26,6 +26,7 @@ import EmailVerificationMessage from "../email-verification-form";
 import AdvancedExcelViewer from "../viewer/advanced-excel-viewer";
 import DownloadOnlyViewer from "../viewer/download-only-viewer";
 import ImageViewer from "../viewer/image-viewer";
+import VideoViewer from "../viewer/video-viewer";
 
 const ExcelViewer = dynamic(
   () => import("@/components/view/viewer/excel-viewer"),
@@ -323,6 +324,8 @@ export default function DataroomView({
         isLoading={isLoading}
         disableEditEmail={disableEditEmail}
         useCustomAccessForm={useCustomAccessForm}
+        brand={brand}
+        customFields={link.customFields}
       />
     );
   }
@@ -337,7 +340,13 @@ export default function DataroomView({
 
   if (submitted && documentData) {
     return viewData.notionData?.recordMap ? (
-      <div className="bg-gray-950">
+      <div
+        className="bg-gray-950"
+        style={{
+          backgroundColor:
+            brand && brand.accentColor ? brand.accentColor : "rgb(3, 7, 18)",
+        }}
+      >
         <NotionPage
           recordMap={viewData.notionData.recordMap}
           viewId={viewData.viewId}
@@ -368,7 +377,13 @@ export default function DataroomView({
         setDocumentData={setDocumentData}
       />
     ) : viewData.fileType === "sheet" && viewData.sheetData ? (
-      <div className="bg-gray-950">
+      <div
+        className="bg-gray-950"
+        style={{
+          backgroundColor:
+            brand && brand.accentColor ? brand.accentColor : "rgb(3, 7, 18)",
+        }}
+      >
         <ExcelViewer
           linkId={link.id}
           viewId={viewData.viewId}
@@ -385,7 +400,13 @@ export default function DataroomView({
         />
       </div>
     ) : viewData.fileType === "sheet" && viewData.useAdvancedExcelViewer ? (
-      <div className="bg-gray-950">
+      <div
+        className="bg-gray-950"
+        style={{
+          backgroundColor:
+            brand && brand.accentColor ? brand.accentColor : "rgb(3, 7, 18)",
+        }}
+      >
         <AdvancedExcelViewer
           linkId={link.id}
           viewId={viewData.viewId}
@@ -401,7 +422,13 @@ export default function DataroomView({
         />
       </div>
     ) : viewData.fileType === "image" ? (
-      <div className="bg-gray-950">
+      <div
+        className="bg-gray-950"
+        style={{
+          backgroundColor:
+            brand && brand.accentColor ? brand.accentColor : "rgb(3, 7, 18)",
+        }}
+      >
         <ImageViewer
           file={viewData.file!}
           linkId={link.id}
@@ -427,8 +454,37 @@ export default function DataroomView({
           linkName={link.name ?? `Link #${link.id.slice(-5)}`}
         />
       </div>
+    ) : viewData.fileType === "video" ? (
+      <div
+        className="bg-gray-950"
+        style={{
+          backgroundColor:
+            brand && brand.accentColor ? brand.accentColor : "rgb(3, 7, 18)",
+        }}
+      >
+        <VideoViewer
+          file={viewData.file!}
+          linkId={link.id}
+          documentId={documentData.id}
+          viewId={viewData.viewId}
+          documentName={documentData.name}
+          allowDownload={viewData.canDownload ?? link.allowDownload!}
+          screenshotProtectionEnabled={link.enableScreenshotProtection!}
+          versionNumber={documentData.documentVersionNumber}
+          brand={brand}
+          dataroomId={dataroom.id}
+          setDocumentData={setDocumentData}
+          isPreview={viewData.isPreview}
+        />
+      </div>
     ) : viewData.pages ? (
-      <div className="bg-gray-950">
+      <div
+        className="bg-gray-950"
+        style={{
+          backgroundColor:
+            brand && brand.accentColor ? brand.accentColor : "rgb(3, 7, 18)",
+        }}
+      >
         <PagesViewerNew
           pages={viewData.pages}
           viewId={viewData.viewId}

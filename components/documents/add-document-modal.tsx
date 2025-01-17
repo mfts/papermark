@@ -167,6 +167,10 @@ export function AddDocumentModal({
             type: document.type,
             teamId: teamId,
             dataroomId: dataroomId,
+            $set: {
+              teamId: teamId,
+              teamPlan: plan,
+            },
           });
 
           return;
@@ -184,6 +188,10 @@ export function AddDocumentModal({
             path: router.asPath,
             type: document.type,
             teamId: teamId,
+            $set: {
+              teamId: teamId,
+              teamPlan: plan,
+            },
           });
 
           // redirect to the document page
@@ -199,6 +207,10 @@ export function AddDocumentModal({
             type: document.type,
             newVersion: true,
             teamId: teamId,
+            $set: {
+              teamId: teamId,
+              teamPlan: plan,
+            },
           });
           toast.success("New document version uploaded.");
 
@@ -337,6 +349,10 @@ export function AddDocumentModal({
             type: "notion",
             teamId: teamId,
             dataroomId: dataroomId,
+            $set: {
+              teamId: teamId,
+              teamPlan: plan,
+            },
           });
 
           return;
@@ -357,6 +373,10 @@ export function AddDocumentModal({
             path: router.asPath,
             type: "notion",
             teamId: teamId,
+            $set: {
+              teamId: teamId,
+              teamPlan: plan,
+            },
           });
 
           // redirect to the document page

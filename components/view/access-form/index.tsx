@@ -1,15 +1,13 @@
-import Image from "next/image";
-import Link from "next/link";
-
 import { useEffect, useState } from "react";
 
-import { Brand, DataroomBrand } from "@prisma/client";
+import { Brand, CustomField, DataroomBrand } from "@prisma/client";
 
 import { Button } from "@/components/ui/button";
 
 import { determineTextColor } from "@/lib/utils/determine-text-color";
 
 import AgreementSection from "./agreement-section";
+import CustomFieldsSection from "./custom-fields-section";
 import EmailSection from "./email-section";
 import NameSection from "./name-section";
 import PasswordSection from "./password-section";
@@ -24,6 +22,7 @@ export type DEFAULT_ACCESS_FORM_TYPE = {
   password: string | null;
   hasConfirmedAgreement?: boolean;
   name?: string | null;
+  customFields?: { [key: string]: string };
 };
 
 export default function AccessForm({
@@ -42,6 +41,7 @@ export default function AccessForm({
   linkId,
   disableEditEmail,
   useCustomAccessForm,
+  customFields,
 }: {
   data: DEFAULT_ACCESS_FORM_TYPE;
   email: string | null | undefined;
@@ -58,6 +58,7 @@ export default function AccessForm({
   linkId?: string;
   disableEditEmail?: boolean;
   useCustomAccessForm?: boolean;
+  customFields?: Partial<CustomField>[];
 }) {
   const [isEmailValid, setIsEmailValid] = useState(true);
 
@@ -78,49 +79,37 @@ export default function AccessForm({
     if (requirePassword && !data.password) return false;
     if (requireAgreement && !data.hasConfirmedAgreement) return false;
     if (requireAgreement && requireName && !data.name) return false;
+    if (customFields?.length) {
+      for (const field of customFields) {
+        if (field.required && !data.customFields?.[field.identifier!]) {
+          return false;
+        }
+      }
+    }
     return true;
+  };
+
+  const updateCustomFields = (fields: { [key: string]: string }) => {
+    setData((prevData) => ({
+      ...prevData,
+      customFields: fields,
+    }));
   };
 
   return (
     <div
-      className="flex h-dvh flex-col justify-between pb-4 pt-12"
+      className="flex h-full min-h-dvh flex-col justify-between pb-4 pt-12"
       style={{
         backgroundColor:
           brand && brand.accentColor ? brand.accentColor : "black",
       }}
     >
-      <div className="flex flex-1 flex-col px-6 lg:px-8">
-        {/* <div className="bg-gray-950" style={{ backgroundColor: accentColor }}> */}
-
-        {/* <div className="relative flex h-16 w-full flex-shrink-0 items-center justify-center">
-          {brand && brand.logo ? (
-            <Image
-              className="object-contain"
-              src={brand.logo}
-              alt="Logo"
-              fill
-              quality={100}
-              priority
-            />
-          ) : (
-            <Link
-              href={`https://www.papermark.io?utm_campaign=navbar&utm_medium=navbar&utm_source=papermark-${linkId}`}
-              target="_blank"
-              className="text-2xl font-bold tracking-tighter text-white"
-            >
-              Papermark
-            </Link>
-          )}
-        </div> */}
-
+      <div className="flex flex-1 flex-col px-6 pb-12 lg:px-8">
         <div className="sm:mx-auto sm:w-full sm:max-w-md">
           <h1
             className="mt-10 text-2xl font-bold leading-9 tracking-tight text-white"
             style={{
-              color:
-                brand && brand.accentColor
-                  ? determineTextColor(brand.accentColor)
-                  : "white",
+              color: determineTextColor(brand?.accentColor),
             }}
           >
             Your action is requested to continue
@@ -143,6 +132,14 @@ export default function AccessForm({
             {requirePassword ? (
               <PasswordSection {...{ data, setData, brand }} />
             ) : null}
+            {customFields?.length ? (
+              <CustomFieldsSection
+                fields={customFields}
+                data={data.customFields || {}}
+                setData={updateCustomFields}
+                brand={brand}
+              />
+            ) : null}
             {requireAgreement && agreementContent && agreementName ? (
               <AgreementSection
                 {...{ data, setData, brand }}
@@ -152,18 +149,14 @@ export default function AccessForm({
               />
             ) : null}
 
-            <div className="flex justify-center">
+            <div className="flex justify-center pt-5">
               <Button
                 type="submit"
                 disabled={!isFormValid()}
                 className="w-1/3 min-w-fit bg-white text-gray-950 hover:bg-white/90"
                 loading={isLoading}
                 style={{
-                  backgroundColor:
-                    brand && brand.accentColor
-                      ? determineTextColor(brand.accentColor)
-                      : "white",
-
+                  backgroundColor: determineTextColor(brand?.accentColor),
                   color:
                     brand && brand.accentColor ? brand.accentColor : "black",
                 }}
@@ -176,10 +169,15 @@ export default function AccessForm({
       </div>
       {!useCustomAccessForm ? (
         <div className="flex justify-center">
-          <p className="text-sm leading-9 tracking-tight text-gray-500">
-            <a href="/" target="_blank" rel="noopener noreferrer">
-              This document is securely shared with you using{" "}
-              <span className="font-semibold">Papermark</span>
+          <p className="text-center text-sm tracking-tight text-gray-500">
+            This document is securely shared with you using{" "}
+            <a
+              href="https://www.papermark.io"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold"
+            >
+              Papermark
             </a>
           </p>
         </div>

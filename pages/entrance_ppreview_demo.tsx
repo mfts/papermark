@@ -22,7 +22,7 @@ export default function ViewPage() {
           <h1
             className="mt-16 text-2xl font-bold leading-9 tracking-tight text-white"
             style={{
-              color: accentColor ? determineTextColor(accentColor) : "white",
+              color: determineTextColor(accentColor),
             }}
           >
             Your action is requested to continue
@@ -37,9 +37,7 @@ export default function ViewPage() {
                   htmlFor="email"
                   className="block text-sm font-medium leading-6 text-white"
                   style={{
-                    color: accentColor
-                      ? determineTextColor(accentColor)
-                      : "white",
+                    color: determineTextColor(accentColor),
                   }}
                 >
                   Email address
