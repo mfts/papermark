@@ -35,46 +35,52 @@ export default function Documents() {
 
   return (
     <AppLayout>
-      <div className="relative mx-2 mb-10 mt-4 space-y-8 overflow-hidden px-1 sm:mx-3 md:mx-5 md:mt-5 lg:mx-7 lg:mt-8 xl:mx-10">
+      <div className="relative mx-2 mb-10 mt-4 space-y-4 overflow-hidden px-1 sm:mx-3 md:mx-5 md:mt-5 lg:mx-7 lg:mt-8 xl:mx-10">
         <header>
           <DataroomHeader
             title={dataroom?.name ?? ""}
             description={dataroom?.pId ?? ""}
-            actions={[
-              <AddDocumentModal
-                isDataroom={true}
-                dataroomId={dataroom?.id}
-                key={1}
-              >
-                <Button
-                  className="group flex flex-1 items-center justify-start gap-x-3 px-3 text-left"
-                  title="Add New Document"
-                >
-                  <PlusIcon className="h-5 w-5 shrink-0" aria-hidden="true" />
-                  <span>Add New Document</span>
-                </Button>
-              </AddDocumentModal>,
-              <AddFolderModal
-                isDataroom={true}
-                dataroomId={dataroom?.id}
-                key={2}
-              >
-                <Button
-                  size="icon"
-                  variant="outline"
-                  className="border-gray-500 bg-gray-50 hover:bg-gray-200 dark:bg-black hover:dark:bg-muted"
-                >
-                  <FolderPlusIcon
-                    className="h-5 w-5 shrink-0"
-                    aria-hidden="true"
-                  />
-                </Button>
-              </AddFolderModal>,
-            ]}
+            actions={[]}
           />
 
           <DataroomNavigation dataroomId={dataroom?.id} />
         </header>
+
+        <div className="flex items-center justify-end gap-x-2">
+          <AddDocumentModal isDataroom={true} dataroomId={dataroom?.id} key={1}>
+            <Button
+              size="sm"
+              className="group flex items-center justify-start gap-x-3 px-3 text-left"
+              title="Add New Document"
+            >
+              <PlusIcon className="h-5 w-5 shrink-0" aria-hidden="true" />
+              <span>Add New Document</span>
+            </Button>
+          </AddDocumentModal>
+          <AddFolderModal isDataroom={true} dataroomId={dataroom?.id} key={2}>
+            <Button
+              size="sm"
+              variant="outline"
+              className="group flex items-center justify-start gap-x-3 px-3 text-left"
+            >
+              <FolderPlusIcon className="h-5 w-5 shrink-0" aria-hidden="true" />
+              <span>Add New Folder</span>
+            </Button>
+          </AddFolderModal>
+          <div id="dataroom-reordering-action">
+            {!isReordering ? (
+              <Button
+                size="sm"
+                variant="outline"
+                className="gap-x-1"
+                onClick={() => setIsReordering(!isReordering)}
+              >
+                <ArrowUpDownIcon className="h-4 w-4" />
+                Edit index
+              </Button>
+            ) : null}
+          </div>
+        </div>
 
         <div className="grid h-full gap-4 pb-2 md:grid-cols-4">
           <div className="h-full truncate md:col-span-1">
@@ -87,19 +93,6 @@ export default function Documents() {
             <div className="flex items-center justify-between">
               <div className="space-y-2">
                 <BreadcrumbComponent />
-              </div>
-              <div id="dataroom-reordering-action">
-                {items.length > 0 && !isReordering ? (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="gap-x-1"
-                    onClick={() => setIsReordering(!isReordering)}
-                  >
-                    <ArrowUpDownIcon className="h-4 w-4" />
-                    Edit index
-                  </Button>
-                ) : null}
               </div>
             </div>
             <section id="documents-header-count" className="min-h-8" />

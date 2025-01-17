@@ -1,3 +1,8 @@
+import { useState } from "react";
+
+import LinkSheet from "../links/link-sheet";
+import { Button } from "../ui/button";
+
 export const DataroomHeader = ({
   title,
   description,
@@ -7,6 +12,8 @@ export const DataroomHeader = ({
   description: string;
   actions?: React.ReactNode[];
 }) => {
+  const [isLinkSheetOpen, setIsLinkSheetOpen] = useState<boolean>(false);
+
   const actionRows: React.ReactNode[][] = [];
   if (actions) {
     for (let i = 0; i < actions.length; i += 3) {
@@ -25,7 +32,10 @@ export const DataroomHeader = ({
         </p> */}
       </div>
       <div className="flex items-center gap-x-1">
-        {actionRows.map((row, i) => (
+        <Button onClick={() => setIsLinkSheetOpen(true)} key={1}>
+          Share
+        </Button>
+        {/* {actionRows.map((row, i) => (
           <ul
             key={i.toString()}
             className="flex flex-wrap items-center justify-end gap-2 md:flex-nowrap md:gap-4"
@@ -34,8 +44,14 @@ export const DataroomHeader = ({
               <li key={i}>{action}</li>
             ))}
           </ul>
-        ))}
+        ))} */}
       </div>
+      <LinkSheet
+        linkType={"DATAROOM_LINK"}
+        isOpen={isLinkSheetOpen}
+        setIsOpen={setIsLinkSheetOpen}
+        // existingLinks={links}
+      />
     </section>
   );
 };
