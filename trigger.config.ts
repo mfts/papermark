@@ -1,3 +1,4 @@
+import { aptGet, ffmpeg } from "@trigger.dev/build/extensions/core";
 import { prismaExtension } from "@trigger.dev/build/extensions/prisma";
 import { defineConfig } from "@trigger.dev/sdk/v3";
 
@@ -19,6 +20,8 @@ export default defineConfig({
       prismaExtension({
         schema: "prisma/schema.prisma",
       }),
+      ffmpeg(),
+      aptGet({ packages: ["mupdf-tools", "curl"] }),
     ],
   },
 });

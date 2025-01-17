@@ -98,9 +98,12 @@ export default async function handle(
         },
       });
 
-      // Only admins can create tokens
-      if (role !== "ADMIN") {
-        return res.status(403).json({ error: "Forbidden" });
+      // Only admins and managers can create tokens
+      if (role !== "ADMIN" && role !== "MANAGER") {
+        return res.status(403).json({
+          error:
+            "You don't have the permissions to create a token. Please contact your administrator or manager.",
+        });
       }
 
       // Generate token
@@ -151,7 +154,10 @@ export default async function handle(
 
       // Only admins can delete tokens
       if (role !== "ADMIN") {
-        return res.status(403).json({ error: "Forbidden" });
+        return res.status(403).json({
+          error:
+            "You don't have the permissions to delete a token. Please contact your administrator.",
+        });
       }
 
       // Delete the token

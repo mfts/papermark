@@ -21,7 +21,8 @@ function luminance(r: number, g: number, b: number) {
   return (0.299 * r + 0.587 * g + 0.114 * b) / 255;
 }
 
-export function determineTextColor(hexColor: string) {
+export function determineTextColor(hexColor: string | null | undefined) {
+  if (!hexColor) return "white";
   const [r, g, b] = hexToRgb(hexColor);
   return luminance(r, g, b) > 0.5 ? "black" : "white";
 }

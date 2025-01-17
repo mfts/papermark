@@ -1,13 +1,20 @@
 import { get } from "@vercel/edge-config";
 
-export type BetaFeatures = "tokens" | "webhooks" | "roomChangeNotifications";
+export type BetaFeatures =
+  | "tokens"
+  | "incomingWebhooks"
+  | "roomChangeNotifications"
+  | "embedding"
+  | "webhooks";
 type BetaFeaturesRecord = Record<BetaFeatures, string[]>;
 
 export const getFeatureFlags = async ({ teamId }: { teamId?: string }) => {
   const teamFeatures: Record<BetaFeatures, boolean> = {
     tokens: false,
-    webhooks: false,
+    incomingWebhooks: false,
     roomChangeNotifications: false,
+    embedding: false,
+    webhooks: false,
   };
 
   // Return all features as true if edge config is not available

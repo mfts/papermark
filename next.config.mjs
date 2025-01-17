@@ -6,7 +6,7 @@ const nextConfig = {
     minimumCacheTTL: 2592000, // 30 days
     remotePatterns: prepareRemotePatterns(),
   },
-  transpilePackages: ["@trigger.dev/react"],
+  transpilePackages: ["@trigger.dev/react", "react-syntax-highlighter"],
   skipTrailingSlashRedirect: true,
   assetPrefix:
     process.env.NODE_ENV === "production" &&
@@ -28,8 +28,11 @@ const nextConfig = {
     ];
   },
   async headers() {
+    const isDev = process.env.NODE_ENV === "development";
+
     return [
       {
+        // Default headers for all routes
         source: "/:path*",
         headers: [
           {
@@ -44,11 +47,54 @@ const nextConfig = {
             key: "X-Frame-Options",
             value: "SAMEORIGIN",
           },
+          {
+            key: "Report-To",
+            value: JSON.stringify({
+              group: "csp-endpoint",
+              max_age: 10886400,
+              endpoints: [{ url: "/api/csp-report" }],
+            }),
+          },
+          {
+            key: "Content-Security-Policy-Report-Only",
+            value:
+              `default-src 'self' https: ${isDev ? "http:" : ""}; ` +
+              `script-src 'self' 'unsafe-inline' 'unsafe-eval' https: ${isDev ? "http:" : ""}; ` +
+              `style-src 'self' 'unsafe-inline' https: ${isDev ? "http:" : ""}; ` +
+              `img-src 'self' data: blob: https: ${isDev ? "http:" : ""}; ` +
+              `font-src 'self' data: https: ${isDev ? "http:" : ""}; ` +
+              `frame-ancestors 'none'; ` +
+              `connect-src 'self' https: ${isDev ? "http: ws: wss:" : ""}; ` + // Add WebSocket for hot reload
+              `${isDev ? "" : "upgrade-insecure-requests;"} ` +
+              "report-to csp-endpoint;",
+          },
         ],
       },
       {
         source: "/view/:path*",
         headers: [
+          {
+            key: "X-Robots-Tag",
+            value: "noindex",
+          },
+        ],
+      },
+      {
+        // Embed routes - allow iframe embedding
+        source: "/view/:path*/embed",
+        headers: [
+          {
+            key: "Content-Security-Policy",
+            value:
+              `default-src 'self' https: ${isDev ? "http:" : ""}; ` +
+              `script-src 'self' 'unsafe-inline' 'unsafe-eval' https: ${isDev ? "http:" : ""}; ` +
+              `style-src 'self' 'unsafe-inline' https: ${isDev ? "http:" : ""}; ` +
+              `img-src 'self' data: blob: https: ${isDev ? "http:" : ""}; ` +
+              `font-src 'self' data: https: ${isDev ? "http:" : ""}; ` +
+              "frame-ancestors *; " + // This allows iframe embedding
+              `connect-src 'self' https: ${isDev ? "http: ws: wss:" : ""}; ` + // Add WebSocket for hot reload
+              `${isDev ? "" : "upgrade-insecure-requests;"}`,
+          },
           {
             key: "X-Robots-Tag",
             value: "noindex",

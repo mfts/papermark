@@ -5,8 +5,8 @@ const UNSUBSCRIBE_BASE_URL = process.env.NEXT_PUBLIC_BASE_URL as string;
 
 type UnsubscribePayload = {
   viewerId: string;
-  dataroomId: string;
   teamId: string;
+  dataroomId?: string;
   exp?: number; // Expiration timestamp
 };
 
@@ -18,7 +18,9 @@ export function generateUnsubscribeUrl(payload: UnsubscribePayload): string {
   };
 
   const token = jwt.sign(tokenPayload, JWT_SECRET);
-  return `${UNSUBSCRIBE_BASE_URL}/api/unsubscribe/dataroom?token=${token}`;
+  return `${UNSUBSCRIBE_BASE_URL}/api/unsubscribe/${
+    payload.dataroomId ? "dataroom" : "yir"
+  }?token=${token}`;
 }
 
 export function verifyUnsubscribeToken(

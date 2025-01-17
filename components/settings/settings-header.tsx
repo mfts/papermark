@@ -7,7 +7,11 @@ import { NavMenu } from "../navigation-menu";
 
 export function SettingsHeader() {
   const teamInfo = useTeam();
-  const { data: features } = useSWR<{ tokens: boolean; webhooks: boolean }>(
+  const { data: features } = useSWR<{
+    tokens: boolean;
+    incomingWebhooks: boolean;
+    webhooks: boolean;
+  }>(
     teamInfo?.currentTeam?.id
       ? `/api/feature-flags?teamId=${teamInfo.currentTeam.id}`
       : null,
@@ -65,6 +69,12 @@ export function SettingsHeader() {
             href: `/settings/webhooks`,
             segment: "webhooks",
             disabled: !features?.webhooks,
+          },
+          {
+            label: "Incoming Webhooks",
+            href: `/settings/incoming-webhooks`,
+            segment: "incoming-webhooks",
+            disabled: !features?.incomingWebhooks,
           },
         ]}
       />

@@ -13,6 +13,7 @@ import { LinkWithDocument, NotionTheme, WatermarkConfig } from "@/lib/types";
 import AdvancedExcelViewer from "./viewer/advanced-excel-viewer";
 import DownloadOnlyViewer from "./viewer/download-only-viewer";
 import ImageViewer from "./viewer/image-viewer";
+import VideoViewer from "./viewer/video-viewer";
 
 const ExcelViewer = dynamic(
   () => import("@/components/view/viewer/excel-viewer"),
@@ -57,6 +58,18 @@ export default function ViewData({
       theme={notionData.theme}
       screenshotProtectionEnabled={link.enableScreenshotProtection!}
     />
+  ) : document.downloadOnly ? (
+    <DownloadOnlyViewer
+      file={viewData.file!}
+      linkId={link.id}
+      viewId={viewData.viewId}
+      documentId={document.id}
+      allowDownload={true}
+      versionNumber={document.versions[0].versionNumber}
+      brand={brand}
+      documentName={document.name}
+      isPreview={viewData.isPreview}
+    />
   ) : viewData.fileType === "sheet" && viewData.sheetData ? (
     <ExcelViewer
       linkId={link.id}
@@ -92,6 +105,7 @@ export default function ViewData({
       allowDownload={link.allowDownload!}
       feedbackEnabled={link.enableFeedback!}
       screenshotProtectionEnabled={link.enableScreenshotProtection!}
+      screenShieldPercentage={link.screenShieldPercentage}
       versionNumber={document.versions[0].versionNumber}
       brand={brand}
       showPoweredByBanner={showPoweredByBanner}
@@ -118,6 +132,7 @@ export default function ViewData({
       allowDownload={link.allowDownload!}
       feedbackEnabled={link.enableFeedback!}
       screenshotProtectionEnabled={link.enableScreenshotProtection!}
+      screenShieldPercentage={link.screenShieldPercentage}
       versionNumber={document.versions[0].versionNumber}
       brand={brand}
       showPoweredByBanner={showPoweredByBanner}
@@ -132,16 +147,17 @@ export default function ViewData({
       ipAddress={viewData.ipAddress}
       linkName={link.name ?? `Link #${link.id.slice(-5)}`}
     />
-  ) : document.downloadOnly ? (
-    <DownloadOnlyViewer
+  ) : viewData.fileType === "video" ? (
+    <VideoViewer
       file={viewData.file!}
       linkId={link.id}
       viewId={viewData.viewId}
       documentId={document.id}
-      allowDownload={true}
+      documentName={link.document?.name}
+      allowDownload={link.allowDownload!}
+      screenshotProtectionEnabled={link.enableScreenshotProtection!}
       versionNumber={document.versions[0].versionNumber}
       brand={brand}
-      documentName={document.name}
       isPreview={viewData.isPreview}
     />
   ) : (

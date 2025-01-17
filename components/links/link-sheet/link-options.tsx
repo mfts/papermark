@@ -20,7 +20,9 @@ import { usePlan } from "@/lib/swr/use-billing";
 import useLimits from "@/lib/swr/use-limits";
 
 import AgreementSection from "./agreement-section";
+import CustomFieldsSection from "./custom-fields-section";
 import QuestionSection from "./question-section";
+import ScreenShieldSection from "./screen-shield-section";
 import ScreenshotProtectionSection from "./screenshot-protection-section";
 import WatermarkSection from "./watermark-section";
 
@@ -51,6 +53,7 @@ export const LinkOptions = ({
   const allowAdvancedLinkControls = limits
     ? limits?.advancedLinkControlsOnPro
     : false;
+  const allowWatermarkOnBusiness = limits?.watermarkOnBusiness ?? false;
 
   const [openUpgradeModal, setOpenUpgradeModal] = useState<boolean>(false);
   const [trigger, setTrigger] = useState<string>("");
@@ -128,9 +131,14 @@ export const LinkOptions = ({
         }
         handleUpgradeStateChange={handleUpgradeStateChange}
       />
+      <ScreenShieldSection
+        {...{ data, setData }}
+        isAllowed={isTrial || isBusiness || isDatarooms}
+        handleUpgradeStateChange={handleUpgradeStateChange}
+      />
       <WatermarkSection
         {...{ data, setData }}
-        isAllowed={isTrial || isDatarooms}
+        isAllowed={isTrial || isDatarooms || allowWatermarkOnBusiness}
         handleUpgradeStateChange={handleUpgradeStateChange}
       />
       <AgreementSection
@@ -147,6 +155,11 @@ export const LinkOptions = ({
           isBusiness ||
           isDatarooms
         }
+        handleUpgradeStateChange={handleUpgradeStateChange}
+      />
+      <CustomFieldsSection
+        {...{ data, setData }}
+        isAllowed={isTrial || isBusiness || isDatarooms}
         handleUpgradeStateChange={handleUpgradeStateChange}
       />
       {linkType === LinkType.DOCUMENT_LINK ? (

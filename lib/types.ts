@@ -1,5 +1,6 @@
 import {
   Agreement,
+  CustomField,
   Dataroom,
   DataroomDocument,
   DataroomFolder,
@@ -46,6 +47,7 @@ export interface LinkWithViews extends Link {
   };
   views: View[];
   feedback: { id: true; data: { question: string; type: string } } | null;
+  customFields: CustomField[];
 }
 
 export interface LinkWithDocument extends Link {
@@ -70,6 +72,7 @@ export interface LinkWithDocument extends Link {
     };
   } | null;
   agreement: Agreement | null;
+  customFields: CustomField[];
 }
 
 export interface LinkWithDataroom extends Link {
@@ -98,6 +101,7 @@ export interface LinkWithDataroom extends Link {
     lastUpdatedAt: Date;
   };
   agreement: Agreement | null;
+  customFields: CustomField[];
 }
 
 export interface Geo {
@@ -291,14 +295,3 @@ export const WatermarkConfigSchema = z.object({
 export type WatermarkConfig = z.infer<typeof WatermarkConfigSchema>;
 
 export type NotionTheme = "light" | "dark";
-
-export const ZNotificationPreferencesSchema = z
-  .object({
-    dataroom: z.record(
-      z.object({
-        enabled: z.boolean(),
-      }),
-    ),
-  })
-  .optional()
-  .default({ dataroom: {} });

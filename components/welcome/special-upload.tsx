@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { LinkType } from "@prisma/client";
-import { motion } from "framer-motion";
 import Cookies from "js-cookie";
+import { motion } from "motion/react";
 import { usePlausible } from "next-plausible";
 import { toast } from "sonner";
 

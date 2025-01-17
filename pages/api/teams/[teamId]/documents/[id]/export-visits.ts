@@ -78,7 +78,19 @@ export default async function handler(
       where: { documentId: docId },
       include: {
         link: { select: { name: true } },
-        agreementResponse: true,
+        agreementResponse: {
+          include: {
+            agreement: {
+              select: {
+                name: true,
+                content: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        viewedAt: "desc",
       },
     });
 
@@ -86,57 +98,80 @@ export default async function handler(
       return res.status(404).end("Document has no views");
     }
 
-    // Fetching durations from tinyBird function
-    const durationsPromises = views?.map((view) =>
-      getViewPageDuration({
-        documentId: docId,
-        viewId: view.id,
-        since: 0,
-      }),
+    // Create CSV rows array starting with headers
+    const csvRows: string[] = [];
+    csvRows.push(
+      [
+        "Viewed at",
+        "Name",
+        "Email",
+        "Link Name",
+        "Total Visit Duration (s)",
+        "Total Document Completion (%)",
+        "Document version",
+        "Downloaded at",
+        "Verified",
+        "Agreement Accepted",
+        "Agreement Name",
+        "Agreement Content",
+        "Agreement Accepted At",
+        "Viewed from dataroom",
+      ].join(","),
     );
 
-    const durations = await Promise.all(durationsPromises);
+    // Fetch all durations in parallel
+    const durations = await Promise.all(
+      views.map((view) =>
+        getViewPageDuration({
+          documentId: docId,
+          viewId: view.id,
+          since: 0,
+        }),
+      ),
+    );
 
-    const exportData = views?.map((view: any, index: number) => {
-      // Identifying the document version as per the time we Viewed it.
+    // Process each view and add to CSV rows
+    views.forEach((view, index) => {
       const relevantDocumentVersion = document.versions.find(
         (version) => version.createdAt <= view.viewedAt,
       );
 
       const numPages =
         relevantDocumentVersion?.numPages || document.numPages || 0;
-
-      // Calculating the completion rate in percentage.
       const completionRate = numPages
         ? (durations[index].data.length / numPages) * 100
         : 0;
 
-      return {
-        viewedAt: view.viewedAt.toISOString(),
-        viewerName: view.viewerName || "NaN", // If the value is not available we are showing NaN as per csv
-        viewerEmail: view.viewerEmail || "NaN",
-        linkName: view.link?.name || "NaN",
-        totalVisitDuration: durations[index].data.reduce(
-          (total, data) => total + data.sum_duration,
-          0,
-        ),
-        visitCompletion: completionRate.toFixed(2) + "%",
-        documentVersion:
+      const totalDuration = durations[index].data.reduce(
+        (total, data) => total + data.sum_duration,
+        0,
+      );
+
+      csvRows.push(
+        [
+          view.viewedAt.toISOString(),
+          view.viewerName || "NaN",
+          view.viewerEmail || "NaN",
+          view.link?.name || "NaN",
+          (totalDuration / 1000.0).toFixed(1),
+          completionRate.toFixed(2) + "%",
           relevantDocumentVersion?.versionNumber ||
-          document.versions[0]?.versionNumber ||
-          "NaN",
-        downloadedAt: view.downloadedAt
-          ? view.downloadedAt.toISOString()
-          : "NaN",
-        verified: view.verified ? "Yes" : "No",
-        agreement: view.agreementResponse ? "Yes" : "NaN",
-        dataroom: view.dataroomId ? "Yes" : "No",
-      };
+            document.versions[0]?.versionNumber ||
+            "NaN",
+          view.downloadedAt ? view.downloadedAt.toISOString() : "NaN",
+          view.verified ? "Yes" : "No",
+          view.agreementResponse ? "Yes" : "NaN",
+          view.agreementResponse?.agreement.name || "NaN",
+          view.agreementResponse?.agreement.content || "NaN",
+          view.agreementResponse?.createdAt.toISOString() || "NaN",
+          view.dataroomId ? "Yes" : "No",
+        ].join(","),
+      );
     });
 
     return res.status(200).json({
       documentName: document.name,
-      visits: exportData,
+      visits: csvRows.join("\n"),
     });
   } catch (error) {
     console.error(error);

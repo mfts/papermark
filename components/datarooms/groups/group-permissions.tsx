@@ -453,37 +453,34 @@ export default function ExpandableTable({
 
         // Ensure all parent folders are viewable if the item is being set to viewable
         // and downloadable if the item is being set to downloadable
-        // if (updatedPermissions.view || updatedPermissions.download) {
-        //   parents.forEach((parent) => {
-        //     changes[parent.id] = {
-        //       view: updatedPermissions.view || parent.permissions.view,
-        //       download:
-        //         updatedPermissions.download || parent.permissions.download,
-        //       itemType: parent.itemType,
-        //     };
-        //   });
+        if (updatedPermissions.view) {
+          parents.forEach((parent) => {
+            changes[parent.id] = {
+              view: true, // Always enable view for parent folders
+              download: parent.permissions.download, // Maintain existing download permission
+              itemType: parent.itemType,
+            };
+          });
+        } else {
+          // If turning off view, recalculate parent permissions
+          [...parents].reverse().forEach((parent) => {
+            const otherChildren =
+              parent.subItems?.filter((subItem) => subItem.id !== item.id) ||
+              [];
+            const someSubItemViewable = otherChildren.some(
+              (subItem) => subItem.permissions.view,
+            );
+            const someSubItemDownloadable = otherChildren.some(
+              (subItem) => subItem.permissions.download,
+            );
 
-        // } else {
-        // If turning off view, recalculate parent permissions
-        [...parents].reverse().forEach((parent) => {
-          const someSubItemViewable = parent.subItems?.some((subItem) =>
-            subItem.id === item.id
-              ? updatedPermissions.view
-              : subItem.permissions.view,
-          );
-          const someSubItemDownloadable = parent.subItems?.some((subItem) =>
-            subItem.id === item.id
-              ? updatedPermissions.download
-              : subItem.permissions.download,
-          );
-
-          changes[parent.id] = {
-            view: someSubItemViewable || false,
-            download: someSubItemDownloadable || false,
-            itemType: parent.itemType,
-          };
-        });
-        // }
+            changes[parent.id] = {
+              view: someSubItemViewable,
+              download: someSubItemDownloadable,
+              itemType: parent.itemType,
+            };
+          });
+        }
 
         return changes;
       };

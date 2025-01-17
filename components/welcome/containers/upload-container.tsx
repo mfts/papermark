@@ -3,7 +3,7 @@ import { useRouter } from "next/router";
 import { Dispatch, SetStateAction, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { toast } from "sonner";
 
 import DocumentUpload from "@/components/document-upload";

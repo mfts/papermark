@@ -5,6 +5,7 @@ import { getServerSession } from "next-auth/next";
 
 import { hashToken } from "@/lib/api/auth/token";
 import sendNotification from "@/lib/api/notification-helper";
+import { recordVisit } from "@/lib/api/views/record-visit";
 import { sendOtpVerificationEmail } from "@/lib/emails/send-email-otp-verification";
 import { getFile } from "@/lib/files/get-file";
 import { newId } from "@/lib/id-helper";
@@ -60,6 +61,11 @@ export default async function handle(
     hasConfirmedAgreement?: boolean;
   };
 
+  // Add customFields to the data extraction
+  const { customFields } = data as {
+    customFields?: { [key: string]: string };
+  };
+
   // INFO: for using the advanced excel viewer
   const { useAdvancedExcelViewer } = data as {
     useAdvancedExcelViewer: boolean;
@@ -100,6 +106,12 @@ export default async function handle(
       team: {
         select: {
           plan: true,
+        },
+      },
+      customFields: {
+        select: {
+          identifier: true,
+          label: true,
         },
       },
     },
@@ -440,6 +452,18 @@ export default async function handle(
                 },
               },
             }),
+          ...(customFields &&
+            link.customFields.length > 0 && {
+              customFieldResponse: {
+                create: {
+                  data: link.customFields.map((field) => ({
+                    identifier: field.identifier,
+                    label: field.label,
+                    response: customFields[field.identifier] || "",
+                  })),
+                },
+              },
+            }),
         },
         select: { id: true },
       });
@@ -495,7 +519,11 @@ export default async function handle(
         return;
       }
 
-      if (documentVersion.type === "pdf" || documentVersion.type === "image") {
+      if (
+        documentVersion.type === "pdf" ||
+        documentVersion.type === "image" ||
+        documentVersion.type === "video"
+      ) {
         documentVersion.file = await getFile({
           data: documentVersion.file,
           type: documentVersion.storageType,
@@ -526,6 +554,19 @@ export default async function handle(
       console.timeEnd("sendemail");
     }
 
+    // Prepare webhook for view
+    if (newView) {
+      waitUntil(
+        recordVisit({
+          viewId: newView.id,
+          linkId,
+          teamId: link.teamId!,
+          documentId,
+          headers: req.headers,
+        }),
+      );
+    }
+
     const returnObject = {
       message: "View recorded",
       viewId: !isPreview && newView ? newView.id : undefined,
@@ -534,7 +575,8 @@ export default async function handle(
         (documentVersion &&
           (documentVersion.type === "pdf" ||
             documentVersion.type === "image" ||
-            documentVersion.type === "zip")) ||
+            documentVersion.type === "zip" ||
+            documentVersion.type === "video")) ||
         (documentVersion && useAdvancedExcelViewer)
           ? documentVersion.file
           : undefined,

@@ -33,28 +33,28 @@ export default function WebhookSettings() {
   const [isLoading, setIsLoading] = useState(false);
 
   // Feature flag check
-  const { data: features } = useSWR<{ webhooks: boolean }>(
+  const { data: features } = useSWR<{ incomingWebhooks: boolean }>(
     teamId ? `/api/feature-flags?teamId=${teamId}` : null,
     fetcher,
   );
 
   // Redirect if feature is not enabled
   useEffect(() => {
-    if (features && !features.webhooks) {
+    if (features && !features.incomingWebhooks) {
       router.push("/settings/general");
       toast.error("This feature is not available for your team");
     }
   }, [features, router]);
 
   const { data: webhooks, mutate } = useSWR<Webhook[]>(
-    teamId ? `/api/teams/${teamId}/webhooks` : null,
+    teamId ? `/api/teams/${teamId}/incoming-webhooks` : null,
     fetcher,
   );
 
   const createWebhook = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(`/api/teams/${teamId}/webhooks`, {
+      const response = await fetch(`/api/teams/${teamId}/incoming-webhooks`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -83,7 +83,7 @@ export default function WebhookSettings() {
 
   const deleteWebhook = async (webhookId: string) => {
     try {
-      const response = await fetch(`/api/teams/${teamId}/webhooks`, {
+      const response = await fetch(`/api/teams/${teamId}/incoming-webhooks`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",

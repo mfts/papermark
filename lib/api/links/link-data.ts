@@ -109,6 +109,7 @@ export async function fetchDataroomLinkData({
       logo: true,
       banner: true,
       brandColor: true,
+      accentColor: true,
     },
   });
 

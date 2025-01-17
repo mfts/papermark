@@ -14,7 +14,6 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import { motion } from "framer-motion";
 import {
   ArchiveXIcon,
   FileIcon,
@@ -22,6 +21,7 @@ import {
   FolderInputIcon,
   XIcon,
 } from "lucide-react";
+import { motion } from "motion/react";
 
 import { EmptyDocuments } from "@/components/documents/empty-document";
 import FolderCard from "@/components/documents/folder-card";

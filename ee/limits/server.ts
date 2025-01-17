@@ -38,6 +38,7 @@ const configSchema = z.object({
   customDomainOnPro: z.boolean(),
   customDomainInDataroom: z.boolean(),
   advancedLinkControlsOnPro: z.boolean().nullish(),
+  watermarkOnBusiness: z.boolean().nullish(),
 });
 
 export async function getLimits({

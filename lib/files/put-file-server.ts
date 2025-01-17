@@ -80,7 +80,7 @@ const putFileInS3Server = async ({
     file.type !== "image/jpeg" &&
     file.type !== "application/pdf"
   ) {
-    throw new Error("Only PNG, JPEG or PDF files are supported");
+    throw new Error("Only PNG, JPEG, PDF or MP4 files are supported");
   }
 
   if (!restricted && !SUPPORTED_DOCUMENT_MIME_TYPES.includes(file.type)) {
@@ -94,12 +94,10 @@ const putFileInS3Server = async ({
 
   const key = `${teamId}/${docId}/${slugify(name)}${ext}`;
 
-  const buffer = file.buffer;
-
   const params = {
     Bucket: process.env.NEXT_PRIVATE_UPLOAD_BUCKET,
     Key: key,
-    Body: buffer,
+    Body: file.buffer,
     ContentType: file.type,
   };
 
