@@ -74,6 +74,21 @@ export default async function handle(
               plan: true,
             },
           },
+          customFields: {
+            select: {
+              id: true,
+              type: true,
+              identifier: true,
+              label: true,
+              placeholder: true,
+              required: true,
+              disabled: true,
+              orderIndex: true,
+            },
+            orderBy: {
+              orderIndex: "asc",
+            },
+          },
         },
       });
 
@@ -143,6 +158,11 @@ export default async function handle(
         team: undefined,
         document: undefined,
         dataroom: undefined,
+        ...(teamPlan === "free" && {
+          customFields: [], // reset custom fields for free plan
+          enableAgreement: false,
+          enableWatermark: false,
+        }),
       };
 
       // clean up the link return object

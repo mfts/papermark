@@ -1,0 +1,20 @@
+VERSION 1
+
+DESCRIPTION >
+    Get all click events for a specific view
+
+NODE endpoint
+SQL >
+    %
+    SELECT
+        timestamp,
+        document_id,
+        dataroom_id,
+        view_id,
+        page_number,
+        version_number,
+        href
+    FROM click_events
+    WHERE document_id = {{ String(document_id, required=True) }}
+        AND view_id = {{ String(view_id, required=True) }}
+    ORDER BY timestamp ASC

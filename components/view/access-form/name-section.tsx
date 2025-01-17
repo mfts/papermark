@@ -37,43 +37,35 @@ export default function NameSection({
   };
 
   return (
-    <div className="pb-5">
-      <div className="relative space-y-2 rounded-md shadow-sm">
-        <label
-          htmlFor="name"
-          className="block text-sm font-medium leading-6 text-white"
-          style={{
-            color:
-              brand && brand.accentColor
-                ? determineTextColor(brand.accentColor)
-                : "white",
-          }}
-        >
-          Name
-        </label>
-        <input
-          name="name"
-          id="name"
-          type="text"
-          autoCorrect="off"
-          autoComplete="off"
-          autoFocus
-          className="flex w-full rounded-md border-0 bg-black py-1.5 text-white shadow-sm ring-1 ring-inset ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-gray-300 sm:text-sm sm:leading-6"
-          style={{
-            backgroundColor:
-              brand && brand.accentColor ? brand.accentColor : "black",
-            color:
-              brand && brand.accentColor
-                ? determineTextColor(brand.accentColor)
-                : "white",
-          }}
-          value={name || ""}
-          placeholder="Enter your full name"
-          onChange={handleNameChange}
-          aria-invalid="true"
-          data-1p-ignore
-        />
-      </div>
+    <div className="relative space-y-2 rounded-md shadow-sm">
+      <label
+        htmlFor="name"
+        className="block text-sm font-medium leading-6 text-white"
+        style={{
+          color: determineTextColor(brand?.accentColor),
+        }}
+      >
+        Name
+      </label>
+      <input
+        name="name"
+        id="name"
+        type="text"
+        autoCorrect="off"
+        autoComplete="off"
+        autoFocus
+        className="flex w-full rounded-md border-0 bg-black py-1.5 text-white shadow-sm ring-1 ring-inset ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-gray-300 sm:text-sm sm:leading-6"
+        style={{
+          backgroundColor:
+            brand && brand.accentColor ? brand.accentColor : "black",
+          color: determineTextColor(brand?.accentColor),
+        }}
+        value={name || ""}
+        placeholder="Enter your full name"
+        onChange={handleNameChange}
+        aria-invalid="true"
+        data-1p-ignore
+      />
     </div>
   );
 }

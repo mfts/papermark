@@ -61,6 +61,11 @@ export default async function handle(
     hasConfirmedAgreement?: boolean;
   };
 
+  // Add customFields to the data extraction
+  const { customFields } = data as {
+    customFields?: { [key: string]: string };
+  };
+
   // INFO: for using the advanced excel viewer
   const { useAdvancedExcelViewer } = data as {
     useAdvancedExcelViewer: boolean;
@@ -101,6 +106,12 @@ export default async function handle(
       team: {
         select: {
           plan: true,
+        },
+      },
+      customFields: {
+        select: {
+          identifier: true,
+          label: true,
         },
       },
     },
@@ -441,6 +452,18 @@ export default async function handle(
                 },
               },
             }),
+          ...(customFields &&
+            link.customFields.length > 0 && {
+              customFieldResponse: {
+                create: {
+                  data: link.customFields.map((field) => ({
+                    identifier: field.identifier,
+                    label: field.label,
+                    response: customFields[field.identifier] || "",
+                  })),
+                },
+              },
+            }),
         },
         select: { id: true },
       });
@@ -496,7 +519,11 @@ export default async function handle(
         return;
       }
 
-      if (documentVersion.type === "pdf" || documentVersion.type === "image") {
+      if (
+        documentVersion.type === "pdf" ||
+        documentVersion.type === "image" ||
+        documentVersion.type === "video"
+      ) {
         documentVersion.file = await getFile({
           data: documentVersion.file,
           type: documentVersion.storageType,
@@ -548,7 +575,8 @@ export default async function handle(
         (documentVersion &&
           (documentVersion.type === "pdf" ||
             documentVersion.type === "image" ||
-            documentVersion.type === "zip")) ||
+            documentVersion.type === "zip" ||
+            documentVersion.type === "video")) ||
         (documentVersion && useAdvancedExcelViewer)
           ? documentVersion.file
           : undefined,

@@ -728,6 +728,27 @@ export default function PagesViewer({
         // Reset the start time for the new page
         startTimeRef.current = Date.now();
       }
+    } else {
+      // Track external link clicks
+      if (!isPreview && viewId) {
+        fetch("/api/record_click", {
+          method: "POST",
+          body: JSON.stringify({
+            timestamp: new Date().toISOString(),
+            sessionId: viewId,
+            linkId,
+            documentId,
+            viewId,
+            pageNumber: pageNumber.toString(),
+            href,
+            versionNumber,
+            dataroomId,
+          }),
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }).catch(console.error); // Non-blocking
+      }
     }
   };
 

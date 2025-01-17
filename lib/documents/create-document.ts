@@ -5,7 +5,7 @@ export type DocumentData = {
   key: string;
   storageType: DocumentStorageType;
   contentType: string; // actual file mime type
-  supportedFileType: string; // papermark types: "pdf", "sheet", "docs", "slides"
+  supportedFileType: string; // papermark types: "pdf", "sheet", "docs", "slides", "map", "zip"
   fileSize: number | undefined; // file size in bytes
 };
 

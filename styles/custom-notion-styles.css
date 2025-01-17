@@ -57,3 +57,7 @@
   background-repeat: no-repeat;
   background-size: contain;
 }
+
+.notion-toggle:has(.notion-h1) {
+  margin-top: 2rem;
+}
