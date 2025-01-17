@@ -1,3 +1,17 @@
+import Link from "next/link";
+
+import { useState } from "react";
+
+import LinkSheet from "@/components/links/link-sheet";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { Button } from "@/components/ui/button";
+
 export const DataroomHeader = ({
   title,
   description,
@@ -7,6 +21,8 @@ export const DataroomHeader = ({
   description: string;
   actions?: React.ReactNode[];
 }) => {
+  const [isLinkSheetOpen, setIsLinkSheetOpen] = useState<boolean>(false);
+
   const actionRows: React.ReactNode[][] = [];
   if (actions) {
     for (let i = 0; i < actions.length; i += 3) {
@@ -15,26 +31,36 @@ export const DataroomHeader = ({
   }
 
   return (
-    <section className="mb-4 flex items-center justify-between md:mb-8 lg:mb-12">
-      <div className="flex min-h-10 items-center space-y-1">
-        <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
-          {title}
-        </h1>
-        {/* <p className="text-xs sm:text-sm text-muted-foreground font-mono">
-          {description}
-        </p> */}
-      </div>
-      <div className="flex items-center gap-x-1">
-        {actionRows.map((row, i) => (
-          <ul
-            key={i.toString()}
-            className="flex flex-wrap items-center justify-end gap-2 md:flex-nowrap md:gap-4"
-          >
-            {row.map((action, i) => (
-              <li key={i}>{action}</li>
-            ))}
-          </ul>
-        ))}
+    <section className="mb-4">
+      <Breadcrumb>
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink asChild>
+              <Link href="/datarooms">All Datarooms</Link>
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <span className="font-medium text-foreground">{title}</span>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+      <div className="mt-2 flex items-center justify-between">
+        <div className="flex min-h-10 items-center space-y-1">
+          <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
+            {title}
+          </h1>
+        </div>
+        <div className="flex items-center gap-x-1">
+          <Button onClick={() => setIsLinkSheetOpen(true)} key={1}>
+            Share
+          </Button>
+        </div>
+        <LinkSheet
+          linkType={"DATAROOM_LINK"}
+          isOpen={isLinkSheetOpen}
+          setIsOpen={setIsLinkSheetOpen}
+        />
       </div>
     </section>
   );

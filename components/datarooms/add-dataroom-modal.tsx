@@ -1,3 +1,5 @@
+import { useRouter } from "next/router";
+
 import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
@@ -31,6 +33,7 @@ export function AddDataroomModal({
   openModal?: boolean;
   setOpenModal?: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
+  const router = useRouter();
   const [dataroomName, setDataroomName] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const [open, setOpen] = useState<boolean>(openModal);
@@ -68,10 +71,13 @@ export function AddDataroomModal({
         return;
       }
 
+      const { dataroom } = await response.json();
+
       analytics.capture("Dataroom Created", { dataroomName: dataroomName });
-      toast.success("Dataroom successfully created! 🎉");
 
       mutate(`/api/teams/${teamInfo?.currentTeam?.id}/datarooms`);
+      toast.success("Dataroom successfully created! 🎉");
+      router.push(`/datarooms/${dataroom.id}/documents`);
     } catch (error) {
       setLoading(false);
       toast.error("Error adding dataroom. Please try again.");
