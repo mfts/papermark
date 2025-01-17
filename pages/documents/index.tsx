@@ -19,7 +19,7 @@ export default function Documents() {
   const { documents, isValidating, isFiltered } = useDocuments();
 
   return (
-    <AppLayout>
+    <AppLayout breadcrumbs={[{ title: "All Documents", href: "/documents" }]}>
       <div className="sticky top-0 z-50 bg-white p-4 pb-0 dark:bg-gray-900 sm:mx-4 sm:pt-8">
         <section className="mb-4 flex items-center justify-between space-x-2 sm:space-x-0">
           <div className="space-y-0 sm:space-y-1">

@@ -231,6 +231,8 @@ export type AnalyticsEvents =
 export interface Team {
   id: string;
   name?: string;
+  logo?: React.ElementType;
+  plan?: string;
 }
 
 export interface TeamDetail {

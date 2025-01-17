@@ -22,7 +22,12 @@ export default function DataroomPage() {
   }
 
   return (
-    <AppLayout>
+    <AppLayout
+      breadcrumbs={[
+        { title: "All Datarooms", href: "/datarooms" },
+        { title: dataroom.name, href: `/datarooms/${dataroom.id}` },
+      ]}
+    >
       <div className="relative mx-2 mb-10 mt-4 space-y-8 overflow-hidden px-1 sm:mx-3 md:mx-5 md:mt-5 lg:mx-7 lg:mt-8 xl:mx-10">
         <header>
           <DataroomHeader

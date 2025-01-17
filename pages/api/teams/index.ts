@@ -32,6 +32,7 @@ export default async function handle(
             select: {
               id: true,
               name: true,
+              plan: true,
             },
           },
         },
@@ -62,6 +63,7 @@ export default async function handle(
           select: {
             id: true,
             name: true,
+            plan: true,
           },
         });
         teams.push(defaultTeam);
