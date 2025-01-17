@@ -44,10 +44,10 @@ export default function Settings() {
           <h1 className="text-2xl font-semibold">Settings</h1>
         </div>
         <div className="mx-auto grid w-full items-start gap-6 md:grid-cols-[180px_1fr] lg:grid-cols-[250px_1fr]">
-          <nav className="grid gap-4 text-sm text-muted-foreground">
+          <nav className="grid gap-2 text-sm text-muted-foreground">
             <Link
               href={`/datarooms/${dataroom.id}/settings`}
-              className="font-semibold text-primary"
+              className="rounded-lg bg-muted px-2 py-1 font-semibold text-primary"
             >
               General
             </Link>

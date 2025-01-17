@@ -92,7 +92,7 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
     //   disabled: true,
     // },
     {
-      name: "Documents",
+      name: "All Documents",
       href: "/documents",
       icon:
         router.pathname.includes("documents") &&
@@ -109,7 +109,7 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
       disabled: false,
     },
     {
-      name: "Datarooms",
+      name: "All Datarooms",
       href: "/datarooms",
       icon: ServerIcon,
       current: router.pathname.includes("datarooms"),

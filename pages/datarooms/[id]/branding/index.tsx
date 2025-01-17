@@ -189,13 +189,7 @@ export default function DataroomBrandPage() {
           <DataroomHeader
             title={dataroom.name}
             description={dataroom.pId}
-            actions={
-              [
-                // <Button onClick={() => setIsLinkSheetOpen(true)} key={1}>
-                //   Create Link
-                // </Button>,
-              ]
-            }
+            actions={[]}
           />
 
           <DataroomNavigation dataroomId={dataroom.id} />
@@ -204,7 +198,7 @@ export default function DataroomBrandPage() {
         <div className="mb-4 flex items-center justify-between md:mb-8 lg:mb-12">
           <div className="space-y-1">
             <h3 className="text-2xl font-semibold tracking-tight text-foreground">
-              Customization
+              Branding
             </h3>
             <p className="flex flex-row items-center gap-2 text-sm text-muted-foreground">
               Customize your data room&apos;s branding for a cohesive user
