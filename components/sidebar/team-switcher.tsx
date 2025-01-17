@@ -63,7 +63,7 @@ export function TeamSwitcher({
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate">{activeTeam.name}</span>
                 <span className="truncate text-xs font-semibold capitalize">
-                  {isTrial ? "Data Room Trial" : plan}
+                  {isTrial ? "Data Room Trial" : null}
                 </span>
               </div>
               <ChevronsUpDown className="ml-auto" />

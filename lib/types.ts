@@ -33,6 +33,11 @@ export interface DocumentWithLinksAndLinkCountAndViewCount extends Document {
 
 export interface DocumentWithVersion extends Document {
   versions: DocumentVersion[];
+  folder: {
+    name: string;
+    path: string;
+  };
+  hasPageLinks: boolean;
 }
 
 export interface LinkWithViews extends Link {
