@@ -9,26 +9,12 @@ import { useEffect, useState } from "react";
 import { TeamContextType, initialState, useTeam } from "@/context/team-context";
 import Cookies from "js-cookie";
 import {
-  AudioWaveform,
-  BookOpen,
-  Bot,
   BrushIcon,
   CogIcon,
-  Command,
   ContactIcon,
   FolderIcon,
-  Frame,
-  GalleryVerticalEnd,
-  LifeBuoy,
   Loader,
-  Map,
-  PaletteIcon,
-  PieChart,
-  Send,
   ServerIcon,
-  Settings2,
-  SquareTerminal,
-  SwatchBookIcon,
 } from "lucide-react";
 
 import { NavMain } from "@/components/sidebar/nav-main";
@@ -40,9 +26,7 @@ import {
   SidebarFooter,
   SidebarHeader,
   SidebarMenu,
-  SidebarMenuButton,
   SidebarMenuItem,
-  SidebarTrigger,
 } from "@/components/ui/sidebar";
 
 import { usePlan } from "@/lib/swr/use-billing";

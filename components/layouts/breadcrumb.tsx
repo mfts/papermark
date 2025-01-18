@@ -27,7 +27,7 @@ import useViewer from "@/lib/swr/use-viewer";
 
 const FOLDERS_TO_DISPLAY = 1; // Only show the last folder in the path
 
-const SingleDocumentBreadcrumb = ({ documentId }: { documentId: string }) => {
+const SingleDocumentBreadcrumb = () => {
   const { document } = useDocument();
   const { folders } = useFolderWithParents({
     name: document?.folder?.path ? [document.folder.path] : [],
@@ -136,7 +136,9 @@ const SingleDataroomBreadcrumb = ({ path }: { path: string }) => {
         <BreadcrumbSeparator />
         <BreadcrumbItem>
           <BreadcrumbLink asChild>
-            <Link href={`/datarooms/${dataroom?.id}`}>{dataroom?.name}</Link>
+            <Link href={`/datarooms/${dataroom?.id}/documents`}>
+              {dataroom?.name}
+            </Link>
           </BreadcrumbLink>
         </BreadcrumbItem>
         <BreadcrumbSeparator />
@@ -345,7 +347,7 @@ export const AppBreadcrumb = () => {
 
     // Single document route
     if (path === "/documents/[id]" && id) {
-      return <SingleDocumentBreadcrumb documentId={id} />;
+      return <SingleDocumentBreadcrumb />;
     }
 
     // Dataroom document routes

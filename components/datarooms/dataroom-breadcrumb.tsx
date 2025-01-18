@@ -48,7 +48,7 @@ function BreadcrumbComponentBase({
         <BreadcrumbSeparator />
         <BreadcrumbItem>
           <BreadcrumbLink asChild>
-            <Link href={`/datarooms/${dataroomId}`}>
+            <Link href={`/datarooms/${dataroomId}/documents`}>
               {dataroom?.name || "Loading..."}
             </Link>
           </BreadcrumbLink>
