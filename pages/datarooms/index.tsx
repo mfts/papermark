@@ -114,7 +114,10 @@ export default function DataroomsPage() {
           <ul className="grid grid-cols-1 gap-x-6 gap-y-8 lg:grid-cols-2 xl:grid-cols-3">
             {datarooms &&
               datarooms.map((dataroom) => (
-                <Link key={dataroom.id} href={`/datarooms/${dataroom.id}`}>
+                <Link
+                  key={dataroom.id}
+                  href={`/datarooms/${dataroom.id}/documents`}
+                >
                   <Card className="group relative overflow-hidden duration-500 hover:border-primary/50">
                     <CardHeader>
                       <div className="flex items-center justify-between">

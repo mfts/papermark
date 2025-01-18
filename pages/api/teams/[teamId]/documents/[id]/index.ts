@@ -38,6 +38,12 @@ export default async function handle(
               orderBy: { createdAt: "desc" },
               take: 1,
             },
+            folder: {
+              select: {
+                name: true,
+                path: true,
+              },
+            },
           },
         },
       });

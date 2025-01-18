@@ -79,8 +79,8 @@ export default function DataroomVisitorsTable({
 
   return (
     <div className="w-full">
-      <div className="flex justify-between">
-        <h2 className="mb-2 md:mb-4">All visitors</h2>
+      <div className="mb-2 flex items-center justify-between md:mb-4">
+        <h2>All visitors</h2>
         <Button size="sm" onClick={() => exportVisitCounts(dataroomId)}>
           Export visits
         </Button>

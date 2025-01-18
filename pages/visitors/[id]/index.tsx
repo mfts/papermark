@@ -43,19 +43,6 @@ export default function VisitorDetailPage() {
       <div className="p-4 pb-0 sm:m-4 sm:py-4">
         {viewer ? (
           <section className="mb-4 flex flex-col justify-between md:mb-8 lg:mb-12">
-            <Breadcrumb className="hidden md:flex">
-              <BreadcrumbList>
-                <BreadcrumbItem>
-                  <BreadcrumbLink asChild>
-                    <Link href="/visitors">All Visitors</Link>
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                  <BreadcrumbPage>{viewer.email}</BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
             <div className="mt-2 flex items-center gap-x-2">
               <VisitorAvatar viewerEmail={viewer.email} />
 
