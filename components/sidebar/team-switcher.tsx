@@ -55,8 +55,8 @@ export function TeamSwitcher({
               size="lg"
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground border"
             >
-              <Avatar className="size-8 rounded-lg">
-                <AvatarFallback className="rounded-lg">
+              <Avatar className="size-8 rounded">
+                <AvatarFallback className="rounded">
                   {activeTeam?.name?.slice(0, 2).toUpperCase()}
                 </AvatarFallback>
               </Avatar>

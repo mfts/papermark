@@ -12,6 +12,7 @@ import {
   AudioWaveform,
   BookOpen,
   Bot,
+  BrushIcon,
   CogIcon,
   Command,
   ContactIcon,
@@ -27,6 +28,7 @@ import {
   ServerIcon,
   Settings2,
   SquareTerminal,
+  SwatchBookIcon,
 } from "lucide-react";
 
 import { NavMain } from "@/components/sidebar/nav-main";
@@ -94,7 +96,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       {
         title: "Branding",
         url: "/branding",
-        icon: PaletteIcon,
+        icon: BrushIcon,
         current:
           router.pathname.includes("branding") &&
           !router.pathname.includes("datarooms"),
@@ -137,6 +139,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar
       className="bg-gray-50 dark:bg-black"
+      sidebarClassName="bg-gray-50 dark:bg-black"
       side="left"
       variant="inset"
       collapsible="icon"
@@ -173,8 +176,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
-        {/* <NavProjects projects={data.projects} /> */}
-        {/* <NavSecondary items={data.navSecondary} className="mt-auto" /> */}
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu className="group-data-[collapsible=icon]:hidden">

@@ -23,6 +23,7 @@ import {
 import { useDataroom } from "@/lib/swr/use-dataroom";
 import { useDocument } from "@/lib/swr/use-document";
 import { useFolderWithParents } from "@/lib/swr/use-folders";
+import useViewer from "@/lib/swr/use-viewer";
 
 const FOLDERS_TO_DISPLAY = 1; // Only show the last folder in the path
 
@@ -275,6 +276,42 @@ const DocumentsBreadcrumb = () => {
   );
 };
 
+const VisitorsBreadcrumb = () => {
+  return (
+    <Breadcrumb>
+      <BreadcrumbList>
+        <BreadcrumbItem>
+          <BreadcrumbLink asChild>
+            <Link href="/visitors">Visitors</Link>
+          </BreadcrumbLink>
+        </BreadcrumbItem>
+      </BreadcrumbList>
+    </Breadcrumb>
+  );
+};
+
+const SingleVisitorBreadcrumb = () => {
+  const { viewer } = useViewer();
+
+  return (
+    <Breadcrumb>
+      <BreadcrumbList>
+        <BreadcrumbItem>
+          <BreadcrumbLink asChild>
+            <Link href="/visitors">Visitors</Link>
+          </BreadcrumbLink>
+        </BreadcrumbItem>
+        <BreadcrumbSeparator />
+        <BreadcrumbItem>
+          <BreadcrumbPage className="max-w-[200px] truncate">
+            {viewer?.email || "Loading..."}
+          </BreadcrumbPage>
+        </BreadcrumbItem>
+      </BreadcrumbList>
+    </Breadcrumb>
+  );
+};
+
 export const AppBreadcrumb = () => {
   const router = useRouter();
   const path = router.pathname;
@@ -337,6 +374,16 @@ export const AppBreadcrumb = () => {
           </BreadcrumbList>
         </Breadcrumb>
       );
+    }
+
+    // Root visitors route
+    if (path === "/visitors") {
+      return <VisitorsBreadcrumb />;
+    }
+
+    // Single visitor route
+    if (path === "/visitors/[id]" && id) {
+      return <SingleVisitorBreadcrumb />;
     }
 
     return null;

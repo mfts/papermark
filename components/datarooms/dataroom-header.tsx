@@ -1,15 +1,6 @@
-import Link from "next/link";
-
 import { useState } from "react";
 
 import LinkSheet from "@/components/links/link-sheet";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 
 export const DataroomHeader = ({
@@ -32,20 +23,7 @@ export const DataroomHeader = ({
 
   return (
     <section className="mb-4">
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink asChild>
-              <Link href="/datarooms">All Datarooms</Link>
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <span className="font-medium text-foreground">{title}</span>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
-      <div className="mt-2 flex items-center justify-between">
+      <div className="flex items-center justify-between">
         <div className="flex min-h-10 items-center space-y-1">
           <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
             {title}

@@ -51,10 +51,10 @@ export default function Documents() {
             <Button
               size="sm"
               className="group flex items-center justify-start gap-x-3 px-3 text-left"
-              title="Add New Document"
+              title="Add Document"
             >
               <PlusIcon className="h-5 w-5 shrink-0" aria-hidden="true" />
-              <span>Add New Document</span>
+              <span>Add Document</span>
             </Button>
           </AddDocumentModal>
           <AddFolderModal isDataroom={true} dataroomId={dataroom?.id} key={2}>
@@ -64,7 +64,7 @@ export default function Documents() {
               className="group flex items-center justify-start gap-x-3 px-3 text-left"
             >
               <FolderPlusIcon className="h-5 w-5 shrink-0" aria-hidden="true" />
-              <span>Add New Folder</span>
+              <span>Add Folder</span>
             </Button>
           </AddFolderModal>
           <div id="dataroom-reordering-action">
@@ -90,11 +90,6 @@ export default function Documents() {
             </ScrollArea>
           </div>
           <div className="space-y-4 md:col-span-3">
-            <div className="flex items-center justify-between">
-              <div className="space-y-2">
-                <BreadcrumbComponent />
-              </div>
-            </div>
             <section id="documents-header-count" className="min-h-8" />
 
             {isLoading ? <LoadingDocuments count={3} /> : null}
