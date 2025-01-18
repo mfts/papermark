@@ -43,9 +43,6 @@ export function TeamSwitcher({
 
   if (!activeTeam) return null;
 
-  const plan = activeTeam.plan?.split("+")[0];
-  const isTrial = activeTeam.plan?.includes("trial");
-
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -62,9 +59,6 @@ export function TeamSwitcher({
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate">{activeTeam.name}</span>
-                <span className="truncate text-xs font-semibold capitalize">
-                  {isTrial ? "Data Room Trial" : null}
-                </span>
               </div>
               <ChevronsUpDown className="ml-auto" />
             </SidebarMenuButton>
