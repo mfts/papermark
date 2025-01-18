@@ -3,6 +3,8 @@ import { useState } from "react";
 import LinkSheet from "@/components/links/link-sheet";
 import { Button } from "@/components/ui/button";
 
+import { useDataroomLinks } from "@/lib/swr/use-dataroom";
+
 export const DataroomHeader = ({
   title,
   description,
@@ -13,6 +15,7 @@ export const DataroomHeader = ({
   actions?: React.ReactNode[];
 }) => {
   const [isLinkSheetOpen, setIsLinkSheetOpen] = useState<boolean>(false);
+  const { links } = useDataroomLinks();
 
   const actionRows: React.ReactNode[][] = [];
   if (actions) {
@@ -38,6 +41,7 @@ export const DataroomHeader = ({
           linkType={"DATAROOM_LINK"}
           isOpen={isLinkSheetOpen}
           setIsOpen={setIsLinkSheetOpen}
+          existingLinks={links}
         />
       </div>
     </section>

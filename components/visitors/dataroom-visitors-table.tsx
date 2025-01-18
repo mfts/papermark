@@ -27,8 +27,9 @@ import {
 import { BadgeTooltip } from "@/components/ui/tooltip";
 
 import { useDataroomVisits } from "@/lib/swr/use-dataroom";
-import { durationFormat, timeAgo } from "@/lib/utils";
+import { timeAgo } from "@/lib/utils";
 
+import DataroomVisitorCustomFields from "./dataroom-visitor-custom-fields";
 import { DataroomVisitorUserAgent } from "./dataroom-visitor-useragent";
 import DataroomVisitHistory from "./dataroom-visitors-history";
 import { VisitorAvatar } from "./visitor-avatar";
@@ -201,6 +202,11 @@ export default function DataroomVisitorsTable({
                       <>
                         <TableRow>
                           <TableCell colSpan={3}>
+                            <DataroomVisitorCustomFields
+                              viewId={view.id}
+                              teamId={view.teamId!}
+                              dataroomId={dataroomId}
+                            />
                             <DataroomVisitorUserAgent viewId={view.id} />
                           </TableCell>
                         </TableRow>

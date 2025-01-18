@@ -12,7 +12,7 @@ export default async function handle(
   res: NextApiResponse,
 ) {
   if (req.method === "GET") {
-    // GET /api/teams/:teamId/documents/:id/views/:viewId/custom-fields
+    // GET /api/teams/:teamId/datarooms/:id/views/:viewId/custom-fields
     const session = await getServerSession(req, res, authOptions);
     if (!session) {
       return res.status(401).end("Unauthorized");
@@ -20,7 +20,7 @@ export default async function handle(
 
     const {
       teamId,
-      id: docId,
+      id: dataroomId,
       viewId,
     } = req.query as {
       teamId: string;
@@ -58,7 +58,7 @@ export default async function handle(
         where: {
           viewId: viewId,
           view: {
-            documentId: docId,
+            dataroomId: dataroomId,
           },
         },
         select: {
