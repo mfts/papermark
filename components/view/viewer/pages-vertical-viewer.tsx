@@ -747,21 +747,15 @@ export default function PagesVerticalViewer({
           <div className="flex min-h-full min-w-full justify-center">
             <div className="flex w-full max-w-[1400px] justify-center">
               <div
-                className={cn(
-                  "transform-container w-full",
-                  isMobile && "touch-zoom-container",
-                )}
+                className="transform-container w-full"
                 style={{
-                  transform: isMobile ? "none" : `scale(${scale})`,
+                  transform: `scale(${scale})`,
                   transition: "transform 0.2s ease-out",
                   transformOrigin: scale <= 1 ? "center top" : "left top",
                 }}
               >
                 <div
-                  className={cn(
-                    "flex flex-col items-center gap-2",
-                    isMobile && "touch-action-manipulation",
-                  )}
+                  className="flex flex-col items-center gap-2"
                   onContextMenu={handleContextMenu}
                 >
                   {pageNumber <= numPagesWithAccountCreation &&
@@ -770,10 +764,7 @@ export default function PagesVerticalViewer({
                     ? pages.map((page, index) => (
                         <div
                           key={index}
-                          className={cn(
-                            "w-full px-4 md:px-8",
-                            isMobile && "touch-action-pinch-zoom",
-                          )}
+                          className="w-full px-4 md:px-8"
                           style={{
                             width: containerWidth
                               ? `${calculateOptimalWidth(containerWidth, page.metadata, isMobile, isTablet)}px`
