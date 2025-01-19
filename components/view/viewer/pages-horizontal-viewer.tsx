@@ -590,20 +590,11 @@ export default function PagesHorizontalViewer({
           )}
           ref={containerRef}
         >
-          <div
-            className={cn(
-              "h-full w-full",
-              scale > 1 && "overflow-auto",
-              isMobile && "touch-zoom-container",
-            )}
-          >
+          <div className={cn("h-full w-full", scale > 1 && "overflow-auto")}>
             <div
-              className={cn(
-                "flex min-h-full w-full items-center justify-center",
-                isMobile && "touch-action-pinch-zoom",
-              )}
+              className="flex min-h-full w-full items-center justify-center"
               style={{
-                transform: isMobile ? "none" : `scale(${scale})`,
+                transform: `scale(${scale})`,
                 transition: "transform 0.2s ease-out",
                 transformOrigin: scale <= 1 ? "center center" : "left top",
                 minWidth: scale > 1 ? `${100 * scale}%` : "100%",
@@ -626,7 +617,6 @@ export default function PagesHorizontalViewer({
                       <img
                         className={cn(
                           "!pointer-events-auto max-h-[calc(100dvh-64px)] object-contain",
-                          isMobile && "touch-action-pinch-zoom",
                         )}
                         ref={(ref) => {
                           imageRefs.current[index] = ref;
