@@ -789,8 +789,8 @@ export default function PagesViewer({
         embeddedLinks={pages[pageNumber - 1]?.embeddedLinks}
         isDataroom={dataroomId ? true : false}
         setDocumentData={setDocumentData}
-        documentRefs={pinchRefs}
-        isVertical={isVertical}
+        // documentRefs={pinchRefs}
+        // isVertical={isVertical}
         isMobile={isMobile}
         isPreview={isPreview}
         hasWatermark={watermarkConfig ? true : false}
