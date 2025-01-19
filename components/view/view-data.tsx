@@ -114,7 +114,6 @@ export default function ViewData({
       showAccountCreationSlide={showAccountCreationSlide}
       enableQuestion={link.enableQuestion}
       feedback={link.feedback}
-      isVertical={document.versions[0].isVertical}
       viewerEmail={viewerEmail}
       watermarkConfig={
         link.enableWatermark ? (link.watermarkConfig as WatermarkConfig) : null
