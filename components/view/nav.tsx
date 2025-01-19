@@ -1,20 +1,15 @@
-import Image from "next/image";
 import Link from "next/link";
 
-import { MutableRefObject } from "react";
 import React from "react";
 
 import { Brand, DataroomBrand } from "@prisma/client";
 import {
   ArrowUpRight,
   Download,
-  Flag,
-  Minimize2Icon,
   Slash,
   ZoomInIcon,
   ZoomOutIcon,
 } from "lucide-react";
-import { ReactZoomPanPinchContentRef } from "react-zoom-pan-pinch";
 import { toast } from "sonner";
 
 import {
@@ -45,7 +40,6 @@ import {
   BreadcrumbSeparator,
 } from "../ui/breadcrumb";
 import { Button } from "../ui/button";
-import { Separator } from "../ui/separator";
 import { TDocumentData } from "./dataroom/dataroom-view";
 import ReportForm from "./report-form";
 
@@ -62,7 +56,6 @@ export default function Nav({
   documentName,
   isDataroom,
   setDocumentData,
-  documentRefs,
   isMobile,
   isPreview,
   hasWatermark,
@@ -82,7 +75,6 @@ export default function Nav({
   documentName?: string;
   isDataroom?: boolean;
   setDocumentData?: React.Dispatch<React.SetStateAction<TDocumentData | null>>;
-  documentRefs?: MutableRefObject<(ReactZoomPanPinchContentRef | null)[]>;
   isMobile?: boolean;
   isPreview?: boolean;
   hasWatermark?: boolean;
