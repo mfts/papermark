@@ -26,6 +26,8 @@ import EmailVerificationMessage from "../email-verification-form";
 import AdvancedExcelViewer from "../viewer/advanced-excel-viewer";
 import DownloadOnlyViewer from "../viewer/download-only-viewer";
 import ImageViewer from "../viewer/image-viewer";
+import PagesHorizontalViewer from "../viewer/pages-horizontal-viewer";
+import PagesVerticalViewer from "../viewer/pages-vertical-viewer";
 import VideoViewer from "../viewer/video-viewer";
 
 const ExcelViewer = dynamic(
@@ -477,7 +479,7 @@ export default function DataroomView({
           isPreview={viewData.isPreview}
         />
       </div>
-    ) : viewData.pages ? (
+    ) : viewData.pages && !documentData.isVertical ? (
       <div
         className="bg-gray-950"
         style={{
@@ -485,7 +487,7 @@ export default function DataroomView({
             brand && brand.accentColor ? brand.accentColor : "rgb(3, 7, 18)",
         }}
       >
-        <PagesViewerNew
+        <PagesHorizontalViewer
           pages={viewData.pages}
           viewId={viewData.viewId}
           isPreview={viewData.isPreview}
@@ -500,7 +502,39 @@ export default function DataroomView({
           brand={brand}
           dataroomId={dataroom.id}
           setDocumentData={setDocumentData}
-          isVertical={documentData.isVertical}
+          viewerEmail={data.email ?? verifiedEmail ?? userEmail ?? undefined}
+          watermarkConfig={
+            link.enableWatermark
+              ? (link.watermarkConfig as WatermarkConfig)
+              : null
+          }
+          ipAddress={viewData.ipAddress}
+          linkName={link.name ?? `Link #${link.id.slice(-5)}`}
+        />
+      </div>
+    ) : viewData.pages && documentData.isVertical ? (
+      <div
+        className="bg-gray-950"
+        style={{
+          backgroundColor:
+            brand && brand.accentColor ? brand.accentColor : "rgb(3, 7, 18)",
+        }}
+      >
+        <PagesVerticalViewer
+          pages={viewData.pages}
+          viewId={viewData.viewId}
+          isPreview={viewData.isPreview}
+          linkId={link.id}
+          documentId={documentData.id}
+          documentName={documentData.name}
+          allowDownload={viewData.canDownload ?? link.allowDownload!}
+          feedbackEnabled={link.enableFeedback!}
+          screenshotProtectionEnabled={link.enableScreenshotProtection!}
+          screenShieldPercentage={link.screenShieldPercentage}
+          versionNumber={documentData.documentVersionNumber}
+          brand={brand}
+          dataroomId={dataroom.id}
+          setDocumentData={setDocumentData}
           viewerEmail={data.email ?? verifiedEmail ?? userEmail ?? undefined}
           watermarkConfig={
             link.enableWatermark
