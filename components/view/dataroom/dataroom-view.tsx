@@ -21,7 +21,6 @@ import { SUPPORTED_DOCUMENT_SIMPLE_TYPES } from "@/lib/constants";
 import { LinkWithDataroom, NotionTheme, WatermarkConfig } from "@/lib/types";
 
 import DataroomViewer from "../DataroomViewer";
-import PagesViewerNew from "../PagesViewerNew";
 import EmailVerificationMessage from "../email-verification-form";
 import AdvancedExcelViewer from "../viewer/advanced-excel-viewer";
 import DownloadOnlyViewer from "../viewer/download-only-viewer";
