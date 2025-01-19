@@ -100,3 +100,25 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  .touch-action-manipulation {
+    touch-action: manipulation;
+  }
+
+  .touch-action-pinch-zoom {
+    touch-action: pinch-zoom;
+  }
+
+  .transform-container {
+    transform-origin: 0 0;
+    will-change: transform;
+  }
+
+  .touch-zoom-container {
+    touch-action: none; /* Disable all browser handling */
+    -webkit-overflow-scrolling: touch;
+    isolation: isolate; /* Create a new stacking context */
+    contain: paint; /* Optimize rendering */
+  }
+}

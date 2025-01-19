@@ -26,6 +26,12 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 import { determineTextColor } from "@/lib/utils/determine-text-color";
 
@@ -57,11 +63,12 @@ export default function Nav({
   isDataroom,
   setDocumentData,
   documentRefs,
-  isVertical,
   isMobile,
   isPreview,
   hasWatermark,
   documentId,
+  handleZoomIn,
+  handleZoomOut,
 }: {
   pageNumber?: number;
   numPages?: number;
@@ -76,11 +83,12 @@ export default function Nav({
   isDataroom?: boolean;
   setDocumentData?: React.Dispatch<React.SetStateAction<TDocumentData | null>>;
   documentRefs?: MutableRefObject<(ReactZoomPanPinchContentRef | null)[]>;
-  isVertical?: boolean;
   isMobile?: boolean;
   isPreview?: boolean;
   hasWatermark?: boolean;
   documentId?: string;
+  handleZoomIn?: () => void;
+  handleZoomOut?: () => void;
 }) {
   const downloadFile = async () => {
     if (isPreview) {
@@ -243,52 +251,50 @@ export default function Nav({
               </Button>
             ) : null}
 
-            {!isMobile && documentRefs ? (
+            {!isMobile && handleZoomIn && handleZoomOut && (
               <div className="flex gap-1">
-                <Button
-                  onClick={() => {
-                    if (isMobile) {
-                      documentRefs.current[pageNumber! - 1]?.zoomIn();
-                      return;
-                    }
-                    documentRefs.current.map((ref) => ref?.zoomIn());
-                  }}
-                  className="bg-gray-900 text-white hover:bg-gray-900/80"
-                  size="icon"
-                  title="Zoom in"
-                >
-                  <ZoomInIcon className="h-5 w-5" />
-                </Button>
-                <Button
-                  onClick={() => {
-                    if (isMobile) {
-                      documentRefs.current[pageNumber! - 1]?.zoomOut();
-                      return;
-                    }
-                    documentRefs.current.map((ref) => ref?.zoomOut());
-                  }}
-                  className="bg-gray-900 text-white hover:bg-gray-900/80"
-                  size="icon"
-                  title="Zoom out"
-                >
-                  <ZoomOutIcon className="h-5 w-5" />
-                </Button>
-                <Button
-                  onClick={() => {
-                    if (isMobile) {
-                      documentRefs.current[pageNumber! - 1]?.resetTransform();
-                      return;
-                    }
-                    documentRefs.current.map((ref) => ref?.resetTransform());
-                  }}
-                  className="bg-gray-900 text-white hover:bg-gray-900/80"
-                  size="icon"
-                  title="Reset zoom"
-                >
-                  <Minimize2Icon className="h-5 w-5" />
-                </Button>
+                <TooltipProvider delayDuration={50}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        onClick={handleZoomIn}
+                        className="bg-gray-900 text-white hover:bg-gray-900/80"
+                        size="icon"
+                      >
+                        <ZoomInIcon className="h-5 w-5" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <span className="mr-2 text-xs">Zoom in</span>
+                      <span className="ml-auto rounded-sm border bg-muted p-0.5 text-xs tracking-widest text-muted-foreground">
+                        ⌘+
+                      </span>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+
+                <TooltipProvider delayDuration={50}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        onClick={handleZoomOut}
+                        className="bg-gray-900 text-white hover:bg-gray-900/80"
+                        size="icon"
+                      >
+                        <ZoomOutIcon className="h-5 w-5" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <span className="mr-2 text-xs">Zoom out</span>
+                      <span className="ml-auto rounded-sm border bg-muted p-0.5 text-xs tracking-widest text-muted-foreground">
+                        ⌘-
+                      </span>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
-            ) : null}
+            )}
+
             {pageNumber && numPages ? (
               <div className="flex h-8 items-center space-x-1 rounded-md bg-gray-900 px-3 py-1.5 text-xs font-medium text-white sm:h-10 sm:px-4 sm:py-2 sm:text-sm">
                 <span style={{ fontVariantNumeric: "tabular-nums" }}>
