@@ -9,30 +9,49 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   ChevronUpIcon,
+  ZoomInIcon,
+  ZoomOutIcon,
 } from "lucide-react";
 import { useSession } from "next-auth/react";
-import {
-  ReactZoomPanPinchContentRef,
-  TransformComponent,
-  TransformWrapper,
-} from "react-zoom-pan-pinch";
 import { toast } from "sonner";
 
 import { WatermarkConfig } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useMediaQuery } from "@/lib/utils/use-media-query";
 
-import { ScreenProtector } from "./ScreenProtection";
-import { TDocumentData } from "./dataroom/dataroom-view";
-import Nav from "./nav";
-import { PoweredBy } from "./powered-by";
-import Question from "./question";
-import { ScreenShield } from "./screen-shield";
-import Toolbar from "./toolbar";
-import ViewDurationSummary from "./visitor-graph";
-import { SVGWatermark } from "./watermark-svg";
+import { ScreenProtector } from "../ScreenProtection";
+import { TDocumentData } from "../dataroom/dataroom-view";
+import Nav from "../nav";
+import { PoweredBy } from "../powered-by";
+import Question from "../question";
+import { ScreenShield } from "../screen-shield";
+import Toolbar from "../toolbar";
+import ViewDurationSummary from "../visitor-graph";
+import { SVGWatermark } from "../watermark-svg";
 
 const DEFAULT_PRELOADED_IMAGES_NUM = 5;
+
+const calculateOptimalWidth = (
+  containerWidth: number,
+  metadata: { width: number; height: number },
+  isMobile: boolean,
+  isTablet: boolean,
+) => {
+  const aspectRatio = metadata.width / metadata.height;
+  const maxWidth = Math.min(1400, containerWidth); // 100% of container width, max 1400px
+  const minWidth = Math.min(
+    800,
+    isTablet ? containerWidth * 0.9 : containerWidth * 0.6,
+  ); // 60% of container width, min 600px
+
+  // For landscape documents (width > height), use more width
+  if (aspectRatio > 1) {
+    return maxWidth;
+  }
+
+  // For portrait documents, use full width on mobile, min width on desktop
+  return isMobile ? containerWidth : minWidth;
+};
 
 const trackPageView = async (data: {
   linkId: string;
@@ -68,7 +87,7 @@ const trackPageView = async (data: {
   });
 };
 
-export default function PagesViewer({
+export default function PagesVerticalViewer({
   pages,
   linkId,
   documentId,
@@ -87,7 +106,6 @@ export default function PagesViewer({
   showAccountCreationSlide,
   enableQuestion = false,
   feedback,
-  isVertical = false,
   viewerEmail,
   isPreview,
   watermarkConfig,
@@ -121,7 +139,6 @@ export default function PagesViewer({
     id: string;
     data: { question: string; type: string };
   } | null;
-  isVertical?: boolean;
   viewerEmail?: string;
   isPreview?: boolean;
   watermarkConfig?: WatermarkConfig | null;
@@ -129,21 +146,12 @@ export default function PagesViewer({
   linkName?: string;
 }) {
   const router = useRouter();
-  const { status: sessionStatus } = useSession();
-
-  const showStatsSlideWithAccountCreation =
-    showAccountCreationSlide && // if showAccountCreationSlide is enabled
-    sessionStatus !== "authenticated" && // and user is not authenticated
-    !dataroomId && // and it's not a dataroom
-    !isVertical; // and it's not vertical document
 
   const numPages = pages.length;
   const numPagesWithFeedback =
     enableQuestion && feedback ? numPages + 1 : numPages;
 
-  const numPagesWithAccountCreation = showStatsSlideWithAccountCreation
-    ? numPagesWithFeedback + 1
-    : numPagesWithFeedback;
+  const numPagesWithAccountCreation = numPagesWithFeedback;
 
   const pageQuery = router.query.p ? Number(router.query.p) : 1;
 
@@ -176,14 +184,13 @@ export default function PagesViewer({
   const scrollActionRef = useRef<boolean>(false);
   const hasTrackedDownRef = useRef<boolean>(false);
   const hasTrackedUpRef = useRef<boolean>(false);
-  const pinchRefs = useRef<(ReactZoomPanPinchContentRef | null)[]>([]);
   const imageRefs = useRef<(HTMLImageElement | null)[]>([]);
 
   const [imageDimensions, setImageDimensions] = useState<
     Record<number, { width: number; height: number }>
   >({});
 
-  const { isMobile } = useMediaQuery();
+  const { isMobile, isTablet } = useMediaQuery();
 
   const scaleCoordinates = (coords: string, scaleFactor: number) => {
     return coords
@@ -360,34 +367,23 @@ export default function PagesViewer({
   }, []); // Run once on mount
 
   const handleScroll = () => {
-    if (!isVertical) return;
-
     const container = containerRef.current;
     if (!container) return;
 
     const scrollPosition = container.scrollTop;
-    const pageHeight = container.scrollHeight / numPagesWithAccountCreation;
-
-    const currentPage = Math.floor(scrollPosition / pageHeight) + 1;
-    const currentPageFraction = (scrollPosition % pageHeight) / pageHeight;
-
-    if (scrollActionRef.current) {
-      if (scrollPosition % pageHeight === 0) {
-        scrollActionRef.current = false;
-      }
-      return;
-    }
+    const containerHeight = container.clientHeight;
+    const containerRect = container.getBoundingClientRect();
 
     // Do not track the question page
-    if (currentPage > numPages) {
-      setPageNumber(currentPage);
+    if (pageNumber > numPages) {
+      setPageNumber(pageNumber);
       startTimeRef.current = Date.now();
       return;
     }
 
     // Always preload surrounding pages during scroll
-    const startPage = Math.max(0, currentPage - 2 - 1);
-    const endPage = Math.min(numPages - 1, currentPage + 2 - 1);
+    const startPage = Math.max(0, pageNumber - 2 - 1);
+    const endPage = Math.min(numPages - 1, pageNumber + 2 - 1);
 
     setLoadedImages((prev) => {
       const newLoadedImages = [...prev];
@@ -397,61 +393,27 @@ export default function PagesViewer({
       return newLoadedImages;
     });
 
-    // Scroll Down Tracking
-    if (
-      currentPageFraction > 0.5 &&
-      currentPage === pageNumber &&
-      !hasTrackedDownRef.current
-    ) {
-      // Track the page view
-      const duration = Date.now() - startTimeRef.current;
-      trackPageView({
-        linkId,
-        documentId,
-        viewId,
-        duration,
-        pageNumber: pageNumber,
-        versionNumber,
-        dataroomId,
-        setViewedPages,
-        isPreview,
-      });
-      setPageNumber(currentPage);
-      pageNumberRef.current = currentPage;
-      startTimeRef.current = Date.now();
-      hasTrackedDownRef.current = true;
-      hasTrackedUpRef.current = false;
-    } else if (
-      currentPageFraction > 0.5 &&
-      currentPage === pageNumber - 1 &&
-      !hasTrackedDownRef.current
-    ) {
-      const duration = Date.now() - startTimeRef.current;
-      trackPageView({
-        linkId,
-        documentId,
-        viewId,
-        duration,
-        pageNumber: pageNumber,
-        versionNumber,
-        dataroomId,
-        setViewedPages,
-        isPreview,
-      });
-      setPageNumber(currentPage);
-      pageNumberRef.current = currentPage;
-      startTimeRef.current = Date.now();
-      hasTrackedDownRef.current = true;
-      hasTrackedUpRef.current = false;
-    }
+    // Find which page is most visible in the viewport
+    let maxVisiblePage = pageNumber;
+    let maxVisibleArea = 0;
 
-    // Scroll Up Tracking
-    if (
-      currentPageFraction <= 0.5 &&
-      currentPage === pageNumber &&
-      !hasTrackedUpRef.current
-    ) {
-      // Track the page view
+    imageRefs.current.forEach((img, index) => {
+      if (!img) return;
+
+      const rect = img.getBoundingClientRect();
+      const visibleHeight =
+        Math.min(rect.bottom, containerRect.bottom) -
+        Math.max(rect.top, containerRect.top);
+      const visibleArea = Math.max(0, visibleHeight);
+
+      if (visibleArea > maxVisibleArea) {
+        maxVisibleArea = visibleArea;
+        maxVisiblePage = index + 1;
+      }
+    });
+
+    // Only update page number and track view if the most visible page has changed
+    if (maxVisiblePage !== pageNumber) {
       const duration = Date.now() - startTimeRef.current;
       trackPageView({
         linkId,
@@ -464,33 +426,10 @@ export default function PagesViewer({
         setViewedPages,
         isPreview,
       });
-      setPageNumber(currentPage);
-      pageNumberRef.current = currentPage;
+
+      setPageNumber(maxVisiblePage);
+      pageNumberRef.current = maxVisiblePage;
       startTimeRef.current = Date.now();
-      hasTrackedUpRef.current = true;
-      hasTrackedDownRef.current = false;
-    } else if (
-      currentPageFraction <= 0.5 &&
-      currentPage === pageNumber + 1 &&
-      !hasTrackedUpRef.current
-    ) {
-      const duration = Date.now() - startTimeRef.current;
-      trackPageView({
-        linkId,
-        documentId,
-        viewId,
-        duration,
-        pageNumber: pageNumber + 1,
-        versionNumber,
-        dataroomId,
-        setViewedPages,
-        isPreview,
-      });
-      setPageNumber(currentPage);
-      pageNumberRef.current = currentPage;
-      startTimeRef.current = Date.now();
-      hasTrackedUpRef.current = true;
-      hasTrackedDownRef.current = false;
     }
   };
 
@@ -522,37 +461,26 @@ export default function PagesViewer({
   const goToPreviousPage = () => {
     if (pageNumber <= 1) return;
     if (enableQuestion && feedback && pageNumber === numPagesWithFeedback) {
-      if (isVertical) {
-        scrollActionRef.current = true;
-        const newScrollPosition =
-          ((pageNumber - 2) * containerRef.current!.scrollHeight) /
-          numPagesWithAccountCreation;
-        containerRef.current?.scrollTo({
-          top: newScrollPosition,
-          behavior: "smooth",
-        });
+      const targetImg = imageRefs.current[pageNumber - 2];
+      if (targetImg) {
+        targetImg.scrollIntoView({ behavior: "smooth", block: "start" });
+        setPageNumber(pageNumber - 1);
+        startTimeRef.current = Date.now();
       }
-      setPageNumber(pageNumber - 1);
-      startTimeRef.current = Date.now();
       return;
     }
 
     if (pageNumber === numPagesWithFeedback + 1) {
-      if (isVertical) {
-        scrollActionRef.current = true;
-        const newScrollPosition =
-          (pageNumber - 2) * containerRef.current!.clientHeight;
-        containerRef.current?.scrollTo({
-          top: newScrollPosition,
-          behavior: "smooth",
-        });
+      const targetImg = imageRefs.current[pageNumber - 2];
+      if (targetImg) {
+        targetImg.scrollIntoView({ behavior: "smooth", block: "start" });
+        setPageNumber(pageNumber - 1);
+        startTimeRef.current = Date.now();
       }
-      setPageNumber(pageNumber - 1);
-      startTimeRef.current = Date.now();
       return;
     }
 
-    // Preload previous pages every 4 pages in advanced
+    // Preload previous pages
     preloadImage(pageNumber - 4);
 
     const duration = Date.now() - startTimeRef.current;
@@ -568,41 +496,28 @@ export default function PagesViewer({
       isPreview,
     });
 
-    if (isVertical) {
-      scrollActionRef.current = true;
-      const newScrollPosition =
-        ((pageNumber - 2) * containerRef.current!.scrollHeight) /
-        numPagesWithAccountCreation;
-      containerRef.current?.scrollTo({
-        top: newScrollPosition,
-        behavior: "smooth",
-      });
+    const targetImg = imageRefs.current[pageNumber - 2];
+    if (targetImg) {
+      targetImg.scrollIntoView({ behavior: "smooth", block: "start" });
+      setPageNumber(pageNumber - 1);
+      startTimeRef.current = Date.now();
     }
-
-    // decrement page number
-    setPageNumber(pageNumber - 1);
-    startTimeRef.current = Date.now();
   };
 
   const goToNextPage = () => {
     if (pageNumber >= numPagesWithAccountCreation) return;
 
     if (pageNumber > numPages) {
-      if (isVertical) {
-        scrollActionRef.current = true;
-        const newScrollPosition =
-          pageNumber * containerRef.current!.clientHeight;
-        containerRef.current?.scrollTo({
-          top: newScrollPosition,
-          behavior: "smooth",
-        });
+      const targetImg = imageRefs.current[pageNumber];
+      if (targetImg) {
+        targetImg.scrollIntoView({ behavior: "smooth", block: "start" });
+        setPageNumber(pageNumber + 1);
+        startTimeRef.current = Date.now();
       }
-      setPageNumber(pageNumber + 1);
-      startTimeRef.current = Date.now();
       return;
     }
 
-    // Preload the next page every 2 pages in advanced
+    // Preload the next page
     preloadImage(pageNumber + 2);
 
     const duration = Date.now() - startTimeRef.current;
@@ -618,64 +533,38 @@ export default function PagesViewer({
       isPreview,
     });
 
-    if (isVertical) {
-      scrollActionRef.current = true;
-      const newScrollPosition =
-        (pageNumber * containerRef.current!.scrollHeight) /
-        numPagesWithAccountCreation;
-      console.log("newScrollPosition", newScrollPosition);
-      containerRef.current?.scrollTo({
-        top: newScrollPosition,
-        behavior: "smooth",
-      });
+    const targetImg = imageRefs.current[pageNumber];
+    if (targetImg) {
+      targetImg.scrollIntoView({ behavior: "smooth", block: "start" });
+      setPageNumber(pageNumber + 1);
+      startTimeRef.current = Date.now();
     }
-
-    // increment page number
-    setPageNumber(pageNumber + 1);
-    startTimeRef.current = Date.now();
   };
 
   const handleKeyDown = (event: KeyboardEvent) => {
-    if (isVertical) {
-      switch (event.key) {
-        case "ArrowDown":
-          event.preventDefault(); // Prevent default behavior
-          event.stopPropagation(); // Stop propagation
-          goToNextPage();
-          break;
-        case "ArrowUp":
-          event.preventDefault(); // Prevent default behavior
-          event.stopPropagation(); // Stop propagation
-          goToPreviousPage();
-          break;
-        case "ArrowRight":
-          event.preventDefault(); // Prevent default behavior
-          event.stopPropagation(); // Stop propagation
-          goToNextPage();
-          break;
-        case "ArrowLeft":
-          event.preventDefault(); // Prevent default behavior
-          event.stopPropagation(); // Stop propagation
-          goToPreviousPage();
-          break;
-        default:
-          break;
-      }
-    } else {
-      switch (event.key) {
-        case "ArrowRight":
-          event.preventDefault(); // Prevent default behavior
-          event.stopPropagation(); // Stop propagation
-          goToNextPage();
-          break;
-        case "ArrowLeft":
-          event.preventDefault(); // Prevent default behavior
-          event.stopPropagation(); // Stop propagation
-          goToPreviousPage();
-          break;
-        default:
-          break;
-      }
+    switch (event.key) {
+      case "ArrowDown":
+        event.preventDefault(); // Prevent default behavior
+        event.stopPropagation(); // Stop propagation
+        goToNextPage();
+        break;
+      case "ArrowUp":
+        event.preventDefault(); // Prevent default behavior
+        event.stopPropagation(); // Stop propagation
+        goToPreviousPage();
+        break;
+      case "ArrowRight":
+        event.preventDefault(); // Prevent default behavior
+        event.stopPropagation(); // Stop propagation
+        goToNextPage();
+        break;
+      case "ArrowLeft":
+        event.preventDefault(); // Prevent default behavior
+        event.stopPropagation(); // Stop propagation
+        goToPreviousPage();
+        break;
+      default:
+        break;
     }
   };
 
@@ -714,7 +603,7 @@ export default function PagesViewer({
 
         setPageNumber(targetPage);
         pageNumberRef.current = targetPage;
-        if (isVertical && containerRef.current) {
+        if (containerRef.current) {
           scrollActionRef.current = true;
           const newScrollPosition =
             ((targetPage - 1) * containerRef.current.scrollHeight) /
@@ -761,18 +650,64 @@ export default function PagesViewer({
   }, [handleKeyDown, goToNextPage, goToPreviousPage]);
 
   useEffect(() => {
-    if (!isVertical) return;
-
-    if (isVertical && containerRef.current) {
+    if (containerRef.current) {
       containerRef.current.addEventListener("scroll", handleScroll);
     }
 
     return () => {
-      if (isVertical && containerRef.current) {
+      if (containerRef.current) {
         containerRef.current.removeEventListener("scroll", handleScroll);
       }
     };
-  }, [isVertical, handleScroll]);
+  }, [handleScroll]);
+
+  const [containerWidth, setContainerWidth] = useState<number>(0);
+
+  // Add resize observer to track container width
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        setContainerWidth(entry.contentRect.width);
+      }
+    });
+
+    resizeObserver.observe(containerRef.current);
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, []);
+
+  const handleZoomIn = () => {
+    setScale((prev) => Math.min(prev + 0.25, 3)); // Max zoom 3x
+  };
+
+  const handleZoomOut = () => {
+    setScale((prev) => Math.max(prev - 0.25, 0.5)); // Min zoom 0.5x
+  };
+
+  // Add keyboard shortcuts for zooming
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.metaKey || e.ctrlKey) {
+        if (e.key === "=" || e.key === "+") {
+          e.preventDefault();
+          handleZoomIn();
+        } else if (e.key === "-") {
+          e.preventDefault();
+          handleZoomOut();
+        } else if (e.key === "0") {
+          e.preventDefault();
+          setScale(1);
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   return (
     <>
@@ -789,107 +724,64 @@ export default function PagesViewer({
         embeddedLinks={pages[pageNumber - 1]?.embeddedLinks}
         isDataroom={dataroomId ? true : false}
         setDocumentData={setDocumentData}
-        // documentRefs={pinchRefs}
-        // isVertical={isVertical}
         isMobile={isMobile}
         isPreview={isPreview}
         hasWatermark={watermarkConfig ? true : false}
+        handleZoomIn={handleZoomIn}
+        handleZoomOut={handleZoomOut}
       />
       <div
         style={{ height: "calc(100dvh - 64px)" }}
-        className={cn("relative flex items-center", isVertical && "h-dvh")}
+        className={cn("relative h-dvh overflow-hidden")}
       >
         <div
           className={cn(
-            "relative flex h-full w-full",
-            isVertical ? "flex-col overflow-y-auto" : "flex-row",
+            "h-full w-full",
+            "overflow-auto scroll-smooth",
             !isWindowFocused &&
               screenshotProtectionEnabled &&
               "blur-xl transition-all duration-300",
           )}
           ref={containerRef}
         >
-          <div
-            className={cn(
-              "flex w-full",
-              isVertical ? "flex-col items-center" : "flex-row justify-center",
-            )}
-            onContextMenu={handleContextMenu}
-          >
-            {pageNumber <= numPagesWithAccountCreation &&
-            pages &&
-            loadedImages[pageNumber - 1]
-              ? pages.map((page, index) => (
-                  <React.Fragment key={index}>
-                    <TransformWrapper
-                      key={index}
-                      initialScale={scale}
-                      initialPositionX={0}
-                      initialPositionY={0}
-                      disabled={isVertical && isMobile}
-                      panning={{
-                        lockAxisY: isVertical,
-                        velocityDisabled: true,
-                        wheelPanning: false,
-                      }}
-                      wheel={{ disabled: true }}
-                      pinch={{ disabled: true }}
-                      doubleClick={{ disabled: true }}
-                      onZoom={(ref) => {
-                        setScale(ref.state.scale);
-                      }}
-                      ref={(ref) => {
-                        pinchRefs.current[index] = ref;
-                      }}
-                      customTransform={(
-                        x: number,
-                        y: number,
-                        scale: number,
-                      ) => {
-                        // Keep the translateY value constant
-                        if (isVertical) {
-                          const transform = `translate(${x}px, ${index * y * -2}px) scale(${scale})`;
-                          return transform;
-                        }
-                        const transform = `translate(${x}px, ${y}px) scale(${scale})`;
-                        return transform;
-                      }}
-                    >
-                      <TransformComponent
-                        wrapperClass={cn(
-                          !isVertical && "!h-full",
-                          isVertical
-                            ? "!overflow-x-clip !overflow-y-visible"
-                            : isMobile
-                              ? "!overflow-x-clip !overflow-y-clip"
-                              : "!overflow-x-visible !overflow-y-clip",
-                        )}
-                        contentClass={cn(
-                          !isVertical && "!h-full",
-                          isVertical && "!w-dvw !h-[calc(100dvh-64px)]",
-                        )}
-                      >
+          <div className="flex min-h-full min-w-full justify-center">
+            <div className="flex w-full max-w-[1400px] justify-center">
+              <div
+                className={cn(
+                  "transform-container w-full",
+                  isMobile && "touch-zoom-container",
+                )}
+                style={{
+                  transform: isMobile ? "none" : `scale(${scale})`,
+                  transition: "transform 0.2s ease-out",
+                  transformOrigin: scale <= 1 ? "center top" : "left top",
+                }}
+              >
+                <div
+                  className={cn(
+                    "flex flex-col items-center gap-2",
+                    isMobile && "touch-action-manipulation",
+                  )}
+                  onContextMenu={handleContextMenu}
+                >
+                  {pageNumber <= numPagesWithAccountCreation &&
+                  pages &&
+                  loadedImages[pageNumber - 1]
+                    ? pages.map((page, index) => (
                         <div
                           key={index}
                           className={cn(
-                            "relative my-auto w-full",
-                            pageNumber - 1 === index && !isVertical
-                              ? "block"
-                              : "hidden",
-                            isVertical && "flex justify-center",
+                            "w-full px-4 md:px-8",
+                            isMobile && "touch-action-pinch-zoom",
                           )}
+                          style={{
+                            width: containerWidth
+                              ? `${calculateOptimalWidth(containerWidth, page.metadata, isMobile, isTablet)}px`
+                              : undefined,
+                          }}
                         >
                           <img
-                            className={cn(
-                              "!pointer-events-auto object-contain",
-                              isVertical && "h-auto",
-                            )}
-                            style={{
-                              maxHeight: "calc(100dvh - 64px)",
-                            }}
-                            // ref={(ref) => {
-                            //   imageRefs.current[index] = ref;
-                            // }}
+                            className="h-auto w-full object-contain"
                             ref={(ref) => {
                               imageRefs.current[index] = ref;
                               if (ref) {
@@ -912,7 +804,6 @@ export default function PagesViewer({
                             alt={`Page ${index + 1}`}
                           />
 
-                          {/* Add Watermark Component */}
                           {watermarkConfig ? (
                             <SVGWatermark
                               config={watermarkConfig}
@@ -937,9 +828,9 @@ export default function PagesViewer({
                             <map name={`page-map-${index + 1}`}>
                               {page.pageLinks
                                 .filter((link) => !link.href.includes(".gif"))
-                                .map((link, index) => (
+                                .map((link, linkIndex) => (
                                   <area
-                                    key={index}
+                                    key={linkIndex}
                                     shape="rect"
                                     coords={scaleCoordinates(
                                       link.coords,
@@ -967,7 +858,6 @@ export default function PagesViewer({
                             </map>
                           ) : null}
 
-                          {/** Automatically Render Overlays **/}
                           {page.pageLinks
                             ? page.pageLinks
                                 .filter((link) => link.href.includes(".gif"))
@@ -988,7 +878,7 @@ export default function PagesViewer({
                                   return (
                                     <img
                                       key={`overlay-${index}-${linkIndex}`}
-                                      src={link.href} // Assuming the href points to a GIF or overlay image
+                                      src={link.href}
                                       alt={`Overlay ${index + 1}`}
                                       style={{
                                         position: "absolute",
@@ -996,111 +886,72 @@ export default function PagesViewer({
                                         left: x1,
                                         width: `${overlayWidth}px`,
                                         height: `${overlayHeight}px`,
-                                        pointerEvents: "none", // To ensure the overlay doesn't interfere with interaction
+                                        pointerEvents: "none",
                                       }}
                                     />
                                   );
                                 })
                             : null}
                         </div>
-                      </TransformComponent>
-                    </TransformWrapper>
-                  </React.Fragment>
-                ))
-              : null}
+                      ))
+                    : null}
 
-            {enableQuestion &&
-            feedback &&
-            (isVertical || pageNumber === numPagesWithFeedback) ? (
-              <div
-                className={cn("relative block h-dvh w-full")}
-                style={{ height: "calc(100dvh - 64px)" }}
-              >
-                <Question
-                  feedback={feedback}
-                  viewId={viewId}
-                  submittedFeedback={submittedFeedback}
-                  setSubmittedFeedback={setSubmittedFeedback}
-                  isPreview={isPreview}
-                />
+                  {enableQuestion &&
+                  feedback &&
+                  pageNumber === numPagesWithFeedback ? (
+                    <div
+                      className={cn("relative block h-dvh w-full")}
+                      style={{ height: "calc(100dvh - 64px)" }}
+                    >
+                      <Question
+                        feedback={feedback}
+                        viewId={viewId}
+                        submittedFeedback={submittedFeedback}
+                        setSubmittedFeedback={setSubmittedFeedback}
+                        isPreview={isPreview}
+                      />
+                    </div>
+                  ) : null}
+                </div>
               </div>
-            ) : null}
-
-            {showStatsSlideWithAccountCreation &&
-            !isVertical &&
-            pageNumber === numPagesWithAccountCreation ? (
-              <div
-                className={cn("relative block h-dvh w-full")}
-                style={{ height: "calc(100dvh - 64px)" }}
-              >
-                <ViewDurationSummary
-                  linkId={linkId}
-                  viewedPages={viewedPages}
-                  viewerEmail={viewerEmail}
-                  accountCreated={accountCreated}
-                  setAccountCreated={setAccountCreated}
-                />
-              </div>
-            ) : null}
+            </div>
           </div>
         </div>
 
-        {isVertical && (
-          <>
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 transform">
-              <button
-                onClick={goToNextPage}
-                disabled={pageNumber >= numPagesWithAccountCreation}
-                className={cn(
-                  "rounded-full bg-gray-950/50 p-1 hover:bg-gray-950/75",
-                  pageNumber >= numPagesWithAccountCreation && "hidden",
-                )}
-              >
-                <ChevronDownIcon className="h-10 w-10 text-white" />
-              </button>
-            </div>
-            <div className="absolute left-1/2 top-4 -translate-x-1/2 transform">
-              <button
-                onClick={goToPreviousPage}
-                disabled={pageNumber === 1}
-                className={cn(
-                  "rounded-full bg-gray-950/50 p-1 hover:bg-gray-950/75",
-                  pageNumber == 1 && "hidden",
-                )}
-              >
-                <ChevronUpIcon className="h-10 w-10 text-white" />
-              </button>
-            </div>
-          </>
-        )}
-        {!isVertical && (
-          <>
-            <div className="absolute left-4 top-1/2 -translate-y-1/2 transform">
-              <button
-                onClick={goToPreviousPage}
-                disabled={pageNumber === 1}
-                className={cn(
-                  "rounded-full bg-gray-950/50 p-1 hover:bg-gray-950/75",
-                  pageNumber == 1 && "hidden",
-                )}
-              >
-                <ChevronLeftIcon className="h-10 w-10 text-white" />
-              </button>
-            </div>
-            <div className="absolute right-4 top-1/2 -translate-y-1/2 transform">
-              <button
-                onClick={goToNextPage}
-                disabled={pageNumber >= numPagesWithAccountCreation}
-                className={cn(
-                  "rounded-full bg-gray-950/50 p-1 hover:bg-gray-950/75",
-                  pageNumber >= numPagesWithAccountCreation && "hidden",
-                )}
-              >
-                <ChevronRightIcon className="h-10 w-10 text-white" />
-              </button>
-            </div>
-          </>
-        )}
+        {/* Up arrow - hide on first page */}
+        <div
+          className={cn(
+            "absolute left-0 right-0 top-0 flex h-24 items-start justify-center pt-4 transition-opacity duration-200",
+            pageNumber <= 1 ? "hidden" : "opacity-0 hover:opacity-100",
+          )}
+          onClick={goToPreviousPage}
+        >
+          <button
+            disabled={pageNumber <= 1}
+            className="rounded-full bg-gray-950/50 p-1 hover:bg-gray-950/75"
+          >
+            <ChevronUpIcon className="h-10 w-10 text-white" />
+          </button>
+        </div>
+
+        {/* Down arrow - hide on last page unless there's an account creation page */}
+        <div
+          className={cn(
+            "absolute bottom-0 left-0 right-0 flex h-24 items-end justify-center pb-4 transition-opacity duration-200",
+            pageNumber >= numPagesWithAccountCreation
+              ? "hidden"
+              : "opacity-0 hover:opacity-100",
+          )}
+          onClick={goToNextPage}
+        >
+          <button
+            disabled={pageNumber >= numPagesWithAccountCreation}
+            className="rounded-full bg-gray-950/50 p-1 hover:bg-gray-950/75"
+          >
+            <ChevronDownIcon className="h-10 w-10 text-white" />
+          </button>
+        </div>
+
         {feedbackEnabled && pageNumber <= numPages ? (
           <Toolbar
             viewId={viewId}

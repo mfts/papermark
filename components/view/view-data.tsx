@@ -13,6 +13,8 @@ import { LinkWithDocument, NotionTheme, WatermarkConfig } from "@/lib/types";
 import AdvancedExcelViewer from "./viewer/advanced-excel-viewer";
 import DownloadOnlyViewer from "./viewer/download-only-viewer";
 import ImageViewer from "./viewer/image-viewer";
+import PagesHorizontalViewer from "./viewer/pages-horizontal-viewer";
+import PagesVerticalViewer from "./viewer/pages-vertical-viewer";
 import VideoViewer from "./viewer/video-viewer";
 
 const ExcelViewer = dynamic(
@@ -112,7 +114,6 @@ export default function ViewData({
       showAccountCreationSlide={showAccountCreationSlide}
       enableQuestion={link.enableQuestion}
       feedback={link.feedback}
-      isVertical={document.versions[0].isVertical}
       viewerEmail={viewerEmail}
       watermarkConfig={
         link.enableWatermark ? (link.watermarkConfig as WatermarkConfig) : null
@@ -121,8 +122,8 @@ export default function ViewData({
       linkName={link.name ?? `Link #${link.id.slice(-5)}`}
       isPreview={viewData.isPreview}
     />
-  ) : viewData.pages ? (
-    <PagesViewerNew
+  ) : viewData.pages && !document.versions[0].isVertical ? (
+    <PagesHorizontalViewer
       pages={viewData.pages}
       viewId={viewData.viewId}
       isPreview={viewData.isPreview}
@@ -139,7 +140,31 @@ export default function ViewData({
       showAccountCreationSlide={showAccountCreationSlide}
       enableQuestion={link.enableQuestion}
       feedback={link.feedback}
-      isVertical={document.versions[0].isVertical}
+      viewerEmail={viewerEmail}
+      watermarkConfig={
+        link.enableWatermark ? (link.watermarkConfig as WatermarkConfig) : null
+      }
+      ipAddress={viewData.ipAddress}
+      linkName={link.name ?? `Link #${link.id.slice(-5)}`}
+    />
+  ) : viewData.pages && document.versions[0].isVertical ? (
+    <PagesVerticalViewer
+      pages={viewData.pages}
+      viewId={viewData.viewId}
+      isPreview={viewData.isPreview}
+      linkId={link.id}
+      documentId={document.id}
+      assistantEnabled={document.assistantEnabled}
+      allowDownload={link.allowDownload!}
+      feedbackEnabled={link.enableFeedback!}
+      screenshotProtectionEnabled={link.enableScreenshotProtection!}
+      screenShieldPercentage={link.screenShieldPercentage}
+      versionNumber={document.versions[0].versionNumber}
+      brand={brand}
+      showPoweredByBanner={showPoweredByBanner}
+      showAccountCreationSlide={showAccountCreationSlide}
+      enableQuestion={link.enableQuestion}
+      feedback={link.feedback}
       viewerEmail={viewerEmail}
       watermarkConfig={
         link.enableWatermark ? (link.watermarkConfig as WatermarkConfig) : null
