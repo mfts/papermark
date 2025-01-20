@@ -285,6 +285,32 @@ export const NotionPage = ({
   //   };
   // }, [maxScrollPercentage]);
 
+  // Add a function to handle smooth scrolling to elements
+  const scrollToHashElement = useCallback(() => {
+    const hash = window.location.hash;
+    if (hash) {
+      // Remove the # from the hash
+      const elementId = hash.slice(1);
+      const element = document.getElementById(elementId);
+      if (element) {
+        // Wait a bit for the content to render
+        setTimeout(() => {
+          element.scrollIntoView({ behavior: "smooth" });
+        }, 100);
+      }
+    }
+  }, []);
+
+  // Handle initial load and hash changes
+  useEffect(() => {
+    scrollToHashElement();
+    // Listen for hash changes
+    window.addEventListener("hashchange", scrollToHashElement);
+    return () => {
+      window.removeEventListener("hashchange", scrollToHashElement);
+    };
+  }, [scrollToHashElement]);
+
   if (!recordMap) {
     return null;
   }
