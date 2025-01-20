@@ -33,10 +33,15 @@ const DEFAULT_PRELOADED_IMAGES_NUM = 5;
 
 const calculateOptimalWidth = (
   containerWidth: number,
-  metadata: { width: number; height: number },
+  metadata: { width: number; height: number } | null,
   isMobile: boolean,
   isTablet: boolean,
 ) => {
+  if (!metadata) {
+    // Fallback dimensions if metadata is null
+    return isMobile ? containerWidth : Math.min(800, containerWidth * 0.6);
+  }
+
   const aspectRatio = metadata.width / metadata.height;
   const maxWidth = Math.min(1400, containerWidth); // 100% of container width, max 1400px
   const minWidth = Math.min(
@@ -209,6 +214,11 @@ export default function PagesVerticalViewer({
     const containerHeight = imageDimensions[pageNumber - 1]
       ? imageDimensions[pageNumber - 1]!.height
       : window.innerHeight - 64;
+
+    // Add a safety check to prevent division by zero
+    if (!naturalHeight || naturalHeight === 0) {
+      return scaleFactor;
+    }
 
     return (scaleFactor * containerHeight) / naturalHeight;
   };
