@@ -189,6 +189,11 @@ export default function PagesHorizontalViewer({
       ? imageDimensions[pageNumber - 1]!.height
       : window.innerHeight - 64;
 
+    // Add a safety check to prevent division by zero
+    if (!naturalHeight || naturalHeight === 0) {
+      return scaleFactor;
+    }
+
     return (scaleFactor * containerHeight) / naturalHeight;
   };
 
