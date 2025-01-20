@@ -291,20 +291,50 @@ export const NotionPage = ({
     if (hash) {
       // Remove the # from the hash
       const elementId = hash.slice(1);
-      const element = document.getElementById(elementId);
-      if (element) {
-        // Wait a bit for the content to render
-        setTimeout(() => {
-          element.scrollIntoView({ behavior: "smooth" });
-        }, 100);
-      }
+
+      // Create observer to watch for position changes
+      const observer = new MutationObserver((mutations, obs) => {
+        const element = document.getElementById(elementId);
+        if (element) {
+          // Get current position
+          const rect = element.getBoundingClientRect();
+          const absoluteTop = window.scrollY + rect.top; // Account for header
+
+          window.scrollTo({
+            top: absoluteTop,
+            behavior: "smooth",
+          });
+        }
+      });
+
+      // Start observing the document with the configured parameters
+      observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        characterData: true,
+      });
+
+      // Always observe for at least 2 seconds to catch any layout shifts
+      setTimeout(() => {
+        const element = document.getElementById(elementId);
+        if (element) {
+          const rect = element.getBoundingClientRect();
+          const absoluteTop = window.scrollY + rect.top;
+          window.scrollTo({
+            top: absoluteTop,
+            behavior: "smooth",
+          });
+        }
+        observer.disconnect();
+      }, 2000);
     }
   }, []);
 
   // Handle initial load and hash changes
   useEffect(() => {
     scrollToHashElement();
-    // Listen for hash changes
+
     window.addEventListener("hashchange", scrollToHashElement);
     return () => {
       window.removeEventListener("hashchange", scrollToHashElement);
