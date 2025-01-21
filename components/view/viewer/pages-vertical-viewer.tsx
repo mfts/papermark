@@ -774,7 +774,7 @@ export default function PagesVerticalViewer({
                     ? pages.map((page, index) => (
                         <div
                           key={index}
-                          className="w-full px-4 md:px-8"
+                          className="relative w-full px-4 md:px-8"
                           style={{
                             width: containerWidth
                               ? `${calculateOptimalWidth(containerWidth, page.metadata, isMobile, isTablet)}px`
@@ -805,24 +805,21 @@ export default function PagesVerticalViewer({
                             alt={`Page ${index + 1}`}
                           />
 
-                          {watermarkConfig ? (
-                            <SVGWatermark
-                              config={watermarkConfig}
-                              viewerData={{
-                                email: viewerEmail,
-                                date: new Date().toLocaleDateString(),
-                                time: new Date().toLocaleTimeString(),
-                                link: linkName,
-                                ipAddress: ipAddress,
-                              }}
-                              documentDimensions={
-                                imageDimensions[index] || {
-                                  width: 0,
-                                  height: 0,
-                                }
-                              }
-                              pageIndex={index}
-                            />
+                          {watermarkConfig && imageDimensions[index] ? (
+                            <div className="absolute left-0 top-0">
+                              <SVGWatermark
+                                config={watermarkConfig}
+                                viewerData={{
+                                  email: viewerEmail,
+                                  date: new Date().toLocaleDateString(),
+                                  time: new Date().toLocaleTimeString(),
+                                  link: linkName,
+                                  ipAddress: ipAddress,
+                                }}
+                                documentDimensions={imageDimensions[index]}
+                                pageIndex={index}
+                              />
+                            </div>
                           ) : null}
 
                           {page.pageLinks ? (
