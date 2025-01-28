@@ -11,6 +11,8 @@ import { bytesToSize } from "@/lib/utils";
 import { fileIcon } from "@/lib/utils/get-file-icon";
 import { getPagesCount } from "@/lib/utils/get-page-number-count";
 
+import DropboxChooser from "./documents/DropboxChooser";
+
 const fileSizeLimits: { [key: string]: number } = {
   "application/vnd.ms-excel": 40, // 40 MB
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": 40, // 40 MB
@@ -28,9 +30,11 @@ const fileSizeLimits: { [key: string]: number } = {
 export default function DocumentUpload({
   currentFile,
   setCurrentFile,
+  clearModelStates,
 }: {
   currentFile: File | null;
   setCurrentFile: React.Dispatch<React.SetStateAction<File | null>>;
+  clearModelStates: () => void;
 }) {
   const { theme, systemTheme } = useTheme();
   const isLight =
@@ -195,6 +199,18 @@ export default function DocumentUpload({
                   ? `Only *.pdf, *.xls, *.xlsx, *.csv, *.ods, *.png, *.jpeg, *.jpg & ${maxSize} MB limit`
                   : `Only *.pdf, *.pptx, *.docx, *.xlsx, *.xls, *.xlsm, *.csv, *.ods, *.ppt, *.odp, *.doc, *.odt, *.dwg, *.dxf, *.png, *.jpg, *.jpeg & ${maxSize} MB limit`}
             </p>
+            {currentFile ? (
+              <></>
+            ) : (
+              <>
+                <p className="mb-2 mt-4 text-xs leading-5 text-gray-500">
+                  Or import from
+                </p>
+                <div>
+                  <DropboxChooser clearModelStates={clearModelStates} />
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
