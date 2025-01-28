@@ -253,7 +253,7 @@ export default function PapermarkYearInReviewEmail({
                 Share your stats
               </Link>
               <Link
-                href="https://app.papermark.io/documents"
+                href={`${process.env.NEXT_PUBLIC_BASE_URL}/documents`}
                 className="mt-4 block items-center text-center text-sm font-bold text-gray-900 no-underline"
               >
                 Go to your dashboard
