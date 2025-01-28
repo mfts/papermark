@@ -781,46 +781,48 @@ export default function PagesVerticalViewer({
                               : undefined,
                           }}
                         >
-                          <img
-                            className="h-auto w-full object-contain"
-                            ref={(ref) => {
-                              imageRefs.current[index] = ref;
-                              if (ref) {
-                                ref.onload = () =>
-                                  setImageDimensions((prev) => ({
-                                    ...prev,
-                                    [index]: {
-                                      width: ref.clientWidth,
-                                      height: ref.clientHeight,
-                                    },
-                                  }));
+                          <div className="relative">
+                            <img
+                              className="h-auto w-full object-contain"
+                              ref={(ref) => {
+                                imageRefs.current[index] = ref;
+                                if (ref) {
+                                  ref.onload = () =>
+                                    setImageDimensions((prev) => ({
+                                      ...prev,
+                                      [index]: {
+                                        width: ref.clientWidth,
+                                        height: ref.clientHeight,
+                                      },
+                                    }));
+                                }
+                              }}
+                              useMap={`#page-map-${index + 1}`}
+                              src={
+                                loadedImages[index]
+                                  ? page.file
+                                  : "https://www.papermark.io/_static/blank.gif"
                               }
-                            }}
-                            useMap={`#page-map-${index + 1}`}
-                            src={
-                              loadedImages[index]
-                                ? page.file
-                                : "https://www.papermark.io/_static/blank.gif"
-                            }
-                            alt={`Page ${index + 1}`}
-                          />
+                              alt={`Page ${index + 1}`}
+                            />
 
-                          {watermarkConfig && imageDimensions[index] ? (
-                            <div className="absolute left-0 top-0">
-                              <SVGWatermark
-                                config={watermarkConfig}
-                                viewerData={{
-                                  email: viewerEmail,
-                                  date: new Date().toLocaleDateString(),
-                                  time: new Date().toLocaleTimeString(),
-                                  link: linkName,
-                                  ipAddress: ipAddress,
-                                }}
-                                documentDimensions={imageDimensions[index]}
-                                pageIndex={index}
-                              />
-                            </div>
-                          ) : null}
+                            {watermarkConfig && imageDimensions[index] ? (
+                              <div className="absolute left-0 top-0">
+                                <SVGWatermark
+                                  config={watermarkConfig}
+                                  viewerData={{
+                                    email: viewerEmail,
+                                    date: new Date().toLocaleDateString(),
+                                    time: new Date().toLocaleTimeString(),
+                                    link: linkName,
+                                    ipAddress: ipAddress,
+                                  }}
+                                  documentDimensions={imageDimensions[index]}
+                                  pageIndex={index}
+                                />
+                              </div>
+                            ) : null}
+                          </div>
 
                           {page.pageLinks ? (
                             <map name={`page-map-${index + 1}`}>
