@@ -1,0 +1,12 @@
+VERSION 1
+
+NODE endpoint
+SQL >
+    %
+    SELECT SUM(duration) AS sum_duration, COUNT(distinct viewId) as view_count
+    FROM page_views__v3
+    WHERE
+        linkId = {{ String(linkId, required=true) }}
+        AND time >= {{ Int64(since, required=true) }}
+        AND documentId = {{ String(documentId, required=true) }}
+        AND viewId NOT IN splitByChar(',', {{ String(excludedViewIds, required=true) }})
