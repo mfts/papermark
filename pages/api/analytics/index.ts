@@ -56,21 +56,21 @@ export default async function handler(
 
     switch (interval) {
       case "24h":
-        // Get start of the hour 24 hours ago
+        // Get start of the hour 23 hours ago plus current hour = 24h
         startDate = new Date(now);
         startDate.setHours(startDate.getHours() - 23);
         startDate.setMinutes(0, 0, 0);
         break;
       case "7d":
-        // Get start of the day 7 days ago
+        // Get start of the day 6 days ago plus current day = 7d
         startDate = new Date(now);
-        startDate.setDate(startDate.getDate() - 7);
+        startDate.setDate(startDate.getDate() - 6);
         startDate.setHours(0, 0, 0, 0);
         break;
       case "30d":
-        // Get start of the day 30 days ago
+        // Get start of the day 29 days ago plus current day = 30d
         startDate = new Date(now);
-        startDate.setDate(startDate.getDate() - 30);
+        startDate.setDate(startDate.getDate() - 29);
         startDate.setHours(0, 0, 0, 0);
         break;
     }
@@ -79,6 +79,9 @@ export default async function handler(
     const intervalFilter = {
       gte: startDate,
     };
+
+    console.log("startDate", startDate);
+    console.log("intervalFilter", intervalFilter);
 
     switch (type) {
       case "overview": {
@@ -108,7 +111,7 @@ export default async function handler(
                 FROM "View"
                 WHERE 
                   "teamId" = ${teamId}
-                  AND "viewedAt" >= ${new Date(Date.now() - INTERVALS[interval])}
+                  AND "viewedAt" >= ${startDate}
                   AND "isArchived" = false
                   AND "viewType" = 'DOCUMENT_VIEW'
                 GROUP BY DATE_TRUNC('hour', "viewedAt")
@@ -121,7 +124,7 @@ export default async function handler(
                 FROM "View"
                 WHERE 
                   "teamId" = ${teamId}
-                  AND "viewedAt" >= ${new Date(Date.now() - INTERVALS[interval])}
+                  AND "viewedAt" >= ${startDate}
                   AND "isArchived" = false
                   AND "viewType" = 'DOCUMENT_VIEW'
                 GROUP BY DATE_TRUNC('day', "viewedAt")

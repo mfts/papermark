@@ -1,6 +1,6 @@
 import { useRouter } from "next/router";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { DocumentStorageType } from "@prisma/client";
@@ -18,6 +18,10 @@ import useLimits from "@/lib/swr/use-limits";
 import { CustomUser } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { getSupportedContentType } from "@/lib/utils/get-content-type";
+import {
+  getFileSizeLimit,
+  getFileSizeLimits,
+} from "@/lib/utils/get-file-size-limits";
 import { getPagesCount } from "@/lib/utils/get-page-number-count";
 
 // Originally these mime values were directly used in the dropzone hook.
@@ -68,19 +72,19 @@ interface FileWithPaths extends File {
   whereToUploadPath?: string;
 }
 
-const fileSizeLimits: { [key: string]: number } = {
-  "application/vnd.ms-excel": 40, // 40 MB
-  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": 40, // 40 MB
-  "application/vnd.oasis.opendocument.spreadsheet": 40, // 40 MB
-  "image/png": 100, // 100 MB
-  "image/jpeg": 100, // 100 MB
-  "image/jpg": 100, // 100 MB
-  "video/mp4": 500, // 500 MB
-  "video/quicktime": 500, // 500 MB
-  "video/x-msvideo": 500, // 500 MB
-  "video/webm": 500, // 500 MB
-  "video/ogg": 500, // 500 MB
-};
+// const fileSizeLimits: { [key: string]: number } = {
+//   "application/vnd.ms-excel": 40, // 40 MB
+//   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": 40, // 40 MB
+//   "application/vnd.oasis.opendocument.spreadsheet": 40, // 40 MB
+//   "image/png": 100, // 100 MB
+//   "image/jpeg": 100, // 100 MB
+//   "image/jpg": 100, // 100 MB
+//   "video/mp4": 500, // 500 MB
+//   "video/quicktime": 500, // 500 MB
+//   "video/x-msvideo": 500, // 500 MB
+//   "video/webm": 500, // 500 MB
+//   "video/ogg": 500, // 500 MB
+// };
 
 export default function UploadZone({
   children,
@@ -120,7 +124,7 @@ export default function UploadZone({
   const { data: session } = useSession();
   const isFreePlan = plan === "free";
   const isTrial = !!trial;
-  const maxSize = isFreePlan && !isTrial ? 30 : 350;
+  // const maxSize = isFreePlan && !isTrial ? 30 : 350;
   const maxNumPages = isFreePlan && !isTrial ? 100 : 500;
   const { limits, canAddDocuments } = useLimits();
   const remainingDocuments = limits?.documents
@@ -130,6 +134,16 @@ export default function UploadZone({
   const [progress, setProgress] = useState<number>(0);
   const [showProgress, setShowProgress] = useState(false);
   const uploadProgress = useRef<number[]>([]);
+
+  const fileSizeLimits = useMemo(
+    () =>
+      getFileSizeLimits({
+        limits,
+        isFreePlan,
+        isTrial,
+      }),
+    [limits, isFreePlan, isTrial],
+  );
 
   const acceptableDropZoneFileTypes =
     isFreePlan && !isTrial
@@ -146,7 +160,8 @@ export default function UploadZone({
       const rejected = rejectedFiles.map(({ file, errors }) => {
         let message = "";
         if (errors.find(({ code }) => code === "file-too-large")) {
-          message = `File size too big (max. ${maxSize} MB). Upgrade to a paid plan to increase the limit.`;
+          const fileSizeLimitMB = getFileSizeLimit(file.type, fileSizeLimits);
+          message = `File size too big (max. ${fileSizeLimitMB} MB). Upgrade to a paid plan to increase the limit.`;
         } else if (errors.find(({ code }) => code === "file-invalid-type")) {
           const isSupported = SUPPORTED_DOCUMENT_MIME_TYPES.includes(file.type);
           message = `File type not supported ${
@@ -157,7 +172,7 @@ export default function UploadZone({
       });
       onUploadRejected(rejected);
     },
-    [onUploadRejected, maxSize],
+    [onUploadRejected, fileSizeLimits, isFreePlan, isTrial],
   );
 
   const onDrop = useCallback(
@@ -166,13 +181,55 @@ export default function UploadZone({
         toast.error("You have reached the maximum number of documents.");
         return;
       }
-      const newUploads = acceptedFiles.map((file) => ({
+
+      // Validate files and separate into valid and invalid
+      const validatedFiles = acceptedFiles.reduce<{
+        valid: FileWithPaths[];
+        invalid: { fileName: string; message: string }[];
+      }>(
+        (acc, file) => {
+          const fileSizeLimitMB = getFileSizeLimit(file.type, fileSizeLimits);
+          const fileSizeLimit = fileSizeLimitMB * 1024 * 1024; // Convert to bytes
+
+          if (file.size > fileSizeLimit) {
+            acc.invalid.push({
+              fileName: file.name,
+              message: `File size too big (max. ${fileSizeLimitMB} MB)${
+                isFreePlan && !isTrial
+                  ? ". Upgrade to a paid plan to increase the limit"
+                  : ""
+              }`,
+            });
+          } else {
+            acc.valid.push(file);
+          }
+          return acc;
+        },
+        { valid: [], invalid: [] },
+      );
+
+      // Handle rejected files first
+      if (validatedFiles.invalid.length > 0) {
+        setRejectedFiles((prev) => [...validatedFiles.invalid, ...prev]);
+
+        // If all files were rejected, show a summary toast
+        if (validatedFiles.valid.length === 0) {
+          toast.error(
+            `${validatedFiles.invalid.length} file(s) exceeded size limits`,
+          );
+          return;
+        }
+      }
+
+      // Continue with valid files
+      const newUploads = validatedFiles.valid.map((file) => ({
         fileName: file.name,
         progress: 0,
       }));
+
       onUploadStart(newUploads);
 
-      const uploadPromises = acceptedFiles.map(async (file, index) => {
+      const uploadPromises = validatedFiles.valid.map(async (file, index) => {
         // Due to `getFilesFromEvent` file.path will always hold a valid value and represents the value of webkitRelativePath.
         // We no longer need to use webkitRelativePath because everything is been handled in `getFilesFromEvent`
         const path = file.path || file.name;
@@ -196,23 +253,6 @@ export default function UploadZone({
               ...prev,
             ]);
           }
-        }
-
-        // check dynamic file size
-        const fileType = file.type;
-        const fileSizeLimit = fileSizeLimits[fileType] * 1024 * 1024;
-        if (file.size > fileSizeLimit) {
-          setUploads((prev) =>
-            prev.filter((upload) => upload.fileName !== file.name),
-          );
-
-          return setRejectedFiles((prev) => [
-            {
-              fileName: file.name,
-              message: `File size too big (max. ${fileSizeLimit} MB)`,
-            },
-            ...prev,
-          ]);
         }
 
         const { complete } = await resumableUpload({
@@ -377,7 +417,14 @@ export default function UploadZone({
           );
       });
     },
-    [onUploadStart, onUploadProgress, endpointTargetType],
+    [
+      onUploadStart,
+      onUploadProgress,
+      endpointTargetType,
+      fileSizeLimits,
+      isFreePlan,
+      isTrial,
+    ],
   );
 
   const getFilesFromEvent = useCallback(
@@ -586,7 +633,8 @@ export default function UploadZone({
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: acceptableDropZoneFileTypes,
     multiple: true,
-    maxSize: maxSize * 1024 * 1024, // 30 MB
+    // maxSize: maxSize * 1024 * 1024, // 30 MB
+    maxFiles: 150,
     onDrop,
     onDropRejected,
     getFilesFromEvent,
@@ -620,8 +668,8 @@ export default function UploadZone({
             <span className="mx-auto">Drop your file(s) to upload here</span>
             <p className="text-xs leading-5 text-gray-800">
               {isFreePlan && !isTrial
-                ? `Only *.pdf, *.xls, *.xlsx, *.csv, *.ods, *.png, *.jpeg, *.jpg & ${maxSize} MB limit`
-                : `Only *.pdf, *.pptx, *.docx, *.xlsx, *.xls, *.csv, *.ods, *.ppt, *.odp, *.doc, *.odt, *.dwg, *.dxf, *.png, *.jpg, *.jpeg & ${maxSize} MB limit`}
+                ? `Only *.pdf, *.xls, *.xlsx, *.csv, *.ods, *.png, *.jpeg, *.jpg`
+                : `Only *.pdf, *.pptx, *.docx, *.xlsx, *.xls, *.csv, *.ods, *.ppt, *.odp, *.doc, *.odt, *.dwg, *.dxf, *.png, *.jpg, *.jpeg, *.mp4, *.mov, *.avi, *.webm, *.ogg`}
             </p>
           </div>
         </div>
