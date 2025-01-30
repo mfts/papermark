@@ -39,6 +39,14 @@ const configSchema = z.object({
   customDomainInDataroom: z.boolean(),
   advancedLinkControlsOnPro: z.boolean().nullish(),
   watermarkOnBusiness: z.boolean().nullish(),
+  fileSizeLimits: z
+    .object({
+      video: z.number().optional(), // in MB
+      document: z.number().optional(), // in MB
+      image: z.number().optional(), // in MB
+      excel: z.number().optional(), // in MB
+    })
+    .optional(),
 });
 
 export async function getLimits({
