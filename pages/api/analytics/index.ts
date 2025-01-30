@@ -58,7 +58,7 @@ export default async function handler(
       case "24h":
         // Get start of the hour 24 hours ago
         startDate = new Date(now);
-        startDate.setHours(startDate.getHours() - 24);
+        startDate.setHours(startDate.getHours() - 23);
         startDate.setMinutes(0, 0, 0);
         break;
       case "7d":
