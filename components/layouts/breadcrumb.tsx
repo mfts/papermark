@@ -314,6 +314,42 @@ const SingleVisitorBreadcrumb = () => {
   );
 };
 
+const AnalyticsBreadcrumb = () => {
+  const router = useRouter();
+  const { type = "links" } = router.query;
+
+  const title = useMemo(() => {
+    switch (type) {
+      case "links":
+        return "Links";
+      case "documents":
+        return "Documents";
+      case "visitors":
+        return "Visitors";
+      case "views":
+        return "Recent Visits";
+      default:
+        return "Analytics";
+    }
+  }, [type]);
+
+  return (
+    <Breadcrumb>
+      <BreadcrumbList>
+        <BreadcrumbItem>
+          <BreadcrumbLink asChild>
+            <Link href="/dashboard?interval=7d&type=links">Dashboard</Link>
+          </BreadcrumbLink>
+        </BreadcrumbItem>
+        <BreadcrumbSeparator />
+        <BreadcrumbItem>
+          <BreadcrumbPage>{title}</BreadcrumbPage>
+        </BreadcrumbItem>
+      </BreadcrumbList>
+    </Breadcrumb>
+  );
+};
+
 export const AppBreadcrumb = () => {
   const router = useRouter();
   const path = router.pathname;
@@ -322,6 +358,11 @@ export const AppBreadcrumb = () => {
   };
 
   const breadcrumb = useMemo(() => {
+    // Analytics routes
+    if (path === "/dashboard") {
+      return <AnalyticsBreadcrumb />;
+    }
+
     // Settings routes
     if (path.startsWith("/settings")) {
       return <SettingsBreadcrumb />;
