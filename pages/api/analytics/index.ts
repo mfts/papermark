@@ -50,14 +50,35 @@ export default async function handler(
 
     const { interval, type, teamId } = result.data;
 
-    const intervalFilter = {
-      gte: new Date(Date.now() - INTERVALS[interval]),
-    };
+    // get the start date for the interval
+    const now = new Date();
+    let startDate: Date;
 
-    console.log(
-      "greater than or equal to",
-      new Date(Date.now() - INTERVALS[interval]),
-    );
+    switch (interval) {
+      case "24h":
+        // Get start of the hour 24 hours ago
+        startDate = new Date(now);
+        startDate.setHours(startDate.getHours() - 24);
+        startDate.setMinutes(0, 0, 0);
+        break;
+      case "7d":
+        // Get start of the day 7 days ago
+        startDate = new Date(now);
+        startDate.setDate(startDate.getDate() - 7);
+        startDate.setHours(0, 0, 0, 0);
+        break;
+      case "30d":
+        // Get start of the day 30 days ago
+        startDate = new Date(now);
+        startDate.setDate(startDate.getDate() - 30);
+        startDate.setHours(0, 0, 0, 0);
+        break;
+    }
+
+    // create the interval filter for the query
+    const intervalFilter = {
+      gte: startDate,
+    };
 
     switch (type) {
       case "overview": {
@@ -68,6 +89,7 @@ export default async function handler(
               teamId,
               viewedAt: intervalFilter,
               isArchived: false,
+              viewType: "DOCUMENT_VIEW",
             },
             select: {
               id: true,
@@ -88,6 +110,7 @@ export default async function handler(
                   "teamId" = ${teamId}
                   AND "viewedAt" >= ${new Date(Date.now() - INTERVALS[interval])}
                   AND "isArchived" = false
+                  AND "viewType" = 'DOCUMENT_VIEW'
                 GROUP BY DATE_TRUNC('hour', "viewedAt")
                 ORDER BY date ASC
               `
@@ -100,6 +123,7 @@ export default async function handler(
                   "teamId" = ${teamId}
                   AND "viewedAt" >= ${new Date(Date.now() - INTERVALS[interval])}
                   AND "isArchived" = false
+                  AND "viewType" = 'DOCUMENT_VIEW'
                 GROUP BY DATE_TRUNC('day', "viewedAt")
                 ORDER BY date ASC
               `,
@@ -136,6 +160,8 @@ export default async function handler(
             views: {
               some: {
                 viewedAt: intervalFilter,
+                viewType: "DOCUMENT_VIEW",
+                isArchived: false,
               },
             },
           },
@@ -151,11 +177,18 @@ export default async function handler(
                 views: {
                   where: {
                     viewedAt: intervalFilter,
+                    viewType: "DOCUMENT_VIEW",
+                    isArchived: false,
                   },
                 },
               },
             },
             views: {
+              where: {
+                viewedAt: intervalFilter,
+                viewType: "DOCUMENT_VIEW",
+                isArchived: false,
+              },
               orderBy: {
                 viewedAt: "desc",
               },
@@ -176,11 +209,6 @@ export default async function handler(
                     numPages: true,
                   },
                 },
-              },
-            },
-            dataroom: {
-              select: {
-                name: true,
               },
             },
           },
@@ -221,8 +249,7 @@ export default async function handler(
               url: link.domainId
                 ? `https://${link.domainSlug}/${link.slug}`
                 : `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${link.id}`,
-              documentName:
-                link.document?.name || link.dataroom?.name || "Unknown",
+              documentName: link.document?.name || "Unknown",
               documentId: link.documentId,
               views: link._count.views,
               avgDuration,
@@ -241,6 +268,8 @@ export default async function handler(
             views: {
               some: {
                 viewedAt: intervalFilter,
+                viewType: "DOCUMENT_VIEW",
+                isArchived: false,
               },
             },
           },
@@ -252,11 +281,18 @@ export default async function handler(
                 views: {
                   where: {
                     viewedAt: intervalFilter,
+                    viewType: "DOCUMENT_VIEW",
+                    isArchived: false,
                   },
                 },
               },
             },
             views: {
+              where: {
+                viewedAt: intervalFilter,
+                viewType: "DOCUMENT_VIEW",
+                isArchived: false,
+              },
               orderBy: {
                 viewedAt: "desc",
               },
