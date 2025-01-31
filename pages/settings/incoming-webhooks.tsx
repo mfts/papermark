@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { BadgeTooltip } from "@/components/ui/tooltip";
 
-import { fetcher } from "@/lib/utils";
+import { copyToClipboard, fetcher } from "@/lib/utils";
 
 interface Webhook {
   id: string;
@@ -112,7 +112,9 @@ export default function WebhookSettings() {
           <div className="flex flex-col items-center justify-between gap-4 space-y-3 border-b border-gray-200 p-5 sm:flex-row sm:space-y-0 sm:p-10">
             <div className="flex max-w-screen-sm flex-col space-y-3">
               <div className="flex items-center gap-2">
-                <h2 className="text-xl font-medium">Incoming Webhooks</h2>
+                <h2 className="text-xl font-medium text-gray-900">
+                  Incoming Webhooks
+                </h2>
                 <BadgeTooltip content="Use webhooks to receive data from external services">
                   <CircleHelpIcon className="h-4 w-4 text-gray-500" />
                 </BadgeTooltip>
@@ -127,18 +129,36 @@ export default function WebhookSettings() {
           <div className="p-5 sm:p-10">
             <div className="flex flex-col space-y-4">
               <div>
-                <Label htmlFor="webhook-name">Webhook Name</Label>
+                <Label htmlFor="webhook-name" className="text-gray-900">
+                  Webhook Name
+                </Label>
                 <Input
                   id="webhook-name"
                   placeholder="Enter a name for your webhook"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
+                  className="text-gray-900 dark:bg-white"
                 />
               </div>
 
               {webhookId && (
-                <div className="rounded-lg bg-gray-50 p-4">
-                  <Label>Your Webhook URL (copy it now)</Label>
+                <div className="rounded-lg bg-gray-50 p-4 text-gray-900">
+                  <div className="flex items-center gap-2">
+                    <Label>Your Webhook URL (copy it now)</Label>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6"
+                      onClick={() =>
+                        copyToClipboard(
+                          `${process.env.NEXT_PUBLIC_WEBHOOK_BASE_URL}/services/${webhookId}`,
+                          "Webhook URL copied to clipboard",
+                        )
+                      }
+                    >
+                      <CopyIcon />
+                    </Button>
+                  </div>
                   <code className="mt-2 block break-all rounded bg-gray-100 p-2 font-mono text-sm">
                     {`${process.env.NEXT_PUBLIC_WEBHOOK_BASE_URL}/services/${webhookId}`}
                   </code>
@@ -148,14 +168,16 @@ export default function WebhookSettings() {
               <Button
                 onClick={createWebhook}
                 disabled={!name || isLoading}
-                className="w-fit"
+                className="w-fit bg-gray-900 text-gray-50 hover:bg-gray-900/90"
               >
                 {isLoading ? "Creating..." : "Create Webhook"}
               </Button>
 
               {/* Webhooks List */}
               <div className="mt-8">
-                <h3 className="mb-4 text-lg font-medium">Existing Webhooks</h3>
+                <h3 className="mb-4 text-lg font-medium text-gray-900">
+                  Existing Webhooks
+                </h3>
                 <div className="rounded-lg border border-gray-200">
                   {webhooks?.length === 0 ? (
                     <div className="p-4 text-center text-sm text-gray-500">
@@ -169,7 +191,9 @@ export default function WebhookSettings() {
                           className="flex items-center justify-between p-4"
                         >
                           <div className="space-y-1">
-                            <p className="font-medium">{webhook.name}</p>
+                            <p className="font-medium text-gray-900">
+                              {webhook.name}
+                            </p>
                             <div className="flex items-center space-x-2 text-sm text-gray-500">
                               <div className="flex items-center gap-2 rounded-md border border-gray-200 bg-gray-50 px-3 py-1.5 font-mono">
                                 <span className="max-w-[200px] overflow-x-auto whitespace-nowrap md:max-w-[400px]">
@@ -179,16 +203,14 @@ export default function WebhookSettings() {
                                   variant="ghost"
                                   size="icon"
                                   className="h-6 w-6"
-                                  onClick={() => {
-                                    navigator.clipboard.writeText(
+                                  onClick={() =>
+                                    copyToClipboard(
                                       `${process.env.NEXT_PUBLIC_WEBHOOK_BASE_URL}/services/${webhook.webhookId}`,
-                                    );
-                                    toast.success(
                                       "Webhook URL copied to clipboard",
-                                    );
-                                  }}
+                                    )
+                                  }
                                 >
-                                  <CopyIcon className="h-3 w-3" />
+                                  <CopyIcon />
                                 </Button>
                               </div>
                               <span>•</span>
