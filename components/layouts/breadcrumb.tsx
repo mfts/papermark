@@ -184,7 +184,7 @@ const SettingsBreadcrumb = () => {
       <BreadcrumbList>
         <BreadcrumbItem>
           <BreadcrumbLink asChild>
-            <Link href="/settings">Settings</Link>
+            <Link href="/settings/general">Settings</Link>
           </BreadcrumbLink>
         </BreadcrumbItem>
         <BreadcrumbSeparator />
