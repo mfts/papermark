@@ -3,7 +3,6 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { client } from "@/trigger";
 import { DocumentStorageType, Prisma } from "@prisma/client";
-import { RunHandle } from "@trigger.dev/sdk/v3";
 import { getServerSession } from "next-auth/next";
 import { parsePageId } from "notion-utils";
 
@@ -322,7 +321,11 @@ export default async function handle(
           },
           {
             idempotencyKey: `${teamId}-${document.versions[0].id}`,
-            tags: [`team_${teamId}`, `document_${document.id}`],
+            tags: [
+              `team_${teamId}`,
+              `document_${document.id}`,
+              `version:${document.versions[0].id}`,
+            ],
           },
         );
       }
@@ -330,9 +333,13 @@ export default async function handle(
       // skip triggering convert-pdf-to-image job for "notion" / "excel" documents
       if (type === "pdf") {
         // trigger document uploaded event to trigger convert-pdf-to-image job
-        if (teamId === "cluqtfmcr0001zkza4xcgqatw") {
+        if (
+          teamId === "cluqtfmcr0001zkza4xcgqatw" ||
+          teamId === "clup33by90000oewh4rfvp2eg" // local
+        ) {
           await convertPdfToImage.trigger(
             {
+              documentId: document.id,
               documentVersionId: document.versions[0].id,
               teamId,
               docId: fileUrl.split("/")[1],
@@ -342,7 +349,7 @@ export default async function handle(
               tags: [
                 `team_${teamId}`,
                 `document_${document.id}`,
-                `version_${document.versions[0].id}`,
+                `version:${document.versions[0].id}`,
               ],
             },
           );

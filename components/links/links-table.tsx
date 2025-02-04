@@ -69,7 +69,7 @@ export default function LinksTable({
   targetType: "DOCUMENT" | "DATAROOM";
   links?: LinkWithViews[];
   primaryVersion?: DocumentVersion;
-  mutateDocument: () => void;
+  mutateDocument?: () => void;
 }) {
   const router = useRouter();
   const { plan } = usePlan();
@@ -319,18 +319,11 @@ export default function LinksTable({
                               )}
                             >
                               {/* Progress bar */}
-                              {/* {primaryVersion &&
-                              primaryVersion.type === "pdf" &&
-                              !primaryVersion.hasPages ? (
-                                <ProcessStatusBar
-                                  documentVersionId={primaryVersion.id}
-                                  className="absolute bottom-0 left-0 right-0 top-0 z-20 flex h-full items-center gap-x-8"
-                                />
-                              ) : null} */}
-
                               {primaryVersion && !primaryVersion.hasPages && (
                                 <>
-                                  {primaryVersion.type === "pdf" ? (
+                                  {primaryVersion.type === "pdf" &&
+                                  teamInfo?.currentTeam?.id !==
+                                    "cluqtfmcr0001zkza4xcgqatw" ? (
                                     <ProcessStatusBar
                                       documentVersionId={primaryVersion.id}
                                       className="absolute bottom-0 left-0 right-0 top-0 z-20 flex h-full items-center gap-x-8"
@@ -339,6 +332,7 @@ export default function LinksTable({
                                     <FileProcessStatusBar
                                       documentVersionId={primaryVersion.id}
                                       className="absolute bottom-0 left-0 right-0 top-0 z-20 flex h-full items-center gap-x-8"
+                                      // @ts-ignore: mutateDocument is not present on datarooms but on document pages
                                       mutateDocument={mutateDocument}
                                     />
                                   )}
