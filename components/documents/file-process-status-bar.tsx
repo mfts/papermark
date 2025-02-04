@@ -1,3 +1,5 @@
+import { useEffect } from "react";
+
 import useSWRImmutable from "swr/immutable";
 
 import { Progress } from "@/components/ui/progress";
@@ -9,10 +11,12 @@ export default function FileProcessStatusBar({
   documentVersionId,
   className,
   mutateDocument,
+  onProcessingChange,
 }: {
   documentVersionId: string;
   className?: string;
   mutateDocument: () => void;
+  onProcessingChange?: (processing: boolean) => void;
 }) {
   const { data } = useSWRImmutable<{ publicAccessToken: string }>(
     `/api/progress-token?documentVersionId=${documentVersionId}`,
@@ -21,6 +25,16 @@ export default function FileProcessStatusBar({
 
   const { status: progressStatus, error: progressError } =
     useDocumentProgressStatus(documentVersionId, data?.publicAccessToken);
+
+  // Update processing state whenever status changes
+  useEffect(() => {
+    if (onProcessingChange) {
+      onProcessingChange(
+        progressStatus.state === "QUEUED" ||
+          progressStatus.state === "EXECUTING",
+      );
+    }
+  }, [progressStatus.state, onProcessingChange]);
 
   if (progressStatus.state === "QUEUED") {
     return (
