@@ -10,6 +10,7 @@ import {
   ContactIcon,
   FolderIcon as FolderLucideIcon,
   FolderOpenIcon,
+  LayoutDashboardIcon,
   PaletteIcon,
   ServerIcon,
 } from "lucide-react";
@@ -84,13 +85,12 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
   }, []);
 
   const navigation = [
-    // {
-    //   name: "Overview",
-    //   href: "/overview",
-    //   icon: HomeIcon,
-    //   current: router.pathname.includes("overview"),
-    //   disabled: true,
-    // },
+    {
+      name: "Dashboard",
+      href: "/dashboard",
+      icon: LayoutDashboardIcon,
+      current: router.pathname === "/dashboard",
+    },
     {
       name: "All Documents",
       href: "/documents",

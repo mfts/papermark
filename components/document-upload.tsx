@@ -7,23 +7,28 @@ import { toast } from "sonner";
 
 import { SUPPORTED_DOCUMENT_MIME_TYPES } from "@/lib/constants";
 import { usePlan } from "@/lib/swr/use-billing";
+import useLimits from "@/lib/swr/use-limits";
 import { bytesToSize } from "@/lib/utils";
 import { fileIcon } from "@/lib/utils/get-file-icon";
+import {
+  getFileSizeLimit,
+  getFileSizeLimits,
+} from "@/lib/utils/get-file-size-limits";
 import { getPagesCount } from "@/lib/utils/get-page-number-count";
 
-const fileSizeLimits: { [key: string]: number } = {
-  "application/vnd.ms-excel": 40, // 40 MB
-  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": 40, // 40 MB
-  "application/vnd.oasis.opendocument.spreadsheet": 40, // 40 MB
-  "image/png": 100, // 100 MB
-  "image/jpeg": 100, // 100 MB
-  "image/jpg": 100, // 100 MB
-  "video/mp4": 500, // 500 MB
-  "video/quicktime": 500, // 500 MB
-  "video/x-msvideo": 500, // 500 MB
-  "video/webm": 500, // 500 MB
-  "video/ogg": 500, // 500 MB
-};
+// const fileSizeLimits: { [key: string]: number } = {
+//   "application/vnd.ms-excel": 40, // 40 MB
+//   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": 40, // 40 MB
+//   "application/vnd.oasis.opendocument.spreadsheet": 40, // 40 MB
+//   "image/png": 100, // 100 MB
+//   "image/jpeg": 100, // 100 MB
+//   "image/jpg": 100, // 100 MB
+//   "video/mp4": 500, // 500 MB
+//   "video/quicktime": 500, // 500 MB
+//   "video/x-msvideo": 500, // 500 MB
+//   "video/webm": 500, // 500 MB
+//   "video/ogg": 500, // 500 MB
+// };
 
 export default function DocumentUpload({
   currentFile,
@@ -36,10 +41,22 @@ export default function DocumentUpload({
   const isLight =
     theme === "light" || (theme === "system" && systemTheme === "light");
   const { plan, trial } = usePlan();
+  const { limits } = useLimits();
   const isFreePlan = plan === "free";
   const isTrial = !!trial;
-  const maxSize = isFreePlan && !isTrial ? 30 : 100;
+  // const maxSize = isFreePlan && !isTrial ? 30 : 100;
   const maxNumPages = isFreePlan && !isTrial ? 100 : 500;
+
+  // Get file size limits
+  const fileSizeLimits = useMemo(
+    () =>
+      getFileSizeLimits({
+        limits,
+        isFreePlan,
+        isTrial,
+      }),
+    [limits, isFreePlan, isTrial],
+  );
 
   const { getRootProps, getInputProps } = useDropzone({
     accept:
@@ -90,11 +107,12 @@ export default function DocumentUpload({
     onDropAccepted: (acceptedFiles) => {
       const file = acceptedFiles[0];
       const fileType = file.type;
-      const fileSizeLimit = (fileSizeLimits[fileType] || maxSize) * 1024 * 1024;
+      const fileSizeLimitMB = getFileSizeLimit(fileType, fileSizeLimits); // in MB
+      const fileSizeLimit = fileSizeLimitMB * 1024 * 1024; // in bytes
 
       if (file.size > fileSizeLimit) {
         toast.error(
-          `File size too big for ${fileType} (max. ${fileSizeLimits[fileType] || maxSize} MB)`,
+          `File size too big for ${fileType} (max. ${fileSizeLimitMB} MB)`,
         );
         return;
       }
@@ -123,7 +141,8 @@ export default function DocumentUpload({
       const { errors, file } = fileRejections[0];
       let message;
       if (errors[0].code === "file-too-large") {
-        message = `File size too big (max. ${maxSize} MB)${
+        const fileSizeLimitMB = getFileSizeLimit(file.type, fileSizeLimits);
+        message = `File size too big (max. ${fileSizeLimitMB} MB)${
           isFreePlan && !isTrial
             ? `. Upgrade to a paid plan to increase the limit.`
             : ""
@@ -192,8 +211,8 @@ export default function DocumentUpload({
               {currentFile
                 ? "Replace file?"
                 : isFreePlan && !isTrial
-                  ? `Only *.pdf, *.xls, *.xlsx, *.csv, *.ods, *.png, *.jpeg, *.jpg & ${maxSize} MB limit`
-                  : `Only *.pdf, *.pptx, *.docx, *.xlsx, *.xls, *.xlsm, *.csv, *.ods, *.ppt, *.odp, *.doc, *.odt, *.dwg, *.dxf, *.png, *.jpg, *.jpeg & ${maxSize} MB limit`}
+                  ? `Only *.pdf, *.xls, *.xlsx, *.csv, *.ods, *.png, *.jpeg, *.jpg`
+                  : `Only *.pdf, *.pptx, *.docx, *.xlsx, *.xls, *.xlsm, *.csv, *.ods, *.ppt, *.odp, *.doc, *.odt, *.dwg, *.dxf, *.png, *.jpg, *.jpeg, *.mp4, *.mov, *.avi, *.webm, *.ogg`}
             </p>
           </div>
         </div>

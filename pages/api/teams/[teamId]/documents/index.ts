@@ -298,6 +298,11 @@ export default async function handle(
       }
 
       if (type === "video") {
+        if (fileSize && fileSize > 500 * 1024 * 1024) {
+          // INFO: if the file size is greater than 500MB, skip the video processing
+          return res.status(201).json(document);
+        }
+
         await processVideo.trigger(
           {
             videoUrl: fileUrl,

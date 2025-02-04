@@ -774,56 +774,55 @@ export default function PagesVerticalViewer({
                     ? pages.map((page, index) => (
                         <div
                           key={index}
-                          className="w-full px-4 md:px-8"
+                          className="relative w-full px-4 md:px-8"
                           style={{
                             width: containerWidth
                               ? `${calculateOptimalWidth(containerWidth, page.metadata, isMobile, isTablet)}px`
                               : undefined,
                           }}
                         >
-                          <img
-                            className="h-auto w-full object-contain"
-                            ref={(ref) => {
-                              imageRefs.current[index] = ref;
-                              if (ref) {
-                                ref.onload = () =>
-                                  setImageDimensions((prev) => ({
-                                    ...prev,
-                                    [index]: {
-                                      width: ref.clientWidth,
-                                      height: ref.clientHeight,
-                                    },
-                                  }));
-                              }
-                            }}
-                            useMap={`#page-map-${index + 1}`}
-                            src={
-                              loadedImages[index]
-                                ? page.file
-                                : "https://www.papermark.io/_static/blank.gif"
-                            }
-                            alt={`Page ${index + 1}`}
-                          />
-
-                          {watermarkConfig ? (
-                            <SVGWatermark
-                              config={watermarkConfig}
-                              viewerData={{
-                                email: viewerEmail,
-                                date: new Date().toLocaleDateString(),
-                                time: new Date().toLocaleTimeString(),
-                                link: linkName,
-                                ipAddress: ipAddress,
-                              }}
-                              documentDimensions={
-                                imageDimensions[index] || {
-                                  width: 0,
-                                  height: 0,
+                          <div className="relative">
+                            <img
+                              className="h-auto w-full object-contain"
+                              ref={(ref) => {
+                                imageRefs.current[index] = ref;
+                                if (ref) {
+                                  ref.onload = () =>
+                                    setImageDimensions((prev) => ({
+                                      ...prev,
+                                      [index]: {
+                                        width: ref.clientWidth,
+                                        height: ref.clientHeight,
+                                      },
+                                    }));
                                 }
+                              }}
+                              useMap={`#page-map-${index + 1}`}
+                              src={
+                                loadedImages[index]
+                                  ? page.file
+                                  : "https://www.papermark.io/_static/blank.gif"
                               }
-                              pageIndex={index}
+                              alt={`Page ${index + 1}`}
                             />
-                          ) : null}
+
+                            {watermarkConfig && imageDimensions[index] ? (
+                              <div className="absolute left-0 top-0">
+                                <SVGWatermark
+                                  config={watermarkConfig}
+                                  viewerData={{
+                                    email: viewerEmail,
+                                    date: new Date().toLocaleDateString(),
+                                    time: new Date().toLocaleTimeString(),
+                                    link: linkName,
+                                    ipAddress: ipAddress,
+                                  }}
+                                  documentDimensions={imageDimensions[index]}
+                                  pageIndex={index}
+                                />
+                              </div>
+                            ) : null}
+                          </div>
 
                           {page.pageLinks ? (
                             <map name={`page-map-${index + 1}`}>

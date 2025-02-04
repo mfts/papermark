@@ -47,6 +47,31 @@ export const getTotalDocumentDuration = tb.buildPipe({
   }),
 });
 
+export const getTotalLinkDuration = tb.buildPipe({
+  pipe: "get_total_link_duration__v1",
+  parameters: z.object({
+    linkId: z.string(),
+    documentId: z.string(),
+    excludedViewIds: z.string().describe("Comma separated viewIds"),
+    since: z.number(),
+  }),
+  data: z.object({
+    sum_duration: z.number(),
+    view_count: z.number(),
+  }),
+});
+
+export const getTotalViewerDuration = tb.buildPipe({
+  pipe: "get_total_viewer_duration__v1",
+  parameters: z.object({
+    viewIds: z.string().describe("Comma separated viewIds"),
+    since: z.number(),
+  }),
+  data: z.object({
+    sum_duration: z.number(),
+  }),
+});
+
 export const getViewUserAgent = tb.buildPipe({
   pipe: "get_useragent_per_view__v2",
   parameters: z.object({
