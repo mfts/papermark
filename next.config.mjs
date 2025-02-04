@@ -30,6 +30,11 @@ const nextConfig = {
         destination: "/view/cm68iygxd0005wuf5svbr6c1x",
         permanent: false,
       },
+      {
+        source: "/settings",
+        destination: "/settings/general",
+        permanent: false,
+      },
     ];
   },
   async headers() {
