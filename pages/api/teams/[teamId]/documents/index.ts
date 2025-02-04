@@ -3,6 +3,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { client } from "@/trigger";
 import { DocumentStorageType, Prisma } from "@prisma/client";
+import { RunHandle } from "@trigger.dev/sdk/v3";
 import { getServerSession } from "next-auth/next";
 import { parsePageId } from "notion-utils";
 
@@ -12,6 +13,7 @@ import notion from "@/lib/notion";
 import prisma from "@/lib/prisma";
 import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
 import {
+  ConvertPayload,
   convertCadToPdfTask,
   convertFilesToPdfTask,
 } from "@/lib/trigger/convert-files";
@@ -276,7 +278,11 @@ export default async function handle(
           },
           {
             idempotencyKey: `${teamId}-${document.versions[0].id}`,
-            tags: [`team_${teamId}`, `document_${document.id}`],
+            tags: [
+              `team_${teamId}`,
+              `document_${document.id}`,
+              `version:${document.versions[0].id}`,
+            ],
           },
         );
       }
@@ -292,7 +298,11 @@ export default async function handle(
           },
           {
             idempotencyKey: `${teamId}-${document.versions[0].id}`,
-            tags: [`team_${teamId}`, `document_${document.id}`],
+            tags: [
+              `team_${teamId}`,
+              `document_${document.id}`,
+              `version:${document.versions[0].id}`,
+            ],
           },
         );
       }
