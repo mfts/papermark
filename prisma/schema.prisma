@@ -599,8 +599,10 @@ model ViewerGroup {
   id             String                      @id @default(cuid())
   name           String
   members        ViewerGroupMembership[]
+  domains        String[]
   links          Link[]
   accessControls ViewerGroupAccessControls[]
+  allowAll       Boolean                     @default(false)
 
   dataroomId String
   dataroom   Dataroom @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
