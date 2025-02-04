@@ -155,6 +155,41 @@ export const PLANS = [
       },
     },
   },
+  {
+    name: "Data Rooms Plus",
+    slug: "datarooms-plus",
+    minQuantity: 5,
+    price: {
+      monthly: {
+        amount: 399,
+        unitPrice: 4967,
+        priceIds: {
+          test: {
+            old: "price_1QojZuFJyGSZ96lhNwiD1y2r",
+            new: "price_1QojT3BYvhH6u7U7quP5CAXv",
+          },
+          production: {
+            old: "price_1QojcVFJyGSZ96lhZFAJBCaJ",
+            new: "price_1QojXJBYvhH6u7U7Jd3sVnMY",
+          },
+        },
+      },
+      yearly: {
+        amount: 249,
+        unitPrice: 3300,
+        priceIds: {
+          test: {
+            old: "price_1QojaPFJyGSZ96lhods9TOxh",
+            new: "price_1QojT3BYvhH6u7U7VNseK7Fw",
+          },
+          production: {
+            old: "price_1QojcVFJyGSZ96lhhlR7qR4C",
+            new: "price_1QojXJBYvhH6u7U7AFd0GxkA",
+          },
+        },
+      },
+    },
+  },
 ];
 
 export const isOldAccount = (plan: string) => {

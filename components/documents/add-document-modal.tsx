@@ -57,6 +57,7 @@ export function AddDocumentModal({
   const [isOpen, setIsOpen] = useState<boolean | undefined>(undefined);
   const [currentFile, setCurrentFile] = useState<File | null>(null);
   const [notionLink, setNotionLink] = useState<string | null>(null);
+  const [figmaLink, setFigmaLink] = useState<string | null>(null);
   const teamInfo = useTeam();
   const { canAddDocuments } = useLimits();
   const { plan, trial } = usePlan();
@@ -398,9 +399,90 @@ export function AddDocumentModal({
     }
   };
 
+  const handleFigmaUpload = async (
+    event: FormEvent<HTMLFormElement>,
+  ): Promise<void> => {
+    event.preventDefault();
+
+    if (!canAddDocuments) {
+      toast.error("You have reached the maximum number of documents.");
+      return;
+    }
+
+    // Validate Figma URL
+    const isFigmaURL = figmaLink?.includes("figma.com");
+    if (!figmaLink || !isFigmaURL) {
+      toast.error("Please enter a valid Figma presentation link.");
+      return;
+    }
+
+    try {
+      setUploading(true);
+
+      const response = await fetch(
+        `/api/teams/${teamInfo?.currentTeam?.id}/documents`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: "Figma Presentation",
+            url: figmaLink,
+            numPages: 1,
+            type: "figma",
+            createLink: false,
+            folderPathName: currentFolderPath?.join("/"),
+          }),
+        },
+      );
+
+      if (response) {
+        const document = await response.json();
+
+        if (isDataroom && dataroomId) {
+          await addDocumentToDataroom({
+            documentId: document.id,
+            folderPathName: currentFolderPath?.join("/"),
+          });
+
+          plausible("documentUploaded");
+          plausible("figmaDocumentUploaded");
+          analytics.capture("Document Added", {
+            documentId: document.id,
+            name: document.name,
+            path: router.asPath,
+            type: "figma",
+            teamId: teamId,
+            dataroomId: dataroomId,
+            $set: {
+              teamId: teamId,
+              teamPlan: plan,
+            },
+          });
+
+          return;
+        }
+
+        toast.success("Figma presentation processed. Redirecting to document page...");
+        router.push("/documents/" + document.id);
+      }
+    } catch (error) {
+      setUploading(false);
+      toast.error(
+        "Oops! Can't access the Figma presentation. Please check if it's publicly accessible."
+      );
+      console.error("An error occurred while processing the Figma link: ", error);
+    } finally {
+      setUploading(false);
+      setIsOpen(false);
+    }
+  };
+
   const clearModelStates = () => {
     currentFile !== null && setCurrentFile(null);
     notionLink !== null && setNotionLink(null);
+    figmaLink !== null && setFigmaLink(null);
     setIsOpen(!isOpen);
     setAddDocumentModalOpen && setAddDocumentModalOpen(!isOpen);
   };
@@ -432,9 +514,10 @@ export function AddDocumentModal({
       >
         <Tabs defaultValue="document">
           {!newVersion ? (
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="document">Document</TabsTrigger>
               <TabsTrigger value="notion">Notion Page</TabsTrigger>
+              <TabsTrigger value="figma">Figma Deck</TabsTrigger>
             </TabsList>
           ) : (
             <TabsList className="grid w-full grid-cols-1">
@@ -566,6 +649,51 @@ export function AddDocumentModal({
               </Card>
             </TabsContent>
           )}
+          <TabsContent value="figma">
+            <Card>
+              <CardHeader className="space-y-3">
+                <CardTitle>Share a Figma Presentation</CardTitle>
+                <CardDescription>
+                  Share your Figma presentation deck. Make sure your presentation is publicly accessible.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <form
+                  encType="multipart/form-data"
+                  onSubmit={handleFigmaUpload}
+                  className="flex flex-col"
+                >
+                  <div className="space-y-1 pb-8">
+                    <Label htmlFor="figma-link">Figma Presentation Link</Label>
+                    <div className="mt-2">
+                      <input
+                        type="text"
+                        name="figma-link"
+                        id="figma-link"
+                        placeholder="figma.com/..."
+                        className="flex w-full rounded-md border-0 bg-background py-1.5 text-foreground shadow-sm ring-1 ring-inset ring-input placeholder:text-muted-foreground focus:ring-2 focus:ring-inset focus:ring-gray-400 sm:text-sm sm:leading-6"
+                        value={figmaLink || ""}
+                        onChange={(e) => setFigmaLink(e.target.value)}
+                      />
+                    </div>
+                    <small className="text-xs text-muted-foreground">
+                      Your Figma presentation needs to be publicly accessible.
+                    </small>
+                  </div>
+                  <div className="flex justify-center">
+                    <Button
+                      type="submit"
+                      className="w-full lg:w-1/2"
+                      disabled={uploading || !figmaLink}
+                      loading={uploading}
+                    >
+                      {uploading ? "Processing..." : "Share Figma Deck"}
+                    </Button>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+          </TabsContent>
         </Tabs>
       </DialogContent>
     </Dialog>

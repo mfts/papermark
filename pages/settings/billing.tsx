@@ -4,7 +4,7 @@ import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
-import { CheckIcon } from "lucide-react";
+import { CheckIcon, MinusCircleIcon, PlusCircleIcon } from "lucide-react";
 import { toast } from "sonner";
 
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
@@ -39,6 +39,7 @@ export default function Billing() {
   const [frequencyPro, setFrequencyPro] = useState(frequencies[0]);
   const [frequencyBusiness, setFrequencyBusiness] = useState(frequencies[0]);
   const [frequencyDatarooms, setFrequencyDatarooms] = useState(frequencies[0]);
+  const [showDataRoomsPlus, setShowDataRoomsPlus] = useState(false);
 
   useEffect(() => {
     if (toggleProYear) {
@@ -106,15 +107,14 @@ export default function Billing() {
       featureIntro: "What's included:",
       features: [
         "1 user",
-        "10 links",
         "10 documents",
+        "10 links",
         "Unlimited visitors",
         "Page-by-page analytics",
         "Document sharing controls",
         "Password protection",
         "30-day analytics retention",
       ],
-
       bgColor: "bg-gray-200",
       borderColor: "#bg-gray-800",
       textColor: "text-foreground ",
@@ -131,11 +131,13 @@ export default function Billing() {
       featureIntro: "Everything in Free, plus:",
       features: [
         "2 users included",
-        "Unlimited links",
         "100 documents",
+        "Unlimited links",
         "Custom branding",
         "Folder organization",
+        "Large file uploads",
         "Require email verification",
+        "Video sharing and analytics",
         "More file types: pppt, docx, excel",
         "Papermark branding removed",
         "1-year analytics retention",
@@ -158,15 +160,15 @@ export default function Billing() {
       features: [
         "3 users included",
         "1 dataroom",
-        "Unlimited documents",
+        "1000 documents",
         "Custom domain for documents",
-        "Unlimited folder and subfolder levels",
-        "Large file uploads",
+        "Unlimited folder levels",
         "Multi-file sharing",
+        "Screen shield/fence protection",
         "Allow/Block list",
         "Dataroom branding",
-
-        "More file types: dmg (cad)",
+        "Webhooks",
+        "More file types: dwg, kml, zip",
         "2-year analytics retention",
       ],
       bgColor: "#bg-gray-500",
@@ -175,7 +177,6 @@ export default function Billing() {
       buttonText: "Upgrade to Business",
       mostPopular: true,
     },
-
     {
       name: "Data Rooms",
       id: "tier-datarooms",
@@ -188,15 +189,16 @@ export default function Billing() {
       features: [
         "3 users included",
         "Unlimited data rooms",
-        "Custom domain for data rooms",
-        "Advanced data rooms analytics",
+        "Unlimited documents",
+        "One custom domain for data rooms",
+        "Data rooms analytics",
         "NDA agreements",
-        "Dynamic Watermark",
-        "Granular user/group permisssions",
-        "Invite users directly from Papermark",
-        "Audit log",
+        "Dynamic watermark",
+        "Granular user/group permissions",
+        "Audit log for viewers",
         "24h priority support",
-        "Custom onboarding ",
+        "Custom onboarding",
+        "2-year analytics retention",
       ],
       bgColor: "#fb7a00",
       borderColor: "#fb7a00",
@@ -204,19 +206,98 @@ export default function Billing() {
       buttonText: "Upgrade to Data Rooms",
       mostPopular: true,
     },
+    {
+      name: "Data Rooms Plus",
+      id: "tier-datarooms-plus",
+      href: "/login",
+      currentPlan: plan && plan == "datarooms-plus" ? true : false,
+      price: { monthly: "€399", annually: "€249" },
+      description:
+        "The ultimate data room solution with advanced features and unlimited storage.",
+      featureIntro: "Everything in Data Rooms, plus:",
+      features: [
+        "5 users included",
+        "Unlimited storage",
+        "No file size limit",
+        "Unlimited custom domains for data rooms",
+        "Q&A module with permissions",
+        "Automatic file indexing",
+        "Assign users to data room",
+        "Email invite viewers directly from Papermark",
+        "White-labeling",
+        "Dedicated account manager",
+        "3-year analytics retention",
+      ],
+      bgColor: "bg-gray-900",
+      borderColor: "border-gray-900",
+      textColor: "text-white",
+      buttonText: "Upgrade to Data Rooms Plus",
+      mostPopular: true,
+    },
   ];
 
   const enterpriseFeatures = [
     "Self-hosted version",
+    "Bring your own storage for documents",
     "Unlimited users",
     "Unlimited documents",
     "Unlimited folders and subfolders",
     "Unlimited datarooms",
+    "Unlimited storage",
     "Full white-labeling",
-    "Up to 5TB file uploads",
+    "No file size limit",
+    "Single sign-on (SSO)",
     "Dedicated support",
     "Custom onboarding",
   ];
+
+  const displayTiers = tiers.filter(
+    (tier) =>
+      tier.name !== (showDataRoomsPlus ? "Data Rooms" : "Data Rooms Plus"),
+  );
+
+  const dataRoomsIndex = displayTiers.findIndex(
+    (tier) => tier.name === "Data Rooms" || tier.name === "Data Rooms Plus",
+  );
+
+  if (dataRoomsIndex !== -1) {
+    const currentTier = displayTiers[dataRoomsIndex];
+    displayTiers[dataRoomsIndex] = {
+      ...currentTier,
+      name: showDataRoomsPlus ? "Data Rooms Plus" : "Data Rooms",
+      price: showDataRoomsPlus
+        ? { monthly: "€299", annually: "€249" }
+        : { monthly: "€199", annually: "€99" },
+      features: showDataRoomsPlus
+        ? [
+            "5 users included",
+            "Unlimited encrypted storage",
+            "No file size limit",
+            "Unlimited custom domains for data rooms",
+            "Q&A module with custom permissions",
+            "Automatic file indexing",
+            "Assign users to particular data room",
+            "Email invite viewers directly from Papermark",
+            "White-labeling",
+            "Dedicated account manager",
+            "3-year analytics retention",
+          ]
+        : [
+            "3 users included",
+            "Unlimited data rooms",
+            "Unlimited documents",
+            "One custom domain for data rooms",
+            "Data rooms analytics",
+            "NDA agreements",
+            "Dynamic watermark",
+            "Granular user/group permissions",
+            "Audit log for viewers",
+            "24h priority support",
+            "Custom onboarding",
+            "2-year analytics retention",
+          ],
+    };
+  }
 
   return (
     <AppLayout>
@@ -246,22 +327,43 @@ export default function Billing() {
           <div className="bg-white dark:bg-gray-900">
             <div className="mx-auto space-y-8">
               <div className="isolate grid grid-cols-1 overflow-hidden rounded-xl border border-black dark:border-muted-foreground md:grid-cols-4">
-                {tiers.map((tier) => (
+                {displayTiers.map((tier) => (
                   <div
                     key={tier.id}
                     className="flex flex-col justify-between border-r-0 border-black dark:border-muted-foreground md:border-r md:last:!border-r-0"
                   >
                     <div>
                       <div className="border-b border-black bg-gray-100 p-6 dark:border-muted-foreground dark:bg-gray-500">
-                        <h3
-                          id={tier.id}
-                          className="flex items-center gap-x-2 text-balance text-xl leading-8 text-foreground"
-                        >
-                          <span>{tier.name}</span>
-                          {tier.currentPlan ? (
-                            <Badge className="rounded-md">Current Plan</Badge>
-                          ) : null}
-                        </h3>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-x-3">
+                            <h3
+                              id={tier.id}
+                              className="flex items-center text-balance text-xl leading-8 text-foreground"
+                            >
+                              {tier.name}
+                            </h3>
+                            {tier.currentPlan ? (
+                              <Badge className="rounded-md">Current Plan</Badge>
+                            ) : null}
+                          </div>
+                          {(tier.name === "Data Rooms" ||
+                            tier.name === "Data Rooms Plus") && (
+                            <div className="flex items-center gap-x-2">
+                              <button
+                                onClick={() =>
+                                  setShowDataRoomsPlus(!showDataRoomsPlus)
+                                }
+                                className="focus:outline-none"
+                              >
+                                {showDataRoomsPlus ? (
+                                  <MinusCircleIcon className="h-6 w-6 text-[#fb7a00] hover:text-[#fb7a00]/90" />
+                                ) : (
+                                  <PlusCircleIcon className="h-6 w-6 text-[#fb7a00] hover:text-[#fb7a00]/90" />
+                                )}
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       </div>
                       <div className="p-6">
                         <div className="mt-2">
