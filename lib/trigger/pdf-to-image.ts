@@ -11,18 +11,26 @@ import { getFile } from "@/lib/files/get-file";
 import { streamFileServer } from "@/lib/files/stream-file-server";
 import prisma from "@/lib/prisma";
 
+import { updateStatus } from "../utils/generate-trigger-status";
+
+type ConvertPdfToImagePayload = {
+  documentId: string;
+  documentVersionId: string;
+  teamId: string;
+  docId: string;
+  versionNumber?: number;
+};
+
 export const convertPdfToImage = task({
   id: "convert-pdf-to-image",
   machine: {
     preset: "small-2x",
   },
-  run: async (payload: {
-    documentVersionId: string;
-    teamId: string;
-    docId: string;
-    versionNumber?: number;
-  }) => {
-    const { documentVersionId, teamId, docId, versionNumber } = payload;
+  run: async (payload: ConvertPdfToImagePayload) => {
+    const { documentId, documentVersionId, teamId, docId, versionNumber } =
+      payload;
+
+    updateStatus({ progress: 0, text: "Initializing..." });
 
     try {
       // Get document version
@@ -36,9 +44,11 @@ export const convertPdfToImage = task({
       });
 
       if (!documentVersion) {
+        updateStatus({ progress: 0, text: "Document not found" });
         throw new Error("Document version not found");
       }
 
+      updateStatus({ progress: 10, text: "Retrieving file..." });
       // Get signed URL for the PDF
       const pdfUrl = await getFile({
         type: documentVersion.storageType,
@@ -46,6 +56,7 @@ export const convertPdfToImage = task({
       });
 
       if (!pdfUrl) {
+        updateStatus({ progress: 0, text: "Failed to retrieve file" });
         throw new Error("Failed to get signed URL");
       }
 
@@ -59,11 +70,14 @@ export const convertPdfToImage = task({
       // Stream PDF to temporary file
       const response = await fetch(pdfUrl);
       if (!response.body) {
+        updateStatus({ progress: 0, text: "Failed to retrieve file" });
         throw new Error("Failed to fetch PDF stream");
       }
 
       logger.info("Streaming PDF to temporary file");
       await pipeline(response.body, createWriteStream(pdfPath));
+
+      updateStatus({ progress: 20, text: "Converting document..." });
 
       // Get total pages and first page dimensions
       const getDimensions = execSync(
@@ -111,14 +125,22 @@ export const convertPdfToImage = task({
         const pngPath = `${pngOutputPath}1.png`;
         const jpegPath = `${jpegOutputPath}1.jpg`;
 
-        // Convert to PNG
-        execSync(
-          `mutool convert -o "${pngOutputPath}.png" -F png -O "resolution=${resolution}" "${pdfPath}" ${pageNumber}`,
-        );
-        // Convert to JPEG
-        execSync(
-          `mutool convert -o "${jpegOutputPath}.jpg" -F jpeg -O "resolution=${resolution},quality=80" "${pdfPath}" ${pageNumber}`,
-        );
+        try {
+          // Convert to PNG
+          execSync(
+            `mutool convert -o "${pngOutputPath}.png" -F png -O "resolution=${resolution}" "${pdfPath}" ${pageNumber}`,
+          );
+          // Convert to JPEG
+          execSync(
+            `mutool convert -o "${jpegOutputPath}.jpg" -F jpeg -O "resolution=${resolution},quality=80" "${pdfPath}" ${pageNumber}`,
+          );
+        } catch (error) {
+          updateStatus({
+            progress: (100 * pageNumber) / totalPages,
+            text: `Error processing page ${pageNumber} of ${totalPages}`,
+          });
+          throw new Error("Failed to convert document");
+        }
 
         // Get file sizes
         const pngStats = await fs.stat(pngPath);
@@ -152,6 +174,10 @@ export const convertPdfToImage = task({
         });
 
         if (!data) {
+          updateStatus({
+            progress: (100 * pageNumber) / totalPages,
+            text: `Error saving page ${pageNumber} of ${totalPages}`,
+          });
           throw new Error(`Failed to upload page ${pageNumber}`);
         }
 
@@ -172,6 +198,11 @@ export const convertPdfToImage = task({
           },
         });
 
+        updateStatus({
+          progress: (100 * pageNumber) / totalPages,
+          text: `${pageNumber} / ${totalPages} pages processed`,
+        });
+
         logger.info(`Uploaded page ${pageNumber}`, { type, data });
       }
 
@@ -182,6 +213,11 @@ export const convertPdfToImage = task({
           hasPages: true,
           isPrimary: true,
         },
+      });
+
+      updateStatus({
+        progress: 100,
+        text: "Enabling pages...",
       });
 
       // If versionNumber is provided, update other versions to not be primary
@@ -197,11 +233,25 @@ export const convertPdfToImage = task({
             isPrimary: false,
           },
         });
+
+        await fetch(
+          `${process.env.NEXTAUTH_URL}/api/revalidate?secret=${process.env.REVALIDATE_TOKEN}&documentId=${documentId}`,
+        );
+
+        updateStatus({
+          progress: 100,
+          text: "Revalidating links...",
+        });
       }
 
       // Clean up temporary directory
       await fs.rm(tempDirectory, { recursive: true });
       logger.info("Temporary directory cleaned up", { tempDirectory });
+
+      updateStatus({
+        progress: 100,
+        text: "Processing complete",
+      });
 
       return {
         success: true,
@@ -209,6 +259,10 @@ export const convertPdfToImage = task({
         totalPages,
       };
     } catch (error) {
+      updateStatus({
+        progress: 0,
+        text: "Failed to convert PDF",
+      });
       logger.error("Failed to convert PDF:", {
         error: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined,

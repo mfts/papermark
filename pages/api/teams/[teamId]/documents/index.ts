@@ -12,6 +12,7 @@ import notion from "@/lib/notion";
 import prisma from "@/lib/prisma";
 import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
 import {
+  ConvertPayload,
   convertCadToPdfTask,
   convertFilesToPdfTask,
 } from "@/lib/trigger/convert-files";
@@ -276,7 +277,11 @@ export default async function handle(
           },
           {
             idempotencyKey: `${teamId}-${document.versions[0].id}`,
-            tags: [`team_${teamId}`, `document_${document.id}`],
+            tags: [
+              `team_${teamId}`,
+              `document_${document.id}`,
+              `version:${document.versions[0].id}`,
+            ],
           },
         );
       }
@@ -292,7 +297,11 @@ export default async function handle(
           },
           {
             idempotencyKey: `${teamId}-${document.versions[0].id}`,
-            tags: [`team_${teamId}`, `document_${document.id}`],
+            tags: [
+              `team_${teamId}`,
+              `document_${document.id}`,
+              `version:${document.versions[0].id}`,
+            ],
           },
         );
       }
@@ -312,7 +321,11 @@ export default async function handle(
           },
           {
             idempotencyKey: `${teamId}-${document.versions[0].id}`,
-            tags: [`team_${teamId}`, `document_${document.id}`],
+            tags: [
+              `team_${teamId}`,
+              `document_${document.id}`,
+              `version:${document.versions[0].id}`,
+            ],
           },
         );
       }
@@ -320,9 +333,13 @@ export default async function handle(
       // skip triggering convert-pdf-to-image job for "notion" / "excel" documents
       if (type === "pdf") {
         // trigger document uploaded event to trigger convert-pdf-to-image job
-        if (teamId === "cluqtfmcr0001zkza4xcgqatw") {
+        if (
+          teamId === "cluqtfmcr0001zkza4xcgqatw" ||
+          teamId === "clup33by90000oewh4rfvp2eg" // local
+        ) {
           await convertPdfToImage.trigger(
             {
+              documentId: document.id,
               documentVersionId: document.versions[0].id,
               teamId,
               docId: fileUrl.split("/")[1],
@@ -332,7 +349,7 @@ export default async function handle(
               tags: [
                 `team_${teamId}`,
                 `document_${document.id}`,
-                `version_${document.versions[0].id}`,
+                `version:${document.versions[0].id}`,
               ],
             },
           );

@@ -47,6 +47,7 @@ import useLimits from "@/lib/swr/use-limits";
 import { LinkWithViews, WatermarkConfig } from "@/lib/types";
 import { cn, copyToClipboard, fetcher, nFormatter, timeAgo } from "@/lib/utils";
 
+import FileProcessStatusBar from "../documents/file-process-status-bar";
 import ProcessStatusBar from "../documents/process-status-bar";
 import BarChart from "../shared/icons/bar-chart";
 import ChevronDown from "../shared/icons/chevron-down";
@@ -63,10 +64,12 @@ export default function LinksTable({
   targetType,
   links,
   primaryVersion,
+  mutateDocument,
 }: {
   targetType: "DOCUMENT" | "DATAROOM";
   links?: LinkWithViews[];
   primaryVersion?: DocumentVersion;
+  mutateDocument?: () => void;
 }) {
   const router = useRouter();
   const { plan } = usePlan();
@@ -316,14 +319,25 @@ export default function LinksTable({
                               )}
                             >
                               {/* Progress bar */}
-                              {primaryVersion &&
-                              primaryVersion.type === "pdf" &&
-                              !primaryVersion.hasPages ? (
-                                <ProcessStatusBar
-                                  documentVersionId={primaryVersion.id}
-                                  className="absolute bottom-0 left-0 right-0 top-0 z-20 flex h-full items-center gap-x-8"
-                                />
-                              ) : null}
+                              {primaryVersion && !primaryVersion.hasPages && (
+                                <>
+                                  {primaryVersion.type === "pdf" &&
+                                  teamInfo?.currentTeam?.id !==
+                                    "cluqtfmcr0001zkza4xcgqatw" ? (
+                                    <ProcessStatusBar
+                                      documentVersionId={primaryVersion.id}
+                                      className="absolute bottom-0 left-0 right-0 top-0 z-20 flex h-full items-center gap-x-8"
+                                    />
+                                  ) : (
+                                    <FileProcessStatusBar
+                                      documentVersionId={primaryVersion.id}
+                                      className="absolute bottom-0 left-0 right-0 top-0 z-20 flex h-full items-center gap-x-8"
+                                      // @ts-ignore: mutateDocument is not present on datarooms but on document pages
+                                      mutateDocument={mutateDocument}
+                                    />
+                                  )}
+                                </>
+                              )}
 
                               <div className="flex w-full whitespace-nowrap text-sm group-hover/cell:opacity-0">
                                 {link.domainId
