@@ -319,25 +319,26 @@ export default function LinksTable({
                               )}
                             >
                               {/* Progress bar */}
-                              {primaryVersion && !primaryVersion.hasPages && (
-                                <>
-                                  {primaryVersion.type === "pdf" &&
-                                  teamInfo?.currentTeam?.id !==
+                              {primaryVersion &&
+                                !primaryVersion.hasPages &&
+                                primaryVersion.type === "pdf" && (
+                                  <>
+                                    {teamInfo?.currentTeam?.id !==
                                     "cluqtfmcr0001zkza4xcgqatw" ? (
-                                    <ProcessStatusBar
-                                      documentVersionId={primaryVersion.id}
-                                      className="absolute bottom-0 left-0 right-0 top-0 z-20 flex h-full items-center gap-x-8"
-                                    />
-                                  ) : (
-                                    <FileProcessStatusBar
-                                      documentVersionId={primaryVersion.id}
-                                      className="absolute bottom-0 left-0 right-0 top-0 z-20 flex h-full items-center gap-x-8"
-                                      // @ts-ignore: mutateDocument is not present on datarooms but on document pages
-                                      mutateDocument={mutateDocument}
-                                    />
-                                  )}
-                                </>
-                              )}
+                                      <ProcessStatusBar
+                                        documentVersionId={primaryVersion.id}
+                                        className="absolute bottom-0 left-0 right-0 top-0 z-20 flex h-full items-center gap-x-8"
+                                      />
+                                    ) : (
+                                      <FileProcessStatusBar
+                                        documentVersionId={primaryVersion.id}
+                                        className="absolute bottom-0 left-0 right-0 top-0 z-20 flex h-full items-center gap-x-8"
+                                        // @ts-ignore: mutateDocument is not present on datarooms but on document pages
+                                        mutateDocument={mutateDocument}
+                                      />
+                                    )}
+                                  </>
+                                )}
 
                               <div className="flex w-full whitespace-nowrap text-sm group-hover/cell:opacity-0">
                                 {link.domainId
