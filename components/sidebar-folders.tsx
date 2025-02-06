@@ -213,13 +213,19 @@ const SidebarFoldersSelection = ({
 export function SidebarFolderTreeSelection({
   selectedFolder,
   setSelectedFolder,
+  filterFoldersFn
 }: {
   selectedFolder: TSelectedFolder;
   setSelectedFolder: React.Dispatch<React.SetStateAction<TSelectedFolder>>;
+  filterFoldersFn ?: (folders: FolderWithDocuments[]) => FolderWithDocuments[]
 }) {
-  const { folders, error } = useFolders();
+  let { folders, error } = useFolders();
 
   if (!folders || error) return null;
+
+  if (folders && folders.length && filterFoldersFn && typeof filterFoldersFn === 'function'){
+    folders = filterFoldersFn(folders)
+  }
 
   return (
     <SidebarFoldersSelection
