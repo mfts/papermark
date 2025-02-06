@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { logger, task } from "@trigger.dev/sdk/v3";
 import { execSync } from "child_process";
 import { createReadStream, createWriteStream } from "fs";
@@ -20,6 +21,129 @@ type ConvertPdfToImagePayload = {
   docId: string;
   versionNumber?: number;
 };
+
+interface PageLink {
+  href: string;
+  coords: string;
+}
+
+type DocumentPageMetadata = {
+  originalWidth: number;
+  originalHeight: number;
+  width: number;
+  height: number;
+  scaleFactor: number;
+};
+
+function findPageNumberFromRef(
+  pdfPath: string,
+  ref: string,
+): number | undefined {
+  try {
+    const output = execSync(`mutool show "${pdfPath}" pages | grep "${ref}"`, {
+      encoding: "utf8",
+    }).trim();
+
+    const match = output.match(/page (\d+)/);
+    return match ? parseInt(match[1]) : undefined;
+  } catch (error) {
+    return undefined;
+  }
+}
+
+function extractPageLinks(pdfPath: string, pageNumber: number): PageLink[] {
+  const links: PageLink[] = [];
+
+  // Get page height first
+  const mediaBoxOutput = execSync(
+    `mutool show "${pdfPath}" "pages/${pageNumber}/MediaBox"`,
+    { encoding: "utf8" },
+  ).trim();
+
+  const dimensions = mediaBoxOutput
+    .replace(/[\[\]]/g, "")
+    .trim()
+    .split(/\s+/)
+    .map(Number);
+
+  const pageHeight = Math.abs(dimensions[3] - dimensions[1]);
+
+  // Get annotations for the page
+  const annotsOutput = execSync(
+    `mutool show "${pdfPath}" pages/${pageNumber}/Annots`,
+    { encoding: "utf8" },
+  ).trim();
+
+  if (!annotsOutput || annotsOutput === "null") {
+    return links;
+  }
+
+  // Parse the array of annotation references
+  const annotRefs = annotsOutput
+    .replace(/[\[\]]/g, "")
+    .trim()
+    .split(/\s+/)
+    .filter((ref) => ref.endsWith("R"));
+
+  // Process each annotation
+  for (let i = 1; i <= annotRefs.length; i++) {
+    try {
+      const annotOutput = execSync(
+        `mutool show "${pdfPath}" pages/${pageNumber}/Annots/${i}`,
+        { encoding: "utf8" },
+      ).trim();
+
+      // Check if annotation is present
+      if (!annotOutput || annotOutput === "null") continue;
+
+      // Check if annotation is a link
+      if (!annotOutput.includes("/Subtype /Link")) continue;
+
+      // Extract coordinates (Rect)
+      const rectMatch = annotOutput.match(/\/Rect\s*\[\s*([\d\s.]+)\s*\]/);
+      if (!rectMatch) continue;
+
+      // Transform coordinates
+      const rawCoords = rectMatch[1].trim().split(/\s+/).map(Number);
+      if (rawCoords.length < 4) continue;
+
+      // Transform y-coordinates by subtracting from page height
+      const transformedCoords = [
+        rawCoords[0], // x1
+        pageHeight - rawCoords[3], // y1 (transformed)
+        rawCoords[2], // x2
+        pageHeight - rawCoords[1], // y2 (transformed)
+      ].join(",");
+
+      // Check for URI links
+      const uriMatch = annotOutput.match(/\/URI\s*\((.*?)\)/);
+      if (uriMatch) {
+        links.push({
+          href: uriMatch[1],
+          coords: transformedCoords,
+        });
+        continue;
+      }
+
+      // Check for internal links (Dest)
+      const destMatch = annotOutput.match(/\/Dest\s*\[\s*(\d+\s+0\s+R)/);
+      if (destMatch) {
+        const ref = destMatch[1];
+        const targetPage = findPageNumberFromRef(pdfPath, ref);
+        links.push({
+          coords: transformedCoords,
+          href: `#page=${targetPage}&zoom=100,nan,nan`,
+        });
+      }
+    } catch (error) {
+      logger.warn(`Failed to extract link ${i} from page ${pageNumber}`, {
+        error,
+      });
+    }
+  }
+
+  return links;
+}
 
 export const convertPdfToImage = task({
   id: "convert-pdf-to-image",
@@ -181,6 +305,8 @@ export const convertPdfToImage = task({
           throw new Error(`Failed to upload page ${pageNumber}`);
         }
 
+        const pageLinks = extractPageLinks(pdfPath, pageNumber);
+
         // Create document page
         await prisma.documentPage.create({
           data: {
@@ -188,13 +314,14 @@ export const convertPdfToImage = task({
             pageNumber,
             file: data,
             storageType: type,
+            pageLinks: pageLinks as unknown as Prisma.InputJsonValue,
             metadata: {
               originalWidth: widthInPoints,
               originalHeight: heightInPoints,
               width: widthInPoints * scaleFactor,
               height: heightInPoints * scaleFactor,
               scaleFactor,
-            },
+            } as unknown as Prisma.InputJsonValue,
           },
         });
 
