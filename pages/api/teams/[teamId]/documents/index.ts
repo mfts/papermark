@@ -307,17 +307,13 @@ export default async function handle(
       }
 
       if (type === "video") {
-        if (fileSize && fileSize > 500 * 1024 * 1024) {
-          // INFO: if the file size is greater than 500MB, skip the video processing
-          return res.status(201).json(document);
-        }
-
         await processVideo.trigger(
           {
             videoUrl: fileUrl,
             teamId,
             docId: fileUrl.split("/")[1], // Extract doc_xxxx from teamId/doc_xxxx/filename
             documentVersionId: document.versions[0].id,
+            fileSize: fileSize || 0,
           },
           {
             idempotencyKey: `${teamId}-${document.versions[0].id}`,
