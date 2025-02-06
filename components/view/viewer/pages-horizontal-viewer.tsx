@@ -785,7 +785,7 @@ export default function PagesHorizontalViewer({
               onClick={!isMobile ? goToPreviousPage : undefined}
               className={cn(
                 "rounded-full bg-gray-950/50 p-1 transition-opacity duration-200 hover:bg-gray-950/75",
-                "opacity-0 group-hover:opacity-100",
+                "opacity-50 group-hover:opacity-100",
               )}
             >
               <ChevronLeftIcon
@@ -808,7 +808,7 @@ export default function PagesHorizontalViewer({
               onClick={!isMobile ? goToNextPage : undefined}
               className={cn(
                 "rounded-full bg-gray-950/50 p-1 transition-opacity duration-200 hover:bg-gray-950/75",
-                "opacity-0 group-hover:opacity-100",
+                "opacity-50 group-hover:opacity-100",
               )}
             >
               <ChevronRightIcon
