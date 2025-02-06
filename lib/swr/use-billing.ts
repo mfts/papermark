@@ -43,7 +43,9 @@ export type BasePlan =
   | "pro"
   | "trial"
   | "business"
-  | "datarooms";
+  | "datarooms"
+  | "datarooms-plus";
+
 type PlanWithTrial = `${BasePlan}+drtrial`;
 type PlanWithOld = `${BasePlan}+old` | `${BasePlan}+drtrial+old`;
 
