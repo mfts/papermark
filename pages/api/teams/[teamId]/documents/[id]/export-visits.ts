@@ -4,7 +4,7 @@ import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth/next";
 
 import prisma from "@/lib/prisma";
-import { getViewPageDuration } from "@/lib/tinybird";
+import { getViewPageDuration, getViewUserAgent } from "@/lib/tinybird";
 import { CustomUser } from "@/lib/types";
 
 export default async function handler(
@@ -88,6 +88,11 @@ export default async function handler(
             },
           },
         },
+        customFieldResponse: {
+          select: {
+            data: true,
+          },
+        },
       },
       orderBy: {
         viewedAt: "desc",
@@ -98,26 +103,35 @@ export default async function handler(
       return res.status(404).end("Document has no views");
     }
 
+    const isProPlan = team.plan.includes("pro");
+
     // Create CSV rows array starting with headers
     const csvRows: string[] = [];
-    csvRows.push(
-      [
-        "Viewed at",
-        "Name",
-        "Email",
-        "Link Name",
-        "Total Visit Duration (s)",
-        "Total Document Completion (%)",
-        "Document version",
-        "Downloaded at",
-        "Verified",
-        "Agreement Accepted",
-        "Agreement Name",
-        "Agreement Content",
-        "Agreement Accepted At",
-        "Viewed from dataroom",
-      ].join(","),
-    );
+    const headers = [
+      "Viewed at",
+      "Name",
+      "Email",
+      "Link Name",
+      "Total Visit Duration (s)",
+      "Total Document Completion (%)",
+      "Document version",
+      "Downloaded at",
+      "Verified",
+      "Agreement Accepted",
+      "Agreement Name",
+      "Agreement Content",
+      "Agreement Accepted At",
+      "Viewed from dataroom",
+      "Browser",
+      "OS",
+      "Device",
+    ];
+
+    if (!isProPlan) {
+      headers.push("Country", "City", "Custom Fields");
+    }
+
+    csvRows.push(headers.join(","));
 
     // Fetch all durations in parallel
     const durations = await Promise.all(
@@ -130,6 +144,15 @@ export default async function handler(
       ),
     );
 
+    const userAgentData = await Promise.all(
+      views.map((view) =>
+        getViewUserAgent({
+          documentId: docId,
+          viewId: view.id,
+          since: 0,
+        }),
+      ),
+    );
     // Process each view and add to CSV rows
     views.forEach((view, index) => {
       const relevantDocumentVersion = document.versions.find(
@@ -147,26 +170,39 @@ export default async function handler(
         0,
       );
 
-      csvRows.push(
-        [
-          view.viewedAt.toISOString(),
-          view.viewerName || "NaN",
-          view.viewerEmail || "NaN",
-          view.link?.name || "NaN",
-          (totalDuration / 1000.0).toFixed(1),
-          completionRate.toFixed(2) + "%",
-          relevantDocumentVersion?.versionNumber ||
-            document.versions[0]?.versionNumber ||
-            "NaN",
-          view.downloadedAt ? view.downloadedAt.toISOString() : "NaN",
-          view.verified ? "Yes" : "No",
-          view.agreementResponse ? "Yes" : "NaN",
-          view.agreementResponse?.agreement.name || "NaN",
-          view.agreementResponse?.agreement.content || "NaN",
-          view.agreementResponse?.createdAt.toISOString() || "NaN",
-          view.dataroomId ? "Yes" : "No",
-        ].join(","),
-      );
+      const rowData = [
+        view.viewedAt.toISOString(),
+        view.viewerName || "NaN",
+        view.viewerEmail || "NaN",
+        view.link?.name || "NaN",
+        (totalDuration / 1000.0).toFixed(1),
+        completionRate.toFixed(2) + "%",
+        relevantDocumentVersion?.versionNumber ||
+          document.versions[0]?.versionNumber ||
+          "NaN",
+        view.downloadedAt ? view.downloadedAt.toISOString() : "NaN",
+        view.verified ? "Yes" : "No",
+        view.agreementResponse ? "Yes" : "NaN",
+        view.agreementResponse?.agreement.name || "NaN",
+        view.agreementResponse?.agreement.content || "NaN",
+        view.agreementResponse?.createdAt.toISOString() || "NaN",
+        view.dataroomId ? "Yes" : "No",
+        userAgentData[index]?.data[0]?.browser || "NaN",
+        userAgentData[index]?.data[0]?.os || "NaN",
+        userAgentData[index]?.data[0]?.device || "NaN",
+      ];
+
+      if (!isProPlan) {
+        rowData.push(
+          userAgentData[index]?.data[0]?.country || "NaN",
+          userAgentData[index]?.data[0]?.city || "NaN",
+          view.customFieldResponse?.data
+            ? `"${JSON.stringify(view.customFieldResponse.data).replace(/"/g, '""')}"`
+            : "NaN",
+        );
+      }
+
+      csvRows.push(rowData.join(","));
     });
 
     return res.status(200).json({
