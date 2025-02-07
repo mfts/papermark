@@ -61,7 +61,7 @@ export default function DataroomGroupPage() {
                     headers: {
                       "Content-Type": "application/json",
                     },
-                    body: JSON.stringify({ name: updateData?.name.trim() }),
+                    body: JSON.stringify(updateData),
                   },
                 ).then(async (res) => {
                   if (res.status === 200) {
