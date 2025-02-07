@@ -22,7 +22,7 @@ import { Label } from "@/components/ui/label";
 
 import { useAnalytics } from "@/lib/analytics";
 
-import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
+import { PlanEnum, UpgradePlanModal } from "../billing/upgrade-plan-modal";
 import { PhoneInput } from "../ui/phone-input";
 import {
   Select,
@@ -236,7 +236,7 @@ export function DataroomTrialModal({
 
               <div className="text-xs text-muted-foreground">
                 After the trial, upgrade to{" "}
-                <UpgradePlanModal clickedPlan="Business">
+                <UpgradePlanModal clickedPlan={PlanEnum.Business}>
                   <button className="underline">Papermark Business</button>
                 </UpgradePlanModal>{" "}
                 to continue using data rooms.

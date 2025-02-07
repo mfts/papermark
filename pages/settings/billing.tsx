@@ -7,7 +7,10 @@ import { useTeam } from "@/context/team-context";
 import { CheckIcon } from "lucide-react";
 import { toast } from "sonner";
 
-import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
+import {
+  PlanEnum,
+  UpgradePlanModal,
+} from "@/components/billing/upgrade-plan-modal";
 import AppLayout from "@/components/layouts/app";
 import { SettingsHeader } from "@/components/settings/settings-header";
 import { Badge } from "@/components/ui/badge";
@@ -355,9 +358,7 @@ export default function Billing() {
                           </Button>
                         ) : (
                           <UpgradePlanModal
-                            clickedPlan={
-                              tier.name as "Pro" | "Business" | "Data Rooms"
-                            }
+                            clickedPlan={tier.name as PlanEnum}
                             trigger={"billing_page"}
                           >
                             <Button

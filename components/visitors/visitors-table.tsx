@@ -41,7 +41,7 @@ import { usePlan } from "@/lib/swr/use-billing";
 import { useDocumentVisits } from "@/lib/swr/use-document";
 import { durationFormat, timeAgo } from "@/lib/utils";
 
-import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
+import { PlanEnum, UpgradePlanModal } from "../billing/upgrade-plan-modal";
 import { Button } from "../ui/button";
 import {
   DropdownMenu,
@@ -479,7 +479,7 @@ export default function VisitorsTable({
                         Some older visits may not be shown because your document
                         has more than 20 views.{" "}
                       </span>
-                      <UpgradePlanModal clickedPlan="Pro" trigger="">
+                      <UpgradePlanModal clickedPlan={PlanEnum.Pro} trigger="">
                         <button className="underline hover:text-gray-800">
                           Upgrade to see full history
                         </button>

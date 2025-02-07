@@ -17,6 +17,11 @@ import { PLANS } from "@/lib/stripe/utils";
 import { usePlan } from "@/lib/swr/use-billing";
 import { capitalize } from "@/lib/utils";
 
+export enum PlanEnum {
+  Pro = "Pro",
+  Business = "Business",
+  DataRooms = "Data Rooms",
+}
 export function UpgradePlanModal({
   clickedPlan,
   trigger,
@@ -24,7 +29,7 @@ export function UpgradePlanModal({
   setOpen,
   children,
 }: {
-  clickedPlan: "Pro" | "Business" | "Data Rooms";
+  clickedPlan: PlanEnum;
   trigger?: string;
   open?: boolean;
   setOpen?: React.Dispatch<React.SetStateAction<boolean>>;

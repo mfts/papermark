@@ -1,6 +1,9 @@
 import { CrownIcon } from "lucide-react";
 
-import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
+import {
+  PlanEnum,
+  UpgradePlanModal,
+} from "@/components/billing/upgrade-plan-modal";
 import { Button } from "@/components/ui/button";
 import UAIcon from "@/components/user-agent-icon";
 
@@ -36,7 +39,10 @@ export default function VisitorUserAgentPlaceholder() {
         </div>
       </div>
       <div className="absolute left-8 top-3">
-        <UpgradePlanModal clickedPlan="Pro" trigger="visitor-table-user-agent">
+        <UpgradePlanModal
+          clickedPlan={PlanEnum.Pro}
+          trigger="visitor-table-user-agent"
+        >
           <Button
             variant="outline"
             size="sm"

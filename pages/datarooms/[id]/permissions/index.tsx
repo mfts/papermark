@@ -4,7 +4,10 @@ import { useState } from "react";
 
 import { CircleHelpIcon, UsersIcon } from "lucide-react";
 
-import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
+import {
+  PlanEnum,
+  UpgradePlanModal,
+} from "@/components/billing/upgrade-plan-modal";
 import { DataroomHeader } from "@/components/datarooms/dataroom-header";
 import { DataroomNavigation } from "@/components/datarooms/dataroom-navigation";
 import { AddGroupModal } from "@/components/datarooms/groups/add-group-modal";
@@ -40,7 +43,10 @@ export default function DataroomAnalyticsPage() {
       return <Button onClick={() => setModalOpen(true)}>Create group</Button>;
     }
     return (
-      <UpgradePlanModal clickedPlan="Data Rooms" trigger="create_group_button">
+      <UpgradePlanModal
+        clickedPlan={PlanEnum.DataRooms}
+        trigger="create_group_button"
+      >
         <Button>Upgrade to create group</Button>
       </UpgradePlanModal>
     );

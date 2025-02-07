@@ -33,7 +33,7 @@ import { usePlan } from "@/lib/swr/use-billing";
 import useLimits from "@/lib/swr/use-limits";
 import { getSupportedContentType } from "@/lib/utils/get-content-type";
 
-import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
+import { PlanEnum, UpgradePlanModal } from "../billing/upgrade-plan-modal";
 
 export function AddDocumentModal({
   newVersion,
@@ -409,7 +409,7 @@ export function AddDocumentModal({
     if (newVersion) {
       return (
         <UpgradePlanModal
-          clickedPlan="Pro"
+          clickedPlan={PlanEnum.Pro}
           trigger={"limit_upload_document_version"}
         >
           {children}
@@ -417,7 +417,10 @@ export function AddDocumentModal({
       );
     }
     return (
-      <UpgradePlanModal clickedPlan="Pro" trigger={"limit_upload_documents"}>
+      <UpgradePlanModal
+        clickedPlan={PlanEnum.Pro}
+        trigger={"limit_upload_documents"}
+      >
         <Button>Upgrade to Add Documents</Button>
       </UpgradePlanModal>
     );

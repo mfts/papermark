@@ -22,7 +22,7 @@ import {
 import { useAnalytics } from "@/lib/analytics";
 import { STAGGER_CHILD_VARIANTS } from "@/lib/constants";
 
-import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
+import { PlanEnum, UpgradePlanModal } from "../billing/upgrade-plan-modal";
 import { Input } from "../ui/input";
 
 export default function DataroomTrial() {
@@ -240,12 +240,12 @@ export default function DataroomTrial() {
 
             <div className="text-xs text-muted-foreground">
               {/* Data rooms are available on our{" "}
-              <UpgradePlanModal clickedPlan="Business">
+              <UpgradePlanModal clickedPlan={PlanEnum.Business}>
                 <button className="underline">Business</button>
               </UpgradePlanModal>{" "}
               plan. <br /> */}
               No credit card is required. After the trial, upgrade to{" "}
-              <UpgradePlanModal clickedPlan="Business">
+              <UpgradePlanModal clickedPlan={PlanEnum.Business}>
                 <button className="underline">
                   Papermark Business or Data Rooms
                 </button>

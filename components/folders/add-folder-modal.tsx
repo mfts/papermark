@@ -23,7 +23,7 @@ import { Label } from "@/components/ui/label";
 import { useAnalytics } from "@/lib/analytics";
 import { usePlan } from "@/lib/swr/use-billing";
 
-import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
+import { PlanEnum, UpgradePlanModal } from "../billing/upgrade-plan-modal";
 
 export function AddFolderModal({
   // open,
@@ -110,7 +110,10 @@ export function AddFolderModal({
   if (plan === "free" && (!isDataroom || !trial)) {
     if (children) {
       return (
-        <UpgradePlanModal clickedPlan="Pro" trigger={"add_folder_button"}>
+        <UpgradePlanModal
+          clickedPlan={PlanEnum.Pro}
+          trigger={"add_folder_button"}
+        >
           {children}
         </UpgradePlanModal>
       );

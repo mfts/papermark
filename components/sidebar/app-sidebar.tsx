@@ -10,12 +10,10 @@ import { TeamContextType, initialState, useTeam } from "@/context/team-context";
 import Cookies from "js-cookie";
 import {
   BrushIcon,
-  ChartNoAxesColumn,
-  ChartNoAxesColumnIcon,
+  CircleUserRound,
   CogIcon,
   ContactIcon,
   FolderIcon,
-  HouseIcon,
   Loader,
   ServerIcon,
 } from "lucide-react";
@@ -37,6 +35,7 @@ import useLimits from "@/lib/swr/use-limits";
 import { nFormatter } from "@/lib/utils";
 
 import ProBanner from "../billing/pro-banner";
+import { PlanEnum } from "../billing/upgrade-plan-modal";
 import { Progress } from "../ui/progress";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -45,6 +44,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { currentTeam, teams, setCurrentTeam, isLoading }: TeamContextType =
     useTeam() || initialState;
   const { plan: userPlan, trial: userTrial } = usePlan();
+  const isTrial = !!userTrial;
   const { limits } = useLimits();
   const linksLimit = limits?.links;
   const documentsLimit = limits?.documents;
@@ -79,12 +79,21 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         url: "/datarooms",
         icon: ServerIcon,
         current: router.pathname.includes("datarooms"),
+        disabled:
+          userPlan === "business" || userPlan === "datarooms" || isTrial
+            ? false
+            : true,
+        trigger: "sidebar_datarooms",
+        plan: PlanEnum.Business,
       },
       {
         title: "Visitors",
         url: "/visitors",
         icon: ContactIcon,
         current: router.pathname.includes("visitors"),
+        disabled: userPlan === "free" && !isTrial ? true : false,
+        trigger: "sidebar_visitors",
+        plan: PlanEnum.Pro,
       },
       {
         title: "Branding",
@@ -123,6 +132,29 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             title: "Billing",
             url: "/settings/billing",
             current: router.pathname.includes("settings/billing"),
+          },
+        ],
+      },
+      {
+        title: "Account",
+        url: "/account/general",
+        icon: CircleUserRound,
+        isActive:
+          router.pathname.includes("account") &&
+          !router.pathname.includes("branding") &&
+          !router.pathname.includes("datarooms") &&
+          !router.pathname.includes("documents") &&
+          !router.pathname.includes("settings"),
+        items: [
+          {
+            title: "General",
+            url: "/account/general",
+            current: router.pathname.includes("account/general"),
+          },
+          {
+            title: "Security",
+            url: "/account/security",
+            current: router.pathname.includes("account/security"),
           },
         ],
       },
