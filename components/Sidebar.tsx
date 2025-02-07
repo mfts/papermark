@@ -23,7 +23,7 @@ import useLimits from "@/lib/swr/use-limits";
 import { cn, nFormatter } from "@/lib/utils";
 
 import ProBanner from "./billing/pro-banner";
-import { UpgradePlanModal } from "./billing/upgrade-plan-modal";
+import { PlanEnum, UpgradePlanModal } from "./billing/upgrade-plan-modal";
 import ProfileMenu from "./profile-menu";
 import SiderbarFolders from "./sidebar-folders";
 import { AddTeamModal } from "./teams/add-team-modal";
@@ -241,7 +241,7 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
                   return (
                     <UpgradePlanModal
                       key={item.name}
-                      clickedPlan={"Business"}
+                      clickedPlan={PlanEnum.Business}
                       trigger={"sidebar_datarooms"}
                     >
                       <div className="group flex w-full items-center gap-x-2 rounded-md px-3 py-2 text-sm leading-6 text-muted-foreground hover:bg-transparent">
@@ -262,7 +262,7 @@ export const SidebarComponent = ({ className }: { className?: string }) => {
                   return (
                     <UpgradePlanModal
                       key={item.name}
-                      clickedPlan={"Pro"}
+                      clickedPlan={PlanEnum.Pro}
                       trigger={"sidebar_visitors"}
                     >
                       <div className="group flex w-full items-center gap-x-2 rounded-md px-3 py-2 text-sm leading-6 text-muted-foreground hover:bg-transparent">

@@ -6,7 +6,7 @@ import { usePlausible } from "next-plausible";
 import X from "@/components/shared/icons/x";
 import { Button } from "@/components/ui/button";
 
-import { UpgradePlanModal } from "./upgrade-plan-modal";
+import { PlanEnum, UpgradePlanModal } from "./upgrade-plan-modal";
 
 export default function ProBanner({
   setShowProBanner,
@@ -40,7 +40,10 @@ export default function ProBanner({
         Join to unlock custom branding, domains, team members, and data rooms.
       </p>
       <div className="flex">
-        <UpgradePlanModal clickedPlan={"Business"} trigger={"pro_banner"}>
+        <UpgradePlanModal
+          clickedPlan={PlanEnum.Business}
+          trigger={"pro_banner"}
+        >
           <Button
             type="button"
             className="grow"

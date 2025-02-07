@@ -44,7 +44,7 @@ import { cn } from "@/lib/utils";
 import { fileIcon } from "@/lib/utils/get-file-icon";
 
 import PlanBadge from "../billing/plan-badge";
-import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
+import { PlanEnum, UpgradePlanModal } from "../billing/upgrade-plan-modal";
 import AdvancedSheet from "../shared/icons/advanced-sheet";
 import PortraitLandscape from "../shared/icons/portrait-landscape";
 import { Alert, AlertClose, AlertDescription, AlertTitle } from "../ui/alert";
@@ -845,7 +845,7 @@ export default function DocumentHeader({
 
       {planModalOpen ? (
         <UpgradePlanModal
-          clickedPlan="Pro"
+          clickedPlan={PlanEnum.Pro}
           trigger={planModalTrigger}
           open={planModalOpen}
           setOpen={setPlanModalOpen}

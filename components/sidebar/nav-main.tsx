@@ -23,22 +23,25 @@ import {
 
 import { cn } from "@/lib/utils";
 
-export function NavMain({
-  items,
-}: {
-  items: {
+import { PlanEnum, UpgradePlanModal } from "../billing/upgrade-plan-modal";
+
+export interface NavItem {
+  title: string;
+  url: string;
+  icon: LucideIcon;
+  current?: boolean;
+  isActive?: boolean;
+  disabled?: boolean;
+  plan?: PlanEnum;
+  trigger?: string;
+  items?: {
     title: string;
     url: string;
-    icon: LucideIcon;
     current?: boolean;
-    isActive?: boolean;
-    items?: {
-      title: string;
-      url: string;
-      current?: boolean;
-    }[];
   }[];
-}) {
+}
+
+export function NavMain({ items }: { items: NavItem[] }) {
   return (
     <SidebarGroup>
       <SidebarMenu className="space-y-0.5 text-foreground">
@@ -50,11 +53,24 @@ export function NavMain({
                   "rounded-md bg-gray-200 font-semibold dark:bg-secondary",
               )}
             >
-              <SidebarMenuButton asChild tooltip={item.title}>
-                <Link href={item.url} className="p-2">
-                  <item.icon />
-                  <span>{item.title}</span>
-                </Link>
+              <SidebarMenuButton asChild={!item.disabled} tooltip={item.title}>
+                {item.disabled ? (
+                  <UpgradePlanModal
+                    key={item.title}
+                    clickedPlan={item.plan as PlanEnum}
+                    trigger={item.trigger}
+                  >
+                    <div className="flex w-full flex-row items-center gap-2">
+                      <item.icon className="h-4 w-4" />
+                      <span id={item.plan}>{item.title}</span>
+                    </div>
+                  </UpgradePlanModal>
+                ) : (
+                  <Link href={item.url} className="p-2">
+                    <item.icon />
+                    <span>{item.title}</span>
+                  </Link>
+                )}
               </SidebarMenuButton>
               {item.items?.length ? (
                 <>
