@@ -31,6 +31,7 @@ export function Form({
   disabledTooltip,
   handleSubmit,
   validate,
+  defaultValue,
 }: {
   title: string;
   description: string;
@@ -40,17 +41,18 @@ export function Form({
   disabledTooltip?: string | ReactNode;
   handleSubmit: (data: any) => Promise<any>;
   validate?: (data: string) => boolean;
+  defaultValue?: string;
 }) {
   const [saving, setSaving] = useState(false);
-  const [value, setValue] = useState(inputAttrs.defaultValue);
+  const [value, setValue] = useState(defaultValue);
 
   useEffect(() => {
-    if (inputAttrs.defaultValue) setValue(inputAttrs.defaultValue);
-  }, [inputAttrs.defaultValue]);
+    if (defaultValue) setValue(defaultValue);
+  }, [defaultValue]);
 
   const saveDisabled = useMemo(() => {
-    return saving || !value || value === inputAttrs.defaultValue;
-  }, [saving, value, inputAttrs.defaultValue]);
+    return saving || !value || value === defaultValue;
+  }, [saving, value, defaultValue]);
 
   return (
     <form
@@ -74,7 +76,7 @@ export function Form({
           <CardDescription>{description}</CardDescription>
         </CardHeader>
         <CardContent>
-          {typeof inputAttrs.defaultValue === "string" ? (
+          {typeof defaultValue === "string" ? (
             <Input
               {...inputAttrs}
               value={value}
@@ -83,6 +85,11 @@ export function Form({
               disabled={!!disabledTooltip}
               onChange={(e) => setValue(e.target.value)}
               onBlur={(e) => setValue(e.target.value.trim())}
+              onKeyDown={(e) =>
+                inputAttrs.type === "email" &&
+                e.key === " " &&
+                e.preventDefault()
+              }
               className={cn(
                 "w-full max-w-md focus:border-gray-500 focus:outline-none focus:ring-gray-500",
                 {

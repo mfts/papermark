@@ -23,10 +23,10 @@ const ProfilePage: NextPage = () => {
             description="This will be your display name on Papermark.io."
             inputAttrs={{
               name: "name",
-              defaultValue: session?.user?.name ?? "",
               placeholder: "Dino Hems",
               maxLength: 32,
             }}
+            defaultValue={session?.user?.name ?? ""}
             helpText="Max 32 characters."
             handleSubmit={(data) =>
               fetch("/api/account", {
@@ -51,11 +51,11 @@ const ProfilePage: NextPage = () => {
             description="This will be the email you use to log in to Papermark.io and receive notification. A confirmation is required for changes."
             inputAttrs={{
               name: "email",
-              defaultValue: session?.user?.email ?? undefined,
               placeholder: "name@example.com",
               maxLength: 52,
               type: "email",
             }}
+            defaultValue={session?.user?.email ?? ""}
             // TODO: MAIL SUBSCRIPTION
             // helpText={<UpdateMailSubscribe />}
             validate={validateEmail}

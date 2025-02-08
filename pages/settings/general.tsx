@@ -29,10 +29,10 @@ export default function General() {
             description="This is the name of your team on Papermark."
             inputAttrs={{
               name: "name",
-              defaultValue: teamInfo?.currentTeam?.name,
               placeholder: "My Personal Team",
               maxLength: 32,
             }}
+            defaultValue={teamInfo?.currentTeam?.name ?? ""}
             helpText="Max 32 characters."
             handleSubmit={(updateData) =>
               fetch(`/api/teams/${teamInfo?.currentTeam?.id}/update-name`, {
