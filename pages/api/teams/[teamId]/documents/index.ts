@@ -12,10 +12,12 @@ import notion from "@/lib/notion";
 import prisma from "@/lib/prisma";
 import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
 import {
+  ConvertPayload,
   convertCadToPdfTask,
   convertFilesToPdfTask,
 } from "@/lib/trigger/convert-files";
 import { processVideo } from "@/lib/trigger/optimize-video-files";
+import { convertPdfToImage } from "@/lib/trigger/pdf-to-image";
 import { CustomUser } from "@/lib/types";
 import { getExtension, log } from "@/lib/utils";
 
@@ -275,7 +277,11 @@ export default async function handle(
           },
           {
             idempotencyKey: `${teamId}-${document.versions[0].id}`,
-            tags: [`team_${teamId}`, `document_${document.id}`],
+            tags: [
+              `team_${teamId}`,
+              `document_${document.id}`,
+              `version:${document.versions[0].id}`,
+            ],
           },
         );
       }
@@ -291,7 +297,11 @@ export default async function handle(
           },
           {
             idempotencyKey: `${teamId}-${document.versions[0].id}`,
-            tags: [`team_${teamId}`, `document_${document.id}`],
+            tags: [
+              `team_${teamId}`,
+              `document_${document.id}`,
+              `version:${document.versions[0].id}`,
+            ],
           },
         );
       }
@@ -303,10 +313,15 @@ export default async function handle(
             teamId,
             docId: fileUrl.split("/")[1], // Extract doc_xxxx from teamId/doc_xxxx/filename
             documentVersionId: document.versions[0].id,
+            fileSize: fileSize || 0,
           },
           {
             idempotencyKey: `${teamId}-${document.versions[0].id}`,
-            tags: [`team_${teamId}`, `document_${document.id}`],
+            tags: [
+              `team_${teamId}`,
+              `document_${document.id}`,
+              `version:${document.versions[0].id}`,
+            ],
           },
         );
       }
@@ -314,15 +329,37 @@ export default async function handle(
       // skip triggering convert-pdf-to-image job for "notion" / "excel" documents
       if (type === "pdf") {
         // trigger document uploaded event to trigger convert-pdf-to-image job
-        await client.sendEvent({
-          id: document.versions[0].id, // unique eventId for the run
-          name: "document.uploaded",
-          payload: {
-            documentVersionId: document.versions[0].id,
-            teamId: teamId,
-            documentId: document.id,
-          },
-        });
+        if (
+          teamId === "cluqtfmcr0001zkza4xcgqatw" ||
+          teamId === "clup33by90000oewh4rfvp2eg" // local
+        ) {
+          await convertPdfToImage.trigger(
+            {
+              documentId: document.id,
+              documentVersionId: document.versions[0].id,
+              teamId,
+              docId: fileUrl.split("/")[1],
+            },
+            {
+              idempotencyKey: `${teamId}-${document.versions[0].id}`,
+              tags: [
+                `team_${teamId}`,
+                `document_${document.id}`,
+                `version:${document.versions[0].id}`,
+              ],
+            },
+          );
+        } else {
+          await client.sendEvent({
+            id: document.versions[0].id, // unique eventId for the run
+            name: "document.uploaded",
+            payload: {
+              documentVersionId: document.versions[0].id,
+              teamId: teamId,
+              documentId: document.id,
+            },
+          });
+        }
       }
 
       return res.status(201).json(document);

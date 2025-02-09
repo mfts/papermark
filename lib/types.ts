@@ -34,6 +34,11 @@ export interface DocumentWithLinksAndLinkCountAndViewCount extends Document {
 
 export interface DocumentWithVersion extends Document {
   versions: DocumentVersion[];
+  folder: {
+    name: string;
+    path: string;
+  };
+  hasPageLinks: boolean;
 }
 
 export interface LinkWithViews extends Link {
@@ -235,6 +240,8 @@ export type AnalyticsEvents =
 export interface Team {
   id: string;
   name?: string;
+  logo?: React.ElementType;
+  plan?: string;
 }
 
 export interface TeamDetail {

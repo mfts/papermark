@@ -9,6 +9,7 @@ import { copyFileToBucketServer } from "@/lib/files/copy-file-to-bucket-server";
 import prisma from "@/lib/prisma";
 import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
 import { convertFilesToPdfTask } from "@/lib/trigger/convert-files";
+import { convertPdfToImage } from "@/lib/trigger/pdf-to-image";
 import { CustomUser } from "@/lib/types";
 import { log } from "@/lib/utils";
 
@@ -111,22 +112,49 @@ export default async function handle(
           },
           {
             idempotencyKey: `${teamId}-${version.id}`,
-            tags: [`team_${teamId}`, `document_${documentId}`],
+            tags: [
+              `team_${teamId}`,
+              `document_${documentId}`,
+              `version:${version.id}`,
+            ],
           },
         );
       }
       // trigger document uploaded event to trigger convert-pdf-to-image job
       if (type === "pdf") {
-        await client.sendEvent({
-          id: version.id,
-          name: "document.uploaded",
-          payload: {
-            documentVersionId: version.id,
-            versionNumber: version.versionNumber,
-            documentId: documentId,
-            teamId: teamId,
-          },
-        });
+        if (
+          teamId === "cluqtfmcr0001zkza4xcgqatw" ||
+          teamId === "clup33by90000oewh4rfvp2eg" // local
+        ) {
+          await convertPdfToImage.trigger(
+            {
+              documentId: documentId,
+              documentVersionId: version.id,
+              teamId,
+              docId: version.file.split("/")[1], // Extract doc_xxxx from teamId/doc_xxxx/filename
+              versionNumber: version.versionNumber,
+            },
+            {
+              idempotencyKey: `${teamId}-${version.id}`,
+              tags: [
+                `team_${teamId}`,
+                `document_${documentId}`,
+                `version:${version.id}`,
+              ],
+            },
+          );
+        } else {
+          await client.sendEvent({
+            id: version.id,
+            name: "document.uploaded",
+            payload: {
+              documentVersionId: version.id,
+              versionNumber: version.versionNumber,
+              documentId: documentId,
+              teamId: teamId,
+            },
+          });
+        }
       }
 
       if (type === "sheet" && document?.advancedExcelEnabled) {

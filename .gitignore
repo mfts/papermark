@@ -58,3 +58,6 @@ lib/emails/marketing
 
 # trigger.dev
 .trigger
+
+# changelog
+changelog

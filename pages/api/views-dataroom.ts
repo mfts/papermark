@@ -231,7 +231,11 @@ export default async function handle(
   if (link.audienceType === LinkAudienceType.GROUP && link.groupId) {
     const group = await prisma.viewerGroup.findUnique({
       where: { id: link.groupId },
-      select: { members: { include: { viewer: { select: { email: true } } } } },
+      select: {
+        members: { include: { viewer: { select: { email: true } } } },
+        domains: true,
+        allowAll: true,
+      },
     });
 
     if (!group) {
@@ -239,12 +243,26 @@ export default async function handle(
       return;
     }
 
-    const isMember = group.members.some(
-      (member) => member.viewer.email === email,
-    );
-    if (!isMember) {
-      res.status(403).json({ message: "Unauthorized access" });
-      return;
+    // Check if all emails are allowed
+    if (group.allowAll) {
+      // Allow access
+    } else {
+      // Check individual membership
+      const isMember = group.members.some(
+        (member) => member.viewer.email === email,
+      );
+
+      // Extract domain from email
+      const emailDomain = email.substring(email.lastIndexOf("@"));
+      // Check domain access
+      const hasDomainAccess = group.domains.some(
+        (domain) => domain === emailDomain,
+      );
+
+      if (!isMember && !hasDomainAccess) {
+        res.status(403).json({ message: "Unauthorized access" });
+        return;
+      }
     }
   }
 

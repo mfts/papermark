@@ -6,7 +6,7 @@ export function DataroomVisitorUserAgent({ viewId }: { viewId: string }) {
   const { userAgent, error } = useDataroomVisitorUserAgent(viewId);
 
   if (error) {
-    return <div>No useragent info</div>;
+    return null;
   }
 
   if (!userAgent) {

@@ -20,7 +20,12 @@ import { useDocument, useDocumentLinks } from "@/lib/swr/use-document";
 import useLimits from "@/lib/swr/use-limits";
 
 export default function DocumentPage() {
-  const { document: prismaDocument, primaryVersion, error } = useDocument();
+  const {
+    document: prismaDocument,
+    primaryVersion,
+    error,
+    mutate: mutateDocument,
+  } = useDocument();
   const { links } = useDocumentLinks();
   const teamInfo = useTeam();
 
@@ -92,6 +97,7 @@ export default function DocumentPage() {
               links={links}
               targetType={"DOCUMENT"}
               primaryVersion={primaryVersion}
+              mutateDocument={mutateDocument}
             />
 
             {/* Visitors */}

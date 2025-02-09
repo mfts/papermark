@@ -25,6 +25,16 @@ const nextConfig = {
         destination: "/view/cm34cqqqx000212oekj9upn8o",
         permanent: false,
       },
+      {
+        source: "/view/cm5morpmg000btdwrlahi7f2y",
+        destination: "/view/cm68iygxd0005wuf5svbr6c1x",
+        permanent: false,
+      },
+      {
+        source: "/settings",
+        destination: "/settings/general",
+        permanent: false,
+      },
     ];
   },
   async headers() {

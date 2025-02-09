@@ -20,7 +20,7 @@ export default function Documents() {
 
   return (
     <AppLayout>
-      <div className="sticky top-0 z-50 bg-white p-4 pb-0 dark:bg-gray-900 sm:mx-4 sm:pt-8">
+      <div className="sticky top-0 mb-4 min-h-[calc(100vh-72px)] rounded-lg bg-white p-4 dark:bg-gray-900 sm:mx-4 sm:pt-8">
         <section className="mb-4 flex items-center justify-between space-x-2 sm:space-x-0">
           <div className="space-y-0 sm:space-y-1">
             <h2 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
@@ -34,10 +34,10 @@ export default function Documents() {
             <AddDocumentModal>
               <Button
                 className="group flex flex-1 items-center justify-start gap-x-1 whitespace-nowrap px-1 text-left sm:gap-x-3 sm:px-3"
-                title="Add New Document"
+                title="Add Document"
               >
                 <PlusIcon className="h-5 w-5 shrink-0" aria-hidden="true" />
-                <span className="text-xs sm:text-base">Add New Document</span>
+                <span className="text-xs sm:text-base">Add Document</span>
               </Button>
             </AddDocumentModal>
             <AddFolderModal>

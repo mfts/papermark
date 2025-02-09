@@ -57,6 +57,9 @@ export default async function handle(
       const customFields = await prisma.customFieldResponse.findFirst({
         where: {
           viewId: viewId,
+          view: {
+            documentId: docId,
+          },
         },
         select: {
           data: true,

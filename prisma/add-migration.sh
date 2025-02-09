@@ -48,7 +48,7 @@ mkdir -p "prisma/migrations/${migration_name}" || {
 }
 
 # Generate migration
-prisma migrate diff \
+npx prisma migrate diff \
     --from-migrations prisma/migrations \
     --to-schema-datamodel prisma/schema.prisma \
     --shadow-database-url "postgresql://${USER}@localhost:5432/papermark-shadow-db" \
@@ -58,7 +58,7 @@ prisma migrate diff \
 }
 
 # Apply migration
-prisma migrate resolve --applied "${migration_name}" || {
+npx prisma migrate resolve --applied "${migration_name}" || {
     echo "Failed to apply migration"
     exit 1
 }

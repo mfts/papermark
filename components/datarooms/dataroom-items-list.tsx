@@ -283,7 +283,7 @@ export function DataroomItemsList({
       );
     } else {
       return (
-        <div className="mb-2 flex items-center gap-x-2 pt-5">
+        <div className="mb-2 flex min-h-10 items-center gap-x-2">
           {folderCount > 0 ? (
             <p className="flex items-center gap-x-1 text-sm text-gray-400">
               <FolderIcon className="h-5 w-5" />

@@ -8,27 +8,22 @@ export const DataroomNavigation = ({ dataroomId }: { dataroomId?: string }) => {
     <NavMenu
       navigation={[
         {
-          label: "Overview",
-          href: `/datarooms/${dataroomId}`,
-          segment: `/datarooms/[id]`,
-        },
-        {
-          label: "Documents",
+          label: "Data Room",
           href: `/datarooms/${dataroomId}/documents`,
           segment: "documents",
         },
         {
-          label: "Groups",
-          href: `/datarooms/${dataroomId}/groups`,
-          segment: "groups",
+          label: "Permissions",
+          href: `/datarooms/${dataroomId}/permissions`,
+          segment: "permissions",
         },
         {
-          label: "Users",
-          href: `/datarooms/${dataroomId}/users`,
-          segment: "users",
+          label: "Analytics",
+          href: `/datarooms/${dataroomId}/analytics`,
+          segment: "analytics",
         },
         {
-          label: "Customization",
+          label: "Branding",
           href: `/datarooms/${dataroomId}/branding`,
           segment: "branding",
         },

@@ -217,7 +217,7 @@ export default function Billing() {
             </div>
           </div>
           <div>
-            <div className="flex items-center justify-between rounded-lg border border-border bg-secondary p-4 sm:p-10 gap-x-1">
+            <div className="flex items-center justify-between gap-x-1 rounded-lg border border-border bg-secondary p-4 sm:p-10">
               <div className="flex flex-col space-y-1 sm:space-y-3">
                 <h2 className="text-xl font-medium">People</h2>
                 <p className="text-sm text-secondary-foreground">
@@ -237,7 +237,9 @@ export default function Billing() {
                   clickedPlan={"Pro"}
                   trigger={"invite_team_members"}
                 >
-                  <Button  className="text-xs sm:text-sm whitespace-nowrap px-1 sm:px-4">Upgrade to invite members</Button>
+                  <Button className="whitespace-nowrap px-1 text-xs sm:px-4 sm:text-sm">
+                    Upgrade to invite members
+                  </Button>
                 </UpgradePlanModal>
               )}
             </div>
@@ -261,7 +263,7 @@ export default function Billing() {
             )}
             {team?.users.map((member, index) => (
               <li
-                className="flex items-center justify-between px-10 py-4 overflow-auto gap-12"
+                className="flex items-center justify-between gap-12 overflow-auto px-10 py-4"
                 key={index}
               >
                 <div className="flex items-center gap-12">
@@ -276,7 +278,7 @@ export default function Billing() {
                   <div className="text-sm">
                     <div className="flex items-center gap-2">
                       <Folder />
-                      <span className="text-xs text-foreground text-nowrap">
+                      <span className="text-nowrap text-xs text-foreground">
                         {getUserDocumentCount(member.userId)}{" "}
                         {getUserDocumentCount(member.userId) === 1
                           ? "document"
