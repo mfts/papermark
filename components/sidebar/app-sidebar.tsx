@@ -10,12 +10,10 @@ import { TeamContextType, initialState, useTeam } from "@/context/team-context";
 import Cookies from "js-cookie";
 import {
   BrushIcon,
-  ChartNoAxesColumn,
-  ChartNoAxesColumnIcon,
+  CircleUserRound,
   CogIcon,
   ContactIcon,
   FolderIcon,
-  HouseIcon,
   Loader,
   ServerIcon,
 } from "lucide-react";
@@ -123,6 +121,29 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             title: "Billing",
             url: "/settings/billing",
             current: router.pathname.includes("settings/billing"),
+          },
+        ],
+      },
+      {
+        title: "Account",
+        url: "/account/general",
+        icon: CircleUserRound,
+        isActive:
+          router.pathname.includes("account") &&
+          !router.pathname.includes("branding") &&
+          !router.pathname.includes("datarooms") &&
+          !router.pathname.includes("documents") &&
+          !router.pathname.includes("settings"),
+        items: [
+          {
+            title: "General",
+            url: "/account/general",
+            current: router.pathname.includes("account/general"),
+          },
+          {
+            title: "Security",
+            url: "/account/security",
+            current: router.pathname.includes("account/security"),
           },
         ],
       },
