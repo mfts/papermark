@@ -1,3 +1,5 @@
+import { useRouter } from "next/router";
+
 import { useState } from "react";
 
 import { useLimits } from "@/ee/limits/swr-handler";
@@ -25,6 +27,7 @@ export default function DuplicateDataroom({
   dataroomId: string;
   teamId?: string;
 }) {
+  const router = useRouter();
   const [loading, setLoading] = useState<boolean>(false);
   const [planModalOpen, setPlanModalOpen] = useState<boolean>(false);
   const { limits } = useLimits();
@@ -71,6 +74,7 @@ export default function DuplicateDataroom({
           loading: "Copying dataroom...",
           success: () => {
             mutate(`/api/teams/${teamId}/datarooms`);
+            router.push("/datarooms");
             return "Dataroom copied successfully.";
           },
           error: (error) => {

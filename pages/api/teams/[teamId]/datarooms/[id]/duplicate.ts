@@ -2,7 +2,12 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 import { getLimits } from "@/ee/limits/server";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import { Dataroom, DataroomDocument, DataroomFolder } from "@prisma/client";
+import {
+  Dataroom,
+  DataroomBrand,
+  DataroomDocument,
+  DataroomFolder,
+} from "@prisma/client";
 import { getServerSession } from "next-auth/next";
 
 import { newId } from "@/lib/id-helper";
@@ -12,6 +17,7 @@ import { CustomUser } from "@/lib/types";
 interface DataroomWithContents extends Dataroom {
   documents: DataroomDocument[];
   folders: DataroomFolderWithContents[];
+  brand: Partial<DataroomBrand> | null;
 }
 
 interface DataroomFolderWithContents extends DataroomFolder {
@@ -31,6 +37,7 @@ async function fetchDataroomContents(
         where: { parentId: null }, // Only get root folders initially
         include: { documents: true },
       },
+      brand: true,
     },
   });
 
@@ -79,6 +86,7 @@ async function fetchDataroomContents(
     ...dataroom,
     documents: dataroom.documents.filter((doc) => !doc.folderId),
     folders: foldersWithContents,
+    brand: dataroom.brand,
   };
 }
 
@@ -210,6 +218,14 @@ export default async function handle(
           },
           folders: {
             create: [],
+          },
+          brand: {
+            create: {
+              banner: dataroomContents.brand?.banner,
+              logo: dataroomContents.brand?.logo,
+              accentColor: dataroomContents.brand?.accentColor,
+              brandColor: dataroomContents.brand?.brandColor,
+            },
           },
         },
       });
