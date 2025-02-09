@@ -285,25 +285,27 @@ export default function DataroomDocumentCard({
           </div>
         </div>
 
-        {(teamInfo?.currentTeam?.id === "cluqtfmcr0001zkza4xcgqatw" ||
-          teamInfo?.currentTeam?.id === "clup33by90000oewh4rfvp2eg") &&
+        {
+          // (teamInfo?.currentTeam?.id === "cluqtfmcr0001zkza4xcgqatw" ||
+          //   teamInfo?.currentTeam?.id === "clup33by90000oewh4rfvp2eg") &&
           ["pdf", "docs", "slides", "cad"].includes(
             dataroomDocument.document.type,
           ) &&
-          !dataroomDocument.document.versions?.[0]?.hasPages &&
-          dataroomDocument.document.versions?.[0]?.id && (
-            <FileProcessStatusBar
-              documentVersionId={dataroomDocument.document.versions[0].id}
-              className="rounded-b-lg border-t border-gray-200 dark:border-gray-700"
-              mutateDocument={() => {
-                setIsProcessing(false);
-                mutate(
-                  `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}/documents`,
-                );
-              }}
-              onProcessingChange={(processing) => setIsProcessing(processing)}
-            />
-          )}
+            !dataroomDocument.document.versions?.[0]?.hasPages &&
+            dataroomDocument.document.versions?.[0]?.id && (
+              <FileProcessStatusBar
+                documentVersionId={dataroomDocument.document.versions[0].id}
+                className="rounded-b-lg border-t border-gray-200 dark:border-gray-700"
+                mutateDocument={() => {
+                  setIsProcessing(false);
+                  mutate(
+                    `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}/documents`,
+                  );
+                }}
+                onProcessingChange={(processing) => setIsProcessing(processing)}
+              />
+            )
+        }
       </div>
       {addDataRoomOpen ? (
         <AddToDataroomModal
