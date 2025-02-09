@@ -201,7 +201,7 @@ export const convertPdfToImage = task({
       logger.info("Streaming PDF to temporary file");
       await pipeline(response.body, createWriteStream(pdfPath));
 
-      updateStatus({ progress: 20, text: "Converting document..." });
+      updateStatus({ progress: 10, text: "Converting document..." });
 
       // Get total pages and first page dimensions
       const getDimensions = execSync(

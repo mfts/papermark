@@ -111,7 +111,7 @@ export default async function handle(
             documentId,
           },
           {
-            idempotencyKey: `${teamId}-${version.id}`,
+            idempotencyKey: `${teamId}-${version.id}-docs`,
             tags: [
               `team_${teamId}`,
               `document_${documentId}`,
@@ -122,39 +122,39 @@ export default async function handle(
       }
       // trigger document uploaded event to trigger convert-pdf-to-image job
       if (type === "pdf") {
-        if (
-          teamId === "cluqtfmcr0001zkza4xcgqatw" ||
-          teamId === "clup33by90000oewh4rfvp2eg" // local
-        ) {
-          await convertPdfToImage.trigger(
-            {
-              documentId: documentId,
-              documentVersionId: version.id,
-              teamId,
-              docId: version.file.split("/")[1], // Extract doc_xxxx from teamId/doc_xxxx/filename
-              versionNumber: version.versionNumber,
-            },
-            {
-              idempotencyKey: `${teamId}-${version.id}`,
-              tags: [
-                `team_${teamId}`,
-                `document_${documentId}`,
-                `version:${version.id}`,
-              ],
-            },
-          );
-        } else {
-          await client.sendEvent({
-            id: version.id,
-            name: "document.uploaded",
-            payload: {
-              documentVersionId: version.id,
-              versionNumber: version.versionNumber,
-              documentId: documentId,
-              teamId: teamId,
-            },
-          });
-        }
+        // if (
+        //   teamId === "cluqtfmcr0001zkza4xcgqatw" ||
+        //   teamId === "clup33by90000oewh4rfvp2eg" // local
+        // ) {
+        await convertPdfToImage.trigger(
+          {
+            documentId: documentId,
+            documentVersionId: version.id,
+            teamId,
+            docId: version.file.split("/")[1], // Extract doc_xxxx from teamId/doc_xxxx/filename
+            versionNumber: version.versionNumber,
+          },
+          {
+            idempotencyKey: `${teamId}-${version.id}`,
+            tags: [
+              `team_${teamId}`,
+              `document_${documentId}`,
+              `version:${version.id}`,
+            ],
+          },
+        );
+        // } else {
+        //   await client.sendEvent({
+        //     id: version.id,
+        //     name: "document.uploaded",
+        //     payload: {
+        //       documentVersionId: version.id,
+        //       versionNumber: version.versionNumber,
+        //       documentId: documentId,
+        //       teamId: teamId,
+        //     },
+        //   });
+        // }
       }
 
       if (type === "sheet" && document?.advancedExcelEnabled) {
