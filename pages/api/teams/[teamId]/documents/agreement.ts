@@ -13,6 +13,7 @@ import { convertFilesToPdfTask } from "@/lib/trigger/convert-files";
 import { convertPdfToImage } from "@/lib/trigger/pdf-to-image";
 import { CustomUser } from "@/lib/types";
 import { getExtension, log } from "@/lib/utils";
+import { conversionQueue } from "@/lib/utils/trigger-utils";
 
 import { authOptions } from "../../../auth/[...nextauth]";
 
@@ -54,7 +55,7 @@ export default async function handle(
     };
 
     try {
-      await getTeamWithUsersAndDocument({
+      const { team } = await getTeamWithUsersAndDocument({
         teamId,
         userId,
       });
@@ -118,8 +119,6 @@ export default async function handle(
       });
 
       if (type === "docs") {
-        console.log("converting docx to pdf");
-        // Trigger convert-files-to-pdf task
         await convertFilesToPdfTask.trigger(
           {
             documentId: document.id,
@@ -133,11 +132,12 @@ export default async function handle(
               `document_${document.id}`,
               `version:${document.versions[0].id}`,
             ],
+            queue: conversionQueue(team.plan),
+            concurrencyKey: teamId,
           },
         );
       }
 
-      // skip triggering convert-pdf-to-image job for "notion" / "excel" documents
       if (type === "pdf") {
         await convertPdfToImage.trigger(
           {
@@ -153,18 +153,10 @@ export default async function handle(
               `document_${document.id}`,
               `version:${document.versions[0].id}`,
             ],
+            queue: conversionQueue(team.plan),
+            concurrencyKey: teamId,
           },
         );
-        // // trigger document uploaded event to trigger convert-pdf-to-image job
-        // await client.sendEvent({
-        //   id: document.versions[0].id, // unique eventId for the run
-        //   name: "document.uploaded",
-        //   payload: {
-        //     documentVersionId: document.versions[0].id,
-        //     teamId: teamId,
-        //     documentId: document.id,
-        //   },
-        // });
       }
 
       return res.status(201).json(document);

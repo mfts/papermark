@@ -12,6 +12,7 @@ import { convertFilesToPdfTask } from "@/lib/trigger/convert-files";
 import { convertPdfToImage } from "@/lib/trigger/pdf-to-image";
 import { CustomUser } from "@/lib/types";
 import { log } from "@/lib/utils";
+import { conversionQueue } from "@/lib/utils/trigger-utils";
 
 export default async function handle(
   req: NextApiRequest,
@@ -42,7 +43,7 @@ export default async function handle(
     const userId = (session.user as CustomUser).id;
 
     try {
-      const { document } = await getTeamWithUsersAndDocument({
+      const { team, document } = await getTeamWithUsersAndDocument({
         teamId,
         userId,
         docId: documentId,
@@ -102,8 +103,6 @@ export default async function handle(
       });
 
       if (type === "docs" || type === "slides") {
-        console.log("converting docx or pptx to pdf");
-        // Trigger convert-files-to-pdf task
         await convertFilesToPdfTask.trigger(
           {
             documentVersionId: version.id,
@@ -117,15 +116,13 @@ export default async function handle(
               `document_${documentId}`,
               `version:${version.id}`,
             ],
+            queue: conversionQueue(team.plan),
+            concurrencyKey: teamId,
           },
         );
       }
       // trigger document uploaded event to trigger convert-pdf-to-image job
       if (type === "pdf") {
-        // if (
-        //   teamId === "cluqtfmcr0001zkza4xcgqatw" ||
-        //   teamId === "clup33by90000oewh4rfvp2eg" // local
-        // ) {
         await convertPdfToImage.trigger(
           {
             documentId: documentId,
@@ -141,20 +138,10 @@ export default async function handle(
               `document_${documentId}`,
               `version:${version.id}`,
             ],
+            queue: conversionQueue(team.plan),
+            concurrencyKey: teamId,
           },
         );
-        // } else {
-        //   await client.sendEvent({
-        //     id: version.id,
-        //     name: "document.uploaded",
-        //     payload: {
-        //       documentVersionId: version.id,
-        //       versionNumber: version.versionNumber,
-        //       documentId: documentId,
-        //       teamId: teamId,
-        //     },
-        //   });
-        // }
       }
 
       if (type === "sheet" && document?.advancedExcelEnabled) {
