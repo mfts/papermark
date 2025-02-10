@@ -10,6 +10,7 @@ import prisma from "@/lib/prisma";
 import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
 import { convertFilesToPdfTask } from "@/lib/trigger/convert-files";
 import { convertPdfToImage } from "@/lib/trigger/pdf-to-image";
+import { convertPdfToImageRoute } from "@/lib/trigger/pdf-to-image-route";
 import { CustomUser } from "@/lib/types";
 import { log } from "@/lib/utils";
 import { conversionQueue } from "@/lib/utils/trigger-utils";
@@ -123,12 +124,12 @@ export default async function handle(
       }
       // trigger document uploaded event to trigger convert-pdf-to-image job
       if (type === "pdf") {
-        await convertPdfToImage.trigger(
+        await convertPdfToImageRoute.trigger(
           {
             documentId: documentId,
             documentVersionId: version.id,
             teamId,
-            docId: version.file.split("/")[1], // Extract doc_xxxx from teamId/doc_xxxx/filename
+            // docId: version.file.split("/")[1], // Extract doc_xxxx from teamId/doc_xxxx/filename
             versionNumber: version.versionNumber,
           },
           {
