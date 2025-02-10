@@ -6,7 +6,7 @@ import prisma from "@/lib/prisma";
 
 import { updateStatus } from "../utils/generate-trigger-status";
 import { getExtensionFromContentType } from "../utils/get-content-type";
-import { convertPdfToImage } from "./pdf-to-image";
+import { convertPdfToImageRoute } from "./pdf-to-image-route";
 
 export type ConvertPayload = {
   documentId: string;
@@ -176,12 +176,11 @@ export const convertFilesToPdfTask = task({
     updateStatus({ progress: 40, text: "Initiating document processing..." });
 
     // trigger convert-pdf-to-image job
-    await convertPdfToImage.trigger(
+    await convertPdfToImageRoute.trigger(
       {
         documentId: payload.documentId,
         documentVersionId: payload.documentVersionId,
         teamId: payload.teamId,
-        docId: docId!,
         versionNumber: versionNumber,
       },
       {
@@ -365,12 +364,11 @@ export const convertCadToPdfTask = task({
     });
 
     // trigger convert-pdf-to-image job
-    await convertPdfToImage.trigger(
+    await convertPdfToImageRoute.trigger(
       {
         documentId: payload.documentId,
         documentVersionId: payload.documentVersionId,
         teamId: payload.teamId,
-        docId: docId!,
       },
       {
         idempotencyKey: `${payload.teamId}-${payload.documentVersionId}`,
