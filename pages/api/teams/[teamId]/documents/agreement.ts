@@ -11,6 +11,7 @@ import prisma from "@/lib/prisma";
 import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
 import { convertFilesToPdfTask } from "@/lib/trigger/convert-files";
 import { convertPdfToImage } from "@/lib/trigger/pdf-to-image";
+import { convertPdfToImageRoute } from "@/lib/trigger/pdf-to-image-route";
 import { CustomUser } from "@/lib/types";
 import { getExtension, log } from "@/lib/utils";
 import { conversionQueue } from "@/lib/utils/trigger-utils";
@@ -139,12 +140,12 @@ export default async function handle(
       }
 
       if (type === "pdf") {
-        await convertPdfToImage.trigger(
+        await convertPdfToImageRoute.trigger(
           {
             documentId: document.id,
             documentVersionId: document.versions[0].id,
             teamId,
-            docId: fileUrl.split("/")[1],
+            // docId: fileUrl.split("/")[1],
           },
           {
             idempotencyKey: `${teamId}-${document.versions[0].id}`,
