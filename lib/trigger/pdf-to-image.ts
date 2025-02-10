@@ -360,16 +360,16 @@ export const convertPdfToImage = task({
             isPrimary: false,
           },
         });
-
-        await fetch(
-          `${process.env.NEXTAUTH_URL}/api/revalidate?secret=${process.env.REVALIDATE_TOKEN}&documentId=${documentId}`,
-        );
-
-        updateStatus({
-          progress: 100,
-          text: "Revalidating links...",
-        });
       }
+
+      updateStatus({
+        progress: 95,
+        text: "Revalidating links...",
+      });
+
+      await fetch(
+        `${process.env.NEXTAUTH_URL}/api/revalidate?secret=${process.env.REVALIDATE_TOKEN}&documentId=${documentId}`,
+      );
 
       // Clean up temporary directory
       await fs.rm(tempDirectory, { recursive: true });
