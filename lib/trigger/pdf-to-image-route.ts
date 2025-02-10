@@ -37,6 +37,7 @@ export const convertPdfToImageRoute = task({
       return;
     }
 
+    logger.info("Document version", { documentVersion });
     updateStatus({ progress: 10, text: "Retrieving file..." });
 
     // 2. get signed url from file
@@ -44,6 +45,8 @@ export const convertPdfToImageRoute = task({
       type: documentVersion.storageType,
       data: documentVersion.file,
     });
+
+    logger.info("Retrieved signed url", { signedUrl });
 
     if (!signedUrl) {
       logger.error("Failed to get signed url", { payload });
@@ -56,6 +59,7 @@ export const convertPdfToImageRoute = task({
     // skip if the numPages are already defined
     if (!numPages || numPages === 1) {
       // 3. send file to api/convert endpoint in a task and get back number of pages
+      logger.info("Sending file to api/get-pages endpoint");
 
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_BASE_URL}/api/mupdf/get-pages`,
@@ -76,9 +80,11 @@ export const convertPdfToImageRoute = task({
         throw new Error("Failed to get number of pages");
       }
 
-      const { numPagesResult } = (await response.json()) as {
-        numPagesResult: number;
+      const { numPages: numPagesResult } = (await response.json()) as {
+        numPages: number;
       };
+
+      logger.info("Received number of pages", { numPagesResult });
 
       if (numPagesResult < 1) {
         logger.error("Failed to get number of pages", { payload });
@@ -101,6 +107,11 @@ export const convertPdfToImageRoute = task({
 
       // increment currentPage
       currentPage = i + 1;
+      logger.info(`Converting page ${currentPage}`, {
+        currentPage,
+        numPages,
+      });
+
       try {
         // send page number to api/convert-page endpoint in a task and get back page img url
         const response = await fetch(
@@ -173,6 +184,7 @@ export const convertPdfToImageRoute = task({
       },
     });
 
+    logger.info("Enabling pages");
     updateStatus({
       progress: 90,
       text: "Enabling pages...",
@@ -193,6 +205,7 @@ export const convertPdfToImageRoute = task({
       });
     }
 
+    logger.info("Revalidating link");
     updateStatus({
       progress: 95,
       text: "Revalidating link...",
@@ -208,6 +221,7 @@ export const convertPdfToImageRoute = task({
       text: "Processing complete",
     });
 
+    logger.info("Processing complete");
     return {
       success: true,
       message: "Successfully converted PDF to images",
