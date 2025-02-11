@@ -2,6 +2,7 @@ import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { toast } from "sonner";
+import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -42,17 +43,23 @@ export function AddDomainModal({
   const { plan } = usePlan();
   const { limits } = useLimits();
   const analytics = useAnalytics();
+  const addDomainSchema = z.object({
+    name: z
+      .string()
+      .nonempty("Domain is required. Please enter a valid domain.")
+      // Add validation for papermark
+      .refine((name) => !name.toLowerCase().includes("papermark"), {
+        message: "Domain cannot contain 'papermark'",
+      }),
+  });
 
   const handleSubmit = async (event: any) => {
     event.preventDefault();
     event.stopPropagation();
 
-    if (domain == "") return;
-
-    // Add validation for papermark
-    if (domain.toLowerCase().includes("papermark")) {
-      toast.error("Domain cannot contain 'papermark'");
-      return;
+    const validation = addDomainSchema.safeParse({ name: domain });
+    if (!validation.success) {
+      return toast.error(validation.error.errors[0].message);
     }
 
     setLoading(true);

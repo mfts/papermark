@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useTeam } from "@/context/team-context";
 import { toast } from "sonner";
 import { mutate } from "swr";
+import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -36,12 +37,20 @@ export function AddGroupModal({
 
   const teamInfo = useTeam();
   const analytics = useAnalytics();
+  const addGroupSchema = z.object({
+    name: z
+      .string()
+      .nonempty("Group name is required. Please enter a valid name."),
+  });
 
   const handleSubmit = async (event: any) => {
     event.preventDefault();
     event.stopPropagation();
 
-    if (groupName == "") return;
+    const validation = addGroupSchema.safeParse({ name: groupName });
+    if (!validation.success) {
+      return toast.error(validation.error.errors[0].message);
+    }
 
     setLoading(true);
 
