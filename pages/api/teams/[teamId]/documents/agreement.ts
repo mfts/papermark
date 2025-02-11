@@ -2,14 +2,11 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 import { DocumentStorageType } from "@prisma/client";
 import { getServerSession } from "next-auth/next";
-import { parsePageId } from "notion-utils";
 
 import { errorhandler } from "@/lib/errorHandler";
-import notion from "@/lib/notion";
 import prisma from "@/lib/prisma";
 import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
 import { convertFilesToPdfTask } from "@/lib/trigger/convert-files";
-import { convertPdfToImage } from "@/lib/trigger/pdf-to-image";
 import { convertPdfToImageRoute } from "@/lib/trigger/pdf-to-image-route";
 import { CustomUser } from "@/lib/types";
 import { getExtension, log } from "@/lib/utils";
