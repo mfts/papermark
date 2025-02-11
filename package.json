@@ -63,8 +63,6 @@
     "@tanstack/react-table": "^8.20.6",
     "@teamhanko/passkeys-next-auth-provider": "^0.2.7",
     "@tremor/react": "^3.18.7",
-    "@trigger.dev/nextjs": "^3.3.12",
-    "@trigger.dev/react": "^3.3.12",
     "@trigger.dev/react-hooks": "^3.3.13",
     "@trigger.dev/sdk": "^3.3.13",
     "@tus/s3-store": "^1.8.0",

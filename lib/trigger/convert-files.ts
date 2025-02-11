@@ -175,7 +175,6 @@ export const convertFilesToPdfTask = task({
 
     updateStatus({ progress: 40, text: "Initiating document processing..." });
 
-    // trigger convert-pdf-to-image job
     await convertPdfToImageRoute.trigger(
       {
         documentId: payload.documentId,
@@ -363,7 +362,6 @@ export const convertCadToPdfTask = task({
       },
     });
 
-    // trigger convert-pdf-to-image job
     await convertPdfToImageRoute.trigger(
       {
         documentId: payload.documentId,
