@@ -72,9 +72,9 @@ export default function DuplicateDataroom({
         }),
         {
           loading: "Copying dataroom...",
-          success: () => {
+          success: (dataroom) => {
             mutate(`/api/teams/${teamId}/datarooms`);
-            router.push("/datarooms");
+            router.push(`/datarooms/${dataroom.id}/documents`);
             return "Dataroom copied successfully.";
           },
           error: (error) => {

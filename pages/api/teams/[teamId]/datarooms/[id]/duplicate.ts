@@ -237,16 +237,7 @@ export default async function handle(
           .map((folder) => duplicateFolders(newDataroom.id, folder)),
       );
 
-      const dataroomWithCount = await prisma.dataroom.findUnique({
-        where: {
-          id: dataroom.id,
-        },
-        include: {
-          _count: { select: { documents: true } },
-        },
-      });
-
-      res.status(201).json(dataroomWithCount);
+      res.status(201).json(newDataroom);
     } catch (error) {
       console.error("Request error", error);
       res.status(500).json({ message: "Error duplicating dataroom" });
