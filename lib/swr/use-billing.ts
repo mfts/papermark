@@ -37,13 +37,7 @@ export function useBilling() {
   };
 }
 
-export type BasePlan =
-  | "free"
-  | "starter"
-  | "pro"
-  | "trial"
-  | "business"
-  | "datarooms";
+export type BasePlan = "free" | "starter" | "pro" | "business" | "datarooms";
 type PlanWithTrial = `${BasePlan}+drtrial`;
 type PlanWithOld = `${BasePlan}+old` | `${BasePlan}+drtrial+old`;
 

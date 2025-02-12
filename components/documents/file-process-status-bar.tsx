@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import useSWRImmutable from "swr/immutable";
 
@@ -6,6 +6,13 @@ import { Progress } from "@/components/ui/progress";
 
 import { cn, fetcher } from "@/lib/utils";
 import { useDocumentProgressStatus } from "@/lib/utils/use-progress-status";
+
+const QUEUED_MESSAGES = [
+  "Converting document...",
+  "Optimizing for viewing...",
+  "Preparing preview...",
+  "Almost ready...",
+];
 
 export default function FileProcessStatusBar({
   documentVersionId,
@@ -18,6 +25,7 @@ export default function FileProcessStatusBar({
   mutateDocument: () => void;
   onProcessingChange?: (processing: boolean) => void;
 }) {
+  const [messageIndex, setMessageIndex] = useState(0);
   const { data } = useSWRImmutable<{ publicAccessToken: string }>(
     `/api/progress-token?documentVersionId=${documentVersionId}`,
     fetcher,
@@ -36,11 +44,29 @@ export default function FileProcessStatusBar({
     }
   }, [progressStatus.state, onProcessingChange]);
 
-  if (progressStatus.state === "QUEUED") {
+  // Cycle through messages when queued or executing
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+
+    if (progressStatus.state === "QUEUED") {
+      interval = setInterval(() => {
+        setMessageIndex((current) => (current + 1) % QUEUED_MESSAGES.length);
+      }, 5000); // Change message every 5 seconds
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [progressStatus.state]);
+
+  console.log("status", progressStatus);
+  console.log("error", progressError);
+
+  if (progressStatus.state === "QUEUED" && !progressError) {
     return (
       <Progress
         value={0}
-        text="Processing document..."
+        text={QUEUED_MESSAGES[messageIndex]}
         className={cn(
           "w-full rounded-none text-[8px] font-semibold",
           className,
@@ -77,6 +103,7 @@ export default function FileProcessStatusBar({
     return null;
   }
 
+  // For EXECUTING state
   return (
     <Progress
       value={progressStatus.progress || 0}
