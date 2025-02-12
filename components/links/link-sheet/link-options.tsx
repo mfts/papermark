@@ -131,11 +131,6 @@ export const LinkOptions = ({
         }
         handleUpgradeStateChange={handleUpgradeStateChange}
       />
-      <ScreenShieldSection
-        {...{ data, setData }}
-        isAllowed={isTrial || isBusiness || isDatarooms}
-        handleUpgradeStateChange={handleUpgradeStateChange}
-      />
       <WatermarkSection
         {...{ data, setData }}
         isAllowed={isTrial || isDatarooms || allowWatermarkOnBusiness}
