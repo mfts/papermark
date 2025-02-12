@@ -71,7 +71,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         icon: FolderIcon,
         current:
           router.pathname.includes("documents") &&
-          !router.pathname.includes("tree") &&
           !router.pathname.includes("datarooms"),
       },
       {
@@ -80,9 +79,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         icon: ServerIcon,
         current: router.pathname.includes("datarooms"),
         disabled:
-          userPlan === "business" || userPlan === "datarooms" || isTrial
-            ? false
-            : true,
+          userPlan !== "business" && userPlan !== "datarooms" && !isTrial,
         trigger: "sidebar_datarooms",
         plan: PlanEnum.Business,
       },
@@ -91,7 +88,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         url: "/visitors",
         icon: ContactIcon,
         current: router.pathname.includes("visitors"),
-        disabled: userPlan === "free" && !isTrial ? true : false,
+        disabled: userPlan === "free" && !isTrial,
         trigger: "sidebar_visitors",
         plan: PlanEnum.Pro,
       },
