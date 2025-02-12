@@ -10,6 +10,8 @@ import { WatermarkConfig } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useMediaQuery } from "@/lib/utils/use-media-query";
 
+import "@/styles/custom-viewer-styles.css";
+
 import { ScreenProtector } from "../ScreenProtection";
 import { TDocumentData } from "../dataroom/dataroom-view";
 import Nav from "../nav";
@@ -275,22 +277,6 @@ export default function ImageViewer({
     }
   }, []); // Run once on mount
 
-  // Function to handle context for screenshotting
-  const handleContextMenu = (event: React.MouseEvent<HTMLDivElement>) => {
-    if (!screenshotProtectionEnabled && !screenShieldPercentage) {
-      return null;
-    }
-
-    event.preventDefault();
-    // Close menu on click anywhere
-    const clickHandler = () => {
-      document.removeEventListener("click", clickHandler);
-    };
-    document.addEventListener("click", clickHandler);
-
-    toast.info("Context menu has been disabled.");
-  };
-
   return (
     <>
       <Nav
@@ -332,9 +318,9 @@ export default function ImageViewer({
                 transformOrigin: scale <= 1 ? "center center" : "left top",
                 minWidth: scale > 1 ? `${100 * scale}%` : "100%",
               }}
-              onContextMenu={handleContextMenu}
+              onContextMenu={(e) => e.preventDefault()}
             >
-              <div className="relative my-auto flex w-full justify-center">
+              <div className="viewer-container relative my-auto flex w-full justify-center">
                 <img
                   className="!pointer-events-auto max-h-[calc(100dvh-64px)] object-contain"
                   ref={(ref) => {
