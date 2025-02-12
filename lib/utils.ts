@@ -5,7 +5,7 @@ import { type ClassValue, clsx } from "clsx";
 import crypto from "crypto";
 import ms from "ms";
 import { customAlphabet } from "nanoid";
-import { ThreadMessage } from "openai/resources/beta/threads/messages/messages";
+import { Message as ThreadMessage } from "openai/resources/beta/threads/messages";
 import { rgb } from "pdf-lib";
 import { toast } from "sonner";
 import { twMerge } from "tailwind-merge";
