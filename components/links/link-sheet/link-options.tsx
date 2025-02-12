@@ -132,11 +132,6 @@ export const LinkOptions = ({
         }
         handleUpgradeStateChange={handleUpgradeStateChange}
       />
-      <ScreenShieldSection
-        {...{ data, setData }}
-        isAllowed={isTrial || isBusiness || isDatarooms}
-        handleUpgradeStateChange={handleUpgradeStateChange}
-      />
       <WatermarkSection
         {...{ data, setData }}
         isAllowed={isTrial || isDatarooms || allowWatermarkOnBusiness}
@@ -147,17 +142,21 @@ export const LinkOptions = ({
         isAllowed={isTrial || isDatarooms}
         handleUpgradeStateChange={handleUpgradeStateChange}
       />
-      <FeedbackSection {...{ data, setData }} />
-      <QuestionSection
-        {...{ data, setData }}
-        isAllowed={
-          isTrial ||
-          (isPro && allowAdvancedLinkControls) ||
-          isBusiness ||
-          isDatarooms
-        }
-        handleUpgradeStateChange={handleUpgradeStateChange}
-      />
+      {linkType === LinkType.DOCUMENT_LINK ? (
+        <>
+          <FeedbackSection {...{ data, setData }} />
+          <QuestionSection
+            {...{ data, setData }}
+            isAllowed={
+              isTrial ||
+              (isPro && allowAdvancedLinkControls) ||
+              isBusiness ||
+              isDatarooms
+            }
+            handleUpgradeStateChange={handleUpgradeStateChange}
+          />
+        </>
+      ) : null}
       <CustomFieldsSection
         {...{ data, setData }}
         isAllowed={isTrial || isBusiness || isDatarooms}
