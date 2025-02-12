@@ -6,7 +6,10 @@ import { useLimits } from "@/ee/limits/swr-handler";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
-import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
+import {
+  PlanEnum,
+  UpgradePlanModal,
+} from "@/components/billing/upgrade-plan-modal";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -125,7 +128,7 @@ export default function DuplicateDataroom({
       </Card>
       {planModalOpen ? (
         <UpgradePlanModal
-          clickedPlan="Data Rooms"
+          clickedPlan={PlanEnum.DataRooms}
           trigger="datarooms"
           open={planModalOpen}
           setOpen={setPlanModalOpen}

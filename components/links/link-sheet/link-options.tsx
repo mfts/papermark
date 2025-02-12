@@ -2,7 +2,10 @@ import { useState } from "react";
 
 import { LinkAudienceType, LinkType } from "@prisma/client";
 
-import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
+import {
+  PlanEnum,
+  UpgradePlanModal,
+} from "@/components/billing/upgrade-plan-modal";
 import { DEFAULT_LINK_TYPE } from "@/components/links/link-sheet";
 import AllowDownloadSection from "@/components/links/link-sheet/allow-download-section";
 import AllowListSection from "@/components/links/link-sheet/allow-list-section";
@@ -57,9 +60,7 @@ export const LinkOptions = ({
 
   const [openUpgradeModal, setOpenUpgradeModal] = useState<boolean>(false);
   const [trigger, setTrigger] = useState<string>("");
-  const [upgradePlan, setUpgradePlan] = useState<
-    "Pro" | "Business" | "Data Rooms"
-  >("Business");
+  const [upgradePlan, setUpgradePlan] = useState<PlanEnum>(PlanEnum.Business);
 
   const handleUpgradeStateChange = ({
     state,
@@ -69,7 +70,7 @@ export const LinkOptions = ({
     setOpenUpgradeModal(state);
     setTrigger(trigger);
     if (plan) {
-      setUpgradePlan(plan);
+      setUpgradePlan(plan as PlanEnum);
     }
   };
 

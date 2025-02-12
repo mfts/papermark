@@ -16,7 +16,10 @@ import {
 import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
 
-import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
+import {
+  PlanEnum,
+  UpgradePlanModal,
+} from "@/components/billing/upgrade-plan-modal";
 import { Button } from "@/components/ui/button";
 import {
   Collapsible,
@@ -203,7 +206,7 @@ export default function LinksTable({
   const AddLinkButton = () => {
     if (!canAddLinks) {
       return (
-        <UpgradePlanModal clickedPlan="Pro" trigger={"limit_add_link"}>
+        <UpgradePlanModal clickedPlan={PlanEnum.Pro} trigger={"limit_add_link"}>
           <Button>Upgrade to Create Link</Button>
         </UpgradePlanModal>
       );

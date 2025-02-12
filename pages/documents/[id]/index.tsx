@@ -4,7 +4,10 @@ import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 
-import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
+import {
+  PlanEnum,
+  UpgradePlanModal,
+} from "@/components/billing/upgrade-plan-modal";
 import DocumentHeader from "@/components/documents/document-header";
 import { StatsComponent } from "@/components/documents/stats";
 import VideoAnalytics from "@/components/documents/video-analytics";
@@ -44,7 +47,7 @@ export default function DocumentPage() {
   const AddLinkButton = () => {
     if (!canAddLinks) {
       return (
-        <UpgradePlanModal clickedPlan="Pro" trigger={"limit_add_link"}>
+        <UpgradePlanModal clickedPlan={PlanEnum.Pro} trigger={"limit_add_link"}>
           <Button className="flex h-8 whitespace-nowrap text-xs lg:h-9 lg:text-sm">
             Upgrade to Create Link
           </Button>

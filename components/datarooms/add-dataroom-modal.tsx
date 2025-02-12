@@ -22,7 +22,7 @@ import { Label } from "@/components/ui/label";
 import { useAnalytics } from "@/lib/analytics";
 import { usePlan } from "@/lib/swr/use-billing";
 
-import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
+import { PlanEnum, UpgradePlanModal } from "../billing/upgrade-plan-modal";
 
 export function AddDataroomModal({
   children,
@@ -94,7 +94,7 @@ export function AddDataroomModal({
     if (children) {
       return (
         <UpgradePlanModal
-          clickedPlan="Data Rooms"
+          clickedPlan={PlanEnum.DataRooms}
           trigger={"add_dataroom_overview"}
         >
           {children}
