@@ -1,6 +1,6 @@
 import { Ratelimit } from "@upstash/ratelimit";
 import { experimental_AssistantResponse } from "ai";
-import { type MessageContentText } from "openai/resources/beta/threads/messages/messages";
+import { type TextContentBlock } from "openai/resources/beta/threads/messages";
 import { type Run } from "openai/resources/beta/threads/runs/runs";
 
 import { openai } from "@/lib/openai";
@@ -149,7 +149,7 @@ export default async function POST(req: Request) {
           role: "assistant",
           content: message.content.filter(
             (content) => content.type === "text",
-          ) as Array<MessageContentText>,
+          ) as Array<TextContentBlock>,
         });
       }
     },

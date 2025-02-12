@@ -105,7 +105,7 @@
     "notion-client": "^7.1.6",
     "notion-utils": "^7.1.6",
     "nuqs": "^1.20.0",
-    "openai": "4.20.1",
+    "openai": "^4.84.0",
     "pdf-lib": "^1.17.1",
     "postcss": "^8.5.1",
     "posthog-js": "^1.215.3",
