@@ -19,6 +19,8 @@ import { WatermarkConfig } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useMediaQuery } from "@/lib/utils/use-media-query";
 
+import "@/styles/custom-viewer-styles.css";
+
 import { ScreenProtector } from "../ScreenProtection";
 import { TDocumentData } from "../dataroom/dataroom-view";
 import Nav from "../nav";
@@ -443,22 +445,6 @@ export default function PagesVerticalViewer({
     }
   };
 
-  // Function to handle context for screenshotting
-  const handleContextMenu = (event: React.MouseEvent<HTMLDivElement>) => {
-    if (!screenshotProtectionEnabled && !screenShieldPercentage) {
-      return null;
-    }
-
-    event.preventDefault();
-    // Close menu on click anywhere
-    const clickHandler = () => {
-      document.removeEventListener("click", clickHandler);
-    };
-    document.addEventListener("click", clickHandler);
-
-    toast.info("Context menu has been disabled.");
-  };
-
   // Function to preload next image
   const preloadImage = (index: number) => {
     if (index < numPages && !loadedImages[index]) {
@@ -766,7 +752,7 @@ export default function PagesVerticalViewer({
               >
                 <div
                   className="flex flex-col items-center gap-2"
-                  onContextMenu={handleContextMenu}
+                  onContextMenu={(e) => e.preventDefault()}
                 >
                   {pageNumber <= numPagesWithAccountCreation &&
                   pages &&
@@ -781,7 +767,7 @@ export default function PagesVerticalViewer({
                               : undefined,
                           }}
                         >
-                          <div className="relative">
+                          <div className="viewer-container relative">
                             <img
                               className="h-auto w-full object-contain"
                               ref={(ref) => {
