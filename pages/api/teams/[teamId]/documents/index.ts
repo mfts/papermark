@@ -1,7 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import { client } from "@/trigger";
 import { DocumentStorageType, Prisma } from "@prisma/client";
 import { getServerSession } from "next-auth/next";
 import { parsePageId } from "notion-utils";
@@ -12,12 +11,10 @@ import notion from "@/lib/notion";
 import prisma from "@/lib/prisma";
 import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
 import {
-  ConvertPayload,
   convertCadToPdfTask,
   convertFilesToPdfTask,
 } from "@/lib/trigger/convert-files";
 import { processVideo } from "@/lib/trigger/optimize-video-files";
-import { convertPdfToImage } from "@/lib/trigger/pdf-to-image";
 import { convertPdfToImageRoute } from "@/lib/trigger/pdf-to-image-route";
 import { CustomUser } from "@/lib/types";
 import { getExtension, log } from "@/lib/utils";
