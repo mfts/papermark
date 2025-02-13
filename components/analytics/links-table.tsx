@@ -334,7 +334,12 @@ export default function LinksTable({
                         <Link2Icon className="size-6" />
                       </div>
                     </div>
-                    <p>No visited links in the last {interval}</p>
+                    <p>
+                      No visited links in the last{" "}
+                      {interval === "custom"
+                        ? `From ${format(startDate, "PP")} to ${format(endDate, "PP")}`
+                        : interval}
+                    </p>
                   </div>
                 </TableCell>
               </TableRow>
