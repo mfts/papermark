@@ -12,6 +12,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
+import { format } from "date-fns";
 import {
   BadgeCheckIcon,
   ChevronDownIcon,
@@ -202,7 +203,13 @@ const columns: ColumnDef<Visitor>[] = [
   },
 ];
 
-export default function VisitorsTable() {
+export default function VisitorsTable({
+  startDate,
+  endDate,
+}: {
+  startDate: Date;
+  endDate: Date;
+}) {
   const router = useRouter();
   const teamInfo = useTeam();
   const { interval = "7d" } = router.query;
@@ -212,7 +219,7 @@ export default function VisitorsTable() {
 
   const { data: visitors } = useSWR<Visitor[]>(
     teamInfo?.currentTeam?.id
-      ? `/api/analytics?type=visitors&interval=${interval}&teamId=${teamInfo.currentTeam.id}`
+      ? `/api/analytics?type=visitors&interval=${interval}&teamId=${teamInfo.currentTeam.id}${interval === "custom" ? `&startDate=${format(startDate, "MM-dd-yyyy")}&endDate=${format(endDate, "MM-dd-yyyy")}` : ""}`
       : null,
     fetcher,
     {

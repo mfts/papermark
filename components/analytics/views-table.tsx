@@ -13,6 +13,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
+import { format } from "date-fns";
 import {
   BadgeCheckIcon,
   BadgeInfoIcon,
@@ -273,7 +274,13 @@ const columns: ColumnDef<View>[] = [
   },
 ];
 
-export default function ViewsTable() {
+export default function ViewsTable({
+  startDate,
+  endDate,
+}: {
+  startDate: Date;
+  endDate: Date;
+}) {
   const router = useRouter();
   const teamInfo = useTeam();
   const { interval = "7d" } = router.query;
@@ -283,7 +290,7 @@ export default function ViewsTable() {
 
   const { data: views } = useSWR<View[]>(
     teamInfo?.currentTeam?.id
-      ? `/api/analytics?type=views&interval=${interval}&teamId=${teamInfo.currentTeam.id}`
+      ? `/api/analytics?type=views&interval=${interval}&teamId=${teamInfo.currentTeam.id}${interval === "custom" ? `&startDate=${format(startDate, "MM-dd-yyyy")}&endDate=${format(endDate, "MM-dd-yyyy")}` : ""}`
       : null,
     fetcher,
     {
