@@ -561,26 +561,25 @@ export default function DocumentHeader({
               </div>
             ))}
 
-          {primaryVersion.type !== "notion" &&
-            primaryVersion.type !== "video" && (
-              <AddDocumentModal
-                newVersion
-                openModal={openAddDocModal}
-                setAddDocumentModalOpen={setOpenAddDocModal}
+          {primaryVersion.type !== "notion" && (
+            <AddDocumentModal
+              newVersion
+              openModal={openAddDocModal}
+              setAddDocumentModalOpen={setOpenAddDocModal}
+            >
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setOpenAddDocModal(true);
+                }}
+                className="hidden md:flex"
               >
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setOpenAddDocModal(true);
-                  }}
-                  className="hidden md:flex"
-                >
-                  <FileUp className="h-6 w-6" />
-                </Button>
-              </AddDocumentModal>
-            )}
+                <FileUp className="h-6 w-6" />
+              </Button>
+            </AddDocumentModal>
+          )}
 
           {prismaDocument.type !== "notion" &&
             prismaDocument.type !== "sheet" &&
