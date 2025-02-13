@@ -44,12 +44,12 @@ export const sendEmail = async ({
       from: marketing
         ? "Marc from Papermark <marc@ship.papermark.io>"
         : system
-          ? "Papermark <system@papermark.io>"
+          ? process.env.RESEND_SENDER_SYSTEM || "Papermark <system@papermark.io>"
           : verify
-            ? "Papermark <system@verify.papermark.io>"
+            ? process.env.RESEND_SENDER_VERIFY || "Papermark <system@verify.papermark.io>"
             : !!scheduledAt
-              ? "Marc Seitz <marc@papermark.io>"
-              : "Marc from Papermark <marc@papermark.io>",
+              ? process.env.RESEND_SENDER_SYSTEM || "Marc Seitz <marc@papermark.io>"
+              : process.env.RESEND_SENDER_SYSTEM || "Marc from Papermark <marc@papermark.io>",
       to: test ? "delivered@resend.dev" : to,
       cc: cc,
       replyTo: marketing ? "marc@papermark.io" : undefined,
