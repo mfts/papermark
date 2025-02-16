@@ -24,8 +24,6 @@ export default function VisitorCustomFields({
     fetcher,
   );
 
-  console.log("customFieldResponse", customFieldResponse);
-
   if (!customFieldResponse) return null;
 
   return (

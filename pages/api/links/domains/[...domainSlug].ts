@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 import { Brand, DataroomBrand, LinkAudienceType } from "@prisma/client";
 
+import { fetchDataroomDocumentLinkData } from "@/lib/api/links/link-data";
 import {
   fetchDataroomLinkData,
   fetchDocumentLinkData,
@@ -22,6 +23,7 @@ export default async function handle(
 
     const domain = domainSlug[0];
     const slug = domainSlug[1];
+    const documentId = domainSlug[3];
 
     if (slug === "404") {
       return res.status(404).json({
@@ -139,16 +141,30 @@ export default async function handle(
         linkData = data.linkData;
         brand = data.brand;
       } else if (linkType === "DATAROOM_LINK") {
-        const data = await fetchDataroomLinkData({
-          linkId: link.id,
-          teamId: link.teamId!,
-          ...(link.audienceType === LinkAudienceType.GROUP &&
-            link.groupId && {
-              groupId: link.groupId,
-            }),
-        });
-        linkData = data.linkData;
-        brand = data.brand;
+        if (documentId) {
+          const data = await fetchDataroomDocumentLinkData({
+            linkId: link.id,
+            teamId: link.teamId!,
+            dataroomDocumentId: documentId,
+            ...(link.audienceType === LinkAudienceType.GROUP &&
+              link.groupId && {
+                groupId: link.groupId,
+              }),
+          });
+          linkData = data.linkData;
+          brand = data.brand;
+        } else {
+          const data = await fetchDataroomLinkData({
+            linkId: link.id,
+            teamId: link.teamId!,
+            ...(link.audienceType === LinkAudienceType.GROUP &&
+              link.groupId && {
+                groupId: link.groupId,
+              }),
+          });
+          linkData = data.linkData;
+          brand = data.brand;
+        }
       }
 
       // remove document and domain from link
@@ -169,6 +185,7 @@ export default async function handle(
       const returnLink = {
         ...sanitizedLink,
         ...linkData,
+        dataroomDocument: linkData.dataroom?.documents[0] || undefined,
       };
 
       res.status(200).json({ linkType, link: returnLink, brand });

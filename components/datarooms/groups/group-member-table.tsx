@@ -108,7 +108,6 @@ export default function GroupMemberTable({
       key,
       (currentData: { members: any[] } | undefined) => {
         if (!currentData) return currentData;
-        console.log(currentData);
         return {
           ...currentData,
           viewerGroupMembers: currentData.members.filter(

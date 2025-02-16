@@ -109,7 +109,6 @@ export function DataroomSortableList({
 
     try {
       // Make API call to save the new order
-      console.log("Saving new order:", newOrder);
       const response = await fetch(
         `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}/reorder`,
         {

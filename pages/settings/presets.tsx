@@ -64,7 +64,6 @@ export default function Presets() {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    console.log("presets", presets);
     if (presets) {
       setData({
         metaImage: presets.metaImage,

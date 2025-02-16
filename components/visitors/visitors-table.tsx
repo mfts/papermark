@@ -126,8 +126,6 @@ export default function VisitorsTable({
     setIsLoading(false);
   };
 
-  console.log(views);
-
   return (
     <div className="w-full">
       <div className="mb-2 md:mb-4">

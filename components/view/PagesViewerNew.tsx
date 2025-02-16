@@ -623,7 +623,6 @@ export default function PagesViewer({
       const newScrollPosition =
         (pageNumber * containerRef.current!.scrollHeight) /
         numPagesWithAccountCreation;
-      console.log("newScrollPosition", newScrollPosition);
       containerRef.current?.scrollTo({
         top: newScrollPosition,
         behavior: "smooth",

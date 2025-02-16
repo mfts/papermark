@@ -2,9 +2,8 @@ import { useRouter } from "next/router";
 
 import React, { useEffect, useRef, useState } from "react";
 
-import { Brand } from "@prisma/client";
+import { DataroomBrand } from "@prisma/client";
 import Cookies from "js-cookie";
-import { usePlausible } from "next-plausible";
 import { ExtendedRecordMap } from "notion-types";
 import { toast } from "sonner";
 
@@ -15,10 +14,11 @@ import AccessForm, {
 } from "@/components/view/access-form";
 
 import { useAnalytics } from "@/lib/analytics";
-import { LinkWithDocument, NotionTheme, WatermarkConfig } from "@/lib/types";
+import { SUPPORTED_DOCUMENT_SIMPLE_TYPES } from "@/lib/constants";
+import { LinkWithDataroomDocument, NotionTheme } from "@/lib/types";
 
-import EmailVerificationMessage from "./email-verification-form";
-import ViewData, { TViewDocumentData } from "./view-data";
+import EmailVerificationMessage from "../email-verification-form";
+import ViewData, { TViewDocumentData } from "../view-data";
 
 type RowData = { [key: string]: any };
 type SheetData = {
@@ -27,8 +27,12 @@ type SheetData = {
   rowData: RowData[];
 };
 
-export type DEFAULT_DOCUMENT_VIEW_TYPE = {
+export type TSupportedDocumentSimpleType =
+  (typeof SUPPORTED_DOCUMENT_SIMPLE_TYPES)[number];
+
+type DEFAULT_DOCUMENT_VIEW_TYPE = {
   viewId?: string;
+  dataroomViewId?: string;
   file?: string | null;
   pages?:
     | {
@@ -40,13 +44,19 @@ export type DEFAULT_DOCUMENT_VIEW_TYPE = {
       }[]
     | null;
   sheetData?: SheetData[] | null;
+  notionData?: {
+    recordMap: ExtendedRecordMap | null;
+    theme: NotionTheme | null | undefined;
+  };
   fileType?: string;
-  isPreview?: boolean;
   ipAddress?: string;
+  useAdvancedExcelViewer?: boolean;
+  isPreview?: boolean;
+  canDownload?: boolean;
   verificationToken?: string;
 };
 
-export default function DocumentView({
+export default function DataroomDocumentView({
   link,
   userEmail,
   userId,
@@ -55,15 +65,14 @@ export default function DocumentView({
   brand,
   token,
   verifiedEmail,
-  showPoweredByBanner,
-  showAccountCreationSlide,
   useAdvancedExcelViewer,
   previewToken,
   disableEditEmail,
   useCustomAccessForm,
   isEmbedded,
+  preview,
 }: {
-  link: LinkWithDocument;
+  link: LinkWithDataroomDocument;
   userEmail: string | null | undefined;
   userId: string | null | undefined;
   isProtected: boolean;
@@ -72,25 +81,23 @@ export default function DocumentView({
     recordMap: ExtendedRecordMap | null;
     theme: NotionTheme | null;
   };
-  brand?: Partial<Brand> | null;
+  brand?: Partial<DataroomBrand> | null;
   token?: string;
   verifiedEmail?: string;
-  showPoweredByBanner?: boolean;
-  showAccountCreationSlide?: boolean;
   useAdvancedExcelViewer?: boolean;
   previewToken?: string;
   disableEditEmail?: boolean;
   useCustomAccessForm?: boolean;
   isEmbedded?: boolean;
+  preview?: boolean;
 }) {
   const {
-    document,
+    linkType,
     emailProtected,
     password: linkPassword,
     enableAgreement,
   } = link;
 
-  const plausible = usePlausible();
   const analytics = useAnalytics();
   const router = useRouter();
 
@@ -105,15 +112,17 @@ export default function DocumentView({
   );
   const [verificationRequested, setVerificationRequested] =
     useState<boolean>(false);
+  const [dataroomVerified, setDataroomVerified] = useState<boolean>(false);
   const [verificationToken, setVerificationToken] = useState<string | null>(
     token ?? null,
   );
+
   const [code, setCode] = useState<string | null>(null);
   const [isInvalidCode, setIsInvalidCode] = useState<boolean>(false);
 
   const handleSubmission = async (): Promise<void> => {
     setIsLoading(true);
-    const response = await fetch("/api/views", {
+    const response = await fetch("/api/views-dataroom", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -122,12 +131,16 @@ export default function DocumentView({
         ...data,
         email: data.email ?? verifiedEmail ?? userEmail ?? null,
         linkId: link.id,
-        documentId: document.id,
-        documentName: document.name,
-        ownerId: document.ownerId,
+        documentId: link.dataroomDocument.document.id,
+        documentName: link.dataroomDocument.document.name,
         userId: userId ?? null,
-        documentVersionId: document.versions[0].id,
-        hasPages: document.versions[0].hasPages,
+        documentVersionId: link.dataroomDocument.document.versions[0].id,
+        hasPages: link.dataroomDocument.document.versions[0].hasPages,
+        dataroomVerified: dataroomVerified,
+        dataroomId: link.dataroomId,
+        linkType: "DATAROOM_LINK",
+        dataroomViewId: viewData.dataroomViewId ?? null,
+        viewType: "DOCUMENT_VIEW",
         useAdvancedExcelViewer,
         previewToken,
         code: code ?? undefined,
@@ -147,45 +160,53 @@ export default function DocumentView({
           viewId,
           file,
           pages,
+          notionData,
           sheetData,
           fileType,
           isPreview,
           ipAddress,
+          useAdvancedExcelViewer,
+          canDownload,
           verificationToken,
         } = fetchData as DEFAULT_DOCUMENT_VIEW_TYPE;
-        plausible("documentViewed"); // track the event
         analytics.identify(
           userEmail ?? verifiedEmail ?? data.email ?? undefined,
         );
         analytics.capture("Link Viewed", {
           linkId: link.id,
-          documentId: document.id,
-          linkType: "DOCUMENT_LINK",
+          documentId: link.dataroomDocument.document.id,
+          dataroomId: link.dataroomId,
+          linkType: linkType,
           viewerId: viewId,
           viewerEmail: data.email ?? verifiedEmail ?? userEmail,
           isEmbedded,
         });
 
         // set the verification token to the cookie
+        // TODO: remove verificaiton token for something simpler as we are setting the token on cookie directly
         if (verificationToken) {
-          Cookies.set("pm_vft", verificationToken, {
-            path: router.asPath.split("?")[0],
-            expires: 1,
-            sameSite: "strict",
-            secure: true,
-          });
+          // Cookies.set("pm_vft", verificationToken, {
+          //   path: router.asPath.split("?")[0],
+          //   expires: 1,
+          //   sameSite: "strict",
+          //   secure: true,
+          // });
           setCode(null);
         }
 
-        setViewData({
+        setViewData((prev) => ({
           viewId,
+          dataroomViewId: prev.dataroomViewId,
           file,
           pages,
+          notionData,
           sheetData,
           fileType,
           isPreview,
           ipAddress,
-        });
+          useAdvancedExcelViewer,
+          canDownload,
+        }));
         setSubmitted(true);
         setVerificationRequested(false);
         setIsLoading(false);
@@ -201,6 +222,7 @@ export default function DocumentView({
         setVerificationToken(null);
         setCode(null);
         setIsInvalidCode(true);
+        setDataroomVerified(false);
       }
       setIsLoading(false);
     }
@@ -217,12 +239,17 @@ export default function DocumentView({
   // If link is not submitted and does not have email / password protection, show the access form
   useEffect(() => {
     if (!didMount.current) {
-      if ((!submitted && !isProtected) || token) {
+      if (
+        (!submitted && !isProtected) ||
+        token ||
+        preview ||
+        viewData.dataroomViewId
+      ) {
         handleSubmission();
+        didMount.current = true;
       }
-      didMount.current = true;
     }
-  }, [submitted, isProtected, token]);
+  }, [submitted, isProtected, token, preview, viewData.dataroomViewId]);
 
   // Components to render when email is submitted but verification is pending
   if (verificationRequested) {
@@ -254,9 +281,9 @@ export default function DocumentView({
         agreementContent={link.agreement?.content}
         requireName={link.agreement?.requireName}
         isLoading={isLoading}
-        brand={brand}
         disableEditEmail={disableEditEmail}
         useCustomAccessForm={useCustomAccessForm}
+        brand={brand}
         customFields={link.customFields}
       />
     );
@@ -279,13 +306,14 @@ export default function DocumentView({
     >
       {submitted ? (
         <ViewData
+          dataroomId={link.dataroomId!}
           link={link}
+          document={link.dataroomDocument.document as TViewDocumentData}
           viewData={viewData}
-          document={document as unknown as TViewDocumentData}
           notionData={notionData}
           brand={brand}
-          showPoweredByBanner={showPoweredByBanner}
-          showAccountCreationSlide={showAccountCreationSlide}
+          showPoweredByBanner={false}
+          showAccountCreationSlide={false}
           useAdvancedExcelViewer={useAdvancedExcelViewer}
           viewerEmail={data.email ?? verifiedEmail ?? userEmail ?? undefined}
         />

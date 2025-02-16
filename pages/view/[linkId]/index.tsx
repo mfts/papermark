@@ -222,7 +222,9 @@ export default function ViewPage({
 
   useEffect(() => {
     // Retrieve token from cookie on component mount
-    const cookieToken = Cookies.get("pm_vft");
+    const cookieToken =
+      Cookies.get("pm_vft") ||
+      Cookies.get(`pm_drs_flag_${router.query.linkId}`);
     const storedEmail = window.localStorage.getItem("papermark.email");
     if (cookieToken) {
       setStoredToken(cookieToken);
@@ -230,7 +232,7 @@ export default function ViewPage({
         setStoredEmail(storedEmail.toLowerCase());
       }
     }
-  }, []);
+  }, [router.query.linkId]);
 
   if (router.isFallback) {
     return (
@@ -244,10 +246,12 @@ export default function ViewPage({
     email: verifiedEmail,
     d: disableEditEmail,
     previewToken,
+    preview,
   } = router.query as {
     email: string;
     d: string;
     previewToken?: string;
+    preview?: string;
   };
   const { linkType, link, brand } = linkData;
 
@@ -400,15 +404,15 @@ export default function ViewPage({
         <DataroomView
           link={link}
           userEmail={verifiedEmail ?? storedEmail ?? userEmail}
+          verifiedEmail={verifiedEmail}
           userId={userId}
           isProtected={!!(emailProtected || linkPassword || enableAgreement)}
           brand={brand}
-          useAdvancedExcelViewer={useAdvancedExcelViewer}
-          previewToken={previewToken}
           disableEditEmail={!!disableEditEmail}
           useCustomAccessForm={useCustomAccessForm}
           token={storedToken}
-          verifiedEmail={verifiedEmail}
+          previewToken={previewToken}
+          preview={!!preview}
         />
       </>
     );
