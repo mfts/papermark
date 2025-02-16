@@ -524,7 +524,7 @@ export default async function handle(
     viewerEmail: viewer?.email ?? email,
     viewerName: name,
     verified: isEmailVerified,
-    dataroomId: dataroomId,
+    dataroomId: link.dataroomId,
     viewerId: viewer?.id ?? undefined,
     teamId: link.teamId,
     ...(link.enableAgreement &&
