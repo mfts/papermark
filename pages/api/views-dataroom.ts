@@ -186,10 +186,12 @@ export default async function handle(
 
   let dataroomSession: DataroomSession | null = null;
   if (!isPreview) {
-    dataroomSession = await verifyDataroomSession(req, linkId, dataroomId);
+    dataroomSession = await verifyDataroomSession(
+      req,
+      linkId,
+      link.dataroomId!,
+    );
   }
-
-  console.log("dataroomSession", dataroomSession);
 
   let isEmailVerified: boolean = false;
   let hashedVerificationToken: string | null = null;
