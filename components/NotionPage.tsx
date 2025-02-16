@@ -148,7 +148,6 @@ export const NotionPage = ({
         }
 
         setLoading(true);
-        console.log("Fetching subPageId", pageId);
         try {
           const response = await fetch("/api/file/notion", {
             method: "POST",
@@ -174,7 +173,6 @@ export const NotionPage = ({
           setLoading(false);
         }
       } else {
-        console.log("subPageId is", pageId);
         setRecordMapState(recordMap);
         // get the first item in the recordMap.block object
         const firstBlockId = Object.keys(recordMap.block)[0];
@@ -192,33 +190,6 @@ export const NotionPage = ({
     fetchSubPage(subPageId);
   }, [subPageId, fetchSubPage]);
 
-  // useEffect(() => {
-  //   const fetchSubPage = async () => {
-  //     if (subPageId) {
-  //       setLoading(true);
-  //       console.log("subPageId", subPageId);
-  //       const recordMap = await fetch("/api/file/notion", {
-  //         method: "POST",
-  //         body: JSON.stringify({ pageId: subPageId }),
-  //         headers: {
-  //           "Content-Type": "application/json",
-  //         },
-  //       });
-  //       setRecordMapState(await recordMap.json());
-  //       setLoading(false);
-  //     } else {
-  //       console.log("subPageId is", subPageId);
-  //       setRecordMapState(recordMap);
-  //     }
-
-  //     const duration = Date.now() - startTimeRef.current;
-  //     trackPageView(duration);
-  //     startTimeRef.current = Date.now();
-  //   };
-
-  //   fetchSubPage();
-  // }, [subPageId]);
-
   useEffect(() => {
     const handleBeforeUnload = () => {
       const duration = Date.now() - startTimeRef.current;
@@ -233,7 +204,6 @@ export const NotionPage = ({
   }, [subPageId]);
 
   async function trackPageView(duration: number = 0) {
-    console.log("tracking page view");
     if (isPreview) return;
 
     await fetch("/api/record_view", {

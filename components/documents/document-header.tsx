@@ -484,8 +484,6 @@ export default function DocumentHeader({
     );
   };
 
-  console.log("Primary version", primaryVersion);
-
   return (
     <header className="flex flex-col gap-y-4">
       <div className="flex items-center justify-between gap-x-8">
