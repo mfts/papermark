@@ -219,7 +219,8 @@ export default function ViewPage({
 
   useEffect(() => {
     // Retrieve token from cookie on component mount
-    const cookieToken = Cookies.get("pm_vft");
+    const cookieToken =
+      Cookies.get("pm_vft") || Cookies.get(`pm_drs_flag_${router.query.slug}`);
     const storedEmail = window.localStorage.getItem("papermark.email");
     if (cookieToken) {
       setStoredToken(cookieToken);
@@ -227,7 +228,7 @@ export default function ViewPage({
         setStoredEmail(storedEmail.toLowerCase());
       }
     }
-  }, []);
+  }, [router.query.slug]);
 
   if (router.isFallback) {
     return (
