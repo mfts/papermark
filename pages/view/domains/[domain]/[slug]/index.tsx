@@ -242,10 +242,12 @@ export default function ViewPage({
     email: verifiedEmail,
     d: disableEditEmail,
     previewToken,
+    preview,
   } = router.query as {
     email: string;
     d: string;
     previewToken?: string;
+    preview?: string;
   };
   const { linkType, link, brand } = linkData;
 
@@ -399,12 +401,12 @@ export default function ViewPage({
           userId={userId}
           isProtected={!!(emailProtected || linkPassword || enableAgreement)}
           brand={brand}
-          useAdvancedExcelViewer={useAdvancedExcelViewer}
-          previewToken={previewToken}
           disableEditEmail={!!disableEditEmail}
           useCustomAccessForm={useCustomAccessForm}
           token={storedToken}
           verifiedEmail={verifiedEmail}
+          previewToken={previewToken}
+          preview={!!preview}
         />
       </>
     );
