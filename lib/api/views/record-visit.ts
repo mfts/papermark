@@ -32,7 +32,7 @@ export async function recordVisit({
     }
 
     const features = await getFeatureFlags({ teamId });
-    if (!features.incomingWebhooks) {
+    if (!features.webhooks) {
       // webhooks are not enabled for this team
       return;
     }
