@@ -32,7 +32,6 @@ export default async function handle(
         allowDownload: true,
         enableFeedback: true,
         enableScreenshotProtection: true,
-        screenShieldPercentage: true,
         password: true,
         isArchived: true,
         enableCustomMetatag: true,

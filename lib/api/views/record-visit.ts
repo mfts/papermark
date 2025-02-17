@@ -95,7 +95,6 @@ export async function recordVisit({
       enabledFeedback: link.enableFeedback ?? false,
       enabledQuestion: link.enableQuestion ?? false,
       enabledScreenshotProtection: link.enableScreenshotProtection ?? false,
-      enabledScreenShieldPercentage: !!link.screenShieldPercentage,
       enabledAgreement: link.enableAgreement ?? false,
       enabledWatermark: link.enableWatermark ?? false,
       metaTitle: link.metaTitle,
