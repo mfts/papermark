@@ -75,7 +75,6 @@ export const DEFAULT_LINK_PROPS = (linkType: LinkType) => ({
   watermarkConfig: null,
   audienceType: LinkAudienceType.GENERAL,
   groupId: null,
-  screenShieldPercentage: null,
   customFields: [],
 });
 
@@ -109,7 +108,6 @@ export type DEFAULT_LINK_TYPE = {
   watermarkConfig: WatermarkConfig | null;
   audienceType: LinkAudienceType;
   groupId: string | null;
-  screenShieldPercentage: number | null;
   customFields: CustomFieldData[];
 };
 

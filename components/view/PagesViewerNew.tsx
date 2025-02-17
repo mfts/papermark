@@ -27,7 +27,6 @@ import { TDocumentData } from "./dataroom/dataroom-view";
 import Nav from "./nav";
 import { PoweredBy } from "./powered-by";
 import Question from "./question";
-import { ScreenShield } from "./screen-shield";
 import Toolbar from "./toolbar";
 import ViewDurationSummary from "./visitor-graph";
 import { SVGWatermark } from "./watermark-svg";
@@ -77,7 +76,6 @@ export default function PagesViewer({
   allowDownload,
   feedbackEnabled,
   screenshotProtectionEnabled,
-  screenShieldPercentage,
   versionNumber,
   brand,
   documentName,
@@ -108,7 +106,6 @@ export default function PagesViewer({
   allowDownload: boolean;
   feedbackEnabled: boolean;
   screenshotProtectionEnabled: boolean;
-  screenShieldPercentage: number | null;
   versionNumber: number;
   brand?: Partial<Brand> | Partial<DataroomBrand> | null;
   documentName?: string;
@@ -496,7 +493,7 @@ export default function PagesViewer({
 
   // Function to handle context for screenshotting
   const handleContextMenu = (event: React.MouseEvent<HTMLDivElement>) => {
-    if (!screenshotProtectionEnabled && !screenShieldPercentage) {
+    if (!screenshotProtectionEnabled) {
       return null;
     }
 
@@ -1106,9 +1103,6 @@ export default function PagesViewer({
             pageNumber={pageNumber}
             isPreview={isPreview}
           />
-        ) : null}
-        {!!screenShieldPercentage ? (
-          <ScreenShield visiblePercentage={screenShieldPercentage} />
         ) : null}
         {screenshotProtectionEnabled ? <ScreenProtector /> : null}
         {showPoweredByBanner ? <PoweredBy linkId={linkId} /> : null}

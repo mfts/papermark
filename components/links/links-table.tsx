@@ -137,7 +137,6 @@ export default function LinksTable({
       watermarkConfig: link.watermarkConfig as WatermarkConfig | null,
       audienceType: link.audienceType,
       groupId: link.groupId,
-      screenShieldPercentage: link.screenShieldPercentage,
       customFields: link.customFields || [],
     });
     //wait for dropdown to close before opening the link sheet

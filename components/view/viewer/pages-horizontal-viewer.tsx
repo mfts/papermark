@@ -6,7 +6,6 @@ import React from "react";
 import { Brand, DataroomBrand } from "@prisma/client";
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import { useSession } from "next-auth/react";
-import { toast } from "sonner";
 
 import { WatermarkConfig } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -19,7 +18,6 @@ import { TDocumentData } from "../dataroom/dataroom-view";
 import Nav from "../nav";
 import { PoweredBy } from "../powered-by";
 import Question from "../question";
-import { ScreenShield } from "../screen-shield";
 import Toolbar from "../toolbar";
 import ViewDurationSummary from "../visitor-graph";
 import { SVGWatermark } from "../watermark-svg";
@@ -69,7 +67,6 @@ export default function PagesHorizontalViewer({
   allowDownload,
   feedbackEnabled,
   screenshotProtectionEnabled,
-  screenShieldPercentage,
   versionNumber,
   brand,
   documentName,
@@ -99,7 +96,6 @@ export default function PagesHorizontalViewer({
   allowDownload: boolean;
   feedbackEnabled: boolean;
   screenshotProtectionEnabled: boolean;
-  screenShieldPercentage: number | null;
   versionNumber: number;
   brand?: Partial<Brand> | Partial<DataroomBrand> | null;
   documentName?: string;
@@ -811,9 +807,7 @@ export default function PagesHorizontalViewer({
             isPreview={isPreview}
           />
         ) : null}
-        {!!screenShieldPercentage ? (
-          <ScreenShield visiblePercentage={screenShieldPercentage} />
-        ) : null}
+
         {screenshotProtectionEnabled ? <ScreenProtector /> : null}
         {showPoweredByBanner ? <PoweredBy linkId={linkId} /> : null}
       </div>
