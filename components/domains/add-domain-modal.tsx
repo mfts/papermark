@@ -21,7 +21,7 @@ import { useAnalytics } from "@/lib/analytics";
 import { usePlan } from "@/lib/swr/use-billing";
 import useLimits from "@/lib/swr/use-limits";
 
-import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
+import { PlanEnum, UpgradePlanModal } from "../billing/upgrade-plan-modal";
 
 export function AddDomainModal({
   open,
@@ -114,7 +114,11 @@ export function AddDomainModal({
     if (children) {
       return (
         <UpgradePlanModal
-          clickedPlan={linkType === "DATAROOM_LINK" ? "Data Rooms" : "Business"}
+          clickedPlan={
+            linkType === "DATAROOM_LINK"
+              ? PlanEnum.DataRooms
+              : PlanEnum.Business
+          }
           trigger={"add_domain_overview"}
         >
           <Button>Upgrade to Add Domain</Button>
@@ -123,7 +127,11 @@ export function AddDomainModal({
     } else {
       return (
         <UpgradePlanModal
-          clickedPlan={linkType === "DATAROOM_LINK" ? "Data Rooms" : "Business"}
+          clickedPlan={
+            linkType === "DATAROOM_LINK"
+              ? PlanEnum.DataRooms
+              : PlanEnum.Business
+          }
           open={open}
           setOpen={setOpen}
           trigger={"add_domain_link_sheet"}

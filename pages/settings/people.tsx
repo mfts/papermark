@@ -8,7 +8,10 @@ import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
-import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
+import {
+  PlanEnum,
+  UpgradePlanModal,
+} from "@/components/billing/upgrade-plan-modal";
 import AppLayout from "@/components/layouts/app";
 import { SettingsHeader } from "@/components/settings/settings-header";
 import Folder from "@/components/shared/icons/folder";
@@ -234,7 +237,7 @@ export default function Billing() {
                 </AddTeamMembers>
               ) : (
                 <UpgradePlanModal
-                  clickedPlan={"Pro"}
+                  clickedPlan={PlanEnum.Pro}
                   trigger={"invite_team_members"}
                 >
                   <Button className="whitespace-nowrap px-1 text-xs sm:px-4 sm:text-sm">

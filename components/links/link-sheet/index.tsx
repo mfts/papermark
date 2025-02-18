@@ -8,7 +8,10 @@ import { RefreshCwIcon } from "lucide-react";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
-import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
+import {
+  PlanEnum,
+  UpgradePlanModal,
+} from "@/components/billing/upgrade-plan-modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -72,7 +75,6 @@ export const DEFAULT_LINK_PROPS = (linkType: LinkType) => ({
   watermarkConfig: null,
   audienceType: LinkAudienceType.GENERAL,
   groupId: null,
-  screenShieldPercentage: null,
   customFields: [],
 });
 
@@ -106,7 +108,6 @@ export type DEFAULT_LINK_TYPE = {
   watermarkConfig: WatermarkConfig | null;
   audienceType: LinkAudienceType;
   groupId: string | null;
-  screenShieldPercentage: number | null;
   customFields: CustomFieldData[];
 };
 
@@ -319,7 +320,7 @@ export default function LinkSheet({
                           </TabsTrigger>
                         ) : (
                           <UpgradePlanModal
-                            clickedPlan="Data Rooms"
+                            clickedPlan={PlanEnum.DataRooms}
                             trigger="add_group_link"
                           >
                             <div className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all">

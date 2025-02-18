@@ -118,13 +118,18 @@ export default function AdvancedExcelViewer({
       />
       <div
         style={{ height: "calc(100dvh - 64px)" }}
-        className="mx-2 flex h-screen flex-col sm:mx-6 lg:mx-8"
-      // ref={containerRef}
+        className="relative mx-2 flex h-screen flex-col sm:mx-6 lg:mx-8"
       >
         <iframe
           className="h-full w-full"
-          src={`https://view.officeapps.live.com/op/embed.aspx?src=${file}&wdPrint=0`}
+          src={`https://view.officeapps.live.com/op/embed.aspx?src=${file}&wdPrint=0&action=embedview&wdAllowInteractivity=False`}
         ></iframe>
+        <div
+          className="absolute bottom-0 left-0 right-0 z-50 h-[26px] bg-gray-950"
+          style={{
+            background: brand?.accentColor || "rgb(3, 7, 18)",
+          }}
+        />
       </div>
     </>
   );

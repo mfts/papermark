@@ -8,7 +8,10 @@ import { HexColorInput, HexColorPicker } from "react-colorful";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
-import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
+import {
+  PlanEnum,
+  UpgradePlanModal,
+} from "@/components/billing/upgrade-plan-modal";
 import AppLayout from "@/components/layouts/app";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -353,7 +356,7 @@ export default function Branding() {
                   <CardFooter className="border-t p-6">
                     {plan === "free" ? (
                       <UpgradePlanModal
-                        clickedPlan="Pro"
+                        clickedPlan={PlanEnum.Pro}
                         trigger={"branding_page"}
                       >
                         <Button>Upgrade to Save Branding</Button>

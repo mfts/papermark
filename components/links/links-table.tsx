@@ -8,7 +8,6 @@ import {
   ArchiveIcon,
   BoxesIcon,
   Code2Icon,
-  CopyIcon,
   CopyPlusIcon,
   EyeIcon,
   LinkIcon,
@@ -17,7 +16,10 @@ import {
 import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
 
-import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
+import {
+  PlanEnum,
+  UpgradePlanModal,
+} from "@/components/billing/upgrade-plan-modal";
 import { Button } from "@/components/ui/button";
 import {
   Collapsible,
@@ -32,7 +34,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -48,7 +49,6 @@ import { LinkWithViews, WatermarkConfig } from "@/lib/types";
 import { cn, copyToClipboard, fetcher, nFormatter, timeAgo } from "@/lib/utils";
 
 import FileProcessStatusBar from "../documents/file-process-status-bar";
-import ProcessStatusBar from "../documents/process-status-bar";
 import BarChart from "../shared/icons/bar-chart";
 import ChevronDown from "../shared/icons/chevron-down";
 import MoreHorizontal from "../shared/icons/more-horizontal";
@@ -137,7 +137,6 @@ export default function LinksTable({
       watermarkConfig: link.watermarkConfig as WatermarkConfig | null,
       audienceType: link.audienceType,
       groupId: link.groupId,
-      screenShieldPercentage: link.screenShieldPercentage,
       customFields: link.customFields || [],
     });
     //wait for dropdown to close before opening the link sheet
@@ -206,7 +205,7 @@ export default function LinksTable({
   const AddLinkButton = () => {
     if (!canAddLinks) {
       return (
-        <UpgradePlanModal clickedPlan="Pro" trigger={"limit_add_link"}>
+        <UpgradePlanModal clickedPlan={PlanEnum.Pro} trigger={"limit_add_link"}>
           <Button>Upgrade to Create Link</Button>
         </UpgradePlanModal>
       );
@@ -321,23 +320,15 @@ export default function LinksTable({
                               {/* Progress bar */}
                               {primaryVersion &&
                                 !primaryVersion.hasPages &&
-                                primaryVersion.type === "pdf" && (
-                                  <>
-                                    {teamInfo?.currentTeam?.id !==
-                                    "cluqtfmcr0001zkza4xcgqatw" ? (
-                                      <ProcessStatusBar
-                                        documentVersionId={primaryVersion.id}
-                                        className="absolute bottom-0 left-0 right-0 top-0 z-20 flex h-full items-center gap-x-8"
-                                      />
-                                    ) : (
-                                      <FileProcessStatusBar
-                                        documentVersionId={primaryVersion.id}
-                                        className="absolute bottom-0 left-0 right-0 top-0 z-20 flex h-full items-center gap-x-8"
-                                        // @ts-ignore: mutateDocument is not present on datarooms but on document pages
-                                        mutateDocument={mutateDocument}
-                                      />
-                                    )}
-                                  </>
+                                ["pdf", "slides", "docs", "cad"].includes(
+                                  primaryVersion.type!,
+                                ) && (
+                                  <FileProcessStatusBar
+                                    documentVersionId={primaryVersion.id}
+                                    className="absolute bottom-0 left-0 right-0 top-0 z-20 flex h-full items-center gap-x-8"
+                                    // @ts-ignore: mutateDocument is not present on datarooms but on document pages
+                                    mutateDocument={mutateDocument}
+                                  />
                                 )}
 
                               <div className="flex w-full whitespace-nowrap text-sm group-hover/cell:opacity-0">

@@ -6,18 +6,18 @@ import React from "react";
 import { Brand, DataroomBrand } from "@prisma/client";
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import { useSession } from "next-auth/react";
-import { toast } from "sonner";
 
 import { WatermarkConfig } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useMediaQuery } from "@/lib/utils/use-media-query";
+
+import "@/styles/custom-viewer-styles.css";
 
 import { ScreenProtector } from "../ScreenProtection";
 import { TDocumentData } from "../dataroom/dataroom-view";
 import Nav from "../nav";
 import { PoweredBy } from "../powered-by";
 import Question from "../question";
-import { ScreenShield } from "../screen-shield";
 import Toolbar from "../toolbar";
 import ViewDurationSummary from "../visitor-graph";
 import { SVGWatermark } from "../watermark-svg";
@@ -67,7 +67,6 @@ export default function PagesHorizontalViewer({
   allowDownload,
   feedbackEnabled,
   screenshotProtectionEnabled,
-  screenShieldPercentage,
   versionNumber,
   brand,
   documentName,
@@ -97,7 +96,6 @@ export default function PagesHorizontalViewer({
   allowDownload: boolean;
   feedbackEnabled: boolean;
   screenshotProtectionEnabled: boolean;
-  screenShieldPercentage: number | null;
   versionNumber: number;
   brand?: Partial<Brand> | Partial<DataroomBrand> | null;
   documentName?: string;
@@ -350,22 +348,6 @@ export default function PagesHorizontalViewer({
     }
   }, []); // Run once on mount
 
-  // Function to handle context for screenshotting
-  const handleContextMenu = (event: React.MouseEvent<HTMLDivElement>) => {
-    if (!screenshotProtectionEnabled && !screenShieldPercentage) {
-      return null;
-    }
-
-    event.preventDefault();
-    // Close menu on click anywhere
-    const clickHandler = () => {
-      document.removeEventListener("click", clickHandler);
-    };
-    document.addEventListener("click", clickHandler);
-
-    toast.info("Context menu has been disabled.");
-  };
-
   // Function to preload next image
   const preloadImage = (index: number) => {
     if (index < numPages && !loadedImages[index]) {
@@ -604,7 +586,7 @@ export default function PagesHorizontalViewer({
                 transformOrigin: scale <= 1 ? "center center" : "left top",
                 minWidth: scale > 1 ? `${100 * scale}%` : "100%",
               }}
-              onContextMenu={handleContextMenu}
+              onContextMenu={(e) => e.preventDefault()}
             >
               {pageNumber <= numPagesWithAccountCreation &&
               pages &&
@@ -613,7 +595,7 @@ export default function PagesHorizontalViewer({
                     <div
                       key={index}
                       className={cn(
-                        "relative mx-auto w-full",
+                        "viewer-container relative mx-auto w-full",
                         pageNumber - 1 === index
                           ? "flex justify-center"
                           : "hidden",
@@ -825,9 +807,7 @@ export default function PagesHorizontalViewer({
             isPreview={isPreview}
           />
         ) : null}
-        {!!screenShieldPercentage ? (
-          <ScreenShield visiblePercentage={screenShieldPercentage} />
-        ) : null}
+
         {screenshotProtectionEnabled ? <ScreenProtector /> : null}
         {showPoweredByBanner ? <PoweredBy linkId={linkId} /> : null}
       </div>
