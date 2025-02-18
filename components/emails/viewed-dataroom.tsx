@@ -51,7 +51,7 @@ export default function ViewedDataroom({
             <Section className="my-8 text-center">
               <Button
                 className="rounded bg-black text-center text-xs font-semibold text-white no-underline"
-                href={`https://app.papermark.io/datarooms/${dataroomId}`}
+                href={`${process.env.NEXT_PUBLIC_BASE_URL}/datarooms/${dataroomId}`}
                 style={{ padding: "12px 20px" }}
               >
                 See my dataroom insights
