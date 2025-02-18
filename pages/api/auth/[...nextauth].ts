@@ -14,7 +14,7 @@ import { CreateUserEmailProps, CustomUser } from "@/lib/types";
 import { subscribe } from "@/lib/unsend";
 import { generateChecksum } from "@/lib/utils/generate-checksum";
 
-const VERCEL_DEPLOYMENT = !!process.env.VERCEL_URL;
+const VERCEL_DEPLOYMENT = (!!process.env.VERCEL_URL || !!process.env.DOMAIN);
 
 // This function can run for a maximum of 180 seconds
 export const config = {
@@ -89,7 +89,7 @@ export const authOptions: NextAuthOptions = {
         sameSite: "lax",
         path: "/",
         // When working on localhost, the cookie domain must be omitted entirely (https://stackoverflow.com/a/1188145)
-        domain: VERCEL_DEPLOYMENT ? ".papermark.io" : undefined,
+        // TODO: Verify if we really need to set a domain
         secure: VERCEL_DEPLOYMENT,
       },
     },
