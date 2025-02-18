@@ -1,9 +1,11 @@
 import { useRouter } from "next/router";
 
-import { useEffect } from "react";
+import { useRef, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
+import { addDays, format } from "date-fns";
 import { BarChart3, Eye, FileText, Link, Users } from "lucide-react";
+import { toast } from "sonner";
 import useSWR from "swr";
 
 import { AnalyticsCard } from "@/components/analytics/analytics-card";
@@ -33,26 +35,45 @@ interface OverviewData {
     views: number;
   }[];
 }
+export const defaultRange = {
+  start: addDays(new Date(), -7),
+  end: addDays(new Date(), 0),
+};
 
 export default function DashboardPage() {
   const router = useRouter();
   const teamInfo = useTeam();
+  const slug = useRef<boolean>(false);
+  const [customRange, setCustomRange] = useState<{
+    start: Date;
+    end: Date;
+  }>(defaultRange);
+
   const { interval = "7d", type = "links" } = router.query as {
     interval: TimeRange;
     type: string;
   };
 
-  // Fetch overview data
-  const { data: overview, isLoading } = useSWR<OverviewData>(
-    teamInfo?.currentTeam?.id
-      ? `/api/analytics?type=overview&interval=${interval}&teamId=${teamInfo.currentTeam.id}`
-      : null,
+  const {
+    data: overview,
+    isLoading,
+    error,
+  } = useSWR<OverviewData>(
+    `/api/analytics?type=overview&interval=${interval}&teamId=${teamInfo?.currentTeam?.id}${interval === "custom" ? `&startDate=${format(customRange.start, "MM-dd-yyyy")}&endDate=${format(customRange.end, "MM-dd-yyyy")}` : ""}`,
     fetcher,
     {
       keepPreviousData: true,
       revalidateOnFocus: false,
     },
   );
+
+  if (error && !slug.current) {
+    const errorObj = JSON.parse(error.message);
+    const errorMessage = errorObj?.error;
+    toast.info(errorMessage);
+    setCustomRange(defaultRange);
+    slug.current = true;
+  }
 
   // Update the URL when time range changes
   const handleTimeRangeChange = (newTimeRange: TimeRange) => {
@@ -66,7 +87,13 @@ export default function DashboardPage() {
       <div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
         <div className="flex items-center justify-between">
           <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
-          <TimeRangeSelect value={interval} onChange={handleTimeRangeChange} />
+          <TimeRangeSelect
+            value={interval}
+            onChange={handleTimeRangeChange}
+            customRange={customRange}
+            setCustomRange={setCustomRange}
+            slug={slug}
+          />
         </div>
 
         <div className="space-y-4">
@@ -75,7 +102,12 @@ export default function DashboardPage() {
             icon={<BarChart3 className="h-4 w-4" />}
             contentClassName="space-y-4"
           >
-            <DashboardViewsChart timeRange={interval} data={overview?.graph} />
+            <DashboardViewsChart
+              timeRange={interval}
+              data={overview?.graph}
+              startDate={customRange.start}
+              endDate={customRange.end}
+            />
           </AnalyticsCard>
 
           <TabMenu
@@ -112,10 +144,30 @@ export default function DashboardPage() {
           />
 
           <div className="grid grid-cols-1">
-            {type === "links" && <LinksTable />}
-            {type === "documents" && <DocumentsTable />}
-            {type === "visitors" && <VisitorsTable />}
-            {type === "views" && <ViewsTable />}
+            {type === "links" && (
+              <LinksTable
+                startDate={customRange.start}
+                endDate={customRange.end}
+              />
+            )}
+            {type === "documents" && (
+              <DocumentsTable
+                startDate={customRange.start}
+                endDate={customRange.end}
+              />
+            )}
+            {type === "visitors" && (
+              <VisitorsTable
+                startDate={customRange.start}
+                endDate={customRange.end}
+              />
+            )}
+            {type === "views" && (
+              <ViewsTable
+                startDate={customRange.start}
+                endDate={customRange.end}
+              />
+            )}
           </div>
         </div>
       </div>
