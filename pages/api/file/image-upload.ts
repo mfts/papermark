@@ -7,11 +7,37 @@ import { CustomUser } from "@/lib/types";
 
 import { authOptions } from "../auth/[...nextauth]";
 
+const uploadConfig = {
+  profile: {
+    allowedContentTypes: ["image/png", "image/jpg"],
+    maximumSizeInBytes: 2 * 1024 * 1024, // 2MB
+  },
+  assets: {
+    allowedContentTypes: [
+      "image/png",
+      "image/jpeg",
+      "image/jpg",
+      "image/svg+xml",
+      "image/x-icon",
+      "image/ico",
+    ],
+    maximumSizeInBytes: 5 * 1024 * 1024, // 5MB
+  },
+};
+
+// logo-upload/?type= "profile" | "assets"
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
   const body = req.body as HandleUploadBody;
+  const type = Array.isArray(req.query.type)
+    ? req.query.type[0]
+    : req.query.type;
+
+  if (!type || !(type in uploadConfig)) {
+    return res.status(400).json({ error: "Invalid upload type specified." });
+  }
 
   try {
     const jsonResponse = await handleUpload({
@@ -27,15 +53,10 @@ export default async function handler(
         }
 
         return {
-          allowedContentTypes: [
-            "image/png",
-            "image/jpeg",
-            "image/jpg",
-            "image/svg+xml",
-            "image/x-icon",
-            "image/ico",
-          ],
-          maximumSizeInBytes: 5 * 1024 * 1024, // 5 MB
+          allowedContentTypes:
+            uploadConfig[type as keyof typeof uploadConfig].allowedContentTypes,
+          maximumSizeInBytes:
+            uploadConfig[type as keyof typeof uploadConfig].maximumSizeInBytes,
           metadata: JSON.stringify({
             // optional, sent to your server on upload completion
             userId: (session.user as CustomUser).id,

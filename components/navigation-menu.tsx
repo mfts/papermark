@@ -28,7 +28,7 @@ export const NavMenu: React.FC<React.PropsWithChildren<Props>> = ({
     <nav
       className={cn("sticky top-0 bg-background dark:bg-gray-900", className)}
     >
-      <div className="flex w-full items-center overflow-x-auto pl-1">
+      <div className="flex w-full items-center overflow-x-auto px-4">
         <ul className="flex flex-row gap-4">
           {navigation.map(({ label, href, segment, tag, disabled }) => (
             <NavItem

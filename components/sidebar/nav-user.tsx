@@ -1,9 +1,12 @@
 "use client";
 
+import Link from "next/link";
+
 import { useState } from "react";
 
 import {
   ChevronsUpDown,
+  CircleUserRound,
   FileTextIcon,
   LifeBuoyIcon,
   LogOut,
@@ -141,12 +144,14 @@ export function NavUser() {
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <ModeToggle />
-              {/* <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <Settings2 />
-                User Settings
-              </DropdownMenuItem>
-            </DropdownMenuGroup> */}
+              <DropdownMenuGroup>
+                <Link href="/account/general">
+                  <DropdownMenuItem>
+                    <CircleUserRound />
+                    Account
+                  </DropdownMenuItem>
+                </Link>
+              </DropdownMenuGroup>
               <DropdownMenuSeparator />
               <DropdownMenuGroup>
                 <DropdownMenuItem
