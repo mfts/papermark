@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useTeam } from "@/context/team-context";
 import { toast } from "sonner";
 import { mutate } from "swr";
+import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -34,12 +35,20 @@ export function AddTeamMembers({
   const [loading, setLoading] = useState<boolean>(false);
   const teamInfo = useTeam();
   const analytics = useAnalytics();
+  const emailSchema = z
+    .string()
+    .min(3, { message: "Email name is required." })
+    .email({ message: "Please enter a valid email." });
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     event.stopPropagation();
 
-    if (!email) return;
+    const validation = emailSchema.safeParse(email);
+    if (!validation.success) {
+      toast.error(validation.error.errors[0].message);
+      return;
+    }
 
     setLoading(true);
     const response = await fetch(
