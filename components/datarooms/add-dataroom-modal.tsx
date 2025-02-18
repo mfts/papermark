@@ -43,9 +43,9 @@ export function AddDataroomModal({
   const { plan } = usePlan();
   const analytics = useAnalytics();
   const dataroomSchema = z.object({
-    name: z
-      .string()
-      .nonempty("Dataroom name is required. Please enter a valid name."),
+    name: z.string().min(3, {
+      message: "Dataroom name is required. Please enter a valid name.",
+    }),
   });
 
   const handleSubmit = async (event: any) => {

@@ -37,7 +37,7 @@ export function AddTeamMembers({
   const analytics = useAnalytics();
   const emailSchema = z
     .string()
-    .nonempty("Email name is required.")
+    .min(3, { message: "Email name is required." })
     .email({ message: "Please enter a valid email." });
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {

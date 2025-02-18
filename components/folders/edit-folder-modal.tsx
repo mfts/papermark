@@ -42,9 +42,9 @@ export function EditFolderModal({
 
   const teamInfo = useTeam();
   const editFolderSchema = z.object({
-    name: z
-      .string()
-      .nonempty("Folder name is required. Please enter a valid name."),
+    name: z.string().min(3, {
+      message: "Folder name is required. Please enter a valid name.",
+    }),
   });
 
   const handleSubmit = async (event: any) => {

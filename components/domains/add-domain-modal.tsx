@@ -46,7 +46,7 @@ export function AddDomainModal({
   const addDomainSchema = z.object({
     name: z
       .string()
-      .nonempty("Domain is required. Please enter a valid domain.")
+      .min(3, { message: "Domain is required. Please enter a valid domain." })
       // Add validation for papermark
       .refine((name) => !name.toLowerCase().includes("papermark"), {
         message: "Domain cannot contain 'papermark'",

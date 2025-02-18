@@ -40,7 +40,9 @@ export function AddGroupModal({
   const addGroupSchema = z.object({
     name: z
       .string()
-      .nonempty("Group name is required. Please enter a valid name."),
+      .min(3, {
+        message: "Group name is required. Please enter a valid name.",
+      }),
   });
 
   const handleSubmit = async (event: any) => {
