@@ -127,6 +127,7 @@ export interface LinkWithDataroom extends Link {
     }[];
     folders: DataroomFolder[];
     lastUpdatedAt: Date;
+    createdAt: Date;
   };
   agreement: Agreement | null;
   customFields: CustomField[];
