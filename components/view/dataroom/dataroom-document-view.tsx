@@ -54,6 +54,7 @@ type DEFAULT_DOCUMENT_VIEW_TYPE = {
   isPreview?: boolean;
   canDownload?: boolean;
   verificationToken?: string;
+  viewerEmail?: string;
 };
 
 export default function DataroomDocumentView({
@@ -168,9 +169,10 @@ export default function DataroomDocumentView({
           useAdvancedExcelViewer,
           canDownload,
           verificationToken,
+          viewerEmail,
         } = fetchData as DEFAULT_DOCUMENT_VIEW_TYPE;
         analytics.identify(
-          userEmail ?? verifiedEmail ?? data.email ?? undefined,
+          userEmail ?? viewerEmail ?? verifiedEmail ?? data.email ?? undefined,
         );
         analytics.capture("Link Viewed", {
           linkId: link.id,
@@ -178,7 +180,7 @@ export default function DataroomDocumentView({
           dataroomId: link.dataroomId,
           linkType: linkType,
           viewerId: viewId,
-          viewerEmail: data.email ?? verifiedEmail ?? userEmail,
+          viewerEmail: viewerEmail ?? data.email ?? verifiedEmail ?? userEmail,
           isEmbedded,
         });
 
@@ -206,6 +208,7 @@ export default function DataroomDocumentView({
           ipAddress,
           useAdvancedExcelViewer,
           canDownload,
+          viewerEmail,
         }));
         setSubmitted(true);
         setVerificationRequested(false);
@@ -314,8 +317,16 @@ export default function DataroomDocumentView({
           brand={brand}
           showPoweredByBanner={false}
           showAccountCreationSlide={false}
-          useAdvancedExcelViewer={useAdvancedExcelViewer}
-          viewerEmail={data.email ?? verifiedEmail ?? userEmail ?? undefined}
+          useAdvancedExcelViewer={
+            viewData.useAdvancedExcelViewer ?? useAdvancedExcelViewer
+          }
+          viewerEmail={
+            viewData.viewerEmail ??
+            data.email ??
+            verifiedEmail ??
+            userEmail ??
+            undefined
+          }
         />
       ) : (
         <div className="flex h-screen items-center justify-center">

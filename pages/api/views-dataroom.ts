@@ -858,6 +858,7 @@ export default async function handle(
             ? "notion"
             : undefined,
       watermarkConfig: link.enableWatermark ? link.watermarkConfig : undefined,
+      viewerEmail: viewer?.email ?? email ?? verifiedEmail ?? null,
       ipAddress:
         link.enableWatermark &&
         link.watermarkConfig &&
