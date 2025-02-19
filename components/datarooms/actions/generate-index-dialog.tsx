@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 
+import { useAnalytics } from "@/lib/analytics";
 import { usePlan } from "@/lib/swr/use-billing";
 import { useDataroomLinks } from "@/lib/swr/use-dataroom";
 import { IndexFileFormat } from "@/lib/types/index-file";
@@ -48,6 +49,7 @@ export default function GenerateIndexDialog({
 }: GenerateIndexDialogProps) {
   const { links } = useDataroomLinks();
   const { plan, trial } = usePlan();
+  const analytics = useAnalytics();
 
   const [isLoading, setIsLoading] = useState(false);
   const [selectedLinkId, setSelectedLinkId] = useState<string>("");
@@ -106,6 +108,13 @@ export default function GenerateIndexDialog({
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
+
+      analytics.capture("Generate Index File", {
+        teamId,
+        dataroomId,
+        linkId: selectedLinkId,
+        format: selectedFormat,
+      });
 
       toast.success("Index file generated successfully");
       setIsOpen(false);
