@@ -1,3 +1,5 @@
+import { useSearchParams } from "next/navigation";
+
 import { useMemo } from "react";
 import React from "react";
 
@@ -24,6 +26,7 @@ import {
 
 import { cn } from "@/lib/utils";
 
+import { SearchBoxPersisted } from "../search-box";
 import DocumentCard from "./dataroom/document-card";
 import FolderCard from "./dataroom/folder-card";
 import DataroomNav from "./dataroom/nav-dataroom";
@@ -82,6 +85,8 @@ export default function DataroomViewer({
   folderId: string | null;
   setFolderId: React.Dispatch<React.SetStateAction<string | null>>;
 }) {
+  const searchParams = useSearchParams();
+  const searchQuery = searchParams?.get("search")?.toLowerCase() || "";
   const { documents, folders } = dataroom as {
     documents: DataroomDocument[];
     folders: DataroomFolder[];
@@ -94,6 +99,12 @@ export default function DataroomViewer({
 
   // create a mixedItems array with folders and documents of the current folder and memoize it
   const mixedItems = useMemo(() => {
+    if (searchQuery) {
+      return (documents || [])
+        .filter((doc) => doc.name.toLowerCase().includes(searchQuery))
+        .map((doc) => ({ ...doc, itemType: "document" }))
+        .sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
+    }
     const mixedItems: FolderOrDocument[] = [
       ...(folders || [])
         .filter((folder) => folder.parentId === folderId)
@@ -104,7 +115,7 @@ export default function DataroomViewer({
     ];
 
     return mixedItems.sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
-  }, [folders, documents, folderId]);
+  }, [folders, documents, folderId, searchQuery]);
 
   const renderItem = (item: FolderOrDocument) => {
     if ("versions" in item) {
@@ -221,8 +232,19 @@ export default function DataroomViewer({
                   </BreadcrumbList>
                 </Breadcrumb>
               </div>
+              <div className="flex justify-end px-4">
+                <SearchBoxPersisted inputClassName="h-10" />
+              </div>
               <ul role="list" className="space-y-4 overflow-auto p-4">
-                {mixedItems.map(renderItem)}
+                {mixedItems.length === 0 ? (
+                  <li className="py-6 text-center text-muted-foreground">
+                    {searchQuery
+                      ? "No documents name match your search."
+                      : "No items available."}
+                  </li>
+                ) : (
+                  mixedItems.map(renderItem)
+                )}
               </ul>
             </div>
             <ScrollBar orientation="vertical" />
