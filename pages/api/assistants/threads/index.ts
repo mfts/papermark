@@ -49,8 +49,15 @@ export default async function handle(
               {
                 role: "user",
                 content: "Initializing conversation with Papermark Assistant",
-                file_ids: [documentVersion?.fileId || ""],
-                metadata: { intitialMessage: true },
+                attachments: [
+                  {
+                    file_id: documentVersion?.fileId || "",
+		    tools: [
+                      { type: "file_search" }
+                    ]
+                  }
+                ],
+                metadata: { initialMessage: "true" },
               },
             ],
           })
