@@ -171,6 +171,9 @@ export function DocumentsList({
     setSelectedDocuments([]);
     setIsOverFolder(false);
   };
+  const handleCloseDrawer = () => {
+    setShowDrawer(false);
+  };
 
   const HeaderContent = memo(() => {
     if (selectedDocuments.length > 0) {
@@ -477,6 +480,7 @@ export function DocumentsList({
           open={showDrawer}
           onOpenChange={setShowDrawer}
           uploads={uploads}
+          handleCloseDrawer={handleCloseDrawer}
           setUploads={setUploads}
           rejectedFiles={rejectedFiles}
           setRejectedFiles={setRejectedFiles}

@@ -10,6 +10,7 @@ import prisma from "@/lib/prisma";
 import { cancelSubscription } from "@/lib/stripe";
 import { isOldAccount } from "@/lib/stripe/utils";
 import { CustomUser } from "@/lib/types";
+import { unsubscribe } from "@/lib/unsend";
 
 import { authOptions } from "../../auth/[...nextauth]";
 
@@ -215,6 +216,8 @@ export default async function handle(
         // delete subscription, if exists on team
         team.stripeId &&
           cancelSubscription(team.stripeId, isOldAccount(team.plan)),
+        // delete user from contact book
+        unsubscribe((session.user as CustomUser).email ?? ""),
         // delete user, if no other teams
         userTeams.length === 1 &&
           prisma.user.delete({

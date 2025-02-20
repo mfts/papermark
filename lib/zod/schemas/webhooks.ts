@@ -56,7 +56,6 @@ const linkEventSchema = z.object({
   enabledFeedback: z.boolean().default(false),
   enabledQuestion: z.boolean().default(false),
   enabledScreenshotProtection: z.boolean().default(false),
-  enabledScreenShieldPercentage: z.boolean().default(false),
   enabledAgreement: z.boolean().default(false),
   enabledWatermark: z.boolean().default(false),
 
