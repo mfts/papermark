@@ -138,7 +138,7 @@ export default function GenerateIndexDialog({
           Generate Index File
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Generate Dataroom Index File</DialogTitle>
           <DialogDescription>

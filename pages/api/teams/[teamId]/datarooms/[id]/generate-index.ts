@@ -49,7 +49,7 @@ export default async function handle(
       return res.status(401).json({ error: "Unauthorized" });
     }
 
-    if (team.plan !== "datarooms" && !team.plan.includes("trial")) {
+    if (!team.plan.includes("datarooms") && !team.plan.includes("trial")) {
       return res.status(401).json({
         error: "Please upgrade to a Data Rooms plan to generate an index",
       });
