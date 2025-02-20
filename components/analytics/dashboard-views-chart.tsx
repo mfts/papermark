@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 
-import { format, subDays, subHours } from "date-fns";
+import { format } from "date-fns";
 import {
   Bar,
   BarChart,
@@ -15,23 +15,59 @@ import { TimeRange } from "./time-range-select";
 
 interface DashboardViewsChartProps {
   timeRange: TimeRange;
-  data?: {
-    date: string;
-    views: number;
-  }[];
+  data?: { date: string; views: number }[];
+  startDate?: Date;
+  endDate?: Date;
 }
 
 export default function DashboardViewsChart({
   timeRange,
   data = [],
+  startDate,
+  endDate,
 }: DashboardViewsChartProps) {
+  const totalDays =
+    startDate && endDate
+      ? Math.ceil(
+          (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24),
+        )
+      : 0;
   // Format the data for display
   const formattedData = useMemo(() => {
     // Generate all possible time slots
     const now = new Date();
     const slots: { date: Date; views: number }[] = [];
+    if (timeRange === "custom" && startDate && endDate) {
+      if (totalDays > 365) {
+        // More than a year: Group by months
+        let current = new Date(
+          startDate.getFullYear(),
+          startDate.getMonth(),
+          1,
+        );
 
-    if (timeRange === "24h") {
+        while (current <= endDate) {
+          slots.push({ date: new Date(current), views: 0 });
+          current.setMonth(current.getMonth() + 1);
+        }
+      } else if (totalDays > 30) {
+        // More than a month but less than a year: Group by weeks
+        for (let i = 0; i <= totalDays; i += 7) {
+          const date = new Date(startDate);
+          date.setDate(date.getDate() + i);
+          date.setHours(0, 0, 0, 0);
+          slots.push({ date, views: 0 });
+        }
+      } else {
+        // Less than a month: Show daily data
+        for (let i = 0; i <= totalDays; i++) {
+          const date = new Date(startDate);
+          date.setDate(date.getDate() + i);
+          date.setHours(0, 0, 0, 0);
+          slots.push({ date, views: 0 });
+        }
+      }
+    } else if (timeRange === "24h") {
       // Generate 24 hourly slots
       for (let i = 23; i >= 0; i--) {
         const date = new Date(now);
@@ -54,15 +90,44 @@ export default function DashboardViewsChart({
     if (data) {
       data.forEach((point) => {
         const pointDate = new Date(point.date);
-        const slotIndex = slots.findIndex((slot) => {
-          if (timeRange === "24h") {
-            return slot.date.getHours() === pointDate.getHours();
+
+        let slotIndex = -1;
+
+        if (timeRange === "24h") {
+          slotIndex = slots.findIndex(
+            (slot) => slot.date.getHours() === pointDate.getHours(),
+          );
+        } else if (timeRange === "custom") {
+          if (totalDays > 365) {
+            // If range is more than a year, match by month
+            slotIndex = slots.findIndex(
+              (slot) =>
+                slot.date.getFullYear() === pointDate.getFullYear() &&
+                slot.date.getMonth() === pointDate.getMonth(),
+            );
+          } else if (totalDays > 30) {
+            // If range is more than a month but less than a year, match by week
+            slotIndex = slots.findIndex(
+              (slot) =>
+                pointDate >= slot.date &&
+                pointDate <
+                  new Date(slot.date.getTime() + 7 * 24 * 60 * 60 * 1000), // Within the week
+            );
           } else {
-            return slot.date.toDateString() === pointDate.toDateString();
+            // If range is less than a month, match by exact day
+            slotIndex = slots.findIndex(
+              (slot) => slot.date.toDateString() === pointDate.toDateString(),
+            );
           }
-        });
+        } else {
+          // Default case: match by exact day for '7d' and '30d'
+          slotIndex = slots.findIndex(
+            (slot) => slot.date.toDateString() === pointDate.toDateString(),
+          );
+        }
+
         if (slotIndex !== -1) {
-          slots[slotIndex].views = point.views;
+          slots[slotIndex].views += point.views;
         }
       });
     }
@@ -70,10 +135,19 @@ export default function DashboardViewsChart({
     // Format for display
     return slots.map((slot) => ({
       date: slot.date,
-      name: format(slot.date, timeRange === "24h" ? "h:mm aa" : "EEE, MMM d"),
+      name: format(
+        slot.date,
+        timeRange === "24h"
+          ? "h:mm aa"
+          : totalDays > 365
+            ? "MMM yyyy"
+            : totalDays > 30
+              ? "MMM d"
+              : "EEE, MMM d",
+      ),
       views: slot.views,
     }));
-  }, [data, timeRange]);
+  }, [data, timeRange, startDate, endDate, totalDays]);
 
   // Calculate tick values based on time range
   const ticks = useMemo(() => {
@@ -96,9 +170,33 @@ export default function DashboardViewsChart({
         tickIndices.unshift(i);
       }
       return tickIndices.map((i) => formattedData[i].name);
+    } else if (timeRange === "custom") {
+      if (totalDays > 365) {
+        // Show every 2rd month
+        return formattedData.filter((_, i) => i % 2 === 0).map((d) => d.name);
+      }
+
+      if (totalDays > 30) {
+        // Show every 2nd week
+        return formattedData.filter((_, i) => i % 2 === 0).map((d) => d.name);
+      }
+      return formattedData.map((d) => d.name);
     }
     return formattedData.map((d) => d.name);
-  }, [timeRange, formattedData]);
+  }, [timeRange, formattedData, totalDays]);
+
+  const barSize = useMemo(() => {
+    if (timeRange === "24h") return 8;
+    if (timeRange === "7d") return 24;
+    if (timeRange === "30d") return 12;
+
+    if (startDate && endDate) {
+      if (totalDays > 365) return 24;
+      if (totalDays > 30) return 16;
+    }
+
+    return 12;
+  }, [timeRange, startDate, endDate, totalDays]);
 
   return (
     <div className="h-[300px] w-full">
@@ -106,7 +204,7 @@ export default function DashboardViewsChart({
         <BarChart
           data={formattedData}
           margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
-          barSize={timeRange === "24h" ? 8 : timeRange === "7d" ? 24 : 12}
+          barSize={barSize}
         >
           <XAxis
             dataKey="name"
@@ -137,9 +235,16 @@ export default function DashboardViewsChart({
                           Time
                         </span>
                         <span className="font-bold text-muted-foreground">
-                          {timeRange === "24h"
-                            ? format(data.date, "h:mm a")
-                            : format(data.date, "MMM d, yyyy")}
+                          {format(
+                            data.date,
+                            timeRange === "24h"
+                              ? "h:mm aa"
+                              : totalDays > 365
+                                ? "MMM yyyy"
+                                : totalDays > 30
+                                  ? "'Week of' MMM d"
+                                  : "MMM d, yyyy",
+                          )}
                         </span>
                       </div>
                       <div className="flex flex-col">

@@ -13,6 +13,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
+import { format } from "date-fns";
 import {
   ChevronDownIcon,
   ChevronUpIcon,
@@ -154,7 +155,13 @@ const columns: ColumnDef<Document>[] = [
   },
 ];
 
-export default function DocumentsTable() {
+export default function DocumentsTable({
+  startDate,
+  endDate,
+}: {
+  startDate: Date;
+  endDate: Date;
+}) {
   const router = useRouter();
   const teamInfo = useTeam();
   const [sorting, setSorting] = useState<SortingState>([
@@ -163,7 +170,7 @@ export default function DocumentsTable() {
 
   const interval = router.query.interval || "24h";
   const { data: documents, isLoading } = useSWR<Document[]>(
-    `/api/analytics?type=documents&interval=${interval}&teamId=${teamInfo?.currentTeam?.id}`,
+    `/api/analytics?type=documents&interval=${interval}&teamId=${teamInfo?.currentTeam?.id}${interval === "custom" ? `&startDate=${format(startDate, "MM-dd-yyyy")}&endDate=${format(endDate, "MM-dd-yyyy")}` : ""}`,
     fetcher,
     {
       keepPreviousData: true,
