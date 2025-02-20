@@ -45,7 +45,10 @@ import { CustomFieldData } from "./custom-fields-panel";
 import DomainSection from "./domain-section";
 import { LinkOptions } from "./link-options";
 
-export const DEFAULT_LINK_PROPS = (linkType: LinkType) => ({
+export const DEFAULT_LINK_PROPS = (
+  linkType: LinkType,
+  groupId: string | null = null,
+) => ({
   id: null,
   name: null,
   domain: null,
@@ -73,8 +76,8 @@ export const DEFAULT_LINK_PROPS = (linkType: LinkType) => ({
   showBanner: linkType === LinkType.DOCUMENT_LINK ? true : false,
   enableWatermark: false,
   watermarkConfig: null,
-  audienceType: LinkAudienceType.GENERAL,
-  groupId: null,
+  audienceType: groupId ? LinkAudienceType.GROUP : LinkAudienceType.GENERAL,
+  groupId: groupId,
   customFields: [],
 });
 
@@ -124,7 +127,13 @@ export default function LinkSheet({
   currentLink?: DEFAULT_LINK_TYPE;
   existingLinks?: LinkWithViews[];
 }) {
+  const router = useRouter();
+  const { id: targetId, groupId } = router.query as {
+    id: string;
+    groupId?: string;
+  };
   const { domains } = useDomains();
+
   const {
     viewerGroups,
     loading: isLoadingGroups,
@@ -134,16 +143,13 @@ export default function LinkSheet({
   const { plan, trial } = usePlan();
   const analytics = useAnalytics();
   const [data, setData] = useState<DEFAULT_LINK_TYPE>(
-    DEFAULT_LINK_PROPS(linkType),
+    DEFAULT_LINK_PROPS(linkType, groupId),
   );
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState<boolean>(false);
 
-  const router = useRouter();
-  const targetId = router.query.id as string;
-
   useEffect(() => {
-    setData(currentLink || DEFAULT_LINK_PROPS(linkType));
+    setData(currentLink || DEFAULT_LINK_PROPS(linkType, groupId));
   }, [currentLink]);
 
   const handlePreviewLink = async (link: LinkWithViews) => {
@@ -273,7 +279,7 @@ export default function LinkSheet({
       toast.success("Link created successfully");
     }
 
-    setData(DEFAULT_LINK_PROPS(linkType));
+    setData(DEFAULT_LINK_PROPS(linkType, groupId));
     setIsSaving(false);
 
     if (shouldPreview) {

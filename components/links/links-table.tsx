@@ -74,7 +74,9 @@ export default function LinksTable({
   const router = useRouter();
   const { plan } = usePlan();
   const teamInfo = useTeam();
-
+  const { groupId } = router.query as {
+    groupId?: string;
+  };
   const { canAddLinks } = useLimits();
   const { data: features } = useSWR<{
     embedding: boolean;
@@ -88,7 +90,7 @@ export default function LinksTable({
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isLinkSheetVisible, setIsLinkSheetVisible] = useState<boolean>(false);
   const [selectedLink, setSelectedLink] = useState<DEFAULT_LINK_TYPE>(
-    DEFAULT_LINK_PROPS(`${targetType}_LINK`),
+    DEFAULT_LINK_PROPS(`${targetType}_LINK`, groupId),
   );
   const [embedModalOpen, setEmbedModalOpen] = useState(false);
   const [selectedEmbedLink, setSelectedEmbedLink] = useState<{
@@ -250,7 +252,13 @@ export default function LinksTable({
       (links || []).map((link) => (link.id === linkId ? archivedLink : link)),
       false,
     );
-
+    mutate(
+      `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${encodeURIComponent(
+        targetId,
+      )}/groups/${groupId}/links`,
+      (links || []).map((link) => (link.id === linkId ? archivedLink : link)),
+      false,
+    );
     toast.success(
       !isArchived
         ? "Link successfully archived"
