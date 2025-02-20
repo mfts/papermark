@@ -14,6 +14,7 @@ import {
   CogIcon,
   ContactIcon,
   FolderIcon,
+  HouseIcon,
   Loader,
   ServerIcon,
 } from "lucide-react";
@@ -59,12 +60,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   const data = {
     navMain: [
-      // {
-      //   title: "Dashboard",
-      //   url: "/dashboard",
-      //   icon: HouseIcon,
-      //   current: router.pathname.includes("dashboard"),
-      // },
+      {
+        title: "Dashboard",
+        url: "/dashboard",
+        icon: HouseIcon,
+        current: router.pathname.includes("dashboard"),
+      },
       {
         title: "All Documents",
         url: "/documents",
