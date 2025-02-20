@@ -44,7 +44,7 @@ export function AddDataroomModal({
   const analytics = useAnalytics();
   const dataroomSchema = z.object({
     name: z.string().min(3, {
-      message: "Dataroom name is required. Please enter a valid name.",
+      message: "Please provide a dataroom name with at least 3 characters.",
     }),
   });
 

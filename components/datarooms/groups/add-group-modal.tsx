@@ -38,11 +38,9 @@ export function AddGroupModal({
   const teamInfo = useTeam();
   const analytics = useAnalytics();
   const addGroupSchema = z.object({
-    name: z
-      .string()
-      .min(3, {
-        message: "Group name is required. Please enter a valid name.",
-      }),
+    name: z.string().min(3, {
+      message: "Please provide a group name with at least 3 characters.",
+    }),
   });
 
   const handleSubmit = async (event: any) => {
