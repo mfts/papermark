@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { addDays, format } from "date-fns";
-import { BarChart3, Eye, FileText, Link, Users } from "lucide-react";
+import { BarChart3 } from "lucide-react";
 import { toast } from "sonner";
 import useSWR from "swr";
 
@@ -21,6 +21,7 @@ import VisitorsTable from "@/components/analytics/visitors-table";
 import AppLayout from "@/components/layouts/app";
 import { TabMenu } from "@/components/tab-menu";
 
+import { usePlan } from "@/lib/swr/use-billing";
 import { fetcher } from "@/lib/utils";
 
 interface OverviewData {
@@ -43,15 +44,26 @@ export const defaultRange = {
 export default function DashboardPage() {
   const router = useRouter();
   const teamInfo = useTeam();
+  const { plan, trial } = usePlan();
   const slug = useRef<boolean>(false);
   const [customRange, setCustomRange] = useState<{
     start: Date;
     end: Date;
   }>(defaultRange);
 
-  const { interval = "7d", type = "links" } = router.query as {
+  // Check if user has access to data beyond 30 days
+  const isPremium = plan !== "free" || !!trial;
+
+  const {
+    interval = "7d",
+    type = "links",
+    start,
+    end,
+  } = router.query as {
     interval: TimeRange;
     type: string;
+    start: string;
+    end: string;
   };
 
   const {
@@ -79,7 +91,31 @@ export default function DashboardPage() {
   const handleTimeRangeChange = (newTimeRange: TimeRange) => {
     const params = new URLSearchParams(window.location.search);
     params.set("interval", newTimeRange);
-    router.push(`/dashboard?${params.toString()}`);
+    if (type) {
+      params.set("type", type);
+    }
+    // Only remove date params when switching to preset ranges
+    if (newTimeRange !== "custom") {
+      params.delete("start");
+      params.delete("end");
+    }
+    router.push(`/dashboard?${params.toString()}`, undefined, {
+      shallow: true,
+    });
+  };
+
+  // Handle custom range URL updates
+  const handleCustomRangeComplete = (range: { start: Date; end: Date }) => {
+    const params = new URLSearchParams(window.location.search);
+    params.set("interval", "custom");
+    params.set("start", range.start.toISOString());
+    params.set("end", range.end.toISOString());
+    if (type) {
+      params.set("type", type);
+    }
+    router.push(`/dashboard?${params.toString()}`, undefined, {
+      shallow: true,
+    });
   };
 
   return (
@@ -92,7 +128,9 @@ export default function DashboardPage() {
             onChange={handleTimeRangeChange}
             customRange={customRange}
             setCustomRange={setCustomRange}
+            onCustomRangeComplete={handleCustomRangeComplete}
             slug={slug}
+            isPremium={isPremium}
           />
         </div>
 

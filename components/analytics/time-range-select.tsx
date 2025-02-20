@@ -1,20 +1,19 @@
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
-import { Ref, useState } from "react";
-
-import { addDays, format } from "date-fns";
+import { differenceInDays, format, startOfDay, subDays } from "date-fns";
 import { CalendarIcon, ChevronDown } from "lucide-react";
-import { start } from "repl";
+import { DateRange } from "react-day-picker";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
 
-import { DatePickerWithPresets } from "../ui/datePicker";
-import { Separator } from "../ui/separator";
+import { cn } from "@/lib/utils";
 
 const TIME_RANGES = [
   { value: "24h", label: "Last 24 hours", shortcut: "D" },
@@ -32,8 +31,10 @@ interface TimeRangeSelectProps {
   value: TimeRange;
   onChange: (value: TimeRange) => void;
   customRange: CustomRange;
-  setCustomRange: React.Dispatch<React.SetStateAction<CustomRange>>;
+  setCustomRange: (range: CustomRange) => void;
+  onCustomRangeComplete?: (range: CustomRange) => void;
   slug: React.MutableRefObject<boolean>;
+  isPremium?: boolean;
 }
 
 export function TimeRangeSelect({
@@ -41,81 +42,153 @@ export function TimeRangeSelect({
   onChange,
   customRange,
   setCustomRange,
+  onCustomRangeComplete,
   slug,
+  isPremium = false,
 }: TimeRangeSelectProps) {
-  const [isDatePickerShow, setIsDatePickerShow] = useState(false);
-  const selectedRange =
-    value !== "custom"
-      ? TIME_RANGES.find((range) => range.value === value)
-      : null;
+  const selectedRange = TIME_RANGES.find((range) => range.value === value);
+  const [date, setDate] = useState<DateRange | undefined>({
+    from: customRange.start,
+    to: customRange.end,
+  });
+  const [open, setOpen] = useState(false);
+
+  // Calculate the minimum allowed date (30 days ago for non-premium)
+  const minDate = isPremium ? undefined : subDays(new Date(), 30);
+
+  useEffect(() => {
+    setDate({ from: customRange.start, to: customRange.end });
+  }, [customRange]);
 
   const handleSelectOption = (value: TimeRange) => {
-    const isCustom = value === "custom";
+    // Prevent selecting custom range for non-premium users
+    if (value === "custom" && !isPremium) {
+      toast.error("Upgrade to view data beyond 30 days");
+      return;
+    }
+
     onChange(value);
-    setIsDatePickerShow(isCustom);
+
+    // Update date range based on selected preset
+    const now = new Date();
+    const end = startOfDay(now);
+    let start = startOfDay(now);
+
+    switch (value) {
+      case "24h":
+        start = subDays(end, 1);
+        break;
+      case "7d":
+        start = subDays(end, 7);
+        break;
+      case "30d":
+        start = subDays(end, 30);
+        break;
+      case "custom":
+        // Reset the date range when switching to custom
+        setDate(undefined);
+        return;
+      default:
+        return;
+    }
+
+    setCustomRange({ start, end });
+    setDate({ from: start, to: end });
+    slug.current = false;
+    setOpen(false);
   };
 
-  const handleDateChange = (key: "start" | "end", date: Date) => {
-    setCustomRange((prev: CustomRange) => ({ ...prev, [key]: date }));
-    slug.current = false;
+  const handleRangeChange = (range: DateRange | undefined) => {
+    setDate(range);
+    if (range?.from && range?.to) {
+      // Check if the selected range is within limits for non-premium users
+      if (
+        !isPremium &&
+        (differenceInDays(new Date(), range.from) > 30 ||
+          differenceInDays(new Date(), range.to) > 30)
+      ) {
+        toast.error("Upgrade to view data beyond 30 days");
+        return;
+      }
+
+      const newRange = { start: range.from, end: range.to };
+      setCustomRange(newRange);
+      onChange("custom");
+      slug.current = false;
+      setOpen(false);
+      onCustomRangeComplete?.(newRange);
+    } else if (range?.from) {
+      setCustomRange({ start: range.from, end: range.from });
+      onChange("custom");
+      slug.current = false;
+    }
   };
 
   return (
-    <Popover>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
           variant="outline"
-          className="w-full justify-between text-left font-normal sm:inline-flex sm:min-w-[200px] md:w-fit"
+          className={cn(
+            "w-[300px] justify-between text-left font-normal",
+            !date && "text-muted-foreground",
+          )}
         >
           <div className="flex items-center gap-2">
-            <CalendarIcon className="!size-4" />
+            <CalendarIcon className="h-4 w-4" />
             <span>
-              {selectedRange
-                ? selectedRange.label
-                : customRange.start && customRange.end
-                  ? `${format(customRange.start, "PP")} - ${format(customRange.end, "PP")}`
-                  : "Select Date Range"}
+              {value === "custom" && date?.from ? (
+                <>
+                  {format(date.from, "MMM d")} -{" "}
+                  {format(date.to || date.from, "MMM d, yyyy")}
+                </>
+              ) : (
+                selectedRange?.label
+              )}
             </span>
           </div>
-          <ChevronDown className="!size-4 opacity-50" />
+          <ChevronDown className="h-4 w-4 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[250px] p-1" align="end">
-        <div className="grid gap-0.5">
-          {TIME_RANGES.map((range) => (
-            <Button
-              key={range.value}
-              variant={range.value === value ? "secondary" : "ghost"}
-              className="justify-between"
-              onClick={() => handleSelectOption(range.value)}
-            >
-              <span>{range.label}</span>
-              <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
-                {range.shortcut}
-              </kbd>
-            </Button>
-          ))}
-        </div>
-        {isDatePickerShow && (
-          <>
-            <Separator className="mt-2" />
-            <div className="mt-2 grid gap-0.5">
-              <DatePickerWithPresets
-                value={customRange.start}
-                defaultDate={customRange.start}
-                onChange={(date) => handleDateChange("start", date)}
-                title="Start Date"
-              />
-              <DatePickerWithPresets
-                startDate={customRange.start}
-                value={customRange.end}
-                defaultDate={customRange.end}
-                onChange={(date) => handleDateChange("end", date)}
-                title="End Date"
-              />
+      <PopoverContent className="w-auto p-2" align="end">
+        <div className="flex gap-2">
+          <div className="rounded-md border">
+            <Calendar
+              mode="range"
+              defaultMonth={date?.from}
+              selected={date}
+              onSelect={handleRangeChange}
+              numberOfMonths={2}
+              disabled={
+                !isPremium
+                  ? (date) => {
+                      if (!date) return false;
+                      return differenceInDays(new Date(), date) > 30;
+                    }
+                  : undefined
+              }
+              fromDate={minDate}
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <div className="grid gap-1">
+              {TIME_RANGES.map((range) => (
+                <Button
+                  key={range.value}
+                  variant={range.value === value ? "secondary" : "ghost"}
+                  className="justify-between"
+                  onClick={() => handleSelectOption(range.value)}
+                  disabled={!isPremium && range.value === "custom"}
+                >
+                  <span>{range.label}</span>
+                  {/* <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
+                    {range.shortcut}
+                  </kbd> */}
+                </Button>
+              ))}
             </div>
-          </>
-        )}
+          </div>
+        </div>
       </PopoverContent>
     </Popover>
   );

@@ -11,6 +11,7 @@ import {
   getTotalViewerDuration,
   getViewPageDuration,
 } from "@/lib/tinybird/pipes";
+import { CustomUser } from "@/lib/types";
 import { durationFormat } from "@/lib/utils";
 
 import { authOptions } from "../auth/[...nextauth]";
@@ -59,6 +60,35 @@ export default async function handler(
       endDate: endStr,
     } = result.data;
 
+    const team = await prisma.team.findUnique({
+      where: {
+        id: teamId,
+        users: {
+          some: {
+            userId: (session.user as CustomUser).id,
+          },
+        },
+      },
+    });
+
+    if (!team) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    // Check if free plan user is trying to access data beyond 30 days
+    if (interval === "custom" && team.plan.includes("free")) {
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      thirtyDaysAgo.setHours(0, 0, 0, 0);
+
+      // For custom range, check the provided start date
+      if (startStr && new Date(startStr) < thirtyDaysAgo) {
+        return res.status(401).json({
+          error: "Free plan users can only access data from the last 30 days",
+        });
+      }
+    }
+
     // get the start date for the interval
     const now = new Date();
     let startDate: Date;
@@ -84,14 +114,9 @@ export default async function handler(
         startDate.setHours(0, 0, 0, 0);
         break;
       case "custom":
-        startDate = new Date(startStr || addDays(new Date(), -7));
-        endDate = new Date(endStr || addDays(new Date(), 0));
-
-        if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-          return res
-            .status(400)
-            .json({ error: "Invalid startDate or endDate format." });
-        }
+        startDate = new Date(startStr || addDays(new Date(), -6));
+        startDate.setHours(0, 0, 0, 0);
+        endDate = new Date(endStr || now);
 
         if (startDate > endDate) {
           return res
@@ -101,6 +126,7 @@ export default async function handler(
         break;
       default:
         startDate = new Date(now);
+        startDate.setDate(startDate.getDate() - 6);
     }
 
     // Create the interval filter for the query
@@ -157,19 +183,16 @@ export default async function handler(
             : interval === "custom"
               ? prisma.$queryRaw`
                 SELECT 
-                  CASE 
-                    WHEN ${endDate} - ${startDate} > INTERVAL '1 years' THEN DATE_TRUNC('year', "viewedAt")
-                    WHEN ${endDate} - ${startDate} > INTERVAL '1 months' THEN DATE_TRUNC('month', "viewedAt")
-                    ELSE DATE_TRUNC('day', "viewedAt")
-                  END AS date,
+                  DATE_TRUNC('day', "viewedAt") as date,
                   COUNT(*) as views
                 FROM "View"
                 WHERE 
                   "teamId" = ${teamId}
-                  AND "viewedAt" BETWEEN ${startDate} AND ${endDate}
+                  AND "viewedAt" >= ${startDate}
+                  AND "viewedAt" <= ${endDate}
                   AND "isArchived" = false
                   AND "viewType" = 'DOCUMENT_VIEW'
-                GROUP BY date
+                GROUP BY DATE_TRUNC('day', "viewedAt")
                 ORDER BY date ASC
               `
               : prisma.$queryRaw`
