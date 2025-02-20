@@ -19,6 +19,7 @@ import {
   FileIcon,
   FolderIcon,
   FolderInputIcon,
+  PanelLeft,
   XIcon,
 } from "lucide-react";
 import { motion } from "motion/react";
@@ -33,12 +34,14 @@ import {
   DataroomFolderDocument,
   DataroomFolderWithCount,
 } from "@/lib/swr/use-dataroom";
+import { cn } from "@/lib/utils";
 import { useMediaQuery } from "@/lib/utils/use-media-query";
 
 import { DraggableItem } from "../documents/drag-and-drop/draggable-item";
 import { DroppableFolder } from "../documents/drag-and-drop/droppable-folder";
 import { Button } from "../ui/button";
 import { Portal } from "../ui/portal";
+import { Separator } from "../ui/separator";
 import { ButtonTooltip } from "../ui/tooltip";
 import { useRemoveDataroomDocumentsModal } from "./actions/remove-document-modal";
 import DataroomDocumentCard from "./dataroom-document-card";
@@ -55,6 +58,7 @@ export function DataroomItemsList({
   dataroomId,
   folderCount,
   documentCount,
+  toggleSidebar,
 }: {
   mixedItems: FolderOrDocument[] | [];
   teamInfo: TeamContextType | null;
@@ -62,6 +66,7 @@ export function DataroomItemsList({
   dataroomId: string;
   folderCount: number;
   documentCount: number;
+  toggleSidebar: () => void;
 }) {
   const { isMobile } = useMediaQuery();
 
@@ -284,6 +289,17 @@ export function DataroomItemsList({
     } else {
       return (
         <div className="mb-2 flex min-h-10 items-center gap-x-2">
+          <Button
+            data-sidebar="trigger"
+            variant="ghost"
+            size="icon"
+            className={cn("h-7 w-7")}
+            onClick={toggleSidebar}
+          >
+            <PanelLeft />
+            <span className="sr-only">Toggle Sidebar</span>
+          </Button>
+          <Separator orientation="vertical" className="mr-1 h-4" />
           {folderCount > 0 ? (
             <p className="flex items-center gap-x-1 text-sm text-gray-400">
               <FolderIcon className="h-5 w-5" />

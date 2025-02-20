@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { ArrowUpDownIcon, FolderPlusIcon, PlusIcon } from "lucide-react";
@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 import { useDataroom, useDataroomItems } from "@/lib/swr/use-dataroom";
+import { localStorage } from "@/lib/webstorage";
 
 export default function Documents() {
   const { dataroom } = useDataroom();
@@ -25,6 +26,24 @@ export default function Documents() {
   const teamInfo = useTeam();
 
   const [isReordering, setIsReordering] = useState<boolean>(false);
+  const [isSidebarShow, setIsSidebarShow] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const storedState = JSON.parse(
+      localStorage.getItem("isSidebarShow") ?? "true",
+    );
+    setIsSidebarShow(storedState);
+  }, []);
+
+  const toggleSidebar = () => {
+    const newState = !isSidebarShow;
+    setIsSidebarShow(newState);
+    localStorage.setItem("isSidebarShow", JSON.stringify(newState));
+  };
+
+  if (isSidebarShow === null) {
+    return null;
+  }
 
   return (
     <AppLayout>
@@ -76,13 +95,21 @@ export default function Documents() {
         </div>
 
         <div className="grid h-full gap-4 pb-2 md:grid-cols-4">
-          <div className="h-full truncate md:col-span-1">
+          <div
+            className={`h-full truncate transition-all duration-300 ${
+              isSidebarShow ? "md:col-span-1" : "hidden"
+            }`}
+          >
             <ScrollArea showScrollbar>
               <SidebarFolderTree dataroomId={dataroom?.id!} />
               <ScrollBar orientation="horizontal" />
             </ScrollArea>
           </div>
-          <div className="space-y-4 md:col-span-3">
+          <div
+            className={`space-y-4 transition-all duration-300 ${
+              isSidebarShow ? "md:col-span-3" : "md:col-span-4"
+            }`}
+          >
             <section id="documents-header-count" className="min-h-8" />
 
             {isLoading ? <LoadingDocuments count={3} /> : null}
@@ -101,6 +128,7 @@ export default function Documents() {
                 dataroomId={dataroom?.id!}
                 folderCount={folderCount}
                 documentCount={documentCount}
+                toggleSidebar={toggleSidebar}
               />
             )}
           </div>
