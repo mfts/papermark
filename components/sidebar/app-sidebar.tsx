@@ -126,6 +126,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             current: router.pathname.includes("settings/domains"),
           },
           {
+            title: "Webhooks",
+            url: "/settings/webhooks",
+            current: router.pathname.includes("settings/webhooks"),
+          },
+          {
             title: "Billing",
             url: "/settings/billing",
             current: router.pathname.includes("settings/billing"),
