@@ -196,6 +196,38 @@ const SettingsBreadcrumb = () => {
   );
 };
 
+const AccountBreadcrumb = () => {
+  const router = useRouter();
+  const path = router.pathname;
+
+  const accountTitle = useMemo(() => {
+    switch (path) {
+      case "/account/general":
+        return "General";
+      case "/account/security":
+        return "Security";
+      default:
+        return "Account";
+    }
+  }, [path]);
+
+  return (
+    <Breadcrumb>
+      <BreadcrumbList>
+        <BreadcrumbItem>
+          <BreadcrumbLink asChild>
+            <Link href="/account/general">Account</Link>
+          </BreadcrumbLink>
+        </BreadcrumbItem>
+        <BreadcrumbSeparator />
+        <BreadcrumbItem>
+          <BreadcrumbPage>{accountTitle}</BreadcrumbPage>
+        </BreadcrumbItem>
+      </BreadcrumbList>
+    </Breadcrumb>
+  );
+};
+
 const DocumentsBreadcrumb = () => {
   const router = useRouter();
   const { name } = router.query as { name: string[] };
@@ -366,6 +398,11 @@ export const AppBreadcrumb = () => {
     // Settings routes
     if (path.startsWith("/settings")) {
       return <SettingsBreadcrumb />;
+    }
+
+    // Account routes
+    if (path.startsWith("/account")) {
+      return <AccountBreadcrumb />;
     }
 
     // Root documents route

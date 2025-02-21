@@ -20,7 +20,10 @@ export default async function AppMiddleware(req: NextRequest) {
     const loginUrl = new URL(`/login`, req.url);
     // Append "next" parameter only if not navigating to the root
     if (path !== "/") {
-      loginUrl.searchParams.set("next", encodeURIComponent(path));
+      const nextPath =
+        path === "/auth/confirm-email-change" ? `${path}${url.search}` : path;
+
+      loginUrl.searchParams.set("next", encodeURIComponent(nextPath));
     }
     return NextResponse.redirect(loginUrl);
   }
