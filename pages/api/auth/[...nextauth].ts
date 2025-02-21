@@ -15,6 +15,7 @@ import { subscribe } from "@/lib/unsend";
 import { generateChecksum } from "@/lib/utils/generate-checksum";
 
 const VERCEL_DEPLOYMENT = !!process.env.VERCEL_URL;
+const COOKIE_DOMAIN = (process.env.NEXT_PUBLIC_BASE_URL ?? "https://papermark.io").replace(/^https?:\/\//, ".")
 
 // This function can run for a maximum of 180 seconds
 export const config = {
@@ -89,7 +90,7 @@ export const authOptions: NextAuthOptions = {
         sameSite: "lax",
         path: "/",
         // When working on localhost, the cookie domain must be omitted entirely (https://stackoverflow.com/a/1188145)
-        domain: VERCEL_DEPLOYMENT ? ".papermark.io" : undefined,
+        domain: VERCEL_DEPLOYMENT ? COOKIE_DOMAIN : undefined,
         secure: VERCEL_DEPLOYMENT,
       },
     },
