@@ -117,7 +117,7 @@ export default function DataroomAnalyticsPage() {
                       {viewerGroups.map((group) => (
                         <li key={group.id}>
                           <Link
-                            href={`/datarooms/${dataroom.id}/permissions/${group.id}`}
+                            href={`/datarooms/${dataroom.id}/groups/${group.id}`}
                           >
                             <GroupCard group={group} />
                           </Link>

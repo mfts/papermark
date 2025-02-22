@@ -2,6 +2,7 @@ import { useRouter } from "next/router";
 
 import { useTeam } from "@/context/team-context";
 import {
+  Link,
   Viewer,
   ViewerGroup,
   ViewerGroupAccessControls,
@@ -10,6 +11,8 @@ import {
 import useSWR from "swr";
 
 import { fetcher } from "@/lib/utils";
+
+import { LinkWithViews } from "../types";
 
 export default function useDataroomGroups() {
   const teamInfo = useTeam();
@@ -45,6 +48,32 @@ export default function useDataroomGroups() {
     loading: !viewerGroups && !error,
     error,
     mutate,
+  };
+}
+
+export function useDataroomGroupLinks() {
+  const router = useRouter();
+
+  const { id, groupId } = router.query as {
+    id: string;
+    groupId: string;
+  };
+
+  const teamInfo = useTeam();
+  const teamId = teamInfo?.currentTeam?.id;
+
+  const { data: links, error } = useSWR<LinkWithViews[]>(
+    teamId &&
+      id &&
+      `/api/teams/${teamId}/datarooms/${id}/groups/${groupId}/links`,
+    fetcher,
+    { dedupingInterval: 10000 },
+  );
+
+  return {
+    links,
+    loading: !error && !links,
+    error,
   };
 }
 
