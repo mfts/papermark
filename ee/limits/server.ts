@@ -111,8 +111,9 @@ export async function getLimits({
       return {
         ...parsedData,
         // if account is paid, but link and document limits are not set, then set them to Infinity
-        links: parsedData.links > 50 ? Infinity : parsedData.links,
-        documents: parsedData.documents > 300 ? Infinity : parsedData.documents,
+        links: parsedData.links === 50 ? Infinity : parsedData.links,
+        documents:
+          parsedData.documents === 50 ? Infinity : parsedData.documents,
         usage: { documents: documentCount, links: linkCount },
       };
     }
