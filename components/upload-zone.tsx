@@ -72,20 +72,6 @@ interface FileWithPaths extends File {
   whereToUploadPath?: string;
 }
 
-// const fileSizeLimits: { [key: string]: number } = {
-//   "application/vnd.ms-excel": 40, // 40 MB
-//   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": 40, // 40 MB
-//   "application/vnd.oasis.opendocument.spreadsheet": 40, // 40 MB
-//   "image/png": 100, // 100 MB
-//   "image/jpeg": 100, // 100 MB
-//   "image/jpg": 100, // 100 MB
-//   "video/mp4": 500, // 500 MB
-//   "video/quicktime": 500, // 500 MB
-//   "video/x-msvideo": 500, // 500 MB
-//   "video/webm": 500, // 500 MB
-//   "video/ogg": 500, // 500 MB
-// };
-
 export default function UploadZone({
   children,
   onUploadStart,
