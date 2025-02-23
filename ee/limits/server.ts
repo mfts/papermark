@@ -28,11 +28,11 @@ const configSchema = z.object({
   links: z
     .preprocess((v) => (v === null ? Infinity : Number(v)), z.number())
     .optional()
-    .default(10),
+    .default(50),
   documents: z
     .preprocess((v) => (v === null ? Infinity : Number(v)), z.number())
     .optional()
-    .default(10),
+    .default(50),
   users: z.number(),
   domains: z.number(),
   customDomainOnPro: z.boolean(),
@@ -111,9 +111,8 @@ export async function getLimits({
       return {
         ...parsedData,
         // if account is paid, but link and document limits are not set, then set them to Infinity
-        links: parsedData.links === 10 ? Infinity : parsedData.links,
-        documents:
-          parsedData.documents === 10 ? Infinity : parsedData.documents,
+        links: parsedData.links > 50 ? Infinity : parsedData.links,
+        documents: parsedData.documents > 300 ? Infinity : parsedData.documents,
         usage: { documents: documentCount, links: linkCount },
       };
     }
