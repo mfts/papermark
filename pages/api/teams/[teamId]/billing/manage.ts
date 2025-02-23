@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import { stripeInstance } from "@/ee/stripe";
+import { getPriceIdFromPlan } from "@/ee/stripe/functions/get-price-id-from-plan";
 import getSubscriptionItem from "@/ee/stripe/functions/get-subscription-item";
 import { PLANS, isOldAccount } from "@/ee/stripe/utils";
 import { waitUntil } from "@vercel/functions";
@@ -67,11 +68,7 @@ export default async function handle(
       let priceId: string | undefined;
       let subscriptionItemId: string | undefined;
       if (!!proAnnualBanner) {
-        priceId = PLANS.find((p) => p.name === "Pro")?.price.yearly.priceIds[
-          process.env.NEXT_PUBLIC_VERCEL_ENV === "production"
-            ? "production"
-            : "test"
-        ][isOldAccount(team.plan) ? "old" : "new"];
+        priceId = getPriceIdFromPlan(team.plan, "yearly");
 
         subscriptionItemId = await getSubscriptionItem(
           team.subscriptionId,
