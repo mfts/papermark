@@ -4,14 +4,14 @@ import { useMemo, useState } from "react";
 import React from "react";
 
 import { useTeam } from "@/context/team-context";
+import { getStripe } from "@/ee/stripe/client";
+import { PLANS } from "@/ee/stripe/utils";
 import { CheckIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 
 import { useAnalytics } from "@/lib/analytics";
-import { getStripe } from "@/lib/stripe/client";
-import { PLANS } from "@/lib/stripe/utils";
 import { usePlan } from "@/lib/swr/use-billing";
 import { capitalize } from "@/lib/utils";
 
@@ -28,13 +28,13 @@ export default function UpgradePage() {
       Pro: {
         featureIntro: "Everything in Free, plus:",
         features: [
-          "2 users included",
-          "100 documents",
+          "1 user included",
+          "300 documents",
           "Unlimited links",
           "Custom branding",
           "Folder organization",
-          "Require email verification",
-          "More file types: pppt, docx, excel",
+          // "Require email verification",
+          "More file types: ppt, docx, excel",
           "Papermark branding removed",
           "1-year analytics retention",
         ],

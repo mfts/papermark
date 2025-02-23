@@ -1,5 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
+import { cancelSubscription } from "@/ee/stripe";
+import { isOldAccount } from "@/ee/stripe/utils";
 import { DocumentStorageType } from "@prisma/client";
 import { getServerSession } from "next-auth";
 
@@ -7,8 +9,6 @@ import { removeDomainFromVercelProject } from "@/lib/domains";
 import { errorhandler } from "@/lib/errorHandler";
 import { deleteFiles } from "@/lib/files/delete-team-files-server";
 import prisma from "@/lib/prisma";
-import { cancelSubscription } from "@/lib/stripe";
-import { isOldAccount } from "@/lib/stripe/utils";
 import { CustomUser } from "@/lib/types";
 import { unsubscribe } from "@/lib/unsend";
 

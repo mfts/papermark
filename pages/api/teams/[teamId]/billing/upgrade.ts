@@ -1,12 +1,12 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
+import { stripeInstance } from "@/ee/stripe";
+import { getPlanFromPriceId, isOldAccount } from "@/ee/stripe/utils";
 import { waitUntil } from "@vercel/functions";
 import { getServerSession } from "next-auth/next";
 
 import { identifyUser, trackAnalytics } from "@/lib/analytics";
 import prisma from "@/lib/prisma";
-import { stripeInstance } from "@/lib/stripe";
-import { getPlanFromPriceId, isOldAccount } from "@/lib/stripe/utils";
 import { CustomUser } from "@/lib/types";
 
 import { authOptions } from "../../../auth/[...nextauth]";
@@ -61,13 +61,14 @@ export default async function handle(
     const lineItem = {
       price: priceId,
       quantity: oldAccount ? 1 : minimumQuantity,
-      ...(!oldAccount && {
-        adjustable_quantity: {
-          enabled: true,
-          minimum: minimumQuantity,
-          maximum: 99,
-        },
-      }),
+      ...(!oldAccount &&
+        minimumQuantity > 1 && {
+          adjustable_quantity: {
+            enabled: true,
+            minimum: minimumQuantity,
+            maximum: 99,
+          },
+        }),
     };
 
     const stripe = stripeInstance(oldAccount);

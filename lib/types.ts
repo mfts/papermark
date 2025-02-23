@@ -264,6 +264,7 @@ export type AnalyticsEvents =
   | {
       event: "Stripe Billing Portal Clicked";
       teamId: string;
+      action?: string;
     };
 
 export interface Team {
