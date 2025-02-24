@@ -3,11 +3,9 @@ import ErrorPage from "next/error";
 import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
+import { PlanEnum } from "@/ee/stripe/constants";
 
-import {
-  PlanEnum,
-  UpgradePlanModal,
-} from "@/components/billing/upgrade-plan-modal";
+import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import DocumentHeader from "@/components/documents/document-header";
 import { StatsComponent } from "@/components/documents/stats";
 import VideoAnalytics from "@/components/documents/video-analytics";
