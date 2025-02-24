@@ -76,7 +76,6 @@ export function AddTeamMembers({
   const [loading, setLoading] = useState<boolean>(false);
   const teamInfo = useTeam();
   const analytics = useAnalytics();
-
   const dataroomsList =
     datarooms
       ?.filter((room) => room.teamId === teamId)

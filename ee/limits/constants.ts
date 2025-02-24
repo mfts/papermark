@@ -14,8 +14,8 @@ export type TPlanLimits = {
 
 export const FREE_PLAN_LIMITS = {
   users: 1,
-  links: 10,
-  documents: 10,
+  links: 50,
+  documents: 50,
   domains: 0,
   datarooms: 0,
   customDomainOnPro: false,
@@ -24,10 +24,10 @@ export const FREE_PLAN_LIMITS = {
 };
 
 export const PRO_PLAN_LIMITS = {
-  users: 2,
+  users: 1,
   links: null,
-  documents: 100,
-  domains: 2,
+  documents: 300,
+  domains: 0,
   datarooms: 0,
   customDomainOnPro: false,
   customDomainInDataroom: false,

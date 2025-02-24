@@ -17,7 +17,7 @@ export function getFileSizeLimits({
   // Default limits based on plan type
   const defaultLimits: FileSizeLimits = {
     video: 500, // 500MB
-    document: isFreePlan && !isTrial ? 30 : 350, // 30MB free, 100MB paid
+    document: isFreePlan && !isTrial ? 100 : 350, // 100MB free, 350MB paid
     image: isFreePlan && !isTrial ? 30 : 100, // 30MB free, 100MB paid
     excel: 40, // 40MB
   };

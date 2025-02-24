@@ -43,7 +43,7 @@ export function EditFolderModal({
   const teamInfo = useTeam();
   const editFolderSchema = z.object({
     name: z.string().min(3, {
-      message: "Folder name is required. Please enter a valid name.",
+      message: "Please provide a folder name with at least 3 characters.",
     }),
   });
 

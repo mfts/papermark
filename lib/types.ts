@@ -129,6 +129,7 @@ export interface LinkWithDataroom extends Link {
     }[];
     folders: DataroomFolder[];
     lastUpdatedAt: Date;
+    createdAt: Date;
   };
   agreement: Agreement | null;
   customFields: CustomField[];
@@ -265,6 +266,7 @@ export type AnalyticsEvents =
   | {
       event: "Stripe Billing Portal Clicked";
       teamId: string;
+      action?: string;
     };
 
 export interface Team {

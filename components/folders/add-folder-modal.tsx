@@ -54,7 +54,7 @@ export function AddFolderModal({
   const currentFolderPath = router.query.name as string[] | undefined;
   const addFolderSchema = z.object({
     name: z.string().min(3, {
-      message: "Folder name is required. Please enter a valid name.",
+      message: "Please provide a folder name with at least 3 characters.",
     }),
   });
 

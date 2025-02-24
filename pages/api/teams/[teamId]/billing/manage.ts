@@ -1,13 +1,15 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
+import { stripeInstance } from "@/ee/stripe";
+import { getPriceIdFromPlan } from "@/ee/stripe/functions/get-price-id-from-plan";
+import getSubscriptionItem from "@/ee/stripe/functions/get-subscription-item";
+import { PLANS, isOldAccount } from "@/ee/stripe/utils";
 import { waitUntil } from "@vercel/functions";
 import { getServerSession } from "next-auth/next";
 
 import { identifyUser, trackAnalytics } from "@/lib/analytics";
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
-import { stripeInstance } from "@/lib/stripe";
-import { isOldAccount } from "@/lib/stripe/utils";
 import { CustomUser } from "@/lib/types";
 
 import { authOptions } from "../../../auth/[...nextauth]";
@@ -29,7 +31,10 @@ export default async function handle(
       return;
     }
 
-    const { teamId } = req.query as { teamId: string };
+    const { teamId, proAnnualBanner } = req.query as {
+      teamId: string;
+      proAnnualBanner?: string;
+    };
     const userId = (session.user as CustomUser).id;
     const userEmail = (session.user as CustomUser).email;
     try {
@@ -44,6 +49,7 @@ export default async function handle(
         },
         select: {
           stripeId: true,
+          subscriptionId: true,
           plan: true,
         },
       });
@@ -55,10 +61,47 @@ export default async function handle(
         return res.status(400).json({ error: "No Stripe customer ID" });
       }
 
+      if (!team.subscriptionId) {
+        return res.status(400).json({ error: "No subscription ID" });
+      }
+
+      let priceId: string | undefined;
+      let subscriptionItemId: string | undefined;
+      if (!!proAnnualBanner) {
+        priceId = getPriceIdFromPlan(team.plan, "yearly");
+
+        subscriptionItemId = await getSubscriptionItem(
+          team.subscriptionId,
+          isOldAccount(team.plan),
+        );
+      }
+
       const stripe = stripeInstance(isOldAccount(team.plan));
       const { url } = await stripe.billingPortal.sessions.create({
         customer: team.stripeId,
-        return_url: `${process.env.NEXTAUTH_URL}/settings/billing`,
+        return_url: `${process.env.NEXTAUTH_URL}/settings/billing?cancel=true`,
+        ...(!!proAnnualBanner &&
+          subscriptionItemId && {
+            flow_data: {
+              type: "subscription_update_confirm",
+              subscription_update_confirm: {
+                subscription: team.subscriptionId,
+                items: [
+                  {
+                    id: subscriptionItemId,
+                    quantity: 1,
+                    price: priceId,
+                  },
+                ],
+              },
+              after_completion: {
+                type: "redirect",
+                redirect: {
+                  return_url: `${process.env.NEXTAUTH_URL}/settings/billing?success=true`,
+                },
+              },
+            },
+          }),
       });
 
       waitUntil(identifyUser(userEmail ?? userId));
@@ -66,6 +109,7 @@ export default async function handle(
         trackAnalytics({
           event: "Stripe Billing Portal Clicked",
           teamId,
+          action: !!proAnnualBanner ? "pro-annual-banner" : undefined,
         }),
       );
 

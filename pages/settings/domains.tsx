@@ -46,7 +46,7 @@ export default function Domains() {
                 Domains
               </h3>
               <p className="flx-row flex items-center gap-2 text-sm text-muted-foreground">
-                Manage your custom domain for document sharing
+                Manage your custom domain for sharing documents and data rooms.
                 <BadgeTooltip
                   content="How to connect a custom domain to your link?"
                   key="verified"
