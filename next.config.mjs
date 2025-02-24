@@ -17,7 +17,7 @@ const nextConfig = {
     return [
       {
         source: "/",
-        destination: "/dashboard",
+        destination: "/documents",
         permanent: false,
       },
       {
