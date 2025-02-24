@@ -191,7 +191,7 @@ export function TimeRangeSelect({
                     </Button>
                   );
                 } else {
-                  return <UpgradeButton />;
+                  return <UpgradeButton key={range.value} />;
                 }
               })}
             </div>
