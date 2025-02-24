@@ -35,8 +35,12 @@ import {
 } from "@/components/ui/table";
 import { DataTablePagination } from "@/components/visitors/data-table-pagination";
 
+import { usePlan } from "@/lib/swr/use-billing";
 import { fetcher, timeAgo } from "@/lib/utils";
 import { downloadCSV } from "@/lib/utils/csv";
+
+import { PlanEnum } from "../billing/upgrade-plan-modal";
+import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
 
 interface Document {
   id: string;
@@ -164,6 +168,8 @@ export default function DocumentsTable({
 }) {
   const router = useRouter();
   const teamInfo = useTeam();
+  const { plan, isTrial } = usePlan();
+  const isFree = plan === "free";
   const [sorting, setSorting] = useState<SortingState>([
     { id: "lastViewed", desc: true },
   ]);
@@ -191,6 +197,11 @@ export default function DocumentsTable({
   });
 
   const handleExport = () => {
+    if (isFree && !isTrial) {
+      toast.error("Please upgrade to export data");
+      return;
+    }
+
     if (!documents?.length) {
       toast.error("No data to export");
       return;
@@ -208,13 +219,36 @@ export default function DocumentsTable({
     downloadCSV(exportData, "documents");
   };
 
-  return (
-    <div className="space-y-4">
-      <div className="flex justify-end">
+  const UpgradeOrExportButton = () => {
+    const [open, setOpen] = useState(false);
+    if (isFree && !isTrial) {
+      return (
+        <>
+          <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
+            Upgrade to Export
+          </Button>
+          <UpgradePlanModal
+            clickedPlan={PlanEnum.Pro}
+            trigger="dashboard_documents_export"
+            open={open}
+            setOpen={setOpen}
+          />
+        </>
+      );
+    } else {
+      return (
         <Button variant="outline" size="sm" onClick={handleExport}>
           <Download className="!size-4" />
           Export
         </Button>
+      );
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-end">
+        <UpgradeOrExportButton />
       </div>
       <div className="rounded-xl border">
         <Table>

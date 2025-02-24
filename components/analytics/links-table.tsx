@@ -37,9 +37,13 @@ import {
 } from "@/components/ui/table";
 import { DataTablePagination } from "@/components/visitors/data-table-pagination";
 
+import { usePlan } from "@/lib/swr/use-billing";
 import { cn, timeAgo } from "@/lib/utils";
 import { fetcher } from "@/lib/utils";
 import { downloadCSV } from "@/lib/utils/csv";
+
+import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
+import { PlanEnum } from "../billing/upgrade-plan-modal";
 
 interface Link {
   id: string;
@@ -225,8 +229,9 @@ export default function LinksTable({
   endDate: Date;
 }) {
   const router = useRouter();
-
   const teamInfo = useTeam();
+  const { plan, isTrial } = usePlan();
+  const isFree = plan === "free";
   const [sorting, setSorting] = useState<SortingState>([
     { id: "lastViewed", desc: true },
   ]);
@@ -254,6 +259,11 @@ export default function LinksTable({
   });
 
   const handleExport = () => {
+    if (isFree && !isTrial) {
+      toast.error("Please upgrade to export data");
+      return;
+    }
+
     if (!links?.length) {
       toast.error("No data to export");
       return;
@@ -273,13 +283,36 @@ export default function LinksTable({
     downloadCSV(exportData, "links");
   };
 
-  return (
-    <div className="space-y-4">
-      <div className="flex justify-end">
+  const UpgradeOrExportButton = () => {
+    const [open, setOpen] = useState(false);
+    if (isFree && !isTrial) {
+      return (
+        <>
+          <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
+            Upgrade to Export
+          </Button>
+          <UpgradePlanModal
+            clickedPlan={PlanEnum.Pro}
+            trigger="dashboard_links_export"
+            open={open}
+            setOpen={setOpen}
+          />
+        </>
+      );
+    } else {
+      return (
         <Button variant="outline" size="sm" onClick={handleExport}>
           <Download className="!size-4" />
           Export
         </Button>
+      );
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-end">
+        <UpgradeOrExportButton />
       </div>
       <div className="rounded-xl border">
         <Table>

@@ -2,6 +2,15 @@ import { COUNTRIES } from "@/lib/constants";
 
 import UAIcon from "../user-agent-icon";
 
+function decodeCity(city: string) {
+  try {
+    return decodeURIComponent(city);
+  } catch (e) {
+    // If decoding fails, return the original string
+    return city;
+  }
+}
+
 export default function VisitorUserAgentBase({
   userAgent,
 }: {
@@ -26,7 +35,7 @@ export default function VisitorUserAgentBase({
                 src={`https://flag.vercel.app/m/${country}.svg`}
                 className="h-3 w-4"
               />
-              <span>{city},</span>
+              <span>{decodeCity(city)},</span>
               <span>{COUNTRIES[country]}</span>
             </div>
           </div>
