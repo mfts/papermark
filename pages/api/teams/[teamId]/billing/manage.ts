@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 import { stripeInstance } from "@/ee/stripe";
 import { getPriceIdFromPlan } from "@/ee/stripe/functions/get-price-id-from-plan";
+import { getQuantityFromPriceId } from "@/ee/stripe/functions/get-quantity-from-plan";
 import getSubscriptionItem from "@/ee/stripe/functions/get-subscription-item";
 import { PLANS, isOldAccount } from "@/ee/stripe/utils";
 import { waitUntil } from "@vercel/functions";
@@ -31,12 +32,15 @@ export default async function handle(
       return;
     }
 
-    const { teamId, proAnnualBanner } = req.query as {
-      teamId: string;
-      proAnnualBanner?: string;
-    };
     const userId = (session.user as CustomUser).id;
     const userEmail = (session.user as CustomUser).email;
+
+    const { teamId } = req.query as { teamId: string };
+    const { priceId, upgradePlan, proAnnualBanner } = req.body as {
+      priceId: string;
+      upgradePlan: boolean;
+      proAnnualBanner?: boolean;
+    };
     try {
       const team = await prisma.team.findUnique({
         where: {
@@ -65,22 +69,18 @@ export default async function handle(
         return res.status(400).json({ error: "No subscription ID" });
       }
 
-      let priceId: string | undefined;
-      let subscriptionItemId: string | undefined;
-      if (!!proAnnualBanner) {
-        priceId = getPriceIdFromPlan(team.plan, "yearly");
+      const subscriptionItemId = await getSubscriptionItem(
+        team.subscriptionId,
+        isOldAccount(team.plan),
+      );
 
-        subscriptionItemId = await getSubscriptionItem(
-          team.subscriptionId,
-          isOldAccount(team.plan),
-        );
-      }
+      const minQuantity = getQuantityFromPriceId(priceId);
 
       const stripe = stripeInstance(isOldAccount(team.plan));
       const { url } = await stripe.billingPortal.sessions.create({
         customer: team.stripeId,
         return_url: `${process.env.NEXTAUTH_URL}/settings/billing?cancel=true`,
-        ...(!!proAnnualBanner &&
+        ...(upgradePlan &&
           subscriptionItemId && {
             flow_data: {
               type: "subscription_update_confirm",
@@ -89,7 +89,7 @@ export default async function handle(
                 items: [
                   {
                     id: subscriptionItemId,
-                    quantity: 1,
+                    quantity: isOldAccount(team.plan) ? 1 : minQuantity,
                     price: priceId,
                   },
                 ],
@@ -109,7 +109,7 @@ export default async function handle(
         trackAnalytics({
           event: "Stripe Billing Portal Clicked",
           teamId,
-          action: !!proAnnualBanner ? "pro-annual-banner" : undefined,
+          action: proAnnualBanner ? "pro-annual-banner" : undefined,
         }),
       );
 

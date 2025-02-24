@@ -7,6 +7,7 @@ import React from "react";
 import { useTeam } from "@/context/team-context";
 import { getStripe } from "@/ee/stripe/client";
 import { Feature, PlanEnum, getPlanFeatures } from "@/ee/stripe/constants";
+import { getPriceIdFromPlan } from "@/ee/stripe/functions/get-price-id-from-plan";
 import { PLANS } from "@/ee/stripe/utils";
 import { CheckIcon, Users2Icon } from "lucide-react";
 
@@ -277,10 +278,22 @@ export function UpgradePlanModal({
                     loading={selectedPlan === planOption}
                     disabled={selectedPlan !== null}
                     onClick={() => {
+                      const priceId = getPriceIdFromPlan(
+                        displayPlanName,
+                        period,
+                      );
+
                       setSelectedPlan(planOption);
                       if (isCustomer && teamPlan !== "free") {
                         fetch(`/api/teams/${teamId}/billing/manage`, {
                           method: "POST",
+                          headers: {
+                            "Content-Type": "application/json",
+                          },
+                          body: JSON.stringify({
+                            priceId,
+                            upgradePlan: true,
+                          }),
                         })
                           .then(async (res) => {
                             const url = await res.json();
@@ -293,13 +306,7 @@ export function UpgradePlanModal({
                       } else {
                         fetch(
                           `/api/teams/${teamId}/billing/upgrade?priceId=${
-                            PLANS.find((p) => p.name === displayPlanName)!
-                              .price[period].priceIds[
-                              process.env.NEXT_PUBLIC_VERCEL_ENV ===
-                              "production"
-                                ? "production"
-                                : "test"
-                            ][isOldAccount ? "old" : "new"]
+                            priceId
                           }`,
                           {
                             method: "POST",

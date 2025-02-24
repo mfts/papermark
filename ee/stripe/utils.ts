@@ -165,30 +165,30 @@ export const PLANS = [
     minQuantity: 5,
     price: {
       monthly: {
-        amount: 399,
+        amount: 249,
         unitPrice: 4967,
         priceIds: {
           test: {
             old: "price_1QojZuFJyGSZ96lhNwiD1y2r",
-            new: "price_1QojT3BYvhH6u7U7quP5CAXv",
+            new: "price_1Qw63uBYvhH6u7U7dHVZ0kWZ",
           },
           production: {
-            old: "price_1QojcVFJyGSZ96lhZFAJBCaJ",
-            new: "price_1QojXJBYvhH6u7U7Jd3sVnMY",
+            old: "price_1Qw6nDFJyGSZ96lhLrtONCCG",
+            new: "price_1Qw6lGBYvhH6u7U7yjSR0uOV",
           },
         },
       },
       yearly: {
-        amount: 249,
+        amount: 199,
         unitPrice: 3300,
         priceIds: {
           test: {
             old: "price_1QojaPFJyGSZ96lhods9TOxh",
-            new: "price_1QojT3BYvhH6u7U7VNseK7Fw",
+            new: "price_1Qw63ABYvhH6u7U7MXK3UOJF",
           },
           production: {
-            old: "price_1QojcVFJyGSZ96lhhlR7qR4C",
-            new: "price_1QojXJBYvhH6u7U7AFd0GxkA",
+            old: "price_1Qw6neFJyGSZ96lh6ka3Gjyg",
+            new: "price_1Qw6kzBYvhH6u7U7Cujel6bW",
           },
         },
       },

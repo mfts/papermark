@@ -1,6 +1,7 @@
 import {
   BUSINESS_PLAN_LIMITS,
   DATAROOMS_PLAN_LIMITS,
+  DATAROOMS_PLUS_PLAN_LIMITS,
   PRO_PLAN_LIMITS,
 } from "@/ee/limits/constants";
 import { stripeInstance } from "@/ee/stripe";
@@ -58,13 +59,16 @@ export async function checkoutSessionCompleted(
   let planLimits:
     | typeof PRO_PLAN_LIMITS
     | typeof BUSINESS_PLAN_LIMITS
-    | typeof DATAROOMS_PLAN_LIMITS = structuredClone(PRO_PLAN_LIMITS);
+    | typeof DATAROOMS_PLAN_LIMITS
+    | typeof DATAROOMS_PLUS_PLAN_LIMITS = structuredClone(PRO_PLAN_LIMITS);
   if (plan.slug === "pro") {
     planLimits = structuredClone(PRO_PLAN_LIMITS);
   } else if (plan.slug === "business") {
     planLimits = structuredClone(BUSINESS_PLAN_LIMITS);
   } else if (plan.slug === "datarooms") {
     planLimits = structuredClone(DATAROOMS_PLAN_LIMITS);
+  } else if (plan.slug === "datarooms-plus") {
+    planLimits = structuredClone(DATAROOMS_PLUS_PLAN_LIMITS);
   }
 
   // Update the user limit in planLimits based on the subscription quantity
