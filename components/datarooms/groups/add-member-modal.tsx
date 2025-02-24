@@ -14,6 +14,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 
 import { useAnalytics } from "@/lib/analytics";
@@ -44,6 +45,11 @@ export function AddGroupMemberModal({
     );
   };
 
+  // Domain validation regex pattern
+  const validateDomain = (domain: string) => {
+    return domain.match(/^@([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/);
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const inputValue = e.target.value;
     setInputValue(inputValue);
@@ -53,14 +59,18 @@ export function AddGroupMemberModal({
     event.preventDefault();
     event.stopPropagation();
 
-    const emails = inputValue
+    const inputs = inputValue
       .split(",")
-      .map((email) => email.trim().toLowerCase())
-      .filter((email) => email);
+      .map((input) => input.trim().toLowerCase())
+      .filter((input) => input);
 
-    if (emails.length === 0) return;
+    if (inputs.length === 0) return;
 
     setLoading(true);
+
+    // Separate domains and emails
+    const domains = inputs.filter((input) => input.startsWith("@"));
+    const emails = inputs.filter((input) => !input.startsWith("@"));
 
     // validate emails
     const invalidEmails = emails.filter((email) => !validateEmail(email));
@@ -70,7 +80,17 @@ export function AddGroupMemberModal({
       return;
     }
 
-    // POST request with multiple emails
+    // validate domains
+    const invalidDomains = domains.filter((domain) => !validateDomain(domain));
+    if (invalidDomains.length > 0) {
+      setLoading(false);
+      toast.error(
+        "Found one or more invalid domains. Domains should be in format @example.org",
+      );
+      return;
+    }
+
+    // POST request with emails and domains
     const response = await fetch(
       `/api/teams/${teamId}/datarooms/${dataroomId}/groups/${groupId}/members`,
       {
@@ -79,7 +99,8 @@ export function AddGroupMemberModal({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          emails: emails,
+          emails,
+          domains,
         }),
       },
     );
@@ -93,7 +114,8 @@ export function AddGroupMemberModal({
     }
 
     analytics.capture("Dataroom Group Member Added", {
-      inviteeCount: emails.length,
+      emailCount: emails.length,
+      domainCount: domains.length,
       teamId: teamId,
       dataroomId: dataroomId,
       groupId: groupId,
@@ -115,19 +137,20 @@ export function AddGroupMemberModal({
           <DialogTitle>Add members</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
-          <Label htmlFor="email">Email addresses</Label>
+          <Label htmlFor="email">Email addresses or domains</Label>
           <div className="flex flex-col gap-2 py-2 text-sm">
             <Textarea
               value={inputValue}
               onChange={handleInputChange}
               rows={5}
               id="email"
-              placeholder="jane@acme.com, john@acme.com"
+              placeholder="jane@acme.com, john@acme.com, @example.org"
               className="flex-1 bg-muted"
               autoComplete="off"
             />
             <small className="text-xs text-muted-foreground">
-              Use comma to separate multiple email addresses.
+              Use comma to separate multiple email addresses or domains. For
+              domains, use format @example.org
             </small>
           </div>
 

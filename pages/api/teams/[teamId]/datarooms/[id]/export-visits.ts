@@ -4,7 +4,7 @@ import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth/next";
 
 import prisma from "@/lib/prisma";
-import { getViewPageDuration } from "@/lib/tinybird";
+import { getViewPageDuration, getViewUserAgent } from "@/lib/tinybird";
 import { CustomUser } from "@/lib/types";
 
 export default async function handler(
@@ -116,6 +116,11 @@ export default async function handler(
                 numPages: true,
               },
             },
+          },
+        },
+        customFieldResponse: {
+          select: {
+            data: true,
           },
         },
       },
@@ -230,10 +235,26 @@ export default async function handler(
         "Total Visit Duration (s)",
         "Total Document Completion (%)",
         "Document Version",
+        "Browser",
+        "OS",
+        "Device",
+        "Country",
+        "City",
       ].join(","),
     );
 
-    // Add data rows
+    // Get user agent data for all views
+    const userAgentData = await Promise.all(
+      documentViews.map((view) =>
+        getViewUserAgent({
+          documentId: view.document?.id!,
+          viewId: view.id,
+          since: 0,
+        }),
+      ),
+    );
+
+    // Process each view and add to CSV rows
     exportData.forEach((view) => {
       if (view.documentViews.length === 0) {
         // Add a row for dataroom view without document views
@@ -255,11 +276,16 @@ export default async function handler(
             "",
             "",
             "",
+            "", // Browser
+            "", // OS
+            "", // Device
+            "", // Country
+            "", // City
           ].join(","),
         );
       } else {
         // Add a row for each document view
-        view.documentViews.forEach((docView) => {
+        view.documentViews.forEach((docView, index) => {
           csvRows.push(
             [
               view.dataroomViewedAt,
@@ -278,6 +304,11 @@ export default async function handler(
               (docView.duration / 1000).toFixed(1),
               docView.completionRate,
               docView.documentVersion,
+              userAgentData[index]?.data[0]?.browser || "NaN",
+              userAgentData[index]?.data[0]?.os || "NaN",
+              userAgentData[index]?.data[0]?.device || "NaN",
+              userAgentData[index]?.data[0]?.country || "NaN",
+              userAgentData[index]?.data[0]?.city || "NaN",
             ].join(","),
           );
         });

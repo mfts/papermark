@@ -18,7 +18,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -33,7 +39,7 @@ import { usePlan } from "@/lib/swr/use-billing";
 import useLimits from "@/lib/swr/use-limits";
 import { getSupportedContentType } from "@/lib/utils/get-content-type";
 
-import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
+import { PlanEnum, UpgradePlanModal } from "../billing/upgrade-plan-modal";
 
 export function AddDocumentModal({
   newVersion,
@@ -491,7 +497,7 @@ export function AddDocumentModal({
     if (newVersion) {
       return (
         <UpgradePlanModal
-          clickedPlan="Pro"
+          clickedPlan={PlanEnum.Pro}
           trigger={"limit_upload_document_version"}
         >
           {children}
@@ -499,7 +505,10 @@ export function AddDocumentModal({
       );
     }
     return (
-      <UpgradePlanModal clickedPlan="Pro" trigger={"limit_upload_documents"}>
+      <UpgradePlanModal
+        clickedPlan={PlanEnum.Pro}
+        trigger={"limit_upload_documents"}
+      >
         <Button>Upgrade to Add Documents</Button>
       </UpgradePlanModal>
     );
@@ -512,6 +521,10 @@ export function AddDocumentModal({
         className="border-none bg-transparent text-foreground shadow-none"
         isDocumentDialog
       >
+        <DialogTitle className="sr-only">Add Document</DialogTitle>
+        <DialogDescription className="sr-only">
+          An overlayed modal that can be clicked to upload a document
+        </DialogDescription>
         <Tabs defaultValue="document">
           {!newVersion ? (
             <TabsList className="grid w-full grid-cols-3">

@@ -171,6 +171,9 @@ export function DocumentsList({
     setSelectedDocuments([]);
     setIsOverFolder(false);
   };
+  const handleCloseDrawer = () => {
+    setShowDrawer(false);
+  };
 
   const HeaderContent = memo(() => {
     if (selectedDocuments.length > 0) {
@@ -347,7 +350,7 @@ export function DocumentsList({
                 },
               }}
             >
-              <div className="space-y-4 pb-3">
+              <div className="space-y-4">
                 {/* Folders list */}
                 <ul role="list" className="space-y-4">
                   {folders
@@ -477,6 +480,7 @@ export function DocumentsList({
           open={showDrawer}
           onOpenChange={setShowDrawer}
           uploads={uploads}
+          handleCloseDrawer={handleCloseDrawer}
           setUploads={setUploads}
           rejectedFiles={rejectedFiles}
           setRejectedFiles={setRejectedFiles}

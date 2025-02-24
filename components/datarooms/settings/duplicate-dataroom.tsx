@@ -1,10 +1,15 @@
+import { useRouter } from "next/router";
+
 import { useState } from "react";
 
 import { useLimits } from "@/ee/limits/swr-handler";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
-import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
+import {
+  PlanEnum,
+  UpgradePlanModal,
+} from "@/components/billing/upgrade-plan-modal";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -25,6 +30,7 @@ export default function DuplicateDataroom({
   dataroomId: string;
   teamId?: string;
 }) {
+  const router = useRouter();
   const [loading, setLoading] = useState<boolean>(false);
   const [planModalOpen, setPlanModalOpen] = useState<boolean>(false);
   const { limits } = useLimits();
@@ -69,8 +75,9 @@ export default function DuplicateDataroom({
         }),
         {
           loading: "Copying dataroom...",
-          success: () => {
+          success: (dataroom) => {
             mutate(`/api/teams/${teamId}/datarooms`);
+            router.push(`/datarooms/${dataroom.id}/documents`);
             return "Dataroom copied successfully.";
           },
           error: (error) => {
@@ -121,7 +128,7 @@ export default function DuplicateDataroom({
       </Card>
       {planModalOpen ? (
         <UpgradePlanModal
-          clickedPlan="Data Rooms"
+          clickedPlan={PlanEnum.DataRooms}
           trigger="datarooms"
           open={planModalOpen}
           setOpen={setPlanModalOpen}

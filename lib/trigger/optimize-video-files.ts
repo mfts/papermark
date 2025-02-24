@@ -21,8 +21,9 @@ export const processVideo = task({
     teamId: string;
     docId: string;
     documentVersionId: string;
+    fileSize: number;
   }) => {
-    const { videoUrl, teamId, docId, documentVersionId } = payload;
+    const { videoUrl, teamId, docId, documentVersionId, fileSize } = payload;
 
     try {
       const fileUrl = await getFile({
@@ -83,6 +84,29 @@ export const processVideo = task({
           });
         });
       });
+
+      // Update document version with metadata
+      await prisma.documentVersion.update({
+        where: { id: documentVersionId },
+        data: {
+          length: metadata.duration,
+        },
+      });
+
+      if (fileSize > 500 * 1024 * 1024) {
+        // if file size is greater than 500MB, skip optimization
+        logger.info(
+          `File size is ${fileSize / 1024 / 1024} MB, skipping optimization`,
+        );
+
+        // Clean up temporary directory
+        await fs.rm(tempDirectory, { recursive: true });
+        logger.info("Temporary directory cleaned up", { tempDirectory });
+        return {
+          success: true,
+          message: "File size is too large, skipping optimization",
+        };
+      }
 
       // Calculate encoding parameters
       const keyframeInterval = Math.round(metadata.fps * 2);
@@ -184,7 +208,6 @@ export const processVideo = task({
         },
         data: {
           file: data,
-          length: metadata.duration,
         },
       });
 

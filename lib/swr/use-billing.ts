@@ -1,9 +1,4 @@
-import { useRouter } from "next/router";
-
-import { useMemo } from "react";
-
 import { useTeam } from "@/context/team-context";
-import { parse } from "path";
 import useSWR from "swr";
 
 import { fetcher } from "@/lib/utils";
@@ -52,6 +47,7 @@ type PlanWithOld = `${BasePlan}+old` | `${BasePlan}+drtrial+old`;
 type PlanResponse = {
   plan: BasePlan | PlanWithTrial | PlanWithOld;
   isCustomer: boolean;
+  subscriptionCycle: "monthly" | "yearly";
 };
 
 interface PlanDetails {
@@ -87,10 +83,12 @@ export function usePlan() {
     : { plan: null, trial: null, old: false };
 
   return {
-    plan: parsedPlan.plan,
+    plan: parsedPlan.plan ?? "free",
     trial: parsedPlan.trial,
+    isTrial: !!parsedPlan.trial,
     isOldAccount: parsedPlan.old,
     isCustomer: plan?.isCustomer,
+    isAnnualPlan: plan?.subscriptionCycle === "yearly",
     loading: !plan && !error,
     error,
   };

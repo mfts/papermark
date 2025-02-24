@@ -4,17 +4,17 @@ import { useEffect, useRef, useState } from "react";
 import React from "react";
 
 import { Brand, DataroomBrand } from "@prisma/client";
-import { toast } from "sonner";
 
 import { WatermarkConfig } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useMediaQuery } from "@/lib/utils/use-media-query";
 
+import "@/styles/custom-viewer-styles.css";
+
 import { ScreenProtector } from "../ScreenProtection";
 import { TDocumentData } from "../dataroom/dataroom-view";
 import Nav from "../nav";
 import { PoweredBy } from "../powered-by";
-import { ScreenShield } from "../screen-shield";
 import { SVGWatermark } from "../watermark-svg";
 
 const trackPageView = async (data: {
@@ -48,7 +48,6 @@ export default function ImageViewer({
   allowDownload,
   feedbackEnabled,
   screenshotProtectionEnabled,
-  screenShieldPercentage,
   versionNumber,
   brand,
   documentName,
@@ -72,7 +71,6 @@ export default function ImageViewer({
   allowDownload: boolean;
   feedbackEnabled: boolean;
   screenshotProtectionEnabled: boolean;
-  screenShieldPercentage: number | null;
   versionNumber: number;
   brand?: Partial<Brand> | Partial<DataroomBrand> | null;
   documentName?: string;
@@ -275,22 +273,6 @@ export default function ImageViewer({
     }
   }, []); // Run once on mount
 
-  // Function to handle context for screenshotting
-  const handleContextMenu = (event: React.MouseEvent<HTMLDivElement>) => {
-    if (!screenshotProtectionEnabled && !screenShieldPercentage) {
-      return null;
-    }
-
-    event.preventDefault();
-    // Close menu on click anywhere
-    const clickHandler = () => {
-      document.removeEventListener("click", clickHandler);
-    };
-    document.addEventListener("click", clickHandler);
-
-    toast.info("Context menu has been disabled.");
-  };
-
   return (
     <>
       <Nav
@@ -332,9 +314,9 @@ export default function ImageViewer({
                 transformOrigin: scale <= 1 ? "center center" : "left top",
                 minWidth: scale > 1 ? `${100 * scale}%` : "100%",
               }}
-              onContextMenu={handleContextMenu}
+              onContextMenu={(e) => e.preventDefault()}
             >
-              <div className="relative my-auto flex w-full justify-center">
+              <div className="viewer-container relative my-auto flex w-full justify-center">
                 <img
                   className="!pointer-events-auto max-h-[calc(100dvh-64px)] object-contain"
                   ref={(ref) => {
@@ -373,9 +355,6 @@ export default function ImageViewer({
           </div>
         </div>
 
-        {!!screenShieldPercentage ? (
-          <ScreenShield visiblePercentage={screenShieldPercentage} />
-        ) : null}
         {screenshotProtectionEnabled ? <ScreenProtector /> : null}
         {showPoweredByBanner ? <PoweredBy linkId={linkId} /> : null}
       </div>

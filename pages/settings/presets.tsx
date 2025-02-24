@@ -11,7 +11,10 @@ import { toast } from "sonner";
 import { mutate } from "swr";
 import useSWRImmutable from "swr/immutable";
 
-import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
+import {
+  PlanEnum,
+  UpgradePlanModal,
+} from "@/components/billing/upgrade-plan-modal";
 import AppLayout from "@/components/layouts/app";
 import Preview from "@/components/settings/og-preview";
 import { SettingsHeader } from "@/components/settings/settings-header";
@@ -61,7 +64,6 @@ export default function Presets() {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    console.log("presets", presets);
     if (presets) {
       setData({
         metaImage: presets.metaImage,
@@ -533,7 +535,7 @@ export default function Presets() {
                 <div className="flex justify-end">
                   {plan === "free" ? (
                     <UpgradePlanModal
-                      clickedPlan="Pro"
+                      clickedPlan={PlanEnum.Pro}
                       trigger={"branding_page"}
                     >
                       <Button>Upgrade to Save Preset</Button>

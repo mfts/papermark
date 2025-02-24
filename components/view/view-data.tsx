@@ -1,14 +1,18 @@
 import dynamic from "next/dynamic";
 
-import { Brand } from "@prisma/client";
+import { Brand, Document, DocumentVersion } from "@prisma/client";
 import { ExtendedRecordMap } from "notion-types";
 
 import { NotionPage } from "@/components/NotionPage";
 import PDFViewer from "@/components/view/PDFViewer";
-import PagesViewerNew from "@/components/view/PagesViewerNew";
 import { DEFAULT_DOCUMENT_VIEW_TYPE } from "@/components/view/document-view";
 
-import { LinkWithDocument, NotionTheme, WatermarkConfig } from "@/lib/types";
+import {
+  LinkWithDataroomDocument,
+  LinkWithDocument,
+  NotionTheme,
+  WatermarkConfig,
+} from "@/lib/types";
 
 import AdvancedExcelViewer from "./viewer/advanced-excel-viewer";
 import DownloadOnlyViewer from "./viewer/download-only-viewer";
@@ -22,18 +26,25 @@ const ExcelViewer = dynamic(
   { ssr: false },
 );
 
+export type TViewDocumentData = Document & {
+  versions: DocumentVersion[];
+};
+
 export default function ViewData({
   viewData,
   link,
+  document,
   notionData,
   brand,
   showPoweredByBanner,
   showAccountCreationSlide,
   useAdvancedExcelViewer,
   viewerEmail,
+  dataroomId,
 }: {
   viewData: DEFAULT_DOCUMENT_VIEW_TYPE;
-  link: LinkWithDocument;
+  link: LinkWithDocument | LinkWithDataroomDocument;
+  document: TViewDocumentData;
   notionData?: {
     rootNotionPageId: string | null;
     recordMap: ExtendedRecordMap | null;
@@ -44,9 +55,8 @@ export default function ViewData({
   showAccountCreationSlide?: boolean;
   useAdvancedExcelViewer?: boolean;
   viewerEmail?: string;
+  dataroomId?: string;
 }) {
-  const { document } = link;
-
   return notionData?.recordMap ? (
     <NotionPage
       recordMap={notionData.recordMap}
@@ -59,6 +69,7 @@ export default function ViewData({
       brand={brand}
       theme={notionData.theme}
       screenshotProtectionEnabled={link.enableScreenshotProtection!}
+      dataroomId={dataroomId}
     />
   ) : document.downloadOnly ? (
     <DownloadOnlyViewer
@@ -71,6 +82,7 @@ export default function ViewData({
       brand={brand}
       documentName={document.name}
       isPreview={viewData.isPreview}
+      dataroomId={dataroomId}
     />
   ) : viewData.fileType === "sheet" && viewData.sheetData ? (
     <ExcelViewer
@@ -84,6 +96,7 @@ export default function ViewData({
       brand={brand}
       allowDownload={link.allowDownload!}
       screenshotProtectionEnabled={link.enableScreenshotProtection!}
+      dataroomId={dataroomId}
     />
   ) : viewData.fileType === "sheet" && useAdvancedExcelViewer ? (
     <AdvancedExcelViewer
@@ -96,6 +109,7 @@ export default function ViewData({
       file={viewData.file!}
       allowDownload={link.allowDownload!}
       brand={brand}
+      dataroomId={dataroomId}
     />
   ) : viewData.fileType === "image" ? (
     <ImageViewer
@@ -107,7 +121,6 @@ export default function ViewData({
       allowDownload={link.allowDownload!}
       feedbackEnabled={link.enableFeedback!}
       screenshotProtectionEnabled={link.enableScreenshotProtection!}
-      screenShieldPercentage={link.screenShieldPercentage}
       versionNumber={document.versions[0].versionNumber}
       brand={brand}
       showPoweredByBanner={showPoweredByBanner}
@@ -121,6 +134,7 @@ export default function ViewData({
       ipAddress={viewData.ipAddress}
       linkName={link.name ?? `Link #${link.id.slice(-5)}`}
       isPreview={viewData.isPreview}
+      dataroomId={dataroomId}
     />
   ) : viewData.pages && !document.versions[0].isVertical ? (
     <PagesHorizontalViewer
@@ -133,7 +147,6 @@ export default function ViewData({
       allowDownload={link.allowDownload!}
       feedbackEnabled={link.enableFeedback!}
       screenshotProtectionEnabled={link.enableScreenshotProtection!}
-      screenShieldPercentage={link.screenShieldPercentage}
       versionNumber={document.versions[0].versionNumber}
       brand={brand}
       showPoweredByBanner={showPoweredByBanner}
@@ -146,6 +159,7 @@ export default function ViewData({
       }
       ipAddress={viewData.ipAddress}
       linkName={link.name ?? `Link #${link.id.slice(-5)}`}
+      dataroomId={dataroomId}
     />
   ) : viewData.pages && document.versions[0].isVertical ? (
     <PagesVerticalViewer
@@ -158,7 +172,6 @@ export default function ViewData({
       allowDownload={link.allowDownload!}
       feedbackEnabled={link.enableFeedback!}
       screenshotProtectionEnabled={link.enableScreenshotProtection!}
-      screenShieldPercentage={link.screenShieldPercentage}
       versionNumber={document.versions[0].versionNumber}
       brand={brand}
       showPoweredByBanner={showPoweredByBanner}
@@ -171,6 +184,7 @@ export default function ViewData({
       }
       ipAddress={viewData.ipAddress}
       linkName={link.name ?? `Link #${link.id.slice(-5)}`}
+      dataroomId={dataroomId}
     />
   ) : viewData.fileType === "video" ? (
     <VideoViewer
@@ -178,12 +192,13 @@ export default function ViewData({
       linkId={link.id}
       viewId={viewData.viewId}
       documentId={document.id}
-      documentName={link.document?.name}
+      documentName={document.name}
       allowDownload={link.allowDownload!}
       screenshotProtectionEnabled={link.enableScreenshotProtection!}
       versionNumber={document.versions[0].versionNumber}
       brand={brand}
       isPreview={viewData.isPreview}
+      dataroomId={dataroomId}
     />
   ) : (
     <PDFViewer
@@ -196,6 +211,7 @@ export default function ViewData({
       allowDownload={link.allowDownload}
       assistantEnabled={document.assistantEnabled}
       versionNumber={document.versions[0].versionNumber}
+      dataroomId={dataroomId}
     />
   );
 }

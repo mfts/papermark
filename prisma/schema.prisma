@@ -50,6 +50,7 @@ model User {
   teams          UserTeam[]
   domains        Domain[]
   conversations  Conversation[]
+  contactId      String?
   plan           String         @default("free")
   stripeId       String?        @unique // Stripe subscription / customer ID
   subscriptionId String?        @unique // Stripe subscription ID
@@ -255,7 +256,6 @@ model Link {
   enableFeedback             Boolean?   @default(false) // Optional give user a option to enable the reactions toolbar
   enableQuestion             Boolean?   @default(false) // Optional give user a option to enable the question feedback
   enableScreenshotProtection Boolean?   @default(false) // Optional give user a option to enable the screenshot protection
-  screenShieldPercentage     Int? // Optional give user a option to enable the screen shield percentage
   feedback                   Feedback?
   enableAgreement            Boolean?   @default(false) // Optional give user a option to enable the terms and conditions
   agreement                  Agreement? @relation(fields: [agreementId], references: [id], onDelete: SetNull)
@@ -599,8 +599,10 @@ model ViewerGroup {
   id             String                      @id @default(cuid())
   name           String
   members        ViewerGroupMembership[]
+  domains        String[]
   links          Link[]
   accessControls ViewerGroupAccessControls[]
+  allowAll       Boolean                     @default(false)
 
   dataroomId String
   dataroom   Dataroom @relation(fields: [dataroomId], references: [id], onDelete: Cascade)

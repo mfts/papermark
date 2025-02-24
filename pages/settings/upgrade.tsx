@@ -4,6 +4,8 @@ import { useMemo, useState } from "react";
 import React from "react";
 
 import { useTeam } from "@/context/team-context";
+import { getStripe } from "@/ee/stripe/client";
+import { PLANS } from "@/ee/stripe/utils";
 import { CheckIcon, Users2Icon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -16,8 +18,6 @@ import {
 } from "@/components/ui/tooltip";
 
 import { useAnalytics } from "@/lib/analytics";
-import { getStripe } from "@/lib/stripe/client";
-import { PLANS } from "@/lib/stripe/utils";
 import { usePlan } from "@/lib/swr/use-billing";
 import { capitalize } from "@/lib/utils";
 
@@ -62,36 +62,16 @@ export default function UpgradePage() {
       Pro: {
         featureIntro: "Everything in Free, plus:",
         features: [
-          <div
-            key="users"
-            className="flex items-center justify-between gap-x-8"
-          >
-            <div className="flex items-center gap-x-3">
-              <CheckIcon className="h-6 w-5 flex-none text-[#fb7a00]" />
-              <span>2 users included</span>
-            </div>
-            <TooltipProvider>
-              <Tooltip delayDuration={0}>
-                <TooltipTrigger asChild>
-                  <div className="cursor-help">
-                    <Users2Icon className="h-4 w-4 text-gray-500" />
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>{PLAN_PRICING.Pro.extraUserPrice[period]}</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>,
-          "100 documents",
+          "1 user included",
           "Unlimited links",
+          "300 documents",
           "Custom branding",
           "Folder organization",
           "Large file uploads",
-          "Require email verification",
+          // "Require email verification",
+          "More file types: ppt, docx, excel",
           "Video sharing and analytics",
-          "More file types: pppt, docx, excel",
-          "Papermark branding removed",
+          "Remove Papermark branding",
           "1-year analytics retention",
         ],
       },
@@ -128,7 +108,6 @@ export default function UpgradePage() {
             </span>
           </span>,
           "Unlimited folder levels",
-
           "Multi-file sharing",
           "Screen shield/fence protection",
           "Allow/Block list",

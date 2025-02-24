@@ -3,11 +3,11 @@ import {
   DATAROOMS_PLAN_LIMITS,
   PRO_PLAN_LIMITS,
 } from "@/ee/limits/constants";
+import { stripeInstance } from "@/ee/stripe";
 import Stripe from "stripe";
 
 import { sendUpgradePlanEmail } from "@/lib/emails/send-upgrade-plan";
 import prisma from "@/lib/prisma";
-import { stripeInstance } from "@/lib/stripe";
 import { log } from "@/lib/utils";
 
 import { getPlanFromPriceId } from "../utils";

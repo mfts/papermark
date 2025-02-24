@@ -29,7 +29,11 @@ export default async function handle(
       groupId: string;
     };
 
-    const { emails } = req.body as { emails: string[] };
+    const { emails, domains, allowAll } = req.body as {
+      emails: string[];
+      domains: string[];
+      allowAll: boolean;
+    };
 
     try {
       // Check if the user is part of the team
@@ -85,6 +89,12 @@ export default async function handle(
           groupId: groupId,
           viewerId: viewer.id,
         })),
+      });
+
+      // Update the group with the new domains and allowAll setting
+      await prisma.viewerGroup.update({
+        where: { id: groupId },
+        data: { domains, allowAll },
       });
 
       res.status(201).json(members);

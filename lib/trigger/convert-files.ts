@@ -1,13 +1,14 @@
-import { client } from "@/trigger";
 import { logger, retry, task } from "@trigger.dev/sdk/v3";
 
 import { getFile } from "@/lib/files/get-file";
 import { putFileServer } from "@/lib/files/put-file-server";
 import prisma from "@/lib/prisma";
 
+import { updateStatus } from "../utils/generate-trigger-status";
 import { getExtensionFromContentType } from "../utils/get-content-type";
+import { convertPdfToImageRoute } from "./pdf-to-image-route";
 
-type ConvertPayload = {
+export type ConvertPayload = {
   documentId: string;
   documentVersionId: string;
   teamId: string;
@@ -20,6 +21,8 @@ export const convertFilesToPdfTask = task({
     concurrencyLimit: 10,
   },
   run: async (payload: ConvertPayload) => {
+    updateStatus({ progress: 0, text: "Initializing..." });
+
     const team = await prisma.team.findUnique({
       where: {
         id: payload.teamId,
@@ -57,6 +60,8 @@ export const convertFilesToPdfTask = task({
       !document.versions[0].originalFile ||
       !document.versions[0].contentType
     ) {
+      updateStatus({ progress: 0, text: "Document not found" });
+
       logger.error("Document not found", {
         documentId: payload.documentId,
         documentVersionId: payload.documentVersionId,
@@ -64,6 +69,8 @@ export const convertFilesToPdfTask = task({
       });
       return;
     }
+
+    updateStatus({ progress: 10, text: "Retrieving file..." });
 
     const fileUrl = await getFile({
       data: document.versions[0].originalFile,
@@ -80,7 +87,9 @@ export const convertFilesToPdfTask = task({
         },
       ]),
     );
-    formData.append("quality", "50");
+    formData.append("quality", "75");
+
+    updateStatus({ progress: 20, text: "Converting document..." });
 
     // Make the conversion request
     const conversionResponse = await retry.fetch(
@@ -107,6 +116,7 @@ export const convertFilesToPdfTask = task({
     );
 
     if (!conversionResponse.ok) {
+      updateStatus({ progress: 0, text: "Conversion failed" });
       const body = await conversionResponse.json();
       throw new Error(
         `Conversion failed: ${body.message} ${conversionResponse.status}`,
@@ -123,6 +133,8 @@ export const convertFilesToPdfTask = task({
     const match = document.versions[0].originalFile.match(/(doc_[^\/]+)\//);
     const docId = match ? match[1] : undefined;
 
+    updateStatus({ progress: 30, text: "Saving converted file..." });
+
     // Save the converted file to the database
     const { type: storageType, data } = await putFileServer({
       file: {
@@ -135,6 +147,8 @@ export const convertFilesToPdfTask = task({
     });
 
     if (!data || !storageType) {
+      updateStatus({ progress: 0, text: "Failed to save converted file" });
+
       logger.error("Failed to save converted file to database", {
         documentId: payload.documentId,
         documentVersionId: payload.documentVersionId,
@@ -147,25 +161,36 @@ export const convertFilesToPdfTask = task({
     console.log("data from conversion", data);
     console.log("storageType from conversion", storageType);
 
-    await prisma.documentVersion.update({
+    const { versionNumber } = await prisma.documentVersion.update({
       where: { id: payload.documentVersionId },
       data: {
         file: data,
         type: "pdf",
         storageType: storageType,
       },
-    });
-
-    // v2: trigger document uploaded event to trigger convert-pdf-to-image job
-    await client.sendEvent({
-      id: payload.documentVersionId, // unique eventId for the run
-      name: "document.uploaded",
-      payload: {
-        documentVersionId: payload.documentVersionId,
-        teamId: payload.teamId,
-        documentId: payload.documentId,
+      select: {
+        versionNumber: true,
       },
     });
+
+    updateStatus({ progress: 40, text: "Initiating document processing..." });
+
+    await convertPdfToImageRoute.trigger(
+      {
+        documentId: payload.documentId,
+        documentVersionId: payload.documentVersionId,
+        teamId: payload.teamId,
+        versionNumber: versionNumber,
+      },
+      {
+        idempotencyKey: `${payload.teamId}-${payload.documentVersionId}`,
+        tags: [
+          `team_${payload.teamId}`,
+          `document_${payload.documentId}`,
+          `version:${payload.documentVersionId}`,
+        ],
+      },
+    );
 
     logger.info("Document converted", {
       documentId: payload.documentId,
@@ -337,16 +362,21 @@ export const convertCadToPdfTask = task({
       },
     });
 
-    // v2: trigger document uploaded event to trigger convert-pdf-to-image job
-    await client.sendEvent({
-      id: payload.documentVersionId, // unique eventId for the run
-      name: "document.uploaded",
-      payload: {
+    await convertPdfToImageRoute.trigger(
+      {
+        documentId: payload.documentId,
         documentVersionId: payload.documentVersionId,
         teamId: payload.teamId,
-        documentId: payload.documentId,
       },
-    });
+      {
+        idempotencyKey: `${payload.teamId}-${payload.documentVersionId}`,
+        tags: [
+          `team_${payload.teamId}`,
+          `document_${payload.documentId}`,
+          `version:${payload.documentVersionId}`,
+        ],
+      },
+    );
 
     logger.info("Document converted", {
       documentId: payload.documentId,

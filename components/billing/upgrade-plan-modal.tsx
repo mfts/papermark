@@ -5,6 +5,8 @@ import { useEffect, useMemo, useState } from "react";
 import React from "react";
 
 import { useTeam } from "@/context/team-context";
+import { getStripe } from "@/ee/stripe/client";
+import { PLANS } from "@/ee/stripe/utils";
 import {
   CheckIcon,
   MinusCircleIcon,
@@ -23,8 +25,6 @@ import {
 } from "@/components/ui/tooltip";
 
 import { useAnalytics } from "@/lib/analytics";
-import { getStripe } from "@/lib/stripe/client";
-import { PLANS } from "@/lib/stripe/utils";
 import { usePlan } from "@/lib/swr/use-billing";
 import { capitalize } from "@/lib/utils";
 
@@ -56,6 +56,12 @@ const PLAN_PRICING = {
   },
 };
 
+export enum PlanEnum {
+  Pro = "Pro",
+  Business = "Business",
+  DataRooms = "Data Rooms",
+  DataRoomsPlus = "Data Rooms Plus",
+}
 export function UpgradePlanModal({
   clickedPlan,
   trigger,
@@ -63,7 +69,7 @@ export function UpgradePlanModal({
   setOpen,
   children,
 }: {
-  clickedPlan: "Pro" | "Business" | "Data Rooms" | "Data Rooms Plus";
+  clickedPlan: PlanEnum;
   trigger?: string;
   open?: boolean;
   setOpen?: React.Dispatch<React.SetStateAction<boolean>>;
@@ -83,27 +89,8 @@ export function UpgradePlanModal({
       Pro: {
         featureIntro: "Everything in Free, plus:",
         features: [
-          <div
-            key="users"
-            className="flex items-center justify-between gap-x-8"
-          >
-            <div className="flex items-center gap-x-3">
-              <span>2 users included</span>
-            </div>
-            <TooltipProvider>
-              <Tooltip delayDuration={0}>
-                <TooltipTrigger asChild>
-                  <div className="cursor-help">
-                    <Users2Icon className="h-4 w-4 text-gray-500" />
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>{PLAN_PRICING.Pro.extraUserPrice[period]}</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>,
-          "100 documents",
+          "1 user included",
+          "300 documents",
           "Unlimited links",
           <div key="custom-domain" className="flex items-center gap-x-3">
             <span>
@@ -112,10 +99,10 @@ export function UpgradePlanModal({
           </div>,
           "Folder organization",
           "Large file uploads",
-          "Require email verification",
           "Video sharing and analytics",
-          "More file types: pppt, docx, excel",
-          "Papermark branding removed",
+          // "Require email verification",
+          "More file types: ppt, docx, excel",
+          "Remove Papermark branding",
           "1-year analytics retention",
         ],
       },
@@ -142,7 +129,7 @@ export function UpgradePlanModal({
               </Tooltip>
             </TooltipProvider>
           </div>,
-          "1 dataroom",
+          "Unlimited data rooms",
           "1000 documents",
           <div key="custom-domain" className="flex items-center gap-x-3">
             <span>
@@ -152,6 +139,7 @@ export function UpgradePlanModal({
           "Unlimited folder levels",
           "Multi-file sharing",
           "Screen shield/fence protection",
+          "Require email verification",
           "Allow/Block list",
           "Dataroom branding",
           "Webhooks",

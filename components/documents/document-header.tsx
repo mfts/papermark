@@ -44,7 +44,7 @@ import { cn } from "@/lib/utils";
 import { fileIcon } from "@/lib/utils/get-file-icon";
 
 import PlanBadge from "../billing/plan-badge";
-import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
+import { PlanEnum, UpgradePlanModal } from "../billing/upgrade-plan-modal";
 import AdvancedSheet from "../shared/icons/advanced-sheet";
 import PortraitLandscape from "../shared/icons/portrait-landscape";
 import { Alert, AlertClose, AlertDescription, AlertTitle } from "../ui/alert";
@@ -484,8 +484,6 @@ export default function DocumentHeader({
     );
   };
 
-  console.log("Primary version", primaryVersion);
-
   return (
     <header className="flex flex-col gap-y-4">
       <div className="flex items-center justify-between gap-x-8">
@@ -561,26 +559,25 @@ export default function DocumentHeader({
               </div>
             ))}
 
-          {primaryVersion.type !== "notion" &&
-            primaryVersion.type !== "video" && (
-              <AddDocumentModal
-                newVersion
-                openModal={openAddDocModal}
-                setAddDocumentModalOpen={setOpenAddDocModal}
+          {primaryVersion.type !== "notion" && (
+            <AddDocumentModal
+              newVersion
+              openModal={openAddDocModal}
+              setAddDocumentModalOpen={setOpenAddDocModal}
+            >
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setOpenAddDocModal(true);
+                }}
+                className="hidden md:flex"
               >
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setOpenAddDocModal(true);
-                  }}
-                  className="hidden md:flex"
-                >
-                  <FileUp className="h-6 w-6" />
-                </Button>
-              </AddDocumentModal>
-            )}
+                <FileUp className="h-6 w-6" />
+              </Button>
+            </AddDocumentModal>
+          )}
 
           {prismaDocument.type !== "notion" &&
             prismaDocument.type !== "sheet" &&
@@ -845,7 +842,7 @@ export default function DocumentHeader({
 
       {planModalOpen ? (
         <UpgradePlanModal
-          clickedPlan="Pro"
+          clickedPlan={PlanEnum.Pro}
           trigger={planModalTrigger}
           open={planModalOpen}
           setOpen={setPlanModalOpen}

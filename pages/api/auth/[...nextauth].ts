@@ -11,6 +11,7 @@ import { sendWelcomeEmail } from "@/lib/emails/send-welcome";
 import hanko from "@/lib/hanko";
 import prisma from "@/lib/prisma";
 import { CreateUserEmailProps, CustomUser } from "@/lib/types";
+import { subscribe } from "@/lib/unsend";
 import { generateChecksum } from "@/lib/utils/generate-checksum";
 
 const VERCEL_DEPLOYMENT = !!process.env.VERCEL_URL;
@@ -129,6 +130,10 @@ export const authOptions: NextAuthOptions = {
       });
 
       await sendWelcomeEmail(params);
+
+      if (message.user.email) {
+        await subscribe(message.user.email);
+      }
     },
     async signIn(message) {
       await identifyUser(message.user.email ?? message.user.id);

@@ -1,10 +1,10 @@
+import { useRouter } from "next/router";
+
 import React from "react";
 
 import { useTheme } from "next-themes";
 
 import { fileIcon } from "@/lib/utils/get-file-icon";
-
-import { TDocumentData, TSupportedDocumentSimpleType } from "./dataroom-view";
 
 type DRDocument = {
   dataroomDocumentId: string;
@@ -22,17 +22,34 @@ type DRDocument = {
 
 type DocumentsCardProps = {
   document: DRDocument;
-  setViewType: (type: "DOCUMENT_VIEW" | "DATAROOM_VIEW") => void;
-  setDocumentData: React.Dispatch<React.SetStateAction<TDocumentData | null>>;
+  linkId: string;
 };
-export default function DocumentCard({
-  document,
-  setViewType,
-  setDocumentData,
-}: DocumentsCardProps) {
+
+export default function DocumentCard({ document, linkId }: DocumentsCardProps) {
   const { theme, systemTheme } = useTheme();
   const isLight =
     theme === "light" || (theme === "system" && systemTheme === "light");
+  const router = useRouter();
+  const { previewToken, domain, slug } = router.query as {
+    previewToken?: string;
+    domain?: string;
+    slug?: string;
+  };
+
+  const handleDocumentClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    // Open in new tab
+    if (domain && slug) {
+      window.open(`/${slug}/d/${document.dataroomDocumentId}`, "_blank");
+    } else {
+      window.open(
+        `/view/${linkId}/d/${document.dataroomDocumentId}${
+          previewToken ? `?previewToken=${previewToken}&preview=1` : ""
+        }`,
+        "_blank",
+      );
+    }
+  };
 
   return (
     <>
@@ -50,20 +67,7 @@ export default function DocumentCard({
             <div className="flex items-center">
               <h2 className="min-w-0 max-w-[300px] truncate text-sm font-semibold leading-6 text-foreground sm:max-w-lg">
                 <button
-                  onClick={() => {
-                    setViewType("DOCUMENT_VIEW");
-                    setDocumentData({
-                      id: document.id,
-                      name: document.name,
-                      hasPages: document.versions[0].hasPages,
-                      documentType: document.versions[0]
-                        .type as TSupportedDocumentSimpleType,
-                      documentVersionId: document.versions[0].id,
-                      documentVersionNumber: document.versions[0].versionNumber,
-                      downloadOnly: document.downloadOnly,
-                      isVertical: document.versions[0].isVertical,
-                    });
-                  }}
+                  onClick={handleDocumentClick}
                   className="w-full truncate"
                 >
                   <span>{document.name}</span>

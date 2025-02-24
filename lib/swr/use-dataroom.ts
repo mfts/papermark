@@ -266,6 +266,7 @@ export type DataroomFolderDocument = DataroomDocument & {
     id: string;
     name: string;
     type: string;
+    versions?: { id: string; hasPages: boolean }[];
     _count: {
       views: number;
       versions: number;
