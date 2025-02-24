@@ -82,6 +82,7 @@ export function usePlan() {
   return {
     plan: parsedPlan.plan ?? "free",
     trial: parsedPlan.trial,
+    isTrial: !!parsedPlan.trial,
     isOldAccount: parsedPlan.old,
     isCustomer: plan?.isCustomer,
     isAnnualPlan: plan?.subscriptionCycle === "yearly",
