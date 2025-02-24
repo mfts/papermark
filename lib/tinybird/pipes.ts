@@ -56,7 +56,7 @@ export const getTotalLinkDuration = tb.buildPipe({
     documentId: z.string(),
     excludedViewIds: z.string().describe("Comma separated viewIds"),
     since: z.number(),
-    until: z.number(),
+    until: z.number().optional(),
   }),
   data: z.object({
     sum_duration: z.number(),
@@ -69,7 +69,7 @@ export const getTotalViewerDuration = tb.buildPipe({
   parameters: z.object({
     viewIds: z.string().describe("Comma separated viewIds"),
     since: z.number(),
-    until: z.number(),
+    until: z.number().optional(),
   }),
   data: z.object({
     sum_duration: z.number(),
