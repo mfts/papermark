@@ -38,8 +38,12 @@ import { BadgeTooltip } from "@/components/ui/tooltip";
 import { DataTablePagination } from "@/components/visitors/data-table-pagination";
 import { VisitorAvatar } from "@/components/visitors/visitor-avatar";
 
+import { usePlan } from "@/lib/swr/use-billing";
 import { durationFormat, fetcher, timeAgo } from "@/lib/utils";
 import { downloadCSV } from "@/lib/utils/csv";
+
+import { PlanEnum } from "../billing/upgrade-plan-modal";
+import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
 
 interface Visitor {
   email: string;
@@ -212,6 +216,8 @@ export default function VisitorsTable({
 }) {
   const router = useRouter();
   const teamInfo = useTeam();
+  const { plan, isTrial } = usePlan();
+  const isFree = plan === "free";
   const { interval = "7d" } = router.query;
   const [sorting, setSorting] = useState<SortingState>([
     { id: "lastActive", desc: true },
@@ -241,6 +247,11 @@ export default function VisitorsTable({
   });
 
   const handleExport = () => {
+    if (isFree && !isTrial) {
+      toast.error("Please upgrade to export data");
+      return;
+    }
+
     if (!visitors?.length) {
       toast.error("No data to export");
       return;
@@ -258,13 +269,36 @@ export default function VisitorsTable({
     downloadCSV(exportData, "visitors");
   };
 
-  return (
-    <div className="space-y-4">
-      <div className="flex justify-end">
+  const UpgradeOrExportButton = () => {
+    const [open, setOpen] = useState(false);
+    if (isFree && !isTrial) {
+      return (
+        <>
+          <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
+            Upgrade to Export
+          </Button>
+          <UpgradePlanModal
+            clickedPlan={PlanEnum.Pro}
+            trigger="dashboard_visitors_export"
+            open={open}
+            setOpen={setOpen}
+          />
+        </>
+      );
+    } else {
+      return (
         <Button variant="outline" size="sm" onClick={handleExport}>
           <Download className="!size-4" />
           Export
         </Button>
+      );
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-end">
+        <UpgradeOrExportButton />
       </div>
       <div className="rounded-xl border">
         <Table>
