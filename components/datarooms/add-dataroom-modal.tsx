@@ -1,8 +1,11 @@
+import { useRouter } from "next/router";
+
 import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { toast } from "sonner";
 import { mutate } from "swr";
+import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -20,7 +23,7 @@ import { Label } from "@/components/ui/label";
 import { useAnalytics } from "@/lib/analytics";
 import { usePlan } from "@/lib/swr/use-billing";
 
-import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
+import { PlanEnum, UpgradePlanModal } from "../billing/upgrade-plan-modal";
 
 export function AddDataroomModal({
   children,
@@ -31,6 +34,7 @@ export function AddDataroomModal({
   openModal?: boolean;
   setOpenModal?: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
+  const router = useRouter();
   const [dataroomName, setDataroomName] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const [open, setOpen] = useState<boolean>(openModal);
@@ -38,12 +42,20 @@ export function AddDataroomModal({
   const teamInfo = useTeam();
   const { plan } = usePlan();
   const analytics = useAnalytics();
+  const dataroomSchema = z.object({
+    name: z.string().min(3, {
+      message: "Please provide a dataroom name with at least 3 characters.",
+    }),
+  });
 
   const handleSubmit = async (event: any) => {
     event.preventDefault();
     event.stopPropagation();
 
-    if (dataroomName == "") return;
+    const validation = dataroomSchema.safeParse({ name: dataroomName });
+    if (!validation.success) {
+      return toast.error(validation.error.errors[0].message);
+    }
 
     setLoading(true);
 
@@ -68,10 +80,13 @@ export function AddDataroomModal({
         return;
       }
 
+      const { dataroom } = await response.json();
+
       analytics.capture("Dataroom Created", { dataroomName: dataroomName });
-      toast.success("Dataroom successfully created! 🎉");
 
       mutate(`/api/teams/${teamInfo?.currentTeam?.id}/datarooms`);
+      toast.success("Dataroom successfully created! 🎉");
+      router.push(`/datarooms/${dataroom.id}/documents`);
     } catch (error) {
       setLoading(false);
       toast.error("Error adding dataroom. Please try again.");
@@ -88,7 +103,7 @@ export function AddDataroomModal({
     if (children) {
       return (
         <UpgradePlanModal
-          clickedPlan="Data Rooms"
+          clickedPlan={PlanEnum.DataRooms}
           trigger={"add_dataroom_overview"}
         >
           {children}

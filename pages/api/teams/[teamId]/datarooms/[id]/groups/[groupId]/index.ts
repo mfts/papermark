@@ -89,7 +89,11 @@ export default async function handle(
       groupId: string;
     };
 
-    const { name } = req.body as { name: string };
+    const { name, domains, allowAll } = req.body as {
+      name?: string;
+      domains?: string[];
+      allowAll?: boolean;
+    };
     const userId = (session.user as CustomUser).id;
 
     try {
@@ -97,9 +101,19 @@ export default async function handle(
         where: {
           id: groupId,
           dataroomId: dataroomId,
+          teamId: teamId,
+          team: {
+            users: {
+              some: {
+                userId: userId,
+              },
+            },
+          },
         },
         data: {
-          name,
+          ...(name && { name }),
+          ...(typeof allowAll === "boolean" && { allowAll }),
+          ...(domains && { domains }),
         },
       });
 

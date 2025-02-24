@@ -27,7 +27,6 @@ import { TDocumentData } from "./dataroom/dataroom-view";
 import Nav from "./nav";
 import { PoweredBy } from "./powered-by";
 import Question from "./question";
-import { ScreenShield } from "./screen-shield";
 import Toolbar from "./toolbar";
 import ViewDurationSummary from "./visitor-graph";
 import { SVGWatermark } from "./watermark-svg";
@@ -77,7 +76,6 @@ export default function PagesViewer({
   allowDownload,
   feedbackEnabled,
   screenshotProtectionEnabled,
-  screenShieldPercentage,
   versionNumber,
   brand,
   documentName,
@@ -108,7 +106,6 @@ export default function PagesViewer({
   allowDownload: boolean;
   feedbackEnabled: boolean;
   screenshotProtectionEnabled: boolean;
-  screenShieldPercentage: number | null;
   versionNumber: number;
   brand?: Partial<Brand> | Partial<DataroomBrand> | null;
   documentName?: string;
@@ -496,7 +493,7 @@ export default function PagesViewer({
 
   // Function to handle context for screenshotting
   const handleContextMenu = (event: React.MouseEvent<HTMLDivElement>) => {
-    if (!screenshotProtectionEnabled && !screenShieldPercentage) {
+    if (!screenshotProtectionEnabled) {
       return null;
     }
 
@@ -623,7 +620,6 @@ export default function PagesViewer({
       const newScrollPosition =
         (pageNumber * containerRef.current!.scrollHeight) /
         numPagesWithAccountCreation;
-      console.log("newScrollPosition", newScrollPosition);
       containerRef.current?.scrollTo({
         top: newScrollPosition,
         behavior: "smooth",
@@ -728,6 +724,27 @@ export default function PagesViewer({
         // Reset the start time for the new page
         startTimeRef.current = Date.now();
       }
+    } else {
+      // Track external link clicks
+      if (!isPreview && viewId) {
+        fetch("/api/record_click", {
+          method: "POST",
+          body: JSON.stringify({
+            timestamp: new Date().toISOString(),
+            sessionId: viewId,
+            linkId,
+            documentId,
+            viewId,
+            pageNumber: pageNumber.toString(),
+            href,
+            versionNumber,
+            dataroomId,
+          }),
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }).catch(console.error); // Non-blocking
+      }
     }
   };
 
@@ -768,8 +785,8 @@ export default function PagesViewer({
         embeddedLinks={pages[pageNumber - 1]?.embeddedLinks}
         isDataroom={dataroomId ? true : false}
         setDocumentData={setDocumentData}
-        documentRefs={pinchRefs}
-        isVertical={isVertical}
+        // documentRefs={pinchRefs}
+        // isVertical={isVertical}
         isMobile={isMobile}
         isPreview={isPreview}
         hasWatermark={watermarkConfig ? true : false}
@@ -1086,9 +1103,6 @@ export default function PagesViewer({
             pageNumber={pageNumber}
             isPreview={isPreview}
           />
-        ) : null}
-        {!!screenShieldPercentage ? (
-          <ScreenShield visiblePercentage={screenShieldPercentage} />
         ) : null}
         {screenshotProtectionEnabled ? <ScreenProtector /> : null}
         {showPoweredByBanner ? <PoweredBy linkId={linkId} /> : null}

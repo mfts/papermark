@@ -4,22 +4,17 @@ import { useEffect, useRef, useState } from "react";
 import React from "react";
 
 import { Brand, DataroomBrand } from "@prisma/client";
-import {
-  ReactZoomPanPinchContentRef,
-  TransformComponent,
-  TransformWrapper,
-} from "react-zoom-pan-pinch";
-import { toast } from "sonner";
 
 import { WatermarkConfig } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useMediaQuery } from "@/lib/utils/use-media-query";
 
+import "@/styles/custom-viewer-styles.css";
+
 import { ScreenProtector } from "../ScreenProtection";
 import { TDocumentData } from "../dataroom/dataroom-view";
 import Nav from "../nav";
 import { PoweredBy } from "../powered-by";
-import { ScreenShield } from "../screen-shield";
 import { SVGWatermark } from "../watermark-svg";
 
 const trackPageView = async (data: {
@@ -53,7 +48,6 @@ export default function ImageViewer({
   allowDownload,
   feedbackEnabled,
   screenshotProtectionEnabled,
-  screenShieldPercentage,
   versionNumber,
   brand,
   documentName,
@@ -63,7 +57,6 @@ export default function ImageViewer({
   showAccountCreationSlide,
   enableQuestion = false,
   feedback,
-  isVertical = false,
   viewerEmail,
   isPreview,
   watermarkConfig,
@@ -78,7 +71,6 @@ export default function ImageViewer({
   allowDownload: boolean;
   feedbackEnabled: boolean;
   screenshotProtectionEnabled: boolean;
-  screenShieldPercentage: number | null;
   versionNumber: number;
   brand?: Partial<Brand> | Partial<DataroomBrand> | null;
   documentName?: string;
@@ -91,7 +83,6 @@ export default function ImageViewer({
     id: string;
     data: { question: string; type: string };
   } | null;
-  isVertical?: boolean;
   viewerEmail?: string;
   isPreview?: boolean;
   watermarkConfig?: WatermarkConfig | null;
@@ -110,7 +101,6 @@ export default function ImageViewer({
   const startTimeRef = useRef(Date.now());
   const visibilityRef = useRef<boolean>(true);
   const containerRef = useRef<HTMLDivElement>(null);
-  const pinchRefs = useRef<(ReactZoomPanPinchContentRef | null)[]>([]);
   const imageRefs = useRef<HTMLImageElement | null>(null);
 
   const [imageDimensions, setImageDimensions] = useState<{
@@ -119,6 +109,36 @@ export default function ImageViewer({
   } | null>(null);
 
   const { isMobile } = useMediaQuery();
+
+  // Add zoom handlers
+  const handleZoomIn = () => {
+    setScale((prev) => Math.min(prev + 0.25, 3)); // Max zoom 3x
+  };
+
+  const handleZoomOut = () => {
+    setScale((prev) => Math.max(prev - 0.25, 0.5)); // Min zoom 0.5x
+  };
+
+  // Add keyboard shortcuts for zooming
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.metaKey || e.ctrlKey) {
+        if (e.key === "=" || e.key === "+") {
+          e.preventDefault();
+          handleZoomIn();
+        } else if (e.key === "-") {
+          e.preventDefault();
+          handleZoomOut();
+        } else if (e.key === "0") {
+          e.preventDefault();
+          setScale(1);
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [containerRef.current, imageDimensions]);
 
   useEffect(() => {
     const updateImageDimensions = () => {
@@ -253,22 +273,6 @@ export default function ImageViewer({
     }
   }, []); // Run once on mount
 
-  // Function to handle context for screenshotting
-  const handleContextMenu = (event: React.MouseEvent<HTMLDivElement>) => {
-    if (!screenshotProtectionEnabled && !screenShieldPercentage) {
-      return null;
-    }
-
-    event.preventDefault();
-    // Close menu on click anywhere
-    const clickHandler = () => {
-      document.removeEventListener("click", clickHandler);
-    };
-    document.addEventListener("click", clickHandler);
-
-    toast.info("Context menu has been disabled.");
-  };
-
   return (
     <>
       <Nav
@@ -280,114 +284,77 @@ export default function ImageViewer({
         linkId={linkId}
         documentId={documentId}
         documentName={documentName}
-        isDataroom={dataroomId ? true : false}
+        isDataroom={!!dataroomId}
         setDocumentData={setDocumentData}
-        documentRefs={pinchRefs}
         isMobile={isMobile}
         isPreview={isPreview}
-        hasWatermark={watermarkConfig ? true : false}
+        hasWatermark={!!watermarkConfig}
+        handleZoomIn={handleZoomIn}
+        handleZoomOut={handleZoomOut}
       />
       <div
         style={{ height: "calc(100dvh - 64px)" }}
-        className="relative flex items-center"
+        className="relative flex items-center overflow-hidden"
       >
         <div
           className={cn(
-            "relative flex h-full w-full flex-row",
+            "relative h-full w-full",
             !isWindowFocused &&
               screenshotProtectionEnabled &&
               "blur-xl transition-all duration-300",
           )}
           ref={containerRef}
         >
-          <div
-            className="flex w-full flex-row justify-center"
-            onContextMenu={handleContextMenu}
-          >
-            <TransformWrapper
-              initialScale={scale}
-              initialPositionX={0}
-              initialPositionY={0}
-              disabled={isMobile}
-              panning={{
-                lockAxisY: false,
-                velocityDisabled: true,
-                wheelPanning: false,
+          <div className={cn("h-full w-full", scale > 1 && "overflow-auto")}>
+            <div
+              className="flex min-h-full w-full items-center justify-center"
+              style={{
+                transform: `scale(${scale})`,
+                transition: "transform 0.2s ease-out",
+                transformOrigin: scale <= 1 ? "center center" : "left top",
+                minWidth: scale > 1 ? `${100 * scale}%` : "100%",
               }}
-              wheel={{ disabled: true }}
-              pinch={{ disabled: true }}
-              doubleClick={{ disabled: true }}
-              onZoom={(ref) => {
-                setScale(ref.state.scale);
-              }}
-              ref={(ref) => {
-                pinchRefs.current[0] = ref;
-              }}
-              customTransform={(x: number, y: number, scale: number) => {
-                // Keep the translateY value constant
-                if (isVertical) {
-                  const transform = `translate(${x}px, ${0 * y * -2}px) scale(${scale})`;
-                  return transform;
-                }
-                const transform = `translate(${x}px, ${y}px) scale(${scale})`;
-                return transform;
-              }}
+              onContextMenu={(e) => e.preventDefault()}
             >
-              <TransformComponent
-                wrapperClass={cn(
-                  "!h-full",
-                  isMobile
-                    ? "!overflow-x-clip !overflow-y-clip"
-                    : "!overflow-x-visible !overflow-y-clip",
-                )}
-                contentClass="!h-full"
-              >
-                <div className="relative my-auto block w-full">
-                  <img
-                    className="!pointer-events-auto object-contain"
-                    style={{
-                      maxHeight: "calc(100dvh - 64px)",
-                    }}
-                    ref={(ref) => {
-                      imageRefs.current = ref;
-                      if (ref) {
-                        ref.onload = () =>
-                          setImageDimensions({
-                            width: ref.clientWidth,
-                            height: ref.clientHeight,
-                          });
-                      }
-                    }}
-                    src={file}
-                    alt="Image 1"
-                  />
+              <div className="viewer-container relative my-auto flex w-full justify-center">
+                <img
+                  className="!pointer-events-auto max-h-[calc(100dvh-64px)] object-contain"
+                  ref={(ref) => {
+                    imageRefs.current = ref;
+                    if (ref) {
+                      ref.onload = () =>
+                        setImageDimensions({
+                          width: ref.clientWidth,
+                          height: ref.clientHeight,
+                        });
+                    }
+                  }}
+                  src={file}
+                  alt="Image 1"
+                />
 
-                  {/* Add Watermark Component */}
-                  {watermarkConfig ? (
-                    <SVGWatermark
-                      config={watermarkConfig}
-                      viewerData={{
-                        email: viewerEmail,
-                        date: new Date().toLocaleDateString(),
-                        time: new Date().toLocaleTimeString(),
-                        link: linkName,
-                        ipAddress: ipAddress,
-                      }}
-                      documentDimensions={
-                        imageDimensions ?? { width: 0, height: 0 }
-                      }
-                      pageIndex={0}
-                    />
-                  ) : null}
-                </div>
-              </TransformComponent>
-            </TransformWrapper>
+                {/* Add Watermark Component */}
+                {watermarkConfig ? (
+                  <SVGWatermark
+                    config={watermarkConfig}
+                    viewerData={{
+                      email: viewerEmail,
+                      date: new Date().toLocaleDateString(),
+                      time: new Date().toLocaleTimeString(),
+                      link: linkName,
+                      ipAddress: ipAddress,
+                    }}
+                    documentDimensions={
+                      imageDimensions ?? { width: 0, height: 0 }
+                    }
+                    pageIndex={0}
+                  />
+                ) : null}
+              </div>
+            </div>
           </div>
         </div>
 
-        {!!screenShieldPercentage ? (
-          <ScreenShield visiblePercentage={screenShieldPercentage} />
-        ) : null}
         {screenshotProtectionEnabled ? <ScreenProtector /> : null}
         {showPoweredByBanner ? <PoweredBy linkId={linkId} /> : null}
       </div>

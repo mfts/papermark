@@ -30,6 +30,10 @@ export const PostHogCustomProvider = ({
               posthog.identify(
                 (session.user as CustomUser).email ??
                   (session.user as CustomUser).id,
+                {
+                  email: (session.user as CustomUser).email,
+                  userId: (session.user as CustomUser).id,
+                },
               );
             } else {
               posthog.reset();

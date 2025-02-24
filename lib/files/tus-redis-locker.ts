@@ -48,11 +48,14 @@ class RedisLock implements Lock {
     private timeout: number = 1000 * 30, // default: 30 seconds
   ) {}
 
-  async lock(requestRelease: RequestRelease): Promise<void> {
+  async lock(
+    signal: AbortSignal,
+    requestRelease: RequestRelease,
+  ): Promise<void> {
     const abortController = new AbortController();
     const lock = await Promise.race([
-      this.waitTimeout(abortController.signal),
-      this.acquireLock(this.id, requestRelease, abortController.signal),
+      this.waitTimeout(signal),
+      this.acquireLock(this.id, requestRelease, signal),
     ]);
 
     abortController.abort();

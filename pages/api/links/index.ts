@@ -132,7 +132,6 @@ export default async function handler(
           enableNotification: linkData.enableNotification,
           enableFeedback: linkData.enableFeedback,
           enableScreenshotProtection: linkData.enableScreenshotProtection,
-          screenShieldPercentage: linkData.screenShieldPercentage,
           enableCustomMetatag: linkData.enableCustomMetatag,
           metaTitle: linkData.metaTitle || null,
           metaDescription: linkData.metaDescription || null,
@@ -165,6 +164,23 @@ export default async function handler(
             watermarkConfig: linkData.watermarkConfig,
           }),
           showBanner: linkData.showBanner,
+          ...(linkData.customFields && {
+            customFields: {
+              createMany: {
+                data: linkData.customFields.map(
+                  (field: any, index: number) => ({
+                    type: field.type,
+                    identifier: field.identifier,
+                    label: field.label,
+                    placeholder: field.placeholder,
+                    required: field.required,
+                    disabled: field.disabled,
+                    orderIndex: index,
+                  }),
+                ),
+              },
+            },
+          }),
         },
       });
 

@@ -149,7 +149,13 @@ export default function DomainSection({
             name="key"
             required
             value={data.slug || ""}
-            pattern="[\p{L}\p{N}\p{Pd}]+"
+            pattern="^[a-zA-Z0-9-]+$"
+            onKeyDown={(e) => {
+              // Allow navigation keys, backspace, delete, etc.
+              if (e.key.length === 1 && !/^[a-zA-Z0-9-]$/.test(e.key)) {
+                e.preventDefault();
+              }
+            }}
             onInvalid={(e) => {
               const currentValue = e.currentTarget.value;
               const isBlocked = BLOCKED_PATHNAMES.includes(`/${currentValue}`);
@@ -171,7 +177,7 @@ export default function DomainSection({
             )}
             placeholder="deck"
             onChange={(e) => {
-              const currentValue = e.target.value;
+              const currentValue = e.target.value.replace(/[^a-zA-Z0-9-]/g, "");
               const isBlocked = BLOCKED_PATHNAMES.includes(`/${currentValue}`);
 
               if (isBlocked) {

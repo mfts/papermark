@@ -158,8 +158,7 @@ export default function ViewPage() {
                       },
                     ],
                   }}
-                  setViewType={() => {}}
-                  setDocumentData={() => {}}
+                  linkId="1"
                 />
               </ul>
             </div>

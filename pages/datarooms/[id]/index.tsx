@@ -30,7 +30,7 @@ export default function DataroomPage() {
             description={dataroom.pId}
             actions={[
               <Button onClick={() => setIsLinkSheetOpen(true)} key={1}>
-                Create Link
+                Share
               </Button>,
             ]}
           />

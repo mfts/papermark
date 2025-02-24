@@ -1,5 +1,6 @@
 import {
   Agreement,
+  CustomField,
   Dataroom,
   DataroomDocument,
   DataroomFolder,
@@ -33,6 +34,11 @@ export interface DocumentWithLinksAndLinkCountAndViewCount extends Document {
 
 export interface DocumentWithVersion extends Document {
   versions: DocumentVersion[];
+  folder: {
+    name: string;
+    path: string;
+  };
+  hasPageLinks: boolean;
 }
 
 export interface LinkWithViews extends Link {
@@ -41,6 +47,7 @@ export interface LinkWithViews extends Link {
   };
   views: View[];
   feedback: { id: true; data: { question: string; type: string } } | null;
+  customFields: CustomField[];
 }
 
 export interface LinkWithDocument extends Link {
@@ -65,6 +72,35 @@ export interface LinkWithDocument extends Link {
     };
   } | null;
   agreement: Agreement | null;
+  customFields: CustomField[];
+}
+
+export interface LinkWithDataroomDocument extends Link {
+  dataroomDocument: DataroomDocument & {
+    document: Document & {
+      versions: {
+        id: string;
+        versionNumber: number;
+        type: string;
+        hasPages: boolean;
+        file: string;
+        isVertical: boolean;
+      }[];
+    };
+  };
+  feedback: {
+    id: string;
+    data: {
+      question: string;
+      type: string;
+    };
+  } | null;
+  agreement: Agreement | null;
+  customFields: CustomField[];
+  teamId: string;
+  team: {
+    plan: string;
+  };
 }
 
 export interface LinkWithDataroom extends Link {
@@ -91,8 +127,10 @@ export interface LinkWithDataroom extends Link {
     }[];
     folders: DataroomFolder[];
     lastUpdatedAt: Date;
+    createdAt: Date;
   };
   agreement: Agreement | null;
+  customFields: CustomField[];
 }
 
 export interface Geo {
@@ -226,11 +264,14 @@ export type AnalyticsEvents =
   | {
       event: "Stripe Billing Portal Clicked";
       teamId: string;
+      action?: string;
     };
 
 export interface Team {
   id: string;
   name?: string;
+  logo?: React.ElementType;
+  plan?: string;
 }
 
 export interface TeamDetail {

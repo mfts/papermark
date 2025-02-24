@@ -6,7 +6,7 @@ const nextConfig = {
     minimumCacheTTL: 2592000, // 30 days
     remotePatterns: prepareRemotePatterns(),
   },
-  transpilePackages: ["@trigger.dev/react", "react-syntax-highlighter"],
+  transpilePackages: ["react-syntax-highlighter"],
   skipTrailingSlashRedirect: true,
   assetPrefix:
     process.env.NODE_ENV === "production" &&
@@ -23,6 +23,16 @@ const nextConfig = {
       {
         source: "/view/cm2xiaxzo000d147xszm9q72o",
         destination: "/view/cm34cqqqx000212oekj9upn8o",
+        permanent: false,
+      },
+      {
+        source: "/view/cm5morpmg000btdwrlahi7f2y",
+        destination: "/view/cm68iygxd0005wuf5svbr6c1x",
+        permanent: false,
+      },
+      {
+        source: "/settings",
+        destination: "/settings/general",
         permanent: false,
       },
     ];

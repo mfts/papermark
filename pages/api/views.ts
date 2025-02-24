@@ -6,6 +6,8 @@ import { getServerSession } from "next-auth/next";
 import { hashToken } from "@/lib/api/auth/token";
 import sendNotification from "@/lib/api/notification-helper";
 import { recordVisit } from "@/lib/api/views/record-visit";
+import { verifyPreviewSession } from "@/lib/auth/preview-auth";
+import { PreviewSession } from "@/lib/auth/preview-auth";
 import { sendOtpVerificationEmail } from "@/lib/emails/send-email-otp-verification";
 import { getFile } from "@/lib/files/get-file";
 import { newId } from "@/lib/id-helper";
@@ -61,6 +63,11 @@ export default async function handle(
     hasConfirmedAgreement?: boolean;
   };
 
+  // Add customFields to the data extraction
+  const { customFields } = data as {
+    customFields?: { [key: string]: string };
+  };
+
   // INFO: for using the advanced excel viewer
   const { useAdvancedExcelViewer } = data as {
     useAdvancedExcelViewer: boolean;
@@ -101,6 +108,12 @@ export default async function handle(
       team: {
         select: {
           plan: true,
+        },
+      },
+      customFields: {
+        select: {
+          identifier: true,
+          label: true,
         },
       },
     },
@@ -352,7 +365,8 @@ export default async function handle(
     isEmailVerified = true;
   }
 
-  // Check if the view is a preview
+  // Check if there's a valid preview session
+  let previewSession: PreviewSession | null = null;
   let isPreview: boolean = false;
   if (previewToken) {
     const session = await getServerSession(req, res, authOptions);
@@ -361,34 +375,20 @@ export default async function handle(
         .status(401)
         .json({ message: "You need to be logged in to preview the link." });
     }
-    const verification = await prisma.verificationToken.findUnique({
-      where: {
-        token: previewToken,
-        identifier: `preview:${linkId}:${(session.user as CustomUser).id}`,
-      },
-    });
+    previewSession = await verifyPreviewSession(
+      previewToken,
+      (session.user as CustomUser).id,
+      linkId,
+    );
 
-    if (!verification) {
+    console.log("previewSession", previewSession);
+    if (!previewSession) {
       res.status(401).json({
-        message: "Unauthorized access.",
+        message: "Preview session expired or invalid. Request a new one.",
+        resetPreview: true,
       });
       return;
     }
-
-    // Check the token's expiration date
-    if (Date.now() > verification.expires.getTime()) {
-      res.status(401).json({ message: "Preview access expired" });
-      return;
-    }
-
-    // TODO: delete previewToken
-    // delete the token after verification
-    // await prisma.verificationToken.delete({
-    //   where: {
-    //     token: previewToken,
-    //   },
-    // });
-
     isPreview = true;
   }
 
@@ -438,6 +438,18 @@ export default async function handle(
               agreementResponse: {
                 create: {
                   agreementId: link.agreementId,
+                },
+              },
+            }),
+          ...(customFields &&
+            link.customFields.length > 0 && {
+              customFieldResponse: {
+                create: {
+                  data: link.customFields.map((field) => ({
+                    identifier: field.identifier,
+                    label: field.label,
+                    response: customFields[field.identifier] || "",
+                  })),
                 },
               },
             }),
@@ -496,7 +508,11 @@ export default async function handle(
         return;
       }
 
-      if (documentVersion.type === "pdf" || documentVersion.type === "image") {
+      if (
+        documentVersion.type === "pdf" ||
+        documentVersion.type === "image" ||
+        documentVersion.type === "video"
+      ) {
         documentVersion.file = await getFile({
           data: documentVersion.file,
           type: documentVersion.storageType,
@@ -548,7 +564,8 @@ export default async function handle(
         (documentVersion &&
           (documentVersion.type === "pdf" ||
             documentVersion.type === "image" ||
-            documentVersion.type === "zip")) ||
+            documentVersion.type === "zip" ||
+            documentVersion.type === "video")) ||
         (documentVersion && useAdvancedExcelViewer)
           ? documentVersion.file
           : undefined,

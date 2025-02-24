@@ -50,6 +50,7 @@ model User {
   teams          UserTeam[]
   domains        Domain[]
   conversations  Conversation[]
+  contactId      String?
   plan           String         @default("free")
   stripeId       String?        @unique // Stripe subscription / customer ID
   subscriptionId String?        @unique // Stripe subscription ID
@@ -89,7 +90,7 @@ model Team {
 
   incomingWebhooks IncomingWebhook[]
   restrictedTokens RestrictedToken[]
-  webhooks       Webhook[]
+  webhooks         Webhook[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -186,6 +187,7 @@ model DocumentVersion {
   fileId        String? // This is the file ID of the OpenAI File API
   pages         DocumentPage[]
   hasPages      Boolean             @default(false) // Indicates if the document has pages
+  length        Int? // This is the length of the video in seconds
   createdAt     DateTime            @default(now())
   updatedAt     DateTime            @updatedAt
 
@@ -254,7 +256,6 @@ model Link {
   enableFeedback             Boolean?   @default(false) // Optional give user a option to enable the reactions toolbar
   enableQuestion             Boolean?   @default(false) // Optional give user a option to enable the question feedback
   enableScreenshotProtection Boolean?   @default(false) // Optional give user a option to enable the screenshot protection
-  screenShieldPercentage     Int? // Optional give user a option to enable the screen shield percentage
   feedback                   Feedback?
   enableAgreement            Boolean?   @default(false) // Optional give user a option to enable the terms and conditions
   agreement                  Agreement? @relation(fields: [agreementId], references: [id], onDelete: SetNull)
@@ -277,6 +278,8 @@ model Link {
 
   teamId String?
   team   Team?   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  customFields CustomField[]
 
   @@unique([domainSlug, slug])
   @@index([documentId])
@@ -341,6 +344,7 @@ model View {
   group             ViewerGroup?       @relation(fields: [groupId], references: [id], onDelete: SetNull)
   feedbackResponse  FeedbackResponse?
   agreementResponse AgreementResponse?
+  customFieldResponse CustomFieldResponse?
 
   isArchived Boolean @default(false) // Indicates if the view is archived and not counted in the analytics
 
@@ -364,7 +368,7 @@ model Viewer {
   email                   String
   verified                Boolean   @default(false) // Whether the viewer email has been verified
   invitedAt               DateTime? // This is the time the viewer was invited
-  notificationPreferences Json? // Format: { dataroom: {"dr_123": { "enabled": false }, "dr_456": { "enabled": true } } }
+  notificationPreferences Json? // Format: { dataroom: {"dr_123": { "enabled": false }, "dr_456": { "enabled": true } } } }
 
   dataroomId String?
   dataroom   Dataroom? @relation(fields: [dataroomId], references: [id], onDelete: SetNull)
@@ -595,8 +599,10 @@ model ViewerGroup {
   id             String                      @id @default(cuid())
   name           String
   members        ViewerGroupMembership[]
+  domains        String[]
   links          Link[]
   accessControls ViewerGroupAccessControls[]
+  allowAll       Boolean                     @default(false)
 
   dataroomId String
   dataroom   Dataroom @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
@@ -695,15 +701,15 @@ model RestrictedToken {
 }
 
 model Webhook {
-  id         String    @id @default(cuid())
-  pId        String    @unique // public ID for the webhook
-  name       String
-  url        String
-  secret     String // signing secret for the webhook
-  triggers   Json
+  id       String @id @default(cuid())
+  pId      String @unique // public ID for the webhook
+  name     String
+  url      String
+  secret   String // signing secret for the webhook
+  triggers Json
 
-  teamId     String
-  team       Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId String
+  team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -711,12 +717,11 @@ model Webhook {
   @@index([teamId])
 }
 
-
 model YearInReview {
-  id String @id @default(cuid())
-  teamId String
-  status        String   @default("pending") // pending, processing, completed, failed
-  attempts      Int      @default(0)
+  id            String    @id @default(cuid())
+  teamId        String
+  status        String    @default("pending") // pending, processing, completed, failed
+  attempts      Int       @default(0)
   lastAttempted DateTime?
   error         String?
 
@@ -727,4 +732,43 @@ model YearInReview {
 
   @@index([status, attempts])
   @@index([teamId])
+}
+
+enum CustomFieldType {
+  SHORT_TEXT
+  LONG_TEXT
+  NUMBER
+  PHONE_NUMBER
+  URL
+  CHECKBOX
+  SELECT
+  MULTI_SELECT
+}
+
+model CustomField {
+  id          String          @id @default(cuid())
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  type        CustomFieldType
+  identifier  String
+  label       String
+  placeholder String?
+  required    Boolean         @default(false)
+  disabled    Boolean         @default(false)
+  link        Link            @relation(fields: [linkId], references: [id], onDelete: Cascade)
+  linkId      String
+  orderIndex  Int             @default(0)
+
+  @@index([linkId])
+}
+
+model CustomFieldResponse {
+  id        String   @id @default(cuid())
+  data      Json // Store the custom field responses as a JSON object [{ "identifier": "value", "label": "value", "response:" }]
+  viewId    String   @unique
+  view      View     @relation(fields: [viewId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([viewId])
 }

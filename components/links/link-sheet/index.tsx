@@ -8,7 +8,10 @@ import { RefreshCwIcon } from "lucide-react";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
-import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
+import {
+  PlanEnum,
+  UpgradePlanModal,
+} from "@/components/billing/upgrade-plan-modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -38,6 +41,7 @@ import { useDomains } from "@/lib/swr/use-domains";
 import { LinkWithViews, WatermarkConfig } from "@/lib/types";
 import { convertDataUrlToFile, uploadImage } from "@/lib/utils";
 
+import { CustomFieldData } from "./custom-fields-panel";
 import DomainSection from "./domain-section";
 import { LinkOptions } from "./link-options";
 
@@ -71,7 +75,7 @@ export const DEFAULT_LINK_PROPS = (linkType: LinkType) => ({
   watermarkConfig: null,
   audienceType: LinkAudienceType.GENERAL,
   groupId: null,
-  screenShieldPercentage: null,
+  customFields: [],
 });
 
 export type DEFAULT_LINK_TYPE = {
@@ -104,7 +108,7 @@ export type DEFAULT_LINK_TYPE = {
   watermarkConfig: WatermarkConfig | null;
   audienceType: LinkAudienceType;
   groupId: string | null;
-  screenShieldPercentage: number | null;
+  customFields: CustomFieldData[];
 };
 
 export default function LinkSheet({
@@ -133,6 +137,7 @@ export default function LinkSheet({
     DEFAULT_LINK_PROPS(linkType),
   );
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isSaving, setIsSaving] = useState<boolean>(false);
 
   const router = useRouter();
   const targetId = router.query.id as string;
@@ -141,10 +146,36 @@ export default function LinkSheet({
     setData(currentLink || DEFAULT_LINK_PROPS(linkType));
   }, [currentLink]);
 
-  const handleSubmit = async (event: any) => {
-    event.preventDefault();
+  const handlePreviewLink = async (link: LinkWithViews) => {
+    if (link.domainId && plan === "free") {
+      toast.error("You need to upgrade to preview this link");
+      return;
+    }
 
     setIsLoading(true);
+    const response = await fetch(`/api/links/${link.id}/preview`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      toast.error("Failed to generate preview link");
+      setIsLoading(false);
+      return;
+    }
+
+    const { previewToken } = await response.json();
+    const previewLink = `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${link.id}?previewToken=${previewToken}`;
+    setIsLoading(false);
+    window.open(previewLink, "_blank");
+  };
+
+  const handleSubmit = async (event: any, shouldPreview: boolean = false) => {
+    event.preventDefault();
+
+    setIsSaving(true);
 
     // Upload the image if it's a data URL
     let blobUrl: string | null =
@@ -201,7 +232,7 @@ export default function LinkSheet({
       // handle error with toast message
       const { error } = await response.json();
       toast.error(error);
-      setIsLoading(false);
+      setIsSaving(false);
       return;
     }
 
@@ -243,7 +274,11 @@ export default function LinkSheet({
     }
 
     setData(DEFAULT_LINK_PROPS(linkType));
-    setIsLoading(false);
+    setIsSaving(false);
+
+    if (shouldPreview) {
+      await handlePreviewLink(returnedLink);
+    }
   };
 
   return (
@@ -257,7 +292,10 @@ export default function LinkSheet({
           </SheetTitle>
         </SheetHeader>
 
-        <form className="flex grow flex-col" onSubmit={handleSubmit}>
+        <form
+          className="flex grow flex-col"
+          onSubmit={(e) => handleSubmit(e, false)}
+        >
           <ScrollArea className="flex-grow">
             <div className="h-0 flex-1">
               <div className="flex flex-1 flex-col justify-between">
@@ -282,7 +320,7 @@ export default function LinkSheet({
                           </TabsTrigger>
                         ) : (
                           <UpgradePlanModal
-                            clickedPlan="Data Rooms"
+                            clickedPlan={PlanEnum.DataRooms}
                             trigger="add_group_link"
                           >
                             <div className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all">
@@ -295,7 +333,7 @@ export default function LinkSheet({
 
                     <TabsContent value={LinkAudienceType.GENERAL}>
                       {/* GENERAL LINK */}
-                      <div className="space-y-6 pb-[35%] pt-2">
+                      <div className="space-y-6 pb-10 pt-2">
                         <div className="space-y-2">
                           <Label htmlFor="link-name">Link Name</Label>
 
@@ -341,7 +379,7 @@ export default function LinkSheet({
 
                     <TabsContent value={LinkAudienceType.GROUP}>
                       {/* GROUP LINK */}
-                      <div className="space-y-6 pb-[35%] pt-2">
+                      <div className="space-y-6 pb-10 pt-2">
                         <div className="space-y-2">
                           <div className="flex w-full items-center justify-between">
                             <Label htmlFor="group-id">Group </Label>
@@ -457,9 +495,21 @@ export default function LinkSheet({
           </ScrollArea>
 
           <SheetFooter>
-            <div className="flex items-center pt-2">
-              <Button type="submit" loading={isLoading}>
+            <div className="flex flex-row-reverse items-center gap-2 pt-2">
+              <Button
+                type="submit"
+                loading={isSaving}
+                onClick={(e) => handleSubmit(e, false)}
+              >
                 {currentLink ? "Update Link" : "Save Link"}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                loading={isLoading}
+                onClick={(e) => handleSubmit(e, true)}
+              >
+                {currentLink ? "Update & Preview" : "Save & Preview"}
               </Button>
             </div>
           </SheetFooter>

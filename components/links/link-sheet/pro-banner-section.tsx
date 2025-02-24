@@ -28,7 +28,6 @@ export function ProBannerSection({
 
   const handleShowBanner = () => {
     const updatedShowBanner = !enabled;
-    console.log("updatedShowBanner", updatedShowBanner);
     setData({ ...data, showBanner: updatedShowBanner });
     setEnabled(updatedShowBanner);
   };

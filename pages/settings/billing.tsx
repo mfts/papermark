@@ -7,7 +7,11 @@ import { useTeam } from "@/context/team-context";
 import { CheckIcon } from "lucide-react";
 import { toast } from "sonner";
 
-import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
+import UpgradePlanContainer from "@/components/billing/upgrade-plan-container";
+import {
+  PlanEnum,
+  UpgradePlanModal,
+} from "@/components/billing/upgrade-plan-modal";
 import AppLayout from "@/components/layouts/app";
 import { SettingsHeader } from "@/components/settings/settings-header";
 import { Badge } from "@/components/ui/badge";
@@ -106,8 +110,8 @@ export default function Billing() {
       featureIntro: "What's included:",
       features: [
         "1 user",
-        "10 links",
-        "10 documents",
+        "50 links",
+        "50 documents",
         "Unlimited visitors",
         "Page-by-page analytics",
         "Document sharing controls",
@@ -130,13 +134,13 @@ export default function Billing() {
       description: "The branded experience for your documents.",
       featureIntro: "Everything in Free, plus:",
       features: [
-        "2 users included",
+        "1 user included",
         "Unlimited links",
-        "100 documents",
+        "300 documents",
         "Custom branding",
         "Folder organization",
-        "Require email verification",
-        "More file types: pppt, docx, excel",
+        // "Require email verification",
+        "More file types: ppt, docx, excel",
         "Papermark branding removed",
         "1-year analytics retention",
       ],
@@ -223,213 +227,7 @@ export default function Billing() {
       <main className="relative mx-2 mb-10 mt-4 space-y-8 overflow-hidden px-1 sm:mx-3 md:mx-5 md:mt-5 lg:mx-7 lg:mt-8 xl:mx-10">
         <SettingsHeader />
 
-        <div>
-          <div className="mb-4 flex items-center justify-between md:mb-8 lg:mb-12">
-            <div className="space-y-1">
-              <h3 className="text-2xl font-semibold tracking-tight text-foreground">
-                Billing
-              </h3>
-              <div className="flex items-center space-x-2">
-                <p className="text-sm text-muted-foreground">
-                  Manage your subscription and billing information.
-                </p>
-                <Link
-                  href="/settings/upgrade"
-                  className="text-sm text-foreground underline-offset-4 hover:underline"
-                >
-                  See all plans
-                </Link>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-gray-900">
-            <div className="mx-auto space-y-8">
-              <div className="isolate grid grid-cols-1 overflow-hidden rounded-xl border border-black dark:border-muted-foreground md:grid-cols-4">
-                {tiers.map((tier) => (
-                  <div
-                    key={tier.id}
-                    className="flex flex-col justify-between border-r-0 border-black dark:border-muted-foreground md:border-r md:last:!border-r-0"
-                  >
-                    <div>
-                      <div className="border-b border-black bg-gray-100 p-6 dark:border-muted-foreground dark:bg-gray-500">
-                        <h3
-                          id={tier.id}
-                          className="flex items-center gap-x-2 text-balance text-xl leading-8 text-foreground"
-                        >
-                          <span>{tier.name}</span>
-                          {tier.currentPlan ? (
-                            <Badge className="rounded-md">Current Plan</Badge>
-                          ) : null}
-                        </h3>
-                      </div>
-                      <div className="p-6">
-                        <div className="mt-2">
-                          {tier.id === "tier-enterprise" ? (
-                            <div className="min-h-12">
-                              <div className="flex flex-col text-sm">
-                                <div className="h-6"></div>
-                                <h4>Get in touch</h4>
-                              </div>
-                            </div>
-                          ) : null}
-                        </div>
-
-                        {/* <p className="mt-4 text-balance text-sm leading-6 text-gray-600 dark:text-muted-foreground">
-                          {tier.description}
-                        </p> */}
-                        <ul
-                          role="list"
-                          className="mt-8 space-y-3 text-sm leading-6 text-gray-600 dark:text-muted-foreground"
-                        >
-                          <li>{tier.featureIntro}</li>
-                          {tier.features.map((feature) => (
-                            <li key={feature} className="flex gap-x-3">
-                              <CheckIcon
-                                className="h-6 w-5 flex-none text-[#fb7a00]"
-                                aria-hidden="true"
-                              />
-                              <span>{feature}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    </div>
-                    <div className="p-6">
-                      {tier.id !==
-                      "tier-free" /** hide button on free tier */ ? (
-                        tier.currentPlan && isCustomer ? (
-                          <Button
-                            className="rounded-3xl"
-                            loading={clicked}
-                            onClick={() => {
-                              setClicked(true);
-                              fetch(
-                                `/api/teams/${teamInfo?.currentTeam?.id}/billing/manage`,
-                                {
-                                  method: "POST",
-                                },
-                              )
-                                .then(async (res) => {
-                                  const url = await res.json();
-                                  router.push(url);
-                                })
-                                .catch((err) => {
-                                  alert(err);
-                                  setClicked(false);
-                                });
-                            }}
-                          >
-                            {clicked
-                              ? "Redirecting to Customer Portal..."
-                              : "Manage Subscription"}
-                          </Button>
-                        ) : plan !== "free" && isCustomer ? (
-                          <Button
-                            className="rounded-3xl"
-                            variant={
-                              tier.id === "tier-business" ? "orange" : "default"
-                            }
-                            loading={clicked}
-                            onClick={() => {
-                              setClicked(true);
-                              fetch(
-                                `/api/teams/${teamInfo?.currentTeam?.id}/billing/manage`,
-                                {
-                                  method: "POST",
-                                },
-                              )
-                                .then(async (res) => {
-                                  const url = await res.json();
-                                  router.push(url);
-                                })
-                                .catch((err) => {
-                                  alert(err);
-                                  setClicked(false);
-                                });
-                            }}
-                          >
-                            {clicked
-                              ? "Redirecting to Customer Portal..."
-                              : tier.buttonText}
-                          </Button>
-                        ) : (
-                          <UpgradePlanModal
-                            clickedPlan={
-                              tier.name as "Pro" | "Business" | "Data Rooms"
-                            }
-                            trigger={"billing_page"}
-                          >
-                            <Button
-                              className="rounded-3xl"
-                              variant={
-                                tier.id === "tier-business"
-                                  ? "orange"
-                                  : "default"
-                              }
-                            >
-                              {tier.buttonText}
-                            </Button>
-                          </UpgradePlanModal>
-                        )
-                      ) : null}
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div className="isolate grid grid-cols-1 overflow-hidden rounded-xl border border-black dark:border-muted-foreground">
-                <div
-                  key="tier-enterprise"
-                  className="flex flex-col justify-between border-r-0 border-black dark:border-muted-foreground md:border-r md:last:!border-r-0"
-                >
-                  <div>
-                    <div className="border-b border-black bg-gray-100 p-6 dark:border-muted-foreground dark:bg-gray-800">
-                      <h3
-                        id="tier-enterprise"
-                        className="flex items-center gap-x-2 text-balance text-xl leading-8 text-foreground"
-                      >
-                        <span>Enterprise</span>
-                      </h3>
-                    </div>
-                    <div className="p-6">
-                      <p className="mt-4 text-balance text-sm leading-6 text-gray-600 dark:text-muted-foreground">
-                        Self-hosted and advanced document infrastructure for
-                        your company.
-                      </p>
-                      <p className="mt-6 flex items-baseline gap-x-1">
-                        <span className="text-balance text-4xl font-medium text-foreground">
-                          Custom
-                        </span>
-                      </p>
-                      <ul
-                        role="list"
-                        className="mt-8 grid grid-cols-1 gap-y-3 text-sm leading-6 text-gray-600 dark:text-muted-foreground sm:grid-cols-2 md:grid-cols-3"
-                      >
-                        {enterpriseFeatures.map((feature) => (
-                          <li key={feature} className="flex gap-x-3">
-                            <CheckIcon
-                              className="h-6 w-5 flex-none text-[#fb7a00]"
-                              aria-hidden="true"
-                            />
-                            <span>{feature}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-                  <div className="p-6">
-                    <Link
-                      href="https://cal.com/marcseitz/papermark"
-                      target="_blank"
-                    >
-                      <Button className="rounded-3xl">Talk to us</Button>
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <UpgradePlanContainer />
       </main>
     </AppLayout>
   );

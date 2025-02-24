@@ -17,6 +17,14 @@ export type LimitProps = {
     documents: number;
     links: number;
   };
+  fileSizeLimits:
+    | {
+        video: number | undefined;
+        document: number | undefined;
+        image: number | undefined;
+        excel: number | undefined;
+      }
+    | undefined;
 };
 
 export function useLimits() {

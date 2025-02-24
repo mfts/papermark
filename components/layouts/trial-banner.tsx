@@ -3,7 +3,10 @@ import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import Cookies from "js-cookie";
 import { usePlausible } from "next-plausible";
 
-import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
+import {
+  PlanEnum,
+  UpgradePlanModal,
+} from "@/components/billing/upgrade-plan-modal";
 import X from "@/components/shared/icons/x";
 
 import { usePlan } from "@/lib/swr/use-billing";
@@ -69,7 +72,7 @@ function TrialBannerComponent({
             You are on a data room trial, you have access to advanced link
             permissions and data room.{" "}
             <UpgradePlanModal
-              clickedPlan={"Data Rooms"}
+              clickedPlan={PlanEnum.DataRooms}
               trigger={"trial_navbar"}
             >
               <span

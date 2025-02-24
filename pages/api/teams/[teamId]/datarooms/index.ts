@@ -120,7 +120,7 @@ export default async function handle(
         _count: { documents: 0 },
       };
 
-      res.status(201).json(dataroomWithCount);
+      res.status(201).json({ dataroom: dataroomWithCount });
     } catch (error) {
       console.error("Request error", error);
       res.status(500).json({ error: "Error creating dataroom" });

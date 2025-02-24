@@ -21,11 +21,11 @@ export function ModeToggle() {
 
   return (
     <DropdownMenuSub>
-      <DropdownMenuSubTrigger className="flex w-full items-center rounded-none !py-2 px-3 pr-2 text-sm duration-200 hover:!bg-gray-200 dark:hover:!bg-muted">
-        <Palette className="mr-2 h-4 w-4" /> Themes
+      <DropdownMenuSubTrigger>
+        <Palette /> Change Theme
       </DropdownMenuSubTrigger>
       <DropdownMenuPortal>
-        <DropdownMenuSubContent className="w-[180px]">
+        <DropdownMenuSubContent className="w-fit">
           <DropdownMenuRadioGroup
             value={theme}
             onValueChange={setTheme}

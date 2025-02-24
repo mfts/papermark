@@ -3,13 +3,17 @@ import { useRouter } from "next/router";
 import { useCallback, useEffect, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
-import { CircleHelpIcon, PlusIcon } from "lucide-react";
+import { Check, CircleHelpIcon, PlusIcon } from "lucide-react";
 import { HexColorInput, HexColorPicker } from "react-colorful";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
-import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
+import {
+  PlanEnum,
+  UpgradePlanModal,
+} from "@/components/billing/upgrade-plan-modal";
 import AppLayout from "@/components/layouts/app";
+import { NavMenu } from "@/components/navigation-menu";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -135,6 +139,39 @@ export default function Branding() {
   return (
     <AppLayout>
       <main className="relative mx-2 mb-10 mt-4 space-y-8 overflow-hidden px-1 sm:mx-3 md:mx-5 md:mt-5 lg:mx-7 lg:mt-8 xl:mx-10">
+        <header>
+          <section className="mb-4 flex items-center justify-between md:mb-8 lg:mb-12">
+            <div className="space-y-1">
+              <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
+                Branding
+              </h1>
+              <p className="text-xs text-muted-foreground sm:text-sm">
+                Customize how your brand appears globally across Papermark
+                documents your visitors see.
+              </p>
+            </div>
+          </section>
+
+          <NavMenu
+            navigation={[
+              {
+                label: "Document Branding",
+                href: "/branding",
+                segment: `branding`,
+              },
+              {
+                label: "Domains",
+                href: "/settings/domains",
+                segment: "domains",
+              },
+              {
+                label: "Link Previews",
+                href: "/settings/presets",
+                segment: "presets",
+              },
+            ]}
+          />
+        </header>
         <div>
           <div className="mb-4 flex items-center justify-between md:mb-8 lg:mb-12">
             <div className="space-y-1">
@@ -142,8 +179,10 @@ export default function Branding() {
                 Document Branding
               </h3>
               <p className="flex flex-row items-center gap-2 text-sm text-muted-foreground">
-                Customize how your brand appears globally across Papermark
-                documents your visitors see.
+                All direct links to documents will have your branding applied.
+                <span className="italic">
+                  Data rooms are styled individually.
+                </span>
                 <BadgeTooltip
                   linkText="Click here"
                   content="How to customize document branding?"
@@ -299,29 +338,53 @@ export default function Branding() {
                         <Label htmlFor="accent-color">Background Color</Label>
                         <div className="flex space-x-1">
                           <div
-                            className="h-9 w-9 cursor-pointer rounded-md bg-white shadow-sm ring-1 ring-muted-foreground hover:ring-1 hover:ring-gray-300"
+                            className="relative h-9 w-9 cursor-pointer rounded-md bg-white shadow-sm ring-1 ring-muted-foreground hover:ring-gray-300"
                             onClick={() => setAccentColor("#ffffff")}
-                          />
+                          >
+                            {accentColor === "#ffffff" && (
+                              <Check className="absolute left-1/2 top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 text-gray-600" />
+                            )}
+                          </div>
                           <div
-                            className="h-9 w-9 cursor-pointer rounded-md bg-gray-50 shadow-sm ring-1 ring-muted-foreground hover:ring-1 hover:ring-gray-300"
+                            className="relative h-9 w-9 cursor-pointer rounded-md bg-gray-50 shadow-sm ring-1 ring-muted-foreground hover:ring-gray-300"
                             onClick={() => setAccentColor("#f9fafb")}
-                          />
+                          >
+                            {accentColor === "#f9fafb" && (
+                              <Check className="absolute left-1/2 top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 text-gray-600" />
+                            )}
+                          </div>
                           <div
-                            className="h-9 w-9 cursor-pointer rounded-md bg-gray-200 shadow-sm ring-1 ring-muted-foreground hover:ring-1 hover:ring-gray-300"
+                            className="relative h-9 w-9 cursor-pointer rounded-md bg-gray-200 shadow-sm ring-1 ring-muted-foreground hover:ring-gray-300"
                             onClick={() => setAccentColor("#e5e7eb")}
-                          />
+                          >
+                            {accentColor === "#e5e7eb" && (
+                              <Check className="absolute left-1/2 top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 text-gray-600" />
+                            )}
+                          </div>
                           <div
-                            className="h-9 w-9 cursor-pointer rounded-md bg-gray-400 shadow-sm ring-1 ring-muted-foreground hover:ring-1 hover:ring-gray-300"
+                            className="relative h-9 w-9 cursor-pointer rounded-md bg-gray-400 shadow-sm ring-1 ring-muted-foreground hover:ring-gray-300"
                             onClick={() => setAccentColor("#9ca3af")}
-                          />
+                          >
+                            {accentColor === "#9ca3af" && (
+                              <Check className="absolute left-1/2 top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 text-white" />
+                            )}
+                          </div>
                           <div
-                            className="h-9 w-9 cursor-pointer rounded-md bg-gray-800 shadow-sm ring-1 ring-muted-foreground hover:ring-1 hover:ring-gray-300"
+                            className="relative h-9 w-9 cursor-pointer rounded-md bg-gray-800 shadow-sm ring-1 ring-muted-foreground hover:ring-gray-300"
                             onClick={() => setAccentColor("#1f2937")}
-                          />
+                          >
+                            {accentColor === "#1f2937" && (
+                              <Check className="absolute left-1/2 top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 text-white" />
+                            )}
+                          </div>
                           <div
-                            className="h-9 w-9 cursor-pointer rounded-md bg-gray-950 shadow-sm ring-1 ring-muted-foreground hover:ring-1 hover:ring-gray-300"
+                            className="relative h-9 w-9 cursor-pointer rounded-md bg-gray-950 shadow-sm ring-1 ring-muted-foreground hover:ring-gray-300"
                             onClick={() => setAccentColor("#030712")}
-                          />
+                          >
+                            {accentColor === "#030712" && (
+                              <Check className="absolute left-1/2 top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 text-white" />
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -329,7 +392,7 @@ export default function Branding() {
                   <CardFooter className="border-t p-6">
                     {plan === "free" ? (
                       <UpgradePlanModal
-                        clickedPlan="Pro"
+                        clickedPlan={PlanEnum.Pro}
                         trigger={"branding_page"}
                       >
                         <Button>Upgrade to Save Branding</Button>

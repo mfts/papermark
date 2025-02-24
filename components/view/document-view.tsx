@@ -18,7 +18,7 @@ import { useAnalytics } from "@/lib/analytics";
 import { LinkWithDocument, NotionTheme, WatermarkConfig } from "@/lib/types";
 
 import EmailVerificationMessage from "./email-verification-form";
-import ViewData from "./view-data";
+import ViewData, { TViewDocumentData } from "./view-data";
 
 type RowData = { [key: string]: any };
 type SheetData = {
@@ -257,6 +257,7 @@ export default function DocumentView({
         brand={brand}
         disableEditEmail={disableEditEmail}
         useCustomAccessForm={useCustomAccessForm}
+        customFields={link.customFields}
       />
     );
   }
@@ -280,6 +281,7 @@ export default function DocumentView({
         <ViewData
           link={link}
           viewData={viewData}
+          document={document as unknown as TViewDocumentData}
           notionData={notionData}
           brand={brand}
           showPoweredByBanner={showPoweredByBanner}

@@ -1,9 +1,11 @@
+import { ffmpeg } from "@trigger.dev/build/extensions/core";
 import { prismaExtension } from "@trigger.dev/build/extensions/prisma";
-import { defineConfig } from "@trigger.dev/sdk/v3";
+import { defineConfig, timeout } from "@trigger.dev/sdk/v3";
 
 export default defineConfig({
   project: "proj_plmsfqvqunboixacjjus",
   dirs: ["./lib/trigger"],
+  maxDuration: timeout.None, // no max duration
   retries: {
     enabledInDev: false,
     default: {
@@ -19,6 +21,7 @@ export default defineConfig({
       prismaExtension({
         schema: "prisma/schema.prisma",
       }),
+      ffmpeg(),
     ],
   },
 });

@@ -1,6 +1,6 @@
 import { useRouter } from "next/router";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { DocumentStorageType } from "@prisma/client";
@@ -18,6 +18,10 @@ import useLimits from "@/lib/swr/use-limits";
 import { CustomUser } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { getSupportedContentType } from "@/lib/utils/get-content-type";
+import {
+  getFileSizeLimit,
+  getFileSizeLimits,
+} from "@/lib/utils/get-file-size-limits";
 import { getPagesCount } from "@/lib/utils/get-page-number-count";
 
 // Originally these mime values were directly used in the dropzone hook.
@@ -54,21 +58,19 @@ const allAcceptableDropZoneMimeTypes = {
   "image/jpg": [], // ".jpg"
   "application/zip": [], // ".zip"
   "application/x-zip-compressed": [], // ".zip"
+  "video/mp4": [], // ".mp4"
+  "video/webm": [], // ".webm"
+  "video/quicktime": [], // ".mov"
+  "video/x-msvideo": [], // ".avi"
+  "video/ogg": [], // ".ogg"
+  "application/vnd.google-earth.kml+xml": [".kml"], // ".kml"
+  "application/vnd.google-earth.kmz": [".kmz"], // ".kmz"
 };
 
 interface FileWithPaths extends File {
   path?: string;
   whereToUploadPath?: string;
 }
-
-const fileSizeLimits: { [key: string]: number } = {
-  "application/vnd.ms-excel": 40, // 40 MB
-  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": 40, // 40 MB
-  "application/vnd.oasis.opendocument.spreadsheet": 40, // 40 MB
-  "image/png": 100, // 100 MB
-  "image/jpeg": 100, // 100 MB
-  "image/jpg": 100, // 100 MB
-};
 
 export default function UploadZone({
   children,
@@ -108,7 +110,7 @@ export default function UploadZone({
   const { data: session } = useSession();
   const isFreePlan = plan === "free";
   const isTrial = !!trial;
-  const maxSize = isFreePlan && !isTrial ? 30 : 350;
+  // const maxSize = isFreePlan && !isTrial ? 30 : 350;
   const maxNumPages = isFreePlan && !isTrial ? 100 : 500;
   const { limits, canAddDocuments } = useLimits();
   const remainingDocuments = limits?.documents
@@ -118,6 +120,16 @@ export default function UploadZone({
   const [progress, setProgress] = useState<number>(0);
   const [showProgress, setShowProgress] = useState(false);
   const uploadProgress = useRef<number[]>([]);
+
+  const fileSizeLimits = useMemo(
+    () =>
+      getFileSizeLimits({
+        limits,
+        isFreePlan,
+        isTrial,
+      }),
+    [limits, isFreePlan, isTrial],
+  );
 
   const acceptableDropZoneFileTypes =
     isFreePlan && !isTrial
@@ -134,7 +146,8 @@ export default function UploadZone({
       const rejected = rejectedFiles.map(({ file, errors }) => {
         let message = "";
         if (errors.find(({ code }) => code === "file-too-large")) {
-          message = `File size too big (max. ${maxSize} MB). Upgrade to a paid plan to increase the limit.`;
+          const fileSizeLimitMB = getFileSizeLimit(file.type, fileSizeLimits);
+          message = `File size too big (max. ${fileSizeLimitMB} MB). Upgrade to a paid plan to increase the limit.`;
         } else if (errors.find(({ code }) => code === "file-invalid-type")) {
           const isSupported = SUPPORTED_DOCUMENT_MIME_TYPES.includes(file.type);
           message = `File type not supported ${
@@ -145,7 +158,7 @@ export default function UploadZone({
       });
       onUploadRejected(rejected);
     },
-    [onUploadRejected, maxSize],
+    [onUploadRejected, fileSizeLimits, isFreePlan, isTrial],
   );
 
   const onDrop = useCallback(
@@ -154,13 +167,55 @@ export default function UploadZone({
         toast.error("You have reached the maximum number of documents.");
         return;
       }
-      const newUploads = acceptedFiles.map((file) => ({
+
+      // Validate files and separate into valid and invalid
+      const validatedFiles = acceptedFiles.reduce<{
+        valid: FileWithPaths[];
+        invalid: { fileName: string; message: string }[];
+      }>(
+        (acc, file) => {
+          const fileSizeLimitMB = getFileSizeLimit(file.type, fileSizeLimits);
+          const fileSizeLimit = fileSizeLimitMB * 1024 * 1024; // Convert to bytes
+
+          if (file.size > fileSizeLimit) {
+            acc.invalid.push({
+              fileName: file.name,
+              message: `File size too big (max. ${fileSizeLimitMB} MB)${
+                isFreePlan && !isTrial
+                  ? ". Upgrade to a paid plan to increase the limit"
+                  : ""
+              }`,
+            });
+          } else {
+            acc.valid.push(file);
+          }
+          return acc;
+        },
+        { valid: [], invalid: [] },
+      );
+
+      // Handle rejected files first
+      if (validatedFiles.invalid.length > 0) {
+        setRejectedFiles((prev) => [...validatedFiles.invalid, ...prev]);
+
+        // If all files were rejected, show a summary toast
+        if (validatedFiles.valid.length === 0) {
+          toast.error(
+            `${validatedFiles.invalid.length} file(s) exceeded size limits`,
+          );
+          return;
+        }
+      }
+
+      // Continue with valid files
+      const newUploads = validatedFiles.valid.map((file) => ({
         fileName: file.name,
         progress: 0,
       }));
+
       onUploadStart(newUploads);
 
-      const uploadPromises = acceptedFiles.map(async (file, index) => {
+      const uploadPromises = validatedFiles.valid.map(async (file, index) => {
         // Due to `getFilesFromEvent` file.path will always hold a valid value and represents the value of webkitRelativePath.
         // We no longer need to use webkitRelativePath because everything is been handled in `getFilesFromEvent`
         const path = file.path || file.name;
@@ -184,23 +239,6 @@ export default function UploadZone({
               ...prev,
             ]);
           }
-        }
-
-        // check dynamic file size
-        const fileType = file.type;
-        const fileSizeLimit = fileSizeLimits[fileType] * 1024 * 1024;
-        if (file.size > fileSizeLimit) {
-          setUploads((prev) =>
-            prev.filter((upload) => upload.fileName !== file.name),
-          );
-
-          return setRejectedFiles((prev) => [
-            {
-              fileName: file.name,
-              message: `File size too big (max. ${fileSizeLimit} MB)`,
-            },
-            ...prev,
-          ]);
         }
 
         const { complete } = await resumableUpload({
@@ -251,6 +289,14 @@ export default function UploadZone({
         if (uploadResult.fileName.endsWith(".xlsm")) {
           supportedFileType = "sheet";
           contentType = "application/vnd.ms-excel.sheet.macroEnabled.12";
+        }
+
+        if (
+          uploadResult.fileName.endsWith(".kml") ||
+          uploadResult.fileName.endsWith(".kmz")
+        ) {
+          supportedFileType = "map";
+          contentType = `application/vnd.google-earth.${uploadResult.fileName.endsWith(".kml") ? "kml+xml" : "kmz"}`;
         }
 
         const documentData: DocumentData = {
@@ -333,6 +379,10 @@ export default function UploadZone({
           teamId: teamInfo?.currentTeam?.id,
           bulkupload: true,
           dataroomId: dataroomId,
+          $set: {
+            teamId: teamInfo?.currentTeam?.id,
+            teamPlan: plan,
+          },
         });
 
         return document;
@@ -353,7 +403,14 @@ export default function UploadZone({
           );
       });
     },
-    [onUploadStart, onUploadProgress, endpointTargetType],
+    [
+      onUploadStart,
+      onUploadProgress,
+      endpointTargetType,
+      fileSizeLimits,
+      isFreePlan,
+      isTrial,
+    ],
   );
 
   const getFilesFromEvent = useCallback(
@@ -562,7 +619,8 @@ export default function UploadZone({
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: acceptableDropZoneFileTypes,
     multiple: true,
-    maxSize: maxSize * 1024 * 1024, // 30 MB
+    // maxSize: maxSize * 1024 * 1024, // 30 MB
+    maxFiles: 150,
     onDrop,
     onDropRejected,
     getFilesFromEvent,
@@ -571,36 +629,42 @@ export default function UploadZone({
   return (
     <div
       {...getRootProps({ onClick: (evt) => evt.stopPropagation() })}
-      className="relative h-full min-h-[calc(100vh-350px)]"
+      className={cn(
+        "relative",
+        dataroomId ? "min-h-[calc(100vh-350px)]" : "min-h-[calc(100vh-270px)]",
+      )}
     >
       <div
         className={cn(
-          "absolute bottom-0 left-0 right-0 top-0 z-50",
-          isDragActive ? "pointer-events-auto" : "pointer-events-none",
+          "absolute inset-0 z-40 -m-1 rounded-lg border-2 border-dashed",
+          isDragActive
+            ? "pointer-events-auto border-primary/50 bg-gray-100/75 backdrop-blur-sm dark:bg-gray-800/75"
+            : "pointer-events-none border-none",
         )}
       >
-        <div
-          className={cn(
-            "-m-1 hidden h-full items-center justify-center border-dashed bg-gray-100 text-center dark:border-gray-300 dark:bg-gray-400",
-            isDragActive && "flex",
-          )}
-        >
-          <input
-            {...getInputProps()}
-            name="file"
-            id="upload-multi-files-zone"
-            className="sr-only"
-          />
+        <input
+          {...getInputProps()}
+          name="file"
+          id="upload-multi-files-zone"
+          className="sr-only"
+        />
 
-          <div className="mt-4 flex flex-col text-sm leading-6 text-gray-800">
-            <span className="mx-auto">Drop your file(s) to upload here</span>
-            <p className="text-xs leading-5 text-gray-800">
-              {isFreePlan && !isTrial
-                ? `Only *.pdf, *.xls, *.xlsx, *.csv, *.ods, *.png, *.jpeg, *.jpg & ${maxSize} MB limit`
-                : `Only *.pdf, *.pptx, *.docx, *.xlsx, *.xls, *.csv, *.ods, *.ppt, *.odp, *.doc, *.odt, *.dwg, *.dxf, *.png, *.jpg, *.jpeg & ${maxSize} MB limit`}
-            </p>
+        {isDragActive && (
+          <div className="sticky top-1/2 z-50 -translate-y-1/2 px-2">
+            <div className="flex justify-center">
+              <div className="inline-flex flex-col rounded-lg bg-background/95 px-6 py-4 text-center ring-1 ring-gray-900/5 dark:bg-gray-900/95 dark:ring-white/10">
+                <span className="font-medium text-foreground">
+                  Drop your file(s) here
+                </span>
+                <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                  {isFreePlan && !isTrial
+                    ? `Only *.pdf, *.xls, *.xlsx, *.csv, *.ods, *.png, *.jpeg, *.jpg`
+                    : `Only *.pdf, *.pptx, *.docx, *.xlsx, *.xls, *.csv, *.ods, *.ppt, *.odp, *.doc, *.odt, *.dwg, *.dxf, *.png, *.jpg, *.jpeg, *.mp4, *.mov, *.avi, *.webm, *.ogg`}
+                </p>
+              </div>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {children}

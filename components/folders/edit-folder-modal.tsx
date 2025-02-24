@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useTeam } from "@/context/team-context";
 import { toast } from "sonner";
 import { mutate } from "swr";
+import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -40,12 +41,20 @@ export function EditFolderModal({
   const [loading, setLoading] = useState<boolean>(false);
 
   const teamInfo = useTeam();
+  const editFolderSchema = z.object({
+    name: z.string().min(3, {
+      message: "Please provide a folder name with at least 3 characters.",
+    }),
+  });
 
   const handleSubmit = async (event: any) => {
     event.preventDefault();
     event.stopPropagation();
 
-    if (folderName == "") return;
+    const validation = editFolderSchema.safeParse({ name: folderName });
+    if (!validation.success) {
+      return toast.error(validation.error.errors[0].message);
+    }
 
     setLoading(true);
     const endpointTargetType =

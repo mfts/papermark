@@ -62,6 +62,7 @@ export default async function handle(
               viewedAt: "desc",
             },
           },
+          customFields: true,
           _count: {
             select: { views: { where: { viewType: "DATAROOM_VIEW" } } },
           },
