@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 
+import { PlanEnum } from "@/ee/stripe/constants";
 import { ChevronRight, type LucideIcon } from "lucide-react";
 
 import {
@@ -23,7 +24,7 @@ import {
 
 import { cn } from "@/lib/utils";
 
-import { PlanEnum, UpgradePlanModal } from "../billing/upgrade-plan-modal";
+import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
 
 export interface NavItem {
   title: string;

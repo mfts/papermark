@@ -4,6 +4,7 @@ import { useRouter } from "next/router";
 import { FormEvent, useEffect, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
+import { PlanEnum } from "@/ee/stripe/constants";
 import { usePlausible } from "next-plausible";
 import { parsePageId } from "notion-utils";
 import { toast } from "sonner";
@@ -39,7 +40,7 @@ import { usePlan } from "@/lib/swr/use-billing";
 import useLimits from "@/lib/swr/use-limits";
 import { getSupportedContentType } from "@/lib/utils/get-content-type";
 
-import { PlanEnum, UpgradePlanModal } from "../billing/upgrade-plan-modal";
+import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
 
 export function AddDocumentModal({
   newVersion,
@@ -470,15 +471,20 @@ export function AddDocumentModal({
           return;
         }
 
-        toast.success("Figma presentation processed. Redirecting to document page...");
+        toast.success(
+          "Figma presentation processed. Redirecting to document page...",
+        );
         router.push("/documents/" + document.id);
       }
     } catch (error) {
       setUploading(false);
       toast.error(
-        "Oops! Can't access the Figma presentation. Please check if it's publicly accessible."
+        "Oops! Can't access the Figma presentation. Please check if it's publicly accessible.",
       );
-      console.error("An error occurred while processing the Figma link: ", error);
+      console.error(
+        "An error occurred while processing the Figma link: ",
+        error,
+      );
     } finally {
       setUploading(false);
       setIsOpen(false);
@@ -667,7 +673,8 @@ export function AddDocumentModal({
               <CardHeader className="space-y-3">
                 <CardTitle>Share a Figma Presentation</CardTitle>
                 <CardDescription>
-                  Share your Figma presentation deck. Make sure your presentation is publicly accessible.
+                  Share your Figma presentation deck. Make sure your
+                  presentation is publicly accessible.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-2">
