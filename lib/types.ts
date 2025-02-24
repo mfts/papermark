@@ -14,6 +14,8 @@ import {
 import { User as NextAuthUser } from "next-auth";
 import { z } from "zod";
 
+import { USER_ROLE } from "@/components/team-role/user-role-modal";
+
 export type CustomUser = NextAuthUser & PrismaUser;
 
 export interface CreateUserEmailProps {
@@ -282,7 +284,10 @@ export interface TeamDetail {
     };
   }[];
   users: {
-    role: "ADMIN" | "MANAGER" | "MEMBER";
+    role: USER_ROLE;
+    datarooms: {
+      dataroomId: string;
+    }[];
     teamId: string;
     user: {
       email: string;

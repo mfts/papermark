@@ -1,8 +1,6 @@
 import { useState } from "react";
 
-import { useTeam } from "@/context/team-context";
 import { toast } from "sonner";
-import { mutate } from "swr";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
@@ -15,14 +13,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-import { useAnalytics } from "@/lib/analytics";
 import useDatarooms from "@/lib/swr/use-datarooms";
+import { useGetTeam } from "@/lib/swr/use-team";
 
-import SelectField from "../team-role/SelectField";
-import { USER_ROLE, roleOptions } from "../team-role/user-role-modal";
+import { MultiSelect } from "../ui/multi-select-v1";
 import {
   Select,
   SelectContent,
@@ -30,13 +26,39 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
+import SelectField from "./SelectField";
 
-const schema = z
+export enum USER_ROLE {
+  MANAGER = "MANAGER",
+  DATAROOM_MEMBER = "DATAROOM_MEMBER",
+  MEMBER = "MEMBER",
+  ADMIN = "ADMIN",
+}
+
+export const roleOptions = [
+  { value: USER_ROLE.MANAGER, label: "Manager" },
+  { value: USER_ROLE.MEMBER, label: "Member" },
+  { value: USER_ROLE.DATAROOM_MEMBER, label: "Dataroom Member" },
+];
+
+interface CreateUserRoleModalProps {
+  open: boolean;
+  setOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  children?: React.ReactNode;
+  dataroomId: string[];
+  role: USER_ROLE;
+  changeRole: (
+    teamId: string,
+    userId: string,
+    selectedRole: USER_ROLE,
+    selectedDatarooms: string[],
+  ) => Promise<void>;
+  teamId: string;
+  userId: string;
+}
+
+const UserRoleSchema = z
   .object({
-    email: z
-      .string()
-      .min(3, { message: "Please enter a valid email." })
-      .email({ message: "Please enter a valid email." }),
     selectedRole: z.nativeEnum(USER_ROLE, {
       required_error: "Role is required.",
     }),
@@ -44,6 +66,12 @@ const schema = z
   })
   .superRefine((data, ctx) => {
     if (data.selectedRole === USER_ROLE.DATAROOM_MEMBER) {
+      console.log(
+        data.selectedRole,
+        USER_ROLE.DATAROOM_MEMBER,
+        data.selectedRole === USER_ROLE.DATAROOM_MEMBER,
+      );
+
       if (!data.selectedDatarooms || data.selectedDatarooms.length < 1) {
         ctx.addIssue({
           code: z.ZodIssueCode.too_small,
@@ -58,66 +86,39 @@ const schema = z
     }
   });
 
-export function AddTeamMembers({
+export const CreateUserRoleModal: React.FC<CreateUserRoleModalProps> = ({
   open,
-  setOpen,
-  children,
   teamId,
-}: {
-  open: boolean;
-  teamId: string;
-  setOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  children?: React.ReactNode;
-}) {
-  const [selectedRole, setSelectedRole] = useState<USER_ROLE>(USER_ROLE.MEMBER);
-  const [email, setEmail] = useState<string>("");
+  setOpen,
+  userId,
+  children,
+  changeRole,
+  role,
+  dataroomId,
+}) => {
   const { datarooms } = useDatarooms();
-  const [selectedDatarooms, setSelectedDatarooms] = useState<string[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
-  const teamInfo = useTeam();
-  const analytics = useAnalytics();
+  const { team } = useGetTeam();
+  const [loading, setLoading] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<USER_ROLE>(role);
+  const [selectedDatarooms, setSelectedDatarooms] =
+    useState<string[]>(dataroomId);
 
   const dataroomsList =
     datarooms
-      ?.filter((room) => room.teamId === teamId)
+      ?.filter((room) => room.teamId === team?.id)
       .map(({ id, name }) => ({ label: name, value: id })) ?? [];
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleCreatePermission = async (event: React.FormEvent) => {
     event.preventDefault();
     event.stopPropagation();
 
     setLoading(true);
+
     try {
-      schema.safeParse({
-        email,
-        selectedRole,
-        selectedDatarooms,
-      });
-      const response = await fetch(
-        `/api/teams/${teamInfo?.currentTeam?.id}/invite`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ email, selectedRole, selectedDatarooms }),
-        },
-      );
+      UserRoleSchema.parse({ selectedRole, selectedDatarooms });
 
-      console.log("🚀 ~ handleSubmit ~ response:", response);
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error);
-      }
+      await changeRole(teamId, userId, selectedRole, selectedDatarooms);
 
-      analytics.capture("Team Member Invitation Sent", {
-        email,
-        teamId: teamInfo?.currentTeam?.id,
-      });
-
-      mutate(`/api/teams/${teamInfo?.currentTeam?.id}/invitations`);
-
-      toast.success("An invitation email has been sent!");
       setOpen(false);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -135,24 +136,17 @@ export function AddTeamMembers({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent>
         <DialogHeader className="text-start">
-          <DialogTitle>Add Member</DialogTitle>
+          <DialogTitle>Edit User Role</DialogTitle>
           <DialogDescription>
-            You can easily add team members.
+            Modify user UserRoles within the team.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit}>
-          <Label htmlFor="domain" className="opacity-80">
-            Email
-          </Label>
-          <Input
-            id="email"
-            placeholder="team@member.com"
-            className="mt-1 w-full"
-            onChange={(e) => setEmail(e.target.value)}
-          />
+
+        <form onSubmit={handleCreatePermission}>
           <div className="flex flex-col gap-4 py-4">
+            {/* Role Selection */}
             <div className="flex flex-1 flex-col gap-2">
               <Label className="opacity-80">Select Role</Label>
               <Select
@@ -182,13 +176,18 @@ export function AddTeamMembers({
               />
             )}
           </div>
-          <DialogFooter>
-            <Button type="submit" className="h-9 w-full">
-              {loading ? "Sending email..." : "Add member"}
+
+          <DialogFooter className="flex sm:justify-center">
+            <Button
+              type="submit"
+              className="mt-5 h-9 w-full max-w-[400px]"
+              disabled={loading}
+            >
+              {loading ? "Updating..." : "Update Role"}
             </Button>
           </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
   );
-}
+};

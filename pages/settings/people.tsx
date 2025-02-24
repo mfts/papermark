@@ -16,6 +16,10 @@ import AppLayout from "@/components/layouts/app";
 import { SettingsHeader } from "@/components/settings/settings-header";
 import Folder from "@/components/shared/icons/folder";
 import MoreVertical from "@/components/shared/icons/more-vertical";
+import {
+  CreateUserRoleModal,
+  USER_ROLE,
+} from "@/components/team-role/user-role-modal";
 import { AddTeamMembers } from "@/components/teams/add-team-member-modal";
 import { Button } from "@/components/ui/button";
 import {
@@ -33,13 +37,34 @@ import { useInvitations } from "@/lib/swr/use-invitations";
 import useLimits from "@/lib/swr/use-limits";
 import { useGetTeam } from "@/lib/swr/use-team";
 import { useTeams } from "@/lib/swr/use-teams";
-import { CustomUser } from "@/lib/types";
+import { CustomUser, TeamDetail } from "@/lib/types";
+
+type Member = {
+  role: USER_ROLE;
+  datarooms: {
+    dataroomId: string;
+  }[];
+  teamId: string;
+  user: {
+    email: string;
+    name: string;
+  };
+  userId: string;
+};
+
+const ROLE_LABELS: Record<USER_ROLE, string> = {
+  [USER_ROLE.MANAGER]: "Manager",
+  [USER_ROLE.DATAROOM_MEMBER]: "Dataroom Member",
+  [USER_ROLE.MEMBER]: "Member",
+  [USER_ROLE.ADMIN]: "Admin",
+};
 
 export default function Billing() {
   const [isTeamMemberInviteModalOpen, setTeamMemberInviteModalOpen] =
     useState<boolean>(false);
   const [leavingUserId, setLeavingUserId] = useState<string>("");
-
+  const [open, setOpen] = useState<boolean>(false);
+  const [memberRole, setMemberRole] = useState<Member | null>(null);
   const { data: session } = useSession();
   const { team, loading } = useGetTeam()!;
   const teamInfo = useTeam();
@@ -76,7 +101,12 @@ export default function Billing() {
     );
   };
 
-  const changeRole = async (teamId: string, userId: string, role: string) => {
+  const changeRole = async (
+    teamId: string,
+    userId: string,
+    selectedRole: USER_ROLE,
+    selectedDatarooms: string[],
+  ) => {
     const response = await fetch(`/api/teams/${teamId}/change-role`, {
       method: "PUT",
       headers: {
@@ -84,11 +114,12 @@ export default function Billing() {
       },
       body: JSON.stringify({
         userToBeChanged: userId,
-        role: role,
+        role: selectedRole,
+        selectedDatarooms: selectedDatarooms,
       }),
     });
 
-    if (response.status !== 204) {
+    if (!response.ok) {
       const error = await response.json();
       toast.error(error);
       return;
@@ -100,7 +131,7 @@ export default function Billing() {
     analytics.capture("Team Member Role Changed", {
       userId: userId,
       teamId: teamId,
-      role: role,
+      role: selectedRole,
     });
 
     toast.success("Role changed successfully!");
@@ -145,7 +176,9 @@ export default function Billing() {
   };
 
   // resend invitation function
-  const resendInvitation = async (invitation: { email: string } & any) => {
+  const resendInvitation = async (
+    invitation: { email: string; role: USER_ROLE; dataroomId: string[] } & any,
+  ) => {
     const response = await fetch(
       `/api/teams/${teamInfo?.currentTeam?.id}/invitations/resend`,
       {
@@ -155,6 +188,8 @@ export default function Billing() {
         },
         body: JSON.stringify({
           email: invitation.email as string,
+          role: invitation.role,
+          selectedDatarooms: invitation.dataroomId,
         }),
       },
     );
@@ -229,12 +264,15 @@ export default function Billing() {
               </div>
               {userPlan !== "free" &&
               (limits === null || (limits && limits.users >= numUsers)) ? (
-                <AddTeamMembers
-                  open={isTeamMemberInviteModalOpen}
-                  setOpen={setTeamMemberInviteModalOpen}
-                >
-                  <Button>Invite</Button>
-                </AddTeamMembers>
+                teamInfo?.currentTeam?.id ? (
+                  <AddTeamMembers
+                    open={isTeamMemberInviteModalOpen}
+                    setOpen={setTeamMemberInviteModalOpen}
+                    teamId={teamInfo.currentTeam.id}
+                  >
+                    <Button>Invite</Button>
+                  </AddTeamMembers>
+                ) : null
               ) : (
                 <UpgradePlanModal
                   clickedPlan={PlanEnum.Pro}
@@ -292,7 +330,7 @@ export default function Billing() {
                 </div>
                 <div className="flex items-center gap-12">
                   <span className="text-sm capitalize text-foreground">
-                    {member.role.toLowerCase()}
+                    {ROLE_LABELS[member.role]}
                   </span>
                   {leavingUserId === member.userId ? (
                     <span className="text-xs">leaving...</span>
@@ -320,19 +358,13 @@ export default function Billing() {
                         !isCurrentUser(member.userId) ? (
                           <>
                             <DropdownMenuItem
-                              onClick={() =>
-                                changeRole(
-                                  member.teamId,
-                                  member.userId,
-                                  member.role === "MEMBER"
-                                    ? "MANAGER"
-                                    : "MEMBER",
-                                )
-                              }
+                              onClick={() => {
+                                setMemberRole(member);
+                                setOpen(true);
+                              }}
                               className="text-red-500 hover:cursor-pointer focus:bg-destructive focus:text-destructive-foreground"
                             >
-                              Change role to{" "}
-                              {member.role === "MEMBER" ? "MANAGER" : "MEMBER"}
+                              Edit user role
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() =>
@@ -411,6 +443,19 @@ export default function Billing() {
                   </div>
                 </li>
               ))}
+            {open && memberRole ? (
+              <CreateUserRoleModal
+                role={memberRole.role}
+                dataroomId={
+                  memberRole?.datarooms.map((d) => d.dataroomId) ?? []
+                }
+                open={open}
+                setOpen={setOpen}
+                teamId={memberRole.teamId}
+                userId={memberRole.userId}
+                changeRole={changeRole}
+              />
+            ) : null}
           </ul>
         </div>
       </main>
