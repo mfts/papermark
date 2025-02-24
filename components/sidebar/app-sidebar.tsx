@@ -35,6 +35,7 @@ import { usePlan } from "@/lib/swr/use-billing";
 import useLimits from "@/lib/swr/use-limits";
 import { nFormatter } from "@/lib/utils";
 
+import ProAnnualBanner from "../billing/pro-annual-banner";
 import ProBanner from "../billing/pro-banner";
 import { PlanEnum } from "../billing/upgrade-plan-modal";
 import { Progress } from "../ui/progress";
@@ -42,9 +43,12 @@ import { Progress } from "../ui/progress";
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const router = useRouter();
   const [showProBanner, setShowProBanner] = useState<boolean | null>(null);
+  const [showProAnnualBanner, setShowProAnnualBanner] = useState<
+    boolean | null
+  >(null);
   const { currentTeam, teams, setCurrentTeam, isLoading }: TeamContextType =
     useTeam() || initialState;
-  const { plan: userPlan, trial: userTrial } = usePlan();
+  const { plan: userPlan, trial: userTrial, isAnnualPlan } = usePlan();
   const isTrial = !!userTrial;
   const { limits } = useLimits();
   const linksLimit = limits?.links;
@@ -56,7 +60,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     } else {
       setShowProBanner(false);
     }
+    if (Cookies.get("hideProAnnualBanner") !== "pro-annual-banner") {
+      setShowProAnnualBanner(true);
+    } else {
+      setShowProAnnualBanner(false);
+    }
   }, []);
+
+  console.log("userPlan", userPlan);
+  console.log("userTrial", userTrial);
+
+  console.log("linksLimit", linksLimit);
+  console.log("documentsLimit", documentsLimit);
 
   const data = {
     navMain: [
@@ -184,8 +199,19 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               {/*
                * if user is free and showProBanner is true show pro banner
                */}
-              {userPlan === "free" && showProBanner ? (
+              {userPlan === "free" && !userTrial && showProBanner ? (
                 <ProBanner setShowProBanner={setShowProBanner} />
+              ) : null}
+              {/*
+               * if user is pro and showProAnnualBanner is true show pro annual banner
+               */}
+              {userPlan === "pro" &&
+              !isAnnualPlan &&
+              !userTrial &&
+              showProAnnualBanner ? (
+                <ProAnnualBanner
+                  setShowProAnnualBanner={setShowProAnnualBanner}
+                />
               ) : null}
 
               <div className="mb-2">

@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import React from "react";
 
 import { Brand, DataroomBrand } from "@prisma/client";
-import { toast } from "sonner";
 
 import { WatermarkConfig } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -16,7 +15,6 @@ import { ScreenProtector } from "../ScreenProtection";
 import { TDocumentData } from "../dataroom/dataroom-view";
 import Nav from "../nav";
 import { PoweredBy } from "../powered-by";
-import { ScreenShield } from "../screen-shield";
 import { SVGWatermark } from "../watermark-svg";
 
 const trackPageView = async (data: {
@@ -50,7 +48,6 @@ export default function ImageViewer({
   allowDownload,
   feedbackEnabled,
   screenshotProtectionEnabled,
-  screenShieldPercentage,
   versionNumber,
   brand,
   documentName,
@@ -74,7 +71,6 @@ export default function ImageViewer({
   allowDownload: boolean;
   feedbackEnabled: boolean;
   screenshotProtectionEnabled: boolean;
-  screenShieldPercentage: number | null;
   versionNumber: number;
   brand?: Partial<Brand> | Partial<DataroomBrand> | null;
   documentName?: string;
@@ -359,9 +355,6 @@ export default function ImageViewer({
           </div>
         </div>
 
-        {!!screenShieldPercentage ? (
-          <ScreenShield visiblePercentage={screenShieldPercentage} />
-        ) : null}
         {screenshotProtectionEnabled ? <ScreenProtector /> : null}
         {showPoweredByBanner ? <PoweredBy linkId={linkId} /> : null}
       </div>

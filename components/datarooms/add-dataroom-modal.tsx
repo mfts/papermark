@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useTeam } from "@/context/team-context";
 import { toast } from "sonner";
 import { mutate } from "swr";
+import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -41,12 +42,20 @@ export function AddDataroomModal({
   const teamInfo = useTeam();
   const { plan } = usePlan();
   const analytics = useAnalytics();
+  const dataroomSchema = z.object({
+    name: z.string().min(3, {
+      message: "Please provide a dataroom name with at least 3 characters.",
+    }),
+  });
 
   const handleSubmit = async (event: any) => {
     event.preventDefault();
     event.stopPropagation();
 
-    if (dataroomName == "") return;
+    const validation = dataroomSchema.safeParse({ name: dataroomName });
+    if (!validation.success) {
+      return toast.error(validation.error.errors[0].message);
+    }
 
     setLoading(true);
 

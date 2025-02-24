@@ -112,4 +112,13 @@ export async function customerSubsciptionUpdated(
       },
     });
   }
+
+  // Update the subscription start and end dates
+  await prisma.team.update({
+    where: { stripeId },
+    data: {
+      startsAt,
+      endsAt,
+    },
+  });
 }

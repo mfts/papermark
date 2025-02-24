@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useTeam } from "@/context/team-context";
 import { ArrowUpDownIcon, FolderPlusIcon, PlusIcon } from "lucide-react";
 
+import GenerateIndexButton from "@/components/datarooms/actions/generate-index-button";
 import { DataroomHeader } from "@/components/datarooms/dataroom-header";
 import { DataroomItemsList } from "@/components/datarooms/dataroom-items-list";
 import { DataroomNavigation } from "@/components/datarooms/dataroom-navigation";
@@ -39,39 +40,55 @@ export default function Documents() {
           <DataroomNavigation dataroomId={dataroom?.id} />
         </header>
 
-        <div className="flex items-center justify-end gap-x-2">
-          <AddDocumentModal isDataroom={true} dataroomId={dataroom?.id} key={1}>
-            <Button
-              size="sm"
-              className="group flex items-center justify-start gap-x-3 px-3 text-left"
-              title="Add Document"
+        <div className="flex items-center justify-between gap-x-2">
+          <div>
+            <GenerateIndexButton
+              teamId={teamInfo?.currentTeam?.id!}
+              dataroomId={dataroom?.id!}
+            />
+          </div>
+          <div className="flex items-center justify-end gap-x-2">
+            <AddDocumentModal
+              isDataroom={true}
+              dataroomId={dataroom?.id}
+              key={1}
             >
-              <PlusIcon className="h-5 w-5 shrink-0" aria-hidden="true" />
-              <span>Add Document</span>
-            </Button>
-          </AddDocumentModal>
-          <AddFolderModal isDataroom={true} dataroomId={dataroom?.id} key={2}>
-            <Button
-              size="sm"
-              variant="outline"
-              className="group flex items-center justify-start gap-x-3 px-3 text-left"
-            >
-              <FolderPlusIcon className="h-5 w-5 shrink-0" aria-hidden="true" />
-              <span>Add Folder</span>
-            </Button>
-          </AddFolderModal>
-          <div id="dataroom-reordering-action">
-            {!isReordering ? (
+              <Button
+                size="sm"
+                className="group flex items-center justify-start gap-x-3 px-3 text-left"
+                title="Add Document"
+              >
+                <PlusIcon className="h-5 w-5 shrink-0" aria-hidden="true" />
+                <span>Add Document</span>
+              </Button>
+            </AddDocumentModal>
+
+            <AddFolderModal isDataroom={true} dataroomId={dataroom?.id} key={2}>
               <Button
                 size="sm"
                 variant="outline"
-                className="gap-x-1"
-                onClick={() => setIsReordering(!isReordering)}
+                className="group flex items-center justify-start gap-x-3 px-3 text-left"
               >
-                <ArrowUpDownIcon className="h-4 w-4" />
-                Edit index
+                <FolderPlusIcon
+                  className="h-5 w-5 shrink-0"
+                  aria-hidden="true"
+                />
+                <span>Add Folder</span>
               </Button>
-            ) : null}
+            </AddFolderModal>
+            <div id="dataroom-reordering-action">
+              {!isReordering ? (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="gap-x-1"
+                  onClick={() => setIsReordering(!isReordering)}
+                >
+                  <ArrowUpDownIcon className="h-4 w-4" />
+                  Edit index
+                </Button>
+              ) : null}
+            </div>
           </div>
         </div>
 

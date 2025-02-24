@@ -44,6 +44,7 @@ type PlanWithOld = `${BasePlan}+old` | `${BasePlan}+drtrial+old`;
 type PlanResponse = {
   plan: BasePlan | PlanWithTrial | PlanWithOld;
   isCustomer: boolean;
+  subscriptionCycle: "monthly" | "yearly";
 };
 
 interface PlanDetails {
@@ -79,10 +80,11 @@ export function usePlan() {
     : { plan: null, trial: null, old: false };
 
   return {
-    plan: parsedPlan.plan,
+    plan: parsedPlan.plan ?? "free",
     trial: parsedPlan.trial,
     isOldAccount: parsedPlan.old,
     isCustomer: plan?.isCustomer,
+    isAnnualPlan: plan?.subscriptionCycle === "yearly",
     loading: !plan && !error,
     error,
   };

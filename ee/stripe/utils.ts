@@ -53,33 +53,37 @@ export const PLANS = [
   {
     name: "Pro",
     slug: "pro",
-    minQuantity: 2,
+    minQuantity: 1,
     price: {
       monthly: {
-        amount: 39,
+        amount: 29,
         unitPrice: 1950,
         priceIds: {
           test: {
             old: "price_1Q3bcHFJyGSZ96lhElXBA5C1",
-            new: "price_1Q8aUBBYvhH6u7U7LPIVxYpz",
+            // new: "price_1Q8aUBBYvhH6u7U7LPIVxYpz",
+            new: "price_1QvgdNBYvhH6u7U7drrXAXM3", // exp
           },
           production: {
             old: "price_1P3FK4FJyGSZ96lhD67yF3lj",
-            new: "price_1Q8egtBYvhH6u7U7gq1Pbp5Z",
+            // new: "price_1Q8egtBYvhH6u7U7gq1Pbp5Z",
+            new: "price_1Qvk3LBYvhH6u7U7JE4V6JY0", // exp
           },
         },
       },
       yearly: {
-        amount: 29,
+        amount: 24,
         unitPrice: 1450,
         priceIds: {
           test: {
             old: "price_1Q3bV9FJyGSZ96lhCYWIcmg5",
-            new: "price_1Q8aTkBYvhH6u7U7kUiNTSLX",
+            // new: "price_1Q8aTkBYvhH6u7U7kUiNTSLX",
+            new: "price_1QviTtBYvhH6u7U79PQ2rzMI", // exp
           },
           production: {
             old: "price_1Q3gfNFJyGSZ96lh2jGhEadm",
-            new: "price_1Q8egtBYvhH6u7U7T4ehn7SM",
+            // new: "price_1Q8egtBYvhH6u7U7T4ehn7SM",
+            new: "price_1Qvk3LBYvhH6u7U7kppryTjV", // exp
           },
         },
       },

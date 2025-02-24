@@ -8,6 +8,7 @@ import { copyFileToBucketServer } from "@/lib/files/copy-file-to-bucket-server";
 import prisma from "@/lib/prisma";
 import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
 import { convertFilesToPdfTask } from "@/lib/trigger/convert-files";
+import { processVideo } from "@/lib/trigger/optimize-video-files";
 import { convertPdfToImageRoute } from "@/lib/trigger/pdf-to-image-route";
 import { CustomUser } from "@/lib/types";
 import { log } from "@/lib/utils";
@@ -120,6 +121,29 @@ export default async function handle(
           },
         );
       }
+
+      if (type === "video") {
+        await processVideo.trigger(
+          {
+            videoUrl: url,
+            teamId,
+            docId: url.split("/")[1], // Extract doc_xxxx from teamId/doc_xxxx/filename
+            documentVersionId: version.id,
+            fileSize: fileSize || 0,
+          },
+          {
+            idempotencyKey: `${teamId}-${version.id}`,
+            tags: [
+              `team_${teamId}`,
+              `document_${documentId}`,
+              `version:${version.id}`,
+            ],
+            queue: conversionQueue(team.plan),
+            concurrencyKey: teamId,
+          },
+        );
+      }
+
       // trigger document uploaded event to trigger convert-pdf-to-image job
       if (type === "pdf") {
         await convertPdfToImageRoute.trigger(

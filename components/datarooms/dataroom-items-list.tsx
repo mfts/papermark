@@ -83,6 +83,9 @@ export function DataroomItemsList({
   const [isOverFolder, setIsOverFolder] = useState<boolean>(false);
   const [isDragging, setIsDragging] = useState<boolean>(false);
 
+  const handleCloseDrawer = () => {
+    setShowDrawer(false);
+  };
   const { setShowRemoveDataroomDocumentsModal, RemoveDataroomDocumentsModal } =
     useRemoveDataroomDocumentsModal({
       documentIds: selectedDocuments,
@@ -413,6 +416,7 @@ export function DataroomItemsList({
           open={showDrawer}
           onOpenChange={setShowDrawer}
           uploads={uploads}
+          handleCloseDrawer={handleCloseDrawer}
           setUploads={setUploads}
           rejectedFiles={rejectedFiles}
           setRejectedFiles={setRejectedFiles}
