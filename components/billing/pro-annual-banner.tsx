@@ -5,6 +5,7 @@ import { Dispatch, SetStateAction, useState } from "react";
 import { useTeam } from "@/context/team-context";
 import Cookies from "js-cookie";
 import { usePlausible } from "next-plausible";
+import { toast } from "sonner";
 
 import X from "@/components/shared/icons/x";
 import { Button } from "@/components/ui/button";
@@ -42,10 +43,10 @@ export default function ProAnnualBanner({
         <span className="sr-only">Close</span>
       </button>
       <div className="flex space-x-2">
-        <span className="text-sm font-bold">Papermark Pro Annual</span>
+        <span className="text-sm font-bold">Papermark Pro Annual ✨</span>
       </div>
       <p className="my-4 text-sm">
-        Upgrade to Papermark Pro Annual to get 2 months free.
+        Lock in a better price and get 2 months free.
       </p>
       <div className="flex">
         <Button
@@ -67,6 +68,7 @@ export default function ProAnnualBanner({
                 })
                 .catch((err) => {
                   alert(err);
+                  toast.error("Something went wrong");
                 })
                 .finally(() => {
                   setIsLoading(false);
@@ -74,7 +76,7 @@ export default function ProAnnualBanner({
             }
           }}
         >
-          {isLoading ? "Upgrading..." : "Upgrade"}
+          {isLoading ? "Redirecting..." : "Upgrade"}
         </Button>
       </div>
     </aside>
