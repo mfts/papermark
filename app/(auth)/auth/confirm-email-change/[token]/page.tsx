@@ -73,6 +73,7 @@ const VerifyEmailChange = async ({ params: { token } }: PageProps) => {
       sendEmail({
         to: data.email,
         subject: "Your email address has been changed",
+        system: true,
         react: EmailUpdated({
           oldEmail: data.email,
           newEmail: data.newEmail,
