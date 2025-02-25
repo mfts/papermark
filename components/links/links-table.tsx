@@ -352,7 +352,7 @@ export default function LinksTable({
                               {link.isUpdated && (
                                 <Badge
                                   variant="outline"
-                                  className="animate-pulse border-blue-500/30 text-blue-500"
+                                  className="border-blue-500/30 text-blue-500"
                                 >
                                   Updated
                                 </Badge>
