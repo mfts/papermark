@@ -148,7 +148,7 @@ export function NavUser() {
                 <Link href="/account/general">
                   <DropdownMenuItem>
                     <CircleUserRound />
-                    Account
+                    User Settings
                   </DropdownMenuItem>
                 </Link>
               </DropdownMenuGroup>
