@@ -15,7 +15,7 @@ const acceptFileTypes: Record<
 > = {
   any: { types: [] },
   images: {
-    types: ["image/png", "image/jpg"],
+    types: ["image/png", "image/jpg", "image/jpeg"],
     errorMessage: "File type not supported (.png or .jpg only)",
   },
   csv: {
