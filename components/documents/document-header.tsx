@@ -860,9 +860,8 @@ export default function DocumentHeader({
               >
                 upgrading
               </span>{" "}
-              to Business to improve the file formatting.
-              <br />
-              The advanced mode uses Microsoft viewer.
+              to Business plan to preserve the file formatting. This uses the
+              Microsoft Office viewer.
             </>
           }
           onClose={() => handleCloseAlert("advanced-excel-alert")}
