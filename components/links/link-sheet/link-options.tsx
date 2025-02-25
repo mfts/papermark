@@ -1,11 +1,9 @@
 import { useState } from "react";
 
+import { PlanEnum } from "@/ee/stripe/constants";
 import { LinkAudienceType, LinkType } from "@prisma/client";
 
-import {
-  PlanEnum,
-  UpgradePlanModal,
-} from "@/components/billing/upgrade-plan-modal";
+import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { DEFAULT_LINK_TYPE } from "@/components/links/link-sheet";
 import AllowDownloadSection from "@/components/links/link-sheet/allow-download-section";
 import AllowListSection from "@/components/links/link-sheet/allow-list-section";

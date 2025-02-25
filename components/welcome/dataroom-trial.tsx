@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
+import { PlanEnum } from "@/ee/stripe/constants";
 import { E164Number } from "libphonenumber-js";
 import { motion } from "motion/react";
 import { toast } from "sonner";
@@ -22,7 +23,7 @@ import {
 import { useAnalytics } from "@/lib/analytics";
 import { STAGGER_CHILD_VARIANTS } from "@/lib/constants";
 
-import { PlanEnum, UpgradePlanModal } from "../billing/upgrade-plan-modal";
+import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
 import { Input } from "../ui/input";
 
 export default function DataroomTrial() {

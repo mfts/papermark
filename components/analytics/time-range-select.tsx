@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 
+import { PlanEnum } from "@/ee/stripe/constants";
 import { differenceInDays, format, startOfDay, subDays } from "date-fns";
 import { CalendarIcon, ChevronDown, CrownIcon } from "lucide-react";
 import { DateRange } from "react-day-picker";
@@ -15,7 +16,6 @@ import {
 
 import { cn } from "@/lib/utils";
 
-import { PlanEnum } from "../billing/upgrade-plan-modal";
 import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
 
 const TIME_RANGES = [

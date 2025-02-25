@@ -5,6 +5,7 @@ import prisma from "@/lib/prisma";
 import {
   BUSINESS_PLAN_LIMITS,
   DATAROOMS_PLAN_LIMITS,
+  DATAROOMS_PLUS_PLAN_LIMITS,
   FREE_PLAN_LIMITS,
   PRO_PLAN_LIMITS,
   TPlanLimits,
@@ -21,6 +22,7 @@ const planLimitsMap: Record<string, TPlanLimits> = {
   pro: PRO_PLAN_LIMITS,
   business: BUSINESS_PLAN_LIMITS,
   datarooms: DATAROOMS_PLAN_LIMITS,
+  "datarooms-plus": DATAROOMS_PLUS_PLAN_LIMITS,
 };
 
 const configSchema = z.object({
