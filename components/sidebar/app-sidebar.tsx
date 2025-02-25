@@ -15,6 +15,7 @@ import {
   CogIcon,
   ContactIcon,
   FolderIcon,
+  HouseIcon,
   Loader,
   ServerIcon,
 } from "lucide-react";
