@@ -36,10 +36,20 @@ export default async function handle(
     const userEmail = (session.user as CustomUser).email;
 
     const { teamId } = req.query as { teamId: string };
-    const { priceId, upgradePlan, proAnnualBanner } = req.body as {
+    const {
+      priceId,
+      upgradePlan,
+      quantity,
+      addSeat,
+      proAnnualBanner,
+      return_url,
+    } = req.body as {
       priceId: string;
       upgradePlan: boolean;
+      quantity?: number;
+      addSeat?: boolean;
       proAnnualBanner?: boolean;
+      return_url?: string;
     };
     try {
       const team = await prisma.team.findUnique({
@@ -80,7 +90,7 @@ export default async function handle(
       const { url } = await stripe.billingPortal.sessions.create({
         customer: team.stripeId,
         return_url: `${process.env.NEXTAUTH_URL}/settings/billing?cancel=true`,
-        ...(upgradePlan &&
+        ...((upgradePlan || addSeat) &&
           subscriptionItemId && {
             flow_data: {
               type: "subscription_update_confirm",
@@ -89,7 +99,9 @@ export default async function handle(
                 items: [
                   {
                     id: subscriptionItemId,
-                    quantity: isOldAccount(team.plan) ? 1 : minQuantity,
+                    quantity: isOldAccount(team.plan)
+                      ? 1
+                      : (quantity ?? minQuantity),
                     price: priceId,
                   },
                 ],
@@ -97,7 +109,9 @@ export default async function handle(
               after_completion: {
                 type: "redirect",
                 redirect: {
-                  return_url: `${process.env.NEXTAUTH_URL}/settings/billing?success=true`,
+                  return_url:
+                    return_url ??
+                    `${process.env.NEXTAUTH_URL}/settings/billing?success=true`,
                 },
               },
             },
