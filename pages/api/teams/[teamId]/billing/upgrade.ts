@@ -61,14 +61,13 @@ export default async function handle(
     const lineItem = {
       price: priceId,
       quantity: oldAccount ? 1 : minimumQuantity,
-      ...(!oldAccount &&
-        minimumQuantity > 1 && {
-          adjustable_quantity: {
-            enabled: true,
-            minimum: minimumQuantity,
-            maximum: 99,
-          },
-        }),
+      ...(!oldAccount && {
+        adjustable_quantity: {
+          enabled: true,
+          minimum: minimumQuantity,
+          maximum: 99,
+        },
+      }),
     };
 
     const stripe = stripeInstance(oldAccount);
