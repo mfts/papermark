@@ -3,7 +3,7 @@ import { useRouter } from "next/router";
 import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
-import { Folder } from "@prisma/client";
+import slugify from "@sindresorhus/slugify";
 import { toast } from "sonner";
 import { mutate } from "swr";
 import { z } from "zod";
@@ -52,6 +52,12 @@ export function AddFolderModal({
 
   /** current folder name */
   const currentFolderPath = router.query.name as string[] | undefined;
+
+  const folderPath =
+    isDataroom && dataroomId
+      ? `/datarooms/${dataroomId}/documents/${currentFolderPath ? currentFolderPath?.join("/") : ""}/${"/" + slugify(folderName.trim())}`
+      : `/documents/tree/${currentFolderPath ? currentFolderPath?.join("/") : ""}${"/" + slugify(folderName.trim())}`;
+
   const addFolderSchema = z.object({
     name: z.string().min(3, {
       message: "Please provide a folder name with at least 3 characters.",
@@ -97,7 +103,13 @@ export function AddFolderModal({
       const { parentFolderPath } = await response.json();
 
       analytics.capture("Folder Added", { folderName: folderName.trim() });
-      toast.success("Folder added successfully! 🎉");
+      toast.error("Folder added successfully! 🎉", {
+        action: {
+          label: `Go to ${folderName.trim()}`,
+          onClick: () => router.push(folderPath),
+        },
+        duration: 10000,
+      });
 
       mutate(
         `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}?root=true`,
