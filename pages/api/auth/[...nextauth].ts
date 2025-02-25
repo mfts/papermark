@@ -114,6 +114,15 @@ export const authOptions: NextAuthOptions = {
         } else {
           return {};
         }
+
+        if (refreshedUser?.email !== user.email) {
+          // if user has changed email, delete all accounts for the user
+          if (user.id && refreshedUser.email) {
+            await prisma.account.deleteMany({
+              where: { userId: user.id },
+            });
+          }
+        }
       }
       return token;
     },

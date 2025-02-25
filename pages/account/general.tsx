@@ -20,7 +20,7 @@ const ProfilePage: NextPage = () => {
         <div className="space-y-6">
           <Form
             title="Your Name"
-            description="This will be your display name on Papermark.io."
+            description="This will be your display name on Papermark."
             inputAttrs={{
               name: "name",
               placeholder: "Dino Hems",
@@ -36,7 +36,7 @@ const ProfilePage: NextPage = () => {
                 },
                 body: JSON.stringify(data),
               }).then(async (res) => {
-                if (res.status === 201) {
+                if (res.status === 200) {
                   update();
                   toast.success("Successfully updated your name!");
                 } else {
@@ -48,7 +48,7 @@ const ProfilePage: NextPage = () => {
           />
           <Form
             title="Your Email"
-            description="This will be the email you use to log in to Papermark.io and receive notification. A confirmation is required for changes."
+            description="This will be the email you use to log in to Papermark and receive notification. A confirmation is required for changes."
             inputAttrs={{
               name: "email",
               placeholder: "name@example.com",
@@ -68,21 +68,20 @@ const ProfilePage: NextPage = () => {
                 },
                 body: JSON.stringify(data),
               }).then(async (res) => {
-                if (res.status === 201) {
-                  update();
+                if (res.status === 200) {
                   toast.success(
                     `A confirmation email has been sent to ${data.email}.`,
                   );
                 } else {
                   const { error } = await res.json();
-                  toast.error(error.message);
+                  toast.error(error);
                 }
               })
             }
           />
           <UploadAvatar
             title="Your Avatar"
-            description={`This is your avatar image on ${process.env.NEXT_PUBLIC_BASE_URL}.`}
+            description="This is your avatar image on Papermark."
             helpText="Square image recommended. Accepted file types: .png, .jpg. Max file
           size: 2MB."
           />

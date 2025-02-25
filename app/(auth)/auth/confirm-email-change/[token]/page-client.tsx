@@ -22,12 +22,12 @@ export default function ConfirmEmailChangePageClient() {
     async function updateSession() {
       hasUpdatedSession.current = true;
       await update();
-      router.replace("/account/general");
       toast.success("Email update successful!");
+      router.replace("/account/general");
     }
 
     updateSession();
-  }, [status, update, router]);
+  }, [status, update]);
 
   return (
     <div className="flex h-screen w-full items-center justify-center">

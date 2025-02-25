@@ -33,8 +33,8 @@ export function EmailUpdated({
               Your email address has been changed
             </Text>
             <Text className="text-sm leading-6 text-black">
-              The e-mail address for your Papermark account has been changed
-              from <strong>{oldEmail}</strong> to <strong>{newEmail}</strong>.
+              The email address for your Papermark account has been changed from{" "}
+              <strong>{oldEmail}</strong> to <strong>{newEmail}</strong>.
             </Text>
             <Text className="text-sm leading-6 text-black">
               If you did not make this change, please contact our support team
@@ -45,7 +45,7 @@ export function EmailUpdated({
               .
             </Text>
             <Text className="text-sm leading-6 text-black">
-              This message is being sent to your old e-mail address only.
+              This message is being sent to your old email address only.
             </Text>
             <Hr />
             <Section className="mt-8 text-gray-400">

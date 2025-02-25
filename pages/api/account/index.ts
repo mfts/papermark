@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import { waitUntil } from "@vercel/functions";
+import { randomBytes } from "crypto";
 import { getServerSession } from "next-auth";
 import { z } from "zod";
 
@@ -9,7 +10,7 @@ import { sendEmailChangeVerificationRequestEmail } from "@/lib/emails/send-mail-
 import { errorhandler } from "@/lib/errorHandler";
 import { newId } from "@/lib/id-helper";
 import prisma from "@/lib/prisma";
-import { ratelimit } from "@/lib/redis";
+import { ratelimit, redis } from "@/lib/redis";
 import { CustomUser } from "@/lib/types";
 import { trim } from "@/lib/utils";
 
@@ -32,13 +33,13 @@ export default async function handle(
       res.status(401).end("Unauthorized");
       throw new Error("Unauthorized");
     }
-    const user = session.user as CustomUser;
+    const sessionUser = session.user as CustomUser;
     const { email, image, name } = await updateUserSchema.parseAsync(
       await req.body,
     );
 
     try {
-      if (email && email !== session.user?.email) {
+      if (email && email !== sessionUser.email) {
         const userWithEmail = await prisma.user.findUnique({
           where: {
             email,
@@ -48,36 +49,49 @@ export default async function handle(
           throw new Error("Email is already in use.");
         }
         const { success } = await ratelimit(6, "6 h").limit(
-          `email-change-request:${user.id}`,
+          `email-change-request:${sessionUser.id}`,
         );
         if (!success) {
           throw new Error(
             "You've requested too many email change requests. Please try again later.",
           );
         }
-        const token = newId("email");
+        const token = randomBytes(32).toString("hex");
         const expiresIn = 15 * 60 * 1000;
+
         await prisma.verificationToken.create({
           data: {
-            identifier: user.id,
+            identifier: sessionUser.id,
             token: hashToken(token),
             expires: new Date(Date.now() + expiresIn),
           },
         });
+
+        await redis.set(
+          `email-change-request:user:${sessionUser.id}`,
+          {
+            email: sessionUser.email,
+            newEmail: email,
+          },
+          {
+            px: expiresIn,
+          },
+        );
+
         waitUntil(
           sendEmailChangeVerificationRequestEmail({
-            email: user.email as string,
+            email: sessionUser.email as string,
             newEmail: email,
-            url: `${process.env.NEXTAUTH_URL}/auth/confirm-email-change?token=${token}`,
+            url: `${process.env.NEXTAUTH_URL}/auth/confirm-email-change/${token}`,
           }),
         );
 
-        return res.status(201).json({ message: "success" });
+        return res.status(200).json({ message: "success" });
       }
 
       const response = await prisma.user.update({
         where: {
-          id: user.id,
+          id: sessionUser.id,
         },
         data: {
           ...(name && { name }),
@@ -85,7 +99,7 @@ export default async function handle(
         },
       });
 
-      return res.status(201).json(response);
+      return res.status(200).json(response);
     } catch (error) {
       errorhandler(error, res);
     }

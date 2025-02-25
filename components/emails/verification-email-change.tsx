@@ -15,7 +15,7 @@ import {
 interface ConfirmEmailChangeProps {
   email: string;
   newEmail: string;
-  confirmUrl?: string;
+  confirmUrl: string;
 }
 
 export function ConfirmEmailChange({
