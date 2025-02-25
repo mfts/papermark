@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 
 import { useEffect } from "react";
 
+import { PlanEnum } from "@/ee/stripe/constants";
 import { PlusIcon } from "lucide-react";
 
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
@@ -60,7 +61,10 @@ export default function DataroomsPage() {
           </div>
           <div className="flex items-center gap-x-1">
             {isBusiness && !canCreateUnlimitedDatarooms ? (
-              <UpgradePlanModal clickedPlan="Data Rooms" trigger="datarooms">
+              <UpgradePlanModal
+                clickedPlan={PlanEnum.DataRooms}
+                trigger="datarooms"
+              >
                 <Button
                   className="group flex flex-1 items-center justify-start gap-x-3 px-3 text-left"
                   title="Upgrade to Add Data Room"
@@ -76,7 +80,10 @@ export default function DataroomsPage() {
                     {daysLeft(new Date(datarooms[0].createdAt), 7)} days left
                   </span>
                 </div>
-                <UpgradePlanModal clickedPlan="Data Rooms" trigger="datarooms">
+                <UpgradePlanModal
+                  clickedPlan={PlanEnum.DataRooms}
+                  trigger="datarooms"
+                >
                   <Button
                     className="group flex flex-1 items-center justify-start gap-x-3 px-3 text-left"
                     title="Upgrade to Add Data Room"

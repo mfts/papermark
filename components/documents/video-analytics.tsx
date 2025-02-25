@@ -59,7 +59,6 @@ export default function VideoAnalytics({
     );
   }
 
-  console.log(data);
   if (!data?.overall) {
     const emptyStats = [
       {

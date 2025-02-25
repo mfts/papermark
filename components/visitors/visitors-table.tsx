@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
+import { PlanEnum } from "@/ee/stripe/constants";
 import { DocumentVersion } from "@prisma/client";
 import {
   AlertTriangleIcon,
@@ -125,8 +126,6 @@ export default function VisitorsTable({
     );
     setIsLoading(false);
   };
-
-  console.log(views);
 
   return (
     <div className="w-full">
@@ -479,7 +478,7 @@ export default function VisitorsTable({
                         Some older visits may not be shown because your document
                         has more than 20 views.{" "}
                       </span>
-                      <UpgradePlanModal clickedPlan="Pro" trigger="">
+                      <UpgradePlanModal clickedPlan={PlanEnum.Pro} trigger="">
                         <button className="underline hover:text-gray-800">
                           Upgrade to see full history
                         </button>

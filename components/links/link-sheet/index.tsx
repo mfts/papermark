@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
+import { PlanEnum } from "@/ee/stripe/constants";
 import { LinkAudienceType, LinkType } from "@prisma/client";
 import { RefreshCwIcon } from "lucide-react";
 import { toast } from "sonner";
@@ -72,7 +73,6 @@ export const DEFAULT_LINK_PROPS = (linkType: LinkType) => ({
   watermarkConfig: null,
   audienceType: LinkAudienceType.GENERAL,
   groupId: null,
-  screenShieldPercentage: null,
   customFields: [],
 });
 
@@ -106,7 +106,6 @@ export type DEFAULT_LINK_TYPE = {
   watermarkConfig: WatermarkConfig | null;
   audienceType: LinkAudienceType;
   groupId: string | null;
-  screenShieldPercentage: number | null;
   customFields: CustomFieldData[];
 };
 
@@ -319,7 +318,7 @@ export default function LinkSheet({
                           </TabsTrigger>
                         ) : (
                           <UpgradePlanModal
-                            clickedPlan="Data Rooms"
+                            clickedPlan={PlanEnum.DataRooms}
                             trigger="add_group_link"
                           >
                             <div className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all">

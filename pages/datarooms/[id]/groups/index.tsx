@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { useState } from "react";
 
+import { PlanEnum } from "@/ee/stripe/constants";
 import { CircleHelpIcon, InfoIcon, UsersIcon } from "lucide-react";
 
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
@@ -35,7 +36,10 @@ export default function DataroomGroupPage() {
       return <Button onClick={() => setModalOpen(true)}>Create group</Button>;
     }
     return (
-      <UpgradePlanModal clickedPlan="Data Rooms" trigger="create_group_button">
+      <UpgradePlanModal
+        clickedPlan={PlanEnum.DataRooms}
+        trigger="create_group_button"
+      >
         <Button>Upgrade to create group</Button>
       </UpgradePlanModal>
     );

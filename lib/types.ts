@@ -75,6 +75,34 @@ export interface LinkWithDocument extends Link {
   customFields: CustomField[];
 }
 
+export interface LinkWithDataroomDocument extends Link {
+  dataroomDocument: DataroomDocument & {
+    document: Document & {
+      versions: {
+        id: string;
+        versionNumber: number;
+        type: string;
+        hasPages: boolean;
+        file: string;
+        isVertical: boolean;
+      }[];
+    };
+  };
+  feedback: {
+    id: string;
+    data: {
+      question: string;
+      type: string;
+    };
+  } | null;
+  agreement: Agreement | null;
+  customFields: CustomField[];
+  teamId: string;
+  team: {
+    plan: string;
+  };
+}
+
 export interface LinkWithDataroom extends Link {
   dataroom: {
     id: string;
@@ -99,6 +127,7 @@ export interface LinkWithDataroom extends Link {
     }[];
     folders: DataroomFolder[];
     lastUpdatedAt: Date;
+    createdAt: Date;
   };
   agreement: Agreement | null;
   customFields: CustomField[];
@@ -235,6 +264,7 @@ export type AnalyticsEvents =
   | {
       event: "Stripe Billing Portal Clicked";
       teamId: string;
+      action?: string;
     };
 
 export interface Team {
@@ -295,3 +325,11 @@ export const WatermarkConfigSchema = z.object({
 export type WatermarkConfig = z.infer<typeof WatermarkConfigSchema>;
 
 export type NotionTheme = "light" | "dark";
+
+export type BasePlan =
+  | "free"
+  | "pro"
+  | "business"
+  | "datarooms"
+  | "datarooms-plus"
+  | "enterprise";

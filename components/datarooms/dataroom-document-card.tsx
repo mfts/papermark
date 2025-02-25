@@ -285,11 +285,9 @@ export default function DataroomDocumentCard({
           </div>
         </div>
 
-        {(teamInfo?.currentTeam?.id === "cluqtfmcr0001zkza4xcgqatw" ||
-          teamInfo?.currentTeam?.id === "clup33by90000oewh4rfvp2eg") &&
-          ["pdf", "docs", "slides", "cad"].includes(
-            dataroomDocument.document.type,
-          ) &&
+        {["pdf", "docs", "slides", "cad"].includes(
+          dataroomDocument.document.type,
+        ) &&
           !dataroomDocument.document.versions?.[0]?.hasPages &&
           dataroomDocument.document.versions?.[0]?.id && (
             <FileProcessStatusBar

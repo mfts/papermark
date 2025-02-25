@@ -4,10 +4,13 @@ import { useRouter } from "next/router";
 import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
+import { PlanEnum } from "@/ee/stripe/constants";
+import { getPriceIdFromPlan } from "@/ee/stripe/functions/get-price-id-from-plan";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
+import { AddSeatModal } from "@/components/billing/add-seat-modal";
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import AppLayout from "@/components/layouts/app";
 import { SettingsHeader } from "@/components/settings/settings-header";
@@ -35,12 +38,13 @@ import { CustomUser } from "@/lib/types";
 export default function Billing() {
   const [isTeamMemberInviteModalOpen, setTeamMemberInviteModalOpen] =
     useState<boolean>(false);
+  const [isAddSeatModalOpen, setAddSeatModalOpen] = useState<boolean>(false);
   const [leavingUserId, setLeavingUserId] = useState<string>("");
 
   const { data: session } = useSession();
   const { team, loading } = useGetTeam()!;
   const teamInfo = useTeam();
-  const { plan: userPlan } = usePlan();
+  const { plan: userPlan, planName } = usePlan();
   const { limits } = useLimits();
   const { teams } = useTeams();
   const analytics = useAnalytics();
@@ -50,6 +54,7 @@ export default function Billing() {
   const router = useRouter();
 
   const numUsers = (team && team.users.length) ?? 1;
+  const numInvitations = (invitations && invitations.length) ?? 0;
 
   const getUserDocumentCount = (userId: string) => {
     const documents = team?.documents.filter(
@@ -224,8 +229,17 @@ export default function Billing() {
                   Teammates that have access to this project.
                 </p>
               </div>
-              {userPlan !== "free" &&
-              (limits === null || (limits && limits.users >= numUsers)) ? (
+              {userPlan === "free" ? (
+                <UpgradePlanModal
+                  clickedPlan={PlanEnum.Pro}
+                  trigger={"invite_team_members"}
+                >
+                  <Button className="whitespace-nowrap px-1 text-xs sm:px-4 sm:text-sm">
+                    Upgrade to invite members
+                  </Button>
+                </UpgradePlanModal>
+              ) : limits === null ||
+                (limits && limits.users > numUsers + numInvitations) ? (
                 <AddTeamMembers
                   open={isTeamMemberInviteModalOpen}
                   setOpen={setTeamMemberInviteModalOpen}
@@ -233,14 +247,14 @@ export default function Billing() {
                   <Button>Invite</Button>
                 </AddTeamMembers>
               ) : (
-                <UpgradePlanModal
-                  clickedPlan={"Pro"}
-                  trigger={"invite_team_members"}
+                <AddSeatModal
+                  open={isAddSeatModalOpen}
+                  setOpen={setAddSeatModalOpen}
                 >
                   <Button className="whitespace-nowrap px-1 text-xs sm:px-4 sm:text-sm">
-                    Upgrade to invite members
+                    Add a seat to invite member
                   </Button>
-                </UpgradePlanModal>
+                </AddSeatModal>
               )}
             </div>
           </div>

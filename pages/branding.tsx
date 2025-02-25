@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 import { useCallback, useEffect, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
+import { PlanEnum } from "@/ee/stripe/constants";
 import { Check, CircleHelpIcon, PlusIcon } from "lucide-react";
 import { HexColorInput, HexColorPicker } from "react-colorful";
 import { toast } from "sonner";
@@ -10,6 +11,7 @@ import { mutate } from "swr";
 
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import AppLayout from "@/components/layouts/app";
+import { NavMenu } from "@/components/navigation-menu";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -135,6 +137,39 @@ export default function Branding() {
   return (
     <AppLayout>
       <main className="relative mx-2 mb-10 mt-4 space-y-8 overflow-hidden px-1 sm:mx-3 md:mx-5 md:mt-5 lg:mx-7 lg:mt-8 xl:mx-10">
+        <header>
+          <section className="mb-4 flex items-center justify-between md:mb-8 lg:mb-12">
+            <div className="space-y-1">
+              <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
+                Branding
+              </h1>
+              <p className="text-xs text-muted-foreground sm:text-sm">
+                Customize how your brand appears globally across Papermark
+                documents your visitors see.
+              </p>
+            </div>
+          </section>
+
+          <NavMenu
+            navigation={[
+              {
+                label: "Document Branding",
+                href: "/branding",
+                segment: `branding`,
+              },
+              {
+                label: "Domains",
+                href: "/settings/domains",
+                segment: "domains",
+              },
+              {
+                label: "Link Previews",
+                href: "/settings/presets",
+                segment: "presets",
+              },
+            ]}
+          />
+        </header>
         <div>
           <div className="mb-4 flex items-center justify-between md:mb-8 lg:mb-12">
             <div className="space-y-1">
@@ -142,8 +177,10 @@ export default function Branding() {
                 Document Branding
               </h3>
               <p className="flex flex-row items-center gap-2 text-sm text-muted-foreground">
-                Customize how your brand appears globally across Papermark
-                documents your visitors see.
+                All direct links to documents will have your branding applied.
+                <span className="italic">
+                  Data rooms are styled individually.
+                </span>
                 <BadgeTooltip
                   linkText="Click here"
                   content="How to customize document branding?"
@@ -353,7 +390,7 @@ export default function Branding() {
                   <CardFooter className="border-t p-6">
                     {plan === "free" ? (
                       <UpgradePlanModal
-                        clickedPlan="Pro"
+                        clickedPlan={PlanEnum.Pro}
                         trigger={"branding_page"}
                       >
                         <Button>Upgrade to Save Branding</Button>

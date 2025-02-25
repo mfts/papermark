@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
+import { PlanEnum } from "@/ee/stripe/constants";
 import { E164Number } from "libphonenumber-js";
 import { toast } from "sonner";
 import { mutate } from "swr";
@@ -236,7 +237,7 @@ export function DataroomTrialModal({
 
               <div className="text-xs text-muted-foreground">
                 After the trial, upgrade to{" "}
-                <UpgradePlanModal clickedPlan="Business">
+                <UpgradePlanModal clickedPlan={PlanEnum.Business}>
                   <button className="underline">Papermark Business</button>
                 </UpgradePlanModal>{" "}
                 to continue using data rooms.

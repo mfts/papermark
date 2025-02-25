@@ -7,6 +7,7 @@ import * as React from "react";
 import { useEffect, useState } from "react";
 
 import { TeamContextType, initialState, useTeam } from "@/context/team-context";
+import { PlanEnum } from "@/ee/stripe/constants";
 import Cookies from "js-cookie";
 import {
   BrushIcon,
@@ -34,15 +35,20 @@ import { usePlan } from "@/lib/swr/use-billing";
 import useLimits from "@/lib/swr/use-limits";
 import { nFormatter } from "@/lib/utils";
 
+import ProAnnualBanner from "../billing/pro-annual-banner";
 import ProBanner from "../billing/pro-banner";
 import { Progress } from "../ui/progress";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const router = useRouter();
   const [showProBanner, setShowProBanner] = useState<boolean | null>(null);
+  const [showProAnnualBanner, setShowProAnnualBanner] = useState<
+    boolean | null
+  >(null);
   const { currentTeam, teams, setCurrentTeam, isLoading }: TeamContextType =
     useTeam() || initialState;
-  const { plan: userPlan, trial: userTrial } = usePlan();
+  const { plan: userPlan, trial: userTrial, isAnnualPlan } = usePlan();
+  const isTrial = !!userTrial;
   const { limits } = useLimits();
   const linksLimit = limits?.links;
   const documentsLimit = limits?.documents;
@@ -53,23 +59,27 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     } else {
       setShowProBanner(false);
     }
+    if (Cookies.get("hideProAnnualBanner") !== "pro-annual-banner") {
+      setShowProAnnualBanner(true);
+    } else {
+      setShowProAnnualBanner(false);
+    }
   }, []);
 
   const data = {
     navMain: [
-      // {
-      //   title: "Dashboard",
-      //   url: "/dashboard",
-      //   icon: HouseIcon,
-      //   current: router.pathname.includes("dashboard"),
-      // },
+      {
+        title: "Dashboard",
+        url: "/dashboard",
+        icon: HouseIcon,
+        current: router.pathname.includes("dashboard"),
+      },
       {
         title: "All Documents",
         url: "/documents",
         icon: FolderIcon,
         current:
           router.pathname.includes("documents") &&
-          !router.pathname.includes("tree") &&
           !router.pathname.includes("datarooms"),
       },
       {
@@ -77,12 +87,19 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         url: "/datarooms",
         icon: ServerIcon,
         current: router.pathname.includes("datarooms"),
+        disabled:
+          userPlan !== "business" && userPlan !== "datarooms" && !isTrial,
+        trigger: "sidebar_datarooms",
+        plan: PlanEnum.Business,
       },
       {
         title: "Visitors",
         url: "/visitors",
         icon: ContactIcon,
         current: router.pathname.includes("visitors"),
+        disabled: userPlan === "free" && !isTrial,
+        trigger: "sidebar_visitors",
+        plan: PlanEnum.Pro,
       },
       {
         title: "Branding",
@@ -198,8 +215,19 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               {/*
                * if user is free and showProBanner is true show pro banner
                */}
-              {userPlan === "free" && showProBanner ? (
+              {userPlan === "free" && !userTrial && showProBanner ? (
                 <ProBanner setShowProBanner={setShowProBanner} />
+              ) : null}
+              {/*
+               * if user is pro and showProAnnualBanner is true show pro annual banner
+               */}
+              {userPlan === "pro" &&
+              !isAnnualPlan &&
+              !userTrial &&
+              showProAnnualBanner ? (
+                <ProAnnualBanner
+                  setShowProAnnualBanner={setShowProAnnualBanner}
+                />
               ) : null}
 
               <div className="mb-2">

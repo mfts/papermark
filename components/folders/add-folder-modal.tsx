@@ -3,9 +3,11 @@ import { useRouter } from "next/router";
 import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
+import { PlanEnum } from "@/ee/stripe/constants";
 import { Folder } from "@prisma/client";
 import { toast } from "sonner";
 import { mutate } from "swr";
+import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -51,12 +53,21 @@ export function AddFolderModal({
 
   /** current folder name */
   const currentFolderPath = router.query.name as string[] | undefined;
+  const addFolderSchema = z.object({
+    name: z.string().min(3, {
+      message: "Please provide a folder name with at least 3 characters.",
+    }),
+  });
 
   const handleSubmit = async (event: any) => {
     event.preventDefault();
     event.stopPropagation();
 
-    if (folderName == "") return;
+    const validation = addFolderSchema.safeParse({ name: folderName });
+    if (!validation.success) {
+      toast.error(validation.error.errors[0].message);
+      return;
+    }
 
     setLoading(true);
     const endpointTargetType =
@@ -110,7 +121,10 @@ export function AddFolderModal({
   if (plan === "free" && (!isDataroom || !trial)) {
     if (children) {
       return (
-        <UpgradePlanModal clickedPlan="Pro" trigger={"add_folder_button"}>
+        <UpgradePlanModal
+          clickedPlan={PlanEnum.Pro}
+          trigger={"add_folder_button"}
+        >
           {children}
         </UpgradePlanModal>
       );

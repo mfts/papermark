@@ -4,29 +4,20 @@ import { useEffect, useRef, useState } from "react";
 import React from "react";
 
 import { Brand, DataroomBrand } from "@prisma/client";
-import {
-  ChevronDownIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  ChevronUpIcon,
-  ZoomInIcon,
-  ZoomOutIcon,
-} from "lucide-react";
-import { useSession } from "next-auth/react";
-import { toast } from "sonner";
+import { ChevronDownIcon, ChevronUpIcon } from "lucide-react";
 
 import { WatermarkConfig } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useMediaQuery } from "@/lib/utils/use-media-query";
+
+import "@/styles/custom-viewer-styles.css";
 
 import { ScreenProtector } from "../ScreenProtection";
 import { TDocumentData } from "../dataroom/dataroom-view";
 import Nav from "../nav";
 import { PoweredBy } from "../powered-by";
 import Question from "../question";
-import { ScreenShield } from "../screen-shield";
 import Toolbar from "../toolbar";
-import ViewDurationSummary from "../visitor-graph";
 import { SVGWatermark } from "../watermark-svg";
 
 const DEFAULT_PRELOADED_IMAGES_NUM = 5;
@@ -101,7 +92,6 @@ export default function PagesVerticalViewer({
   allowDownload,
   feedbackEnabled,
   screenshotProtectionEnabled,
-  screenShieldPercentage,
   versionNumber,
   brand,
   documentName,
@@ -131,7 +121,6 @@ export default function PagesVerticalViewer({
   allowDownload: boolean;
   feedbackEnabled: boolean;
   screenshotProtectionEnabled: boolean;
-  screenShieldPercentage: number | null;
   versionNumber: number;
   brand?: Partial<Brand> | Partial<DataroomBrand> | null;
   documentName?: string;
@@ -443,22 +432,6 @@ export default function PagesVerticalViewer({
     }
   };
 
-  // Function to handle context for screenshotting
-  const handleContextMenu = (event: React.MouseEvent<HTMLDivElement>) => {
-    if (!screenshotProtectionEnabled && !screenShieldPercentage) {
-      return null;
-    }
-
-    event.preventDefault();
-    // Close menu on click anywhere
-    const clickHandler = () => {
-      document.removeEventListener("click", clickHandler);
-    };
-    document.addEventListener("click", clickHandler);
-
-    toast.info("Context menu has been disabled.");
-  };
-
   // Function to preload next image
   const preloadImage = (index: number) => {
     if (index < numPages && !loadedImages[index]) {
@@ -766,7 +739,7 @@ export default function PagesVerticalViewer({
               >
                 <div
                   className="flex flex-col items-center gap-2"
-                  onContextMenu={handleContextMenu}
+                  onContextMenu={(e) => e.preventDefault()}
                 >
                   {pageNumber <= numPagesWithAccountCreation &&
                   pages &&
@@ -781,7 +754,7 @@ export default function PagesVerticalViewer({
                               : undefined,
                           }}
                         >
-                          <div className="relative">
+                          <div className="viewer-container relative">
                             <img
                               className="h-auto w-full object-contain"
                               ref={(ref) => {
@@ -959,9 +932,7 @@ export default function PagesVerticalViewer({
             isPreview={isPreview}
           />
         ) : null}
-        {!!screenShieldPercentage ? (
-          <ScreenShield visiblePercentage={screenShieldPercentage} />
-        ) : null}
+
         {screenshotProtectionEnabled ? <ScreenProtector /> : null}
         {showPoweredByBanner ? <PoweredBy linkId={linkId} /> : null}
       </div>

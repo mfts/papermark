@@ -1,6 +1,7 @@
 import { ChangeEvent, useCallback, useEffect, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
+import { PlanEnum } from "@/ee/stripe/constants";
 import { LinkPreset } from "@prisma/client";
 import {
   Upload as ArrowUpTrayIcon,
@@ -61,7 +62,6 @@ export default function Presets() {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    console.log("presets", presets);
     if (presets) {
       setData({
         metaImage: presets.metaImage,
@@ -533,7 +533,7 @@ export default function Presets() {
                 <div className="flex justify-end">
                   {plan === "free" ? (
                     <UpgradePlanModal
-                      clickedPlan="Pro"
+                      clickedPlan={PlanEnum.Pro}
                       trigger={"branding_page"}
                     >
                       <Button>Upgrade to Save Preset</Button>

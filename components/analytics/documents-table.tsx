@@ -4,6 +4,7 @@ import { useRouter } from "next/router";
 import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
+import { PlanEnum } from "@/ee/stripe/constants";
 import {
   ColumnDef,
   SortingState,
@@ -13,6 +14,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
+import { format } from "date-fns";
 import {
   ChevronDownIcon,
   ChevronUpIcon,
@@ -34,8 +36,11 @@ import {
 } from "@/components/ui/table";
 import { DataTablePagination } from "@/components/visitors/data-table-pagination";
 
+import { usePlan } from "@/lib/swr/use-billing";
 import { fetcher, timeAgo } from "@/lib/utils";
 import { downloadCSV } from "@/lib/utils/csv";
+
+import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
 
 interface Document {
   id: string;
@@ -154,16 +159,24 @@ const columns: ColumnDef<Document>[] = [
   },
 ];
 
-export default function DocumentsTable() {
+export default function DocumentsTable({
+  startDate,
+  endDate,
+}: {
+  startDate: Date;
+  endDate: Date;
+}) {
   const router = useRouter();
   const teamInfo = useTeam();
+  const { plan, isTrial } = usePlan();
+  const isFree = plan === "free";
   const [sorting, setSorting] = useState<SortingState>([
     { id: "lastViewed", desc: true },
   ]);
 
   const interval = router.query.interval || "24h";
   const { data: documents, isLoading } = useSWR<Document[]>(
-    `/api/analytics?type=documents&interval=${interval}&teamId=${teamInfo?.currentTeam?.id}`,
+    `/api/analytics?type=documents&interval=${interval}&teamId=${teamInfo?.currentTeam?.id}${interval === "custom" ? `&startDate=${format(startDate, "MM-dd-yyyy")}&endDate=${format(endDate, "MM-dd-yyyy")}` : ""}`,
     fetcher,
     {
       keepPreviousData: true,
@@ -184,6 +197,11 @@ export default function DocumentsTable() {
   });
 
   const handleExport = () => {
+    if (isFree && !isTrial) {
+      toast.error("Please upgrade to export data");
+      return;
+    }
+
     if (!documents?.length) {
       toast.error("No data to export");
       return;
@@ -201,13 +219,36 @@ export default function DocumentsTable() {
     downloadCSV(exportData, "documents");
   };
 
-  return (
-    <div className="space-y-4">
-      <div className="flex justify-end">
+  const UpgradeOrExportButton = () => {
+    const [open, setOpen] = useState(false);
+    if (isFree && !isTrial) {
+      return (
+        <>
+          <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
+            Upgrade to Export
+          </Button>
+          <UpgradePlanModal
+            clickedPlan={PlanEnum.Pro}
+            trigger="dashboard_documents_export"
+            open={open}
+            setOpen={setOpen}
+          />
+        </>
+      );
+    } else {
+      return (
         <Button variant="outline" size="sm" onClick={handleExport}>
           <Download className="!size-4" />
           Export
         </Button>
+      );
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-end">
+        <UpgradeOrExportButton />
       </div>
       <div className="rounded-xl border">
         <Table>

@@ -13,7 +13,6 @@ export const GroupNavigation = ({
   viewerGroupId: string;
 }) => {
   const router = useRouter();
-  console.log(router.pathname);
 
   return (
     <nav className="grid space-y-1 text-sm">

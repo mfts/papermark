@@ -1,4 +1,3 @@
-import { client } from "@/trigger";
 import { logger, retry, task } from "@trigger.dev/sdk/v3";
 
 import { getFile } from "@/lib/files/get-file";
@@ -7,6 +6,7 @@ import prisma from "@/lib/prisma";
 
 import { updateStatus } from "../utils/generate-trigger-status";
 import { getExtensionFromContentType } from "../utils/get-content-type";
+import { convertPdfToImageRoute } from "./pdf-to-image-route";
 
 export type ConvertPayload = {
   documentId: string;
@@ -161,27 +161,36 @@ export const convertFilesToPdfTask = task({
     console.log("data from conversion", data);
     console.log("storageType from conversion", storageType);
 
-    await prisma.documentVersion.update({
+    const { versionNumber } = await prisma.documentVersion.update({
       where: { id: payload.documentVersionId },
       data: {
         file: data,
         type: "pdf",
         storageType: storageType,
       },
+      select: {
+        versionNumber: true,
+      },
     });
 
     updateStatus({ progress: 40, text: "Initiating document processing..." });
 
-    // v2: trigger document uploaded event to trigger convert-pdf-to-image job
-    await client.sendEvent({
-      id: payload.documentVersionId, // unique eventId for the run
-      name: "document.uploaded",
-      payload: {
+    await convertPdfToImageRoute.trigger(
+      {
+        documentId: payload.documentId,
         documentVersionId: payload.documentVersionId,
         teamId: payload.teamId,
-        documentId: payload.documentId,
+        versionNumber: versionNumber,
       },
-    });
+      {
+        idempotencyKey: `${payload.teamId}-${payload.documentVersionId}`,
+        tags: [
+          `team_${payload.teamId}`,
+          `document_${payload.documentId}`,
+          `version:${payload.documentVersionId}`,
+        ],
+      },
+    );
 
     logger.info("Document converted", {
       documentId: payload.documentId,
@@ -353,16 +362,21 @@ export const convertCadToPdfTask = task({
       },
     });
 
-    // v2: trigger document uploaded event to trigger convert-pdf-to-image job
-    await client.sendEvent({
-      id: payload.documentVersionId, // unique eventId for the run
-      name: "document.uploaded",
-      payload: {
+    await convertPdfToImageRoute.trigger(
+      {
+        documentId: payload.documentId,
         documentVersionId: payload.documentVersionId,
         teamId: payload.teamId,
-        documentId: payload.documentId,
       },
-    });
+      {
+        idempotencyKey: `${payload.teamId}-${payload.documentVersionId}`,
+        tags: [
+          `team_${payload.teamId}`,
+          `document_${payload.documentId}`,
+          `version:${payload.documentVersionId}`,
+        ],
+      },
+    );
 
     logger.info("Document converted", {
       documentId: payload.documentId,

@@ -1,5 +1,6 @@
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 
+import { PlanEnum } from "@/ee/stripe/constants";
 import Cookies from "js-cookie";
 import { usePlausible } from "next-plausible";
 
@@ -69,7 +70,7 @@ function TrialBannerComponent({
             You are on a data room trial, you have access to advanced link
             permissions and data room.{" "}
             <UpgradePlanModal
-              clickedPlan={"Data Rooms"}
+              clickedPlan={PlanEnum.DataRooms}
               trigger={"trial_navbar"}
             >
               <span

@@ -4,6 +4,7 @@ import { useRouter } from "next/router";
 import { useMemo, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
+import { PlanEnum } from "@/ee/stripe/constants";
 import {
   ColumnDef,
   SortingState,
@@ -13,6 +14,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
+import { format } from "date-fns";
 import {
   BadgeCheckIcon,
   BadgeInfoIcon,
@@ -55,8 +57,11 @@ import VisitorCustomFields from "@/components/visitors/visitor-custom-fields";
 import VisitorUserAgent from "@/components/visitors/visitor-useragent";
 import VisitorVideoChart from "@/components/visitors/visitor-video-chart";
 
+import { usePlan } from "@/lib/swr/use-billing";
 import { cn, durationFormat, fetcher, timeAgo } from "@/lib/utils";
 import { downloadCSV } from "@/lib/utils/csv";
+
+import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
 
 interface View {
   id: string;
@@ -273,9 +278,17 @@ const columns: ColumnDef<View>[] = [
   },
 ];
 
-export default function ViewsTable() {
+export default function ViewsTable({
+  startDate,
+  endDate,
+}: {
+  startDate: Date;
+  endDate: Date;
+}) {
   const router = useRouter();
   const teamInfo = useTeam();
+  const { plan, isTrial } = usePlan();
+  const isFree = plan === "free";
   const { interval = "7d" } = router.query;
   const [sorting, setSorting] = useState<SortingState>([
     { id: "viewedAt", desc: true },
@@ -283,7 +296,7 @@ export default function ViewsTable() {
 
   const { data: views } = useSWR<View[]>(
     teamInfo?.currentTeam?.id
-      ? `/api/analytics?type=views&interval=${interval}&teamId=${teamInfo.currentTeam.id}`
+      ? `/api/analytics?type=views&interval=${interval}&teamId=${teamInfo.currentTeam.id}${interval === "custom" ? `&startDate=${format(startDate, "MM-dd-yyyy")}&endDate=${format(endDate, "MM-dd-yyyy")}` : ""}`
       : null,
     fetcher,
     {
@@ -305,6 +318,11 @@ export default function ViewsTable() {
   });
 
   const handleExport = () => {
+    if (isFree && !isTrial) {
+      toast.error("Please upgrade to export data");
+      return;
+    }
+
     if (!views?.length) {
       toast.error("No data to export");
       return;
@@ -323,13 +341,36 @@ export default function ViewsTable() {
     downloadCSV(exportData, "views");
   };
 
-  return (
-    <div className="space-y-4">
-      <div className="flex justify-end">
+  const UpgradeOrExportButton = () => {
+    const [open, setOpen] = useState(false);
+    if (isFree && !isTrial) {
+      return (
+        <>
+          <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
+            Upgrade to Export
+          </Button>
+          <UpgradePlanModal
+            clickedPlan={PlanEnum.Pro}
+            trigger="dashboard_views_export"
+            open={open}
+            setOpen={setOpen}
+          />
+        </>
+      );
+    } else {
+      return (
         <Button variant="outline" size="sm" onClick={handleExport}>
           <Download className="!size-4" />
           Export
         </Button>
+      );
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-end">
+        <UpgradeOrExportButton />
       </div>
       <div className="rounded-xl border">
         <Table>

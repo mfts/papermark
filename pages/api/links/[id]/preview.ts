@@ -2,8 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 import { getServerSession } from "next-auth/next";
 
-import { newId } from "@/lib/id-helper";
-import prisma from "@/lib/prisma";
+import { createPreviewSession } from "@/lib/auth/preview-auth";
 import { CustomUser } from "@/lib/types";
 
 import { authOptions } from "../../auth/[...nextauth]";
@@ -21,20 +20,12 @@ export default async function handle(
 
     const { id } = req.query as { id: string };
 
-    // Create a new preview token
-    const previewToken = newId("preview");
-    const expiresAt = new Date();
-    expiresAt.setMinutes(expiresAt.getMinutes() + 20); // previewToken expires in 20 minutes
+    const previewSession = await createPreviewSession(
+      id,
+      (session.user as CustomUser).id,
+    );
 
-    await prisma.verificationToken.create({
-      data: {
-        token: previewToken,
-        identifier: `preview:${id}:${(session.user as CustomUser).id}`,
-        expires: expiresAt,
-      },
-    });
-
-    return res.status(200).json({ previewToken });
+    return res.status(200).json({ previewToken: previewSession.token });
   } else {
     // We only allow POST requests
     res.setHeader("Allow", ["POST"]);
