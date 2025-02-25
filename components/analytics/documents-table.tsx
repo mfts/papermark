@@ -4,6 +4,7 @@ import { useRouter } from "next/router";
 import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
+import { PlanEnum } from "@/ee/stripe/constants";
 import {
   ColumnDef,
   SortingState,
@@ -39,7 +40,6 @@ import { usePlan } from "@/lib/swr/use-billing";
 import { fetcher, timeAgo } from "@/lib/utils";
 import { downloadCSV } from "@/lib/utils/csv";
 
-import { PlanEnum } from "../billing/upgrade-plan-modal";
 import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
 
 interface Document {

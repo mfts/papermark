@@ -4,6 +4,7 @@ import { useRouter } from "next/router";
 import { FormEvent, useEffect, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
+import { PlanEnum } from "@/ee/stripe/constants";
 import { usePlausible } from "next-plausible";
 import { parsePageId } from "notion-utils";
 import { toast } from "sonner";
@@ -39,7 +40,7 @@ import { usePlan } from "@/lib/swr/use-billing";
 import useLimits from "@/lib/swr/use-limits";
 import { getSupportedContentType } from "@/lib/utils/get-content-type";
 
-import { PlanEnum, UpgradePlanModal } from "../billing/upgrade-plan-modal";
+import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
 
 export function AddDocumentModal({
   newVersion,
