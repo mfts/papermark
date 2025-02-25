@@ -53,6 +53,18 @@ export const GroupNavigation = ({
         <FileSlidersIcon className="h-4 w-4" />
         Permissions
       </Link>
+      <Link
+        href={`/datarooms/${dataroomId}/groups/${viewerGroupId}/group-analytic`}
+        className={cn(
+          "flex items-center gap-x-2 rounded-md p-2 text-primary hover:bg-muted",
+          {
+            "bg-muted font-medium": router.pathname.includes("group-analytic"),
+          },
+        )}
+      >
+        <FileSlidersIcon className="h-4 w-4" />
+        Group analytics
+      </Link>
     </nav>
   );
 };
