@@ -5,6 +5,15 @@ export enum PlanEnum {
   DataRoomsPlus = "Data Rooms Plus",
 }
 
+export const PLAN_NAME_MAP: Record<string, string> = {
+  free: "Free",
+  starter: "Starter",
+  pro: "Pro",
+  business: "Business",
+  datarooms: "Data Rooms",
+  "datarooms-plus": "Data Rooms Plus",
+};
+
 export type PeriodType = "monthly" | "yearly";
 
 export interface Feature {
@@ -26,8 +35,8 @@ export interface PlanFeatures {
 export const PLAN_PRICING = {
   Pro: {
     extraUserPrice: {
-      monthly: "€19/month per additional user",
-      yearly: "€14/month per additional user",
+      monthly: "€29/month per additional user",
+      yearly: "€24/month per additional user",
     },
   },
   Business: {
@@ -44,7 +53,7 @@ export const PLAN_PRICING = {
   },
   "Data Rooms Plus": {
     extraUserPrice: {
-      monthly: "€79/month per additional user",
+      monthly: "€69/month per additional user",
       yearly: "€49/month per additional user",
     },
   },

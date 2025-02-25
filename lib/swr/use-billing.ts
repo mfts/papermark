@@ -1,4 +1,5 @@
 import { useTeam } from "@/context/team-context";
+import { PLAN_NAME_MAP } from "@/ee/stripe/constants";
 import useSWR from "swr";
 
 import { fetcher } from "@/lib/utils";
@@ -84,6 +85,7 @@ export function usePlan() {
 
   return {
     plan: parsedPlan.plan ?? "free",
+    planName: PLAN_NAME_MAP[parsedPlan.plan ?? "free"],
     trial: parsedPlan.trial,
     isTrial: !!parsedPlan.trial,
     isOldAccount: parsedPlan.old,
