@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 import { Dispatch, SetStateAction, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
+import { getPriceIdFromPlan } from "@/ee/stripe/functions/get-price-id-from-plan";
 import Cookies from "js-cookie";
 import { usePlausible } from "next-plausible";
 import { toast } from "sonner";
@@ -56,12 +57,17 @@ export default function ProAnnualBanner({
           onClick={() => {
             if (isCustomer && teamPlan === "pro") {
               setIsLoading(true);
-              fetch(
-                `/api/teams/${teamInfo?.currentTeam?.id}/billing/manage?proAnnualBanner=true`,
-                {
-                  method: "POST",
+              fetch(`/api/teams/${teamInfo?.currentTeam?.id}/billing/manage`, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
                 },
-              )
+                body: JSON.stringify({
+                  priceId: getPriceIdFromPlan("Pro", "yearly"),
+                  upgradePlan: true,
+                  proAnnualBanner: true,
+                }),
+              })
                 .then(async (res) => {
                   const url = await res.json();
                   router.push(url);
