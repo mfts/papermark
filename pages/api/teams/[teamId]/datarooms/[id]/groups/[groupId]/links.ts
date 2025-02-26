@@ -67,6 +67,7 @@ export default async function handle(
             orderBy: {
               viewedAt: "desc",
             },
+            take: 1,
           },
           customFields: true,
           _count: {
@@ -74,7 +75,6 @@ export default async function handle(
           },
         },
       });
-      console.log("links", links);
 
       // Decrypt the password for each link
       links.forEach((link) => {
