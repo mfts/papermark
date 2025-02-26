@@ -43,7 +43,10 @@ import { CustomFieldData } from "./custom-fields-panel";
 import DomainSection from "./domain-section";
 import { LinkOptions } from "./link-options";
 
-export const DEFAULT_LINK_PROPS = (linkType: LinkType) => ({
+export const DEFAULT_LINK_PROPS = (
+  linkType: LinkType,
+  groupId: string | null = null,
+) => ({
   id: null,
   name: null,
   domain: null,
@@ -71,8 +74,8 @@ export const DEFAULT_LINK_PROPS = (linkType: LinkType) => ({
   showBanner: linkType === LinkType.DOCUMENT_LINK ? true : false,
   enableWatermark: false,
   watermarkConfig: null,
-  audienceType: LinkAudienceType.GENERAL,
-  groupId: null,
+  audienceType: groupId ? LinkAudienceType.GROUP : LinkAudienceType.GENERAL,
+  groupId: groupId,
   customFields: [],
 });
 
@@ -122,7 +125,13 @@ export default function LinkSheet({
   currentLink?: DEFAULT_LINK_TYPE;
   existingLinks?: LinkWithViews[];
 }) {
+  const router = useRouter();
+  const { id: targetId, groupId } = router.query as {
+    id: string;
+    groupId?: string;
+  };
   const { domains } = useDomains();
+
   const {
     viewerGroups,
     loading: isLoadingGroups,
@@ -132,16 +141,13 @@ export default function LinkSheet({
   const { plan, trial } = usePlan();
   const analytics = useAnalytics();
   const [data, setData] = useState<DEFAULT_LINK_TYPE>(
-    DEFAULT_LINK_PROPS(linkType),
+    DEFAULT_LINK_PROPS(linkType, groupId),
   );
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState<boolean>(false);
 
-  const router = useRouter();
-  const targetId = router.query.id as string;
-
   useEffect(() => {
-    setData(currentLink || DEFAULT_LINK_PROPS(linkType));
+    setData(currentLink || DEFAULT_LINK_PROPS(linkType, groupId));
   }, [currentLink]);
 
   const handlePreviewLink = async (link: LinkWithViews) => {
@@ -249,9 +255,64 @@ export default function LinkSheet({
         ),
         false,
       );
+
+      // Handle group changes
+      if (!!groupId && returnedLink.audienceType === LinkAudienceType.GROUP) {
+        // If we're viewing a group page
+        if (currentLink.groupId !== returnedLink.groupId) {
+          // If the link's group has changed
+          if (currentLink.groupId === groupId) {
+            // If the link was in the current group but is now in a different group
+            // Remove it from the current group's view
+            const groupLinks =
+              existingLinks?.filter(
+                (link) =>
+                  link.id !== currentLink.id && link.groupId === groupId,
+              ) || [];
+
+            mutate(
+              `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
+                targetId,
+              )}/groups/${groupId}/links`,
+              groupLinks,
+              false,
+            );
+          } else if (returnedLink.groupId === groupId) {
+            // If the link was in a different group but is now in the current group
+            // Add it to the current group's view
+            const groupLinks =
+              existingLinks?.filter((link) => link.groupId === groupId) || [];
+
+            mutate(
+              `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
+                targetId,
+              )}/groups/${groupId}/links`,
+              [returnedLink, ...groupLinks],
+              false,
+            );
+          }
+        } else if (returnedLink.groupId === groupId) {
+          // If the link's group hasn't changed and it's in the current group
+          // Update it in the current group's view
+          const groupLinks =
+            existingLinks?.filter((link) => link.groupId === groupId) || [];
+
+          mutate(
+            `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
+              targetId,
+            )}/groups/${groupId}/links`,
+            groupLinks.map((link) =>
+              link.id === currentLink.id ? returnedLink : link,
+            ),
+            false,
+          );
+        }
+      }
+
       toast.success("Link updated successfully");
     } else {
       setIsOpen(false);
+
       // Add the new link to the list of links
       mutate(
         `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
@@ -260,6 +321,23 @@ export default function LinkSheet({
         [returnedLink, ...(existingLinks || [])],
         false,
       );
+
+      // Also update the group-specific links cache if this is a group link
+      if (
+        !!groupId &&
+        returnedLink.audienceType === LinkAudienceType.GROUP &&
+        returnedLink.groupId === groupId
+      ) {
+        const groupLinks =
+          existingLinks?.filter((link) => link.groupId === groupId) || [];
+        mutate(
+          `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
+            targetId,
+          )}/groups/${groupId}/links`,
+          [returnedLink, ...groupLinks],
+          false,
+        );
+      }
 
       analytics.capture("Link Added", {
         linkId: returnedLink.id,
@@ -271,7 +349,7 @@ export default function LinkSheet({
       toast.success("Link created successfully");
     }
 
-    setData(DEFAULT_LINK_PROPS(linkType));
+    setData(DEFAULT_LINK_PROPS(linkType, groupId));
     setIsSaving(false);
 
     if (shouldPreview) {
