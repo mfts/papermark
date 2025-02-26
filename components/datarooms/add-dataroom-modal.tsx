@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
+import { PlanEnum } from "@/ee/stripe/constants";
 import { toast } from "sonner";
 import { mutate } from "swr";
 import { z } from "zod";
@@ -23,7 +24,7 @@ import { Label } from "@/components/ui/label";
 import { useAnalytics } from "@/lib/analytics";
 import { usePlan } from "@/lib/swr/use-billing";
 
-import { PlanEnum, UpgradePlanModal } from "../billing/upgrade-plan-modal";
+import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
 
 export function AddDataroomModal({
   children,
@@ -44,7 +45,7 @@ export function AddDataroomModal({
   const analytics = useAnalytics();
   const dataroomSchema = z.object({
     name: z.string().min(3, {
-      message: "Dataroom name is required. Please enter a valid name.",
+      message: "Please provide a dataroom name with at least 3 characters.",
     }),
   });
 

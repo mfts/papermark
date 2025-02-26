@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
+import { PlanEnum } from "@/ee/stripe/constants";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -21,7 +22,7 @@ import { useAnalytics } from "@/lib/analytics";
 import { usePlan } from "@/lib/swr/use-billing";
 import useLimits from "@/lib/swr/use-limits";
 
-import { PlanEnum, UpgradePlanModal } from "../billing/upgrade-plan-modal";
+import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
 
 export function AddDomainModal({
   open,
@@ -46,7 +47,9 @@ export function AddDomainModal({
   const addDomainSchema = z.object({
     name: z
       .string()
-      .min(3, { message: "Domain is required. Please enter a valid domain." })
+      .min(3, {
+        message: "Please provide a domain name with at least 3 characters.",
+      })
       // Add validation for papermark
       .refine((name) => !name.toLowerCase().includes("papermark"), {
         message: "Domain cannot contain 'papermark'",

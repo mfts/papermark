@@ -3,12 +3,10 @@ import { useRouter } from "next/router";
 
 import { useEffect } from "react";
 
+import { PlanEnum } from "@/ee/stripe/constants";
 import { PlusIcon } from "lucide-react";
 
-import {
-  PlanEnum,
-  UpgradePlanModal,
-} from "@/components/billing/upgrade-plan-modal";
+import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { AddDataroomModal } from "@/components/datarooms/add-dataroom-modal";
 import { DataroomTrialModal } from "@/components/datarooms/dataroom-trial-modal";
 import { EmptyDataroom } from "@/components/datarooms/empty-dataroom";

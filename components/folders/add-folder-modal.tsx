@@ -3,7 +3,8 @@ import { useRouter } from "next/router";
 import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
-import { Folder } from "@prisma/client";
+import { PlanEnum } from "@/ee/stripe/constants";
+import slugify from "@sindresorhus/slugify";
 import { toast } from "sonner";
 import { mutate } from "swr";
 import { z } from "zod";
@@ -24,7 +25,7 @@ import { Label } from "@/components/ui/label";
 import { useAnalytics } from "@/lib/analytics";
 import { usePlan } from "@/lib/swr/use-billing";
 
-import { PlanEnum, UpgradePlanModal } from "../billing/upgrade-plan-modal";
+import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
 
 export function AddFolderModal({
   // open,
@@ -52,9 +53,15 @@ export function AddFolderModal({
 
   /** current folder name */
   const currentFolderPath = router.query.name as string[] | undefined;
+
+  const folderPath =
+    isDataroom && dataroomId
+      ? `/datarooms/${dataroomId}/documents/${currentFolderPath ? currentFolderPath?.join("/") : ""}/${"/" + slugify(folderName.trim())}`
+      : `/documents/tree/${currentFolderPath ? currentFolderPath?.join("/") : ""}${"/" + slugify(folderName.trim())}`;
+
   const addFolderSchema = z.object({
     name: z.string().min(3, {
-      message: "Folder name is required. Please enter a valid name.",
+      message: "Please provide a folder name with at least 3 characters.",
     }),
   });
 
@@ -90,14 +97,24 @@ export function AddFolderModal({
       if (!response.ok) {
         const { message } = await response.json();
         setLoading(false);
-        toast.error(message);
+        toast.error(message.error);
         return;
       }
 
       const { parentFolderPath } = await response.json();
 
-      analytics.capture("Folder Added", { folderName: folderName.trim() });
-      toast.success("Folder added successfully! 🎉");
+      analytics.capture("Folder Added", {
+        folderName: folderName.trim(),
+        dataroomId,
+      });
+      toast.success(`Folder added successfully!`, {
+        description: `"${folderName.trim()}"`,
+        action: {
+          label: "Open folder",
+          onClick: () => router.push(folderPath),
+        },
+        duration: 10000,
+      });
 
       mutate(
         `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}?root=true`,

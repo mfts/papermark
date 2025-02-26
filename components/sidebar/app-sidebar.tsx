@@ -7,6 +7,7 @@ import * as React from "react";
 import { useEffect, useState } from "react";
 
 import { TeamContextType, initialState, useTeam } from "@/context/team-context";
+import { PlanEnum } from "@/ee/stripe/constants";
 import Cookies from "js-cookie";
 import {
   BrushIcon,
@@ -14,6 +15,7 @@ import {
   CogIcon,
   ContactIcon,
   FolderIcon,
+  HouseIcon,
   Loader,
   ServerIcon,
 } from "lucide-react";
@@ -34,16 +36,19 @@ import { usePlan } from "@/lib/swr/use-billing";
 import useLimits from "@/lib/swr/use-limits";
 import { nFormatter } from "@/lib/utils";
 
+import ProAnnualBanner from "../billing/pro-annual-banner";
 import ProBanner from "../billing/pro-banner";
-import { PlanEnum } from "../billing/upgrade-plan-modal";
 import { Progress } from "../ui/progress";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const router = useRouter();
   const [showProBanner, setShowProBanner] = useState<boolean | null>(null);
+  const [showProAnnualBanner, setShowProAnnualBanner] = useState<
+    boolean | null
+  >(null);
   const { currentTeam, teams, setCurrentTeam, isLoading }: TeamContextType =
     useTeam() || initialState;
-  const { plan: userPlan, trial: userTrial } = usePlan();
+  const { plan: userPlan, trial: userTrial, isAnnualPlan } = usePlan();
   const isTrial = !!userTrial;
   const { limits } = useLimits();
   const linksLimit = limits?.links;
@@ -55,16 +60,21 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     } else {
       setShowProBanner(false);
     }
+    if (Cookies.get("hideProAnnualBanner") !== "pro-annual-banner") {
+      setShowProAnnualBanner(true);
+    } else {
+      setShowProAnnualBanner(false);
+    }
   }, []);
 
   const data = {
     navMain: [
-      // {
-      //   title: "Dashboard",
-      //   url: "/dashboard",
-      //   icon: HouseIcon,
-      //   current: router.pathname.includes("dashboard"),
-      // },
+      {
+        title: "Dashboard",
+        url: "/dashboard",
+        icon: HouseIcon,
+        current: router.pathname.includes("dashboard"),
+      },
       {
         title: "All Documents",
         url: "/documents",
@@ -185,6 +195,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                */}
               {userPlan === "free" && !userTrial && showProBanner ? (
                 <ProBanner setShowProBanner={setShowProBanner} />
+              ) : null}
+              {/*
+               * if user is pro and showProAnnualBanner is true show pro annual banner
+               */}
+              {userPlan === "pro" &&
+              !isAnnualPlan &&
+              !userTrial &&
+              showProAnnualBanner ? (
+                <ProAnnualBanner
+                  setShowProAnnualBanner={setShowProAnnualBanner}
+                />
               ) : null}
 
               <div className="mb-2">

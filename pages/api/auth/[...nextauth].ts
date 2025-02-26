@@ -95,12 +95,34 @@ export const authOptions: NextAuthOptions = {
     },
   },
   callbacks: {
-    jwt: async ({ token, user }) => {
+    jwt: async (params) => {
+      const { token, user, trigger } = params;
       if (!token.email) {
         return {};
       }
       if (user) {
         token.user = user;
+      }
+      // refresh the user data
+      if (trigger === "update") {
+        const user = token?.user as CustomUser;
+        const refreshedUser = await prisma.user.findUnique({
+          where: { id: user.id },
+        });
+        if (refreshedUser) {
+          token.user = refreshedUser;
+        } else {
+          return {};
+        }
+
+        if (refreshedUser?.email !== user.email) {
+          // if user has changed email, delete all accounts for the user
+          if (user.id && refreshedUser.email) {
+            await prisma.account.deleteMany({
+              where: { userId: user.id },
+            });
+          }
+        }
       }
       return token;
     },
