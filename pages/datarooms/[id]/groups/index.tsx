@@ -13,6 +13,7 @@ import GroupCard from "@/components/datarooms/groups/group-card";
 import { GroupCardPlaceholder } from "@/components/datarooms/groups/group-card-placeholder";
 import AppLayout from "@/components/layouts/app";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BadgeTooltip } from "@/components/ui/tooltip";
 
 import { usePlan } from "@/lib/swr/use-billing";
@@ -57,6 +58,15 @@ export default function DataroomGroupPage() {
 
           <DataroomNavigation dataroomId={dataroom.id} />
         </header>
+
+        <Tabs defaultValue="groups" className="!mt-4 space-y-4">
+          <TabsList>
+            <TabsTrigger value="links" asChild>
+              <Link href={`/datarooms/${dataroom.id}/permissions`}>Links</Link>
+            </TabsTrigger>
+            <TabsTrigger value="groups">Groups</TabsTrigger>
+          </TabsList>
+        </Tabs>
 
         <div className="space-y-4">
           {/* Groups */}
