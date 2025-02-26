@@ -85,31 +85,21 @@ export default function LinksTable({
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     );
 
-    const latestUpdatedLink = links.reduce((latest, current) => {
-      return new Date(current.updatedAt) > new Date(latest.updatedAt)
-        ? current
-        : latest;
-    }, links[0]);
-
     return sortedLinks.map((link) => {
       const createdDate = new Date(link.createdAt);
       const updatedDate = new Date(link.updatedAt);
 
       return {
         ...link,
-        isNew:
-          link.id === sortedLinks[0].id &&
-          isWithinInterval(createdDate, {
-            start: oneMinuteAgo,
-            end: now,
-          }),
+        isNew: isWithinInterval(createdDate, {
+          start: oneMinuteAgo,
+          end: now,
+        }),
         isUpdated:
-          link.id === latestUpdatedLink.id &&
           isWithinInterval(updatedDate, {
             start: oneMinuteAgo,
             end: now,
-          }) &&
-          updatedDate.getTime() !== createdDate.getTime(),
+          }) && updatedDate.getTime() !== createdDate.getTime(),
       };
     });
   }, [links, now]);
@@ -339,22 +329,22 @@ export default function LinksTable({
                                 </ButtonTooltip>
                               ) : null}
                               {link.name || `Link #${link.id.slice(-5)}`}
-                              {link.isNew && !link.isUpdated && (
+                              {link.isNew && !link.isUpdated ? (
                                 <Badge
                                   variant="outline"
-                                  className="animate-pulse border-transparent bg-emerald-500/15 text-emerald-600 transition-colors hover:bg-emerald-500/20 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                                  className="border-emerald-600/80 text-emerald-600/80"
                                 >
                                   New
                                 </Badge>
-                              )}
-                              {link.isUpdated && (
+                              ) : null}
+                              {link.isUpdated ? (
                                 <Badge
                                   variant="outline"
-                                  className="border-blue-500/30 text-blue-500"
+                                  className="border-blue-500/80 text-blue-500/80"
                                 >
                                   Updated
                                 </Badge>
-                              )}
+                              ) : null}
                               {link.domainId && hasFreePlan ? (
                                 <span className="ml-2 rounded-full bg-destructive px-2.5 py-0.5 text-xs text-foreground ring-1 ring-destructive">
                                   Inactive
