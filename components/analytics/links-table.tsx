@@ -4,6 +4,7 @@ import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
+import { PlanEnum } from "@/ee/stripe/constants";
 import {
   ColumnDef,
   SortingState,
@@ -43,7 +44,6 @@ import { fetcher } from "@/lib/utils";
 import { downloadCSV } from "@/lib/utils/csv";
 
 import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
-import { PlanEnum } from "../billing/upgrade-plan-modal";
 
 interface Link {
   id: string;

@@ -1,12 +1,10 @@
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 
+import { PlanEnum } from "@/ee/stripe/constants";
 import Cookies from "js-cookie";
 import { usePlausible } from "next-plausible";
 
-import {
-  PlanEnum,
-  UpgradePlanModal,
-} from "@/components/billing/upgrade-plan-modal";
+import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import X from "@/components/shared/icons/x";
 
 import { usePlan } from "@/lib/swr/use-billing";
