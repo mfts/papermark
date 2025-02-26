@@ -329,22 +329,22 @@ export default function LinksTable({
                                 </ButtonTooltip>
                               ) : null}
                               {link.name || `Link #${link.id.slice(-5)}`}
-                              {link.isNew && !link.isUpdated ? (
+                              {link.isNew && !link.isUpdated && (
                                 <Badge
                                   variant="outline"
                                   className="border-emerald-600/80 text-emerald-600/80"
                                 >
                                   New
                                 </Badge>
-                              ) : null}
-                              {link.isUpdated ? (
+                              )}
+                              {link.isUpdated && (
                                 <Badge
                                   variant="outline"
                                   className="border-blue-500/80 text-blue-500/80"
                                 >
                                   Updated
                                 </Badge>
-                              ) : null}
+                              )}
                               {link.domainId && hasFreePlan ? (
                                 <span className="ml-2 rounded-full bg-destructive px-2.5 py-0.5 text-xs text-foreground ring-1 ring-destructive">
                                   Inactive
