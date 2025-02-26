@@ -97,16 +97,20 @@ export function AddFolderModal({
       if (!response.ok) {
         const { message } = await response.json();
         setLoading(false);
-        toast.error(message);
+        toast.error(message.error);
         return;
       }
 
       const { parentFolderPath } = await response.json();
 
-      analytics.capture("Folder Added", { folderName: folderName.trim() });
-      toast.error("Folder added successfully! 🎉", {
+      analytics.capture("Folder Added", {
+        folderName: folderName.trim(),
+        dataroomId,
+      });
+      toast.success(`Folder added successfully!`, {
+        description: `"${folderName.trim()}"`,
         action: {
-          label: `Go to ${folderName.trim()}`,
+          label: "Open folder",
           onClick: () => router.push(folderPath),
         },
         duration: 10000,
