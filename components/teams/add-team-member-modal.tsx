@@ -103,7 +103,6 @@ export function AddTeamMembers({
         },
       );
 
-      console.log("🚀 ~ handleSubmit ~ response:", response);
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error);
