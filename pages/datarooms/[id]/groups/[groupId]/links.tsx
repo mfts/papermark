@@ -1,8 +1,5 @@
-import { useTeam } from "@/context/team-context";
-
 import { DataroomHeader } from "@/components/datarooms/dataroom-header";
 import { DataroomNavigation } from "@/components/datarooms/dataroom-navigation";
-import DeleteGroup from "@/components/datarooms/groups/delete-group";
 import { GroupHeader } from "@/components/datarooms/groups/group-header";
 import { GroupNavigation } from "@/components/datarooms/groups/group-navigation";
 import AppLayout from "@/components/layouts/app";
@@ -15,12 +12,9 @@ import {
 } from "@/lib/swr/use-dataroom-groups";
 
 export default function DataroomGroupLinksPage() {
-  const teamInfo = useTeam();
-  const teamId = teamInfo?.currentTeam?.id;
   const { dataroom } = useDataroom();
   const { viewerGroup } = useDataroomGroup();
   const { links, loading } = useDataroomGroupLinks();
-  console.log("links", links);
 
   if (!dataroom || !viewerGroup) {
     return <div>Loading...</div>;
