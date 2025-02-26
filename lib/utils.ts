@@ -446,10 +446,13 @@ export const validateImageDimensions = (
   });
 };
 
-export const uploadImage = async (file: File) => {
+export const uploadImage = async (
+  file: File,
+  uploadType: "profile" | "assets" = "assets",
+) => {
   const newBlob = await upload(file.name, file, {
     access: "public",
-    handleUploadUrl: "/api/file/logo-upload",
+    handleUploadUrl: `/api/file/image-upload?type=${uploadType}`,
   });
 
   return newBlob.url;
@@ -535,3 +538,5 @@ export function hexToRgb(hex: string) {
   let b = (bigint & 255) / 255; // Convert to 0-1 range
   return rgb(r, g, g);
 }
+
+export const trim = (u: unknown) => (typeof u === "string" ? u.trim() : u);

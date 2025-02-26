@@ -1,12 +1,13 @@
 import { Dispatch, SetStateAction } from "react";
 
+import { PlanEnum } from "@/ee/stripe/constants";
 import Cookies from "js-cookie";
 import { usePlausible } from "next-plausible";
 
 import X from "@/components/shared/icons/x";
 import { Button } from "@/components/ui/button";
 
-import { PlanEnum, UpgradePlanModal } from "./upgrade-plan-modal";
+import { UpgradePlanModal } from "./upgrade-plan-modal";
 
 export default function ProBanner({
   setShowProBanner,

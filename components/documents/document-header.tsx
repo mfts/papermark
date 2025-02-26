@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 import { useEffect, useRef, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
+import { PlanEnum } from "@/ee/stripe/constants";
 import { Document, DocumentVersion } from "@prisma/client";
 import {
   AlertCircleIcon,
@@ -44,14 +45,14 @@ import { cn } from "@/lib/utils";
 import { fileIcon } from "@/lib/utils/get-file-icon";
 
 import PlanBadge from "../billing/plan-badge";
-import { PlanEnum, UpgradePlanModal } from "../billing/upgrade-plan-modal";
+import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
 import AdvancedSheet from "../shared/icons/advanced-sheet";
 import PortraitLandscape from "../shared/icons/portrait-landscape";
-import { Alert, AlertClose, AlertDescription, AlertTitle } from "../ui/alert";
 import LoadingSpinner from "../ui/loading-spinner";
 import { ButtonTooltip } from "../ui/tooltip";
 import { AddDocumentModal } from "./add-document-modal";
 import { AddToDataroomModal } from "./add-document-to-dataroom-modal";
+import AlertBanner from "./alert";
 
 export default function DocumentHeader({
   prismaDocument,
@@ -80,6 +81,7 @@ export default function DocumentHeader({
   const [openAddDocModal, setOpenAddDocModal] = useState<boolean>(false);
   const [planModalOpen, setPlanModalOpen] = useState<boolean>(false);
   const [planModalTrigger, setPlanModalTrigger] = useState<string>("");
+  const [selectedPlan, setSelectedPlan] = useState<PlanEnum>(PlanEnum.Pro);
   const nameRef = useRef<HTMLHeadingElement>(null);
   const enterPressedRef = useRef<boolean>(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
@@ -93,6 +95,19 @@ export default function DocumentHeader({
       actionRows.push(actions.slice(i, i + 3));
     }
   }
+
+  const handleUpgradeClick = (plan: PlanEnum, trigger: string) => {
+    setSelectedPlan(plan);
+    setPlanModalTrigger(trigger);
+    setPlanModalOpen(true);
+  };
+
+  const handleCloseAlert = (id: string) => {
+    const alert = document.getElementById(id);
+    if (alert) {
+      alert.style.display = "none";
+    }
+  };
 
   const currentTime = new Date();
   const formattedTime =
@@ -273,6 +288,7 @@ export default function DocumentHeader({
         plausible("advancedExcelEnabled", {
           props: { documentId: document.id },
         }); // track the event
+        handleCloseAlert("enable-advanced-excel-alert");
         toast.success(message);
       }
     } catch (error) {
@@ -721,8 +737,10 @@ export default function DocumentHeader({
                   <DropdownMenuItem
                     onClick={() =>
                       isFree
-                        ? (setPlanModalTrigger("download-only-document"),
-                          setPlanModalOpen(true))
+                        ? handleUpgradeClick(
+                            PlanEnum.Business,
+                            "download-only-document",
+                          )
                         : toggleDownloadOnly()
                     }
                   >
@@ -767,8 +785,10 @@ export default function DocumentHeader({
               <DropdownMenuItem
                 onClick={() =>
                   isFree
-                    ? (setPlanModalTrigger("export-document-visits"),
-                      setPlanModalOpen(true))
+                    ? handleUpgradeClick(
+                        PlanEnum.Business,
+                        "export-document-visits",
+                      )
                     : exportVisitCounts(prismaDocument)
                 }
               >
@@ -802,34 +822,76 @@ export default function DocumentHeader({
         </div>
       </div>
 
-      {isFree && prismaDocument.hasPageLinks ? (
-        <Alert id="in-document-links-alert" variant="destructive">
-          <AlertCircleIcon className="h-4 w-4" />
-          <AlertTitle>In-document links detected</AlertTitle>
-          <AlertDescription>
-            External in-document links are not available on the free plan.
-            Upgrade to a{" "}
-            <span
-              className="cursor-pointer underline underline-offset-4 hover:text-destructive/80"
-              onClick={() => {
-                setPlanModalTrigger("in-document-links");
-                setPlanModalOpen(true);
-              }}
-            >
-              higher plan
-            </span>{" "}
-            to use this feature.
-          </AlertDescription>
-          <AlertClose
-            onClick={() => {
-              const alert = document.getElementById("in-document-links-alert");
-              if (alert) {
-                alert.style.display = "none";
-              }
-            }}
+      {isFree && prismaDocument.hasPageLinks && (
+        <AlertBanner
+          id="in-document-links-alert"
+          variant="destructive"
+          title="In-document links detected"
+          description={
+            <>
+              External in-document links are not available on the free plan.{" "}
+              <span
+                className="cursor-pointer underline underline-offset-4 hover:text-destructive/80"
+                onClick={() =>
+                  handleUpgradeClick(PlanEnum.Pro, "in-document-links")
+                }
+              >
+                Upgrade
+              </span>{" "}
+              to a higher plan to use this feature.
+            </>
+          }
+          onClose={() => handleCloseAlert("in-document-links-alert")}
+        />
+      )}
+
+      {prismaDocument.type === "sheet" && (isFree || plan === "pro") && (
+        <AlertBanner
+          id="advanced-excel-alert"
+          variant="default"
+          title="Advanced Excel mode"
+          description={
+            <>
+              You can turn on advanced excel mode by{" "}
+              <span
+                className="cursor-pointer underline underline-offset-4 hover:text-primary/80"
+                onClick={() =>
+                  handleUpgradeClick(PlanEnum.Business, "advanced-excel-mode")
+                }
+              >
+                upgrading
+              </span>{" "}
+              to Business plan to preserve the file formatting. This uses the
+              Microsoft Office viewer.
+            </>
+          }
+          onClose={() => handleCloseAlert("advanced-excel-alert")}
+        />
+      )}
+
+      {prismaDocument.type === "sheet" &&
+        !prismaDocument.advancedExcelEnabled &&
+        (plan === "business" || plan === "datarooms" || isTrial) && (
+          <AlertBanner
+            id="enable-advanced-excel-alert"
+            variant="default"
+            title="Advanced Excel mode"
+            description={
+              <>
+                You can{" "}
+                <span
+                  className="cursor-pointer underline underline-offset-4 hover:text-primary/80"
+                  onClick={() => setMenuOpen(true)}
+                >
+                  turn on
+                </span>{" "}
+                advanced excel mode to improve the file formatting.
+                <br /> The advanced mode uses Microsoft viewer.
+              </>
+            }
+            onClose={() => handleCloseAlert("enable-advanced-excel-alert")}
           />
-        </Alert>
-      ) : null}
+        )}
 
       {addDataRoomOpen ? (
         <AddToDataroomModal
@@ -842,7 +904,7 @@ export default function DocumentHeader({
 
       {planModalOpen ? (
         <UpgradePlanModal
-          clickedPlan={PlanEnum.Pro}
+          clickedPlan={selectedPlan}
           trigger={planModalTrigger}
           open={planModalOpen}
           setOpen={setPlanModalOpen}

@@ -1,9 +1,11 @@
 import { useRouter } from "next/router";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
-import { DocumentVersion } from "@prisma/client";
+import { PlanEnum } from "@/ee/stripe/constants";
+import { DocumentVersion, LinkAudienceType } from "@prisma/client";
+import { isWithinInterval, subMinutes } from "date-fns";
 import {
   ArchiveIcon,
   BoxesIcon,
@@ -16,10 +18,7 @@ import {
 import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
 
-import {
-  PlanEnum,
-  UpgradePlanModal,
-} from "@/components/billing/upgrade-plan-modal";
+import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { Button } from "@/components/ui/button";
 import {
   Collapsible,
@@ -52,6 +51,7 @@ import FileProcessStatusBar from "../documents/file-process-status-bar";
 import BarChart from "../shared/icons/bar-chart";
 import ChevronDown from "../shared/icons/chevron-down";
 import MoreHorizontal from "../shared/icons/more-horizontal";
+import { Badge } from "../ui/badge";
 import { ButtonTooltip } from "../ui/tooltip";
 import EmbedCodeModal from "./embed-code-modal";
 import LinkSheet, {
@@ -71,9 +71,41 @@ export default function LinksTable({
   primaryVersion?: DocumentVersion;
   mutateDocument?: () => void;
 }) {
+  const now = Date.now();
   const router = useRouter();
   const { plan } = usePlan();
   const teamInfo = useTeam();
+  const { groupId } = router.query as {
+    groupId?: string;
+  };
+
+  const processedLinks = useMemo(() => {
+    if (!links?.length) return [];
+
+    const oneMinuteAgo = subMinutes(now, 1);
+    const sortedLinks = links.sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
+
+    return sortedLinks.map((link) => {
+      const createdDate = new Date(link.createdAt);
+      const updatedDate = new Date(link.updatedAt);
+
+      return {
+        ...link,
+        isNew: isWithinInterval(createdDate, {
+          start: oneMinuteAgo,
+          end: now,
+        }),
+        isUpdated:
+          isWithinInterval(updatedDate, {
+            start: oneMinuteAgo,
+            end: now,
+          }) && updatedDate.getTime() !== createdDate.getTime(),
+      };
+    });
+  }, [links, now]);
 
   const { canAddLinks } = useLimits();
   const { data: features } = useSWR<{
@@ -88,7 +120,7 @@ export default function LinksTable({
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isLinkSheetVisible, setIsLinkSheetVisible] = useState<boolean>(false);
   const [selectedLink, setSelectedLink] = useState<DEFAULT_LINK_TYPE>(
-    DEFAULT_LINK_PROPS(`${targetType}_LINK`),
+    DEFAULT_LINK_PROPS(`${targetType}_LINK`, groupId),
   );
   const [embedModalOpen, setEmbedModalOpen] = useState(false);
   const [selectedEmbedLink, setSelectedEmbedLink] = useState<{
@@ -198,6 +230,19 @@ export default function LinksTable({
       false,
     );
 
+    // Update the group-specific links cache if this is a group link
+    if (!!groupId) {
+      const groupLinks =
+        links?.filter((link) => link.groupId === groupId) || [];
+      mutate(
+        `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
+          duplicatedLink.documentId ?? duplicatedLink.dataroomId ?? "",
+        )}/groups/${duplicatedLink.groupId}/links`,
+        groupLinks.concat(duplicatedLink),
+        false,
+      );
+    }
+
     toast.success("Link duplicated successfully");
     setIsLoading(false);
   };
@@ -251,6 +296,19 @@ export default function LinksTable({
       false,
     );
 
+    // Update the group-specific links cache if this is a group link
+    if (!!groupId) {
+      const groupLinks =
+        links?.filter((link) => link.groupId === groupId) || [];
+      mutate(
+        `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
+          archivedLink.documentId ?? archivedLink.dataroomId ?? "",
+        )}/groups/${groupId}/links`,
+        groupLinks.map((link) => (link.id === linkId ? archivedLink : link)),
+        false,
+      );
+    }
+
     toast.success(
       !isArchived
         ? "Link successfully archived"
@@ -268,7 +326,7 @@ export default function LinksTable({
   return (
     <>
       <div className="w-full">
-        <div>
+        <div className={cn(targetType === "DATAROOM" && "hidden")}>
           <h2 className="mb-2 md:mb-4">All links</h2>
         </div>
         <div className="rounded-md border">
@@ -285,8 +343,8 @@ export default function LinksTable({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {links && links.length > 0 ? (
-                links
+              {processedLinks && processedLinks.length > 0 ? (
+                processedLinks
                   .filter((link) => !link.isArchived)
                   .map((link) => (
                     <Collapsible key={link.id} asChild>
@@ -300,7 +358,22 @@ export default function LinksTable({
                                 </ButtonTooltip>
                               ) : null}
                               {link.name || `Link #${link.id.slice(-5)}`}
-
+                              {link.isNew && !link.isUpdated && (
+                                <Badge
+                                  variant="outline"
+                                  className="border-emerald-600/80 text-emerald-600/80"
+                                >
+                                  New
+                                </Badge>
+                              )}
+                              {link.isUpdated && (
+                                <Badge
+                                  variant="outline"
+                                  className="border-blue-500/80 text-blue-500/80"
+                                >
+                                  Updated
+                                </Badge>
+                              )}
                               {link.domainId && hasFreePlan ? (
                                 <span className="ml-2 rounded-full bg-destructive px-2.5 py-0.5 text-xs text-foreground ring-1 ring-destructive">
                                   Inactive
@@ -562,14 +635,30 @@ export default function LinksTable({
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {links &&
-                        links
+                      {processedLinks &&
+                        processedLinks
                           .filter((link) => link.isArchived)
                           .map((link) => (
                             <>
                               <TableRow key={link.id} className="group/row">
                                 <TableCell className="w-[180px] truncate">
                                   {link.name || "No link name"}
+                                  {link.isNew && !link.isUpdated && (
+                                    <Badge
+                                      variant="outline"
+                                      className="animate-pulse border-transparent bg-emerald-500/15 text-emerald-600 transition-colors hover:bg-emerald-500/20 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                                    >
+                                      New
+                                    </Badge>
+                                  )}
+                                  {link.isUpdated && (
+                                    <Badge
+                                      variant="outline"
+                                      className="border-blue-500/30 text-blue-500"
+                                    >
+                                      Updated
+                                    </Badge>
+                                  )}
                                 </TableCell>
                                 <TableCell className="max-w-[250px] sm:min-w-[300px] md:min-w-[400px] lg:min-w-[450px]">
                                   <div className="flex items-center gap-x-4 whitespace-nowrap rounded-sm bg-secondary px-3 py-1.5 text-xs text-secondary-foreground sm:py-1 sm:text-sm">

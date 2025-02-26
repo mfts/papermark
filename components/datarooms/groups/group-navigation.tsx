@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
 
-import { CogIcon, FileSlidersIcon, UsersIcon } from "lucide-react";
+import { CogIcon, FileSlidersIcon, LinkIcon, UsersIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -64,6 +64,19 @@ export const GroupNavigation = ({
       >
         <FileSlidersIcon className="h-4 w-4" />
         Group analytics
+            </Link>
+          <Link
+        href={`/datarooms/${dataroomId}/groups/${viewerGroupId}/links`}
+        className={cn(
+          "flex items-center gap-x-2 rounded-md p-2 text-primary hover:bg-muted",
+          {
+            "bg-muted font-medium": router.pathname.includes("links"),
+          },
+        )}
+      >
+        <LinkIcon className="h-4 w-4" />
+        Links
+
       </Link>
     </nav>
   );

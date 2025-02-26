@@ -28,7 +28,7 @@ export const NavMenu: React.FC<React.PropsWithChildren<Props>> = ({
     <nav
       className={cn("sticky top-0 bg-background dark:bg-gray-900", className)}
     >
-      <div className="flex w-full items-center overflow-x-auto pl-1">
+      <div className="flex w-full items-center overflow-x-auto px-4 pl-1">
         <ul className="flex flex-row gap-4">
           {navigation.map(({ label, href, segment, tag, disabled }) => (
             <NavItem
@@ -62,6 +62,11 @@ const NavItem: React.FC<Props["navigation"][0]> = ({
 
   if (segment === "/datarooms/[id]") {
     active = router.pathname === "/datarooms/[id]";
+  }
+
+  // Special case for permissions - also active when pathname includes "groups"
+  if (segment === "permissions" && router.pathname.includes("groups")) {
+    active = true;
   }
 
   return (

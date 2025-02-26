@@ -8,7 +8,6 @@ import Dataroom from "@/components/welcome/dataroom";
 import DataroomTrial from "@/components/welcome/dataroom-trial";
 import Intro from "@/components/welcome/intro";
 import Next from "@/components/welcome/next";
-import NotionForm from "@/components/welcome/notion-form";
 import DeckGeneratorUpload from "@/components/welcome/special-upload";
 import Upload from "@/components/welcome/upload";
 
