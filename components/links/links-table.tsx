@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { PlanEnum } from "@/ee/stripe/constants";
-import { DocumentVersion } from "@prisma/client";
+import { DocumentVersion, LinkAudienceType } from "@prisma/client";
 import { isWithinInterval, subMinutes } from "date-fns";
 import {
   ArchiveIcon,
@@ -230,6 +230,19 @@ export default function LinksTable({
       false,
     );
 
+    // Update the group-specific links cache if this is a group link
+    if (!!groupId) {
+      const groupLinks =
+        links?.filter((link) => link.groupId === groupId) || [];
+      mutate(
+        `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
+          duplicatedLink.documentId ?? duplicatedLink.dataroomId ?? "",
+        )}/groups/${duplicatedLink.groupId}/links`,
+        groupLinks.concat(duplicatedLink),
+        false,
+      );
+    }
+
     toast.success("Link duplicated successfully");
     setIsLoading(false);
   };
@@ -282,13 +295,20 @@ export default function LinksTable({
       (links || []).map((link) => (link.id === linkId ? archivedLink : link)),
       false,
     );
-    mutate(
-      `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${encodeURIComponent(
-        targetId,
-      )}/groups/${groupId}/links`,
-      (links || []).map((link) => (link.id === linkId ? archivedLink : link)),
-      false,
-    );
+
+    // Update the group-specific links cache if this is a group link
+    if (!!groupId) {
+      const groupLinks =
+        links?.filter((link) => link.groupId === groupId) || [];
+      mutate(
+        `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
+          archivedLink.documentId ?? archivedLink.dataroomId ?? "",
+        )}/groups/${groupId}/links`,
+        groupLinks.map((link) => (link.id === linkId ? archivedLink : link)),
+        false,
+      );
+    }
+
     toast.success(
       !isArchived
         ? "Link successfully archived"
@@ -306,7 +326,7 @@ export default function LinksTable({
   return (
     <>
       <div className="w-full">
-        <div>
+        <div className={cn(targetType === "DATAROOM" && "hidden")}>
           <h2 className="mb-2 md:mb-4">All links</h2>
         </div>
         <div className="rounded-md border">
