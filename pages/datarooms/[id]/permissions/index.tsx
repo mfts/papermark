@@ -2,12 +2,10 @@ import Link from "next/link";
 
 import { useState } from "react";
 
+import { PlanEnum } from "@/ee/stripe/constants";
 import { CircleHelpIcon, UsersIcon } from "lucide-react";
 
-import {
-  PlanEnum,
-  UpgradePlanModal,
-} from "@/components/billing/upgrade-plan-modal";
+import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { DataroomHeader } from "@/components/datarooms/dataroom-header";
 import { DataroomNavigation } from "@/components/datarooms/dataroom-navigation";
 import { AddGroupModal } from "@/components/datarooms/groups/add-group-modal";

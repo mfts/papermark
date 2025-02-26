@@ -1,6 +1,7 @@
 import { ChangeEvent, useCallback, useEffect, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
+import { PlanEnum } from "@/ee/stripe/constants";
 import { LinkPreset } from "@prisma/client";
 import {
   Upload as ArrowUpTrayIcon,
@@ -11,10 +12,7 @@ import { toast } from "sonner";
 import { mutate } from "swr";
 import useSWRImmutable from "swr/immutable";
 
-import {
-  PlanEnum,
-  UpgradePlanModal,
-} from "@/components/billing/upgrade-plan-modal";
+import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import AppLayout from "@/components/layouts/app";
 import Preview from "@/components/settings/og-preview";
 import { SettingsHeader } from "@/components/settings/settings-header";

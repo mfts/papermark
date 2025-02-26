@@ -3,13 +3,11 @@ import { useRouter } from "next/router";
 import { useState } from "react";
 
 import { useLimits } from "@/ee/limits/swr-handler";
+import { PlanEnum } from "@/ee/stripe/constants";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
-import {
-  PlanEnum,
-  UpgradePlanModal,
-} from "@/components/billing/upgrade-plan-modal";
+import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { Button } from "@/components/ui/button";
 import {
   Card,

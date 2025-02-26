@@ -7,6 +7,7 @@ import * as React from "react";
 import { useEffect, useState } from "react";
 
 import { TeamContextType, initialState, useTeam } from "@/context/team-context";
+import { PlanEnum } from "@/ee/stripe/constants";
 import Cookies from "js-cookie";
 import {
   BrushIcon,
@@ -37,7 +38,6 @@ import { nFormatter } from "@/lib/utils";
 
 import ProAnnualBanner from "../billing/pro-annual-banner";
 import ProBanner from "../billing/pro-banner";
-import { PlanEnum } from "../billing/upgrade-plan-modal";
 import { Progress } from "../ui/progress";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -66,12 +66,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       setShowProAnnualBanner(false);
     }
   }, []);
-
-  console.log("userPlan", userPlan);
-  console.log("userTrial", userTrial);
-
-  console.log("linksLimit", linksLimit);
-  console.log("documentsLimit", documentsLimit);
 
   const data = {
     navMain: [
