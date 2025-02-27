@@ -156,6 +156,13 @@ export default async function handle(
           },
         },
         include: {
+          brand: {
+            select: {
+              accentColor: true,
+              brandColor: true,
+              logo: true,
+            },
+          },
           _count: {
             select: {
               datarooms: true,
@@ -222,9 +229,11 @@ export default async function handle(
           brand: {
             create: {
               banner: dataroomContents.brand?.banner,
-              logo: dataroomContents.brand?.logo,
-              accentColor: dataroomContents.brand?.accentColor,
-              brandColor: dataroomContents.brand?.brandColor,
+              logo: dataroomContents.brand?.logo || team.brand?.logo,
+              accentColor:
+                dataroomContents.brand?.accentColor || team.brand?.accentColor,
+              brandColor:
+                dataroomContents.brand?.brandColor || team.brand?.brandColor,
             },
           },
         },

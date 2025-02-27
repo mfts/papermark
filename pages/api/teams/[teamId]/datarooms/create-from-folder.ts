@@ -138,6 +138,13 @@ export default async function handle(
           },
         },
         select: {
+          brand: {
+            select: {
+              accentColor: true,
+              brandColor: true,
+              logo: true,
+            },
+          },
           id: true,
           plan: true,
           _count: {
@@ -196,6 +203,13 @@ export default async function handle(
           },
           folders: {
             create: [],
+          },
+          brand: {
+            create: {
+              accentColor: team.brand?.accentColor,
+              brandColor: team.brand?.brandColor,
+              logo: team.brand?.logo,
+            },
           },
         },
         select: { id: true },
