@@ -128,7 +128,11 @@ export function TeamSwitcher({
         </DropdownMenu>
       </SidebarMenuItem>
       <SidebarMenuItem>
-        {activeTeam.plan === "free" ? (
+        {loading ? (
+          <Button type="button" variant="outline" className="h-12 w-12 p-1">
+            <Loader className="animate-spin" />
+          </Button>
+        ) : activeTeam.plan === "free" ? (
           <UpgradePlanModal
             clickedPlan={PlanEnum.Pro}
             trigger={"invite_team_members"}
