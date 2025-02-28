@@ -86,7 +86,7 @@ export default async function handle(
         },
       });
 
-      return res.redirect(`/documents`);
+      return res.redirect(`/invite`);
     } catch (error) {
       errorhandler(error, res);
     }
