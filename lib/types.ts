@@ -272,6 +272,7 @@ export interface Team {
   name?: string;
   logo?: React.ElementType;
   plan?: string;
+  createdAt?: Date;
 }
 
 export interface TeamDetail {
