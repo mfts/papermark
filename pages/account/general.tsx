@@ -70,7 +70,7 @@ const ProfilePage: NextPage = () => {
               }).then(async (res) => {
                 if (res.status === 200) {
                   toast.success(
-                    `A confirmation email has been sent to ${data.email}.`,
+                    `A confirmation email has been sent to ${session?.user?.email}.`,
                   );
                 } else {
                   const { error } = await res.json();
