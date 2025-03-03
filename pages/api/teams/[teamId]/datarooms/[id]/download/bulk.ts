@@ -2,13 +2,15 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { InvocationType, InvokeCommand } from "@aws-sdk/client-lambda";
-import { ItemType, PrismaClient, ViewType } from "@prisma/client";
 import { getServerSession } from "next-auth";
 
 import { getLambdaClient } from "@/lib/files/aws-client";
+import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 
-const prisma = new PrismaClient();
+export const config = {
+  maxDuration: 180,
+};
 
 export default async function handler(
   req: NextApiRequest,
