@@ -117,6 +117,11 @@ const SingleDataroomBreadcrumb = ({ path }: { path: string }) => {
       case "/datarooms/[id]/branding":
         return "Branding";
       case "/datarooms/[id]/permissions":
+      case "/datarooms/[id]/groups":
+      case "/datarooms/[id]/groups/[groupId]":
+      case "/datarooms/[id]/groups/[groupId]/permissions":
+      case "/datarooms/[id]/groups/[groupId]/members":
+      case "/datarooms/[id]/groups/[groupId]/links":
         return "Permissions";
       case "/datarooms/[id]/analytics":
         return "Analytics";
@@ -190,6 +195,38 @@ const SettingsBreadcrumb = () => {
         <BreadcrumbSeparator />
         <BreadcrumbItem>
           <BreadcrumbPage>{settingsTitle}</BreadcrumbPage>
+        </BreadcrumbItem>
+      </BreadcrumbList>
+    </Breadcrumb>
+  );
+};
+
+const AccountBreadcrumb = () => {
+  const router = useRouter();
+  const path = router.pathname;
+
+  const accountTitle = useMemo(() => {
+    switch (path) {
+      case "/account/general":
+        return "General";
+      case "/account/security":
+        return "Security";
+      default:
+        return "Account";
+    }
+  }, [path]);
+
+  return (
+    <Breadcrumb>
+      <BreadcrumbList>
+        <BreadcrumbItem>
+          <BreadcrumbLink asChild>
+            <Link href="/account/general">Account</Link>
+          </BreadcrumbLink>
+        </BreadcrumbItem>
+        <BreadcrumbSeparator />
+        <BreadcrumbItem>
+          <BreadcrumbPage>{accountTitle}</BreadcrumbPage>
         </BreadcrumbItem>
       </BreadcrumbList>
     </Breadcrumb>
@@ -366,6 +403,11 @@ export const AppBreadcrumb = () => {
     // Settings routes
     if (path.startsWith("/settings")) {
       return <SettingsBreadcrumb />;
+    }
+
+    // Account routes
+    if (path.startsWith("/account")) {
+      return <AccountBreadcrumb />;
     }
 
     // Root documents route

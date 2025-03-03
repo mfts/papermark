@@ -48,10 +48,10 @@ export default function DataroomGroupPage() {
               description="This is the name of your data room group on Papermark."
               inputAttrs={{
                 name: "name",
-                defaultValue: viewerGroup?.name,
                 placeholder: "e.g. Management Team",
                 maxLength: 32,
               }}
+              defaultValue={viewerGroup?.name ?? ""}
               helpText="Max 32 characters"
               handleSubmit={(updateData) =>
                 fetch(
@@ -61,7 +61,7 @@ export default function DataroomGroupPage() {
                     headers: {
                       "Content-Type": "application/json",
                     },
-                    body: JSON.stringify({ name: updateData?.name.trim() }),
+                    body: JSON.stringify(updateData),
                   },
                 ).then(async (res) => {
                   if (res.status === 200) {

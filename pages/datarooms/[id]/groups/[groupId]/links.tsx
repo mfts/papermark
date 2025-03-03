@@ -1,16 +1,20 @@
 import { DataroomHeader } from "@/components/datarooms/dataroom-header";
 import { DataroomNavigation } from "@/components/datarooms/dataroom-navigation";
 import { GroupHeader } from "@/components/datarooms/groups/group-header";
-import GroupMemberTable from "@/components/datarooms/groups/group-member-table";
 import { GroupNavigation } from "@/components/datarooms/groups/group-navigation";
 import AppLayout from "@/components/layouts/app";
+import LinksTable from "@/components/links/links-table";
 
 import { useDataroom } from "@/lib/swr/use-dataroom";
-import { useDataroomGroup } from "@/lib/swr/use-dataroom-groups";
+import {
+  useDataroomGroup,
+  useDataroomGroupLinks,
+} from "@/lib/swr/use-dataroom-groups";
 
-export default function DataroomGroupPage() {
+export default function DataroomGroupLinksPage() {
   const { dataroom } = useDataroom();
   const { viewerGroup } = useDataroomGroup();
+  const { links, loading } = useDataroomGroupLinks();
 
   if (!dataroom || !viewerGroup) {
     return <div>Loading...</div>;
@@ -36,10 +40,11 @@ export default function DataroomGroupPage() {
             viewerGroupId={viewerGroup.id}
           />
           <div className="grid gap-6">
-            <GroupMemberTable
-              dataroomId={dataroom.id}
-              groupId={viewerGroup.id}
-            />
+            {loading ? (
+              <div>Loading...</div>
+            ) : (
+              <LinksTable links={links} targetType={"DATAROOM"} />
+            )}
           </div>
         </div>
       </div>

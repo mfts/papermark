@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import { PlanEnum } from "@/ee/stripe/constants";
 import {
   FileJson,
   FileSlidersIcon,
@@ -8,10 +9,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-import {
-  PlanEnum,
-  UpgradePlanModal,
-} from "@/components/billing/upgrade-plan-modal";
+import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
