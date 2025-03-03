@@ -193,16 +193,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               {/*
                * if user is free and showProBanner is true show pro banner
                */}
-              {userPlan === "free" && !userTrial && showProBanner ? (
+              {userPlan === "free" && showProBanner ? (
                 <ProBanner setShowProBanner={setShowProBanner} />
               ) : null}
               {/*
                * if user is pro and showProAnnualBanner is true show pro annual banner
                */}
-              {userPlan === "pro" &&
-              !isAnnualPlan &&
-              !userTrial &&
-              showProAnnualBanner ? (
+              {userPlan === "pro" && !isAnnualPlan && showProAnnualBanner ? (
                 <ProAnnualBanner
                   setShowProAnnualBanner={setShowProAnnualBanner}
                 />
