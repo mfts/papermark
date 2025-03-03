@@ -91,7 +91,12 @@ export const LinkOptions = ({
 
       <EmailAuthenticationSection
         {...{ data, setData }}
-        isAllowed={isTrial || isPro || isBusiness || isDatarooms}
+        isAllowed={
+          isTrial ||
+          (isPro && allowAdvancedLinkControls) ||
+          isBusiness ||
+          isDatarooms
+        }
         handleUpgradeStateChange={handleUpgradeStateChange}
       />
       {data.audienceType === LinkAudienceType.GENERAL ? (

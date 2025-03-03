@@ -33,6 +33,7 @@ const FeatureItem = ({ feature }: { feature: Feature }) => {
     return (
       <div className={cn("justify-between gap-x-8", baseClasses)}>
         <div className="flex items-center gap-x-3">
+          <CheckIcon className="h-5 w-5 flex-shrink-0 text-[#fb7a00]" />
           <span>{feature.text}</span>
         </div>
         {feature.tooltip && (

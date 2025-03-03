@@ -785,10 +785,7 @@ export default function DocumentHeader({
               <DropdownMenuItem
                 onClick={() =>
                   isFree
-                    ? handleUpgradeClick(
-                        PlanEnum.Business,
-                        "export-document-visits",
-                      )
+                    ? handleUpgradeClick(PlanEnum.Pro, "export-document-visits")
                     : exportVisitCounts(prismaDocument)
                 }
               >
