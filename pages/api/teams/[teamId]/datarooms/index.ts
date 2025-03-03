@@ -84,15 +84,6 @@ export default async function handle(
             },
           },
         },
-        include: {
-          brand: {
-            select: {
-              accentColor: true,
-              brandColor: true,
-              logo: true,
-            },
-          },
-        },
       });
 
       if (!team) {
@@ -121,13 +112,6 @@ export default async function handle(
           name: name,
           teamId: teamId,
           pId: pId,
-          brand: {
-            create: {
-              accentColor: team.brand?.accentColor,
-              brandColor: team.brand?.brandColor,
-              logo: team.brand?.logo,
-            },
-          },
         },
       });
 
