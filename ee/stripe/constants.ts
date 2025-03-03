@@ -84,7 +84,6 @@ export const BASE_FEATURES: Record<PlanEnum, PlanFeatures> = {
         usersIncluded: 3,
       },
       { id: "datarooms", text: "Unlimited data rooms" },
-      { id: "documents", text: "1000 documents" },
       {
         id: "custom-domain",
         text: "Custom domain for documents",
