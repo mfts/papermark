@@ -138,7 +138,7 @@ export default function LinkSheet({
     mutate: mutateGroups,
   } = useDataroomGroups();
   const teamInfo = useTeam();
-  const { plan, trial } = usePlan();
+  const { isFree, isDatarooms, isDataroomsPlus, isTrial } = usePlan();
   const analytics = useAnalytics();
   const [data, setData] = useState<DEFAULT_LINK_TYPE>(
     DEFAULT_LINK_PROPS(linkType, groupId),
@@ -151,7 +151,7 @@ export default function LinkSheet({
   }, [currentLink]);
 
   const handlePreviewLink = async (link: LinkWithViews) => {
-    if (link.domainId && plan === "free") {
+    if (link.domainId && isFree) {
       toast.error("You need to upgrade to preview this link");
       return;
     }
@@ -390,7 +390,7 @@ export default function LinkSheet({
                         <TabsTrigger value={LinkAudienceType.GENERAL}>
                           General
                         </TabsTrigger>
-                        {plan === "datarooms" || trial ? (
+                        {isDatarooms || isDataroomsPlus || isTrial ? (
                           <TabsTrigger value={LinkAudienceType.GROUP}>
                             Group
                           </TabsTrigger>
@@ -429,7 +429,6 @@ export default function LinkSheet({
                         <div className="space-y-2">
                           <DomainSection
                             {...{ data, setData, domains }}
-                            plan={plan}
                             linkType={linkType}
                             editLink={!!currentLink}
                           />
@@ -541,7 +540,6 @@ export default function LinkSheet({
                         <div className="space-y-2">
                           <DomainSection
                             {...{ data, setData, domains }}
-                            plan={plan}
                             linkType={linkType}
                             editLink={!!currentLink}
                           />

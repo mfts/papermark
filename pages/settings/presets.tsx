@@ -531,7 +531,7 @@ export default function Presets() {
                 </div>
 
                 <div className="flex justify-end">
-                  {plan === "free" || plan === "pro" || !isTrial ? (
+                  {(plan === "free" || plan === "pro") && !isTrial ? (
                     <UpgradePlanModal
                       clickedPlan={PlanEnum.Business}
                       trigger={"presets_page"}

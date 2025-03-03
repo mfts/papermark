@@ -19,8 +19,7 @@ export default function Settings() {
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
 
-  const { plan } = usePlan();
-  const isDataroomsPlan = plan === "datarooms";
+  const { isDatarooms, isDataroomsPlus } = usePlan();
 
   if (!dataroom) {
     return <div>Loading...</div>;
@@ -85,7 +84,7 @@ export default function Settings() {
               }
             />
             <DuplicateDataroom dataroomId={dataroom.id} teamId={teamId} />
-            {isDataroomsPlan ? (
+            {isDatarooms || isDataroomsPlus ? (
               <DeleteDataroom
                 dataroomId={dataroom.id}
                 dataroomName={dataroom.name}
