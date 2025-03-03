@@ -67,12 +67,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     }
   }, []);
 
-  console.log("userPlan", userPlan);
-  console.log("userTrial", userTrial);
-
-  console.log("linksLimit", linksLimit);
-  console.log("documentsLimit", documentsLimit);
-
   const data = {
     navMain: [
       {
