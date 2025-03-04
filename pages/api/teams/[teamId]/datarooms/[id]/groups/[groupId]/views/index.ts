@@ -36,7 +36,7 @@ export default async function handle(
           id: teamId,
           users: {
             some: {
-              userId: (session.user as CustomUser).id,
+              userId: userId,
             },
           },
         },
