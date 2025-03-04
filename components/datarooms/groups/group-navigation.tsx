@@ -76,7 +76,7 @@ export const GroupNavigation = ({
         className={cn(
           "flex items-center gap-x-2 rounded-md p-2 text-primary hover:bg-muted",
           {
-            "bg-muted font-medium": router.pathname.includes("group-analytic"),
+            "bg-muted font-medium": router.pathname.includes("group-analytics"),
           },
         )}
       >
