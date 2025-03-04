@@ -336,23 +336,31 @@ export default function ImageViewer({
                 src={file}
                 alt="Image 1"
               />
+              {/* Add Watermark Component */}
+              {watermarkConfig ? (
+                <div className="pointer-events-none absolute flex h-full w-full items-center justify-center [&>svg]:!top-auto">
+                  <SVGWatermark
+                    config={watermarkConfig}
+                    viewerData={{
+                      email: viewerEmail,
+                      date: new Date().toLocaleDateString(),
+                      time: new Date().toLocaleTimeString(),
+                      link: linkName,
+                      ipAddress: ipAddress,
+                    }}
+                    documentDimensions={{
+                      width: imageDimensions?.width
+                        ? scale * imageDimensions?.width
+                        : 0,
+                      height: imageDimensions?.height
+                        ? scale * imageDimensions?.height
+                        : 0,
+                    }}
+                    pageIndex={0}
+                  />
+                </div>
+              ) : null}
             </div>
-
-            {/* Add Watermark Component */}
-            {watermarkConfig ? (
-              <SVGWatermark
-                config={watermarkConfig}
-                viewerData={{
-                  email: viewerEmail,
-                  date: new Date().toLocaleDateString(),
-                  time: new Date().toLocaleTimeString(),
-                  link: linkName,
-                  ipAddress: ipAddress,
-                }}
-                documentDimensions={imageDimensions ?? { width: 0, height: 0 }}
-                pageIndex={0}
-              />
-            ) : null}
           </div>
         </div>
 

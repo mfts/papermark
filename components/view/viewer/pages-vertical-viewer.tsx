@@ -201,7 +201,7 @@ export default function PagesVerticalViewer({
     scaleFactor: number;
   }) => {
     const containerHeight = imageDimensions[pageNumber - 1]
-      ? imageDimensions[pageNumber - 1]!.height
+      ? scale * imageDimensions[pageNumber - 1]!.height
       : window.innerHeight - 64;
 
     // Add a safety check to prevent division by zero
