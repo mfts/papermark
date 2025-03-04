@@ -87,7 +87,7 @@ export async function customerSubsciptionUpdated(
     await prisma.team.update({
       where: { stripeId },
       data: {
-        plan: plan.slug,
+        plan: `${plan.slug}${isOldAccount ? "+old" : ""}`,
         subscriptionId,
         startsAt,
         endsAt,
