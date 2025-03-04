@@ -19,8 +19,7 @@ export default function Settings() {
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
 
-  const { plan } = usePlan();
-  const isDataroomsPlan = plan === "datarooms";
+  const { isDatarooms, isDataroomsPlus } = usePlan();
 
   if (!dataroom) {
     return <div>Loading...</div>;
@@ -58,10 +57,10 @@ export default function Settings() {
               description="This is the name of your data room on Papermark."
               inputAttrs={{
                 name: "name",
-                defaultValue: dataroom.name,
                 placeholder: "My Dataroom",
                 maxLength: 32,
               }}
+              defaultValue={dataroom.name}
               helpText="Max 32 characters"
               handleSubmit={(updateData) =>
                 fetch(`/api/teams/${teamId}/datarooms/${dataroom.id}`, {
@@ -69,7 +68,7 @@ export default function Settings() {
                   headers: {
                     "Content-Type": "application/json",
                   },
-                  body: JSON.stringify({ name: updateData.name.trim() }),
+                  body: JSON.stringify(updateData),
                 }).then(async (res) => {
                   if (res.status === 200) {
                     await Promise.all([
@@ -85,7 +84,7 @@ export default function Settings() {
               }
             />
             <DuplicateDataroom dataroomId={dataroom.id} teamId={teamId} />
-            {isDataroomsPlan ? (
+            {isDatarooms || isDataroomsPlus ? (
               <DeleteDataroom
                 dataroomId={dataroom.id}
                 dataroomName={dataroom.name}

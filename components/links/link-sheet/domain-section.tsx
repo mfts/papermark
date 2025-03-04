@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/select";
 
 import { BLOCKED_PATHNAMES } from "@/lib/constants";
-import { BasePlan } from "@/lib/swr/use-billing";
+import { BasePlan, usePlan } from "@/lib/swr/use-billing";
 import useLimits from "@/lib/swr/use-limits";
 import { cn } from "@/lib/utils";
 
@@ -28,20 +28,20 @@ export default function DomainSection({
   data,
   setData,
   domains,
-  plan,
   linkType,
   editLink,
 }: {
   data: DEFAULT_LINK_TYPE;
   setData: Dispatch<SetStateAction<DEFAULT_LINK_TYPE>>;
   domains?: Domain[];
-  plan?: BasePlan | null;
   linkType: "DOCUMENT_LINK" | "DATAROOM_LINK";
   editLink?: boolean;
 }) {
   const [isModalOpen, setModalOpen] = useState(false);
   const teamInfo = useTeam();
   const { limits } = useLimits();
+
+  const { isBusiness, isDatarooms, isDataroomsPlus } = usePlan();
 
   const handleDomainChange = (value: string) => {
     // const value = event.target.value;
@@ -102,7 +102,7 @@ export default function DomainSection({
               papermark.io
             </SelectItem>
             {linkType === "DOCUMENT_LINK" &&
-              (plan === "business" || (limits && limits.customDomainOnPro)) && (
+              (isBusiness || (limits && limits.customDomainOnPro)) && (
                 <>
                   {domains?.map(({ slug }) => (
                     <SelectItem
@@ -116,7 +116,8 @@ export default function DomainSection({
                 </>
               )}
             {linkType === "DATAROOM_LINK" &&
-              (plan === "datarooms" ||
+              (isDatarooms ||
+                isDataroomsPlus ||
                 (limits && limits.customDomainInDataroom)) && (
                 <>
                   {domains?.map(({ slug }) => (
@@ -149,7 +150,13 @@ export default function DomainSection({
             name="key"
             required
             value={data.slug || ""}
-            pattern="[\p{L}\p{N}\p{Pd}]+"
+            pattern="^[a-zA-Z0-9-]+$"
+            onKeyDown={(e) => {
+              // Allow navigation keys, backspace, delete, etc.
+              if (e.key.length === 1 && !/^[a-zA-Z0-9-]$/.test(e.key)) {
+                e.preventDefault();
+              }
+            }}
             onInvalid={(e) => {
               const currentValue = e.currentTarget.value;
               const isBlocked = BLOCKED_PATHNAMES.includes(`/${currentValue}`);
@@ -171,7 +178,7 @@ export default function DomainSection({
             )}
             placeholder="deck"
             onChange={(e) => {
-              const currentValue = e.target.value;
+              const currentValue = e.target.value.replace(/[^a-zA-Z0-9-]/g, "");
               const isBlocked = BLOCKED_PATHNAMES.includes(`/${currentValue}`);
 
               if (isBlocked) {
