@@ -46,7 +46,7 @@ export default function GenerateIndexDialog({
   disabled = false,
 }: GenerateIndexDialogProps) {
   const { links } = useDataroomLinks();
-  const { plan, trial } = usePlan();
+  const { isDatarooms, isDataroomsPlus, isTrial } = usePlan();
   const analytics = useAnalytics();
 
   const [isLoading, setIsLoading] = useState(false);
@@ -55,7 +55,7 @@ export default function GenerateIndexDialog({
     useState<IndexFileFormat>("excel");
   const [isOpen, setIsOpen] = useState(false);
 
-  const hasDataroomsPlan = plan === "datarooms" || trial;
+  const hasDataroomsPlan = isDatarooms || isDataroomsPlus || isTrial;
 
   const handleGenerateIndex = async () => {
     if (!hasDataroomsPlan) {

@@ -28,20 +28,18 @@ import { daysLeft } from "@/lib/utils";
 
 export default function DataroomsPage() {
   const { datarooms } = useDatarooms();
-  const { plan, trial } = usePlan();
+  const { isFree, isPro, isBusiness, isDatarooms, isDataroomsPlus, isTrial } =
+    usePlan();
   const { limits } = useLimits();
   const router = useRouter();
 
   const numDatarooms = datarooms?.length ?? 0;
   const limitDatarooms = limits?.datarooms ?? 1;
 
-  const isFree = plan === "free";
-  const isPro = plan === "pro";
-  const isBusiness = plan === "business";
-  const isDatarooms = plan === "datarooms";
-  const isTrial = !!trial;
   const canCreateUnlimitedDatarooms =
-    isDatarooms || (isBusiness && numDatarooms < limitDatarooms);
+    isDatarooms ||
+    isDataroomsPlus ||
+    (isBusiness && numDatarooms < limitDatarooms);
 
   useEffect(() => {
     if (!isTrial && (isFree || isPro)) router.push("/documents");
@@ -72,7 +70,11 @@ export default function DataroomsPage() {
                   <span>Upgrade to Add Data Room</span>
                 </Button>
               </UpgradePlanModal>
-            ) : isTrial && datarooms && !isBusiness && !isDatarooms ? (
+            ) : isTrial &&
+              datarooms &&
+              !isBusiness &&
+              !isDatarooms &&
+              !isDataroomsPlus ? (
               <div className="flex items-center gap-x-4">
                 <div className="text-sm text-destructive">
                   <span>Dataroom Trial: </span>
@@ -92,7 +94,7 @@ export default function DataroomsPage() {
                   </Button>
                 </UpgradePlanModal>
               </div>
-            ) : isBusiness || isDatarooms ? (
+            ) : isBusiness || isDatarooms || isDataroomsPlus ? (
               <AddDataroomModal>
                 <Button
                   className="group flex flex-1 items-center justify-start gap-x-3 px-3 text-left"

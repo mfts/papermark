@@ -45,12 +45,12 @@ export default function EmailAuthenticationSection({
         enabled={enabled}
         action={handleEnableAuthentication}
         isAllowed={isAllowed}
-        requiredPlan="pro"
+        requiredPlan="business"
         upgradeAction={() =>
           handleUpgradeStateChange({
             state: true,
             trigger: "link_sheet_email_auth_section",
-            plan: "Pro",
+            plan: "Business",
           })
         }
       />
