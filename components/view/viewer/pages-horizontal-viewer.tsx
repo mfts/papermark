@@ -639,12 +639,14 @@ export default function PagesHorizontalViewer({
                           link: linkName,
                           ipAddress: ipAddress,
                         }}
-                        documentDimensions={
-                          imageDimensions[index] || {
-                            width: 0,
-                            height: 0,
-                          }
-                        }
+                        documentDimensions={{
+                          width: imageDimensions[index]?.width
+                            ? scale * imageDimensions[index]?.width
+                            : 0,
+                          height: imageDimensions[index]?.height
+                            ? scale * imageDimensions[index]?.height
+                            : 0,
+                        }}
                         pageIndex={index}
                       />
                     ) : null}
