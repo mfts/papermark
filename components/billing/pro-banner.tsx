@@ -1,5 +1,6 @@
 import { Dispatch, SetStateAction } from "react";
 
+import { PlanEnum } from "@/ee/stripe/constants";
 import Cookies from "js-cookie";
 import { usePlausible } from "next-plausible";
 
@@ -40,7 +41,10 @@ export default function ProBanner({
         Join to unlock custom branding, domains, team members, and data rooms.
       </p>
       <div className="flex">
-        <UpgradePlanModal clickedPlan={"Business"} trigger={"pro_banner"}>
+        <UpgradePlanModal
+          clickedPlan={PlanEnum.Business}
+          trigger={"pro_banner"}
+        >
           <Button
             type="button"
             className="grow"

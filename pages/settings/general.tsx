@@ -1,47 +1,14 @@
 import { useTeam } from "@/context/team-context";
-import {
-  type CredentialCreationOptionsJSON,
-  create,
-} from "@github/webauthn-json";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
 import AppLayout from "@/components/layouts/app";
 import DeleteTeam from "@/components/settings/delete-team";
 import { SettingsHeader } from "@/components/settings/settings-header";
-import Passkey from "@/components/shared/icons/passkey";
-import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 
 export default function General() {
   const teamInfo = useTeam();
-
-  async function registerPasskey() {
-    const createOptionsResponse = await fetch("/api/passkeys/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ start: true, finish: false, credential: null }),
-    });
-
-    const { createOptions } = await createOptionsResponse.json();
-
-    // Open "register passkey" dialog
-    const credential = await create(
-      createOptions as CredentialCreationOptionsJSON,
-    );
-
-    const response = await fetch("/api/passkeys/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ start: false, finish: true, credential }),
-    });
-
-    if (response.ok) {
-      toast.success("Registered passkey successfully!");
-      return;
-    }
-    // Now the user has registered their passkey and can use it to log in.
-  }
 
   return (
     <AppLayout>
@@ -62,10 +29,10 @@ export default function General() {
             description="This is the name of your team on Papermark."
             inputAttrs={{
               name: "name",
-              defaultValue: teamInfo?.currentTeam?.name,
               placeholder: "My Personal Team",
               maxLength: 32,
             }}
+            defaultValue={teamInfo?.currentTeam?.name ?? ""}
             helpText="Max 32 characters."
             handleSubmit={(updateData) =>
               fetch(`/api/teams/${teamInfo?.currentTeam?.id}/update-name`, {
@@ -73,7 +40,7 @@ export default function General() {
                 headers: {
                   "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ name: updateData?.name.trim() }),
+                body: JSON.stringify(updateData),
               }).then(async (res) => {
                 if (res.status === 200) {
                   await Promise.all([
@@ -88,26 +55,6 @@ export default function General() {
               })
             }
           />
-
-          <div className="rounded-lg border border-muted p-10">
-            <div className="space-y-6">
-              <div className="space-y-3">
-                <h2 className="text-xl font-medium">Register a passkey</h2>
-                <p className="mt-3 text-sm text-secondary-foreground">
-                  Never use a password or oauth again. Register a passkey to
-                  make logging in easy.
-                </p>
-              </div>
-              <Button
-                onClick={() => registerPasskey()}
-                className="flex items-center justify-center space-x-2"
-              >
-                <Passkey className="h-4 w-4" />
-                <span>Register a new passkey</span>
-              </Button>
-            </div>
-          </div>
-
           <DeleteTeam />
         </div>
       </main>

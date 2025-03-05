@@ -12,10 +12,19 @@ export type LimitProps = {
   customDomainOnPro: boolean;
   customDomainInDataroom: boolean;
   advancedLinkControlsOnPro: boolean | undefined | null;
+  watermarkOnBusiness: boolean | undefined | null;
   usage: {
     documents: number;
     links: number;
   };
+  fileSizeLimits:
+    | {
+        video: number | undefined;
+        document: number | undefined;
+        image: number | undefined;
+        excel: number | undefined;
+      }
+    | undefined;
 };
 
 export function useLimits() {

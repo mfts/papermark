@@ -142,11 +142,12 @@ export const NotionPage = ({
           setSubTitle(
             firstBlock?.value?.properties?.title?.[0]?.[0] || "Untitled",
           );
+          // Scroll to top when changing subpages
+          window.scrollTo({ top: 0, behavior: "smooth" });
           return;
         }
 
         setLoading(true);
-        console.log("Fetching subPageId", pageId);
         try {
           const response = await fetch("/api/file/notion", {
             method: "POST",
@@ -164,18 +165,21 @@ export const NotionPage = ({
           setSubTitle(
             firstBlock?.value?.properties?.title?.[0]?.[0] || "Untitled",
           );
+          // Scroll to top after loading new subpage
+          window.scrollTo({ top: 0, behavior: "smooth" });
         } catch (error) {
           console.error("Error fetching subpage:", error);
         } finally {
           setLoading(false);
         }
       } else {
-        console.log("subPageId is", pageId);
         setRecordMapState(recordMap);
         // get the first item in the recordMap.block object
         const firstBlockId = Object.keys(recordMap.block)[0];
         const firstBlock = recordMap.block[firstBlockId];
         setTitle(firstBlock?.value?.properties?.title?.[0]?.[0] || "Untitled");
+        // Scroll to top when returning to main page
+        window.scrollTo({ top: 0, behavior: "smooth" });
       }
     },
     [subPageId, recordMap],
@@ -185,33 +189,6 @@ export const NotionPage = ({
   useMemo(() => {
     fetchSubPage(subPageId);
   }, [subPageId, fetchSubPage]);
-
-  // useEffect(() => {
-  //   const fetchSubPage = async () => {
-  //     if (subPageId) {
-  //       setLoading(true);
-  //       console.log("subPageId", subPageId);
-  //       const recordMap = await fetch("/api/file/notion", {
-  //         method: "POST",
-  //         body: JSON.stringify({ pageId: subPageId }),
-  //         headers: {
-  //           "Content-Type": "application/json",
-  //         },
-  //       });
-  //       setRecordMapState(await recordMap.json());
-  //       setLoading(false);
-  //     } else {
-  //       console.log("subPageId is", subPageId);
-  //       setRecordMapState(recordMap);
-  //     }
-
-  //     const duration = Date.now() - startTimeRef.current;
-  //     trackPageView(duration);
-  //     startTimeRef.current = Date.now();
-  //   };
-
-  //   fetchSubPage();
-  // }, [subPageId]);
 
   useEffect(() => {
     const handleBeforeUnload = () => {
@@ -227,7 +204,6 @@ export const NotionPage = ({
   }, [subPageId]);
 
   async function trackPageView(duration: number = 0) {
-    console.log("tracking page view");
     if (isPreview) return;
 
     await fetch("/api/record_view", {
@@ -279,6 +255,62 @@ export const NotionPage = ({
   //   };
   // }, [maxScrollPercentage]);
 
+  // Add a function to handle smooth scrolling to elements
+  const scrollToHashElement = useCallback(() => {
+    const hash = window.location.hash;
+    if (hash) {
+      // Remove the # from the hash
+      const elementId = hash.slice(1);
+
+      // Create observer to watch for position changes
+      const observer = new MutationObserver((mutations, obs) => {
+        const element = document.getElementById(elementId);
+        if (element) {
+          // Get current position
+          const rect = element.getBoundingClientRect();
+          const absoluteTop = window.scrollY + rect.top; // Account for header
+
+          window.scrollTo({
+            top: absoluteTop,
+            behavior: "smooth",
+          });
+        }
+      });
+
+      // Start observing the document with the configured parameters
+      observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        characterData: true,
+      });
+
+      // Always observe for at least 2 seconds to catch any layout shifts
+      setTimeout(() => {
+        const element = document.getElementById(elementId);
+        if (element) {
+          const rect = element.getBoundingClientRect();
+          const absoluteTop = window.scrollY + rect.top;
+          window.scrollTo({
+            top: absoluteTop,
+            behavior: "smooth",
+          });
+        }
+        observer.disconnect();
+      }, 2000);
+    }
+  }, []);
+
+  // Handle initial load and hash changes
+  useEffect(() => {
+    scrollToHashElement();
+
+    window.addEventListener("hashchange", scrollToHashElement);
+    return () => {
+      window.removeEventListener("hashchange", scrollToHashElement);
+    };
+  }, [scrollToHashElement]);
+
   if (!recordMap) {
     return null;
   }
@@ -305,10 +337,7 @@ export const NotionPage = ({
                 className="cursor-pointer underline underline-offset-4 hover:font-medium"
                 onClick={() => setSubPageId(null)}
                 style={{
-                  color:
-                    brand && brand.brandColor
-                      ? determineTextColor(brand.brandColor)
-                      : "white",
+                  color: determineTextColor(brand?.brandColor),
                 }}
               >
                 {title}
@@ -321,10 +350,7 @@ export const NotionPage = ({
               <BreadcrumbPage
                 className="font-medium"
                 style={{
-                  color:
-                    brand && brand.brandColor
-                      ? determineTextColor(brand.brandColor)
-                      : "white",
+                  color: determineTextColor(brand?.brandColor),
                 }}
               >
                 {subTitle}

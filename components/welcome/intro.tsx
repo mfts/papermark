@@ -1,6 +1,6 @@
 import { useRouter } from "next/router";
 
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 
 import { STAGGER_CHILD_VARIANTS } from "@/lib/constants";
 

@@ -1,7 +1,7 @@
 import { pdfjs } from "react-pdf";
 import * as XLSX from "xlsx";
 
-pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
+pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
 export const getPagesCount = async (arrayBuffer: ArrayBuffer) => {
   const pdf = await pdfjs.getDocument(arrayBuffer).promise;

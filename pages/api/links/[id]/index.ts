@@ -9,7 +9,10 @@ import {
 } from "@/lib/api/links/link-data";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
-import { generateEncrpytedPassword } from "@/lib/utils";
+import {
+  decryptEncrpytedPassword,
+  generateEncrpytedPassword,
+} from "@/lib/utils";
 
 import { authOptions } from "../../auth/[...nextauth]";
 
@@ -58,6 +61,26 @@ export default async function handle(
           groupId: true,
           audienceType: true,
           teamId: true,
+          team: {
+            select: {
+              plan: true,
+            },
+          },
+          customFields: {
+            select: {
+              id: true,
+              type: true,
+              identifier: true,
+              label: true,
+              placeholder: true,
+              required: true,
+              disabled: true,
+              orderIndex: true,
+            },
+            orderBy: {
+              orderIndex: "asc",
+            },
+          },
         },
       });
 
@@ -96,9 +119,16 @@ export default async function handle(
         brand = data.brand;
       }
 
+      const teamPlan = link.team?.plan || "free";
+
       const returnLink = {
         ...link,
         ...linkData,
+        ...(teamPlan === "free" && {
+          customFields: [], // reset custom fields for free plan
+          enableAgreement: false,
+          enableWatermark: false,
+        }),
       };
 
       return res.status(200).json({ linkType, link: returnLink, brand });
@@ -243,6 +273,23 @@ export default async function handle(
         metaDescription: linkData.metaDescription || null,
         metaImage: linkData.metaImage || null,
         metaFavicon: linkData.metaFavicon || null,
+        ...(linkData.customFields && {
+          customFields: {
+            deleteMany: {}, // Delete all existing custom fields
+            createMany: {
+              data: linkData.customFields.map((field: any, index: number) => ({
+                type: field.type,
+                identifier: field.identifier,
+                label: field.label,
+                placeholder: field.placeholder,
+                required: field.required,
+                disabled: field.disabled,
+                orderIndex: index,
+              })),
+              skipDuplicates: true,
+            },
+          },
+        }),
         enableQuestion: linkData.enableQuestion,
         ...(linkData.enableQuestion && {
           feedback: {
@@ -289,6 +336,11 @@ export default async function handle(
     await fetch(
       `${process.env.NEXTAUTH_URL}/api/revalidate?secret=${process.env.REVALIDATE_TOKEN}&linkId=${id}&hasDomain=${updatedLink.domainId ? "true" : "false"}`,
     );
+
+    // Decrypt the password for the updated link
+    if (updatedLink.password !== null) {
+      updatedLink.password = decryptEncrpytedPassword(updatedLink.password);
+    }
 
     return res.status(200).json(updatedLink);
   } else if (req.method == "DELETE") {

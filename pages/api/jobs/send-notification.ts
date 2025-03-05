@@ -37,6 +37,7 @@ export default async function handle(
     viewType: "DOCUMENT_VIEW" | "DATAROOM_VIEW";
     viewerEmail: string | null;
     linkId: string;
+    link: { name: string | null } | null;
     document: {
       teamId: string | null;
       id: string;
@@ -59,6 +60,11 @@ export default async function handle(
         viewType: true,
         viewerEmail: true,
         linkId: true,
+        link: {
+          select: {
+            name: true,
+          },
+        },
         document: {
           select: {
             teamId: true,
@@ -121,6 +127,7 @@ export default async function handle(
         ownerEmail: adminEmail!,
         documentId: view.document!.id,
         documentName: view.document!.name,
+        linkName: view.link!.name || `Link #${view.linkId.slice(-5)}`,
         viewerEmail: view.viewerEmail,
         teamMembers: users
           .map((user) => user.user.email!)

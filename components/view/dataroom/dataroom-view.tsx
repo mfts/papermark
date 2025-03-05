@@ -1,15 +1,11 @@
-import dynamic from "next/dynamic";
 import { useRouter } from "next/router";
 
 import React, { useEffect, useRef, useState } from "react";
 
 import { DataroomBrand } from "@prisma/client";
 import Cookies from "js-cookie";
-import { usePlausible } from "next-plausible";
-import { ExtendedRecordMap } from "notion-types";
 import { toast } from "sonner";
 
-import { NotionPage } from "@/components/NotionPage";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import AccessForm, {
   DEFAULT_ACCESS_FORM_DATA,
@@ -18,25 +14,10 @@ import AccessForm, {
 
 import { useAnalytics } from "@/lib/analytics";
 import { SUPPORTED_DOCUMENT_SIMPLE_TYPES } from "@/lib/constants";
-import { LinkWithDataroom, NotionTheme, WatermarkConfig } from "@/lib/types";
+import { LinkWithDataroom } from "@/lib/types";
 
 import DataroomViewer from "../DataroomViewer";
-import PagesViewerNew from "../PagesViewerNew";
 import EmailVerificationMessage from "../email-verification-form";
-import AdvancedExcelViewer from "../viewer/advanced-excel-viewer";
-import ImageViewer from "../viewer/image-viewer";
-
-const ExcelViewer = dynamic(
-  () => import("@/components/view/viewer/excel-viewer"),
-  { ssr: false },
-);
-
-type RowData = { [key: string]: any };
-type SheetData = {
-  sheetName: string;
-  columnData: string[];
-  rowData: RowData[];
-};
 
 export type TSupportedDocumentSimpleType =
   (typeof SUPPORTED_DOCUMENT_SIMPLE_TYPES)[number];
@@ -48,32 +29,13 @@ export type TDocumentData = {
   documentType: TSupportedDocumentSimpleType;
   documentVersionId: string;
   documentVersionNumber: number;
+  downloadOnly: boolean;
   isVertical?: boolean;
 };
 
-export type DEFAULT_DOCUMENT_VIEW_TYPE = {
+type DEFAULT_DATAROOM_VIEW_TYPE = {
   viewId?: string;
   isPreview?: boolean;
-  dataroomViewId?: string;
-  file?: string | null;
-  pages?:
-    | {
-        file: string;
-        pageNumber: string;
-        embeddedLinks: string[];
-        pageLinks: { href: string; coords: string }[];
-        metadata: { width: number; height: number; scaleFactor: number };
-      }[]
-    | null;
-  sheetData?: SheetData[] | null;
-  notionData?: {
-    recordMap: ExtendedRecordMap | null;
-    theme: NotionTheme | null | undefined;
-  };
-  fileType?: string;
-  ipAddress?: string;
-  useAdvancedExcelViewer?: boolean;
-  canDownload?: boolean;
   verificationToken?: string;
 };
 
@@ -85,10 +47,11 @@ export default function DataroomView({
   brand,
   token,
   verifiedEmail,
-  useAdvancedExcelViewer,
   previewToken,
   disableEditEmail,
   useCustomAccessForm,
+  isEmbedded,
+  preview,
 }: {
   link: LinkWithDataroom;
   userEmail: string | null | undefined;
@@ -97,10 +60,11 @@ export default function DataroomView({
   brand?: Partial<DataroomBrand> | null;
   token?: string;
   verifiedEmail?: string;
-  useAdvancedExcelViewer?: boolean;
   previewToken?: string;
   disableEditEmail?: boolean;
   useCustomAccessForm?: boolean;
+  isEmbedded?: boolean;
+  preview?: boolean;
 }) {
   const {
     linkType,
@@ -110,7 +74,6 @@ export default function DataroomView({
     enableAgreement,
   } = link;
 
-  const plausible = usePlausible();
   const analytics = useAnalytics();
   const router = useRouter();
   const [folderId, setFolderId] = useState<string | null>(null);
@@ -118,7 +81,7 @@ export default function DataroomView({
   const didMount = useRef<boolean>(false);
   const [submitted, setSubmitted] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [viewData, setViewData] = useState<DEFAULT_DOCUMENT_VIEW_TYPE>({
+  const [viewData, setViewData] = useState<DEFAULT_DATAROOM_VIEW_TYPE>({
     viewId: "",
   });
   const [data, setData] = useState<DEFAULT_ACCESS_FORM_TYPE>(
@@ -126,18 +89,12 @@ export default function DataroomView({
   );
   const [verificationRequested, setVerificationRequested] =
     useState<boolean>(false);
-  const [dataroomVerified, setDataroomVerified] = useState<boolean>(false);
-  const [documentData, setDocumentData] = useState<TDocumentData | null>(null);
   const [verificationToken, setVerificationToken] = useState<string | null>(
     token ?? null,
   );
 
   const [code, setCode] = useState<string | null>(null);
   const [isInvalidCode, setIsInvalidCode] = useState<boolean>(false);
-
-  const [viewType, setViewType] = useState<"DOCUMENT_VIEW" | "DATAROOM_VIEW">(
-    "DATAROOM_VIEW",
-  );
 
   const handleSubmission = async (): Promise<void> => {
     setIsLoading(true);
@@ -150,17 +107,10 @@ export default function DataroomView({
         ...data,
         email: data.email ?? verifiedEmail ?? userEmail ?? null,
         linkId: link.id,
-        documentId: documentData?.id,
-        documentName: documentData?.name,
         userId: userId ?? null,
-        documentVersionId: documentData?.documentVersionId,
-        hasPages: documentData?.hasPages,
-        dataroomVerified: dataroomVerified,
         dataroomId: dataroom?.id,
-        linkType: linkType,
-        dataroomViewId: viewData.dataroomViewId ?? null,
-        viewType: viewType,
-        useAdvancedExcelViewer,
+        linkType: "DATAROOM_LINK",
+        viewType: "DATAROOM_VIEW",
         previewToken,
         code: code ?? undefined,
         token: verificationToken ?? undefined,
@@ -175,60 +125,38 @@ export default function DataroomView({
         setVerificationRequested(true);
         setIsLoading(false);
       } else {
-        const {
-          viewId,
-          file,
-          pages,
-          notionData,
-          sheetData,
-          fileType,
-          isPreview,
-          ipAddress,
-          useAdvancedExcelViewer,
-          canDownload,
-          verificationToken,
-        } = fetchData as DEFAULT_DOCUMENT_VIEW_TYPE;
-        plausible("dataroomViewed"); // track the event
+        const { viewId, isPreview, verificationToken } =
+          fetchData as DEFAULT_DATAROOM_VIEW_TYPE;
+
         analytics.identify(
           userEmail ?? verifiedEmail ?? data.email ?? undefined,
         );
         analytics.capture("Link Viewed", {
           linkId: link.id,
-          documentId: documentData?.id,
           dataroomId: dataroom?.id,
           linkType: linkType,
           viewerId: viewId,
           viewerEmail: data.email ?? verifiedEmail ?? userEmail,
+          isEmbedded,
         });
 
         // set the verification token to the cookie
         if (verificationToken) {
-          Cookies.set("pm_vft", verificationToken, {
-            path: router.asPath.split("?")[0],
-            expires: 1,
-            sameSite: "strict",
-            secure: true,
-          });
+          // Cookies.set("pm_vft", verificationToken, {
+          //   path: router.asPath.split("?")[0],
+          //   expires: 1,
+          //   sameSite: "strict",
+          //   secure: true,
+          // });
           setCode(null);
         }
 
-        setViewData((prev) => ({
+        setViewData({
           viewId,
-          dataroomViewId:
-            viewType === "DATAROOM_VIEW" ? viewId : prev.dataroomViewId,
-          file,
-          pages,
-          notionData,
-          sheetData,
-          fileType,
           isPreview,
-          ipAddress,
-          useAdvancedExcelViewer,
-          canDownload,
-        }));
+        });
         setSubmitted(true);
         setVerificationRequested(false);
-        viewType === "DATAROOM_VIEW" && setDataroomVerified(true);
         setIsLoading(false);
       }
     } else {
@@ -242,7 +170,6 @@ export default function DataroomView({
         setVerificationToken(null);
         setCode(null);
         setIsInvalidCode(true);
-        setDataroomVerified(false);
       }
       setIsLoading(false);
     }
@@ -259,32 +186,12 @@ export default function DataroomView({
   // If link is not submitted and does not have email / password protection, show the access form
   useEffect(() => {
     if (!didMount.current) {
-      if ((!submitted && !isProtected) || token || viewData.dataroomViewId) {
+      if ((!submitted && !isProtected) || token || preview) {
         handleSubmission();
-      }
-      didMount.current = true;
-    }
-  }, [submitted, isProtected, token, viewData.dataroomViewId]);
-
-  useEffect(() => {
-    // Ensure we're not running this logic on initial mount, but only when `documentData` changes thereafter
-    if (didMount.current) {
-      if (documentData !== null) {
-        // Call handleSubmission or any other logic that needs to run when a document is selected
-        handleSubmission();
+        didMount.current = true;
       }
     }
-
-    setViewData((prev) => ({
-      ...prev,
-      pages: undefined,
-      file: undefined,
-      viewId: prev.dataroomViewId,
-      notionData: undefined,
-      ipAddress: undefined,
-    }));
-    // This effect is specifically for handling changes to `documentData` post-mount
-  }, [documentData]);
+  }, [submitted, isProtected, token, preview]);
 
   // Components to render when email is submitted but verification is pending
   if (verificationRequested) {
@@ -318,6 +225,8 @@ export default function DataroomView({
         isLoading={isLoading}
         disableEditEmail={disableEditEmail}
         useCustomAccessForm={useCustomAccessForm}
+        brand={brand}
+        customFields={link.customFields}
       />
     );
   }
@@ -330,114 +239,7 @@ export default function DataroomView({
     );
   }
 
-  if (submitted && documentData) {
-    return viewData.notionData?.recordMap ? (
-      <div className="bg-gray-950">
-        <NotionPage
-          recordMap={viewData.notionData.recordMap}
-          viewId={viewData.viewId}
-          isPreview={viewData.isPreview}
-          linkId={link.id}
-          documentId={documentData.id}
-          documentName={documentData.name}
-          versionNumber={documentData.documentVersionNumber}
-          brand={brand}
-          dataroomId={dataroom.id}
-          theme={viewData.notionData.theme}
-          setDocumentData={setDocumentData}
-          screenshotProtectionEnabled={link.enableScreenshotProtection!}
-        />
-      </div>
-    ) : viewData.fileType === "sheet" && viewData.sheetData ? (
-      <div className="bg-gray-950">
-        <ExcelViewer
-          linkId={link.id}
-          viewId={viewData.viewId}
-          isPreview={viewData.isPreview}
-          documentId={documentData.id}
-          documentName={documentData.name}
-          versionNumber={documentData.documentVersionNumber}
-          sheetData={viewData.sheetData}
-          brand={brand}
-          dataroomId={dataroom.id}
-          setDocumentData={setDocumentData}
-          allowDownload={viewData.canDownload ?? link.allowDownload!}
-          screenshotProtectionEnabled={link.enableScreenshotProtection!}
-        />
-      </div>
-    ) : viewData.fileType === "sheet" && viewData.useAdvancedExcelViewer ? (
-      <div className="bg-gray-950">
-        <AdvancedExcelViewer
-          linkId={link.id}
-          viewId={viewData.viewId}
-          isPreview={viewData.isPreview}
-          documentId={documentData.id}
-          documentName={documentData.name}
-          versionNumber={documentData.documentVersionNumber}
-          file={viewData.file!}
-          allowDownload={viewData.canDownload ?? link.allowDownload!}
-          brand={brand}
-          dataroomId={dataroom.id}
-          setDocumentData={setDocumentData}
-        />
-      </div>
-    ) : viewData.fileType === "image" ? (
-      <div className="bg-gray-950">
-        <ImageViewer
-          file={viewData.file!}
-          linkId={link.id}
-          viewId={viewData.viewId}
-          isPreview={viewData.isPreview}
-          documentId={documentData.id}
-          documentName={documentData.name}
-          allowDownload={viewData.canDownload ?? link.allowDownload!}
-          feedbackEnabled={link.enableFeedback!}
-          screenshotProtectionEnabled={link.enableScreenshotProtection!}
-          versionNumber={documentData.documentVersionNumber}
-          brand={brand}
-          dataroomId={dataroom.id}
-          setDocumentData={setDocumentData}
-          viewerEmail={data.email ?? verifiedEmail ?? userEmail ?? undefined}
-          watermarkConfig={
-            link.enableWatermark
-              ? (link.watermarkConfig as WatermarkConfig)
-              : null
-          }
-          ipAddress={viewData.ipAddress}
-          linkName={link.name ?? `Link #${link.id.slice(-5)}`}
-        />
-      </div>
-    ) : viewData.pages ? (
-      <div className="bg-gray-950">
-        <PagesViewerNew
-          pages={viewData.pages}
-          viewId={viewData.viewId}
-          isPreview={viewData.isPreview}
-          linkId={link.id}
-          documentId={documentData.id}
-          documentName={documentData.name}
-          allowDownload={viewData.canDownload ?? link.allowDownload!}
-          feedbackEnabled={link.enableFeedback!}
-          screenshotProtectionEnabled={link.enableScreenshotProtection!}
-          versionNumber={documentData.documentVersionNumber}
-          brand={brand}
-          dataroomId={dataroom.id}
-          setDocumentData={setDocumentData}
-          isVertical={documentData.isVertical}
-          viewerEmail={data.email ?? verifiedEmail ?? userEmail ?? undefined}
-          watermarkConfig={
-            link.enableWatermark
-              ? (link.watermarkConfig as WatermarkConfig)
-              : null
-          }
-          ipAddress={viewData.ipAddress}
-          linkName={link.name ?? `Link #${link.id.slice(-5)}`}
-        />
-      </div>
-    ) : null;
-  }
-
-  if (submitted && !documentData) {
+  if (submitted) {
     return (
       <div className="bg-gray-950">
         <DataroomViewer
@@ -445,12 +247,8 @@ export default function DataroomView({
           viewId={viewData.viewId}
           isPreview={viewData.isPreview}
           linkId={link.id}
-          dataroomViewId={viewData.dataroomViewId!}
           dataroom={dataroom}
           allowDownload={link.allowDownload!}
-          setDocumentData={setDocumentData}
-          setViewType={setViewType}
-          setDataroomVerified={setDataroomVerified}
           folderId={folderId}
           setFolderId={setFolderId}
         />

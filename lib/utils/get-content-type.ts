@@ -4,6 +4,7 @@ export function getSupportedContentType(contentType: string): string | null {
       return "pdf";
     case "application/vnd.ms-excel":
     case "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
+    case "application/vnd.ms-excel.sheet.macroEnabled.12":
     case "text/csv":
     case "application/vnd.oasis.opendocument.spreadsheet":
       return "sheet";
@@ -22,6 +23,18 @@ export function getSupportedContentType(contentType: string): string | null {
     case "image/jpeg":
     case "image/jpg":
       return "image";
+    case "application/zip":
+    case "application/x-zip-compressed":
+      return "zip";
+    case "video/mp4":
+    case "video/quicktime":
+    case "video/x-msvideo":
+    case "video/webm":
+    case "video/ogg":
+      return "video";
+    case "application/vnd.google-earth.kml+xml":
+    case "application/vnd.google-earth.kmz":
+      return "map";
     default:
       return null;
   }
@@ -37,6 +50,8 @@ export function getExtensionFromContentType(
       return "xls";
     case "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
       return "xlsx";
+    case "application/vnd.ms-excel.sheet.macroEnabled.12":
+      return "xlsm";
     case "text/csv":
       return "csv";
     case "application/vnd.oasis.opendocument.spreadsheet":
@@ -63,32 +78,20 @@ export function getExtensionFromContentType(
       return "jpeg";
     case "image/jpg":
       return "jpg";
-    default:
-      return null;
-  }
-}
-
-export function getExtensionFromSupportedType(
-  supportedType: string,
-): string | null {
-  switch (supportedType) {
-    case "pdf":
-      return "pdf";
-    case "sheet":
-      return "xlsx";
-    default:
-      return null;
-  }
-}
-
-export function getMimeTypeFromSupportedType(
-  supportedType: string,
-): string | null {
-  switch (supportedType) {
-    case "pdf":
-      return "application/pdf";
-    case "sheet":
-      return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+    case "video/mp4":
+      return "mp4";
+    case "video/quicktime":
+      return "mov";
+    case "video/x-msvideo":
+      return "avi";
+    case "video/webm":
+      return "webm";
+    case "video/ogg":
+      return "ogg";
+    case "application/vnd.google-earth.kml+xml":
+      return "kml";
+    case "application/vnd.google-earth.kmz":
+      return "kmz";
     default:
       return null;
   }

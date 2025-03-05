@@ -1,8 +1,12 @@
+import { useRouter } from "next/router";
+
 import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
+import { PlanEnum } from "@/ee/stripe/constants";
 import { toast } from "sonner";
 import { mutate } from "swr";
+import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -31,19 +35,28 @@ export function AddDataroomModal({
   openModal?: boolean;
   setOpenModal?: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
+  const router = useRouter();
   const [dataroomName, setDataroomName] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const [open, setOpen] = useState<boolean>(openModal);
 
   const teamInfo = useTeam();
-  const { plan } = usePlan();
+  const { isFree, isPro } = usePlan();
   const analytics = useAnalytics();
+  const dataroomSchema = z.object({
+    name: z.string().min(3, {
+      message: "Please provide a dataroom name with at least 3 characters.",
+    }),
+  });
 
   const handleSubmit = async (event: any) => {
     event.preventDefault();
     event.stopPropagation();
 
-    if (dataroomName == "") return;
+    const validation = dataroomSchema.safeParse({ name: dataroomName });
+    if (!validation.success) {
+      return toast.error(validation.error.errors[0].message);
+    }
 
     setLoading(true);
 
@@ -68,10 +81,13 @@ export function AddDataroomModal({
         return;
       }
 
+      const { dataroom } = await response.json();
+
       analytics.capture("Dataroom Created", { dataroomName: dataroomName });
-      toast.success("Dataroom successfully created! 🎉");
 
       mutate(`/api/teams/${teamInfo?.currentTeam?.id}/datarooms`);
+      toast.success("Dataroom successfully created! 🎉");
+      router.push(`/datarooms/${dataroom.id}/documents`);
     } catch (error) {
       setLoading(false);
       toast.error("Error adding dataroom. Please try again.");
@@ -84,11 +100,11 @@ export function AddDataroomModal({
   };
 
   // If the team is on a free plan, show the upgrade modal
-  if (plan === "free" || plan === "pro") {
+  if (isFree || isPro) {
     if (children) {
       return (
         <UpgradePlanModal
-          clickedPlan="Data Rooms"
+          clickedPlan={PlanEnum.DataRooms}
           trigger={"add_dataroom_overview"}
         >
           {children}

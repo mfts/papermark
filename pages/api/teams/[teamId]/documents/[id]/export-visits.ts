@@ -4,7 +4,7 @@ import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth/next";
 
 import prisma from "@/lib/prisma";
-import { getViewPageDuration } from "@/lib/tinybird";
+import { getViewPageDuration, getViewUserAgent } from "@/lib/tinybird";
 import { CustomUser } from "@/lib/types";
 
 export default async function handler(
@@ -78,7 +78,24 @@ export default async function handler(
       where: { documentId: docId },
       include: {
         link: { select: { name: true } },
-        agreementResponse: true,
+        agreementResponse: {
+          include: {
+            agreement: {
+              select: {
+                name: true,
+                content: true,
+              },
+            },
+          },
+        },
+        customFieldResponse: {
+          select: {
+            data: true,
+          },
+        },
+      },
+      orderBy: {
+        viewedAt: "desc",
       },
     });
 
@@ -86,57 +103,111 @@ export default async function handler(
       return res.status(404).end("Document has no views");
     }
 
-    // Fetching durations from tinyBird function
-    const durationsPromises = views?.map((view) =>
-      getViewPageDuration({
-        documentId: docId,
-        viewId: view.id,
-        since: 0,
-      }),
+    const isProPlan = team.plan.includes("pro");
+
+    // Create CSV rows array starting with headers
+    const csvRows: string[] = [];
+    const headers = [
+      "Viewed at",
+      "Name",
+      "Email",
+      "Link Name",
+      "Total Visit Duration (s)",
+      "Total Document Completion (%)",
+      "Document version",
+      "Downloaded at",
+      "Verified",
+      "Agreement Accepted",
+      "Agreement Name",
+      "Agreement Content",
+      "Agreement Accepted At",
+      "Viewed from dataroom",
+      "Browser",
+      "OS",
+      "Device",
+    ];
+
+    if (!isProPlan) {
+      headers.push("Country", "City", "Custom Fields");
+    }
+
+    csvRows.push(headers.join(","));
+
+    // Fetch all durations in parallel
+    const durations = await Promise.all(
+      views.map((view) =>
+        getViewPageDuration({
+          documentId: docId,
+          viewId: view.id,
+          since: 0,
+        }),
+      ),
     );
 
-    const durations = await Promise.all(durationsPromises);
-
-    const exportData = views?.map((view: any, index: number) => {
-      // Identifying the document version as per the time we Viewed it.
+    const userAgentData = await Promise.all(
+      views.map((view) =>
+        getViewUserAgent({
+          documentId: docId,
+          viewId: view.id,
+          since: 0,
+        }),
+      ),
+    );
+    // Process each view and add to CSV rows
+    views.forEach((view, index) => {
       const relevantDocumentVersion = document.versions.find(
         (version) => version.createdAt <= view.viewedAt,
       );
 
       const numPages =
         relevantDocumentVersion?.numPages || document.numPages || 0;
-
-      // Calculating the completion rate in percentage.
       const completionRate = numPages
         ? (durations[index].data.length / numPages) * 100
         : 0;
 
-      return {
-        viewedAt: view.viewedAt.toISOString(),
-        viewerName: view.viewerName || "NaN", // If the value is not available we are showing NaN as per csv
-        viewerEmail: view.viewerEmail || "NaN",
-        linkName: view.link?.name || "NaN",
-        totalVisitDuration: durations[index].data.reduce(
-          (total, data) => total + data.sum_duration,
-          0,
-        ),
-        visitCompletion: completionRate.toFixed(2) + "%",
-        documentVersion:
-          relevantDocumentVersion?.versionNumber ||
+      const totalDuration = durations[index].data.reduce(
+        (total, data) => total + data.sum_duration,
+        0,
+      );
+
+      const rowData = [
+        view.viewedAt.toISOString(),
+        view.viewerName || "NaN",
+        view.viewerEmail || "NaN",
+        view.link?.name || "NaN",
+        (totalDuration / 1000.0).toFixed(1),
+        completionRate.toFixed(2) + "%",
+        relevantDocumentVersion?.versionNumber ||
           document.versions[0]?.versionNumber ||
           "NaN",
-        downloadedAt: view.downloadedAt
-          ? view.downloadedAt.toISOString()
-          : "NaN",
-        verified: view.verified ? "Yes" : "No",
-        agreement: view.agreementResponse ? "Yes" : "NaN",
-        dataroom: view.dataroomId ? "Yes" : "No",
-      };
+        view.downloadedAt ? view.downloadedAt.toISOString() : "NaN",
+        view.verified ? "Yes" : "No",
+        view.agreementResponse ? "Yes" : "NaN",
+        view.agreementResponse?.agreement.name || "NaN",
+        view.agreementResponse?.agreement.content || "NaN",
+        view.agreementResponse?.createdAt.toISOString() || "NaN",
+        view.dataroomId ? "Yes" : "No",
+        userAgentData[index]?.data[0]?.browser || "NaN",
+        userAgentData[index]?.data[0]?.os || "NaN",
+        userAgentData[index]?.data[0]?.device || "NaN",
+      ];
+
+      if (!isProPlan) {
+        rowData.push(
+          userAgentData[index]?.data[0]?.country || "NaN",
+          userAgentData[index]?.data[0]?.city || "NaN",
+          view.customFieldResponse?.data
+            ? `"${JSON.stringify(view.customFieldResponse.data).replace(/"/g, '""')}"`
+            : "NaN",
+        );
+      }
+
+      csvRows.push(rowData.join(","));
     });
 
     return res.status(200).json({
       documentName: document.name,
-      visits: exportData,
+      visits: csvRows.join("\n"),
     });
   } catch (error) {
     console.error(error);

@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
+import { PlanEnum } from "@/ee/stripe/constants";
 import { LinkAudienceType, LinkType } from "@prisma/client";
 import { RefreshCwIcon } from "lucide-react";
 import { toast } from "sonner";
@@ -38,10 +39,14 @@ import { useDomains } from "@/lib/swr/use-domains";
 import { LinkWithViews, WatermarkConfig } from "@/lib/types";
 import { convertDataUrlToFile, uploadImage } from "@/lib/utils";
 
+import { CustomFieldData } from "./custom-fields-panel";
 import DomainSection from "./domain-section";
 import { LinkOptions } from "./link-options";
 
-export const DEFAULT_LINK_PROPS = (linkType: LinkType) => ({
+export const DEFAULT_LINK_PROPS = (
+  linkType: LinkType,
+  groupId: string | null = null,
+) => ({
   id: null,
   name: null,
   domain: null,
@@ -69,8 +74,9 @@ export const DEFAULT_LINK_PROPS = (linkType: LinkType) => ({
   showBanner: linkType === LinkType.DOCUMENT_LINK ? true : false,
   enableWatermark: false,
   watermarkConfig: null,
-  audienceType: LinkAudienceType.GENERAL,
-  groupId: null,
+  audienceType: groupId ? LinkAudienceType.GROUP : LinkAudienceType.GENERAL,
+  groupId: groupId,
+  customFields: [],
 });
 
 export type DEFAULT_LINK_TYPE = {
@@ -103,6 +109,7 @@ export type DEFAULT_LINK_TYPE = {
   watermarkConfig: WatermarkConfig | null;
   audienceType: LinkAudienceType;
   groupId: string | null;
+  customFields: CustomFieldData[];
 };
 
 export default function LinkSheet({
@@ -118,31 +125,61 @@ export default function LinkSheet({
   currentLink?: DEFAULT_LINK_TYPE;
   existingLinks?: LinkWithViews[];
 }) {
+  const router = useRouter();
+  const { id: targetId, groupId } = router.query as {
+    id: string;
+    groupId?: string;
+  };
   const { domains } = useDomains();
+
   const {
     viewerGroups,
     loading: isLoadingGroups,
     mutate: mutateGroups,
   } = useDataroomGroups();
   const teamInfo = useTeam();
-  const { plan, trial } = usePlan();
+  const { isFree, isDatarooms, isDataroomsPlus, isTrial } = usePlan();
   const analytics = useAnalytics();
   const [data, setData] = useState<DEFAULT_LINK_TYPE>(
-    DEFAULT_LINK_PROPS(linkType),
+    DEFAULT_LINK_PROPS(linkType, groupId),
   );
   const [isLoading, setIsLoading] = useState<boolean>(false);
-
-  const router = useRouter();
-  const targetId = router.query.id as string;
+  const [isSaving, setIsSaving] = useState<boolean>(false);
 
   useEffect(() => {
-    setData(currentLink || DEFAULT_LINK_PROPS(linkType));
+    setData(currentLink || DEFAULT_LINK_PROPS(linkType, groupId));
   }, [currentLink]);
 
-  const handleSubmit = async (event: any) => {
-    event.preventDefault();
+  const handlePreviewLink = async (link: LinkWithViews) => {
+    if (link.domainId && isFree) {
+      toast.error("You need to upgrade to preview this link");
+      return;
+    }
 
     setIsLoading(true);
+    const response = await fetch(`/api/links/${link.id}/preview`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      toast.error("Failed to generate preview link");
+      setIsLoading(false);
+      return;
+    }
+
+    const { previewToken } = await response.json();
+    const previewLink = `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${link.id}?previewToken=${previewToken}`;
+    setIsLoading(false);
+    window.open(previewLink, "_blank");
+  };
+
+  const handleSubmit = async (event: any, shouldPreview: boolean = false) => {
+    event.preventDefault();
+
+    setIsSaving(true);
 
     // Upload the image if it's a data URL
     let blobUrl: string | null =
@@ -199,7 +236,7 @@ export default function LinkSheet({
       // handle error with toast message
       const { error } = await response.json();
       toast.error(error);
-      setIsLoading(false);
+      setIsSaving(false);
       return;
     }
 
@@ -218,9 +255,64 @@ export default function LinkSheet({
         ),
         false,
       );
+
+      // Handle group changes
+      if (!!groupId && returnedLink.audienceType === LinkAudienceType.GROUP) {
+        // If we're viewing a group page
+        if (currentLink.groupId !== returnedLink.groupId) {
+          // If the link's group has changed
+          if (currentLink.groupId === groupId) {
+            // If the link was in the current group but is now in a different group
+            // Remove it from the current group's view
+            const groupLinks =
+              existingLinks?.filter(
+                (link) =>
+                  link.id !== currentLink.id && link.groupId === groupId,
+              ) || [];
+
+            mutate(
+              `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
+                targetId,
+              )}/groups/${groupId}/links`,
+              groupLinks,
+              false,
+            );
+          } else if (returnedLink.groupId === groupId) {
+            // If the link was in a different group but is now in the current group
+            // Add it to the current group's view
+            const groupLinks =
+              existingLinks?.filter((link) => link.groupId === groupId) || [];
+
+            mutate(
+              `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
+                targetId,
+              )}/groups/${groupId}/links`,
+              [returnedLink, ...groupLinks],
+              false,
+            );
+          }
+        } else if (returnedLink.groupId === groupId) {
+          // If the link's group hasn't changed and it's in the current group
+          // Update it in the current group's view
+          const groupLinks =
+            existingLinks?.filter((link) => link.groupId === groupId) || [];
+
+          mutate(
+            `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
+              targetId,
+            )}/groups/${groupId}/links`,
+            groupLinks.map((link) =>
+              link.id === currentLink.id ? returnedLink : link,
+            ),
+            false,
+          );
+        }
+      }
+
       toast.success("Link updated successfully");
     } else {
       setIsOpen(false);
+
       // Add the new link to the list of links
       mutate(
         `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
@@ -229,6 +321,23 @@ export default function LinkSheet({
         [returnedLink, ...(existingLinks || [])],
         false,
       );
+
+      // Also update the group-specific links cache if this is a group link
+      if (
+        !!groupId &&
+        returnedLink.audienceType === LinkAudienceType.GROUP &&
+        returnedLink.groupId === groupId
+      ) {
+        const groupLinks =
+          existingLinks?.filter((link) => link.groupId === groupId) || [];
+        mutate(
+          `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
+            targetId,
+          )}/groups/${groupId}/links`,
+          [returnedLink, ...groupLinks],
+          false,
+        );
+      }
 
       analytics.capture("Link Added", {
         linkId: returnedLink.id,
@@ -240,8 +349,12 @@ export default function LinkSheet({
       toast.success("Link created successfully");
     }
 
-    setData(DEFAULT_LINK_PROPS(linkType));
-    setIsLoading(false);
+    setData(DEFAULT_LINK_PROPS(linkType, groupId));
+    setIsSaving(false);
+
+    if (shouldPreview) {
+      await handlePreviewLink(returnedLink);
+    }
   };
 
   return (
@@ -255,7 +368,10 @@ export default function LinkSheet({
           </SheetTitle>
         </SheetHeader>
 
-        <form className="flex grow flex-col" onSubmit={handleSubmit}>
+        <form
+          className="flex grow flex-col"
+          onSubmit={(e) => handleSubmit(e, false)}
+        >
           <ScrollArea className="flex-grow">
             <div className="h-0 flex-1">
               <div className="flex flex-1 flex-col justify-between">
@@ -274,13 +390,13 @@ export default function LinkSheet({
                         <TabsTrigger value={LinkAudienceType.GENERAL}>
                           General
                         </TabsTrigger>
-                        {plan === "datarooms" || trial ? (
+                        {isDatarooms || isDataroomsPlus || isTrial ? (
                           <TabsTrigger value={LinkAudienceType.GROUP}>
                             Group
                           </TabsTrigger>
                         ) : (
                           <UpgradePlanModal
-                            clickedPlan="Data Rooms"
+                            clickedPlan={PlanEnum.DataRooms}
                             trigger="add_group_link"
                           >
                             <div className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all">
@@ -293,7 +409,7 @@ export default function LinkSheet({
 
                     <TabsContent value={LinkAudienceType.GENERAL}>
                       {/* GENERAL LINK */}
-                      <div className="space-y-6 pb-[35%] pt-2">
+                      <div className="space-y-6 pb-10 pt-2">
                         <div className="space-y-2">
                           <Label htmlFor="link-name">Link Name</Label>
 
@@ -313,7 +429,6 @@ export default function LinkSheet({
                         <div className="space-y-2">
                           <DomainSection
                             {...{ data, setData, domains }}
-                            plan={plan}
                             linkType={linkType}
                             editLink={!!currentLink}
                           />
@@ -339,7 +454,7 @@ export default function LinkSheet({
 
                     <TabsContent value={LinkAudienceType.GROUP}>
                       {/* GROUP LINK */}
-                      <div className="space-y-6 pb-[35%] pt-2">
+                      <div className="space-y-6 pb-10 pt-2">
                         <div className="space-y-2">
                           <div className="flex w-full items-center justify-between">
                             <Label htmlFor="group-id">Group </Label>
@@ -425,7 +540,6 @@ export default function LinkSheet({
                         <div className="space-y-2">
                           <DomainSection
                             {...{ data, setData, domains }}
-                            plan={plan}
                             linkType={linkType}
                             editLink={!!currentLink}
                           />
@@ -455,9 +569,21 @@ export default function LinkSheet({
           </ScrollArea>
 
           <SheetFooter>
-            <div className="flex items-center pt-2">
-              <Button type="submit" loading={isLoading}>
+            <div className="flex flex-row-reverse items-center gap-2 pt-2">
+              <Button
+                type="submit"
+                loading={isSaving}
+                onClick={(e) => handleSubmit(e, false)}
+              >
                 {currentLink ? "Update Link" : "Save Link"}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                loading={isLoading}
+                onClick={(e) => handleSubmit(e, true)}
+              >
+                {currentLink ? "Update & Preview" : "Save & Preview"}
               </Button>
             </div>
           </SheetFooter>

@@ -3,8 +3,8 @@ import { ChangeEvent, useCallback, useEffect, useState } from "react";
 import { useTeam } from "@/context/team-context";
 import { LinkPreset } from "@prisma/client";
 import { Label } from "@radix-ui/react-label";
-import { motion } from "framer-motion";
 import { Upload as ArrowUpTrayIcon, PlusIcon } from "lucide-react";
+import { motion } from "motion/react";
 import useSWRImmutable from "swr/immutable";
 
 import { Input } from "@/components/ui/input";
@@ -118,9 +118,9 @@ export default function OGSection({
   const resetMetatags = () => {
     setData({
       ...data,
-      metaImage: null || (presets?.metaImage ?? null),
-      metaTitle: null || (presets?.metaTitle ?? null),
-      metaDescription: null || (presets?.metaDescription ?? null),
+      metaImage: presets?.metaImage ?? null,
+      metaTitle: presets?.metaTitle ?? null,
+      metaDescription: presets?.metaDescription ?? null,
     });
   };
 
@@ -200,7 +200,7 @@ export default function OGSection({
             </div>
             <label
               htmlFor="image"
-              className="group relative mt-1 flex aspect-auto h-full min-h-[14rem] cursor-pointer flex-col items-center justify-center rounded-md border border-input bg-white shadow-sm transition-all hover:border-muted-foreground hover:bg-gray-50 hover:ring-muted-foreground dark:bg-gray-800 hover:dark:bg-transparent sm:aspect-[1200/630]"
+              className="group relative mt-1 flex aspect-[1200/630] h-fit cursor-pointer flex-col items-center justify-center rounded-md border border-input bg-white shadow-sm transition-all hover:border-muted-foreground hover:bg-gray-50 hover:ring-muted-foreground dark:bg-gray-800 hover:dark:bg-transparent"
             >
               {false && (
                 <div className="absolute z-[5] flex h-full w-full items-center justify-center rounded-md bg-white">
@@ -310,7 +310,7 @@ export default function OGSection({
             </div>
             <label
               htmlFor="faviconIcon"
-              className="group relative mt-1 flex h-[4rem] w-[12rem] cursor-pointer flex-col items-center justify-center rounded-md border border-gray-300 bg-white shadow-sm transition-all hover:bg-gray-50"
+              className="group relative mt-1 flex size-14 cursor-pointer flex-col items-center justify-center rounded-md border border-gray-300 bg-white shadow-sm transition-all hover:bg-gray-50"
               style={{
                 backgroundImage:
                   "linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(135deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(135deg, transparent 75%, #ccc 75%)",

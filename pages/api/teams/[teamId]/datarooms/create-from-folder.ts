@@ -157,7 +157,7 @@ export default async function handle(
 
       if (
         !team.plan.includes("drtrial") &&
-        ["business", "datarooms"].includes(stripedTeamPlan) &&
+        ["business", "datarooms", "datarooms-plus"].includes(stripedTeamPlan) &&
         limits &&
         team._count.datarooms >= limits.datarooms
       ) {

@@ -446,10 +446,13 @@ export const validateImageDimensions = (
   });
 };
 
-export const uploadImage = async (file: File) => {
+export const uploadImage = async (
+  file: File,
+  uploadType: "profile" | "assets" = "assets",
+) => {
   const newBlob = await upload(file.name, file, {
     access: "public",
-    handleUploadUrl: "/api/file/logo-upload",
+    handleUploadUrl: `/api/file/image-upload?type=${uploadType}`,
   });
 
   return newBlob.url;
@@ -477,7 +480,15 @@ export const generateGravatarHash = (email: string | null): string => {
 export async function generateEncrpytedPassword(
   password: string,
 ): Promise<string> {
+  // If the password is empty, return an empty string
   if (!password) return "";
+  // If the password is already encrypted, return it
+  const textParts: string[] = password.split(":");
+  console.log("textparts in encryption", textParts);
+  if (textParts.length === 2) {
+    return password;
+  }
+  // Otherwise, encrypt the password
   const encryptedKey: string = crypto
     .createHash("sha256")
     .update(String(process.env.NEXT_PRIVATE_DOCUMENT_PASSWORD_KEY))
@@ -527,3 +538,5 @@ export function hexToRgb(hex: string) {
   let b = (bigint & 255) / 255; // Convert to 0-1 range
   return rgb(r, g, g);
 }
+
+export const trim = (u: unknown) => (typeof u === "string" ? u.trim() : u);

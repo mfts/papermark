@@ -1,11 +1,15 @@
 import { ChangeEvent, useCallback, useEffect, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
+import { PlanEnum } from "@/ee/stripe/constants";
 import { LinkPreset } from "@prisma/client";
-import { Upload as ArrowUpTrayIcon, InfoIcon, PlusIcon } from "lucide-react";
-import { DropEvent } from "react-dropzone";
+import {
+  Upload as ArrowUpTrayIcon,
+  CircleHelpIcon,
+  PlusIcon,
+} from "lucide-react";
 import { toast } from "sonner";
-import useSWR, { mutate } from "swr";
+import { mutate } from "swr";
 import useSWRImmutable from "swr/immutable";
 
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
@@ -31,7 +35,7 @@ import { resizeImage } from "@/lib/utils/resize-image";
 
 export default function Presets() {
   const teamInfo = useTeam();
-  const { plan } = usePlan();
+  const { plan, isTrial } = usePlan();
   const { data: presets, mutate: mutatePreset } = useSWRImmutable<LinkPreset>(
     `/api/teams/${teamInfo?.currentTeam?.id}/presets`,
     fetcher,
@@ -58,7 +62,6 @@ export default function Presets() {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    console.log("presets", presets);
     if (presets) {
       setData({
         metaImage: presets.metaImage,
@@ -224,7 +227,7 @@ export default function Presets() {
                   key="verified"
                   link="https://www.papermark.io/help/article/change-social-media-cards"
                 >
-                  <InfoIcon className="h-4 w-4 shrink-0 cursor-pointer text-foreground" />
+                  <CircleHelpIcon className="h-4 w-4 shrink-0 cursor-pointer text-muted-foreground hover:text-foreground" />
                 </BadgeTooltip>
               </p>
             </div>
@@ -355,7 +358,7 @@ export default function Presets() {
                   </div>
                   <label
                     htmlFor="faviconIcon"
-                    className="group relative mt-1 flex h-[4rem] w-[12rem] cursor-pointer flex-col items-center justify-center rounded-md border border-gray-300 bg-white shadow-sm transition-all hover:bg-gray-50"
+                    className="group relative mt-1 flex size-14 cursor-pointer flex-col items-center justify-center rounded-md border border-gray-300 bg-white shadow-sm transition-all hover:bg-gray-50"
                     style={{
                       backgroundImage:
                         "linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(135deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(135deg, transparent 75%, #ccc 75%)",
@@ -528,10 +531,10 @@ export default function Presets() {
                 </div>
 
                 <div className="flex justify-end">
-                  {plan === "free" ? (
+                  {(plan === "free" || plan === "pro") && !isTrial ? (
                     <UpgradePlanModal
-                      clickedPlan="Pro"
-                      trigger={"branding_page"}
+                      clickedPlan={PlanEnum.Business}
+                      trigger={"presets_page"}
                     >
                       <Button>Upgrade to Save Preset</Button>
                     </UpgradePlanModal>

@@ -1,11 +1,11 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import { client } from "@/trigger";
 import { DocumentStorageType, Prisma } from "@prisma/client";
 import { getServerSession } from "next-auth/next";
 import { parsePageId } from "notion-utils";
 
+import { hashToken } from "@/lib/api/auth/token";
 import { errorhandler } from "@/lib/errorHandler";
 import notion from "@/lib/notion";
 import prisma from "@/lib/prisma";
@@ -14,8 +14,11 @@ import {
   convertCadToPdfTask,
   convertFilesToPdfTask,
 } from "@/lib/trigger/convert-files";
+import { processVideo } from "@/lib/trigger/optimize-video-files";
+import { convertPdfToImageRoute } from "@/lib/trigger/pdf-to-image-route";
 import { CustomUser } from "@/lib/types";
 import { getExtension, log } from "@/lib/utils";
+import { conversionQueue } from "@/lib/utils/trigger-utils";
 
 export default async function handle(
   req: NextApiRequest,
@@ -121,15 +124,42 @@ export default async function handle(
     }
   } else if (req.method === "POST") {
     // POST /api/teams/:teamId/documents
-    const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      res.status(401).end("Unauthorized");
-      return;
-    }
 
     const { teamId } = req.query as { teamId: string };
 
-    const userId = (session.user as CustomUser).id;
+    // Check for API token first
+    const authHeader = req.headers.authorization;
+    let userId: string;
+
+    if (authHeader?.startsWith("Bearer ")) {
+      const token = authHeader.replace("Bearer ", "");
+      const hashedToken = hashToken(token);
+
+      // Look up token in database
+      const restrictedToken = await prisma.restrictedToken.findUnique({
+        where: { hashedKey: hashedToken },
+        select: { userId: true, teamId: true },
+      });
+
+      // Check if token exists
+      if (!restrictedToken) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
+      // Check if token is for the correct team
+      if (restrictedToken.teamId !== teamId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
+      userId = restrictedToken.userId;
+    } else {
+      // Fall back to session auth
+      const session = await getServerSession(req, res, authOptions);
+      if (!session) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      userId = (session.user as CustomUser).id;
+    }
 
     // Assuming data is an object with `name` and `description` properties
     const {
@@ -141,6 +171,7 @@ export default async function handle(
       folderPathName,
       contentType,
       createLink,
+      fileSize,
     } = req.body as {
       name: string;
       url: string;
@@ -150,10 +181,11 @@ export default async function handle(
       folderPathName?: string;
       contentType: string;
       createLink?: boolean;
+      fileSize?: number;
     };
 
     try {
-      await getTeamWithUsersAndDocument({
+      const { team } = await getTeamWithUsersAndDocument({
         teamId,
         userId,
       });
@@ -166,6 +198,9 @@ export default async function handle(
         try {
           const pageId = parsePageId(fileUrl, { uuid: false });
           // if the page isn't accessible then end the process here.
+          if (!pageId) {
+            throw new Error("Notion page not found");
+          }
           await notion.getPage(pageId);
         } catch (error) {
           return res
@@ -186,6 +221,9 @@ export default async function handle(
         },
       });
 
+      // determine if the document is download only
+      const isDownloadOnly = type === "zip" || type === "map";
+
       // Save data to the database
       const document = await prisma.document.create({
         data: {
@@ -196,8 +234,9 @@ export default async function handle(
           contentType: contentType,
           type: type,
           storageType,
-          ownerId: (session.user as CustomUser).id,
+          ownerId: userId,
           teamId: teamId,
+          downloadOnly: isDownloadOnly,
           ...(createLink && {
             links: {
               create: {
@@ -215,6 +254,7 @@ export default async function handle(
               numPages: numPages,
               isPrimary: true,
               versionNumber: 1,
+              fileSize: fileSize,
             },
           },
           folderId: folder?.id ? folder.id : null,
@@ -226,8 +266,6 @@ export default async function handle(
       });
 
       if (type === "docs" || type === "slides") {
-        console.log("converting docx or pptx to pdf");
-        // Trigger convert-files-to-pdf task
         await convertFilesToPdfTask.trigger(
           {
             documentId: document.id,
@@ -235,15 +273,19 @@ export default async function handle(
             teamId,
           },
           {
-            idempotencyKey: `${teamId}-${document.versions[0].id}`,
-            tags: [`team_${teamId}`, `document_${document.id}`],
+            idempotencyKey: `${teamId}-${document.versions[0].id}-docs`,
+            tags: [
+              `team_${teamId}`,
+              `document_${document.id}`,
+              `version:${document.versions[0].id}`,
+            ],
+            queue: conversionQueue(team.plan),
+            concurrencyKey: teamId,
           },
         );
       }
 
       if (type === "cad") {
-        console.log("converting cad to pdf");
-        // Trigger convert-files-to-pdf task
         await convertCadToPdfTask.trigger(
           {
             documentId: document.id,
@@ -251,24 +293,59 @@ export default async function handle(
             teamId,
           },
           {
+            idempotencyKey: `${teamId}-${document.versions[0].id}-cad`,
+            tags: [
+              `team_${teamId}`,
+              `document_${document.id}`,
+              `version:${document.versions[0].id}`,
+            ],
+            queue: conversionQueue(team.plan),
+            concurrencyKey: teamId,
+          },
+        );
+      }
+
+      if (type === "video") {
+        await processVideo.trigger(
+          {
+            videoUrl: fileUrl,
+            teamId,
+            docId: fileUrl.split("/")[1], // Extract doc_xxxx from teamId/doc_xxxx/filename
+            documentVersionId: document.versions[0].id,
+            fileSize: fileSize || 0,
+          },
+          {
             idempotencyKey: `${teamId}-${document.versions[0].id}`,
-            tags: [`team_${teamId}`, `document_${document.id}`],
+            tags: [
+              `team_${teamId}`,
+              `document_${document.id}`,
+              `version:${document.versions[0].id}`,
+            ],
+            queue: conversionQueue(team.plan),
+            concurrencyKey: teamId,
           },
         );
       }
 
       // skip triggering convert-pdf-to-image job for "notion" / "excel" documents
       if (type === "pdf") {
-        // trigger document uploaded event to trigger convert-pdf-to-image job
-        await client.sendEvent({
-          id: document.versions[0].id, // unique eventId for the run
-          name: "document.uploaded",
-          payload: {
-            documentVersionId: document.versions[0].id,
-            teamId: teamId,
+        await convertPdfToImageRoute.trigger(
+          {
             documentId: document.id,
+            documentVersionId: document.versions[0].id,
+            teamId,
           },
-        });
+          {
+            idempotencyKey: `${teamId}-${document.versions[0].id}`,
+            tags: [
+              `team_${teamId}`,
+              `document_${document.id}`,
+              `version:${document.versions[0].id}`,
+            ],
+            queue: conversionQueue(team.plan),
+            concurrencyKey: teamId,
+          },
+        );
       }
 
       return res.status(201).json(document);

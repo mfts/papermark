@@ -1,10 +1,11 @@
-import { PrismaInstrumentation } from "@prisma/instrumentation";
-import type { TriggerConfig } from "@trigger.dev/sdk/v3";
+import { ffmpeg } from "@trigger.dev/build/extensions/core";
+import { prismaExtension } from "@trigger.dev/build/extensions/prisma";
+import { defineConfig, timeout } from "@trigger.dev/sdk/v3";
 
-export const config: TriggerConfig = {
+export default defineConfig({
   project: "proj_plmsfqvqunboixacjjus",
-  triggerDirectories: ["./lib/trigger"],
-  instrumentations: [new PrismaInstrumentation()],
+  dirs: ["./lib/trigger"],
+  maxDuration: timeout.None, // no max duration
   retries: {
     enabledInDev: false,
     default: {
@@ -15,8 +16,12 @@ export const config: TriggerConfig = {
       randomize: true,
     },
   },
-  dependenciesToBundle: ["nanoid", /@sindresorhus/, "escape-string-regexp"],
-  additionalFiles: ["./prisma/schema.prisma"],
-  additionalPackages: ["prisma@5.19.1"],
-  postInstall: "npm exec --package prisma -- prisma generate",
-};
+  build: {
+    extensions: [
+      prismaExtension({
+        schema: "prisma/schema.prisma",
+      }),
+      ffmpeg(),
+    ],
+  },
+});

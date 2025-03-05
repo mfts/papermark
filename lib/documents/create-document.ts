@@ -5,7 +5,8 @@ export type DocumentData = {
   key: string;
   storageType: DocumentStorageType;
   contentType: string; // actual file mime type
-  supportedFileType: string; // papermark types: "pdf", "sheet", "docs", "slides"
+  supportedFileType: string; // papermark types: "pdf", "sheet", "docs", "slides", "map", "zip"
+  fileSize: number | undefined; // file size in bytes
 };
 
 export const createDocument = async ({
@@ -14,30 +15,37 @@ export const createDocument = async ({
   numPages,
   folderPathName,
   createLink = false,
+  token,
 }: {
   documentData: DocumentData;
   teamId: string;
   numPages?: number;
   folderPathName?: string;
   createLink?: boolean;
+  token?: string;
 }) => {
   // create a document in the database with the blob url
-  const response = await fetch(`/api/teams/${teamId}/documents`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_BASE_URL}/api/teams/${teamId}/documents`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({
+        name: documentData.name,
+        url: documentData.key,
+        storageType: documentData.storageType,
+        numPages: numPages,
+        folderPathName: folderPathName,
+        type: documentData.supportedFileType,
+        contentType: documentData.contentType,
+        createLink: createLink,
+        fileSize: documentData.fileSize,
+      }),
     },
-    body: JSON.stringify({
-      name: documentData.name,
-      url: documentData.key,
-      storageType: documentData.storageType,
-      numPages: numPages,
-      folderPathName: folderPathName,
-      type: documentData.supportedFileType,
-      contentType: documentData.contentType,
-      createLink: createLink,
-    }),
-  });
+  );
 
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`);
@@ -71,6 +79,7 @@ export const createAgreementDocument = async ({
       folderPathName: folderPathName,
       type: documentData.supportedFileType,
       contentType: documentData.contentType,
+      fileSize: documentData.fileSize,
     }),
   });
 
@@ -106,6 +115,7 @@ export const createNewDocumentVersion = async ({
         numPages: numPages,
         type: documentData.supportedFileType,
         contentType: documentData.contentType,
+        fileSize: documentData.fileSize,
       }),
     },
   );

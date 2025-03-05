@@ -12,7 +12,7 @@ export const getFile = async ({
   type,
   data,
   isDownload = false,
-}: GetFileOptions) => {
+}: GetFileOptions): Promise<string> => {
   const url = await match(type)
     .with(DocumentStorageType.VERCEL_BLOB, () => {
       if (isDownload) {

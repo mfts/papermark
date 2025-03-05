@@ -1,0 +1,24 @@
+VERSION 1
+
+DESCRIPTION >
+    Get all video events for a specific view 
+
+NODE get_view_video_events
+SQL >
+    %
+    SELECT
+        timestamp,
+        event_type,
+        start_time,
+        end_time,
+        playback_rate,
+        volume,
+        is_muted,
+        is_focused,
+        is_fullscreen
+    FROM video_views
+    WHERE document_id = {{String(document_id, required=True)}}
+    AND view_id = {{String(view_id, required=True)}}
+    ORDER BY timestamp ASC
+
+

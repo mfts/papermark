@@ -18,7 +18,7 @@ import { useAnalytics } from "@/lib/analytics";
 import { LinkWithDocument, NotionTheme, WatermarkConfig } from "@/lib/types";
 
 import EmailVerificationMessage from "./email-verification-form";
-import ViewData from "./view-data";
+import ViewData, { TViewDocumentData } from "./view-data";
 
 type RowData = { [key: string]: any };
 type SheetData = {
@@ -61,6 +61,7 @@ export default function DocumentView({
   previewToken,
   disableEditEmail,
   useCustomAccessForm,
+  isEmbedded,
 }: {
   link: LinkWithDocument;
   userEmail: string | null | undefined;
@@ -80,6 +81,7 @@ export default function DocumentView({
   previewToken?: string;
   disableEditEmail?: boolean;
   useCustomAccessForm?: boolean;
+  isEmbedded?: boolean;
 }) {
   const {
     document,
@@ -161,6 +163,7 @@ export default function DocumentView({
           linkType: "DOCUMENT_LINK",
           viewerId: viewId,
           viewerEmail: data.email ?? verifiedEmail ?? userEmail,
+          isEmbedded,
         });
 
         // set the verification token to the cookie
@@ -254,6 +257,7 @@ export default function DocumentView({
         brand={brand}
         disableEditEmail={disableEditEmail}
         useCustomAccessForm={useCustomAccessForm}
+        customFields={link.customFields}
       />
     );
   }
@@ -277,6 +281,7 @@ export default function DocumentView({
         <ViewData
           link={link}
           viewData={viewData}
+          document={document as unknown as TViewDocumentData}
           notionData={notionData}
           brand={brand}
           showPoweredByBanner={showPoweredByBanner}

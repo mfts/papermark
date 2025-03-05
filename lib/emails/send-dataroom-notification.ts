@@ -8,12 +8,14 @@ export const sendDataroomNotification = async ({
   senderEmail,
   to,
   url,
+  unsubscribeUrl,
 }: {
   dataroomName: string;
   documentName: string | undefined;
   senderEmail: string;
   to: string;
   url: string;
+  unsubscribeUrl: string;
 }) => {
   try {
     await sendEmail({
@@ -24,9 +26,11 @@ export const sendDataroomNotification = async ({
         dataroomName,
         documentName,
         url,
+        unsubscribeUrl,
       }),
       test: process.env.NODE_ENV === "development",
       system: true,
+      unsubscribeUrl,
     });
   } catch (e) {
     console.error(e);

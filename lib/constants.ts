@@ -53,23 +53,7 @@ export const BLOCKED_PATHNAMES = [
 ];
 
 // list of paths that should be excluded from team checks
-export const EXCLUDED_PATHS = [
-  "/",
-  "/register",
-  "/privacy",
-  "/oss-friends",
-  "/pricing",
-  "/docsend-alternatives",
-  "/launch-week",
-  "/open-source-investors",
-  "/investors",
-  "/ai",
-  "/share-notion-page",
-  "/alternatives",
-  "/investors",
-  "/blog",
-  "/view",
-];
+export const EXCLUDED_PATHS = ["/", "/register", "/privacy", "/view"];
 
 // free limits
 export const LIMITS = {
@@ -80,6 +64,7 @@ export const SUPPORTED_DOCUMENT_MIME_TYPES = [
   "application/pdf", // .pdf
   "application/vnd.ms-excel", // .xls
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", // .xlsx
+  "application/vnd.ms-excel.sheet.macroEnabled.12", // .xlsm
   "text/csv", // .csv
   "application/vnd.oasis.opendocument.spreadsheet", // .ods
   "application/vnd.ms-powerpoint", // .ppt
@@ -93,6 +78,15 @@ export const SUPPORTED_DOCUMENT_MIME_TYPES = [
   "image/png", // .png
   "image/jpeg", // .jpeg
   "image/jpg", // .jpg
+  "application/zip", // .zip
+  "application/x-zip-compressed", // .zip
+  "video/mp4", // .mp4
+  "video/quicktime", // .mov
+  "video/x-msvideo", // .avi
+  "video/webm", // .webm
+  "video/ogg", // .ogg
+  "application/vnd.google-earth.kml+xml", // .kml
+  "application/vnd.google-earth.kmz", // .kmz
 ];
 
 export const SUPPORTED_DOCUMENT_SIMPLE_TYPES = [
@@ -103,7 +97,32 @@ export const SUPPORTED_DOCUMENT_SIMPLE_TYPES = [
   "docs",
   "cad",
   "image",
-];
+  "zip",
+  "video",
+  "map",
+] as const;
+
+export const VIDEO_EVENT_TYPES = [
+  // Playback events
+  "loaded", // Initial load
+  "played", // Play pressed
+  "seeked", // User seeked to position
+
+  // Speed events
+  "rate_changed", // Playback speed changed
+
+  // Volume events
+  "volume_up", // Volume increased
+  "volume_down", // Volume decreased
+  "muted", // Muted
+  "unmuted", // Unmuted
+
+  // View state events
+  "focus", // Window/tab gained focus
+  "blur", // Window/tab lost focus
+  "enterfullscreen", // Entered fullscreen
+  "exitfullscreen", // Exited fullscreen
+] as const;
 
 export const COUNTRIES: { [key: string]: string } = {
   AF: "Afghanistan",
@@ -359,3 +378,37 @@ export const COUNTRIES: { [key: string]: string } = {
 };
 
 export const COUNTRY_CODES = Object.keys(COUNTRIES) as [string, ...string[]];
+
+export const EU_COUNTRY_CODES = [
+  "AT",
+  "BE",
+  "BG",
+  "CY",
+  "CZ",
+  "DE",
+  "DK",
+  "EE",
+  "ES",
+  "FI",
+  "FR",
+  "GB",
+  "GR",
+  "HR",
+  "HU",
+  "IE",
+  "IS",
+  "IT",
+  "LI",
+  "LT",
+  "LU",
+  "LV",
+  "MT",
+  "NL",
+  "NO",
+  "PL",
+  "PT",
+  "RO",
+  "SE",
+  "SI",
+  "SK",
+];

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import React from "react";
 
 import { DataroomBrand, DataroomFolder } from "@prisma/client";
@@ -24,7 +24,6 @@ import {
 
 import { cn } from "@/lib/utils";
 
-import { TDocumentData } from "./dataroom/dataroom-view";
 import DocumentCard from "./dataroom/document-card";
 import FolderCard from "./dataroom/folder-card";
 import DataroomNav from "./dataroom/nav-dataroom";
@@ -37,6 +36,7 @@ type DataroomDocument = {
   id: string;
   name: string;
   orderIndex: number | null;
+  downloadOnly: boolean;
   versions: {
     id: string;
     type: string;
@@ -67,27 +67,17 @@ export default function DataroomViewer({
   brand,
   viewId,
   linkId,
-  dataroomViewId,
   dataroom,
   allowDownload,
-  setViewType,
-  setDocumentData,
-  setDataroomVerified,
   isPreview,
   folderId,
-  setFolderId
+  setFolderId,
 }: {
   brand: Partial<DataroomBrand>;
   viewId?: string;
   linkId: string;
-  dataroomViewId: string;
   dataroom: any;
   allowDownload: boolean;
-  setViewType: React.Dispatch<
-    React.SetStateAction<"DOCUMENT_VIEW" | "DATAROOM_VIEW">
-  >;
-  setDocumentData: React.Dispatch<React.SetStateAction<TDocumentData | null>>;
-  setDataroomVerified: React.Dispatch<React.SetStateAction<boolean>>;
   isPreview?: boolean;
   folderId: string | null;
   setFolderId: React.Dispatch<React.SetStateAction<string | null>>;
@@ -118,14 +108,7 @@ export default function DataroomViewer({
 
   const renderItem = (item: FolderOrDocument) => {
     if ("versions" in item) {
-      return (
-        <DocumentCard
-          key={item.id}
-          document={item}
-          setViewType={setViewType}
-          setDocumentData={setDocumentData}
-        />
-      );
+      return <DocumentCard key={item.id} document={item} linkId={linkId} />;
     }
 
     return (

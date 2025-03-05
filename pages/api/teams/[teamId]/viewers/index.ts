@@ -18,6 +18,8 @@ export default async function handle(
       return res.status(401).end("Unauthorized");
     }
 
+    const { query } = req.query as { query?: string };
+
     const { teamId } = req.query as { teamId: string };
 
     const userId = (session.user as CustomUser).id;
@@ -39,7 +41,15 @@ export default async function handle(
       }
 
       const viewers = await prisma.viewer.findMany({
-        where: { teamId },
+        where: {
+          teamId,
+          ...(query && {
+            email: {
+              contains: query,
+              mode: "insensitive",
+            },
+          }),
+        },
         include: {
           views: {
             orderBy: {

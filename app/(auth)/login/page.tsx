@@ -18,7 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 import { cn } from "@/lib/utils";
-import { simpleEmailRegex, validateEmail } from "@/lib/utils/validate-email";
+import { validateEmail } from "@/lib/utils/validate-email";
 
 export default function Login() {
   const { next } = useParams as { next?: string };
@@ -91,7 +91,7 @@ export default function Login() {
               autoComplete="email"
               autoCorrect="off"
               disabled={clickedMethod === "email"}
-              pattern={simpleEmailRegex.source}
+              // pattern={patternSimpleEmailRegex}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className={cn(
@@ -221,7 +221,7 @@ export default function Login() {
               <div className="mb-4 h-64 w-64">
                 <img
                   className="h-full w-full rounded-2xl object-cover shadow-2xl"
-                  src="https://www.papermark.io/_static/testimonials/jaski.jpeg"
+                  src="/_static/testimonials/jaski.jpeg"
                   alt="Jaski"
                 />
               </div>

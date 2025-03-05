@@ -5,6 +5,7 @@ import prisma from "@/lib/prisma";
 import {
   BUSINESS_PLAN_LIMITS,
   DATAROOMS_PLAN_LIMITS,
+  DATAROOMS_PLUS_PLAN_LIMITS,
   FREE_PLAN_LIMITS,
   PRO_PLAN_LIMITS,
   TPlanLimits,
@@ -21,6 +22,7 @@ const planLimitsMap: Record<string, TPlanLimits> = {
   pro: PRO_PLAN_LIMITS,
   business: BUSINESS_PLAN_LIMITS,
   datarooms: DATAROOMS_PLAN_LIMITS,
+  "datarooms-plus": DATAROOMS_PLUS_PLAN_LIMITS,
 };
 
 const configSchema = z.object({
@@ -28,16 +30,25 @@ const configSchema = z.object({
   links: z
     .preprocess((v) => (v === null ? Infinity : Number(v)), z.number())
     .optional()
-    .default(10),
+    .default(50),
   documents: z
     .preprocess((v) => (v === null ? Infinity : Number(v)), z.number())
     .optional()
-    .default(10),
+    .default(50),
   users: z.number(),
   domains: z.number(),
   customDomainOnPro: z.boolean(),
   customDomainInDataroom: z.boolean(),
   advancedLinkControlsOnPro: z.boolean().nullish(),
+  watermarkOnBusiness: z.boolean().nullish(),
+  fileSizeLimits: z
+    .object({
+      video: z.number().optional(), // in MB
+      document: z.number().optional(), // in MB
+      image: z.number().optional(), // in MB
+      excel: z.number().optional(), // in MB
+    })
+    .optional(),
 });
 
 export async function getLimits({
@@ -102,9 +113,9 @@ export async function getLimits({
       return {
         ...parsedData,
         // if account is paid, but link and document limits are not set, then set them to Infinity
-        links: parsedData.links === 10 ? Infinity : parsedData.links,
+        links: parsedData.links === 50 ? Infinity : parsedData.links,
         documents:
-          parsedData.documents === 10 ? Infinity : parsedData.documents,
+          parsedData.documents === 50 ? Infinity : parsedData.documents,
         usage: { documents: documentCount, links: linkCount },
       };
     }
