@@ -692,7 +692,8 @@ export default function DocumentHeader({
 
                 <DropdownMenuSeparator />
               </DropdownMenuGroup>
-              {primaryVersion.type !== "notion" &&
+              {/* TODO: Assistant feature temporarily disabled. Will be re-enabled in a future update */}
+              {/* {primaryVersion.type !== "notion" &&
                 primaryVersion.type !== "sheet" &&
                 primaryVersion.type !== "zip" &&
                 primaryVersion.type !== "video" &&
@@ -712,7 +713,7 @@ export default function DocumentHeader({
                   >
                     <Sparkles className="mr-2 h-4 w-4" /> Disable Assistant
                   </DropdownMenuItem>
-                ))}
+                ))} */}
               {prismaDocument.type === "sheet" &&
                 !prismaDocument.advancedExcelEnabled &&
                 (isBusiness || isDatarooms || isTrial) && (
