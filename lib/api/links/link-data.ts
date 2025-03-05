@@ -89,6 +89,11 @@ export async function fetchDataroomLinkData({
           },
         },
       },
+      group: {
+        select: {
+          accessControls: true,
+        },
+      },
     },
   });
 

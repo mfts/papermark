@@ -10,6 +10,7 @@ import {
   Link,
   User as PrismaUser,
   View,
+  ViewerGroupAccessControls,
 } from "@prisma/client";
 import { User as NextAuthUser } from "next-auth";
 import { z } from "zod";
@@ -128,6 +129,9 @@ export interface LinkWithDataroom extends Link {
     folders: DataroomFolder[];
     lastUpdatedAt: Date;
     createdAt: Date;
+  };
+  group?: {
+    accessControls: ViewerGroupAccessControls[];
   };
   agreement: Agreement | null;
   customFields: CustomField[];
