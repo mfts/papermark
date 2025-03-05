@@ -25,7 +25,7 @@ export default async function handle(
 
     const { teamId } = req.query as { teamId: string };
 
-    const { email } = req.body;
+    const { email, selectedRole, selectedDatarooms } = req.body;
 
     if (!email) {
       return res.status(400).json("Email is missing in request body");
@@ -117,6 +117,8 @@ export default async function handle(
           token,
           expires: expiresAt,
           teamId,
+          role: selectedRole,
+          dataroomId: selectedDatarooms,
         },
       });
 

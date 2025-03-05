@@ -40,6 +40,11 @@ export default async function handle(
               role: true,
               teamId: true,
               userId: true,
+              datarooms: {
+                select: {
+                  dataroomId: true,
+                },
+              },
               user: {
                 select: {
                   email: true,

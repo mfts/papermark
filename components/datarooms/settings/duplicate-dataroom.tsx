@@ -21,6 +21,8 @@ import {
 import { usePlan } from "@/lib/swr/use-billing";
 import useDatarooms from "@/lib/swr/use-datarooms";
 
+import { useUserRole } from "./useUserRole";
+
 export default function DuplicateDataroom({
   dataroomId,
   teamId,
@@ -32,6 +34,7 @@ export default function DuplicateDataroom({
   const [loading, setLoading] = useState<boolean>(false);
   const [planModalOpen, setPlanModalOpen] = useState<boolean>(false);
   const { limits } = useLimits();
+  const userRole = useUserRole();
   const { isBusiness, isDatarooms, isDataroomsPlus, isTrial } = usePlan();
   const { datarooms: dataRooms } = useDatarooms();
   const numDatarooms = dataRooms?.length ?? 0;
@@ -52,7 +55,9 @@ export default function DuplicateDataroom({
     if (!teamId) {
       return;
     }
-
+    if (!userRole || userRole === "DATAROOM_MEMBER") {
+      toast.info("You don't have permission to duplicate this dataroom.");
+    }
     setLoading(true);
 
     try {
@@ -106,7 +111,11 @@ export default function DuplicateDataroom({
       );
     } else {
       return (
-        <Button onClick={(e) => handleDuplicateDataroom(e)} loading={loading}>
+        <Button
+          onClick={(e) => handleDuplicateDataroom(e)}
+          loading={loading}
+          disabled={!userRole || userRole === "DATAROOM_MEMBER"}
+        >
           Duplicate Dataroom
         </Button>
       );

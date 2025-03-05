@@ -41,6 +41,8 @@ export default async function handle(
         select: {
           email: true,
           expires: true,
+          dataroomId: true,
+          role: true,
         },
       });
 

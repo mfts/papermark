@@ -23,7 +23,11 @@ export default async function handle(
 
     const { teamId } = req.query as { teamId: string };
 
-    const { email } = req.body as { email: string };
+    const { email, role, dataroomId } = req.body as {
+      email: string;
+      role: "DATAROOM_MEMBER" | "MEMBER" | "MANAGER";
+      dataroomId: string[];
+    };
 
     try {
       // check if currentUser is part of the team with the teamId
@@ -68,6 +72,8 @@ export default async function handle(
         },
         data: {
           expires: expiresAt,
+          dataroomId: dataroomId,
+          role: role,
         },
         select: {
           token: true,

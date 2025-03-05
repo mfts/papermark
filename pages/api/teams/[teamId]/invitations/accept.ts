@@ -73,6 +73,51 @@ export default async function handle(
         },
       });
 
+      await prisma.$transaction(async (tx) => {
+        await tx.userTeam.upsert({
+          where: {
+            userId_teamId: {
+              userId: userId,
+              teamId,
+            },
+          },
+          update: {
+            role: invitation.role,
+          },
+          create: {
+            userId: userId,
+            teamId,
+            role: invitation.role,
+          },
+        });
+
+        if (invitation.role === "DATAROOM_MEMBER") {
+          if (!invitation.dataroomId || invitation.dataroomId.length === 0) {
+            throw new Error(
+              "At least one dataroom must be selected for DATAROOM_MEMBER.",
+            );
+          }
+
+          // Remove existing UserDatarooms first
+          await tx.userDataroom.deleteMany({
+            where: { userId: userId, teamId },
+          });
+
+          // Assign new datarooms
+          await tx.userDataroom.createMany({
+            data: invitation.dataroomId.map((dataroomId) => ({
+              userId: userId,
+              teamId,
+              dataroomId,
+            })),
+          });
+        } else {
+          await tx.userDataroom.deleteMany({
+            where: { userId: userId, teamId },
+          });
+        }
+      });
+
       await identifyUser(invitation.email);
       await trackAnalytics({
         event: "Team Member Invitation Accepted",

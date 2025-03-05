@@ -5,6 +5,8 @@ import { DocumentStorageType, Prisma } from "@prisma/client";
 import { getServerSession } from "next-auth/next";
 import { parsePageId } from "notion-utils";
 
+import { USER_ROLE } from "@/components/team-role/user-role-modal";
+
 import { hashToken } from "@/lib/api/auth/token";
 import { errorhandler } from "@/lib/errorHandler";
 import notion from "@/lib/notion";
@@ -45,7 +47,16 @@ export default async function handle(
             },
           },
         },
+        include: {
+          users: {
+            where: { userId: userId },
+            select: { userId: true, role: true, datarooms: true },
+          },
+        },
       });
+      const curruntUser = team?.users.find((li) => li.userId === userId);
+      const dataroomIds = curruntUser?.datarooms.map((li) => li.dataroomId);
+      const isDataroomMember = curruntUser?.role === USER_ROLE.DATAROOM_MEMBER;
 
       if (!team) {
         return res.status(404).end("Team not found");
@@ -72,6 +83,24 @@ export default async function handle(
       const documents = await prisma.document.findMany({
         where: {
           teamId: teamId,
+          OR: isDataroomMember
+            ? [
+                {
+                  datarooms: {
+                    some: {
+                      dataroomId: {
+                        in: dataroomIds,
+                      },
+                    },
+                  },
+                },
+                {
+                  datarooms: {
+                    none: {},
+                  },
+                },
+              ]
+            : undefined,
           ...(query && {
             name: {
               contains: query,

@@ -22,9 +22,10 @@ export default async function handle(
     const { teamId } = req.query as { teamId: string };
     const userId = (session.user as CustomUser).id;
 
-    const { userToBeChanged, role } = req.body as {
+    const { userToBeChanged, role, selectedDatarooms } = req.body as {
       userToBeChanged: string;
-      role: "MEMBER" | "MANAGER";
+      role: "MEMBER" | "MANAGER" | "DATAROOM_MEMBER";
+      selectedDatarooms: string[];
     };
 
     try {
@@ -43,17 +44,53 @@ export default async function handle(
         return res.status(401).json("You can't change the Admin");
       }
 
-      await prisma.userTeam.update({
-        where: {
-          userId_teamId: {
+      await prisma.$transaction(async (tx) => {
+        const userTeam = await tx.userTeam.upsert({
+          where: {
+            userId_teamId: {
+              userId: userToBeChanged,
+              teamId,
+            },
+          },
+          update: {
+            role,
+          },
+          create: {
             userId: userToBeChanged,
             teamId,
+            role,
           },
-        },
-        data: {
-          role,
-        },
+        });
+
+        // Step 2: If role is DATAROOM_MEMBER, update UserDataroom entries
+        if (role === "DATAROOM_MEMBER") {
+          if (!selectedDatarooms || selectedDatarooms.length === 0) {
+            throw new Error(
+              "At least one dataroom must be selected for DATAROOM_MEMBER.",
+            );
+          }
+
+          // Remove existing UserDatarooms first
+          await tx.userDataroom.deleteMany({
+            where: { userId: userToBeChanged, teamId },
+          });
+
+          // Assign new datarooms
+          await tx.userDataroom.createMany({
+            data: selectedDatarooms.map((dataroomId) => ({
+              userId: userToBeChanged,
+              teamId,
+              dataroomId,
+            })),
+          });
+        } else {
+          // If role is changed from DATAROOM_MEMBER to something else, remove existing UserDatarooms
+          await tx.userDataroom.deleteMany({
+            where: { userId: userToBeChanged, teamId },
+          });
+        }
       });
+
       return res.status(204).end();
     } catch (error) {
       errorhandler(error, res);
