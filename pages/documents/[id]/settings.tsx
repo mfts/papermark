@@ -48,7 +48,7 @@ type Feedback = {
 
 export default function Settings() {
   const { document, primaryVersion } = useDocument();
-  const { plan } = usePlan();
+  const { plan, isBusiness } = usePlan();
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
   const id = document?.id;
@@ -60,8 +60,6 @@ export default function Settings() {
   //     dedupingInterval: 1000 * 60 * 60,
   //   },
   // );
-
-  const isNotBusiness = plan !== "business";
 
   const [loading, setLoading] = useState(false);
   const [loadingStatus, setLoadingStatus] = useState(false);

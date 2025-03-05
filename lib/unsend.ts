@@ -24,7 +24,7 @@ const subscribe = async (email: string) => {
   });
 
   if (!contactId.data?.contactId) {
-    throw new Error("Failed to add user to contact book");
+    return;
   }
 
   await prisma.user.update({
