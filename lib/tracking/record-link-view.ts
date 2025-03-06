@@ -104,6 +104,8 @@ export async function recordLinkView({
     // record link view in Tinybird
     recordLinkViewTB(clickData),
 
+    // send email notification
+    enableNotification ? sendNotification({ viewId, locationData }) : null,
 
     // send webhook event
     sendLinkViewWebhook({

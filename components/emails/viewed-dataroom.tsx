@@ -16,11 +16,15 @@ import {
 export default function ViewedDataroom({
   dataroomId = "123",
   dataroomName = "Example Dataroom",
+  linkName = "Dataroom",
   viewerEmail,
+  locationString,
 }: {
   dataroomId: string;
   dataroomName: string;
+  linkName: string;
   viewerEmail: string | null;
+  locationString?: string;
 }) {
   return (
     <Html>
@@ -42,7 +46,13 @@ export default function ViewedDataroom({
               <span className="font-semibold">
                 {viewerEmail ? `${viewerEmail}` : `someone`}
               </span>
-              .
+              {locationString ? (
+                <span>
+                  {" "}
+                  in <span className="font-semibold">{locationString}</span>
+                </span>
+              ) : null}{" "}
+              from the link <span className="font-semibold">{linkName}</span>.
             </Text>
             <Text className="text-sm leading-6 text-black">
               You can get the detailed engagement analytics like time-spent per
