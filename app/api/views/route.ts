@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 // Import authOptions directly from the source
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import { ipAddress, waitUntil } from "@vercel/functions";
+import { ipAddress, ipAddress, waitUntil } from "@vercel/functions";
 import { getServerSession } from "next-auth";
 
 import { hashToken } from "@/lib/api/auth/token";
@@ -21,17 +21,6 @@ import { generateOTP } from "@/lib/utils/generate-otp";
 import { LOCALHOST_IP } from "@/lib/utils/geo";
 import { getIpAddress } from "@/lib/utils/ip";
 import { validateEmail } from "@/lib/utils/validate-email";
-
-// Helper function to convert Headers to the expected format
-export function headersToObject(headers: Headers): {
-  [key: string]: string | string[] | undefined;
-} {
-  const result: { [key: string]: string | string[] | undefined } = {};
-  headers.forEach((value, key) => {
-    result[key] = value;
-  });
-  return result;
-}
 
 export async function POST(request: NextRequest) {
   try {
@@ -230,11 +219,10 @@ export async function POST(request: NextRequest) {
     // 1) email verification is required and
     // 2) code is not provided or token not provided
     if (link.emailAuthenticated && !code && !token) {
-      const headerObj = headersToObject(request.headers);
-      const ipAddress = getIpAddress(headerObj);
+      const ipAddressValue = ipAddress(request);
 
       const { success } = await ratelimit(10, "1 m").limit(
-        `send-otp:${ipAddress}`,
+        `send-otp:${ipAddressValue}`,
       );
       if (!success) {
         return NextResponse.json(
@@ -271,10 +259,9 @@ export async function POST(request: NextRequest) {
     let isEmailVerified: boolean = false;
     let hashedVerificationToken: string | null = null;
     if (link.emailAuthenticated && code) {
-      const headerObj = headersToObject(request.headers);
-      const ipAddress = getIpAddress(headerObj);
+      const ipAddressValue = ipAddress(request);
       const { success } = await ratelimit(10, "1 m").limit(
-        `verify-otp:${ipAddress}`,
+        `verify-otp:${ipAddressValue}`,
       );
       if (!success) {
         return NextResponse.json(
@@ -341,10 +328,9 @@ export async function POST(request: NextRequest) {
     }
 
     if (link.emailAuthenticated && token) {
-      const headerObj = headersToObject(request.headers);
-      const ipAddress = getIpAddress(headerObj);
+      const ipAddressValue = ipAddress(request);
       const { success } = await ratelimit(10, "1 m").limit(
-        `verify-email:${ipAddress}`,
+        `verify-email:${ipAddressValue}`,
       );
       if (!success) {
         return NextResponse.json(

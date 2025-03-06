@@ -28,8 +28,6 @@ import { generateOTP } from "@/lib/utils/generate-otp";
 import { LOCALHOST_IP } from "@/lib/utils/geo";
 import { validateEmail } from "@/lib/utils/validate-email";
 
-import { headersToObject } from "../views/route";
-
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
