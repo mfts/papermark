@@ -5,6 +5,8 @@ import { geolocation, ipAddress } from "@vercel/functions";
 import { recordLinkViewTB } from "@/lib/tinybird";
 import { isBot } from "@/lib/utils/user-agent";
 
+import sendNotification from "../api/notification-helper";
+import { sendLinkViewWebhook } from "../api/views/send-webhook-event";
 import { EU_COUNTRY_CODES } from "../constants";
 import { capitalize, getDomainWithoutWWW } from "../utils";
 import { LOCALHOST_GEO_DATA, LOCALHOST_IP } from "../utils/geo";
@@ -14,15 +16,19 @@ export async function recordLinkView({
   clickId,
   viewId,
   linkId,
+  teamId,
   documentId,
   dataroomId,
+  enableNotification,
 }: {
   req: NextRequest;
   clickId: string;
   viewId: string;
   linkId: string;
+  teamId: string;
   documentId?: string;
   dataroomId?: string;
+  enableNotification: boolean | null;
 }) {
   const ua = userAgent(req);
   const bot = isBot(ua.ua);
@@ -33,15 +39,6 @@ export async function recordLinkView({
   }
 
   const ip = process.env.VERCEL === "1" ? ipAddress(req) : LOCALHOST_IP;
-
-  // const cacheKey = `recordClick:${linkId}:${ip}`;
-
-  // // by default, we deduplicate clicks for a domain + key pair from the same IP address – only record 1 click per hour
-  // // here, we check if the clickId is cached in Redis within the last hour
-  // const cachedClickId = await redis.get<string>(cacheKey);
-  // if (cachedClickId) {
-  //   return null;
-  // }
 
   // get continent, region & geolocation data
   // interesting, geolocation().region is Vercel's edge region – NOT the actual region
@@ -69,11 +66,6 @@ export async function recordLinkView({
     link_id: linkId,
     document_id: documentId || null,
     dataroom_id: dataroomId || null,
-    ip_address:
-      // only record IP if it's a valid IP and not from a EU country
-      typeof ip === "string" && ip.trim().length > 0 && !isEuCountry
-        ? ip
-        : null,
     continent: continent || "",
     country: geo.country || "Unknown",
     region: region || "Unknown",
@@ -94,17 +86,31 @@ export async function recordLinkView({
     bot: ua.isBot,
     referer: refererDomain,
     referer_url: referer || "(direct)",
+    ip_address:
+      // only record IP if it's a valid IP and not from a EU country
+      typeof ip === "string" && ip.trim().length > 0 && !isEuCountry
+        ? ip
+        : null,
   };
 
-  // record link view in Tinybird
-  await recordLinkViewTB(clickData);
+  const locationData = {
+    continent,
+    country: geo.country || "Unknown",
+    region: region || "Unknown",
+    city: geo.city || "Unknown",
+  };
 
-  // const [,] = await Promise.all([
-  //   // cache the click ID in Redis for 1 hour
-  //   // redis.set(cacheKey, clickId, {
-  //   //   ex: 60 * 60,
-  //   // }),
-  // ]);
+  const [, ,] = await Promise.all([
+    // record link view in Tinybird
+    recordLinkViewTB(clickData),
+
+
+    // send webhook event
+    sendLinkViewWebhook({
+      teamId,
+      clickData,
+    }),
+  ]);
 
   return clickData;
 }

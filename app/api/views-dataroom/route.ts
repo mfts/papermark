@@ -592,32 +592,17 @@ export async function POST(request: NextRequest) {
 
         // Send events in the background to avoid blocking the response
         if (newDataroomView) {
-          const headerObj = headersToObject(request.headers);
           waitUntil(
-            Promise.all([
-              // Record link view in Tinybird
-              recordLinkView({
-                req: request,
-                clickId: newId("linkView"),
-                viewId: newDataroomView.id,
-                linkId,
-                dataroomId,
-              }),
-
-              // Send notification to the document owner
-              link.enableNotification
-                ? sendNotification({ viewId: newDataroomView.id })
-                : null,
-
-              // Send webhook event
-              recordVisit({
-                viewId: newDataroomView.id,
-                linkId,
-                teamId: link.teamId!,
-                dataroomId,
-                headers: headerObj,
-              }),
-            ]),
+            // Record link view in Tinybird
+            recordLinkView({
+              req: request,
+              clickId: newId("linkView"),
+              viewId: newDataroomView.id,
+              linkId,
+              dataroomId,
+              teamId: link.teamId!,
+              enableNotification: link.enableNotification,
+            }),
           );
         }
 
@@ -699,33 +684,17 @@ export async function POST(request: NextRequest) {
             select: { id: true },
           });
 
-          // Send events in the background to avoid blocking the response
-          const headerObj = headersToObject(request.headers);
           waitUntil(
-            Promise.all([
-              // Record link view in Tinybird
-              recordLinkView({
-                req: request,
-                clickId: newId("linkView"),
-                viewId: dataroomView.id,
-                linkId,
-                dataroomId,
-              }),
-
-              // Send notification to the document owner
-              link.enableNotification
-                ? sendNotification({ viewId: dataroomView.id })
-                : null,
-
-              // Send webhook event
-              recordVisit({
-                viewId: dataroomView.id,
-                linkId,
-                teamId: link.teamId!,
-                dataroomId,
-                headers: headerObj,
-              }),
-            ]),
+            // Record link view in Tinybird
+            recordLinkView({
+              req: request,
+              clickId: newId("linkView"),
+              viewId: dataroomView.id,
+              linkId,
+              dataroomId,
+              teamId: link.teamId!,
+              enableNotification: link.enableNotification,
+            }),
           );
         }
 

@@ -573,37 +573,19 @@ export async function POST(request: NextRequest) {
       }
 
       if (newView) {
-        console.time("waitUntil");
-        // INFO: create a header object because headers look different on nextapirequest vs nextrequest
-        const headerObj = headersToObject(request.headers);
         // Record view in the background to avoid blocking the response
         waitUntil(
-          Promise.all([
-            // Record link view in Tinybird
-            recordLinkView({
-              req: request,
-              clickId: newId("linkView"),
-              viewId: newView.id,
-              linkId,
-              documentId,
-            }),
-
-            // Send notification to the document owner
-            link.enableNotification
-              ? sendNotification({ viewId: newView.id })
-              : null,
-
-            // Send webhook event
-            recordVisit({
-              viewId: newView.id,
-              linkId,
-              teamId: link.teamId!,
-              documentId,
-              headers: headerObj,
-            }),
-          ]),
+          // Record link view in Tinybird
+          recordLinkView({
+            req: request,
+            clickId: newId("linkView"),
+            viewId: newView.id,
+            linkId,
+            documentId,
+            teamId: link.teamId!,
+            enableNotification: link.enableNotification,
+          }),
         );
-        console.timeEnd("waitUntil");
       }
 
       const returnObject = {
