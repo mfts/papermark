@@ -114,7 +114,7 @@ const Folder = memo<FolderProps>(
           className={cn(
             "inline-flex w-full cursor-pointer items-center",
             "rounded-md text-foreground duration-100 hover:bg-gray-100 hover:dark:bg-muted",
-            "px-3 py-1.5 leading-6 ",
+            "px-3 py-1.5 leading-6",
             active && "bg-gray-100 font-semibold dark:bg-muted",
             className,
           )}
@@ -127,7 +127,7 @@ const Folder = memo<FolderProps>(
           >
             <ChevronRightIcon
               className={cn(
-                "chevron h-4 w-4 shrink-0  transition-transform duration-150 ",
+                "chevron h-4 w-4 shrink-0 transition-transform duration-150",
                 isFolderOpen && "rotate-90",
               )}
             />

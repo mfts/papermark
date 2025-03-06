@@ -1,14 +1,13 @@
 import { useRouter } from "next/router";
 
-import { AnimatePresence } from "framer-motion";
 import { ArrowLeft as ArrowLeftIcon } from "lucide-react";
+import { AnimatePresence } from "motion/react";
 
 import { Button } from "@/components/ui/button";
 import Dataroom from "@/components/welcome/dataroom";
 import DataroomTrial from "@/components/welcome/dataroom-trial";
 import Intro from "@/components/welcome/intro";
 import Next from "@/components/welcome/next";
-import NotionForm from "@/components/welcome/notion-form";
 import DeckGeneratorUpload from "@/components/welcome/special-upload";
 import Upload from "@/components/welcome/upload";
 

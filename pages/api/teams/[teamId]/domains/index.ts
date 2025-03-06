@@ -71,20 +71,45 @@ export default async function handle(
       // Assuming data is an object with `domain` properties
       const { domain } = req.body;
 
-      // TODO: Add check for if the domain already exists on another user
-      const validDomain = validDomainRegex.test(domain);
+      // Sanitize domain by removing whitespace, protocol, and paths
+      const sanitizedDomain = domain
+        .trim()
+        .toLowerCase()
+        .replace(/^(?:https?:\/\/)?(?:www\.)?/i, "")
+        .split("/")[0];
+
+      // Check if domain is valid
+      const validDomain = validDomainRegex.test(sanitizedDomain);
       if (validDomain !== true) {
         return res.status(422).json("Invalid domain");
       }
 
+      // Check if domain contains papermark
+      if (sanitizedDomain.toLowerCase().includes("papermark")) {
+        return res
+          .status(400)
+          .json({ message: "Domain cannot contain 'papermark'" });
+      }
+
+      // Check if domain already exists
+      const existingDomain = await prisma.domain.findFirst({
+        where: {
+          slug: sanitizedDomain,
+        },
+      });
+
+      if (existingDomain) {
+        return res.status(400).json({ message: "Domain already exists" });
+      }
+
       const response = await prisma.domain.create({
         data: {
-          slug: domain,
+          slug: sanitizedDomain,
           userId,
           teamId,
         },
       });
-      await addDomainToVercel(domain);
+      await addDomainToVercel(sanitizedDomain);
 
       return res.status(201).json(response);
     } catch (error) {

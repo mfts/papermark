@@ -1,19 +1,16 @@
-import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/router";
 
-import { MutableRefObject } from "react";
 import React from "react";
 
 import { Brand, DataroomBrand } from "@prisma/client";
 import {
   ArrowUpRight,
   Download,
-  Minimize2Icon,
   Slash,
   ZoomInIcon,
   ZoomOutIcon,
 } from "lucide-react";
-import { ReactZoomPanPinchContentRef } from "react-zoom-pan-pinch";
 import { toast } from "sonner";
 
 import {
@@ -25,6 +22,12 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 import { determineTextColor } from "@/lib/utils/determine-text-color";
 
@@ -39,6 +42,7 @@ import {
 } from "../ui/breadcrumb";
 import { Button } from "../ui/button";
 import { TDocumentData } from "./dataroom/dataroom-view";
+import ReportForm from "./report-form";
 
 export default function Nav({
   pageNumber,
@@ -53,11 +57,12 @@ export default function Nav({
   documentName,
   isDataroom,
   setDocumentData,
-  documentRefs,
-  isVertical,
   isMobile,
   isPreview,
   hasWatermark,
+  documentId,
+  handleZoomIn,
+  handleZoomOut,
 }: {
   pageNumber?: number;
   numPages?: number;
@@ -71,14 +76,28 @@ export default function Nav({
   documentName?: string;
   isDataroom?: boolean;
   setDocumentData?: React.Dispatch<React.SetStateAction<TDocumentData | null>>;
-  documentRefs?: MutableRefObject<(ReactZoomPanPinchContentRef | null)[]>;
-  isVertical?: boolean;
   isMobile?: boolean;
   isPreview?: boolean;
   hasWatermark?: boolean;
+  documentId?: string;
+  handleZoomIn?: () => void;
+  handleZoomOut?: () => void;
 }) {
+  const router = useRouter();
+  const asPath = router.asPath;
+  const { previewToken, preview } = router.query;
+
+  // Extract the dataroom path from the URL
+  // This regex captures everything before "/d/" in the path
+  const dataroomPathMatch = asPath.match(/^(.*?)\/d\//);
+  const dataroomPath = dataroomPathMatch ? dataroomPathMatch[1] : "";
+
   const downloadFile = async () => {
-    if (!allowDownload || type === "notion" || isPreview) return;
+    if (isPreview) {
+      toast.error("You cannot download documents in preview mode.");
+      return;
+    }
+    if (!allowDownload || type === "notion") return;
     try {
       const response = await fetch(`/api/links/download`, {
         method: "POST",
@@ -91,8 +110,6 @@ export default function Nav({
       if (hasWatermark) {
         const pdfBlob = await response.blob();
         const blobUrl = URL.createObjectURL(pdfBlob);
-
-        console.log("Blob URL:", blobUrl);
 
         const a = document.createElement("a");
         a.href = blobUrl;
@@ -147,44 +164,39 @@ export default function Nav({
                 </Link>
               )}
             </div>
-            {isDataroom && setDocumentData ? (
+            <div id="view-breadcrump-portal"></div>
+            {isDataroom ? (
               <Breadcrumb>
                 <BreadcrumbList>
                   <BreadcrumbItem>
                     <BreadcrumbLink
                       className="cursor-pointer underline underline-offset-4 hover:font-medium"
-                      onClick={() => setDocumentData(null)}
+                      href={`${dataroomPath}${isPreview ? "?previewToken=" + previewToken + "&preview=" + preview : ""}`}
                       style={{
-                        color:
-                          brand && brand.brandColor
-                            ? determineTextColor(brand.brandColor)
-                            : "white",
+                        color: determineTextColor(brand?.brandColor),
                       }}
                     >
                       Home
                     </BreadcrumbLink>
                   </BreadcrumbItem>
-                  <BreadcrumbSeparator>
+                  {/* <BreadcrumbSeparator>
                     <Slash />
                   </BreadcrumbSeparator>
                   <BreadcrumbItem>
                     <BreadcrumbPage
                       className="font-medium"
                       style={{
-                        color:
-                          brand && brand.brandColor
-                            ? determineTextColor(brand.brandColor)
-                            : "white",
+                        color: determineTextColor(brand?.brandColor),
                       }}
                     >
                       {documentName ?? "Document"}
                     </BreadcrumbPage>
-                  </BreadcrumbItem>
+                  </BreadcrumbItem> */}
                 </BreadcrumbList>
               </Breadcrumb>
             ) : null}
           </div>
-          <div className="absolute inset-y-0 right-0 flex items-center space-x-4 pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
+          <div className="absolute inset-y-0 right-0 flex items-center space-x-2 pr-2 sm:static sm:inset-auto sm:ml-6 sm:space-x-4 sm:pr-0">
             {embeddedLinks && embeddedLinks.length > 0 ? (
               <DropdownMenu>
                 <DropdownMenuTrigger>
@@ -233,73 +245,79 @@ export default function Nav({
             {allowDownload ? (
               <Button
                 onClick={downloadFile}
-                className="m-1 bg-gray-900 text-white hover:bg-gray-900/80"
+                className="size-8 bg-gray-900 text-white hover:bg-gray-900/80 sm:size-10"
                 size="icon"
                 title="Download document"
               >
-                <Download className="h-5 w-5" />
+                <Download className="size-4 sm:size-5" />
               </Button>
             ) : null}
-            {!(isVertical && isMobile) && documentRefs ? (
+
+            {!isMobile && handleZoomIn && handleZoomOut && (
               <div className="flex gap-1">
-                <Button
-                  onClick={() => {
-                    if (isMobile) {
-                      documentRefs.current[pageNumber! - 1]?.zoomIn();
-                      return;
-                    }
-                    documentRefs.current.map((ref) => ref?.zoomIn());
-                  }}
-                  className="bg-gray-900 text-white hover:bg-gray-900/80"
-                  size="icon"
-                  title="Zoom in"
-                >
-                  <ZoomInIcon className="h-5 w-5" />
-                </Button>
-                <Button
-                  onClick={() => {
-                    if (isMobile) {
-                      documentRefs.current[pageNumber! - 1]?.zoomOut();
-                      return;
-                    }
-                    documentRefs.current.map((ref) => ref?.zoomOut());
-                  }}
-                  className="bg-gray-900 text-white hover:bg-gray-900/80"
-                  size="icon"
-                  title="Zoom out"
-                >
-                  <ZoomOutIcon className="h-5 w-5" />
-                </Button>
-                <Button
-                  onClick={() => {
-                    if (isMobile) {
-                      documentRefs.current[pageNumber! - 1]?.resetTransform();
-                      return;
-                    }
-                    documentRefs.current.map((ref) => ref?.resetTransform());
-                  }}
-                  className="bg-gray-900 text-white hover:bg-gray-900/80"
-                  size="icon"
-                  title="Reset zoom"
-                >
-                  <Minimize2Icon className="h-5 w-5" />
-                </Button>
+                <TooltipProvider delayDuration={50}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        onClick={handleZoomIn}
+                        className="bg-gray-900 text-white hover:bg-gray-900/80"
+                        size="icon"
+                      >
+                        <ZoomInIcon className="h-5 w-5" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <span className="mr-2 text-xs">Zoom in</span>
+                      <span className="ml-auto rounded-sm border bg-muted p-0.5 text-xs tracking-widest text-muted-foreground">
+                        ⌘+
+                      </span>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+
+                <TooltipProvider delayDuration={50}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        onClick={handleZoomOut}
+                        className="bg-gray-900 text-white hover:bg-gray-900/80"
+                        size="icon"
+                      >
+                        <ZoomOutIcon className="h-5 w-5" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <span className="mr-2 text-xs">Zoom out</span>
+                      <span className="ml-auto rounded-sm border bg-muted p-0.5 text-xs tracking-widest text-muted-foreground">
+                        ⌘-
+                      </span>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
-            ) : null}
+            )}
+
             {pageNumber && numPages ? (
-              <div className="flex h-10 items-center rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white">
+              <div className="flex h-8 items-center space-x-1 rounded-md bg-gray-900 px-3 py-1.5 text-xs font-medium text-white sm:h-10 sm:px-4 sm:py-2 sm:text-sm">
                 <span style={{ fontVariantNumeric: "tabular-nums" }}>
                   {pageNumber}
                 </span>
+                <span className="text-gray-400">/</span>
                 <span
                   className="text-gray-400"
                   style={{ fontVariantNumeric: "tabular-nums" }}
                 >
-                  {" "}
-                  / {numPages}
+                  {numPages}
                 </span>
               </div>
             ) : null}
+            {/* add a separator that doesn't use radix or shadcn  */}
+            <div className="h-6 w-px bg-gray-800" />
+            <ReportForm
+              linkId={linkId}
+              documentId={documentId}
+              viewId={viewId}
+            />
           </div>
         </div>
       </div>

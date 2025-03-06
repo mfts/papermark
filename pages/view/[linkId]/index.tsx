@@ -1,19 +1,28 @@
 import { GetStaticPropsContext } from "next";
 import { useRouter } from "next/router";
 
+import { useEffect, useState } from "react";
+
 import NotFound from "@/pages/404";
 import { Brand, DataroomBrand } from "@prisma/client";
+import Cookies from "js-cookie";
 import { useSession } from "next-auth/react";
 import { ExtendedRecordMap } from "notion-types";
 import { parsePageId } from "notion-utils";
 
 import LoadingSpinner from "@/components/ui/loading-spinner";
-import CustomMetatag from "@/components/view/custom-metatag";
+import CustomMetaTag from "@/components/view/custom-metatag";
 import DataroomView from "@/components/view/dataroom/dataroom-view";
 import DocumentView from "@/components/view/document-view";
 
 import notion from "@/lib/notion";
-import { CustomUser, LinkWithDataroom, LinkWithDocument } from "@/lib/types";
+import { addSignedUrls } from "@/lib/notion/utils";
+import {
+  CustomUser,
+  LinkWithDataroom,
+  LinkWithDocument,
+  NotionTheme,
+} from "@/lib/types";
 
 type DocumentLinkData = {
   linkType: "DOCUMENT_LINK";
@@ -26,6 +35,27 @@ type DataroomLinkData = {
   link: LinkWithDataroom;
   brand: DataroomBrand | null;
 };
+
+export interface ViewPageProps {
+  linkData: DocumentLinkData | DataroomLinkData;
+  notionData: {
+    rootNotionPageId: string | null;
+    recordMap: ExtendedRecordMap | null;
+    theme: NotionTheme | null;
+  };
+  meta: {
+    enableCustomMetatag: boolean;
+    metaTitle: string | null;
+    metaDescription: string | null;
+    metaImage: string | null;
+    metaUrl: string | null;
+    metaFavicon: string | null;
+  };
+  showPoweredByBanner: boolean;
+  showAccountCreationSlide: boolean;
+  useAdvancedExcelViewer: boolean;
+  useCustomAccessForm: boolean;
+}
 
 export const getStaticProps = async (context: GetStaticPropsContext) => {
   const { linkId } = context.params as { linkId: string };
@@ -49,11 +79,13 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
     if (linkType === "DOCUMENT_LINK") {
       let pageId = null;
       let recordMap = null;
+      let theme = null;
 
       const { type, file, ...versionWithoutTypeAndFile } =
         link.document.versions[0];
 
       if (type === "notion") {
+        theme = new URL(file).searchParams.get("mode");
         const notionPageId = parsePageId(file, { uuid: false });
         if (!notionPageId) {
           return {
@@ -62,7 +94,9 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
         }
 
         pageId = notionPageId;
-        recordMap = await notion.getPage(pageId);
+        recordMap = await notion.getPage(pageId, { signFileUrls: false });
+        // TODO: separately sign the file urls until PR merged and published; ref: https://github.com/NotionX/react-notion-x/issues/580#issuecomment-2542823817
+        await addSignedUrls({ recordMap });
       }
 
       const { team, teamId, advancedExcelEnabled, ...linkDocument } =
@@ -85,12 +119,14 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
           notionData: {
             rootNotionPageId: null, // do not pass rootNotionPageId to the client
             recordMap,
+            theme,
           },
           meta: {
             enableCustomMetatag: link.enableCustomMetatag || false,
             metaTitle: link.metaTitle,
             metaDescription: link.metaDescription,
             metaImage: link.metaImage,
+            metaFavicon: link.metaFavicon ?? "/favicon.ico",
             metaUrl: `https://www.papermark.io/view/${linkId}`,
           },
           showPoweredByBanner: link.showBanner || teamPlan === "free",
@@ -98,9 +134,10 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
           useAdvancedExcelViewer: advancedExcelEnabled,
           useCustomAccessForm:
             teamId === "cm0154tiv0000lr2t6nr5c6kp" ||
-            teamId === "clup33by90000oewh4rfvp2eg",
+            teamId === "clup33by90000oewh4rfvp2eg" ||
+            teamId === "cm76hfyvy0002q623hmen99pf",
         },
-        revalidate: brand ? 10 : false,
+        revalidate: brand || recordMap ? 10 : false,
       };
     }
 
@@ -144,6 +181,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
             metaTitle: link.metaTitle,
             metaDescription: link.metaDescription,
             metaImage: link.metaImage,
+            metaFavicon: link.metaFavicon ?? "/favicon.ico",
             metaUrl: `https://www.papermark.io/view/${linkId}`,
           },
           showPoweredByBanner: false,
@@ -177,26 +215,25 @@ export default function ViewPage({
   showAccountCreationSlide,
   useAdvancedExcelViewer,
   useCustomAccessForm,
-}: {
-  linkData: DocumentLinkData | DataroomLinkData;
-  notionData: {
-    rootNotionPageId: string | null;
-    recordMap: ExtendedRecordMap | null;
-  };
-  meta: {
-    enableCustomMetatag: boolean;
-    metaTitle: string | null;
-    metaDescription: string | null;
-    metaImage: string | null;
-    metaUrl: string | null;
-  };
-  showPoweredByBanner: boolean;
-  showAccountCreationSlide: boolean;
-  useAdvancedExcelViewer: boolean;
-  useCustomAccessForm: boolean;
-}) {
+}: ViewPageProps) {
   const router = useRouter();
   const { data: session, status } = useSession();
+  const [storedToken, setStoredToken] = useState<string | undefined>(undefined);
+  const [storedEmail, setStoredEmail] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    // Retrieve token from cookie on component mount
+    const cookieToken =
+      Cookies.get("pm_vft") ||
+      Cookies.get(`pm_drs_flag_${router.query.linkId}`);
+    const storedEmail = window.localStorage.getItem("papermark.email");
+    if (cookieToken) {
+      setStoredToken(cookieToken);
+      if (storedEmail) {
+        setStoredEmail(storedEmail.toLowerCase());
+      }
+    }
+  }, [router.query.linkId]);
 
   if (router.isFallback) {
     return (
@@ -207,15 +244,15 @@ export default function ViewPage({
   }
 
   const {
-    token,
     email: verifiedEmail,
     d: disableEditEmail,
     previewToken,
+    preview,
   } = router.query as {
-    token: string;
     email: string;
     d: string;
     previewToken?: string;
+    preview?: string;
   };
   const { linkType, link, brand } = linkData;
 
@@ -224,7 +261,8 @@ export default function ViewPage({
     if (!linkData || status === "loading" || router.isFallback) {
       return (
         <>
-          <CustomMetatag
+          <CustomMetaTag
+            favicon={meta.metaFavicon}
             enableBranding={meta.enableCustomMetatag ?? false}
             title={
               meta.metaTitle ??
@@ -269,7 +307,8 @@ export default function ViewPage({
 
     return (
       <>
-        <CustomMetatag
+        <CustomMetaTag
+          favicon={meta.metaFavicon}
           enableBranding={meta.enableCustomMetatag ?? false}
           title={
             meta.metaTitle ??
@@ -282,7 +321,7 @@ export default function ViewPage({
         />
         <DocumentView
           link={link}
-          userEmail={verifiedEmail ?? userEmail}
+          userEmail={verifiedEmail ?? storedEmail ?? userEmail}
           userId={userId}
           isProtected={!!(emailProtected || linkPassword || enableAgreement)}
           notionData={notionData}
@@ -293,7 +332,7 @@ export default function ViewPage({
           previewToken={previewToken}
           disableEditEmail={!!disableEditEmail}
           useCustomAccessForm={useCustomAccessForm}
-          token={token}
+          token={storedToken}
           verifiedEmail={verifiedEmail}
         />
       </>
@@ -305,7 +344,8 @@ export default function ViewPage({
     if (!link || status === "loading" || router.isFallback) {
       return (
         <>
-          <CustomMetatag
+          <CustomMetaTag
+            favicon={meta.metaFavicon}
             enableBranding={meta.enableCustomMetatag ?? false}
             title={
               meta.metaTitle ??
@@ -350,7 +390,8 @@ export default function ViewPage({
 
     return (
       <>
-        <CustomMetatag
+        <CustomMetaTag
+          favicon={meta.metaFavicon}
           enableBranding={meta.enableCustomMetatag ?? false}
           title={
             meta.metaTitle ??
@@ -363,16 +404,16 @@ export default function ViewPage({
         />
         <DataroomView
           link={link}
-          userEmail={verifiedEmail ?? userEmail}
+          userEmail={verifiedEmail ?? storedEmail ?? userEmail}
+          verifiedEmail={verifiedEmail}
           userId={userId}
           isProtected={!!(emailProtected || linkPassword || enableAgreement)}
           brand={brand}
-          useAdvancedExcelViewer={useAdvancedExcelViewer}
-          previewToken={previewToken}
           disableEditEmail={!!disableEditEmail}
           useCustomAccessForm={useCustomAccessForm}
-          token={token}
-          verifiedEmail={verifiedEmail}
+          token={storedToken}
+          previewToken={previewToken}
+          preview={!!preview}
         />
       </>
     );

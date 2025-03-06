@@ -1,8 +1,10 @@
+import Link from "next/link";
 import { useRouter } from "next/router";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
+import { PlanEnum } from "@/ee/stripe/constants";
 import { usePlausible } from "next-plausible";
 import { parsePageId } from "notion-utils";
 import { toast } from "sonner";
@@ -17,7 +19,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -28,8 +36,11 @@ import {
   createNewDocumentVersion,
 } from "@/lib/documents/create-document";
 import { putFile } from "@/lib/files/put-file";
-import { copyToClipboard } from "@/lib/utils";
+import { usePlan } from "@/lib/swr/use-billing";
+import useLimits from "@/lib/swr/use-limits";
 import { getSupportedContentType } from "@/lib/utils/get-content-type";
+
+import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
 
 export function AddDocumentModal({
   newVersion,
@@ -37,10 +48,12 @@ export function AddDocumentModal({
   isDataroom,
   dataroomId,
   setAddDocumentModalOpen,
+  openModal,
 }: {
   newVersion?: boolean;
   children: React.ReactNode;
   isDataroom?: boolean;
+  openModal?: boolean;
   dataroomId?: string;
   setAddDocumentModalOpen?: (isOpen: boolean) => void;
 }) {
@@ -52,8 +65,16 @@ export function AddDocumentModal({
   const [currentFile, setCurrentFile] = useState<File | null>(null);
   const [notionLink, setNotionLink] = useState<string | null>(null);
   const teamInfo = useTeam();
+  const { canAddDocuments } = useLimits();
+  const { plan, trial } = usePlan();
+  const isFreePlan = plan === "free";
+  const isTrial = !!trial;
 
   const teamId = teamInfo?.currentTeam?.id as string;
+
+  useEffect(() => {
+    if (openModal) setIsOpen(openModal);
+  }, [openModal]);
 
   /** current folder name */
   const currentFolderPath = router.query.name as string[] | undefined;
@@ -69,21 +90,39 @@ export function AddDocumentModal({
       return; // prevent form from submitting
     }
 
+    if (!canAddDocuments) {
+      toast.error("You have reached the maximum number of documents.");
+      return;
+    }
+
     try {
       setUploading(true);
 
-      const contentType = currentFile.type;
-      const supportedFileType = getSupportedContentType(contentType);
+      let contentType = currentFile.type;
+      let supportedFileType = getSupportedContentType(contentType);
+
+      if (
+        currentFile.name.endsWith(".dwg") ||
+        currentFile.name.endsWith(".dxf")
+      ) {
+        supportedFileType = "cad";
+        contentType = `image/vnd.${currentFile.name.split(".").pop()}`;
+      }
+
+      if (currentFile.name.endsWith(".xlsm")) {
+        supportedFileType = "sheet";
+        contentType = "application/vnd.ms-excel.sheet.macroEnabled.12";
+      }
 
       if (!supportedFileType) {
         setUploading(false);
         toast.error(
-          "Unsupported file format. Please upload a PDF, Powerpoint, Excel, or Word file.",
+          "Unsupported file format. Please upload a PDF, Powerpoint, Excel, Word or image file.",
         );
         return;
       }
 
-      const { type, data, numPages } = await putFile({
+      const { type, data, numPages, fileSize } = await putFile({
         file: currentFile,
         teamId,
       });
@@ -94,6 +133,7 @@ export function AddDocumentModal({
         storageType: type!,
         contentType: contentType,
         supportedFileType: supportedFileType,
+        fileSize: fileSize,
       };
       let response: Response | undefined;
       // create a document or new version in the database
@@ -134,6 +174,10 @@ export function AddDocumentModal({
             type: document.type,
             teamId: teamId,
             dataroomId: dataroomId,
+            $set: {
+              teamId: teamId,
+              teamPlan: plan,
+            },
           });
 
           return;
@@ -151,6 +195,10 @@ export function AddDocumentModal({
             path: router.asPath,
             type: document.type,
             teamId: teamId,
+            $set: {
+              teamId: teamId,
+              teamPlan: plan,
+            },
           });
 
           // redirect to the document page
@@ -166,6 +214,10 @@ export function AddDocumentModal({
             type: document.type,
             newVersion: true,
             teamId: teamId,
+            $set: {
+              teamId: teamId,
+              teamPlan: plan,
+            },
           });
           toast.success("New document version uploaded.");
 
@@ -243,6 +295,12 @@ export function AddDocumentModal({
     event: FormEvent<HTMLFormElement>,
   ): Promise<void> => {
     event.preventDefault();
+
+    if (!canAddDocuments) {
+      toast.error("You have reached the maximum number of documents.");
+      return;
+    }
+
     const validateNotionPageURL = parsePageId(notionLink);
     // Check if it's a valid URL or not by Regx
     const isValidURL =
@@ -274,6 +332,7 @@ export function AddDocumentModal({
             numPages: 1,
             type: "notion",
             createLink: false,
+            folderPathName: currentFolderPath?.join("/"),
           }),
         },
       );
@@ -297,6 +356,10 @@ export function AddDocumentModal({
             type: "notion",
             teamId: teamId,
             dataroomId: dataroomId,
+            $set: {
+              teamId: teamId,
+              teamPlan: plan,
+            },
           });
 
           return;
@@ -317,6 +380,10 @@ export function AddDocumentModal({
             path: router.asPath,
             type: "notion",
             teamId: teamId,
+            $set: {
+              teamId: teamId,
+              teamPlan: plan,
+            },
           });
 
           // redirect to the document page
@@ -345,6 +412,27 @@ export function AddDocumentModal({
     setAddDocumentModalOpen && setAddDocumentModalOpen(!isOpen);
   };
 
+  if (!canAddDocuments && children) {
+    if (newVersion) {
+      return (
+        <UpgradePlanModal
+          clickedPlan={PlanEnum.Pro}
+          trigger={"limit_upload_document_version"}
+        >
+          {children}
+        </UpgradePlanModal>
+      );
+    }
+    return (
+      <UpgradePlanModal
+        clickedPlan={PlanEnum.Pro}
+        trigger={"limit_upload_documents"}
+      >
+        <Button>Upgrade to Add Documents</Button>
+      </UpgradePlanModal>
+    );
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={clearModelStates}>
       <DialogTrigger asChild>{children}</DialogTrigger>
@@ -352,6 +440,10 @@ export function AddDocumentModal({
         className="border-none bg-transparent text-foreground shadow-none"
         isDocumentDialog
       >
+        <DialogTitle className="sr-only">Add Document</DialogTitle>
+        <DialogDescription className="sr-only">
+          An overlayed modal that can be clicked to upload a document
+        </DialogDescription>
         <Tabs defaultValue="document">
           {!newVersion ? (
             <TabsList className="grid w-full grid-cols-2">
@@ -370,10 +462,26 @@ export function AddDocumentModal({
                   {newVersion ? `Upload a new version` : `Share a document`}
                 </CardTitle>
                 <CardDescription>
-                  {newVersion
-                    ? `After you upload a new version, the existing links will remain the unchanged.`
-                    : `After you upload the document, a shareable link will be
-                generated and copied to your clipboard.`}
+                  {newVersion ? (
+                    `After you upload a new version, the existing links will remain the unchanged.`
+                  ) : (
+                    <span>
+                      After you upload the document, create a shareable link.{" "}
+                      {isFreePlan && !isTrial ? (
+                        <>
+                          Upload larger files and more{" "}
+                          <Link
+                            href="https://www.papermark.io/help/article/document-types"
+                            target="_blank"
+                            className="underline underline-offset-4 transition-all hover:text-muted-foreground/80 hover:dark:text-muted-foreground/80"
+                          >
+                            file types
+                          </Link>{" "}
+                          with a higher plan.
+                        </>
+                      ) : null}
+                    </span>
+                  )}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-2">

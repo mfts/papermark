@@ -20,14 +20,14 @@
 
 <br/>
 
-Papermark is the open-source document sharing alternative to DocSend with built-in analytics and custom domains.
+Papermark is the open-source document-sharing alternative to DocSend, featuring built-in analytics and custom domains.
 
 ## Features
 
-- **Shareable Links:** Share your document securely by sending a custom link
-- **Custom Branding:** Add a custom domain and your own branding
-- **Analytics:** Get insights via document tracking and soon page-by-page analytics
-- **Self-hosted, open-source:** Host it yourself and hack on it
+- **Shareable Links:** Share your documents securely by sending a custom link.
+- **Custom Branding:** Add a custom domain and your own branding.
+- **Analytics:** Gain insights through document tracking and soon page-by-page analytics.
+- **Self-hosted, Open-source:** Host it yourself and customize it as needed.
 
 ## Demo
 
@@ -36,11 +36,11 @@ Papermark is the open-source document sharing alternative to DocSend with built-
 ## Tech Stack
 
 - [Next.js](https://nextjs.org/) – Framework
-- [Typescript](https://www.typescriptlang.org/) – Language
+- [TypeScript](https://www.typescriptlang.org/) – Language
 - [Tailwind](https://tailwindcss.com/) – CSS
 - [shadcn/ui](https://ui.shadcn.com) - UI Components
 - [Prisma](https://prisma.io) - ORM [![Made with Prisma](https://made-with.prisma.io/dark.svg)](https://prisma.io)
-- PostgreSQL - Database
+- [PostgreSQL](https://www.postgresql.org/) - Database
 - [NextAuth.js](https://next-auth.js.org/) – Authentication
 - [Tinybird](https://tinybird.co) – Analytics
 - [Resend](https://resend.com) – Email
@@ -51,9 +51,9 @@ Papermark is the open-source document sharing alternative to DocSend with built-
 
 ### Prerequisites
 
-Here's what you need to be able to run Papermark:
+Here's what you need to run Papermark:
 
-- Node.js (version >= 18)
+- Node.js (version >= 18.17.0)
 - PostgreSQL Database
 - Blob storage (currently [AWS S3](https://aws.amazon.com/s3/) or [Vercel Blob](https://vercel.com/storage/blob))
 - [Resend](https://resend.com) (for sending emails)
@@ -80,8 +80,7 @@ cp .env.example .env
 ### 4. Initialize the database
 
 ```shell
-npx prisma generate
-npx prisma migrate deploy
+npm run dev:prisma
 ```
 
 ### 5. Run the dev server
@@ -94,11 +93,11 @@ npm run dev
 
 Visit [http://localhost:3000](http://localhost:3000) in your browser.
 
-## Tinybird instructions
+## Tinybird Instructions
 
 To prepare the Tinybird database, follow these steps:
 
-0. We use `pipenv` to manage my Python dependencies. If you don't have it installed, you can install it using the following command:
+0. We use `pipenv` to manage our Python dependencies. If you don't have it installed, you can install it using the following command:
    ```sh
    pkgx pipenv
    ```
@@ -107,7 +106,7 @@ To prepare the Tinybird database, follow these steps:
    ```sh
    cd lib/tinybird
    ```
-3. Push the necessary datasources using the following command:
+3. Push the necessary data sources using the following command:
    ```sh
    tb push datasources/*
    tb push endpoints/get_*
@@ -127,9 +126,9 @@ pipenv update tinybird-cli
 
 ## Contributing
 
-Papermark is an open-source project and we welcome contributions from the community.
+Papermark is an open-source project, and we welcome contributions from the community.
 
-If you'd like to contribute, please fork the repository and make changes as you'd like. Pull requests are warmly welcome.
+If you'd like to contribute, please fork the repository and make any changes you'd like. Pull requests are warmly welcome.
 
 ### Our Contributors ✨
 

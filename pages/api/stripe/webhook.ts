@@ -1,12 +1,12 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
+import { stripeInstance } from "@/ee/stripe";
+import { checkoutSessionCompleted } from "@/ee/stripe/webhooks/checkout-session-completed";
+import { customerSubscriptionDeleted } from "@/ee/stripe/webhooks/customer-subscription-deleted";
+import { customerSubsciptionUpdated } from "@/ee/stripe/webhooks/customer-subscription-updated";
 import { Readable } from "node:stream";
 import type Stripe from "stripe";
 
-import { stripe } from "@/lib/stripe";
-import { checkoutSessionCompleted } from "@/lib/stripe/webhooks/checkout-session-completed";
-import { customerSubscriptionDeleted } from "@/lib/stripe/webhooks/customer-subscription-deleted";
-import { customerSubsciptionUpdated } from "@/lib/stripe/webhooks/customer-subscription-updated";
 import { log } from "@/lib/utils";
 
 // Stripe requires the raw body to construct the event.
@@ -42,6 +42,7 @@ export default async function webhookHandler(
     let event: Stripe.Event;
     try {
       if (!sig || !webhookSecret) return;
+      const stripe = stripeInstance();
       event = stripe.webhooks.constructEvent(buf, sig, webhookSecret);
     } catch (err: any) {
       return res.status(400).send(`Webhook Error: ${err.message}`);

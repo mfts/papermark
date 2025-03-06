@@ -6,7 +6,9 @@ import { TeamContextType } from "@/context/team-context";
 import {
   BetweenHorizontalStartIcon,
   FolderIcon,
+  FolderPenIcon,
   MoreVertical,
+  PackagePlusIcon,
   TrashIcon,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -28,6 +30,7 @@ import { timeAgo } from "@/lib/utils";
 
 import { EditFolderModal } from "../folders/edit-folder-modal";
 import { AddFolderToDataroomModal } from "./add-folder-to-dataroom-modal";
+import { DeleteFolderModal } from "./delete-folder-modal";
 
 type FolderCardProps = {
   folder: FolderWithCount | DataroomFolderWithCount;
@@ -47,10 +50,9 @@ export default function FolderCard({
 }: FolderCardProps) {
   const router = useRouter();
   const [openFolder, setOpenFolder] = useState<boolean>(false);
-  const [isFirstClick, setIsFirstClick] = useState<boolean>(false);
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
   const [addDataroomOpen, setAddDataroomOpen] = useState<boolean>(false);
-
+  const [deleteModalOpen, setDeleteModalOpen] = useState<boolean>(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
   const folderPath =
@@ -62,49 +64,25 @@ export default function FolderCard({
     folder.path.lastIndexOf("/"),
   );
 
-  useEffect(() => {
-    function handleClickOutside(event: { target: any }) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setMenuOpen(false);
-        setIsFirstClick(false);
-      }
-    }
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-
   // https://github.com/radix-ui/primitives/issues/1241#issuecomment-1888232392
   useEffect(() => {
-    if (!openFolder || !addDataroomOpen) {
+    if (!openFolder || !addDataroomOpen || !deleteModalOpen) {
       setTimeout(() => {
         document.body.style.pointerEvents = "";
       });
     }
-  }, [openFolder, addDataroomOpen]);
+  }, [openFolder, addDataroomOpen, deleteModalOpen]);
 
   const handleButtonClick = (event: any, documentId: string) => {
     event.stopPropagation();
     event.preventDefault();
 
-    if (isFirstClick) {
-      handleDeleteFolder(documentId);
-      setIsFirstClick(false);
-      setMenuOpen(false); // Close the dropdown after deleting
-    } else {
-      setIsFirstClick(true);
-    }
+    setDeleteModalOpen(false);
+    handleDeleteFolder(documentId);
+    setMenuOpen(false);
   };
 
   const handleDeleteFolder = async (folderId: string) => {
-    // Prevent the first click from deleting the document
-    if (!isFirstClick) {
-      setIsFirstClick(true);
-      return;
-    }
-
     const endpointTargetType =
       isDataroom && dataroomId ? `datarooms/${dataroomId}/folders` : "folders";
 
@@ -129,28 +107,13 @@ export default function FolderCard({
           );
           return isDataroom
             ? "Folder removed successfully."
-            : "Folder deleted successfully.";
+            : `Folder deleted successfully with ${folder._count.documents} documents and ${folder._count.childFolders} folders`;
         },
         error: isDataroom
           ? "Failed to remove folder."
           : "Failed to delete folder. Move documents first.",
       },
     );
-  };
-
-  const handleMenuStateChange = (open: boolean) => {
-    if (isFirstClick) {
-      setMenuOpen(true); // Keep the dropdown open on the first click
-      return;
-    }
-
-    // If the menu is closed, reset the isFirstClick state
-    if (!open) {
-      setIsFirstClick(false);
-      setMenuOpen(false); // Ensure the dropdown is closed
-    } else {
-      setMenuOpen(true); // Open the dropdown
-    }
   };
 
   const handleCreateDataroom = (e: any, folderId: string) => {
@@ -231,14 +194,14 @@ export default function FolderCard({
           href={`/documents/${prismaDocument.id}`}
           className="flex items-center z-10 space-x-1 rounded-md bg-gray-200 dark:bg-gray-700 px-1.5 sm:px-2 py-0.5 transition-all duration-75 hover:scale-105 active:scale-100"
         >
-          <BarChart className="h-3 sm:h-4 w-3 sm:w-4 text-muted-foreground" />
-          <p className="whitespace-nowrap text-xs sm:text-sm text-muted-foreground">
+          <BarChart className="w-3 h-3 sm:h-4 sm:w-4 text-muted-foreground" />
+          <p className="text-xs whitespace-nowrap sm:text-sm text-muted-foreground">
             {nFormatter(prismaDocument._count.views)}
-            <span className="ml-1 hidden sm:inline-block">views</span>
+            <span className="hidden ml-1 sm:inline-block">views</span>
           </p>
         </Link> */}
 
-          <DropdownMenu open={menuOpen} onOpenChange={handleMenuStateChange}>
+          <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
             <DropdownMenuTrigger asChild>
               <Button
                 // size="icon"
@@ -258,41 +221,41 @@ export default function FolderCard({
                   setOpenFolder(true);
                 }}
               >
+                <FolderPenIcon className="mr-2 h-4 w-4" />
                 Rename
               </DropdownMenuItem>
               {!isDataroom ? (
-                <>
-                  <DropdownMenuItem
-                    onClick={(e) => handleCreateDataroom(e, folder.id)}
-                  >
-                    Create dataroom from folder
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      setAddDataroomOpen(true);
-                    }}
-                  >
-                    <BetweenHorizontalStartIcon className="mr-2 h-4 w-4" />
-                    Add folder to dataroom
-                  </DropdownMenuItem>
-                </>
+                <DropdownMenuItem
+                  onClick={(e) => handleCreateDataroom(e, folder.id)}
+                >
+                  <PackagePlusIcon className="mr-2 h-4 w-4" />
+                  Create dataroom from folder
+                </DropdownMenuItem>
               ) : null}
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setAddDataroomOpen(true);
+                }}
+              >
+                <BetweenHorizontalStartIcon className="mr-2 h-4 w-4" />
+                {isDataroom
+                  ? "Copy folder to other dataroom"
+                  : "Add folder to dataroom"}
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
 
               <DropdownMenuItem
-                onClick={(event) => handleButtonClick(event, folder.id)}
+                onClick={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  setDeleteModalOpen(true);
+                }}
                 className="text-destructive duration-200 focus:bg-destructive focus:text-destructive-foreground"
               >
-                {isFirstClick ? (
-                  `Really ${isDataroom ? "remove" : "delete"}?`
-                ) : (
-                  <>
-                    <TrashIcon className="mr-2 h-4 w-4" />{" "}
-                    {isDataroom ? "Remove Folder" : "Delete Folder"}
-                  </>
-                )}
+                <TrashIcon className="mr-2 h-4 w-4" />{" "}
+                {isDataroom ? "Remove Folder" : "Delete Folder"}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -323,6 +286,19 @@ export default function FolderCard({
           setOpen={setAddDataroomOpen}
           folderId={folder.id}
           folderName={folder.name}
+          dataroomId={dataroomId}
+        />
+      ) : null}
+      {deleteModalOpen ? (
+        <DeleteFolderModal
+          folderId={folder.id}
+          open={deleteModalOpen}
+          setOpen={setDeleteModalOpen}
+          folderName={folder.name}
+          documents={folder._count.documents}
+          childFolders={folder._count.childFolders}
+          isDataroom={isDataroom}
+          handleButtonClick={handleButtonClick}
         />
       ) : null}
     </>

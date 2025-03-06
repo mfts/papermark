@@ -50,11 +50,14 @@ model User {
   teams          UserTeam[]
   domains        Domain[]
   conversations  Conversation[]
+  contactId      String?
   plan           String         @default("free")
   stripeId       String?        @unique // Stripe subscription / customer ID
   subscriptionId String?        @unique // Stripe subscription ID
   startsAt       DateTime? // Stripe subscription start date
   endsAt         DateTime? // Stripe subscription end date
+
+  restrictedTokens RestrictedToken[]
 }
 
 model Team {
@@ -72,6 +75,9 @@ model Team {
   viewerGroups ViewerGroup[]
   viewers      Viewer[]
 
+  links Link[]
+  views View[]
+
   plan           String    @default("free")
   stripeId       String?   @unique // Stripe customer ID
   subscriptionId String?   @unique // Stripe subscription ID
@@ -81,6 +87,10 @@ model Team {
   linkPresets LinkPreset[] // Link presets for the team
 
   limits Json? // Plan limits // {datarooms: 1, users: 1, domains: 1, customDomainOnPro: boolean, customDomainInDataroom: boolean}
+
+  incomingWebhooks IncomingWebhook[]
+  restrictedTokens RestrictedToken[]
+  webhooks         Webhook[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -111,6 +121,8 @@ model UserTeam {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
 
+  notificationPreferences Json? // Format: { yearInReview: { "enabled": false } }
+
   @@id([userId, teamId])
   @@index([userId])
   @@index([teamId])
@@ -125,27 +137,28 @@ model VerificationToken {
 }
 
 model Document {
-  id               String              @id @default(cuid())
-  name             String
-  description      String?
-  file             String // This should be a reference to where the file is stored (S3, Google Cloud Storage, etc.)
-  originalFile     String? // This should be a reference to the original file like pptx, xlsx, etc. (S3, Google Cloud Storage, etc.)
-  type             String? // This should be a reference to the file type (pdf, sheet, etc.)
-  contentType      String? // This should be the actual contentType of the file like application/pdf, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, etc.
-  storageType      DocumentStorageType @default(VERCEL_BLOB)
-  numPages         Int? // This should be a reference to the number of pages in the document
-  owner            User?               @relation(fields: [ownerId], references: [id], onDelete: SetNull)
-  teamId           String
-  team             Team                @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  ownerId          String? // This field holds the foreign key.
-  assistantEnabled Boolean             @default(false) // This indicates if assistant is enabled for this document
+  id                   String              @id @default(cuid())
+  name                 String
+  description          String?
+  file                 String // This should be a reference to where the file is stored (S3, Google Cloud Storage, etc.)
+  originalFile         String? // This should be a reference to the original file like pptx, xlsx, etc. (S3, Google Cloud Storage, etc.)
+  type                 String? // This should be a reference to the file type (pdf, sheet, etc.)
+  contentType          String? // This should be the actual contentType of the file like application/pdf, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, etc.
+  storageType          DocumentStorageType @default(VERCEL_BLOB)
+  numPages             Int? // This should be a reference to the number of pages in the document
+  owner                User?               @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  teamId               String
+  team                 Team                @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  ownerId              String? // This field holds the foreign key.
+  assistantEnabled     Boolean             @default(false) // This indicates if assistant is enabled for this document
   advancedExcelEnabled Boolean             @default(false) // This indicates if advanced Excel is enabled for this document
-  createdAt        DateTime            @default(now())
-  updatedAt        DateTime            @updatedAt
-  links            Link[]
-  views            View[]
-  versions         DocumentVersion[]
-  conversations    Conversation[]
+  downloadOnly         Boolean             @default(false) // Indicates if the document is download only
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+  links                Link[]
+  views                View[]
+  versions             DocumentVersion[]
+  conversations        Conversation[]
 
   folderId String? // Optional Folder ID for documents in folders
   folder   Folder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
@@ -166,6 +179,7 @@ model DocumentVersion {
   originalFile  String? // This should be a reference to the original file like pptx, xlsx, etc. (S3, Google Cloud Storage, etc.)
   type          String? // This should be a reference to the file type (pdf, docx, etc.)
   contentType   String? // This should be the actual contentType of the file like application/pdf, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, etc.
+  fileSize      Int? // This should be the size of the file in bytes
   storageType   DocumentStorageType @default(VERCEL_BLOB)
   numPages      Int? // This should be a reference to the number of pages in the document
   isPrimary     Boolean             @default(false) // Indicates if this is the primary version
@@ -173,6 +187,7 @@ model DocumentVersion {
   fileId        String? // This is the file ID of the OpenAI File API
   pages         DocumentPage[]
   hasPages      Boolean             @default(false) // Indicates if the document has pages
+  length        Int? // This is the length of the video in seconds
   createdAt     DateTime            @default(now())
   updatedAt     DateTime            @updatedAt
 
@@ -258,10 +273,17 @@ model Link {
   metaTitle           String? // This will be the meta title of the link
   metaDescription     String? // This will be the meta description of the link
   metaImage           String? // This will be the meta image of the link
+  metaFavicon         String? // This will be the meta favicon of the link
   enableCustomMetatag Boolean? @default(false) // Optional give user a option to enable the custom metatag
+
+  teamId String?
+  team   Team?   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  customFields CustomField[]
 
   @@unique([domainSlug, slug])
   @@index([documentId])
+  @@index([teamId])
 }
 
 model LinkPreset {
@@ -273,7 +295,8 @@ model LinkPreset {
   enableCustomMetaTag Boolean? @default(false) // Optional give user a option to enable the custom metatag
   metaTitle           String? // This will be the meta title of the link
   metaDescription     String? // This will be the meta description of the link
-  metaImage           String? // This will be the meta image of the link
+  metaImage           String? // This will be the meta image of the link 
+  metaFavicon         String? // This will be the meta favicon of the link
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -321,11 +344,18 @@ model View {
   group             ViewerGroup?       @relation(fields: [groupId], references: [id], onDelete: SetNull)
   feedbackResponse  FeedbackResponse?
   agreementResponse AgreementResponse?
+  customFieldResponse CustomFieldResponse?
+
+  isArchived Boolean @default(false) // Indicates if the view is archived and not counted in the analytics
+
+  teamId String?
+  team   Team?   @relation(fields: [teamId], references: [id], onDelete: Cascade)
 
   @@index([linkId])
   @@index([documentId])
   @@index([dataroomId])
   @@index([dataroomViewId])
+  @@index([teamId])
 }
 
 enum ViewType {
@@ -334,15 +364,16 @@ enum ViewType {
 }
 
 model Viewer {
-  id        String    @id @default(cuid())
-  email     String
-  verified  Boolean   @default(false) // Whether the viewer email has been verified
-  invitedAt DateTime? // This is the time the viewer was invited
+  id                      String    @id @default(cuid())
+  email                   String
+  verified                Boolean   @default(false) // Whether the viewer email has been verified
+  invitedAt               DateTime? // This is the time the viewer was invited
+  notificationPreferences Json? // Format: { dataroom: {"dr_123": { "enabled": false }, "dr_456": { "enabled": true } } } }
 
-  dataroomId String
-  dataroom   Dataroom @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
-  teamId     String?
-  team       Team?    @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  dataroomId String?
+  dataroom   Dataroom? @relation(fields: [dataroomId], references: [id], onDelete: SetNull)
+  teamId     String
+  team       Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
 
   views  View[]
   groups ViewerGroupMembership[]
@@ -350,7 +381,7 @@ model Viewer {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([dataroomId, email])
+  @@unique([teamId, email])
   @@index([teamId])
   @@index([dataroomId])
 }
@@ -568,8 +599,10 @@ model ViewerGroup {
   id             String                      @id @default(cuid())
   name           String
   members        ViewerGroupMembership[]
+  domains        String[]
   links          Link[]
   accessControls ViewerGroupAccessControls[]
+  allowAll       Boolean                     @default(false)
 
   dataroomId String
   dataroom   Dataroom @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
@@ -623,4 +656,119 @@ model ViewerGroupAccessControls {
 enum ItemType {
   DATAROOM_DOCUMENT
   DATAROOM_FOLDER
+}
+
+model IncomingWebhook {
+  id                  String    @id @default(cuid())
+  externalId          String    @unique
+  name                String
+  secret              String? // Webhook signing secret for verification
+  source              String? // Allowed source URL/domain
+  actions             String? // comma separated (Eg: "documents:write,documentVersions:write")
+  consecutiveFailures Int       @default(0)
+  lastFailedAt        DateTime?
+  disabledAt          DateTime?
+
+  teamId String
+  team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([teamId])
+}
+
+model RestrictedToken {
+  id         String    @id @default(cuid())
+  name       String
+  hashedKey  String    @unique
+  partialKey String
+  scopes     String? // comma separated (Eg: "documents:write,links:write")
+  expires    DateTime?
+  lastUsed   DateTime?
+  rateLimit  Int       @default(60) // rate limit per minute
+
+  userId String
+  teamId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([teamId])
+}
+
+model Webhook {
+  id       String @id @default(cuid())
+  pId      String @unique // public ID for the webhook
+  name     String
+  url      String
+  secret   String // signing secret for the webhook
+  triggers Json
+
+  teamId String
+  team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([teamId])
+}
+
+model YearInReview {
+  id            String    @id @default(cuid())
+  teamId        String
+  status        String    @default("pending") // pending, processing, completed, failed
+  attempts      Int       @default(0)
+  lastAttempted DateTime?
+  error         String?
+
+  stats Json
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, attempts])
+  @@index([teamId])
+}
+
+enum CustomFieldType {
+  SHORT_TEXT
+  LONG_TEXT
+  NUMBER
+  PHONE_NUMBER
+  URL
+  CHECKBOX
+  SELECT
+  MULTI_SELECT
+}
+
+model CustomField {
+  id          String          @id @default(cuid())
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  type        CustomFieldType
+  identifier  String
+  label       String
+  placeholder String?
+  required    Boolean         @default(false)
+  disabled    Boolean         @default(false)
+  link        Link            @relation(fields: [linkId], references: [id], onDelete: Cascade)
+  linkId      String
+  orderIndex  Int             @default(0)
+
+  @@index([linkId])
+}
+
+model CustomFieldResponse {
+  id        String   @id @default(cuid())
+  data      Json // Store the custom field responses as a JSON object [{ "identifier": "value", "label": "value", "response:" }]
+  viewId    String   @unique
+  view      View     @relation(fields: [viewId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([viewId])
 }

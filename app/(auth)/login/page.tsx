@@ -6,10 +6,10 @@ import { useParams } from "next/navigation";
 import { useState } from "react";
 
 import { signInWithPasskey } from "@teamhanko/passkeys-next-auth-provider/client";
-import { Loader } from "lucide-react";
 import { signIn } from "next-auth/react";
 import { toast } from "sonner";
 
+import { LastUsed, useLastUsed } from "@/components/hooks/useLastUsed";
 import Google from "@/components/shared/icons/google";
 import LinkedIn from "@/components/shared/icons/linkedin";
 import Passkey from "@/components/shared/icons/passkey";
@@ -17,20 +17,27 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
+import { cn } from "@/lib/utils";
+import { validateEmail } from "@/lib/utils/validate-email";
+
 export default function Login() {
   const { next } = useParams as { next?: string };
 
-  const [isLoginWithEmail, setIsLoginWithEmail] = useState<boolean>(false);
-  const [isLoginWithGoogle, setIsLoginWithGoogle] = useState<boolean>(false);
-  const [isLoginWithLinkedIn, setIsLoginWithLinkedIn] =
-    useState<boolean>(false);
+  const [lastUsed, setLastUsed] = useLastUsed();
+  const authMethods = ["google", "email", "linkedin", "passkey"] as const;
+  type AuthMethod = (typeof authMethods)[number];
+  const [clickedMethod, setClickedMethod] = useState<AuthMethod | undefined>(
+    undefined,
+  );
   const [email, setEmail] = useState<string>("");
   const [emailButtonText, setEmailButtonText] = useState<string>(
     "Continue with Email",
   );
 
+  const isValidEmail = email.length > 0 && validateEmail(email);
+
   return (
-    <div className="flex h-screen w-full flex-wrap ">
+    <div className="flex h-screen w-full flex-wrap">
       {/* Left part */}
       <div className="flex w-full justify-center bg-white md:w-1/2 lg:w-2/5">
         <div
@@ -40,11 +47,11 @@ export default function Login() {
         <div className="z-10 mx-5 mt-[calc(20vh)] h-fit w-full max-w-md overflow-hidden rounded-lg sm:mx-0">
           <div className="flex flex-col items-center justify-center space-y-3 px-4 py-6 pt-8 text-center sm:px-16">
             <Link href="/">
-              <span className=" text-balance text-2xl font-semibold text-gray-800 ">
+              <span className="text-balance text-2xl font-semibold text-gray-800">
                 Welcome to Papermark
               </span>
             </Link>
-            <h3 className="text-balance text-sm text-gray-800 ">
+            <h3 className="text-balance text-sm text-gray-800">
               Share documents. Not attachments.
             </h3>
           </div>
@@ -52,7 +59,9 @@ export default function Login() {
             className="flex flex-col gap-4 px-4 pt-8 sm:px-16"
             onSubmit={(e) => {
               e.preventDefault();
-              setIsLoginWithEmail(true);
+              if (!isValidEmail) return;
+
+              setClickedMethod("email");
               signIn("email", {
                 email: email,
                 redirect: false,
@@ -60,22 +69,17 @@ export default function Login() {
               }).then((res) => {
                 if (res?.ok && !res?.error) {
                   setEmail("");
+                  setLastUsed("credentials");
                   setEmailButtonText("Email sent - check your inbox!");
                   toast.success("Email sent - check your inbox!");
                 } else {
                   setEmailButtonText("Error sending email - try again?");
                   toast.error("Error sending email - try again?");
                 }
-                setIsLoginWithEmail(false);
+                setClickedMethod(undefined);
               });
             }}
           >
-            {/* <Input
-              className="border-1 bg-white border-gray-200 hover:border-gray-200 text-gray-800"
-              placeholder="jsmith@company.co"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            /> */}
             <Label className="sr-only" htmlFor="email">
               Email
             </Label>
@@ -86,94 +90,122 @@ export default function Login() {
               autoCapitalize="none"
               autoComplete="email"
               autoCorrect="off"
-              disabled={isLoginWithEmail}
+              disabled={clickedMethod === "email"}
+              // pattern={patternSimpleEmailRegex}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="flex h-10 w-full rounded-md border-0 bg-background bg-white px-3 py-2 text-sm text-gray-900 ring-1 ring-gray-200 transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-            />
-            {/* <Button type="submit" disabled={isLoginWithEmail}>
-              {isLoginWithEmail && (
-                <Loader className="h-5 w-5 mr-2 animate-spin bg-gray-800 hover:bg-gray-900" />
+              className={cn(
+                "flex h-10 w-full rounded-md border-0 bg-background bg-white px-3 py-2 text-sm text-gray-900 ring-1 ring-gray-200 transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 dark:bg-white",
+                email.length > 0 && !isValidEmail
+                  ? "ring-red-500"
+                  : "ring-gray-200",
               )}
-              Continue with Email
-            </Button> */}
-            <Button
-              type="submit"
-              loading={isLoginWithEmail}
-              className={`${
-                isLoginWithEmail ? "bg-black" : "bg-gray-800 hover:bg-gray-900 "
-              } focus:shadow-outline transform rounded px-4 py-2 text-white transition-colors duration-300 ease-in-out focus:outline-none`}
-            >
-              {emailButtonText}
-            </Button>
+            />
+            <div className="relative">
+              <Button
+                type="submit"
+                loading={clickedMethod === "email"}
+                disabled={!isValidEmail || !!clickedMethod}
+                className={cn(
+                  "focus:shadow-outline w-full transform rounded px-4 py-2 text-white transition-colors duration-300 ease-in-out focus:outline-none",
+                  clickedMethod === "email"
+                    ? "bg-black"
+                    : "bg-gray-800 hover:bg-gray-900",
+                )}
+              >
+                {emailButtonText}
+              </Button>
+              {lastUsed === "credentials" && <LastUsed />}
+            </div>
           </form>
           <p className="py-4 text-center">or</p>
           <div className="flex flex-col space-y-2 px-4 sm:px-16">
-            <Button
-              onClick={() => {
-                setIsLoginWithGoogle(true);
-                signIn("google", {
-                  ...(next && next.length > 0 ? { callbackUrl: next } : {}),
-                }).then((res) => {
-                  if (res?.status) {
-                    setIsLoginWithGoogle(false);
-                  }
-                });
-              }}
-              disabled={isLoginWithGoogle}
-              className="flex items-center justify-center space-x-2  border border-gray-200 bg-gray-100 font-normal text-gray-900 hover:bg-gray-200 "
-            >
-              {isLoginWithGoogle ? (
-                <Loader className="mr-2 h-5 w-5 animate-spin" />
-              ) : (
+            <div className="relative">
+              <Button
+                onClick={() => {
+                  setClickedMethod("google");
+                  setLastUsed("google");
+                  signIn("google", {
+                    ...(next && next.length > 0 ? { callbackUrl: next } : {}),
+                  }).then((res) => {
+                    if (res?.status) {
+                      setClickedMethod(undefined);
+                    }
+                  });
+                }}
+                loading={clickedMethod === "google"}
+                disabled={clickedMethod && clickedMethod !== "google"}
+                className="flex w-full items-center justify-center space-x-2 border border-gray-200 bg-gray-100 font-normal text-gray-900 hover:bg-gray-200"
+              >
                 <Google className="h-5 w-5" />
-              )}
-              <span>Continue with Google</span>
-            </Button>
-            <Button
-              onClick={() => {
-                setIsLoginWithLinkedIn(true);
-                signIn("linkedin", {
-                  ...(next && next.length > 0 ? { callbackUrl: next } : {}),
-                }).then((res) => {
-                  if (res?.status) {
-                    setIsLoginWithLinkedIn(false);
-                  }
-                });
-              }}
-              disabled={isLoginWithLinkedIn}
-              className="flex items-center justify-center space-x-2 border border-gray-200 bg-gray-100 font-normal text-gray-900 hover:bg-gray-200"
-            >
-              {isLoginWithLinkedIn ? (
-                <Loader className="mr-2 h-5 w-5 animate-spin " />
-              ) : (
+                <span>Continue with Google</span>
+                {clickedMethod !== "google" && lastUsed === "google" && (
+                  <LastUsed />
+                )}
+              </Button>
+            </div>
+            <div className="relative">
+              <Button
+                onClick={() => {
+                  setClickedMethod("linkedin");
+                  setLastUsed("linkedin");
+                  signIn("linkedin", {
+                    ...(next && next.length > 0 ? { callbackUrl: next } : {}),
+                  }).then((res) => {
+                    if (res?.status) {
+                      setClickedMethod(undefined);
+                    }
+                  });
+                }}
+                loading={clickedMethod === "linkedin"}
+                disabled={clickedMethod && clickedMethod !== "linkedin"}
+                className="flex w-full items-center justify-center space-x-2 border border-gray-200 bg-gray-100 font-normal text-gray-900 hover:bg-gray-200"
+              >
                 <LinkedIn />
-              )}
-              <span>Continue with LinkedIn</span>
-            </Button>
-            <Button
-              onClick={() =>
-                signInWithPasskey({
-                  tenantId: process.env.NEXT_PUBLIC_HANKO_TENANT_ID as string,
-                })
-              }
-              variant="outline"
-              className="flex items-center justify-center space-x-2 border border-gray-200 bg-gray-100  font-normal text-gray-900 hover:bg-gray-200 hover:text-gray-900"
-            >
-              <Passkey className="h-4 w-4 " />
-              <span>Continue with a passkey</span>
-            </Button>
+                <span>Continue with LinkedIn</span>
+                {clickedMethod !== "linkedin" && lastUsed === "linkedin" && (
+                  <LastUsed />
+                )}
+              </Button>
+            </div>
+            <div className="relative">
+              <Button
+                onClick={() => {
+                  setLastUsed("passkey");
+                  setClickedMethod("passkey");
+                  signInWithPasskey({
+                    tenantId: process.env.NEXT_PUBLIC_HANKO_TENANT_ID as string,
+                  });
+                }}
+                variant="outline"
+                loading={clickedMethod === "passkey"}
+                disabled={clickedMethod && clickedMethod !== "passkey"}
+                className="flex w-full items-center justify-center space-x-2 border border-gray-200 bg-gray-100 font-normal text-gray-900 hover:bg-gray-200 hover:text-gray-900"
+              >
+                <Passkey className="h-4 w-4" />
+                <span>Continue with a passkey</span>
+                {lastUsed === "passkey" && <LastUsed />}
+              </Button>
+            </div>
           </div>
-          <p className=" mt-10 w-full max-w-md px-4 text-xs text-muted-foreground sm:px-16">
+          <p className="mt-10 w-full max-w-md px-4 text-xs text-muted-foreground sm:px-16">
             By clicking continue, you acknowledge that you have read and agree
             to Papermark&apos;s{" "}
-            <Link href="/terms" className="underline">
+            <a
+              href="https://www.papermark.io/terms"
+              target="_blank"
+              className="underline"
+            >
               Terms of Service
-            </Link>{" "}
+            </a>{" "}
             and{" "}
-            <Link href="/privacy" className="underline">
+            <a
+              href="https://www.papermark.io/privacy"
+              target="_blank"
+              className="underline"
+            >
               Privacy Policy
-            </Link>
+            </a>
             .
           </p>
         </div>
@@ -181,7 +213,7 @@ export default function Login() {
       <div className="hidden w-full justify-center bg-gray-800 md:flex md:w-1/2 lg:w-3/5">
         <div className="flex w-full max-w-5xl px-4 py-20 md:px-8">
           <div
-            className="mx-auto flex w-full max-w-5xl justify-center rounded-3xl bg-gray-800 px-4 py-20  md:px-8"
+            className="mx-auto flex w-full max-w-5xl justify-center rounded-3xl bg-gray-800 px-4 py-20 md:px-8"
             id="features"
           >
             <div className="flex flex-col items-center">
@@ -189,7 +221,7 @@ export default function Login() {
               <div className="mb-4 h-64 w-64">
                 <img
                   className="h-full w-full rounded-2xl object-cover shadow-2xl"
-                  src="https://www.papermark.io/_static/testimonials/jaski.jpeg"
+                  src="/_static/testimonials/jaski.jpeg"
                   alt="Jaski"
                 />
               </div>
@@ -203,10 +235,10 @@ export default function Login() {
                   </p>
                 </blockquote>
                 <figcaption className="mt-4">
-                  <div className="text-balance font-semibold text-white ">
+                  <div className="text-balance font-semibold text-white">
                     Jaski
                   </div>
-                  <div className="text-balance text-gray-400 ">
+                  <div className="text-balance text-gray-400">
                     Founder, Townhall Network
                   </div>
                 </figcaption>

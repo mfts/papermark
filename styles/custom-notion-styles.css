@@ -1,0 +1,63 @@
+.dark-mode {
+  --bg-color: rgb(25, 25, 25);
+}
+
+.notion-simple-table {
+  width: 100%;
+}
+
+.notion-simple-table-row td {
+  vertical-align: top;
+}
+
+.notion-hr {
+  border-top: 1px solid var(--fg-color-0);
+}
+
+.notion-link {
+  display: inline-flex;
+  opacity: 1;
+  cursor: pointer;
+  border-bottom: none;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-decoration-thickness: 1px;
+  text-decoration-color: var(--fg-color-1);
+  &:hover {
+    background: #94949426;
+    border-radius: 1px;
+    box-shadow: 0 0 0 3px #94949426;
+    cursor: pointer !important;
+  }
+}
+
+.notion-link .notion-page-title-text {
+  border-bottom: 1px solid var(--fg-color-1);
+}
+
+.notion-link:has(.notion-page-title-text) {
+  border-bottom: none;
+  text-decoration: none;
+}
+
+.notion-page-icon-inline,
+.notion-page-icon-span {
+  position: relative;
+}
+
+.notion-page-icon-inline::after,
+.notion-page-icon-span::after {
+  content: "";
+  position: absolute;
+  right: -0.2em;
+  bottom: 0;
+  width: 0.7em;
+  height: 0.7em;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 13 13' fill='none'%3E%3Cpath d='M6.30826 4.43292L1.76184 8.98454C1.76176 8.98462 1.76169 8.9847 1.76161 8.98477C1.76158 8.9848 1.76156 8.98482 1.76154 8.98484C1.46068 9.28584 1.25 9.6914 1.25 10.1565C1.25 10.6117 1.45865 11.0119 1.73417 11.2886C2.01014 11.5658 2.41107 11.7773 2.87078 11.7773C3.34169 11.7773 3.73758 11.5617 4.03477 11.2733L4.03482 11.2734L4.04244 11.2657L8.58864 6.72474V8.667C8.58864 9.51956 9.22729 10.2935 10.1521 10.2935C11.0528 10.2935 11.75 9.54534 11.75 8.66127V2.92671C11.75 2.48722 11.5981 2.06381 11.2838 1.74808C10.9689 1.43182 10.5446 1.27728 10.1006 1.27728H4.36028C3.46161 1.27728 2.72804 1.97749 2.72804 2.86942C2.72804 3.79734 3.51104 4.43292 4.35455 4.43292H6.30826Z' fill='%233E3C38' stroke='white' stroke-width='1.5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+
+.notion-toggle:has(.notion-h1) {
+  margin-top: 2rem;
+}

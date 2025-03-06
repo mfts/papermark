@@ -58,6 +58,8 @@ export default async function handle(
                           type: true,
                           file: true,
                           storageType: true,
+                          originalFile: true,
+                          contentType: true,
                         },
                         take: 1,
                       },
@@ -219,7 +221,8 @@ export default async function handle(
           addFileToStructure(
             "/",
             doc.document.name,
-            doc.document.versions[0].file,
+            doc.document.versions[0].originalFile ??
+              doc.document.versions[0].file,
           ),
         );
 
@@ -230,6 +233,16 @@ export default async function handle(
           .filter((doc) => doc.document.versions[0].type !== "notion")
           .filter(
             (doc) => doc.document.versions[0].storageType !== "VERCEL_BLOB",
+          );
+
+        folderDocs &&
+          folderDocs.forEach((doc) =>
+            addFileToStructure(
+              folder.path,
+              doc.document.name,
+              doc.document.versions[0].originalFile ??
+                doc.document.versions[0].file,
+            ),
           );
 
         // If the folder is empty, ensure it's still added to the structure

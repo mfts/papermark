@@ -4,7 +4,7 @@ import { type FormEvent, use, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { LinkType } from "@prisma/client";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { usePlausible } from "next-plausible";
 import { parsePageId } from "notion-utils";
 import { toast } from "sonner";
@@ -168,6 +168,7 @@ export default function NotionForm() {
         metaImage: blobUrl,
         targetId: currentDocId,
         linkType: LinkType.DOCUMENT_LINK,
+        teamId: teamInfo?.currentTeam?.id,
       }),
     });
 
@@ -309,7 +310,7 @@ export default function NotionForm() {
               </main>
             )}
             {currentLinkId && currentDocId && (
-              <main className="min-h-[300px]">
+              <main className="max-h-[calc(100dvh-10rem)] min-h-[300px] overflow-y-scroll scrollbar-hide">
                 <div className="flex flex-col justify-center">
                   <div className="relative">
                     <div className="flex py-8">

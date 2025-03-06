@@ -48,10 +48,10 @@ export default function DataroomGroupPage() {
               description="This is the name of your data room group on Papermark."
               inputAttrs={{
                 name: "name",
-                defaultValue: viewerGroup?.name,
                 placeholder: "e.g. Management Team",
                 maxLength: 32,
               }}
+              defaultValue={viewerGroup?.name ?? ""}
               helpText="Max 32 characters"
               handleSubmit={(updateData) =>
                 fetch(
@@ -84,7 +84,7 @@ export default function DataroomGroupPage() {
             <DeleteGroup
               dataroomId={dataroom.id}
               groupId={viewerGroup.id}
-              groupName={viewerGroup.name}
+              groupName={viewerGroup.name.trim()}
             />
           </div>
         </div>

@@ -5,14 +5,24 @@ import React, { useMemo } from "react";
 
 import {
   Breadcrumb,
+  BreadcrumbEllipsis,
   BreadcrumbItem,
   BreadcrumbLink,
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
-import { useDataroomFolderWithParents } from "@/lib/swr/use-dataroom";
+import {
+  useDataroom,
+  useDataroomFolderWithParents,
+} from "@/lib/swr/use-dataroom";
 
 function BreadcrumbComponentBase({
   name,
@@ -21,7 +31,8 @@ function BreadcrumbComponentBase({
   name: string[];
   dataroomId: string;
 }) {
-  const { folders: folderNames } = useDataroomFolderWithParents({
+  const { dataroom } = useDataroom();
+  const { folders } = useDataroomFolderWithParents({
     name,
     dataroomId,
   });
@@ -29,37 +40,88 @@ function BreadcrumbComponentBase({
   return (
     <Breadcrumb>
       <BreadcrumbList>
-        <BreadcrumbItem key={"root"}>
+        <BreadcrumbItem>
           <BreadcrumbLink asChild>
-            <Link href={`/datarooms/${dataroomId}/documents`}>Home</Link>
+            <Link href="/datarooms">Datarooms</Link>
           </BreadcrumbLink>
         </BreadcrumbItem>
-        {folderNames &&
-          folderNames.map((item, index: number, array) => {
-            return (
-              <React.Fragment key={index}>
-                <BreadcrumbSeparator />
-                {index === array.length - 1 ? (
-                  <BreadcrumbItem>
-                    <BreadcrumbPage className="capitalize">
-                      {item.name}
-                    </BreadcrumbPage>
-                  </BreadcrumbItem>
-                ) : (
-                  <BreadcrumbItem>
-                    <BreadcrumbLink asChild>
+        <BreadcrumbSeparator />
+        <BreadcrumbItem>
+          <BreadcrumbLink asChild>
+            <Link href={`/datarooms/${dataroomId}/documents`}>
+              {dataroom?.name || "Loading..."}
+            </Link>
+          </BreadcrumbLink>
+        </BreadcrumbItem>
+        <BreadcrumbSeparator />
+        <BreadcrumbItem>
+          <BreadcrumbLink asChild>
+            <Link href={`/datarooms/${dataroomId}/documents`}>Documents</Link>
+          </BreadcrumbLink>
+        </BreadcrumbItem>
+        {folders && folders.length > 0 && <BreadcrumbSeparator />}
+        {folders && folders.length > 2 ? (
+          <>
+            <BreadcrumbItem>
+              <DropdownMenu>
+                <DropdownMenuTrigger className="flex items-center gap-1">
+                  <BreadcrumbEllipsis className="h-4 w-4" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start">
+                  {folders.slice(0, -2).map((folder, index) => (
+                    <DropdownMenuItem key={index}>
                       <Link
-                        href={`/datarooms/${dataroomId}/documents${item.path}`}
-                        className="capitalize"
+                        href={`/datarooms/${dataroomId}/documents${folder.path}`}
+                        className="w-full"
                       >
-                        {item.name}
+                        {folder.name}
                       </Link>
-                    </BreadcrumbLink>
-                  </BreadcrumbItem>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link
+                  href={`/datarooms/${dataroomId}/documents${folders[folders.length - 2].path}`}
+                  className="max-w-[200px] truncate"
+                >
+                  {folders[folders.length - 2].name}
+                </Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage className="max-w-[200px] truncate">
+                {folders[folders.length - 1].name}
+              </BreadcrumbPage>
+            </BreadcrumbItem>
+          </>
+        ) : (
+          folders?.map((folder, index) => (
+            <React.Fragment key={index}>
+              <BreadcrumbItem>
+                {index === folders.length - 1 ? (
+                  <BreadcrumbPage className="max-w-[200px] truncate">
+                    {folder.name}
+                  </BreadcrumbPage>
+                ) : (
+                  <BreadcrumbLink asChild>
+                    <Link
+                      href={`/datarooms/${dataroomId}/documents${folder.path}`}
+                      className="max-w-[200px] truncate"
+                    >
+                      {folder.name}
+                    </Link>
+                  </BreadcrumbLink>
                 )}
-              </React.Fragment>
-            );
-          })}
+              </BreadcrumbItem>
+              {index < folders.length - 1 && <BreadcrumbSeparator />}
+            </React.Fragment>
+          ))
+        )}
       </BreadcrumbList>
     </Breadcrumb>
   );

@@ -8,7 +8,6 @@ import { SessionProvider } from "next-auth/react";
 import PlausibleProvider from "next-plausible";
 
 import { PostHogCustomProvider } from "@/components/providers/posthog-provider";
-import { TriggerCustomProvider } from "@/components/providers/trigger-provider";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -69,7 +68,7 @@ export default function App({
           content="https://www.papermark.io/_static/meta-image.png"
           key="tw-image"
         />
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" href="/favicon.ico" key="favicon" />
       </Head>
       <SessionProvider session={session}>
         <PostHogCustomProvider>
@@ -85,9 +84,7 @@ export default function App({
                     <Component {...pageProps} />
                   ) : (
                     <TeamProvider>
-                      <TriggerCustomProvider>
-                        <Component {...pageProps} />
-                      </TriggerCustomProvider>
+                      <Component {...pageProps} />
                     </TeamProvider>
                   )}
                 </TooltipProvider>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 
 import Eye from "@/components/shared/icons/eye";
 import EyeOff from "@/components/shared/icons/eye-off";
@@ -40,6 +40,7 @@ export default function PasswordSection({
         title="Require password to view"
         enabled={enabled}
         action={handleEnablePassword}
+        tooltipContent="Users must enter a password to access the content."
       />
 
       {enabled && (

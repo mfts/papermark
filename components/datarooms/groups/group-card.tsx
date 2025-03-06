@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 import { ViewerGroup } from "@prisma/client";
-import { Layers2Icon, PenIcon, UsersIcon } from "lucide-react";
+import { BoxesIcon, Layers2Icon, PenIcon } from "lucide-react";
 
 import BarChart from "@/components/shared/icons/bar-chart";
 import MoreVertical from "@/components/shared/icons/more-vertical";
@@ -25,7 +25,7 @@ export default function GroupCard({
 
   return (
     <>
-      <div className="hover:drop-shadow-card-hover group rounded-xl border border-gray-200 bg-white p-4 transition-[filter] sm:p-5">
+      <div className="hover:drop-shadow-card-hover group rounded-xl border border-gray-200 bg-white p-4 transition-[filter] dark:bg-gray-800 sm:p-5">
         <div className="flex items-center justify-between gap-3 sm:gap-4">
           <div className="flex min-w-0 items-center gap-4">
             <div className="hidden rounded-full border border-gray-200 sm:block">
@@ -34,12 +34,12 @@ export default function GroupCard({
                   "rounded-full border border-white bg-gradient-to-t from-gray-100 p-1 md:p-3",
                 )}
               >
-                <UsersIcon className="size-5" />
+                <BoxesIcon className="size-5" />
               </div>
             </div>
             <div className="overflow-hidden">
               <div className="flex flex-col gap-1">
-                <p className="truncate text-sm font-medium" title="Group Name">
+                <p className="truncate text-sm font-medium text-foreground">
                   {group.name}
                 </p>
                 <span className="text-xs text-muted-foreground">

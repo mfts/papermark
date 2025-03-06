@@ -1,15 +1,22 @@
-import Image from "next/image";
 import { useRouter } from "next/router";
 
 import { useEffect, useRef, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
+import { PlanEnum } from "@/ee/stripe/constants";
 import { Document, DocumentVersion } from "@prisma/client";
 import {
+  AlertCircleIcon,
   BetweenHorizontalStartIcon,
+  CloudDownloadIcon,
+  DownloadIcon,
+  FileDownIcon,
+  MoonIcon,
   SheetIcon,
   Sparkles,
+  SunIcon,
   TrashIcon,
+  ViewIcon,
 } from "lucide-react";
 import { usePlausible } from "next-plausible";
 import { useTheme } from "next-themes";
@@ -30,17 +37,22 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+import { getFile } from "@/lib/files/get-file";
 import { usePlan } from "@/lib/swr/use-billing";
+import useDatarooms from "@/lib/swr/use-datarooms";
 import { DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
-import { cn, getExtension } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { fileIcon } from "@/lib/utils/get-file-icon";
 
+import PlanBadge from "../billing/plan-badge";
+import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
 import AdvancedSheet from "../shared/icons/advanced-sheet";
 import PortraitLandscape from "../shared/icons/portrait-landscape";
 import LoadingSpinner from "../ui/loading-spinner";
 import { ButtonTooltip } from "../ui/tooltip";
 import { AddDocumentModal } from "./add-document-modal";
 import { AddToDataroomModal } from "./add-document-to-dataroom-modal";
+import AlertBanner from "./alert";
 
 export default function DocumentHeader({
   prismaDocument,
@@ -48,46 +60,76 @@ export default function DocumentHeader({
   teamId,
   actions,
 }: {
-  prismaDocument: Document;
+  prismaDocument: Document & { hasPageLinks?: boolean };
   primaryVersion: DocumentVersion;
   teamId: string;
   actions?: React.ReactNode[];
 }) {
   const router = useRouter();
   const teamInfo = useTeam();
+  const { datarooms: datarooms } = useDatarooms();
   const { theme, systemTheme } = useTheme();
   const isLight =
     theme === "light" || (theme === "system" && systemTheme === "light");
-  const { plan, trial } = usePlan();
-
+  const { isPro, isFree, isTrial, isBusiness, isDatarooms } = usePlan();
   const [isEditingName, setIsEditingName] = useState<boolean>(false);
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
   const [isFirstClick, setIsFirstClick] = useState<boolean>(false);
   const [orientationLoading, setOrientationLoading] = useState<boolean>(false);
-  const [addDataroomOpen, setAddDataroomOpen] = useState<boolean>(false);
+  const [addDataRoomOpen, setAddDataRoomOpen] = useState<boolean>(false);
   const [addDocumentVersion, setAddDocumentVersion] = useState<boolean>(false);
-
+  const [openAddDocModal, setOpenAddDocModal] = useState<boolean>(false);
+  const [planModalOpen, setPlanModalOpen] = useState<boolean>(false);
+  const [planModalTrigger, setPlanModalTrigger] = useState<string>("");
+  const [selectedPlan, setSelectedPlan] = useState<PlanEnum>(PlanEnum.Pro);
   const nameRef = useRef<HTMLHeadingElement>(null);
   const enterPressedRef = useRef<boolean>(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
   const actionRows: React.ReactNode[][] = [];
+
   if (actions) {
     for (let i = 0; i < actions.length; i += 3) {
       actionRows.push(actions.slice(i, i + 3));
     }
   }
 
+  const handleUpgradeClick = (plan: PlanEnum, trigger: string) => {
+    setSelectedPlan(plan);
+    setPlanModalTrigger(trigger);
+    setPlanModalOpen(true);
+  };
+
+  const handleCloseAlert = (id: string) => {
+    const alert = document.getElementById(id);
+    if (alert) {
+      alert.style.display = "none";
+    }
+  };
+
+  const currentTime = new Date();
+  const formattedTime =
+    currentTime.getFullYear() +
+    "-" +
+    String(currentTime.getMonth() + 1).padStart(2, "0") +
+    "-" +
+    String(currentTime.getDate()).padStart(2, "0") +
+    "_" +
+    String(currentTime.getHours()).padStart(2, "0") +
+    "-" +
+    String(currentTime.getMinutes()).padStart(2, "0");
+  "-" + String(currentTime.getSeconds()).padStart(2, "0");
+
   const plausible = usePlausible();
 
   // https://github.com/radix-ui/primitives/issues/1241#issuecomment-1888232392
   useEffect(() => {
-    if (!addDataroomOpen || !addDocumentVersion) {
+    if (!addDataRoomOpen || !addDocumentVersion) {
       setTimeout(() => {
         document.body.style.pointerEvents = "";
       });
     }
-  }, [addDataroomOpen, addDocumentVersion]);
+  }, [addDataRoomOpen, addDocumentVersion]);
 
   const handleNameSubmit = async () => {
     if (enterPressedRef.current) {
@@ -244,12 +286,109 @@ export default function DocumentHeader({
         plausible("advancedExcelEnabled", {
           props: { documentId: document.id },
         }); // track the event
+        handleCloseAlert("enable-advanced-excel-alert");
         toast.success(message);
       }
     } catch (error) {
       console.error("Error:", error);
       toast.error("An error occurred. Please try again.");
     }
+  };
+
+  // export method to fetch the visits data and convert to csv.
+  const exportVisitCounts = async (document: Document) => {
+    if (isFree) {
+      toast.error("This feature is not available for your plan");
+      return;
+    }
+    try {
+      const response = await fetch(
+        `/api/teams/${teamId}/documents/${document.id}/export-visits`,
+        { method: "GET" },
+      );
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+
+      // Create and download the CSV file
+      const blob = new Blob([data.visits], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = window.document.createElement("a");
+      link.href = url;
+      link.setAttribute(
+        "download",
+        `${data.documentName}_visits_${formattedTime}.csv`,
+      );
+      window.document.body.appendChild(link);
+      link.click();
+      window.document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      toast.success("CSV file downloaded successfully");
+    } catch (error) {
+      console.error("Error:", error);
+      toast.error(
+        "An error occurred while downloading the CSV. Please try again.",
+      );
+    }
+  };
+
+  // Make a document download only or viewable
+  const toggleDownloadOnly = async () => {
+    toast.promise(
+      fetch(
+        `/api/teams/${teamId}/documents/${prismaDocument.id}/toggle-download-only`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            downloadOnly: !prismaDocument.downloadOnly,
+          }),
+        },
+      ).then(() => {
+        mutate(`/api/teams/${teamId}/documents/${prismaDocument.id}`);
+      }),
+      {
+        loading: "Updating document...",
+        success: `Document is now ${
+          !prismaDocument.downloadOnly ? "download only" : "viewable"
+        }`,
+        error: "Failed to update document",
+      },
+    );
+  };
+
+  // Toggle dark mode for Notion documents
+  const toggleNotionDarkMode = async (darkMode: boolean) => {
+    if (prismaDocument.type !== "notion") {
+      toast.error("This feature is not available for your document type");
+      return;
+    }
+
+    toast.promise(
+      fetch(
+        `/api/teams/${teamId}/documents/${prismaDocument.id}/toggle-dark-mode`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            darkMode: darkMode,
+          }),
+        },
+      ).then(() => {
+        mutate(`/api/teams/${teamId}/documents/${prismaDocument.id}`);
+      }),
+      {
+        loading: "Updating Notion theme...",
+        success: `Notion theme changed to ${darkMode ? "dark" : "light"} mode`,
+        error: "Failed to update Notion theme",
+      },
+    );
   };
 
   useEffect(() => {
@@ -326,215 +465,444 @@ export default function DocumentHeader({
     }
   };
 
+  const downloadDocument = async (documentVersion: DocumentVersion) => {
+    if (documentVersion.type === "notion") {
+      toast.error("Notion documents cannot be downloaded.");
+      return;
+    }
+    toast.promise(
+      (async () => {
+        const downloadUrl = await getFile({
+          type: documentVersion.storageType,
+          data: documentVersion.originalFile ?? documentVersion.file,
+          isDownload: true,
+        });
+
+        // Fetch the file from the S3 URL and create blob
+        const response = await fetch(downloadUrl);
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = prismaDocument.name;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      })(),
+      {
+        loading: "Downloading document...",
+        success: "Document downloaded successfully",
+        error: "Failed to download document",
+      },
+    );
+  };
+
   return (
-    <header className="flex items-center justify-between gap-x-8">
-      <div className="flex items-center space-x-2">
-        {fileIcon({
-          fileType: prismaDocument.type ?? "",
-          className: "size-7 sm:size-8",
-          isLight,
-        })}
+    <header className="flex flex-col gap-y-4">
+      <div className="flex items-center justify-between gap-x-8">
+        <div className="flex items-center space-x-2">
+          {fileIcon({
+            fileType: prismaDocument.type ?? "",
+            className: "size-7 sm:size-8",
+            isLight,
+          })}
 
-        <div className="mt-1 flex flex-col lg:mt-0">
-          <h2
-            className="rounded-md border border-transparent px-1 py-0.5 text-lg font-semibold tracking-tight text-foreground duration-200 hover:cursor-text hover:border hover:border-border focus-visible:text-lg lg:px-3 lg:py-1 lg:text-xl lg:focus-visible:text-xl xl:text-2xl"
-            ref={nameRef}
-            contentEditable={true}
-            onFocus={() => setIsEditingName(true)}
-            onBlur={handleNameSubmit}
-            onKeyDown={preventEnterAndSubmit}
-            title="Click to edit"
-            dangerouslySetInnerHTML={{ __html: prismaDocument.name }}
-          />
-          {isEditingName && (
-            <span className="mt-1 text-xs text-muted-foreground">
-              {`Press <Enter> to save the name.`}
-            </span>
-          )}
-        </div>
+          <div className="mt-1 flex flex-col lg:mt-0">
+            <h2
+              className="rounded-md border border-transparent px-1 py-0.5 text-lg font-semibold tracking-tight text-foreground duration-200 hover:cursor-text hover:border hover:border-border focus-visible:text-lg lg:px-3 lg:py-1 lg:text-xl lg:focus-visible:text-xl xl:text-2xl"
+              ref={nameRef}
+              contentEditable={true}
+              onFocus={() => setIsEditingName(true)}
+              onBlur={handleNameSubmit}
+              onKeyDown={preventEnterAndSubmit}
+              title="Click to edit"
+              dangerouslySetInnerHTML={{ __html: prismaDocument.name }}
+            />
+            {isEditingName && (
+              <span className="mt-1 text-xs text-muted-foreground">
+                {`Press <Enter> to save the name.`}
+              </span>
+            )}
+          </div>
 
-        {prismaDocument.type === "sheet" &&
-          prismaDocument.advancedExcelEnabled && (
-            <ButtonTooltip content="Advanced Excel mode">
-              <span className="mt-1 text-xs">
-                <AdvancedSheet className="h-6 w-6" />
+          {prismaDocument.type === "sheet" &&
+            prismaDocument.advancedExcelEnabled && (
+              <ButtonTooltip content="Advanced Excel mode">
+                <span className="mt-1 text-xs">
+                  <AdvancedSheet className="h-6 w-6" />
+                </span>
+              </ButtonTooltip>
+            )}
+
+          {prismaDocument.downloadOnly && (
+            <ButtonTooltip content="Download only">
+              <span className="text-xs">
+                <CloudDownloadIcon className="h-6 w-6" />
+                <span className="sr-only">This document is download only</span>
               </span>
             </ButtonTooltip>
           )}
-      </div>
-
-      <div className="flex items-center gap-x-4 md:gap-x-2 lg:gap-x-4">
-        {!orientationLoading ? (
-          <ButtonTooltip content="Change orientation">
-            <button
-              className="hidden md:flex"
-              onClick={changeDocumentOrientation}
-              title={`Change document orientation to ${primaryVersion.isVertical ? "landscape" : "portrait"}`}
-            >
-              <PortraitLandscape
-                className={cn(
-                  "h-6 w-6",
-                  !primaryVersion.isVertical && "-rotate-90 transform",
-                )}
-              />
-            </button>
-          </ButtonTooltip>
-        ) : (
-          <div className="hidden md:flex">
-            <LoadingSpinner className="h-6 w-6" />
-          </div>
-        )}
-
-        {primaryVersion.type !== "notion" && (
-          <AddDocumentModal newVersion>
-            <button title="Upload a new version" className="hidden md:flex">
-              <FileUp className="h-6 w-6" />
-            </button>
-          </AddDocumentModal>
-        )}
-
-        {prismaDocument.type !== "notion" &&
-          prismaDocument.type !== "sheet" &&
-          prismaDocument.assistantEnabled && (
-            <Button
-              className="group hidden h-8 space-x-1 whitespace-nowrap bg-gradient-to-r from-[#16222A] via-emerald-500 to-[#16222A] text-xs duration-200 ease-linear hover:bg-right md:flex lg:h-9 lg:text-sm"
-              variant={"special"}
-              size={"icon"}
-              style={{ backgroundSize: "200% auto" }}
-              onClick={() => activateOrRedirectAssistant(prismaDocument)}
-              title="Open AI Assistant"
-            >
-              <PapermarkSparkle className="h-5 w-5" />
-            </Button>
-          )}
-
-        <div className="flex items-center gap-x-1">
-          {actionRows.map((row, i) => (
-            <ul
-              key={i.toString()}
-              className="flex flex-wrap items-center justify-end gap-2 md:flex-nowrap md:gap-4"
-            >
-              {row.map((action, i) => (
-                <li key={i}>{action}</li>
-              ))}
-            </ul>
-          ))}
         </div>
 
-        <DropdownMenu open={menuOpen} onOpenChange={handleMenuStateChange}>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="outline"
-              className="h-8 w-8 bg-transparent p-0 lg:h-9 lg:w-9"
-            >
-              <span className="sr-only">Open menu</span>
-              <MoreVertical className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent
-            align="end"
-            className="w-[240px]"
-            ref={dropdownRef}
-          >
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuGroup className="block md:hidden">
-              <DropdownMenuItem>
-                <AddDocumentModal
-                  newVersion
-                  setAddDocumentModalOpen={setAddDocumentVersion}
+        <div className="flex items-center gap-x-4 md:gap-x-2">
+          {primaryVersion.type !== "notion" &&
+            primaryVersion.type !== "sheet" &&
+            primaryVersion.type !== "zip" &&
+            primaryVersion.type !== "video" &&
+            (!orientationLoading ? (
+              <ButtonTooltip content="Change orientation">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="hidden md:flex"
+                  onClick={changeDocumentOrientation}
+                  title={`Change document orientation to ${primaryVersion.isVertical ? "landscape" : "portrait"}`}
                 >
-                  <button
-                    title="Add a new version"
-                    className="flex items-center"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setAddDocumentVersion(true);
-                    }}
-                  >
-                    <FileUp className="mr-2 h-4 w-4" /> Add new version
-                  </button>
-                </AddDocumentModal>
-              </DropdownMenuItem>
+                  <PortraitLandscape
+                    className={cn(
+                      "h-6 w-6",
+                      !primaryVersion.isVertical && "-rotate-90 transform",
+                    )}
+                  />
+                </Button>
+              </ButtonTooltip>
+            ) : (
+              <div className="hidden md:flex">
+                <LoadingSpinner className="h-6 w-6" />
+              </div>
+            ))}
 
-              <DropdownMenuItem onClick={() => changeDocumentOrientation()}>
-                <PortraitLandscape
-                  className={cn(
-                    "mr-2 h-4 w-4",
-                    !primaryVersion.isVertical && "-rotate-90 transform",
+          {primaryVersion.type !== "notion" && (
+            <AddDocumentModal
+              newVersion
+              openModal={openAddDocModal}
+              setAddDocumentModalOpen={setOpenAddDocModal}
+            >
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setOpenAddDocModal(true);
+                }}
+                className="hidden md:flex"
+              >
+                <FileUp className="h-6 w-6" />
+              </Button>
+            </AddDocumentModal>
+          )}
+
+          {prismaDocument.type !== "notion" &&
+            prismaDocument.type !== "sheet" &&
+            prismaDocument.type !== "zip" &&
+            prismaDocument.type !== "video" &&
+            prismaDocument.assistantEnabled && (
+              <Button
+                className="group hidden h-8 space-x-1 whitespace-nowrap bg-gradient-to-r from-[#16222A] via-emerald-500 to-[#16222A] text-xs duration-200 ease-linear hover:bg-right md:flex lg:h-9 lg:text-sm"
+                variant={"special"}
+                size={"icon"}
+                style={{ backgroundSize: "200% auto" }}
+                onClick={() => activateOrRedirectAssistant(prismaDocument)}
+                title="Open AI Assistant"
+              >
+                <PapermarkSparkle className="h-5 w-5" />
+              </Button>
+            )}
+
+          <div className="flex items-center gap-x-1">
+            {actionRows.map((row, i) => (
+              <ul
+                key={i.toString()}
+                className="flex flex-wrap items-center justify-end gap-2 md:flex-nowrap md:gap-4"
+              >
+                {row.map((action, i) => (
+                  <li key={i}>{action}</li>
+                ))}
+              </ul>
+            ))}
+          </div>
+
+          <DropdownMenu open={menuOpen} onOpenChange={handleMenuStateChange}>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                className="h-8 w-8 bg-transparent p-0 lg:h-9 lg:w-9"
+              >
+                <span className="sr-only">Open menu</span>
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              className="w-[240px]"
+              ref={dropdownRef}
+            >
+              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuGroup className="block md:hidden">
+                {prismaDocument.type !== "notion" &&
+                  primaryVersion.type !== "video" && (
+                    <DropdownMenuItem>
+                      <AddDocumentModal
+                        newVersion
+                        setAddDocumentModalOpen={setAddDocumentVersion}
+                      >
+                        <button
+                          title="Add a new version"
+                          className="flex items-center"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setAddDocumentVersion(true);
+                          }}
+                        >
+                          <FileUp className="mr-2 h-4 w-4" /> Add new version
+                        </button>
+                      </AddDocumentModal>
+                    </DropdownMenuItem>
                   )}
-                />
-                {" Change orientation"}
+
+                {prismaDocument.type !== "notion" &&
+                  prismaDocument.type !== "sheet" &&
+                  prismaDocument.type !== "zip" &&
+                  primaryVersion.type !== "video" && (
+                    <>
+                      <DropdownMenuItem
+                        onClick={() => changeDocumentOrientation()}
+                      >
+                        <PortraitLandscape
+                          className={cn(
+                            "mr-2 h-4 w-4",
+                            !primaryVersion.isVertical &&
+                              "-rotate-90 transform",
+                          )}
+                        />
+                        Change orientation
+                      </DropdownMenuItem>
+
+                      <DropdownMenuItem
+                        onClick={() =>
+                          activateOrRedirectAssistant(prismaDocument)
+                        }
+                      >
+                        <PapermarkSparkle className="mr-2 h-4 w-4" />
+                        Open AI Assistant
+                      </DropdownMenuItem>
+                    </>
+                  )}
+
+                <DropdownMenuSeparator />
+              </DropdownMenuGroup>
+              {primaryVersion.type !== "notion" &&
+                primaryVersion.type !== "sheet" &&
+                primaryVersion.type !== "zip" &&
+                primaryVersion.type !== "video" &&
+                (!prismaDocument.assistantEnabled ? (
+                  <DropdownMenuItem
+                    onClick={() =>
+                      activateOrDeactivateAssistant(true, prismaDocument.id)
+                    }
+                  >
+                    <Sparkles className="mr-2 h-4 w-4" /> Activate Assistant
+                  </DropdownMenuItem>
+                ) : (
+                  <DropdownMenuItem
+                    onClick={() =>
+                      activateOrDeactivateAssistant(false, prismaDocument.id)
+                    }
+                  >
+                    <Sparkles className="mr-2 h-4 w-4" /> Disable Assistant
+                  </DropdownMenuItem>
+                ))}
+              {prismaDocument.type === "sheet" &&
+                !prismaDocument.advancedExcelEnabled &&
+                (isBusiness || isDatarooms || isTrial) && (
+                  <DropdownMenuItem
+                    onClick={() => enableAdvancedExcel(prismaDocument)}
+                  >
+                    <SheetIcon className="mr-2 h-4 w-4" />
+                    Enable Advanced Mode
+                  </DropdownMenuItem>
+                )}
+              {datarooms && datarooms.length !== 0 && (
+                <DropdownMenuItem onClick={() => setAddDataRoomOpen(true)}>
+                  <BetweenHorizontalStartIcon className="mr-2 h-4 w-4" />
+                  Add to dataroom
+                </DropdownMenuItem>
+              )}
+
+              {primaryVersion.type !== "notion" &&
+                primaryVersion.type !== "zip" && (
+                  <DropdownMenuItem
+                    onClick={() =>
+                      isFree
+                        ? handleUpgradeClick(
+                            PlanEnum.Business,
+                            "download-only-document",
+                          )
+                        : toggleDownloadOnly()
+                    }
+                  >
+                    {prismaDocument.downloadOnly ? (
+                      <>
+                        <ViewIcon className="mr-2 h-4 w-4" />
+                        Set viewable
+                      </>
+                    ) : (
+                      <>
+                        <CloudDownloadIcon className="mr-2 h-4 w-4" />
+                        Set download only{" "}
+                        {isFree && <PlanBadge className="ml-2" plan="pro" />}
+                      </>
+                    )}
+                  </DropdownMenuItem>
+                )}
+
+              {prismaDocument.type === "notion" && (
+                <>
+                  {primaryVersion.file.includes("mode=dark") ? (
+                    <DropdownMenuItem
+                      onClick={() => toggleNotionDarkMode(false)}
+                    >
+                      <MoonIcon className="mr-2 h-4 w-4" />
+                      Disable dark mode
+                    </DropdownMenuItem>
+                  ) : (
+                    <DropdownMenuItem
+                      onClick={() => toggleNotionDarkMode(true)}
+                    >
+                      <SunIcon className="mr-2 h-4 w-4" />
+                      Enable dark mode
+                    </DropdownMenuItem>
+                  )}
+                </>
+              )}
+
+              <DropdownMenuSeparator />
+
+              {/* Export views in CSV */}
+              <DropdownMenuItem
+                onClick={() =>
+                  isFree
+                    ? handleUpgradeClick(PlanEnum.Pro, "export-document-visits")
+                    : exportVisitCounts(prismaDocument)
+                }
+              >
+                <FileDownIcon className="mr-2 h-4 w-4" />
+                Export visits{" "}
+                {isFree && <PlanBadge className="ml-2" plan="pro" />}
               </DropdownMenuItem>
 
-              {prismaDocument.type !== "notion" &&
-                prismaDocument.type !== "sheet" && (
+              {/* Download latest version */}
+              {primaryVersion.type !== "notion" &&
+                primaryVersion.type !== "video" && (
                   <DropdownMenuItem
-                    onClick={() => activateOrRedirectAssistant(prismaDocument)}
+                    onClick={() => downloadDocument(primaryVersion)}
                   >
-                    <PapermarkSparkle className="mr-2 h-4 w-4" />
-                    Open AI Assistant
+                    <DownloadIcon className="mr-2 h-4 w-4" />
+                    Download latest version
                   </DropdownMenuItem>
                 )}
 
               <DropdownMenuSeparator />
-            </DropdownMenuGroup>
 
-            {primaryVersion.type !== "notion" &&
-              primaryVersion.type !== "sheet" &&
-              (!prismaDocument.assistantEnabled ? (
-                <DropdownMenuItem
-                  onClick={() =>
-                    activateOrDeactivateAssistant(true, prismaDocument.id)
-                  }
-                >
-                  <Sparkles className="mr-2 h-4 w-4" /> Activate Assistant
-                </DropdownMenuItem>
-              ) : (
-                <DropdownMenuItem
-                  onClick={() =>
-                    activateOrDeactivateAssistant(false, prismaDocument.id)
-                  }
-                >
-                  <Sparkles className="mr-2 h-4 w-4" /> Disable Assistant
-                </DropdownMenuItem>
-              ))}
-
-            {prismaDocument.type === "sheet" &&
-              !prismaDocument.advancedExcelEnabled &&
-              (plan === "business" || plan === "datarooms" || trial) && (
-                <DropdownMenuItem
-                  onClick={() => enableAdvancedExcel(prismaDocument)}
-                >
-                  <SheetIcon className="mr-2 h-4 w-4" />
-                  Enable Advanced Mode
-                </DropdownMenuItem>
-              )}
-
-            <DropdownMenuItem onClick={() => setAddDataroomOpen(true)}>
-              <BetweenHorizontalStartIcon className="mr-2 h-4 w-4" />
-              Add to dataroom
-            </DropdownMenuItem>
-
-            <DropdownMenuSeparator />
-
-            <DropdownMenuItem
-              className="text-destructive focus:bg-destructive focus:text-destructive-foreground"
-              onClick={(event) => handleButtonClick(event, prismaDocument.id)}
-            >
-              <TrashIcon className="mr-2 h-4 w-4" />
-              {isFirstClick ? "Really delete?" : "Delete document"}
-            </DropdownMenuItem>
-            {/* create a dropdownmenuitem that onclick calls a post request to /api/assistants with the documentId */}
-          </DropdownMenuContent>
-        </DropdownMenu>
+              <DropdownMenuItem
+                className="text-destructive focus:bg-destructive focus:text-destructive-foreground"
+                onClick={(event) => handleButtonClick(event, prismaDocument.id)}
+              >
+                <TrashIcon className="mr-2 h-4 w-4" />
+                {isFirstClick ? "Really delete?" : "Delete document"}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
 
-      {addDataroomOpen ? (
+      {isFree && prismaDocument.hasPageLinks && (
+        <AlertBanner
+          id="in-document-links-alert"
+          variant="destructive"
+          title="In-document links detected"
+          description={
+            <>
+              External in-document links are not available on the free plan.{" "}
+              <span
+                className="cursor-pointer underline underline-offset-4 hover:text-destructive/80"
+                onClick={() =>
+                  handleUpgradeClick(PlanEnum.Pro, "in-document-links")
+                }
+              >
+                Upgrade
+              </span>{" "}
+              to a higher plan to use this feature.
+            </>
+          }
+          onClose={() => handleCloseAlert("in-document-links-alert")}
+        />
+      )}
+
+      {prismaDocument.type === "sheet" && (isFree || isPro) && (
+        <AlertBanner
+          id="advanced-excel-alert"
+          variant="default"
+          title="Advanced Excel mode"
+          description={
+            <>
+              You can turn on advanced excel mode by{" "}
+              <span
+                className="cursor-pointer underline underline-offset-4 hover:text-primary/80"
+                onClick={() =>
+                  handleUpgradeClick(PlanEnum.Business, "advanced-excel-mode")
+                }
+              >
+                upgrading
+              </span>{" "}
+              to Business plan to preserve the file formatting. This uses the
+              Microsoft Office viewer.
+            </>
+          }
+          onClose={() => handleCloseAlert("advanced-excel-alert")}
+        />
+      )}
+
+      {prismaDocument.type === "sheet" &&
+        !prismaDocument.advancedExcelEnabled &&
+        (isBusiness || isDatarooms || isTrial) && (
+          <AlertBanner
+            id="enable-advanced-excel-alert"
+            variant="default"
+            title="Advanced Excel mode"
+            description={
+              <>
+                You can{" "}
+                <span
+                  className="cursor-pointer underline underline-offset-4 hover:text-primary/80"
+                  onClick={() => setMenuOpen(true)}
+                >
+                  turn on
+                </span>{" "}
+                advanced excel mode to improve the file formatting.
+                <br /> The advanced mode uses Microsoft viewer.
+              </>
+            }
+            onClose={() => handleCloseAlert("enable-advanced-excel-alert")}
+          />
+        )}
+
+      {addDataRoomOpen ? (
         <AddToDataroomModal
-          open={addDataroomOpen}
-          setOpen={setAddDataroomOpen}
+          open={addDataRoomOpen}
+          setOpen={setAddDataRoomOpen}
           documentId={prismaDocument.id}
           documentName={prismaDocument.name}
+        />
+      ) : null}
+
+      {planModalOpen ? (
+        <UpgradePlanModal
+          clickedPlan={selectedPlan}
+          trigger={planModalTrigger}
+          open={planModalOpen}
+          setOpen={setPlanModalOpen}
         />
       ) : null}
     </header>

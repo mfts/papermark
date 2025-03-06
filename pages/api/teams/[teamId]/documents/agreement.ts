@@ -1,16 +1,16 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
-import { client } from "@/trigger";
 import { DocumentStorageType } from "@prisma/client";
 import { getServerSession } from "next-auth/next";
-import { parsePageId } from "notion-utils";
 
 import { errorhandler } from "@/lib/errorHandler";
-import notion from "@/lib/notion";
 import prisma from "@/lib/prisma";
 import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
+import { convertFilesToPdfTask } from "@/lib/trigger/convert-files";
+import { convertPdfToImageRoute } from "@/lib/trigger/pdf-to-image-route";
 import { CustomUser } from "@/lib/types";
 import { getExtension, log } from "@/lib/utils";
+import { conversionQueue } from "@/lib/utils/trigger-utils";
 
 import { authOptions } from "../../../auth/[...nextauth]";
 
@@ -38,6 +38,8 @@ export default async function handle(
       numPages,
       type: fileType,
       folderPathName,
+      fileSize,
+      contentType,
     } = req.body as {
       name: string;
       url: string;
@@ -45,10 +47,12 @@ export default async function handle(
       numPages?: number;
       type?: string;
       folderPathName?: string;
+      fileSize?: number;
+      contentType: string;
     };
 
     try {
-      await getTeamWithUsersAndDocument({
+      const { team } = await getTeamWithUsersAndDocument({
         teamId,
         userId,
       });
@@ -74,6 +78,8 @@ export default async function handle(
           name: name,
           numPages: numPages,
           file: fileUrl,
+          originalFile: fileUrl,
+          contentType,
           type: type,
           storageType,
           ownerId: (session.user as CustomUser).id,
@@ -85,6 +91,7 @@ export default async function handle(
               emailProtected: false,
               enableFeedback: false,
               enableNotification: false,
+              teamId,
             },
           },
           versions: {
@@ -92,7 +99,10 @@ export default async function handle(
               file: fileUrl,
               type: type,
               storageType,
+              originalFile: fileUrl,
+              contentType,
               numPages: numPages,
+              fileSize: fileSize,
               isPrimary: true,
               versionNumber: 1,
             },
@@ -105,18 +115,45 @@ export default async function handle(
         },
       });
 
-      // skip triggering convert-pdf-to-image job for "notion" / "excel" documents
-      if (type === "pdf") {
-        // trigger document uploaded event to trigger convert-pdf-to-image job
-        await client.sendEvent({
-          id: document.versions[0].id, // unique eventId for the run
-          name: "document.uploaded",
-          payload: {
-            documentVersionId: document.versions[0].id,
-            teamId: teamId,
+      if (type === "docs") {
+        await convertFilesToPdfTask.trigger(
+          {
             documentId: document.id,
+            documentVersionId: document.versions[0].id,
+            teamId,
           },
-        });
+          {
+            idempotencyKey: `${teamId}-${document.versions[0].id}-docs`,
+            tags: [
+              `team_${teamId}`,
+              `document_${document.id}`,
+              `version:${document.versions[0].id}`,
+            ],
+            queue: conversionQueue(team.plan),
+            concurrencyKey: teamId,
+          },
+        );
+      }
+
+      if (type === "pdf") {
+        await convertPdfToImageRoute.trigger(
+          {
+            documentId: document.id,
+            documentVersionId: document.versions[0].id,
+            teamId,
+            // docId: fileUrl.split("/")[1],
+          },
+          {
+            idempotencyKey: `${teamId}-${document.versions[0].id}`,
+            tags: [
+              `team_${teamId}`,
+              `document_${document.id}`,
+              `version:${document.versions[0].id}`,
+            ],
+            queue: conversionQueue(team.plan),
+            concurrencyKey: teamId,
+          },
+        );
       }
 
       return res.status(201).json(document);

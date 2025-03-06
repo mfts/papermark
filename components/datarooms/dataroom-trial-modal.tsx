@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
+import { PlanEnum } from "@/ee/stripe/constants";
 import { E164Number } from "libphonenumber-js";
 import { toast } from "sonner";
 import { mutate } from "swr";
@@ -34,8 +35,12 @@ import {
 
 export function DataroomTrialModal({
   children,
+  openModal = false,
+  setOpenModal,
 }: {
   children?: React.ReactNode;
+  openModal?: boolean;
+  setOpenModal?: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
   const router = useRouter();
 
@@ -45,7 +50,7 @@ export function DataroomTrialModal({
   const [companyName, setCompanyName] = useState<string>("");
   const [phoneNumber, setPhoneNumber] = useState<E164Number | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
-  const [open, setOpen] = useState<boolean>(false);
+  const [open, setOpen] = useState<boolean>(openModal);
 
   const teamInfo = useTeam();
   const analytics = useAnalytics();
@@ -103,11 +108,21 @@ export function DataroomTrialModal({
     } finally {
       setLoading(false);
       setOpen(false);
+      if (openModal && setOpenModal) setOpenModal(false);
     }
   };
 
+  const onOpenChange = (open: boolean) => {
+    if (!open) {
+      setOpen(false);
+    } else {
+      setOpen(true);
+    }
+    if (openModal && setOpenModal) setOpenModal(false);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader className="text-start">
@@ -222,7 +237,7 @@ export function DataroomTrialModal({
 
               <div className="text-xs text-muted-foreground">
                 After the trial, upgrade to{" "}
-                <UpgradePlanModal clickedPlan="Business">
+                <UpgradePlanModal clickedPlan={PlanEnum.Business}>
                   <button className="underline">Papermark Business</button>
                 </UpgradePlanModal>{" "}
                 to continue using data rooms.

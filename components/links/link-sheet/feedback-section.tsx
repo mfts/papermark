@@ -28,6 +28,7 @@ export default function FeedbackSection({
       <LinkItem
         title="Enable feedback from visitors"
         enabled={enabled}
+        tooltipContent="Allow viewers to provide feedback on your content."
         action={handleEnableFeedback}
       />
     </div>

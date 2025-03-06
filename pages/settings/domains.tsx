@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
+import { CircleHelpIcon } from "lucide-react";
 import { mutate } from "swr";
 
 import { AddDomainModal } from "@/components/domains/add-domain-modal";
@@ -8,6 +9,7 @@ import DomainCard from "@/components/domains/domain-card";
 import AppLayout from "@/components/layouts/app";
 import { SettingsHeader } from "@/components/settings/settings-header";
 import { Button } from "@/components/ui/button";
+import { BadgeTooltip } from "@/components/ui/tooltip";
 
 import { useDomains } from "@/lib/swr/use-domains";
 
@@ -43,8 +45,16 @@ export default function Domains() {
               <h3 className="text-2xl font-semibold tracking-tight text-foreground">
                 Domains
               </h3>
-              <p className="text-sm text-muted-foreground">
-                Manage your custom domain for document sharing
+              <p className="flx-row flex items-center gap-2 text-sm text-muted-foreground">
+                Manage your custom domain for sharing documents and data rooms.
+                <BadgeTooltip
+                  content="How to connect a custom domain to your link?"
+                  key="verified"
+                  linkText="Click here"
+                  link="https://www.papermark.io/help/article/how-to-add-custom-domain-to-link"
+                >
+                  <CircleHelpIcon className="h-4 w-4 shrink-0 text-muted-foreground hover:text-foreground" />
+                </BadgeTooltip>
               </p>
             </div>
             <ul className="flex items-center justify-between gap-4">

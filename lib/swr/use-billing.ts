@@ -1,9 +1,5 @@
-import { useRouter } from "next/router";
-
-import { useMemo } from "react";
-
 import { useTeam } from "@/context/team-context";
-import { parse } from "path";
+import { PLAN_NAME_MAP } from "@/ee/stripe/constants";
 import useSWR from "swr";
 
 import { fetcher } from "@/lib/utils";
@@ -43,26 +39,33 @@ export type BasePlan =
   | "pro"
   | "trial"
   | "business"
-  | "datarooms";
+  | "datarooms"
+  | "datarooms-plus";
+
 type PlanWithTrial = `${BasePlan}+drtrial`;
+type PlanWithOld = `${BasePlan}+old` | `${BasePlan}+drtrial+old`;
 
 type PlanResponse = {
-  plan: BasePlan | PlanWithTrial;
+  plan: BasePlan | PlanWithTrial | PlanWithOld;
+  isCustomer: boolean;
+  subscriptionCycle: "monthly" | "yearly";
 };
 
 interface PlanDetails {
   plan: BasePlan | null;
   trial: string | null;
+  old: boolean;
 }
 
-function parsePlan(plan: BasePlan | PlanWithTrial): PlanDetails {
-  if (!plan) return { plan: null, trial: null };
+function parsePlan(plan: BasePlan | PlanWithTrial | PlanWithOld): PlanDetails {
+  if (!plan) return { plan: null, trial: null, old: false };
 
   // Split the plan on '+'
   const parts = plan.split("+");
   return {
     plan: parts[0] as BasePlan, // Always the base plan
-    trial: parts.length > 1 ? parts[1] : null, // 'drtrial' if present, otherwise null
+    trial: parts.includes("drtrial") ? "drtrial" : null, // 'drtrial' if present, otherwise null
+    old: parts.includes("old"), // true if 'old' is present, otherwise false
   };
 }
 
@@ -73,17 +76,28 @@ export function usePlan() {
   const { data: plan, error } = useSWR<PlanResponse>(
     teamId && `/api/teams/${teamId}/billing/plan`,
     fetcher,
-    {
-      dedupingInterval: 60000,
-    },
   );
 
   // Parse the plan using the parsing function
-  const parsedPlan = plan ? parsePlan(plan.plan) : { plan: null, trial: null };
+  const parsedPlan = plan
+    ? parsePlan(plan.plan)
+    : { plan: null, trial: null, old: false };
 
   return {
-    plan: parsedPlan.plan,
+    plan: parsedPlan.plan ?? "free",
+    planName: PLAN_NAME_MAP[parsedPlan.plan ?? "free"],
     trial: parsedPlan.trial,
+    isTrial: !!parsedPlan.trial,
+    isOldAccount: parsedPlan.old,
+    isCustomer: plan?.isCustomer,
+    isAnnualPlan: plan?.subscriptionCycle === "yearly",
+    isFree: parsedPlan.plan === "free",
+    isStarter: parsedPlan.plan === "starter",
+    isPro: parsedPlan.plan === "pro",
+    isBusiness: parsedPlan.plan === "business",
+    isDatarooms:
+      parsedPlan.plan === "datarooms" || parsedPlan.plan === "datarooms-plus",
+    isDataroomsPlus: parsedPlan.plan === "datarooms-plus",
     loading: !plan && !error,
     error,
   };

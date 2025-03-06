@@ -19,98 +19,111 @@ export default async function handle(
       return res.status(401).end("Unauhorized");
     }
 
-    const { teamId, id: dataroomId } = req.query as {
-      teamId: string;
-      id: string;
-    };
+    // INFO: This endpoint is not available anymore
+    return res.status(404).json("Not available");
 
-    const { emails } = req.body as { emails: string[] };
+    // const { teamId, id: dataroomId } = req.query as {
+    //   teamId: string;
+    //   id: string;
+    // };
 
-    if (!emails) {
-      return res.status(400).json("Email is missing in request body");
-    }
+    // const { emails } = req.body as { emails: string[] };
 
-    try {
-      const team = await prisma.team.findUnique({
-        where: {
-          id: teamId,
-          users: {
-            some: {
-              userId: (session.user as CustomUser).id,
-            },
-          },
-        },
-        select: {
-          id: true,
-        },
-      });
+    // if (!emails) {
+    //   return res.status(400).json("Email is missing in request body");
+    // }
 
-      if (!team) {
-        return res.status(403).end("Unauthorized to access this team");
-      }
+    // if (emails.length > 5) {
+    //   return res
+    //     .status(400)
+    //     .json("You can only send invitations to 5 emails at a time.");
+    // }
 
-      const dataroom = await prisma.dataroom.findUnique({
-        where: {
-          id: dataroomId,
-          teamId: teamId,
-        },
-        include: {
-          viewers: true,
-        },
-      });
+    // try {
+    //   const team = await prisma.team.findUnique({
+    //     where: {
+    //       id: teamId,
+    //       plan: {
+    //         notIn: ["free", "free+drtrial"],
+    //       },
+    //       users: {
+    //         some: {
+    //           userId: (session.user as CustomUser).id,
+    //         },
+    //       },
+    //     },
+    //     select: {
+    //       id: true,
+    //     },
+    //   });
 
-      if (!dataroom) {
-        return res.status(404).end("Dataroom not found");
-      }
+    //   if (!team) {
+    //     return res.status(403).end("Unauthorized to access this team");
+    //   }
 
-      await prisma.viewer.createMany({
-        data: emails.map((email) => ({
-          email,
-          dataroomId,
-          teamId,
-          invitedAt: new Date(),
-        })),
-        skipDuplicates: true,
-      });
+    //   const dataroom = await prisma.dataroom.findUnique({
+    //     where: {
+    //       id: dataroomId,
+    //       teamId: teamId,
+    //     },
+    //     include: {
+    //       viewers: true,
+    //     },
+    //   });
 
-      const viewers = await prisma.viewer.findMany({
-        where: {
-          dataroomId,
-          email: {
-            in: emails,
-          },
-        },
-        select: {
-          id: true,
-          email: true,
-        },
-      });
+    //   if (!dataroom) {
+    //     return res.status(404).end("Dataroom not found");
+    //   }
 
-      // create a new link for the invited group
-      const link = await prisma.link.create({
-        data: {
-          dataroomId,
-          linkType: "DATAROOM_LINK",
-          name: `Invited ${new Date().toLocaleString()}`,
-          enableFeedback: false,
-        },
-        select: {
-          id: true,
-        },
-      });
+    //   await prisma.viewer.createMany({
+    //     data: emails.map((email) => ({
+    //       email,
+    //       dataroomId,
+    //       teamId,
+    //       invitedAt: new Date(),
+    //     })),
+    //     skipDuplicates: true,
+    //   });
 
-      console.time("sendemail");
-      await sendViewerInvitation({
-        dataroomId,
-        linkId: link.id,
-        viewerIds: viewers.map((v) => v.id),
-        senderUserId: (session.user as CustomUser).id,
-      });
-      console.timeEnd("sendemail");
+    //   const viewers = await prisma.viewer.findMany({
+    //     where: {
+    //       dataroomId,
+    //       email: {
+    //         in: emails,
+    //       },
+    //     },
+    //     select: {
+    //       id: true,
+    //       email: true,
+    //     },
+    //   });
 
-      return res.status(200).json("Invitation sent!");
-    } catch (error) {
-      errorhandler(error, res);
-    }
+    //   // create a new link for the invited group
+    //   const link = await prisma.link.create({
+    //     data: {
+    //       dataroomId,
+    //       linkType: "DATAROOM_LINK",
+    //       name: `Invited ${new Date().toLocaleString()}`,
+    //       enableFeedback: false,
+    //       teamId,
+    //     },
+    //     select: {
+    //       id: true,
+    //     },
+    //   });
+
+    //   console.time("sendemail");
+    //   await sendViewerInvitation({
+    //     dataroomId,
+    //     linkId: link.id,
+    //     viewerIds: viewers.map((v) => v.id),
+    //     senderUserId: (session.user as CustomUser).id,
+    //   });
+    //   console.timeEnd("sendemail");
+
+    //   return res.status(200).json("Invitation sent!");
+    // } catch (error) {
+    //   errorhandler(error, res);
+    // }
   }
 }

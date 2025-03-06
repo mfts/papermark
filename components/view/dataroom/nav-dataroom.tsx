@@ -55,7 +55,11 @@ export default function DataroomNav({
   const [loading, setLoading] = useState<boolean>(false);
 
   const downloadDataroom = async () => {
-    if (!allowDownload || type === "notion" || isPreview) return;
+    if (isPreview) {
+      toast.error("You cannot download datarooms in preview mode.");
+      return;
+    }
+    if (!allowDownload || type === "notion") return;
     setLoading(true);
     try {
       toast.promise(

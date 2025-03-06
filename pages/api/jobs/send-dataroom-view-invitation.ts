@@ -35,14 +35,14 @@ export default async function handle(
     senderUserId: string;
   };
 
-  let viewer: { email: string; dataroom: { name: string } } | null = null;
+  let viewer: { email: string; dataroom: { name: string } | null } | null =
+    null;
 
   try {
     // Fetch the link to verify the settings
     viewer = await prisma.viewer.findUnique({
       where: {
         id: viewerId,
-        dataroomId: dataroomId,
       },
       select: {
         email: true,
@@ -82,7 +82,7 @@ export default async function handle(
 
     // send email to document owner that document
     await sendDataroomViewerInvite({
-      dataroomName: viewer.dataroom.name,
+      dataroomName: viewer.dataroom?.name ?? "",
       senderEmail: user.email!,
       to: viewer.email,
       url: `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${linkId}?email=${encodeURIComponent(viewer.email)}`,

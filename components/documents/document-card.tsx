@@ -1,10 +1,10 @@
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
 
 import { useEffect, useRef, useState } from "react";
 
 import { TeamContextType } from "@/context/team-context";
+import { PlanEnum } from "@/ee/stripe/constants";
 import {
   BetweenHorizontalStartIcon,
   FolderInputIcon,
@@ -17,8 +17,6 @@ import { toast } from "sonner";
 import { mutate } from "swr";
 
 import BarChart from "@/components/shared/icons/bar-chart";
-import Check from "@/components/shared/icons/check";
-import Copy from "@/components/shared/icons/copy";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -29,11 +27,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+import useDatarooms from "@/lib/swr/use-datarooms";
+import useLimits from "@/lib/swr/use-limits";
 import { DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
 import { cn, nFormatter, timeAgo } from "@/lib/utils";
 import { fileIcon } from "@/lib/utils/get-file-icon";
 import { useCopyToClipboard } from "@/lib/utils/use-copy-to-clipboard";
 
+import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
+import { DataroomTrialModal } from "../datarooms/dataroom-trial-modal";
 import { AddToDataroomModal } from "./add-document-to-dataroom-modal";
 import { MoveToFolderModal } from "./move-folder-modal";
 
@@ -61,7 +63,13 @@ export default function DocumentsCard({
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
   const [moveFolderOpen, setMoveFolderOpen] = useState<boolean>(false);
   const [addDataroomOpen, setAddDataroomOpen] = useState<boolean>(false);
+  const [trialModalOpen, setTrialModalOpen] = useState<boolean>(false);
+  const [planModalOpen, setPlanModalOpen] = useState<boolean>(false);
+
+  const { datarooms } = useDatarooms();
+
   const dropdownRef = useRef<HTMLDivElement | null>(null);
+  const { canAddDocuments } = useLimits();
 
   /** current folder name */
   const currentFolderPath = router.query.name as string[] | undefined;
@@ -205,7 +213,7 @@ export default function DocumentsCard({
 
           <div className="flex-col">
             <div className="flex items-center">
-              <h2 className="min-w-0 max-w-[150px] truncate text-sm font-semibold leading-6 text-foreground sm:max-w-md">
+              <h2 className="min-w-0 max-w-[250px] truncate text-sm font-semibold leading-6 text-foreground sm:max-w-md">
                 <Link
                   href={`/documents/${prismaDocument.id}`}
                   className="w-full truncate"
@@ -214,7 +222,7 @@ export default function DocumentsCard({
                   <span className="absolute inset-0" />
                 </Link>
               </h2>
-              <div className="ml-2 flex">
+              {/* <div className="ml-2 flex">
                 <button
                   className="group z-10 rounded-md bg-gray-200 p-1 transition-all duration-75 hover:scale-105 hover:bg-emerald-100 active:scale-95 dark:bg-gray-700 hover:dark:bg-emerald-200"
                   onClick={() =>
@@ -228,7 +236,7 @@ export default function DocumentsCard({
                     <Copy className="size-3 text-muted-foreground group-hover:text-emerald-700" />
                   )}
                 </button>
-              </div>
+              </div> */}
             </div>
             <div className="mt-1 flex items-center space-x-1 text-xs leading-5 text-muted-foreground">
               <p className="truncate">{timeAgo(prismaDocument.createdAt)}</p>
@@ -279,14 +287,20 @@ export default function DocumentsCard({
                 <FolderInputIcon className="mr-2 h-4 w-4" />
                 Move to folder
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={(e) => handleDuplicateDocument(e)}>
+              {/* INFO: Duplicate document is disabled for now */}
+              {/* <DropdownMenuItem
+                onClick={(e) => handleDuplicateDocument(e)}
+                disabled={!canAddDocuments}
+              >
                 <Layers2Icon className="mr-2 h-4 w-4" />
                 Duplicate document
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setAddDataroomOpen(true)}>
-                <BetweenHorizontalStartIcon className="mr-2 h-4 w-4" />
-                Add to dataroom
-              </DropdownMenuItem>
+              </DropdownMenuItem> */}
+              {datarooms && datarooms.length !== 0 && (
+                <DropdownMenuItem onClick={() => setAddDataroomOpen(true)}>
+                  <BetweenHorizontalStartIcon className="mr-2 h-4 w-4" />
+                  Add to dataroom
+                </DropdownMenuItem>
+              )}
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={(event) => handleButtonClick(event, prismaDocument.id)}
@@ -319,6 +333,21 @@ export default function DocumentsCard({
           setOpen={setAddDataroomOpen}
           documentId={prismaDocument.id}
           documentName={prismaDocument.name}
+        />
+      ) : null}
+
+      {trialModalOpen ? (
+        <DataroomTrialModal
+          openModal={trialModalOpen}
+          setOpenModal={setTrialModalOpen}
+        />
+      ) : null}
+      {planModalOpen ? (
+        <UpgradePlanModal
+          clickedPlan={PlanEnum.DataRooms}
+          trigger="datarooms"
+          open={planModalOpen}
+          setOpen={setPlanModalOpen}
         />
       ) : null}
     </>

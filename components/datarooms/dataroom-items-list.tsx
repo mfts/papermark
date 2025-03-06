@@ -14,7 +14,6 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import { motion } from "framer-motion";
 import {
   ArchiveXIcon,
   FileIcon,
@@ -22,6 +21,7 @@ import {
   FolderInputIcon,
   XIcon,
 } from "lucide-react";
+import { motion } from "motion/react";
 
 import { EmptyDocuments } from "@/components/documents/empty-document";
 import FolderCard from "@/components/documents/folder-card";
@@ -83,6 +83,9 @@ export function DataroomItemsList({
   const [isOverFolder, setIsOverFolder] = useState<boolean>(false);
   const [isDragging, setIsDragging] = useState<boolean>(false);
 
+  const handleCloseDrawer = () => {
+    setShowDrawer(false);
+  };
   const { setShowRemoveDataroomDocumentsModal, RemoveDataroomDocumentsModal } =
     useRemoveDataroomDocumentsModal({
       documentIds: selectedDocuments,
@@ -283,7 +286,7 @@ export function DataroomItemsList({
       );
     } else {
       return (
-        <div className="mb-2 flex items-center gap-x-2 pt-5">
+        <div className="mb-2 flex min-h-10 items-center gap-x-2">
           {folderCount > 0 ? (
             <p className="flex items-center gap-x-1 text-sm text-gray-400">
               <FolderIcon className="h-5 w-5" />
@@ -413,6 +416,7 @@ export function DataroomItemsList({
           open={showDrawer}
           onOpenChange={setShowDrawer}
           uploads={uploads}
+          handleCloseDrawer={handleCloseDrawer}
           setUploads={setUploads}
           rejectedFiles={rejectedFiles}
           setRejectedFiles={setRejectedFiles}

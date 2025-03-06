@@ -1,25 +1,102 @@
+import Link from "next/link";
 import { useRouter } from "next/router";
 
 import { useEffect, useMemo, useState } from "react";
 import React from "react";
 
 import { useTeam } from "@/context/team-context";
-import { motion } from "framer-motion";
-import { CheckIcon } from "lucide-react";
+import { getStripe } from "@/ee/stripe/client";
+import { Feature, PlanEnum, getPlanFeatures } from "@/ee/stripe/constants";
+import { getPriceIdFromPlan } from "@/ee/stripe/functions/get-price-id-from-plan";
+import { PLANS } from "@/ee/stripe/utils";
+import { CheckIcon, Users2Icon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 import { useAnalytics } from "@/lib/analytics";
-import { STAGGER_CHILD_VARIANTS } from "@/lib/constants";
-import { getStripe } from "@/lib/stripe/client";
-import { PLANS } from "@/lib/stripe/utils";
 import { usePlan } from "@/lib/swr/use-billing";
-import { capitalize } from "@/lib/utils";
+import { capitalize, cn } from "@/lib/utils";
 
-import { DataroomTrialModal } from "../datarooms/dataroom-trial-modal";
-import { Badge } from "../ui/badge";
+// Feature rendering component
+const FeatureItem = ({ feature }: { feature: Feature }) => {
+  const baseClasses = `flex items-center ${feature.isHighlighted ? "bg-orange-50 -mx-6 px-6 py-2 -my-1 font-bold rounded-md dark:bg-orange-900/20" : ""}`;
+
+  if (feature.isUsers) {
+    return (
+      <div className={cn("justify-between gap-x-8", baseClasses)}>
+        <div className="flex items-center gap-x-3">
+          <CheckIcon className="h-5 w-5 flex-shrink-0 text-[#fb7a00]" />
+          <span>{feature.text}</span>
+        </div>
+        {feature.tooltip && (
+          <TooltipProvider>
+            <Tooltip delayDuration={0}>
+              <TooltipTrigger asChild>
+                <div className="cursor-help">
+                  <Users2Icon className="h-4 w-4 text-gray-500" />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{feature.tooltip}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className={cn("text-sm", baseClasses)}>
+      <CheckIcon className="mr-3 h-5 w-5 flex-shrink-0 text-[#fb7a00]" />
+      <span>{feature.text}</span>
+    </div>
+  );
+};
+
+// Segmented control component for Base/Plus selection
+const PlanSelector = ({
+  value,
+  onChange,
+}: {
+  value: boolean;
+  onChange: (value: boolean) => void;
+}) => {
+  return (
+    <div className="mt-1 flex w-1/2 rounded-lg border border-gray-200 p-1">
+      <button
+        className={cn(
+          "flex-1 rounded-md px-3 py-1 text-sm transition-colors",
+          !value
+            ? "bg-gray-300 text-foreground"
+            : "text-gray-600 hover:text-gray-900",
+        )}
+        onClick={() => onChange(false)}
+      >
+        Base
+      </button>
+      <button
+        className={cn(
+          "flex-1 rounded-md px-3 py-1 text-sm transition-colors",
+          value
+            ? "bg-gray-900 text-white"
+            : "text-gray-600 hover:text-gray-900",
+        )}
+        onClick={() => onChange(true)}
+      >
+        Plus
+      </button>
+    </div>
+  );
+};
 
 export function UpgradePlanModal({
   clickedPlan,
@@ -28,92 +105,52 @@ export function UpgradePlanModal({
   setOpen,
   children,
 }: {
-  clickedPlan: "Data Rooms" | "Business" | "Pro";
+  clickedPlan: PlanEnum;
   trigger?: string;
   open?: boolean;
   setOpen?: React.Dispatch<React.SetStateAction<boolean>>;
   children?: React.ReactNode;
 }) {
   const router = useRouter();
-  const [plan, setPlan] = useState<"Pro" | "Business" | "Data Rooms">(
-    clickedPlan,
-  );
   const [period, setPeriod] = useState<"yearly" | "monthly">("yearly");
-  const [clicked, setClicked] = useState<boolean>(false);
+  const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const teamInfo = useTeam();
-  const { plan: teamPlan, trial } = usePlan();
+  const teamId = teamInfo?.currentTeam?.id;
+  const { plan: teamPlan, isCustomer, isOldAccount } = usePlan();
   const analytics = useAnalytics();
+  const [showDataRoomsPlus, setShowDataRoomsPlus] = useState(false);
 
-  const isTrial = !!trial;
-
-  const features = useMemo(() => {
-    if (plan === "Pro") {
-      return [
-        "2 users included",
-        "Custom branding",
-        "Folder organization",
-        "Require email verification",
-        "Papermark branding removed",
-        "1-year analytics retention",
-      ];
+  const plansToShow = useMemo(() => {
+    switch (clickedPlan) {
+      case PlanEnum.Pro:
+        return [PlanEnum.Pro, PlanEnum.Business];
+      case PlanEnum.Business:
+        return [PlanEnum.Business, PlanEnum.DataRooms];
+      case PlanEnum.DataRooms:
+        return [PlanEnum.DataRooms, PlanEnum.DataRoomsPlus];
+      case PlanEnum.DataRoomsPlus:
+        return [PlanEnum.DataRooms, PlanEnum.DataRoomsPlus];
+      default:
+        return [PlanEnum.Pro, PlanEnum.Business];
     }
-
-    if (plan === "Business") {
-      return [
-        "3 users included",
-        "1 dataroom",
-        "Multi-file sharing",
-        <span key="custom-domain">
-          Custom domain <b>for documents</b>
-        </span>,
-        "Advanced link controls",
-        "Allow/Block list",
-        "Unlimited documents",
-        "Unlimited subfolder levels",
-        "Large file uploads",
-        "48h priority support",
-      ];
-    }
-    if (plan === "Data Rooms") {
-      return [
-        "3 users included",
-        "Unlimited data rooms",
-        <span key="custom-dataroom">
-          Custom domain <b>for data rooms</b>
-        </span>,
-
-        "NDA agreements",
-        "Dynamic watermark",
-        "Granular user/group permisssions",
-        "Advanced data rooms analytics",
-        "24h priority support",
-        "Custom onboarding",
-      ];
-    }
-
-    return [
-      "2 users",
-      "Custom branding",
-      "1-year analytics retention",
-      "Folders",
-    ];
-  }, [plan]);
+  }, [clickedPlan]);
 
   // Track analytics event when modal is opened
   useEffect(() => {
     if (open) {
       analytics.capture("Upgrade Button Clicked", {
         trigger: trigger,
-        teamId: teamInfo?.currentTeam?.id,
+        teamId,
       });
+    } else {
+      setShowDataRoomsPlus(false);
     }
   }, [open, trigger]);
 
-  // Track analytics event when child button is present
   const handleUpgradeClick = () => {
     analytics.capture("Upgrade Button Clicked", {
       trigger: trigger,
-      teamId: teamInfo?.currentTeam?.id,
+      teamId,
     });
   };
 
@@ -127,196 +164,189 @@ export function UpgradePlanModal({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{buttonChild}</DialogTrigger>
-      <DialogContent className="bg-background text-foreground">
-        <motion.div
-          variants={{
-            show: {
-              transition: {
-                staggerChildren: 0.15,
-              },
-            },
-          }}
-          initial="hidden"
-          animate="show"
-          className="flex flex-col items-center justify-center space-y-3 border-b border-border py-8 sm:px-12"
-        >
-          <motion.div variants={STAGGER_CHILD_VARIANTS}>
-            <p className="text-2xl font-bold tracking-tighter text-foreground">
-              Papermark
-            </p>
-          </motion.div>
-          <motion.h3
-            className="text-lg font-medium"
-            variants={STAGGER_CHILD_VARIANTS}
-          >
-            Upgrade to {plan}
-          </motion.h3>
-          <motion.p
-            className="text-center text-sm text-muted-foreground"
-            variants={STAGGER_CHILD_VARIANTS}
-          >
-            Enjoy higher limits and extra features with our {plan} plan.
-          </motion.p>
-        </motion.div>
+      <DialogContent
+        className="max-h-[90vh] min-h-fit overflow-y-auto bg-gray-50 text-foreground dark:bg-gray-900"
+        style={{
+          width: "90vw",
+          maxWidth: "900px",
+        }}
+      >
+        <div className="flex items-center justify-center">
+          <span className="mr-2 text-sm">Monthly</span>
+          <Switch
+            checked={period === "yearly"}
+            onCheckedChange={() =>
+              setPeriod(period === "monthly" ? "yearly" : "monthly")
+            }
+          />
+          <span className="ml-2 text-sm">
+            Annually <span className="text-[#fb7a00]">(Save up to 35%)</span>
+          </span>
+        </div>
 
-        <div className="bg-background pb-8 text-left sm:px-8">
-          <Tabs className="pb-4" defaultValue={plan}>
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="Pro" onClick={() => setPlan("Pro")}>
-                Pro
-              </TabsTrigger>
-              <TabsTrigger value="Business" onClick={() => setPlan("Business")}>
-                Business
-              </TabsTrigger>
-              <TabsTrigger
-                value="Data Rooms"
-                onClick={() => setPlan("Data Rooms")}
+        <div className="isolate grid grid-cols-1 gap-4 overflow-hidden rounded-xl p-4 md:grid-cols-2">
+          {plansToShow.map((planOption) => {
+            const planFeatures = getPlanFeatures(planOption, {
+              period,
+              showDataRoomsPlus:
+                planOption === PlanEnum.DataRooms && showDataRoomsPlus,
+            });
+
+            // Get the effective plan name for display
+            const displayPlanName =
+              planOption === PlanEnum.DataRooms && showDataRoomsPlus
+                ? PlanEnum.DataRoomsPlus
+                : planOption;
+
+            const isDataRoomsUpgrade = plansToShow.includes(PlanEnum.DataRooms);
+
+            return (
+              <div
+                key={displayPlanName}
+                className={`relative flex flex-col rounded-lg border ${
+                  planOption === PlanEnum.Business
+                    ? "border-[#fb7a00]"
+                    : planOption === PlanEnum.DataRoomsPlus &&
+                        isDataRoomsUpgrade
+                      ? "border-gray-900"
+                      : "border-gray-200"
+                } bg-white p-6 shadow-sm dark:bg-gray-900`}
               >
-                Data Rooms
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-          <motion.div
-            className="flex flex-col space-y-3"
-            variants={STAGGER_CHILD_VARIANTS}
-            initial="hidden"
-            animate="show"
-          >
-            <div className="mb-4">
-              <div className="mb-4 flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <h4 className="font-medium text-foreground">
-                    {plan} {capitalize(period)}
-                  </h4>
-                  <Badge
-                    variant="outline"
-                    className="text-sm font-normal normal-case"
+                <div className="mb-4 border-b border-gray-200 pb-2">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-balance text-xl font-medium text-gray-900 dark:text-white">
+                      Papermark {displayPlanName}
+                    </h3>
+                  </div>
+                  <span
+                    className={cn(
+                      "absolute right-2 top-2 rounded px-2 py-1 text-xs text-white",
+                      planOption === PlanEnum.Business && "bg-[#fb7a00]",
+                      displayPlanName === PlanEnum.DataRoomsPlus &&
+                        "bg-gray-900",
+                    )}
                   >
-                    {`€${
-                      PLANS.find((p) => p.name === plan)!.price[period].amount
-                    }/month`}{" "}
-                    {period === "yearly" ? (
-                      <span className="ml-1 text-xs">(billed yearly)</span>
-                    ) : null}
-                  </Badge>
+                    {planOption === PlanEnum.Business && "Most popular"}
+                    {displayPlanName === PlanEnum.DataRoomsPlus && "Best deal"}
+                  </span>
                 </div>
-                <button
-                  onClick={() => {
-                    setPeriod(period === "monthly" ? "yearly" : "monthly");
-                  }}
-                  className="text-xs text-muted-foreground underline underline-offset-4 transition-colors hover:text-gray-800 hover:dark:text-muted-foreground/80"
-                >
-                  {period === "monthly"
-                    ? plan === "Business"
-                      ? "Want 43% off?"
-                      : plan === "Data Rooms"
-                        ? "Want 50% off?"
-                        : "Want 35% off?"
-                    : "Switch to monthly"}
-                </button>
-              </div>
-              <motion.div
-                variants={{
-                  show: {
-                    transition: {
-                      staggerChildren: 0.08,
-                    },
-                  },
-                }}
-                initial="hidden"
-                animate="show"
-                className="flex flex-col space-y-2"
-              >
-                {features.map((feature, i) => (
-                  <motion.div
-                    key={i}
-                    variants={STAGGER_CHILD_VARIANTS}
-                    className="flex items-center gap-x-3 text-sm text-muted-foreground"
-                  >
-                    <CheckIcon
-                      className="h-5 w-5 flex-none text-[#fb7a00]"
-                      aria-hidden="true"
-                    />
-                    <span>{feature}</span>
-                  </motion.div>
-                ))}
-              </motion.div>
-            </div>
-            <Button
-              loading={clicked}
-              onClick={() => {
-                setClicked(true);
-                // @ts-ignore
-                // prettier-ignore
 
-                if (teamPlan !== "free") {
-                  fetch(
-                    `/api/teams/${teamInfo?.currentTeam?.id}/billing/manage`,
+                <div className="mb-2">
+                  <span className="text-balance text-4xl font-medium tabular-nums text-gray-900 dark:text-white">
+                    €
                     {
-                      method: "POST",
-                    },
-                  )
-                    .then(async (res) => {
-                      const url = await res.json();
-                      router.push(url);
-                    })
-                    .catch((err) => {
-                      alert(err);
-                      setClicked(false);
-                    });
-                } else {
+                      PLANS.find((p) => p.name === displayPlanName)?.price[
+                        period
+                      ].amount
+                    }
+                  </span>
+                  <span className="text-gray-500 dark:text-white/75">
+                    /month
+                  </span>
+                </div>
 
-                fetch(
-                  `/api/teams/${
-                    teamInfo?.currentTeam?.id
-                  }/billing/upgrade?priceId=${
-                    PLANS.find((p) => p.name === plan)!.price[period].priceIds[
-                      process.env.NEXT_PUBLIC_VERCEL_ENV === "production"
-                        ? "production"
-                        : "test"
-                    ]
-                  }`,
-                  {
-                    method: "POST",
-                    headers: {
-                      "Content-Type": "application/json",
-                    },
-                  },
-                )
-                  .then(async (res) => {
-                    const data = await res.json();
-                    const { id: sessionId } = data;
-                    const stripe = await getStripe();
-                    stripe?.redirectToCheckout({ sessionId });
-                  })
-                  .catch((err) => {
-                    alert(err);
-                    setClicked(false);
-                  });
-                }
-              }}
-            >{`Upgrade to ${plan} ${capitalize(period)}`}</Button>
-            <div className="flex items-center justify-center space-x-2">
-              {plan === "Business" && !isTrial ? (
-                <DataroomTrialModal>
-                  <button
-                    className="text-center text-xs text-muted-foreground underline-offset-4 transition-all hover:text-gray-800 hover:underline hover:dark:text-muted-foreground/80"
-                    onClick={() => analytics.capture("Dataroom Trial Clicked")}
+                {planOption === PlanEnum.DataRooms &&
+                  isDataRoomsUpgrade &&
+                  !plansToShow.includes(PlanEnum.DataRoomsPlus) && (
+                    <PlanSelector
+                      value={showDataRoomsPlus}
+                      onChange={setShowDataRoomsPlus}
+                    />
+                  )}
+
+                <p className="mt-4 text-sm text-gray-600 dark:text-white">
+                  {planFeatures.featureIntro}
+                </p>
+
+                <ul className="mb-6 mt-2 space-y-2 text-sm leading-6 text-gray-600 dark:text-muted-foreground">
+                  {planFeatures.features.map((feature, i) => (
+                    <li key={i}>
+                      <FeatureItem feature={feature} />
+                    </li>
+                  ))}
+                </ul>
+
+                <div className="mt-auto">
+                  <Button
+                    variant={
+                      planOption === PlanEnum.Business ? "default" : "outline"
+                    }
+                    className={`w-full py-2 text-sm ${
+                      planOption === PlanEnum.Business
+                        ? "bg-[#fb7a00]/90 text-white hover:bg-[#fb7a00]"
+                        : "bg-gray-800 text-white hover:bg-gray-900 hover:text-white dark:hover:bg-gray-700/80"
+                    }`}
+                    loading={selectedPlan === planOption}
+                    disabled={selectedPlan !== null}
+                    onClick={() => {
+                      const priceId = getPriceIdFromPlan(
+                        displayPlanName,
+                        period,
+                      );
+
+                      setSelectedPlan(planOption);
+                      if (isCustomer && teamPlan !== "free") {
+                        fetch(`/api/teams/${teamId}/billing/manage`, {
+                          method: "POST",
+                          headers: {
+                            "Content-Type": "application/json",
+                          },
+                          body: JSON.stringify({
+                            priceId,
+                            upgradePlan: true,
+                          }),
+                        })
+                          .then(async (res) => {
+                            const url = await res.json();
+                            router.push(url);
+                          })
+                          .catch((err) => {
+                            alert(err);
+                            setSelectedPlan(null);
+                          });
+                      } else {
+                        fetch(
+                          `/api/teams/${teamId}/billing/upgrade?priceId=${
+                            priceId
+                          }`,
+                          {
+                            method: "POST",
+                            headers: {
+                              "Content-Type": "application/json",
+                            },
+                          },
+                        )
+                          .then(async (res) => {
+                            const data = await res.json();
+                            const { id: sessionId } = data;
+                            const stripe = await getStripe(isOldAccount);
+                            stripe?.redirectToCheckout({ sessionId });
+                          })
+                          .catch((err) => {
+                            alert(err);
+                            setSelectedPlan(null);
+                          });
+                      }
+                    }}
                   >
-                    Looking for a trial?
-                  </button>
-                </DataroomTrialModal>
-              ) : (
-                <a
-                  href="https://cal.com/marcseitz/papermark"
-                  target="_blank"
-                  className="text-center text-xs text-muted-foreground underline-offset-4 transition-all hover:text-gray-800 hover:underline hover:dark:text-muted-foreground/80"
-                >
-                  Looking for Papermark Enterprise?
-                </a>
-              )}
-            </div>
-          </motion.div>
+                    {selectedPlan === planOption
+                      ? "Redirecting to Stripe..."
+                      : `Upgrade to ${displayPlanName} ${capitalize(period)}`}
+                  </Button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        <div className="flex flex-col items-center text-center text-sm text-muted-foreground">
+          All plans include unlimited viewers and page by page document
+          analytics.
+          <Link
+            href="/settings/upgrade"
+            className="underline underline-offset-4 hover:text-foreground"
+          >
+            See all plans
+          </Link>
         </div>
       </DialogContent>
     </Dialog>

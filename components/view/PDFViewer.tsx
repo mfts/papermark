@@ -6,7 +6,7 @@ import { Document, Page, pdfjs } from "react-pdf";
 
 import Nav from "./nav";
 
-pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
+pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
 export default function PDFViewer(props: any) {
   const [numPages, setNumPages] = useState<number>(0);
@@ -169,6 +169,7 @@ export default function PDFViewer(props: any) {
         assistantEnabled={props.assistantEnabled}
         viewId={props.viewId}
         linkId={props.linkId}
+        documentId={props.documentId}
       />
       <div
         hidden={loading}

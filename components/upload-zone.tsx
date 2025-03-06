@@ -1,24 +1,75 @@
 import { useRouter } from "next/router";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { DocumentStorageType } from "@prisma/client";
 import { useSession } from "next-auth/react";
-import { FileRejection, useDropzone } from "react-dropzone";
+import { DropEvent, FileRejection, useDropzone } from "react-dropzone";
+import { toast } from "sonner";
 import { mutate } from "swr";
 
 import { useAnalytics } from "@/lib/analytics";
+import { SUPPORTED_DOCUMENT_MIME_TYPES } from "@/lib/constants";
 import { DocumentData, createDocument } from "@/lib/documents/create-document";
 import { resumableUpload } from "@/lib/files/tus-upload";
 import { usePlan } from "@/lib/swr/use-billing";
+import useLimits from "@/lib/swr/use-limits";
 import { CustomUser } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { getSupportedContentType } from "@/lib/utils/get-content-type";
+import {
+  getFileSizeLimit,
+  getFileSizeLimits,
+} from "@/lib/utils/get-file-size-limits";
 import { getPagesCount } from "@/lib/utils/get-page-number-count";
 
-interface FileWithPath extends File {
+// Originally these mime values were directly used in the dropzone hook.
+// There was a solid reason to take them out of the scope, primarily to solve a browser compatibility issue to determine the file type when user dropped a folder.
+// you will figure out how this change helped to fix the compatibility issue once you have went through reading of `getFilesFromDropEvent` and `traverseFolder`
+const acceptableDropZoneMimeTypesWhenIsFreePlanAndNotTrail = {
+  "application/pdf": [], // ".pdf"
+  "application/vnd.ms-excel": [], // ".xls"
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [], // ".xlsx"
+  "text/csv": [], // ".csv"
+  "application/vnd.oasis.opendocument.spreadsheet": [], // ".ods"
+  "image/png": [], // ".png"
+  "image/jpeg": [], // ".jpeg"
+  "image/jpg": [], // ".jpg"
+};
+const allAcceptableDropZoneMimeTypes = {
+  "application/pdf": [], // ".pdf"
+  "application/vnd.ms-excel": [], // ".xls"
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [], // ".xlsx"
+  "application/vnd.ms-excel.sheet.macroEnabled.12": [".xlsm"], // ".xlsm"
+  "text/csv": [], // ".csv"
+  "application/vnd.oasis.opendocument.spreadsheet": [], // ".ods"
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [], // ".docx"
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation":
+    [], // ".pptx"
+  "application/vnd.ms-powerpoint": [], // ".ppt"
+  "application/msword": [], // ".doc"
+  "application/vnd.oasis.opendocument.text": [], // ".odt"
+  "application/vnd.oasis.opendocument.presentation": [], // ".odp"
+  "image/vnd.dwg": [".dwg"], // ".dwg"
+  "image/vnd.dxf": [".dxf"], // ".dxf"
+  "image/png": [], // ".png"
+  "image/jpeg": [], // ".jpeg"
+  "image/jpg": [], // ".jpg"
+  "application/zip": [], // ".zip"
+  "application/x-zip-compressed": [], // ".zip"
+  "video/mp4": [], // ".mp4"
+  "video/webm": [], // ".webm"
+  "video/quicktime": [], // ".mov"
+  "video/x-msvideo": [], // ".avi"
+  "video/ogg": [], // ".ogg"
+  "application/vnd.google-earth.kml+xml": [".kml"], // ".kml"
+  "application/vnd.google-earth.kmz": [".kmz"], // ".kmz"
+};
+
+interface FileWithPaths extends File {
   path?: string;
+  whereToUploadPath?: string;
 }
 
 export default function UploadZone({
@@ -59,23 +110,117 @@ export default function UploadZone({
   const { data: session } = useSession();
   const isFreePlan = plan === "free";
   const isTrial = !!trial;
-  const maxSize = plan === "business" || plan === "datarooms" ? 250 : 30;
-  const maxNumPages = plan === "business" || plan === "datarooms" ? 500 : 100;
+  // const maxSize = isFreePlan && !isTrial ? 30 : 350;
+  const maxNumPages = isFreePlan && !isTrial ? 100 : 500;
+  const { limits, canAddDocuments } = useLimits();
+  const remainingDocuments = limits?.documents
+    ? limits?.documents - limits?.usage?.documents
+    : 0;
 
   const [progress, setProgress] = useState<number>(0);
   const [showProgress, setShowProgress] = useState(false);
   const uploadProgress = useRef<number[]>([]);
 
+  const fileSizeLimits = useMemo(
+    () =>
+      getFileSizeLimits({
+        limits,
+        isFreePlan,
+        isTrial,
+      }),
+    [limits, isFreePlan, isTrial],
+  );
+
+  const acceptableDropZoneFileTypes =
+    isFreePlan && !isTrial
+      ? acceptableDropZoneMimeTypesWhenIsFreePlanAndNotTrail
+      : allAcceptableDropZoneMimeTypes;
+
+  // this var will help to determine the correct api endpoint to request folder creation (If needed).
+  const endpointTargetType = dataroomId
+    ? `datarooms/${dataroomId}/folders`
+    : "folders";
+
+  const onDropRejected = useCallback(
+    (rejectedFiles: FileRejection[]) => {
+      const rejected = rejectedFiles.map(({ file, errors }) => {
+        let message = "";
+        if (errors.find(({ code }) => code === "file-too-large")) {
+          const fileSizeLimitMB = getFileSizeLimit(file.type, fileSizeLimits);
+          message = `File size too big (max. ${fileSizeLimitMB} MB). Upgrade to a paid plan to increase the limit.`;
+        } else if (errors.find(({ code }) => code === "file-invalid-type")) {
+          const isSupported = SUPPORTED_DOCUMENT_MIME_TYPES.includes(file.type);
+          message = `File type not supported ${
+            isFreePlan && !isTrial && isSupported ? `on free plan` : ""
+          }`;
+        }
+        return { fileName: file.name, message };
+      });
+      onUploadRejected(rejected);
+    },
+    [onUploadRejected, fileSizeLimits, isFreePlan, isTrial],
+  );
+
   const onDrop = useCallback(
-    (acceptedFiles: FileWithPath[]) => {
-      const newUploads = acceptedFiles.map((file) => ({
+    (acceptedFiles: FileWithPaths[]) => {
+      if (!canAddDocuments && acceptedFiles.length > remainingDocuments) {
+        toast.error("You have reached the maximum number of documents.");
+        return;
+      }
+
+      // Validate files and separate into valid and invalid
+      const validatedFiles = acceptedFiles.reduce<{
+        valid: FileWithPaths[];
+        invalid: { fileName: string; message: string }[];
+      }>(
+        (acc, file) => {
+          const fileSizeLimitMB = getFileSizeLimit(file.type, fileSizeLimits);
+          const fileSizeLimit = fileSizeLimitMB * 1024 * 1024; // Convert to bytes
+
+          if (file.size > fileSizeLimit) {
+            acc.invalid.push({
+              fileName: file.name,
+              message: `File size too big (max. ${fileSizeLimitMB} MB)${
+                isFreePlan && !isTrial
+                  ? ". Upgrade to a paid plan to increase the limit"
+                  : ""
+              }`,
+            });
+          } else {
+            acc.valid.push(file);
+          }
+          return acc;
+        },
+        { valid: [], invalid: [] },
+      );
+
+      // Handle rejected files first
+      if (validatedFiles.invalid.length > 0) {
+        setRejectedFiles((prev) => [...validatedFiles.invalid, ...prev]);
+
+        // If all files were rejected, show a summary toast
+        if (validatedFiles.valid.length === 0) {
+          toast.error(
+            `${validatedFiles.invalid.length} file(s) exceeded size limits`,
+          );
+          return;
+        }
+      }
+
+      // Continue with valid files
+      const newUploads = validatedFiles.valid.map((file) => ({
         fileName: file.name,
         progress: 0,
       }));
+
       onUploadStart(newUploads);
 
-      const uploadPromises = acceptedFiles.map(async (file, index) => {
-        const path = (file as any).path || file.webkitRelativePath || file.name;
+      const uploadPromises = validatedFiles.valid.map(async (file, index) => {
+        // Due to `getFilesFromEvent` file.path will always hold a valid value and represents the value of webkitRelativePath.
+        // We no longer need to use webkitRelativePath because everything is been handled in `getFilesFromEvent`
+        const path = file.path || file.name;
+
+        // count the number of pages in the file
         let numPages = 1;
         if (file.type === "application/pdf") {
           const buffer = await file.arrayBuffer();
@@ -130,25 +275,53 @@ export default function UploadZone({
 
         const uploadResult = await complete;
 
+        let contentType = uploadResult.fileType;
+        let supportedFileType = getSupportedContentType(contentType) ?? "";
+
+        if (
+          uploadResult.fileName.endsWith(".dwg") ||
+          uploadResult.fileName.endsWith(".dxf")
+        ) {
+          supportedFileType = "cad";
+          contentType = `image/vnd.${uploadResult.fileName.split(".").pop()}`;
+        }
+
+        if (uploadResult.fileName.endsWith(".xlsm")) {
+          supportedFileType = "sheet";
+          contentType = "application/vnd.ms-excel.sheet.macroEnabled.12";
+        }
+
+        if (
+          uploadResult.fileName.endsWith(".kml") ||
+          uploadResult.fileName.endsWith(".kmz")
+        ) {
+          supportedFileType = "map";
+          contentType = `application/vnd.google-earth.${uploadResult.fileName.endsWith(".kml") ? "kml+xml" : "kmz"}`;
+        }
+
         const documentData: DocumentData = {
           key: uploadResult.id,
-          supportedFileType: getSupportedContentType(uploadResult.fileType)!,
+          supportedFileType: supportedFileType,
           name: file.name,
           storageType: DocumentStorageType.S3_PATH,
-          contentType: uploadResult.fileType,
+          contentType: contentType,
+          fileSize: file.size,
         };
+
+        const fileUploadPathName = file?.whereToUploadPath;
+
         const response = await createDocument({
           documentData,
           teamId: teamInfo?.currentTeam?.id as string,
           numPages: uploadResult.numPages,
-          folderPathName: folderPathName,
+          folderPathName: fileUploadPathName,
         });
 
         // add the new document to the list
         mutate(`/api/teams/${teamInfo?.currentTeam?.id}/documents`);
-        folderPathName &&
+        fileUploadPathName &&
           mutate(
-            `/api/teams/${teamInfo?.currentTeam?.id}/folders/documents/${folderPathName}`,
+            `/api/teams/${teamInfo?.currentTeam?.id}/folders/documents/${fileUploadPathName}`,
           );
 
         const document = await response.json();
@@ -164,7 +337,7 @@ export default function UploadZone({
                 },
                 body: JSON.stringify({
                   documentId: document.id,
-                  folderPathName: folderPathName,
+                  folderPathName: fileUploadPathName,
                 }),
               },
             );
@@ -181,9 +354,10 @@ export default function UploadZone({
             mutate(
               `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}/documents`,
             );
-            mutate(
-              `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}/folders/documents/${folderPathName}`,
-            );
+            fileUploadPathName &&
+              mutate(
+                `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}/folders/documents/${fileUploadPathName}`,
+              );
           } catch (error) {
             console.error(
               "An error occurred while adding document to the dataroom: ",
@@ -205,98 +379,293 @@ export default function UploadZone({
           teamId: teamInfo?.currentTeam?.id,
           bulkupload: true,
           dataroomId: dataroomId,
+          $set: {
+            teamId: teamInfo?.currentTeam?.id,
+            teamPlan: plan,
+          },
         });
 
         return document;
       });
 
-      const documents = Promise.all(uploadPromises);
+      const documents = Promise.all(uploadPromises).finally(() => {
+        /* If it a parentFolder was created prior to the upload, we would need to update that
+           how many documents and folders does this folder contain rather than displaying 0
+            */
+
+        mutate(
+          `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}?root=true`,
+        );
+        mutate(`/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}`);
+        folderPathName &&
+          mutate(
+            `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${folderPathName}`,
+          );
+      });
     },
-    [onUploadStart, onUploadProgress],
+    [
+      onUploadStart,
+      onUploadProgress,
+      endpointTargetType,
+      fileSizeLimits,
+      isFreePlan,
+      isTrial,
+    ],
   );
 
-  const onDropRejected = useCallback(
-    (rejectedFiles: FileRejection[]) => {
-      const rejected = rejectedFiles.map(({ file, errors }) => {
-        let message = "";
-        if (errors.find(({ code }) => code === "file-too-large")) {
-          message = `File size too big (max. ${maxSize} MB)`;
-        } else if (errors.find(({ code }) => code === "file-invalid-type")) {
-          message = "File type not supported";
+  const getFilesFromEvent = useCallback(
+    async (event: DropEvent) => {
+      // This callback also run when event.type =`dragenter`. We only need to compute files when the event.type is `drop`.
+      if ("type" in event && event.type !== "drop" && event.type !== "change") {
+        return [];
+      }
+
+      let filesToBePassedToOnDrop: FileWithPaths[] = [];
+
+      /** *********** START OF `traverseFolder` *********** */
+      const traverseFolder = async (
+        entry: FileSystemEntry,
+        parentPathOfThisEntry?: string,
+      ): Promise<FileWithPaths[]> => {
+        /**
+         * Summary of this function:
+         *  1. if it find a folder then corresponding folder will be created at backend.
+         *  2. Smoothly handles the deeply nested folders.
+         *  3. Upon folder creation it assign the path and whereToUploadPath to each entry. (Those values will be helpful for `onDrop` to  upload document correctly)
+         */
+
+        let files: FileWithPaths[] = [];
+
+        if (entry.isDirectory) {
+          /**
+           * Let's create the folder.
+           * Fact that reader can skip: For Consistency, child files will only be pushed if folder successfully gets created.
+           */
+          try {
+            // An empty folder name can cause the unexpected url problems.
+            if (entry.name.trim() === "") {
+              setRejectedFiles((prev) => [
+                {
+                  fileName: entry.name,
+                  message: "Folder name cannot be empty",
+                },
+                ...prev,
+              ]);
+              throw new Error("Folder name cannot be empty");
+            }
+
+            if (!teamInfo?.currentTeam?.id) {
+              /** This case probably may not happen */
+              setRejectedFiles((prev) => [
+                {
+                  fileName: "Unknown Team",
+                  message: "Team Id not found",
+                },
+                ...prev,
+              ]);
+              throw new Error("No team found");
+            }
+
+            const response = await fetch(
+              `/api/teams/${teamInfo.currentTeam.id}/${endpointTargetType}`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  name: entry.name, // as folderName
+                  path: parentPathOfThisEntry ?? folderPathName,
+                }),
+              },
+            );
+
+            if (!response.ok) {
+              const { message } = await response.json();
+              setRejectedFiles((prev) => [
+                {
+                  fileName: entry.name,
+                  message: message,
+                },
+                ...prev,
+              ]);
+            } else {
+              let {
+                parentFolderPath: parentFolderPath,
+                path: slugifiedPathNameOfThisEntryAfterFolderCreation,
+              } = await response.json();
+
+              if (
+                slugifiedPathNameOfThisEntryAfterFolderCreation?.startsWith("/")
+              ) {
+                // Reason "/" is removed because our `createDocument` API needs `path` to not start with "/"
+                slugifiedPathNameOfThisEntryAfterFolderCreation =
+                  slugifiedPathNameOfThisEntryAfterFolderCreation.slice(1);
+              }
+
+              analytics.capture("Folder Added", { folderName: entry.name });
+              mutate(
+                `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}?root=true`,
+              );
+              mutate(
+                `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}`,
+              );
+              mutate(
+                `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}${parentFolderPath}`,
+              );
+
+              // Now we are sure that folder is created at the backend and we can continue to traverse its child folders/files.
+              const dirReader = (
+                entry as FileSystemDirectoryEntry
+              ).createReader();
+              const subEntries = await new Promise<FileSystemEntry[]>(
+                (resolve) => dirReader.readEntries(resolve),
+              );
+
+              for (const subEntry of subEntries) {
+                files.push(
+                  ...(await traverseFolder(
+                    subEntry,
+                    slugifiedPathNameOfThisEntryAfterFolderCreation,
+                  )),
+                );
+              }
+            }
+          } catch (error) {
+            setRejectedFiles((prev) => [
+              {
+                fileName: entry.name,
+                message: "Failed to create the folder",
+              },
+              ...prev,
+            ]);
+          }
+        } else if (entry.isFile) {
+          let file = await new Promise<FileWithPaths>((resolve) =>
+            (entry as FileSystemFileEntry).file(resolve),
+          );
+
+          /** In some browsers e.g firefox is not able to detect the file type. (This only happens when user upload folder) */
+          const browserFileTypeCompatibilityIssue = file.type === "";
+
+          if (browserFileTypeCompatibilityIssue) {
+            const fileExtension = file.name.split(".").pop();
+            const correctFileType =
+              fileExtension &&
+              Object.keys(acceptableDropZoneFileTypes).find((fileType) =>
+                fileType.endsWith(fileExtension),
+              );
+
+            if (correctFileType) {
+              // if we can't do like ```file.type = fileType``` because of [Error: Setting getter-only property "type"]
+              // The following is the only best way to resolve the problem
+              file = new File([file], file.name, {
+                type: correctFileType,
+                lastModified: file.lastModified,
+              });
+            }
+          }
+
+          // Reason of removing "/" because webkitRelativePath doesn't start with "/"
+          file.path = entry.fullPath.startsWith("/")
+            ? entry.fullPath.substring(1)
+            : entry.fullPath;
+
+          file.whereToUploadPath = parentPathOfThisEntry ?? folderPathName;
+
+          files.push(file);
         }
-        return { fileName: file.name, message };
-      });
-      onUploadRejected(rejected);
+
+        return files;
+      };
+      /** *********** END OF `traverseFolder` *********** */
+
+      if ("dataTransfer" in event && event.dataTransfer) {
+        const items = event.dataTransfer.items;
+
+        const fileResults = await Promise.all(
+          Array.from(items, (item) => {
+            // MDN Note: This function is implemented as webkitGetAsEntry() in non-WebKit browsers including Firefox at this time; it may be renamed to getAsEntry() in the future, so you should code defensively, looking for both.
+            const entry =
+              (typeof item?.webkitGetAsEntry === "function" &&
+                item.webkitGetAsEntry()) ??
+              (typeof (item as any)?.getAsEntry === "function" &&
+                (item as any).getAsEntry()) ??
+              null;
+            return entry ? traverseFolder(entry) : [];
+          }),
+        );
+        fileResults.forEach((fileResult) =>
+          filesToBePassedToOnDrop.push(...fileResult),
+        );
+      } else if (
+        "target" in event &&
+        event.target &&
+        event.target instanceof HTMLInputElement &&
+        event.target.files
+      ) {
+        for (let i = 0; i < event.target.files.length; i++) {
+          const file: FileWithPaths = event.target.files[i];
+          file.path = file.name;
+          file.whereToUploadPath = folderPathName;
+          filesToBePassedToOnDrop.push(event.target.files[i]);
+        }
+      }
+
+      return filesToBePassedToOnDrop;
     },
-    [onUploadRejected, maxSize],
+    [folderPathName, endpointTargetType, teamInfo],
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    accept:
-      isFreePlan && !isTrial
-        ? {
-            "application/pdf": [], // ".pdf"
-            "application/vnd.ms-excel": [], // ".xls"
-            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
-              [], // ".xlsx"
-            "text/csv": [], // ".csv"
-            "application/vnd.oasis.opendocument.spreadsheet": [], // ".ods"
-          }
-        : {
-            "application/pdf": [], // ".pdf"
-            "application/vnd.ms-excel": [], // ".xls"
-            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
-              [], // ".xlsx"
-            "text/csv": [], // ".csv"
-            "application/vnd.oasis.opendocument.spreadsheet": [], // ".ods"
-            "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-              [], // ".docx"
-            "application/vnd.openxmlformats-officedocument.presentationml.presentation":
-              [], // ".pptx"
-            "application/vnd.ms-powerpoint": [], // ".ppt"
-            "application/msword": [], // ".doc"
-            "application/vnd.oasis.opendocument.text": [], // ".odt"
-            "application/vnd.oasis.opendocument.presentation": [], // ".odp"
-          },
+    accept: acceptableDropZoneFileTypes,
     multiple: true,
-    maxSize: maxSize * 1024 * 1024, // 30 MB
+    // maxSize: maxSize * 1024 * 1024, // 30 MB
+    maxFiles: 150,
     onDrop,
     onDropRejected,
+    getFilesFromEvent,
   });
 
   return (
     <div
       {...getRootProps({ onClick: (evt) => evt.stopPropagation() })}
-      className="relative h-full min-h-[(calc(100vh-350px))]"
+      className={cn(
+        "relative",
+        dataroomId ? "min-h-[calc(100vh-350px)]" : "min-h-[calc(100vh-270px)]",
+      )}
     >
       <div
         className={cn(
-          "absolute bottom-0 left-0 right-0 top-0 z-50",
-          isDragActive ? "pointer-events-auto" : "pointer-events-none",
+          "absolute inset-0 z-40 -m-1 rounded-lg border-2 border-dashed",
+          isDragActive
+            ? "pointer-events-auto border-primary/50 bg-gray-100/75 backdrop-blur-sm dark:bg-gray-800/75"
+            : "pointer-events-none border-none",
         )}
       >
-        <div
-          className={cn(
-            "-m-1 hidden h-full items-center justify-center border-dashed bg-gray-100 text-center dark:border-gray-300 dark:bg-gray-400",
-            isDragActive && "flex",
-          )}
-        >
-          <input
-            {...getInputProps()}
-            name="file"
-            id="upload-multi-files-zone"
-            className="sr-only"
-          />
+        <input
+          {...getInputProps()}
+          name="file"
+          id="upload-multi-files-zone"
+          className="sr-only"
+        />
 
-          <div className="mt-4 flex flex-col text-sm leading-6 text-gray-800">
-            <span className="mx-auto">Drop your file(s) to upload here</span>
-            <p className="text-xs leading-5 text-gray-800">
-              {isFreePlan && !isTrial
-                ? `Only *.pdf, *.xls, *.xlsx, *.csv, *.ods & ${maxSize} MB limit`
-                : `Only *.pdf, *.pptx, *.docx, *.xlsx, *.xls, *.csv, *.ods, *.ppt, *.odp, *.doc, *.odt & ${maxSize} MB limit`}
-            </p>
+        {isDragActive && (
+          <div className="sticky top-1/2 z-50 -translate-y-1/2 px-2">
+            <div className="flex justify-center">
+              <div className="inline-flex flex-col rounded-lg bg-background/95 px-6 py-4 text-center ring-1 ring-gray-900/5 dark:bg-gray-900/95 dark:ring-white/10">
+                <span className="font-medium text-foreground">
+                  Drop your file(s) here
+                </span>
+                <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                  {isFreePlan && !isTrial
+                    ? `Only *.pdf, *.xls, *.xlsx, *.csv, *.ods, *.png, *.jpeg, *.jpg`
+                    : `Only *.pdf, *.pptx, *.docx, *.xlsx, *.xls, *.csv, *.ods, *.ppt, *.odp, *.doc, *.odt, *.dwg, *.dxf, *.png, *.jpg, *.jpeg, *.mp4, *.mov, *.avi, *.webm, *.ogg`}
+                </p>
+              </div>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {children}

@@ -34,10 +34,16 @@ export class IdGenerator<TPrefixes extends string> {
 
 export const newId = new IdGenerator({
   view: "view",
+  videoView: "vview",
   inv: "inv", // invitation
   email: "email",
   doc: "doc",
   page: "page",
   dataroom: "dr",
   preview: "preview",
+  webhook: "wh",
+  webhookEvent: "evt",
+  webhookSecret: "whsec",
+  token: "pmk",
+  clickEvent: "click",
 }).id;

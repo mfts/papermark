@@ -17,6 +17,7 @@ export function UploadNotificationDrawer({
   setUploads,
   rejectedFiles,
   setRejectedFiles,
+  handleCloseDrawer,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -26,6 +27,7 @@ export function UploadNotificationDrawer({
   ) => void;
   rejectedFiles: { fileName: string; message: string }[];
   setRejectedFiles: (rejected: { fileName: string; message: string }[]) => void;
+  handleCloseDrawer: () => void;
 }) {
   const uploadCount = uploads.length;
   const failedCount = rejectedFiles.length;
@@ -58,7 +60,10 @@ export function UploadNotificationDrawer({
                 </p>
               ) : null}
             </div>
-            <DrawerClose className="rounded-full p-1 hover:bg-gray-200 hover:dark:bg-gray-800">
+            <DrawerClose
+              className="rounded-full p-1 hover:bg-gray-200 hover:dark:bg-gray-800"
+              onClick={handleCloseDrawer}
+            >
               <XIcon className="h-6 w-6" />
             </DrawerClose>
           </DrawerHeader>
@@ -72,7 +77,7 @@ export function UploadNotificationDrawer({
                   href={`/documents/${upload.documentId}`}
                   className="flex items-center justify-between"
                 >
-                  <span>{upload.fileName}</span>
+                  <span className="w-72 truncate">{upload.fileName}</span>
                   {upload.progress === 100 ? (
                     <CheckIcon
                       className="h-6 w-6 rounded-full bg-emerald-500 p-1 text-background"

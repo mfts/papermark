@@ -55,7 +55,6 @@ function DeleteDataroomModal({
             dataroomId: dataroomId,
           });
           await mutate(`/api/teams/${teamInfo?.currentTeam?.id}/datarooms`);
-          console.log("dataroomsCount", dataroomsCount);
           router.push("/datarooms");
           resolve(null);
         } else {
@@ -76,8 +75,11 @@ function DeleteDataroomModal({
     >
       <div className="flex flex-col items-center justify-center space-y-3 border-b border-border bg-white px-4 py-4 pt-8 dark:border-gray-900 dark:bg-gray-900 sm:px-8">
         <CardTitle>Delete Dataroom</CardTitle>
+        <CardDescription className="text-md font-semibold text-foreground">
+          {dataroomName}
+        </CardDescription>
         <CardDescription>
-          Warning: This will permanently delete your dataroom, all associated
+          Warning: This will permanently delete your dataroom and all associated
           links and their respective views.
         </CardDescription>
       </div>
@@ -93,31 +95,6 @@ function DeleteDataroomModal({
         }}
         className="flex flex-col space-y-6 bg-muted px-4 py-8 text-left dark:bg-gray-900 sm:px-8"
       >
-        <div>
-          <label
-            htmlFor="dataroom-name"
-            className="block text-sm font-medium text-muted-foreground"
-          >
-            Enter the dataroom name{" "}
-            <span className="font-semibold text-foreground">
-              {dataroomName}
-            </span>{" "}
-            to continue:
-          </label>
-          <div className="relative mt-1 rounded-md shadow-sm">
-            <Input
-              type="text"
-              name="dataroom-name"
-              id="dataroom-name"
-              autoFocus={!isMobile}
-              autoComplete="off"
-              required
-              pattern={dataroomName}
-              className="bg-white dark:border-gray-500 dark:bg-gray-800 focus:dark:bg-transparent"
-            />
-          </div>
-        </div>
-
         <div>
           <label
             htmlFor="verification"

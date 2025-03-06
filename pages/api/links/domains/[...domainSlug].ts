@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 import { Brand, DataroomBrand, LinkAudienceType } from "@prisma/client";
 
+import { fetchDataroomDocumentLinkData } from "@/lib/api/links/link-data";
 import {
   fetchDataroomLinkData,
   fetchDocumentLinkData,
@@ -22,6 +23,7 @@ export default async function handle(
 
     const domain = domainSlug[0];
     const slug = domainSlug[1];
+    const documentId = domainSlug[3];
 
     if (slug === "404") {
       return res.status(404).json({
@@ -51,7 +53,9 @@ export default async function handle(
           metaTitle: true,
           metaDescription: true,
           metaImage: true,
+          metaFavicon: true,
           enableQuestion: true,
+          dataroomId: true,
           linkType: true,
           feedback: {
             select: {
@@ -66,24 +70,25 @@ export default async function handle(
           watermarkConfig: true,
           groupId: true,
           audienceType: true,
-          document: {
+          teamId: true,
+          team: {
             select: {
-              team: {
-                select: {
-                  id: true,
-                  plan: true,
-                },
-              },
+              plan: true,
             },
           },
-          dataroom: {
+          customFields: {
             select: {
-              team: {
-                select: {
-                  id: true,
-                  plan: true,
-                },
-              },
+              id: true,
+              type: true,
+              identifier: true,
+              label: true,
+              placeholder: true,
+              required: true,
+              disabled: true,
+              orderIndex: true,
+            },
+            orderBy: {
+              orderIndex: "asc",
             },
           },
         },
@@ -109,10 +114,10 @@ export default async function handle(
         });
       }
 
-      const teamPlan = link.document?.team?.plan || link.dataroom?.team.plan;
-      const teamId = link.document?.team?.id || link.dataroom?.team.id;
+      const teamPlan = link.team?.plan || "free";
+      const teamId = link.teamId;
       // if owner of document is on free plan, return 404
-      if (teamPlan === "free") {
+      if (teamPlan.includes("free")) {
         log({
           message: `Link is from a free team _${teamId}_ for custom domain _${domain}/${slug}_`,
           type: "info",
@@ -129,32 +134,58 @@ export default async function handle(
       let linkData: any;
 
       if (linkType === "DOCUMENT_LINK") {
-        const data = await fetchDocumentLinkData({ linkId: link.id });
-        linkData = data.linkData;
-        brand = data.brand;
-      } else if (linkType === "DATAROOM_LINK") {
-        const data = await fetchDataroomLinkData({
+        const data = await fetchDocumentLinkData({
           linkId: link.id,
-          ...(link.audienceType === LinkAudienceType.GROUP &&
-            link.groupId && {
-              groupId: link.groupId,
-            }),
+          teamId: link.teamId!,
         });
         linkData = data.linkData;
         brand = data.brand;
+      } else if (linkType === "DATAROOM_LINK") {
+        if (documentId) {
+          const data = await fetchDataroomDocumentLinkData({
+            linkId: link.id,
+            teamId: link.teamId!,
+            dataroomDocumentId: documentId,
+            ...(link.audienceType === LinkAudienceType.GROUP &&
+              link.groupId && {
+                groupId: link.groupId,
+              }),
+          });
+          linkData = data.linkData;
+          brand = data.brand;
+        } else {
+          const data = await fetchDataroomLinkData({
+            linkId: link.id,
+            teamId: link.teamId!,
+            ...(link.audienceType === LinkAudienceType.GROUP &&
+              link.groupId && {
+                groupId: link.groupId,
+              }),
+          });
+          linkData = data.linkData;
+          brand = data.brand;
+        }
       }
 
       // remove document and domain from link
       const sanitizedLink = {
         ...link,
+        teamId: undefined,
+        team: undefined,
         document: undefined,
         dataroom: undefined,
+        ...(teamPlan === "free" && {
+          customFields: [], // reset custom fields for free plan
+          enableAgreement: false,
+          enableWatermark: false,
+        }),
       };
 
       // clean up the link return object
       const returnLink = {
         ...sanitizedLink,
         ...linkData,
+        dataroomDocument: linkData.dataroom?.documents[0] || undefined,
       };
 
       res.status(200).json({ linkType, link: returnLink, brand });
@@ -170,7 +201,7 @@ export default async function handle(
       });
     }
   } else {
-    // We only allow GET and POST requests
+    // We only allow GET requests
     res.setHeader("Allow", ["GET"]);
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }

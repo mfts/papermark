@@ -1,7 +1,9 @@
 import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
+import { PlanEnum } from "@/ee/stripe/constants";
 import { toast } from "sonner";
+import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -39,15 +41,29 @@ export function AddDomainModal({
   const [loading, setLoading] = useState<boolean>(false);
 
   const teamInfo = useTeam();
-  const { plan } = usePlan();
+  const { isFree, isPro, isBusiness } = usePlan();
   const { limits } = useLimits();
   const analytics = useAnalytics();
+  const addDomainSchema = z.object({
+    name: z
+      .string()
+      .min(3, {
+        message: "Please provide a domain name with at least 3 characters.",
+      })
+      // Add validation for papermark
+      .refine((name) => !name.toLowerCase().includes("papermark"), {
+        message: "Domain cannot contain 'papermark'",
+      }),
+  });
 
   const handleSubmit = async (event: any) => {
     event.preventDefault();
     event.stopPropagation();
 
-    if (domain == "") return;
+    const validation = addDomainSchema.safeParse({ name: domain });
+    if (!validation.success) {
+      return toast.error(validation.error.errors[0].message);
+    }
 
     setLoading(true);
     const response = await fetch(
@@ -92,16 +108,20 @@ export function AddDomainModal({
   // - on business plan and has custom domain in dataroom disabled
   // => then show the upgrade modal
   if (
-    plan === "free" ||
-    (plan === "pro" && !limits?.customDomainOnPro) ||
+    isFree ||
+    (isPro && !limits?.customDomainOnPro) ||
     (linkType === "DATAROOM_LINK" &&
-      plan === "business" &&
+      isBusiness &&
       !limits?.customDomainInDataroom)
   ) {
     if (children) {
       return (
         <UpgradePlanModal
-          clickedPlan={linkType === "DATAROOM_LINK" ? "Data Rooms" : "Business"}
+          clickedPlan={
+            linkType === "DATAROOM_LINK"
+              ? PlanEnum.DataRooms
+              : PlanEnum.Business
+          }
           trigger={"add_domain_overview"}
         >
           <Button>Upgrade to Add Domain</Button>
@@ -110,7 +130,11 @@ export function AddDomainModal({
     } else {
       return (
         <UpgradePlanModal
-          clickedPlan={linkType === "DATAROOM_LINK" ? "Data Rooms" : "Business"}
+          clickedPlan={
+            linkType === "DATAROOM_LINK"
+              ? PlanEnum.DataRooms
+              : PlanEnum.Business
+          }
           open={open}
           setOpen={setOpen}
           trigger={"add_domain_link_sheet"}

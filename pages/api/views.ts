@@ -3,15 +3,22 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { waitUntil } from "@vercel/functions";
 import { getServerSession } from "next-auth/next";
 
+import { hashToken } from "@/lib/api/auth/token";
 import sendNotification from "@/lib/api/notification-helper";
-import { sendVerificationEmail } from "@/lib/emails/send-email-verification";
+import { recordVisit } from "@/lib/api/views/record-visit";
+import { verifyPreviewSession } from "@/lib/auth/preview-auth";
+import { PreviewSession } from "@/lib/auth/preview-auth";
+import { sendOtpVerificationEmail } from "@/lib/emails/send-email-otp-verification";
 import { getFile } from "@/lib/files/get-file";
 import { newId } from "@/lib/id-helper";
 import prisma from "@/lib/prisma";
+import { ratelimit } from "@/lib/redis";
 import { parseSheet } from "@/lib/sheet";
 import { CustomUser, WatermarkConfigSchema } from "@/lib/types";
 import { checkPassword, decryptEncrpytedPassword, log } from "@/lib/utils";
+import { generateOTP } from "@/lib/utils/generate-otp";
 import { getIpAddress } from "@/lib/utils/ip";
+import { validateEmail } from "@/lib/utils/validate-email";
 
 import { authOptions } from "./auth/[...nextauth]";
 
@@ -37,9 +44,7 @@ export default async function handle(
     documentVersionId,
     documentName,
     hasPages,
-    token,
     ownerId,
-    verifiedEmail,
     ...data
   } = req.body as {
     linkId: string;
@@ -48,9 +53,7 @@ export default async function handle(
     documentVersionId: string;
     documentName: string;
     hasPages: boolean;
-    token: string | null;
     ownerId: string;
-    verifiedEmail: string | null;
   };
 
   const { email, password, name, hasConfirmedAgreement } = data as {
@@ -58,6 +61,11 @@ export default async function handle(
     password: string;
     name?: string;
     hasConfirmedAgreement?: boolean;
+  };
+
+  // Add customFields to the data extraction
+  const { customFields } = data as {
+    customFields?: { [key: string]: string };
   };
 
   // INFO: for using the advanced excel viewer
@@ -68,6 +76,13 @@ export default async function handle(
   // previewToken is used to determine if the view is a preview and therefore should not be recorded
   const { previewToken } = data as {
     previewToken?: string;
+  };
+
+  // Email Verification Data
+  const { code, token, verifiedEmail } = data as {
+    code?: string;
+    token?: string;
+    verifiedEmail?: string;
   };
 
   // Fetch the link to verify the settings
@@ -89,6 +104,18 @@ export default async function handle(
       agreementId: true,
       enableWatermark: true,
       watermarkConfig: true,
+      teamId: true,
+      team: {
+        select: {
+          plan: true,
+        },
+      },
+      customFields: {
+        select: {
+          identifier: true,
+          label: true,
+        },
+      },
     },
   });
 
@@ -106,6 +133,12 @@ export default async function handle(
   if (link.emailProtected) {
     if (!email || email.trim() === "") {
       res.status(400).json({ message: "Email is required." });
+      return;
+    }
+
+    // validate email
+    if (!validateEmail(email)) {
+      res.status(400).json({ message: "Invalid email address." });
       return;
     }
   }
@@ -177,31 +210,41 @@ export default async function handle(
     }
   }
 
-  // Check if email verification is required for visiting the link
-  if (link.emailAuthenticated && !token) {
-    const token = newId("email");
+  // Request OTP Code for email verification if
+  // 1) email verification is required and
+  // 2) code is not provided or token not provided
+  if (link.emailAuthenticated && !code && !token) {
+    const ipAddress = getIpAddress(req.headers);
+
+    const { success } = await ratelimit(10, "1 m").limit(
+      `send-otp:${ipAddress}`,
+    );
+    if (!success) {
+      res
+        .status(429)
+        .json({ message: "Too many requests. Please try again later." });
+      return;
+    }
+
+    await prisma.verificationToken.deleteMany({
+      where: {
+        identifier: `otp:${linkId}:${email}`,
+      },
+    });
+
+    const otpCode = generateOTP();
     const expiresAt = new Date();
-    expiresAt.setMinutes(expiresAt.getMinutes() + 20); // token expires in 20 minutes
+    expiresAt.setMinutes(expiresAt.getMinutes() + 10); // token expires at 10 minutes
 
     await prisma.verificationToken.create({
       data: {
-        token,
-        identifier: `${linkId}:${email}`,
+        token: otpCode,
+        identifier: `otp:${linkId}:${email}`,
         expires: expiresAt,
       },
     });
 
-    // set the default verification url
-    let verificationUrl: string =
-      `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${linkId}/?token=${token}&email=${encodeURIComponent(email)}` +
-      (previewToken ? `&previewToken=${previewToken}` : "");
-
-    if (link.domainSlug && link.slug && !previewToken) {
-      // if custom domain is enabled, use the custom domain
-      verificationUrl = `https://${link.domainSlug}/${link.slug}/?token=${token}&email=${encodeURIComponent(email)}`;
-    }
-
-    await sendVerificationEmail(email, verificationUrl);
+    waitUntil(sendOtpVerificationEmail(email, otpCode));
     res.status(200).json({
       type: "email-verification",
       message: "Verification email sent.",
@@ -210,11 +253,24 @@ export default async function handle(
   }
 
   let isEmailVerified: boolean = false;
-  if (link.emailAuthenticated && token) {
+  let hashedVerificationToken: string | null = null;
+  if (link.emailAuthenticated && code) {
+    const ipAddress = getIpAddress(req.headers);
+    const { success } = await ratelimit(10, "1 m").limit(
+      `verify-otp:${ipAddress}`,
+    );
+    if (!success) {
+      res
+        .status(429)
+        .json({ message: "Too many requests. Please try again later." });
+      return;
+    }
+
+    // Check if the OTP code is valid
     const verification = await prisma.verificationToken.findUnique({
       where: {
-        token: token,
-        identifier: `${linkId}:${verifiedEmail}`,
+        token: code,
+        identifier: `otp:${linkId}:${email}`,
       },
     });
 
@@ -226,23 +282,91 @@ export default async function handle(
       return;
     }
 
-    // Check the token's expiration date
+    // Check the OTP code's expiration date
     if (Date.now() > verification.expires.getTime()) {
-      res.status(401).json({ message: "Access expired" });
+      await prisma.verificationToken.delete({
+        where: {
+          token: code,
+        },
+      });
+      res.status(401).json({
+        message: "Access expired. Request new access.",
+        resetVerification: true,
+      });
       return;
     }
 
-    // delete the token after verification
+    // delete the OTP code after verification
     await prisma.verificationToken.delete({
       where: {
-        token: token,
+        token: code,
+      },
+    });
+
+    // Create a email verification token for repeat access
+    const token = newId("email");
+    hashedVerificationToken = hashToken(token);
+    const tokenExpiresAt = new Date();
+    tokenExpiresAt.setHours(tokenExpiresAt.getHours() + 23); // token expires at 23 hours
+    await prisma.verificationToken.create({
+      data: {
+        token: hashedVerificationToken,
+        identifier: `link-verification:${linkId}:${link.teamId}:${email}`,
+        expires: tokenExpiresAt,
       },
     });
 
     isEmailVerified = true;
   }
 
-  // Check if the view is a preview
+  if (link.emailAuthenticated && token) {
+    const ipAddress = getIpAddress(req.headers);
+    const { success } = await ratelimit(10, "1 m").limit(
+      `verify-email:${ipAddress}`,
+    );
+    if (!success) {
+      res
+        .status(429)
+        .json({ message: "Too many requests. Please try again later." });
+      return;
+    }
+
+    // Check if the long-term verification token is valid
+    const verification = await prisma.verificationToken.findUnique({
+      where: {
+        token: token,
+        identifier: `link-verification:${linkId}:${link.teamId}:${email}`,
+      },
+    });
+
+    if (!verification) {
+      res.status(401).json({
+        message: "Unauthorized access. Request new access.",
+        resetVerification: true,
+      });
+      return;
+    }
+
+    // Check the long-term verification token's expiration date
+    if (Date.now() > verification.expires.getTime()) {
+      // delete the long-term verification token after verification
+      await prisma.verificationToken.delete({
+        where: {
+          token: token,
+        },
+      });
+      res.status(401).json({
+        message: "Access expired. Request new access.",
+        resetVerification: true,
+      });
+      return;
+    }
+
+    isEmailVerified = true;
+  }
+
+  // Check if there's a valid preview session
+  let previewSession: PreviewSession | null = null;
   let isPreview: boolean = false;
   if (previewToken) {
     const session = await getServerSession(req, res, authOptions);
@@ -251,38 +375,51 @@ export default async function handle(
         .status(401)
         .json({ message: "You need to be logged in to preview the link." });
     }
-    const verification = await prisma.verificationToken.findUnique({
-      where: {
-        token: previewToken,
-        identifier: `preview:${linkId}:${(session.user as CustomUser).id}`,
-      },
-    });
+    previewSession = await verifyPreviewSession(
+      previewToken,
+      (session.user as CustomUser).id,
+      linkId,
+    );
 
-    if (!verification) {
+    console.log("previewSession", previewSession);
+    if (!previewSession) {
       res.status(401).json({
-        message: "Unauthorized access.",
+        message: "Preview session expired or invalid. Request a new one.",
+        resetPreview: true,
       });
       return;
     }
-
-    // Check the token's expiration date
-    if (Date.now() > verification.expires.getTime()) {
-      res.status(401).json({ message: "Preview access expired" });
-      return;
-    }
-
-    // TODO: delete previewToken
-    // delete the token after verification
-    // await prisma.verificationToken.delete({
-    //   where: {
-    //     token: previewToken,
-    //   },
-    // });
-
     isPreview = true;
   }
 
   try {
+    let viewer: { id: string } | null = null;
+    if (email && !isPreview) {
+      // find or create a viewer
+      console.time("find-viewer");
+      viewer = await prisma.viewer.findFirst({
+        where: {
+          email: email,
+          teamId: link.teamId!,
+        },
+        select: { id: true },
+      });
+      console.timeEnd("find-viewer");
+
+      if (!viewer) {
+        console.time("create-viewer");
+        viewer = await prisma.viewer.create({
+          data: {
+            email: email,
+            verified: isEmailVerified,
+            teamId: link.teamId!,
+          },
+          select: { id: true },
+        });
+        console.timeEnd("create-viewer");
+      }
+    }
+
     let newView: { id: string } | null = null;
     if (!isPreview) {
       console.time("create-view");
@@ -292,6 +429,8 @@ export default async function handle(
           viewerEmail: email,
           viewerName: name,
           documentId: documentId,
+          teamId: link.teamId!,
+          viewerId: viewer?.id ?? undefined,
           verified: isEmailVerified,
           ...(link.enableAgreement &&
             link.agreementId &&
@@ -299,6 +438,18 @@ export default async function handle(
               agreementResponse: {
                 create: {
                   agreementId: link.agreementId,
+                },
+              },
+            }),
+          ...(customFields &&
+            link.customFields.length > 0 && {
+              customFieldResponse: {
+                create: {
+                  data: link.customFields.map((field) => ({
+                    identifier: field.identifier,
+                    label: field.label,
+                    response: customFields[field.identifier] || "",
+                  })),
                 },
               },
             }),
@@ -323,8 +474,8 @@ export default async function handle(
           file: true,
           storageType: true,
           pageNumber: true,
-          embeddedLinks: true,
-          pageLinks: true,
+          embeddedLinks: !link.team?.plan.includes("free"),
+          pageLinks: !link.team?.plan.includes("free"),
           metadata: true,
         },
       });
@@ -357,7 +508,11 @@ export default async function handle(
         return;
       }
 
-      if (documentVersion.type === "pdf") {
+      if (
+        documentVersion.type === "pdf" ||
+        documentVersion.type === "image" ||
+        documentVersion.type === "video"
+      ) {
         documentVersion.file = await getFile({
           data: documentVersion.file,
           type: documentVersion.storageType,
@@ -388,12 +543,29 @@ export default async function handle(
       console.timeEnd("sendemail");
     }
 
+    // Prepare webhook for view
+    if (newView) {
+      waitUntil(
+        recordVisit({
+          viewId: newView.id,
+          linkId,
+          teamId: link.teamId!,
+          documentId,
+          headers: req.headers,
+        }),
+      );
+    }
+
     const returnObject = {
       message: "View recorded",
       viewId: !isPreview && newView ? newView.id : undefined,
       isPreview: isPreview ? true : undefined,
       file:
-        (documentVersion && documentVersion.type === "pdf") ||
+        (documentVersion &&
+          (documentVersion.type === "pdf" ||
+            documentVersion.type === "image" ||
+            documentVersion.type === "zip" ||
+            documentVersion.type === "video")) ||
         (documentVersion && useAdvancedExcelViewer)
           ? documentVersion.file
           : undefined,
@@ -418,6 +590,7 @@ export default async function handle(
         )
           ? getIpAddress(req.headers)
           : undefined,
+      verificationToken: hashedVerificationToken ?? undefined,
     };
 
     return res.status(200).json(returnObject);

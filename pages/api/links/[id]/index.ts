@@ -9,7 +9,10 @@ import {
 } from "@/lib/api/links/link-data";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
-import { generateEncrpytedPassword } from "@/lib/utils";
+import {
+  decryptEncrpytedPassword,
+  generateEncrpytedPassword,
+} from "@/lib/utils";
 
 import { authOptions } from "../../auth/[...nextauth]";
 
@@ -41,6 +44,7 @@ export default async function handle(
           metaTitle: true,
           metaDescription: true,
           metaImage: true,
+          metaFavicon: true,
           enableQuestion: true,
           linkType: true,
           feedback: {
@@ -56,6 +60,27 @@ export default async function handle(
           watermarkConfig: true,
           groupId: true,
           audienceType: true,
+          teamId: true,
+          team: {
+            select: {
+              plan: true,
+            },
+          },
+          customFields: {
+            select: {
+              id: true,
+              type: true,
+              identifier: true,
+              label: true,
+              placeholder: true,
+              required: true,
+              disabled: true,
+              orderIndex: true,
+            },
+            orderBy: {
+              orderIndex: "asc",
+            },
+          },
         },
       });
 
@@ -75,12 +100,16 @@ export default async function handle(
       let linkData: any;
 
       if (linkType === "DOCUMENT_LINK") {
-        const data = await fetchDocumentLinkData({ linkId: id });
+        const data = await fetchDocumentLinkData({
+          linkId: id,
+          teamId: link.teamId!,
+        });
         linkData = data.linkData;
         brand = data.brand;
       } else if (linkType === "DATAROOM_LINK") {
         const data = await fetchDataroomLinkData({
           linkId: id,
+          teamId: link.teamId!,
           ...(link.audienceType === LinkAudienceType.GROUP &&
             link.groupId && {
               groupId: link.groupId,
@@ -90,9 +119,16 @@ export default async function handle(
         brand = data.brand;
       }
 
+      const teamPlan = link.team?.plan || "free";
+
       const returnLink = {
         ...link,
         ...linkData,
+        ...(teamPlan === "free" && {
+          customFields: [], // reset custom fields for free plan
+          enableAgreement: false,
+          enableWatermark: false,
+        }),
       };
 
       return res.status(200).json({ linkType, link: returnLink, brand });
@@ -109,12 +145,44 @@ export default async function handle(
       return res.status(401).end("Unauthorized");
     }
 
+    const userId = (session.user as CustomUser).id;
     const { id } = req.query as { id: string };
-    const { targetId, linkType, password, expiresAt, ...linkDomainData } =
-      req.body;
+    const {
+      targetId,
+      linkType,
+      password,
+      expiresAt,
+      teamId,
+      ...linkDomainData
+    } = req.body;
 
     const dataroomLink = linkType === "DATAROOM_LINK";
     const documentLink = linkType === "DOCUMENT_LINK";
+
+    try {
+      const existingLink = await prisma.link.findUnique({
+        where: {
+          id: id,
+          teamId: teamId,
+          team: {
+            users: {
+              some: { userId },
+            },
+          },
+        },
+      });
+
+      if (!existingLink) {
+        return res
+          .status(404)
+          .json({ error: "Link not found or unauthorized" });
+      }
+    } catch (error) {
+      return res.status(500).json({
+        message: "Internal Server Error",
+        error: (error as Error).message,
+      });
+    }
 
     const hashedPassword =
       password && password.length > 0
@@ -179,7 +247,7 @@ export default async function handle(
 
     // Update the link in the database
     const updatedLink = await prisma.link.update({
-      where: { id: id },
+      where: { id, teamId },
       data: {
         documentId: documentLink ? targetId : null,
         dataroomId: dataroomLink ? targetId : null,
@@ -204,23 +272,43 @@ export default async function handle(
         metaTitle: linkData.metaTitle || null,
         metaDescription: linkData.metaDescription || null,
         metaImage: linkData.metaImage || null,
-        enableQuestion: linkData.enableQuestion,
-        feedback: {
-          upsert: {
-            create: {
-              data: {
-                question: linkData.questionText,
-                type: linkData.questionType,
-              },
+        metaFavicon: linkData.metaFavicon || null,
+        ...(linkData.customFields && {
+          customFields: {
+            deleteMany: {}, // Delete all existing custom fields
+            createMany: {
+              data: linkData.customFields.map((field: any, index: number) => ({
+                type: field.type,
+                identifier: field.identifier,
+                label: field.label,
+                placeholder: field.placeholder,
+                required: field.required,
+                disabled: field.disabled,
+                orderIndex: index,
+              })),
+              skipDuplicates: true,
             },
-            update: {
-              data: {
-                question: linkData.questionText,
-                type: linkData.questionType,
+          },
+        }),
+        enableQuestion: linkData.enableQuestion,
+        ...(linkData.enableQuestion && {
+          feedback: {
+            upsert: {
+              create: {
+                data: {
+                  question: linkData.questionText,
+                  type: linkData.questionType,
+                },
+              },
+              update: {
+                data: {
+                  question: linkData.questionText,
+                  type: linkData.questionType,
+                },
               },
             },
           },
-        },
+        }),
         enableAgreement: linkData.enableAgreement,
         agreementId: linkData.agreementId || null,
         showBanner: linkData.showBanner,
@@ -248,6 +336,11 @@ export default async function handle(
     await fetch(
       `${process.env.NEXTAUTH_URL}/api/revalidate?secret=${process.env.REVALIDATE_TOKEN}&linkId=${id}&hasDomain=${updatedLink.domainId ? "true" : "false"}`,
     );
+
+    // Decrypt the password for the updated link
+    if (updatedLink.password !== null) {
+      updatedLink.password = decryptEncrpytedPassword(updatedLink.password);
+    }
 
     return res.status(200).json(updatedLink);
   } else if (req.method == "DELETE") {

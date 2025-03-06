@@ -2,7 +2,8 @@ import Link from "next/link";
 
 import { useState } from "react";
 
-import { UsersIcon } from "lucide-react";
+import { PlanEnum } from "@/ee/stripe/constants";
+import { CircleHelpIcon, InfoIcon, UsersIcon } from "lucide-react";
 
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { DataroomHeader } from "@/components/datarooms/dataroom-header";
@@ -12,6 +13,8 @@ import GroupCard from "@/components/datarooms/groups/group-card";
 import { GroupCardPlaceholder } from "@/components/datarooms/groups/group-card-placeholder";
 import AppLayout from "@/components/layouts/app";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { BadgeTooltip } from "@/components/ui/tooltip";
 
 import { usePlan } from "@/lib/swr/use-billing";
 import { useDataroom } from "@/lib/swr/use-dataroom";
@@ -19,7 +22,7 @@ import useDataroomGroups from "@/lib/swr/use-dataroom-groups";
 import { cn } from "@/lib/utils";
 
 export default function DataroomGroupPage() {
-  const { plan, trial } = usePlan();
+  const { isDatarooms, isDataroomsPlus, isTrial } = usePlan();
   const { dataroom } = useDataroom();
   const { viewerGroups, loading } = useDataroomGroups();
 
@@ -30,11 +33,14 @@ export default function DataroomGroupPage() {
   }
 
   const ButtonComponent = () => {
-    if (plan === "datarooms" || trial) {
+    if (isDatarooms || isDataroomsPlus || isTrial) {
       return <Button onClick={() => setModalOpen(true)}>Create group</Button>;
     }
     return (
-      <UpgradePlanModal clickedPlan="Data Rooms" trigger="create_group_button">
+      <UpgradePlanModal
+        clickedPlan={PlanEnum.DataRooms}
+        trigger="create_group_button"
+      >
         <Button>Upgrade to create group</Button>
       </UpgradePlanModal>
     );
@@ -53,14 +59,37 @@ export default function DataroomGroupPage() {
           <DataroomNavigation dataroomId={dataroom.id} />
         </header>
 
+        <Tabs defaultValue="groups" className="!mt-4 space-y-4">
+          <TabsList>
+            <TabsTrigger value="links" asChild>
+              <Link href={`/datarooms/${dataroom.id}/permissions`}>Links</Link>
+            </TabsTrigger>
+            <TabsTrigger value="groups">Groups</TabsTrigger>
+          </TabsList>
+        </Tabs>
+
         <div className="space-y-4">
           {/* Groups */}
           <div className="grid gap-5">
             <div className="flex flex-wrap justify-between gap-6">
               <div className="flex items-center gap-x-2">
-                <h1 className="text-xl font-semibold tracking-tight text-black">
-                  Groups
-                </h1>
+                <div className="space-y-1">
+                  <h3 className="text-lg font-semibold tracking-tight text-foreground">
+                    Groups
+                  </h3>
+                  <p className="flex flex-row items-center gap-2 text-sm text-muted-foreground">
+                    Control document access with granular permissions through
+                    groups.{" "}
+                    <BadgeTooltip
+                      linkText="Learn more"
+                      content="Manage Access with Granular Permissions for Data Room Groups"
+                      key="groups"
+                      link="https://www.papermark.io/help/article/granular-permissions"
+                    >
+                      <CircleHelpIcon className="h-4 w-4 shrink-0 text-muted-foreground hover:text-foreground" />
+                    </BadgeTooltip>
+                  </p>
+                </div>
               </div>
               <div className="flex w-full flex-wrap items-center gap-3 sm:w-auto">
                 <ButtonComponent />

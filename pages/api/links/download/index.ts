@@ -35,6 +35,7 @@ export default async function handle(
           document: {
             select: {
               teamId: true,
+              downloadOnly: true,
               versions: {
                 where: { isPrimary: true },
                 select: {
@@ -42,6 +43,8 @@ export default async function handle(
                   file: true,
                   storageType: true,
                   numPages: true,
+                  originalFile: true,
+                  contentType: true,
                 },
                 take: 1,
               },
@@ -56,7 +59,7 @@ export default async function handle(
       }
 
       // if link does not allow download, we should not allow the download
-      if (!view.link.allowDownload) {
+      if (!view.link.allowDownload && !view.document?.downloadOnly) {
         return res.status(403).json({ error: "Error downloading" });
       }
 
@@ -89,22 +92,18 @@ export default async function handle(
         data: { downloadedAt: new Date() },
       });
 
-      // TODO: team hardcode for special download
-      if (
-        view.document!.teamId === "clwt1qwt00000qz39aqra71w6" &&
-        view.document!.versions[0].type === "sheet"
-      ) {
-        const downloadUrl = view.document!.versions[0].file;
-        return res.status(200).json({ downloadUrl });
-      }
-
       const downloadUrl = await getFile({
         type: view.document!.versions[0].storageType,
-        data: view.document!.versions[0].file,
+        data:
+          view.document!.versions[0].originalFile ??
+          view.document!.versions[0].file,
         isDownload: true,
       });
 
-      if (view.link.enableWatermark) {
+      if (
+        view.document!.versions[0].type === "pdf" &&
+        view.link.enableWatermark
+      ) {
         const response = await fetch(
           `${process.env.NEXTAUTH_URL}/api/mupdf/annotate-document`,
           {

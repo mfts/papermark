@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 
-import { motion } from "framer-motion";
 import { SettingsIcon, StampIcon } from "lucide-react";
+import { motion } from "motion/react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -70,6 +70,8 @@ export default function WatermarkSection({
     <div className="pb-5">
       <LinkItem
         title="Apply Watermark"
+        link="https://www.papermark.io/help/article/document-watermark"
+        tooltipContent="Add a dynamic watermark to your content."
         enabled={enabled}
         action={handleWatermarkToggle}
         isAllowed={isAllowed}
@@ -109,7 +111,7 @@ export default function WatermarkSection({
                 }}
                 className="focus:ring-inset"
               />
-              <div className="space-x-1">
+              <div className="space-x-1 space-y-1">
                 {["email", "date", "time", "link", "ipAddress"].map((item) => (
                   <Button
                     key={item}

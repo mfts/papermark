@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { FileCheckIcon } from "lucide-react";
+import { DownloadCloudIcon, FileCheckIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -22,35 +22,71 @@ export default function DataroomVisitHistory({
     <>
       {documentViews ? (
         documentViews.map((view) => (
-          <TableRow key={view.id}>
-            <TableCell>
-              <div className="flex items-center gap-x-4 overflow-visible">
-                <FileCheckIcon className="h-5 w-5 text-[#fb7a00]" />
-                Viewed {view.document.name}
-              </div>
-            </TableCell>
+          <>
+            {/* Show viewed row */}
+            <TableRow key={`${view.id}-viewed`}>
+              <TableCell>
+                <div className="flex items-center gap-x-4 overflow-visible">
+                  <FileCheckIcon className="h-5 w-5 text-[#fb7a00]" />
+                  Viewed {view.document.name}
+                </div>
+              </TableCell>
 
-            <TableCell>
-              <div>
-                <time
-                  className="truncate text-sm text-muted-foreground"
-                  dateTime={new Date(view.viewedAt).toISOString()}
-                  title={new Date(view.viewedAt).toLocaleString()}
-                >
-                  {timeAgo(view.viewedAt)}
-                </time>
-              </div>
-            </TableCell>
-            <TableCell className="table-cell">
-              <div className="flex items-center justify-end space-x-4">
-                <Button size={"sm"} variant={"link"} className="">
-                  <Link href={`/documents/${view.document.id}`}>
-                    See document
-                  </Link>
-                </Button>
-              </div>
-            </TableCell>
-          </TableRow>
+              <TableCell>
+                <div>
+                  <time
+                    className="truncate text-sm text-muted-foreground"
+                    dateTime={new Date(view.viewedAt).toISOString()}
+                    title={new Date(view.viewedAt).toLocaleString()}
+                  >
+                    {timeAgo(new Date(view.viewedAt))}
+                  </time>
+                </div>
+              </TableCell>
+              <TableCell className="table-cell">
+                <div className="flex items-center justify-end space-x-4">
+                  <Button size={"sm"} variant={"link"} className="">
+                    <Link href={`/documents/${view.document.id}`}>
+                      See document
+                    </Link>
+                  </Button>
+                </div>
+              </TableCell>
+            </TableRow>
+
+            {/* Show downloaded row if downloadedAt exists */}
+            {view.downloadedAt && (
+              <TableRow key={`${view.id}-downloaded`}>
+                <TableCell>
+                  <div className="flex items-center gap-x-4 overflow-visible">
+                    <DownloadCloudIcon className="h-5 w-5 text-[#fb7a00]" />
+                    Downloaded {view.document.name}
+                  </div>
+                </TableCell>
+
+                <TableCell>
+                  <div>
+                    <time
+                      className="truncate text-sm text-muted-foreground"
+                      dateTime={new Date(view.downloadedAt).toISOString()}
+                      title={new Date(view.downloadedAt).toLocaleString()}
+                    >
+                      {timeAgo(new Date(view.downloadedAt))}
+                    </time>
+                  </div>
+                </TableCell>
+                <TableCell className="table-cell">
+                  <div className="flex items-center justify-end space-x-4">
+                    <Button size={"sm"} variant={"link"} className="">
+                      <Link href={`/documents/${view.document.id}`}>
+                        See document
+                      </Link>
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            )}
+          </>
         ))
       ) : (
         <TableRow>

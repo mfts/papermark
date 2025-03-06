@@ -67,8 +67,6 @@ async function createDataroomStructure(
     },
   });
 
-  console.log("Created dataroom folder", dataroomFolder);
-
   await Promise.all(
     folder.childFolders.map((childFolder) =>
       createDataroomStructure(

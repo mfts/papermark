@@ -2,7 +2,12 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 import { getLimits } from "@/ee/limits/server";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import { Dataroom, DataroomDocument, DataroomFolder } from "@prisma/client";
+import {
+  Dataroom,
+  DataroomBrand,
+  DataroomDocument,
+  DataroomFolder,
+} from "@prisma/client";
 import { getServerSession } from "next-auth/next";
 
 import { newId } from "@/lib/id-helper";
@@ -12,6 +17,7 @@ import { CustomUser } from "@/lib/types";
 interface DataroomWithContents extends Dataroom {
   documents: DataroomDocument[];
   folders: DataroomFolderWithContents[];
+  brand: Partial<DataroomBrand> | null;
 }
 
 interface DataroomFolderWithContents extends DataroomFolder {
@@ -24,12 +30,14 @@ async function fetchDataroomContents(
   dataroomId: string,
 ): Promise<DataroomWithContents> {
   const dataroom = await prisma.dataroom.findUnique({
-    where: {
-      id: dataroomId,
-    },
+    where: { id: dataroomId },
     include: {
       documents: true,
-      folders: true,
+      folders: {
+        where: { parentId: null }, // Only get root folders initially
+        include: { documents: true },
+      },
+      brand: true,
     },
   });
 
@@ -37,24 +45,48 @@ async function fetchDataroomContents(
     throw new Error(`Dataroom with id ${dataroomId} not found`);
   }
 
-  const transformFolders = (
-    documents: DataroomDocument[],
-    folders: DataroomFolder[],
-  ): DataroomFolderWithContents[] => {
-    return folders.map((folder) => ({
+  // Recursive function to fetch folder contents
+  async function getFolderContents(
+    folderId: string,
+  ): Promise<DataroomFolderWithContents> {
+    const folder = await prisma.dataroomFolder.findUnique({
+      where: { id: folderId },
+      include: {
+        documents: true,
+        childFolders: {
+          include: { documents: true },
+        },
+      },
+    });
+
+    if (!folder) {
+      throw new Error(`Folder with id ${folderId} not found`);
+    }
+
+    const childFolders = await Promise.all(
+      folder.childFolders.map(async (childFolder) => {
+        const nestedContents = await getFolderContents(childFolder.id);
+        return nestedContents;
+      }),
+    );
+
+    return {
       ...folder,
-      documents: documents.filter((doc) => doc.folderId === folder.id),
-      childFolders: transformFolders(
-        documents,
-        folders.filter((f) => f.parentId === folder.id),
-      ),
-    }));
-  };
+      documents: folder.documents,
+      childFolders: childFolders,
+    };
+  }
+
+  // Transform root folders by fetching their complete contents
+  const foldersWithContents = await Promise.all(
+    dataroom.folders.map((folder) => getFolderContents(folder.id)),
+  );
 
   return {
     ...dataroom,
-    documents: dataroom.documents.filter((doc) => !doc.folderId), // only look at root documents
-    folders: transformFolders(dataroom.documents, dataroom.folders),
+    documents: dataroom.documents.filter((doc) => !doc.folderId),
+    folders: foldersWithContents,
+    brand: dataroom.brand,
   };
 }
 
@@ -187,26 +219,25 @@ export default async function handle(
           folders: {
             create: [],
           },
+          brand: {
+            create: {
+              banner: dataroomContents.brand?.banner,
+              logo: dataroomContents.brand?.logo,
+              accentColor: dataroomContents.brand?.accentColor,
+              brandColor: dataroomContents.brand?.brandColor,
+            },
+          },
         },
       });
 
-      // Start the recursive creation with the root folders
-      dataroomContents.folders
-        .filter((folder) => !folder.parentId) // only look at root folders
-        .map(async (folder) => {
-          await duplicateFolders(newDataroom.id, folder);
-        });
+      // Changed this section to properly await all folder duplications
+      await Promise.all(
+        dataroomContents.folders
+          .filter((folder) => !folder.parentId)
+          .map((folder) => duplicateFolders(newDataroom.id, folder)),
+      );
 
-      const dataroomWithCount = await prisma.dataroom.findUnique({
-        where: {
-          id: dataroom.id,
-        },
-        include: {
-          _count: { select: { documents: true } },
-        },
-      });
-
-      res.status(201).json(dataroomWithCount);
+      res.status(201).json(newDataroom);
     } catch (error) {
       console.error("Request error", error);
       res.status(500).json({ message: "Error duplicating dataroom" });

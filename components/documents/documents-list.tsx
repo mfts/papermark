@@ -15,7 +15,6 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import { motion } from "framer-motion";
 import {
   FileIcon,
   FolderIcon,
@@ -23,6 +22,7 @@ import {
   Trash2Icon,
   XIcon,
 } from "lucide-react";
+import { motion } from "motion/react";
 
 import { Skeleton } from "@/components/ui/skeleton";
 import { UploadNotificationDrawer } from "@/components/upload-notification";
@@ -170,6 +170,9 @@ export function DocumentsList({
 
     setSelectedDocuments([]);
     setIsOverFolder(false);
+  };
+  const handleCloseDrawer = () => {
+    setShowDrawer(false);
   };
 
   const HeaderContent = memo(() => {
@@ -477,6 +480,7 @@ export function DocumentsList({
           open={showDrawer}
           onOpenChange={setShowDrawer}
           uploads={uploads}
+          handleCloseDrawer={handleCloseDrawer}
           setUploads={setUploads}
           rejectedFiles={rejectedFiles}
           setRejectedFiles={setRejectedFiles}

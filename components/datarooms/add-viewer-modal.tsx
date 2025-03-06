@@ -20,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 import { useAnalytics } from "@/lib/analytics";
+import { usePlan } from "@/lib/swr/use-billing";
 
 export function AddViewerModal({
   dataroomId,
@@ -37,6 +38,8 @@ export function AddViewerModal({
   const [loading, setLoading] = useState<boolean>(false);
   const teamInfo = useTeam();
   const analytics = useAnalytics();
+  const { trial } = usePlan();
+  const isTrial = !!trial;
 
   // Email validation regex pattern
   const validateEmail = (email: string) => {
@@ -116,6 +119,20 @@ export function AddViewerModal({
 
     if (emails.length === 0) return;
 
+    if (isTrial) {
+      toast.error(
+        "You are on a trial plan. You cannot send email invitations to prevent spamming.",
+      );
+      return;
+    }
+
+    if (emails.length > 5) {
+      toast.error(
+        "You can only send invitations to a maximum of 5 emails at a time.",
+      );
+      return;
+    }
+
     setLoading(true);
 
     // POST request with multiple emails
@@ -170,7 +187,7 @@ export function AddViewerModal({
           <Label htmlFor="email" className="opacity-80">
             Emails
           </Label>
-          <div className="flex flex-wrap gap-2 py-2  text-sm">
+          <div className="flex flex-wrap gap-2 py-2 text-sm">
             {emails.map((email, index) => (
               <div
                 key={index}

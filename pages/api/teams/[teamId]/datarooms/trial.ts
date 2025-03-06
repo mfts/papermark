@@ -14,6 +14,11 @@ import {
 import { CustomUser } from "@/lib/types";
 import { log } from "@/lib/utils";
 
+export const config = {
+  // in order to enable `waitUntil` function
+  supportsResponseStreaming: true,
+};
+
 export default async function handle(
   req: NextApiRequest,
   res: NextApiResponse,

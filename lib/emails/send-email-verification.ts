@@ -5,15 +5,20 @@ import { sendEmail } from "@/lib/resend";
 export const sendVerificationEmail = async (
   email: string,
   verificationURL: string,
+  isDataroom: boolean = false,
 ) => {
-  const emailTemplate = EmailVerification({ verificationURL, email });
+  const emailTemplate = EmailVerification({
+    verificationURL,
+    email,
+    isDataroom,
+  });
   try {
     await sendEmail({
       to: email,
-      subject: "Verify your email address",
+      subject: `Verify your email address to access the ${isDataroom ? "dataroom" : "document"}`,
       react: emailTemplate,
       test: process.env.NODE_ENV === "development",
-      system: true,
+      verify: true,
     });
   } catch (e) {
     console.error(e);

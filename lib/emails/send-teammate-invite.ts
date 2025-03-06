@@ -18,7 +18,7 @@ export const sendTeammateInviteEmail = async ({
   try {
     await sendEmail({
       to: to,
-      subject: `You are invited to join a ${senderName}'s team`,
+      subject: `You are invited to join team`,
       react: TeamInvitation({
         senderName,
         senderEmail,

@@ -75,8 +75,15 @@ export default async function handle(
         where: {
           id: teamId,
           plan: {
-            // exclude all teams not on `business`, `datarooms` plan
-            in: ["business", "datarooms"],
+            // exclude all teams not on `business`, `datarooms`, `datarooms-plus`, `business+old`, `datarooms+old`, `datarooms-plus+old` plan
+            in: [
+              "business",
+              "datarooms",
+              "datarooms-plus",
+              "business+old",
+              "datarooms+old",
+              "datarooms-plus+old",
+            ],
           },
           users: {
             some: {
@@ -120,7 +127,7 @@ export default async function handle(
         _count: { documents: 0 },
       };
 
-      res.status(201).json(dataroomWithCount);
+      res.status(201).json({ dataroom: dataroomWithCount });
     } catch (error) {
       console.error("Request error", error);
       res.status(500).json({ error: "Error creating dataroom" });

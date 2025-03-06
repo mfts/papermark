@@ -55,19 +55,21 @@ export default async function handler(
     // Get the basename and extension for the file
     const { name, ext } = path.parse(fileName);
 
-    let key = `${team.id}/${docId}/${slugify(name)}${ext}`;
+    const slugifiedName = slugify(name) + ext;
+    const key = `${team.id}/${docId}/${slugifiedName}`;
 
     const putObjectCommand = new PutObjectCommand({
       Bucket: process.env.NEXT_PRIVATE_UPLOAD_BUCKET,
       Key: key,
       ContentType: contentType,
+      ContentDisposition: `attachment; filename="${slugifiedName}"`,
     });
 
     const url = await getSignedUrl(client, putObjectCommand, {
       expiresIn: ONE_HOUR / ONE_SECOND,
     });
 
-    return res.status(200).json({ url, key, docId });
+    return res.status(200).json({ url, key, docId, fileName: slugifiedName });
   } catch (error) {
     return res.status(500).json({ error: "Internal server error" });
   }
