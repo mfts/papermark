@@ -6,8 +6,6 @@ import { ipAddress, waitUntil } from "@vercel/functions";
 import { getServerSession } from "next-auth";
 
 import { hashToken } from "@/lib/api/auth/token";
-import sendNotification from "@/lib/api/notification-helper";
-import { recordVisit } from "@/lib/api/views/record-visit";
 import { verifyPreviewSession } from "@/lib/auth/preview-auth";
 import { PreviewSession } from "@/lib/auth/preview-auth";
 import { sendOtpVerificationEmail } from "@/lib/emails/send-email-otp-verification";

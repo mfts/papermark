@@ -7,8 +7,6 @@ import { getServerSession } from "next-auth";
 import { parsePageId } from "notion-utils";
 
 import { hashToken } from "@/lib/api/auth/token";
-import sendNotification from "@/lib/api/notification-helper";
-import { recordVisit } from "@/lib/api/views/record-visit";
 import {
   DataroomSession,
   createDataroomSession,
