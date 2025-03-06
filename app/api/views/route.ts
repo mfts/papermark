@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 // Import authOptions directly from the source
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import { ipAddress, ipAddress, waitUntil } from "@vercel/functions";
+import { ipAddress, waitUntil } from "@vercel/functions";
 import { getServerSession } from "next-auth";
 
 import { hashToken } from "@/lib/api/auth/token";
