@@ -23,7 +23,7 @@ export default async function DomainMiddleware(req: NextRequest) {
 
   // Rewrite the URL to the correct page component for custom domains
   // Rewrite to the pages/view/domains/[domain]/[slug] route
-  url.pathname = `/view/domains/${host}/${path}`;
+  url.pathname = `/view/domains/${host}${path}`;
 
   return NextResponse.rewrite(url, {
     headers: {
