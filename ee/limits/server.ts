@@ -47,6 +47,7 @@ const configSchema = z.object({
       document: z.number().optional(), // in MB
       image: z.number().optional(), // in MB
       excel: z.number().optional(), // in MB
+      maxFiles: z.number().optional(), // in amount of files
     })
     .optional(),
 });
