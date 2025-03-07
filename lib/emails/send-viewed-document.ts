@@ -9,6 +9,7 @@ export const sendViewedDocumentEmail = async ({
   linkName,
   viewerEmail,
   teamMembers,
+  locationString,
 }: {
   ownerEmail: string | null;
   documentId: string;
@@ -16,12 +17,14 @@ export const sendViewedDocumentEmail = async ({
   linkName: string;
   viewerEmail: string | null;
   teamMembers?: string[];
+  locationString?: string;
 }) => {
   const emailTemplate = ViewedDocumentEmail({
     documentId,
     documentName,
     linkName,
     viewerEmail,
+    locationString,
   });
   try {
     if (!ownerEmail) {

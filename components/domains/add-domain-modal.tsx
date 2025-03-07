@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
+import { PlanEnum } from "@/ee/stripe/constants";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -21,7 +22,7 @@ import { useAnalytics } from "@/lib/analytics";
 import { usePlan } from "@/lib/swr/use-billing";
 import useLimits from "@/lib/swr/use-limits";
 
-import { PlanEnum, UpgradePlanModal } from "../billing/upgrade-plan-modal";
+import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
 
 export function AddDomainModal({
   open,
@@ -40,7 +41,7 @@ export function AddDomainModal({
   const [loading, setLoading] = useState<boolean>(false);
 
   const teamInfo = useTeam();
-  const { plan } = usePlan();
+  const { isFree, isPro, isBusiness } = usePlan();
   const { limits } = useLimits();
   const analytics = useAnalytics();
   const addDomainSchema = z.object({
@@ -107,10 +108,10 @@ export function AddDomainModal({
   // - on business plan and has custom domain in dataroom disabled
   // => then show the upgrade modal
   if (
-    plan === "free" ||
-    (plan === "pro" && !limits?.customDomainOnPro) ||
+    isFree ||
+    (isPro && !limits?.customDomainOnPro) ||
     (linkType === "DATAROOM_LINK" &&
-      plan === "business" &&
+      isBusiness &&
       !limits?.customDomainInDataroom)
   ) {
     if (children) {

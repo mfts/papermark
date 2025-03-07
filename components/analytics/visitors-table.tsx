@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
+import { PlanEnum } from "@/ee/stripe/constants";
 import {
   ColumnDef,
   SortingState,
@@ -42,7 +43,6 @@ import { usePlan } from "@/lib/swr/use-billing";
 import { durationFormat, fetcher, timeAgo } from "@/lib/utils";
 import { downloadCSV } from "@/lib/utils/csv";
 
-import { PlanEnum } from "../billing/upgrade-plan-modal";
 import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
 
 interface Visitor {
@@ -216,8 +216,7 @@ export default function VisitorsTable({
 }) {
   const router = useRouter();
   const teamInfo = useTeam();
-  const { plan, isTrial } = usePlan();
-  const isFree = plan === "free";
+  const { isTrial, isFree } = usePlan();
   const { interval = "7d" } = router.query;
   const [sorting, setSorting] = useState<SortingState>([
     { id: "lastActive", desc: true },

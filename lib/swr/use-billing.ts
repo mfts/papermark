@@ -1,9 +1,5 @@
-import { useRouter } from "next/router";
-
-import { useMemo } from "react";
-
 import { useTeam } from "@/context/team-context";
-import { parse } from "path";
+import { PLAN_NAME_MAP } from "@/ee/stripe/constants";
 import useSWR from "swr";
 
 import { fetcher } from "@/lib/utils";
@@ -37,7 +33,15 @@ export function useBilling() {
   };
 }
 
-export type BasePlan = "free" | "starter" | "pro" | "business" | "datarooms";
+export type BasePlan =
+  | "free"
+  | "starter"
+  | "pro"
+  | "trial"
+  | "business"
+  | "datarooms"
+  | "datarooms-plus";
+
 type PlanWithTrial = `${BasePlan}+drtrial`;
 type PlanWithOld = `${BasePlan}+old` | `${BasePlan}+drtrial+old`;
 
@@ -81,11 +85,19 @@ export function usePlan() {
 
   return {
     plan: parsedPlan.plan ?? "free",
+    planName: PLAN_NAME_MAP[parsedPlan.plan ?? "free"],
     trial: parsedPlan.trial,
     isTrial: !!parsedPlan.trial,
     isOldAccount: parsedPlan.old,
     isCustomer: plan?.isCustomer,
     isAnnualPlan: plan?.subscriptionCycle === "yearly",
+    isFree: parsedPlan.plan === "free",
+    isStarter: parsedPlan.plan === "starter",
+    isPro: parsedPlan.plan === "pro",
+    isBusiness: parsedPlan.plan === "business",
+    isDatarooms:
+      parsedPlan.plan === "datarooms" || parsedPlan.plan === "datarooms-plus",
+    isDataroomsPlus: parsedPlan.plan === "datarooms-plus",
     loading: !plan && !error,
     error,
   };

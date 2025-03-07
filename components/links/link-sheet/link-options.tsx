@@ -1,11 +1,9 @@
 import { useState } from "react";
 
+import { PlanEnum } from "@/ee/stripe/constants";
 import { LinkAudienceType, LinkType } from "@prisma/client";
 
-import {
-  PlanEnum,
-  UpgradePlanModal,
-} from "@/components/billing/upgrade-plan-modal";
+import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { DEFAULT_LINK_TYPE } from "@/components/links/link-sheet";
 import AllowDownloadSection from "@/components/links/link-sheet/allow-download-section";
 import AllowListSection from "@/components/links/link-sheet/allow-list-section";
@@ -45,13 +43,16 @@ export const LinkOptions = ({
   linkType: LinkType;
   editLink?: boolean;
 }) => {
-  const { plan, trial } = usePlan();
+  const {
+    isStarter,
+    isPro,
+    isBusiness,
+    isDatarooms,
+    isDataroomsPlus,
+    isTrial,
+  } = usePlan();
   const { limits } = useLimits();
 
-  const isTrial = !!trial;
-  const isPro = plan === "pro";
-  const isBusiness = plan === "business";
-  const isDatarooms = plan === "datarooms";
   const allowAdvancedLinkControls = limits
     ? limits?.advancedLinkControlsOnPro
     : false;
@@ -85,7 +86,8 @@ export const LinkOptions = ({
           isTrial ||
           (isPro && allowAdvancedLinkControls) ||
           isBusiness ||
-          isDatarooms
+          isDatarooms ||
+          isDataroomsPlus
         }
         handleUpgradeStateChange={handleUpgradeStateChange}
         editLink={editLink ?? false}
@@ -93,7 +95,13 @@ export const LinkOptions = ({
 
       <EmailAuthenticationSection
         {...{ data, setData }}
-        isAllowed={isTrial || isPro || isBusiness || isDatarooms}
+        isAllowed={
+          isTrial ||
+          (isPro && allowAdvancedLinkControls) ||
+          isBusiness ||
+          isDatarooms ||
+          isDataroomsPlus
+        }
         handleUpgradeStateChange={handleUpgradeStateChange}
       />
       {data.audienceType === LinkAudienceType.GENERAL ? (
@@ -103,7 +111,8 @@ export const LinkOptions = ({
             isTrial ||
             (isPro && allowAdvancedLinkControls) ||
             isBusiness ||
-            isDatarooms
+            isDatarooms ||
+            isDataroomsPlus
           }
           handleUpgradeStateChange={handleUpgradeStateChange}
         />
@@ -115,7 +124,8 @@ export const LinkOptions = ({
             isTrial ||
             (isPro && allowAdvancedLinkControls) ||
             isBusiness ||
-            isDatarooms
+            isDatarooms ||
+            isDataroomsPlus
           }
           handleUpgradeStateChange={handleUpgradeStateChange}
         />
@@ -127,18 +137,23 @@ export const LinkOptions = ({
           isTrial ||
           (isPro && allowAdvancedLinkControls) ||
           isBusiness ||
-          isDatarooms
+          isDatarooms ||
+          isDataroomsPlus
         }
         handleUpgradeStateChange={handleUpgradeStateChange}
       />
       <WatermarkSection
         {...{ data, setData }}
-        isAllowed={isTrial || isDatarooms || allowWatermarkOnBusiness}
+        isAllowed={
+          isTrial || isDatarooms || isDataroomsPlus || allowWatermarkOnBusiness
+        }
         handleUpgradeStateChange={handleUpgradeStateChange}
       />
       <AgreementSection
         {...{ data, setData }}
-        isAllowed={isTrial || isDatarooms}
+        isAllowed={
+          isTrial || isDatarooms || isDataroomsPlus || allowWatermarkOnBusiness
+        }
         handleUpgradeStateChange={handleUpgradeStateChange}
       />
       {linkType === LinkType.DOCUMENT_LINK ? (
@@ -150,7 +165,8 @@ export const LinkOptions = ({
               isTrial ||
               (isPro && allowAdvancedLinkControls) ||
               isBusiness ||
-              isDatarooms
+              isDatarooms ||
+              isDataroomsPlus
             }
             handleUpgradeStateChange={handleUpgradeStateChange}
           />
@@ -158,14 +174,19 @@ export const LinkOptions = ({
       ) : null}
       <CustomFieldsSection
         {...{ data, setData }}
-        isAllowed={isTrial || isBusiness || isDatarooms}
+        isAllowed={isTrial || isBusiness || isDatarooms || isDataroomsPlus}
         handleUpgradeStateChange={handleUpgradeStateChange}
       />
       {linkType === LinkType.DOCUMENT_LINK ? (
         <ProBannerSection
           {...{ data, setData }}
           isAllowed={
-            isTrial || isPro || isBusiness || isDatarooms || plan === "starter"
+            isTrial ||
+            isPro ||
+            isBusiness ||
+            isDatarooms ||
+            isDataroomsPlus ||
+            isStarter
           }
           handleUpgradeStateChange={handleUpgradeStateChange}
         />

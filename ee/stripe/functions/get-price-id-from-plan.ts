@@ -9,7 +9,7 @@ export function getPriceIdFromPlan(
   const accountType = isOldAccount(planName) ? "old" : "new";
   const cleanPlanName = planName.split("+")[0];
 
-  return PLANS.find((p) => p.name === cleanPlanName)?.price[period].priceIds[
-    env
-  ][accountType];
+  const priceId = PLANS.find((p) => p.name === cleanPlanName)?.price[period]
+    .priceIds[env][accountType];
+  return priceId;
 }

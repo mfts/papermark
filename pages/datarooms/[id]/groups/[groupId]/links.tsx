@@ -2,15 +2,19 @@ import { DataroomHeader } from "@/components/datarooms/dataroom-header";
 import { DataroomNavigation } from "@/components/datarooms/dataroom-navigation";
 import { GroupHeader } from "@/components/datarooms/groups/group-header";
 import { GroupNavigation } from "@/components/datarooms/groups/group-navigation";
-import ExpandableTable from "@/components/datarooms/groups/group-permissions";
 import AppLayout from "@/components/layouts/app";
+import LinksTable from "@/components/links/links-table";
 
 import { useDataroom } from "@/lib/swr/use-dataroom";
-import { useDataroomGroup } from "@/lib/swr/use-dataroom-groups";
+import {
+  useDataroomGroup,
+  useDataroomGroupLinks,
+} from "@/lib/swr/use-dataroom-groups";
 
-export default function DataroomGroupPage() {
+export default function DataroomGroupLinksPage() {
   const { dataroom } = useDataroom();
   const { viewerGroup } = useDataroomGroup();
+  const { links, loading } = useDataroomGroupLinks();
 
   if (!dataroom || !viewerGroup) {
     return <div>Loading...</div>;
@@ -33,14 +37,14 @@ export default function DataroomGroupPage() {
         <div className="mx-auto grid w-full items-start gap-6 md:grid-cols-[180px_1fr] lg:grid-cols-[250px_1fr]">
           <GroupNavigation
             dataroomId={dataroom.id}
-            viewerGroupId={viewerGroup?.id!}
+            viewerGroupId={viewerGroup.id}
           />
           <div className="grid gap-6">
-            <ExpandableTable
-              dataroomId={dataroom.id}
-              permissions={viewerGroup.accessControls}
-              groupId={viewerGroup.id}
-            />
+            {loading ? (
+              <div>Loading...</div>
+            ) : (
+              <LinksTable links={links} targetType={"DATAROOM"} />
+            )}
           </div>
         </div>
       </div>

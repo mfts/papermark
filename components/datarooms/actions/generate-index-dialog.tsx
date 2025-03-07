@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import { PlanEnum } from "@/ee/stripe/constants";
 import {
   FileJson,
   FileSlidersIcon,
@@ -8,10 +9,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-import {
-  PlanEnum,
-  UpgradePlanModal,
-} from "@/components/billing/upgrade-plan-modal";
+import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -48,7 +46,7 @@ export default function GenerateIndexDialog({
   disabled = false,
 }: GenerateIndexDialogProps) {
   const { links } = useDataroomLinks();
-  const { plan, trial } = usePlan();
+  const { isDatarooms, isDataroomsPlus, isTrial } = usePlan();
   const analytics = useAnalytics();
 
   const [isLoading, setIsLoading] = useState(false);
@@ -57,7 +55,7 @@ export default function GenerateIndexDialog({
     useState<IndexFileFormat>("excel");
   const [isOpen, setIsOpen] = useState(false);
 
-  const hasDataroomsPlan = plan === "datarooms" || trial;
+  const hasDataroomsPlan = isDatarooms || isDataroomsPlus || isTrial;
 
   const handleGenerateIndex = async () => {
     if (!hasDataroomsPlan) {

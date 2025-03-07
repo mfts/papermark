@@ -1,3 +1,5 @@
+import { useRouter } from "next/router";
+
 import { useState } from "react";
 
 import { LinkType } from "@prisma/client";
@@ -10,12 +12,17 @@ import { LinkOptionContainer } from "@/components/welcome/containers/link-option
 import { UploadContainer } from "@/components/welcome/containers/upload-container";
 
 export default function Upload() {
+  const router = useRouter();
+  const { groupId } = router.query as {
+    id: string;
+    groupId?: string;
+  };
   const [currentFile, setCurrentFile] = useState<File | null>(null);
   const [currentBlob, setCurrentBlob] = useState<boolean>(false);
   const [currentLinkId, setCurrentLinkId] = useState<string | null>(null);
   const [currentDocId, setCurrentDocId] = useState<string | null>(null);
   const [linkData, setLinkData] = useState<DEFAULT_LINK_TYPE>(
-    DEFAULT_LINK_PROPS(LinkType.DOCUMENT_LINK),
+    DEFAULT_LINK_PROPS(LinkType.DOCUMENT_LINK, groupId),
   );
 
   if (!currentBlob) {
