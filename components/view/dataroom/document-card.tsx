@@ -2,11 +2,18 @@ import { useRouter } from "next/router";
 
 import React from "react";
 
-import { ArrowDownToLineIcon } from "lucide-react";
+import { Download, MoreVerticalIcon } from "lucide-react";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 import { fileIcon } from "@/lib/utils/get-file-icon";
 
@@ -69,7 +76,7 @@ export default function DocumentCard({
       return;
     }
     try {
-      const response = await fetch(`/api/links/download/dataroomDocumet`, {
+      const response = await fetch(`/api/links/download/dataroom-document`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -85,11 +92,61 @@ export default function DocumentCard({
         toast.error("Error downloading file");
         return;
       }
-      const { downloadUrl } = await response.json();
 
-      window.open(downloadUrl, "_blank");
+      // Check if the response is JSON (for direct downloads) or binary (for buffered files)
+      const contentType = response.headers.get("content-type");
+
+      // If it's a watermarked PDF, handle it with the buffer method
+      if (contentType?.includes("application/pdf")) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+
+        const link = window.document.createElement("a");
+        link.href = url;
+        const disposition = response.headers.get("content-disposition");
+        const filenameMatch =
+          disposition && disposition.match(/filename="(.+)"/);
+        link.download = filenameMatch
+          ? decodeURIComponent(filenameMatch[1])
+          : document.name;
+
+        window.document.body.appendChild(link);
+        link.click();
+        window.document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+
+        toast.success("File downloaded successfully");
+        return;
+      }
+
+      // For all other files, use the iframe method
+      if (contentType?.includes("application/json")) {
+        const data = await response.json();
+        const downloadUrl = data.isDirectDownload
+          ? data.downloadUrl
+          : response.url;
+
+        // Create a hidden iframe for download
+        const iframe = window.document.createElement("iframe");
+        iframe.style.display = "none";
+        window.document.body.appendChild(iframe);
+        iframe.src = downloadUrl;
+
+        // Clean up the iframe after a delay
+        setTimeout(() => {
+          if (iframe && iframe.parentNode) {
+            window.document.body.removeChild(iframe);
+          }
+        }, 5000);
+
+        toast.success("Download started");
+        return;
+      }
+
+      toast.error("Unexpected response format");
     } catch (error) {
       console.error("Error downloading file:", error);
+      toast.error("Error downloading file");
     }
   };
 
@@ -120,19 +177,32 @@ export default function DocumentCard({
           </div>
         </div>
         {canDownload && (
-          <div className="invisible z-10 group-hover/row:visible">
-            <Button
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                downloadDocument();
-              }}
-              variant="default"
-              className="rounded-md p-2"
-              aria-label="Download document"
-            >
-              <ArrowDownToLineIcon className="h-5 w-5" />
-            </Button>
+          <div className="z-10">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 p-0 text-gray-500 ring-1 ring-gray-100 hover:bg-gray-200 group-hover/row:text-foreground group-hover/row:ring-gray-300"
+                  aria-label="Open menu"
+                >
+                  <MoreVerticalIcon className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    downloadDocument();
+                  }}
+                >
+                  <Download className="h-4 w-4" />
+                  Download
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         )}
       </li>

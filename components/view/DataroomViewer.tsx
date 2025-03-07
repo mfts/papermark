@@ -118,7 +118,9 @@ export default function DataroomViewer({
           return {
             ...doc,
             itemType: "document",
-            canDownload: accessControl?.canDownload ?? true,
+            canDownload:
+              (accessControl?.canDownload ?? true) &&
+              doc.versions[0].type !== "notion",
           };
         }),
     ];

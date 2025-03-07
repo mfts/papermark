@@ -104,10 +104,10 @@ export default async function handle(
         return res.status(404).json({ error: "Error downloading" });
       }
 
-      // if viewedAt is longer than 30 mins ago, we should not allow the download
+      // if viewedAt is longer than 23 hours ago, we should not allow the download
       if (
         view.viewedAt &&
-        view.viewedAt < new Date(Date.now() - 30 * 60 * 1000)
+        view.viewedAt < new Date(Date.now() - 23 * 60 * 60 * 1000)
       ) {
         return res.status(403).json({ error: "Error downloading" });
       }
@@ -150,14 +150,20 @@ export default async function handle(
         },
       });
 
+      const file =
+        view.link.enableWatermark &&
+        downloadDocuments[0].document!.versions[0].type === "pdf"
+          ? downloadDocuments[0].document!.versions[0].file
+          : (downloadDocuments[0].document!.versions[0].originalFile ??
+            downloadDocuments[0].document!.versions[0].file);
+
       const downloadUrl = await getFile({
         type: downloadDocuments[0].document!.versions[0].storageType,
-        data:
-          downloadDocuments[0].document!.versions[0].originalFile ??
-          downloadDocuments[0].document!.versions[0].file,
+        data: file,
         isDownload: true,
       });
 
+      // For PDF files with watermark, always buffer and process
       if (
         downloadDocuments[0].document!.versions[0].type === "pdf" &&
         view.link.enableWatermark
@@ -190,20 +196,69 @@ export default async function handle(
 
         const pdfBuffer = await response.arrayBuffer();
 
-        // Set appropriate headers
+        // Set appropriate headers for watermarked PDF
         res.setHeader("Content-Type", "application/pdf");
         res.setHeader(
           "Content-Disposition",
-          'attachment; filename="watermarked.pdf"',
+          `attachment; filename="${encodeURIComponent(downloadDocuments[0].document!.name)}"`,
         );
+        res.setHeader("Content-Length", Buffer.from(pdfBuffer).length);
 
-        // Send the buffer directly
+        // Send the watermarked buffer directly
         return res.send(Buffer.from(pdfBuffer));
       }
 
-      return res.status(200).json({ downloadUrl });
-      // Add documents in folders
-    } catch {}
+      // For non-watermarked PDFs, we need to buffer and set proper headers
+      // - contentType is application/pdf
+      // - contentType is null and type is pdf
+      // - contentType starts with image/
+      if (
+        downloadDocuments[0].document!.versions[0].contentType ===
+          "application/pdf" ||
+        (downloadDocuments[0].document!.versions[0].contentType === null &&
+          downloadDocuments[0].document!.versions[0].type === "pdf") ||
+        downloadDocuments[0].document!.versions[0].contentType?.startsWith(
+          "image/",
+        )
+      ) {
+        const response = await fetch(downloadUrl);
+        if (!response.ok) {
+          return res.status(500).json({ error: "Error downloading file" });
+        }
+
+        const pdfBuffer = await response.arrayBuffer();
+
+        // Set appropriate headers to force download
+        res.setHeader("Content-Type", "application/pdf");
+        res.setHeader(
+          "Content-Disposition",
+          `attachment; filename="${encodeURIComponent(downloadDocuments[0].document!.name)}"`,
+        );
+        res.setHeader("Content-Length", Buffer.from(pdfBuffer).length);
+        res.setHeader("Cache-Control", "no-cache");
+
+        // Send the PDF buffer directly
+        return res.send(Buffer.from(pdfBuffer));
+      }
+
+      const headResponse = await fetch(downloadUrl, { method: "HEAD" });
+      const contentType =
+        downloadDocuments[0].document!.versions[0].contentType ||
+        headResponse.headers.get("content-type") ||
+        "application/octet-stream";
+      const fileName = downloadDocuments[0].document!.name;
+
+      // For all other files, return direct download URL
+      return res.status(200).json({
+        downloadUrl,
+        fileName,
+        contentType,
+        isDirectDownload: true,
+      });
+    } catch (error) {
+      console.error("Error:", error);
+      return res.status(500).json({ error: "Error downloading file" });
+    }
   } else {
     // We only allow POST requests
     res.setHeader("Allow", ["POST"]);
