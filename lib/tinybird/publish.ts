@@ -111,3 +111,37 @@ export const recordClickEvent = tb.buildIngestEndpoint({
     dataroom_id: z.string().nullable(),
   }),
 });
+
+// Event track when a visitor opens a link
+export const recordLinkViewTB = tb.buildIngestEndpoint({
+  datasource: "pm_click_events__v1",
+  event: z.object({
+    timestamp: z.string(),
+    click_id: z.string(),
+    view_id: z.string(),
+    link_id: z.string(),
+    document_id: z.string().nullable(),
+    dataroom_id: z.string().nullable(),
+    continent: z.string().optional().default("Unknown"),
+    country: z.string().optional().default("Unknown"),
+    city: z.string().optional().default("Unknown"),
+    region: z.string().optional().default("Unknown"),
+    latitude: z.string().optional().default("Unknown"),
+    longitude: z.string().optional().default("Unknown"),
+    device: z.string().optional().default("Desktop"),
+    device_model: z.string().optional().default("Unknown"),
+    device_vendor: z.string().optional().default("Unknown"),
+    browser: z.string().optional().default("Unknown"),
+    browser_version: z.string().optional().default("Unknown"),
+    os: z.string().optional().default("Unknown"),
+    os_version: z.string().optional().default("Unknown"),
+    engine: z.string().optional().default("Unknown"),
+    engine_version: z.string().optional().default("Unknown"),
+    cpu_architecture: z.string().optional().default("Unknown"),
+    ua: z.string().optional().default("Unknown"),
+    bot: z.boolean().optional(),
+    referer: z.string().optional().default("(direct)"),
+    referer_url: z.string().optional().default("(direct)"),
+    ip_address: z.string().nullable(),
+  }),
+});

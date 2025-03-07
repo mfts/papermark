@@ -48,7 +48,7 @@ export function AddFolderModal({
   const [open, setOpen] = useState<boolean>(false);
 
   const teamInfo = useTeam();
-  const { plan, trial } = usePlan();
+  const { isFree, isTrial } = usePlan();
   const analytics = useAnalytics();
 
   /** current folder name */
@@ -134,7 +134,7 @@ export function AddFolderModal({
   };
 
   // If the team is on a free plan, show the upgrade modal
-  if (plan === "free" && (!isDataroom || !trial)) {
+  if (isFree && (!isDataroom || !isTrial)) {
     if (children) {
       return (
         <UpgradePlanModal

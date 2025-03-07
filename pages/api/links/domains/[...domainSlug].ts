@@ -55,6 +55,7 @@ export default async function handle(
           metaImage: true,
           metaFavicon: true,
           enableQuestion: true,
+          dataroomId: true,
           linkType: true,
           feedback: {
             select: {

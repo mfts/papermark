@@ -71,7 +71,7 @@ export default function DocumentHeader({
   const { theme, systemTheme } = useTheme();
   const isLight =
     theme === "light" || (theme === "system" && systemTheme === "light");
-  const { plan, trial } = usePlan();
+  const { isPro, isFree, isTrial, isBusiness, isDatarooms } = usePlan();
   const [isEditingName, setIsEditingName] = useState<boolean>(false);
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
   const [isFirstClick, setIsFirstClick] = useState<boolean>(false);
@@ -86,8 +86,6 @@ export default function DocumentHeader({
   const enterPressedRef = useRef<boolean>(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
-  const isFree = plan === "free";
-  const isTrial = !!trial;
   const actionRows: React.ReactNode[][] = [];
 
   if (actions) {
@@ -717,7 +715,7 @@ export default function DocumentHeader({
                 ))}
               {prismaDocument.type === "sheet" &&
                 !prismaDocument.advancedExcelEnabled &&
-                (plan === "business" || plan === "datarooms" || isTrial) && (
+                (isBusiness || isDatarooms || isTrial) && (
                   <DropdownMenuItem
                     onClick={() => enableAdvancedExcel(prismaDocument)}
                   >
@@ -785,10 +783,7 @@ export default function DocumentHeader({
               <DropdownMenuItem
                 onClick={() =>
                   isFree
-                    ? handleUpgradeClick(
-                        PlanEnum.Business,
-                        "export-document-visits",
-                      )
+                    ? handleUpgradeClick(PlanEnum.Pro, "export-document-visits")
                     : exportVisitCounts(prismaDocument)
                 }
               >
@@ -845,7 +840,7 @@ export default function DocumentHeader({
         />
       )}
 
-      {prismaDocument.type === "sheet" && (isFree || plan === "pro") && (
+      {prismaDocument.type === "sheet" && (isFree || isPro) && (
         <AlertBanner
           id="advanced-excel-alert"
           variant="default"
@@ -871,7 +866,7 @@ export default function DocumentHeader({
 
       {prismaDocument.type === "sheet" &&
         !prismaDocument.advancedExcelEnabled &&
-        (plan === "business" || plan === "datarooms" || isTrial) && (
+        (isBusiness || isDatarooms || isTrial) && (
           <AlertBanner
             id="enable-advanced-excel-alert"
             variant="default"

@@ -18,11 +18,13 @@ export default function ViewedDocument({
   documentName = "Pitchdeck",
   linkName = "Pitchdeck",
   viewerEmail,
+  locationString,
 }: {
   documentId: string;
   documentName: string;
   linkName: string;
   viewerEmail: string | null;
+  locationString?: string;
 }) {
   return (
     <Html>
@@ -43,7 +45,13 @@ export default function ViewedDocument({
               viewed by{" "}
               <span className="font-semibold">
                 {viewerEmail ? `${viewerEmail}` : `someone`}
-              </span>{" "}
+              </span>
+              {locationString ? (
+                <span>
+                  {" "}
+                  in <span className="font-semibold">{locationString}</span>
+                </span>
+              ) : null}{" "}
               from the link <span className="font-semibold">{linkName}</span>.
             </Text>
             <Text className="text-sm leading-6 text-black">
