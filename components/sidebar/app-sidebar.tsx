@@ -185,8 +185,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           ) : null}
         </p>
         {isLoading ? (
-          <div className="flex items-center gap-2 text-sm">
-            <Loader className="h-5 w-5 animate-spin" /> Loading teams...
+          <div className="flex items-center justify-center gap-2 text-sm">
+            <Loader className="h-5 w-5 animate-spin" />
+            <span className="group-data-[collapsible=icon]:hidden">
+              Loading teams...
+            </span>
           </div>
         ) : (
           <TeamSwitcher

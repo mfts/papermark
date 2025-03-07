@@ -305,36 +305,40 @@ export default function ImageViewer({
           )}
           ref={containerRef}
         >
-          <div className={cn("h-full w-full", scale > 1 && "overflow-auto")}>
+          <div
+            style={{ height: "calc(100dvh - 64px)" }}
+            onContextMenu={(e) => e.preventDefault()}
+            className="block max-w-full overflow-auto"
+          >
             <div
-              className="flex min-h-full w-full items-center justify-center"
+              className={cn(
+                "viewer-container relative mx-auto w-full",
+                "flex justify-center",
+              )}
               style={{
-                transform: `scale(${scale})`,
-                transition: "transform 0.2s ease-out",
-                transformOrigin: scale <= 1 ? "center center" : "left top",
-                minWidth: scale > 1 ? `${100 * scale}%` : "100%",
+                width: `${imageDimensions?.width ? scale * imageDimensions.width + "px" : "auto"}`,
+                height: `${imageDimensions?.height && scale > 1 ? scale * imageDimensions?.height + "px" : "calc(100dvh - 64px)"}`,
+                transition: "width 0.2s ease-in-out",
               }}
-              onContextMenu={(e) => e.preventDefault()}
             >
-              <div className="viewer-container relative my-auto flex w-full justify-center">
-                <img
-                  className="!pointer-events-auto max-h-[calc(100dvh-64px)] object-contain"
-                  ref={(ref) => {
-                    imageRefs.current = ref;
-                    if (ref) {
-                      ref.onload = () =>
-                        setImageDimensions({
-                          width: ref.clientWidth,
-                          height: ref.clientHeight,
-                        });
-                    }
-                  }}
-                  src={file}
-                  alt="Image 1"
-                />
-
-                {/* Add Watermark Component */}
-                {watermarkConfig ? (
+              <img
+                className="!pointer-events-auto object-contain"
+                ref={(ref) => {
+                  imageRefs.current = ref;
+                  if (ref) {
+                    ref.onload = () =>
+                      setImageDimensions({
+                        width: ref.clientWidth,
+                        height: ref.clientHeight,
+                      });
+                  }
+                }}
+                src={file}
+                alt="Image 1"
+              />
+              {/* Add Watermark Component */}
+              {watermarkConfig ? (
+                <div className="pointer-events-none absolute flex h-full w-full items-center justify-center [&>svg]:!top-auto">
                   <SVGWatermark
                     config={watermarkConfig}
                     viewerData={{
@@ -344,13 +348,18 @@ export default function ImageViewer({
                       link: linkName,
                       ipAddress: ipAddress,
                     }}
-                    documentDimensions={
-                      imageDimensions ?? { width: 0, height: 0 }
-                    }
+                    documentDimensions={{
+                      width: imageDimensions?.width
+                        ? scale * imageDimensions?.width
+                        : 0,
+                      height: imageDimensions?.height
+                        ? scale * imageDimensions?.height
+                        : 0,
+                    }}
                     pageIndex={0}
                   />
-                ) : null}
-              </div>
+                </div>
+              ) : null}
             </div>
           </div>
         </div>
