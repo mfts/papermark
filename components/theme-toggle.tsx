@@ -39,6 +39,10 @@ export function ModeToggle() {
               <Moon className="mr-2 h-4 w-4" />
               Dark
             </DropdownMenuRadioItem>
+            <DropdownMenuRadioItem value="seed-theme">
+              <div className="mr-2 h-4 w-4 rounded-full bg-[#b25447]" />
+              Seed to Scale
+            </DropdownMenuRadioItem>
             <DropdownMenuRadioItem value="system">
               <Monitor className="mr-2 h-4 w-4" />
               System

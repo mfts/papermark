@@ -90,6 +90,52 @@
     --sidebar-border: 240 3.7% 15.9%; /* gray-200 */
     --sidebar-ring: 217.2 91.2% 59.8%; /* gray-400 */
   }
+  
+  .seed-theme {
+    /* Convert #b25447 to HSL - it's approximately 7 42% 49% */
+    --background: 0 0% 100%; /* white */
+    --foreground: 7 42% 30%; /* darker terracotta */
+    
+    --muted: 7 42% 95%; /* light terracotta */
+    --muted-foreground: 7 42% 40%; /* medium terracotta */
+    
+    --popover: 0 0% 100%; /* white */
+    --popover-foreground: 7 42% 30%; /* darker terracotta */
+    
+    --card: 0 0% 100%; /* white */
+    --card-foreground: 7 42% 30%; /* darker terracotta */
+    
+    --border: 7 42% 90%; /* very light terracotta */
+    --input: 7 42% 85%; /* light terracotta */
+    
+    --primary: 7 42% 49%; /* terracotta (#b25447) */
+    --primary-foreground: 0 0% 100%; /* white */
+    
+    --secondary: 7 42% 95%; /* very light terracotta */
+    --secondary-foreground: 7 42% 30%; /* darker terracotta */
+    
+    --accent: 7 42% 40%; /* medium-dark terracotta */
+    --accent-foreground: 0 0% 100%; /* white */
+    
+    --destructive: 0 84% 60%; /* red-500 */
+    --destructive-foreground: 210 20% 98%; /* gray-50 */
+    
+    --warning: 38 92% 50%; /* amber-500 */
+    --warning-foreground: 210 20% 98%; /* gray-50 */
+    
+    --ring: 7 42% 40%; /* medium terracotta */
+    
+    --radius: 0.5rem; /* md */
+    
+    --sidebar-background: 7 42% 35%; /* dark terracotta */
+    --sidebar-foreground: 0 0% 100%; /* white */
+    --sidebar-primary: 7 42% 49%; /* terracotta */
+    --sidebar-primary-foreground: 0 0% 100%; /* white */
+    --sidebar-accent: 7 42% 25%; /* darker terracotta */
+    --sidebar-accent-foreground: 0 0% 100%; /* white */
+    --sidebar-border: 7 42% 20%; /* very dark terracotta */
+    --sidebar-ring: 7 42% 60%; /* lighter terracotta */
+  }
 }
 
 @layer base {

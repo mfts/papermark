@@ -72,7 +72,7 @@ export default function App({
       </Head>
       <SessionProvider session={session}>
         <PostHogCustomProvider>
-          <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+          <ThemeProvider attribute="class" defaultTheme="light" enableSystem themes={["light", "dark", "seed-theme"]}>
             <PlausibleProvider
               domain="papermark.io"
               enabled={process.env.NEXT_PUBLIC_VERCEL_ENV === "production"}
