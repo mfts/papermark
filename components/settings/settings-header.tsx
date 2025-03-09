@@ -54,6 +54,12 @@ export function SettingsHeader() {
             segment: "presets",
           },
           {
+            label: "Webhooks",
+            href: `/settings/webhooks`,
+            segment: "webhooks",
+            disabled: !features?.webhooks,
+          },
+          {
             label: "Billing",
             href: `/settings/billing`,
             segment: "billing",
@@ -63,12 +69,6 @@ export function SettingsHeader() {
             href: `/settings/tokens`,
             segment: "tokens",
             disabled: !features?.tokens,
-          },
-          {
-            label: "Webhooks",
-            href: `/settings/webhooks`,
-            segment: "webhooks",
-            disabled: !features?.webhooks,
           },
           {
             label: "Incoming Webhooks",
