@@ -10,11 +10,6 @@ import { useSession } from "next-auth/react";
 import { ExtendedRecordMap } from "notion-types";
 import { parsePageId } from "notion-utils";
 
-import LoadingSpinner from "@/components/ui/loading-spinner";
-import CustomMetaTag from "@/components/view/custom-metatag";
-import DataroomView from "@/components/view/dataroom/dataroom-view";
-import DocumentView from "@/components/view/document-view";
-
 import notion from "@/lib/notion";
 import {
   CustomUser,
@@ -22,6 +17,11 @@ import {
   LinkWithDocument,
   NotionTheme,
 } from "@/lib/types";
+
+import LoadingSpinner from "@/components/ui/loading-spinner";
+import CustomMetaTag from "@/components/view/custom-metatag";
+import DataroomView from "@/components/view/dataroom/dataroom-view";
+import DocumentView from "@/components/view/document-view";
 
 type DocumentLinkData = {
   linkType: "DOCUMENT_LINK";
@@ -93,6 +93,8 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
               document: {
                 ...linkDocument,
                 versions: [versionWithoutTypeAndFile],
+                // TODO: remove this once the assistant feature is re-enabled
+                assistantEnabled: false,
               },
             },
             brand,
