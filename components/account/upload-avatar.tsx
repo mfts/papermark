@@ -5,10 +5,9 @@ import { ReactNode, useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
-
 import { convertDataUrlToFile, uploadImage } from "@/lib/utils";
 
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -16,8 +15,8 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "../ui/card";
-import { FileUpload } from "../ui/file-upload";
+} from "@/components/ui/card";
+import { FileUpload } from "@/components/ui/file-upload";
 
 interface UploadAvatarProps {
   title: string;
