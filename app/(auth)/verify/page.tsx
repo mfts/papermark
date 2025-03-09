@@ -65,7 +65,7 @@ export default function VerifyPage({
             By clicking continue, you acknowledge that you have read and agree
             to Papermark&apos;s{" "}
             <a
-              href="https://www.papermark.io/terms"
+              href="https://www.papermark.com/terms"
               target="_blank"
               className="underline"
             >
@@ -73,7 +73,7 @@ export default function VerifyPage({
             </a>{" "}
             and{" "}
             <a
-              href="https://www.papermark.io/privacy"
+              href="https://www.papermark.com/privacy"
               target="_blank"
               className="underline"
             >

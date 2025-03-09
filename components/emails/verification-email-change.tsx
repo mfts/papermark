@@ -21,7 +21,7 @@ interface ConfirmEmailChangeProps {
 export function ConfirmEmailChange({
   email,
   newEmail,
-  confirmUrl = "https://www.papermark.io",
+  confirmUrl = "https://www.papermark.com",
 }: ConfirmEmailChangeProps) {
   return (
     <Html>
@@ -65,11 +65,11 @@ export function ConfirmEmailChange({
               <Text className="text-xs">
                 © {new Date().getFullYear()}{" "}
                 <a
-                  href="https://www.papermark.io"
+                  href="https://www.papermark.com"
                   className="text-gray-400 no-underline visited:text-gray-400 hover:text-gray-400"
                   target="_blank"
                 >
-                  papermark.io
+                  papermark.com
                 </a>
               </Text>
               <Text className="text-xs">
