@@ -32,7 +32,7 @@ export const DataroomHeader = ({
             {title}
           </h1>
         </div>
-        <div className="flex items-center gap-x-1">
+        <div>
           <Button onClick={() => setIsLinkSheetOpen(true)} key={1}>
             Share
           </Button>
