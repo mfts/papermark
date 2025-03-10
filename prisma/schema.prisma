@@ -112,6 +112,7 @@ enum Role {
   ADMIN
   MANAGER
   MEMBER
+  DATAROOM_MEMBER
 }
 
 model UserTeam {
@@ -121,6 +122,7 @@ model UserTeam {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
 
+  datarooms               UserDataroom[]
   notificationPreferences Json? // Format: { yearInReview: { "enabled": false } }
 
   @@id([userId, teamId])
@@ -397,6 +399,12 @@ model Reaction {
   @@index([viewId])
 }
 
+enum userRole {
+  MANAGER
+  MEMBER
+  DATAROOM_MEMBER
+}
+
 model Invitation {
   email     String
   expires   DateTime
@@ -404,6 +412,9 @@ model Invitation {
   team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   token     String   @unique
+
+  role       userRole
+  dataroomId String[]
 
   @@unique([email, teamId])
 }
@@ -462,6 +473,20 @@ model Folder {
   @@index([parentId])
 }
 
+model UserDataroom {
+  userId     String
+  teamId     String
+  dataroomId String
+
+  userTeam UserTeam @relation(fields: [userId, teamId], references: [userId, teamId], onDelete: Cascade)
+  dataroom Dataroom @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
+
+  assignedAt DateTime @default(now())
+
+  @@id([userId, dataroomId])
+  @@index([dataroomId])
+}
+
 model Dataroom {
   id           String             @id @default(cuid())
   pId          String             @unique // This is the generated public ID for the dataroom dr_1234
@@ -475,6 +500,8 @@ model Dataroom {
   viewers      Viewer[]
   viewerGroups ViewerGroup[]
   brand        DataroomBrand?
+
+  assignUsers UserDataroom[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

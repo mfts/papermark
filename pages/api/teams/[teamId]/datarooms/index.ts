@@ -34,15 +34,31 @@ export default async function handle(
             },
           },
         },
+        include: {
+          users: {
+            where: { userId: userId },
+            select: { userId: true, role: true, datarooms: true },
+          },
+        },
       });
 
       if (!team) {
         return res.status(401).end("Unauthorized");
       }
+      const userRole = team?.users.find((li) => li.userId === userId)?.role;
 
       const datarooms = await prisma.dataroom.findMany({
         where: {
           teamId: teamId,
+          ...(userRole === "DATAROOM_MEMBER"
+            ? {
+                assignUsers: {
+                  some: {
+                    userId: userId,
+                  },
+                },
+              }
+            : {}),
         },
         include: {
           _count: {
