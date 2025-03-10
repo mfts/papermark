@@ -10,6 +10,7 @@ import {
   MoreVertical,
   PackagePlusIcon,
   TrashIcon,
+  FolderUpIcon
 } from "lucide-react";
 import { toast } from "sonner";
 import { mutate } from "swr";
@@ -31,6 +32,7 @@ import { timeAgo } from "@/lib/utils";
 import { EditFolderModal } from "../folders/edit-folder-modal";
 import { AddFolderToDataroomModal } from "./add-folder-to-dataroom-modal";
 import { DeleteFolderModal } from "./delete-folder-modal";
+import { MoveFoldersInToFolderModal } from "../folders/move-folders-into-folder-modal";
 
 type FolderCardProps = {
   folder: FolderWithCount | DataroomFolderWithCount;
@@ -53,6 +55,7 @@ export default function FolderCard({
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
   const [addDataroomOpen, setAddDataroomOpen] = useState<boolean>(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState<boolean>(false);
+  const [moveFolderToFolderModalOpen, setMoveFolderToFolderModalOpen] = useState<boolean>(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
   const folderPath =
@@ -66,12 +69,12 @@ export default function FolderCard({
 
   // https://github.com/radix-ui/primitives/issues/1241#issuecomment-1888232392
   useEffect(() => {
-    if (!openFolder || !addDataroomOpen || !deleteModalOpen) {
+    if (!openFolder || !addDataroomOpen || !deleteModalOpen || !moveFolderToFolderModalOpen) {
       setTimeout(() => {
         document.body.style.pointerEvents = "";
       });
     }
-  }, [openFolder, addDataroomOpen, deleteModalOpen]);
+  }, [openFolder, addDataroomOpen, deleteModalOpen, moveFolderToFolderModalOpen]);
 
   const handleButtonClick = (event: any, documentId: string) => {
     event.stopPropagation();
@@ -152,6 +155,12 @@ export default function FolderCard({
     }
     router.push(folderPath);
   };
+
+  const handleMoveFolderModalOpen = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    setMoveFolderToFolderModalOpen(true);
+  }
 
   return (
     <>
@@ -244,7 +253,15 @@ export default function FolderCard({
                   ? "Copy folder to other dataroom"
                   : "Add folder to dataroom"}
               </DropdownMenuItem>
+              
               <DropdownMenuSeparator />
+
+              <DropdownMenuItem
+                onClick={handleMoveFolderModalOpen}
+              >
+                <FolderUpIcon className="mr-2 h-4 w-4" />
+                Move folder
+              </DropdownMenuItem>
 
               <DropdownMenuItem
                 onClick={(event) => {
@@ -301,6 +318,16 @@ export default function FolderCard({
           handleButtonClick={handleButtonClick}
         />
       ) : null}
+      {moveFolderToFolderModalOpen ? (
+        <MoveFoldersInToFolderModal
+          open={moveFolderToFolderModalOpen}
+          setOpen={setMoveFolderToFolderModalOpen}
+          folderIds={[folder.id]}
+          folderName={folder.name}
+          dataroomId={dataroomId}
+        />
+      ): null
+      }
     </>
   );
 }
