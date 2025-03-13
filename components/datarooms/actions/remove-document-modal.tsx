@@ -18,17 +18,17 @@ import { Modal } from "@/components/ui/modal";
 
 import { useAnalytics } from "@/lib/analytics";
 
-function RemoveDataroomDocumentsModal({
-  showRemoveDataroomDocumentsModal,
-  setShowRemoveDataroomDocumentsModal,
+function RemoveDataroomItemsModal({
+  showRemoveDataroomItemsModal,
+  setShowRemoveDataroomItemModal,
   documentIds,
   dataroomId,
   setSelectedDocuments,
   folderIds,
   setSelectedFolders,
 }: {
-  showRemoveDataroomDocumentsModal: boolean;
-  setShowRemoveDataroomDocumentsModal: Dispatch<SetStateAction<boolean>>;
+  showRemoveDataroomItemsModal: boolean;
+  setShowRemoveDataroomItemModal: Dispatch<SetStateAction<boolean>>;
   documentIds: string[];
   dataroomId: string;
   setSelectedDocuments: Dispatch<SetStateAction<string[]>>;
@@ -130,15 +130,15 @@ function RemoveDataroomDocumentsModal({
         setDeleting(false);
         reject((error as Error).message);
       } finally {
-        setShowRemoveDataroomDocumentsModal(false);
+        setShowRemoveDataroomItemModal(false);
       }
     });
   }
 
   return (
     <Modal
-      showModal={showRemoveDataroomDocumentsModal}
-      setShowModal={setShowRemoveDataroomDocumentsModal}
+      showModal={showRemoveDataroomItemsModal}
+      setShowModal={setShowRemoveDataroomItemModal}
     >
       <div className="flex flex-col items-center justify-center space-y-3 border-b border-border bg-white px-4 py-4 pt-8 dark:border-gray-900 dark:bg-gray-900 sm:px-8">
         <DialogTitle className="text-2xl">
@@ -190,7 +190,7 @@ function RemoveDataroomDocumentsModal({
   );
 }
 
-export function useRemoveDataroomDocumentsModal({
+export function useRemoveDataroomItemsModal({
   documentIds,
   dataroomId,
   setSelectedDocuments,
@@ -203,18 +203,14 @@ export function useRemoveDataroomDocumentsModal({
   dataroomId: string;
   setSelectedDocuments: Dispatch<SetStateAction<string[]>>;
 }) {
-  const [
-    showRemoveDataroomDocumentsModal,
-    setShowRemoveDataroomDocumentsModal,
-  ] = useState(false);
+  const [showRemoveDataroomItemsModal, setShowRemoveDataroomItemModal] =
+    useState(false);
 
-  const RemoveDataroomDocumentsModalCallback = useCallback(() => {
+  const RemoveDataroomItemModal = useCallback(() => {
     return (
-      <RemoveDataroomDocumentsModal
-        showRemoveDataroomDocumentsModal={showRemoveDataroomDocumentsModal}
-        setShowRemoveDataroomDocumentsModal={
-          setShowRemoveDataroomDocumentsModal
-        }
+      <RemoveDataroomItemsModal
+        showRemoveDataroomItemsModal={showRemoveDataroomItemsModal}
+        setShowRemoveDataroomItemModal={setShowRemoveDataroomItemModal}
         documentIds={documentIds}
         dataroomId={dataroomId}
         setSelectedDocuments={setSelectedDocuments}
@@ -223,8 +219,8 @@ export function useRemoveDataroomDocumentsModal({
       />
     );
   }, [
-    showRemoveDataroomDocumentsModal,
-    setShowRemoveDataroomDocumentsModal,
+    showRemoveDataroomItemsModal,
+    setShowRemoveDataroomItemModal,
     documentIds,
     dataroomId,
     setSelectedDocuments,
@@ -234,9 +230,9 @@ export function useRemoveDataroomDocumentsModal({
 
   return useMemo(
     () => ({
-      setShowRemoveDataroomDocumentsModal,
-      RemoveDataroomDocumentsModal: RemoveDataroomDocumentsModalCallback,
+      setShowRemoveDataroomItemModal,
+      RemoveDataroomItemModal: RemoveDataroomItemModal,
     }),
-    [setShowRemoveDataroomDocumentsModal, RemoveDataroomDocumentsModalCallback],
+    [setShowRemoveDataroomItemModal, RemoveDataroomItemModal],
   );
 }

@@ -319,6 +319,7 @@ export default function DataroomDocumentCard({
           dataroomId={dataroomDocument.dataroomId}
           documentIds={[dataroomDocument.id]}
           itemName={dataroomDocument.document.name}
+          folderIds={[]}
         />
       ) : null}
     </>

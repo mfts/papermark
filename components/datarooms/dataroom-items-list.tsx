@@ -44,7 +44,7 @@ import { DroppableFolder } from "../documents/drag-and-drop/droppable-folder";
 import { Button } from "../ui/button";
 import { Portal } from "../ui/portal";
 import { ButtonTooltip } from "../ui/tooltip";
-import { useRemoveDataroomDocumentsModal } from "./actions/remove-document-modal";
+import { useRemoveDataroomItemsModal } from "./actions/remove-document-modal";
 import DataroomDocumentCard from "./dataroom-document-card";
 import { itemsMessage } from "./folders/utils";
 import { MoveToDataroomFolderModal } from "./move-dataroom-folder-modal";
@@ -99,8 +99,8 @@ export function DataroomItemsList({
     setShowDrawer(false);
   };
 
-  const { setShowRemoveDataroomDocumentsModal, RemoveDataroomDocumentsModal } =
-    useRemoveDataroomDocumentsModal({
+  const { setShowRemoveDataroomItemModal, RemoveDataroomItemModal } =
+    useRemoveDataroomItemsModal({
       documentIds: selectedDocuments,
       setSelectedDocuments: setSelectedDocuments,
       dataroomId,
@@ -442,7 +442,7 @@ export function DataroomItemsList({
           </ButtonTooltip>
           <ButtonTooltip content="Remove">
             <Button
-              onClick={() => setShowRemoveDataroomDocumentsModal(true)}
+              onClick={() => setShowRemoveDataroomItemModal(true)}
               className="mx-1.5 my-1 size-8 rounded-full hover:bg-destructive hover:text-destructive-foreground"
               variant="ghost"
               size="icon"
@@ -589,7 +589,7 @@ export function DataroomItemsList({
                 setSelectedFoldersId={setSelectedFolders}
               />
             ) : null}
-            <RemoveDataroomDocumentsModal />
+            <RemoveDataroomItemModal />
           </>
         )}
       </UploadZone>
