@@ -4,7 +4,6 @@ import { getServerSession } from "next-auth/next";
 
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
-import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
 import { CustomUser } from "@/lib/types";
 import { decryptEncrpytedPassword, log } from "@/lib/utils";
 
@@ -45,7 +44,7 @@ export default async function handle(
         return res.status(401).end("Unauthorized");
       }
 
-      const links = await prisma.link.findMany({
+      let links = await prisma.link.findMany({
         where: {
           dataroomId,
           linkType: "DATAROOM_LINK",
@@ -70,11 +69,36 @@ export default async function handle(
       });
 
       // Decrypt the password for each link
-      links.forEach((link) => {
-        if (link.password !== null) {
-          link.password = decryptEncrpytedPassword(link.password);
-        }
-      });
+      if (links && links.length > 0) {
+        links = await Promise.all(
+          links.map(async (link) => {
+            // Decrypt the password if it exists
+            if (link.password !== null) {
+              link.password = decryptEncrpytedPassword(link.password);
+            }
+            const tags = await prisma.tag.findMany({
+              where: {
+                taggedItems: {
+                  some: {
+                    linkId: link.id,
+                  },
+                },
+              },
+              select: {
+                id: true,
+                name: true,
+                color: true,
+                description: true,
+              },
+            });
+
+            return {
+              ...link,
+              ["tags"]: tags,
+            };
+          }),
+        );
+      }
 
       return res.status(200).json(links);
     } catch (error) {

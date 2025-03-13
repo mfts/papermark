@@ -1,3 +1,4 @@
+import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/router";
 
 import { useMemo, useState } from "react";
@@ -58,6 +59,7 @@ import LinkSheet, {
   DEFAULT_LINK_PROPS,
   type DEFAULT_LINK_TYPE,
 } from "./link-sheet";
+import { TagColumn } from "./link-sheet/tag/tagDetails";
 import LinksVisitors from "./links-visitors";
 
 export default function LinksTable({
@@ -71,6 +73,11 @@ export default function LinksTable({
   primaryVersion?: DocumentVersion;
   mutateDocument?: () => void;
 }) {
+  const searchParams = useSearchParams();
+  const selectedTagIds = useMemo(
+    () => searchParams?.get("tagIds")?.split(",")?.filter(Boolean) ?? [],
+    [searchParams],
+  );
   const now = Date.now();
   const router = useRouter();
   const { isFree } = usePlan();
@@ -79,7 +86,7 @@ export default function LinksTable({
     groupId?: string;
   };
 
-  const processedLinks = useMemo(() => {
+  let processedLinks = useMemo(() => {
     if (!links?.length) return [];
 
     const oneMinuteAgo = subMinutes(now, 1);
@@ -106,6 +113,14 @@ export default function LinksTable({
       };
     });
   }, [links, now]);
+
+  processedLinks = useMemo(() => {
+    if (!links?.length) return [];
+    return processedLinks.filter((link) => {
+      if (selectedTagIds.length === 0) return true;
+      return link.tags.some((tag) => selectedTagIds.includes(tag.id));
+    });
+  }, [links, processedLinks, selectedTagIds]);
 
   const { canAddLinks } = useLimits();
   const { data: features } = useSWR<{
@@ -170,6 +185,7 @@ export default function LinksTable({
       audienceType: link.audienceType,
       groupId: link.groupId,
       customFields: link.customFields || [],
+      tags: link.tags.map((tag) => tag.id) || [],
     });
     //wait for dropdown to close before opening the link sheet
     setTimeout(() => {
@@ -321,6 +337,15 @@ export default function LinksTable({
     ? links.filter((link) => link.isArchived).length
     : 0;
 
+  const hasAnyTags = useMemo(
+    () =>
+      processedLinks.reduce(
+        (acc, link) => acc || (link?.tags && link.tags.length > 0),
+        false,
+      ),
+    [processedLinks],
+  );
+
   return (
     <>
       <div className="w-full">
@@ -335,6 +360,9 @@ export default function LinksTable({
                 <TableHead className="w-[150px] sm:w-[200px] md:w-[250px]">
                   Link
                 </TableHead>
+                {hasAnyTags ? (
+                  <TableHead className="w-[250px] 2xl:w-auto">Tags</TableHead>
+                ) : null}
                 <TableHead className="w-[250px] sm:w-auto">Views</TableHead>
                 <TableHead>Last Viewed</TableHead>
                 <TableHead className="text-center sm:text-right"></TableHead>
@@ -458,6 +486,11 @@ export default function LinksTable({
                               </Button>
                             </ButtonTooltip>
                           </TableCell>
+                          {hasAnyTags ? (
+                            <TableCell className="w-[250px] 2xl:w-auto">
+                              <TagColumn link={link} />
+                            </TableCell>
+                          ) : null}
                           <TableCell>
                             <CollapsibleTrigger
                               disabled={
@@ -628,6 +661,11 @@ export default function LinksTable({
                           Link
                         </TableHead>
                         <TableHead>Views</TableHead>
+                        {hasAnyTags ? (
+                          <TableHead className="w-[250px] 2xl:w-auto">
+                            Tags
+                          </TableHead>
+                        ) : null}
                         <TableHead>Last Viewed</TableHead>
                         <TableHead className="ftext-center sm:text-right"></TableHead>
                       </TableRow>
@@ -665,6 +703,13 @@ export default function LinksTable({
                                       : `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${link.id}`}
                                   </div>
                                 </TableCell>
+                                {hasAnyTags ? (
+                                  <TableCell className="w-[250px] 2xl:w-auto">
+                                    <div className="flex items-center gap-x-2">
+                                      <TagColumn link={link} />
+                                    </div>
+                                  </TableCell>
+                                ) : null}
                                 <TableCell>
                                   <div className="flex items-center space-x-1 [&[data-state=open]>svg.chevron]:rotate-180">
                                     <BarChart className="h-4 w-4 text-gray-400" />

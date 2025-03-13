@@ -42,6 +42,7 @@ import { convertDataUrlToFile, uploadImage } from "@/lib/utils";
 import { CustomFieldData } from "./custom-fields-panel";
 import DomainSection from "./domain-section";
 import { LinkOptions } from "./link-options";
+import TagSection from "./tag/tagSection";
 
 export const DEFAULT_LINK_PROPS = (
   linkType: LinkType,
@@ -78,6 +79,7 @@ export const DEFAULT_LINK_PROPS = (
   audienceType: groupId ? LinkAudienceType.GROUP : LinkAudienceType.GENERAL,
   groupId: groupId,
   customFields: [],
+  tags: [],
 });
 
 export type DEFAULT_LINK_TYPE = {
@@ -111,6 +113,7 @@ export type DEFAULT_LINK_TYPE = {
   audienceType: LinkAudienceType;
   groupId: string | null;
   customFields: CustomFieldData[];
+  tags: string[];
 };
 
 export default function LinkSheet({
@@ -131,6 +134,7 @@ export default function LinkSheet({
     id: string;
     groupId?: string;
   };
+
   const { domains } = useDomains();
 
   const {
@@ -434,6 +438,13 @@ export default function LinkSheet({
                             editLink={!!currentLink}
                           />
                         </div>
+                        <div className="space-y-2">
+                          <TagSection
+                            {...{ data, setData }}
+                            editLink={!!currentLink}
+                            teamId={teamInfo?.currentTeam?.id as string}
+                          />
+                        </div>
 
                         <div className="relative flex items-center">
                           <Separator className="absolute bg-muted-foreground" />
@@ -543,6 +554,13 @@ export default function LinkSheet({
                             {...{ data, setData, domains }}
                             linkType={linkType}
                             editLink={!!currentLink}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <TagSection
+                            {...{ data, setData }}
+                            editLink={!!currentLink}
+                            teamId={teamInfo?.currentTeam?.id as string}
                           />
                         </div>
 
