@@ -6,13 +6,20 @@ import { cn } from "@/lib/utils";
 
 interface DroppableFolderProps {
   id: string;
+  disabledFolder: string[];
   children: React.ReactElement;
+  path: string;
 }
 
-export function DroppableFolder({ id, children }: DroppableFolderProps) {
+export function DroppableFolder({
+  id,
+  disabledFolder,
+  children,
+  path,
+}: DroppableFolderProps) {
   const { isOver, setNodeRef } = useDroppable({
     id: id,
-    data: { type: "folder", id: id },
+    data: { type: "folder", id, path },
   });
 
   const childWithProps = React.cloneElement(children, {
@@ -23,7 +30,9 @@ export function DroppableFolder({ id, children }: DroppableFolderProps) {
     <div
       ref={setNodeRef}
       className={cn(
-        isOver && "rounded-lg ring-2 ring-black dark:ring-gray-100",
+        isOver &&
+          !disabledFolder.includes(id) &&
+          "rounded-lg ring-2 ring-black dark:ring-gray-100",
       )}
     >
       {childWithProps}

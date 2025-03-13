@@ -6,6 +6,7 @@ import { TeamContextType } from "@/context/team-context";
 import {
   BetweenHorizontalStartIcon,
   FolderIcon,
+  FolderInputIcon,
   FolderPenIcon,
   MoreVertical,
   PackagePlusIcon,
@@ -28,9 +29,11 @@ import { DataroomFolderWithCount } from "@/lib/swr/use-dataroom";
 import { FolderWithCount } from "@/lib/swr/use-documents";
 import { timeAgo } from "@/lib/utils";
 
+import { MoveToDataroomFolderModal } from "../datarooms/move-dataroom-folder-modal";
 import { EditFolderModal } from "../folders/edit-folder-modal";
 import { AddFolderToDataroomModal } from "./add-folder-to-dataroom-modal";
 import { DeleteFolderModal } from "./delete-folder-modal";
+import { MoveToFolderModal } from "./move-folder-modal";
 
 type FolderCardProps = {
   folder: FolderWithCount | DataroomFolderWithCount;
@@ -39,6 +42,8 @@ type FolderCardProps = {
   dataroomId?: string;
   isDragging?: boolean;
   isOver?: boolean;
+  isHovered?: boolean;
+  isSelected?: boolean;
 };
 export default function FolderCard({
   folder,
@@ -47,8 +52,11 @@ export default function FolderCard({
   dataroomId,
   isDragging,
   isOver,
+  isSelected,
+  isHovered,
 }: FolderCardProps) {
   const router = useRouter();
+  const [moveFolderOpen, setMoveFolderOpen] = useState<boolean>(false);
   const [openFolder, setOpenFolder] = useState<boolean>(false);
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
   const [addDataroomOpen, setAddDataroomOpen] = useState<boolean>(false);
@@ -73,12 +81,12 @@ export default function FolderCard({
     }
   }, [openFolder, addDataroomOpen, deleteModalOpen]);
 
-  const handleButtonClick = (event: any, documentId: string) => {
+  const handleButtonClick = (event: any, FolderId: string) => {
     event.stopPropagation();
     event.preventDefault();
 
     setDeleteModalOpen(false);
-    handleDeleteFolder(documentId);
+    handleDeleteFolder(FolderId);
     setMenuOpen(false);
   };
 
@@ -160,9 +168,13 @@ export default function FolderCard({
         className="group/row relative flex items-center justify-between rounded-lg border-0 bg-white p-3 ring-1 ring-gray-400 transition-all hover:bg-secondary hover:ring-gray-500 dark:bg-secondary dark:ring-gray-500 hover:dark:ring-gray-400 sm:p-4"
       >
         <div className="flex min-w-0 shrink items-center space-x-2 sm:space-x-4">
-          <div className="mx-0.5 flex w-8 items-center justify-center text-center sm:mx-1">
-            <FolderIcon className="h-8 w-8" strokeWidth={1} />
-          </div>
+          {!isSelected && !isHovered ? (
+            <div className="mx-0.5 flex w-8 items-center justify-center text-center sm:mx-1">
+              <FolderIcon className="h-8 w-8" strokeWidth={1} />
+            </div>
+          ) : (
+            <div className="mx-0.5 w-8 sm:mx-1"></div>
+          )}
 
           <div className="flex-col">
             <div className="flex items-center">
@@ -223,6 +235,16 @@ export default function FolderCard({
               >
                 <FolderPenIcon className="mr-2 h-4 w-4" />
                 Rename
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setMoveFolderOpen(true);
+                }}
+              >
+                <FolderInputIcon className="mr-2 h-4 w-4" />
+                Move to Folder
               </DropdownMenuItem>
               {!isDataroom ? (
                 <DropdownMenuItem
@@ -299,6 +321,27 @@ export default function FolderCard({
           childFolders={folder._count.childFolders}
           isDataroom={isDataroom}
           handleButtonClick={handleButtonClick}
+        />
+      ) : null}
+      {moveFolderOpen && !isDataroom ? (
+        <MoveToFolderModal
+          open={moveFolderOpen}
+          setOpen={setMoveFolderOpen}
+          folderIds={[folder.id]}
+          itemName={folder.name}
+          documentIds={[]}
+          folderParentId={folder.parentId!}
+        />
+      ) : null}
+      {moveFolderOpen && isDataroom && dataroomId ? (
+        <MoveToDataroomFolderModal
+          open={moveFolderOpen}
+          setOpen={setMoveFolderOpen}
+          dataroomId={dataroomId}
+          documentIds={[]}
+          folderIds={[folder.id]}
+          folderParentId={folder.parentId!}
+          itemName={folder.name}
         />
       ) : null}
     </>

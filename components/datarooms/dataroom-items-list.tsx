@@ -1,4 +1,4 @@
-import { memo, useCallback, useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 
 import { TeamContextType } from "@/context/team-context";
 import {
@@ -11,6 +11,7 @@ import {
   MouseSensor,
   PointerSensor,
   TouchSensor,
+  UniqueIdentifier,
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
@@ -22,6 +23,7 @@ import {
   XIcon,
 } from "lucide-react";
 import { motion } from "motion/react";
+import { toast } from "sonner";
 
 import { EmptyDocuments } from "@/components/documents/empty-document";
 import FolderCard from "@/components/documents/folder-card";
@@ -29,10 +31,12 @@ import { UploadNotificationDrawer } from "@/components/upload-notification";
 import UploadZone from "@/components/upload-zone";
 
 import { moveDataroomDocumentToFolder } from "@/lib/documents/move-dataroom-documents";
+import { moveDataroomFolderToFolder } from "@/lib/documents/move-dataroom-folders";
 import {
   DataroomFolderDocument,
   DataroomFolderWithCount,
 } from "@/lib/swr/use-dataroom";
+import { FolderWithCount } from "@/lib/swr/use-documents";
 import { useMediaQuery } from "@/lib/utils/use-media-query";
 
 import { DraggableItem } from "../documents/drag-and-drop/draggable-item";
@@ -40,8 +44,9 @@ import { DroppableFolder } from "../documents/drag-and-drop/droppable-folder";
 import { Button } from "../ui/button";
 import { Portal } from "../ui/portal";
 import { ButtonTooltip } from "../ui/tooltip";
-import { useRemoveDataroomDocumentsModal } from "./actions/remove-document-modal";
+import { useRemoveDataroomItemsModal } from "./actions/remove-document-modal";
 import DataroomDocumentCard from "./dataroom-document-card";
+import { itemsMessage } from "./folders/utils";
 import { MoveToDataroomFolderModal } from "./move-dataroom-folder-modal";
 
 type FolderOrDocument =
@@ -76,21 +81,31 @@ export function DataroomItemsList({
   const [moveFolderOpen, setMoveFolderOpen] = useState<boolean>(false);
 
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  // forDoc
   const [selectedDocuments, setSelectedDocuments] = useState<string[]>([]);
   const [draggedDocument, setDraggedDocument] =
     useState<FolderOrDocument | null>(null);
 
+  // forFolder
+  const [selectedFolders, setSelectedFolders] = useState<string[]>([]);
+  const [draggedFolder, setDraggedFolder] = useState<FolderOrDocument | null>(
+    null,
+  );
+  const [parentFolderId, setParentFolderId] = useState<string>("");
   const [isOverFolder, setIsOverFolder] = useState<boolean>(false);
   const [isDragging, setIsDragging] = useState<boolean>(false);
 
   const handleCloseDrawer = () => {
     setShowDrawer(false);
   };
-  const { setShowRemoveDataroomDocumentsModal, RemoveDataroomDocumentsModal } =
-    useRemoveDataroomDocumentsModal({
+
+  const { setShowRemoveDataroomItemModal, RemoveDataroomItemModal } =
+    useRemoveDataroomItemsModal({
       documentIds: selectedDocuments,
       setSelectedDocuments: setSelectedDocuments,
       dataroomId,
+      folderIds: selectedFolders,
+      setSelectedFolders,
     });
 
   const sensors = useSensors(
@@ -103,47 +118,99 @@ export function DataroomItemsList({
     }),
   );
 
-  const handleSelect = useCallback((id: string) => {
-    setSelectedDocuments((prev) =>
-      prev.includes(id) ? prev.filter((docId) => docId !== id) : [...prev, id],
-    );
-  }, []);
+  const selectedDocumentsLength = useMemo(
+    () => selectedDocuments && selectedDocuments.length,
+    [selectedDocuments],
+  );
 
-  const handleDragStart = (event: DragStartEvent) => {
-    setIsDragging(true);
-    // Set draggedDocumentName for DragOverlay
-    if (event.active.data.current?.type === "document") {
-      setDraggedDocument(
-        mixedItems
-          .filter((item) => item.itemType === "document")
-          .find((doc) => doc.id === event.active.id) ?? null,
+  const selectedFoldersLength = useMemo(
+    () => selectedFolders && selectedFolders.length,
+    [selectedFolders],
+  );
+
+  const handleSelect = useCallback(
+    (id: string, type: "document" | "folder") => {
+      if (type === "folder") {
+        setSelectedFolders((prev) =>
+          prev.includes(id)
+            ? prev.filter((docId) => docId !== id)
+            : [...prev, id],
+        );
+      } else {
+        setSelectedDocuments((prev) =>
+          prev.includes(id)
+            ? prev.filter((docId) => docId !== id)
+            : [...prev, id],
+        );
+      }
+    },
+    [],
+  );
+  const handleDragForType = useCallback(
+    (
+      itemId: string,
+      items: { id: string }[],
+      setDraggedItem: (item: any) => void,
+      selectedItems: string[],
+      setSelectedItems: (items: string[]) => void,
+    ) => {
+      if (!items.length) return;
+
+      const draggedItem = items.find((item) => item.id === itemId) ?? null;
+      setDraggedItem(draggedItem);
+
+      const itemIndex = items.findIndex((item) => item.id === itemId);
+      const isSelected = selectedItems.includes(itemId);
+
+      let yOffset = 0;
+      if (isSelected) {
+        const firstSelectedIndex = items.findIndex((item) =>
+          selectedItems.includes(item.id),
+        );
+        yOffset = (itemIndex - firstSelectedIndex) * 80; // Adjust height accordingly
+      }
+
+      setDragOffset({ x: 0, y: yOffset });
+
+      if (!isSelected) {
+        setSelectedItems([...selectedItems, itemId]);
+      }
+    },
+    [],
+  );
+  const handleDragStart = useCallback(
+    (event: DragStartEvent) => {
+      setIsDragging(true);
+      setParentFolderId(event.active.data.current?.parentFolderId);
+      const { type } = event.active.data.current ?? {};
+      const itemId = event.active.id as string;
+
+      if (!type) return;
+
+      const isDocument = type === "document";
+      const filteredItems = mixedItems.filter((item) => item.itemType === type);
+
+      handleDragForType(
+        itemId,
+        filteredItems,
+        isDocument ? setDraggedDocument : setDraggedFolder,
+        isDocument ? selectedDocuments : selectedFolders,
+        isDocument ? setSelectedDocuments : setSelectedFolders,
       );
-    }
-    const documentId = event.active.id as string;
-    // Find the index of the document that's being dragged
-    const documentIndex = mixedItems
-      .filter((item) => item.itemType === "document")
-      .findIndex((doc) => doc.id === documentId);
-
-    // Determine if the document is already selected
-    const isSelected = selectedDocuments.includes(documentId);
-
-    // Calculate yOffset only if the task is already selected
-    let yOffset = 0;
-    if (isSelected) {
-      const firstSelectedIndex = mixedItems?.findIndex((document) =>
-        selectedDocuments.includes(document.id.toString()),
-      );
-      yOffset = (documentIndex - firstSelectedIndex) * 80; // Example task height, adjust accordingly
-    }
-
-    setDragOffset({ x: 0, y: yOffset });
-
-    // Select the document if it's not already selected
-    if (!isSelected) {
-      setSelectedDocuments([documentId]);
-    }
-  };
+    },
+    [
+      mixedItems,
+      setIsDragging,
+      setDraggedDocument,
+      setDraggedFolder,
+      selectedDocuments,
+      selectedFolders,
+      setSelectedDocuments,
+      setSelectedFolders,
+      setParentFolderId,
+      handleDragForType,
+    ],
+  );
 
   const handleDragOver = (event: DragOverEvent) => {
     const { over } = event;
@@ -158,34 +225,100 @@ export function DataroomItemsList({
     }
   };
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const moveDocumentsAndFolders = async ({
+    documentsToMove,
+    foldersToMove,
+    overId,
+    folderPathName,
+    teamId,
+    selectedFolderPath,
+  }: {
+    documentsToMove: string[];
+    foldersToMove: string[];
+    overId: UniqueIdentifier;
+    folderPathName: string[] | undefined;
+    teamId: string;
+    selectedFolderPath: string;
+  }) => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        if (documentsToMove && documentsToMove.length > 0) {
+          await moveDataroomDocumentToFolder({
+            documentIds: documentsToMove,
+            folderId: overId.toString(),
+            folderPathName,
+            dataroomId,
+            teamId: teamId,
+            folderIds: foldersToMove,
+          });
+        }
+        if (foldersToMove && foldersToMove.length > 0) {
+          await moveDataroomFolderToFolder({
+            folderIds: foldersToMove,
+            folderPathName: folderPathName ? folderPathName : undefined,
+            teamId: teamId,
+            selectedFolder: overId.toString(),
+            dataroomId: dataroomId,
+            selectedFolderPath: selectedFolderPath,
+          });
+        }
+
+        resolve("Successfully moved documents and folders.");
+      } catch (error) {
+        reject(
+          error instanceof Error
+            ? error.message
+            : "Failed to move documents and folders.",
+        );
+      }
+    });
+  };
+
+  const handleDragEnd = async (event: DragEndEvent) => {
     setIsDragging(false);
     const { active, over } = event;
 
     setDraggedDocument(null);
+    setDraggedFolder(null);
 
     if (!over) return;
 
     const activeId = active.id;
     const overId = over.id;
+    if (selectedFolders.includes(overId.toString())) {
+      return toast.error(
+        "Can not move folder and documents into selected folders",
+      );
+    }
     const isActiveADocument = active.data.current?.type === "document";
+    const isActiveAFolder = active.data.current?.type === "folder";
     const isOverAFolder = over.data.current?.type === "folder";
-
     if (activeId === overId) return;
-    if (!isActiveADocument || !isOverAFolder) return;
+    if (isActiveADocument && !isOverAFolder) return;
+    if (isActiveAFolder && !isOverAFolder) return;
 
     // Move the document(s) to the new folder
     const documentsToMove =
-      selectedDocuments.length > 0 ? selectedDocuments : [activeId.toString()];
-    moveDataroomDocumentToFolder({
-      documentIds: documentsToMove,
-      folderId: overId.toString(),
-      folderPathName,
-      dataroomId,
-      teamId: teamInfo?.currentTeam?.id,
-    });
-
+      selectedDocumentsLength > 0 ? selectedDocuments : [];
+    const foldersToMove = selectedFoldersLength > 0 ? selectedFolders : [];
+    toast.promise(
+      moveDocumentsAndFolders({
+        documentsToMove: documentsToMove,
+        foldersToMove: foldersToMove,
+        overId: overId,
+        folderPathName: folderPathName,
+        teamId: teamInfo?.currentTeam?.id!,
+        selectedFolderPath: over.data.current?.path,
+      }),
+      {
+        loading: itemsMessage(documentsToMove, foldersToMove, "Moving"),
+        success: () =>
+          itemsMessage(documentsToMove, foldersToMove, "Successfully moved"),
+        error: (err) => err,
+      },
+    );
     setSelectedDocuments([]);
+    setSelectedFolders([]);
     setIsOverFolder(false);
   };
 
@@ -218,40 +351,66 @@ export function DataroomItemsList({
     return (
       <>
         {item.itemType === "folder" ? (
-          <DroppableFolder key={itemId} id={item.id}>
-            <FolderCard
-              folder={item}
-              teamInfo={teamInfo}
-              isDataroom={!!dataroomId}
-              dataroomId={dataroomId}
-            />
+          <DroppableFolder
+            key={itemId}
+            id={item.id}
+            disabledFolder={selectedFolders}
+            path={item.path}
+          >
+            <DraggableItem
+              key={item.id}
+              id={item.id}
+              isSelected={selectedFolders.includes(item.id)}
+              onSelect={(id, type) => {
+                handleSelect(id, type);
+              }}
+              isDraggingSelected={isDragging}
+              type="folder"
+            >
+              <FolderCard
+                folder={item}
+                teamInfo={teamInfo}
+                isDataroom={!!dataroomId}
+                dataroomId={dataroomId}
+                isSelected={selectedFolders.includes(item.id)}
+                isDragging={isDragging && selectedFolders.includes(item.id)}
+              />
+            </DraggableItem>
           </DroppableFolder>
         ) : (
           <DraggableItem
             key={itemId}
             id={item.id}
             isSelected={selectedDocuments.includes(item.id)}
-            onSelect={handleSelect}
+            onSelect={(id, type) => {
+              handleSelect(id, type);
+            }}
             isDraggingSelected={isDragging}
+            type="document"
           >
             <DataroomDocumentCard
               document={item as DataroomFolderDocument}
               teamInfo={teamInfo}
               dataroomId={dataroomId}
+              isDragging={isDragging && selectedDocuments.includes(item.id)}
             />
           </DraggableItem>
         )}
       </>
     );
   };
+  const resetSelection = () => {
+    setSelectedDocuments([]);
+    setSelectedFolders([]);
+  };
 
   const HeaderContent = memo(() => {
-    if (selectedDocuments.length > 0) {
+    if (selectedDocumentsLength > 0 || selectedFoldersLength > 0) {
       return (
         <div className="mb-2 flex items-center gap-x-1 rounded-3xl bg-gray-100 text-sm text-foreground dark:bg-gray-800">
           <ButtonTooltip content="Clear selection">
             <Button
-              onClick={() => setSelectedDocuments([])}
+              onClick={resetSelection}
               className="mx-1.5 my-1 size-8 rounded-full hover:bg-gray-200 hover:dark:bg-gray-700"
               variant="ghost"
               size="icon"
@@ -259,9 +418,18 @@ export function DataroomItemsList({
               <XIcon className="h-5 w-5" />
             </Button>
           </ButtonTooltip>
-          <div className="mr-2 tabular-nums">
-            {selectedDocuments.length} selected
-          </div>
+          {selectedDocumentsLength ? (
+            <div className="mr-2 tabular-nums">
+              {selectedDocumentsLength} document
+              {selectedDocumentsLength > 1 ? "s" : ""} selected
+            </div>
+          ) : null}
+          {selectedFoldersLength ? (
+            <div className="mr-2 tabular-nums">
+              {selectedFoldersLength} folder
+              {selectedFoldersLength > 1 ? "s" : ""} selected
+            </div>
+          ) : null}
           <ButtonTooltip content="Move">
             <Button
               onClick={() => setMoveFolderOpen(true)}
@@ -274,7 +442,7 @@ export function DataroomItemsList({
           </ButtonTooltip>
           <ButtonTooltip content="Remove">
             <Button
-              onClick={() => setShowRemoveDataroomDocumentsModal(true)}
+              onClick={() => setShowRemoveDataroomItemModal(true)}
               className="mx-1.5 my-1 size-8 rounded-full hover:bg-destructive hover:text-destructive-foreground"
               variant="ghost"
               size="icon"
@@ -291,12 +459,15 @@ export function DataroomItemsList({
             <p className="flex items-center gap-x-1 text-sm text-gray-400">
               <FolderIcon className="h-5 w-5" />
               <span>{folderCount} folders</span>
+              {folderCount} folder{folderCount > 1 ? "s" : ""}
             </p>
           ) : null}
           {documentCount > 0 ? (
             <p className="flex items-center gap-x-1 text-sm text-gray-400">
               <FileIcon className="h-5 w-5" />
-              <span>{documentCount} documents</span>
+              <span>
+                {documentCount} document{documentCount > 1 ? "s" : ""}
+              </span>
             </p>
           ) : null}
         </div>
@@ -377,10 +548,18 @@ export function DataroomItemsList({
                         dataroomId={dataroomId}
                       />
                     ) : null}
-                    {selectedDocuments.length > 1 ? (
+                    {draggedFolder && draggedFolder.itemType === "folder" ? (
+                      <FolderCard
+                        folder={draggedFolder}
+                        teamInfo={teamInfo}
+                        isDataroom={!!dataroomId}
+                        dataroomId={dataroomId}
+                      />
+                    ) : null}
+                    {selectedDocumentsLength + selectedFoldersLength > 1 ? (
                       <div className="absolute -right-4 -top-4 rounded-full border border-border bg-foreground px-4 py-2">
                         <span className="text-sm font-semibold text-background">
-                          {selectedDocuments.length}
+                          {selectedDocumentsLength + selectedFoldersLength}
                         </span>
                       </div>
                     ) : null}
@@ -405,9 +584,12 @@ export function DataroomItemsList({
                 setSelectedDocuments={setSelectedDocuments}
                 documentIds={selectedDocuments}
                 dataroomId={dataroomId}
+                folderIds={selectedFolders}
+                folderParentId={parentFolderId}
+                setSelectedFoldersId={setSelectedFolders}
               />
             ) : null}
-            <RemoveDataroomDocumentsModal />
+            <RemoveDataroomItemModal />
           </>
         )}
       </UploadZone>

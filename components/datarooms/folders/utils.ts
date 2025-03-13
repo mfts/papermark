@@ -77,3 +77,23 @@ type DataroomFolderWithDocumentsNew = DataroomFolder & {
     name: string;
   }[];
 };
+
+export const itemsMessage = (
+  documentsToMove: string[],
+  foldersToMove: string[],
+  action: "Moving" | "Successfully moved",
+) => {
+  const docCount = documentsToMove.length;
+  const folderCount = foldersToMove.length;
+
+  if (docCount && folderCount) {
+    return `${action} ${docCount} document${docCount > 1 ? "s" : ""} and ${folderCount} folder${folderCount > 1 ? "s" : ""}...`;
+  }
+  if (docCount) {
+    return `${action} ${docCount} document${docCount > 1 ? "s" : ""}...`;
+  }
+  if (folderCount) {
+    return `${action} ${folderCount} folder${folderCount > 1 ? "s" : ""}...`;
+  }
+  return `${action} items...`;
+};
