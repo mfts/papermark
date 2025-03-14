@@ -147,8 +147,13 @@ export function AddFolderModal({
     }
   }
 
+  const clearModelState = () => {
+    setOpen(!open);
+    folderName !== null && setFolderName("");
+  };
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={clearModelState}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader className="text-start">
@@ -164,10 +169,16 @@ export function AddFolderModal({
             placeholder="folder-123"
             className="mb-4 mt-1 w-full"
             onChange={(e) => setFolderName(e.target.value)}
+            value={folderName || ""}
           />
           <DialogFooter>
-            <Button type="submit" className="h-9 w-full">
-              Add new folder
+            <Button
+              type="submit"
+              className="h-9 w-full"
+              disabled={folderName?.trim() == "" || loading}
+              loading={loading}
+            >
+              {loading ? "Adding..." : "Add new folder"}
             </Button>
           </DialogFooter>
         </form>
