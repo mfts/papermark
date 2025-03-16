@@ -18,8 +18,8 @@ export default async function handle(
     };
 
     try {
-      let conversation;
-      conversation = await prisma.conversation.findUnique({
+      let chat;
+      chat = await prisma.chat.findUnique({
         where: {
           userId_documentId: {
             userId,
@@ -31,7 +31,7 @@ export default async function handle(
         },
       });
 
-      if (!conversation) {
+      if (!chat) {
         // get fileId from document version
         const documentVersion = await prisma.documentVersion.findFirst({
           where: {
@@ -48,7 +48,7 @@ export default async function handle(
             messages: [
               {
                 role: "user",
-                content: "Initializing conversation with Papermark Assistant",
+                content: "Initializing chat with Papermark Assistant",
                 file_ids: [documentVersion?.fileId || ""],
                 metadata: { intitialMessage: true },
               },
@@ -56,7 +56,7 @@ export default async function handle(
           })
         ).id;
 
-        conversation = await prisma.conversation.create({
+        chat = await prisma.chat.create({
           data: {
             userId,
             threadId,
@@ -68,12 +68,12 @@ export default async function handle(
         });
       }
 
-      const threadId = conversation.threadId;
+      const threadId = chat.threadId;
       // get existing messages from thread, latest first (DESC)
       const { data } = await openai.beta.threads.messages.list(threadId);
 
       return res.status(200).json({
-        ...conversation,
+        ...chat,
         messages: convertThreadMessagesToMessages(data),
       });
     } catch (error) {
