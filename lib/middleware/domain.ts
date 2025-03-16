@@ -8,6 +8,12 @@ export default async function DomainMiddleware(req: NextRequest) {
 
   // If it's the root path, redirect to papermark.com/home
   if (path === "/") {
+    if (host === "guide.permithealth.com") {
+      return NextResponse.redirect(
+        new URL("https://guide.permithealth.com/faq", req.url),
+      );
+    }
+
     return NextResponse.redirect(
       new URL("https://www.papermark.com/home", req.url),
     );
