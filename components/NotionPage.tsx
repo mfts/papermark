@@ -329,35 +329,40 @@ export const NotionPage = ({
         viewId={viewId}
       />
 
-      <Portal containerId="view-breadcrump-portal">
-        <Breadcrumb>
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink
-                className="cursor-pointer underline underline-offset-4 hover:font-medium"
-                onClick={() => setSubPageId(null)}
-                style={{
-                  color: determineTextColor(brand?.brandColor),
-                }}
-              >
-                {title}
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator>
-              <Slash />
-            </BreadcrumbSeparator>
-            <BreadcrumbItem>
-              <BreadcrumbPage
-                className="font-medium"
-                style={{
-                  color: determineTextColor(brand?.brandColor),
-                }}
-              >
-                {subTitle}
-              </BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
+      <Portal
+        containerId="view-breadcrump-portal"
+        className="flex items-center gap-1.5"
+      >
+        <>
+          <BreadcrumbItem>
+            <BreadcrumbLink
+              className="cursor-pointer underline underline-offset-4"
+              onClick={() => setSubPageId(null)}
+              style={{
+                color: determineTextColor(brand?.brandColor),
+              }}
+            >
+              {title}
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          {subPageId ? (
+            <>
+              <BreadcrumbSeparator>
+                <Slash />
+              </BreadcrumbSeparator>
+              <BreadcrumbItem>
+                <BreadcrumbPage
+                  className="font-medium"
+                  style={{
+                    color: determineTextColor(brand?.brandColor),
+                  }}
+                >
+                  {subTitle}
+                </BreadcrumbPage>
+              </BreadcrumbItem>
+            </>
+          ) : null}
+        </>
       </Portal>
 
       {loading && <div>Loading...</div>}

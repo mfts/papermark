@@ -164,7 +164,6 @@ export default function Nav({
                 </Link>
               )}
             </div>
-            <div id="view-breadcrump-portal"></div>
             {isDataroom ? (
               <Breadcrumb>
                 <BreadcrumbList>
@@ -179,19 +178,20 @@ export default function Nav({
                       Home
                     </BreadcrumbLink>
                   </BreadcrumbItem>
-                  {/* <BreadcrumbSeparator>
-                    <Slash />
-                  </BreadcrumbSeparator>
-                  <BreadcrumbItem>
-                    <BreadcrumbPage
-                      className="font-medium"
-                      style={{
-                        color: determineTextColor(brand?.brandColor),
-                      }}
-                    >
-                      {documentName ?? "Document"}
-                    </BreadcrumbPage>
-                  </BreadcrumbItem> */}
+                  {type === "notion" ? (
+                    <>
+                      <BreadcrumbSeparator>
+                        <Slash />
+                      </BreadcrumbSeparator>
+                      <div id="view-breadcrump-portal"></div>
+                    </>
+                  ) : null}
+                </BreadcrumbList>
+              </Breadcrumb>
+            ) : type === "notion" ? (
+              <Breadcrumb>
+                <BreadcrumbList>
+                  <div id="view-breadcrump-portal"></div>
                 </BreadcrumbList>
               </Breadcrumb>
             ) : null}
