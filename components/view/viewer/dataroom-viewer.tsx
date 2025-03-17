@@ -28,9 +28,9 @@ import {
 
 import { cn } from "@/lib/utils";
 
-import DocumentCard from "./dataroom/document-card";
-import FolderCard from "./dataroom/folder-card";
-import DataroomNav from "./dataroom/nav-dataroom";
+import DocumentCard from "../dataroom/document-card";
+import FolderCard from "../dataroom/folder-card";
+import DataroomNav from "../dataroom/nav-dataroom";
 
 type FolderOrDocument = DataroomFolder | DataroomDocument;
 
@@ -81,6 +81,7 @@ export default function DataroomViewer({
   folderId,
   setFolderId,
   accessControls,
+  viewerId,
 }: {
   brand: Partial<DataroomBrand>;
   viewId?: string;
@@ -91,6 +92,7 @@ export default function DataroomViewer({
   folderId: string | null;
   setFolderId: React.Dispatch<React.SetStateAction<string | null>>;
   accessControls: ViewerGroupAccessControls[];
+  viewerId?: string;
 }) {
   const { documents, folders } = dataroom as {
     documents: DataroomDocument[];
@@ -160,6 +162,9 @@ export default function DataroomViewer({
         dataroom={dataroom}
         allowDownload={allowDownload}
         isPreview={isPreview}
+        dataroomId={dataroom?.id}
+        viewerId={viewerId}
+        conversationsEnabled={true} // TODO: update this with real value
       />
       <div
         style={{ height: "calc(100vh - 64px)" }}
