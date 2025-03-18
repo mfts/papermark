@@ -23,8 +23,6 @@ export function DraggableItem({
   children,
   type,
 }: DraggableItemProps) {
-  console.log("isSelected", children);
-
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: id,
     data: {
