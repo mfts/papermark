@@ -621,7 +621,7 @@ export default function UploadZone({
     accept: acceptableDropZoneFileTypes,
     multiple: true,
     // maxSize: maxSize * 1024 * 1024, // 30 MB
-    maxFiles: 150,
+    maxFiles: fileSizeLimits.maxFiles ?? 150,
     onDrop,
     onDropRejected,
     getFilesFromEvent,

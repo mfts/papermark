@@ -1,32 +1,23 @@
-import { IncomingHttpHeaders } from "http";
-
 import { getFeatureFlags } from "@/lib/featureFlags";
 import prisma from "@/lib/prisma";
-import { Geo } from "@/lib/types";
-import { getDomainWithoutWWW, log } from "@/lib/utils";
-import { capitalize } from "@/lib/utils";
-import { LOCALHOST_GEO_DATA, getGeoData } from "@/lib/utils/geo";
-import { userAgentFromString } from "@/lib/utils/user-agent";
+import { log } from "@/lib/utils";
 import { sendWebhooks } from "@/lib/webhook/send-webhooks";
 
-interface LinkViewProps {
-  viewId: string;
-  linkId: string;
-  teamId: string;
-  documentId?: string;
-  dataroomId?: string;
-  headers: IncomingHttpHeaders;
-}
-
-export async function recordVisit({
-  viewId,
-  linkId,
+export async function sendLinkViewWebhook({
   teamId,
-  documentId,
-  dataroomId,
-  headers,
-}: LinkViewProps) {
+  clickData,
+}: {
+  teamId: string;
+  clickData: any;
+}) {
   try {
+    const {
+      view_id: viewId,
+      link_id: linkId,
+      document_id: documentId,
+      dataroom_id: dataroomId,
+    } = clickData;
+
     if (!viewId || !linkId || !teamId) {
       throw new Error("Missing required parameters");
     }
@@ -57,13 +48,6 @@ export async function recordVisit({
       return;
     }
 
-    // Get geo data
-    const geo: Geo =
-      process.env.VERCEL === "1" ? getGeoData(headers) : LOCALHOST_GEO_DATA;
-
-    const referer = headers.referer;
-    const ua = userAgentFromString(headers["user-agent"]);
-
     // Get link information
     const link = await prisma.link.findUnique({
       where: { id: linkId, teamId },
@@ -78,9 +62,9 @@ export async function recordVisit({
       id: link.id,
       url: link.domainId
         ? `https://${link.domainSlug}/${link.slug}`
-        : `https://www.papermark.io/view/${link.id}`,
+        : `https://www.papermark.com/view/${link.id}`,
       domain:
-        link.domainId && link.domainSlug ? link.domainSlug : "papermark.io",
+        link.domainId && link.domainSlug ? link.domainSlug : "papermark.com",
       key: link.domainId && link.slug ? link.slug : `view/${link.id}`,
       name: link.name,
       expiresAt: link.expiresAt?.toISOString() || null,
@@ -131,13 +115,13 @@ export async function recordVisit({
       viewId: view.id,
       email: view.viewerEmail,
       emailVerified: view.verified,
-      country: geo?.country || null,
-      city: geo?.city || null,
-      device: ua.device.type ? capitalize(ua.device.type) : "Desktop",
-      browser: ua.browser.name || null,
-      os: ua.os.name || null,
-      ua: ua.ua || null,
-      referer: referer ? (getDomainWithoutWWW(referer) ?? null) : null,
+      country: clickData.country,
+      city: clickData.city,
+      device: clickData.device,
+      browser: clickData.browser,
+      os: clickData.os,
+      ua: clickData.ua,
+      referer: clickData.referer,
     };
 
     // Get document and dataroom information for webhook in parallel
@@ -185,11 +169,13 @@ export async function recordVisit({
         data: webhookData,
       });
     }
+    return;
   } catch (error) {
     log({
       message: `Error sending webhooks for link view: ${error}`,
       type: "error",
       mention: true,
     });
+    return;
   }
 }

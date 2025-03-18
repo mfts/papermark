@@ -40,17 +40,17 @@ export default function EmailAuthenticationSection({
     <div className="pb-5">
       <LinkItem
         title="Require email verification"
-        link="https://www.papermark.io/help/article/require-email-verification"
+        link="https://www.papermark.com/help/article/require-email-verification"
         tooltipContent="Users must verify their email before accessing the content."
         enabled={enabled}
         action={handleEnableAuthentication}
         isAllowed={isAllowed}
-        requiredPlan="pro"
+        requiredPlan="business"
         upgradeAction={() =>
           handleUpgradeStateChange({
             state: true,
             trigger: "link_sheet_email_auth_section",
-            plan: "Pro",
+            plan: "Business",
           })
         }
       />

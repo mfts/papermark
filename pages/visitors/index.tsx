@@ -12,11 +12,8 @@ import useViewers from "@/lib/swr/use-viewers";
 
 export default function Visitors() {
   const router = useRouter();
-  const { plan, trial } = usePlan();
+  const { isFree, isTrial } = usePlan();
   const { viewers, isValidating, isFiltered } = useViewers();
-
-  const isTrial = !!trial;
-  const isFree = plan == "free";
 
   useEffect(() => {
     if (isFree && !isTrial) router.push("/documents");

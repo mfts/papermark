@@ -1,7 +1,11 @@
 import { useMemo } from "react";
 import React from "react";
 
-import { DataroomBrand, DataroomFolder } from "@prisma/client";
+import {
+  DataroomBrand,
+  DataroomFolder,
+  ViewerGroupAccessControls,
+} from "@prisma/client";
 import * as SheetPrimitive from "@radix-ui/react-dialog";
 import { PanelLeftIcon, XIcon } from "lucide-react";
 
@@ -30,6 +34,14 @@ import DataroomNav from "./dataroom/nav-dataroom";
 
 type FolderOrDocument = DataroomFolder | DataroomDocument;
 
+export type DocumentVersion = {
+  id: string;
+  type: string;
+  versionNumber: number;
+  hasPages: boolean;
+  isVertical: boolean;
+};
+
 type DataroomDocument = {
   dataroomDocumentId: string;
   folderId: string | null;
@@ -37,13 +49,9 @@ type DataroomDocument = {
   name: string;
   orderIndex: number | null;
   downloadOnly: boolean;
-  versions: {
-    id: string;
-    type: string;
-    versionNumber: number;
-    hasPages: boolean;
-    isVertical: boolean;
-  }[];
+  versions: DocumentVersion[];
+  canDownload: boolean;
+  canView: boolean;
 };
 
 const getParentFolders = (
@@ -72,6 +80,7 @@ export default function DataroomViewer({
   isPreview,
   folderId,
   setFolderId,
+  accessControls,
 }: {
   brand: Partial<DataroomBrand>;
   viewId?: string;
@@ -81,6 +90,7 @@ export default function DataroomViewer({
   isPreview?: boolean;
   folderId: string | null;
   setFolderId: React.Dispatch<React.SetStateAction<string | null>>;
+  accessControls: ViewerGroupAccessControls[];
 }) {
   const { documents, folders } = dataroom as {
     documents: DataroomDocument[];
@@ -100,15 +110,35 @@ export default function DataroomViewer({
         .map((folder) => ({ ...folder, itemType: "folder" })),
       ...(documents || [])
         .filter((doc) => doc.folderId === folderId)
-        .map((doc) => ({ ...doc, itemType: "document" })),
-    ];
+        .map((doc) => {
+          const accessControl = accessControls.find(
+            (access) => access.itemId === doc.dataroomDocumentId,
+          );
 
+          return {
+            ...doc,
+            itemType: "document",
+            canDownload:
+              (accessControl?.canDownload ?? true) &&
+              doc.versions[0].type !== "notion",
+          };
+        }),
+    ];
     return mixedItems.sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
-  }, [folders, documents, folderId]);
+  }, [folders, documents, folderId, accessControls]);
 
   const renderItem = (item: FolderOrDocument) => {
     if ("versions" in item) {
-      return <DocumentCard key={item.id} document={item} linkId={linkId} />;
+      return (
+        <DocumentCard
+          key={item.id}
+          document={item}
+          linkId={linkId}
+          viewId={viewId}
+          isPreview={!!isPreview}
+          allowDownload={allowDownload}
+        />
+      );
     }
 
     return (

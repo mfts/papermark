@@ -18,11 +18,13 @@ export default function ViewedDocument({
   documentName = "Pitchdeck",
   linkName = "Pitchdeck",
   viewerEmail,
+  locationString,
 }: {
   documentId: string;
   documentName: string;
   linkName: string;
   viewerEmail: string | null;
+  locationString?: string;
 }) {
   return (
     <Html>
@@ -43,7 +45,13 @@ export default function ViewedDocument({
               viewed by{" "}
               <span className="font-semibold">
                 {viewerEmail ? `${viewerEmail}` : `someone`}
-              </span>{" "}
+              </span>
+              {locationString ? (
+                <span>
+                  {" "}
+                  in <span className="font-semibold">{locationString}</span>
+                </span>
+              ) : null}{" "}
               from the link <span className="font-semibold">{linkName}</span>.
             </Text>
             <Text className="text-sm leading-6 text-black">
@@ -53,7 +61,7 @@ export default function ViewedDocument({
             <Section className="my-8 text-center">
               <Button
                 className="rounded bg-black text-center text-xs font-semibold text-white no-underline"
-                href={`https://app.papermark.io/documents/${documentId}`}
+                href={`https://app.papermark.com/documents/${documentId}`}
                 style={{ padding: "12px 20px" }}
               >
                 See my document insights
@@ -67,11 +75,11 @@ export default function ViewedDocument({
               <Text className="text-xs">
                 © {new Date().getFullYear()}{" "}
                 <a
-                  href="https://www.papermark.io"
+                  href="https://www.papermark.com"
                   className="text-gray-400 no-underline visited:text-gray-400 hover:text-gray-400"
                   target="_blank"
                 >
-                  papermark.io
+                  papermark.com
                 </a>
               </Text>
               <Text className="text-xs">

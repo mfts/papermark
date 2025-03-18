@@ -112,6 +112,8 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
               document: {
                 ...linkDocument,
                 versions: [versionWithoutTypeAndFile],
+                // TODO: remove this once the assistant feature is re-enabled
+                assistantEnabled: false,
               },
             },
             brand,
@@ -127,7 +129,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
             metaDescription: link.metaDescription,
             metaImage: link.metaImage,
             metaFavicon: link.metaFavicon ?? "/favicon.ico",
-            metaUrl: `https://www.papermark.io/view/${linkId}`,
+            metaUrl: `https://www.papermark.com/view/${linkId}`,
           },
           showPoweredByBanner: link.showBanner || teamPlan === "free",
           showAccountCreationSlide: link.showBanner || teamPlan === "free",
@@ -182,7 +184,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
             metaDescription: link.metaDescription,
             metaImage: link.metaImage,
             metaFavicon: link.metaFavicon ?? "/favicon.ico",
-            metaUrl: `https://www.papermark.io/view/${linkId}`,
+            metaUrl: `https://www.papermark.com/view/${linkId}`,
           },
           showPoweredByBanner: false,
           showAccountCreationSlide: false,

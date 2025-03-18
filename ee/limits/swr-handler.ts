@@ -24,6 +24,7 @@ export type LimitProps = {
         document: number | undefined;
         image: number | undefined;
         excel: number | undefined;
+        maxFiles: number | undefined;
       }
     | undefined;
 };

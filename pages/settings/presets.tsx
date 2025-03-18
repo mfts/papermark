@@ -35,7 +35,7 @@ import { resizeImage } from "@/lib/utils/resize-image";
 
 export default function Presets() {
   const teamInfo = useTeam();
-  const { plan } = usePlan();
+  const { plan, isTrial } = usePlan();
   const { data: presets, mutate: mutatePreset } = useSWRImmutable<LinkPreset>(
     `/api/teams/${teamInfo?.currentTeam?.id}/presets`,
     fetcher,
@@ -225,7 +225,7 @@ export default function Presets() {
                 <BadgeTooltip
                   content="Customize how your content appears when shared on social media."
                   key="verified"
-                  link="https://www.papermark.io/help/article/change-social-media-cards"
+                  link="https://www.papermark.com/help/article/change-social-media-cards"
                 >
                   <CircleHelpIcon className="h-4 w-4 shrink-0 cursor-pointer text-muted-foreground hover:text-foreground" />
                 </BadgeTooltip>
@@ -531,10 +531,10 @@ export default function Presets() {
                 </div>
 
                 <div className="flex justify-end">
-                  {plan === "free" ? (
+                  {(plan === "free" || plan === "pro") && !isTrial ? (
                     <UpgradePlanModal
-                      clickedPlan={PlanEnum.Pro}
-                      trigger={"branding_page"}
+                      clickedPlan={PlanEnum.Business}
+                      trigger={"presets_page"}
                     >
                       <Button>Upgrade to Save Preset</Button>
                     </UpgradePlanModal>
