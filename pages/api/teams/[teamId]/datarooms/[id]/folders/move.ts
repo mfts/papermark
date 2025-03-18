@@ -62,6 +62,7 @@ export default async function handle(
 
         const existingFolders = await prisma.dataroomFolder.findMany({
           where: {
+            dataroomId: dataroomId,
             parentId: selectedFolder, // Check only inside the target folder can be null
           },
           select: { name: true },
@@ -121,7 +122,7 @@ export default async function handle(
           const newSubfolderPath = `${newParentPath}${relativePath}`;
 
           return prisma.dataroomFolder.update({
-            where: { id: subfolder.id },
+            where: { id: subfolder.id, dataroomId: dataroomId },
             data: { path: newSubfolderPath },
           });
         });
@@ -151,7 +152,7 @@ export default async function handle(
       let folder: { path: string } | null = null;
       if (selectedFolder) {
         folder = await prisma.dataroomFolder.findUnique({
-          where: { id: selectedFolder },
+          where: { id: selectedFolder, dataroomId: dataroomId },
           select: { path: true },
         });
       }
