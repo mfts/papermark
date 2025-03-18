@@ -23,6 +23,13 @@ import { useTheme } from "next-themes";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
+import { getFile } from "@/lib/files/get-file";
+import { usePlan } from "@/lib/swr/use-billing";
+import useDatarooms from "@/lib/swr/use-datarooms";
+import { DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
+import { cn } from "@/lib/utils";
+import { fileIcon } from "@/lib/utils/get-file-icon";
+
 import FileUp from "@/components/shared/icons/file-up";
 import MoreVertical from "@/components/shared/icons/more-vertical";
 import PapermarkSparkle from "@/components/shared/icons/papermark-sparkle";
@@ -36,13 +43,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-import { getFile } from "@/lib/files/get-file";
-import { usePlan } from "@/lib/swr/use-billing";
-import useDatarooms from "@/lib/swr/use-datarooms";
-import { DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
-import { cn } from "@/lib/utils";
-import { fileIcon } from "@/lib/utils/get-file-icon";
 
 import PlanBadge from "../billing/plan-badge";
 import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
@@ -593,7 +593,8 @@ export default function DocumentHeader({
             </AddDocumentModal>
           )}
 
-          {prismaDocument.type !== "notion" &&
+          {/* TODO: Assistant feature temporarily disabled. Will be re-enabled in a future update */}
+          {/* {prismaDocument.type !== "notion" &&
             prismaDocument.type !== "sheet" &&
             prismaDocument.type !== "zip" &&
             prismaDocument.type !== "video" &&
@@ -608,7 +609,7 @@ export default function DocumentHeader({
               >
                 <PapermarkSparkle className="h-5 w-5" />
               </Button>
-            )}
+            )} */}
 
           <div className="flex items-center gap-x-1">
             {actionRows.map((row, i) => (
@@ -661,7 +662,8 @@ export default function DocumentHeader({
                     </DropdownMenuItem>
                   )}
 
-                {prismaDocument.type !== "notion" &&
+                {/* TODO: Assistant feature temporarily disabled. Will be re-enabled in a future update */}
+                {/* {prismaDocument.type !== "notion" &&
                   prismaDocument.type !== "sheet" &&
                   prismaDocument.type !== "zip" &&
                   primaryVersion.type !== "video" && (
@@ -688,11 +690,12 @@ export default function DocumentHeader({
                         Open AI Assistant
                       </DropdownMenuItem>
                     </>
-                  )}
+                  )} */}
 
                 <DropdownMenuSeparator />
               </DropdownMenuGroup>
-              {primaryVersion.type !== "notion" &&
+              {/* TODO: Assistant feature temporarily disabled. Will be re-enabled in a future update */}
+              {/* {primaryVersion.type !== "notion" &&
                 primaryVersion.type !== "sheet" &&
                 primaryVersion.type !== "zip" &&
                 primaryVersion.type !== "video" &&
@@ -712,7 +715,7 @@ export default function DocumentHeader({
                   >
                     <Sparkles className="mr-2 h-4 w-4" /> Disable Assistant
                   </DropdownMenuItem>
-                ))}
+                ))} */}
               {prismaDocument.type === "sheet" &&
                 !prismaDocument.advancedExcelEnabled &&
                 (isBusiness || isDatarooms || isTrial) && (
