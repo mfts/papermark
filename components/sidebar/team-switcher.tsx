@@ -4,21 +4,13 @@ import * as React from "react";
 
 import { useLimits } from "@/ee/limits/swr-handler";
 import { PlanEnum } from "@/ee/stripe/constants";
-import {
-  ChevronsUpDown,
-  GalleryVerticalEndIcon,
-  Loader,
-  Plus,
-  UserRoundPlusIcon,
-} from "lucide-react";
+import { ChevronsUpDown, UserRoundPlusIcon } from "lucide-react";
 
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -28,8 +20,6 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 
-import { useInvitations } from "@/lib/swr/use-invitations";
-import { useGetTeam } from "@/lib/swr/use-team";
 import { Team } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -37,8 +27,6 @@ import { AddSeatModal } from "../billing/add-seat-modal";
 import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
 import { AddTeamMembers } from "../teams/add-team-member-modal";
 import { Avatar, AvatarFallback } from "../ui/avatar";
-import { Button } from "../ui/button";
-import { ButtonTooltip } from "../ui/tooltip";
 
 export function TeamSwitcher({
   currentTeam: activeTeam,
@@ -53,12 +41,8 @@ export function TeamSwitcher({
     React.useState<boolean>(false);
   const [isAddSeatModalOpen, setAddSeatModalOpen] =
     React.useState<boolean>(false);
-  const { team, loading } = useGetTeam()!;
   const { isMobile } = useSidebar();
-  const { limits } = useLimits();
-  const { invitations } = useInvitations();
-  const numUsers = (team && team.users.length) ?? 1;
-  const numInvitations = (invitations && invitations.length) ?? 0;
+  const { canAddUsers } = useLimits();
 
   const switchTeam = (team: Team) => {
     localStorage.setItem("currentTeamId", team.id);
@@ -68,7 +52,7 @@ export function TeamSwitcher({
   if (!activeTeam) return null;
 
   return (
-    <SidebarMenu className="flex flex-row gap-1 group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:gap-1.5">
+    <SidebarMenu className="flex flex-row items-center gap-1 group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:gap-1.5">
       <SidebarMenuItem>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -128,60 +112,37 @@ export function TeamSwitcher({
         </DropdownMenu>
       </SidebarMenuItem>
       <SidebarMenuItem>
-        {loading ? (
-          <Button type="button" variant="outline" className="h-12 w-12 p-1">
-            <Loader className="animate-spin" />
-          </Button>
-        ) : activeTeam.plan === "free" ? (
+        {activeTeam.plan?.includes("free") ? (
           <UpgradePlanModal
             clickedPlan={PlanEnum.Pro}
             trigger={"invite_team_members"}
           >
             <SidebarMenuButton
               size="lg"
-              className="border data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+              className="size-12 justify-center border data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground group-data-[collapsible=icon]:hidden"
             >
-              <Button
-                type="button"
-                variant="ghost"
-                className="h-8 w-8 bg-gray-300 p-1 dark:bg-muted"
-              >
-                <UserRoundPlusIcon className="!h-4 !w-4" />
-              </Button>
+              <UserRoundPlusIcon className="!size-5" strokeWidth={1.5} />
             </SidebarMenuButton>
           </UpgradePlanModal>
-        ) : limits === null ||
-          (limits && limits.users > numUsers + numInvitations) ? (
+        ) : canAddUsers ? (
           <AddTeamMembers
             open={isTeamMemberInviteModalOpen}
             setOpen={setTeamMemberInviteModalOpen}
           >
             <SidebarMenuButton
               size="lg"
-              className="border data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+              className="size-12 justify-center border data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground group-data-[collapsible=icon]:hidden"
             >
-              <Button
-                type="button"
-                variant="ghost"
-                className="h-8 w-8 bg-gray-300 p-1 dark:bg-muted"
-              >
-                <UserRoundPlusIcon className="!h-4 !w-4" />
-              </Button>
+              <UserRoundPlusIcon className="!size-5" strokeWidth={1.5} />
             </SidebarMenuButton>
           </AddTeamMembers>
         ) : (
           <AddSeatModal open={isAddSeatModalOpen} setOpen={setAddSeatModalOpen}>
             <SidebarMenuButton
               size="lg"
-              className="border data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+              className="size-12 justify-center border data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground group-data-[collapsible=icon]:hidden"
             >
-              <Button
-                type="button"
-                variant="ghost"
-                className="h-8 w-8 bg-gray-300 p-1 dark:bg-muted"
-              >
-                <UserRoundPlusIcon className="!h-4 !w-4" />
-              </Button>
+              <UserRoundPlusIcon className="!size-5" strokeWidth={1.5} />
             </SidebarMenuButton>
           </AddSeatModal>
         )}
