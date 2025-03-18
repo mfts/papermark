@@ -80,6 +80,7 @@ const nextConfig = {
               `img-src 'self' data: blob: https: ${isDev ? "http:" : ""}; ` +
               `font-src 'self' data: https: ${isDev ? "http:" : ""}; ` +
               `frame-ancestors 'none'; ` +
+              `worker-src 'self' blob: https: ${isDev ? "http:" : ""}; ` +
               `connect-src 'self' https: ${isDev ? "http: ws: wss:" : ""}; ` + // Add WebSocket for hot reload
               `${isDev ? "" : "upgrade-insecure-requests;"} ` +
               "report-to csp-endpoint;",
