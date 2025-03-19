@@ -39,7 +39,7 @@ export async function POST(req: Request) {
         slug: {
           // exclude domains that belong to us
           not: {
-            contains: "papermark.io",
+            contains: "agrowy.com",
           },
         },
       },

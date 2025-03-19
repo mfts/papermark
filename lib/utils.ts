@@ -352,7 +352,7 @@ export const convertThreadMessagesToMessages = (
 export function constructMetadata({
   title = "Papermark | The Open Source DocSend Alternative",
   description = "Papermark is an open-source document sharing alternative to DocSend with built-in engagement analytics and 100% white-labeling.",
-  image = "https://www.papermark.com/_static/meta-image.png",
+  image = "https://www.agrowy.com/_static/meta-image.png",
   favicon = "/favicon.ico",
   noIndex = false,
 }: {

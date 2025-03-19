@@ -7,7 +7,7 @@ const stripeOld = new Stripe(
   {
     apiVersion: "2024-06-20",
     appInfo: {
-      name: "Papermark.io",
+      name: "agrowy.com",
       version: "0.1.0",
     },
     typescript: true,
@@ -19,7 +19,7 @@ const stripeNew = new Stripe(
   {
     apiVersion: "2024-06-20",
     appInfo: {
-      name: "Papermark.io",
+      name: "agrowy.com",
       version: "0.1.0",
     },
     typescript: true,

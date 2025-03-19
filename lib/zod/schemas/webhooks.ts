@@ -39,7 +39,7 @@ const linkEventSchema = z.object({
   url: z
     .string()
     .describe(
-      "This is the full URL of the link e.g. https://www.papermark.com/view/1234566",
+      "This is the full URL of the link e.g. https://www.agrowy.com/view/1234566",
     ),
   name: z.string().nullable(),
   domain: z.string(),

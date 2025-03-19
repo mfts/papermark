@@ -49,7 +49,7 @@ export default function DomainSection({
     if (value === "add_domain" || value === "add_dataroom_domain") {
       // Redirect to the add domain page
       setModalOpen(true);
-      setData({ ...data, domain: "papermark.com" });
+      setData({ ...data, domain: "agrowy.com" });
       return;
     }
 
@@ -66,14 +66,14 @@ export default function DomainSection({
       const defaultDomain = domains.find((domain) => domain.isDefault);
       setData({
         ...data,
-        domain: defaultDomain?.slug ?? "papermark.com",
+        domain: defaultDomain?.slug ?? "agrowy.com",
       });
     }
   }, [domains, editLink]);
 
   const defaultDomain = editLink
-    ? (data.domain ?? "papermark.com")
-    : (domains?.find((domain) => domain.isDefault)?.slug ?? "papermark.com");
+    ? (data.domain ?? "agrowy.com")
+    : (domains?.find((domain) => domain.isDefault)?.slug ?? "agrowy.com");
 
   const currentDomain = domains?.find((domain) => domain.slug === data.domain);
   const isDomainVerified = currentDomain?.verified;
@@ -90,7 +90,7 @@ export default function DomainSection({
           <SelectTrigger
             className={cn(
               "flex w-full rounded-none rounded-l-md border border-input bg-white text-foreground placeholder-muted-foreground focus:border-muted-foreground focus:outline-none focus:ring-inset focus:ring-muted-foreground dark:border-gray-500 dark:bg-gray-800 focus:dark:bg-transparent sm:text-sm",
-              data.domain && data.domain !== "papermark.com"
+              data.domain && data.domain !== "agrowy.com"
                 ? ""
                 : "border-r-1 rounded-r-md",
             )}
@@ -98,8 +98,8 @@ export default function DomainSection({
             <SelectValue placeholder="Select a domain" />
           </SelectTrigger>
           <SelectContent className="flex w-full rounded-md border border-input bg-white text-foreground placeholder-muted-foreground focus:border-muted-foreground focus:outline-none focus:ring-inset focus:ring-muted-foreground dark:border-gray-500 dark:bg-gray-800 focus:dark:bg-transparent sm:text-sm">
-            <SelectItem value="papermark.com" className="hover:bg-muted">
-              papermark.com
+            <SelectItem value="agrowy.com" className="hover:bg-muted">
+              agrowy.com
             </SelectItem>
             {linkType === "DOCUMENT_LINK" &&
               (isBusiness || (limits && limits.customDomainOnPro)) && (
@@ -144,7 +144,7 @@ export default function DomainSection({
           </SelectContent>
         </Select>
 
-        {data.domain && data.domain !== "papermark.com" ? (
+        {data.domain && data.domain !== "agrowy.com" ? (
           <Input
             type="text"
             name="key"
@@ -174,7 +174,7 @@ export default function DomainSection({
             autoComplete="off"
             className={cn(
               "hidden rounded-l-none focus:ring-inset",
-              data.domain && data.domain !== "papermark.com" ? "flex" : "",
+              data.domain && data.domain !== "agrowy.com" ? "flex" : "",
             )}
             placeholder="deck"
             onChange={(e) => {
@@ -195,7 +195,7 @@ export default function DomainSection({
         ) : null}
       </div>
 
-      {data.domain && data.domain !== "papermark.com" && !isDomainVerified ? (
+      {data.domain && data.domain !== "agrowy.com" && !isDomainVerified ? (
         <div className="mt-4 text-sm text-red-500">
           Your domain is not verified yet!{" "}
           <Link

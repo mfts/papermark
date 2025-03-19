@@ -51,7 +51,7 @@ export default function Domains() {
                   content="How to connect a custom domain to your link?"
                   key="verified"
                   linkText="Click here"
-                  link="https://www.papermark.com/help/article/how-to-add-custom-domain-to-link"
+                  link="https://www.agrowy.com/help/article/how-to-add-custom-domain-to-link"
                 >
                   <CircleHelpIcon className="h-4 w-4 shrink-0 text-muted-foreground hover:text-foreground" />
                 </BadgeTooltip>

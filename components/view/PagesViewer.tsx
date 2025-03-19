@@ -309,7 +309,7 @@ export default function PagesViewer({
             (pages && loadedImages[pageNumber - 1] ? (
               pages.map((page, index) => {
                 // served from cloudfront, then use img tag otherwise use next/image
-                if (page.file.toLowerCase().includes("files.papermark.io")) {
+                if (page.file.toLowerCase().includes("files.agrowy.com")) {
                   return (
                     <img
                       key={index}
@@ -319,7 +319,7 @@ export default function PagesViewer({
                       src={
                         loadedImages[index]
                           ? page.file
-                          : "https://www.papermark.com/_static/blank.gif"
+                          : "https://www.agrowy.com/_static/blank.gif"
                       }
                       alt={`Page ${index + 1}`}
                       fetchPriority={loadedImages[index] ? "high" : "auto"}

@@ -61,7 +61,7 @@ export default function DataroomAnalyticsPage() {
                     linkText="Learn more"
                     content="Configure access controls for data room links."
                     key="links"
-                    link="https://www.papermark.com/help/category/links"
+                    link="https://www.agrowy.com/help/category/links"
                   >
                     <CircleHelpIcon className="h-4 w-4 shrink-0 text-muted-foreground hover:text-foreground" />
                   </BadgeTooltip>

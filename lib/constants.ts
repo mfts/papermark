@@ -13,7 +13,7 @@ export const STAGGER_CHILD_VARIANTS = {
 export const PAPERMARK_HEADERS = {
   headers: {
     "x-powered-by":
-      "Papermark.io - Document sharing infrastructure for the modern web",
+      "agrowy.com - Document sharing infrastructure for the modern web",
   },
 };
 

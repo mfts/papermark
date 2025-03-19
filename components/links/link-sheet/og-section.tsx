@@ -171,7 +171,7 @@ export default function OGSection({
       <LinkItem
         tooltipContent="Customize how your content appears when shared on social media."
         title="Custom social media cards"
-        link="https://www.papermark.com/help/article/change-social-media-cards"
+        link="https://www.agrowy.com/help/article/change-social-media-cards"
         enabled={enableCustomMetatag}
         action={handleCustomMetatag}
         isAllowed={isAllowed}

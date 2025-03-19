@@ -39,7 +39,7 @@ const TrialEndFinalReminderEmail = ({ name }: TrialEndFinalReminderEmail) => {
             </Text>
             <Text className="text-sm leading-6 text-black">
               Your Papermark Pro trial expires in 24 hours.{" "}
-              <Link href={`https://app.papermark.com/settings/billing`}>
+              <Link href={`https://app.agrowy.com/settings/billing`}>
                 Upgrade now
               </Link>{" "}
               to:
@@ -60,7 +60,7 @@ const TrialEndFinalReminderEmail = ({ name }: TrialEndFinalReminderEmail) => {
             <Section className="mb-[32px] mt-[32px] text-center">
               <Button
                 className="rounded bg-black text-center text-xs font-semibold text-white no-underline"
-                href={`https://app.papermark.com/settings/billing`}
+                href={`https://app.agrowy.com/settings/billing`}
                 style={{ padding: "12px 20px" }}
               >
                 Upgrade now
@@ -76,11 +76,11 @@ const TrialEndFinalReminderEmail = ({ name }: TrialEndFinalReminderEmail) => {
               <Text className="text-xs">
                 © {new Date().getFullYear()}{" "}
                 <a
-                  href="https://www.papermark.com"
+                  href="https://www.agrowy.com"
                   className="text-gray-400 no-underline visited:text-gray-400 hover:text-gray-400"
                   target="_blank"
                 >
-                  papermark.com
+                  agrowy.com
                 </a>
               </Text>
               <Text className="text-xs">

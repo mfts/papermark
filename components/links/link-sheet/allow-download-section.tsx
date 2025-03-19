@@ -28,7 +28,7 @@ export default function AllowDownloadSection({
       <LinkItem
         title="Allow downloading"
         enabled={enabled}
-        link="https://www.papermark.com/help/article/link-settings"
+        link="https://www.agrowy.com/help/article/link-settings"
         action={handleAllowDownload}
         tooltipContent="Allow visitors to download the content."
       />

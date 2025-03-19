@@ -54,7 +54,7 @@ const Onboarding3Email = () => {
             <Section className="mb-[32px] mt-[32px] text-center">
               <Button
                 className="rounded bg-black text-center text-xs font-semibold text-white no-underline"
-                href={`https://app.papermark.com/documents?utm_source=onboarding&utm_medium=email&utm_campaign=20240723&utm_content=upload_documents`}
+                href={`https://app.agrowy.com/documents?utm_source=onboarding&utm_medium=email&utm_campaign=20240723&utm_content=upload_documents`}
                 style={{ padding: "12px 20px" }}
               >
                 View your document activity
@@ -68,11 +68,11 @@ const Onboarding3Email = () => {
               <Text className="text-xs">
                 © {new Date().getFullYear()}{" "}
                 <a
-                  href="https://www.papermark.com"
+                  href="https://www.agrowy.com"
                   className="text-gray-400 no-underline visited:text-gray-400 hover:text-gray-400"
                   target="_blank"
                 >
-                  papermark.com
+                  agrowy.com
                 </a>
               </Text>
               <Text className="text-xs">

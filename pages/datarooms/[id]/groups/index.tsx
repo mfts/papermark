@@ -84,7 +84,7 @@ export default function DataroomGroupPage() {
                       linkText="Learn more"
                       content="Manage Access with Granular Permissions for Data Room Groups"
                       key="groups"
-                      link="https://www.papermark.com/help/article/granular-permissions"
+                      link="https://www.agrowy.com/help/article/granular-permissions"
                     >
                       <CircleHelpIcon className="h-4 w-4 shrink-0 text-muted-foreground hover:text-foreground" />
                     </BadgeTooltip>

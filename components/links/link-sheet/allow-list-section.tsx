@@ -76,7 +76,7 @@ export default function AllowListSection({
       <div className="flex flex-col space-y-4">
         <LinkItem
           title="Allow specified viewers"
-          link="https://www.papermark.com/help/article/allow-list"
+          link="https://www.agrowy.com/help/article/allow-list"
           tooltipContent="Restrict access to a selected group of viewers. Enter allowed emails or domains."
           enabled={enabled}
           isAllowed={isAllowed}
@@ -99,7 +99,7 @@ export default function AllowListSection({
             <Textarea
               className="focus:ring-inset"
               rows={5}
-              placeholder="Enter allowed emails/domains, one per line, e.g.                                      marc@papermark.io                                                                                   @example.org"
+              placeholder="Enter allowed emails/domains, one per line, e.g.                                      marc@agrowy.com                                                                                   @example.org"
               value={allowListInput}
               onChange={handleAllowListChange}
             />

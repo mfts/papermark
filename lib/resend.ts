@@ -42,17 +42,17 @@ export const sendEmail = async ({
   try {
     const { data, error } = await resend.emails.send({
       from: marketing
-        ? "Marc from Papermark <marc@ship.papermark.io>"
+        ? "Marc from Papermark <marc@ship.agrowy.com>"
         : system
-          ? "Papermark <system@papermark.io>"
+          ? "Papermark <system@agrowy.com>"
           : verify
-            ? "Papermark <system@verify.papermark.io>"
+            ? "Papermark <system@verify.agrowy.com>"
             : !!scheduledAt
-              ? "Marc Seitz <marc@papermark.io>"
-              : "Marc from Papermark <marc@papermark.io>",
+              ? "Marc Seitz <marc@agrowy.com>"
+              : "Marc from Papermark <marc@agrowy.com>",
       to: test ? "delivered@resend.dev" : to,
       cc: cc,
-      replyTo: marketing ? "marc@papermark.io" : undefined,
+      replyTo: marketing ? "marc@agrowy.com" : undefined,
       subject,
       react,
       scheduledAt,

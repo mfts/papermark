@@ -225,7 +225,7 @@ export default function Presets() {
                 <BadgeTooltip
                   content="Customize how your content appears when shared on social media."
                   key="verified"
-                  link="https://www.papermark.com/help/article/change-social-media-cards"
+                  link="https://www.agrowy.com/help/article/change-social-media-cards"
                 >
                   <CircleHelpIcon className="h-4 w-4 shrink-0 cursor-pointer text-muted-foreground hover:text-foreground" />
                 </BadgeTooltip>

@@ -903,7 +903,7 @@ export default function PagesViewer({
                             src={
                               loadedImages[index]
                                 ? page.file
-                                : "https://www.papermark.com/_static/blank.gif"
+                                : "https://www.agrowy.com/_static/blank.gif"
                             }
                             alt={`Page ${index + 1}`}
                           />

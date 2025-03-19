@@ -471,7 +471,7 @@ export function AddDocumentModal({
                         <>
                           Upload larger files and more{" "}
                           <Link
-                            href="https://www.papermark.com/help/article/document-types"
+                            href="https://www.agrowy.com/help/article/document-types"
                             target="_blank"
                             className="underline underline-offset-4 transition-all hover:text-muted-foreground/80 hover:dark:text-muted-foreground/80"
                           >
