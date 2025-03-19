@@ -94,6 +94,7 @@ model Team {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  Tag       Tag[]
 }
 
 model Brand {
@@ -163,7 +164,8 @@ model Document {
   folderId String? // Optional Folder ID for documents in folders
   folder   Folder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
 
-  datarooms DataroomDocument[] // Datarooms associated with this document
+  datarooms   DataroomDocument[] // Datarooms associated with this document
+  taggedItems TaggedItem[]
 
   @@index([ownerId])
   @@index([teamId])
@@ -280,10 +282,60 @@ model Link {
   team   Team?   @relation(fields: [teamId], references: [id], onDelete: Cascade)
 
   customFields CustomField[]
+  taggedItems  TaggedItem[]
 
   @@unique([domainSlug, slug])
   @@index([documentId])
   @@index([teamId])
+}
+
+enum TaggableItemType {
+  LINK
+  DOCUMENT
+  DATAROOM
+}
+
+model Tag {
+  id          String       @id @default(uuid())
+  name        String
+  color       String
+  description String?
+  teamId      String
+  team        Team         @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  createdBy   String?
+  taggedItems TaggedItem[]
+
+  @@unique([teamId, name])
+  @@index([teamId])
+  @@index([name])
+  @@index([id])
+}
+
+model TaggedItem {
+  id        String           @id @default(uuid())
+  tagId     String
+  tag       Tag              @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  itemType  TaggableItemType
+  createdAt DateTime         @default(now())
+  taggedBy  String?
+
+  linkId String?
+  link   Link?   @relation(fields: [linkId], references: [id], onDelete: Cascade)
+
+  documentId String?
+  document   Document? @relation(fields: [documentId], references: [id])
+
+  dataroomId String?
+  dataroom   Dataroom? @relation(fields: [dataroomId], references: [id])
+
+  @@index([itemType, linkId])
+  @@index([itemType, documentId])
+  @@index([itemType, dataroomId])
+  @@index([tagId, linkId])
+  @@index([tagId, documentId])
+  @@index([tagId, dataroomId])
 }
 
 model LinkPreset {
@@ -476,8 +528,9 @@ model Dataroom {
   viewerGroups ViewerGroup[]
   brand        DataroomBrand?
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  taggedItems TaggedItem[]
 
   @@index([teamId])
 }

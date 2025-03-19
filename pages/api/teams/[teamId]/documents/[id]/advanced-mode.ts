@@ -1,15 +1,11 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import { DocumentStorageType } from "@prisma/client";
-import { waitUntil } from "@vercel/functions";
 import { getServerSession } from "next-auth/next";
-import { version } from "os";
 
 import { errorhandler } from "@/lib/errorHandler";
 import { copyFileToBucketServer } from "@/lib/files/copy-file-to-bucket-server";
 import prisma from "@/lib/prisma";
-import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
 import { CustomUser } from "@/lib/types";
 
 export default async function handle(

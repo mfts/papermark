@@ -55,11 +55,17 @@ export const BadgeTooltip = ({
   children,
   linkText,
   link,
+  side = "top",
+  align = "center",
+  className,
 }: {
+  className?: string;
+  align?: "start" | "center" | "end";
   link?: string;
-  content: string;
+  content: string | React.ReactNode;
   children: React.ReactNode;
   linkText?: string;
+  side?: "top" | "right" | "bottom" | "left";
 }) => {
   return (
     <Tooltip>
@@ -67,22 +73,32 @@ export const BadgeTooltip = ({
         {children}
       </TooltipTrigger>
       <TooltipPortal>
-        <TooltipContent className="max-w-72 text-center text-muted-foreground">
-          {link ? (
+        <TooltipContent
+          className={cn(
+            "max-w-72 text-center text-muted-foreground",
+            className,
+          )}
+          side={side}
+          sideOffset={8}
+          align={align}
+        >
+          {typeof content === "string" ? (
             <p>
               {content}{" "}
-              <a
-                href={link}
-                className="underline underline-offset-4 transition-all hover:text-gray-800 hover:dark:text-muted-foreground/80"
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={(e) => e.stopPropagation()}
-              >
-                {linkText || "Learn more"}
-              </a>
+              {link && (
+                <a
+                  href={link}
+                  className="underline underline-offset-4 transition-all hover:text-gray-800 hover:dark:text-muted-foreground/80"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {linkText || "Learn more"}
+                </a>
+              )}
             </p>
           ) : (
-            <p>{content}</p>
+            content
           )}
         </TooltipContent>
       </TooltipPortal>
