@@ -59,9 +59,6 @@ export default function FileProcessStatusBar({
     };
   }, [progressStatus.state]);
 
-  console.log("status", progressStatus);
-  console.log("error", progressError);
-
   if (progressStatus.state === "QUEUED" && !progressError) {
     return (
       <Progress
