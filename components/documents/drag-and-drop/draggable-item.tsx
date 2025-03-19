@@ -9,9 +9,10 @@ import { cn } from "@/lib/utils";
 interface DraggableItemProps {
   id: string;
   isSelected: boolean;
-  onSelect: (id: string) => void;
+  onSelect: (id: string, type: "document" | "folder") => void;
   isDraggingSelected: boolean;
   children: React.ReactElement;
+  type: "document" | "folder";
 }
 
 export function DraggableItem({
@@ -20,22 +21,33 @@ export function DraggableItem({
   onSelect,
   isDraggingSelected,
   children,
+  type,
 }: DraggableItemProps) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: id,
     data: {
-      type: "document",
+      type: type,
       id: id,
-      name: children.props.document.name,
-      contentType: children.props.document.type,
+      name:
+        type === "folder"
+          ? children.props.folder.name
+          : children.props.document.name,
+      contentType:
+        type === "folder"
+          ? children.props.folder.type
+          : children.props.document.type,
+      parentFolderId:
+        type === "folder"
+          ? children.props.folder.parentId
+          : children.props.document.folderId,
     },
   });
 
   const [isHovered, setIsHovered] = useState(false);
 
   const handleClick = useCallback(() => {
-    onSelect(id);
-  }, [id, onSelect]);
+    onSelect(id, type);
+  }, [id, onSelect, type]);
 
   const style = {
     opacity: isSelected && isDraggingSelected ? 0.5 : 1,

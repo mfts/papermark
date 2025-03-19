@@ -323,7 +323,8 @@ export default function DocumentsCard({
           open={moveFolderOpen}
           setOpen={setMoveFolderOpen}
           documentIds={[prismaDocument.id]}
-          documentName={prismaDocument.name}
+          itemName={prismaDocument.name}
+          folderParentId={prismaDocument.folderId!}
         />
       ) : null}
 
