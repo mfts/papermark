@@ -65,7 +65,7 @@ export default function LinksTable({
   links,
   primaryVersion,
   mutateDocument,
-isDataroomArchived,
+  isDataroomArchived,
 }: {
   targetType: "DOCUMENT" | "DATAROOM";
   links?: LinkWithViews[];
