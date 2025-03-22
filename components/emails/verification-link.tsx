@@ -13,7 +13,7 @@ import {
 } from "@react-email/components";
 
 const VerificationLinkEmail = ({
-  url = "https://www.papermark.io",
+  url = "https://www.papermark.com",
 }: {
   url: string;
 }) => {

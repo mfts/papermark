@@ -46,6 +46,7 @@ import { LinkOptions } from "./link-options";
 export const DEFAULT_LINK_PROPS = (
   linkType: LinkType,
   groupId: string | null = null,
+  showBanner: boolean = true,
 ) => ({
   id: null,
   name: null,
@@ -71,7 +72,7 @@ export const DEFAULT_LINK_PROPS = (
   questionType: null,
   enableAgreement: false,
   agreementId: null,
-  showBanner: linkType === LinkType.DOCUMENT_LINK ? true : false,
+  showBanner: linkType === LinkType.DOCUMENT_LINK ? showBanner : false,
   enableWatermark: false,
   watermarkConfig: null,
   audienceType: groupId ? LinkAudienceType.GROUP : LinkAudienceType.GENERAL,
@@ -141,13 +142,13 @@ export default function LinkSheet({
   const { isFree, isDatarooms, isDataroomsPlus, isTrial } = usePlan();
   const analytics = useAnalytics();
   const [data, setData] = useState<DEFAULT_LINK_TYPE>(
-    DEFAULT_LINK_PROPS(linkType, groupId),
+    DEFAULT_LINK_PROPS(linkType, groupId, !isDatarooms),
   );
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState<boolean>(false);
 
   useEffect(() => {
-    setData(currentLink || DEFAULT_LINK_PROPS(linkType, groupId));
+    setData(currentLink || DEFAULT_LINK_PROPS(linkType, groupId, !isDatarooms));
   }, [currentLink]);
 
   const handlePreviewLink = async (link: LinkWithViews) => {

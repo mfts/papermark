@@ -47,7 +47,7 @@ const Onboarding3Email = () => {
               <Text className="text-sm">
                 All about Papermark{" "}
                 <a
-                  href="https://www.papermark.io/data-room"
+                  href="https://www.papermark.com/data-room"
                   className="text-blue-500 underline"
                 >
                   Data Rooms
@@ -59,7 +59,7 @@ const Onboarding3Email = () => {
             <Section className="mb-[32px] mt-[32px] text-center">
               <Button
                 className="rounded bg-black text-center text-xs font-semibold text-white no-underline"
-                href={`https://app.papermark.io/datarooms?utm_source=dataroom-info&utm_medium=email&utm_campaign=20240723&utm_content=upload_documents`}
+                href={`https://app.papermark.com/datarooms?utm_source=dataroom-info&utm_medium=email&utm_campaign=20240723&utm_content=upload_documents`}
                 style={{ padding: "12px 20px" }}
               >
                 Create new data room
@@ -81,11 +81,11 @@ const Onboarding3Email = () => {
               <Text className="text-xs">
                 © {new Date().getFullYear()}{" "}
                 <a
-                  href="https://www.papermark.io"
+                  href="https://www.papermark.com"
                   className="text-gray-400 no-underline visited:text-gray-400 hover:text-gray-400"
                   target="_blank"
                 >
-                  papermark.io
+                  papermark.com
                 </a>
               </Text>
               <Text className="text-xs">

@@ -148,6 +148,7 @@ export default function ViewPage() {
                     name: "Q4 Report.pdf",
                     dataroomDocumentId: "1",
                     downloadOnly: false,
+                    canDownload: false,
                     versions: [
                       {
                         id: "1",
@@ -159,6 +160,8 @@ export default function ViewPage() {
                     ],
                   }}
                   linkId="1"
+                  isPreview={false}
+                  allowDownload={false}
                 />
               </ul>
             </div>

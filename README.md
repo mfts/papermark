@@ -7,7 +7,7 @@
 </div>
 
 <div align="center">
-  <a href="https://www.papermark.io">papermark.io</a>
+  <a href="https://www.papermark.com">papermark.com</a>
 </div>
 
 <br/>
