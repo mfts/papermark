@@ -21,6 +21,7 @@ export default function DataroomAnalyticsPage() {
             title={dataroom.name}
             description={dataroom.pId}
             actions={[]}
+            isArchived={dataroom.isArchived}
           />
           <DataroomNavigation dataroomId={dataroom.id} />
         </header>

@@ -476,6 +476,10 @@ model Dataroom {
   viewerGroups ViewerGroup[]
   brand        DataroomBrand?
 
+  isArchived Boolean   @default(false)
+  archivedAt DateTime?
+  archivedBy String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

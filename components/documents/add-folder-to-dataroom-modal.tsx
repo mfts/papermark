@@ -32,12 +32,14 @@ export function AddFolderToDataroomModal({
   folderId,
   folderName,
   dataroomId,
+  isArchived,
 }: {
   open: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
   folderId?: string;
   folderName?: string;
   dataroomId?: string;
+  isArchived?: boolean;
 }) {
   const [selectedDataroom, setSelectedDataroom] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
@@ -52,6 +54,11 @@ export function AddFolderToDataroomModal({
     event.stopPropagation();
 
     if (!selectedDataroom) return;
+
+    if (dataroomId && isArchived) {
+      toast.error("You cannot add a folder to an archived dataroom.");
+      return;
+    }
 
     setLoading(true);
     try {

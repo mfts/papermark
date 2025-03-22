@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
+import { toast } from "sonner";
 
 import { SidebarFolderTreeSelection } from "@/components/datarooms/folders";
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,7 @@ export function MoveToDataroomFolderModal({
   setSelectedDocuments,
   documentIds,
   documentName,
+  isArchived,
 }: {
   open: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
@@ -33,6 +35,7 @@ export function MoveToDataroomFolderModal({
   setSelectedDocuments?: React.Dispatch<React.SetStateAction<string[]>>;
   documentIds: string[];
   documentName?: string;
+  isArchived?: boolean;
 }) {
   const router = useRouter();
   const [selectedFolder, setSelectedFolder] = useState<TSelectedFolder>(null);
@@ -50,6 +53,11 @@ export function MoveToDataroomFolderModal({
     event.stopPropagation();
 
     if (!selectedFolder) return;
+
+    if (dataroomId && isArchived) {
+      toast.error("You cannot move documents to an archived dataroom.");
+      return;
+    }
 
     setLoading(true);
 

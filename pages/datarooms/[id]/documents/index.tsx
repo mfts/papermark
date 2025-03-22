@@ -35,6 +35,7 @@ export default function Documents() {
             title={dataroom?.name ?? ""}
             description={dataroom?.pId ?? ""}
             actions={[]}
+            isArchived={dataroom?.isArchived}
           />
 
           <DataroomNavigation dataroomId={dataroom?.id} />
@@ -110,6 +111,7 @@ export default function Documents() {
                 teamInfo={teamInfo}
                 dataroomId={dataroom?.id!}
                 setIsReordering={setIsReordering}
+                isArchived={!!dataroom?.isArchived}
               />
             ) : (
               <DataroomItemsList
@@ -118,6 +120,7 @@ export default function Documents() {
                 dataroomId={dataroom?.id!}
                 folderCount={folderCount}
                 documentCount={documentCount}
+                isArchived={!!dataroom?.isArchived}
               />
             )}
           </div>

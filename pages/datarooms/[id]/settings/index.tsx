@@ -6,6 +6,7 @@ import { mutate } from "swr";
 
 import { DataroomHeader } from "@/components/datarooms/dataroom-header";
 import { DataroomNavigation } from "@/components/datarooms/dataroom-navigation";
+import { ArchiveDataroom } from "@/components/datarooms/settings/archive-dataroom";
 import DeleteDataroom from "@/components/datarooms/settings/delete-dataroooom";
 import DuplicateDataroom from "@/components/datarooms/settings/duplicate-dataroom";
 import AppLayout from "@/components/layouts/app";
@@ -33,6 +34,7 @@ export default function Settings() {
             title={dataroom.name}
             description={dataroom.pId}
             actions={[]}
+            isArchived={dataroom.isArchived}
           />
 
           <DataroomNavigation dataroomId={dataroom.id} />
@@ -84,6 +86,11 @@ export default function Settings() {
               }
             />
             <DuplicateDataroom dataroomId={dataroom.id} teamId={teamId} />
+            <ArchiveDataroom
+              dataroomId={dataroom.id}
+              teamId={teamId}
+              isArchived={dataroom.isArchived}
+            />
             {isBusiness || isDatarooms || isDataroomsPlus ? (
               <DeleteDataroom
                 dataroomId={dataroom.id}

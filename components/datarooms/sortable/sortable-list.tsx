@@ -44,12 +44,14 @@ export function DataroomSortableList({
   dataroomId,
   folderPathName,
   setIsReordering,
+  isArchived,
 }: {
   mixedItems: FolderOrDocument[] | undefined;
   teamInfo: TeamContextType | null;
   dataroomId: string;
   folderPathName?: string[];
   setIsReordering: (isReordering: boolean) => void;
+  isArchived: boolean;
 }) {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [items, setItems] = useState<FolderOrDocument[]>(mixedItems ?? []);
@@ -151,12 +153,14 @@ export function DataroomSortableList({
             teamInfo={teamInfo}
             isDataroom={!!dataroomId}
             dataroomId={dataroomId}
+            isArchived={isArchived}
           />
         ) : (
           <DataroomDocumentCard
             document={item as DataroomFolderDocument}
             teamInfo={teamInfo}
             dataroomId={dataroomId}
+            isArchived={isArchived}
           />
         )}
       </SortableItem>
@@ -199,12 +203,14 @@ export function DataroomSortableList({
                   teamInfo={teamInfo}
                   isDataroom={!!dataroomId}
                   dataroomId={dataroomId}
+                  isArchived={isArchived}
                 />
               ) : (
                 <DataroomDocumentCard
                   document={activeItem}
                   teamInfo={teamInfo}
                   dataroomId={dataroomId}
+                  isArchived={isArchived}
                 />
               )}
             </div>

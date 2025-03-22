@@ -37,6 +37,7 @@ export default function DataroomAnalyticsPage() {
                 Share
               </Button>,
             ]}
+            isArchived={dataroom.isArchived}
           />
           <DataroomNavigation dataroomId={dataroom.id} />
         </header>
@@ -68,7 +69,11 @@ export default function DataroomAnalyticsPage() {
                 </p>
               </div>
             </div>
-            <LinksTable links={links} targetType={"DATAROOM"} />
+            <LinksTable
+              links={links}
+              targetType={"DATAROOM"}
+              isDataroomArchived={dataroom.isArchived}
+            />
             <LinkSheet
               linkType={"DATAROOM_LINK"}
               isOpen={isLinkSheetOpen}

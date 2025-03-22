@@ -245,6 +245,19 @@ export default async function handle(
       });
     }
 
+    const dataroom = await prisma.dataroom.findUnique({
+      where: {
+        id: targetId,
+      },
+      select: {
+        isArchived: true,
+      },
+    });
+
+    if (targetId && !dataroom) {
+      return res.status(400).json({ error: "Dataroom is archived." });
+    }
+
     // Update the link in the database
     const updatedLink = await prisma.link.update({
       where: { id, teamId },
@@ -273,6 +286,7 @@ export default async function handle(
         metaDescription: linkData.metaDescription || null,
         metaImage: linkData.metaImage || null,
         metaFavicon: linkData.metaFavicon || null,
+        isArchived: dataroom?.isArchived,
         ...(linkData.customFields && {
           customFields: {
             deleteMany: {}, // Delete all existing custom fields
