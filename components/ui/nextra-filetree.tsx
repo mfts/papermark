@@ -40,6 +40,7 @@ interface FolderProps {
   onToggle?: (open: boolean) => void;
   className?: string;
   children: ReactNode;
+  disable?: boolean;
 }
 
 interface FileProps {
@@ -79,6 +80,7 @@ const Folder = memo<FolderProps>(
     defaultOpen = false,
     onToggle,
     className,
+    disable,
   }) => {
     const indent = useIndent();
     const [isOpen, setIsOpen] = useState(defaultOpen || childActive);
@@ -116,6 +118,7 @@ const Folder = memo<FolderProps>(
             "rounded-md text-foreground duration-100 hover:bg-gray-100 hover:dark:bg-muted",
             "px-3 py-1.5 leading-6",
             active && "bg-gray-100 font-semibold dark:bg-muted",
+            disable && "pointer-events-none cursor-auto opacity-50",
             className,
           )}
           onClick={handleFolderClick}

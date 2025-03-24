@@ -55,7 +55,7 @@ export default async function handle(
     let folder: { path: string } | null = null;
     if (folderId) {
       folder = await prisma.folder.findUnique({
-        where: { id: folderId },
+        where: { id: folderId, teamId: teamId },
         select: { path: true },
       });
     }
