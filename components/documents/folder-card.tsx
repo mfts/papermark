@@ -39,12 +39,14 @@ type FolderCardProps = {
   dataroomId?: string;
   isDragging?: boolean;
   isOver?: boolean;
+  isArchived?: boolean;
 };
 export default function FolderCard({
   folder,
   teamInfo,
   isDataroom,
   dataroomId,
+  isArchived,
   isDragging,
   isOver,
 }: FolderCardProps) {
@@ -86,6 +88,11 @@ export default function FolderCard({
     const endpointTargetType =
       isDataroom && dataroomId ? `datarooms/${dataroomId}/folders` : "folders";
 
+    if (isDataroom && isArchived) {
+      toast.error("You cannot delete an archived dataroom folder.");
+      return;
+    }
+
     toast.promise(
       fetch(
         `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/manage/${folderId}`,
@@ -119,6 +126,13 @@ export default function FolderCard({
   const handleCreateDataroom = (e: any, folderId: string) => {
     e.stopPropagation();
     e.preventDefault();
+
+    if (isArchived) {
+      toast.error(
+        "You cannot create a dataroom from an archived dataroom folder.",
+      );
+      return;
+    }
 
     toast.promise(
       fetch(
@@ -226,6 +240,7 @@ export default function FolderCard({
               </DropdownMenuItem>
               {!isDataroom ? (
                 <DropdownMenuItem
+                  disabled={isArchived}
                   onClick={(e) => handleCreateDataroom(e, folder.id)}
                 >
                   <PackagePlusIcon className="mr-2 h-4 w-4" />
@@ -238,6 +253,7 @@ export default function FolderCard({
                   e.stopPropagation();
                   setAddDataroomOpen(true);
                 }}
+                disabled={isArchived}
               >
                 <BetweenHorizontalStartIcon className="mr-2 h-4 w-4" />
                 {isDataroom
@@ -247,6 +263,7 @@ export default function FolderCard({
               <DropdownMenuSeparator />
 
               <DropdownMenuItem
+                disabled={isArchived}
                 onClick={(event) => {
                   event.preventDefault();
                   event.stopPropagation();
@@ -287,6 +304,7 @@ export default function FolderCard({
           folderId={folder.id}
           folderName={folder.name}
           dataroomId={dataroomId}
+          isArchived={isArchived}
         />
       ) : null}
       {deleteModalOpen ? (

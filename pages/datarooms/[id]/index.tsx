@@ -33,6 +33,7 @@ export default function DataroomPage() {
                 Share
               </Button>,
             ]}
+            isArchived={dataroom.isArchived}
           />
 
           <DataroomNavigation dataroomId={dataroom.id} />
@@ -43,7 +44,11 @@ export default function DataroomPage() {
           <StatsCard />
 
           {/* Links */}
-          <LinksTable links={links} targetType={"DATAROOM"} />
+          <LinksTable
+            links={links}
+            targetType={"DATAROOM"}
+            isDataroomArchived={dataroom.isArchived}
+          />
 
           {/* Visitors */}
           <DataroomVisitorsTable dataroomId={dataroom.id} />

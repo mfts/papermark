@@ -55,6 +55,7 @@ export function DataroomItemsList({
   dataroomId,
   folderCount,
   documentCount,
+  isArchived,
 }: {
   mixedItems: FolderOrDocument[] | [];
   teamInfo: TeamContextType | null;
@@ -62,6 +63,7 @@ export function DataroomItemsList({
   dataroomId: string;
   folderCount: number;
   documentCount: number;
+  isArchived: boolean;
 }) {
   const { isMobile } = useMediaQuery();
 
@@ -202,6 +204,7 @@ export function DataroomItemsList({
               teamInfo={teamInfo}
               isDataroom={!!dataroomId}
               dataroomId={dataroomId}
+              isArchived={isArchived}
             />
           ) : (
             <DataroomDocumentCard
@@ -209,6 +212,7 @@ export function DataroomItemsList({
               document={item as DataroomFolderDocument}
               teamInfo={teamInfo}
               dataroomId={dataroomId}
+              isArchived={isArchived}
             />
           )}
         </>
@@ -224,6 +228,7 @@ export function DataroomItemsList({
               teamInfo={teamInfo}
               isDataroom={!!dataroomId}
               dataroomId={dataroomId}
+              isArchived={isArchived}
             />
           </DroppableFolder>
         ) : (
@@ -238,6 +243,7 @@ export function DataroomItemsList({
               document={item as DataroomFolderDocument}
               teamInfo={teamInfo}
               dataroomId={dataroomId}
+              isArchived={isArchived}
             />
           </DraggableItem>
         )}
@@ -375,6 +381,7 @@ export function DataroomItemsList({
                         document={draggedDocument as DataroomFolderDocument}
                         teamInfo={teamInfo}
                         dataroomId={dataroomId}
+                        isArchived={isArchived}
                       />
                     ) : null}
                     {selectedDocuments.length > 1 ? (

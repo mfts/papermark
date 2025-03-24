@@ -42,6 +42,7 @@ type DocumentsCardProps = {
   isDragging?: boolean;
   isSelected?: boolean;
   isHovered?: boolean;
+  isArchived?: boolean;
 };
 export default function DataroomDocumentCard({
   document: dataroomDocument,
@@ -50,6 +51,7 @@ export default function DataroomDocumentCard({
   isDragging,
   isSelected,
   isHovered,
+  isArchived,
 }: DocumentsCardProps) {
   const { theme, systemTheme } = useTheme();
   const isLight =
@@ -106,6 +108,10 @@ export default function DataroomDocumentCard({
   };
 
   const handleRemoveDocument = async (documentId: string) => {
+    if (dataroomId && isArchived) {
+      toast.error("You cannot delete an archived dataroom document.");
+      return;
+    }
     // Prevent the first click from deleting the document
     if (!isFirstClick) {
       setIsFirstClick(true);
@@ -251,6 +257,7 @@ export default function DataroomDocumentCard({
                     e.stopPropagation();
                     setMoveFolderOpen(true);
                   }}
+                  disabled={isArchived}
                 >
                   <FolderInputIcon className="mr-2 h-4 w-4" />
                   Move to folder
@@ -260,6 +267,7 @@ export default function DataroomDocumentCard({
                     e.stopPropagation();
                     setAddDataRoomOpen(true);
                   }}
+                  disabled={isArchived}
                 >
                   <BetweenHorizontalStartIcon className="mr-2 h-4 w-4" />
                   Copy to other dataroom
@@ -267,6 +275,7 @@ export default function DataroomDocumentCard({
                 <DropdownMenuSeparator />
 
                 <DropdownMenuItem
+                  disabled={isArchived}
                   onClick={(event) =>
                     handleButtonClick(event, dataroomDocument.id)
                   }
@@ -310,6 +319,7 @@ export default function DataroomDocumentCard({
           documentId={dataroomDocument.document.id}
           documentName={dataroomDocument.document.name}
           dataroomId={dataroomId}
+          isArchived={isArchived}
         />
       ) : null}
       {moveFolderOpen ? (
@@ -319,6 +329,7 @@ export default function DataroomDocumentCard({
           dataroomId={dataroomDocument.dataroomId}
           documentIds={[dataroomDocument.id]}
           documentName={dataroomDocument.document.name}
+          isArchived={isArchived}
         />
       ) : null}
     </>

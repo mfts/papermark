@@ -65,11 +65,13 @@ export default function LinksTable({
   links,
   primaryVersion,
   mutateDocument,
+  isDataroomArchived,
 }: {
   targetType: "DOCUMENT" | "DATAROOM";
   links?: LinkWithViews[];
   primaryVersion?: DocumentVersion;
   mutateDocument?: () => void;
+  isDataroomArchived?: boolean;
 }) {
   const now = Date.now();
   const router = useRouter();
@@ -268,6 +270,11 @@ export default function LinksTable({
     targetId: string,
     isArchived: boolean,
   ) => {
+    if (targetId && isDataroomArchived) {
+      toast.error("Can not archive dataroom link! Dataroom is archived.");
+      return;
+    }
+
     setIsLoading(true);
 
     const response = await fetch(`/api/links/${linkId}/archive`, {

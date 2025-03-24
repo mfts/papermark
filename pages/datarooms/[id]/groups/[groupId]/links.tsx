@@ -28,6 +28,7 @@ export default function DataroomGroupLinksPage() {
             title={dataroom.name}
             description={dataroom.pId}
             actions={[]}
+            isArchived={dataroom.isArchived}
           />
 
           <DataroomNavigation dataroomId={dataroom.id} />
@@ -43,7 +44,11 @@ export default function DataroomGroupLinksPage() {
             {loading ? (
               <div>Loading...</div>
             ) : (
-              <LinksTable links={links} targetType={"DATAROOM"} />
+              <LinksTable
+                links={links}
+                targetType={"DATAROOM"}
+                isDataroomArchived={dataroom.isArchived}
+              />
             )}
           </div>
         </div>

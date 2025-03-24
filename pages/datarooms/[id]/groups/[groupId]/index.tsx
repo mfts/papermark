@@ -31,6 +31,7 @@ export default function DataroomGroupPage() {
             title={dataroom.name}
             description={dataroom.pId}
             actions={[]}
+            isArchived={dataroom.isArchived}
           />
 
           <DataroomNavigation dataroomId={dataroom.id} />
