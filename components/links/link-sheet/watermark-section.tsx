@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 
-import { motion } from "framer-motion";
 import { SettingsIcon, StampIcon } from "lucide-react";
+import { motion } from "motion/react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -70,7 +70,7 @@ export default function WatermarkSection({
     <div className="pb-5">
       <LinkItem
         title="Apply Watermark"
-        link="https://www.papermark.io/help/article/document-watermark"
+        link="https://www.papermark.com/help/article/document-watermark"
         tooltipContent="Add a dynamic watermark to your content."
         enabled={enabled}
         action={handleWatermarkToggle}

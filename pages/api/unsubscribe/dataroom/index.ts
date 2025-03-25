@@ -2,8 +2,8 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 import prisma from "@/lib/prisma";
 import { ratelimit } from "@/lib/redis";
-import { ZNotificationPreferencesSchema } from "@/lib/types";
 import { verifyUnsubscribeToken } from "@/lib/utils/unsubscribe";
+import { ZViewerNotificationPreferencesSchema } from "@/lib/zod/schemas/notifications";
 
 export default async function handle(
   req: NextApiRequest,
@@ -24,7 +24,7 @@ export default async function handle(
 
     if (req.method === "GET") {
       // For GET requests, redirect to the unsubscribe page
-      return res.redirect(`/unsubscribe?token=${token}`);
+      return res.redirect(`/unsubscribe?type=dataroom&token=${token}`);
     }
 
     // Rate limit the unsubscribe request
@@ -59,6 +59,11 @@ export default async function handle(
 
     const { viewerId, dataroomId, teamId } = payload;
 
+    if (!dataroomId) {
+      res.status(400).json({ message: "Dataroom ID is required" });
+      return;
+    }
+
     // Fetch the current notification preferences
     const viewer = await prisma.viewer.findUnique({
       where: { id: viewerId, teamId },
@@ -85,7 +90,7 @@ export default async function handle(
 
     if (viewer.notificationPreferences) {
       // Parse the existing preferences
-      const defaultPreferences = ZNotificationPreferencesSchema.safeParse(
+      const defaultPreferences = ZViewerNotificationPreferencesSchema.safeParse(
         viewer.notificationPreferences,
       );
 

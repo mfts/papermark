@@ -266,6 +266,7 @@ export type DataroomFolderDocument = DataroomDocument & {
     id: string;
     name: string;
     type: string;
+    versions?: { id: string; hasPages: boolean }[];
     _count: {
       views: number;
       versions: number;
@@ -323,14 +324,20 @@ export function useDataroomViewers({ dataroomId }: { dataroomId: string }) {
   };
 }
 
-export function useDataroomVisits({ dataroomId }: { dataroomId: string }) {
+export function useDataroomVisits({
+  dataroomId,
+  groupId,
+}: {
+  dataroomId: string;
+  groupId?: string;
+}) {
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
 
   const { data: views, error } = useSWR<any[]>(
     teamId &&
       dataroomId &&
-      `/api/teams/${teamId}/datarooms/${dataroomId}/views`,
+      `/api/teams/${teamId}/datarooms/${dataroomId}${groupId ? `/groups/${groupId}` : ""}/views`,
     fetcher,
     {
       dedupingInterval: 10000,

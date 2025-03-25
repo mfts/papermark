@@ -29,14 +29,21 @@ export default async function handle(
     return;
   }
 
-  const { viewId } = req.body as {
+  const { viewId, locationData } = req.body as {
     viewId: string;
+    locationData: {
+      continent: string | null;
+      country: string;
+      region: string;
+      city: string;
+    };
   };
 
   let view: {
     viewType: "DOCUMENT_VIEW" | "DATAROOM_VIEW";
     viewerEmail: string | null;
     linkId: string;
+    link: { name: string | null } | null;
     document: {
       teamId: string | null;
       id: string;
@@ -46,6 +53,9 @@ export default async function handle(
       teamId: string | null;
       id: string;
       name: string;
+    } | null;
+    team: {
+      plan: string | null;
     } | null;
   } | null;
 
@@ -59,6 +69,11 @@ export default async function handle(
         viewType: true,
         viewerEmail: true,
         linkId: true,
+        link: {
+          select: {
+            name: true,
+          },
+        },
         document: {
           select: {
             teamId: true,
@@ -71,6 +86,11 @@ export default async function handle(
             teamId: true,
             id: true,
             name: true,
+          },
+        },
+        team: {
+          select: {
+            plan: true,
           },
         },
       },
@@ -111,6 +131,16 @@ export default async function handle(
     },
   });
 
+  const includeLocation =
+    !view.team?.plan?.includes("free") &&
+    !view.team?.plan?.includes("starter") &&
+    !view.team?.plan?.includes("pro");
+
+  const locationString =
+    locationData.country === "US"
+      ? `${locationData.city}, ${locationData.region}, ${locationData.country}`
+      : `${locationData.city}, ${locationData.country}`;
+
   // POST /api/jobs/send-notification
   try {
     const adminEmail = users.find((user) => user.role === "ADMIN")?.user.email;
@@ -121,10 +151,12 @@ export default async function handle(
         ownerEmail: adminEmail!,
         documentId: view.document!.id,
         documentName: view.document!.name,
+        linkName: view.link!.name || `Link #${view.linkId.slice(-5)}`,
         viewerEmail: view.viewerEmail,
         teamMembers: users
           .map((user) => user.user.email!)
           .filter((email) => email !== adminEmail),
+        locationString: includeLocation ? locationString : undefined,
       });
     } else {
       // send email to dataroom owner that dataroom
@@ -133,9 +165,11 @@ export default async function handle(
         dataroomId: view.dataroom!.id,
         dataroomName: view.dataroom!.name,
         viewerEmail: view.viewerEmail,
+        linkName: view.link!.name || `Link #${view.linkId.slice(-5)}`,
         teamMembers: users
           .map((user) => user.user.email!)
           .filter((email) => email !== adminEmail),
+        locationString: includeLocation ? locationString : undefined,
       });
     }
 

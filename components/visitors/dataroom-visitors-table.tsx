@@ -1,3 +1,4 @@
+import { useTeam } from "@/context/team-context";
 import {
   BadgeCheckIcon,
   BadgeInfoIcon,
@@ -5,8 +6,10 @@ import {
   FileBadgeIcon,
   MailOpenIcon,
 } from "lucide-react";
+import { toast } from "sonner";
 
 import ChevronDown from "@/components/shared/icons/chevron-down";
+import { Button } from "@/components/ui/button";
 import {
   Collapsible,
   CollapsibleContent,
@@ -24,22 +27,68 @@ import {
 import { BadgeTooltip } from "@/components/ui/tooltip";
 
 import { useDataroomVisits } from "@/lib/swr/use-dataroom";
-import { durationFormat, timeAgo } from "@/lib/utils";
+import { timeAgo } from "@/lib/utils";
 
+import DataroomVisitorCustomFields from "./dataroom-visitor-custom-fields";
+import { DataroomVisitorUserAgent } from "./dataroom-visitor-useragent";
 import DataroomVisitHistory from "./dataroom-visitors-history";
 import { VisitorAvatar } from "./visitor-avatar";
 
 export default function DataroomVisitorsTable({
   dataroomId,
+  groupId,
+  name,
 }: {
   dataroomId: string;
+  groupId?: string;
+  name?: string;
 }) {
-  const { views } = useDataroomVisits({ dataroomId });
+  const teamInfo = useTeam();
+  const teamId = teamInfo?.currentTeam?.id;
+  const { views } = useDataroomVisits({ dataroomId, groupId });
+
+  const exportVisitCounts = async (dataroomId: string) => {
+    const formattedTime = new Date().toISOString().replace(/[-:Z]/g, "");
+    try {
+      const response = await fetch(
+        `/api/teams/${teamId}/datarooms/${dataroomId}${groupId ? `/groups/${groupId}` : ""}/export-visits`,
+        { method: "GET" },
+      );
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+
+      // Create blob and download
+      const blob = new Blob([data.visits], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute(
+        "download",
+        `${data.dataroomName}_${name ? `${name}_` : ""}visits_${formattedTime}.csv`,
+      );
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      toast.success("CSV file downloaded successfully");
+    } catch (error) {
+      console.error("Error:", error);
+      toast.error(
+        "An error occurred while downloading the CSV. Please try again.",
+      );
+    }
+  };
 
   return (
     <div className="w-full">
-      <div>
-        <h2 className="mb-2 md:mb-4">All visitors</h2>
+      <div className="mb-2 flex items-center justify-between md:mb-4">
+        <h2>All visitors</h2>
+        <Button size="sm" onClick={() => exportVisitCounts(dataroomId)}>
+          Export visits
+        </Button>
       </div>
       <div className="rounded-md border">
         <Table>
@@ -155,6 +204,16 @@ export default function DataroomVisitorsTable({
 
                     <CollapsibleContent asChild>
                       <>
+                        <TableRow>
+                          <TableCell colSpan={3}>
+                            <DataroomVisitorCustomFields
+                              viewId={view.id}
+                              teamId={view.teamId!}
+                              dataroomId={dataroomId}
+                            />
+                            <DataroomVisitorUserAgent viewId={view.id} />
+                          </TableCell>
+                        </TableRow>
                         <TableRow key={view.id}>
                           <TableCell>
                             <div className="flex items-center gap-x-4 overflow-visible">

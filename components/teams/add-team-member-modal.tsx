@@ -1,11 +1,9 @@
-import { useRouter } from "next/router";
-
-import { useEffect, useState } from "react";
-
+import { useState } from "react";
 import { useTeam } from "@/context/team-context";
 import { toast } from "sonner";
 import { mutate } from "swr";
-import useSWR from 'swr'; 
+
+import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -35,76 +33,51 @@ export function AddTeamMembers({
   const [inviteLinkLoading, setInviteLinkLoading] = useState<boolean>(true);
   const teamInfo = useTeam();
 
-  const [inviteLinkModalOpen, setInviteLinkModalOpen] = useState<boolean>(false);
-  const [inviteLink, setInviteLink] = useState<string | null>(null);
+  const teamId = teamInfo?.currentTeam?.id;
+  const analytics = useAnalytics();
+  const emailSchema = z
+    .string()
+    .trim()
+    .toLowerCase()
+    .min(3, { message: "Please enter a valid email." })
+    .email({ message: "Please enter a valid email." });
 
-  const fetcher = (url: string) => fetch(url).then(res => {
-    if (!res.ok) throw new Error('Failed to fetch');
-    return res.json();
-  });
-
-  const { data, error } = useSWR(
-    teamInfo?.currentTeam?.id ? `/api/teams/${teamInfo.currentTeam.id}/invite-link` : null,
-    fetcher
-  );
-
-  useEffect(() => {
-    if (data) {
-      setInviteLink(data.inviteLink || null);
-    }
-  }, [data]);
-
-  useEffect(() => {
-    setInviteLinkLoading(!inviteLink && !error);
-  }, [inviteLink, error]);
-
-  const handleResetInviteLink = async () => {
-    setInviteLinkLoading(true);
-    try {
-      const linkResponse = await fetch(
-        `/api/teams/${teamInfo?.currentTeam?.id}/invite-link`,
-        {
-          method: "POST",
-        },
-      );
-
-      if (!linkResponse.ok) {
-        throw new Error("Failed to reset invite link");
-      }
-      const linkData = await linkResponse.json();
-      setInviteLink(linkData.inviteLink || null);
-      toast.success("Invite link has been reset!");
-    } catch (error) {
-      toast.error("Error resetting invite link.");
-    } finally {
-      setInviteLinkLoading(false);
-    }
-  };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     event.stopPropagation();
 
-    if (!email) return;
+    const validation = emailSchema.safeParse(email);
+    if (!validation.success) {
+      toast.error(validation.error.errors[0].message);
+      return;
+    }
 
     setLoading(true);
+    const response = await fetch(`/api/teams/${teamId}/invite`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email: validation.data,
+      }),
+    });
 
-    try {
-      const response = await fetch(
-        `/api/teams/${teamInfo?.currentTeam?.id}/invite`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ email }),
-        },
-      );
+    if (!response.ok) {
+      const error = await response.json();
+      setLoading(false);
+      setOpen(false);
+      toast.error(error);
+      return;
+    }
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error);
-      }
+    analytics.capture("Team Member Invitation Sent", {
+      email: validation.data,
+      teamId: teamId,
+    });
+
+    mutate(`/api/teams/${teamId}/invitations`);
 
       toast.success("An invitation email has been sent!");
       setOpen(false);

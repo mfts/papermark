@@ -1,3 +1,5 @@
+import { useRouter } from "next/router";
+
 import { useMemo } from "react";
 
 import { UploadIcon } from "lucide-react";
@@ -7,18 +9,14 @@ import { toast } from "sonner";
 
 import { SUPPORTED_DOCUMENT_MIME_TYPES } from "@/lib/constants";
 import { usePlan } from "@/lib/swr/use-billing";
+import useLimits from "@/lib/swr/use-limits";
 import { bytesToSize } from "@/lib/utils";
 import { fileIcon } from "@/lib/utils/get-file-icon";
+import {
+  getFileSizeLimit,
+  getFileSizeLimits,
+} from "@/lib/utils/get-file-size-limits";
 import { getPagesCount } from "@/lib/utils/get-page-number-count";
-
-const fileSizeLimits: { [key: string]: number } = {
-  "application/vnd.ms-excel": 40, // 40 MB
-  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": 40, // 40 MB
-  "application/vnd.oasis.opendocument.spreadsheet": 40, // 40 MB
-  "image/png": 100, // 100 MB
-  "image/jpeg": 100, // 100 MB
-  "image/jpg": 100, // 100 MB
-};
 
 export default function DocumentUpload({
   currentFile,
@@ -27,14 +25,27 @@ export default function DocumentUpload({
   currentFile: File | null;
   setCurrentFile: React.Dispatch<React.SetStateAction<File | null>>;
 }) {
+  const router = useRouter();
   const { theme, systemTheme } = useTheme();
   const isLight =
     theme === "light" || (theme === "system" && systemTheme === "light");
   const { plan, trial } = usePlan();
+  const { limits } = useLimits();
   const isFreePlan = plan === "free";
   const isTrial = !!trial;
-  const maxSize = isFreePlan && !isTrial ? 30 : 100;
+  // const maxSize = isFreePlan && !isTrial ? 30 : 100;
   const maxNumPages = isFreePlan && !isTrial ? 100 : 500;
+
+  // Get file size limits
+  const fileSizeLimits = useMemo(
+    () =>
+      getFileSizeLimits({
+        limits,
+        isFreePlan,
+        isTrial,
+      }),
+    [limits, isFreePlan, isTrial],
+  );
 
   const { getRootProps, getInputProps } = useDropzone({
     accept:
@@ -73,18 +84,35 @@ export default function DocumentUpload({
             "image/jpg": [], // ".jpg"
             "application/zip": [], // ".zip"
             "application/x-zip-compressed": [], // ".zip"
+            "video/mp4": [], // ".mp4"
+            "video/quicktime": [], // ".mov"
+            "video/x-msvideo": [], // ".avi"
+            "video/webm": [], // ".webm"
+            "video/ogg": [], // ".ogg"
+            "application/vnd.google-earth.kml+xml": [".kml"], // ".kml"
+            "application/vnd.google-earth.kmz": [".kmz"], // ".kmz"
           },
     multiple: false,
-    maxSize: maxSize * 1024 * 1024, // 30 MB
     onDropAccepted: (acceptedFiles) => {
       const file = acceptedFiles[0];
       const fileType = file.type;
-      const fileSizeLimit = fileSizeLimits[fileType] * 1024 * 1024;
+      const fileSizeLimitMB = getFileSizeLimit(fileType, fileSizeLimits); // in MB
+      const fileSizeLimit = fileSizeLimitMB * 1024 * 1024; // in bytes
 
       if (file.size > fileSizeLimit) {
-        toast.error(
-          `File size too big for ${fileType} (max. ${fileSizeLimits[fileType]} MB)`,
-        );
+        const message = `File size too big for ${fileType} (max. ${fileSizeLimitMB} MB)`;
+        if (isFreePlan && !isTrial) {
+          toast.error(message, {
+            description: "Upgrade to a paid plan to increase the limit",
+            action: {
+              label: "Upgrade",
+              onClick: () => router.push("/settings/upgrade"),
+            },
+            duration: 10000,
+          });
+        } else {
+          toast.error(message);
+        }
         return;
       }
 
@@ -112,16 +140,33 @@ export default function DocumentUpload({
       const { errors, file } = fileRejections[0];
       let message;
       if (errors[0].code === "file-too-large") {
-        message = `File size too big (max. ${maxSize} MB)${
-          isFreePlan && !isTrial
-            ? `. Upgrade to a paid plan to increase the limit.`
-            : ""
-        }`;
+        const fileSizeLimitMB = getFileSizeLimit(file.type, fileSizeLimits);
+        message = `File size too big (max. ${fileSizeLimitMB} MB)`;
+        if (isFreePlan && !isTrial) {
+          toast.error(message, {
+            description: "Upgrade to a paid plan to increase the limit",
+            action: {
+              label: "Upgrade",
+              onClick: () => router.push("/settings/upgrade"),
+            },
+            duration: 10000,
+          });
+          return;
+        }
       } else if (errors[0].code === "file-invalid-type") {
         const isSupported = SUPPORTED_DOCUMENT_MIME_TYPES.includes(file.type);
-        message = `File type not supported ${
-          isFreePlan && !isTrial && isSupported ? `on free plan` : ""
-        }`;
+        message = "File type not supported";
+        if (isFreePlan && !isTrial && isSupported) {
+          toast.error(`${message} on free plan`, {
+            description: `Upgrade to a paid plan to upload ${file.type} files`,
+            action: {
+              label: "Upgrade",
+              onClick: () => router.push("/settings/upgrade"),
+            },
+            duration: 10000,
+          });
+          return;
+        }
       } else {
         message = errors[0].message;
       }
@@ -181,8 +226,8 @@ export default function DocumentUpload({
               {currentFile
                 ? "Replace file?"
                 : isFreePlan && !isTrial
-                  ? `Only *.pdf, *.xls, *.xlsx, *.csv, *.ods, *.png, *.jpeg, *.jpg & ${maxSize} MB limit`
-                  : `Only *.pdf, *.pptx, *.docx, *.xlsx, *.xls, *.xlsm, *.csv, *.ods, *.ppt, *.odp, *.doc, *.odt, *.dwg, *.dxf, *.png, *.jpg, *.jpeg & ${maxSize} MB limit`}
+                  ? `Only *.pdf, *.xls, *.xlsx, *.csv, *.ods, *.png, *.jpeg, *.jpg`
+                  : `Only *.pdf, *.pptx, *.docx, *.xlsx, *.xls, *.xlsm, *.csv, *.ods, *.ppt, *.odp, *.doc, *.odt, *.dwg, *.dxf, *.png, *.jpg, *.jpeg, *.mp4, *.mov, *.avi, *.webm, *.ogg`}
             </p>
           </div>
         </div>

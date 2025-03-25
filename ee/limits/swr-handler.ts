@@ -12,10 +12,21 @@ export type LimitProps = {
   customDomainOnPro: boolean;
   customDomainInDataroom: boolean;
   advancedLinkControlsOnPro: boolean | undefined | null;
+  watermarkOnBusiness: boolean | undefined | null;
   usage: {
     documents: number;
     links: number;
+    users: number;
   };
+  fileSizeLimits:
+    | {
+        video: number | undefined;
+        document: number | undefined;
+        image: number | undefined;
+        excel: number | undefined;
+        maxFiles: number | undefined;
+      }
+    | undefined;
 };
 
 export function useLimits() {
@@ -34,11 +45,13 @@ export function useLimits() {
     ? data?.usage?.documents < data?.documents
     : true;
   const canAddLinks = data?.links ? data?.usage?.links < data?.links : true;
+  const canAddUsers = data?.users ? data?.usage?.users < data?.users : true;
 
   return {
     limits: data,
     canAddDocuments,
     canAddLinks,
+    canAddUsers,
     error,
     loading: !data && !error,
   };

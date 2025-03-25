@@ -6,19 +6,25 @@ export const sendViewedDocumentEmail = async ({
   ownerEmail,
   documentId,
   documentName,
+  linkName,
   viewerEmail,
   teamMembers,
+  locationString,
 }: {
   ownerEmail: string | null;
   documentId: string;
   documentName: string;
+  linkName: string;
   viewerEmail: string | null;
   teamMembers?: string[];
+  locationString?: string;
 }) => {
   const emailTemplate = ViewedDocumentEmail({
     documentId,
     documentName,
+    linkName,
     viewerEmail,
+    locationString,
   });
   try {
     if (!ownerEmail) {

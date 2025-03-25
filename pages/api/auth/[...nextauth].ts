@@ -1,5 +1,5 @@
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
-import { PasskeyProvider } from "@teamhanko/passkeys-next-auth-provider";
+import PasskeyProvider from "@teamhanko/passkeys-next-auth-provider";
 import NextAuth, { type NextAuthOptions } from "next-auth";
 import EmailProvider from "next-auth/providers/email";
 import GoogleProvider from "next-auth/providers/google";
@@ -11,6 +11,7 @@ import { sendWelcomeEmail } from "@/lib/emails/send-welcome";
 import hanko from "@/lib/hanko";
 import prisma from "@/lib/prisma";
 import { CreateUserEmailProps, CustomUser } from "@/lib/types";
+import { subscribe } from "@/lib/unsend";
 import { generateChecksum } from "@/lib/utils/generate-checksum";
 
 const VERCEL_DEPLOYMENT = !!process.env.VERCEL_URL;
@@ -88,18 +89,40 @@ export const authOptions: NextAuthOptions = {
         sameSite: "lax",
         path: "/",
         // When working on localhost, the cookie domain must be omitted entirely (https://stackoverflow.com/a/1188145)
-        domain: VERCEL_DEPLOYMENT ? ".papermark.io" : undefined,
+        domain: VERCEL_DEPLOYMENT ? ".papermark.com" : undefined,
         secure: VERCEL_DEPLOYMENT,
       },
     },
   },
   callbacks: {
-    jwt: async ({ token, user }) => {
+    jwt: async (params) => {
+      const { token, user, trigger } = params;
       if (!token.email) {
         return {};
       }
       if (user) {
         token.user = user;
+      }
+      // refresh the user data
+      if (trigger === "update") {
+        const user = token?.user as CustomUser;
+        const refreshedUser = await prisma.user.findUnique({
+          where: { id: user.id },
+        });
+        if (refreshedUser) {
+          token.user = refreshedUser;
+        } else {
+          return {};
+        }
+
+        if (refreshedUser?.email !== user.email) {
+          // if user has changed email, delete all accounts for the user
+          if (user.id && refreshedUser.email) {
+            await prisma.account.deleteMany({
+              where: { userId: user.id },
+            });
+          }
+        }
       }
       return token;
     },
@@ -129,6 +152,10 @@ export const authOptions: NextAuthOptions = {
       });
 
       await sendWelcomeEmail(params);
+
+      if (message.user.email) {
+        await subscribe(message.user.email);
+      }
     },
     async signIn(message) {
       await identifyUser(message.user.email ?? message.user.id);

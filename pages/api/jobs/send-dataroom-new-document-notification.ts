@@ -112,11 +112,11 @@ export default async function handle(
     });
 
     await sendDataroomNotification({
-      dataroomName: document?.dataroom.name ?? "",
+      dataroomName: document?.dataroom?.name || "",
+      documentName: document?.document?.name || "",
       senderEmail: user.email!,
-      documentName: document?.document.name,
-      to: viewer.email,
-      url: `${linkUrl}?email=${encodeURIComponent(viewer.email)}`,
+      to: viewer.email!,
+      url: linkUrl,
       unsubscribeUrl,
     });
 

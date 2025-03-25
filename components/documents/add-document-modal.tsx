@@ -4,6 +4,7 @@ import { useRouter } from "next/router";
 import { FormEvent, useEffect, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
+import { PlanEnum } from "@/ee/stripe/constants";
 import { usePlausible } from "next-plausible";
 import { parsePageId } from "notion-utils";
 import { toast } from "sonner";
@@ -18,7 +19,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -167,6 +174,10 @@ export function AddDocumentModal({
             type: document.type,
             teamId: teamId,
             dataroomId: dataroomId,
+            $set: {
+              teamId: teamId,
+              teamPlan: plan,
+            },
           });
 
           return;
@@ -184,6 +195,10 @@ export function AddDocumentModal({
             path: router.asPath,
             type: document.type,
             teamId: teamId,
+            $set: {
+              teamId: teamId,
+              teamPlan: plan,
+            },
           });
 
           // redirect to the document page
@@ -199,6 +214,10 @@ export function AddDocumentModal({
             type: document.type,
             newVersion: true,
             teamId: teamId,
+            $set: {
+              teamId: teamId,
+              teamPlan: plan,
+            },
           });
           toast.success("New document version uploaded.");
 
@@ -337,6 +356,10 @@ export function AddDocumentModal({
             type: "notion",
             teamId: teamId,
             dataroomId: dataroomId,
+            $set: {
+              teamId: teamId,
+              teamPlan: plan,
+            },
           });
 
           return;
@@ -357,6 +380,10 @@ export function AddDocumentModal({
             path: router.asPath,
             type: "notion",
             teamId: teamId,
+            $set: {
+              teamId: teamId,
+              teamPlan: plan,
+            },
           });
 
           // redirect to the document page
@@ -389,7 +416,7 @@ export function AddDocumentModal({
     if (newVersion) {
       return (
         <UpgradePlanModal
-          clickedPlan="Pro"
+          clickedPlan={PlanEnum.Pro}
           trigger={"limit_upload_document_version"}
         >
           {children}
@@ -397,7 +424,10 @@ export function AddDocumentModal({
       );
     }
     return (
-      <UpgradePlanModal clickedPlan="Pro" trigger={"limit_upload_documents"}>
+      <UpgradePlanModal
+        clickedPlan={PlanEnum.Pro}
+        trigger={"limit_upload_documents"}
+      >
         <Button>Upgrade to Add Documents</Button>
       </UpgradePlanModal>
     );
@@ -410,6 +440,10 @@ export function AddDocumentModal({
         className="border-none bg-transparent text-foreground shadow-none"
         isDocumentDialog
       >
+        <DialogTitle className="sr-only">Add Document</DialogTitle>
+        <DialogDescription className="sr-only">
+          An overlayed modal that can be clicked to upload a document
+        </DialogDescription>
         <Tabs defaultValue="document">
           {!newVersion ? (
             <TabsList className="grid w-full grid-cols-2">
@@ -437,7 +471,7 @@ export function AddDocumentModal({
                         <>
                           Upload larger files and more{" "}
                           <Link
-                            href="https://www.papermark.io/help/article/document-types"
+                            href="https://www.papermark.com/help/article/document-types"
                             target="_blank"
                             className="underline underline-offset-4 transition-all hover:text-muted-foreground/80 hover:dark:text-muted-foreground/80"
                           >

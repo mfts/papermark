@@ -1,7 +1,6 @@
 import { useRef, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
-import { motion } from "framer-motion";
 import {
   ChevronDownIcon,
   CircleCheckIcon,
@@ -12,6 +11,7 @@ import {
   SettingsIcon,
   TrashIcon,
 } from "lucide-react";
+import { motion } from "motion/react";
 import { mutate } from "swr";
 
 import { Button } from "@/components/ui/button";
@@ -82,7 +82,7 @@ export default function DomainCard({
     <>
       <div
         ref={domainRef}
-        className="hover:drop-shadow-card-hover group rounded-xl border border-gray-200 bg-white p-4 transition-[filter] dark:border-gray-400 dark:bg-secondary sm:p-5"
+        className="group rounded-xl border border-gray-200 bg-white p-4 transition-[filter] dark:border-gray-400 dark:bg-secondary sm:p-5"
         onPointerEnter={() => setGroupHover(true)}
         onPointerLeave={() => setGroupHover(false)}
       >

@@ -5,10 +5,10 @@ import { waitUntil } from "@vercel/functions";
 import { hashToken } from "@/lib/api/auth/token";
 import { createDocument } from "@/lib/documents/create-document";
 import { putFileServer } from "@/lib/files/put-file-server";
+import { extractTeamId, isValidWebhookId } from "@/lib/incoming-webhooks";
 import prisma from "@/lib/prisma";
 import { ratelimit } from "@/lib/redis";
 import { getSupportedContentType } from "@/lib/utils/get-content-type";
-import { extractTeamId, isValidWebhookId } from "@/lib/webhooks";
 
 export const config = {
   // in order to enable `waitUntil` function

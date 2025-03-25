@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 
 export default function UnsubscribePage() {
   const router = useRouter();
-  const { token } = router.query as { token: string };
+  const { type, token } = router.query as { type: string; token: string };
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -19,7 +19,7 @@ export default function UnsubscribePage() {
         return;
       }
       setLoading(true);
-      const response = await fetch(`/api/unsubscribe/dataroom?token=${token}`, {
+      const response = await fetch(`/api/unsubscribe/${type}?token=${token}`, {
         method: "POST",
       });
       const data = await response.json();
@@ -42,7 +42,8 @@ export default function UnsubscribePage() {
     <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 p-4">
       <div className="w-full max-w-md rounded-lg bg-white p-8 shadow-md">
         <h1 className="mb-6 text-center text-2xl font-bold">
-          Unsubscribe from Notifications
+          Unsubscribe from {type === "yir" ? "Year in Review" : "Dataroom "}
+          Notifications
         </h1>
 
         {status === "error" ? (
@@ -52,7 +53,7 @@ export default function UnsubscribePage() {
         ) : (
           <p className="mb-6 text-center text-gray-600">
             Click the button below to unsubscribe from notifications for this
-            dataroom.
+            {type === "yir" ? "year in review" : " dataroom"}.
           </p>
         )}
 

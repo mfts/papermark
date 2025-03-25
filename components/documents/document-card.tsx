@@ -4,6 +4,7 @@ import { useRouter } from "next/router";
 import { useEffect, useRef, useState } from "react";
 
 import { TeamContextType } from "@/context/team-context";
+import { PlanEnum } from "@/ee/stripe/constants";
 import {
   BetweenHorizontalStartIcon,
   FolderInputIcon,
@@ -322,7 +323,8 @@ export default function DocumentsCard({
           open={moveFolderOpen}
           setOpen={setMoveFolderOpen}
           documentIds={[prismaDocument.id]}
-          documentName={prismaDocument.name}
+          itemName={prismaDocument.name}
+          folderParentId={prismaDocument.folderId!}
         />
       ) : null}
 
@@ -343,7 +345,7 @@ export default function DocumentsCard({
       ) : null}
       {planModalOpen ? (
         <UpgradePlanModal
-          clickedPlan="Data Rooms"
+          clickedPlan={PlanEnum.DataRooms}
           trigger="datarooms"
           open={planModalOpen}
           setOpen={setPlanModalOpen}

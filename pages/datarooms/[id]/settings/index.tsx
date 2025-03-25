@@ -19,8 +19,7 @@ export default function Settings() {
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
 
-  const { plan } = usePlan();
-  const isDataroomsPlan = plan === "datarooms";
+  const { isBusiness, isDatarooms, isDataroomsPlus } = usePlan();
 
   if (!dataroom) {
     return <div>Loading...</div>;
@@ -44,10 +43,10 @@ export default function Settings() {
           <h1 className="text-2xl font-semibold">Settings</h1>
         </div>
         <div className="mx-auto grid w-full items-start gap-6 md:grid-cols-[180px_1fr] lg:grid-cols-[250px_1fr]">
-          <nav className="grid gap-4 text-sm text-muted-foreground">
+          <nav className="grid gap-2 text-sm text-muted-foreground">
             <Link
               href={`/datarooms/${dataroom.id}/settings`}
-              className="font-semibold text-primary"
+              className="rounded-lg bg-muted px-2 py-1 font-semibold text-primary"
             >
               General
             </Link>
@@ -58,10 +57,10 @@ export default function Settings() {
               description="This is the name of your data room on Papermark."
               inputAttrs={{
                 name: "name",
-                defaultValue: dataroom.name,
                 placeholder: "My Dataroom",
                 maxLength: 32,
               }}
+              defaultValue={dataroom.name}
               helpText="Max 32 characters"
               handleSubmit={(updateData) =>
                 fetch(`/api/teams/${teamId}/datarooms/${dataroom.id}`, {
@@ -69,7 +68,7 @@ export default function Settings() {
                   headers: {
                     "Content-Type": "application/json",
                   },
-                  body: JSON.stringify({ name: updateData.name.trim() }),
+                  body: JSON.stringify(updateData),
                 }).then(async (res) => {
                   if (res.status === 200) {
                     await Promise.all([
@@ -85,7 +84,7 @@ export default function Settings() {
               }
             />
             <DuplicateDataroom dataroomId={dataroom.id} teamId={teamId} />
-            {isDataroomsPlan ? (
+            {isBusiness || isDatarooms || isDataroomsPlus ? (
               <DeleteDataroom
                 dataroomId={dataroom.id}
                 dataroomName={dataroom.name}

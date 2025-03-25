@@ -55,7 +55,7 @@ export default async function handle(
     let folder: { path: string } | null = null;
     if (folderId) {
       folder = await prisma.folder.findUnique({
-        where: { id: folderId },
+        where: { id: folderId, teamId: teamId },
         select: { path: true },
       });
     }
@@ -63,8 +63,6 @@ export default async function handle(
     if (updatedDocuments.count === 0) {
       return res.status(404).end("No documents were updated");
     }
-
-    console.log("Documents moved successfully", updatedDocuments.count);
 
     return res.status(200).json({
       message: "Document moved successfully",

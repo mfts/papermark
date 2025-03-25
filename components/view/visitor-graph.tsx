@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { BarChart } from "@tremor/react";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { signIn } from "next-auth/react";
 
 import { useAnalytics } from "@/lib/analytics";

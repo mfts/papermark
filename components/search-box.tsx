@@ -26,6 +26,7 @@ type SearchBoxProps = {
   onChangeDebounced?: (value: string) => void;
   debounceTimeoutMs?: number;
   inputClassName?: string;
+  placeholder?: string;
 };
 
 const SearchBox = forwardRef(
@@ -38,6 +39,7 @@ const SearchBox = forwardRef(
       onChangeDebounced,
       debounceTimeoutMs = 500,
       inputClassName,
+      placeholder = "Search...",
     }: SearchBoxProps,
     forwardedRef,
   ) => {
@@ -86,7 +88,7 @@ const SearchBox = forwardRef(
             "transition-all focus:border-gray-500 focus:ring-0",
             inputClassName,
           )}
-          placeholder="Search..."
+          placeholder={placeholder}
           value={value}
           onChange={(e) => {
             onChange(e.target.value);

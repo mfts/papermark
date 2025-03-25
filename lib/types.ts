@@ -1,5 +1,6 @@
 import {
   Agreement,
+  CustomField,
   Dataroom,
   DataroomDocument,
   DataroomFolder,
@@ -9,6 +10,7 @@ import {
   Link,
   User as PrismaUser,
   View,
+  ViewerGroupAccessControls,
 } from "@prisma/client";
 import { User as NextAuthUser } from "next-auth";
 import { z } from "zod";
@@ -33,6 +35,11 @@ export interface DocumentWithLinksAndLinkCountAndViewCount extends Document {
 
 export interface DocumentWithVersion extends Document {
   versions: DocumentVersion[];
+  folder: {
+    name: string;
+    path: string;
+  };
+  hasPageLinks: boolean;
 }
 
 export interface LinkWithViews extends Link {
@@ -41,6 +48,7 @@ export interface LinkWithViews extends Link {
   };
   views: View[];
   feedback: { id: true; data: { question: string; type: string } } | null;
+  customFields: CustomField[];
 }
 
 export interface LinkWithDocument extends Link {
@@ -65,6 +73,35 @@ export interface LinkWithDocument extends Link {
     };
   } | null;
   agreement: Agreement | null;
+  customFields: CustomField[];
+}
+
+export interface LinkWithDataroomDocument extends Link {
+  dataroomDocument: DataroomDocument & {
+    document: Document & {
+      versions: {
+        id: string;
+        versionNumber: number;
+        type: string;
+        hasPages: boolean;
+        file: string;
+        isVertical: boolean;
+      }[];
+    };
+  };
+  feedback: {
+    id: string;
+    data: {
+      question: string;
+      type: string;
+    };
+  } | null;
+  agreement: Agreement | null;
+  customFields: CustomField[];
+  teamId: string;
+  team: {
+    plan: string;
+  };
 }
 
 export interface LinkWithDataroom extends Link {
@@ -91,8 +128,13 @@ export interface LinkWithDataroom extends Link {
     }[];
     folders: DataroomFolder[];
     lastUpdatedAt: Date;
+    createdAt: Date;
+  };
+  group?: {
+    accessControls: ViewerGroupAccessControls[];
   };
   agreement: Agreement | null;
+  customFields: CustomField[];
 }
 
 export interface Geo {
@@ -226,11 +268,15 @@ export type AnalyticsEvents =
   | {
       event: "Stripe Billing Portal Clicked";
       teamId: string;
+      action?: string;
     };
 
 export interface Team {
   id: string;
   name?: string;
+  logo?: React.ElementType;
+  plan?: string;
+  createdAt?: Date;
 }
 
 export interface TeamDetail {
@@ -285,13 +331,10 @@ export type WatermarkConfig = z.infer<typeof WatermarkConfigSchema>;
 
 export type NotionTheme = "light" | "dark";
 
-export const ZNotificationPreferencesSchema = z
-  .object({
-    dataroom: z.record(
-      z.object({
-        enabled: z.boolean(),
-      }),
-    ),
-  })
-  .optional()
-  .default({ dataroom: {} });
+export type BasePlan =
+  | "free"
+  | "pro"
+  | "business"
+  | "datarooms"
+  | "datarooms-plus"
+  | "enterprise";

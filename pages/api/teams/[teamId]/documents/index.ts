@@ -1,7 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import { client } from "@/trigger";
 import { DocumentStorageType, Prisma } from "@prisma/client";
 import { getServerSession } from "next-auth/next";
 import { parsePageId } from "notion-utils";
@@ -15,8 +14,11 @@ import {
   convertCadToPdfTask,
   convertFilesToPdfTask,
 } from "@/lib/trigger/convert-files";
+import { processVideo } from "@/lib/trigger/optimize-video-files";
+import { convertPdfToImageRoute } from "@/lib/trigger/pdf-to-image-route";
 import { CustomUser } from "@/lib/types";
 import { getExtension, log } from "@/lib/utils";
+import { conversionQueue } from "@/lib/utils/trigger-utils";
 
 export default async function handle(
   req: NextApiRequest,
@@ -183,7 +185,7 @@ export default async function handle(
     };
 
     try {
-      await getTeamWithUsersAndDocument({
+      const { team } = await getTeamWithUsersAndDocument({
         teamId,
         userId,
       });
@@ -220,7 +222,7 @@ export default async function handle(
       });
 
       // determine if the document is download only
-      const isDownloadOnly = type === "zip";
+      const isDownloadOnly = type === "zip" || type === "map";
 
       // Save data to the database
       const document = await prisma.document.create({
@@ -264,8 +266,6 @@ export default async function handle(
       });
 
       if (type === "docs" || type === "slides") {
-        console.log("converting docx or pptx to pdf");
-        // Trigger convert-files-to-pdf task
         await convertFilesToPdfTask.trigger(
           {
             documentId: document.id,
@@ -273,15 +273,19 @@ export default async function handle(
             teamId,
           },
           {
-            idempotencyKey: `${teamId}-${document.versions[0].id}`,
-            tags: [`team_${teamId}`, `document_${document.id}`],
+            idempotencyKey: `${teamId}-${document.versions[0].id}-docs`,
+            tags: [
+              `team_${teamId}`,
+              `document_${document.id}`,
+              `version:${document.versions[0].id}`,
+            ],
+            queue: conversionQueue(team.plan),
+            concurrencyKey: teamId,
           },
         );
       }
 
       if (type === "cad") {
-        console.log("converting cad to pdf");
-        // Trigger convert-files-to-pdf task
         await convertCadToPdfTask.trigger(
           {
             documentId: document.id,
@@ -289,24 +293,59 @@ export default async function handle(
             teamId,
           },
           {
+            idempotencyKey: `${teamId}-${document.versions[0].id}-cad`,
+            tags: [
+              `team_${teamId}`,
+              `document_${document.id}`,
+              `version:${document.versions[0].id}`,
+            ],
+            queue: conversionQueue(team.plan),
+            concurrencyKey: teamId,
+          },
+        );
+      }
+
+      if (type === "video") {
+        await processVideo.trigger(
+          {
+            videoUrl: fileUrl,
+            teamId,
+            docId: fileUrl.split("/")[1], // Extract doc_xxxx from teamId/doc_xxxx/filename
+            documentVersionId: document.versions[0].id,
+            fileSize: fileSize || 0,
+          },
+          {
             idempotencyKey: `${teamId}-${document.versions[0].id}`,
-            tags: [`team_${teamId}`, `document_${document.id}`],
+            tags: [
+              `team_${teamId}`,
+              `document_${document.id}`,
+              `version:${document.versions[0].id}`,
+            ],
+            queue: conversionQueue(team.plan),
+            concurrencyKey: teamId,
           },
         );
       }
 
       // skip triggering convert-pdf-to-image job for "notion" / "excel" documents
       if (type === "pdf") {
-        // trigger document uploaded event to trigger convert-pdf-to-image job
-        await client.sendEvent({
-          id: document.versions[0].id, // unique eventId for the run
-          name: "document.uploaded",
-          payload: {
-            documentVersionId: document.versions[0].id,
-            teamId: teamId,
+        await convertPdfToImageRoute.trigger(
+          {
             documentId: document.id,
+            documentVersionId: document.versions[0].id,
+            teamId,
           },
-        });
+          {
+            idempotencyKey: `${teamId}-${document.versions[0].id}`,
+            tags: [
+              `team_${teamId}`,
+              `document_${document.id}`,
+              `version:${document.versions[0].id}`,
+            ],
+            queue: conversionQueue(team.plan),
+            concurrencyKey: teamId,
+          },
+        );
       }
 
       return res.status(201).json(document);

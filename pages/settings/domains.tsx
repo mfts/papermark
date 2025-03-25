@@ -46,12 +46,12 @@ export default function Domains() {
                 Domains
               </h3>
               <p className="flx-row flex items-center gap-2 text-sm text-muted-foreground">
-                Manage your custom domain for document sharing
+                Manage your custom domain for sharing documents and data rooms.
                 <BadgeTooltip
                   content="How to connect a custom domain to your link?"
                   key="verified"
                   linkText="Click here"
-                  link="https://www.papermark.io/help/article/how-to-add-custom-domain-to-link"
+                  link="https://www.papermark.com/help/article/how-to-add-custom-domain-to-link"
                 >
                   <CircleHelpIcon className="h-4 w-4 shrink-0 text-muted-foreground hover:text-foreground" />
                 </BadgeTooltip>

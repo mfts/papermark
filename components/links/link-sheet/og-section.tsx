@@ -3,8 +3,8 @@ import { ChangeEvent, useCallback, useEffect, useState } from "react";
 import { useTeam } from "@/context/team-context";
 import { LinkPreset } from "@prisma/client";
 import { Label } from "@radix-ui/react-label";
-import { motion } from "framer-motion";
 import { Upload as ArrowUpTrayIcon, PlusIcon } from "lucide-react";
+import { motion } from "motion/react";
 import useSWRImmutable from "swr/immutable";
 
 import { Input } from "@/components/ui/input";
@@ -171,7 +171,7 @@ export default function OGSection({
       <LinkItem
         tooltipContent="Customize how your content appears when shared on social media."
         title="Custom social media cards"
-        link="https://www.papermark.io/help/article/change-social-media-cards"
+        link="https://www.papermark.com/help/article/change-social-media-cards"
         enabled={enableCustomMetatag}
         action={handleCustomMetatag}
         isAllowed={isAllowed}

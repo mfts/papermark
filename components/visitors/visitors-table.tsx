@@ -1,6 +1,8 @@
 import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
+import { PlanEnum } from "@/ee/stripe/constants";
+import { DocumentVersion } from "@prisma/client";
 import {
   AlertTriangleIcon,
   ArchiveIcon,
@@ -60,10 +62,19 @@ import {
 } from "../ui/pagination";
 import { VisitorAvatar } from "./visitor-avatar";
 import VisitorChart from "./visitor-chart";
+import VisitorClicks from "./visitor-clicks";
+import VisitorCustomFields from "./visitor-custom-fields";
 import VisitorUserAgent from "./visitor-useragent";
 import VisitorUserAgentPlaceholder from "./visitor-useragent-placeholder";
+import VisitorVideoChart from "./visitor-video-chart";
 
-export default function VisitorsTable() {
+export default function VisitorsTable({
+  primaryVersion,
+  isVideo = false,
+}: {
+  primaryVersion: DocumentVersion;
+  isVideo?: boolean;
+}) {
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -392,23 +403,47 @@ export default function VisitorsTable() {
                         <>
                           <TableRow className="hover:bg-transparent">
                             <TableCell colSpan={5}>
+                              {!isFreePlan && (
+                                <VisitorCustomFields
+                                  viewId={view.id}
+                                  teamId={view.teamId!}
+                                  documentId={view.documentId!}
+                                />
+                              )}
                               {!isFreePlan ? (
                                 <VisitorUserAgent viewId={view.id} />
                               ) : (
                                 <VisitorUserAgentPlaceholder />
                               )}
+
                               <div className="pb-0.5 pl-0.5 md:pb-1 md:pl-1">
                                 <div className="flex items-center gap-x-1 px-1">
                                   <FileDigitIcon className="size-4" /> Document
                                   Version {view.versionNumber}
                                 </div>
                               </div>
-                              <VisitorChart
-                                documentId={view.documentId!}
-                                viewId={view.id}
-                                totalPages={view.versionNumPages}
-                                versionNumber={view.versionNumber}
-                              />
+
+                              {isVideo ? (
+                                <VisitorVideoChart
+                                  documentId={view.documentId!}
+                                  viewId={view.id}
+                                  teamId={view.teamId!}
+                                />
+                              ) : (
+                                <VisitorChart
+                                  documentId={view.documentId!}
+                                  viewId={view.id}
+                                  totalPages={view.versionNumPages}
+                                  versionNumber={view.versionNumber}
+                                />
+                              )}
+                              {!isFreePlan && primaryVersion.type === "pdf" ? (
+                                <VisitorClicks
+                                  teamId={view.teamId!}
+                                  documentId={view.documentId!}
+                                  viewId={view.id}
+                                />
+                              ) : null}
                             </TableCell>
                           </TableRow>
                         </>
@@ -443,7 +478,7 @@ export default function VisitorsTable() {
                         Some older visits may not be shown because your document
                         has more than 20 views.{" "}
                       </span>
-                      <UpgradePlanModal clickedPlan="Pro" trigger="">
+                      <UpgradePlanModal clickedPlan={PlanEnum.Pro} trigger="">
                         <button className="underline hover:text-gray-800">
                           Upgrade to see full history
                         </button>

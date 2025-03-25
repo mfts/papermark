@@ -1,7 +1,11 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import React from "react";
 
-import { DataroomBrand, DataroomFolder } from "@prisma/client";
+import {
+  DataroomBrand,
+  DataroomFolder,
+  ViewerGroupAccessControls,
+} from "@prisma/client";
 import * as SheetPrimitive from "@radix-ui/react-dialog";
 import { PanelLeftIcon, XIcon } from "lucide-react";
 
@@ -24,12 +28,19 @@ import {
 
 import { cn } from "@/lib/utils";
 
-import { TDocumentData } from "./dataroom/dataroom-view";
 import DocumentCard from "./dataroom/document-card";
 import FolderCard from "./dataroom/folder-card";
 import DataroomNav from "./dataroom/nav-dataroom";
 
 type FolderOrDocument = DataroomFolder | DataroomDocument;
+
+export type DocumentVersion = {
+  id: string;
+  type: string;
+  versionNumber: number;
+  hasPages: boolean;
+  isVertical: boolean;
+};
 
 type DataroomDocument = {
   dataroomDocumentId: string;
@@ -38,13 +49,9 @@ type DataroomDocument = {
   name: string;
   orderIndex: number | null;
   downloadOnly: boolean;
-  versions: {
-    id: string;
-    type: string;
-    versionNumber: number;
-    hasPages: boolean;
-    isVertical: boolean;
-  }[];
+  versions: DocumentVersion[];
+  canDownload: boolean;
+  canView: boolean;
 };
 
 const getParentFolders = (
@@ -68,30 +75,22 @@ export default function DataroomViewer({
   brand,
   viewId,
   linkId,
-  dataroomViewId,
   dataroom,
   allowDownload,
-  setViewType,
-  setDocumentData,
-  setDataroomVerified,
   isPreview,
   folderId,
   setFolderId,
+  accessControls,
 }: {
   brand: Partial<DataroomBrand>;
   viewId?: string;
   linkId: string;
-  dataroomViewId: string;
   dataroom: any;
   allowDownload: boolean;
-  setViewType: React.Dispatch<
-    React.SetStateAction<"DOCUMENT_VIEW" | "DATAROOM_VIEW">
-  >;
-  setDocumentData: React.Dispatch<React.SetStateAction<TDocumentData | null>>;
-  setDataroomVerified: React.Dispatch<React.SetStateAction<boolean>>;
   isPreview?: boolean;
   folderId: string | null;
   setFolderId: React.Dispatch<React.SetStateAction<string | null>>;
+  accessControls: ViewerGroupAccessControls[];
 }) {
   const { documents, folders } = dataroom as {
     documents: DataroomDocument[];
@@ -111,11 +110,22 @@ export default function DataroomViewer({
         .map((folder) => ({ ...folder, itemType: "folder" })),
       ...(documents || [])
         .filter((doc) => doc.folderId === folderId)
-        .map((doc) => ({ ...doc, itemType: "document" })),
-    ];
+        .map((doc) => {
+          const accessControl = accessControls.find(
+            (access) => access.itemId === doc.dataroomDocumentId,
+          );
 
+          return {
+            ...doc,
+            itemType: "document",
+            canDownload:
+              (accessControl?.canDownload ?? true) &&
+              doc.versions[0].type !== "notion",
+          };
+        }),
+    ];
     return mixedItems.sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
-  }, [folders, documents, folderId]);
+  }, [folders, documents, folderId, accessControls]);
 
   const renderItem = (item: FolderOrDocument) => {
     if ("versions" in item) {
@@ -123,8 +133,10 @@ export default function DataroomViewer({
         <DocumentCard
           key={item.id}
           document={item}
-          setViewType={setViewType}
-          setDocumentData={setDocumentData}
+          linkId={linkId}
+          viewId={viewId}
+          isPreview={!!isPreview}
+          allowDownload={allowDownload}
         />
       );
     }
