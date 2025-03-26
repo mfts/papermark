@@ -3,22 +3,21 @@ import prisma from "@/lib/prisma";
 import { log } from "@/lib/utils";
 import { sendWebhooks } from "@/lib/webhook/send-webhooks";
 
-export async function sendLinkViewWebhook({
+export async function sendLinkCreatedWebhook({
   teamId,
-  clickData,
+  data,
 }: {
   teamId: string;
-  clickData: any;
+  data: any;
 }) {
   try {
     const {
-      view_id: viewId,
       link_id: linkId,
       document_id: documentId,
       dataroom_id: dataroomId,
-    } = clickData;
+    } = data;
 
-    if (!viewId || !linkId || !teamId) {
+    if (!linkId || !teamId) {
       throw new Error("Missing required parameters");
     }
 
@@ -33,7 +32,7 @@ export async function sendLinkViewWebhook({
       where: {
         teamId,
         triggers: {
-          array_contains: ["link.viewed"],
+          array_contains: ["link.created"],
         },
       },
       select: {
@@ -94,36 +93,6 @@ export async function sendLinkViewWebhook({
       updatedAt: link.updatedAt.toISOString(),
     };
 
-    // Get view information
-    const view = await prisma.view.findUnique({
-      where: { id: viewId, linkId },
-      select: {
-        id: true,
-        viewedAt: true,
-        viewerEmail: true,
-        verified: true,
-      },
-    });
-
-    if (!view) {
-      throw new Error("View not found");
-    }
-
-    // Prepare view data for webhook
-    const viewData = {
-      viewedAt: view.viewedAt.toISOString(),
-      viewId: view.id,
-      email: view.viewerEmail,
-      emailVerified: view.verified,
-      country: clickData.country,
-      city: clickData.city,
-      device: clickData.device,
-      browser: clickData.browser,
-      os: clickData.os,
-      ua: clickData.ua,
-      referer: clickData.referer,
-    };
-
     // Get document and dataroom information for webhook in parallel
     const [document, dataroom] = await Promise.all([
       documentId
@@ -147,7 +116,6 @@ export async function sendLinkViewWebhook({
 
     // Prepare webhook payload
     const webhookData = {
-      view: viewData,
       link: linkData,
       ...(document && {
         document: {
@@ -172,14 +140,14 @@ export async function sendLinkViewWebhook({
     if (webhooks.length > 0) {
       await sendWebhooks({
         webhooks,
-        trigger: "link.viewed",
+        trigger: "link.created",
         data: webhookData,
       });
     }
     return;
   } catch (error) {
     log({
-      message: `Error sending webhooks for link view: ${error}`,
+      message: `Error sending webhooks for link created: ${error}`,
       type: "error",
       mention: true,
     });
