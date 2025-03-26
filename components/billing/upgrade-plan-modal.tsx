@@ -76,8 +76,8 @@ const PlanSelector = ({
         className={cn(
           "flex-1 rounded-md px-3 py-1 text-sm transition-colors",
           !value
-            ? "bg-gray-300 text-foreground"
-            : "text-gray-600 hover:text-gray-900",
+            ? "bg-gray-300 text-foreground dark:bg-gray-600 dark:text-white"
+            : "text-gray-600 hover:text-gray-900 dark:text-muted-foreground dark:hover:text-white",
         )}
         onClick={() => onChange(false)}
       >
@@ -87,8 +87,8 @@ const PlanSelector = ({
         className={cn(
           "flex-1 rounded-md px-3 py-1 text-sm transition-colors",
           value
-            ? "bg-gray-900 text-white"
-            : "text-gray-600 hover:text-gray-900",
+            ? "bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900"
+            : "text-gray-600 hover:text-gray-900 dark:text-muted-foreground dark:hover:text-white",
         )}
         onClick={() => onChange(true)}
       >
@@ -223,7 +223,7 @@ export function UpgradePlanModal({
                       "absolute right-2 top-2 rounded px-2 py-1 text-xs text-white",
                       planOption === PlanEnum.Business && "bg-[#fb7a00]",
                       displayPlanName === PlanEnum.DataRoomsPlus &&
-                        "bg-gray-900",
+                        "bg-gray-900 dark:bg-gray-100 dark:text-gray-900",
                     )}
                   >
                     {planOption === PlanEnum.Business && "Most popular"}
