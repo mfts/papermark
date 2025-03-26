@@ -19,16 +19,20 @@ import { Modal } from "@/components/ui/modal";
 
 import { useAnalytics } from "@/lib/analytics";
 
-function DeleteDocumentsModal({
-  showDeleteDocumentsModal,
-  setShowDeleteDocumentsModal,
+function DeleteItemsModal({
+  showDeleteItemsModal,
+  setShowDeleteItemsModal,
   documentIds,
   setSelectedDocuments,
+  folderIds,
+  setSelectedFolder,
 }: {
-  showDeleteDocumentsModal: boolean;
-  setShowDeleteDocumentsModal: Dispatch<SetStateAction<boolean>>;
+  showDeleteItemsModal: boolean;
+  setShowDeleteItemsModal: Dispatch<SetStateAction<boolean>>;
   documentIds: string[];
   setSelectedDocuments: Dispatch<SetStateAction<string[]>>;
+  folderIds: string[];
+  setSelectedFolder: Dispatch<SetStateAction<string[]>>;
 }) {
   const router = useRouter();
   const folderPathName = router.query.name as string[] | undefined;
@@ -47,13 +51,19 @@ function DeleteDocumentsModal({
       setIsValid(false);
     }
   };
+  const parentFolderPath = folderPathName
+    ?.join("/")
+    ?.substring(0, folderPathName?.lastIndexOf("/"));
 
-  async function deleteDocuments(documentIds: string[]) {
+  async function deleteDocumentsAndFolders(
+    documentIds: string[],
+    folderIds: string[],
+  ) {
     return new Promise(async (resolve, reject) => {
       setDeleting(true);
 
       try {
-        const deletePromises = documentIds.map((documentId) =>
+        const deleteDocumentPromises = documentIds.map((documentId) =>
           fetch(
             `/api/teams/${teamInfo?.currentTeam?.id}/documents/${documentId}`,
             {
@@ -73,28 +83,61 @@ function DeleteDocumentsModal({
               team: teamInfo?.currentTeam?.id,
               documentId,
             });
-            return documentId; // Return the ID of the successfully deleted document
+            return documentId;
           }),
         );
 
-        const results = await Promise.allSettled(deletePromises);
+        const deleteFolderPromises = folderIds.map((folderId) =>
+          fetch(
+            `/api/teams/${teamInfo?.currentTeam?.id}/folders/manage/${folderId}`,
+            {
+              method: "DELETE",
+            },
+          ).then(async (res) => {
+            if (!res.ok) {
+              const error = await res.json();
+              throw new Error(
+                `Failed to delete folder ${folderId}: ${error.message}`,
+              );
+            }
+            analytics.capture("Folder Deleted", {
+              team: teamInfo?.currentTeam?.id,
+              folderId,
+            });
+            return folderId;
+          }),
+        );
 
-        const successfullyDeletedDocuments = results
+        const results = await Promise.allSettled([
+          ...deleteDocumentPromises,
+          ...deleteFolderPromises,
+        ]);
+
+        const successfullyDeletedItems = results
           .filter((result) => result.status === "fulfilled")
           .map((result) => (result as PromiseFulfilledResult<string>).value);
 
         const errors = results
           .filter((result) => result.status === "rejected")
           .map((result) => (result as PromiseRejectedResult).reason);
-
-        // Deselect only the successfully deleted documents
+        if (!errors.length) {
+          setShowDeleteItemsModal(false);
+        }
         setSelectedDocuments((prevSelected) =>
-          prevSelected.filter(
-            (id) => !successfullyDeletedDocuments.includes(id),
-          ),
+          prevSelected.filter((id) => !successfullyDeletedItems.includes(id)),
         );
 
-        // Call mutate only once, after all deletions
+        setSelectedFolder((prevSelected) =>
+          prevSelected.filter((id) => !successfullyDeletedItems.includes(id)),
+        );
+
+        await mutate(
+          `/api/teams/${teamInfo?.currentTeam?.id}/folders?root=true`,
+        );
+        await mutate(`/api/teams/${teamInfo?.currentTeam?.id}/folders`);
+        await mutate(
+          `/api/teams/${teamInfo?.currentTeam?.id}/folders${parentFolderPath}`,
+        );
         await mutate(
           `/api/teams/${teamInfo?.currentTeam?.id}/${folderPathName ? `folders/documents/${folderPathName.join("/")}` : "documents"}`,
         );
@@ -110,33 +153,60 @@ function DeleteDocumentsModal({
         setDeleting(false);
         reject((error as Error).message);
       } finally {
-        setShowDeleteDocumentsModal(false);
+        setShowDeleteItemsModal(false);
       }
     });
   }
 
   return (
     <Modal
-      showModal={showDeleteDocumentsModal}
-      setShowModal={setShowDeleteDocumentsModal}
+      showModal={showDeleteItemsModal}
+      setShowModal={setShowDeleteItemsModal}
       noBackdropBlur
     >
       <div className="flex flex-col items-center justify-center space-y-3 border-b border-border bg-white px-4 py-4 pt-8 dark:border-gray-900 dark:bg-gray-900 sm:px-8">
         <DialogTitle className="text-2xl">
-          Delete {documentIds.length} Document{documentIds.length > 1 && "s"}
+          Delete{" "}
+          {documentIds.length > 0 && (
+            <>
+              {documentIds.length} Document{documentIds.length > 1 && "s"}
+            </>
+          )}
+          {documentIds.length > 0 && folderIds.length > 0 && " and "}
+          {folderIds.length > 0 && (
+            <>
+              {folderIds.length} Folder{folderIds.length > 1 && "s"}
+            </>
+          )}
         </DialogTitle>
-        <DialogDescription>
-          Warning: This will permanently delete your selected documents, all
-          associated links and their respective views.
+        <DialogDescription className="space-y-2">
+          {documentIds.length > 0 && (
+            <p>
+              <strong>Documents Warning</strong>: This will permanently delete
+              your selected documents, all associated links and their respective
+              views.  {" "}
+            </p>
+          )}
+          {folderIds.length > 0 && (
+            <p>
+              <strong>Folders Warning</strong>: This will permanently delete the
+              folder and all its contents, including subfolders, documents,
+              dataroom references, and any visitor analytics.
+            </p>
+          )}
         </DialogDescription>
       </div>
 
       <form
         onSubmit={async (e) => {
           e.preventDefault();
-          toast.promise(deleteDocuments(documentIds), {
-            loading: "Deleting documents...",
-            success: "Documents deleted successfully!",
+          const title = `${documentIds.length > 0 ? `${documentIds.length} document${documentIds.length > 1 ? "s" : ""}` : ""}${
+            documentIds.length > 0 && folderIds.length > 0 ? " and " : ""
+          }${folderIds.length > 0 ? `${folderIds.length} folder${folderIds.length > 1 ? "s" : ""}` : ""}`;
+
+          toast.promise(deleteDocumentsAndFolders(documentIds, folderIds), {
+            loading: `Deleting ${title}...`,
+            success: `${title} deleted successfully!`,
             error: (err) => err,
           });
         }}
@@ -168,44 +238,56 @@ function DeleteDocumentsModal({
         </div>
 
         <Button variant="destructive" loading={deleting} disabled={!isValid}>
-          Confirm delete documents
+          Confirm delete
+          {documentIds.length > 0 &&
+            ` ${documentIds.length} document${documentIds.length > 1 ? "s" : ""}`}
+          {documentIds.length > 0 && folderIds.length > 0 && " and"}
+          {folderIds.length > 0 &&
+            ` ${folderIds.length} folder${folderIds.length > 1 ? "s" : ""}`}
         </Button>
       </form>
     </Modal>
   );
 }
 
-export function useDeleteDocumentsModal({
+export function useDeleteDocumentsAndFoldersModal({
   documentIds,
   setSelectedDocuments,
+  folderIds,
+  setSelectedFolder,
 }: {
+  setSelectedFolder: Dispatch<SetStateAction<string[]>>;
+  folderIds: string[];
   documentIds: string[];
   setSelectedDocuments: Dispatch<SetStateAction<string[]>>;
 }) {
-  const [showDeleteDocumentsModal, setShowDeleteDocumentsModal] =
-    useState(false);
+  const [showDeleteItemsModal, setShowDeleteItemsModal] = useState(false);
 
-  const DeleteDocumentsModalCallback = useCallback(() => {
+  const DeleteItemsModalCallback = useCallback(() => {
     return (
-      <DeleteDocumentsModal
-        showDeleteDocumentsModal={showDeleteDocumentsModal}
-        setShowDeleteDocumentsModal={setShowDeleteDocumentsModal}
+      <DeleteItemsModal
+        showDeleteItemsModal={showDeleteItemsModal}
+        setShowDeleteItemsModal={setShowDeleteItemsModal}
         documentIds={documentIds}
         setSelectedDocuments={setSelectedDocuments}
+        folderIds={folderIds}
+        setSelectedFolder={setSelectedFolder}
       />
     );
   }, [
-    showDeleteDocumentsModal,
-    setShowDeleteDocumentsModal,
+    showDeleteItemsModal,
+    setShowDeleteItemsModal,
     documentIds,
     setSelectedDocuments,
+    folderIds,
+    setSelectedFolder,
   ]);
 
   return useMemo(
     () => ({
-      setShowDeleteDocumentsModal,
-      DeleteDocumentsModal: DeleteDocumentsModalCallback,
+      setShowDeleteItemsModal,
+      DeleteItemsModal: DeleteItemsModalCallback,
     }),
-    [setShowDeleteDocumentsModal, DeleteDocumentsModalCallback],
+    [setShowDeleteItemsModal, DeleteItemsModalCallback],
   );
 }

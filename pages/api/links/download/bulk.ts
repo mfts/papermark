@@ -8,6 +8,7 @@ import prisma from "@/lib/prisma";
 
 export const config = {
   maxDuration: 180,
+  memory: 2048,
 };
 
 export default async function handle(
@@ -97,10 +98,10 @@ export default async function handle(
         return res.status(404).json({ error: "Error downloading" });
       }
 
-      // if viewedAt is longer than 30 mins ago, we should not allow the download
+      // if viewedAt is longer than 23 hours ago, we should not allow the download
       if (
         view.viewedAt &&
-        view.viewedAt < new Date(Date.now() - 30 * 60 * 1000)
+        view.viewedAt < new Date(Date.now() - 23 * 60 * 60 * 1000)
       ) {
         return res.status(403).json({ error: "Error downloading" });
       }

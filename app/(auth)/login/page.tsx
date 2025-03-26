@@ -8,6 +8,7 @@ import { useState } from "react";
 import { signInWithPasskey } from "@teamhanko/passkeys-next-auth-provider/client";
 import { signIn } from "next-auth/react";
 import { toast } from "sonner";
+import { z } from "zod";
 
 import { LastUsed, useLastUsed } from "@/components/hooks/useLastUsed";
 import Google from "@/components/shared/icons/google";
@@ -34,7 +35,15 @@ export default function Login() {
     "Continue with Email",
   );
 
-  const isValidEmail = email.length > 0 && validateEmail(email);
+  // const isValidEmail = email.length > 0 && validateEmail(email);
+  const emailSchema = z
+    .string()
+    .trim()
+    .toLowerCase()
+    .min(3, { message: "Please enter a valid email." })
+    .email({ message: "Please enter a valid email." });
+
+  const emailValidation = emailSchema.safeParse(email);
 
   return (
     <div className="flex h-screen w-full flex-wrap">
@@ -59,11 +68,14 @@ export default function Login() {
             className="flex flex-col gap-4 px-4 pt-8 sm:px-16"
             onSubmit={(e) => {
               e.preventDefault();
-              if (!isValidEmail) return;
+              if (!emailValidation.success) {
+                toast.error(emailValidation.error.errors[0].message);
+                return;
+              }
 
               setClickedMethod("email");
               signIn("email", {
-                email: email,
+                email: emailValidation.data,
                 redirect: false,
                 ...(next && next.length > 0 ? { callbackUrl: next } : {}),
               }).then((res) => {
@@ -96,7 +108,7 @@ export default function Login() {
               onChange={(e) => setEmail(e.target.value)}
               className={cn(
                 "flex h-10 w-full rounded-md border-0 bg-background bg-white px-3 py-2 text-sm text-gray-900 ring-1 ring-gray-200 transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 dark:bg-white",
-                email.length > 0 && !isValidEmail
+                email.length > 0 && !emailValidation.success
                   ? "ring-red-500"
                   : "ring-gray-200",
               )}
@@ -105,7 +117,7 @@ export default function Login() {
               <Button
                 type="submit"
                 loading={clickedMethod === "email"}
-                disabled={!isValidEmail || !!clickedMethod}
+                disabled={!emailValidation.success || !!clickedMethod}
                 className={cn(
                   "focus:shadow-outline w-full transform rounded px-4 py-2 text-white transition-colors duration-300 ease-in-out focus:outline-none",
                   clickedMethod === "email"
