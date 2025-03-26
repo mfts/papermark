@@ -39,7 +39,7 @@ const publishWebhookEventToQStash = async ({
 }) => {
   // TODO: add proper domain like app.papermark.dev in dev
   const callbackUrl = new URL(
-    `https://app.papermark.dev/api/webhooks/callback`,
+    `${process.env.NEXT_PUBLIC_BASE_URL}/api/webhooks/callback`,
   );
   callbackUrl.searchParams.append("webhookId", webhook.pId);
   callbackUrl.searchParams.append("eventId", payload.id);
