@@ -458,8 +458,9 @@ export function DataroomItemsList({
           {folderCount > 0 ? (
             <p className="flex items-center gap-x-1 text-sm text-gray-400">
               <FolderIcon className="h-5 w-5" />
-              <span>{folderCount} folders</span>
-              {folderCount} folder{folderCount > 1 ? "s" : ""}
+              <span>
+                {folderCount} folder{folderCount > 1 ? "s" : ""}
+              </span>
             </p>
           ) : null}
           {documentCount > 0 ? (
