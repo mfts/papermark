@@ -10,6 +10,7 @@ import {
   FolderInputIcon,
   Layers2Icon,
   MoreVertical,
+  PencilLineIcon,
   TrashIcon,
 } from "lucide-react";
 import { useTheme } from "next-themes";
@@ -37,6 +38,7 @@ import { useCopyToClipboard } from "@/lib/utils/use-copy-to-clipboard";
 import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
 import { DataroomTrialModal } from "../datarooms/dataroom-trial-modal";
 import { AddToDataroomModal } from "./add-document-to-dataroom-modal";
+import { EditDocumentModal } from "./edit-document-modal";
 import { MoveToFolderModal } from "./move-folder-modal";
 
 type DocumentsCardProps = {
@@ -65,6 +67,7 @@ export default function DocumentsCard({
   const [addDataroomOpen, setAddDataroomOpen] = useState<boolean>(false);
   const [trialModalOpen, setTrialModalOpen] = useState<boolean>(false);
   const [planModalOpen, setPlanModalOpen] = useState<boolean>(false);
+  const [isEditingName, setIsEditingName] = useState<boolean>(false);
 
   const { datarooms } = useDatarooms();
 
@@ -283,6 +286,10 @@ export default function DocumentsCard({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" ref={dropdownRef}>
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuItem onClick={() => setIsEditingName(true)}>
+                <PencilLineIcon className="mr-2 h-4 w-4" />
+                Rename
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setMoveFolderOpen(true)}>
                 <FolderInputIcon className="mr-2 h-4 w-4" />
                 Move to folder
@@ -327,7 +334,14 @@ export default function DocumentsCard({
           folderParentId={prismaDocument.folderId!}
         />
       ) : null}
-
+      {isEditingName ? (
+        <EditDocumentModal
+          open={isEditingName}
+          setOpen={setIsEditingName}
+          documentId={prismaDocument.id}
+          name={prismaDocument.name}
+        />
+      ) : null}
       {addDataroomOpen ? (
         <AddToDataroomModal
           open={addDataroomOpen}
