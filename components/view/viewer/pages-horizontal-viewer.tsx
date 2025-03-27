@@ -725,6 +725,7 @@ export default function PagesHorizontalViewer({
                   style={{ height: "calc(100dvh - 64px)" }}
                 >
                   <Question
+                    accentColor={brand?.accentColor}
                     feedback={feedback}
                     viewId={viewId}
                     submittedFeedback={submittedFeedback}

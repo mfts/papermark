@@ -348,6 +348,7 @@ export default function PagesViewer({
           {enableQuestion && feedback && pageNumber === numPagesWithFeedback ? (
             <div className="flex w-full items-center justify-center">
               <Question
+                accentColor={brand?.accentColor}
                 feedback={feedback}
                 viewId={viewId}
                 submittedFeedback={submittedFeedback}
