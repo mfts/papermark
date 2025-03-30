@@ -91,6 +91,12 @@ export default async function handle(
         },
         orderBy,
         include: {
+          folder: {
+            select: {
+              name: true,
+              path: true,
+            },
+          },
           ...(sort &&
             sort === "lastViewed" && {
               views: {

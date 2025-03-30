@@ -540,3 +540,13 @@ export function hexToRgb(hex: string) {
 }
 
 export const trim = (u: unknown) => (typeof u === "string" ? u.trim() : u);
+
+export const getBreadcrumbPath = (path: string, basePath = "tree") => {
+  const segments = path.split("/").filter(Boolean); // Remove empty strings
+  let currentPath = basePath; // Start with base path
+
+  return segments.map((segment) => {
+    currentPath += `/${segment}`; // Append current segment to path
+    return { name: segment, pathLink: currentPath };
+  });
+};

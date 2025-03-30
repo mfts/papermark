@@ -7,6 +7,8 @@ import { TeamContextType } from "@/context/team-context";
 import { PlanEnum } from "@/ee/stripe/constants";
 import {
   BetweenHorizontalStartIcon,
+  ChevronRight,
+  FolderIcon,
   FolderInputIcon,
   Layers2Icon,
   MoreVertical,
@@ -15,6 +17,13 @@ import {
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
 import { mutate } from "swr";
+
+import useDatarooms from "@/lib/swr/use-datarooms";
+import useLimits from "@/lib/swr/use-limits";
+import { DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
+import { cn, getBreadcrumbPath, nFormatter, timeAgo } from "@/lib/utils";
+import { fileIcon } from "@/lib/utils/get-file-icon";
+import { useCopyToClipboard } from "@/lib/utils/use-copy-to-clipboard";
 
 import BarChart from "@/components/shared/icons/bar-chart";
 import { Button } from "@/components/ui/button";
@@ -26,13 +35,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-import useDatarooms from "@/lib/swr/use-datarooms";
-import useLimits from "@/lib/swr/use-limits";
-import { DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
-import { cn, nFormatter, timeAgo } from "@/lib/utils";
-import { fileIcon } from "@/lib/utils/get-file-icon";
-import { useCopyToClipboard } from "@/lib/utils/use-copy-to-clipboard";
 
 import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
 import { DataroomTrialModal } from "../datarooms/dataroom-trial-modal";
@@ -251,6 +253,17 @@ export default function DocumentsCard({
                   <p className="truncate">{`${prismaDocument._count.versions} Versions`}</p>
                 </>
               ) : null}
+            </div>
+            <div className="mt-1 flex items-center space-x-1 text-xs leading-5 text-muted-foreground">
+              {getBreadcrumbPath(prismaDocument.folder.path).map(
+                (segment, index) => (
+                  <p className="flex items-center gap-x-1 truncate hover:underline">
+                    {index !== 0 && <ChevronRight className="h-3 w-3" />}
+                    <FolderIcon className="h-3 w-3" />
+                    <Link href={segment.pathLink}>{segment.name}</Link>
+                  </p>
+                ),
+              )}
             </div>
           </div>
         </div>
