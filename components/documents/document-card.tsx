@@ -8,6 +8,7 @@ import { PlanEnum } from "@/ee/stripe/constants";
 import {
   BetweenHorizontalStartIcon,
   ChevronRight,
+  FileIcon,
   FolderIcon,
   FolderInputIcon,
   Layers2Icon,
@@ -40,6 +41,7 @@ import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
 import { DataroomTrialModal } from "../datarooms/dataroom-trial-modal";
 import { AddToDataroomModal } from "./add-document-to-dataroom-modal";
 import { MoveToFolderModal } from "./move-folder-modal";
+import DocsIcon from "../shared/icons/files/docs";
 
 type DocumentsCardProps = {
   document: DocumentWithLinksAndLinkCountAndViewCount;
@@ -254,17 +256,37 @@ export default function DocumentsCard({
                 </>
               ) : null}
             </div>
-            <div className="mt-1 flex items-center space-x-1 text-xs leading-5 text-muted-foreground">
-              {getBreadcrumbPath(prismaDocument.folder.path).map(
-                (segment, index) => (
-                  <p className="flex items-center gap-x-1 truncate hover:underline">
-                    {index !== 0 && <ChevronRight className="h-3 w-3" />}
-                    <FolderIcon className="h-3 w-3" />
-                    <Link href={segment.pathLink}>{segment.name}</Link>
-                  </p>
-                ),
-              )}
-            </div>
+            {prismaDocument?.folder?.path ? 
+              <div className="mt-1 flex items-center space-x-1 text-xs leading-5 text-muted-foreground relative z-10">
+                {getBreadcrumbPath(prismaDocument.folder.path).map(
+                  (segment, index) => (
+                    <p
+                      className="flex inset-2 items-center gap-x-1 truncate"
+                      key={segment.pathLink}
+                    >
+                      {index !== 0 && <ChevronRight className="h-3 w-3" />}
+                      <FolderIcon className="h-3 w-3" />
+                      <Link 
+                        href={segment.pathLink}
+                        className="hover:underline relative z-10"
+                      >
+                        {segment.name}
+                      </Link>
+                    </p>
+                  ),
+                )}
+                <p className="flex inset-2 items-center gap-x-1 truncate">
+                  <ChevronRight className="h-3 w-3" />
+                  <FileIcon className="h-3 w-3" />
+                  <Link 
+                    href={`/documents/${prismaDocument.id}`}
+                    className="hover:underline relative z-10"
+                  >
+                    {prismaDocument.name}
+                  </Link>
+                </p>
+              </div> 
+            : null}
           </div>
         </div>
 

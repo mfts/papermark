@@ -541,12 +541,19 @@ export function hexToRgb(hex: string) {
 
 export const trim = (u: unknown) => (typeof u === "string" ? u.trim() : u);
 
-export const getBreadcrumbPath = (path: string, basePath = "tree") => {
+export const deSlugify = (slug: string) => {
+  return slug
+    .split('-')
+    // .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
+
+export const getBreadcrumbPath = (path: string, basePath = "documents/tree") => {
   const segments = path.split("/").filter(Boolean); // Remove empty strings
   let currentPath = basePath; // Start with base path
 
   return segments.map((segment) => {
     currentPath += `/${segment}`; // Append current segment to path
-    return { name: segment, pathLink: currentPath };
+    return { name: deSlugify(segment), pathLink: currentPath };
   });
 };
