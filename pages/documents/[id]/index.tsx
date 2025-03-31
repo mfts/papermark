@@ -108,6 +108,7 @@ export default function DocumentPage() {
             />
 
             <LinkSheet
+              isNotionLink={primaryVersion.type === "notion"}
               isOpen={isLinkSheetOpen}
               linkType="DOCUMENT_LINK"
               setIsOpen={setIsLinkSheetOpen}
