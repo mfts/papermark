@@ -10,6 +10,7 @@ import {
   BetweenHorizontalStartIcon,
   FolderInputIcon,
   MoreVertical,
+  PencilLineIcon,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
@@ -32,6 +33,7 @@ import { cn, nFormatter, timeAgo } from "@/lib/utils";
 import { fileIcon } from "@/lib/utils/get-file-icon";
 
 import { AddToDataroomModal } from "../documents/add-document-to-dataroom-modal";
+import { EditDocumentModal } from "../documents/edit-document-modal";
 import FileProcessStatusBar from "../documents/file-process-status-bar";
 import { MoveToDataroomFolderModal } from "./move-dataroom-folder-modal";
 
@@ -61,6 +63,7 @@ export default function DataroomDocumentCard({
   const [moveFolderOpen, setMoveFolderOpen] = useState<boolean>(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
   const [addDataRoomOpen, setAddDataRoomOpen] = useState<boolean>(false);
+  const [isEditingName, setIsEditingName] = useState<boolean>(false);
 
   /** current folder name */
   const currentFolderPath = router.query.name as string[] | undefined;
@@ -95,7 +98,6 @@ export default function DataroomDocumentCard({
     event.stopPropagation();
     event.preventDefault();
 
-    console.log("isFirstClick", isFirstClick);
     if (isFirstClick) {
       handleRemoveDocument(documentId);
       setIsFirstClick(false);
@@ -232,40 +234,47 @@ export default function DataroomDocumentCard({
                 <span className="ml-1 hidden sm:inline-block">views</span>
               </p>
             </Link>
-
-            <DropdownMenu open={menuOpen} onOpenChange={handleMenuStateChange}>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  // size="icon"
-                  variant="outline"
-                  className="z-10 h-8 w-8 border-gray-200 bg-transparent p-0 hover:bg-gray-200 dark:border-gray-700 hover:dark:bg-gray-700 lg:h-9 lg:w-9"
-                >
-                  <span className="sr-only">Open menu</span>
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" ref={dropdownRef}>
-                <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                <DropdownMenuItem
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setMoveFolderOpen(true);
-                  }}
-                >
-                  <FolderInputIcon className="mr-2 h-4 w-4" />
-                  Move to folder
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setAddDataRoomOpen(true);
-                  }}
-                >
-                  <BetweenHorizontalStartIcon className="mr-2 h-4 w-4" />
-                  Copy to other dataroom
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-
+          <DropdownMenu open={menuOpen} onOpenChange={handleMenuStateChange}>
+            <DropdownMenuTrigger asChild>
+              <Button
+                // size="icon"
+                variant="outline"
+                className="z-10 h-8 w-8 border-gray-200 bg-transparent p-0 hover:bg-gray-200 dark:border-gray-700 hover:dark:bg-gray-700 lg:h-9 lg:w-9"
+              >
+                <span className="sr-only">Open menu</span>
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" ref={dropdownRef}>
+              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsEditingName(true);
+                }}
+              >
+                <PencilLineIcon className="mr-2 h-4 w-4" />
+                Rename
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setMoveFolderOpen(true);
+                }}
+              >
+                <FolderInputIcon className="mr-2 h-4 w-4" />
+                Move to folder
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setAddDataRoomOpen(true);
+                }}
+              >
+                <BetweenHorizontalStartIcon className="mr-2 h-4 w-4" />
+                Copy to other dataroom
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={(event) =>
                     handleButtonClick(event, dataroomDocument.id)
@@ -320,6 +329,16 @@ export default function DataroomDocumentCard({
           documentIds={[dataroomDocument.id]}
           itemName={dataroomDocument.document.name}
           folderIds={[]}
+        />
+      ) : null}
+      {isEditingName ? (
+        <EditDocumentModal
+          open={isEditingName}
+          setOpen={setIsEditingName}
+          documentId={dataroomDocument.document.id}
+          name={dataroomDocument.document.name}
+          dataroomId={dataroomDocument.dataroomId}
+          isDataroom={!!dataroomDocument.dataroomId}
         />
       ) : null}
     </>
