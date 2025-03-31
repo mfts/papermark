@@ -1,8 +1,8 @@
 import { useState } from "react";
-
 import { useTeam } from "@/context/team-context";
 import { toast } from "sonner";
 import { mutate } from "swr";
+
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
@@ -17,8 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
-import { useAnalytics } from "@/lib/analytics";
+import { InviteLinkModal } from "./invite-link-modal";
 
 export function AddTeamMembers({
   open,
@@ -31,7 +30,9 @@ export function AddTeamMembers({
 }) {
   const [email, setEmail] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
+  const [inviteLinkLoading, setInviteLinkLoading] = useState<boolean>(true);
   const teamInfo = useTeam();
+
   const teamId = teamInfo?.currentTeam?.id;
   const analytics = useAnalytics();
   const emailSchema = z
@@ -40,6 +41,7 @@ export function AddTeamMembers({
     .toLowerCase()
     .min(3, { message: "Please enter a valid email." })
     .email({ message: "Please enter a valid email." });
+
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -77,9 +79,13 @@ export function AddTeamMembers({
 
     mutate(`/api/teams/${teamId}/invitations`);
 
-    toast.success("An invitation email has been sent!");
-    setOpen(false);
-    setLoading(false);
+      toast.success("An invitation email has been sent!");
+      setOpen(false);
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -89,27 +95,34 @@ export function AddTeamMembers({
         <DialogHeader className="text-start">
           <DialogTitle>Add Member</DialogTitle>
           <DialogDescription>
-            You can easily add team members.
+            Invite team members via email.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
-          <Label htmlFor="domain" className="opacity-80">
+          <Label htmlFor="email" className="opacity-80">
             Email
           </Label>
           <Input
             id="email"
             placeholder="team@member.com"
-            className="mb-8 mt-1 w-full"
+            className="mb-4 mt-1 w-full"
             onChange={(e) => setEmail(e.target.value)}
           />
-
-          <DialogFooter>
-            <Button type="submit" className="h-9 w-full">
-              {loading ? "Sending email..." : "Add member"}
-            </Button>
-          </DialogFooter>
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading ? "Sending invitation..." : "Send Invitation"}
+          </Button>
         </form>
+
+        <Button onClick={() => setInviteLinkModalOpen(true)} className="w-full">
+          Invite Link
+        </Button>
       </DialogContent>
+      <InviteLinkModal 
+        open={inviteLinkModalOpen} 
+        setOpen={setInviteLinkModalOpen} 
+        inviteLink={inviteLink} 
+        handleResetInviteLink={handleResetInviteLink} 
+      />
     </Dialog>
-  );
+  );  
 }
