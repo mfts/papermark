@@ -35,6 +35,7 @@ export interface DocumentWithLinksAndLinkCountAndViewCount extends Document {
     name: string;
     path: string;
   }
+  folderList: string[];
 }
 
 export interface DocumentWithVersion extends Document {

@@ -58,6 +58,9 @@ export default function DocumentsCard({
   isHovered,
 }: DocumentsCardProps) {
   const router = useRouter();
+   const queryParams = router.query;
+  const searchQuery = queryParams["search"];
+  const sortQuery = queryParams["sort"];
   const { theme, systemTheme } = useTheme();
   const isLight =
     theme === "light" || (theme === "system" && systemTheme === "light");
@@ -256,9 +259,9 @@ export default function DocumentsCard({
                 </>
               ) : null}
             </div>
-            {prismaDocument?.folder?.path ? 
+            {searchQuery || sortQuery ? 
               <div className="mt-1 flex items-center space-x-1 text-xs leading-5 text-muted-foreground relative z-10">
-                {getBreadcrumbPath(prismaDocument.folder.path).map(
+                {getBreadcrumbPath(prismaDocument.folderList).map(
                   (segment, index) => (
                     <p
                       className="flex inset-2 items-center gap-x-1 truncate"

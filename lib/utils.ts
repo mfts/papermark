@@ -1,3 +1,4 @@
+import slugify from "@sindresorhus/slugify";
 import { upload } from "@vercel/blob/client";
 import { Message } from "ai";
 import bcrypt from "bcryptjs";
@@ -541,19 +542,18 @@ export function hexToRgb(hex: string) {
 
 export const trim = (u: unknown) => (typeof u === "string" ? u.trim() : u);
 
-export const deSlugify = (slug: string) => {
-  return slug
-    .split('-')
-    // .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
-};
+export const getBreadcrumbPath = (path: string[]) => {
+  const segments = path.filter(Boolean);
+  let currentPath = "documents/tree";
 
-export const getBreadcrumbPath = (path: string, basePath = "documents/tree") => {
-  const segments = path.split("/").filter(Boolean); // Remove empty strings
-  let currentPath = basePath; // Start with base path
-
-  return segments.map((segment) => {
-    currentPath += `/${segment}`; // Append current segment to path
-    return { name: deSlugify(segment), pathLink: currentPath };
-  });
+  return [
+    { name: "Home", pathLink: "/documents" },
+    ...segments.map((segment, index) => {
+      currentPath += `/${slugify(segment)}`;
+      return { 
+        name: segment, 
+        pathLink: currentPath 
+      };
+    })
+  ];
 };
