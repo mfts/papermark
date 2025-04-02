@@ -59,13 +59,13 @@ const UploadAvatar = ({
           body: JSON.stringify({ image: blobUrl }),
         }).then(async (res) => {
           setUploading(false);
-          if (res.status === 201) {
-            await update();
-            toast.success("Successfully updated your profile picture!");
-          } else {
+          if (!res.ok) {
             const errorMessage = await res.text();
             toast.error(errorMessage || "Something went wrong");
+            return;
           }
+          await update();
+          toast.success("Successfully updated your profile picture!");
         });
       }}
       className="rounded-lg"

@@ -140,14 +140,34 @@ export default function FolderCard({
             folderId: folderId,
           }),
         },
-      ),
+      ).then(async (response) => {
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(
+            errorData.message || "An error occurred while creating dataroom.",
+          );
+        }
+        return response.json();
+      }),
       {
         loading: "Creating dataroom...",
-        success: () => {
+        success: (data) => {
+          toast.dismiss();
+          setMenuOpen(false);
           mutate(`/api/teams/${teamInfo?.currentTeam?.id}/datarooms`);
-          return "Dataroom created successfully.";
+          toast.success(`Successfully created!`, {
+            description: `${folder.name} → ${data.name}`,
+            action: {
+              label: "Open Dataroom",
+              onClick: () => router.push(`/datarooms/${data.id}/documents`),
+            },
+            duration: 10000,
+          });
+          return null;
         },
-        error: "Failed to create dataroom.",
+        error: (error) => {
+          return error.message;
+        },
       },
     );
   };
