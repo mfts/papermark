@@ -58,6 +58,7 @@ export default async function handle(
       const newLinkName = link.name
         ? link.name + " (Copy)"
         : `Link #${link.id.slice(-5)} (Copy)`;
+
       const newLink = await prisma.link.create({
         data: {
           ...link,
@@ -67,6 +68,29 @@ export default async function handle(
           watermarkConfig: link.watermarkConfig || Prisma.JsonNull,
           createdAt: undefined,
           updatedAt: undefined,
+        },
+        include: {
+          ...(link.linkType === "FILE_REQUEST_LINK"
+            ? {
+              folder: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+              dataroomFolder: {
+                select: {
+                  id: true,
+                  name: true,
+                  dataroom: {
+                    select: {
+                      name: true,
+                    },
+                  },
+                },
+              },
+            }
+            : {}),
         },
       });
 

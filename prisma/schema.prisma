@@ -136,6 +136,12 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
+enum DocumentApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 model Document {
   id                   String              @id @default(cuid())
   name                 String
@@ -163,11 +169,23 @@ model Document {
   folderId String? // Optional Folder ID for documents in folders
   folder   Folder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
 
+  viewerId        String?
+  viewer          Viewer?                 @relation(fields: [viewerId], references: [id], onDelete: Cascade)
+  approvalStatus  DocumentApprovalStatus?
+  approvedAt      DateTime?
+  approvedBy      String?
+  rejectionReason String?
+
+  uploadedViaLinkId String?
+  uploadedViaLink   Link?   @relation("UploadedViaLink", fields: [uploadedViaLinkId], references: [id], onDelete: SetNull)
+
   datarooms DataroomDocument[] // Datarooms associated with this document
 
   @@index([ownerId])
   @@index([teamId])
   @@index([folderId])
+  @@index([viewerId])
+  @@index([uploadedViaLinkId])
 }
 
 model DocumentVersion {
@@ -218,8 +236,9 @@ enum DocumentStorageType {
 }
 
 enum LinkType {
-  DOCUMENT_LINK
-  DATAROOM_LINK
+  DOCUMENT_LINK // Regular document sharing link
+  DATAROOM_LINK // Link to a dataroom
+  FILE_REQUEST_LINK // Alternative name for upload link
 }
 
 enum LinkAudienceType {
@@ -264,6 +283,14 @@ model Link {
   enableWatermark            Boolean?   @default(false) // Optional give user a option to enable the watermark
   watermarkConfig            Json? // This will store the watermark configuration: {text: "Confidential", isTiled: false, color: "#000000", fontSize: 12, opacity: 0.5, rotation: 30, position: "top-right"}
 
+  // Configuration for file upload settings
+  maxFiles               Int?            @default(1) // Maximum number of files that can be uploaded
+  uploadFolderId         String? // Target folder for uploaded files
+  folder                 Folder?         @relation(fields: [uploadFolderId], references: [id], onDelete: SetNull)
+  uploadDataroomFolderId String? // Target folder for uploaded files
+  dataroomFolder         DataroomFolder? @relation(fields: [uploadDataroomFolderId], references: [id], onDelete: SetNull)
+  requireApproval        Boolean?        @default(false)
+
   // group links
   audienceType LinkAudienceType @default(GENERAL) // This will store the audience type of the link
   groupId      String?
@@ -280,6 +307,8 @@ model Link {
   team   Team?   @relation(fields: [teamId], references: [id], onDelete: Cascade)
 
   customFields CustomField[]
+
+  uploadedDocuments Document[] @relation("UploadedViaLink")
 
   @@unique([domainSlug, slug])
   @@index([documentId])
@@ -323,30 +352,35 @@ model Domain {
 }
 
 model View {
-  id                String             @id @default(cuid())
-  link              Link               @relation(fields: [linkId], references: [id])
-  linkId            String
-  document          Document?          @relation(fields: [documentId], references: [id], onDelete: Cascade)
-  documentId        String?
-  dataroom          Dataroom?          @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
-  dataroomId        String?
-  dataroomViewId    String? // This is the view ID from the dataroom
-  viewerEmail       String? // Email of the viewer if known
-  viewerName        String? // Name of the viewer if known
-  verified          Boolean            @default(false) // Whether the viewer email has been verified
-  viewedAt          DateTime           @default(now())
-  downloadedAt      DateTime? // This is the time the document was downloaded
-  reactions         Reaction[]
-  viewType          ViewType           @default(DOCUMENT_VIEW)
-  viewerId          String? // This is the viewer ID from the dataroom
-  viewer            Viewer?            @relation(fields: [viewerId], references: [id], onDelete: Cascade)
-  groupId           String? // This is the group ID from the dataroom
-  group             ViewerGroup?       @relation(fields: [groupId], references: [id], onDelete: SetNull)
-  feedbackResponse  FeedbackResponse?
-  agreementResponse AgreementResponse?
+  id                  String               @id @default(cuid())
+  link                Link                 @relation(fields: [linkId], references: [id])
+  linkId              String
+  document            Document?            @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  documentId          String?
+  dataroom            Dataroom?            @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
+  dataroomId          String?
+  dataroomViewId      String? // This is the view ID from the dataroom
+  viewerEmail         String? // Email of the viewer if known
+  viewerName          String? // Name of the viewer if known
+  verified            Boolean              @default(false) // Whether the viewer email has been verified
+  viewedAt            DateTime             @default(now())
+  downloadedAt        DateTime? // This is the time the document was downloaded
+  reactions           Reaction[]
+  viewType            ViewType             @default(DOCUMENT_VIEW)
+  viewerId            String? // This is the viewer ID from the dataroom or file request view
+  viewer              Viewer?              @relation(fields: [viewerId], references: [id], onDelete: Cascade)
+  groupId             String? // This is the group ID from the dataroom
+  group               ViewerGroup?         @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  feedbackResponse    FeedbackResponse?
+  agreementResponse   AgreementResponse?
   customFieldResponse CustomFieldResponse?
 
   isArchived Boolean @default(false) // Indicates if the view is archived and not counted in the analytics
+  uploadDocumentIds String[]
+  uploadFolderId String?
+  uploadDataroomFolderId String?
+  uploadFolder        Folder?              @relation(fields: [uploadFolderId], references: [id], onDelete: SetNull, name: "UploadedViaFolder")
+  uploadDataroomFolder DataroomFolder?     @relation(fields: [uploadDataroomFolderId], references: [id], onDelete: SetNull, name: "UploadedViaDataroomFolder")
 
   teamId String?
   team   Team?   @relation(fields: [teamId], references: [id], onDelete: Cascade)
@@ -361,6 +395,7 @@ model View {
 enum ViewType {
   DOCUMENT_VIEW
   DATAROOM_VIEW
+  FILE_REQUEST_VIEW
 }
 
 model Viewer {
@@ -380,6 +415,8 @@ model Viewer {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  documents Document[]
 
   @@unique([teamId, email])
   @@index([teamId])
@@ -457,6 +494,8 @@ model Folder {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  links     Link[]
+  views     View[]   @relation("UploadedViaFolder")
 
   @@unique([teamId, path])
   @@index([parentId])
@@ -514,6 +553,8 @@ model DataroomFolder {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  links     Link[]
+  views     View[]   @relation("UploadedViaDataroomFolder")
 
   @@unique([dataroomId, path])
   @@index([parentId])

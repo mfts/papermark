@@ -65,6 +65,11 @@ export default async function handle(
           createdAt: "desc",
         },
         include: {
+          viewer: {
+            select: {
+              email: true,
+            },
+          },
           _count: {
             select: { links: true, views: true, versions: true },
           },

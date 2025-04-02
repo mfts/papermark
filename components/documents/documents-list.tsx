@@ -485,7 +485,10 @@ export function DocumentsList({
 
             {documents && documents.length === 0 && (
               <div className="flex items-center justify-center">
-                <EmptyDocuments />
+                <EmptyDocuments
+                  title="No documents here"
+                  description="Get started by uploading a new document."
+                />
               </div>
             )}
           </div>
@@ -641,7 +644,10 @@ export function DocumentsList({
 
                 {documents && documents.length === 0 && (
                   <div className="flex items-center justify-center">
-                    <EmptyDocuments />
+                    <EmptyDocuments
+                      title="No documents here"
+                      description="Get started by uploading a new document."
+                    />
                   </div>
                 )}
               </div>

@@ -30,6 +30,9 @@ export interface DocumentWithLinksAndLinkCountAndViewCount extends Document {
     views: number;
     versions: number;
   };
+  viewer: {
+    email: string;
+  };
   links: Link[];
 }
 
@@ -49,6 +52,17 @@ export interface LinkWithViews extends Link {
   views: View[];
   feedback: { id: true; data: { question: string; type: string } } | null;
   customFields: CustomField[];
+  folder?: {
+    id: string;
+    name: string;
+  };
+  dataroomFolder?: {
+    id: string;
+    name: string;
+    dataroom: {
+      name: string;
+    };
+  };
 }
 
 export interface LinkWithDocument extends Link {
@@ -101,6 +115,36 @@ export interface LinkWithDataroomDocument extends Link {
   teamId: string;
   team: {
     plan: string;
+  };
+}
+
+export interface LinkWithRequestFile extends Link {
+  feedback: {
+    id: string;
+    data: {
+      question: string;
+      type: string;
+    };
+  } | null;
+  agreement: Agreement | null;
+  customFields: CustomField[];
+  teamId: string;
+  team: {
+    plan: string;
+    id: string;
+  };
+  folder: {
+    id: string;
+    name: string;
+    path: string;
+    parentId: string;
+  };
+  dataroomFolder: {
+    id: string;
+    name: string;
+    path: string;
+    dataroomId: string;
+    parentId: string;
   };
 }
 

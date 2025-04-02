@@ -1,4 +1,4 @@
-type FileSizeLimits = {
+export type FileSizeLimits = {
   video: number;
   document: number;
   image: number;

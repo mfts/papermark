@@ -86,6 +86,12 @@ export default async function handle(
               id: true,
               name: true,
               type: true,
+              approvalStatus: true,
+              viewer: {
+                select: {
+                  email: true,
+                },
+              },
               versions: {
                 select: { id: true, hasPages: true },
               },

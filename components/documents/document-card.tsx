@@ -7,6 +7,7 @@ import { TeamContextType } from "@/context/team-context";
 import { PlanEnum } from "@/ee/stripe/constants";
 import {
   BetweenHorizontalStartIcon,
+  CheckCircle,
   FolderInputIcon,
   Layers2Icon,
   MoreVertical,
@@ -38,6 +39,7 @@ import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
 import { DataroomTrialModal } from "../datarooms/dataroom-trial-modal";
 import { AddToDataroomModal } from "./add-document-to-dataroom-modal";
 import { MoveToFolderModal } from "./move-folder-modal";
+import { ApprovalStatusBadge } from "./approval-status-badge";
 
 type DocumentsCardProps = {
   document: DocumentWithLinksAndLinkCountAndViewCount;
@@ -46,6 +48,7 @@ type DocumentsCardProps = {
   isSelected?: boolean;
   isHovered?: boolean;
 };
+
 export default function DocumentsCard({
   document: prismaDocument,
   teamInfo,
@@ -190,6 +193,31 @@ export default function DocumentsCard({
     );
   };
 
+  const handleApproveDocument = async (
+    event: React.MouseEvent<HTMLDivElement>,
+    documentId: string,
+  ) => {
+    event.stopPropagation();
+    event.preventDefault();
+
+    toast.promise(
+      fetch(
+        `/api/teams/${teamInfo?.currentTeam?.id}/documents/${documentId}/approve`,
+        { method: "POST" },
+      ).then(() => {
+        mutate(`/api/teams/${teamInfo?.currentTeam?.id}/documents`);
+        mutate(
+          `/api/teams/${teamInfo?.currentTeam?.id}/folders/documents/${currentFolderPath?.join("/")}`,
+        );
+      }),
+      {
+        loading: "Approving document...",
+        success: "Document approved successfully.",
+        error: "Failed to approve document. Try again.",
+      },
+    );
+  };
+
   return (
     <>
       <div
@@ -213,15 +241,28 @@ export default function DocumentsCard({
 
           <div className="flex-col">
             <div className="flex items-center">
-              <h2 className="min-w-0 max-w-[250px] truncate text-sm font-semibold leading-6 text-foreground sm:max-w-md">
-                <Link
-                  href={`/documents/${prismaDocument.id}`}
-                  className="w-full truncate"
-                >
-                  <span>{prismaDocument.name}</span>
-                  <span className="absolute inset-0" />
-                </Link>
-              </h2>
+              <div className="flex items-center gap-2">
+                <h2 className="min-w-0 max-w-[250px] truncate text-sm font-semibold leading-6 text-foreground sm:max-w-md">
+                  {prismaDocument.approvalStatus !== "PENDING" ? (
+                    <Link
+                      href={`/documents/${prismaDocument.id}`}
+                      className="w-full truncate"
+                    >
+                      <span className="flex items-center gap-1">
+                        {prismaDocument.name}
+                      </span>
+                      <span className="absolute inset-0" />
+                    </Link>
+                  ) : (
+                    <span className="flex w-full cursor-not-allowed items-center gap-1 truncate text-gray-400">
+                      {prismaDocument.name}
+                    </span>
+                  )}
+                </h2>
+                {prismaDocument.approvalStatus === "PENDING" && (
+                  <ApprovalStatusBadge status={prismaDocument.approvalStatus} />
+                )}
+              </div>
               {/* <div className="ml-2 flex">
                 <button
                   className="group z-10 rounded-md bg-gray-200 p-1 transition-all duration-75 hover:scale-105 hover:bg-emerald-100 active:scale-95 dark:bg-gray-700 hover:dark:bg-emerald-200"
@@ -249,6 +290,14 @@ export default function DocumentsCard({
                 <>
                   <p>•</p>
                   <p className="truncate">{`${prismaDocument._count.versions} Versions`}</p>
+                </>
+              ) : null}
+              {prismaDocument?.viewer?.email ? (
+                <>
+                  <p>•</p>
+                  <p className="truncate">
+                    Added by {prismaDocument.viewer.email}
+                  </p>
                 </>
               ) : null}
             </div>
@@ -291,7 +340,7 @@ export default function DocumentsCard({
               {/* <DropdownMenuItem
                 onClick={(e) => handleDuplicateDocument(e)}
                 disabled={!canAddDocuments}
-              >
+                >
                 <Layers2Icon className="mr-2 h-4 w-4" />
                 Duplicate document
               </DropdownMenuItem> */}
@@ -301,6 +350,14 @@ export default function DocumentsCard({
                   Add to dataroom
                 </DropdownMenuItem>
               )}
+              {prismaDocument.approvalStatus === "PENDING" ? (
+                <DropdownMenuItem
+                  onClick={(e) => handleApproveDocument(e, prismaDocument.id)}
+                >
+                  <CheckCircle className="mr-2 h-4 w-4" />
+                  Approve document
+                </DropdownMenuItem>
+              ) : null}
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={(event) => handleButtonClick(event, prismaDocument.id)}

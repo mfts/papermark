@@ -14,10 +14,12 @@ export const putFile = async ({
   file,
   teamId,
   docId,
+  viewerId,
 }: {
   file: File;
   teamId: string;
   docId?: string;
+  viewerId?: string;
 }): Promise<{
   type: DocumentStorageType | null;
   data: string | null;
@@ -29,7 +31,7 @@ export const putFile = async ({
   const { type, data, numPages, fileSize } = await match(
     NEXT_PUBLIC_UPLOAD_TRANSPORT,
   )
-    .with("s3", async () => putFileInS3({ file, teamId, docId }))
+    .with("s3", async () => putFileInS3({ file, teamId, docId, viewerId }))
     .with("vercel", async () => putFileInVercel(file))
     .otherwise(() => {
       return {
@@ -67,10 +69,12 @@ const putFileInS3 = async ({
   file,
   teamId,
   docId,
+  viewerId,
 }: {
   file: File;
   teamId: string;
   docId?: string;
+  viewerId?: string;
 }) => {
   if (!docId) {
     docId = newId("doc");
@@ -99,6 +103,7 @@ const putFileInS3 = async ({
         contentType: file.type,
         teamId: teamId,
         docId: docId,
+        viewerId: viewerId,
       }),
     },
   );

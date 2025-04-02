@@ -1,4 +1,4 @@
-import { DocumentStorageType } from "@prisma/client";
+import { DocumentApprovalStatus, DocumentStorageType } from "@prisma/client";
 
 export type DocumentData = {
   name: string;
@@ -16,6 +16,11 @@ export const createDocument = async ({
   folderPathName,
   createLink = false,
   token,
+  viewerId,
+  approvalStatus,
+  uploadedViaLinkId,
+  dataroomId,
+  viewId
 }: {
   documentData: DocumentData;
   teamId: string;
@@ -23,10 +28,15 @@ export const createDocument = async ({
   folderPathName?: string;
   createLink?: boolean;
   token?: string;
+  viewerId?: string;
+  approvalStatus?: DocumentApprovalStatus;
+  uploadedViaLinkId?: string;
+  dataroomId?: string;
+  viewId?: string;
 }) => {
   // create a document in the database with the blob url
   const response = await fetch(
-    `${process.env.NEXT_PUBLIC_BASE_URL}/api/teams/${teamId}/documents`,
+    `${process.env.NEXT_PUBLIC_BASE_URL}/api/teams/${teamId}/documents${viewerId ? `/viewer/${viewerId}` : ""}`,
     {
       method: "POST",
       headers: {
@@ -43,6 +53,13 @@ export const createDocument = async ({
         contentType: documentData.contentType,
         createLink: createLink,
         fileSize: documentData.fileSize,
+        ...(viewerId && {
+          viewId: viewId,
+          viewerId: viewerId,
+          approvalStatus: approvalStatus,
+          uploadedViaLinkId: uploadedViaLinkId,
+          dataroomId: dataroomId ,
+        }),
       }),
     },
   );

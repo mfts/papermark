@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
-import { Domain } from "@prisma/client";
+import { Domain, LinkType } from "@prisma/client";
 import { mutate } from "swr";
 
 import { AddDomainModal } from "@/components/domains/add-domain-modal";
@@ -34,7 +34,7 @@ export default function DomainSection({
   data: DEFAULT_LINK_TYPE;
   setData: Dispatch<SetStateAction<DEFAULT_LINK_TYPE>>;
   domains?: Domain[];
-  linkType: "DOCUMENT_LINK" | "DATAROOM_LINK";
+  linkType: LinkType;
   editLink?: boolean;
 }) {
   const [isModalOpen, setModalOpen] = useState(false);

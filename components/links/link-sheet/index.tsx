@@ -35,12 +35,14 @@ import { ButtonTooltip } from "@/components/ui/tooltip";
 import { useAnalytics } from "@/lib/analytics";
 import { usePlan } from "@/lib/swr/use-billing";
 import useDataroomGroups from "@/lib/swr/use-dataroom-groups";
+import useDatarooms from "@/lib/swr/use-datarooms";
 import { useDomains } from "@/lib/swr/use-domains";
 import { LinkWithViews, WatermarkConfig } from "@/lib/types";
 import { convertDataUrlToFile, uploadImage } from "@/lib/utils";
 
 import { CustomFieldData } from "./custom-fields-panel";
 import DomainSection from "./domain-section";
+import FolderSelectionSection from "./folder-selection-section";
 import { LinkOptions } from "./link-options";
 
 export const DEFAULT_LINK_PROPS = (
@@ -78,6 +80,15 @@ export const DEFAULT_LINK_PROPS = (
   audienceType: groupId ? LinkAudienceType.GROUP : LinkAudienceType.GENERAL,
   groupId: groupId,
   customFields: [],
+  ...(linkType === "FILE_REQUEST_LINK"
+    ? {
+      maxFiles: 1,
+      uploadFolderId: null,
+      uploadDataroomFolderId: null,
+      requireApproval: false, // Auto-approve uploads by default
+      selectedFolderName: null,
+    }
+    : {}),
 });
 
 export type DEFAULT_LINK_TYPE = {
@@ -111,6 +122,13 @@ export type DEFAULT_LINK_TYPE = {
   audienceType: LinkAudienceType;
   groupId: string | null;
   customFields: CustomFieldData[];
+  // for FILE_REQUEST_LINK
+  maxFiles?: number;
+  uploadFolderId?: string | null;
+  uploadDataroomFolderId?: string | null;
+  selectedFolderName?: string | null;
+  requireApproval?: boolean;
+  dataroomName?: string | null;
 };
 
 export default function LinkSheet({
@@ -132,7 +150,7 @@ export default function LinkSheet({
     groupId?: string;
   };
   const { domains } = useDomains();
-
+  const { datarooms } = useDatarooms();
   const {
     viewerGroups,
     loading: isLoadingGroups,
@@ -243,7 +261,7 @@ export default function LinkSheet({
 
     const returnedLink = await response.json();
     const endpointTargetType = `${linkType.replace("_LINK", "").toLowerCase()}s`; // "documents" or "datarooms"
-
+    // /api/teams/${teamId}/inbox/links
     if (currentLink) {
       setIsOpen(false);
       // Update the link in the list of links
@@ -251,6 +269,14 @@ export default function LinkSheet({
         `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
           targetId,
         )}/links`,
+        (existingLinks || []).map((link) =>
+          link.id === currentLink.id ? returnedLink : link,
+        ),
+        false,
+      );
+
+      mutate(
+        `/api/teams/${teamInfo?.currentTeam?.id}/inbox/links`,
         (existingLinks || []).map((link) =>
           link.id === currentLink.id ? returnedLink : link,
         ),
@@ -323,6 +349,13 @@ export default function LinkSheet({
         false,
       );
 
+      // /api/teams/${teamId}/inbox/links
+      mutate(
+        `/api/teams/${teamInfo?.currentTeam?.id}/inbox/links`,
+        [returnedLink, ...(existingLinks || [])],
+        false,
+      );
+
       // Also update the group-specific links cache if this is a group link
       if (
         !!groupId &&
@@ -364,8 +397,12 @@ export default function LinkSheet({
         <SheetHeader className="text-start">
           <SheetTitle>
             {currentLink
-              ? `Edit ${currentLink.audienceType === LinkAudienceType.GROUP ? "group" : ""} link`
-              : "Create a new link"}
+              ? `Edit ${currentLink.audienceType === LinkAudienceType.GROUP
+                ? "group"
+                : ""
+              }${linkType === LinkType.FILE_REQUEST_LINK ? " file upload" : ""} link`
+              : `Create a new${linkType === LinkType.FILE_REQUEST_LINK ? " file upload" : ""
+              } link`}
           </SheetTitle>
         </SheetHeader>
 
@@ -434,7 +471,15 @@ export default function LinkSheet({
                             editLink={!!currentLink}
                           />
                         </div>
-
+                        {linkType === "FILE_REQUEST_LINK" ? (
+                          <div className="space-y-2">
+                            <FolderSelectionSection
+                              {...{ data, setData, datarooms }}
+                              linkType={linkType}
+                              editLink={!!currentLink}
+                            />
+                          </div>
+                        ) : null}
                         <div className="relative flex items-center">
                           <Separator className="absolute bg-muted-foreground" />
                           <div className="relative mx-auto">
@@ -478,7 +523,6 @@ export default function LinkSheet({
                             onValueChange={(value) => {
                               if (value === "add_group") {
                                 // Open the group sheet
-                                console.log("add_group redirect");
                                 return;
                               }
 

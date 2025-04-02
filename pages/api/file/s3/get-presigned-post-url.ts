@@ -23,31 +23,51 @@ export default async function handler(
     return res.status(405).end("Method Not Allowed");
   }
 
-  const { fileName, contentType, teamId, docId } = req.body as {
+  const { fileName, contentType, teamId, docId, viewerId } = req.body as {
     fileName: string;
     contentType: string;
     teamId: string;
     docId: string;
+    viewerId: string;
   };
 
   const session = await getServerSession(req, res, authOptions);
-  if (!session) {
+
+  // If no session and no viewerId, unauthorized
+  if (!session && !viewerId) {
     return res.status(401).end("Unauthorized");
   }
 
-  const team = await prisma.team.findUnique({
-    where: {
-      id: teamId,
-      users: {
-        some: {
-          userId: (session.user as CustomUser).id,
+  let hasAccess = false;
+
+  // Check if user is a team member (only if session exists)
+  if (session?.user) {
+    const team = await prisma.team.findUnique({
+      where: {
+        id: teamId,
+        users: {
+          some: {
+            userId: (session.user as CustomUser).id,
+          },
         },
       },
-    },
-    select: { id: true },
-  });
+      select: { id: true },
+    });
+    hasAccess = !!team;
+  }
 
-  if (!team) {
+  // Check if user is a viewer (if viewerId is provided)
+  if (viewerId) {
+    const viewer = await prisma.viewer.findUnique({
+      where: {
+        id: viewerId,
+        teamId: teamId,
+      },
+    });
+    hasAccess = hasAccess || !!viewer;
+  }
+
+  if (!hasAccess) {
     return res.status(403).end("Unauthorized to access this team");
   }
 
@@ -56,7 +76,7 @@ export default async function handler(
     const { name, ext } = path.parse(fileName);
 
     const slugifiedName = slugify(name) + ext;
-    const key = `${team.id}/${docId}/${slugifiedName}`;
+    const key = `${viewerId ? `${viewerId}/${teamId}` : teamId}/${docId}/${slugifiedName}`;
 
     const putObjectCommand = new PutObjectCommand({
       Bucket: process.env.NEXT_PRIVATE_UPLOAD_BUCKET,

@@ -10,13 +10,16 @@ import { FADE_IN_ANIMATION_SETTINGS } from "@/lib/constants";
 
 import { DEFAULT_LINK_TYPE } from ".";
 import LinkItem from "./link-item";
+import { LinkType } from "@prisma/client";
 
 export default function PasswordSection({
   data,
   setData,
+  linkType,
 }: {
   data: DEFAULT_LINK_TYPE;
   setData: React.Dispatch<React.SetStateAction<DEFAULT_LINK_TYPE>>;
+  linkType: LinkType;
 }) {
   const { password } = data;
   const [enabled, setEnabled] = useState<boolean>(false);
@@ -37,7 +40,13 @@ export default function PasswordSection({
   return (
     <div className="pb-5">
       <LinkItem
-        title="Require password to view"
+        title={
+          linkType === "FILE_REQUEST_LINK"
+            ? `Require password to ${
+                data.uploadFolderId ? "upload" : "view"
+              }`
+            : "Require password to view"
+        }
         enabled={enabled}
         action={handleEnablePassword}
         tooltipContent="Users must enter a password to access the content."

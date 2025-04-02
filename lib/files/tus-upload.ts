@@ -6,7 +6,8 @@ type ResumableUploadParams = {
   file: File;
   onProgress?: (bytesUploaded: number, bytesTotal: number) => void;
   onError?: (error: Error | tus.DetailedError) => void;
-  ownerId: string;
+  ownerId?: string;
+  viewerId?: string;
   teamId: string;
   numPages: number;
   relativePath: string;
@@ -19,7 +20,8 @@ type UploadResult = {
   fileName: string;
   fileType: string;
   numPages: number;
-  ownerId: string;
+  ownerId?: string;
+  viewerId?: string;
   teamId: string;
 };
 
@@ -28,6 +30,7 @@ export function resumableUpload({
   onProgress,
   onError,
   ownerId,
+  viewerId,
   teamId,
   numPages,
   relativePath,
@@ -51,8 +54,9 @@ export function resumableUpload({
           contentType: file.type,
           numPages: String(numPages),
           teamId: teamId,
-          ownerId: ownerId,
+          ownerId: ownerId ?? "",
           relativePath: relativePath,
+          viewerId: viewerId ?? "",
         },
         chunkSize: 4 * 1024 * 1024,
         onError: (error) => {
@@ -85,7 +89,8 @@ export function resumableUpload({
             fileName: file.name,
             fileType: file.type,
             numPages,
-            ownerId,
+            ownerId: ownerId ?? "",
+            viewerId: viewerId ?? "",
             teamId,
           });
         },

@@ -4,7 +4,7 @@ import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 
 import NotFound from "@/pages/404";
-import { Brand, DataroomBrand } from "@prisma/client";
+import { Brand, DataroomBrand, Link } from "@prisma/client";
 import Cookies from "js-cookie";
 import { useSession } from "next-auth/react";
 import { ExtendedRecordMap } from "notion-types";
@@ -14,6 +14,7 @@ import LoadingSpinner from "@/components/ui/loading-spinner";
 import CustomMetaTag from "@/components/view/custom-metatag";
 import DataroomView from "@/components/view/dataroom/dataroom-view";
 import DocumentView from "@/components/view/document-view";
+import RequestFileView from "@/components/view/request-file-view";
 
 import notion from "@/lib/notion";
 import { addSignedUrls } from "@/lib/notion/utils";
@@ -21,12 +22,19 @@ import {
   CustomUser,
   LinkWithDataroom,
   LinkWithDocument,
+  LinkWithRequestFile,
   NotionTheme,
 } from "@/lib/types";
 
 type DocumentLinkData = {
   linkType: "DOCUMENT_LINK";
   link: LinkWithDocument;
+  brand: Brand | null;
+};
+
+type RequestFileLinkData = {
+  linkType: "FILE_REQUEST_LINK";
+  link: LinkWithRequestFile;
   brand: Brand | null;
 };
 
@@ -37,7 +45,7 @@ type DataroomLinkData = {
 };
 
 export interface ViewPageProps {
-  linkData: DocumentLinkData | DataroomLinkData;
+  linkData: DocumentLinkData | DataroomLinkData | RequestFileLinkData;
   notionData: {
     rootNotionPageId: string | null;
     recordMap: ExtendedRecordMap | null;
@@ -61,13 +69,15 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
   const { linkId } = context.params as { linkId: string };
 
   try {
+    // fetch the link
     const res = await fetch(`${process.env.NEXTAUTH_URL}/api/links/${linkId}`);
     if (!res.ok) {
       throw new Error(`Failed to fetch: ${res.status}`);
     }
     const { linkType, link, brand } = (await res.json()) as
       | DocumentLinkData
-      | DataroomLinkData;
+      | DataroomLinkData
+      | RequestFileLinkData;
 
     if (!link || !linkType) {
       return {
@@ -192,6 +202,32 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
           useCustomAccessForm:
             teamId === "cm0154tiv0000lr2t6nr5c6kp" ||
             teamId === "clup33by90000oewh4rfvp2eg",
+        },
+        revalidate: 10,
+      };
+    }
+
+    if (linkType === "FILE_REQUEST_LINK") {
+      return {
+        props: {
+          linkData: {
+            linkType: "FILE_REQUEST_LINK",
+            link,
+            brand,
+          },
+          meta: {
+            enableCustomMetatag: link.enableCustomMetatag || false,
+            metaTitle: link.metaTitle,
+            metaDescription: link.metaDescription,
+            metaImage: link.metaImage,
+            metaFavicon: link.metaFavicon ?? "/favicon.ico",
+            metaUrl: `https://www.papermark.com/view/${linkId}`,
+          },
+          showPoweredByBanner: link.showBanner || link.team.plan === "free",
+          showAccountCreationSlide:
+            link.showBanner || link.team.plan === "free",
+          useAdvancedExcelViewer: false,
+          useCustomAccessForm: false,
         },
         revalidate: 10,
       };
@@ -414,6 +450,86 @@ export default function ViewPage({
           disableEditEmail={!!disableEditEmail}
           useCustomAccessForm={useCustomAccessForm}
           token={storedToken}
+          previewToken={previewToken}
+          preview={!!preview}
+        />
+      </>
+    );
+  }
+
+  // Render the request file view for FILE_REQUEST_LINK
+  if (linkType === "FILE_REQUEST_LINK") {
+    if (!link || status === "loading" || router.isFallback) {
+      return (
+        <>
+          <CustomMetaTag
+            favicon={meta.metaFavicon}
+            enableBranding={meta.enableCustomMetatag ?? false}
+            // TODO: Update title
+            title={
+              meta.metaTitle ??
+              `${link.name} | Powered by Papermark` ??
+              "File upload request powered by Papermark"
+            }
+            description={meta.metaDescription ?? null}
+            imageUrl={meta.metaImage ?? null}
+            url={meta.metaUrl ?? ""}
+          />
+          <div className="flex h-screen items-center justify-center">
+            <LoadingSpinner className="h-20 w-20" />
+          </div>
+        </>
+      );
+    }
+
+    const {
+      expiresAt,
+      emailProtected,
+      password: linkPassword,
+      enableAgreement,
+      isArchived,
+    } = link;
+    // If the link is expired, show a 404 page
+    if (expiresAt && new Date(expiresAt) < new Date()) {
+      return (
+        <NotFound message="Sorry, the link you're looking for is expired." />
+      );
+    }
+
+    const { email: userEmail, id: userId } =
+      (session?.user as CustomUser) || {};
+
+    if (isArchived) {
+      return (
+        <NotFound message="Sorry, the link you're looking for is archived." />
+      );
+    }
+
+    return (
+      <>
+        <CustomMetaTag
+          favicon={meta.metaFavicon}
+          enableBranding={meta.enableCustomMetatag ?? false}
+          // TODO: Update Title
+          title={
+            meta.metaTitle ??
+            `${link.name} | Powered by Papermark` ??
+            "File upload request powered by Papermark"
+          }
+          description={meta.metaDescription ?? null}
+          imageUrl={meta.metaImage ?? null}
+          url={meta.metaUrl ?? ""}
+        />
+        <RequestFileView
+          link={link}
+          userEmail={verifiedEmail ?? storedEmail ?? userEmail}
+          userId={userId}
+          isProtected={!!(emailProtected || linkPassword || enableAgreement)}
+          brand={brand}
+          token={storedToken}
+          verifiedEmail={verifiedEmail}
+          disableEditEmail={!!disableEditEmail}
+          useCustomAccessForm={useCustomAccessForm}
           previewToken={previewToken}
           preview={!!preview}
         />

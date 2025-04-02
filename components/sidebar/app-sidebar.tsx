@@ -14,6 +14,7 @@ import {
   CircleUserRound,
   CogIcon,
   ContactIcon,
+  FileInputIcon,
   FolderIcon,
   HouseIcon,
   Loader,
@@ -99,6 +100,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         current: router.pathname.includes("datarooms"),
         disabled: !isBusiness && !isDatarooms && !isDataroomsPlus && !isTrial,
         trigger: "sidebar_datarooms",
+        plan: PlanEnum.Business,
+      },
+      {
+        title: "Inbox",
+        url: "/inbox",
+        icon: FileInputIcon,
+        current: router.pathname.includes("inbox"),
+        disabled: !isBusiness && !isDatarooms && !isDataroomsPlus && !isTrial,
+        trigger: "sidebar_inbox",
         plan: PlanEnum.Business,
       },
       {

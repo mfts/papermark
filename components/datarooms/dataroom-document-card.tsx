@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
 
@@ -8,6 +7,7 @@ import { TeamContextType } from "@/context/team-context";
 import {
   ArchiveXIcon,
   BetweenHorizontalStartIcon,
+  CheckCircle,
   FolderInputIcon,
   MoreVertical,
 } from "lucide-react";
@@ -32,6 +32,7 @@ import { cn, nFormatter, timeAgo } from "@/lib/utils";
 import { fileIcon } from "@/lib/utils/get-file-icon";
 
 import { AddToDataroomModal } from "../documents/add-document-to-dataroom-modal";
+import { ApprovalStatusBadge } from "../documents/approval-status-badge";
 import FileProcessStatusBar from "../documents/file-process-status-bar";
 import { MoveToDataroomFolderModal } from "./move-dataroom-folder-modal";
 
@@ -95,7 +96,6 @@ export default function DataroomDocumentCard({
     event.stopPropagation();
     event.preventDefault();
 
-    console.log("isFirstClick", isFirstClick);
     if (isFirstClick) {
       handleRemoveDocument(documentId);
       setIsFirstClick(false);
@@ -105,16 +105,16 @@ export default function DataroomDocumentCard({
     }
   };
 
+  const endpoint = currentFolderPath
+    ? `/folders/documents/${currentFolderPath.join("/")}`
+    : "/documents";
+
   const handleRemoveDocument = async (documentId: string) => {
     // Prevent the first click from deleting the document
     if (!isFirstClick) {
       setIsFirstClick(true);
       return;
     }
-
-    const endpoint = currentFolderPath
-      ? `/folders/documents/${currentFolderPath.join("/")}`
-      : "/documents";
 
     toast.promise(
       fetch(
@@ -166,7 +166,36 @@ export default function DataroomDocumentCard({
       e.stopPropagation();
       return;
     }
+    if (dataroomDocument.document.approvalStatus === "PENDING") {
+      toast.error("This document requires approval before creating links.");
+      return;
+    }
     router.push(`/documents/${dataroomDocument.document.id}`);
+  };
+
+  const handleApproveDocument = async (
+    event: React.MouseEvent<HTMLDivElement>,
+    documentId: string,
+  ) => {
+    event.stopPropagation();
+    event.preventDefault();
+
+    toast.promise(
+      fetch(
+        `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}/documents/${documentId}/approve`,
+        { method: "POST" },
+      ).then(() => {
+        mutate(
+          `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}${endpoint}`,
+        );
+        setMenuOpen(false);
+      }),
+      {
+        loading: "Approving document...",
+        success: "Document approved successfully.",
+        error: "Failed to approve document. Try again.",
+      },
+    );
   };
 
   return (
@@ -200,9 +229,25 @@ export default function DataroomDocumentCard({
 
             <div className="flex-col">
               <div className="flex items-center">
-                <h2 className="min-w-0 max-w-[150px] truncate text-sm font-semibold leading-6 text-foreground sm:max-w-md">
-                  {dataroomDocument.document.name}
-                </h2>
+                <div className="flex items-center gap-2">
+                  <h2 className="min-w-0 max-w-[150px] truncate text-sm font-semibold leading-6 text-foreground sm:max-w-md">
+                    <span
+                      className={cn(
+                        "flex w-full",
+                        dataroomDocument.document.approvalStatus === "PENDING"
+                          ? "cursor-not-allowed truncate text-gray-400"
+                          : "",
+                      )}
+                    >
+                      {dataroomDocument.document.name}
+                    </span>
+                  </h2>
+                  {dataroomDocument.document.approvalStatus === "PENDING" && (
+                    <ApprovalStatusBadge
+                      status={dataroomDocument.document.approvalStatus}
+                    />
+                  )}
+                </div>
               </div>
               <div className="mt-1 flex items-center space-x-1 text-xs leading-5 text-muted-foreground">
                 <p className="truncate">
@@ -214,24 +259,42 @@ export default function DataroomDocumentCard({
                     <p className="truncate">{`${dataroomDocument.document._count.versions} Versions`}</p>
                   </>
                 ) : null}
+                {dataroomDocument.document.viewer?.email ? (
+                  <>
+                    <p>•</p>
+                    <p className="truncate">
+                      Added by {dataroomDocument.document.viewer?.email}
+                    </p>
+                  </>
+                ) : null}
               </div>
             </div>
           </div>
 
           <div className="flex flex-row space-x-2">
-            <Link
-              onClick={(e) => {
-                e.stopPropagation();
-              }}
-              href={`/documents/${dataroomDocument.document.id}`}
-              className="z-10 flex items-center space-x-1 rounded-md bg-gray-200 px-1.5 py-0.5 transition-all duration-75 hover:scale-105 active:scale-100 dark:bg-gray-700 sm:px-2"
-            >
-              <BarChart className="h-3 w-3 text-muted-foreground sm:h-4 sm:w-4" />
-              <p className="whitespace-nowrap text-xs text-muted-foreground sm:text-sm">
-                {nFormatter(dataroomDocument.document._count.views)}
-                <span className="ml-1 hidden sm:inline-block">views</span>
-              </p>
-            </Link>
+            {dataroomDocument.document.approvalStatus === "PENDING" ? (
+              <div className="z-10 flex items-center space-x-1 rounded-md bg-gray-200 px-1.5 py-0.5 transition-all duration-75 hover:scale-105 active:scale-100 dark:bg-gray-700 sm:px-2">
+                <BarChart className="h-3 w-3 text-muted-foreground sm:h-4 sm:w-4" />
+                <p className="whitespace-nowrap text-xs text-muted-foreground sm:text-sm">
+                  {nFormatter(dataroomDocument.document._count.views)}
+                  <span className="ml-1 hidden sm:inline-block">views</span>
+                </p>
+              </div>
+            ) : (
+                <Link
+                  onClick={(e) => {
+                    e.stopPropagation();
+                  }}
+                  href={`/documents/${dataroomDocument.document.id}`}
+                  className="z-10 flex items-center space-x-1 rounded-md bg-gray-200 px-1.5 py-0.5 transition-all duration-75 hover:scale-105 active:scale-100 dark:bg-gray-700 sm:px-2"
+                >
+                  <BarChart className="h-3 w-3 text-muted-foreground sm:h-4 sm:w-4" />
+                  <p className="whitespace-nowrap text-xs text-muted-foreground sm:text-sm">
+                    {nFormatter(dataroomDocument.document._count.views)}
+                    <span className="ml-1 hidden sm:inline-block">views</span>
+                  </p>
+                </Link>
+            )}
 
             <DropdownMenu open={menuOpen} onOpenChange={handleMenuStateChange}>
               <DropdownMenuTrigger asChild>
@@ -264,6 +327,16 @@ export default function DataroomDocumentCard({
                   <BetweenHorizontalStartIcon className="mr-2 h-4 w-4" />
                   Copy to other dataroom
                 </DropdownMenuItem>
+                {dataroomDocument.document.approvalStatus === "PENDING" ? (
+                  <DropdownMenuItem
+                    onClick={(e) =>
+                      handleApproveDocument(e, dataroomDocument.id)
+                    }
+                  >
+                    <CheckCircle className="mr-2 h-4 w-4" />
+                    Approve document
+                  </DropdownMenuItem>
+                ) : null}
                 <DropdownMenuSeparator />
 
                 <DropdownMenuItem

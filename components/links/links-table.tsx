@@ -66,7 +66,7 @@ export default function LinksTable({
   primaryVersion,
   mutateDocument,
 }: {
-  targetType: "DOCUMENT" | "DATAROOM";
+    targetType: "DOCUMENT" | "DATAROOM" | "FILE_REQUEST";
   links?: LinkWithViews[];
   primaryVersion?: DocumentVersion;
   mutateDocument?: () => void;
@@ -170,6 +170,12 @@ export default function LinksTable({
       audienceType: link.audienceType,
       groupId: link.groupId,
       customFields: link.customFields || [],
+      maxFiles: link.maxFiles || 1,
+      uploadFolderId: link.uploadFolderId,
+      uploadDataroomFolderId: link.uploadDataroomFolderId,
+      requireApproval: !!link.requireApproval,
+      selectedFolderName: link.folder?.name || link.dataroomFolder?.name,
+      dataroomName: link.dataroomFolder?.dataroom?.name,
     });
     //wait for dropdown to close before opening the link sheet
     setTimeout(() => {
@@ -229,6 +235,15 @@ export default function LinksTable({
       (links || []).concat(duplicatedLink),
       false,
     );
+
+    if (targetType === "FILE_REQUEST") {
+      // /api/teams/${teamId}/inbox/links
+      mutate(
+        `/api/teams/${teamInfo?.currentTeam?.id}/inbox/links`,
+        (links || []).concat(duplicatedLink),
+        false,
+      );
+    }
 
     // Update the group-specific links cache if this is a group link
     if (!!groupId) {
@@ -557,6 +572,7 @@ export default function LinksTable({
                           <LinksVisitors
                             linkName={link.name || "No link name"}
                             linkId={link.id}
+                            linkType={link.linkType}
                           />
                         </CollapsibleContent>
                       </>
@@ -718,6 +734,9 @@ export default function LinksTable({
                                               "",
                                             link.isArchived,
                                           )
+                                        }
+                                        disabled={
+                                          !!link.dataroomId && link.isArchived
                                         }
                                       >
                                         Reactivate

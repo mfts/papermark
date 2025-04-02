@@ -791,7 +791,10 @@ export async function POST(request: NextRequest) {
 
         if (documentVersion.type === "sheet") {
           const document = await prisma.document.findUnique({
-            where: { id: documentId },
+            where: {
+              id: documentId,
+              AND: [{ approvalStatus: { not: "APPROVED" } }],
+            },
             select: { advancedExcelEnabled: true },
           });
           useAdvancedExcelViewer = document?.advancedExcelEnabled ?? false;

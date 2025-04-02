@@ -102,3 +102,7 @@ export function usePlan() {
     error,
   };
 }
+
+export function isPlanTrial(plan: string) {
+  return plan.includes("drtrial");
+}

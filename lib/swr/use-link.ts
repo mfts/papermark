@@ -1,6 +1,6 @@
 import { useRouter } from "next/router";
 
-import { View } from "@prisma/client";
+import { LinkType, View } from "@prisma/client";
 import useSWR from "swr";
 
 import { fetcher } from "@/lib/utils";
@@ -57,17 +57,29 @@ export function useDomainLink() {
   };
 }
 
-interface ViewWithDuration extends View {
-  duration: {
+export interface ViewWithDuration extends View {
+  duration?: {
     data: { pageNumber: string; sum_duration: number }[];
   };
-  totalDuration: number;
-  completionRate: number;
+  totalDuration?: number;
+  completionRate?: number;
+  uploadFolder?: {
+    path: string,
+  },
+  uploadDataroomFolder?: {
+    path: string,
+    dataroom: {
+      name: string;
+      id: string;
+    };
+  };
 }
 
-export function useLinkVisits(linkId: string) {
+export function useLinkVisits(linkId: string, linkType?: LinkType) {
   const { data: views, error } = useSWR<ViewWithDuration[]>(
-    linkId && `/api/links/${encodeURIComponent(linkId)}/visits`,
+    linkId && linkType === "FILE_REQUEST_LINK"
+      ? `/api/links/${encodeURIComponent(linkId)}/visits-requestFile`
+      : `/api/links/${encodeURIComponent(linkId)}/visits`,
     fetcher,
     {
       dedupingInterval: 10000,
