@@ -201,7 +201,7 @@ export default function DocumentsCard({
     <>
       <div
         className={cn(
-          "group/row relative flex items-center justify-between rounded-lg border-0 bg-white p-3 ring-1 ring-gray-200 transition-all hover:bg-secondary hover:ring-gray-300 dark:bg-secondary dark:ring-gray-700 hover:dark:ring-gray-500 sm:p-4",
+          "group/row relative flex items-center justify-between rounded-lg border-0 bg-white p-3 ring-1 ring-gray-200 transition-all hover:bg-secondary hover:ring-gray-300 dark:bg-secondary dark:ring-gray-700 hover:dark:ring-gray-500 sm:p-4 gap-x-2",
           isHovered && "bg-secondary ring-gray-300 dark:ring-gray-500",
         )}
       >
@@ -260,7 +260,7 @@ export default function DocumentsCard({
               ) : null}
             </div>
             {searchQuery || sortQuery ? 
-              <div className="mt-1 flex items-center space-x-1 text-xs leading-5 text-muted-foreground relative z-10">
+              <div className="mt-1 flex items-center space-x-1 text-xs leading-5 text-muted-foreground relative z-10 flex-wrap">
                 {getBreadcrumbPath(prismaDocument.folderList).map(
                   (segment, index) => (
                     <p
@@ -269,7 +269,7 @@ export default function DocumentsCard({
                     >
                       {index !== 0 && <ChevronRight className="h-3 w-3" />}
                       <FolderIcon className="h-3 w-3" />
-                      <Link 
+                      <Link
                         href={segment.pathLink}
                         className="hover:underline relative z-10"
                       >

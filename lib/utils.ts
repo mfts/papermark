@@ -543,7 +543,10 @@ export function hexToRgb(hex: string) {
 export const trim = (u: unknown) => (typeof u === "string" ? u.trim() : u);
 
 export const getBreadcrumbPath = (path: string[]) => {
-  const segments = path.filter(Boolean);
+  const segments = path?.filter(Boolean);
+   if (!Array.isArray(path) || path.length === 0) {
+    return [{ name: "Home", pathLink: "/documents" }];
+  }
   let currentPath = "documents/tree";
 
   return [
