@@ -8,8 +8,11 @@ import {
   CalendarArrowDownIcon,
   CheckIcon,
   ClockArrowDownIcon,
+  ClockIcon,
+  ContactIcon,
   Eye,
   Link,
+  UserRoundIcon,
   XCircleIcon,
 } from "lucide-react";
 
@@ -32,9 +35,15 @@ export default function SortButton() {
     const { sort } = router.query;
     if (
       sort &&
-      ["name", "createdAt", "views", "lastViewed", "links"].includes(
-        sort as string,
-      )
+      [
+        "name",
+        "createdAt",
+        "views",
+        "lastViewed",
+        "links",
+        "visitor",
+        "pending",
+      ].includes(sort as string)
     ) {
       setSortBy(sort as string);
     } else {
@@ -75,6 +84,10 @@ export default function SortButton() {
         return "Name";
       case "links":
         return "Number of Links";
+      case "visitor":
+        return "Added by Viewer";
+      case "pending":
+        return "Needs Approval";
       default:
         return "";
     }
@@ -129,6 +142,22 @@ export default function SortButton() {
             {sortBy === "lastViewed" && (
               <CheckIcon className="ml-auto h-4 w-4" />
             )}
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => setSortBy("visitor")}
+            disabled={sortBy === "visitor"}
+          >
+            <ContactIcon className="mr-2 h-4 w-4" />
+            Added by Viewer
+            {sortBy === "visitor" && <CheckIcon className="ml-auto h-4 w-4" />}
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => setSortBy("pending")}
+            disabled={sortBy === "pending"}
+          >
+            <ClockIcon className="mr-2 h-4 w-4" />
+            Needs Approval
+            {sortBy === "pending" && <CheckIcon className="ml-auto h-4 w-4" />}
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => setSortBy("views")}

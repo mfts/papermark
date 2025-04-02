@@ -72,6 +72,12 @@ export default async function handle(
         case "links":
           orderBy = { links: { _count: "desc" } };
           break;
+        case "visitor":
+          orderBy = { viewer: { email: "asc" } };
+          break;
+        case "pending":
+          orderBy = { approvalStatus: "asc" };
+          break;
         default:
           orderBy = { createdAt: "desc" };
       }
@@ -88,9 +94,17 @@ export default async function handle(
           ...(!(query || sort) && {
             folderId: null,
           }),
+          ...(sort === "pending" && {
+            approvalStatus: "PENDING",
+          }),
         },
         orderBy,
         include: {
+          viewer: {
+            select: {
+              email: true,
+            },
+          },
           ...(sort &&
             sort === "lastViewed" && {
               views: {

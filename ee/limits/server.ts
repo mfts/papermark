@@ -123,3 +123,68 @@ export async function getLimits({
     };
   }
 }
+
+export async function getLimitsForFileUploadRequest({
+  teamId,
+}: {
+  teamId?: string;
+}) {
+  const team = await prisma.team.findUnique({
+    where: {
+      id: teamId,
+    },
+    select: {
+      plan: true,
+      limits: true,
+      _count: {
+        select: {
+          documents: true,
+          links: true,
+          users: true,
+          invitations: true,
+        },
+      },
+    },
+  });
+
+  if (!team) {
+    throw new Error("Team not found");
+  }
+
+  const documentCount = team._count.documents;
+  const linkCount = team._count.links;
+  const userCount = team._count.users + team._count.invitations;
+
+  // parse the limits json with zod and return the limits
+  // {datarooms: 1, users: 1, domains: 1, customDomainOnPro: boolean, customDomainInDataroom: boolean}
+
+  try {
+    let parsedData = configSchema.parse(team.limits);
+
+    // Adjust limits based on the plan if they're at the default value
+    if (isFreePlan(team.plan)) {
+      return {
+        ...parsedData,
+        usage: { documents: documentCount, links: linkCount, users: userCount },
+      };
+    } else {
+      return {
+        ...parsedData,
+        // if account is paid, but link and document limits are not set, then set them to Infinity
+        links: parsedData.links === 50 ? Infinity : parsedData.links,
+        documents:
+          parsedData.documents === 50 ? Infinity : parsedData.documents,
+        usage: { documents: documentCount, links: linkCount, users: userCount },
+      };
+    }
+  } catch (error) {
+    // if no limits set or parsing fails, return default limits based on the plan
+    const basePlan = getBasePlan(team.plan);
+    const defaultLimits = planLimitsMap[basePlan] || FREE_PLAN_LIMITS;
+
+    return {
+      ...defaultLimits,
+      usage: { documents: documentCount, links: linkCount, users: userCount },
+    };
+  }
+}

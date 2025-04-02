@@ -2,6 +2,7 @@ import { useRouter } from "next/router";
 
 import { useMemo } from "react";
 
+import { LimitProps } from "@/ee/limits/swr-handler";
 import { UploadIcon } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useDropzone } from "react-dropzone";
@@ -21,18 +22,26 @@ import { getPagesCount } from "@/lib/utils/get-page-number-count";
 export default function DocumentUpload({
   currentFile,
   setCurrentFile,
+  plan: initialPlan,
+  limits: initialLimits,
+  trial: initialTrial,
+  notShowUpdateToast = false,
 }: {
   currentFile: File | null;
   setCurrentFile: React.Dispatch<React.SetStateAction<File | null>>;
+    plan?: string;
+    limits?: LimitProps | null;
+    trial?: boolean;
+    notShowUpdateToast?: boolean;
 }) {
   const router = useRouter();
   const { theme, systemTheme } = useTheme();
   const isLight =
     theme === "light" || (theme === "system" && systemTheme === "light");
-  const { plan, trial } = usePlan();
+  const { plan: planFromHook, trial } = usePlan();
   const { limits } = useLimits();
-  const isFreePlan = plan === "free";
-  const isTrial = !!trial;
+  const isFreePlan = (initialPlan || planFromHook) === "free";
+  const isTrial = !!initialTrial || !!trial;
   // const maxSize = isFreePlan && !isTrial ? 30 : 100;
   const maxNumPages = isFreePlan && !isTrial ? 100 : 500;
 
@@ -40,11 +49,11 @@ export default function DocumentUpload({
   const fileSizeLimits = useMemo(
     () =>
       getFileSizeLimits({
-        limits,
+        limits: initialLimits || limits,
         isFreePlan,
         isTrial,
       }),
-    [limits, isFreePlan, isTrial],
+    [limits, isFreePlan, isTrial, initialLimits],
   );
 
   const { getRootProps, getInputProps } = useDropzone({
@@ -98,10 +107,9 @@ export default function DocumentUpload({
       const fileType = file.type;
       const fileSizeLimitMB = getFileSizeLimit(fileType, fileSizeLimits); // in MB
       const fileSizeLimit = fileSizeLimitMB * 1024 * 1024; // in bytes
-
       if (file.size > fileSizeLimit) {
         const message = `File size too big for ${fileType} (max. ${fileSizeLimitMB} MB)`;
-        if (isFreePlan && !isTrial) {
+        if (isFreePlan && !isTrial && !notShowUpdateToast) {
           toast.error(message, {
             description: "Upgrade to a paid plan to increase the limit",
             action: {
@@ -142,7 +150,7 @@ export default function DocumentUpload({
       if (errors[0].code === "file-too-large") {
         const fileSizeLimitMB = getFileSizeLimit(file.type, fileSizeLimits);
         message = `File size too big (max. ${fileSizeLimitMB} MB)`;
-        if (isFreePlan && !isTrial) {
+        if (isFreePlan && !isTrial && !notShowUpdateToast) {
           toast.error(message, {
             description: "Upgrade to a paid plan to increase the limit",
             action: {
@@ -156,7 +164,7 @@ export default function DocumentUpload({
       } else if (errors[0].code === "file-invalid-type") {
         const isSupported = SUPPORTED_DOCUMENT_MIME_TYPES.includes(file.type);
         message = "File type not supported";
-        if (isFreePlan && !isTrial && isSupported) {
+        if (isFreePlan && !isTrial && isSupported && !notShowUpdateToast) {
           toast.error(`${message} on free plan`, {
             description: `Upgrade to a paid plan to upload ${file.type} files`,
             action: {

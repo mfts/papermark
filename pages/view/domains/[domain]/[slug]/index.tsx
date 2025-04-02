@@ -15,6 +15,7 @@ import {
   CustomUser,
   LinkWithDataroom,
   LinkWithDocument,
+  LinkWithRequestFile,
   NotionTheme,
 } from "@/lib/types";
 
@@ -22,6 +23,7 @@ import LoadingSpinner from "@/components/ui/loading-spinner";
 import CustomMetaTag from "@/components/view/custom-metatag";
 import DataroomView from "@/components/view/dataroom/dataroom-view";
 import DocumentView from "@/components/view/document-view";
+import RequestFileView from "@/components/view/request-file-view";
 
 type DocumentLinkData = {
   linkType: "DOCUMENT_LINK";
@@ -33,6 +35,12 @@ type DataroomLinkData = {
   linkType: "DATAROOM_LINK";
   link: LinkWithDataroom;
   brand: DataroomBrand | null;
+};
+
+type RequestFileLinkData = {
+  linkType: "FILE_REQUEST_LINK";
+  link: LinkWithRequestFile;
+  brand: Brand | null;
 };
 
 export const getStaticProps = async (context: GetStaticPropsContext) => {
@@ -50,7 +58,8 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
     }
     const { linkType, link, brand } = (await res.json()) as
       | DocumentLinkData
-      | DataroomLinkData;
+      | DataroomLinkData
+      | RequestFileLinkData;
 
     if (!link || !linkType) {
       return {
@@ -122,7 +131,31 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
         revalidate: 10,
       };
     }
-
+    if (linkType === "FILE_REQUEST_LINK") {
+      return {
+        props: {
+          linkData: {
+            linkType: "FILE_REQUEST_LINK",
+            link,
+            brand,
+          },
+          meta: {
+            enableCustomMetatag: link.enableCustomMetatag || false,
+            metaTitle: link.metaTitle,
+            metaDescription: link.metaDescription,
+            metaImage: link.metaImage,
+            metaFavicon: link.metaFavicon ?? "/favicon.ico",
+            metaUrl: `https://${domain}/${slug}`,
+          },
+          showPoweredByBanner: link.showBanner || link.team.plan === "free",
+          showAccountCreationSlide:
+            link.showBanner || link.team.plan === "free",
+          useAdvancedExcelViewer: false,
+          useCustomAccessForm: false,
+        },
+        revalidate: 10,
+      };
+    }
     // Manage the data for the dataroom link
     if (linkType === "DATAROOM_LINK") {
       // iterate the link.documents and extract type and file and rest of the props
@@ -197,7 +230,7 @@ export default function ViewPage({
   useAdvancedExcelViewer,
   useCustomAccessForm,
 }: {
-  linkData: DocumentLinkData | DataroomLinkData;
+    linkData: DocumentLinkData | DataroomLinkData | RequestFileLinkData;
   notionData: {
     rootNotionPageId: string | null;
     recordMap: ExtendedRecordMap | null;
@@ -408,6 +441,85 @@ export default function ViewPage({
           useCustomAccessForm={useCustomAccessForm}
           token={storedToken}
           verifiedEmail={verifiedEmail}
+          previewToken={previewToken}
+          preview={!!preview}
+        />
+      </>
+    );
+  }
+  // Render the request file view for FILE_REQUEST_LINK
+  if (linkType === "FILE_REQUEST_LINK") {
+    if (!link || status === "loading" || router.isFallback) {
+      return (
+        <>
+          <CustomMetaTag
+            favicon={meta.metaFavicon}
+            enableBranding={meta.enableCustomMetatag ?? false}
+            // TODO: Update Title
+            title={
+              meta.metaTitle ??
+              `${link.name} | Powered by Papermark` ??
+              "File upload request powered by Papermark"
+            }
+            description={meta.metaDescription ?? null}
+            imageUrl={meta.metaImage ?? null}
+            url={meta.metaUrl ?? ""}
+          />
+          <div className="flex h-screen items-center justify-center">
+            <LoadingSpinner className="h-20 w-20" />
+          </div>
+        </>
+      );
+    }
+
+    const {
+      expiresAt,
+      emailProtected,
+      password: linkPassword,
+      enableAgreement,
+      isArchived,
+    } = link;
+    // If the link is expired, show a 404 page
+    if (expiresAt && new Date(expiresAt) < new Date()) {
+      return (
+        <NotFound message="Sorry, the link you're looking for is expired." />
+      );
+    }
+
+    const { email: userEmail, id: userId } =
+      (session?.user as CustomUser) || {};
+
+    if (isArchived) {
+      return (
+        <NotFound message="Sorry, the link you're looking for is archived." />
+      );
+    }
+
+    return (
+      <>
+        <CustomMetaTag
+          favicon={meta.metaFavicon}
+          enableBranding={meta.enableCustomMetatag ?? false}
+          // TODO: Update Title
+          title={
+            meta.metaTitle ??
+            `${link.name} | Powered by Papermark` ??
+            "File upload request powered by Papermark"
+          }
+          description={meta.metaDescription ?? null}
+          imageUrl={meta.metaImage ?? null}
+          url={meta.metaUrl ?? ""}
+        />
+        <RequestFileView
+          link={link}
+          userEmail={verifiedEmail ?? storedEmail ?? userEmail}
+          userId={userId}
+          isProtected={!!(emailProtected || linkPassword || enableAgreement)}
+          brand={brand}
+          token={storedToken}
+          verifiedEmail={verifiedEmail}
+          disableEditEmail={!!disableEditEmail}
+          useCustomAccessForm={useCustomAccessForm}
           previewToken={previewToken}
           preview={!!preview}
         />

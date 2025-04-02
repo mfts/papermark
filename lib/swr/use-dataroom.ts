@@ -266,6 +266,10 @@ export type DataroomFolderDocument = DataroomDocument & {
     id: string;
     name: string;
     type: string;
+    approvalStatus: string;
+    viewer: {
+      email: string;
+    };
     versions?: { id: string; hasPages: boolean }[];
     _count: {
       views: number;

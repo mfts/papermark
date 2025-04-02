@@ -22,7 +22,9 @@ import useLimits from "@/lib/swr/use-limits";
 
 import AgreementSection from "./agreement-section";
 import CustomFieldsSection from "./custom-fields-section";
+import MaxFileLimit from "./max-file-limit";
 import QuestionSection from "./question-section";
+import RequireApproval from "./requireApproval";
 import ScreenshotProtectionSection from "./screenshot-protection-section";
 import WatermarkSection from "./watermark-section";
 
@@ -78,8 +80,21 @@ export const LinkOptions = ({
     <div>
       <EmailProtectionSection {...{ data, setData }} />
       <AllowNotificationSection {...{ data, setData }} />
-      <AllowDownloadSection {...{ data, setData }} />
+      {linkType !== "FILE_REQUEST_LINK" && (
+        <AllowDownloadSection {...{ data, setData }} />
+      )}
       <ExpirationSection {...{ data, setData }} />
+      {linkType === "FILE_REQUEST_LINK" ? (
+        <>
+          <RequireApproval {...{ data, setData }} />
+          <MaxFileLimit {...{ data, setData, editLink }} />
+          {/* <UploadSizeLimit
+            {...{ data, setData, editLink }}
+            title="Upload Size Limit"
+            tooltipContent="Set the maximum file size allowed for uploads. Default file size is 50MB. Max size 1024MB."
+          /> */}
+        </>
+      ) : null}
       <OGSection
         {...{ data, setData }}
         isAllowed={
@@ -92,7 +107,6 @@ export const LinkOptions = ({
         handleUpgradeStateChange={handleUpgradeStateChange}
         editLink={editLink ?? false}
       />
-
       <EmailAuthenticationSection
         {...{ data, setData }}
         isAllowed={
@@ -130,32 +144,38 @@ export const LinkOptions = ({
           handleUpgradeStateChange={handleUpgradeStateChange}
         />
       ) : null}
-      <PasswordSection {...{ data, setData }} />
-      <ScreenshotProtectionSection
-        {...{ data, setData }}
-        isAllowed={
-          isTrial ||
-          (isPro && allowAdvancedLinkControls) ||
-          isBusiness ||
-          isDatarooms ||
+      <PasswordSection {...{ data, setData, linkType }} />
+      {linkType !== "FILE_REQUEST_LINK" && (
+        <ScreenshotProtectionSection
+          {...{ data, setData }}
+          isAllowed={
+            isTrial ||
+            (isPro && allowAdvancedLinkControls) ||
+            isBusiness ||
+            isDatarooms ||
           isDataroomsPlus
         }
-        handleUpgradeStateChange={handleUpgradeStateChange}
-      />
-      <WatermarkSection
-        {...{ data, setData }}
+          handleUpgradeStateChange={handleUpgradeStateChange}
+        />
+      )}
+      {linkType !== "FILE_REQUEST_LINK" && (
+        <WatermarkSection
+          {...{ data, setData }}
         isAllowed={
           isTrial || isDatarooms || isDataroomsPlus || allowWatermarkOnBusiness
         }
-        handleUpgradeStateChange={handleUpgradeStateChange}
-      />
-      <AgreementSection
-        {...{ data, setData }}
+          handleUpgradeStateChange={handleUpgradeStateChange}
+        />
+      )}
+      {linkType !== "FILE_REQUEST_LINK" && (
+        <AgreementSection
+          {...{ data, setData }}
         isAllowed={
           isTrial || isDatarooms || isDataroomsPlus || allowWatermarkOnBusiness
         }
-        handleUpgradeStateChange={handleUpgradeStateChange}
-      />
+          handleUpgradeStateChange={handleUpgradeStateChange}
+        />
+      )}
       {linkType === LinkType.DOCUMENT_LINK ? (
         <>
           <FeedbackSection {...{ data, setData }} />
@@ -172,11 +192,13 @@ export const LinkOptions = ({
           />
         </>
       ) : null}
-      <CustomFieldsSection
-        {...{ data, setData }}
-        isAllowed={isTrial || isBusiness || isDatarooms || isDataroomsPlus}
-        handleUpgradeStateChange={handleUpgradeStateChange}
-      />
+      {linkType !== "FILE_REQUEST_LINK" && (
+        <CustomFieldsSection
+          {...{ data, setData }}
+          isAllowed={isTrial || isBusiness || isDatarooms || isDataroomsPlus}
+          handleUpgradeStateChange={handleUpgradeStateChange}
+        />
+      )}
       {linkType === LinkType.DOCUMENT_LINK ? (
         <ProBannerSection
           {...{ data, setData }}

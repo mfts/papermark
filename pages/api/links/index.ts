@@ -44,6 +44,7 @@ export default async function handler(
 
     const dataroomLink = linkType === "DATAROOM_LINK";
     const documentLink = linkType === "DOCUMENT_LINK";
+    const fileRequestLink = linkType === "FILE_REQUEST_LINK";
 
     try {
       const team = await prisma.team.findUnique({
@@ -187,6 +188,12 @@ export default async function handler(
                 ),
               },
             },
+          }),
+          ...(fileRequestLink && {
+            maxFiles: linkData.maxFiles,
+            uploadFolderId: linkData.uploadFolderId,
+            uploadDataroomFolderId: linkData.uploadDataroomFolderId,
+            requireApproval: linkData.requireApproval,
           }),
         },
       });

@@ -6,6 +6,7 @@ import { getServerSession } from "next-auth/next";
 import {
   fetchDataroomLinkData,
   fetchDocumentLinkData,
+  fetchRequestFileLinkData,
 } from "@/lib/api/links/link-data";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
@@ -81,6 +82,10 @@ export default async function handle(
               orderIndex: "asc",
             },
           },
+          uploadFolderId: true,
+          uploadDataroomFolderId: true,
+          maxFiles: true,
+          requireApproval: true,
         },
       });
 
@@ -95,7 +100,6 @@ export default async function handle(
       }
 
       const linkType = link.linkType;
-
       let brand: Partial<Brand> | Partial<DataroomBrand> | null = null;
       let linkData: any;
 
@@ -117,8 +121,14 @@ export default async function handle(
         });
         linkData = data.linkData;
         brand = data.brand;
+      } else if (linkType === "FILE_REQUEST_LINK") {
+        const data = await fetchRequestFileLinkData({
+          linkId: id,
+          teamId: link.teamId!,
+        });
+        linkData = { ...data.linkData };
+        brand = data.brand;
       }
-
       const teamPlan = link.team?.plan || "free";
 
       const returnLink = {
@@ -130,7 +140,6 @@ export default async function handle(
           enableWatermark: false,
         }),
       };
-
       return res.status(200).json({ linkType, link: returnLink, brand });
     } catch (error) {
       return res.status(500).json({
@@ -316,6 +325,10 @@ export default async function handle(
         watermarkConfig: linkData.watermarkConfig || null,
         groupId: linkData.groupId || null,
         audienceType: linkData.audienceType || LinkAudienceType.GENERAL,
+        requireApproval: linkData.requireApproval,
+        maxFiles: linkData.maxFiles,
+        uploadFolderId: linkData.uploadFolderId,
+        uploadDataroomFolderId: linkData.uploadDataroomFolderId,
       },
       include: {
         views: {
@@ -341,8 +354,17 @@ export default async function handle(
     if (updatedLink.password !== null) {
       updatedLink.password = decryptEncrpytedPassword(updatedLink.password);
     }
-
-    return res.status(200).json(updatedLink);
+    let newData;
+    if (linkType === "FILE_REQUEST_LINK") {
+      newData = await fetchRequestFileLinkData({
+        linkId: id,
+        teamId: updatedLink.teamId!,
+      });
+    }
+    return res.status(200).json({
+      ...updatedLink,
+      ...(newData ? { ...newData?.linkData } : {}),
+    });
   } else if (req.method == "DELETE") {
     // DELETE /api/links/:id
     const session = await getServerSession(req, res, authOptions);

@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 import { Brand, DataroomBrand, LinkAudienceType } from "@prisma/client";
 
-import { fetchDataroomDocumentLinkData } from "@/lib/api/links/link-data";
+import { fetchDataroomDocumentLinkData, fetchRequestFileLinkData } from "@/lib/api/links/link-data";
 import {
   fetchDataroomLinkData,
   fetchDocumentLinkData,
@@ -91,6 +91,10 @@ export default async function handle(
               orderIndex: "asc",
             },
           },
+          uploadFolderId: true,
+          uploadDataroomFolderId: true,
+          maxFiles: true,
+          requireApproval: true,
         },
       });
 
@@ -165,6 +169,13 @@ export default async function handle(
           linkData = data.linkData;
           brand = data.brand;
         }
+      } else if (linkType === "FILE_REQUEST_LINK") {
+        const data = await fetchRequestFileLinkData({
+          linkId: link.id,
+          teamId: link.teamId!,
+        });
+        linkData = data.linkData;
+        brand = data.brand;
       }
 
       // remove document and domain from link

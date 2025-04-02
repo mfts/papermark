@@ -510,7 +510,10 @@ export function DataroomItemsList({
             </Portal>
             {mixedItems.length === 0 && (
               <div className="flex h-full justify-center">
-                <EmptyDocuments />
+                <EmptyDocuments
+                  title="No documents here"
+                  description="Get started by uploading a new document."
+                />
               </div>
             )}
           </div>
@@ -574,7 +577,10 @@ export function DataroomItemsList({
 
               {mixedItems.length === 0 && (
                 <div className="flex h-full justify-center">
-                  <EmptyDocuments />
+                  <EmptyDocuments
+                    title="No documents here"
+                    description="Get started by uploading a new document."
+                  />
                 </div>
               )}
             </DndContext>

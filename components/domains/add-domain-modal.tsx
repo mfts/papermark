@@ -2,6 +2,7 @@ import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { PlanEnum } from "@/ee/stripe/constants";
+import { LinkType } from "@prisma/client";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -34,7 +35,7 @@ export function AddDomainModal({
   open: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
   onAddition?: (newDomain: string) => void;
-  linkType?: "DOCUMENT_LINK" | "DATAROOM_LINK";
+    linkType?: LinkType;
   children?: React.ReactNode;
 }) {
   const [domain, setDomain] = useState<string>("");

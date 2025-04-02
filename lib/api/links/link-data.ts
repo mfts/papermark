@@ -43,10 +43,18 @@ export async function fetchDataroomLinkData({
           name: true,
           teamId: true,
           documents: {
-            where:
-              groupPermissions.length > 0 || groupId
-                ? { id: { in: documentIds } }
-                : undefined,
+            where: {
+              AND: [
+                {
+                  document: {
+                    approvalStatus: { not: "PENDING" },
+                  },
+                },
+                ...(groupPermissions.length > 0 || groupId
+                  ? [{ id: { in: documentIds } }]
+                  : []),
+              ],
+            },
             select: {
               id: true,
               folderId: true,
@@ -174,7 +182,10 @@ export async function fetchDataroomDocumentLinkData({
           id: true,
           name: true,
           documents: {
-            where: { id: dataroomDocumentId },
+            where: {
+              id: dataroomDocumentId,
+              AND: [{ document: { approvalStatus: { not: "PENDING" } } }],
+            },
             select: {
               id: true,
               updatedAt: true,
@@ -236,6 +247,9 @@ export async function fetchDocumentLinkData({
     where: { id: linkId, teamId },
     select: {
       document: {
+        where: {
+          approvalStatus: { not: "PENDING" },
+        },
         select: {
           id: true,
           name: true,
@@ -271,6 +285,50 @@ export async function fetchDocumentLinkData({
   const brand = await prisma.brand.findFirst({
     where: {
       teamId: linkData.document.teamId,
+    },
+    select: {
+      logo: true,
+      brandColor: true,
+      accentColor: true,
+    },
+  });
+
+  return { linkData, brand };
+}
+
+export async function fetchRequestFileLinkData({
+  linkId,
+  teamId,
+}: {
+  linkId: string;
+  teamId: string;
+}) {
+  const linkData = await prisma.link.findUnique({
+    where: { id: linkId, teamId },
+    select: {
+      folder: {
+        select: {
+          id: true,
+          name: true,
+          path: true,
+          parentId: true,
+        },
+      },
+      dataroomFolder: {
+        select: {
+          id: true,
+          name: true,
+          path: true,
+          dataroomId: true,
+          parentId: true,
+        },
+      },
+    },
+  });
+
+  const brand = await prisma.brand.findFirst({
+    where: {
+      teamId: teamId,
     },
     select: {
       logo: true,

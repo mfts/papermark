@@ -202,7 +202,7 @@ export function DataroomSortableList({
                 />
               ) : (
                 <DataroomDocumentCard
-                  document={activeItem}
+                  document={activeItem as DataroomFolderDocument}
                   teamInfo={teamInfo}
                   dataroomId={dataroomId}
                 />
