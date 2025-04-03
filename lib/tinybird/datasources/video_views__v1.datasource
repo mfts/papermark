@@ -44,4 +44,4 @@ SCHEMA >
 
 ENGINE "MergeTree"
 ENGINE_SORTING_KEY "timestamp,link_id,document_id,view_id,version_number,event_type"
-
+ENGINE_PARTITION_KEY "toYear(timestamp)"
