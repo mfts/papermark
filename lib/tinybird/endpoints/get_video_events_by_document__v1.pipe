@@ -15,7 +15,7 @@ SQL >
         is_muted,
         is_focused,
         is_fullscreen
-    FROM video_views
+    FROM video_views__v1
     WHERE document_id = {{String(document_id, required=True)}}
     ORDER BY timestamp ASC
 

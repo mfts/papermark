@@ -12,7 +12,7 @@ SQL >
         page_number,
         version_number,
         href
-    FROM click_events
+    FROM click_events__v1
     WHERE document_id = {{ String(document_id, required=True) }}
         AND view_id = {{ String(view_id, required=True) }}
     ORDER BY timestamp ASC
