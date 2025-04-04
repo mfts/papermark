@@ -9,6 +9,8 @@ import {
 import * as SheetPrimitive from "@radix-ui/react-dialog";
 import { PanelLeftIcon, XIcon } from "lucide-react";
 
+import { cn } from "@/lib/utils";
+
 import { ViewFolderTree } from "@/components/datarooms/folders";
 import {
   Breadcrumb,
@@ -26,11 +28,10 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 
-import { cn } from "@/lib/utils";
-
-import DocumentCard from "./dataroom/document-card";
-import FolderCard from "./dataroom/folder-card";
-import DataroomNav from "./dataroom/nav-dataroom";
+import { DEFAULT_DATAROOM_VIEW_TYPE } from "../dataroom/dataroom-view";
+import DocumentCard from "../dataroom/document-card";
+import FolderCard from "../dataroom/folder-card";
+import DataroomNav from "../dataroom/nav-dataroom";
 
 type FolderOrDocument = DataroomFolder | DataroomDocument;
 
@@ -81,6 +82,8 @@ export default function DataroomViewer({
   folderId,
   setFolderId,
   accessControls,
+  viewerId,
+  viewData,
 }: {
   brand: Partial<DataroomBrand>;
   viewId?: string;
@@ -91,6 +94,8 @@ export default function DataroomViewer({
   folderId: string | null;
   setFolderId: React.Dispatch<React.SetStateAction<string | null>>;
   accessControls: ViewerGroupAccessControls[];
+  viewerId?: string;
+  viewData: DEFAULT_DATAROOM_VIEW_TYPE;
 }) {
   const { documents, folders } = dataroom as {
     documents: DataroomDocument[];
@@ -160,6 +165,9 @@ export default function DataroomViewer({
         dataroom={dataroom}
         allowDownload={allowDownload}
         isPreview={isPreview}
+        dataroomId={dataroom?.id}
+        viewerId={viewerId}
+        conversationsEnabled={viewData.conversationsEnabled}
       />
       <div
         style={{ height: "calc(100vh - 64px)" }}

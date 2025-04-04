@@ -18,6 +18,11 @@ import {
 import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
 
+import { usePlan } from "@/lib/swr/use-billing";
+import useLimits from "@/lib/swr/use-limits";
+import { LinkWithViews, WatermarkConfig } from "@/lib/types";
+import { cn, copyToClipboard, fetcher, nFormatter, timeAgo } from "@/lib/utils";
+
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { Button } from "@/components/ui/button";
 import {
@@ -41,11 +46,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-
-import { usePlan } from "@/lib/swr/use-billing";
-import useLimits from "@/lib/swr/use-limits";
-import { LinkWithViews, WatermarkConfig } from "@/lib/types";
-import { cn, copyToClipboard, fetcher, nFormatter, timeAgo } from "@/lib/utils";
 
 import FileProcessStatusBar from "../documents/file-process-status-bar";
 import BarChart from "../shared/icons/bar-chart";
@@ -170,6 +170,7 @@ export default function LinksTable({
       audienceType: link.audienceType,
       groupId: link.groupId,
       customFields: link.customFields || [],
+      enableConversation: link.enableConversation ?? false,
     });
     //wait for dropdown to close before opening the link sheet
     setTimeout(() => {

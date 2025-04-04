@@ -4,6 +4,7 @@ type FileSizeLimits = {
   image: number;
   excel: number;
   maxFiles: number;
+  maxPages: number;
 };
 
 export function getFileSizeLimits({
@@ -22,6 +23,7 @@ export function getFileSizeLimits({
     image: isFreePlan && !isTrial ? 30 : 100, // 30MB free, 100MB paid
     excel: 40, // 40MB
     maxFiles: 150,
+    maxPages: isFreePlan && !isTrial ? 100 : 500,
   };
 
   // If no custom limits are set, return default limits
@@ -36,6 +38,7 @@ export function getFileSizeLimits({
     image: limits.fileSizeLimits.image ?? defaultLimits.image,
     excel: limits.fileSizeLimits.excel ?? defaultLimits.excel,
     maxFiles: limits.fileSizeLimits.maxFiles ?? defaultLimits.maxFiles,
+    maxPages: limits.fileSizeLimits.maxPages ?? defaultLimits.maxPages,
   };
 }
 
