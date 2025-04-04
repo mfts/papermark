@@ -9,6 +9,8 @@ import Nav from "./nav";
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
 export default function PDFViewer(props: any) {
+  const { isPreview, linkId, documentId, viewId } = props.navData;
+
   const [numPages, setNumPages] = useState<number>(0);
   const [pageNumber, setPageNumber] = useState<number>(1); // start on first page
   const [loading, setLoading] = useState(true);
@@ -134,12 +136,13 @@ export default function PDFViewer(props: any) {
     await fetch("/api/record_view", {
       method: "POST",
       body: JSON.stringify({
-        linkId: props.linkId,
-        documentId: props.documentId,
-        viewId: props.viewId,
+        linkId: linkId,
+        documentId: documentId,
+        viewId: viewId,
         duration: duration,
         pageNumber: pageNumberRef.current,
         versionNumber: props.versionNumber,
+        isPreview: isPreview,
       }),
       headers: {
         "Content-Type": "application/json",
@@ -151,7 +154,7 @@ export default function PDFViewer(props: any) {
     await fetch(`/api/teams/${teamInfo?.currentTeam?.id}/documents/update`, {
       method: "POST",
       body: JSON.stringify({
-        documentId: props.documentId,
+        documentId: documentId,
         numPages: numPages,
       }),
       headers: {
@@ -165,11 +168,7 @@ export default function PDFViewer(props: any) {
       <Nav
         pageNumber={pageNumber}
         numPages={numPages}
-        allowDownload={props.allowDownload}
-        assistantEnabled={props.assistantEnabled}
-        viewId={props.viewId}
-        linkId={props.linkId}
-        documentId={props.documentId}
+        navData={props.navData}
       />
       <div
         hidden={loading}

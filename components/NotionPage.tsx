@@ -3,7 +3,6 @@ import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import React from "react";
 
-import { Brand, DataroomBrand } from "@prisma/client";
 import { Slash } from "lucide-react";
 import { ExtendedRecordMap } from "notion-types";
 import { useQueryState } from "nuqs";
@@ -15,21 +14,19 @@ import { NotionTheme } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { determineTextColor } from "@/lib/utils/determine-text-color";
 
-// custom styles for notion
-import "@/styles/custom-notion-styles.css";
-
 import {
-  Breadcrumb,
   BreadcrumbItem,
   BreadcrumbLink,
-  BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "./ui/breadcrumb";
 import { Portal } from "./ui/portal";
 import { ScreenProtector } from "./view/ScreenProtection";
 import { TDocumentData } from "./view/dataroom/dataroom-view";
-import Nav from "./view/nav";
+import Nav, { TNavData } from "./view/nav";
+
+// custom styles for notion
+import "@/styles/custom-notion-styles.css";
 
 const Collection = dynamic(() =>
   import("react-notion-x/build/third-party/collection").then(
@@ -39,33 +36,18 @@ const Collection = dynamic(() =>
 
 export const NotionPage = ({
   recordMap,
-  rootPageId,
-  viewId,
-  linkId,
-  documentId,
-  documentName,
   versionNumber,
-  brand,
-  dataroomId,
-  setDocumentData,
-  isPreview,
   theme,
   screenshotProtectionEnabled,
+  navData,
 }: {
   recordMap: ExtendedRecordMap;
-  rootPageId?: string;
-  viewId?: string;
-  linkId: string;
-  documentId: string;
   versionNumber: number;
-  documentName?: string;
-  brand?: Partial<Brand> | Partial<DataroomBrand> | null;
-  dataroomId?: string;
-  setDocumentData?: React.Dispatch<React.SetStateAction<TDocumentData | null>>;
-  isPreview?: boolean;
   theme?: NotionTheme | null;
   screenshotProtectionEnabled: boolean;
+  navData: TNavData;
 }) => {
+  const { isPreview, linkId, documentId, viewId, brand, dataroomId } = navData;
   const [pageNumber, setPageNumber] = useState<number>(1); // start on first page
   const [maxScrollPercentage, setMaxScrollPercentage] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(false);
@@ -317,17 +299,7 @@ export const NotionPage = ({
 
   return (
     <div className="bg-white">
-      <Nav
-        brand={brand}
-        documentName={documentName}
-        isDataroom={dataroomId ? true : false}
-        setDocumentData={setDocumentData}
-        type="notion"
-        isPreview={isPreview}
-        linkId={linkId}
-        documentId={documentId}
-        viewId={viewId}
-      />
+      <Nav type="notion" navData={navData} />
 
       <Portal
         containerId="view-breadcrump-portal"
@@ -378,7 +350,6 @@ export const NotionPage = ({
           recordMap={recordMapState}
           fullPage={true}
           darkMode={theme ? theme === "dark" : false}
-          rootPageId={rootPageId}
           disableHeader={true}
           components={{
             Collection,
