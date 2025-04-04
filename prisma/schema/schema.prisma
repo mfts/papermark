@@ -95,6 +95,8 @@ model Team {
   incomingWebhooks IncomingWebhook[]
   restrictedTokens RestrictedToken[]
   webhooks         Webhook[]
+  
+  conversations Conversation[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -281,7 +283,7 @@ model Link {
   enableCustomMetatag Boolean? @default(false) // Optional give user a option to enable the custom metatag
 
   // conversation
-  conversationsEnabled Boolean      @default(false)  // Controls if conversations are allowed on this link
+  enableConversation Boolean      @default(false)  // Controls if conversations are allowed on this link
   conversations        Conversation[]
 
   teamId String?

@@ -119,6 +119,7 @@ export async function getLimits({
 
     return {
       ...defaultLimits,
+      conversationsInDataroom: false,
       usage: { documents: documentCount, links: linkCount, users: userCount },
     };
   }

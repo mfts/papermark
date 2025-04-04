@@ -7,15 +7,15 @@ import Cookies from "js-cookie";
 import { ExtendedRecordMap } from "notion-types";
 import { toast } from "sonner";
 
+import { useAnalytics } from "@/lib/analytics";
+import { SUPPORTED_DOCUMENT_SIMPLE_TYPES } from "@/lib/constants";
+import { LinkWithDataroomDocument, NotionTheme } from "@/lib/types";
+
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import AccessForm, {
   DEFAULT_ACCESS_FORM_DATA,
   DEFAULT_ACCESS_FORM_TYPE,
 } from "@/components/view/access-form";
-
-import { useAnalytics } from "@/lib/analytics";
-import { SUPPORTED_DOCUMENT_SIMPLE_TYPES } from "@/lib/constants";
-import { LinkWithDataroomDocument, NotionTheme } from "@/lib/types";
 
 import EmailVerificationMessage from "../email-verification-form";
 import ViewData, { TViewDocumentData } from "../view-data";
@@ -30,7 +30,7 @@ type SheetData = {
 export type TSupportedDocumentSimpleType =
   (typeof SUPPORTED_DOCUMENT_SIMPLE_TYPES)[number];
 
-type DEFAULT_DOCUMENT_VIEW_TYPE = {
+export type DEFAULT_DATAROOM_DOCUMENT_VIEW_TYPE = {
   viewId?: string;
   dataroomViewId?: string;
   file?: string | null;
@@ -55,6 +55,8 @@ type DEFAULT_DOCUMENT_VIEW_TYPE = {
   canDownload?: boolean;
   verificationToken?: string;
   viewerEmail?: string;
+  viewerId?: string;
+  conversationsEnabled?: boolean;
 };
 
 export default function DataroomDocumentView({
@@ -105,9 +107,9 @@ export default function DataroomDocumentView({
   const didMount = useRef<boolean>(false);
   const [submitted, setSubmitted] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [viewData, setViewData] = useState<DEFAULT_DOCUMENT_VIEW_TYPE>({
-    viewId: "",
-  });
+  const [viewData, setViewData] = useState<DEFAULT_DATAROOM_DOCUMENT_VIEW_TYPE>(
+    { viewId: "" },
+  );
   const [data, setData] = useState<DEFAULT_ACCESS_FORM_TYPE>(
     DEFAULT_ACCESS_FORM_DATA,
   );
@@ -170,7 +172,9 @@ export default function DataroomDocumentView({
           canDownload,
           verificationToken,
           viewerEmail,
-        } = fetchData as DEFAULT_DOCUMENT_VIEW_TYPE;
+          viewerId,
+          conversationsEnabled,
+        } = fetchData as DEFAULT_DATAROOM_DOCUMENT_VIEW_TYPE;
         analytics.identify(
           userEmail ?? viewerEmail ?? verifiedEmail ?? data.email ?? undefined,
         );
@@ -179,7 +183,7 @@ export default function DataroomDocumentView({
           documentId: link.dataroomDocument.document.id,
           dataroomId: link.dataroomId,
           linkType: linkType,
-          viewerId: viewId,
+          viewerId: viewerId,
           viewerEmail: viewerEmail ?? data.email ?? verifiedEmail ?? userEmail,
           isEmbedded,
         });
@@ -209,6 +213,8 @@ export default function DataroomDocumentView({
           useAdvancedExcelViewer,
           canDownload,
           viewerEmail,
+          viewerId,
+          conversationsEnabled,
         }));
         setSubmitted(true);
         setVerificationRequested(false);
