@@ -16,9 +16,9 @@ import {
 } from "@/lib/types";
 import { useMediaQuery } from "@/lib/utils/use-media-query";
 
-import { NotionPage } from "@/components/NotionPage";
-import PDFViewer from "@/components/view/PDFViewer";
 import { DEFAULT_DOCUMENT_VIEW_TYPE } from "@/components/view/document-view";
+import { NotionPage } from "@/components/view/viewer/notion-page";
+import PDFViewer from "@/components/view/viewer/pdf-default-viewer";
 
 import { DEFAULT_DATAROOM_DOCUMENT_VIEW_TYPE } from "./dataroom/dataroom-document-view";
 import { TNavData } from "./nav";

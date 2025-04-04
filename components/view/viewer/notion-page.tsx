@@ -19,11 +19,11 @@ import {
   BreadcrumbLink,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from "./ui/breadcrumb";
-import { Portal } from "./ui/portal";
-import { ScreenProtector } from "./view/ScreenProtection";
-import { TDocumentData } from "./view/dataroom/dataroom-view";
-import Nav, { TNavData } from "./view/nav";
+} from "@/components/ui/breadcrumb";
+import { Portal } from "@/components/ui/portal";
+
+import { ScreenProtector } from "../../view/ScreenProtection";
+import Nav, { TNavData } from "../../view/nav";
 
 // custom styles for notion
 import "@/styles/custom-notion-styles.css";

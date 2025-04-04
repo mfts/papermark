@@ -17,7 +17,7 @@ import AccessForm, {
   DEFAULT_ACCESS_FORM_TYPE,
 } from "@/components/view/access-form";
 
-import EmailVerificationMessage from "../email-verification-form";
+import EmailVerificationMessage from "../access-form/email-verification-form";
 import ViewData, { TViewDocumentData } from "../view-data";
 
 type RowData = { [key: string]: any };

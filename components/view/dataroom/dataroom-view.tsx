@@ -16,7 +16,7 @@ import AccessForm, {
   DEFAULT_ACCESS_FORM_TYPE,
 } from "@/components/view/access-form";
 
-import EmailVerificationMessage from "../email-verification-form";
+import EmailVerificationMessage from "../access-form/email-verification-form";
 import DataroomViewer from "../viewer/dataroom-viewer";
 
 export type TSupportedDocumentSimpleType =
