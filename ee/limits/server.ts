@@ -25,7 +25,7 @@ const planLimitsMap: Record<string, TPlanLimits> = {
   "datarooms-plus": DATAROOMS_PLUS_PLAN_LIMITS,
 };
 
-const configSchema = z.object({
+export const configSchema = z.object({
   datarooms: z.number(),
   links: z
     .preprocess((v) => (v === null ? Infinity : Number(v)), z.number())
@@ -41,6 +41,7 @@ const configSchema = z.object({
   customDomainInDataroom: z.boolean(),
   advancedLinkControlsOnPro: z.boolean().nullish(),
   watermarkOnBusiness: z.boolean().nullish(),
+  conversationsInDataroom: z.boolean().nullish(),
   fileSizeLimits: z
     .object({
       video: z.number().optional(), // in MB
@@ -48,6 +49,7 @@ const configSchema = z.object({
       image: z.number().optional(), // in MB
       excel: z.number().optional(), // in MB
       maxFiles: z.number().optional(), // in amount of files
+      maxPages: z.number().optional(), // in amount of pages
     })
     .optional(),
 });
