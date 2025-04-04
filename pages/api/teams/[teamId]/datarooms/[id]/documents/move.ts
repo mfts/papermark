@@ -62,7 +62,7 @@ export default async function handle(
     let folder: { path: string } | null = null;
     if (folderId) {
       folder = await prisma.dataroomFolder.findUnique({
-        where: { id: folderId },
+        where: { id: folderId, dataroomId: dataroomId },
         select: { path: true },
       });
     }

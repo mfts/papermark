@@ -62,9 +62,9 @@ export async function sendLinkViewWebhook({
       id: link.id,
       url: link.domainId
         ? `https://${link.domainSlug}/${link.slug}`
-        : `https://www.papermark.io/view/${link.id}`,
+        : `https://www.papermark.com/view/${link.id}`,
       domain:
-        link.domainId && link.domainSlug ? link.domainSlug : "papermark.io",
+        link.domainId && link.domainSlug ? link.domainSlug : "papermark.com",
       key: link.domainId && link.slug ? link.slug : `view/${link.id}`,
       name: link.name,
       expiresAt: link.expiresAt?.toISOString() || null,
@@ -129,13 +129,18 @@ export async function sendLinkViewWebhook({
       documentId
         ? prisma.document.findUnique({
             where: { id: documentId, teamId },
-            select: { id: true, name: true, contentType: true },
+            select: {
+              id: true,
+              name: true,
+              contentType: true,
+              createdAt: true,
+            },
           })
         : null,
       dataroomId
         ? prisma.dataroom.findUnique({
             where: { id: dataroomId, teamId },
-            select: { id: true, name: true },
+            select: { id: true, name: true, createdAt: true },
           })
         : null,
     ]);
@@ -150,6 +155,7 @@ export async function sendLinkViewWebhook({
           name: document.name,
           contentType: document.contentType,
           teamId: teamId,
+          createdAt: document.createdAt.toISOString(),
         },
       }),
       ...(dataroom && {
@@ -157,6 +163,7 @@ export async function sendLinkViewWebhook({
           id: dataroom.id,
           name: dataroom.name,
           teamId: teamId,
+          createdAt: dataroom.createdAt.toISOString(),
         },
       }),
     };

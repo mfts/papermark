@@ -16,6 +16,7 @@ export type LimitProps = {
   usage: {
     documents: number;
     links: number;
+    users: number;
   };
   fileSizeLimits:
     | {
@@ -44,11 +45,13 @@ export function useLimits() {
     ? data?.usage?.documents < data?.documents
     : true;
   const canAddLinks = data?.links ? data?.usage?.links < data?.links : true;
+  const canAddUsers = data?.users ? data?.usage?.users < data?.users : true;
 
   return {
     limits: data,
     canAddDocuments,
     canAddLinks,
+    canAddUsers,
     error,
     loading: !data && !error,
   };
