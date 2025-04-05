@@ -183,6 +183,8 @@ export async function handleRoute(req: NextApiRequest, res: NextApiResponse) {
     return await handler(req, res);
   } catch (error) {
     console.error("API Error:", error);
-    return res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({
+      error: error instanceof Error ? error.message : "Internal server error",
+    });
   }
 }
