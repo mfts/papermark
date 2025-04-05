@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { PlanEnum } from "@/ee/stripe/constants";
@@ -88,7 +88,8 @@ export default function Presets() {
   const [data, setData] = useState<PresetData>(defaultPresetData);
   const [activeTab, setActiveTab] = useState("social-media");
 
-  const filteredAgreements = agreements.filter((agreement: Agreement) => !agreement.deletedAt);
+  const filteredAgreements = useMemo(() => agreements.filter((agreement: Agreement) => !agreement.deletedAt), [agreements]);
+
   useEffect(() => {
     if (presets) {
       const customFields = presets.customFields ? JSON.parse(presets.customFields as string) as PresetData['customFields'] : null;
