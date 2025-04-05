@@ -121,7 +121,11 @@ export function ConversationViewSidebar({
         }),
       });
 
-      if (!response.ok) throw new Error("Failed to create conversation");
+      if (!response.ok) {
+        const errorData = await response.json();
+        toast.error(errorData.error);
+        return;
+      }
 
       const newConversation = await response.json();
 
@@ -137,7 +141,6 @@ export function ConversationViewSidebar({
 
       toast.success("Conversation created successfully");
     } catch (error) {
-      console.error("Error creating conversation:", error);
       toast.error("Failed to create conversation");
     }
   };
@@ -161,7 +164,11 @@ export function ConversationViewSidebar({
         }),
       });
 
-      if (!response.ok) throw new Error("Failed to send message");
+      if (!response.ok) {
+        const errorData = await response.json();
+        toast.error(errorData.error);
+        return;
+      }
 
       const message: Message = await response.json();
 
