@@ -88,6 +88,7 @@ export default function Presets() {
   const [data, setData] = useState<PresetData>(defaultPresetData);
   const [activeTab, setActiveTab] = useState("social-media");
 
+  const filteredAgreements = agreements.filter((agreement: Agreement) => !agreement.deletedAt);
   useEffect(() => {
     if (presets) {
       const customFields = presets.customFields ? JSON.parse(presets.customFields as string) as PresetData['customFields'] : null;
@@ -326,7 +327,12 @@ export default function Presets() {
             </TabsContent>
             <TabsContent value="access-control">
               <div className="grid w-full gap-6">
-                <PresetOptions data={data} setData={setData} agreements={agreements} />
+                <PresetOptions
+                  data={data}
+                  setData={setData}
+                  agreements={filteredAgreements}
+                  teamId={teamInfo?.currentTeam?.id!}
+                />
               </div>
             </TabsContent>
           </Tabs>

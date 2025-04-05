@@ -21,6 +21,7 @@ import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
+    DropdownMenuLabel,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { format } from "date-fns";
@@ -31,16 +32,20 @@ import WatermarkConfigSheet from "@/components/links/link-sheet/watermark-panel"
 import { Agreement } from "@prisma/client";
 import { cn, sanitizeAllowDenyList } from "@/lib/utils";
 import PlanBadge from "@/components/billing/plan-badge";
+import { toast } from "sonner";
+import { mutate } from "swr";
 interface PresetOptionsProps {
     data: PresetData;
     setData: Dispatch<SetStateAction<PresetData>>;
     agreements: (Agreement & { _count: { links: number } })[];
+    teamId: string;
 };
 
-export default function PresetOptions({ data, setData, agreements }: PresetOptionsProps) {
+export default function PresetOptions({ data, setData, agreements, teamId }: PresetOptionsProps) {
     const { watermarkConfig } = data;
     const [openUpgradeModal, setOpenUpgradeModal] = useState(false);
     const [trigger, setTrigger] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
     const [isConfigOpen, setIsConfigOpen] = useState(false);
     const [isWatermarkConfigOpen, setIsWatermarkConfigOpen] = useState(false);
     const [isAgreementSheetVisible, setIsAgreementSheetVisible] =
@@ -173,6 +178,37 @@ export default function PresetOptions({ data, setData, agreements }: PresetOptio
         });
     };
 
+    const handleDeleteAgreement = async (agreementId: string) => {
+        try {
+            setIsLoading(true);
+            const response = await fetch(`/api/teams/${teamId}/agreements/${agreementId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+            if (response.ok) {
+                mutate(`/api/teams/${teamId}/agreements`, null, {
+                    populateCache: (_, agreements) => {
+                        return agreements.filter(
+                            (agreement: Agreement) =>
+                                agreement.id !== agreementId,
+                        );
+                    },
+                    revalidate: false,
+                });
+                toast.success("Agreement deleted successfully");
+            } else {
+                toast.error("Error deleting agreement - please try again");
+            }
+        } catch (error) {
+            console.error('error', error);
+            toast.error("Error deleting agreement - please try again");
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
     const initialConfig: WatermarkConfig = {
         text: watermarkConfig?.text ?? "",
         isTiled: watermarkConfig?.isTiled ?? false,
@@ -190,7 +226,7 @@ export default function PresetOptions({ data, setData, agreements }: PresetOptio
             <Card>
                 <CardHeader>
                     <CardTitle>Custom Fields</CardTitle>
-                    <CardDescription>Add custom fields to collect additional information from viewers</CardDescription>
+                    <CardDescription>Set default custom fields to collect from viewers on new links</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <LinkItem
@@ -262,10 +298,10 @@ export default function PresetOptions({ data, setData, agreements }: PresetOptio
                             className="w-auto px-2"
                             onClick={() => setIsAgreementSheetVisible(true)}
                         >
-                            <PlusIcon className="h-4 w-4" /> Add Agreement
+                            <PlusIcon className="h-4 w-4" />Create Agreement
                         </Button>
                     </div>
-                    <CardDescription>Require viewers to accept an NDA before viewing</CardDescription>
+                    <CardDescription>Set a default NDA that's pre-filled when creating new links</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <h2
@@ -273,7 +309,7 @@ export default function PresetOptions({ data, setData, agreements }: PresetOptio
                             "flex flex-1 cursor-pointer flex-row items-center gap-2 text-sm font-medium leading-6 text-foreground",
                         )}
                     >
-                        <span>Default NDA Agreement</span>
+                        <span>NDA Agreement</span>
                         <BadgeTooltip
                             content="Require viewers to accept an NDA before viewing"
                             key="link_tooltip"
@@ -302,9 +338,35 @@ export default function PresetOptions({ data, setData, agreements }: PresetOptio
                                                     )}
                                                 </div>
                                             </div>
-                                            <Badge variant="outline" className="flex items-center h-fit">
-                                                {agreement._count.links} links
-                                            </Badge>
+                                            <div className="flex items-center gap-4">
+                                                <Badge variant="outline" className="flex items-center h-fit">
+                                                    {agreement._count.links} links
+                                                </Badge>
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button
+                                                            variant="outline"
+                                                            className="h-8 w-8 p-0"
+                                                        >
+                                                            <span className="sr-only">Open menu</span>
+                                                            <MoreVertical className="h-4 w-4" />
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end">
+                                                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                                        <DropdownMenuItem
+                                                            className="text-destructive focus:text-destructive"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                e.preventDefault();
+                                                                handleDeleteAgreement(agreement.id);
+                                                            }}
+                                                        >
+                                                            {isLoading ? "Deleting..." : "Delete"}
+                                                        </DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
+                                            </div>
                                         </div>
                                     </CardContent>
                                 </Card>
@@ -334,11 +396,10 @@ export default function PresetOptions({ data, setData, agreements }: PresetOptio
                     />
                 </CardContent>
             </Card>
-
             <Card>
                 <CardHeader>
                     <CardTitle>Watermark</CardTitle>
-                    <CardDescription>Apply a watermark to your documents</CardDescription>
+                    <CardDescription>Set a default watermark to apply on documents when creating links</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <LinkItem
@@ -443,7 +504,7 @@ export default function PresetOptions({ data, setData, agreements }: PresetOptio
             <Card>
                 <CardHeader>
                     <CardTitle>Viewer Access Control</CardTitle>
-                    <CardDescription>Control who can access your documents</CardDescription>
+                    <CardDescription>Set a default access rule for who can view your documents</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <LinkItem
