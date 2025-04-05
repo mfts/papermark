@@ -6,25 +6,15 @@ import ReactTextareaAutosize from "react-textarea-autosize";
 import { Facebook } from "../shared/icons/facebook";
 import LinkedIn from "../shared/icons/linkedin";
 import Twitter from "../shared/icons/twitter";
+import { PresetData } from "@/pages/settings/presets";
+
 
 export default function Preview({
   data,
   setData,
 }: {
-  data: {
-    metaImage: string | null;
-    metaTitle: string | null;
-    metaDescription: string | null;
-    metaFavicon: string | null;
-  };
-  setData: Dispatch<
-    SetStateAction<{
-      metaImage: string | null;
-      metaTitle: string | null;
-      metaDescription: string | null;
-      metaFavicon: string | null;
-    }>
-  >;
+    data: PresetData;
+    setData: Dispatch<SetStateAction<PresetData>>;
 }) {
   const {
     metaTitle: title,

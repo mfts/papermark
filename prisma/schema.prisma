@@ -298,6 +298,15 @@ model LinkPreset {
   metaImage           String? // This will be the meta image of the link 
   metaFavicon         String? // This will be the meta favicon of the link
 
+  enableCustomFields Boolean? @default(false)
+  customFields       Json? //[{type: "SHORT_TEXT", identifier: "name", label: "Name", required: true}]
+  enableWatermark Boolean? @default(false)
+  watermarkConfig Json? //{text: "Confidential", isTiled: false, color: "#000000", fontSize: 12, opacity: 0.5, rotation: 30, position: "top-right"}
+  enableAllowList Boolean? @default(false)
+  allowList                 String[]
+  enableDenyList Boolean? @default(false)
+  denyList                  String[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

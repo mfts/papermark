@@ -10,12 +10,14 @@ import { sanitizeAllowDenyList } from "@/lib/utils";
 import { DEFAULT_LINK_TYPE } from ".";
 import LinkItem from "./link-item";
 import { LinkUpgradeOptions } from "./link-options";
+import { LinkPreset } from "@prisma/client";
 
 export default function AllowListSection({
   data,
   setData,
   isAllowed,
   handleUpgradeStateChange,
+  presets,
 }: {
   data: DEFAULT_LINK_TYPE;
   setData: React.Dispatch<React.SetStateAction<DEFAULT_LINK_TYPE>>;
@@ -25,6 +27,7 @@ export default function AllowListSection({
     trigger,
     plan,
   }: LinkUpgradeOptions) => void;
+    presets: LinkPreset | null;
 }) {
   const { emailProtected, allowList } = data;
 
@@ -35,6 +38,13 @@ export default function AllowListSection({
   const [allowListInput, setAllowListInput] = useState<string>(
     allowList?.join("\n") || "",
   );
+
+  useEffect(() => {
+    if (isAllowed && presets?.enableAllowList) {
+      setEnabled(true);
+      setAllowListInput(presets.allowList?.join("\n") || "");
+    }
+  }, [presets, isAllowed]);
 
   useEffect(() => {
     // Update the allowList in the data state when their inputs change
@@ -99,7 +109,9 @@ export default function AllowListSection({
             <Textarea
               className="focus:ring-inset"
               rows={5}
-              placeholder="Enter allowed emails/domains, one per line, e.g.                                      marc@papermark.io                                                                                   @example.org"
+              placeholder={`Enter allowed emails/domains, one per line, e.g.
+marc@papermark.io
+@example.org`}
               value={allowListInput}
               onChange={handleAllowListChange}
             />

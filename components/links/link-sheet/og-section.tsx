@@ -1,11 +1,9 @@
 import { ChangeEvent, useCallback, useEffect, useState } from "react";
 
-import { useTeam } from "@/context/team-context";
 import { LinkPreset } from "@prisma/client";
 import { Label } from "@radix-ui/react-label";
 import { Upload as ArrowUpTrayIcon, PlusIcon } from "lucide-react";
 import { motion } from "motion/react";
-import useSWRImmutable from "swr/immutable";
 
 import { Input } from "@/components/ui/input";
 import LoadingSpinner from "@/components/ui/loading-spinner";
@@ -25,6 +23,7 @@ export default function OGSection({
   isAllowed,
   handleUpgradeStateChange,
   editLink,
+  presets,
 }: {
   data: DEFAULT_LINK_TYPE;
   setData: React.Dispatch<React.SetStateAction<DEFAULT_LINK_TYPE>>;
@@ -35,6 +34,7 @@ export default function OGSection({
     plan,
   }: LinkUpgradeOptions) => void;
   editLink: boolean;
+    presets: LinkPreset | null;
 }) {
   const {
     enableCustomMetatag,
@@ -43,12 +43,12 @@ export default function OGSection({
     metaImage,
     metaFavicon,
   } = data;
-  const teamInfo = useTeam();
-  const { data: presets } = useSWRImmutable<LinkPreset>(
-    `/api/teams/${teamInfo?.currentTeam?.id}/presets`,
-    fetcher,
-  );
 
+  console.log(enableCustomMetatag,
+    metaTitle,
+    metaDescription,
+    metaImage,
+    metaFavicon, 'presets')
   const [enabled, setEnabled] = useState<boolean>(false);
   const [fileError, setFileError] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
@@ -82,7 +82,7 @@ export default function OGSection({
 
   useEffect(() => {
     if (
-      presets &&
+      presets?.enableCustomMetaTag &&
       !(metaTitle || metaDescription || metaImage || metaFavicon)
     ) {
       const preset = presets;

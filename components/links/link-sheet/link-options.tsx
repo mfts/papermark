@@ -25,6 +25,10 @@ import CustomFieldsSection from "./custom-fields-section";
 import QuestionSection from "./question-section";
 import ScreenshotProtectionSection from "./screenshot-protection-section";
 import WatermarkSection from "./watermark-section";
+import useSWRImmutable from "swr/immutable";
+import { LinkPreset } from "@prisma/client";
+import { fetcher } from "@/lib/utils";
+import { useTeam } from "@/context/team-context";
 
 export type LinkUpgradeOptions = {
   state: boolean;
@@ -51,8 +55,13 @@ export const LinkOptions = ({
     isDataroomsPlus,
     isTrial,
   } = usePlan();
+  const teamInfo = useTeam();
+  console.log('data?.id', data?.id)
+  const { data: presets } = useSWRImmutable<LinkPreset>(
+    `/api/teams/${teamInfo?.currentTeam?.id}/presets`,
+    fetcher,
+  );
   const { limits } = useLimits();
-
   const allowAdvancedLinkControls = limits
     ? limits?.advancedLinkControlsOnPro
     : false;
@@ -73,6 +82,7 @@ export const LinkOptions = ({
       setUpgradePlan(plan as PlanEnum);
     }
   };
+  const presetsData = editLink ? null : presets!;
 
   return (
     <div>
@@ -82,6 +92,7 @@ export const LinkOptions = ({
       <ExpirationSection {...{ data, setData }} />
       <OGSection
         {...{ data, setData }}
+        presets={presetsData}
         isAllowed={
           isTrial ||
           (isPro && allowAdvancedLinkControls) ||
@@ -107,6 +118,7 @@ export const LinkOptions = ({
       {data.audienceType === LinkAudienceType.GENERAL ? (
         <AllowListSection
           {...{ data, setData }}
+          presets={presetsData}
           isAllowed={
             isTrial ||
             (isPro && allowAdvancedLinkControls) ||
@@ -127,6 +139,7 @@ export const LinkOptions = ({
             isDatarooms ||
             isDataroomsPlus
           }
+          presets={presetsData}
           handleUpgradeStateChange={handleUpgradeStateChange}
         />
       ) : null}
@@ -147,6 +160,7 @@ export const LinkOptions = ({
         isAllowed={
           isTrial || isDatarooms || isDataroomsPlus || allowWatermarkOnBusiness
         }
+        presets={presetsData}
         handleUpgradeStateChange={handleUpgradeStateChange}
       />
       <AgreementSection
@@ -174,6 +188,7 @@ export const LinkOptions = ({
       ) : null}
       <CustomFieldsSection
         {...{ data, setData }}
+        presets={presetsData}
         isAllowed={isTrial || isBusiness || isDatarooms || isDataroomsPlus}
         handleUpgradeStateChange={handleUpgradeStateChange}
       />
