@@ -587,6 +587,9 @@ model Agreement {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  deletedAt DateTime?
+  deletedBy String?
+
   @@index([teamId])
 }
 
