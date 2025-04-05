@@ -28,10 +28,21 @@ export default function ConversationSection({
 
   const handleEnableConversation = () => {
     const updatedEnableConversation = !enabled;
-    setData({
-      ...data,
-      enableConversation: updatedEnableConversation,
-    });
+    if (updatedEnableConversation) {
+      // Only set email settings to true when enabling conversations
+      setData({
+        ...data,
+        enableConversation: true,
+        emailAuthenticated: true,
+        emailProtected: true,
+      });
+    } else {
+      // When disabling conversations, don't modify email settings
+      setData({
+        ...data,
+        enableConversation: false,
+      });
+    }
     setEnabled(updatedEnableConversation);
   };
 
