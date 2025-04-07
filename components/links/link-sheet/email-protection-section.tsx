@@ -23,6 +23,7 @@ export default function EmailProtectionSection({
       ...data,
       emailProtected: updatedEmailProtection,
       emailAuthenticated: !updatedEmailProtection && false,
+      enableConversation: !updatedEmailProtection && false,
       enableAgreement: !updatedEmailProtection && false,
       allowList: updatedEmailProtection ? data.allowList : [],
       denyList: updatedEmailProtection ? data.denyList : [],

@@ -408,7 +408,7 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-      let viewer: { id: string } | null = null;
+      let viewer: { id: string; verified: boolean } | null = null;
       if (email && !isPreview) {
         // find or create a viewer
         console.time("find-viewer");
@@ -419,7 +419,7 @@ export async function POST(request: NextRequest) {
               email: email,
             },
           },
-          select: { id: true },
+          select: { id: true, verified: true },
         });
         console.timeEnd("find-viewer");
 
@@ -431,9 +431,14 @@ export async function POST(request: NextRequest) {
               verified: isEmailVerified,
               teamId: link.teamId!,
             },
-            select: { id: true },
+            select: { id: true, verified: true },
           });
           console.timeEnd("create-viewer");
+        } else if (!viewer.verified && isEmailVerified) {
+          await prisma.viewer.update({
+            where: { id: viewer.id },
+            data: { verified: isEmailVerified },
+          });
         }
       }
 

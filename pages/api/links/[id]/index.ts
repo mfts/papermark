@@ -316,6 +316,7 @@ export default async function handle(
         watermarkConfig: linkData.watermarkConfig || null,
         groupId: linkData.groupId || null,
         audienceType: linkData.audienceType || LinkAudienceType.GENERAL,
+        enableConversation: linkData.enableConversation || false,
       },
       include: {
         views: {

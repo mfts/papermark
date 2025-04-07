@@ -17,7 +17,7 @@ import {
 
 import { fileIcon } from "@/lib/utils/get-file-icon";
 
-import { DocumentVersion } from "../DataroomViewer";
+import { DocumentVersion } from "../viewer/dataroom-viewer";
 
 type DRDocument = {
   dataroomDocumentId: string;
