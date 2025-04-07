@@ -1,33 +1,23 @@
-import { IncomingHttpHeaders } from "http";
-
 import { getFeatureFlags } from "@/lib/featureFlags";
 import prisma from "@/lib/prisma";
-import { Geo } from "@/lib/types";
-import { getDomainWithoutWWW, log } from "@/lib/utils";
-import { capitalize } from "@/lib/utils";
-import { LOCALHOST_GEO_DATA, getGeoData } from "@/lib/utils/geo";
-import { userAgentFromString } from "@/lib/utils/user-agent";
+import { log } from "@/lib/utils";
 import { sendWebhooks } from "@/lib/webhook/send-webhooks";
 
-interface LinkViewProps {
-  viewId: string;
-  linkId: string;
-  teamId: string;
-  documentId?: string;
-  dataroomId?: string;
-  headers: IncomingHttpHeaders;
-}
-
-export async function recordVisit({
-  viewId,
-  linkId,
+export async function sendLinkCreatedWebhook({
   teamId,
-  documentId,
-  dataroomId,
-  headers,
-}: LinkViewProps) {
+  data,
+}: {
+  teamId: string;
+  data: any;
+}) {
   try {
-    if (!viewId || !linkId || !teamId) {
+    const {
+      link_id: linkId,
+      document_id: documentId,
+      dataroom_id: dataroomId,
+    } = data;
+
+    if (!linkId || !teamId) {
       throw new Error("Missing required parameters");
     }
 
@@ -42,7 +32,7 @@ export async function recordVisit({
       where: {
         teamId,
         triggers: {
-          array_contains: ["link.viewed"],
+          array_contains: ["link.created"],
         },
       },
       select: {
@@ -56,13 +46,6 @@ export async function recordVisit({
       // No webhooks for team, so we don't need to send webhooks
       return;
     }
-
-    // Get geo data
-    const geo: Geo =
-      process.env.VERCEL === "1" ? getGeoData(headers) : LOCALHOST_GEO_DATA;
-
-    const referer = headers.referer;
-    const ua = userAgentFromString(headers["user-agent"]);
 
     // Get link information
     const link = await prisma.link.findUnique({
@@ -78,9 +61,9 @@ export async function recordVisit({
       id: link.id,
       url: link.domainId
         ? `https://${link.domainSlug}/${link.slug}`
-        : `https://www.papermark.io/view/${link.id}`,
+        : `https://www.papermark.com/view/${link.id}`,
       domain:
-        link.domainId && link.domainSlug ? link.domainSlug : "papermark.io",
+        link.domainId && link.domainSlug ? link.domainSlug : "papermark.com",
       key: link.domainId && link.slug ? link.slug : `view/${link.id}`,
       name: link.name,
       expiresAt: link.expiresAt?.toISOString() || null,
@@ -110,55 +93,29 @@ export async function recordVisit({
       updatedAt: link.updatedAt.toISOString(),
     };
 
-    // Get view information
-    const view = await prisma.view.findUnique({
-      where: { id: viewId, linkId },
-      select: {
-        id: true,
-        viewedAt: true,
-        viewerEmail: true,
-        verified: true,
-      },
-    });
-
-    if (!view) {
-      throw new Error("View not found");
-    }
-
-    // Prepare view data for webhook
-    const viewData = {
-      viewedAt: view.viewedAt.toISOString(),
-      viewId: view.id,
-      email: view.viewerEmail,
-      emailVerified: view.verified,
-      country: geo?.country || null,
-      city: geo?.city || null,
-      device: ua.device.type ? capitalize(ua.device.type) : "Desktop",
-      browser: ua.browser.name || null,
-      os: ua.os.name || null,
-      ua: ua.ua || null,
-      referer: referer ? (getDomainWithoutWWW(referer) ?? null) : null,
-    };
-
     // Get document and dataroom information for webhook in parallel
     const [document, dataroom] = await Promise.all([
       documentId
         ? prisma.document.findUnique({
             where: { id: documentId, teamId },
-            select: { id: true, name: true, contentType: true },
+            select: {
+              id: true,
+              name: true,
+              contentType: true,
+              createdAt: true,
+            },
           })
         : null,
       dataroomId
         ? prisma.dataroom.findUnique({
             where: { id: dataroomId, teamId },
-            select: { id: true, name: true },
+            select: { id: true, name: true, createdAt: true },
           })
         : null,
     ]);
 
     // Prepare webhook payload
     const webhookData = {
-      view: viewData,
       link: linkData,
       ...(document && {
         document: {
@@ -166,6 +123,7 @@ export async function recordVisit({
           name: document.name,
           contentType: document.contentType,
           teamId: teamId,
+          createdAt: document.createdAt.toISOString(),
         },
       }),
       ...(dataroom && {
@@ -173,6 +131,7 @@ export async function recordVisit({
           id: dataroom.id,
           name: dataroom.name,
           teamId: teamId,
+          createdAt: dataroom.createdAt.toISOString(),
         },
       }),
     };
@@ -181,15 +140,17 @@ export async function recordVisit({
     if (webhooks.length > 0) {
       await sendWebhooks({
         webhooks,
-        trigger: "link.viewed",
+        trigger: "link.created",
         data: webhookData,
       });
     }
+    return;
   } catch (error) {
     log({
-      message: `Error sending webhooks for link view: ${error}`,
+      message: `Error sending webhooks for link created: ${error}`,
       type: "error",
       mention: true,
     });
+    return;
   }
 }

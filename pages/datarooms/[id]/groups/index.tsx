@@ -22,7 +22,7 @@ import useDataroomGroups from "@/lib/swr/use-dataroom-groups";
 import { cn } from "@/lib/utils";
 
 export default function DataroomGroupPage() {
-  const { plan, trial } = usePlan();
+  const { isDatarooms, isDataroomsPlus, isTrial } = usePlan();
   const { dataroom } = useDataroom();
   const { viewerGroups, loading } = useDataroomGroups();
 
@@ -33,7 +33,7 @@ export default function DataroomGroupPage() {
   }
 
   const ButtonComponent = () => {
-    if (plan === "datarooms" || trial) {
+    if (isDatarooms || isDataroomsPlus || isTrial) {
       return <Button onClick={() => setModalOpen(true)}>Create group</Button>;
     }
     return (
@@ -84,7 +84,7 @@ export default function DataroomGroupPage() {
                       linkText="Learn more"
                       content="Manage Access with Granular Permissions for Data Room Groups"
                       key="groups"
-                      link="https://www.papermark.io/help/article/granular-permissions"
+                      link="https://www.papermark.com/help/article/granular-permissions"
                     >
                       <CircleHelpIcon className="h-4 w-4 shrink-0 text-muted-foreground hover:text-foreground" />
                     </BadgeTooltip>

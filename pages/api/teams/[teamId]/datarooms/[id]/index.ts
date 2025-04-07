@@ -134,9 +134,10 @@ export default async function handle(
           user.userId === (session.user as CustomUser).id,
       );
       if (!isUserAdmin) {
-        return res
-          .status(403)
-          .json({ message: "You are not permitted to perform this action" });
+        return res.status(403).json({
+          message:
+            "You are not permitted to perform this action. Only admin and managers can delete datarooms.",
+        });
       }
 
       await prisma.dataroom.delete({

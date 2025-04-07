@@ -774,7 +774,7 @@ export default function PagesVerticalViewer({
                               src={
                                 loadedImages[index]
                                   ? page.file
-                                  : "https://www.papermark.io/_static/blank.gif"
+                                  : "https://www.papermark.com/_static/blank.gif"
                               }
                               alt={`Page ${index + 1}`}
                             />
@@ -877,6 +877,7 @@ export default function PagesVerticalViewer({
                       style={{ height: "calc(100dvh - 64px)" }}
                     >
                       <Question
+                        accentColor={brand?.accentColor}
                         feedback={feedback}
                         viewId={viewId}
                         submittedFeedback={submittedFeedback}

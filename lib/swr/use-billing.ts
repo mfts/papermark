@@ -91,6 +91,13 @@ export function usePlan() {
     isOldAccount: parsedPlan.old,
     isCustomer: plan?.isCustomer,
     isAnnualPlan: plan?.subscriptionCycle === "yearly",
+    isFree: parsedPlan.plan === "free",
+    isStarter: parsedPlan.plan === "starter",
+    isPro: parsedPlan.plan === "pro",
+    isBusiness: parsedPlan.plan === "business",
+    isDatarooms:
+      parsedPlan.plan === "datarooms" || parsedPlan.plan === "datarooms-plus",
+    isDataroomsPlus: parsedPlan.plan === "datarooms-plus",
     loading: !plan && !error,
     error,
   };

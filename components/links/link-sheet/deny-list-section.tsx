@@ -78,7 +78,7 @@ export default function DenyListSection({
           title="Block specified viewers"
           tooltipContent="Prevent certain users from accessing the content. Enter blocked emails or domains."
           enabled={enabled}
-          link="https://www.papermark.io/help/article/block-list"
+          link="https://www.papermark.com/help/article/block-list"
           action={handleEnableDenyList}
           isAllowed={isAllowed}
           requiredPlan="business"

@@ -89,6 +89,11 @@ export async function fetchDataroomLinkData({
           },
         },
       },
+      group: {
+        select: {
+          accessControls: true,
+        },
+      },
     },
   });
 
@@ -101,7 +106,7 @@ export async function fetchDataroomLinkData({
     linkData.dataroom.documents,
   );
 
-  const brand = await prisma.dataroomBrand.findFirst({
+  const dataroomBrand = await prisma.dataroomBrand.findFirst({
     where: {
       dataroomId: linkData.dataroom.id,
     },
@@ -112,6 +117,24 @@ export async function fetchDataroomLinkData({
       accentColor: true,
     },
   });
+
+  const teamBrand = await prisma.brand.findFirst({
+    where: {
+      teamId: linkData.dataroom.teamId,
+    },
+    select: {
+      logo: true,
+      brandColor: true,
+      accentColor: true,
+    },
+  });
+
+  const brand = {
+    logo: dataroomBrand?.logo || teamBrand?.logo,
+    banner: dataroomBrand?.banner || null,
+    brandColor: dataroomBrand?.brandColor || teamBrand?.brandColor,
+    accentColor: dataroomBrand?.accentColor || teamBrand?.accentColor,
+  };
 
   return { linkData, brand };
 }

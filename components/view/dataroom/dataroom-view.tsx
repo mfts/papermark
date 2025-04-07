@@ -72,6 +72,7 @@ export default function DataroomView({
     emailProtected,
     password: linkPassword,
     enableAgreement,
+    group,
   } = link;
 
   const analytics = useAnalytics();
@@ -243,6 +244,7 @@ export default function DataroomView({
     return (
       <div className="bg-gray-950">
         <DataroomViewer
+          accessControls={group?.accessControls || []}
           brand={brand!}
           viewId={viewData.viewId}
           isPreview={viewData.isPreview}

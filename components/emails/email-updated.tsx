@@ -39,7 +39,7 @@ export function EmailUpdated({
             <Text className="text-sm leading-6 text-black">
               If you did not make this change, please contact our support team
               or{" "}
-              <Link href="https://app.papermark.io/account/general">
+              <Link href="https://app.papermark.com/account/general">
                 update your email address
               </Link>
               .
@@ -52,11 +52,11 @@ export function EmailUpdated({
               <Text className="text-xs">
                 © {new Date().getFullYear()}{" "}
                 <a
-                  href="https://www.papermark.io"
+                  href="https://www.papermark.com"
                   className="text-gray-400 no-underline visited:text-gray-400 hover:text-gray-400"
                   target="_blank"
                 >
-                  papermark.io
+                  papermark.com
                 </a>
               </Text>
             </Section>

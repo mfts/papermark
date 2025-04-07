@@ -23,9 +23,12 @@ export function getGeoData(headers: {
 }
 
 export const LOCALHOST_GEO_DATA = {
+  continent: "Europe",
   city: "Munich",
   region: "BY",
   country: "DE",
   latitude: "48.137154",
   longitude: "11.576124",
 };
+
+export const LOCALHOST_IP = "127.0.0.1";

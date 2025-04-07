@@ -73,7 +73,7 @@ export default function LinksTable({
 }) {
   const now = Date.now();
   const router = useRouter();
-  const { plan } = usePlan();
+  const { isFree } = usePlan();
   const teamInfo = useTeam();
   const { groupId } = router.query as {
     groupId?: string;
@@ -178,7 +178,7 @@ export default function LinksTable({
   };
 
   const handlePreviewLink = async (link: LinkWithViews) => {
-    if (link.domainId && plan === "free") {
+    if (link.domainId && isFree) {
       toast.error("You need to upgrade to preview this link");
       return;
     }
@@ -321,8 +321,6 @@ export default function LinksTable({
     ? links.filter((link) => link.isArchived).length
     : 0;
 
-  const hasFreePlan = plan === "free";
-
   return (
     <>
       <div className="w-full">
@@ -374,7 +372,7 @@ export default function LinksTable({
                                   Updated
                                 </Badge>
                               )}
-                              {link.domainId && hasFreePlan ? (
+                              {link.domainId && isFree ? (
                                 <span className="ml-2 rounded-full bg-destructive px-2.5 py-0.5 text-xs text-foreground ring-1 ring-destructive">
                                   Inactive
                                 </span>
@@ -385,7 +383,7 @@ export default function LinksTable({
                             <div
                               className={cn(
                                 `group/cell relative flex w-full items-center gap-x-4 overflow-hidden truncate rounded-sm px-3 py-1.5 text-center text-secondary-foreground transition-all group-hover/row:ring-1 group-hover/row:ring-gray-400 group-hover/row:dark:ring-gray-100 md:py-1`,
-                                link.domainId && hasFreePlan
+                                link.domainId && isFree
                                   ? "bg-destructive hover:bg-red-700 hover:dark:bg-red-200"
                                   : "bg-secondary hover:bg-emerald-700 hover:dark:bg-emerald-200",
                               )}
@@ -410,7 +408,7 @@ export default function LinksTable({
                                   : `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${link.id}`}
                               </div>
 
-                              {link.domainId && hasFreePlan ? (
+                              {link.domainId && isFree ? (
                                 <button
                                   className="absolute bottom-0 left-0 right-0 top-0 z-10 hidden w-full whitespace-nowrap text-center text-sm group-hover/cell:block group-hover/cell:text-primary-foreground"
                                   onClick={() =>

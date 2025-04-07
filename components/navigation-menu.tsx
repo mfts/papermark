@@ -69,6 +69,10 @@ const NavItem: React.FC<Props["navigation"][0]> = ({
     active = true;
   }
 
+  if (segment === "analytics" && router.pathname.includes("groups")) {
+    active = false;
+  }
+
   return (
     <li
       className={cn(

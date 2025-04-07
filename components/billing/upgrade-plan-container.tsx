@@ -21,7 +21,7 @@ export default function UpgradePlanContainer() {
   const router = useRouter();
   const [loading, setLoading] = useState<boolean>(false);
   const teamInfo = useTeam();
-  const { plan } = usePlan();
+  const { plan, isFree, isDataroomsPlus } = usePlan();
 
   const manageSubscription = async () => {
     if (!teamInfo?.currentTeam?.id) {
@@ -54,7 +54,7 @@ export default function UpgradePlanContainer() {
   };
 
   const ButtonList = () => {
-    if (plan === "free") {
+    if (isFree) {
       return (
         <Link href="/settings/upgrade">
           <Button>Upgrade Plan</Button>
@@ -77,7 +77,9 @@ export default function UpgradePlanContainer() {
           <CardDescription>
             You are currently on the{" "}
             <span className="mx-0.5 rounded-full bg-background px-2.5 py-1 text-xs font-bold tracking-normal text-foreground ring-1 ring-gray-800 dark:ring-gray-400">
-              {plan.charAt(0).toUpperCase() + plan.slice(1)}
+              {isDataroomsPlus
+                ? "Datarooms+"
+                : plan.charAt(0).toUpperCase() + plan.slice(1)}
             </span>{" "}
             plan.{" "}
             <Link

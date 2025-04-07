@@ -23,12 +23,9 @@ import useViewer from "@/lib/swr/use-viewer";
 
 export default function VisitorDetailPage() {
   const router = useRouter();
-  const { plan, trial } = usePlan();
+  const { isFree, isTrial } = usePlan();
   const { viewer, error } = useViewer();
   const views = viewer?.views;
-
-  const isTrial = !!trial;
-  const isFree = plan == "free";
 
   useEffect(() => {
     if (isFree && !isTrial) router.push("/documents");

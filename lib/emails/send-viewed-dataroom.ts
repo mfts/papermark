@@ -7,18 +7,24 @@ export const sendViewedDataroomEmail = async ({
   dataroomId,
   dataroomName,
   viewerEmail,
+  linkName,
   teamMembers,
+  locationString,
 }: {
   ownerEmail: string | null;
   dataroomId: string;
   dataroomName: string;
   viewerEmail: string | null;
+  linkName: string;
   teamMembers?: string[];
+  locationString?: string;
 }) => {
   const emailTemplate = ViewedDataroomEmail({
     dataroomId,
     dataroomName,
     viewerEmail,
+    linkName,
+    locationString,
   });
   try {
     if (!ownerEmail) {

@@ -36,18 +36,22 @@ import { VisitorAvatar } from "./visitor-avatar";
 
 export default function DataroomVisitorsTable({
   dataroomId,
+  groupId,
+  name,
 }: {
   dataroomId: string;
+  groupId?: string;
+  name?: string;
 }) {
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
-  const { views } = useDataroomVisits({ dataroomId });
+  const { views } = useDataroomVisits({ dataroomId, groupId });
 
   const exportVisitCounts = async (dataroomId: string) => {
     const formattedTime = new Date().toISOString().replace(/[-:Z]/g, "");
     try {
       const response = await fetch(
-        `/api/teams/${teamId}/datarooms/${dataroomId}/export-visits`,
+        `/api/teams/${teamId}/datarooms/${dataroomId}${groupId ? `/groups/${groupId}` : ""}/export-visits`,
         { method: "GET" },
       );
       if (!response.ok) {
@@ -62,7 +66,7 @@ export default function DataroomVisitorsTable({
       link.href = url;
       link.setAttribute(
         "download",
-        `${data.dataroomName}_visits_${formattedTime}.csv`,
+        `${data.dataroomName}_${name ? `${name}_` : ""}visits_${formattedTime}.csv`,
       );
       document.body.appendChild(link);
       link.click();

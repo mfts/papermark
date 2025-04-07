@@ -39,7 +39,7 @@ const linkEventSchema = z.object({
   url: z
     .string()
     .describe(
-      "This is the full URL of the link e.g. https://www.papermark.io/view/1234566",
+      "This is the full URL of the link e.g. https://www.papermark.com/view/1234566",
     ),
   name: z.string().nullable(),
   domain: z.string(),
@@ -74,30 +74,85 @@ const linkEventSchema = z.object({
   updatedAt: z.string().datetime(),
 });
 
-// Complete webhook payload schema
-export const webhookPayloadSchema = baseEventSchema.extend({
+// Document Event schema
+const documentEventSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  contentType: z.string().nullable(),
+  teamId: z.string(),
+  createdAt: z.string().datetime(),
+});
+
+// Dataroom Event schema
+const dataroomEventSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  teamId: z.string(),
+  createdAt: z.string().datetime(),
+});
+
+// link.created
+export const linkCreatedWebhookSchema = z.object({
+  id: z.string().startsWith("evt_"),
+  event: z.literal("link.created"),
+  createdAt: z.string().datetime(),
   data: z.object({
-    view: viewEventSchema,
     link: linkEventSchema,
-    document: z
-      .object({
-        id: z.string(),
-        name: z.string(),
-        contentType: z.string().nullable(),
-        teamId: z.string(),
-      })
-      .optional(),
-    dataroom: z
-      .object({
-        id: z.string(),
-        name: z.string(),
-        teamId: z.string(),
-      })
-      .optional(),
+    document: documentEventSchema.optional(),
+    dataroom: dataroomEventSchema.optional(),
   }),
 });
 
+// document.created
+export const documentCreatedWebhookSchema = z.object({
+  id: z.string().startsWith("evt_"),
+  event: z.literal("document.created"),
+  createdAt: z.string().datetime(),
+  data: z.object({
+    document: documentEventSchema,
+  }),
+});
+
+// dataroom.created
+export const dataroomCreatedWebhookSchema = z.object({
+  id: z.string().startsWith("evt_"),
+  event: z.literal("dataroom.created"),
+  createdAt: z.string().datetime(),
+  data: z.object({
+    dataroom: dataroomEventSchema,
+  }),
+});
+
+// link.viewed
+export const linkViewedWebhookSchema = z.object({
+  id: z.string().startsWith("evt_"),
+  event: z.literal("link.viewed"),
+  createdAt: z.string().datetime(),
+  data: z.object({
+    view: viewEventSchema,
+    link: linkEventSchema,
+    document: documentEventSchema.optional(),
+    dataroom: dataroomEventSchema.optional(),
+  }),
+});
+
+export const webhookPayloadSchema = z.discriminatedUnion("event", [
+  linkCreatedWebhookSchema,
+  documentCreatedWebhookSchema,
+  dataroomCreatedWebhookSchema,
+  linkViewedWebhookSchema,
+]);
+
 export type WebhookPayload = z.infer<typeof webhookPayloadSchema>;
+export type LinkCreatedWebhookPayload = z.infer<
+  typeof linkCreatedWebhookSchema
+>;
+export type DocumentCreatedWebhookPayload = z.infer<
+  typeof documentCreatedWebhookSchema
+>;
+export type DataroomCreatedWebhookPayload = z.infer<
+  typeof dataroomCreatedWebhookSchema
+>;
 
 // Schema of response sent to the webhook callback URL by QStash
 export const webhookCallbackSchema = z.object({

@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
+import { sendDataroomNotification } from "@/lib/emails/send-dataroom-notification";
 import prisma from "@/lib/prisma";
 import { log } from "@/lib/utils";
 import { generateUnsubscribeUrl } from "@/lib/utils/unsubscribe";
@@ -108,6 +109,15 @@ export default async function handle(
       viewerId,
       dataroomId,
       teamId,
+    });
+
+    await sendDataroomNotification({
+      dataroomName: document?.dataroom?.name || "",
+      documentName: document?.document?.name || "",
+      senderEmail: user.email!,
+      to: viewer.email!,
+      url: linkUrl,
+      unsubscribeUrl,
     });
 
     res.status(200).json({

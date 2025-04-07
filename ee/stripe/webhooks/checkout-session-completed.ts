@@ -82,7 +82,7 @@ export async function checkoutSessionCompleted(
     },
     data: {
       stripeId,
-      plan: plan.slug,
+      plan: `${plan.slug}${isOldAccount ? "+old" : ""}`,
       subscriptionId,
       startsAt: subscriptionStart,
       endsAt: subscriptionEnd,

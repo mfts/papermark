@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/select";
 
 import { BLOCKED_PATHNAMES } from "@/lib/constants";
-import { BasePlan } from "@/lib/swr/use-billing";
+import { BasePlan, usePlan } from "@/lib/swr/use-billing";
 import useLimits from "@/lib/swr/use-limits";
 import { cn } from "@/lib/utils";
 
@@ -28,14 +28,12 @@ export default function DomainSection({
   data,
   setData,
   domains,
-  plan,
   linkType,
   editLink,
 }: {
   data: DEFAULT_LINK_TYPE;
   setData: Dispatch<SetStateAction<DEFAULT_LINK_TYPE>>;
   domains?: Domain[];
-  plan?: BasePlan | null;
   linkType: "DOCUMENT_LINK" | "DATAROOM_LINK";
   editLink?: boolean;
 }) {
@@ -43,13 +41,15 @@ export default function DomainSection({
   const teamInfo = useTeam();
   const { limits } = useLimits();
 
+  const { isBusiness, isDatarooms, isDataroomsPlus } = usePlan();
+
   const handleDomainChange = (value: string) => {
     // const value = event.target.value;
 
     if (value === "add_domain" || value === "add_dataroom_domain") {
       // Redirect to the add domain page
       setModalOpen(true);
-      setData({ ...data, domain: "papermark.io" });
+      setData({ ...data, domain: "papermark.com" });
       return;
     }
 
@@ -66,14 +66,14 @@ export default function DomainSection({
       const defaultDomain = domains.find((domain) => domain.isDefault);
       setData({
         ...data,
-        domain: defaultDomain?.slug ?? "papermark.io",
+        domain: defaultDomain?.slug ?? "papermark.com",
       });
     }
   }, [domains, editLink]);
 
   const defaultDomain = editLink
-    ? (data.domain ?? "papermark.io")
-    : (domains?.find((domain) => domain.isDefault)?.slug ?? "papermark.io");
+    ? (data.domain ?? "papermark.com")
+    : (domains?.find((domain) => domain.isDefault)?.slug ?? "papermark.com");
 
   const currentDomain = domains?.find((domain) => domain.slug === data.domain);
   const isDomainVerified = currentDomain?.verified;
@@ -90,7 +90,7 @@ export default function DomainSection({
           <SelectTrigger
             className={cn(
               "flex w-full rounded-none rounded-l-md border border-input bg-white text-foreground placeholder-muted-foreground focus:border-muted-foreground focus:outline-none focus:ring-inset focus:ring-muted-foreground dark:border-gray-500 dark:bg-gray-800 focus:dark:bg-transparent sm:text-sm",
-              data.domain && data.domain !== "papermark.io"
+              data.domain && data.domain !== "papermark.com"
                 ? ""
                 : "border-r-1 rounded-r-md",
             )}
@@ -98,11 +98,11 @@ export default function DomainSection({
             <SelectValue placeholder="Select a domain" />
           </SelectTrigger>
           <SelectContent className="flex w-full rounded-md border border-input bg-white text-foreground placeholder-muted-foreground focus:border-muted-foreground focus:outline-none focus:ring-inset focus:ring-muted-foreground dark:border-gray-500 dark:bg-gray-800 focus:dark:bg-transparent sm:text-sm">
-            <SelectItem value="papermark.io" className="hover:bg-muted">
-              papermark.io
+            <SelectItem value="papermark.com" className="hover:bg-muted">
+              papermark.com
             </SelectItem>
             {linkType === "DOCUMENT_LINK" &&
-              (plan === "business" || (limits && limits.customDomainOnPro)) && (
+              (isBusiness || (limits && limits.customDomainOnPro)) && (
                 <>
                   {domains?.map(({ slug }) => (
                     <SelectItem
@@ -116,7 +116,8 @@ export default function DomainSection({
                 </>
               )}
             {linkType === "DATAROOM_LINK" &&
-              (plan === "datarooms" ||
+              (isDatarooms ||
+                isDataroomsPlus ||
                 (limits && limits.customDomainInDataroom)) && (
                 <>
                   {domains?.map(({ slug }) => (
@@ -143,7 +144,7 @@ export default function DomainSection({
           </SelectContent>
         </Select>
 
-        {data.domain && data.domain !== "papermark.io" ? (
+        {data.domain && data.domain !== "papermark.com" ? (
           <Input
             type="text"
             name="key"
@@ -173,7 +174,7 @@ export default function DomainSection({
             autoComplete="off"
             className={cn(
               "hidden rounded-l-none focus:ring-inset",
-              data.domain && data.domain !== "papermark.io" ? "flex" : "",
+              data.domain && data.domain !== "papermark.com" ? "flex" : "",
             )}
             placeholder="deck"
             onChange={(e) => {
@@ -194,7 +195,7 @@ export default function DomainSection({
         ) : null}
       </div>
 
-      {data.domain && data.domain !== "papermark.io" && !isDomainVerified ? (
+      {data.domain && data.domain !== "papermark.com" && !isDomainVerified ? (
         <div className="mt-4 text-sm text-red-500">
           Your domain is not verified yet!{" "}
           <Link
