@@ -93,7 +93,7 @@ export default function PagesHorizontalViewer({
   linkName?: string;
   navData: TNavData;
 }) {
-  const { isMobile, isPreview, linkId, documentId, viewId, dataroomId } =
+  const { isMobile, isPreview, linkId, documentId, viewId, dataroomId, brand } =
     navData;
 
   const router = useRouter();

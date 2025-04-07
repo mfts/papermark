@@ -117,7 +117,7 @@ export default function PagesVerticalViewer({
   linkName?: string;
   navData: TNavData;
 }) {
-  const { linkId, documentId, viewId, isPreview, dataroomId } = navData;
+  const { linkId, documentId, viewId, isPreview, dataroomId, brand } = navData;
 
   const router = useRouter();
 
