@@ -163,7 +163,7 @@ export function SetGroupPermissionsModal({
         <DialogHeader className="w-[90%]">
           <DialogTitle>Set Group Permissions for "{fileName}"</DialogTitle>
           <DialogDescription>
-            Choose which groups can access this document and their permissions.
+            Update which groups can view and download this document.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
