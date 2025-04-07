@@ -99,7 +99,7 @@ export default async function handle(
         },
       });
 
-      return res.status(200).json(response);
+      return res.status(200).json({ message: "success" });
     } catch (error) {
       errorhandler(error, res);
     }
