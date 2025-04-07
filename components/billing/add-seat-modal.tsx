@@ -7,6 +7,10 @@ import { getPriceIdFromPlan } from "@/ee/stripe/functions/get-price-id-from-plan
 import { getQuantityFromPriceId } from "@/ee/stripe/functions/get-quantity-from-plan";
 import { toast } from "sonner";
 
+import { useAnalytics } from "@/lib/analytics";
+import { usePlan } from "@/lib/swr/use-billing";
+import useLimits from "@/lib/swr/use-limits";
+
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -19,10 +23,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
-import { useAnalytics } from "@/lib/analytics";
-import { usePlan } from "@/lib/swr/use-billing";
-import useLimits from "@/lib/swr/use-limits";
 
 export function AddSeatModal({
   open,
@@ -89,7 +89,7 @@ export function AddSeatModal({
 
       if (!response.ok) {
         const error = await response.json();
-        toast.error(error);
+        toast.error("Unable to add seats. Please contact support.");
         setLoading(false);
         return;
       }
