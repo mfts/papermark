@@ -1,11 +1,9 @@
 import dynamic from "next/dynamic";
 
+
+
 import { Brand, Document, DocumentVersion } from "@prisma/client";
 import { ExtendedRecordMap } from "notion-types";
-
-import { NotionPage } from "@/components/NotionPage";
-import PDFViewer from "@/components/view/PDFViewer";
-import { DEFAULT_DOCUMENT_VIEW_TYPE } from "@/components/view/document-view";
 
 import {
   LinkWithDataroomDocument,
@@ -13,6 +11,10 @@ import {
   NotionTheme,
   WatermarkConfig,
 } from "@/lib/types";
+
+import { NotionPage } from "@/components/NotionPage";
+import PDFViewer from "@/components/view/PDFViewer";
+import { DEFAULT_DOCUMENT_VIEW_TYPE } from "@/components/view/document-view";
 
 import AdvancedExcelViewer from "./viewer/advanced-excel-viewer";
 import DownloadOnlyViewer from "./viewer/download-only-viewer";
@@ -30,6 +32,14 @@ export type TViewDocumentData = Document & {
   versions: DocumentVersion[];
 };
 
+const isDownloadAllowed = (
+  canDownload: boolean | undefined,
+  linkAllowDownload: boolean | undefined | null,
+): boolean => {
+  if (canDownload === false) return false;
+  return !!linkAllowDownload;
+};
+
 export default function ViewData({
   viewData,
   link,
@@ -41,6 +51,7 @@ export default function ViewData({
   useAdvancedExcelViewer,
   viewerEmail,
   dataroomId,
+  canDownload,
 }: {
   viewData: DEFAULT_DOCUMENT_VIEW_TYPE;
   link: LinkWithDocument | LinkWithDataroomDocument;
@@ -56,7 +67,9 @@ export default function ViewData({
   useAdvancedExcelViewer?: boolean;
   viewerEmail?: string;
   dataroomId?: string;
+  canDownload?: boolean;
 }) {
+  const allowDownload = isDownloadAllowed(canDownload, link.allowDownload);
   return notionData?.recordMap ? (
     <NotionPage
       recordMap={notionData.recordMap}
@@ -77,7 +90,7 @@ export default function ViewData({
       linkId={link.id}
       viewId={viewData.viewId}
       documentId={document.id}
-      allowDownload={true}
+      allowDownload={allowDownload}
       versionNumber={document.versions[0].versionNumber}
       brand={brand}
       documentName={document.name}
@@ -94,7 +107,7 @@ export default function ViewData({
       versionNumber={document.versions[0].versionNumber}
       sheetData={viewData.sheetData}
       brand={brand}
-      allowDownload={link.allowDownload!}
+      allowDownload={allowDownload}
       screenshotProtectionEnabled={link.enableScreenshotProtection!}
       dataroomId={dataroomId}
     />
@@ -107,7 +120,7 @@ export default function ViewData({
       documentName={document.name}
       versionNumber={document.versions[0].versionNumber}
       file={viewData.file!}
-      allowDownload={link.allowDownload!}
+      allowDownload={allowDownload}
       brand={brand}
       dataroomId={dataroomId}
     />
@@ -118,7 +131,7 @@ export default function ViewData({
       documentId={document.id}
       viewId={viewData.viewId}
       assistantEnabled={document.assistantEnabled}
-      allowDownload={link.allowDownload!}
+      allowDownload={allowDownload}
       feedbackEnabled={link.enableFeedback!}
       screenshotProtectionEnabled={link.enableScreenshotProtection!}
       versionNumber={document.versions[0].versionNumber}
@@ -144,7 +157,7 @@ export default function ViewData({
       linkId={link.id}
       documentId={document.id}
       assistantEnabled={document.assistantEnabled}
-      allowDownload={link.allowDownload!}
+      allowDownload={allowDownload}
       feedbackEnabled={link.enableFeedback!}
       screenshotProtectionEnabled={link.enableScreenshotProtection!}
       versionNumber={document.versions[0].versionNumber}
@@ -169,7 +182,7 @@ export default function ViewData({
       linkId={link.id}
       documentId={document.id}
       assistantEnabled={document.assistantEnabled}
-      allowDownload={link.allowDownload!}
+      allowDownload={allowDownload}
       feedbackEnabled={link.enableFeedback!}
       screenshotProtectionEnabled={link.enableScreenshotProtection!}
       versionNumber={document.versions[0].versionNumber}
@@ -193,7 +206,7 @@ export default function ViewData({
       viewId={viewData.viewId}
       documentId={document.id}
       documentName={document.name}
-      allowDownload={link.allowDownload!}
+      allowDownload={allowDownload}
       screenshotProtectionEnabled={link.enableScreenshotProtection!}
       versionNumber={document.versions[0].versionNumber}
       brand={brand}
@@ -208,7 +221,7 @@ export default function ViewData({
       linkId={link.id}
       documentId={document.id}
       name={document.name}
-      allowDownload={link.allowDownload}
+      allowDownload={allowDownload}
       assistantEnabled={document.assistantEnabled}
       versionNumber={document.versions[0].versionNumber}
       dataroomId={dataroomId}
