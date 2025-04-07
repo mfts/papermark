@@ -9,6 +9,9 @@ import { ArrowLeft, Check } from "lucide-react";
 import { toast } from "sonner";
 import useSWR from "swr";
 
+import { newId } from "@/lib/id-helper";
+import { fetcher } from "@/lib/utils";
+
 import AppLayout from "@/components/layouts/app";
 import { SettingsHeader } from "@/components/settings/settings-header";
 import Copy from "@/components/shared/icons/copy";
@@ -17,9 +20,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
-import { newId } from "@/lib/id-helper";
-import { fetcher } from "@/lib/utils";
 
 interface WebhookEvent {
   id: string;
@@ -185,7 +185,7 @@ export default function NewWebhook() {
                                 checked={formData.triggers.includes(
                                   event.value,
                                 )}
-                                disabled={true}
+                                disabled={event.value !== "document.created"}
                                 onCheckedChange={(checked) => {
                                   setFormData((prev) => ({
                                     ...prev,
@@ -216,7 +216,7 @@ export default function NewWebhook() {
                                 checked={formData.triggers.includes(
                                   event.value,
                                 )}
-                                disabled={true}
+                                disabled={event.value !== "link.created"}
                                 onCheckedChange={(checked) => {
                                   setFormData((prev) => ({
                                     ...prev,

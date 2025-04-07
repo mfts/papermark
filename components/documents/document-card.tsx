@@ -4,6 +4,7 @@ import { useRouter } from "next/router";
 import { useEffect, useRef, useState } from "react";
 
 import { TeamContextType } from "@/context/team-context";
+import { PlanEnum } from "@/ee/stripe/constants";
 import {
   BetweenHorizontalStartIcon,
   FolderInputIcon,
@@ -33,7 +34,7 @@ import { cn, nFormatter, timeAgo } from "@/lib/utils";
 import { fileIcon } from "@/lib/utils/get-file-icon";
 import { useCopyToClipboard } from "@/lib/utils/use-copy-to-clipboard";
 
-import { PlanEnum, UpgradePlanModal } from "../billing/upgrade-plan-modal";
+import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
 import { DataroomTrialModal } from "../datarooms/dataroom-trial-modal";
 import { AddToDataroomModal } from "./add-document-to-dataroom-modal";
 import { MoveToFolderModal } from "./move-folder-modal";
@@ -322,7 +323,8 @@ export default function DocumentsCard({
           open={moveFolderOpen}
           setOpen={setMoveFolderOpen}
           documentIds={[prismaDocument.id]}
-          documentName={prismaDocument.name}
+          itemName={prismaDocument.name}
+          folderParentId={prismaDocument.folderId!}
         />
       ) : null}
 

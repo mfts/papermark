@@ -45,7 +45,7 @@ const FolderComponent = memo(({ folder }: { folder: FolderWithDocuments }) => {
           onToggle={() => router.push(`/documents/${doc.id}`)}
         />
       )),
-    [folder.documents, router.query.name],
+    [folder.documents, router],
   );
 
   // Recursively render child folders if they exist
@@ -95,7 +95,9 @@ const FolderComponentSelection = memo(
     folder,
     selectedFolder,
     setSelectedFolder,
+    disableId,
   }: {
+    disableId?: string[];
     folder: FolderWithDocuments;
     selectedFolder: TSelectedFolder;
     setSelectedFolder: React.Dispatch<React.SetStateAction<TSelectedFolder>>;
@@ -109,32 +111,44 @@ const FolderComponentSelection = memo(
             folder={childFolder}
             selectedFolder={selectedFolder}
             setSelectedFolder={setSelectedFolder}
+            disableId={disableId}
           />
         )),
-      [folder.childFolders, selectedFolder, setSelectedFolder],
+      [folder.childFolders, selectedFolder, setSelectedFolder, disableId],
     );
 
     const isActive = folder.id === selectedFolder?.id;
     const isChildActive = folder.childFolders.some(
       (childFolder) => childFolder.id === selectedFolder?.id,
     );
-
+    const isDisabled = disableId?.includes(folder.id);
     return (
       <div
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
-          setSelectedFolder({ id: folder.id, name: folder.name });
+          if (isDisabled) return;
+          setSelectedFolder({
+            id: folder.id,
+            name: folder.name,
+            path: folder.path,
+          });
         }}
       >
         <FileTree.Folder
+          disable={isDisabled}
           name={folder.name}
           key={folder.id}
           active={isActive}
           childActive={isChildActive}
-          onToggle={() =>
-            setSelectedFolder({ id: folder.id, name: folder.name })
-          }
+          onToggle={() => {
+            if (isDisabled) return;
+            setSelectedFolder({
+              id: folder.id,
+              name: folder.name,
+              path: folder.path,
+            });
+          }}
         >
           {childFolders}
         </FileTree.Folder>
@@ -173,7 +187,9 @@ const SidebarFoldersSelection = ({
   folders,
   selectedFolder,
   setSelectedFolder,
+  disableId,
 }: {
+  disableId?: string[];
   folders: FolderWithDocuments[];
   selectedFolder: TSelectedFolder;
   setSelectedFolder: React.Dispatch<React.SetStateAction<TSelectedFolder>>;
@@ -204,6 +220,7 @@ const SidebarFoldersSelection = ({
         folder={homeFolder}
         selectedFolder={selectedFolder}
         setSelectedFolder={setSelectedFolder}
+        disableId={disableId}
       />
       {/* ))} */}
     </FileTree>
@@ -213,8 +230,10 @@ const SidebarFoldersSelection = ({
 export function SidebarFolderTreeSelection({
   selectedFolder,
   setSelectedFolder,
+  disableId,
 }: {
   selectedFolder: TSelectedFolder;
+  disableId?: string[];
   setSelectedFolder: React.Dispatch<React.SetStateAction<TSelectedFolder>>;
 }) {
   const { folders, error } = useFolders();
@@ -226,6 +245,7 @@ export function SidebarFolderTreeSelection({
       folders={folders}
       selectedFolder={selectedFolder}
       setSelectedFolder={setSelectedFolder}
+      disableId={disableId}
     />
   );
 }

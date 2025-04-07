@@ -5,6 +5,7 @@ import prisma from "@/lib/prisma";
 import {
   BUSINESS_PLAN_LIMITS,
   DATAROOMS_PLAN_LIMITS,
+  DATAROOMS_PLUS_PLAN_LIMITS,
   FREE_PLAN_LIMITS,
   PRO_PLAN_LIMITS,
   TPlanLimits,
@@ -21,6 +22,7 @@ const planLimitsMap: Record<string, TPlanLimits> = {
   pro: PRO_PLAN_LIMITS,
   business: BUSINESS_PLAN_LIMITS,
   datarooms: DATAROOMS_PLAN_LIMITS,
+  "datarooms-plus": DATAROOMS_PLUS_PLAN_LIMITS,
 };
 
 const configSchema = z.object({
@@ -45,6 +47,7 @@ const configSchema = z.object({
       document: z.number().optional(), // in MB
       image: z.number().optional(), // in MB
       excel: z.number().optional(), // in MB
+      maxFiles: z.number().optional(), // in amount of files
     })
     .optional(),
 });
@@ -71,15 +74,9 @@ export async function getLimits({
       _count: {
         select: {
           documents: true,
-        },
-      },
-      documents: {
-        select: {
-          _count: {
-            select: {
-              links: true,
-            },
-          },
+          links: true,
+          users: true,
+          invitations: true,
         },
       },
     },
@@ -90,10 +87,8 @@ export async function getLimits({
   }
 
   const documentCount = team._count.documents;
-  const linkCount = team.documents.reduce(
-    (sum, doc) => sum + doc._count.links,
-    0,
-  );
+  const linkCount = team._count.links;
+  const userCount = team._count.users + team._count.invitations;
 
   // parse the limits json with zod and return the limits
   // {datarooms: 1, users: 1, domains: 1, customDomainOnPro: boolean, customDomainInDataroom: boolean}
@@ -105,7 +100,7 @@ export async function getLimits({
     if (isFreePlan(team.plan)) {
       return {
         ...parsedData,
-        usage: { documents: documentCount, links: linkCount },
+        usage: { documents: documentCount, links: linkCount, users: userCount },
       };
     } else {
       return {
@@ -114,7 +109,7 @@ export async function getLimits({
         links: parsedData.links === 50 ? Infinity : parsedData.links,
         documents:
           parsedData.documents === 50 ? Infinity : parsedData.documents,
-        usage: { documents: documentCount, links: linkCount },
+        usage: { documents: documentCount, links: linkCount, users: userCount },
       };
     }
   } catch (error) {
@@ -124,7 +119,7 @@ export async function getLimits({
 
     return {
       ...defaultLimits,
-      usage: { documents: documentCount, links: linkCount },
+      usage: { documents: documentCount, links: linkCount, users: userCount },
     };
   }
 }

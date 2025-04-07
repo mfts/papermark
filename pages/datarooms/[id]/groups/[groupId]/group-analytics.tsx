@@ -1,9 +1,9 @@
 import { DataroomHeader } from "@/components/datarooms/dataroom-header";
 import { DataroomNavigation } from "@/components/datarooms/dataroom-navigation";
 import { GroupHeader } from "@/components/datarooms/groups/group-header";
-import GroupMemberTable from "@/components/datarooms/groups/group-member-table";
 import { GroupNavigation } from "@/components/datarooms/groups/group-navigation";
 import AppLayout from "@/components/layouts/app";
+import DataroomVisitorsTable from "@/components/visitors/dataroom-visitors-table";
 
 import { useDataroom } from "@/lib/swr/use-dataroom";
 import { useDataroomGroup } from "@/lib/swr/use-dataroom-groups";
@@ -33,12 +33,13 @@ export default function DataroomGroupPage() {
         <div className="mx-auto grid w-full items-start gap-6 md:grid-cols-[180px_1fr] lg:grid-cols-[250px_1fr]">
           <GroupNavigation
             dataroomId={dataroom.id}
-            viewerGroupId={viewerGroup.id}
+            viewerGroupId={viewerGroup?.id!}
           />
           <div className="grid gap-6">
-            <GroupMemberTable
+            <DataroomVisitorsTable
               dataroomId={dataroom.id}
               groupId={viewerGroup.id}
+              name={viewerGroup.name}
             />
           </div>
         </div>

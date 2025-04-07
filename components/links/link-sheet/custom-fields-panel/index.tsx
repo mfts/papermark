@@ -38,11 +38,11 @@ export default function CustomFieldsPanel({
   isConfigOpen: boolean;
   setIsConfigOpen: (open: boolean) => void;
 }) {
-  const { plan } = usePlan();
+  const { isDatarooms, isDataroomsPlus, isBusiness } = usePlan();
 
   const getFieldLimit = () => {
-    if (plan === "datarooms") return 3;
-    if (plan === "business") return 1;
+    if (isDatarooms || isDataroomsPlus) return 3;
+    if (isBusiness) return 1;
     return 0;
   };
 
@@ -50,7 +50,7 @@ export default function CustomFieldsPanel({
     const fieldLimit = getFieldLimit();
     if (fields.length >= fieldLimit) {
       toast.error(
-        `You can only add up to ${fieldLimit} custom field${fieldLimit === 1 ? "" : "s"} on the ${plan === "datarooms" ? "Data Rooms" : "Business"} plan`,
+        `You can only add up to ${fieldLimit} custom field${fieldLimit === 1 ? "" : "s"} on the ${isDatarooms ? "Data Rooms" : "Business"} plan`,
       );
       return;
     }
@@ -117,7 +117,7 @@ export default function CustomFieldsPanel({
               <span className="mt-1 block text-sm text-muted-foreground">
                 You can add up to {fieldLimit} custom field
                 {fieldLimit === 1 ? "" : "s"} on the{" "}
-                {plan === "datarooms" ? "Data Rooms" : "Business"} plan.
+                {isDatarooms ? "Data Rooms" : "Business"} plan.
               </span>
             )}
           </SheetDescription>

@@ -3,7 +3,8 @@ import { useRouter } from "next/router";
 import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
-import { Folder } from "@prisma/client";
+import { PlanEnum } from "@/ee/stripe/constants";
+import slugify from "@sindresorhus/slugify";
 import { toast } from "sonner";
 import { mutate } from "swr";
 import { z } from "zod";
@@ -24,7 +25,7 @@ import { Label } from "@/components/ui/label";
 import { useAnalytics } from "@/lib/analytics";
 import { usePlan } from "@/lib/swr/use-billing";
 
-import { PlanEnum, UpgradePlanModal } from "../billing/upgrade-plan-modal";
+import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
 
 export function AddFolderModal({
   // open,
@@ -47,22 +48,29 @@ export function AddFolderModal({
   const [open, setOpen] = useState<boolean>(false);
 
   const teamInfo = useTeam();
-  const { plan, trial } = usePlan();
+  const { isFree, isTrial } = usePlan();
   const analytics = useAnalytics();
 
   /** current folder name */
   const currentFolderPath = router.query.name as string[] | undefined;
+
+  const folderPath =
+    isDataroom && dataroomId
+      ? `/datarooms/${dataroomId}/documents/${currentFolderPath ? currentFolderPath?.join("/") : ""}/${"/" + slugify(folderName.trim())}`
+      : `/documents/tree/${currentFolderPath ? currentFolderPath?.join("/") : ""}${"/" + slugify(folderName.trim())}`;
+
   const addFolderSchema = z.object({
     name: z.string().min(3, {
       message: "Please provide a folder name with at least 3 characters.",
     }),
   });
 
+  const validation = addFolderSchema.safeParse({ name: folderName });
+
   const handleSubmit = async (event: any) => {
     event.preventDefault();
     event.stopPropagation();
 
-    const validation = addFolderSchema.safeParse({ name: folderName });
     if (!validation.success) {
       toast.error(validation.error.errors[0].message);
       return;
@@ -90,14 +98,24 @@ export function AddFolderModal({
       if (!response.ok) {
         const { message } = await response.json();
         setLoading(false);
-        toast.error(message);
+        toast.error(message.error);
         return;
       }
 
       const { parentFolderPath } = await response.json();
 
-      analytics.capture("Folder Added", { folderName: folderName.trim() });
-      toast.success("Folder added successfully! 🎉");
+      analytics.capture("Folder Added", {
+        folderName: folderName.trim(),
+        dataroomId,
+      });
+      toast.success(`Folder added successfully!`, {
+        description: `"${folderName.trim()}"`,
+        action: {
+          label: "Open folder",
+          onClick: () => router.push(folderPath),
+        },
+        duration: 10000,
+      });
 
       mutate(
         `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}?root=true`,
@@ -111,13 +129,14 @@ export function AddFolderModal({
       toast.error("Error adding folder. Please try again.");
       return;
     } finally {
+      setFolderName("");
       setLoading(false);
       setOpen(false);
     }
   };
 
   // If the team is on a free plan, show the upgrade modal
-  if (plan === "free" && (!isDataroom || !trial)) {
+  if (isFree && (!isDataroom || !isTrial)) {
     if (children) {
       return (
         <UpgradePlanModal
@@ -149,7 +168,12 @@ export function AddFolderModal({
             onChange={(e) => setFolderName(e.target.value)}
           />
           <DialogFooter>
-            <Button type="submit" className="h-9 w-full">
+            <Button
+              type="submit"
+              className="h-9 w-full"
+              disabled={!validation.success}
+              loading={loading}
+            >
               Add new folder
             </Button>
           </DialogFooter>

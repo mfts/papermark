@@ -318,7 +318,8 @@ export default function DataroomDocumentCard({
           setOpen={setMoveFolderOpen}
           dataroomId={dataroomDocument.dataroomId}
           documentIds={[dataroomDocument.id]}
-          documentName={dataroomDocument.document.name}
+          itemName={dataroomDocument.document.name}
+          folderIds={[]}
         />
       ) : null}
     </>

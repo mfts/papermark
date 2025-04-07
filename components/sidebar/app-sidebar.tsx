@@ -7,6 +7,7 @@ import * as React from "react";
 import { useEffect, useState } from "react";
 
 import { TeamContextType, initialState, useTeam } from "@/context/team-context";
+import { PlanEnum } from "@/ee/stripe/constants";
 import Cookies from "js-cookie";
 import {
   BrushIcon,
@@ -37,7 +38,6 @@ import { nFormatter } from "@/lib/utils";
 
 import ProAnnualBanner from "../billing/pro-annual-banner";
 import ProBanner from "../billing/pro-banner";
-import { PlanEnum } from "../billing/upgrade-plan-modal";
 import { Progress } from "../ui/progress";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -48,8 +48,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   >(null);
   const { currentTeam, teams, setCurrentTeam, isLoading }: TeamContextType =
     useTeam() || initialState;
-  const { plan: userPlan, trial: userTrial, isAnnualPlan } = usePlan();
-  const isTrial = !!userTrial;
+  const {
+    plan: userPlan,
+    isAnnualPlan,
+    isPro,
+    isBusiness,
+    isDatarooms,
+    isDataroomsPlus,
+    isFree,
+    isTrial,
+  } = usePlan();
+
   const { limits } = useLimits();
   const linksLimit = limits?.links;
   const documentsLimit = limits?.documents;
@@ -66,12 +75,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       setShowProAnnualBanner(false);
     }
   }, []);
-
-  console.log("userPlan", userPlan);
-  console.log("userTrial", userTrial);
-
-  console.log("linksLimit", linksLimit);
-  console.log("documentsLimit", documentsLimit);
 
   const data = {
     navMain: [
@@ -94,8 +97,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         url: "/datarooms",
         icon: ServerIcon,
         current: router.pathname.includes("datarooms"),
-        disabled:
-          userPlan !== "business" && userPlan !== "datarooms" && !isTrial,
+        disabled: !isBusiness && !isDatarooms && !isDataroomsPlus && !isTrial,
         trigger: "sidebar_datarooms",
         plan: PlanEnum.Business,
       },
@@ -104,7 +106,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         url: "/visitors",
         icon: ContactIcon,
         current: router.pathname.includes("visitors"),
-        disabled: userPlan === "free" && !isTrial,
+        disabled: isFree && !isTrial,
         trigger: "sidebar_visitors",
         plan: PlanEnum.Pro,
       },
@@ -166,12 +168,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </p>
         <p className="ml-2 flex items-center text-2xl font-bold tracking-tighter text-black group-data-[collapsible=icon]:hidden dark:text-white">
           <Link href="/documents">Papermark</Link>
-          {userPlan && userPlan != "free" ? (
+          {userPlan && !isFree && !isDataroomsPlus ? (
             <span className="ml-4 rounded-full bg-background px-2.5 py-1 text-xs tracking-normal text-foreground ring-1 ring-gray-800">
               {userPlan.charAt(0).toUpperCase() + userPlan.slice(1)}
             </span>
           ) : null}
-          {userTrial ? (
+          {isDataroomsPlus ? (
+            <span className="ml-4 rounded-full bg-background px-2.5 py-1 text-xs tracking-normal text-foreground ring-1 ring-gray-800">
+              Datarooms+
+            </span>
+          ) : null}
+          {isTrial ? (
             <span className="ml-2 rounded-sm bg-foreground px-2 py-0.5 text-xs tracking-normal text-background ring-1 ring-gray-800">
               Trial
             </span>
@@ -199,16 +206,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               {/*
                * if user is free and showProBanner is true show pro banner
                */}
-              {userPlan === "free" && !userTrial && showProBanner ? (
+              {isFree && showProBanner ? (
                 <ProBanner setShowProBanner={setShowProBanner} />
               ) : null}
               {/*
                * if user is pro and showProAnnualBanner is true show pro annual banner
                */}
-              {userPlan === "pro" &&
-              !isAnnualPlan &&
-              !userTrial &&
-              showProAnnualBanner ? (
+              {isPro && !isAnnualPlan && showProAnnualBanner ? (
                 <ProAnnualBanner
                   setShowProAnnualBanner={setShowProAnnualBanner}
                 />

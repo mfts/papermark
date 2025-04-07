@@ -416,7 +416,7 @@ export default function UploadZone({
   const getFilesFromEvent = useCallback(
     async (event: DropEvent) => {
       // This callback also run when event.type =`dragenter`. We only need to compute files when the event.type is `drop`.
-      if (event.type !== "drop" && event.type !== "change") {
+      if ("type" in event && event.type !== "drop" && event.type !== "change") {
         return [];
       }
 
@@ -599,6 +599,7 @@ export default function UploadZone({
           filesToBePassedToOnDrop.push(...fileResult),
         );
       } else if (
+        "target" in event &&
         event.target &&
         event.target instanceof HTMLInputElement &&
         event.target.files
@@ -620,7 +621,7 @@ export default function UploadZone({
     accept: acceptableDropZoneFileTypes,
     multiple: true,
     // maxSize: maxSize * 1024 * 1024, // 30 MB
-    maxFiles: 150,
+    maxFiles: fileSizeLimits.maxFiles ?? 150,
     onDrop,
     onDropRejected,
     getFilesFromEvent,

@@ -19,6 +19,19 @@ function isAnalyticsPath(path: string) {
   return pattern.test(path);
 }
 
+function isCustomDomain(host: string) {
+  return (
+    (process.env.NODE_ENV === "development" && host?.includes(".local")) ||
+    (process.env.NODE_ENV !== "development" &&
+      !(
+        host?.includes("localhost") ||
+        host?.includes("papermark.io") ||
+        host?.includes("papermark.com") ||
+        host?.endsWith(".vercel.app")
+      ))
+  );
+}
+
 export const config = {
   matcher: [
     /*
@@ -46,18 +59,12 @@ export default async function middleware(req: NextRequest, ev: NextFetchEvent) {
     return IncomingWebhookMiddleware(req);
   }
 
-  if (
-    (process.env.NODE_ENV === "development" && host?.includes(".local")) ||
-    (process.env.NODE_ENV !== "development" &&
-      !(
-        host?.includes("localhost") ||
-        host?.includes("papermark.io") ||
-        host?.endsWith(".vercel.app")
-      ))
-  ) {
+  // For custom domains, we need to handle them differently
+  if (isCustomDomain(host || "")) {
     return DomainMiddleware(req);
   }
 
+  // Handle standard papermark.io paths
   if (
     !path.startsWith("/view/") &&
     !path.startsWith("/verify") &&
@@ -66,13 +73,13 @@ export default async function middleware(req: NextRequest, ev: NextFetchEvent) {
     return AppMiddleware(req);
   }
 
-  const url = req.nextUrl.clone();
-
+  // Check for blocked pathnames in view routes
   if (
     path.startsWith("/view/") &&
     (BLOCKED_PATHNAMES.some((blockedPath) => path.includes(blockedPath)) ||
       path.includes("."))
   ) {
+    const url = req.nextUrl.clone();
     url.pathname = "/404";
     return NextResponse.rewrite(url, { status: 404 });
   }

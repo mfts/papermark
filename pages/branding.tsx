@@ -3,15 +3,13 @@ import { useRouter } from "next/router";
 import { useCallback, useEffect, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
+import { PlanEnum } from "@/ee/stripe/constants";
 import { Check, CircleHelpIcon, PlusIcon } from "lucide-react";
 import { HexColorInput, HexColorPicker } from "react-colorful";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
-import {
-  PlanEnum,
-  UpgradePlanModal,
-} from "@/components/billing/upgrade-plan-modal";
+import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import AppLayout from "@/components/layouts/app";
 import { NavMenu } from "@/components/navigation-menu";
 import { Button } from "@/components/ui/button";
@@ -187,7 +185,7 @@ export default function Branding() {
                   linkText="Click here"
                   content="How to customize document branding?"
                   key="branding"
-                  link="https://www.papermark.io/help/article/document-branding"
+                  link="https://www.papermark.com/help/article/document-branding"
                 >
                   <CircleHelpIcon className="h-4 w-4 shrink-0 text-muted-foreground hover:text-foreground" />
                 </BadgeTooltip>
@@ -459,7 +457,7 @@ export default function Branding() {
                                 </svg>
                               </div>
                               <span className="whitespace-normal text-xs text-muted-foreground">
-                                papermark.io/view/...
+                                papermark.com/view/...
                               </span>
                             </div>
                           </div>
@@ -533,7 +531,7 @@ export default function Branding() {
                                 </svg>
                               </div>
                               <span className="whitespace-normal text-xs text-muted-foreground">
-                                papermark.io/view/...
+                                papermark.com/view/...
                               </span>
                             </div>
                           </div>
