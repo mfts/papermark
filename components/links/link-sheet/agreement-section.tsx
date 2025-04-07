@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 
 import { motion } from "motion/react";
 
@@ -17,6 +17,7 @@ import { DEFAULT_LINK_TYPE } from ".";
 import AgreementSheet from "./agreement-panel";
 import LinkItem from "./link-item";
 import { LinkUpgradeOptions } from "./link-options";
+import { Agreement } from "@prisma/client";
 
 export default function AgreementSection({
   data,
@@ -38,6 +39,8 @@ export default function AgreementSection({
   const [enabled, setEnabled] = useState<boolean>(false);
   const [isAgreementSheetVisible, setIsAgreementSheetVisible] =
     useState<boolean>(false);
+
+  const filteredAgreements = useMemo(() => agreements.filter((agreement: Agreement) => !agreement.deletedAt || agreement.id === agreementId), [agreements]);
 
   useEffect(() => {
     setEnabled(enableAgreement!);
@@ -98,8 +101,8 @@ export default function AgreementSection({
                   <SelectValue placeholder="Select an agreement" />
                 </SelectTrigger>
                 <SelectContent>
-                  {agreements &&
-                    agreements.map(({ id, name }) => (
+                  {filteredAgreements &&
+                    filteredAgreements.map(({ id, name }) => (
                       <SelectItem key={id} value={id}>
                         {name}
                       </SelectItem>

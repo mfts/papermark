@@ -1,6 +1,7 @@
 import { CustomField, CustomFieldType } from "@prisma/client";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
+import { useCallback, useMemo } from "react";
 
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -40,14 +41,13 @@ export default function CustomFieldsPanel({
 }) {
   const { isDatarooms, isDataroomsPlus, isBusiness } = usePlan();
 
-  const getFieldLimit = () => {
+  const fieldLimit = useMemo(() => {
     if (isDatarooms || isDataroomsPlus) return 3;
     if (isBusiness) return 1;
     return 0;
-  };
+  }, [isDatarooms, isDataroomsPlus, isBusiness]);
 
-  const addField = () => {
-    const fieldLimit = getFieldLimit();
+  const addField = useCallback(() => {
     if (fields.length >= fieldLimit) {
       toast.error(
         `You can only add up to ${fieldLimit} custom field${fieldLimit === 1 ? "" : "s"} on the ${isDatarooms ? "Data Rooms" : "Business"} plan`,
@@ -65,24 +65,24 @@ export default function CustomFieldsPanel({
       orderIndex: fields.length,
     };
     onChange([...fields, newField]);
-  };
+  }, [fields, fieldLimit, isDatarooms, onChange]);
 
-  const updateField = (index: number, updatedField: CustomFieldData) => {
+  const updateField = useCallback((index: number, updatedField: CustomFieldData) => {
     const newFields = [...fields];
     newFields[index] = updatedField;
     onChange(newFields);
-  };
+  }, [fields, onChange]);
 
-  const removeField = (index: number) => {
+  const removeField = useCallback((index: number) => {
     const newFields = fields.filter((_, i) => i !== index);
     // Update orderIndex for remaining fields
     newFields.forEach((field, i) => {
       field.orderIndex = i;
     });
     onChange(newFields);
-  };
+  }, [fields, onChange]);
 
-  const moveField = (index: number, direction: "up" | "down") => {
+  const moveField = useCallback((index: number, direction: "up" | "down") => {
     if (
       (direction === "up" && index === 0) ||
       (direction === "down" && index === fields.length - 1)
@@ -102,9 +102,7 @@ export default function CustomFieldsPanel({
     });
 
     onChange(newFields);
-  };
-
-  const fieldLimit = getFieldLimit();
+  }, [fields, onChange]);
 
   return (
     <Sheet open={isConfigOpen} onOpenChange={setIsConfigOpen}>

@@ -10,12 +10,14 @@ import { sanitizeAllowDenyList } from "@/lib/utils";
 import { DEFAULT_LINK_TYPE } from ".";
 import LinkItem from "./link-item";
 import { LinkUpgradeOptions } from "./link-options";
+import { LinkPreset } from "@prisma/client";
 
 export default function DenyListSection({
   data,
   setData,
   isAllowed,
   handleUpgradeStateChange,
+  presets,
 }: {
   data: DEFAULT_LINK_TYPE;
   setData: React.Dispatch<React.SetStateAction<DEFAULT_LINK_TYPE>>;
@@ -26,6 +28,7 @@ export default function DenyListSection({
     trigger,
     plan,
   }: LinkUpgradeOptions) => void;
+    presets: LinkPreset | null;
 }) {
   const { emailProtected, denyList } = data;
   // Initialize enabled state based on whether denyList is not null and not empty
@@ -35,6 +38,13 @@ export default function DenyListSection({
   const [denyListInput, setDenyListInput] = useState<string>(
     denyList?.join("\n") || "",
   );
+
+  useEffect(() => {
+    if (isAllowed && presets?.enableDenyList) {
+      setEnabled(true);
+      setDenyListInput(presets.denyList?.join("\n") || "");
+    }
+  }, [presets, isAllowed]);
 
   useEffect(() => {
     // Update the denyList in the data state when their inputs change
@@ -99,7 +109,9 @@ export default function DenyListSection({
             <Textarea
               className="focus:ring-inset"
               rows={5}
-              placeholder="Enter blocked emails/domains, one per line, e.g.                                      marc@papermark.io                                                                                   @example.org"
+              placeholder={`Enter blocked emails/domains, one per line, e.g.
+marc@papermark.io
+@example.org`}
               value={denyListInput}
               onChange={handleDenyListChange}
             />

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 
 import { SettingsIcon } from "lucide-react";
 import { motion } from "motion/react";
@@ -12,52 +12,70 @@ import { CustomFieldData } from "./custom-fields-panel";
 import CustomFieldsPanel from "./custom-fields-panel";
 import LinkItem from "./link-item";
 import { LinkUpgradeOptions } from "./link-options";
+import { LinkPreset } from "@prisma/client";
 
 export default function CustomFieldsSection({
   data,
   setData,
   isAllowed,
   handleUpgradeStateChange,
+  presets,
 }: {
   data: DEFAULT_LINK_TYPE;
   setData: React.Dispatch<React.SetStateAction<DEFAULT_LINK_TYPE>>;
   isAllowed: boolean;
   handleUpgradeStateChange: (options: LinkUpgradeOptions) => void;
+    presets: LinkPreset | null;
 }) {
   const [enabled, setEnabled] = useState<boolean>(false);
   const [isConfigOpen, setIsConfigOpen] = useState<boolean>(false);
 
   useEffect(() => {
-    setEnabled(data.customFields.length > 0);
-  }, [data.customFields]);
+    if (isAllowed && presets?.watermarkConfig) {
+      setEnabled(true);
+      setData((prevData) => ({
+        ...prevData,
+        customFields: presets.customFields ? JSON.parse(presets.customFields as string) as CustomFieldData[] : [],
+      }));
+    }
+  }, [presets, isAllowed]);
 
-  const handleCustomFieldsToggle = () => {
+  useEffect(() => {
+    const hasCustomFields = data.customFields.length > 0;
+    if (enabled !== hasCustomFields) {
+      setEnabled(hasCustomFields);
+    }
+  }, [data.customFields, enabled]);
+
+  const handleCustomFieldsToggle = useCallback(() => {
     const updatedEnabled = !enabled;
-    setData({
-      ...data,
+    setData(prevData => ({
+      ...prevData,
       customFields: updatedEnabled
         ? [
-            {
-              type: "SHORT_TEXT",
-              identifier: "",
-              label: "",
-              placeholder: "",
-              required: false,
-              disabled: false,
-              orderIndex: 0,
-            },
-          ]
+          {
+            type: "SHORT_TEXT",
+            identifier: "",
+            label: "",
+            placeholder: "",
+            required: false,
+            disabled: false,
+            orderIndex: 0,
+          },
+        ]
         : [],
-    });
+    }));
     setEnabled(updatedEnabled);
-  };
+  }, [enabled, setData]);
 
-  const handleConfigSave = (fields: CustomFieldData[]) => {
-    setData({
-      ...data,
+  const handleConfigSave = useCallback((fields: CustomFieldData[]) => {
+    setData(prevData => ({
+      ...prevData,
       customFields: fields,
-    });
-  };
+    }));
+  }, [setData]);
+
+  const memoizedFields = useMemo(() => data.customFields || [], [data.customFields]);
 
   return (
     <div className="pb-5">
@@ -84,7 +102,7 @@ export default function CustomFieldsSection({
         >
           <div className="mt-2 flex w-full items-center justify-between">
             <div className="space-y-1">
-              {data.customFields.map((field) => (
+              {memoizedFields.map((field) => (
                 <p
                   key={field.identifier || field.orderIndex}
                   className="text-sm text-muted-foreground"
@@ -114,11 +132,11 @@ export default function CustomFieldsSection({
       )}
 
       <CustomFieldsPanel
-        fields={data.customFields}
+        fields={memoizedFields}
         onChange={handleConfigSave}
         isConfigOpen={isConfigOpen}
         setIsConfigOpen={setIsConfigOpen}
       />
     </div>
   );
-}
+};

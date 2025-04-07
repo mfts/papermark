@@ -34,7 +34,15 @@ export default async function handle(
           },
         },
         select: {
-          agreements: true,
+          agreements: {
+            include: {
+              _count: {
+                select: {
+                  links: true,
+                },
+              },
+            },
+          },
         },
       });
 

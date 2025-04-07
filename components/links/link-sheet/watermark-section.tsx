@@ -14,16 +14,19 @@ import { DEFAULT_LINK_TYPE } from ".";
 import LinkItem from "./link-item";
 import { LinkUpgradeOptions } from "./link-options";
 import WatermarkConfigSheet from "./watermark-panel";
+import { LinkPreset } from "@prisma/client";
 
 export default function WatermarkSection({
   data,
   setData,
   isAllowed,
   handleUpgradeStateChange,
+  presets,
 }: {
   data: DEFAULT_LINK_TYPE;
   setData: React.Dispatch<React.SetStateAction<DEFAULT_LINK_TYPE>>;
   isAllowed: boolean;
+    presets: LinkPreset | null;
   handleUpgradeStateChange: ({
     state,
     trigger,
@@ -33,6 +36,17 @@ export default function WatermarkSection({
   const { enableWatermark, watermarkConfig } = data;
   const [enabled, setEnabled] = useState<boolean>(false);
   const [isConfigOpen, setIsConfigOpen] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (isAllowed && presets?.watermarkConfig) {
+      setEnabled(true);
+      setData((prevData) => ({
+        ...prevData,
+        enableWatermark: true,
+        watermarkConfig: presets.watermarkConfig ? JSON.parse(presets.watermarkConfig as string) as WatermarkConfig : null,
+      }));
+    }
+  }, [presets, isAllowed]);
 
   useEffect(() => {
     setEnabled(enableWatermark);

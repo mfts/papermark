@@ -190,6 +190,9 @@ export default async function handler(
             },
           }),
         },
+        include: {
+          customFields: true,
+        },
       });
 
       const linkWithView = {
