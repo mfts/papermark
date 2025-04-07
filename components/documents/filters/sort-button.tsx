@@ -47,6 +47,8 @@ export default function SortButton() {
 
     if (sortBy === null) {
       delete currentQuery.sort;
+      delete currentQuery.page;
+      delete currentQuery.limit;
     } else {
       currentQuery.sort = sortBy;
     }
