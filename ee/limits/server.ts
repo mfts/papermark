@@ -26,7 +26,7 @@ const planLimitsMap: Record<string, TPlanLimits> = {
 };
 
 export const configSchema = z.object({
-  datarooms: z.number(),
+  datarooms: z.number().optional(),
   links: z
     .preprocess((v) => (v === null ? Infinity : Number(v)), z.number())
     .optional()
@@ -35,10 +35,10 @@ export const configSchema = z.object({
     .preprocess((v) => (v === null ? Infinity : Number(v)), z.number())
     .optional()
     .default(50),
-  users: z.number(),
-  domains: z.number(),
-  customDomainOnPro: z.boolean(),
-  customDomainInDataroom: z.boolean(),
+  users: z.number().optional(),
+  domains: z.number().optional(),
+  customDomainOnPro: z.boolean().optional(),
+  customDomainInDataroom: z.boolean().optional(),
   advancedLinkControlsOnPro: z.boolean().nullish(),
   watermarkOnBusiness: z.boolean().nullish(),
   conversationsInDataroom: z.boolean().nullish(),
