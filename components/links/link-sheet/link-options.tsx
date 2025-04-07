@@ -161,7 +161,10 @@ export const LinkOptions = ({
       limits?.conversationsInDataroom ? (
         <ConversationSection
           {...{ data, setData }}
-          isAllowed={isDataroomsPlus || limits?.conversationsInDataroom}
+          isAllowed={
+            isDataroomsPlus ||
+            ((isBusiness || isDatarooms) && limits?.conversationsInDataroom)
+          }
           handleUpgradeStateChange={handleUpgradeStateChange}
         />
       ) : null}
