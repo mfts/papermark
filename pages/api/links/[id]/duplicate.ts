@@ -1,13 +1,20 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import { Prisma } from "@prisma/client";
+import { waitUntil } from "@vercel/functions";
 import { getServerSession } from "next-auth/next";
 
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
+import { sendLinkCreatedWebhook } from "@/lib/webhook/triggers/link-created";
 
 import { authOptions } from "../../auth/[...nextauth]";
+
+export const config = {
+  // in order to enable `waitUntil` function
+  supportsResponseStreaming: true,
+};
 
 export default async function handle(
   req: NextApiRequest,
@@ -68,6 +75,17 @@ export default async function handle(
         _count: { views: 0 },
         views: [],
       };
+
+      waitUntil(
+        sendLinkCreatedWebhook({
+          teamId,
+          data: {
+            link_id: newLink.id,
+            document_id: newLink.documentId,
+            dataroom_id: newLink.dataroomId,
+          },
+        }),
+      );
 
       return res.status(201).json(linkWithView);
     } catch (error) {

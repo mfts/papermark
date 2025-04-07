@@ -112,6 +112,8 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
               document: {
                 ...linkDocument,
                 versions: [versionWithoutTypeAndFile],
+                // TODO: remove this once the assistant feature is re-enabled
+                assistantEnabled: false,
               },
             },
             brand,
@@ -127,14 +129,15 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
             metaDescription: link.metaDescription,
             metaImage: link.metaImage,
             metaFavicon: link.metaFavicon ?? "/favicon.ico",
-            metaUrl: `https://www.papermark.io/view/${linkId}`,
+            metaUrl: `https://www.papermark.com/view/${linkId}`,
           },
           showPoweredByBanner: link.showBanner || teamPlan === "free",
           showAccountCreationSlide: link.showBanner || teamPlan === "free",
           useAdvancedExcelViewer: advancedExcelEnabled,
           useCustomAccessForm:
             teamId === "cm0154tiv0000lr2t6nr5c6kp" ||
-            teamId === "clup33by90000oewh4rfvp2eg",
+            teamId === "clup33by90000oewh4rfvp2eg" ||
+            teamId === "cm76hfyvy0002q623hmen99pf",
         },
         revalidate: brand || recordMap ? 10 : false,
       };
@@ -181,7 +184,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
             metaDescription: link.metaDescription,
             metaImage: link.metaImage,
             metaFavicon: link.metaFavicon ?? "/favicon.ico",
-            metaUrl: `https://www.papermark.io/view/${linkId}`,
+            metaUrl: `https://www.papermark.com/view/${linkId}`,
           },
           showPoweredByBanner: false,
           showAccountCreationSlide: false,
@@ -222,7 +225,9 @@ export default function ViewPage({
 
   useEffect(() => {
     // Retrieve token from cookie on component mount
-    const cookieToken = Cookies.get("pm_vft");
+    const cookieToken =
+      Cookies.get("pm_vft") ||
+      Cookies.get(`pm_drs_flag_${router.query.linkId}`);
     const storedEmail = window.localStorage.getItem("papermark.email");
     if (cookieToken) {
       setStoredToken(cookieToken);
@@ -230,7 +235,7 @@ export default function ViewPage({
         setStoredEmail(storedEmail.toLowerCase());
       }
     }
-  }, []);
+  }, [router.query.linkId]);
 
   if (router.isFallback) {
     return (
@@ -244,10 +249,12 @@ export default function ViewPage({
     email: verifiedEmail,
     d: disableEditEmail,
     previewToken,
+    preview,
   } = router.query as {
     email: string;
     d: string;
     previewToken?: string;
+    preview?: string;
   };
   const { linkType, link, brand } = linkData;
 
@@ -400,15 +407,15 @@ export default function ViewPage({
         <DataroomView
           link={link}
           userEmail={verifiedEmail ?? storedEmail ?? userEmail}
+          verifiedEmail={verifiedEmail}
           userId={userId}
           isProtected={!!(emailProtected || linkPassword || enableAgreement)}
           brand={brand}
-          useAdvancedExcelViewer={useAdvancedExcelViewer}
-          previewToken={previewToken}
           disableEditEmail={!!disableEditEmail}
           useCustomAccessForm={useCustomAccessForm}
           token={storedToken}
-          verifiedEmail={verifiedEmail}
+          previewToken={previewToken}
+          preview={!!preview}
         />
       </>
     );

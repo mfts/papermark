@@ -128,6 +128,8 @@ export function SearchBoxPersisted({
     if (queryParams[urlParam] ?? "" !== debouncedValue)
       if (debouncedValue === "") {
         delete queryParams[urlParam];
+        delete queryParams["page"];
+        delete queryParams["limit"];
         router.push(
           {
             pathname: router.pathname,

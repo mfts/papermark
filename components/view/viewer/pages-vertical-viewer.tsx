@@ -3,31 +3,20 @@ import { useRouter } from "next/router";
 import { useEffect, useRef, useState } from "react";
 import React from "react";
 
-import { Brand, DataroomBrand } from "@prisma/client";
-import {
-  ChevronDownIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  ChevronUpIcon,
-  ZoomInIcon,
-  ZoomOutIcon,
-} from "lucide-react";
-import { useSession } from "next-auth/react";
-import { toast } from "sonner";
+import { ChevronDownIcon, ChevronUpIcon } from "lucide-react";
 
 import { WatermarkConfig } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useMediaQuery } from "@/lib/utils/use-media-query";
 
 import { ScreenProtector } from "../ScreenProtection";
-import { TDocumentData } from "../dataroom/dataroom-view";
-import Nav from "../nav";
+import Nav, { TNavData } from "../nav";
 import { PoweredBy } from "../powered-by";
 import Question from "../question";
-import { ScreenShield } from "../screen-shield";
 import Toolbar from "../toolbar";
-import ViewDurationSummary from "../visitor-graph";
 import { SVGWatermark } from "../watermark-svg";
+
+import "@/styles/custom-viewer-styles.css";
 
 const DEFAULT_PRELOADED_IMAGES_NUM = 5;
 
@@ -94,28 +83,17 @@ const trackPageView = async (data: {
 
 export default function PagesVerticalViewer({
   pages,
-  linkId,
-  documentId,
-  viewId,
-  assistantEnabled,
-  allowDownload,
   feedbackEnabled,
   screenshotProtectionEnabled,
-  screenShieldPercentage,
   versionNumber,
-  brand,
-  documentName,
-  dataroomId,
-  setDocumentData,
   showPoweredByBanner,
-  showAccountCreationSlide,
   enableQuestion = false,
   feedback,
   viewerEmail,
-  isPreview,
   watermarkConfig,
   ipAddress,
   linkName,
+  navData,
 }: {
   pages: {
     file: string;
@@ -124,32 +102,23 @@ export default function PagesVerticalViewer({
     pageLinks: { href: string; coords: string }[];
     metadata: { width: number; height: number; scaleFactor: number };
   }[];
-  linkId: string;
-  documentId: string;
-  viewId?: string;
-  assistantEnabled?: boolean;
-  allowDownload: boolean;
   feedbackEnabled: boolean;
   screenshotProtectionEnabled: boolean;
-  screenShieldPercentage: number | null;
   versionNumber: number;
-  brand?: Partial<Brand> | Partial<DataroomBrand> | null;
-  documentName?: string;
-  dataroomId?: string;
-  setDocumentData?: React.Dispatch<React.SetStateAction<TDocumentData | null>>;
   showPoweredByBanner?: boolean;
-  showAccountCreationSlide?: boolean;
   enableQuestion?: boolean | null;
   feedback?: {
     id: string;
     data: { question: string; type: string };
   } | null;
   viewerEmail?: string;
-  isPreview?: boolean;
   watermarkConfig?: WatermarkConfig | null;
   ipAddress?: string;
   linkName?: string;
+  navData: TNavData;
 }) {
+  const { linkId, documentId, viewId, isPreview, dataroomId, brand } = navData;
+
   const router = useRouter();
 
   const numPages = pages.length;
@@ -443,22 +412,6 @@ export default function PagesVerticalViewer({
     }
   };
 
-  // Function to handle context for screenshotting
-  const handleContextMenu = (event: React.MouseEvent<HTMLDivElement>) => {
-    if (!screenshotProtectionEnabled && !screenShieldPercentage) {
-      return null;
-    }
-
-    event.preventDefault();
-    // Close menu on click anywhere
-    const clickHandler = () => {
-      document.removeEventListener("click", clickHandler);
-    };
-    document.addEventListener("click", clickHandler);
-
-    toast.info("Context menu has been disabled.");
-  };
-
   // Function to preload next image
   const preloadImage = (index: number) => {
     if (index < numPages && !loadedImages[index]) {
@@ -724,21 +677,11 @@ export default function PagesVerticalViewer({
       <Nav
         pageNumber={pageNumber}
         numPages={numPagesWithAccountCreation}
-        assistantEnabled={assistantEnabled}
-        allowDownload={allowDownload}
-        brand={brand}
-        viewId={viewId}
-        linkId={linkId}
-        documentId={documentId}
-        documentName={documentName}
         embeddedLinks={pages[pageNumber - 1]?.embeddedLinks}
-        isDataroom={dataroomId ? true : false}
-        setDocumentData={setDocumentData}
-        isMobile={isMobile}
-        isPreview={isPreview}
         hasWatermark={watermarkConfig ? true : false}
         handleZoomIn={handleZoomIn}
         handleZoomOut={handleZoomOut}
+        navData={navData}
       />
       <div
         style={{ height: "calc(100dvh - 64px)" }}
@@ -766,7 +709,7 @@ export default function PagesVerticalViewer({
               >
                 <div
                   className="flex flex-col items-center gap-2"
-                  onContextMenu={handleContextMenu}
+                  onContextMenu={(e) => e.preventDefault()}
                 >
                   {pageNumber <= numPagesWithAccountCreation &&
                   pages &&
@@ -781,7 +724,7 @@ export default function PagesVerticalViewer({
                               : undefined,
                           }}
                         >
-                          <div className="relative">
+                          <div className="viewer-container relative">
                             <img
                               className="h-auto w-full object-contain"
                               ref={(ref) => {
@@ -801,7 +744,7 @@ export default function PagesVerticalViewer({
                               src={
                                 loadedImages[index]
                                   ? page.file
-                                  : "https://www.papermark.io/_static/blank.gif"
+                                  : "https://www.papermark.com/_static/blank.gif"
                               }
                               alt={`Page ${index + 1}`}
                             />
@@ -904,6 +847,7 @@ export default function PagesVerticalViewer({
                       style={{ height: "calc(100dvh - 64px)" }}
                     >
                       <Question
+                        accentColor={brand?.accentColor}
                         feedback={feedback}
                         viewId={viewId}
                         submittedFeedback={submittedFeedback}
@@ -959,9 +903,7 @@ export default function PagesVerticalViewer({
             isPreview={isPreview}
           />
         ) : null}
-        {!!screenShieldPercentage ? (
-          <ScreenShield visiblePercentage={screenShieldPercentage} />
-        ) : null}
+
         {screenshotProtectionEnabled ? <ScreenProtector /> : null}
         {showPoweredByBanner ? <PoweredBy linkId={linkId} /> : null}
       </div>

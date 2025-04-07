@@ -35,6 +35,10 @@ import { LinkOptions } from "../links/link-sheet/link-options";
 
 export default function DeckGeneratorUpload() {
   const router = useRouter();
+  const { groupId } = router.query as {
+    id: string;
+    groupId?: string;
+  };
   const plausible = usePlausible();
   const analytics = useAnalytics();
   const [uploading, setUploading] = useState<boolean>(false);
@@ -44,7 +48,7 @@ export default function DeckGeneratorUpload() {
   const [currentLinkId, setCurrentLinkId] = useState<string | null>(null);
   const [currentDocId, setCurrentDocId] = useState<string | null>(null);
   const [linkData, setLinkData] = useState<DEFAULT_LINK_TYPE>(
-    DEFAULT_LINK_PROPS(LinkType.DOCUMENT_LINK),
+    DEFAULT_LINK_PROPS(LinkType.DOCUMENT_LINK, groupId),
   );
   const teamInfo = useTeam();
 

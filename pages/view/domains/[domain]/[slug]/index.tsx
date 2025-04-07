@@ -10,11 +10,6 @@ import { useSession } from "next-auth/react";
 import { ExtendedRecordMap } from "notion-types";
 import { parsePageId } from "notion-utils";
 
-import LoadingSpinner from "@/components/ui/loading-spinner";
-import CustomMetaTag from "@/components/view/custom-metatag";
-import DataroomView from "@/components/view/dataroom/dataroom-view";
-import DocumentView from "@/components/view/document-view";
-
 import notion from "@/lib/notion";
 import {
   CustomUser,
@@ -22,6 +17,11 @@ import {
   LinkWithDocument,
   NotionTheme,
 } from "@/lib/types";
+
+import LoadingSpinner from "@/components/ui/loading-spinner";
+import CustomMetaTag from "@/components/view/custom-metatag";
+import DataroomView from "@/components/view/dataroom/dataroom-view";
+import DocumentView from "@/components/view/document-view";
 
 type DocumentLinkData = {
   linkType: "DOCUMENT_LINK";
@@ -93,6 +93,8 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
               document: {
                 ...linkDocument,
                 versions: [versionWithoutTypeAndFile],
+                // TODO: remove this once the assistant feature is re-enabled
+                assistantEnabled: false,
               },
             },
             brand,
@@ -114,7 +116,8 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
           useAdvancedExcelViewer: advancedExcelEnabled,
           useCustomAccessForm:
             teamId === "cm0154tiv0000lr2t6nr5c6kp" ||
-            teamId === "clup33by90000oewh4rfvp2eg",
+            teamId === "clup33by90000oewh4rfvp2eg" ||
+            teamId === "cm76hfyvy0002q623hmen99pf",
         },
         revalidate: 10,
       };
@@ -219,7 +222,8 @@ export default function ViewPage({
 
   useEffect(() => {
     // Retrieve token from cookie on component mount
-    const cookieToken = Cookies.get("pm_vft");
+    const cookieToken =
+      Cookies.get("pm_vft") || Cookies.get(`pm_drs_flag_${router.query.slug}`);
     const storedEmail = window.localStorage.getItem("papermark.email");
     if (cookieToken) {
       setStoredToken(cookieToken);
@@ -227,7 +231,7 @@ export default function ViewPage({
         setStoredEmail(storedEmail.toLowerCase());
       }
     }
-  }, []);
+  }, [router.query.slug]);
 
   if (router.isFallback) {
     return (
@@ -241,10 +245,12 @@ export default function ViewPage({
     email: verifiedEmail,
     d: disableEditEmail,
     previewToken,
+    preview,
   } = router.query as {
     email: string;
     d: string;
     previewToken?: string;
+    preview?: string;
   };
   const { linkType, link, brand } = linkData;
 
@@ -398,12 +404,12 @@ export default function ViewPage({
           userId={userId}
           isProtected={!!(emailProtected || linkPassword || enableAgreement)}
           brand={brand}
-          useAdvancedExcelViewer={useAdvancedExcelViewer}
-          previewToken={previewToken}
           disableEditEmail={!!disableEditEmail}
           useCustomAccessForm={useCustomAccessForm}
           token={storedToken}
           verifiedEmail={verifiedEmail}
+          previewToken={previewToken}
+          preview={!!preview}
         />
       </>
     );

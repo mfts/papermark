@@ -48,6 +48,7 @@ next-env.d.ts
 
 # Internal scripts
 pages/api/scripts
+scripts/
 
 # marketing emails
 components/emails/marketing
@@ -58,3 +59,6 @@ lib/emails/marketing
 
 # trigger.dev
 .trigger
+
+# changelog
+changelog

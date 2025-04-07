@@ -38,7 +38,6 @@ export default async function handle(
           allowDownload: true,
           enableFeedback: true,
           enableScreenshotProtection: true,
-          screenShieldPercentage: true,
           password: true,
           isArchived: true,
           enableCustomMetatag: true,
@@ -193,8 +192,8 @@ export default async function handle(
 
     let { domain, slug, ...linkData } = linkDomainData;
 
-    // set domain and slug to null if the domain is papermark.io
-    if (domain && domain === "papermark.io") {
+    // set domain and slug to null if the domain is papermark.com
+    if (domain && domain === "papermark.com") {
       domain = null;
       slug = null;
     }
@@ -269,7 +268,6 @@ export default async function handle(
         enableNotification: linkData.enableNotification,
         enableFeedback: linkData.enableFeedback,
         enableScreenshotProtection: linkData.enableScreenshotProtection,
-        screenShieldPercentage: linkData.screenShieldPercentage,
         enableCustomMetatag: linkData.enableCustomMetatag,
         metaTitle: linkData.metaTitle || null,
         metaDescription: linkData.metaDescription || null,
@@ -318,6 +316,7 @@ export default async function handle(
         watermarkConfig: linkData.watermarkConfig || null,
         groupId: linkData.groupId || null,
         audienceType: linkData.audienceType || LinkAudienceType.GENERAL,
+        enableConversation: linkData.enableConversation || false,
       },
       include: {
         views: {

@@ -3,6 +3,7 @@ import ErrorPage from "next/error";
 import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
+import { PlanEnum } from "@/ee/stripe/constants";
 
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import DocumentHeader from "@/components/documents/document-header";
@@ -20,7 +21,12 @@ import { useDocument, useDocumentLinks } from "@/lib/swr/use-document";
 import useLimits from "@/lib/swr/use-limits";
 
 export default function DocumentPage() {
-  const { document: prismaDocument, primaryVersion, error } = useDocument();
+  const {
+    document: prismaDocument,
+    primaryVersion,
+    error,
+    mutate: mutateDocument,
+  } = useDocument();
   const { links } = useDocumentLinks();
   const teamInfo = useTeam();
 
@@ -39,7 +45,7 @@ export default function DocumentPage() {
   const AddLinkButton = () => {
     if (!canAddLinks) {
       return (
-        <UpgradePlanModal clickedPlan="Pro" trigger={"limit_add_link"}>
+        <UpgradePlanModal clickedPlan={PlanEnum.Pro} trigger={"limit_add_link"}>
           <Button className="flex h-8 whitespace-nowrap text-xs lg:h-9 lg:text-sm">
             Upgrade to Create Link
           </Button>
@@ -92,6 +98,7 @@ export default function DocumentPage() {
               links={links}
               targetType={"DOCUMENT"}
               primaryVersion={primaryVersion}
+              mutateDocument={mutateDocument}
             />
 
             {/* Visitors */}

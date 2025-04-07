@@ -1,3 +1,4 @@
+import slugify from "@sindresorhus/slugify";
 import { upload } from "@vercel/blob/client";
 import { Message } from "ai";
 import bcrypt from "bcryptjs";
@@ -352,7 +353,7 @@ export const convertThreadMessagesToMessages = (
 export function constructMetadata({
   title = "Papermark | The Open Source DocSend Alternative",
   description = "Papermark is an open-source document sharing alternative to DocSend with built-in engagement analytics and 100% white-labeling.",
-  image = "https://www.papermark.io/_static/meta-image.png",
+  image = "https://www.papermark.com/_static/meta-image.png",
   favicon = "/favicon.ico",
   noIndex = false,
 }: {
@@ -446,10 +447,13 @@ export const validateImageDimensions = (
   });
 };
 
-export const uploadImage = async (file: File) => {
+export const uploadImage = async (
+  file: File,
+  uploadType: "profile" | "assets" = "assets",
+) => {
   const newBlob = await upload(file.name, file, {
     access: "public",
-    handleUploadUrl: "/api/file/logo-upload",
+    handleUploadUrl: `/api/file/image-upload?type=${uploadType}`,
   });
 
   return newBlob.url;
@@ -535,3 +539,24 @@ export function hexToRgb(hex: string) {
   let b = (bigint & 255) / 255; // Convert to 0-1 range
   return rgb(r, g, g);
 }
+
+export const trim = (u: unknown) => (typeof u === "string" ? u.trim() : u);
+
+export const getBreadcrumbPath = (path: string[]) => {
+  const segments = path?.filter(Boolean);
+   if (!Array.isArray(path) || path.length === 0) {
+    return [{ name: "Home", pathLink: "/documents" }];
+  }
+  let currentPath = "documents/tree";
+
+  return [
+    { name: "Home", pathLink: "/documents" },
+    ...segments.map((segment, index) => {
+      currentPath += `/${slugify(segment)}`;
+      return { 
+        name: segment, 
+        pathLink: currentPath 
+      };
+    })
+  ];
+};

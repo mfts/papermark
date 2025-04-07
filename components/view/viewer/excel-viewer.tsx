@@ -4,13 +4,13 @@ import React from "react";
 import "@/public/vendor/handsontable/handsontable.full.min.css";
 import { Brand, DataroomBrand } from "@prisma/client";
 
-import { Button } from "@/components/ui/button";
-
 import { cn } from "@/lib/utils";
+
+import { Button } from "@/components/ui/button";
 
 import { ScreenProtector } from "../ScreenProtection";
 import { TDocumentData } from "../dataroom/dataroom-view";
-import Nav from "../nav";
+import Nav, { TNavData } from "../nav";
 
 // Define the type for the JSON data
 type RowData = { [key: string]: any };
@@ -43,31 +43,15 @@ const trackPageView = async (data: {
 };
 
 export default function ExcelViewer({
-  linkId,
-  viewId,
-  documentId,
-  documentName,
   versionNumber,
   sheetData,
-  allowDownload,
   screenshotProtectionEnabled,
-  brand,
-  dataroomId,
-  setDocumentData,
-  isPreview,
+  navData,
 }: {
-  linkId: string;
-  viewId?: string;
-  documentId: string;
-  documentName: string;
   versionNumber: number;
   sheetData: SheetData[];
-  allowDownload: boolean;
   screenshotProtectionEnabled: boolean;
-  brand?: Partial<Brand> | Partial<DataroomBrand> | null;
-  dataroomId?: string;
-  setDocumentData?: React.Dispatch<React.SetStateAction<TDocumentData | null>>;
-  isPreview?: boolean;
+  navData: TNavData;
 }) {
   const [availableWidth, setAvailableWidth] = useState<number>(200);
   const [availableHeight, setAvailableHeight] = useState<number>(200);
@@ -75,6 +59,8 @@ export default function ExcelViewer({
   const [selectedSheetIndex, setSelectedSheetIndex] = useState<number>(0);
 
   const [isWindowFocused, setIsWindowFocused] = useState(true);
+
+  const { linkId, documentId, viewId, isPreview, dataroomId } = navData;
 
   useEffect(() => {
     const script = document.createElement("script");
@@ -153,6 +139,7 @@ export default function ExcelViewer({
           pageNumber: selectedSheetIndex + 1,
           versionNumber,
           dataroomId,
+          isPreview,
         });
       }
     };
@@ -170,6 +157,7 @@ export default function ExcelViewer({
           pageNumber: selectedSheetIndex + 1,
           versionNumber,
           dataroomId,
+          isPreview,
         }); // Also capture duration if component unmounts while visible
         startTimeRef.current = Date.now();
       }
@@ -190,6 +178,7 @@ export default function ExcelViewer({
         pageNumber: selectedSheetIndex + 1,
         versionNumber,
         dataroomId,
+        isPreview,
       });
     };
 
@@ -242,18 +231,7 @@ export default function ExcelViewer({
 
   return (
     <>
-      <Nav
-        brand={brand}
-        documentName={documentName}
-        isDataroom={dataroomId ? true : false}
-        setDocumentData={setDocumentData}
-        type="sheet"
-        isPreview={isPreview}
-        allowDownload={allowDownload}
-        linkId={linkId}
-        documentId={documentId}
-        viewId={viewId}
-      />
+      <Nav type="sheet" navData={navData} />
       <div
         style={{ height: "calc(100dvh - 64px)" }}
         className={cn(

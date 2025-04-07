@@ -18,6 +18,7 @@ export const sendEmail = async ({
   verify,
   test,
   cc,
+  replyTo,
   scheduledAt,
   unsubscribeUrl,
 }: {
@@ -29,6 +30,7 @@ export const sendEmail = async ({
   verify?: boolean;
   test?: boolean;
   cc?: string | string[];
+  replyTo?: string;
   scheduledAt?: string;
   unsubscribeUrl?: string;
 }) => {
@@ -52,7 +54,7 @@ export const sendEmail = async ({
               : "Marc from Papermark <marc@papermark.io>",
       to: test ? "delivered@resend.dev" : to,
       cc: cc,
-      replyTo: marketing ? "marc@papermark.io" : undefined,
+      replyTo: marketing ? "marc@papermark.io" : replyTo,
       subject,
       react,
       scheduledAt,

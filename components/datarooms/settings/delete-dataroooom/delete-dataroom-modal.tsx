@@ -18,7 +18,6 @@ import { Input } from "@/components/ui/input";
 import { Modal } from "@/components/ui/modal";
 
 import { useAnalytics } from "@/lib/analytics";
-import { useMediaQuery } from "@/lib/utils/use-media-query";
 
 function DeleteDataroomModal({
   dataroomId,
@@ -38,8 +37,6 @@ function DeleteDataroomModal({
   const [deleting, setDeleting] = useState(false);
 
   async function deleteDataroom() {
-    const dataroomsCount = teamInfo?.teams.length ?? 1;
-
     return new Promise((resolve, reject) => {
       setDeleting(true);
 
@@ -55,7 +52,6 @@ function DeleteDataroomModal({
             dataroomId: dataroomId,
           });
           await mutate(`/api/teams/${teamInfo?.currentTeam?.id}/datarooms`);
-          console.log("dataroomsCount", dataroomsCount);
           router.push("/datarooms");
           resolve(null);
         } else {
@@ -66,8 +62,6 @@ function DeleteDataroomModal({
       });
     });
   }
-
-  const { isMobile } = useMediaQuery();
 
   return (
     <Modal

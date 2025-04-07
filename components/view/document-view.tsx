@@ -8,17 +8,17 @@ import { usePlausible } from "next-plausible";
 import { ExtendedRecordMap } from "notion-types";
 import { toast } from "sonner";
 
+import { useAnalytics } from "@/lib/analytics";
+import { LinkWithDocument, NotionTheme, WatermarkConfig } from "@/lib/types";
+
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import AccessForm, {
   DEFAULT_ACCESS_FORM_DATA,
   DEFAULT_ACCESS_FORM_TYPE,
 } from "@/components/view/access-form";
 
-import { useAnalytics } from "@/lib/analytics";
-import { LinkWithDocument, NotionTheme, WatermarkConfig } from "@/lib/types";
-
-import EmailVerificationMessage from "./email-verification-form";
-import ViewData from "./view-data";
+import EmailVerificationMessage from "./access-form/email-verification-form";
+import ViewData, { TViewDocumentData } from "./view-data";
 
 type RowData = { [key: string]: any };
 type SheetData = {
@@ -281,6 +281,7 @@ export default function DocumentView({
         <ViewData
           link={link}
           viewData={viewData}
+          document={document as unknown as TViewDocumentData}
           notionData={notionData}
           brand={brand}
           showPoweredByBanner={showPoweredByBanner}

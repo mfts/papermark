@@ -1,0 +1,141 @@
+model Conversation {
+  id                String    @id @default(cuid())
+  title             String?   // Optional title for the conversation
+  isEnabled         Boolean   @default(true)
+
+  // Visibility control
+  visibilityMode    ConversationVisibility @default(PRIVATE)
+
+  // Core relationships
+  dataroomId        String
+  dataroom          Dataroom  @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
+
+  // Optional attachments
+  dataroomDocumentId String?
+  dataroomDocument   DataroomDocument? @relation(fields: [dataroomDocumentId], references: [id], onDelete: SetNull)
+  documentVersionNumber     Int?      // Optional document version number reference
+  documentPageNumber        Int?      // Optional document page number reference
+
+  // Optional link relationship
+  linkId            String?
+  link              Link?     @relation(fields: [linkId], references: [id], onDelete: SetNull)
+
+  // Optional viewer group relationship
+  viewerGroupId     String?
+  viewerGroup       ViewerGroup? @relation(fields: [viewerGroupId], references: [id], onDelete: SetNull)
+
+  // Original view that initiated the conversation (for reference)
+  initialViewId     String?
+  initialView       View?     @relation(name: "initialView", fields: [initialViewId], references: [id], onDelete: SetNull)
+
+  teamId            String
+  team              Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  // Track all views that accessed this conversation
+  views             ConversationView[]
+
+  // Track participants including the owner
+  participants      ConversationParticipant[]
+
+  // Track conversations
+  messages          Message[]
+  lastMessageAt     DateTime? // Last message timestamp
+  
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([dataroomId])
+  @@index([dataroomDocumentId])
+  @@index([linkId])
+  @@index([teamId])
+  @@index([viewerGroupId])
+  @@index([initialViewId])
+}
+
+// Define conversation visibility options
+enum ConversationVisibility {
+  PRIVATE        // Only visible to participants and team members
+  PUBLIC_LINK    // Visible to all viewers with access to the specific link
+  PUBLIC_GROUP   // Visible to all viewers in the specific group
+  PUBLIC_DOCUMENT // Visible to all viewers with access to the document, across any link
+  PUBLIC_DATAROOM // Visible to all viewers with access to the dataroom
+}
+
+// Define participant roles
+enum ParticipantRole {
+  OWNER          // Created the conversation
+  PARTICIPANT    // Joined the conversation later
+}
+
+// Track participants in a conversation (including the owner)
+model ConversationParticipant {
+  id              String          @id @default(cuid())
+  conversationId  String
+  conversation    Conversation    @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  // Role in the conversation
+  role            ParticipantRole @default(PARTICIPANT)
+
+  // Participant can be either a viewer or a user
+  viewerId        String?
+  viewer          Viewer?         @relation(fields: [viewerId], references: [id], onDelete: SetNull)
+  userId          String?
+  user            User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  // Notification preferences
+  receiveNotifications Boolean     @default(false)
+
+  createdAt       DateTime        @default(now())
+
+  @@unique([conversationId, viewerId])
+  @@unique([conversationId, userId])
+  @@index([conversationId])
+  @@index([viewerId])
+  @@index([userId])
+}
+
+model Message {
+  id              String       @id @default(cuid())
+  content         String       // The actual message content
+
+  // Conversation relationship
+  conversationId  String
+  conversation    Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  // Sender information
+  userId          String?      // Optional - for team members
+  user            User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  viewerId        String?      // Optional - for viewers
+  viewer          Viewer?      @relation(fields: [viewerId], references: [id], onDelete: SetNull)
+
+  // The specific view when this message was sent (for tracking)
+  viewId          String?
+  view            View?        @relation(fields: [viewId], references: [id], onDelete: SetNull)
+
+  // Tracking
+  isRead          Boolean      @default(false)
+  
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@index([conversationId])
+  @@index([userId])
+  @@index([viewerId])
+  @@index([viewId])
+}
+
+// Join table to track all views that accessed a conversation
+model ConversationView {
+  id              String       @id @default(cuid())
+  conversationId  String
+  conversation    Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  viewId          String
+  view            View         @relation(fields: [viewId], references: [id], onDelete: Cascade)
+
+  createdAt       DateTime     @default(now())
+
+  @@unique([conversationId, viewId])
+  @@index([conversationId])
+  @@index([viewId])
+}

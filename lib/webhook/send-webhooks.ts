@@ -1,12 +1,10 @@
 import { Webhook } from "@prisma/client";
-import { z } from "zod";
 
 import { qstash } from "@/lib/cron";
-import { webhookPayloadSchema } from "@/lib/zod/schemas/webhooks";
 
 import { createWebhookSignature } from "./signature";
 import { prepareWebhookPayload } from "./transform";
-import { EventDataProps, WebhookTrigger } from "./types";
+import { EventDataProps, WebhookPayload, WebhookTrigger } from "./types";
 
 // Send webhooks to multiple webhooks
 export const sendWebhooks = async ({
@@ -37,9 +35,16 @@ const publishWebhookEventToQStash = async ({
   payload,
 }: {
   webhook: Pick<Webhook, "pId" | "url" | "secret">;
-  payload: z.infer<typeof webhookPayloadSchema>;
+  payload: WebhookPayload;
 }) => {
-  const callbackUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/api/webhooks/callback?webhookId=${webhook.pId}`;
+  // TODO: add proper domain like app.papermark.dev in dev
+  const callbackUrl = new URL(
+    `${process.env.NEXT_PUBLIC_BASE_URL}/api/webhooks/callback`,
+  );
+  callbackUrl.searchParams.append("webhookId", webhook.pId);
+  callbackUrl.searchParams.append("eventId", payload.id);
+  callbackUrl.searchParams.append("event", payload.event);
+
   const signature = await createWebhookSignature(webhook.secret, payload);
 
   const response = await qstash.publishJSON({
@@ -49,8 +54,8 @@ const publishWebhookEventToQStash = async ({
       "X-Papermark-Signature": signature,
       "Upstash-Hide-Headers": "true",
     },
-    callback: callbackUrl,
-    failureCallback: callbackUrl,
+    callback: callbackUrl.href,
+    failureCallback: callbackUrl.href,
   });
 
   if (!response.messageId) {

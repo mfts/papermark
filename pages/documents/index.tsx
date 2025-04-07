@@ -1,5 +1,13 @@
 import { useTeam } from "@/context/team-context";
 import { FolderPlusIcon, PlusIcon } from "lucide-react";
+import { useState } from "react";
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  ChevronsLeftIcon,
+  ChevronsRightIcon,
+} from "lucide-react";
+import { useRouter } from "next/router";
 
 import { AddDocumentModal } from "@/components/documents/add-document-modal";
 import { DocumentsList } from "@/components/documents/documents-list";
@@ -9,18 +17,44 @@ import AppLayout from "@/components/layouts/app";
 import { SearchBoxPersisted } from "@/components/search-box";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 import useDocuments, { useRootFolders } from "@/lib/swr/use-documents";
+import { DocumentsPagination } from "@/components/documents/documents-pagination";
 
 export default function Documents() {
+  const router = useRouter();
   const teamInfo = useTeam();
+  const queryParams = router.query;
+  const currentPage = Number(queryParams["page"]) || 1;
+  const pageSize = Number(queryParams["limit"]) || 10;
 
   const { folders } = useRootFolders();
-  const { documents, isValidating, isFiltered } = useDocuments();
+  const { documents, pagination, isValidating, isFiltered } = useDocuments();
+
+  const updatePagination = (newPage?: number, newPageSize?: number) => {
+    const params = new URLSearchParams(window.location.search);
+    
+    if (newPage) params.set("page", newPage.toString());
+    if (newPageSize) {
+      params.set("limit", newPageSize.toString());
+      params.set("page", "1");
+    }
+    
+    router.push(`/documents?${params.toString()}`, undefined, { shallow: true });
+  };
+
+  const displayFolders = isFiltered ? [] : folders;
 
   return (
     <AppLayout>
-      <div className="sticky top-0 bg-white p-4 pb-0 dark:bg-gray-900 sm:mx-4 sm:pt-8">
+      <div className="sticky top-0 mb-4 min-h-[calc(100vh-72px)] rounded-lg bg-white p-4 dark:bg-gray-900 sm:mx-4 sm:pt-8">
         <section className="mb-4 flex items-center justify-between space-x-2 sm:space-x-0">
           <div className="space-y-0 sm:space-y-1">
             <h2 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
@@ -68,9 +102,21 @@ export default function Documents() {
 
         <DocumentsList
           documents={documents}
-          folders={isFiltered ? [] : folders}
+          folders={displayFolders}
           teamInfo={teamInfo}
         />
+
+        {isFiltered && pagination && (
+          <DocumentsPagination
+            currentPage={currentPage}
+            pageSize={pageSize}
+            totalDocuments={pagination.total}
+            totalShownDocuments={documents.length}
+            totalPages={pagination.pages}
+            onPageChange={updatePagination}
+            onPageSizeChange={(size) => updatePagination(undefined, size)}
+          />
+        )}
       </div>
     </AppLayout>
   );

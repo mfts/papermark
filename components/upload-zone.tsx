@@ -72,20 +72,6 @@ interface FileWithPaths extends File {
   whereToUploadPath?: string;
 }
 
-// const fileSizeLimits: { [key: string]: number } = {
-//   "application/vnd.ms-excel": 40, // 40 MB
-//   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": 40, // 40 MB
-//   "application/vnd.oasis.opendocument.spreadsheet": 40, // 40 MB
-//   "image/png": 100, // 100 MB
-//   "image/jpeg": 100, // 100 MB
-//   "image/jpg": 100, // 100 MB
-//   "video/mp4": 500, // 500 MB
-//   "video/quicktime": 500, // 500 MB
-//   "video/x-msvideo": 500, // 500 MB
-//   "video/webm": 500, // 500 MB
-//   "video/ogg": 500, // 500 MB
-// };
-
 export default function UploadZone({
   children,
   onUploadStart,
@@ -125,7 +111,7 @@ export default function UploadZone({
   const isFreePlan = plan === "free";
   const isTrial = !!trial;
   // const maxSize = isFreePlan && !isTrial ? 30 : 350;
-  const maxNumPages = isFreePlan && !isTrial ? 100 : 500;
+  // const maxNumPages = isFreePlan && !isTrial ? 100 : 500;
   const { limits, canAddDocuments } = useLimits();
   const remainingDocuments = limits?.documents
     ? limits?.documents - limits?.usage?.documents
@@ -240,7 +226,7 @@ export default function UploadZone({
           const buffer = await file.arrayBuffer();
           numPages = await getPagesCount(buffer);
 
-          if (numPages > maxNumPages) {
+          if (numPages > fileSizeLimits.maxPages) {
             setUploads((prev) =>
               prev.filter((upload) => upload.fileName !== file.name),
             );
@@ -248,7 +234,7 @@ export default function UploadZone({
             return setRejectedFiles((prev) => [
               {
                 fileName: file.name,
-                message: `File has too many pages (max. ${maxNumPages})`,
+                message: `File has too many pages (max. ${fileSizeLimits.maxPages})`,
               },
               ...prev,
             ]);
@@ -430,7 +416,7 @@ export default function UploadZone({
   const getFilesFromEvent = useCallback(
     async (event: DropEvent) => {
       // This callback also run when event.type =`dragenter`. We only need to compute files when the event.type is `drop`.
-      if (event.type !== "drop" && event.type !== "change") {
+      if ("type" in event && event.type !== "drop" && event.type !== "change") {
         return [];
       }
 
@@ -613,6 +599,7 @@ export default function UploadZone({
           filesToBePassedToOnDrop.push(...fileResult),
         );
       } else if (
+        "target" in event &&
         event.target &&
         event.target instanceof HTMLInputElement &&
         event.target.files
@@ -634,7 +621,7 @@ export default function UploadZone({
     accept: acceptableDropZoneFileTypes,
     multiple: true,
     // maxSize: maxSize * 1024 * 1024, // 30 MB
-    maxFiles: 150,
+    maxFiles: fileSizeLimits.maxFiles ?? 150,
     onDrop,
     onDropRejected,
     getFilesFromEvent,
@@ -643,36 +630,42 @@ export default function UploadZone({
   return (
     <div
       {...getRootProps({ onClick: (evt) => evt.stopPropagation() })}
-      className="relative h-full min-h-[calc(100vh-350px)]"
+      className={cn(
+        "relative",
+        dataroomId ? "min-h-[calc(100vh-350px)]" : "min-h-[calc(100vh-270px)]",
+      )}
     >
       <div
         className={cn(
-          "absolute bottom-0 left-0 right-0 top-0 z-50",
-          isDragActive ? "pointer-events-auto" : "pointer-events-none",
+          "absolute inset-0 z-40 -m-1 rounded-lg border-2 border-dashed",
+          isDragActive
+            ? "pointer-events-auto border-primary/50 bg-gray-100/75 backdrop-blur-sm dark:bg-gray-800/75"
+            : "pointer-events-none border-none",
         )}
       >
-        <div
-          className={cn(
-            "-m-1 hidden h-full items-center justify-center border-dashed bg-gray-100 text-center dark:border-gray-300 dark:bg-gray-400",
-            isDragActive && "flex",
-          )}
-        >
-          <input
-            {...getInputProps()}
-            name="file"
-            id="upload-multi-files-zone"
-            className="sr-only"
-          />
+        <input
+          {...getInputProps()}
+          name="file"
+          id="upload-multi-files-zone"
+          className="sr-only"
+        />
 
-          <div className="mt-4 flex flex-col text-sm leading-6 text-gray-800">
-            <span className="mx-auto">Drop your file(s) to upload here</span>
-            <p className="text-xs leading-5 text-gray-800">
-              {isFreePlan && !isTrial
-                ? `Only *.pdf, *.xls, *.xlsx, *.csv, *.ods, *.png, *.jpeg, *.jpg`
-                : `Only *.pdf, *.pptx, *.docx, *.xlsx, *.xls, *.csv, *.ods, *.ppt, *.odp, *.doc, *.odt, *.dwg, *.dxf, *.png, *.jpg, *.jpeg, *.mp4, *.mov, *.avi, *.webm, *.ogg`}
-            </p>
+        {isDragActive && (
+          <div className="sticky top-1/2 z-50 -translate-y-1/2 px-2">
+            <div className="flex justify-center">
+              <div className="inline-flex flex-col rounded-lg bg-background/95 px-6 py-4 text-center ring-1 ring-gray-900/5 dark:bg-gray-900/95 dark:ring-white/10">
+                <span className="font-medium text-foreground">
+                  Drop your file(s) here
+                </span>
+                <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                  {isFreePlan && !isTrial
+                    ? `Only *.pdf, *.xls, *.xlsx, *.csv, *.ods, *.png, *.jpeg, *.jpg`
+                    : `Only *.pdf, *.pptx, *.docx, *.xlsx, *.xls, *.csv, *.ods, *.ppt, *.odp, *.doc, *.odt, *.dwg, *.dxf, *.png, *.jpg, *.jpeg, *.mp4, *.mov, *.avi, *.webm, *.ogg`}
+                </p>
+              </div>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {children}

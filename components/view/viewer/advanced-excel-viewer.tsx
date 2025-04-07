@@ -1,9 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 
-import { Brand, DataroomBrand } from "@prisma/client";
-
-import { TDocumentData } from "../dataroom/dataroom-view";
-import Nav from "../nav";
+import Nav, { TNavData } from "../nav";
 
 const trackPageView = async (data: {
   linkId: string;
@@ -29,34 +26,17 @@ const trackPageView = async (data: {
 
 export default function AdvancedExcelViewer({
   file,
-  viewId,
-  linkId,
-  documentId,
-  documentName,
-  allowDownload,
   versionNumber,
-  brand,
-  dataroomId,
-  setDocumentData,
-  isPreview,
+  navData,
 }: {
-  linkId: string;
-  viewId?: string;
-  documentId: string;
-  documentName: string;
-  versionNumber: number;
   file: string;
-  allowDownload: boolean;
-  brand?: Partial<Brand> | Partial<DataroomBrand> | null;
-  dataroomId?: string;
-  setDocumentData?: React.Dispatch<React.SetStateAction<TDocumentData | null>>;
-  isPreview?: boolean;
+  versionNumber: number;
+  navData: TNavData;
 }) {
-  const [pageNumber, setPageNumber] = useState<number>(1); // start on first page
-  const [maxScrollPercentage, setMaxScrollPercentage] = useState<number>(0);
+  const { linkId, documentId, viewId, isPreview, dataroomId, brand } = navData;
+  const pageNumber = 1;
 
   const startTimeRef = useRef(Date.now());
-  const pageNumberRef = useRef<number>(pageNumber);
   const visibilityRef = useRef<boolean>(true);
 
   useEffect(() => {
@@ -104,27 +84,21 @@ export default function AdvancedExcelViewer({
 
   return (
     <>
-      <Nav
-        brand={brand}
-        documentName={documentName}
-        isDataroom={dataroomId ? true : false}
-        setDocumentData={setDocumentData}
-        type="sheet"
-        isPreview={isPreview}
-        allowDownload={allowDownload}
-        linkId={linkId}
-        documentId={documentId}
-        viewId={viewId}
-      />
+      <Nav type="sheet" navData={navData} />
       <div
         style={{ height: "calc(100dvh - 64px)" }}
-        className="mx-2 flex h-screen flex-col sm:mx-6 lg:mx-8"
-      // ref={containerRef}
+        className="relative mx-2 flex h-screen flex-col sm:mx-6 lg:mx-8"
       >
         <iframe
           className="h-full w-full"
-          src={`https://view.officeapps.live.com/op/embed.aspx?src=${file}&wdPrint=0`}
+          src={`https://view.officeapps.live.com/op/embed.aspx?src=${file}&wdPrint=0&action=embedview&wdAllowInteractivity=False`}
         ></iframe>
+        <div
+          className="absolute bottom-0 left-0 right-0 z-50 h-[26px] bg-gray-950"
+          style={{
+            background: brand?.accentColor || "rgb(3, 7, 18)",
+          }}
+        />
       </div>
     </>
   );
