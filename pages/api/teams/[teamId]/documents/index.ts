@@ -21,6 +21,7 @@ import { CustomUser } from "@/lib/types";
 import { getExtension, log } from "@/lib/utils";
 import { conversionQueue } from "@/lib/utils/trigger-utils";
 import { sendDocumentCreatedWebhook } from "@/lib/webhook/triggers/document-created";
+import { sendLinkCreatedWebhook } from "@/lib/webhook/triggers/link-created";
 
 export const config = {
   // in order to enable `waitUntil` function
@@ -433,12 +434,22 @@ export default async function handle(
       }
 
       waitUntil(
-        sendDocumentCreatedWebhook({
-          teamId,
-          data: {
-            document_id: document.id,
-          },
-        }),
+        Promise.all([
+          sendDocumentCreatedWebhook({
+            teamId,
+            data: {
+              document_id: document.id,
+            },
+          }),
+          createLink &&
+            sendLinkCreatedWebhook({
+              teamId,
+              data: {
+                document_id: document.id,
+                link_id: document.links[0].id,
+              },
+            }),
+        ]),
       );
 
       return res.status(201).json(document);
