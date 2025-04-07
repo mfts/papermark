@@ -15,14 +15,30 @@ export default function useDocuments() {
   const queryParams = router.query;
   const searchQuery = queryParams["search"];
   const sortQuery = queryParams["sort"];
+  const page = Number(queryParams["page"]) || 1;
+  const pageSize = Number(queryParams["limit"]) || 10;
+
+  const paginationParams = (searchQuery || sortQuery) 
+    ? `&page=${page}&limit=${pageSize}` 
+    : '';
 
   const {
-    data: documents,
+    data,
     isValidating,
     error,
-  } = useSWR<DocumentWithLinksAndLinkCountAndViewCount[]>(
+  } = useSWR<{
+    documents: DocumentWithLinksAndLinkCountAndViewCount[];
+    pagination?: {
+      total: number;
+      pages: number;
+      currentPage: number;
+      pageSize: number;
+    };
+  }>(
     teamId &&
-      `/api/teams/${teamId}/documents${searchQuery ? `?query=${searchQuery}` : ""}${sortQuery ? (searchQuery ? `&sort=${sortQuery}` : `?sort=${sortQuery}`) : ""}`,
+      `/api/teams/${teamId}/documents?${
+        searchQuery ? `query=${searchQuery}` : ""
+      }${sortQuery ? `&sort=${sortQuery}` : ""}${paginationParams}`.replace(/^\?&/, '?'),
     fetcher,
     {
       revalidateOnFocus: false,
@@ -32,9 +48,10 @@ export default function useDocuments() {
   );
 
   return {
-    documents,
+    documents: data?.documents || [],
+    pagination: data?.pagination,
     isValidating,
-    loading: !documents && !error,
+    loading: !data && !error,
     isFiltered: !!searchQuery || !!sortQuery,
     error,
   };
