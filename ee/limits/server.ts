@@ -104,17 +104,18 @@ export async function getLimits({
     // Adjust limits based on the plan if they're at the default value
     if (isFreePlan(team.plan)) {
       return {
+        ...defaultLimits,
         ...parsedData,
         usage: { documents: documentCount, links: linkCount, users: userCount },
       };
     } else {
       return {
+        ...defaultLimits,
         ...parsedData,
         // if account is paid, but link and document limits are not set, then set them to Infinity
         links: parsedData.links === 50 ? Infinity : parsedData.links,
         documents:
           parsedData.documents === 50 ? Infinity : parsedData.documents,
-        users: parsedData.users || defaultLimits.users,
         usage: { documents: documentCount, links: linkCount, users: userCount },
       };
     }
