@@ -46,7 +46,7 @@ const WelcomeEmail = ({ name }: WelcomeEmailProps) => {
             <Text className="text-sm">
               <ul className="list-inside list-disc text-sm">
                 <li>Upload a document</li>
-                 <li>Create a virtual data room</li>
+                <li>Create a virtual data room</li>
                 <li>
                   Share a link{" "}
                   <span className="italic">(with your custom domain)✨</span>
@@ -84,9 +84,12 @@ const WelcomeEmail = ({ name }: WelcomeEmailProps) => {
                       Twitter
                     </Link>
                   </li>
-                     <li>
+                  <li>
                     Have a call to talk enterprise{" "}
-                    <Link href="https://cal.com/marcseitz/papermark" target="_blank">
+                    <Link
+                      href="https://cal.com/marcseitz/papermark"
+                      target="_blank"
+                    >
                       Book
                     </Link>
                   </li>
@@ -95,8 +98,8 @@ const WelcomeEmail = ({ name }: WelcomeEmailProps) => {
             </Section>
             <Section className="mt-4">
               <Text className="text-sm">
-                If you have any questions or feedback just respond to this email. I&apos;m
-                always happy to help!
+                If you have any questions or feedback just respond to this
+                email. I&apos;m always happy to help!
               </Text>
               <Text className="text-sm text-gray-400">Marc from Papermark</Text>
             </Section>
@@ -105,11 +108,11 @@ const WelcomeEmail = ({ name }: WelcomeEmailProps) => {
               <Text className="text-xs">
                 © {new Date().getFullYear()}{" "}
                 <a
-                  href="https://www.papermark.io"
+                  href="https://www.papermark.com"
                   className="text-gray-400 no-underline visited:text-gray-400 hover:text-gray-400"
                   target="_blank"
                 >
-                  papermark.io
+                  papermark.com
                 </a>
               </Text>
               <Text className="text-xs">

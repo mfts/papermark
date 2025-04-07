@@ -46,6 +46,7 @@ import { LinkOptions } from "./link-options";
 export const DEFAULT_LINK_PROPS = (
   linkType: LinkType,
   groupId: string | null = null,
+  showBanner: boolean = true,
 ) => ({
   id: null,
   name: null,
@@ -71,7 +72,7 @@ export const DEFAULT_LINK_PROPS = (
   questionType: null,
   enableAgreement: false,
   agreementId: null,
-  showBanner: linkType === LinkType.DOCUMENT_LINK ? true : false,
+  showBanner: linkType === LinkType.DOCUMENT_LINK ? showBanner : false,
   enableWatermark: false,
   watermarkConfig: null,
   audienceType: groupId ? LinkAudienceType.GROUP : LinkAudienceType.GENERAL,
@@ -138,20 +139,20 @@ export default function LinkSheet({
     mutate: mutateGroups,
   } = useDataroomGroups();
   const teamInfo = useTeam();
-  const { plan, trial } = usePlan();
+  const { isFree, isDatarooms, isDataroomsPlus, isTrial } = usePlan();
   const analytics = useAnalytics();
   const [data, setData] = useState<DEFAULT_LINK_TYPE>(
-    DEFAULT_LINK_PROPS(linkType, groupId),
+    DEFAULT_LINK_PROPS(linkType, groupId, !isDatarooms),
   );
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState<boolean>(false);
 
   useEffect(() => {
-    setData(currentLink || DEFAULT_LINK_PROPS(linkType, groupId));
+    setData(currentLink || DEFAULT_LINK_PROPS(linkType, groupId, !isDatarooms));
   }, [currentLink]);
 
   const handlePreviewLink = async (link: LinkWithViews) => {
-    if (link.domainId && plan === "free") {
+    if (link.domainId && isFree) {
       toast.error("You need to upgrade to preview this link");
       return;
     }
@@ -390,7 +391,7 @@ export default function LinkSheet({
                         <TabsTrigger value={LinkAudienceType.GENERAL}>
                           General
                         </TabsTrigger>
-                        {plan === "datarooms" || trial ? (
+                        {isDatarooms || isDataroomsPlus || isTrial ? (
                           <TabsTrigger value={LinkAudienceType.GROUP}>
                             Group
                           </TabsTrigger>
@@ -429,7 +430,6 @@ export default function LinkSheet({
                         <div className="space-y-2">
                           <DomainSection
                             {...{ data, setData, domains }}
-                            plan={plan}
                             linkType={linkType}
                             editLink={!!currentLink}
                           />
@@ -541,7 +541,6 @@ export default function LinkSheet({
                         <div className="space-y-2">
                           <DomainSection
                             {...{ data, setData, domains }}
-                            plan={plan}
                             linkType={linkType}
                             editLink={!!currentLink}
                           />

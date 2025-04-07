@@ -48,7 +48,7 @@ export function AddFolderModal({
   const [open, setOpen] = useState<boolean>(false);
 
   const teamInfo = useTeam();
-  const { plan, trial } = usePlan();
+  const { isFree, isTrial } = usePlan();
   const analytics = useAnalytics();
 
   /** current folder name */
@@ -65,11 +65,12 @@ export function AddFolderModal({
     }),
   });
 
+  const validation = addFolderSchema.safeParse({ name: folderName });
+
   const handleSubmit = async (event: any) => {
     event.preventDefault();
     event.stopPropagation();
 
-    const validation = addFolderSchema.safeParse({ name: folderName });
     if (!validation.success) {
       toast.error(validation.error.errors[0].message);
       return;
@@ -128,13 +129,14 @@ export function AddFolderModal({
       toast.error("Error adding folder. Please try again.");
       return;
     } finally {
+      setFolderName("");
       setLoading(false);
       setOpen(false);
     }
   };
 
   // If the team is on a free plan, show the upgrade modal
-  if (plan === "free" && (!isDataroom || !trial)) {
+  if (isFree && (!isDataroom || !isTrial)) {
     if (children) {
       return (
         <UpgradePlanModal
@@ -166,7 +168,12 @@ export function AddFolderModal({
             onChange={(e) => setFolderName(e.target.value)}
           />
           <DialogFooter>
-            <Button type="submit" className="h-9 w-full">
+            <Button
+              type="submit"
+              className="h-9 w-full"
+              disabled={!validation.success}
+              loading={loading}
+            >
               Add new folder
             </Button>
           </DialogFooter>

@@ -230,8 +230,7 @@ export default function LinksTable({
 }) {
   const router = useRouter();
   const teamInfo = useTeam();
-  const { plan, isTrial } = usePlan();
-  const isFree = plan === "free";
+  const { isTrial, isFree } = usePlan();
   const [sorting, setSorting] = useState<SortingState>([
     { id: "lastViewed", desc: true },
   ]);

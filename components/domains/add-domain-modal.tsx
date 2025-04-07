@@ -41,7 +41,7 @@ export function AddDomainModal({
   const [loading, setLoading] = useState<boolean>(false);
 
   const teamInfo = useTeam();
-  const { plan } = usePlan();
+  const { isFree, isPro, isBusiness } = usePlan();
   const { limits } = useLimits();
   const analytics = useAnalytics();
   const addDomainSchema = z.object({
@@ -108,10 +108,10 @@ export function AddDomainModal({
   // - on business plan and has custom domain in dataroom disabled
   // => then show the upgrade modal
   if (
-    plan === "free" ||
-    (plan === "pro" && !limits?.customDomainOnPro) ||
+    isFree ||
+    (isPro && !limits?.customDomainOnPro) ||
     (linkType === "DATAROOM_LINK" &&
-      plan === "business" &&
+      isBusiness &&
       !limits?.customDomainInDataroom)
   ) {
     if (children) {

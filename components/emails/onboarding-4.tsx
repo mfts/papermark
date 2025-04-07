@@ -36,7 +36,8 @@ const Onboarding4Email = () => {
             <Text className="text-sm">
               <ul className="list-inside list-disc text-sm">
                 <li>
-                  Share documnets with your <strong>custom domain💫</strong>{" "}
+                  Share documnets with your{" "}
+                  <strong>custom domain💫</strong>{" "}
                 </li>
 
                 <li>Remove &quot;powered by Papermark&quot;</li>
@@ -53,7 +54,7 @@ const Onboarding4Email = () => {
             <Section className="mb-[32px] mt-[32px] text-center">
               <Button
                 className="rounded bg-black text-center text-xs font-semibold text-white no-underline"
-                href={`https://app.papermark.io/documents?utm_source=onboarding&utm_medium=email&utm_campaign=20240723&utm_content=upload_documents`}
+                href={`https://app.papermark.com/documents?utm_source=onboarding&utm_medium=email&utm_campaign=20240723&utm_content=upload_documents`}
                 style={{ padding: "12px 20px" }}
               >
                 Add your domain and branding
@@ -74,11 +75,11 @@ const Onboarding4Email = () => {
               <Text className="text-xs">
                 © {new Date().getFullYear()}{" "}
                 <a
-                  href="https://www.papermark.io"
+                  href="https://www.papermark.com"
                   className="text-gray-400 no-underline visited:text-gray-400 hover:text-gray-400"
                   target="_blank"
                 >
-                  papermark.io
+                  papermark.com
                 </a>
               </Text>
               <Text className="text-xs">

@@ -26,7 +26,7 @@ export function DeleteFolderModal({
   documents: number;
   childFolders: number;
   isDataroom?: boolean;
-  handleButtonClick?: any;
+  handleButtonClick?: (e: React.FormEvent, folderId: string) => void;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
   return (
@@ -54,9 +54,9 @@ export function DeleteFolderModal({
       </div>
 
       <form
-        onSubmit={async (e) => {
+        onSubmit={async (e: React.FormEvent) => {
           e.preventDefault();
-          handleButtonClick(e, folderId);
+          handleButtonClick?.(e, folderId);
         }}
         className="flex flex-col space-y-6 bg-muted px-4 py-8 text-left dark:bg-gray-900 sm:px-8"
       >

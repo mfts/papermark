@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { useRouter } from "next/router";
 
 import React from "react";
 
@@ -82,6 +83,15 @@ export default function Nav({
   handleZoomIn?: () => void;
   handleZoomOut?: () => void;
 }) {
+  const router = useRouter();
+  const asPath = router.asPath;
+  const { previewToken, preview } = router.query;
+
+  // Extract the dataroom path from the URL
+  // This regex captures everything before "/d/" in the path
+  const dataroomPathMatch = asPath.match(/^(.*?)\/d\//);
+  const dataroomPath = dataroomPathMatch ? dataroomPathMatch[1] : "";
+
   const downloadFile = async () => {
     if (isPreview) {
       toast.error("You cannot download documents in preview mode.");
@@ -146,7 +156,7 @@ export default function Nav({
                 />
               ) : (
                 <Link
-                  href={`https://www.papermark.io?utm_campaign=navbar&utm_medium=navbar&utm_source=papermark-${linkId}`}
+                  href={`https://www.papermark.com?utm_campaign=navbar&utm_medium=navbar&utm_source=papermark-${linkId}`}
                   target="_blank"
                   className="text-2xl font-bold tracking-tighter text-white"
                 >
@@ -155,13 +165,13 @@ export default function Nav({
               )}
             </div>
             <div id="view-breadcrump-portal"></div>
-            {isDataroom && setDocumentData ? (
+            {isDataroom ? (
               <Breadcrumb>
                 <BreadcrumbList>
                   <BreadcrumbItem>
                     <BreadcrumbLink
                       className="cursor-pointer underline underline-offset-4 hover:font-medium"
-                      onClick={() => setDocumentData(null)}
+                      href={`${dataroomPath}${isPreview ? "?previewToken=" + previewToken + "&preview=" + preview : ""}`}
                       style={{
                         color: determineTextColor(brand?.brandColor),
                       }}
@@ -169,7 +179,7 @@ export default function Nav({
                       Home
                     </BreadcrumbLink>
                   </BreadcrumbItem>
-                  <BreadcrumbSeparator>
+                  {/* <BreadcrumbSeparator>
                     <Slash />
                   </BreadcrumbSeparator>
                   <BreadcrumbItem>
@@ -181,7 +191,7 @@ export default function Nav({
                     >
                       {documentName ?? "Document"}
                     </BreadcrumbPage>
-                  </BreadcrumbItem>
+                  </BreadcrumbItem> */}
                 </BreadcrumbList>
               </Breadcrumb>
             ) : null}

@@ -41,7 +41,7 @@ export function AddDataroomModal({
   const [open, setOpen] = useState<boolean>(openModal);
 
   const teamInfo = useTeam();
-  const { plan } = usePlan();
+  const { isFree, isPro } = usePlan();
   const analytics = useAnalytics();
   const dataroomSchema = z.object({
     name: z.string().min(3, {
@@ -100,7 +100,7 @@ export function AddDataroomModal({
   };
 
   // If the team is on a free plan, show the upgrade modal
-  if (plan === "free" || plan === "pro") {
+  if (isFree || isPro) {
     if (children) {
       return (
         <UpgradePlanModal
