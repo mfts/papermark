@@ -91,6 +91,12 @@ export default async function handle(
         },
         orderBy,
         include: {
+          folder: {
+            select: {
+              name: true,
+              path: true,
+            },
+          },
           ...(sort &&
             sort === "lastViewed" && {
               views: {
@@ -105,10 +111,40 @@ export default async function handle(
         },
       });
 
-      let sortedDocuments = documents;
+      let documentsWithFolderList = documents;
+      
+      if (query || sort) {
+        documentsWithFolderList = await Promise.all(documents.map(async (doc) => {
+          const folderNames = [];
+          const pathSegments = doc.folder?.path?.split("/") || [];
+          
+          if (pathSegments.length > 0) {
+            const folders = await prisma.folder.findMany({
+              where: {
+                teamId,
+                path: {
+                  in: pathSegments.map((_, index) => 
+                    pathSegments.slice(0, index + 1).join("/")
+                  )
+                }
+              },
+              select: {
+                path: true,
+                name: true,
+              },
+              orderBy: {
+                path: 'asc'
+              }
+            });
+            folderNames.push(...folders.map(f => f.name));
+          }
+          return { ...doc, folderList: folderNames };
+        }));
+      }
 
+      // Sort after we have the complete list
       if (sort === "lastViewed") {
-        sortedDocuments = documents.sort((a, b) => {
+        documentsWithFolderList = documentsWithFolderList.sort((a, b) => {
           const aLastView = a.views[0]?.viewedAt;
           const bLastView = b.views[0]?.viewedAt;
 
@@ -120,12 +156,12 @@ export default async function handle(
       }
 
       if (sort === "name") {
-        sortedDocuments = documents.sort((a, b) =>
+        documentsWithFolderList = documentsWithFolderList.sort((a, b) =>
           a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
         );
       }
 
-      return res.status(200).json(sortedDocuments);
+      return res.status(200).json(documentsWithFolderList);
     } catch (error) {
       errorhandler(error, res);
     }
