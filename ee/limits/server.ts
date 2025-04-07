@@ -98,6 +98,9 @@ export async function getLimits({
   try {
     let parsedData = configSchema.parse(team.limits);
 
+    const basePlan = getBasePlan(team.plan);
+    const defaultLimits = planLimitsMap[basePlan];
+
     // Adjust limits based on the plan if they're at the default value
     if (isFreePlan(team.plan)) {
       return {
@@ -111,6 +114,7 @@ export async function getLimits({
         links: parsedData.links === 50 ? Infinity : parsedData.links,
         documents:
           parsedData.documents === 50 ? Infinity : parsedData.documents,
+        users: parsedData.users || defaultLimits.users,
         usage: { documents: documentCount, links: linkCount, users: userCount },
       };
     }
