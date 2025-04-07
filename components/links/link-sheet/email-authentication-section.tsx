@@ -19,7 +19,7 @@ export default function EmailAuthenticationSection({
     plan,
   }: LinkUpgradeOptions) => void;
 }) {
-  const { emailProtected, emailAuthenticated } = data;
+  const { emailProtected, emailAuthenticated, enableConversation } = data;
   const [enabled, setEnabled] = useState<boolean>(emailAuthenticated);
 
   useEffect(() => {
@@ -32,6 +32,9 @@ export default function EmailAuthenticationSection({
       ...data,
       emailProtected: updatedEmailAuthentication ? true : emailProtected,
       emailAuthenticated: updatedEmailAuthentication,
+      enableConversation: updatedEmailAuthentication
+        ? enableConversation
+        : false,
     });
     setEnabled(updatedEmailAuthentication);
   };

@@ -111,7 +111,7 @@ export default function UploadZone({
   const isFreePlan = plan === "free";
   const isTrial = !!trial;
   // const maxSize = isFreePlan && !isTrial ? 30 : 350;
-  const maxNumPages = isFreePlan && !isTrial ? 100 : 500;
+  // const maxNumPages = isFreePlan && !isTrial ? 100 : 500;
   const { limits, canAddDocuments } = useLimits();
   const remainingDocuments = limits?.documents
     ? limits?.documents - limits?.usage?.documents
@@ -226,7 +226,7 @@ export default function UploadZone({
           const buffer = await file.arrayBuffer();
           numPages = await getPagesCount(buffer);
 
-          if (numPages > maxNumPages) {
+          if (numPages > fileSizeLimits.maxPages) {
             setUploads((prev) =>
               prev.filter((upload) => upload.fileName !== file.name),
             );
@@ -234,7 +234,7 @@ export default function UploadZone({
             return setRejectedFiles((prev) => [
               {
                 fileName: file.name,
-                message: `File has too many pages (max. ${maxNumPages})`,
+                message: `File has too many pages (max. ${fileSizeLimits.maxPages})`,
               },
               ...prev,
             ]);

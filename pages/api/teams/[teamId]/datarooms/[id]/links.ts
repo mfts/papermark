@@ -49,6 +49,7 @@ export default async function handle(
         where: {
           dataroomId,
           linkType: "DATAROOM_LINK",
+          teamId: teamId,
         },
         orderBy: {
           createdAt: "desc",

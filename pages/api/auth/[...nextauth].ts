@@ -158,6 +158,13 @@ export const authOptions: NextAuthOptions = {
       }
     },
     async signIn(message) {
+      if (typeof window !== "undefined") {
+        try {
+          await fetch("/api/auth-plus/set-cookie");
+        } catch (error) {
+          console.error("Failed to set additional cookie", error);
+        }
+      }
       await identifyUser(message.user.email ?? message.user.id);
       await trackAnalytics({
         event: "User Signed In",

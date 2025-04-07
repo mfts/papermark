@@ -25,8 +25,8 @@ const planLimitsMap: Record<string, TPlanLimits> = {
   "datarooms-plus": DATAROOMS_PLUS_PLAN_LIMITS,
 };
 
-const configSchema = z.object({
-  datarooms: z.number(),
+export const configSchema = z.object({
+  datarooms: z.number().optional(),
   links: z
     .preprocess((v) => (v === null ? Infinity : Number(v)), z.number())
     .optional()
@@ -35,12 +35,13 @@ const configSchema = z.object({
     .preprocess((v) => (v === null ? Infinity : Number(v)), z.number())
     .optional()
     .default(50),
-  users: z.number(),
-  domains: z.number(),
-  customDomainOnPro: z.boolean(),
-  customDomainInDataroom: z.boolean(),
+  users: z.number().optional(),
+  domains: z.number().optional(),
+  customDomainOnPro: z.boolean().optional(),
+  customDomainInDataroom: z.boolean().optional(),
   advancedLinkControlsOnPro: z.boolean().nullish(),
   watermarkOnBusiness: z.boolean().nullish(),
+  conversationsInDataroom: z.boolean().nullish(),
   fileSizeLimits: z
     .object({
       video: z.number().optional(), // in MB
@@ -48,6 +49,7 @@ const configSchema = z.object({
       image: z.number().optional(), // in MB
       excel: z.number().optional(), // in MB
       maxFiles: z.number().optional(), // in amount of files
+      maxPages: z.number().optional(), // in amount of pages
     })
     .optional(),
 });
@@ -96,14 +98,19 @@ export async function getLimits({
   try {
     let parsedData = configSchema.parse(team.limits);
 
+    const basePlan = getBasePlan(team.plan);
+    const defaultLimits = planLimitsMap[basePlan];
+
     // Adjust limits based on the plan if they're at the default value
     if (isFreePlan(team.plan)) {
       return {
+        ...defaultLimits,
         ...parsedData,
         usage: { documents: documentCount, links: linkCount, users: userCount },
       };
     } else {
       return {
+        ...defaultLimits,
         ...parsedData,
         // if account is paid, but link and document limits are not set, then set them to Infinity
         links: parsedData.links === 50 ? Infinity : parsedData.links,
@@ -119,6 +126,7 @@ export async function getLimits({
 
     return {
       ...defaultLimits,
+      conversationsInDataroom: false,
       usage: { documents: documentCount, links: linkCount, users: userCount },
     };
   }

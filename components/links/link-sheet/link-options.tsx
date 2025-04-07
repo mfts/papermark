@@ -3,6 +3,9 @@ import { useState } from "react";
 import { PlanEnum } from "@/ee/stripe/constants";
 import { LinkAudienceType, LinkType } from "@prisma/client";
 
+import { usePlan } from "@/lib/swr/use-billing";
+import useLimits from "@/lib/swr/use-limits";
+
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { DEFAULT_LINK_TYPE } from "@/components/links/link-sheet";
 import AllowDownloadSection from "@/components/links/link-sheet/allow-download-section";
@@ -17,10 +20,8 @@ import OGSection from "@/components/links/link-sheet/og-section";
 import PasswordSection from "@/components/links/link-sheet/password-section";
 import { ProBannerSection } from "@/components/links/link-sheet/pro-banner-section";
 
-import { usePlan } from "@/lib/swr/use-billing";
-import useLimits from "@/lib/swr/use-limits";
-
 import AgreementSection from "./agreement-section";
+import ConversationSection from "./conversation-section";
 import CustomFieldsSection from "./custom-fields-section";
 import QuestionSection from "./question-section";
 import ScreenshotProtectionSection from "./screenshot-protection-section";
@@ -33,7 +34,7 @@ import { useTeam } from "@/context/team-context";
 export type LinkUpgradeOptions = {
   state: boolean;
   trigger: string;
-  plan?: "Pro" | "Business" | "Data Rooms";
+  plan?: "Pro" | "Business" | "Data Rooms" | "Data Rooms Plus";
 };
 
 export const LinkOptions = ({
@@ -170,6 +171,17 @@ export const LinkOptions = ({
         }
         handleUpgradeStateChange={handleUpgradeStateChange}
       />
+      {linkType === LinkType.DATAROOM_LINK &&
+      limits?.conversationsInDataroom ? (
+        <ConversationSection
+          {...{ data, setData }}
+          isAllowed={
+            isDataroomsPlus ||
+            ((isBusiness || isDatarooms) && limits?.conversationsInDataroom)
+          }
+          handleUpgradeStateChange={handleUpgradeStateChange}
+        />
+      ) : null}
       {linkType === LinkType.DOCUMENT_LINK ? (
         <>
           <FeedbackSection {...{ data, setData }} />
