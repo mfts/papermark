@@ -175,7 +175,6 @@ export default async function handler(
           addFileToStructure(folder.path, "", "");
         }
       });
-      console.log("downloadFolders", { folderStructure, fileKeys });
 
       const client = getLambdaClient();
 
