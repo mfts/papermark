@@ -8,14 +8,14 @@ import { CircleHelpIcon, CopyIcon } from "lucide-react";
 import { toast } from "sonner";
 import useSWR from "swr";
 
+import { copyToClipboard, fetcher } from "@/lib/utils";
+
 import AppLayout from "@/components/layouts/app";
 import { SettingsHeader } from "@/components/settings/settings-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { BadgeTooltip } from "@/components/ui/tooltip";
-
-import { copyToClipboard, fetcher } from "@/lib/utils";
 
 interface Token {
   id: string;
@@ -69,7 +69,8 @@ export default function TokenSettings() {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to generate token");
+        const error = await response.json();
+        throw new Error(error.error);
       }
 
       const data = await response.json();
@@ -79,7 +80,8 @@ export default function TokenSettings() {
       // After successful token generation, refresh the tokens list
       mutate();
     } catch (error) {
-      toast.error("Failed to generate token");
+      console.error(error);
+      toast.error((error as Error).message || "Failed to generate token");
     } finally {
       setIsLoading(false);
     }
@@ -96,7 +98,8 @@ export default function TokenSettings() {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to delete token");
+        const error = await response.json();
+        throw new Error(error.error);
       }
 
       // Refresh the tokens list
@@ -104,7 +107,7 @@ export default function TokenSettings() {
       toast.success("Token revoked successfully");
     } catch (error) {
       console.error(error);
-      toast.error("Failed to revoke token");
+      toast.error((error as Error).message || "Failed to revoke token");
     }
   };
 
