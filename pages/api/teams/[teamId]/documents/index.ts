@@ -215,9 +215,10 @@ export default async function handle(
     // Check for API token first
     const authHeader = req.headers.authorization;
     let userId: string;
+    let token: string | null = null;
 
     if (authHeader?.startsWith("Bearer ")) {
-      const token = authHeader.replace("Bearer ", "");
+      token = authHeader.replace("Bearer ", "");
       const hashedToken = hashToken(token);
 
       // Look up token in database
@@ -442,6 +443,7 @@ export default async function handle(
             },
           }),
           createLink &&
+            !token && // INFO: only send webhook if there is no token
             sendLinkCreatedWebhook({
               teamId,
               data: {
