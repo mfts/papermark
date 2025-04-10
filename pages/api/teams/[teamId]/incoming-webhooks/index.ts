@@ -44,7 +44,7 @@ export default async function handle(
         },
       });
 
-      if (!role || role !== "ADMIN") {
+      if (!role) {
         return res.status(403).json({ error: "Unauthorized" });
       }
 
