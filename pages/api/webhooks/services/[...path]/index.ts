@@ -11,6 +11,7 @@ import prisma from "@/lib/prisma";
 import { ratelimit } from "@/lib/redis";
 import { generateEncrpytedPassword } from "@/lib/utils";
 import { getSupportedContentType } from "@/lib/utils/get-content-type";
+import { sendLinkCreatedWebhook } from "@/lib/webhook/triggers/link-created";
 
 export const config = {
   // in order to enable `waitUntil` function
@@ -310,7 +311,7 @@ async function handleDocumentCreate(
     teamId: teamId,
     numPages: 1,
     token: token,
-    createLink: createLink,
+    createLink: createLink, // INFO: creatLink=true will not trigger a link.created webhook
   });
 
   if (!documentCreationResponse.ok) {
@@ -318,6 +319,7 @@ async function handleDocumentCreate(
   }
 
   const document = await documentCreationResponse.json();
+  let newLink: any;
 
   // If we need to customize the link, update it after creation
   if (createLink && document.links && document.links.length > 0 && link) {
@@ -344,7 +346,7 @@ async function handleDocumentCreate(
     }
 
     // Update the link with custom settings
-    await prisma.link.update({
+    newLink = await prisma.link.update({
       where: { id: linkId, teamId: teamId },
       data: {
         name: link.name,
@@ -364,6 +366,16 @@ async function handleDocumentCreate(
         allowList: link.allowList,
       },
     });
+
+    waitUntil(
+      sendLinkCreatedWebhook({
+        teamId,
+        data: {
+          document_id: document.id,
+          link_id: newLink.id,
+        },
+      }),
+    );
   }
 
   // If dataroomId was provided, create the relationship
@@ -382,7 +394,12 @@ async function handleDocumentCreate(
     }`,
     documentId: document.id,
     dataroomId: dataroomId ?? undefined,
-    linkId: document.links?.[0]?.id,
+    linkId: newLink?.id ?? undefined,
+    linkUrl: createLink
+      ? newLink?.domainSlug && newLink?.slug
+        ? `https://${newLink.domainSlug}/${newLink.slug}`
+        : `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${newLink?.id}`
+      : undefined,
   });
 }
 
@@ -498,6 +515,17 @@ async function handleLinkCreate(
       },
     });
 
+    waitUntil(
+      sendLinkCreatedWebhook({
+        teamId,
+        data: {
+          document_id: linkType === "DOCUMENT_LINK" ? targetId : null,
+          dataroom_id: linkType === "DATAROOM_LINK" ? targetId : null,
+          link_id: newLink.id,
+        },
+      }),
+    );
+
     return res.status(200).json({
       message: "Link created successfully",
       linkId: newLink.id,
@@ -506,7 +534,7 @@ async function handleLinkCreate(
       linkUrl:
         domainId && link.domain && link.slug
           ? `https://${newLink.domainSlug}/${newLink.slug}`
-          : `${process.env.NEXT_PUBLIC_MARKETING_URL}/link/${newLink.slug}`,
+          : `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${newLink.id}`,
     });
   } catch (error) {
     console.error("Link creation error:", error);
@@ -607,10 +635,27 @@ async function handleDataroomCreate(
       },
     });
 
+    if (createLink) {
+      waitUntil(
+        sendLinkCreatedWebhook({
+          teamId,
+          data: {
+            dataroom_id: dataroom.id,
+            link_id: dataroom.links?.[0]?.id,
+          },
+        }),
+      );
+    }
+
     return res.status(200).json({
       message: "Dataroom created successfully",
       dataroomId: dataroom.id,
-      linkId: dataroom.links?.[0]?.id,
+      linkId: createLink ? dataroom.links?.[0]?.id : undefined,
+      linkUrl: createLink
+        ? dataroom.links?.[0]?.domainSlug && dataroom.links?.[0]?.slug
+          ? `https://${dataroom.links?.[0]?.domainSlug}/${dataroom.links?.[0]?.slug}`
+          : `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${dataroom.links?.[0]?.id}`
+        : undefined,
     });
   } catch (error) {
     console.error("Dataroom creation error:", error);
