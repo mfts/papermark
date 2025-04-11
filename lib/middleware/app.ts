@@ -15,6 +15,8 @@ export default async function AppMiddleware(req: NextRequest) {
     };
   };
 
+  const isInvite = path.startsWith("/invite");
+
   // UNAUTHENTICATED if there's no token and the path isn't /login, redirect to /login
   if (!token?.email && path !== "/login") {
     const loginUrl = new URL(`/login`, req.url);
@@ -33,9 +35,18 @@ export default async function AppMiddleware(req: NextRequest) {
     token?.email &&
     token?.user?.createdAt &&
     new Date(token?.user?.createdAt).getTime() > Date.now() - 10000 &&
-    path !== "/welcome"
+    path !== "/welcome" &&
+    !isInvite
   ) {
     return NextResponse.redirect(new URL("/welcome", req.url));
+  }
+
+  // AUTHENTICATED If Invited user than redirect to "/documents"
+  if (token?.email && isInvite) {
+    const nextPath = "/documents";
+    return NextResponse.redirect(
+      new URL(decodeURIComponent(nextPath), req.url),
+    );
   }
 
   // AUTHENTICATED if the path is /login, redirect to "/documents"
