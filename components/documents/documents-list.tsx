@@ -54,11 +54,15 @@ export function DocumentsList({
   documents,
   teamInfo,
   folderPathName,
+  loading,
+  foldersLoading,
 }: {
   folders: FolderWithCount[] | undefined;
   documents: DocumentWithLinksAndLinkCountAndViewCount[] | undefined;
   teamInfo: TeamContextType | null;
   folderPathName?: string[];
+  loading: boolean;
+  foldersLoading: boolean;
 }) {
   const { isMobile } = useMediaQuery();
 
@@ -418,7 +422,7 @@ export function DocumentsList({
           <div className="space-y-4">
             {/* Folders list */}
             <ul role="list" className="space-y-4">
-              {folders
+              {folders && !foldersLoading
                 ? folders.map((folder) => {
                     return (
                       <FolderCard
@@ -448,7 +452,7 @@ export function DocumentsList({
 
             {/* Documents list */}
             <ul role="list" className="space-y-4">
-              {documents
+              {documents && !loading
                 ? documents.map((document) => {
                     return (
                       <DocumentCard
@@ -483,7 +487,7 @@ export function DocumentsList({
               <HeaderContent />
             </Portal>
 
-            {documents && documents.length === 0 && (
+            {documents && documents.length === 0 && !loading && (
               <div className="flex items-center justify-center">
                 <EmptyDocuments />
               </div>
@@ -506,7 +510,7 @@ export function DocumentsList({
               <div className="space-y-4">
                 {/* Folders list */}
                 <ul role="list" className="space-y-4">
-                  {folders
+                  {folders && !foldersLoading
                     ? folders.map((folder) => {
                         return (
                           <DroppableFolder
@@ -559,7 +563,7 @@ export function DocumentsList({
 
                 {/* Documents list */}
                 <ul role="list" className="space-y-4">
-                  {documents
+                  {documents && !loading
                     ? documents.map((document) => {
                         return (
                           <DraggableItem
@@ -639,7 +643,7 @@ export function DocumentsList({
                   <HeaderContent />
                 </Portal>
 
-                {documents && documents.length === 0 && (
+                {documents && documents.length === 0 && !loading && (
                   <div className="flex items-center justify-center">
                     <EmptyDocuments />
                   </div>
@@ -674,4 +678,4 @@ export function DocumentsList({
       ) : null}
     </>
   );
-}
+};

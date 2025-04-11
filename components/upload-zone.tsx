@@ -110,6 +110,13 @@ export default function UploadZone({
   const { data: session } = useSession();
   const isFreePlan = plan === "free";
   const isTrial = !!trial;
+  const queryParams = router.query;
+  const searchQuery = queryParams["search"];
+  const sortQuery = queryParams["sort"];
+  const page = Number(queryParams["page"]) || 1;
+  const pageSize = Number(queryParams["limit"]) || 10;
+  const paginationParams =
+    searchQuery || sortQuery ? `&page=${page}&limit=${pageSize}` : "";
   // const maxSize = isFreePlan && !isTrial ? 30 : 350;
   // const maxNumPages = isFreePlan && !isTrial ? 100 : 500;
   const { limits, canAddDocuments } = useLimits();
@@ -318,7 +325,15 @@ export default function UploadZone({
         });
 
         // add the new document to the list
-        mutate(`/api/teams/${teamInfo?.currentTeam?.id}/documents`);
+        mutate(
+          `/api/teams/${teamInfo?.currentTeam?.id}/documents?${
+            searchQuery ? `query=${searchQuery}` : ""
+          }${sortQuery ? `&sort=${sortQuery}` : ""}${paginationParams}`.replace(
+            /^\?&/,
+            "?",
+          ),
+        );
+
         fileUploadPathName &&
           mutate(
             `/api/teams/${teamInfo?.currentTeam?.id}/folders/documents/${fileUploadPathName}`,
