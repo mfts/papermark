@@ -142,7 +142,12 @@ export default function LinksTable({
       password: link.password,
       emailProtected: link.emailProtected,
       emailAuthenticated: link.emailAuthenticated,
-      allowDownload: link.allowDownload ? link.allowDownload : false,
+      allowDownload:
+        primaryVersion?.type === "notion"
+          ? false
+          : link.allowDownload
+            ? link.allowDownload
+            : false,
       allowList: link.allowList,
       denyList: link.denyList,
       enableNotification: link.enableNotification
@@ -587,6 +592,7 @@ export default function LinksTable({
         </div>
 
         <LinkSheet
+          isNotionLink={primaryVersion?.type === "notion"}
           isOpen={isLinkSheetVisible}
           setIsOpen={setIsLinkSheetVisible}
           linkType={`${targetType}_LINK`}

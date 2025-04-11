@@ -121,7 +121,9 @@ export default function LinkSheet({
   linkType,
   currentLink,
   existingLinks,
+  isNotionLink,
 }: {
+  isNotionLink?: boolean;
   isOpen: boolean;
   setIsOpen: Dispatch<SetStateAction<boolean>>;
   linkType: LinkType;
@@ -447,6 +449,7 @@ export default function LinkSheet({
                         </div>
 
                         <LinkOptions
+                          isNotionLink={isNotionLink}
                           data={data}
                           setData={setData}
                           linkType={linkType}
@@ -558,6 +561,7 @@ export default function LinkSheet({
                         </div>
 
                         <LinkOptions
+                          isNotionLink={isNotionLink}
                           data={data}
                           setData={setData}
                           linkType={linkType}

@@ -17,7 +17,10 @@ export default function LinkItem({
   resetAction,
   link,
   tooltipContent,
+  switcherTooltipContent,
+  switcherLink,
 }: {
+  switcherLink?: string;
   title: string;
   enabled: boolean;
   action: () => void;
@@ -26,6 +29,7 @@ export default function LinkItem({
   upgradeAction?: () => void;
   link?: string;
   resetAction?: () => void;
+  switcherTooltipContent?: string;
   tooltipContent?: string;
 }) {
   return (
@@ -67,12 +71,29 @@ export default function LinkItem({
           </ButtonTooltip>
         )}
       </div>
-      <Switch
-        checked={enabled}
-        onClick={isAllowed ? undefined : () => upgradeAction?.()}
-        className={isAllowed ? undefined : "opacity-50"}
-        onCheckedChange={isAllowed ? action : undefined}
-      />
+      {switcherTooltipContent ? (
+        <BadgeTooltip
+          content={switcherTooltipContent}
+          key="link_tooltip"
+          link={switcherLink}
+        >
+          <div>
+            <Switch
+              checked={enabled}
+              onClick={isAllowed ? undefined : () => upgradeAction?.()}
+              className={isAllowed ? undefined : "opacity-50"}
+              onCheckedChange={isAllowed ? action : undefined}
+            />
+          </div>
+        </BadgeTooltip>
+      ) : (
+        <Switch
+          checked={enabled}
+          onClick={isAllowed ? undefined : () => upgradeAction?.()}
+          className={isAllowed ? undefined : "opacity-50"}
+          onCheckedChange={isAllowed ? action : undefined}
+        />
+      )}
     </div>
   );
 }
