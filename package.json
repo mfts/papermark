@@ -145,6 +145,7 @@
     "@trigger.dev/build": "^3.3.17",
     "@trivago/prettier-plugin-sort-imports": "^5.2.2",
     "@types/bcryptjs": "^2.4.6",
+    "@types/cookie": "^0.6.0",
     "@types/fluent-ffmpeg": "^2.1.27",
     "@types/js-cookie": "^3.0.6",
     "@types/jsonwebtoken": "^9.0.7",

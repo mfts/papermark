@@ -30,6 +30,7 @@ import {
 
 import { DEFAULT_DATAROOM_VIEW_TYPE } from "../dataroom/dataroom-view";
 import DocumentCard from "../dataroom/document-card";
+import { DocumentUploadModal } from "../dataroom/document-upload-modal";
 import FolderCard from "../dataroom/folder-card";
 import DataroomNav from "../dataroom/nav-dataroom";
 
@@ -84,6 +85,7 @@ export default function DataroomViewer({
   accessControls,
   viewerId,
   viewData,
+  enableVisitorUpload = true,
 }: {
   brand: Partial<DataroomBrand>;
   viewId?: string;
@@ -96,6 +98,7 @@ export default function DataroomViewer({
   accessControls: ViewerGroupAccessControls[];
   viewerId?: string;
   viewData: DEFAULT_DATAROOM_VIEW_TYPE;
+  enableVisitorUpload?: boolean;
 }) {
   const { documents, folders } = dataroom as {
     documents: DataroomDocument[];
@@ -226,38 +229,48 @@ export default function DataroomViewer({
                   </Sheet>
                 </div>
 
-                <Breadcrumb>
-                  <BreadcrumbList>
-                    <BreadcrumbItem key={"root"}>
-                      <BreadcrumbLink
-                        onClick={() => setFolderId(null)}
-                        className="cursor-pointer"
-                      >
-                        Home
-                      </BreadcrumbLink>
-                    </BreadcrumbItem>
+                <div className="flex flex-1 items-center justify-between gap-x-2">
+                  <Breadcrumb>
+                    <BreadcrumbList>
+                      <BreadcrumbItem key={"root"}>
+                        <BreadcrumbLink
+                          onClick={() => setFolderId(null)}
+                          className="cursor-pointer"
+                        >
+                          Home
+                        </BreadcrumbLink>
+                      </BreadcrumbItem>
 
-                    {breadcrumbFolders.map((folder, index) => (
-                      <React.Fragment key={folder.id}>
-                        <BreadcrumbSeparator />
-                        <BreadcrumbItem>
-                          {index === breadcrumbFolders.length - 1 ? (
-                            <BreadcrumbPage className="capitalize">
-                              {folder.name}
-                            </BreadcrumbPage>
-                          ) : (
-                            <BreadcrumbLink
-                              onClick={() => setFolderId(folder.id)}
-                              className="cursor-pointer capitalize"
-                            >
-                              {folder.name}
-                            </BreadcrumbLink>
-                          )}
-                        </BreadcrumbItem>
-                      </React.Fragment>
-                    ))}
-                  </BreadcrumbList>
-                </Breadcrumb>
+                      {breadcrumbFolders.map((folder, index) => (
+                        <React.Fragment key={folder.id}>
+                          <BreadcrumbSeparator />
+                          <BreadcrumbItem>
+                            {index === breadcrumbFolders.length - 1 ? (
+                              <BreadcrumbPage className="capitalize">
+                                {folder.name}
+                              </BreadcrumbPage>
+                            ) : (
+                              <BreadcrumbLink
+                                onClick={() => setFolderId(folder.id)}
+                                className="cursor-pointer capitalize"
+                              >
+                                {folder.name}
+                              </BreadcrumbLink>
+                            )}
+                          </BreadcrumbItem>
+                        </React.Fragment>
+                      ))}
+                    </BreadcrumbList>
+                  </Breadcrumb>
+
+                  {enableVisitorUpload && viewerId && (
+                    <DocumentUploadModal
+                      linkId={linkId}
+                      dataroomId={dataroom?.id}
+                      viewerId={viewerId}
+                    />
+                  )}
+                </div>
               </div>
               <ul role="list" className="-mx-4 space-y-4 overflow-auto p-4">
                 {mixedItems.map(renderItem)}
