@@ -7,6 +7,7 @@ import { getServerSession } from "next-auth/next";
 import { parsePageId } from "notion-utils";
 
 import { hashToken } from "@/lib/api/auth/token";
+import { processDocument } from "@/lib/api/documents/process-document";
 import { errorhandler } from "@/lib/errorHandler";
 import notion from "@/lib/notion";
 import prisma from "@/lib/prisma";
@@ -209,7 +210,6 @@ export default async function handle(
     }
   } else if (req.method === "POST") {
     // POST /api/teams/:teamId/documents
-
     const { teamId } = req.query as { teamId: string };
 
     // Check for API token first
@@ -263,7 +263,7 @@ export default async function handle(
       url: string;
       storageType: DocumentStorageType;
       numPages?: number;
-      type?: string;
+      type: string;
       folderPathName?: string;
       contentType: string;
       createLink?: boolean;
@@ -276,183 +276,22 @@ export default async function handle(
         userId,
       });
 
-      // Get passed type property or alternatively, the file extension and save it as the type
-      const type = fileType || getExtension(name);
-
-      // Check whether the Notion page is publically accessible or not
-      if (type === "notion") {
-        try {
-          const pageId = parsePageId(fileUrl, { uuid: false });
-          // if the page isn't accessible then end the process here.
-          if (!pageId) {
-            throw new Error("Notion page not found");
-          }
-          await notion.getPage(pageId);
-        } catch (error) {
-          return res
-            .status(404)
-            .end("This Notion page isn't publically available.");
-        }
-      }
-
-      const folder = await prisma.folder.findUnique({
-        where: {
-          teamId_path: {
-            teamId,
-            path: "/" + folderPathName,
-          },
-        },
-        select: {
-          id: true,
-        },
-      });
-
-      // determine if the document is download only
-      const isDownloadOnly = type === "zip" || type === "map";
-
-      // Save data to the database
-      const document = await prisma.document.create({
-        data: {
-          name: name,
-          numPages: numPages,
-          file: fileUrl,
-          originalFile: fileUrl,
-          contentType: contentType,
-          type: type,
+      const document = await processDocument({
+        documentData: {
+          name,
+          key: fileUrl,
           storageType,
-          ownerId: userId,
-          teamId: teamId,
-          downloadOnly: isDownloadOnly,
-          ...(createLink && {
-            links: {
-              create: {
-                teamId,
-              },
-            },
-          }),
-          versions: {
-            create: {
-              file: fileUrl,
-              originalFile: fileUrl,
-              contentType: contentType,
-              type: type,
-              storageType,
-              numPages: numPages,
-              isPrimary: true,
-              versionNumber: 1,
-              fileSize: fileSize,
-            },
-          },
-          folderId: folder?.id ? folder.id : null,
+          numPages,
+          supportedFileType: fileType,
+          contentType,
+          fileSize,
         },
-        include: {
-          links: true,
-          versions: true,
-        },
+        teamId,
+        userId,
+        teamPlan: team.plan,
+        createLink,
+        folderPathName,
       });
-
-      if (type === "docs" || type === "slides") {
-        await convertFilesToPdfTask.trigger(
-          {
-            documentId: document.id,
-            documentVersionId: document.versions[0].id,
-            teamId,
-          },
-          {
-            idempotencyKey: `${teamId}-${document.versions[0].id}-docs`,
-            tags: [
-              `team_${teamId}`,
-              `document_${document.id}`,
-              `version:${document.versions[0].id}`,
-            ],
-            queue: conversionQueue(team.plan),
-            concurrencyKey: teamId,
-          },
-        );
-      }
-
-      if (type === "cad") {
-        await convertCadToPdfTask.trigger(
-          {
-            documentId: document.id,
-            documentVersionId: document.versions[0].id,
-            teamId,
-          },
-          {
-            idempotencyKey: `${teamId}-${document.versions[0].id}-cad`,
-            tags: [
-              `team_${teamId}`,
-              `document_${document.id}`,
-              `version:${document.versions[0].id}`,
-            ],
-            queue: conversionQueue(team.plan),
-            concurrencyKey: teamId,
-          },
-        );
-      }
-
-      if (type === "video") {
-        await processVideo.trigger(
-          {
-            videoUrl: fileUrl,
-            teamId,
-            docId: fileUrl.split("/")[1], // Extract doc_xxxx from teamId/doc_xxxx/filename
-            documentVersionId: document.versions[0].id,
-            fileSize: fileSize || 0,
-          },
-          {
-            idempotencyKey: `${teamId}-${document.versions[0].id}`,
-            tags: [
-              `team_${teamId}`,
-              `document_${document.id}`,
-              `version:${document.versions[0].id}`,
-            ],
-            queue: conversionQueue(team.plan),
-            concurrencyKey: teamId,
-          },
-        );
-      }
-
-      // skip triggering convert-pdf-to-image job for "notion" / "excel" documents
-      if (type === "pdf") {
-        await convertPdfToImageRoute.trigger(
-          {
-            documentId: document.id,
-            documentVersionId: document.versions[0].id,
-            teamId,
-          },
-          {
-            idempotencyKey: `${teamId}-${document.versions[0].id}`,
-            tags: [
-              `team_${teamId}`,
-              `document_${document.id}`,
-              `version:${document.versions[0].id}`,
-            ],
-            queue: conversionQueue(team.plan),
-            concurrencyKey: teamId,
-          },
-        );
-      }
-
-      waitUntil(
-        Promise.all([
-          sendDocumentCreatedWebhook({
-            teamId,
-            data: {
-              document_id: document.id,
-            },
-          }),
-          createLink &&
-            !token && // INFO: only send webhook if there is no token
-            sendLinkCreatedWebhook({
-              teamId,
-              data: {
-                document_id: document.id,
-                link_id: document.links[0].id,
-              },
-            }),
-        ]),
-      );
 
       return res.status(201).json(document);
     } catch (error) {
