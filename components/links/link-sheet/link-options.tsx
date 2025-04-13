@@ -84,7 +84,7 @@ export const LinkOptions = ({
       <AllowNotificationSection {...{ data, setData }} />
       <AllowDownloadSection {...{ data, setData }} />
       <ExpirationSection {...{ data, setData }} />
-      {linkType === LinkType.DATAROOM_LINK ? (
+      {limits?.dataroomUpload && linkType === LinkType.DATAROOM_LINK ? (
         <UploadSection
           {...{ data, setData }}
           isAllowed={isTrial || isDatarooms || isDataroomsPlus}
