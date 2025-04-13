@@ -485,7 +485,6 @@ export async function generateEncrpytedPassword(
   if (!password) return "";
   // If the password is already encrypted, return it
   const textParts: string[] = password.split(":");
-  console.log("textparts in encryption", textParts);
   if (textParts.length === 2) {
     return password;
   }
@@ -544,7 +543,7 @@ export const trim = (u: unknown) => (typeof u === "string" ? u.trim() : u);
 
 export const getBreadcrumbPath = (path: string[]) => {
   const segments = path?.filter(Boolean);
-   if (!Array.isArray(path) || path.length === 0) {
+  if (!Array.isArray(path) || path.length === 0) {
     return [{ name: "Home", pathLink: "/documents" }];
   }
   let currentPath = "documents/tree";
@@ -553,10 +552,10 @@ export const getBreadcrumbPath = (path: string[]) => {
     { name: "Home", pathLink: "/documents" },
     ...segments.map((segment, index) => {
       currentPath += `/${slugify(segment)}`;
-      return { 
-        name: segment, 
-        pathLink: currentPath 
+      return {
+        name: segment,
+        pathLink: currentPath,
       };
-    })
+    }),
   ];
 };
