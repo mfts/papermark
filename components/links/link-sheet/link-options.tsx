@@ -43,7 +43,7 @@ export const LinkOptions = ({
 }: {
   data: DEFAULT_LINK_TYPE;
   setData: React.Dispatch<React.SetStateAction<DEFAULT_LINK_TYPE>>;
-  targetId: string;
+  targetId?: string;
   linkType: LinkType;
   editLink?: boolean;
 }) => {
@@ -84,7 +84,9 @@ export const LinkOptions = ({
       <AllowNotificationSection {...{ data, setData }} />
       <AllowDownloadSection {...{ data, setData }} />
       <ExpirationSection {...{ data, setData }} />
-      {limits?.dataroomUpload && linkType === LinkType.DATAROOM_LINK ? (
+      {limits?.dataroomUpload &&
+      linkType === LinkType.DATAROOM_LINK &&
+      targetId ? (
         <UploadSection
           {...{ data, setData }}
           isAllowed={isTrial || isDatarooms || isDataroomsPlus}
