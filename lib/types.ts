@@ -34,7 +34,7 @@ export interface DocumentWithLinksAndLinkCountAndViewCount extends Document {
   folder: {
     name: string;
     path: string;
-  }
+  };
   folderList: string[];
 }
 
@@ -54,6 +54,7 @@ export interface LinkWithViews extends Link {
   views: View[];
   feedback: { id: true; data: { question: string; type: string } } | null;
   customFields: CustomField[];
+  uploadFolderName: string | undefined;
 }
 
 export interface LinkWithDocument extends Link {

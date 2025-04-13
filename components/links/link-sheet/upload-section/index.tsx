@@ -30,15 +30,17 @@ function FolderSelectionModal({
   open,
   setOpen,
   dataroomId,
+  currentFolder,
   handleSelectFolder,
 }: {
   open: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
   dataroomId: string;
+  currentFolder: TSelectedFolder | null;
   handleSelectFolder: (selectedFolder: TSelectedFolder) => void;
 }) {
   const [selectedFolder, setSelectedFolder] = useState<TSelectedFolder | null>(
-    null,
+    currentFolder,
   );
 
   const handleSubmit = async (event: any) => {
@@ -129,15 +131,23 @@ export default function UploadSection({
   }: LinkUpgradeOptions) => void;
   targetId: string;
 }) {
-  const { enableUpload, isFileRequestOnly, uploadFolderId } = data;
+  const { enableUpload, isFileRequestOnly, uploadFolderId, uploadFolderName } =
+    data;
   const [enabled, setEnabled] = useState<boolean>(false);
-  const [selectedFolder, setSelectedFolder] = useState<TSelectedFolder>(null);
-
+  const [selectedFolder, setSelectedFolder] = useState<TSelectedFolder | null>(
+    null,
+  );
   const [open, setOpen] = useState<boolean>(false);
 
   useEffect(() => {
     setEnabled(enableUpload!);
   }, [enableUpload]);
+
+  useEffect(() => {
+    if (uploadFolderId) {
+      setSelectedFolder({ id: uploadFolderId, name: uploadFolderName });
+    }
+  }, [uploadFolderId, uploadFolderName]);
 
   const handleUpload = async () => {
     const updatedUpload = !enabled;
@@ -164,6 +174,8 @@ export default function UploadSection({
     });
   };
 
+  console.log("selectedFolder", selectedFolder);
+
   return (
     <div className="pb-5">
       <LinkItem
@@ -189,7 +201,7 @@ export default function UploadSection({
         >
           <div className="flex w-full flex-col items-start gap-6 overflow-x-visible pb-4 pt-0">
             <div className="w-full space-y-4">
-              <div className="flex items-center space-x-2">
+              {/* <div className="flex items-center space-x-2">
                 <Switch
                   id="file-request-mode"
                   checked={isFileRequestOnly}
@@ -198,14 +210,14 @@ export default function UploadSection({
                 <Label htmlFor="file-request-mode">
                   File request only mode
                 </Label>
-              </div>
+              </div> */}
 
               <div className="space-y-4">
                 <Label
                   htmlFor="link-folder"
                   className="flex items-center gap-2"
                 >
-                  <span>Folder for uploaded file</span>
+                  <span>Upload to specific folder</span>
                   <BadgeTooltip content="This is the folder that will be used to store uploaded files. If you don't select a folder, the files will be stored in the All Documents.">
                     <CircleHelpIcon className="h-4 w-4 shrink-0 text-muted-foreground hover:text-foreground" />
                   </BadgeTooltip>
@@ -214,6 +226,7 @@ export default function UploadSection({
                   open={open}
                   setOpen={setOpen}
                   dataroomId={targetId}
+                  currentFolder={selectedFolder}
                   handleSelectFolder={handleSelectFolder}
                 />
               </div>

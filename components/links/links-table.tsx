@@ -174,6 +174,7 @@ export default function LinksTable({
       enableUpload: link.enableUpload ?? false,
       isFileRequestOnly: link.isFileRequestOnly ?? false,
       uploadFolderId: link.uploadFolderId ?? null,
+      uploadFolderName: link.uploadFolderName ?? "Home",
     });
     //wait for dropdown to close before opening the link sheet
     setTimeout(() => {

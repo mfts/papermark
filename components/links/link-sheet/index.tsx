@@ -82,6 +82,7 @@ export const DEFAULT_LINK_PROPS = (
   enableUpload: false,
   isFileRequestOnly: false,
   uploadFolderId: null,
+  uploadFolderName: "Home",
 });
 
 export type DEFAULT_LINK_TYPE = {
@@ -119,6 +120,7 @@ export type DEFAULT_LINK_TYPE = {
   enableUpload: boolean;
   isFileRequestOnly: boolean;
   uploadFolderId: string | null;
+  uploadFolderName: string;
 };
 
 export default function LinkSheet({
