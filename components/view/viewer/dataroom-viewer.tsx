@@ -190,13 +190,13 @@ export default function DataroomViewer({
 
           {/* Detail view */}
           <ScrollArea showScrollbar className="h-full flex-grow overflow-auto">
-            <div className="h-full space-y-8 px-3 pb-4 pt-4 md:px-6 md:pt-6 lg:px-8 lg:pt-9 xl:px-14">
+            <div className="h-full px-3 pb-4 pt-4 md:px-6 md:pt-6 lg:px-8 lg:pt-9 xl:px-14">
               <div className="flex items-center gap-x-2">
                 {/* sidebar for mobile */}
                 <div className="flex md:hidden">
                   <Sheet>
                     <SheetTrigger asChild>
-                      <button className="text-muted-foreground hover:text-white lg:hidden">
+                      <button className="text-muted-foreground lg:hidden">
                         <PanelLeftIcon className="h-5 w-5" aria-hidden="true" />
                       </button>
                     </SheetTrigger>
@@ -259,7 +259,7 @@ export default function DataroomViewer({
                   </BreadcrumbList>
                 </Breadcrumb>
               </div>
-              <ul role="list" className="space-y-4 overflow-auto p-4">
+              <ul role="list" className="-mx-4 space-y-4 overflow-auto p-4">
                 {mixedItems.map(renderItem)}
               </ul>
             </div>
