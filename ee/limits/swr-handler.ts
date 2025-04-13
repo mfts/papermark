@@ -12,6 +12,7 @@ export type LimitProps = z.infer<typeof configSchema> & {
     links: number;
     users: number;
   };
+  dataroomUpload?: boolean;
 };
 
 export function useLimits() {
