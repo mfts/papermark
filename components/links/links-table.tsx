@@ -171,6 +171,9 @@ export default function LinksTable({
       groupId: link.groupId,
       customFields: link.customFields || [],
       enableConversation: link.enableConversation ?? false,
+      enableUpload: link.enableUpload ?? false,
+      isFileRequestOnly: link.isFileRequestOnly ?? false,
+      uploadFolderId: link.uploadFolderId ?? null,
     });
     //wait for dropdown to close before opening the link sheet
     setTimeout(() => {
