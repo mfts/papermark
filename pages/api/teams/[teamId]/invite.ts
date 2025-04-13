@@ -11,6 +11,7 @@ import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 
 import { authOptions } from "../../auth/[...nextauth]";
+import { generateChecksum } from "@/lib/utils/generate-checksum";
 
 export default async function handle(
   req: NextApiRequest,
@@ -131,20 +132,39 @@ export default async function handle(
       // send invite email
       const sender = session.user as CustomUser;
 
-      const params = new URLSearchParams({
-        callbackUrl: `${process.env.NEXTAUTH_URL}/api/teams/${teamId}/invitations/accept`,
+      // invitation acceptance URL
+      const invitationUrl = `/api/teams/${teamId}/invitations/accept?token=${token}&email=${email}`;
+      const fullInvitationUrl = `${process.env.NEXT_PUBLIC_BASE_URL}${invitationUrl}`;
+
+      // magic link 
+      const magicLinkParams = new URLSearchParams({
         email,
         token,
+        callbackUrl: fullInvitationUrl,
       });
 
-      const url = `${process.env.NEXTAUTH_URL}/api/auth/callback/email?${params}`;
+      const magicLink = `${process.env.NEXT_PUBLIC_BASE_URL}/api/auth/callback/email?${magicLinkParams.toString()}`;
+
+      const verifyParams = new URLSearchParams({
+        verification_url: magicLink,
+        email,
+        token,
+        teamId,
+        type: "invitation",
+        expiresAt: expiresAt.toISOString(),
+      });
+
+      const checksum = generateChecksum(magicLink);
+      verifyParams.append("checksum", checksum);
+
+      const verifyUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/verify/invitation?${verifyParams.toString()}`;
 
       sendTeammateInviteEmail({
         senderName: sender.name || "",
         senderEmail: sender.email || "",
         teamName: team?.name || "",
         to: email,
-        url: url,
+        url: verifyUrl,
       });
 
       return res.status(200).json("Invitation sent!");

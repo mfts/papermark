@@ -206,7 +206,7 @@ export default function Login() {
             <a
               href="https://www.papermark.com/terms"
               target="_blank"
-              className="underline"
+              className="underline hover:text-gray-900"
             >
               Terms of Service
             </a>{" "}
@@ -214,7 +214,7 @@ export default function Login() {
             <a
               href="https://www.papermark.com/privacy"
               target="_blank"
-              className="underline"
+             className="underline hover:text-gray-900"
             >
               Privacy Policy
             </a>

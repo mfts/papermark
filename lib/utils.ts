@@ -6,8 +6,10 @@ import { type ClassValue, clsx } from "clsx";
 import crypto from "crypto";
 import ms from "ms";
 import { customAlphabet } from "nanoid";
+import { NextRouter } from "next/router";
 import { ThreadMessage } from "openai/resources/beta/threads/messages/messages";
 import { rgb } from "pdf-lib";
+import { ParsedUrlQuery } from "querystring";
 import { toast } from "sonner";
 import { twMerge } from "tailwind-merge";
 
@@ -559,4 +561,26 @@ export const getBreadcrumbPath = (path: string[]) => {
       };
     })
   ];
+};
+
+export const handleInvitationStatus = (
+  invitationStatus: 'accepted' | 'teamMember',
+  queryParams: ParsedUrlQuery,
+  router: NextRouter,
+) => {
+  switch (invitationStatus) {
+    case 'accepted':
+      toast.success("Welcome to the team! You've successfully joined.");
+      break;
+    case 'teamMember':
+      toast.error("You've already accepted this invitation!");
+      break;
+    default:
+      toast.error("Invalid invitation status");
+  }
+
+  delete queryParams["invitation"];
+  router.replace("/documents", undefined, {
+    shallow: true,
+  });
 };
