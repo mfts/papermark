@@ -1,10 +1,45 @@
+import { Metadata } from "next";
 import Link from "next/link";
 
 import NotFound from "@/pages/404";
 
+import { generateChecksum } from "@/lib/utils/generate-checksum";
+
 import { Button } from "@/components/ui/button";
 
-import { generateChecksum } from "@/lib/utils/generate-checksum";
+const data = {
+  description: "Verify login to Papermark",
+  title: "Verify | Papermark",
+  url: "/verify",
+};
+
+export const metadata: Metadata = {
+  metadataBase: new URL("https://www.papermark.com"),
+  title: data.title,
+  description: data.description,
+  openGraph: {
+    title: data.title,
+    description: data.description,
+    url: data.url,
+    siteName: "Papermark",
+    images: [
+      {
+        url: "/_static/meta-image.png",
+        width: 800,
+        height: 600,
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: data.title,
+    description: data.description,
+    creator: "@papermarkio",
+    images: ["/_static/meta-image.png"],
+  },
+};
 
 export default function VerifyPage({
   searchParams,
