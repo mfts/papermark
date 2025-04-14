@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 
-import { CircleHelpIcon, FolderIcon } from "lucide-react";
+import { CircleHelpIcon, CircleXIcon, FolderIcon, XIcon } from "lucide-react";
 import { motion } from "motion/react";
 
 import { FADE_IN_ANIMATION_SETTINGS } from "@/lib/constants";
@@ -37,7 +37,7 @@ function FolderSelectionModal({
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
   dataroomId: string;
   currentFolder: TSelectedFolder | null;
-  handleSelectFolder: (selectedFolder: TSelectedFolder) => void;
+  handleSelectFolder: (selectedFolder: TSelectedFolder | null) => void;
 }) {
   const [selectedFolder, setSelectedFolder] = useState<TSelectedFolder | null>(
     currentFolder,
@@ -57,9 +57,22 @@ function FolderSelectionModal({
           <div className="flex w-full cursor-pointer rounded-md border border-input bg-white text-foreground placeholder-muted-foreground focus:border-muted-foreground focus:outline-none focus:ring-inset focus:ring-muted-foreground dark:border-gray-500 dark:bg-gray-800 focus:dark:bg-transparent sm:text-sm">
             <div className="flex w-full items-center px-3 py-2">
               {selectedFolder ? (
-                <span className="flex items-center gap-1">
-                  <FolderIcon className="h-4 w-4" /> {selectedFolder.name}
-                </span>
+                <div className="relative w-full">
+                  <span className="flex items-center gap-1">
+                    <FolderIcon className="mr-1 h-4 w-4" />{" "}
+                    {selectedFolder.name}
+                  </span>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedFolder(null);
+                      handleSelectFolder(null);
+                    }}
+                    className="pointer-events-auto absolute inset-y-0 right-0 z-10 -mr-1 flex items-center rounded-md p-1 hover:bg-muted"
+                  >
+                    <XIcon className="h-4 w-4 text-muted-foreground" />
+                  </button>
+                </div>
               ) : (
                 <span className="text-muted-foreground">
                   Optionally, select folder
@@ -166,15 +179,14 @@ export default function UploadSection({
     });
   };
 
-  const handleSelectFolder = (selectedFolder: TSelectedFolder): void => {
+  const handleSelectFolder = (selectedFolder: TSelectedFolder | null): void => {
     setSelectedFolder(selectedFolder);
     setData({
       ...data,
       uploadFolderId: selectedFolder?.id ?? null,
+      uploadFolderName: selectedFolder?.name || "Home",
     });
   };
-
-  console.log("selectedFolder", selectedFolder);
 
   return (
     <div className="pb-5">
@@ -215,12 +227,17 @@ export default function UploadSection({
               <div className="space-y-4">
                 <Label
                   htmlFor="link-folder"
-                  className="flex items-center gap-2"
+                  className="flex flex-col items-start gap-2"
                 >
-                  <span>Upload to specific folder</span>
-                  <BadgeTooltip content="This is the folder that will be used to store uploaded files. If you don't select a folder, the files will be stored in the All Documents.">
-                    <CircleHelpIcon className="h-4 w-4 shrink-0 text-muted-foreground hover:text-foreground" />
-                  </BadgeTooltip>
+                  <div className="flex items-center gap-2">
+                    <span>Upload to specific folder</span>
+                    <BadgeTooltip content="This is the folder that will be used to store uploaded files. If you don't select a folder, the files will be uploaded to the folder the visitor chooses.">
+                      <CircleHelpIcon className="h-4 w-4 shrink-0 text-muted-foreground hover:text-foreground" />
+                    </BadgeTooltip>
+                  </div>
+                  <span className="text-sm text-muted-foreground">
+                    Leave blank for visitor to choose folder
+                  </span>
                 </Label>
                 <FolderSelectionModal
                   open={open}

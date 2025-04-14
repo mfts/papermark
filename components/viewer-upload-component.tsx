@@ -9,9 +9,11 @@ import ViewerUploadZone from "@/components/viewer-upload-zone";
 export function ViewerUploadComponent({
   viewerData,
   teamId,
+  folderId,
 }: {
   viewerData: { id: string; linkId: string; dataroomId?: string };
   teamId: string;
+  folderId?: string;
 }) {
   const [uploads, setUploads] = useState<
     { fileName: string; progress: number }[]
@@ -45,6 +47,7 @@ export function ViewerUploadComponent({
         body: JSON.stringify({
           documentData,
           dataroomId: viewerData.dataroomId,
+          folderId: folderId,
         }),
       });
 
