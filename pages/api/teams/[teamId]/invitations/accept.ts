@@ -16,10 +16,11 @@ export default async function handle(
     // GET /api/teams/:teamId/invitations/accept?token=...&email=...
     const session = await getServerSession(req, res, authOptions);
 
-    const { teamId, token, email } = req.query as { teamId: string; token?: string; email?: string };
-
-    // Log the request for debugging
-    console.log("Invitation acceptance request:", { teamId, token, email });
+    const { teamId, token, email } = req.query as {
+      teamId: string;
+      token?: string;
+      email?: string;
+    };
 
     // Check if user is authenticated
     if (!session) {
@@ -34,7 +35,6 @@ export default async function handle(
         ? `${redirectUrl}&${params.toString()}`
         : redirectUrl;
 
-      console.log("Redirecting to login:", finalRedirectUrl);
       res.redirect(finalRedirectUrl);
       return;
     }
@@ -52,7 +52,6 @@ export default async function handle(
       });
 
       if (userTeam) {
-        console.log("User already in team, redirecting to documents");
         return res.redirect(`/documents?invitation=teamMember`);
       }
 
