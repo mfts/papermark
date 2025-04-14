@@ -127,7 +127,6 @@ export default async function handle(
       verifyParams.append("checksum", checksum);
 
       const verifyUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/verify/invitation?${verifyParams.toString()}`;
-      console.log("verifyUrl", verifyUrl);
 
       sendTeammateInviteEmail({
         senderName: sender.name || "",

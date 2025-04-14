@@ -1,3 +1,4 @@
+import { Metadata } from "next";
 import Link from "next/link";
 
 import NotFound from "@/pages/404";
@@ -7,6 +8,40 @@ import { ClockIcon, MailIcon } from "lucide-react";
 import { generateChecksum } from "@/lib/utils/generate-checksum";
 
 import { Button } from "@/components/ui/button";
+
+const data = {
+  description: "Accept your team invitation on Papermark",
+  title: "Accept Invitation | Papermark",
+  url: "/verify/invitation",
+};
+
+export const metadata: Metadata = {
+  metadataBase: new URL("https://www.papermark.com"),
+  title: data.title,
+  description: data.description,
+  openGraph: {
+    title: data.title,
+    description: data.description,
+    url: data.url,
+    siteName: "Papermark",
+    images: [
+      {
+        url: "/_static/meta-image.png",
+        width: 800,
+        height: 600,
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: data.title,
+    description: data.description,
+    creator: "@papermarkio",
+    images: ["/_static/meta-image.png"],
+  },
+};
 
 export default function VerifyInvitationPage({
   searchParams,
@@ -65,7 +100,7 @@ export default function VerifyInvitationPage({
               </span>
             </Link>
             <h3 className="text-balance py-1 text-sm font-normal text-gray-800">
-              You've been invited to join a team on Papermark
+              You&apos;ve been invited to join a team on Papermark
             </h3>
             <div className="mt-2 flex items-center gap-2 rounded-full bg-gray-50 px-4 py-2 text-sm text-gray-600 shadow-sm">
               <MailIcon className="h-4 w-4 text-gray-400" />
@@ -80,21 +115,23 @@ export default function VerifyInvitationPage({
                 </Button>
               </Link>
             </div>
-            <div className="text-center text-sm text-gray-500">
-              <p className="flex items-center justify-center gap-1.5 rounded-md bg-amber-50 px-3 py-2 text-amber-700">
-                <ClockIcon className="h-4 w-4 text-amber-500" />
-                <span>
-                  Expires on{" "}
-                  <span className="font-medium">
-                    {format(new Date(expiresAt!), "MMM d, yyyy")}
-                  </span>{" "}
-                  at{" "}
-                  <span className="font-medium">
-                    {format(new Date(expiresAt!), "h:mm a")}
+            {expiresAt ? (
+              <div className="text-center text-sm text-gray-500">
+                <p className="flex items-center justify-center gap-1.5 rounded-md bg-amber-50 px-3 py-2 text-amber-700">
+                  <ClockIcon className="h-4 w-4 text-amber-500" />
+                  <span>
+                    Expires on{" "}
+                    <span className="font-medium">
+                      {format(new Date(expiresAt!), "MMM d, yyyy")}
+                    </span>{" "}
+                    at{" "}
+                    <span className="font-medium">
+                      {format(new Date(expiresAt!), "h:mm a")}
+                    </span>
                   </span>
-                </span>
-              </p>
-            </div>
+                </p>
+              </div>
+            ) : null}
           </div>
           <p className="mt-10 w-full max-w-md px-4 text-xs text-muted-foreground sm:px-16">
             By accepting this invitation, you acknowledge that you have read and
