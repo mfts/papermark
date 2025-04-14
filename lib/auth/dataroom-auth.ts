@@ -1,7 +1,9 @@
+import { NextApiRequest } from "next";
 import { cookies } from "next/headers";
 import { NextRequest } from "next/server";
 
 import { ipAddress } from "@vercel/functions";
+import { parse } from "cookie";
 import crypto from "crypto";
 import { z } from "zod";
 
@@ -83,6 +85,56 @@ async function verifyDataroomSession(
     }
 
     const ipAddressValue = ipAddress(request) ?? LOCALHOST_IP;
+
+    if (ipAddressValue !== sessionData.ipAddress) {
+      await redis.del(`dataroom_session:${sessionToken}`);
+      return null;
+    }
+
+    // Check if the session is for the correct link and dataroom
+    if (
+      sessionData.linkId !== linkId ||
+      sessionData.dataroomId !== dataroomId
+    ) {
+      await redis.del(`dataroom_session:${sessionToken}`);
+      return null;
+    }
+
+    return sessionData;
+  } catch (error) {
+    console.log("error", error);
+    // If validation fails, delete invalid session and return null
+    await redis.del(`dataroom_session:${sessionToken}`);
+    return null;
+  }
+}
+
+export async function verifyDataroomSessionInPagesRouter(
+  req: NextApiRequest,
+  linkId: string,
+  dataroomId: string,
+): Promise<DataroomSession | null> {
+  if (!dataroomId) return null;
+
+  // Get cookies from request headers
+  const cookies = parse(req.headers.cookie || "");
+  const sessionToken = cookies[`pm_drs_${linkId}`];
+  if (!sessionToken) return null;
+
+  const session = await redis.get(`dataroom_session:${sessionToken}`);
+  if (!session) return null;
+
+  try {
+    const sessionData = DataroomSessionSchema.parse(session);
+
+    // Check if session is expired
+    if (sessionData.expiresAt < Date.now()) {
+      await redis.del(`dataroom_session:${sessionToken}`);
+      return null;
+    }
+
+    // Get IP address from request
+    const ipAddressValue = getIpAddress(req.headers) ?? LOCALHOST_IP;
 
     if (ipAddressValue !== sessionData.ipAddress) {
       await redis.del(`dataroom_session:${sessionToken}`);

@@ -79,6 +79,10 @@ export const DEFAULT_LINK_PROPS = (
   groupId: groupId,
   customFields: [],
   enableConversation: false,
+  enableUpload: false,
+  isFileRequestOnly: false,
+  uploadFolderId: null,
+  uploadFolderName: "Home",
 });
 
 export type DEFAULT_LINK_TYPE = {
@@ -113,6 +117,10 @@ export type DEFAULT_LINK_TYPE = {
   groupId: string | null;
   customFields: CustomFieldData[];
   enableConversation: boolean;
+  enableUpload: boolean;
+  isFileRequestOnly: boolean;
+  uploadFolderId: string | null;
+  uploadFolderName: string;
 };
 
 export default function LinkSheet({
@@ -449,6 +457,7 @@ export default function LinkSheet({
                         <LinkOptions
                           data={data}
                           setData={setData}
+                          targetId={targetId}
                           linkType={linkType}
                           editLink={!!currentLink}
                         />
@@ -560,6 +569,7 @@ export default function LinkSheet({
                         <LinkOptions
                           data={data}
                           setData={setData}
+                          targetId={targetId}
                           linkType={linkType}
                           editLink={!!currentLink}
                         />
