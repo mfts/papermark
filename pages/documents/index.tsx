@@ -1,32 +1,19 @@
 import { useTeam } from "@/context/team-context";
 import { FolderPlusIcon, PlusIcon } from "lucide-react";
-import { useState } from "react";
-import {
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  ChevronsLeftIcon,
-  ChevronsRightIcon,
-} from "lucide-react";
+
 import { useRouter } from "next/router";
+import useDocuments, { useRootFolders } from "@/lib/swr/use-documents";
+import { handleInvitationStatus } from "@/lib/utils";
 
 import { AddDocumentModal } from "@/components/documents/add-document-modal";
 import { DocumentsList } from "@/components/documents/documents-list";
+import { DocumentsPagination } from "@/components/documents/documents-pagination";
 import SortButton from "@/components/documents/filters/sort-button";
 import { AddFolderModal } from "@/components/folders/add-folder-modal";
 import AppLayout from "@/components/layouts/app";
 import { SearchBoxPersisted } from "@/components/search-box";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-
-import useDocuments, { useRootFolders } from "@/lib/swr/use-documents";
-import { DocumentsPagination } from "@/components/documents/documents-pagination";
 
 export default function Documents() {
   const router = useRouter();
@@ -34,6 +21,12 @@ export default function Documents() {
   const queryParams = router.query;
   const currentPage = Number(queryParams["page"]) || 1;
   const pageSize = Number(queryParams["limit"]) || 10;
+  const invitation = queryParams["invitation"] as "accepted" | "teamMember";
+
+  // Handle invitation status
+  if (invitation) {
+    handleInvitationStatus(invitation, queryParams, router);
+  }
 
   const { folders } = useRootFolders();
   const { documents, pagination, isValidating, isFiltered } = useDocuments();

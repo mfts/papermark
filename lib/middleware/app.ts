@@ -5,6 +5,7 @@ import { getToken } from "next-auth/jwt";
 export default async function AppMiddleware(req: NextRequest) {
   const url = req.nextUrl;
   const path = url.pathname;
+  const isInvited = url.searchParams.has("invitation");
   const token = (await getToken({
     req,
     secret: process.env.NEXTAUTH_SECRET,
@@ -33,7 +34,8 @@ export default async function AppMiddleware(req: NextRequest) {
     token?.email &&
     token?.user?.createdAt &&
     new Date(token?.user?.createdAt).getTime() > Date.now() - 10000 &&
-    path !== "/welcome"
+    path !== "/welcome" &&
+    !isInvited
   ) {
     return NextResponse.redirect(new URL("/welcome", req.url));
   }

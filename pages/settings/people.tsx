@@ -58,7 +58,7 @@ export default function Billing() {
 
   const getUserDocumentCount = (userId: string) => {
     const documents = team?.documents.filter(
-      (document) => document.owner.id === userId,
+      (document) => document.owner?.id === userId,
     );
     return documents?.length;
   };
