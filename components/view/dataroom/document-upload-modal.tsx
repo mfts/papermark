@@ -17,10 +17,12 @@ export function DocumentUploadModal({
   linkId,
   dataroomId,
   viewerId,
+  folderId,
 }: {
   linkId: string;
   dataroomId: string;
   viewerId: string;
+  folderId?: string;
 }) {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -54,6 +56,7 @@ export function DocumentUploadModal({
               dataroomId,
             }}
             teamId="visitor-upload"
+            folderId={folderId}
           />
         </DialogContent>
       </Dialog>
