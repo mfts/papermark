@@ -6,13 +6,14 @@ import { TeamProvider } from "@/context/team-context";
 import type { Session } from "next-auth";
 import { SessionProvider } from "next-auth/react";
 import PlausibleProvider from "next-plausible";
+import { NuqsAdapter } from "nuqs/adapters/next/pages";
+
+import { EXCLUDED_PATHS } from "@/lib/constants";
 
 import { PostHogCustomProvider } from "@/components/providers/posthog-provider";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-
-import { EXCLUDED_PATHS } from "@/lib/constants";
 
 import "@/styles/globals.css";
 
@@ -77,18 +78,20 @@ export default function App({
               domain="papermark.io"
               enabled={process.env.NEXT_PUBLIC_VERCEL_ENV === "production"}
             >
-              <main className={inter.className}>
-                <Toaster closeButton />
-                <TooltipProvider delayDuration={100}>
-                  {EXCLUDED_PATHS.includes(router.pathname) ? (
-                    <Component {...pageProps} />
-                  ) : (
-                    <TeamProvider>
+              <NuqsAdapter>
+                <main className={inter.className}>
+                  <Toaster closeButton />
+                  <TooltipProvider delayDuration={100}>
+                    {EXCLUDED_PATHS.includes(router.pathname) ? (
                       <Component {...pageProps} />
-                    </TeamProvider>
-                  )}
-                </TooltipProvider>
-              </main>
+                    ) : (
+                      <TeamProvider>
+                        <Component {...pageProps} />
+                      </TeamProvider>
+                    )}
+                  </TooltipProvider>
+                </main>
+              </NuqsAdapter>
             </PlausibleProvider>
           </ThemeProvider>
         </PostHogCustomProvider>
