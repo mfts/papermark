@@ -85,7 +85,7 @@ export default function DataroomViewer({
   accessControls,
   viewerId,
   viewData,
-  enableVisitorUpload = true,
+  enableVisitorUpload = false,
 }: {
   brand: Partial<DataroomBrand>;
   viewId?: string;
