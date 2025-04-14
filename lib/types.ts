@@ -275,6 +275,11 @@ export type AnalyticsEvents =
       event: "Stripe Billing Portal Clicked";
       teamId: string;
       action?: string;
+    }
+  | {
+      event: "User Sign In Attempted";
+      email: string | undefined;
+      userId: string;
     };
 
 export interface Team {

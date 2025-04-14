@@ -6,6 +6,7 @@ import GoogleProvider from "next-auth/providers/google";
 import LinkedInProvider from "next-auth/providers/linkedin";
 
 import { identifyUser, trackAnalytics } from "@/lib/analytics";
+import { isBlacklistedEmail } from "@/lib/edge-config/blacklist";
 import { sendVerificationRequestEmail } from "@/lib/emails/send-verification-request";
 import { sendWelcomeEmail } from "@/lib/emails/send-welcome";
 import hanko from "@/lib/hanko";
@@ -95,6 +96,19 @@ export const authOptions: NextAuthOptions = {
     },
   },
   callbacks: {
+    signIn: async ({ user }) => {
+      if (!user.email || (await isBlacklistedEmail(user.email))) {
+        await identifyUser(user.email ?? user.id);
+        await trackAnalytics({
+          event: "User Sign In Attempted",
+          email: user.email ?? undefined,
+          userId: user.id,
+        });
+        return false;
+      }
+      return true;
+    },
+
     jwt: async (params) => {
       const { token, user, trigger } = params;
       if (!token.email) {
