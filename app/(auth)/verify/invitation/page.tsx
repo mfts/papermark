@@ -6,6 +6,7 @@ import { format } from "date-fns";
 import { ClockIcon, MailIcon } from "lucide-react";
 
 import { generateChecksum } from "@/lib/utils/generate-checksum";
+import { verifyJWT } from "@/lib/utils/generate-jwt";
 
 import AcceptInvitationButton from "./AcceptInvitationButton";
 
@@ -47,40 +48,26 @@ export default function VerifyInvitationPage({
   searchParams,
 }: {
   searchParams: {
-    verification_url?: string;
-    checksum?: string;
-    type?: string;
-    teamId?: string;
     token?: string;
-    email?: string;
-    expiresAt?: string;
   };
 }) {
-  const { verification_url, checksum, type, teamId, token, email, expiresAt } =
-    searchParams;
+  const { token: jwtToken } = searchParams;
 
-  if (type !== "invitation") {
+  if (!jwtToken) {
     return <NotFound />;
   }
+
+  // verify JWT token
+  const payload = verifyJWT(jwtToken);
+
+  if (!payload) {
+    return <NotFound />;
+  }
+
+  const { verification_url, teamId, token, email, expiresAt } = payload;
 
   // Validate required parameters
-  if (!verification_url || !checksum || !teamId || !token || !email) {
-    return <NotFound />;
-  }
-
-  // Server-side validation
-  const isValidVerificationUrl = (url: string, checksum: string): boolean => {
-    try {
-      const urlObj = new URL(url);
-      if (urlObj.origin !== process.env.NEXTAUTH_URL) return false;
-      const expectedChecksum = generateChecksum(url);
-      return checksum === expectedChecksum;
-    } catch {
-      return false;
-    }
-  };
-
-  if (!isValidVerificationUrl(verification_url, checksum)) {
+  if (!verification_url || !teamId || !token || !email) {
     return <NotFound />;
   }
 

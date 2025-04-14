@@ -9,9 +9,10 @@ import { errorhandler } from "@/lib/errorHandler";
 import { newId } from "@/lib/id-helper";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
+import { generateChecksum } from "@/lib/utils/generate-checksum";
+import { generateJWT } from "@/lib/utils/generate-jwt";
 
 import { authOptions } from "../../auth/[...nextauth]";
-import { generateChecksum } from "@/lib/utils/generate-checksum";
 
 export default async function handle(
   req: NextApiRequest,
@@ -136,7 +137,7 @@ export default async function handle(
       const invitationUrl = `/api/teams/${teamId}/invitations/accept?token=${token}&email=${email}`;
       const fullInvitationUrl = `${process.env.NEXT_PUBLIC_BASE_URL}${invitationUrl}`;
 
-      // magic link 
+      // magic link
       const magicLinkParams = new URLSearchParams({
         email,
         token,
@@ -154,10 +155,11 @@ export default async function handle(
         expiresAt: expiresAt.toISOString(),
       });
 
-      const checksum = generateChecksum(magicLink);
-      verifyParams.append("checksum", checksum);
+      const verifyParamsObject = Object.fromEntries(verifyParams.entries());
 
-      const verifyUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/verify/invitation?${verifyParams.toString()}`;
+      const jwtToken = generateJWT(verifyParamsObject);
+
+      const verifyUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/verify/invitation?token=${jwtToken}`;
 
       sendTeammateInviteEmail({
         senderName: sender.name || "",
