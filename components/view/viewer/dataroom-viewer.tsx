@@ -268,6 +268,7 @@ export default function DataroomViewer({
                       linkId={linkId}
                       dataroomId={dataroom?.id}
                       viewerId={viewerId}
+                      folderId={folderId ?? undefined}
                     />
                   )}
                 </div>
