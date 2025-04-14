@@ -7,7 +7,7 @@ import { ClockIcon, MailIcon } from "lucide-react";
 
 import { generateChecksum } from "@/lib/utils/generate-checksum";
 
-import { Button } from "@/components/ui/button";
+import AcceptInvitationButton from "./AcceptInvitationButton";
 
 const data = {
   description: "Accept your team invitation on Papermark",
@@ -109,11 +109,7 @@ export default function VerifyInvitationPage({
           </div>
           <div className="flex flex-col gap-4 px-4 pt-8 sm:px-16">
             <div className="relative">
-              <Link href={verification_url}>
-                <Button className="focus:shadow-outline w-full transform rounded-lg bg-gray-800 px-4 py-3 text-white transition-colors duration-300 ease-in-out hover:bg-gray-900 focus:outline-none">
-                  Accept Invitation
-                </Button>
-              </Link>
+              <AcceptInvitationButton verificationUrl={verification_url} />
             </div>
             {expiresAt ? (
               <div className="text-center text-sm text-gray-500">
