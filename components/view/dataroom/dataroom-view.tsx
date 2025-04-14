@@ -40,6 +40,7 @@ export type DEFAULT_DATAROOM_VIEW_TYPE = {
   viewerEmail?: string;
   viewerId?: string;
   conversationsEnabled?: boolean;
+  enableVisitorUpload?: boolean;
 };
 
 export default function DataroomView({
@@ -136,6 +137,7 @@ export default function DataroomView({
           viewerEmail,
           viewerId,
           conversationsEnabled,
+          enableVisitorUpload,
         } = fetchData as DEFAULT_DATAROOM_VIEW_TYPE;
 
         analytics.identify(
@@ -167,6 +169,7 @@ export default function DataroomView({
           viewerEmail,
           viewerId,
           conversationsEnabled,
+          enableVisitorUpload,
         });
         setSubmitted(true);
         setVerificationRequested(false);

@@ -85,7 +85,6 @@ export default function DataroomViewer({
   accessControls,
   viewerId,
   viewData,
-  enableVisitorUpload = false,
 }: {
   brand: Partial<DataroomBrand>;
   viewId?: string;
@@ -98,7 +97,6 @@ export default function DataroomViewer({
   accessControls: ViewerGroupAccessControls[];
   viewerId?: string;
   viewData: DEFAULT_DATAROOM_VIEW_TYPE;
-  enableVisitorUpload?: boolean;
 }) {
   const { documents, folders } = dataroom as {
     documents: DataroomDocument[];
@@ -263,7 +261,7 @@ export default function DataroomViewer({
                     </BreadcrumbList>
                   </Breadcrumb>
 
-                  {enableVisitorUpload && viewerId && (
+                  {viewData?.enableVisitorUpload && viewerId && (
                     <DocumentUploadModal
                       linkId={linkId}
                       dataroomId={dataroom?.id}
