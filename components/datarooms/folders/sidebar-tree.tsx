@@ -99,6 +99,7 @@ const SidebarFolders = ({
 
   return (
     <FileTree>
+      <SidebarLink href={`/datarooms/${dataroomId}/documents`} label={"Home"} />
       {nestedFolders.map((folder) => (
         <FolderComponent
           key={folder.id}
