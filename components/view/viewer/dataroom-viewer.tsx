@@ -30,6 +30,7 @@ import {
 
 import { DEFAULT_DATAROOM_VIEW_TYPE } from "../dataroom/dataroom-view";
 import DocumentCard from "../dataroom/document-card";
+import { DocumentUploadModal } from "../dataroom/document-upload-modal";
 import FolderCard from "../dataroom/folder-card";
 import DataroomNav from "../dataroom/nav-dataroom";
 
@@ -190,13 +191,13 @@ export default function DataroomViewer({
 
           {/* Detail view */}
           <ScrollArea showScrollbar className="h-full flex-grow overflow-auto">
-            <div className="h-full space-y-8 px-3 pb-4 pt-4 md:px-6 md:pt-6 lg:px-8 lg:pt-9 xl:px-14">
+            <div className="h-full px-3 pb-4 pt-4 md:px-6 md:pt-6 lg:px-8 lg:pt-9 xl:px-14">
               <div className="flex items-center gap-x-2">
                 {/* sidebar for mobile */}
                 <div className="flex md:hidden">
                   <Sheet>
                     <SheetTrigger asChild>
-                      <button className="text-muted-foreground hover:text-white lg:hidden">
+                      <button className="text-muted-foreground lg:hidden">
                         <PanelLeftIcon className="h-5 w-5" aria-hidden="true" />
                       </button>
                     </SheetTrigger>
@@ -226,40 +227,51 @@ export default function DataroomViewer({
                   </Sheet>
                 </div>
 
-                <Breadcrumb>
-                  <BreadcrumbList>
-                    <BreadcrumbItem key={"root"}>
-                      <BreadcrumbLink
-                        onClick={() => setFolderId(null)}
-                        className="cursor-pointer"
-                      >
-                        Home
-                      </BreadcrumbLink>
-                    </BreadcrumbItem>
+                <div className="flex flex-1 items-center justify-between gap-x-2">
+                  <Breadcrumb>
+                    <BreadcrumbList>
+                      <BreadcrumbItem key={"root"}>
+                        <BreadcrumbLink
+                          onClick={() => setFolderId(null)}
+                          className="cursor-pointer"
+                        >
+                          Home
+                        </BreadcrumbLink>
+                      </BreadcrumbItem>
 
-                    {breadcrumbFolders.map((folder, index) => (
-                      <React.Fragment key={folder.id}>
-                        <BreadcrumbSeparator />
-                        <BreadcrumbItem>
-                          {index === breadcrumbFolders.length - 1 ? (
-                            <BreadcrumbPage className="capitalize">
-                              {folder.name}
-                            </BreadcrumbPage>
-                          ) : (
-                            <BreadcrumbLink
-                              onClick={() => setFolderId(folder.id)}
-                              className="cursor-pointer capitalize"
-                            >
-                              {folder.name}
-                            </BreadcrumbLink>
-                          )}
-                        </BreadcrumbItem>
-                      </React.Fragment>
-                    ))}
-                  </BreadcrumbList>
-                </Breadcrumb>
+                      {breadcrumbFolders.map((folder, index) => (
+                        <React.Fragment key={folder.id}>
+                          <BreadcrumbSeparator />
+                          <BreadcrumbItem>
+                            {index === breadcrumbFolders.length - 1 ? (
+                              <BreadcrumbPage className="capitalize">
+                                {folder.name}
+                              </BreadcrumbPage>
+                            ) : (
+                              <BreadcrumbLink
+                                onClick={() => setFolderId(folder.id)}
+                                className="cursor-pointer capitalize"
+                              >
+                                {folder.name}
+                              </BreadcrumbLink>
+                            )}
+                          </BreadcrumbItem>
+                        </React.Fragment>
+                      ))}
+                    </BreadcrumbList>
+                  </Breadcrumb>
+
+                  {viewData?.enableVisitorUpload && viewerId && (
+                    <DocumentUploadModal
+                      linkId={linkId}
+                      dataroomId={dataroom?.id}
+                      viewerId={viewerId}
+                      folderId={folderId ?? undefined}
+                    />
+                  )}
+                </div>
               </div>
-              <ul role="list" className="space-y-4 overflow-auto p-4">
+              <ul role="list" className="-mx-4 space-y-4 overflow-auto p-4">
                 {mixedItems.map(renderItem)}
               </ul>
             </div>

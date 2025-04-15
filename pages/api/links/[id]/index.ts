@@ -317,6 +317,11 @@ export default async function handle(
         groupId: linkData.groupId || null,
         audienceType: linkData.audienceType || LinkAudienceType.GENERAL,
         enableConversation: linkData.enableConversation || false,
+        ...(linkData.enableUpload && {
+          enableUpload: linkData.enableUpload,
+          isFileRequestOnly: linkData.isFileRequestOnly,
+          uploadFolderId: linkData.uploadFolderId,
+        }),
       },
       include: {
         views: {

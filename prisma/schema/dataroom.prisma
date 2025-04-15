@@ -17,6 +17,9 @@ model Dataroom {
   conversationsEnabled Boolean      @default(false)
   conversations        Conversation[]
 
+  // upload external documents
+  uploadedDocuments DocumentUpload[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -34,6 +37,8 @@ model DataroomDocument {
   orderIndex Int?
 
   conversations     Conversation[]
+
+  uploadedDocuments DocumentUpload[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

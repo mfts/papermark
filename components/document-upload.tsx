@@ -29,27 +29,23 @@ export default function DocumentUpload({
   const { theme, systemTheme } = useTheme();
   const isLight =
     theme === "light" || (theme === "system" && systemTheme === "light");
-  const { plan, trial } = usePlan();
+  const { isFree, isTrial } = usePlan();
   const { limits } = useLimits();
-  const isFreePlan = plan === "free";
-  const isTrial = !!trial;
-  // const maxSize = isFreePlan && !isTrial ? 30 : 100;
-  // const maxNumPages = isFreePlan && !isTrial ? 100 : 500;
 
   // Get file size limits
   const fileSizeLimits = useMemo(
     () =>
       getFileSizeLimits({
         limits,
-        isFreePlan,
+        isFree,
         isTrial,
       }),
-    [limits, isFreePlan, isTrial],
+    [limits, isFree, isTrial],
   );
 
   const { getRootProps, getInputProps } = useDropzone({
     accept:
-      isFreePlan && !isTrial
+      isFree && !isTrial
         ? {
             "application/pdf": [], // ".pdf"
             "application/vnd.ms-excel": [], // ".xls"
@@ -101,7 +97,7 @@ export default function DocumentUpload({
 
       if (file.size > fileSizeLimit) {
         const message = `File size too big for ${fileType} (max. ${fileSizeLimitMB} MB)`;
-        if (isFreePlan && !isTrial) {
+        if (isFree && !isTrial) {
           toast.error(message, {
             description: "Upgrade to a paid plan to increase the limit",
             action: {
@@ -144,7 +140,7 @@ export default function DocumentUpload({
       if (errors[0].code === "file-too-large") {
         const fileSizeLimitMB = getFileSizeLimit(file.type, fileSizeLimits);
         message = `File size too big (max. ${fileSizeLimitMB} MB)`;
-        if (isFreePlan && !isTrial) {
+        if (isFree && !isTrial) {
           toast.error(message, {
             description: "Upgrade to a paid plan to increase the limit",
             action: {
@@ -158,7 +154,7 @@ export default function DocumentUpload({
       } else if (errors[0].code === "file-invalid-type") {
         const isSupported = SUPPORTED_DOCUMENT_MIME_TYPES.includes(file.type);
         message = "File type not supported";
-        if (isFreePlan && !isTrial && isSupported) {
+        if (isFree && !isTrial && isSupported) {
           toast.error(`${message} on free plan`, {
             description: `Upgrade to a paid plan to upload ${file.type} files`,
             action: {
@@ -227,7 +223,7 @@ export default function DocumentUpload({
             <p className="text-xs leading-5 text-gray-500">
               {currentFile
                 ? "Replace file?"
-                : isFreePlan && !isTrial
+                : isFree && !isTrial
                   ? `Only *.pdf, *.xls, *.xlsx, *.csv, *.ods, *.png, *.jpeg, *.jpg`
                   : `Only *.pdf, *.pptx, *.docx, *.xlsx, *.xls, *.xlsm, *.csv, *.ods, *.ppt, *.odp, *.doc, *.odt, *.dwg, *.dxf, *.png, *.jpg, *.jpeg, *.mp4, *.mov, *.avi, *.webm, *.ogg`}
             </p>

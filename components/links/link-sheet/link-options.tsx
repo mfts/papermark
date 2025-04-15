@@ -25,6 +25,7 @@ import ConversationSection from "./conversation-section";
 import CustomFieldsSection from "./custom-fields-section";
 import QuestionSection from "./question-section";
 import ScreenshotProtectionSection from "./screenshot-protection-section";
+import UploadSection from "./upload-section";
 import WatermarkSection from "./watermark-section";
 
 export type LinkUpgradeOptions = {
@@ -36,11 +37,13 @@ export type LinkUpgradeOptions = {
 export const LinkOptions = ({
   data,
   setData,
+  targetId,
   linkType,
   editLink,
 }: {
   data: DEFAULT_LINK_TYPE;
   setData: React.Dispatch<React.SetStateAction<DEFAULT_LINK_TYPE>>;
+  targetId?: string;
   linkType: LinkType;
   editLink?: boolean;
 }) => {
@@ -81,6 +84,16 @@ export const LinkOptions = ({
       <AllowNotificationSection {...{ data, setData }} />
       <AllowDownloadSection {...{ data, setData }} />
       <ExpirationSection {...{ data, setData }} />
+      {limits?.dataroomUpload &&
+      linkType === LinkType.DATAROOM_LINK &&
+      targetId ? (
+        <UploadSection
+          {...{ data, setData }}
+          isAllowed={isTrial || isDatarooms || isDataroomsPlus}
+          handleUpgradeStateChange={handleUpgradeStateChange}
+          targetId={targetId}
+        />
+      ) : null}
       <OGSection
         {...{ data, setData }}
         isAllowed={

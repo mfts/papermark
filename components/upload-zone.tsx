@@ -104,21 +104,10 @@ export default function UploadZone({
   dataroomId?: string;
 }) {
   const analytics = useAnalytics();
-  const { plan, trial } = usePlan();
+  const { plan, isFree, isTrial } = usePlan();
   const router = useRouter();
   const teamInfo = useTeam();
   const { data: session } = useSession();
-  const isFreePlan = plan === "free";
-  const isTrial = !!trial;
-  const queryParams = router.query;
-  const searchQuery = queryParams["search"];
-  const sortQuery = queryParams["sort"];
-  const page = Number(queryParams["page"]) || 1;
-  const pageSize = Number(queryParams["limit"]) || 10;
-  const paginationParams =
-    searchQuery || sortQuery ? `&page=${page}&limit=${pageSize}` : "";
-  // const maxSize = isFreePlan && !isTrial ? 30 : 350;
-  // const maxNumPages = isFreePlan && !isTrial ? 100 : 500;
   const { limits, canAddDocuments } = useLimits();
   const remainingDocuments = limits?.documents
     ? limits?.documents - limits?.usage?.documents
@@ -132,14 +121,14 @@ export default function UploadZone({
     () =>
       getFileSizeLimits({
         limits,
-        isFreePlan,
+        isFree,
         isTrial,
       }),
-    [limits, isFreePlan, isTrial],
+    [limits, isFree, isTrial],
   );
 
   const acceptableDropZoneFileTypes =
-    isFreePlan && !isTrial
+    isFree && !isTrial
       ? acceptableDropZoneMimeTypesWhenIsFreePlanAndNotTrail
       : allAcceptableDropZoneMimeTypes;
 
@@ -158,14 +147,14 @@ export default function UploadZone({
         } else if (errors.find(({ code }) => code === "file-invalid-type")) {
           const isSupported = SUPPORTED_DOCUMENT_MIME_TYPES.includes(file.type);
           message = `File type not supported ${
-            isFreePlan && !isTrial && isSupported ? `on free plan` : ""
+            isFree && !isTrial && isSupported ? `on free plan` : ""
           }`;
         }
         return { fileName: file.name, message };
       });
       onUploadRejected(rejected);
     },
-    [onUploadRejected, fileSizeLimits, isFreePlan, isTrial],
+    [onUploadRejected, fileSizeLimits, isFree, isTrial],
   );
 
   const onDrop = useCallback(
@@ -188,7 +177,7 @@ export default function UploadZone({
             acc.invalid.push({
               fileName: file.name,
               message: `File size too big (max. ${fileSizeLimitMB} MB)${
-                isFreePlan && !isTrial
+                isFree && !isTrial
                   ? ". Upgrade to a paid plan to increase the limit"
                   : ""
               }`,
@@ -423,7 +412,7 @@ export default function UploadZone({
       onUploadProgress,
       endpointTargetType,
       fileSizeLimits,
-      isFreePlan,
+      isFree,
       isTrial,
     ],
   );
@@ -673,7 +662,7 @@ export default function UploadZone({
                   Drop your file(s) here
                 </span>
                 <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                  {isFreePlan && !isTrial
+                  {isFree && !isTrial
                     ? `Only *.pdf, *.xls, *.xlsx, *.csv, *.ods, *.png, *.jpeg, *.jpg`
                     : `Only *.pdf, *.pptx, *.docx, *.xlsx, *.xls, *.csv, *.ods, *.ppt, *.odp, *.doc, *.odt, *.dwg, *.dxf, *.png, *.jpg, *.jpeg, *.mp4, *.mov, *.avi, *.webm, *.ogg`}
                 </p>
