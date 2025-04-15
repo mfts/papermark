@@ -53,7 +53,7 @@ interface FileProps {
 function Tree({ children }: { children: ReactNode }): ReactElement {
   return (
     <div className={cn("nextra-filetree !mt-0 w-full select-none text-sm")}>
-      <div className="block rounded-lg">{children}</div>
+      <div className="block space-y-1 rounded-lg">{children}</div>
     </div>
   );
 }
@@ -110,7 +110,7 @@ const Folder = memo<FolderProps>(
     const isFolderOpen = open === undefined ? isOpen : open;
 
     return (
-      <li className="flex w-full list-none flex-col">
+      <li className="flex w-full list-none flex-col space-y-1">
         <div
           title={name}
           className={cn(
