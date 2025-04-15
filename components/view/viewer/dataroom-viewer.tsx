@@ -133,6 +133,23 @@ export default function DataroomViewer({
     return mixedItems.sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
   }, [folders, documents, folderId, accessControls]);
 
+const allDocumentsCanDownload = useMemo(() => {
+  if (!allowDownload) return false;
+
+  if (!documents || documents.length === 0) return false;
+
+  return documents.some((doc) => {
+    if (doc.versions[0].type === "notion") return false;
+
+    const accessControl = accessControls.find(
+      (access) => access.itemId === doc.dataroomDocumentId,
+    );
+
+    return accessControl?.canDownload ?? true;
+  });
+}, [documents, accessControls, allowDownload]);
+
+  
   const renderItem = (item: FolderOrDocument) => {
     if ("versions" in item) {
       return (
@@ -142,7 +159,7 @@ export default function DataroomViewer({
           linkId={linkId}
           viewId={viewId}
           isPreview={!!isPreview}
-          allowDownload={allowDownload}
+          allowDownload={allowDownload && item.canDownload}
         />
       );
     }
@@ -164,7 +181,7 @@ export default function DataroomViewer({
         linkId={linkId}
         viewId={viewId}
         dataroom={dataroom}
-        allowDownload={allowDownload}
+        allowDownload={allDocumentsCanDownload}
         isPreview={isPreview}
         dataroomId={dataroom?.id}
         viewerId={viewerId}
