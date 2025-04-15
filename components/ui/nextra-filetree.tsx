@@ -5,7 +5,7 @@
  * https://github.com/shuding/nextra/blob/main/packages/nextra/src/components/file-tree.tsx
  *
  */
-import {
+import React, {
   createContext,
   memo,
   useCallback,
@@ -108,9 +108,15 @@ const Folder = memo<FolderProps>(
     );
 
     const isFolderOpen = open === undefined ? isOpen : open;
+    const hasChildren = React.Children.count(children) > 0;
 
     return (
-      <li className="flex w-full list-none flex-col space-y-1">
+      <li
+        className={cn(
+          "flex w-full list-none flex-col",
+          hasChildren && "space-y-1",
+        )}
+      >
         <div
           title={name}
           className={cn(
