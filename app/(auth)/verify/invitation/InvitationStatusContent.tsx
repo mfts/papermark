@@ -24,7 +24,7 @@ export default function InvitationStatusContent({
     },
     revoked: {
       title: "Invitation No Longer Available",
-      message: "It may have been used or revoked by the team administrator.",
+      message: "It may have been used or revoked \nby the team administrator.",
       iconColor: "bg-red-100",
       iconTextColor: "text-red-600",
     },
