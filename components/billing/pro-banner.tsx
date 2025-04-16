@@ -38,7 +38,7 @@ export default function ProBanner({
         <span className="text-sm font-bold">✨ Papermark Business ✨</span>
       </div>
       <p className="my-4 text-sm">
-        Join to unlock custom branding, domains, team members, and data rooms.
+        Upgrade to unlock custom branding, team members, domains and data rooms.
       </p>
       <div className="flex">
         <UpgradePlanModal

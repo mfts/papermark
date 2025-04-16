@@ -83,7 +83,8 @@ export const BASE_FEATURES: Record<PlanEnum, PlanFeatures> = {
         isUsers: true,
         usersIncluded: 3,
       },
-      { id: "datarooms", text: "Unlimited data rooms" },
+      { id: "datarooms", text: "Unlimited light data rooms" },
+      { id: "documents", text: "1000 documents per data room" },
       {
         id: "custom-domain",
         text: "Custom domain for documents",
@@ -144,6 +145,7 @@ export const BASE_FEATURES: Record<PlanEnum, PlanFeatures> = {
         highlight: true,
       },
       { id: "qa", text: "Q&A module with custom permissions" },
+      { id: "requests", text: "File requests with permissions" },
       { id: "indexing", text: "Automatic file indexing" },
       { id: "assign", text: "Assign users to particular data room" },
       { id: "invite", text: "Email invite viewers directly from Papermark" },
