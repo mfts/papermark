@@ -15,7 +15,7 @@ export default async function handle(
     // GET /api/teams/:teamId/invitations
     const session = await getServerSession(req, res, authOptions);
     if (!session) {
-      return res.status(401).end("Unauhorized");
+      return res.status(401).end("Unauthorized");
     }
 
     const { teamId } = req.query as { teamId: string };
@@ -57,7 +57,7 @@ export default async function handle(
     // DELETE /api/teams/:teamId/invitations
     const session = await getServerSession(req, res, authOptions);
     if (!session) {
-      return res.status(401).end("Unauhorized");
+      return res.status(401).end("Unauthorized");
     }
 
     const { teamId } = req.query as { teamId: string };
