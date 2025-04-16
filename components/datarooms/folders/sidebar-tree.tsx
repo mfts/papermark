@@ -99,7 +99,10 @@ const SidebarFolders = ({
 
   return (
     <FileTree>
-      <SidebarLink href={`/datarooms/${dataroomId}/documents`} label={"Home"} />
+      <SidebarLink
+        href={`/datarooms/${dataroomId}/documents`}
+        label={"Dataroom Home"}
+      />
       {nestedFolders.map((folder) => (
         <FolderComponent
           key={folder.id}
@@ -135,7 +138,7 @@ export const SidebarLink = memo(
         )}
       >
         <span
-          className="ml-5 inline-flex w-full cursor-pointer items-center"
+          className="inline-flex w-full cursor-pointer items-center"
           onClick={() => router.push(href)}
         >
           <HomeIcon className="h-5 w-5 shrink-0" aria-hidden="true" />
