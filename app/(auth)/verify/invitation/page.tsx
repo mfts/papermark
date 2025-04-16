@@ -6,7 +6,6 @@ import { format } from "date-fns";
 import { ClockIcon, MailIcon } from "lucide-react";
 
 import prisma from "@/lib/prisma";
-import { generateChecksum } from "@/lib/utils/generate-checksum";
 import { verifyJWT } from "@/lib/utils/generate-jwt";
 
 import AcceptInvitationButton from "./AcceptInvitationButton";
@@ -75,15 +74,17 @@ export default async function VerifyInvitationPage({
   }
   const isExpired = expiresAt ? new Date() > new Date(expiresAt) : false;
   let isRevoked = false;
-  try {
-    const invitation = await prisma.invitation.findUnique({
-      where: {
-        token: token,
-      },
-    });
-    isRevoked = !invitation;
-  } catch (error) {
-    console.error("Error checking invitation status:", error);
+  if (!isExpired) {
+    try {
+      const invitation = await prisma.invitation.findUnique({
+        where: {
+          token: token,
+        },
+      });
+      isRevoked = !invitation;
+    } catch (error) {
+      console.error("Error checking invitation status:", error);
+    }
   }
   return (
     <>
@@ -115,13 +116,9 @@ export default async function VerifyInvitationPage({
               )}
             </div>
 
-            {isRevoked ? (
+            {isRevoked || isExpired ? (
               <div className="px-4 py-6 sm:px-16">
-                <InvitationStatusContent email={email} status="revoked" />
-              </div>
-            ) : isExpired ? (
-              <div className="px-4 py-6 sm:px-16">
-                <InvitationStatusContent email={email} status="expired" />
+                <InvitationStatusContent status={"expired"} />
               </div>
             ) : (
               <>

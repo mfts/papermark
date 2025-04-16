@@ -2,23 +2,18 @@
 
 import Link from "next/link";
 
-import { AlertCircleIcon, MailIcon } from "lucide-react";
-
 import { Button } from "@/components/ui/button";
 
-interface InvitationStatusContentProps {
-  email?: string;
-  status: "expired" | "revoked";
-}
-
 export default function InvitationStatusContent({
-  email,
   status,
-}: InvitationStatusContentProps) {
+}: {
+  status: "expired" | "revoked";
+}) {
   const statusConfig = {
     expired: {
-      title: "Invitation Link Expired",
-      message: "This invitation link has expired.\nIt is no longer valid.",
+      title: "Invitation Expired",
+      message:
+        "This invitation has expired. It is no longer valid.\nAsk your admin to send you a new invitation.",
       iconColor: "bg-amber-100",
       iconTextColor: "text-amber-600",
     },
@@ -34,12 +29,6 @@ export default function InvitationStatusContent({
 
   return (
     <div className="flex flex-col items-center space-y-6">
-      <div
-        className={`flex items-center justify-center rounded-full ${config.iconColor} p-4`}
-      >
-        <AlertCircleIcon className={`h-8 w-8 ${config.iconTextColor}`} />
-      </div>
-
       <div className="w-full text-center">
         <h3 className="text-2xl font-bold text-gray-800">{config.title}</h3>
         <p className="mx-auto mt-2 max-w-xs whitespace-pre-line break-words text-sm text-gray-600">
@@ -53,27 +42,10 @@ export default function InvitationStatusContent({
         <div className="space-y-3">
           <Link href="/login" className="block w-full">
             <Button className="w-full bg-gray-800 hover:bg-gray-900">
-              Sign In
+              Register
             </Button>
           </Link>
         </div>
-      </div>
-
-      <div className="mt-4 w-full text-center text-xs text-gray-500">
-        <p>
-          Papermark helps you share documents with analytics and engagement
-          tracking.
-          <br />
-          Join thousands of teams already using{" "}
-          <Link
-            href="https://www.papermark.com"
-            target="_blank"
-            className="underline hover:text-gray-900"
-          >
-            Papermark
-          </Link>
-          .
-        </p>
       </div>
     </div>
   );
