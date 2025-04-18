@@ -36,8 +36,7 @@ export default function useDocuments() {
     };
   }>(
     teamId &&
-      `/api/teams/${teamId}/documents?${
-        searchQuery ? `query=${searchQuery}` : ""
+    `/api/teams/${teamId}/documents?${searchQuery ? `query=${searchQuery}` : ""
       }${sortQuery ? `&sort=${sortQuery}` : ""}${paginationParams}`.replace(/^\?&/, '?'),
     fetcher,
     {

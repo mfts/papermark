@@ -16,8 +16,8 @@ export default function DocumentTreePage() {
   const router = useRouter();
   const { name } = router.query as { name: string[] };
 
-  const { folders } = useFolder({ name });
-  const { documents } = useFolderDocuments({ name });
+  const { folders, loading: foldersLoading } = useFolder({ name });
+  const { documents, loading } = useFolderDocuments({ name });
   const teamInfo = useTeam();
 
   return (
@@ -65,6 +65,8 @@ export default function DocumentTreePage() {
           folders={folders}
           teamInfo={teamInfo}
           folderPathName={name}
+          loading={loading}
+          foldersLoading={foldersLoading}
         />
       </main>
     </AppLayout>

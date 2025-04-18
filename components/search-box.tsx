@@ -120,49 +120,45 @@ export function SearchBoxPersisted({
   const router = useRouter();
   const queryParams = router.query;
 
-  const [value, setValue] = useState(queryParams[urlParam] ?? "");
-  const [debouncedValue, setDebouncedValue] = useState(value);
+  const initial =
+    typeof queryParams[urlParam] === "string" ? queryParams[urlParam] : "";
 
-  // Set URL param when debounced value changes
+  const [value, setValue] = useState(initial);
+  const [debouncedValue, setDebouncedValue] = useState(initial);
+
   useEffect(() => {
-    if (queryParams[urlParam] ?? "" !== debouncedValue)
-      if (debouncedValue === "") {
-        delete queryParams[urlParam];
-        delete queryParams["page"];
-        delete queryParams["limit"];
-        router.push(
-          {
-            pathname: router.pathname,
-            query: queryParams,
-          },
-          undefined,
-          { shallow: true },
-        );
-      } else {
-        queryParams[urlParam] = debouncedValue;
-        router.push(
-          {
-            pathname: router.pathname,
-            query: queryParams,
-          },
-          undefined,
-          { shallow: true },
-        );
-      }
+    const currentQuery = { ...router.query };
+
+    if (debouncedValue === "") {
+      delete currentQuery[urlParam];
+      delete currentQuery.page;
+      delete currentQuery.limit;
+    } else {
+      currentQuery[urlParam] = debouncedValue;
+    }
+
+    router.push(
+      {
+        pathname: router.pathname,
+        query: currentQuery,
+      },
+      undefined,
+      { shallow: true },
+    );
   }, [debouncedValue]);
 
-  // Set value when URL param changes
   useEffect(() => {
-    const search = queryParams[urlParam];
-    // Only update if the value and debouncedValue are synced (the user isn't actively typing)
-    if ((search ?? "" !== value) && value === debouncedValue) {
-      setValue(search ?? "");
+    const queryValue =
+      typeof queryParams[urlParam] === "string" ? queryParams[urlParam] : "";
+    if (queryValue !== value && value === debouncedValue) {
+      setValue(queryValue);
+      setDebouncedValue(queryValue);
     }
   }, [queryParams[urlParam]]);
 
   return (
     <SearchBox
-      value={value as string}
+      value={value}
       onChange={setValue}
       onChangeDebounced={setDebouncedValue}
       {...props}

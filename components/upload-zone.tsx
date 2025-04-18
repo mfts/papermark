@@ -108,7 +108,6 @@ export default function UploadZone({
   const router = useRouter();
   const teamInfo = useTeam();
   const { data: session } = useSession();
-
   const { limits, canAddDocuments } = useLimits();
   const remainingDocuments = limits?.documents
     ? limits?.documents - limits?.usage?.documents
@@ -315,7 +314,15 @@ export default function UploadZone({
         });
 
         // add the new document to the list
-        mutate(`/api/teams/${teamInfo?.currentTeam?.id}/documents`);
+        mutate(
+          `/api/teams/${teamInfo?.currentTeam?.id}/documents?${
+            searchQuery ? `query=${searchQuery}` : ""
+          }${sortQuery ? `&sort=${sortQuery}` : ""}${paginationParams}`.replace(
+            /^\?&/,
+            "?",
+          ),
+        );
+
         fileUploadPathName &&
           mutate(
             `/api/teams/${teamInfo?.currentTeam?.id}/folders/documents/${fileUploadPathName}`,
