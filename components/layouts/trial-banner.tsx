@@ -72,13 +72,14 @@ function TrialBannerComponent({
                     new Date(),
                 ),
                 7,
-              )}
+              )}{" "}
             days left
           </div>
 
           <div className="text-sm">
-            You are on a data room trial, you have access to advanced link
-            permissions and data room.{" "}
+            You are on the <span className="font-bold">Data Rooms</span> plan
+            trial, you have access to advanced access controls, group
+            permissions, and data room.{" "}
             <UpgradePlanModal
               clickedPlan={PlanEnum.DataRooms}
               trigger={"trial_navbar"}
@@ -90,7 +91,7 @@ function TrialBannerComponent({
                 Upgrade to keep access
               </span>
             </UpgradePlanModal>
-            , get more data rooms and custom domains ✨
+            , unlock unlimited data rooms and custom domains ✨
           </div>
         </div>
       </nav>

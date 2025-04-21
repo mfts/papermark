@@ -1,0 +1,136 @@
+enum LinkType {
+  DOCUMENT_LINK
+  DATAROOM_LINK
+}
+
+enum LinkAudienceType {
+  GENERAL
+  GROUP
+  TEAM
+}
+
+model Link {
+  id                         String     @id @default(cuid())
+  document                   Document?  @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  documentId                 String? // This can be nullable, representing links without documents
+  dataroom                   Dataroom?  @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
+  dataroomId                 String? // This can be nullable, representing links without datarooms
+  linkType                   LinkType   @default(DOCUMENT_LINK) // This will store the type of the link
+  url                        String?    @unique
+  name                       String? // Link name
+  slug                       String? // Link slug for pretty URLs
+  expiresAt                  DateTime? // Optional expiration date
+  password                   String? // Optional password for link protection
+  allowList                  String[] // Array of emails and domains allowed to view the document
+  denyList                   String[] // Array of emails and domains denied to view the document
+  emailProtected             Boolean    @default(true) // Optional email protection
+  emailAuthenticated         Boolean    @default(false) // Optional email authentication flag
+  allowDownload              Boolean?   @default(false) // Optional give user a option to allow to download the document
+  isArchived                 Boolean    @default(false) // Indicates if the link is archived
+  views                      View[]
+  domain                     Domain?    @relation(fields: [domainId], references: [id], onDelete: SetNull)
+  domainId                   String? // This can be nullable, representing links without custom domains
+  domainSlug                 String? // This will store the domain's slug even if the domain is deleted
+  createdAt                  DateTime   @default(now())
+  updatedAt                  DateTime   @updatedAt
+  enableNotification         Boolean?   @default(true) // Optional give user a option to pause/resume the notifications
+  enableFeedback             Boolean?   @default(false) // Optional give user a option to enable the reactions toolbar
+  enableQuestion             Boolean?   @default(false) // Optional give user a option to enable the question feedback
+  enableScreenshotProtection Boolean?   @default(false) // Optional give user a option to enable the screenshot protection
+  feedback                   Feedback?
+  enableAgreement            Boolean?   @default(false) // Optional give user a option to enable the terms and conditions
+  agreement                  Agreement? @relation(fields: [agreementId], references: [id], onDelete: SetNull)
+  agreementId                String? // This can be nullable, representing links without agreements
+  showBanner                 Boolean?   @default(false) // Optional give user a option to show the banner and end of document signup form
+  enableWatermark            Boolean?   @default(false) // Optional give user a option to enable the watermark
+  watermarkConfig            Json? // This will store the watermark configuration: {text: "Confidential", isTiled: false, color: "#000000", fontSize: 12, opacity: 0.5, rotation: 30, position: "top-right"}
+
+  // group links
+  audienceType LinkAudienceType @default(GENERAL) // This will store the audience type of the link
+  groupId      String?
+  group        ViewerGroup?     @relation(fields: [groupId], references: [id], onDelete: SetNull)
+
+  // custom metatags
+  metaTitle           String? // This will be the meta title of the link
+  metaDescription     String? // This will be the meta description of the link
+  metaImage           String? // This will be the meta image of the link
+  metaFavicon         String? // This will be the meta favicon of the link
+  enableCustomMetatag Boolean? @default(false) // Optional give user a option to enable the custom metatag
+
+  // conversation
+  enableConversation Boolean      @default(false)  // Controls if conversations are allowed on this link
+  conversations        Conversation[]
+
+  // upload
+  enableUpload Boolean? @default(false) // Optional give user a option to enable the upload document function
+  isFileRequestOnly Boolean? @default(false) // Optional give user a option to enable the file request only
+  uploadFolderId     String? // This can be nullable, indicating upload to root folder, either document folder or dataroom folder
+
+  uploadedDocuments DocumentUpload[]
+
+  teamId String?
+  team   Team?   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  customFields CustomField[]
+
+  @@unique([domainSlug, slug])
+  @@index([documentId])
+  @@index([teamId])
+}
+
+model LinkPreset {
+  id     String @id @default(cuid())
+  name   String
+  teamId String
+  team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  enableCustomMetaTag Boolean? @default(false) // Optional give user a option to enable the custom metatag
+  metaTitle           String? // This will be the meta title of the link
+  metaDescription     String? // This will be the meta description of the link
+  metaImage           String? // This will be the meta image of the link 
+  metaFavicon         String? // This will be the meta favicon of the link
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([teamId])
+}
+
+enum CustomFieldType {
+  SHORT_TEXT
+  LONG_TEXT
+  NUMBER
+  PHONE_NUMBER
+  URL
+  CHECKBOX
+  SELECT
+  MULTI_SELECT
+}
+
+model CustomField {
+  id          String          @id @default(cuid())
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  type        CustomFieldType
+  identifier  String
+  label       String
+  placeholder String?
+  required    Boolean         @default(false)
+  disabled    Boolean         @default(false)
+  link        Link            @relation(fields: [linkId], references: [id], onDelete: Cascade)
+  linkId      String
+  orderIndex  Int             @default(0)
+
+  @@index([linkId])
+}
+
+model CustomFieldResponse {
+  id        String   @id @default(cuid())
+  data      Json // Store the custom field responses as a JSON object [{ "identifier": "value", "label": "value", "response:" }]
+  viewId    String   @unique
+  view      View     @relation(fields: [viewId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([viewId])
+}

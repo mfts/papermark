@@ -171,14 +171,15 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
           useAdvancedExcelViewer: false, // INFO: this is managed in the API route
           useCustomAccessForm:
             teamId === "cm0154tiv0000lr2t6nr5c6kp" ||
-            teamId === "clup33by90000oewh4rfvp2eg",
+            teamId === "clup33by90000oewh4rfvp2eg" ||
+            teamId === "cm76hfyvy0002q623hmen99pf",
         },
         revalidate: 10,
       };
     }
   } catch (error) {
     console.error("Fetching error:", error);
-    return { notFound: true };
+    return { props: { error: true }, revalidate: 30 };
   }
 };
 
@@ -196,6 +197,7 @@ export default function ViewPage({
   showAccountCreationSlide,
   useAdvancedExcelViewer,
   useCustomAccessForm,
+  error,
 }: {
   linkData: DocumentLinkData | DataroomLinkData;
   notionData: {
@@ -214,6 +216,7 @@ export default function ViewPage({
   showAccountCreationSlide: boolean;
   useAdvancedExcelViewer: boolean;
   useCustomAccessForm: boolean;
+  error?: boolean;
 }) {
   const router = useRouter();
   const { data: session, status } = useSession();
@@ -238,6 +241,12 @@ export default function ViewPage({
       <div className="flex h-screen items-center justify-center bg-black">
         <LoadingSpinner className="h-20 w-20" />
       </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <NotFound message="Sorry, we had trouble loading this link. Please try again in a moment." />
     );
   }
 

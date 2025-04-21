@@ -1,13 +1,17 @@
 import Link from "next/link";
 
-import { DownloadCloudIcon, FileCheckIcon } from "lucide-react";
+import {
+  DownloadCloudIcon,
+  FileCheckIcon,
+  UploadCloudIcon,
+} from "lucide-react";
+
+import { useDataroomVisitHistory } from "@/lib/swr/use-dataroom";
+import { timeAgo } from "@/lib/utils";
 
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TableCell, TableRow } from "@/components/ui/table";
-
-import { useDataroomVisitHistory } from "@/lib/swr/use-dataroom";
-import { timeAgo } from "@/lib/utils";
 
 export default function DataroomVisitHistory({
   viewId,
@@ -16,10 +20,46 @@ export default function DataroomVisitHistory({
   viewId: string;
   dataroomId: string;
 }) {
-  const { documentViews } = useDataroomVisitHistory({ viewId, dataroomId });
+  const { documentViews, uploadedDocumentViews } = useDataroomVisitHistory({
+    viewId,
+    dataroomId,
+  });
 
   return (
     <>
+      {uploadedDocumentViews &&
+        uploadedDocumentViews.length > 0 &&
+        uploadedDocumentViews.map((upload) => (
+          <TableRow key={`${upload.documentId}-upload`}>
+            <TableCell>
+              <div className="flex items-center gap-x-4 overflow-visible">
+                <UploadCloudIcon className="h-5 w-5 text-[#fb7a00]" />
+                Uploaded {upload.originalFilename}
+              </div>
+            </TableCell>
+
+            <TableCell>
+              <div>
+                <time
+                  className="truncate text-sm text-muted-foreground"
+                  dateTime={new Date(upload.uploadedAt).toISOString()}
+                  title={new Date(upload.uploadedAt).toLocaleString()}
+                >
+                  {timeAgo(new Date(upload.uploadedAt))}
+                </time>
+              </div>
+            </TableCell>
+            <TableCell className="table-cell">
+              <div className="flex items-center justify-end space-x-4">
+                <Button size={"sm"} variant={"link"} className="">
+                  <Link href={`/documents/${upload.documentId}`}>
+                    See document
+                  </Link>
+                </Button>
+              </div>
+            </TableCell>
+          </TableRow>
+        ))}
       {documentViews ? (
         documentViews.map((view) => (
           <>

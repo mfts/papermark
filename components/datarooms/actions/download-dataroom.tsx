@@ -29,7 +29,17 @@ export default function DownloadDataroomButton({
           loading: "Downloading dataroom...",
           success: async (response) => {
             const { downloadUrl } = await response.json();
-            window.open(downloadUrl, "_blank");
+
+            const link = document.createElement("a");
+            link.href = downloadUrl;
+            link.rel = "noopener noreferrer";
+            document.body.appendChild(link);
+            link.click();
+
+            setTimeout(() => {
+              document.body.removeChild(link);
+            }, 100);
+
             return "Dataroom downloaded successfully.";
           },
           error: (error) => {

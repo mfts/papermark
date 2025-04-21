@@ -1,11 +1,12 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
+import { Link } from "@prisma/client";
 import { getServerSession } from "next-auth/next";
 
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
 import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
-import { CustomUser } from "@/lib/types";
+import { CustomUser, LinkWithViews } from "@/lib/types";
 import { decryptEncrpytedPassword, log } from "@/lib/utils";
 
 import { authOptions } from "../../../../auth/[...nextauth]";
@@ -71,13 +72,27 @@ export default async function handle(
       });
 
       // Decrypt the password for each link
-      links.forEach((link) => {
+      const extendedLinks: LinkWithViews[] = links as LinkWithViews[];
+
+      for (const link of extendedLinks) {
         if (link.password !== null) {
           link.password = decryptEncrpytedPassword(link.password);
         }
-      });
+        if (link.enableUpload && link.uploadFolderId !== null) {
+          const folder = await prisma.dataroomFolder.findUnique({
+            where: {
+              id: link.uploadFolderId,
+            },
+            select: {
+              name: true,
+            },
+          });
+          link.uploadFolderName = folder?.name;
+        }
+      }
 
-      return res.status(200).json(links);
+      // console.log("links", links);
+      return res.status(200).json(extendedLinks);
     } catch (error) {
       log({
         message: `Failed to get links for dataroom: _${dataroomId}_. \n\n ${error} \n\n*Metadata*: \`{teamId: ${teamId}, userId: ${userId}}\``,
