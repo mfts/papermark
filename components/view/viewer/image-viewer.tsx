@@ -3,19 +3,15 @@ import { useRouter } from "next/router";
 import { useEffect, useRef, useState } from "react";
 import React from "react";
 
-import { Brand, DataroomBrand } from "@prisma/client";
-
 import { WatermarkConfig } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { useMediaQuery } from "@/lib/utils/use-media-query";
-
-import "@/styles/custom-viewer-styles.css";
 
 import { ScreenProtector } from "../ScreenProtection";
-import { TDocumentData } from "../dataroom/dataroom-view";
-import Nav from "../nav";
+import Nav, { TNavData } from "../nav";
 import { PoweredBy } from "../powered-by";
 import { SVGWatermark } from "../watermark-svg";
+
+import "@/styles/custom-viewer-styles.css";
 
 const trackPageView = async (data: {
   linkId: string;
@@ -41,55 +37,28 @@ const trackPageView = async (data: {
 
 export default function ImageViewer({
   file,
-  linkId,
-  documentId,
-  viewId,
-  assistantEnabled,
-  allowDownload,
-  feedbackEnabled,
   screenshotProtectionEnabled,
   versionNumber,
-  brand,
-  documentName,
-  dataroomId,
-  setDocumentData,
   showPoweredByBanner,
-  showAccountCreationSlide,
-  enableQuestion = false,
-  feedback,
   viewerEmail,
-  isPreview,
   watermarkConfig,
   ipAddress,
   linkName,
+  navData,
 }: {
   file: string;
-  linkId: string;
-  documentId: string;
-  viewId?: string;
-  assistantEnabled?: boolean;
-  allowDownload: boolean;
-  feedbackEnabled: boolean;
   screenshotProtectionEnabled: boolean;
   versionNumber: number;
-  brand?: Partial<Brand> | Partial<DataroomBrand> | null;
-  documentName?: string;
-  dataroomId?: string;
-  setDocumentData?: React.Dispatch<React.SetStateAction<TDocumentData | null>>;
   showPoweredByBanner?: boolean;
-  showAccountCreationSlide?: boolean;
-  enableQuestion?: boolean | null;
-  feedback?: {
-    id: string;
-    data: { question: string; type: string };
-  } | null;
   viewerEmail?: string;
-  isPreview?: boolean;
   watermarkConfig?: WatermarkConfig | null;
   ipAddress?: string;
   linkName?: string;
+  navData: TNavData;
 }) {
   const router = useRouter();
+
+  const { isPreview, linkId, documentId, viewId, dataroomId } = navData;
 
   const numPages = 1;
 
@@ -107,8 +76,6 @@ export default function ImageViewer({
     width: number;
     height: number;
   } | null>(null);
-
-  const { isMobile } = useMediaQuery();
 
   // Add zoom handlers
   const handleZoomIn = () => {
@@ -278,19 +245,10 @@ export default function ImageViewer({
       <Nav
         pageNumber={pageNumber}
         numPages={numPages}
-        allowDownload={allowDownload}
-        brand={brand}
-        viewId={viewId}
-        linkId={linkId}
-        documentId={documentId}
-        documentName={documentName}
-        isDataroom={!!dataroomId}
-        setDocumentData={setDocumentData}
-        isMobile={isMobile}
-        isPreview={isPreview}
         hasWatermark={!!watermarkConfig}
         handleZoomIn={handleZoomIn}
         handleZoomOut={handleZoomOut}
+        navData={navData}
       />
       <div
         style={{ height: "calc(100dvh - 64px)" }}

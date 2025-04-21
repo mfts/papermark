@@ -1,3 +1,4 @@
+import slugify from "@sindresorhus/slugify";
 import { upload } from "@vercel/blob/client";
 import { Message } from "ai";
 import bcrypt from "bcryptjs";
@@ -540,3 +541,22 @@ export function hexToRgb(hex: string) {
 }
 
 export const trim = (u: unknown) => (typeof u === "string" ? u.trim() : u);
+
+export const getBreadcrumbPath = (path: string[]) => {
+  const segments = path?.filter(Boolean);
+   if (!Array.isArray(path) || path.length === 0) {
+    return [{ name: "Home", pathLink: "/documents" }];
+  }
+  let currentPath = "documents/tree";
+
+  return [
+    { name: "Home", pathLink: "/documents" },
+    ...segments.map((segment, index) => {
+      currentPath += `/${slugify(segment)}`;
+      return { 
+        name: segment, 
+        pathLink: currentPath 
+      };
+    })
+  ];
+};

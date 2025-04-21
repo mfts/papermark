@@ -4,6 +4,7 @@ import { getLimits } from "@/ee/limits/server";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth/next";
 
+import { getFeatureFlags } from "@/lib/featureFlags";
 import { CustomUser } from "@/lib/types";
 
 export default async function handle(
@@ -23,7 +24,14 @@ export default async function handle(
     try {
       const limits = await getLimits({ teamId, userId });
 
-      return res.status(200).json(limits);
+      const featureFlags = await getFeatureFlags({ teamId });
+      const conversationsInDataroom =
+        featureFlags.conversations || limits.conversationsInDataroom;
+
+      return res.status(200).json({
+        ...limits,
+        conversationsInDataroom,
+      });
     } catch (error) {
       return res.status(500).json((error as Error).message);
     }

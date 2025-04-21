@@ -10,6 +10,14 @@ import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
+import { useAnalytics } from "@/lib/analytics";
+import { usePlan } from "@/lib/swr/use-billing";
+import { useInvitations } from "@/lib/swr/use-invitations";
+import useLimits from "@/lib/swr/use-limits";
+import { useGetTeam } from "@/lib/swr/use-team";
+import { useTeams } from "@/lib/swr/use-teams";
+import { CustomUser } from "@/lib/types";
+
 import { AddSeatModal } from "@/components/billing/add-seat-modal";
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import AppLayout from "@/components/layouts/app";
@@ -26,14 +34,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
-
-import { useAnalytics } from "@/lib/analytics";
-import { usePlan } from "@/lib/swr/use-billing";
-import { useInvitations } from "@/lib/swr/use-invitations";
-import useLimits from "@/lib/swr/use-limits";
-import { useGetTeam } from "@/lib/swr/use-team";
-import { useTeams } from "@/lib/swr/use-teams";
-import { CustomUser } from "@/lib/types";
 
 export default function Billing() {
   const [isTeamMemberInviteModalOpen, setTeamMemberInviteModalOpen] =
@@ -239,7 +239,7 @@ export default function Billing() {
                   </Button>
                 </UpgradePlanModal>
               ) : limits === null ||
-                (limits && limits.users > numUsers + numInvitations) ? (
+                (limits && limits.users! > numUsers + numInvitations) ? (
                 <AddTeamMembers
                   open={isTeamMemberInviteModalOpen}
                   setOpen={setTeamMemberInviteModalOpen}

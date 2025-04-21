@@ -9,6 +9,13 @@ import { RefreshCwIcon } from "lucide-react";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
+import { useAnalytics } from "@/lib/analytics";
+import { usePlan } from "@/lib/swr/use-billing";
+import useDataroomGroups from "@/lib/swr/use-dataroom-groups";
+import { useDomains } from "@/lib/swr/use-domains";
+import { LinkWithViews, WatermarkConfig } from "@/lib/types";
+import { convertDataUrlToFile, uploadImage } from "@/lib/utils";
+
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,13 +38,6 @@ import {
 } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ButtonTooltip } from "@/components/ui/tooltip";
-
-import { useAnalytics } from "@/lib/analytics";
-import { usePlan } from "@/lib/swr/use-billing";
-import useDataroomGroups from "@/lib/swr/use-dataroom-groups";
-import { useDomains } from "@/lib/swr/use-domains";
-import { LinkWithViews, WatermarkConfig } from "@/lib/types";
-import { convertDataUrlToFile, uploadImage } from "@/lib/utils";
 
 import { CustomFieldData } from "./custom-fields-panel";
 import DomainSection from "./domain-section";
@@ -78,6 +78,7 @@ export const DEFAULT_LINK_PROPS = (
   audienceType: groupId ? LinkAudienceType.GROUP : LinkAudienceType.GENERAL,
   groupId: groupId,
   customFields: [],
+  enableConversation: false,
 });
 
 export type DEFAULT_LINK_TYPE = {
@@ -111,6 +112,7 @@ export type DEFAULT_LINK_TYPE = {
   audienceType: LinkAudienceType;
   groupId: string | null;
   customFields: CustomFieldData[];
+  enableConversation: boolean;
 };
 
 export default function LinkSheet({

@@ -107,7 +107,7 @@ export default async function incomingWebhookHandler(
     }
 
     // 3. Validate request body
-    const { fileUrl, name, contentType, dataroomId } = req.body;
+    const { fileUrl, name, contentType, dataroomId, createLink } = req.body;
 
     if (!fileUrl) {
       return res.status(400).json({ error: "File URL is required" });
@@ -177,6 +177,7 @@ export default async function incomingWebhookHandler(
       teamId: incomingWebhook.teamId,
       numPages: 1,
       token: token,
+      createLink: createLink,
     });
 
     if (!documentCreationResponse.ok) {

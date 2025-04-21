@@ -58,7 +58,7 @@ export function AddSeatModal({
   }, [open]);
 
   // Calculate the total number of seats after the update
-  const totalSeatsAfterUpdate = limits ? limits.users + quantity : quantity;
+  const totalSeatsAfterUpdate = limits ? limits.users! + quantity : quantity;
 
   const handleDecrement = () => {
     if (quantity > 1) {

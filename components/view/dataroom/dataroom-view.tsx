@@ -6,18 +6,18 @@ import { DataroomBrand } from "@prisma/client";
 import Cookies from "js-cookie";
 import { toast } from "sonner";
 
+import { useAnalytics } from "@/lib/analytics";
+import { SUPPORTED_DOCUMENT_SIMPLE_TYPES } from "@/lib/constants";
+import { LinkWithDataroom } from "@/lib/types";
+
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import AccessForm, {
   DEFAULT_ACCESS_FORM_DATA,
   DEFAULT_ACCESS_FORM_TYPE,
 } from "@/components/view/access-form";
 
-import { useAnalytics } from "@/lib/analytics";
-import { SUPPORTED_DOCUMENT_SIMPLE_TYPES } from "@/lib/constants";
-import { LinkWithDataroom } from "@/lib/types";
-
-import DataroomViewer from "../DataroomViewer";
-import EmailVerificationMessage from "../email-verification-form";
+import EmailVerificationMessage from "../access-form/email-verification-form";
+import DataroomViewer from "../viewer/dataroom-viewer";
 
 export type TSupportedDocumentSimpleType =
   (typeof SUPPORTED_DOCUMENT_SIMPLE_TYPES)[number];
@@ -33,10 +33,13 @@ export type TDocumentData = {
   isVertical?: boolean;
 };
 
-type DEFAULT_DATAROOM_VIEW_TYPE = {
+export type DEFAULT_DATAROOM_VIEW_TYPE = {
   viewId?: string;
   isPreview?: boolean;
   verificationToken?: string;
+  viewerEmail?: string;
+  viewerId?: string;
+  conversationsEnabled?: boolean;
 };
 
 export default function DataroomView({
@@ -126,18 +129,24 @@ export default function DataroomView({
         setVerificationRequested(true);
         setIsLoading(false);
       } else {
-        const { viewId, isPreview, verificationToken } =
-          fetchData as DEFAULT_DATAROOM_VIEW_TYPE;
+        const {
+          viewId,
+          isPreview,
+          verificationToken,
+          viewerEmail,
+          viewerId,
+          conversationsEnabled,
+        } = fetchData as DEFAULT_DATAROOM_VIEW_TYPE;
 
         analytics.identify(
-          userEmail ?? verifiedEmail ?? data.email ?? undefined,
+          userEmail ?? viewerEmail ?? verifiedEmail ?? data.email ?? undefined,
         );
         analytics.capture("Link Viewed", {
           linkId: link.id,
           dataroomId: dataroom?.id,
           linkType: linkType,
-          viewerId: viewId,
-          viewerEmail: data.email ?? verifiedEmail ?? userEmail,
+          viewerId: viewerId,
+          viewerEmail: viewerEmail ?? data.email ?? verifiedEmail ?? userEmail,
           isEmbedded,
         });
 
@@ -155,6 +164,9 @@ export default function DataroomView({
         setViewData({
           viewId,
           isPreview,
+          viewerEmail,
+          viewerId,
+          conversationsEnabled,
         });
         setSubmitted(true);
         setVerificationRequested(false);
@@ -253,6 +265,8 @@ export default function DataroomView({
           allowDownload={link.allowDownload!}
           folderId={folderId}
           setFolderId={setFolderId}
+          viewerId={viewData.viewerId}
+          viewData={viewData}
         />
       </div>
     );

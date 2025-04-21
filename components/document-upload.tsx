@@ -34,7 +34,7 @@ export default function DocumentUpload({
   const isFreePlan = plan === "free";
   const isTrial = !!trial;
   // const maxSize = isFreePlan && !isTrial ? 30 : 100;
-  const maxNumPages = isFreePlan && !isTrial ? 100 : 500;
+  // const maxNumPages = isFreePlan && !isTrial ? 100 : 500;
 
   // Get file size limits
   const fileSizeLimits = useMemo(
@@ -124,8 +124,10 @@ export default function DocumentUpload({
         .arrayBuffer()
         .then((buffer) => {
           getPagesCount(buffer).then((numPages) => {
-            if (numPages > maxNumPages) {
-              toast.error(`File has too many pages (max. ${maxNumPages})`);
+            if (numPages > fileSizeLimits.maxPages) {
+              toast.error(
+                `File has too many pages (max. ${fileSizeLimits.maxPages})`,
+              );
             } else {
               setCurrentFile(file);
             }

@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useTeam } from "@/context/team-context";
 import { ArrowUpDownIcon, FolderPlusIcon, PlusIcon } from "lucide-react";
 
+import DownloadDataroomButton from "@/components/datarooms/actions/download-dataroom";
 import GenerateIndexButton from "@/components/datarooms/actions/generate-index-button";
 import { BreadcrumbComponent } from "@/components/datarooms/dataroom-breadcrumb";
 import { DataroomHeader } from "@/components/datarooms/dataroom-header";
@@ -48,8 +49,12 @@ export default function Documents() {
         </header>
 
         <div className="flex items-center justify-between gap-x-2">
-          <div>
+          <div className="flex items-center gap-x-2">
             <GenerateIndexButton
+              teamId={teamInfo?.currentTeam?.id!}
+              dataroomId={dataroom?.id!}
+            />
+            <DownloadDataroomButton
               teamId={teamInfo?.currentTeam?.id!}
               dataroomId={dataroom?.id!}
             />

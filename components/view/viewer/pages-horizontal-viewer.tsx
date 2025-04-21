@@ -3,24 +3,21 @@ import { useRouter } from "next/router";
 import { useEffect, useRef, useState } from "react";
 import React from "react";
 
-import { Brand, DataroomBrand } from "@prisma/client";
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import { useSession } from "next-auth/react";
 
 import { WatermarkConfig } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { useMediaQuery } from "@/lib/utils/use-media-query";
-
-import "@/styles/custom-viewer-styles.css";
 
 import { ScreenProtector } from "../ScreenProtection";
-import { TDocumentData } from "../dataroom/dataroom-view";
-import Nav from "../nav";
+import Nav, { TNavData } from "../nav";
 import { PoweredBy } from "../powered-by";
 import Question from "../question";
 import Toolbar from "../toolbar";
 import ViewDurationSummary from "../visitor-graph";
 import { SVGWatermark } from "../watermark-svg";
+
+import "@/styles/custom-viewer-styles.css";
 
 const DEFAULT_PRELOADED_IMAGES_NUM = 5;
 
@@ -60,27 +57,18 @@ const trackPageView = async (data: {
 
 export default function PagesHorizontalViewer({
   pages,
-  linkId,
-  documentId,
-  viewId,
-  assistantEnabled,
-  allowDownload,
   feedbackEnabled,
   screenshotProtectionEnabled,
   versionNumber,
-  brand,
-  documentName,
-  dataroomId,
-  setDocumentData,
   showPoweredByBanner,
   showAccountCreationSlide,
   enableQuestion = false,
   feedback,
   viewerEmail,
-  isPreview,
   watermarkConfig,
   ipAddress,
   linkName,
+  navData,
 }: {
   pages: {
     file: string;
@@ -89,18 +77,9 @@ export default function PagesHorizontalViewer({
     pageLinks: { href: string; coords: string }[];
     metadata: { width: number; height: number; scaleFactor: number };
   }[];
-  linkId: string;
-  documentId: string;
-  viewId?: string;
-  assistantEnabled?: boolean;
-  allowDownload: boolean;
   feedbackEnabled: boolean;
   screenshotProtectionEnabled: boolean;
   versionNumber: number;
-  brand?: Partial<Brand> | Partial<DataroomBrand> | null;
-  documentName?: string;
-  dataroomId?: string;
-  setDocumentData?: React.Dispatch<React.SetStateAction<TDocumentData | null>>;
   showPoweredByBanner?: boolean;
   showAccountCreationSlide?: boolean;
   enableQuestion?: boolean | null;
@@ -109,11 +88,14 @@ export default function PagesHorizontalViewer({
     data: { question: string; type: string };
   } | null;
   viewerEmail?: string;
-  isPreview?: boolean;
   watermarkConfig?: WatermarkConfig | null;
   ipAddress?: string;
   linkName?: string;
+  navData: TNavData;
 }) {
+  const { isMobile, isPreview, linkId, documentId, viewId, dataroomId, brand } =
+    navData;
+
   const router = useRouter();
   const { status: sessionStatus } = useSession();
 
@@ -166,8 +148,6 @@ export default function PagesHorizontalViewer({
   const [imageDimensions, setImageDimensions] = useState<
     Record<number, { width: number; height: number }>
   >({});
-
-  const { isMobile } = useMediaQuery();
 
   const scaleCoordinates = (coords: string, scaleFactor: number) => {
     return coords
@@ -540,29 +520,16 @@ export default function PagesHorizontalViewer({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [containerRef.current, pageNumber, imageDimensions]);
 
-  const [showLeftArrow, setShowLeftArrow] = useState(false);
-  const [showRightArrow, setShowRightArrow] = useState(false);
-
   return (
     <>
       <Nav
         pageNumber={pageNumber}
         numPages={numPagesWithAccountCreation}
-        assistantEnabled={assistantEnabled}
-        allowDownload={allowDownload}
-        brand={brand}
-        viewId={viewId}
-        linkId={linkId}
-        documentId={documentId}
-        documentName={documentName}
         embeddedLinks={pages[pageNumber - 1]?.embeddedLinks}
-        isDataroom={!!dataroomId}
-        setDocumentData={setDocumentData}
-        isMobile={isMobile}
-        isPreview={isPreview}
         hasWatermark={!!watermarkConfig}
         handleZoomIn={handleZoomIn}
         handleZoomOut={handleZoomOut}
+        navData={navData}
       />
       <div
         style={{ height: "calc(100dvh - 64px)" }}
@@ -725,6 +692,7 @@ export default function PagesHorizontalViewer({
                   style={{ height: "calc(100dvh - 64px)" }}
                 >
                   <Question
+                    accentColor={brand?.accentColor}
                     feedback={feedback}
                     viewId={viewId}
                     submittedFeedback={submittedFeedback}
