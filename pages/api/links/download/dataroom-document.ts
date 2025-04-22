@@ -15,7 +15,7 @@ export default async function handle(
   res: NextApiResponse,
 ) {
   if (req.method === "POST") {
-    // POST /api/links/download/dataroomDocumet
+    // POST /api/links/download/dataroom-document
     const { linkId, viewId, documentId } = req.body as {
       linkId: string;
       viewId: string;
@@ -200,7 +200,7 @@ export default async function handle(
         res.setHeader("Content-Type", "application/pdf");
         res.setHeader(
           "Content-Disposition",
-          `attachment; filename="${encodeURIComponent(downloadDocuments[0].document!.name)}"`,
+          'attachment; filename="watermarked.pdf"',
         );
         res.setHeader("Content-Length", Buffer.from(pdfBuffer).length);
 

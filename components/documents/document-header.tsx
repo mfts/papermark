@@ -326,17 +326,21 @@ export default function DocumentHeader({
 
       // Create and download the CSV file
       const blob = new Blob([data.visits], { type: "text/csv;charset=utf-8;" });
-      const url = URL.createObjectURL(blob);
+      const url = window.URL.createObjectURL(blob);
       const link = window.document.createElement("a");
       link.href = url;
       link.setAttribute(
         "download",
         `${data.documentName}_visits_${formattedTime}.csv`,
       );
+      link.rel = "noopener noreferrer";
       window.document.body.appendChild(link);
       link.click();
-      window.document.body.removeChild(link);
-      URL.revokeObjectURL(url);
+
+      setTimeout(() => {
+        window.URL.revokeObjectURL(url);
+        window.document.body.removeChild(link);
+      }, 100);
 
       toast.success("CSV file downloaded successfully");
     } catch (error) {
