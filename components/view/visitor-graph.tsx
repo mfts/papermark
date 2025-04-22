@@ -145,7 +145,7 @@ export default function ViewDurationSummary({
               signIn("email", {
                 email: email,
                 redirect: false,
-                callbackUrl: `/documents`,
+                callbackUrl: `/dashboard`,
               }).then((res) => {
                 if (res?.ok && !res?.error) {
                   setEmail("");

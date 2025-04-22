@@ -22,7 +22,7 @@ const SelectTeam = ({ teams, currentTeam, isLoading }: TeamContextType) => {
   const switchTeam = (team: Team) => {
     localStorage.setItem("currentTeamId", team.id);
     userTeam?.setCurrentTeam(team);
-    router.push("/documents");
+    router.push("/dashboard");
   };
 
   return (

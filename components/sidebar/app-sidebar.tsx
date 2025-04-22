@@ -164,10 +164,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     >
       <SidebarHeader className="gap-y-8">
         <p className="hidden w-full justify-center text-2xl font-bold tracking-tighter text-black group-data-[collapsible=icon]:inline-flex dark:text-white">
-          <Link href="/documents">P</Link>
+          <Link href="/dashboard">P</Link>
         </p>
         <p className="ml-2 flex items-center text-2xl font-bold tracking-tighter text-black group-data-[collapsible=icon]:hidden dark:text-white">
-          <Link href="/documents">Papermark</Link>
+          <Link href="/dashboard">Papermark</Link>
           {userPlan && !isFree && !isDataroomsPlus ? (
             <span className="ml-4 rounded-full bg-background px-2.5 py-1 text-xs tracking-normal text-foreground ring-1 ring-gray-800">
               {userPlan.charAt(0).toUpperCase() + userPlan.slice(1)}
