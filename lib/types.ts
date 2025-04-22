@@ -29,6 +29,7 @@ export interface DocumentWithLinksAndLinkCountAndViewCount extends Document {
     links: number;
     views: number;
     versions: number;
+    datarooms: number;
   };
   links: Link[];
   folder: {
@@ -44,6 +45,12 @@ export interface DocumentWithVersion extends Document {
     name: string;
     path: string;
   };
+  datarooms: {
+    dataroom: {
+      id: string;
+      name: string;
+    };
+  }[];
   hasPageLinks: boolean;
 }
 

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { useRouter } from "next/router";
 
 import { useEffect, useRef, useState } from "react";
@@ -6,14 +7,15 @@ import { useTeam } from "@/context/team-context";
 import { PlanEnum } from "@/ee/stripe/constants";
 import { Document, DocumentVersion } from "@prisma/client";
 import {
-  AlertCircleIcon,
+  ArrowRightIcon,
   BetweenHorizontalStartIcon,
+  ChevronRight,
   CloudDownloadIcon,
   DownloadIcon,
   FileDownIcon,
   MoonIcon,
+  ServerIcon,
   SheetIcon,
-  Sparkles,
   SunIcon,
   TrashIcon,
   ViewIcon,
@@ -26,7 +28,10 @@ import { mutate } from "swr";
 import { getFile } from "@/lib/files/get-file";
 import { usePlan } from "@/lib/swr/use-billing";
 import useDatarooms from "@/lib/swr/use-datarooms";
-import { DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
+import {
+  DocumentWithLinksAndLinkCountAndViewCount,
+  DocumentWithVersion,
+} from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { fileIcon } from "@/lib/utils/get-file-icon";
 
@@ -34,6 +39,11 @@ import FileUp from "@/components/shared/icons/file-up";
 import MoreVertical from "@/components/shared/icons/more-vertical";
 import PapermarkSparkle from "@/components/shared/icons/papermark-sparkle";
 import { Button } from "@/components/ui/button";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -60,7 +70,7 @@ export default function DocumentHeader({
   teamId,
   actions,
 }: {
-  prismaDocument: Document & { hasPageLinks?: boolean };
+  prismaDocument: DocumentWithVersion;
   primaryVersion: DocumentVersion;
   teamId: string;
   actions?: React.ReactNode[];
@@ -93,6 +103,9 @@ export default function DocumentHeader({
       actionRows.push(actions.slice(i, i + 3));
     }
   }
+
+  // Check if document is in any datarooms
+  const dataroomCount = prismaDocument.datarooms?.length || 0;
 
   const handleUpgradeClick = (plan: PlanEnum, trigger: string) => {
     setSelectedPlan(plan);
@@ -819,6 +832,41 @@ export default function DocumentHeader({
           </DropdownMenu>
         </div>
       </div>
+
+      {/* Datarooms collapsible section */}
+      {dataroomCount > 0 && (
+        <div className="mb-2">
+          <Collapsible className="w-full">
+            <CollapsibleTrigger className="flex w-full items-center text-sm font-medium">
+              <div className="flex items-center space-x-2 [&[data-state=open]>svg.chevron]:rotate-180">
+                <ChevronRight className="h-4 w-4 transition-transform duration-200" />
+                <ServerIcon className="h-4 w-4 text-[#fb7a00]" />
+                <span>
+                  In {dataroomCount} dataroom{dataroomCount > 1 ? "s" : ""}
+                </span>
+              </div>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="pl-6 pt-2">
+              <ul className="space-y-1">
+                {prismaDocument.datarooms?.map((item) => (
+                  <li
+                    key={item.dataroom.id}
+                    className="flex items-center space-x-2 text-sm"
+                  >
+                    <ArrowRightIcon className="h-3.5 w-3.5" />
+                    <Link
+                      href={`/datarooms/${item.dataroom.id}/documents`}
+                      className="hover:underline"
+                    >
+                      {item.dataroom.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </CollapsibleContent>
+          </Collapsible>
+        </div>
+      )}
 
       {isFree && prismaDocument.hasPageLinks && (
         <AlertBanner
