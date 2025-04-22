@@ -121,27 +121,38 @@ export default function Nav({
         body: JSON.stringify({ linkId, viewId }),
       });
 
+      if (!response.ok) {
+        toast.error("Error downloading file");
+        return;
+      }
+
       if (hasWatermark) {
         const pdfBlob = await response.blob();
-        const blobUrl = URL.createObjectURL(pdfBlob);
+        const blobUrl = window.URL.createObjectURL(pdfBlob);
 
-        const a = document.createElement("a");
-        a.href = blobUrl;
-        a.download = "watermarked_document.pdf";
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
+        const link = document.createElement("a");
+        link.href = blobUrl;
+        link.rel = "noopener noreferrer";
+        link.download = "watermarked_document.pdf";
+        document.body.appendChild(link);
+        link.click();
 
-        // Clean up the Blob URL
-        URL.revokeObjectURL(blobUrl);
+        setTimeout(() => {
+          window.URL.revokeObjectURL(blobUrl);
+          document.body.removeChild(link);
+        }, 100);
       } else {
-        if (!response.ok) {
-          toast.error("Error downloading file");
-          return;
-        }
         const { downloadUrl } = await response.json();
 
-        window.open(downloadUrl, "_blank");
+        const link = document.createElement("a");
+        link.href = downloadUrl;
+        link.rel = "noopener noreferrer";
+        document.body.appendChild(link);
+        link.click();
+
+        setTimeout(() => {
+          document.body.removeChild(link);
+        }, 100);
       }
     } catch (error) {
       console.error("Error downloading file:", error);
