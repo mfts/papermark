@@ -9,6 +9,11 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
+import { useAnalytics } from "@/lib/analytics";
+import { usePlan } from "@/lib/swr/use-billing";
+import { useDataroomLinks } from "@/lib/swr/use-dataroom";
+import { IndexFileFormat } from "@/lib/types/index-file";
+
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,11 +33,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-
-import { useAnalytics } from "@/lib/analytics";
-import { usePlan } from "@/lib/swr/use-billing";
-import { useDataroomLinks } from "@/lib/swr/use-dataroom";
-import { IndexFileFormat } from "@/lib/types/index-file";
 
 interface GenerateIndexDialogProps {
   teamId: string;
@@ -99,13 +99,17 @@ export default function GenerateIndexDialog({
 
       // Create a download link and trigger it
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      link.rel = "noopener noreferrer";
+      document.body.appendChild(link);
+      link.click();
+
+      setTimeout(() => {
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(link);
+      }, 100);
 
       analytics.capture("Generate Index File", {
         teamId,
