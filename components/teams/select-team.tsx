@@ -5,15 +5,15 @@ import { TeamContextType, useTeam } from "@/context/team-context";
 import { Check, Loader, PlusIcon } from "lucide-react";
 import { ChevronsUpDown as ChevronUpDownIcon } from "lucide-react";
 
+import { Team } from "@/lib/types";
+import { cn } from "@/lib/utils";
+
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-import { Team } from "@/lib/types";
-import { cn } from "@/lib/utils";
 
 const SelectTeam = ({ teams, currentTeam, isLoading }: TeamContextType) => {
   const router = useRouter();

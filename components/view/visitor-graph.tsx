@@ -192,11 +192,19 @@ export default function ViewDurationSummary({
           <p className="mt-4 w-full max-w-md px-4 text-xs text-muted-foreground sm:px-16">
             By clicking continue, you acknowledge that you have read and agree
             to Papermark&apos;s{" "}
-            <Link href="/terms" target="_blank" className="underline hover:text-gray-900">
+            <Link
+              href={`${process.env.NEXT_PUBLIC_MARKETING_URL}/terms`}
+              target="_blank"
+              className="underline hover:text-gray-900"
+            >
               Terms of Service
             </Link>{" "}
             and{" "}
-            <Link href="/privacy" target="_blank" className="underline hover:text-gray-900">
+            <Link
+              href={`${process.env.NEXT_PUBLIC_MARKETING_URL}/privacy`}
+              target="_blank"
+              className="underline hover:text-gray-900"
+            >
               Privacy Policy
             </Link>
             .
