@@ -1,8 +1,7 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
 
-import { useEffect, useMemo, useState } from "react";
-import React from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { getStripe } from "@/ee/stripe/client";
@@ -164,54 +163,49 @@ export function UpgradePlanModal({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{buttonChild}</DialogTrigger>
-      <DialogContent
-        className="max-h-[90vh] min-h-fit overflow-y-auto bg-gray-50 text-foreground dark:bg-gray-900"
-        style={{
-          width: "90vw",
-          maxWidth: "900px",
-        }}
-      >
-        <div className="flex items-center justify-center">
-          <span className="mr-2 text-sm">Monthly</span>
-          <Switch
-            checked={period === "yearly"}
-            onCheckedChange={() =>
-              setPeriod(period === "monthly" ? "yearly" : "monthly")
-            }
-          />
-          <span className="ml-2 text-sm">
-            Annually <span className="text-[#fb7a00]">(Save up to 35%)</span>
-          </span>
-        </div>
+      <DialogContent className="w-[95vw] max-w-[900px] bg-gray-50 text-foreground dark:bg-gray-900 p-4">
+        <div className="flex flex-col h-full">
+          <div className="flex items-center justify-center mb-4">
+            <span className="mr-2 text-sm">Monthly</span>
+            <Switch
+              checked={period === "yearly"}
+              onCheckedChange={() =>
+                setPeriod(period === "monthly" ? "yearly" : "monthly")
+              }
+            />
+            <span className="ml-2 text-sm">
+              Annually <span className="text-[#fb7a00]">(Save up to 35%)</span>
+            </span>
+          </div>
 
-        <div className="isolate grid grid-cols-1 gap-4 overflow-hidden rounded-xl p-4 md:grid-cols-2">
-          {plansToShow.map((planOption) => {
-            const planFeatures = getPlanFeatures(planOption, {
-              period,
-              showDataRoomsPlus:
-                planOption === PlanEnum.DataRooms && showDataRoomsPlus,
-            });
+          <div className="isolate grid grid-cols-1 sm:grid-cols-2 gap-4 flex-grow">
+            {plansToShow.map((planOption) => {
+              const planFeatures = getPlanFeatures(planOption, {
+                period,
+                showDataRoomsPlus:
+                  planOption === PlanEnum.DataRooms && showDataRoomsPlus,
+              });
 
-            // Get the effective plan name for display
-            const displayPlanName =
-              planOption === PlanEnum.DataRooms && showDataRoomsPlus
-                ? PlanEnum.DataRoomsPlus
-                : planOption;
+              // Get the effective plan name for display
+              const displayPlanName =
+                planOption === PlanEnum.DataRooms && showDataRoomsPlus
+                  ? PlanEnum.DataRoomsPlus
+                  : planOption;
 
-            const isDataRoomsUpgrade = plansToShow.includes(PlanEnum.DataRooms);
+              const isDataRoomsUpgrade = plansToShow.includes(PlanEnum.DataRooms);
 
-            return (
-              <div
-                key={displayPlanName}
-                className={`relative flex flex-col rounded-lg border ${
-                  planOption === PlanEnum.Business
-                    ? "border-[#fb7a00]"
-                    : planOption === PlanEnum.DataRoomsPlus &&
+              return (
+                <div
+                  key={displayPlanName}
+                  className={`relative flex flex-col rounded-lg border ${
+                    planOption === PlanEnum.Business
+                      ? "border-[#fb7a00]"
+                      : planOption === PlanEnum.DataRoomsPlus &&
                         isDataRoomsUpgrade
                       ? "border-gray-900"
                       : "border-gray-200"
-                } bg-white p-6 shadow-sm dark:bg-gray-900`}
-              >
+                  } bg-white p-4 shadow-sm dark:bg-gray-900`}
+                >
                 <div className="mb-4 border-b border-gray-200 pb-2">
                   <div className="flex items-center justify-between">
                     <h3 className="text-balance text-xl font-medium text-gray-900 dark:text-white">
@@ -223,7 +217,7 @@ export function UpgradePlanModal({
                       "absolute right-2 top-2 rounded px-2 py-1 text-xs text-white",
                       planOption === PlanEnum.Business && "bg-[#fb7a00]",
                       displayPlanName === PlanEnum.DataRoomsPlus &&
-                        "bg-gray-900 dark:bg-gray-100 dark:text-gray-900",
+                      "bg-gray-900 dark:bg-gray-100 dark:text-gray-900",
                     )}
                   >
                     {planOption === PlanEnum.Business && "Most popular"}
@@ -275,7 +269,7 @@ export function UpgradePlanModal({
                       planOption === PlanEnum.Business
                         ? "bg-[#fb7a00]/90 text-white hover:bg-[#fb7a00]"
                         : "bg-gray-800 text-white hover:bg-gray-900 hover:text-white dark:hover:bg-gray-700/80"
-                    }`}
+                      }`}
                     loading={selectedPlan === planOption}
                     disabled={selectedPlan !== null}
                     onClick={() => {
@@ -337,8 +331,9 @@ export function UpgradePlanModal({
               </div>
             );
           })}
+          </div>
         </div>
-        <div className="flex flex-col items-center text-center text-sm text-muted-foreground">
+        <div className="flex flex-col items-center text-center text-sm text-muted-foreground mt-1">
           All plans include unlimited viewers and page by page document
           analytics.
           <Link
