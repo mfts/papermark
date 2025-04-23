@@ -1,7 +1,8 @@
+import { useRouter } from "next/router";
+
 import { useTeam } from "@/context/team-context";
 import { FolderPlusIcon, PlusIcon } from "lucide-react";
 
-import { useRouter } from "next/router";
 import useDocuments, { useRootFolders } from "@/lib/swr/use-documents";
 import { handleInvitationStatus } from "@/lib/utils";
 
@@ -28,19 +29,22 @@ export default function Documents() {
     handleInvitationStatus(invitation, queryParams, router);
   }
 
-  const { folders } = useRootFolders();
-  const { documents, pagination, isValidating, isFiltered } = useDocuments();
+  const { folders, loading: foldersLoading } = useRootFolders();
+  const { documents, pagination, isValidating, isFiltered, loading } =
+    useDocuments();
 
   const updatePagination = (newPage?: number, newPageSize?: number) => {
     const params = new URLSearchParams(window.location.search);
-    
+
     if (newPage) params.set("page", newPage.toString());
     if (newPageSize) {
       params.set("limit", newPageSize.toString());
       params.set("page", "1");
     }
-    
-    router.push(`/documents?${params.toString()}`, undefined, { shallow: true });
+
+    router.push(`/documents?${params.toString()}`, undefined, {
+      shallow: true,
+    });
   };
 
   const displayFolders = isFiltered ? [] : folders;
@@ -97,6 +101,8 @@ export default function Documents() {
           documents={documents}
           folders={displayFolders}
           teamInfo={teamInfo}
+          loading={loading}
+          foldersLoading={foldersLoading}
         />
 
         {isFiltered && pagination && (
