@@ -108,6 +108,19 @@ export default function DataroomViewer({
     [folderId, folders],
   );
 
+  const allDocumentsCanDownload = useMemo(() => {
+    if (!allowDownload) return false;
+    if (!documents || documents.length === 0) return false;
+
+    return documents.some((doc) => {
+      if (doc.versions[0].type === "notion") return false;
+      const accessControl = accessControls.find(
+        (access) => access.itemId === doc.dataroomDocumentId,
+      );
+      return accessControl?.canDownload ?? true;
+    });
+  }, [documents, accessControls, allowDownload]);
+
   // create a mixedItems array with folders and documents of the current folder and memoize it
   const mixedItems = useMemo(() => {
     const mixedItems: FolderOrDocument[] = [
@@ -142,7 +155,7 @@ export default function DataroomViewer({
           linkId={linkId}
           viewId={viewId}
           isPreview={!!isPreview}
-          allowDownload={allowDownload}
+          allowDownload={allowDownload && item.canDownload}
         />
       );
     }
@@ -164,7 +177,7 @@ export default function DataroomViewer({
         linkId={linkId}
         viewId={viewId}
         dataroom={dataroom}
-        allowDownload={allowDownload}
+        allowDownload={allDocumentsCanDownload}
         isPreview={isPreview}
         dataroomId={dataroom?.id}
         viewerId={viewerId}

@@ -5,7 +5,7 @@
  * https://github.com/shuding/nextra/blob/main/packages/nextra/src/components/file-tree.tsx
  *
  */
-import {
+import React, {
   createContext,
   memo,
   useCallback,
@@ -53,7 +53,7 @@ interface FileProps {
 function Tree({ children }: { children: ReactNode }): ReactElement {
   return (
     <div className={cn("nextra-filetree !mt-0 w-full select-none text-sm")}>
-      <div className="block rounded-lg">{children}</div>
+      <div className="block space-y-1 rounded-lg">{children}</div>
     </div>
   );
 }
@@ -108,9 +108,15 @@ const Folder = memo<FolderProps>(
     );
 
     const isFolderOpen = open === undefined ? isOpen : open;
+    const hasChildren = React.Children.count(children) > 0;
 
     return (
-      <li className="flex w-full list-none flex-col">
+      <li
+        className={cn(
+          "flex w-full list-none flex-col",
+          hasChildren && "space-y-1",
+        )}
+      >
         <div
           title={name}
           className={cn(

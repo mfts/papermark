@@ -17,8 +17,6 @@ export function generateJWT(
   payload: JWTPayload,
   expiresInSeconds: number = 60 * 60 * 24,
 ): string {
-  console.log("Generating JWT token with payload:", payload);
-  // Add expiration if not already present
   const tokenPayload = {
     ...payload,
     exp: payload.exp || Math.floor(Date.now() / 1000) + expiresInSeconds,

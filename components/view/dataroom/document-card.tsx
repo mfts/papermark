@@ -6,6 +6,8 @@ import { Download, MoreVerticalIcon } from "lucide-react";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
 
+import { fileIcon } from "@/lib/utils/get-file-icon";
+
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -14,8 +16,6 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-import { fileIcon } from "@/lib/utils/get-file-icon";
 
 import { DocumentVersion } from "../viewer/dataroom-viewer";
 
@@ -109,11 +109,14 @@ export default function DocumentCard({
         link.download = filenameMatch
           ? decodeURIComponent(filenameMatch[1])
           : document.name;
-
+        link.rel = "noopener noreferrer";
         window.document.body.appendChild(link);
         link.click();
-        window.document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
+
+        setTimeout(() => {
+          window.URL.revokeObjectURL(url);
+          window.document.body.removeChild(link);
+        }, 100);
 
         toast.success("File downloaded successfully");
         return;

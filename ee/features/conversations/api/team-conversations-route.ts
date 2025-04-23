@@ -207,9 +207,6 @@ const routeHandlers = {
       return res.status(400).json({ message: "Missing required parameters" });
     }
 
-    console.log("teamId", teamId);
-    console.log("dataroomId", dataroomId);
-
     try {
       // Check if user has access to the dataroom
       const dataroom = await prisma.dataroom.findUnique({
