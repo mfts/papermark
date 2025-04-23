@@ -18,15 +18,10 @@ export default function useDocuments() {
   const page = Number(queryParams["page"]) || 1;
   const pageSize = Number(queryParams["limit"]) || 10;
 
-  const paginationParams = (searchQuery || sortQuery) 
-    ? `&page=${page}&limit=${pageSize}` 
-    : '';
+  const paginationParams =
+    searchQuery || sortQuery ? `&page=${page}&limit=${pageSize}` : "";
 
-  const {
-    data,
-    isValidating,
-    error,
-  } = useSWR<{
+  const { data, isValidating, error } = useSWR<{
     documents: DocumentWithLinksAndLinkCountAndViewCount[];
     pagination?: {
       total: number;
@@ -36,8 +31,12 @@ export default function useDocuments() {
     };
   }>(
     teamId &&
-    `/api/teams/${teamId}/documents?${searchQuery ? `query=${searchQuery}` : ""
-      }${sortQuery ? `&sort=${sortQuery}` : ""}${paginationParams}`.replace(/^\?&/, '?'),
+      `/api/teams/${teamId}/documents?${
+        searchQuery ? `query=${searchQuery}` : ""
+      }${sortQuery ? `&sort=${sortQuery}` : ""}${paginationParams}`.replace(
+        /^\?&/,
+        "?",
+      ),
     fetcher,
     {
       revalidateOnFocus: false,

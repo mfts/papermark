@@ -2,7 +2,7 @@ import { useRouter } from "next/router";
 
 import { useTeam } from "@/context/team-context";
 import { FolderPlusIcon, PlusIcon } from "lucide-react";
-import { useRouter } from "next/router";
+
 import useDocuments, { useRootFolders } from "@/lib/swr/use-documents";
 import { handleInvitationStatus } from "@/lib/utils";
 
@@ -14,6 +14,7 @@ import { AddFolderModal } from "@/components/folders/add-folder-modal";
 import AppLayout from "@/components/layouts/app";
 import { SearchBoxPersisted } from "@/components/search-box";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 
 export default function Documents() {
   const router = useRouter();
@@ -34,14 +35,16 @@ export default function Documents() {
 
   const updatePagination = (newPage?: number, newPageSize?: number) => {
     const params = new URLSearchParams(window.location.search);
-    
+
     if (newPage) params.set("page", newPage.toString());
     if (newPageSize) {
       params.set("limit", newPageSize.toString());
       params.set("page", "1");
     }
-    
-    router.push(`/documents?${params.toString()}`, undefined, { shallow: true });
+
+    router.push(`/documents?${params.toString()}`, undefined, {
+      shallow: true,
+    });
   };
 
   const displayFolders = isFiltered ? [] : folders;

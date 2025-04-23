@@ -314,14 +314,7 @@ export default function UploadZone({
         });
 
         // add the new document to the list
-        mutate(
-          `/api/teams/${teamInfo?.currentTeam?.id}/documents?${
-            searchQuery ? `query=${searchQuery}` : ""
-          }${sortQuery ? `&sort=${sortQuery}` : ""}${paginationParams}`.replace(
-            /^\?&/,
-            "?",
-          ),
-        );
+        mutate(`/api/teams/${teamInfo?.currentTeam?.id}/documents`);
 
         fileUploadPathName &&
           mutate(
