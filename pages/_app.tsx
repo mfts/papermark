@@ -10,6 +10,10 @@ import { NuqsAdapter } from "nuqs/adapters/next/pages";
 
 import { EXCLUDED_PATHS } from "@/lib/constants";
 
+import { EXCLUDED_PATHS } from "@/lib/constants";
+import { UploadProvider } from "@/lib/context/upload-context";
+
+import { UploadNotificationDrawer } from "@/components/documents/upload-notification-drawer";
 import { PostHogCustomProvider } from "@/components/providers/posthog-provider";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
@@ -70,6 +74,7 @@ export default function App({
           key="tw-image"
         />
         <link rel="icon" href="/favicon.ico" key="favicon" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
       <SessionProvider session={session}>
         <PostHogCustomProvider>
@@ -78,19 +83,22 @@ export default function App({
               domain="papermark.io"
               enabled={process.env.NEXT_PUBLIC_VERCEL_ENV === "production"}
             >
-              <NuqsAdapter>
-                <main className={inter.className}>
-                  <Toaster closeButton />
-                  <TooltipProvider delayDuration={100}>
-                    {EXCLUDED_PATHS.includes(router.pathname) ? (
-                      <Component {...pageProps} />
-                    ) : (
-                      <TeamProvider>
+               <NuqsAdapter>
+                 <main className={inter.className}>
+                <Toaster closeButton />
+                <TooltipProvider delayDuration={100}>
+                  {EXCLUDED_PATHS.includes(router.pathname) ? (
+                    <Component {...pageProps} />
+                  ) : (
+                    <TeamProvider>
+                      <UploadProvider>
                         <Component {...pageProps} />
-                      </TeamProvider>
-                    )}
-                  </TooltipProvider>
-                </main>
+                        <UploadNotificationDrawer />
+                      </UploadProvider>
+                    </TeamProvider>
+                  )}
+                </TooltipProvider>
+              </main>
               </NuqsAdapter>
             </PlausibleProvider>
           </ThemeProvider>

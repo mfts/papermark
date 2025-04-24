@@ -20,6 +20,7 @@ type ProcessDocumentParams = {
   folderPathName?: string;
   createLink?: boolean;
   isExternalUpload?: boolean;
+  googleDriveFileId?: string | null; // Google Drive folder ID  
 };
 
 export const processDocument = async ({
@@ -30,6 +31,7 @@ export const processDocument = async ({
   folderPathName,
   createLink = false,
   isExternalUpload = false,
+  googleDriveFileId = null,
 }: ProcessDocumentParams) => {
   const {
     name,
@@ -108,6 +110,7 @@ export const processDocument = async ({
       },
       folderId: folder?.id ?? null,
       isExternalUpload,
+      ...(googleDriveFileId ? { googleDriveFileId } : {}),
     },
     include: {
       links: true,
