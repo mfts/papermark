@@ -36,6 +36,8 @@ model DataroomDocument {
   folder     DataroomFolder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
   orderIndex Int?
 
+  googleDriveFileId String?
+
   conversations     Conversation[]
 
   uploadedDocuments DocumentUpload[]
@@ -59,6 +61,8 @@ model DataroomFolder {
   dataroomId   String
   dataroom     Dataroom           @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
   orderIndex   Int?
+
+  googleDriveFolderId String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

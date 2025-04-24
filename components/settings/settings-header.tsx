@@ -59,6 +59,11 @@ export function SettingsHeader() {
             segment: "billing",
           },
           {
+            label: "Integrations",
+            href: `/settings/integrations`,
+            segment: "integrations",
+          },
+          {
             label: "Tokens",
             href: `/settings/tokens`,
             segment: "tokens",

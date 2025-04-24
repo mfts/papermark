@@ -258,6 +258,7 @@ export default async function handle(
       contentType,
       createLink,
       fileSize,
+      googleDriveFileId,
     } = req.body as {
       name: string;
       url: string;
@@ -268,6 +269,7 @@ export default async function handle(
       contentType: string;
       createLink?: boolean;
       fileSize?: number;
+        googleDriveFileId?: string
     };
 
     try {
@@ -291,6 +293,7 @@ export default async function handle(
         teamPlan: team.plan,
         createLink,
         folderPathName,
+        googleDriveFileId,
       });
 
       return res.status(201).json(document);
