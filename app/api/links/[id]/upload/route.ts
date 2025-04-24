@@ -12,9 +12,10 @@ export async function POST(
   try {
     const linkId = params.id;
     const body = await request.json();
-    const { documentData, dataroomId } = body as {
+    const { documentData, dataroomId, folderId } = body as {
       documentData: DocumentData;
       dataroomId: string;
+      folderId?: string;
     };
 
     if (!linkId || !documentData || !dataroomId) {
@@ -95,7 +96,10 @@ export async function POST(
     });
 
     // 2. Create the dataroom document
-    let dataroomFolderId: string | null = null;
+    // If folderId is provided and link has no uploadFolderId, use folderId as the dataroomFolderId
+    // Otherwise, use the link's uploadFolderId
+    // or null if it doesn't exist
+    let dataroomFolderId: string | null = folderId ?? null;
     if (link.uploadFolderId) {
       const dataroomFolder = await prisma.dataroomFolder.findUnique({
         where: {

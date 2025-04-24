@@ -203,7 +203,7 @@ export default function Login() {
             By clicking continue, you acknowledge that you have read and agree
             to Papermark&apos;s{" "}
             <a
-              href="https://www.papermark.com/terms"
+              href={`${process.env.NEXT_PUBLIC_MARKETING_URL}/terms`}
               target="_blank"
               className="underline"
             >
@@ -211,7 +211,7 @@ export default function Login() {
             </a>{" "}
             and{" "}
             <a
-              href="https://www.papermark.com/privacy"
+              href={`${process.env.NEXT_PUBLIC_MARKETING_URL}/privacy`}
               target="_blank"
               className="underline"
             >

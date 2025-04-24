@@ -100,17 +100,17 @@ export default function VerifyPage({
             By clicking continue, you acknowledge that you have read and agree
             to Papermark&apos;s{" "}
             <a
-              href="https://www.papermark.com/terms"
+              href={`${process.env.NEXT_PUBLIC_MARKETING_URL}/terms`}
               target="_blank"
-              className="underline"
+              className="underline hover:text-gray-900"
             >
               Terms of Service
             </a>{" "}
             and{" "}
             <a
-              href="https://www.papermark.com/privacy"
+              href={`${process.env.NEXT_PUBLIC_MARKETING_URL}/privacy`}
               target="_blank"
-              className="underline"
+              className="underline hover:text-gray-900"
             >
               Privacy Policy
             </a>

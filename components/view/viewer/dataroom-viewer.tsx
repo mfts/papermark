@@ -85,7 +85,6 @@ export default function DataroomViewer({
   accessControls,
   viewerId,
   viewData,
-  enableVisitorUpload = true,
 }: {
   brand: Partial<DataroomBrand>;
   viewId?: string;
@@ -98,7 +97,6 @@ export default function DataroomViewer({
   accessControls: ViewerGroupAccessControls[];
   viewerId?: string;
   viewData: DEFAULT_DATAROOM_VIEW_TYPE;
-  enableVisitorUpload?: boolean;
 }) {
   const { documents, folders } = dataroom as {
     documents: DataroomDocument[];
@@ -109,6 +107,19 @@ export default function DataroomViewer({
     () => getParentFolders(folderId, folders),
     [folderId, folders],
   );
+
+  const allDocumentsCanDownload = useMemo(() => {
+    if (!allowDownload) return false;
+    if (!documents || documents.length === 0) return false;
+
+    return documents.some((doc) => {
+      if (doc.versions[0].type === "notion") return false;
+      const accessControl = accessControls.find(
+        (access) => access.itemId === doc.dataroomDocumentId,
+      );
+      return accessControl?.canDownload ?? true;
+    });
+  }, [documents, accessControls, allowDownload]);
 
   // create a mixedItems array with folders and documents of the current folder and memoize it
   const mixedItems = useMemo(() => {
@@ -144,7 +155,7 @@ export default function DataroomViewer({
           linkId={linkId}
           viewId={viewId}
           isPreview={!!isPreview}
-          allowDownload={allowDownload}
+          allowDownload={allowDownload && item.canDownload}
         />
       );
     }
@@ -166,7 +177,7 @@ export default function DataroomViewer({
         linkId={linkId}
         viewId={viewId}
         dataroom={dataroom}
-        allowDownload={allowDownload}
+        allowDownload={allDocumentsCanDownload}
         isPreview={isPreview}
         dataroomId={dataroom?.id}
         viewerId={viewerId}
@@ -263,11 +274,12 @@ export default function DataroomViewer({
                     </BreadcrumbList>
                   </Breadcrumb>
 
-                  {enableVisitorUpload && viewerId && (
+                  {viewData?.enableVisitorUpload && viewerId && (
                     <DocumentUploadModal
                       linkId={linkId}
                       dataroomId={dataroom?.id}
                       viewerId={viewerId}
+                      folderId={folderId ?? undefined}
                     />
                   )}
                 </div>

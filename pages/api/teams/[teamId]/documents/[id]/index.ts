@@ -44,6 +44,16 @@ export default async function handle(
                 path: true,
               },
             },
+            datarooms: {
+              select: {
+                dataroom: {
+                  select: {
+                    id: true,
+                    name: true,
+                  },
+                },
+              },
+            },
           },
         },
       });

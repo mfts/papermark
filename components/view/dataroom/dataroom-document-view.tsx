@@ -333,6 +333,7 @@ export default function DataroomDocumentView({
             userEmail ??
             undefined
           }
+          canDownload={viewData.canDownload}
         />
       ) : (
         <div className="flex h-screen items-center justify-center">

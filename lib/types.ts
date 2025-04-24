@@ -29,6 +29,7 @@ export interface DocumentWithLinksAndLinkCountAndViewCount extends Document {
     links: number;
     views: number;
     versions: number;
+    datarooms: number;
   };
   links: Link[];
   folder: {
@@ -44,6 +45,12 @@ export interface DocumentWithVersion extends Document {
     name: string;
     path: string;
   };
+  datarooms: {
+    dataroom: {
+      id: string;
+      name: string;
+    };
+  }[];
   hasPageLinks: boolean;
 }
 
@@ -275,6 +282,11 @@ export type AnalyticsEvents =
       event: "Stripe Billing Portal Clicked";
       teamId: string;
       action?: string;
+    }
+  | {
+      event: "User Sign In Attempted";
+      email: string | undefined;
+      userId: string;
     };
 
 export interface Team {

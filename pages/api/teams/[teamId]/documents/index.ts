@@ -2,27 +2,15 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { DocumentStorageType, Prisma } from "@prisma/client";
-import { waitUntil } from "@vercel/functions";
 import { getServerSession } from "next-auth/next";
-import { parsePageId } from "notion-utils";
 
 import { hashToken } from "@/lib/api/auth/token";
 import { processDocument } from "@/lib/api/documents/process-document";
 import { errorhandler } from "@/lib/errorHandler";
-import notion from "@/lib/notion";
 import prisma from "@/lib/prisma";
 import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
-import {
-  convertCadToPdfTask,
-  convertFilesToPdfTask,
-} from "@/lib/trigger/convert-files";
-import { processVideo } from "@/lib/trigger/optimize-video-files";
-import { convertPdfToImageRoute } from "@/lib/trigger/pdf-to-image-route";
 import { CustomUser } from "@/lib/types";
-import { getExtension, log } from "@/lib/utils";
-import { conversionQueue } from "@/lib/utils/trigger-utils";
-import { sendDocumentCreatedWebhook } from "@/lib/webhook/triggers/document-created";
-import { sendLinkCreatedWebhook } from "@/lib/webhook/triggers/link-created";
+import { log } from "@/lib/utils";
 
 export const config = {
   // in order to enable `waitUntil` function
@@ -138,7 +126,12 @@ export default async function handle(
               },
             }),
           _count: {
-            select: { links: true, views: true, versions: true },
+            select: {
+              links: true,
+              views: true,
+              versions: true,
+              datarooms: true,
+            },
           },
         },
       });

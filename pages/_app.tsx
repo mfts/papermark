@@ -6,6 +6,9 @@ import { TeamProvider } from "@/context/team-context";
 import type { Session } from "next-auth";
 import { SessionProvider } from "next-auth/react";
 import PlausibleProvider from "next-plausible";
+import { NuqsAdapter } from "nuqs/adapters/next/pages";
+
+import { EXCLUDED_PATHS } from "@/lib/constants";
 
 import { EXCLUDED_PATHS } from "@/lib/constants";
 import { UploadProvider } from "@/lib/context/upload-context";
@@ -80,7 +83,8 @@ export default function App({
               domain="papermark.io"
               enabled={process.env.NEXT_PUBLIC_VERCEL_ENV === "production"}
             >
-              <main className={inter.className}>
+               <NuqsAdapter>
+                 <main className={inter.className}>
                 <Toaster closeButton />
                 <TooltipProvider delayDuration={100}>
                   {EXCLUDED_PATHS.includes(router.pathname) ? (
@@ -95,6 +99,7 @@ export default function App({
                   )}
                 </TooltipProvider>
               </main>
+              </NuqsAdapter>
             </PlausibleProvider>
           </ThemeProvider>
         </PostHogCustomProvider>

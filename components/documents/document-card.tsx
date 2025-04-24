@@ -13,6 +13,7 @@ import {
   FolderInputIcon,
   Layers2Icon,
   MoreVertical,
+  ServerIcon,
   TrashIcon,
 } from "lucide-react";
 import { useTheme } from "next-themes";
@@ -40,6 +41,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { BadgeTooltip } from "@/components/ui/tooltip";
 
 type DocumentsCardProps = {
   document: DocumentWithLinksAndLinkCountAndViewCount;
@@ -227,21 +229,16 @@ export default function DocumentsCard({
                   <span className="absolute inset-0" />
                 </Link>
               </h2>
-              {/* <div className="ml-2 flex">
-                <button
-                  className="group z-10 rounded-md bg-gray-200 p-1 transition-all duration-75 hover:scale-105 hover:bg-emerald-100 active:scale-95 dark:bg-gray-700 hover:dark:bg-emerald-200"
-                  onClick={() =>
-                    handleCopyToClipboard(prismaDocument.links[0].id)
-                  }
-                  title="Copy to clipboard"
-                >
-                  {isCopied ? (
-                    <Check className="size-3 text-muted-foreground group-hover:text-emerald-700" />
-                  ) : (
-                    <Copy className="size-3 text-muted-foreground group-hover:text-emerald-700" />
-                  )}
-                </button>
-              </div> */}
+              {prismaDocument._count.datarooms > 0 && (
+                <div className="z-20">
+                  <BadgeTooltip
+                    content={`In ${prismaDocument._count.datarooms} dataroom${prismaDocument._count.datarooms > 1 ? "s" : ""}`}
+                    key="dataroom"
+                  >
+                    <ServerIcon className="ml-2 h-4 w-4 text-[#fb7a00] hover:text-[#fb7a00]/90" />
+                  </BadgeTooltip>
+                </div>
+              )}
             </div>
             <div className="mt-1 flex items-center space-x-1 text-xs leading-5 text-muted-foreground">
               <p className="truncate">{timeAgo(prismaDocument.createdAt)}</p>
