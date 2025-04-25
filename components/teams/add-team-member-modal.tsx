@@ -76,6 +76,7 @@ export function AddTeamMembers({
     });
 
     mutate(`/api/teams/${teamId}/invitations`);
+    mutate(`/api/teams/${teamId}/limits`);
 
     toast.success("An invitation email has been sent!");
     setOpen(false);

@@ -3,6 +3,7 @@ import { AppSidebar } from "@/components/sidebar/app-sidebar";
 import { Separator } from "../ui/separator";
 import { SidebarInset, SidebarTrigger } from "../ui/sidebar";
 import { SidebarProvider } from "../ui/sidebar";
+import { BlockingModal } from "./blocking-modal";
 import { AppBreadcrumb } from "./breadcrumb";
 import TrialBanner from "./trial-banner";
 
@@ -21,6 +22,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </header>
           {/* Trial banner shown only on trial */}
           <TrialBanner />
+          <BlockingModal />
           <main className="flex-1">{children}</main>
         </SidebarInset>
       </div>
