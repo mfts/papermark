@@ -1,11 +1,10 @@
-import Link from "next/link";
 import { useRouter } from "next/router";
 
 import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { PlanEnum } from "@/ee/stripe/constants";
-import { getPriceIdFromPlan } from "@/ee/stripe/functions/get-price-id-from-plan";
+import { BadgeInfoIcon, MoreVerticalIcon, XIcon } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { mutate } from "swr";
@@ -14,17 +13,20 @@ import { useAnalytics } from "@/lib/analytics";
 import { usePlan } from "@/lib/swr/use-billing";
 import { useInvitations } from "@/lib/swr/use-invitations";
 import useLimits from "@/lib/swr/use-limits";
+import { useOrgMembers } from "@/lib/swr/use-org-members";
 import { useGetTeam } from "@/lib/swr/use-team";
 import { useTeams } from "@/lib/swr/use-teams";
 import { CustomUser } from "@/lib/types";
+import { getEmailDomain } from "@/lib/utils/email-domain";
 
 import { AddSeatModal } from "@/components/billing/add-seat-modal";
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import AppLayout from "@/components/layouts/app";
 import { SettingsHeader } from "@/components/settings/settings-header";
 import Folder from "@/components/shared/icons/folder";
-import MoreVertical from "@/components/shared/icons/more-vertical";
 import { AddTeamMembers } from "@/components/teams/add-team-member-modal";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -34,22 +36,28 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
+import { BadgeTooltip, ButtonTooltip } from "@/components/ui/tooltip";
 
 export default function Billing() {
   const [isTeamMemberInviteModalOpen, setTeamMemberInviteModalOpen] =
     useState<boolean>(false);
   const [isAddSeatModalOpen, setAddSeatModalOpen] = useState<boolean>(false);
   const [leavingUserId, setLeavingUserId] = useState<string>("");
-
+  const [invitedMemberIds, setInvitedMemberIds] = useState<string[]>([]);
+  const [invitingMemberId, setInvitingMemberId] = useState<string>("");
   const { data: session } = useSession();
   const { team, loading } = useGetTeam()!;
   const teamInfo = useTeam();
-  const { plan: userPlan, planName } = usePlan();
+  const { plan: userPlan, isFree } = usePlan();
   const { limits } = useLimits();
   const { teams } = useTeams();
   const analytics = useAnalytics();
 
   const { invitations } = useInvitations();
+  const { members } = useOrgMembers(teamInfo?.currentTeam?.id ?? "");
+  const domain = session?.user?.email
+    ? getEmailDomain(session.user.email)
+    : null;
 
   const router = useRouter();
 
@@ -162,8 +170,12 @@ export default function Billing() {
     );
 
     if (response.status !== 200) {
-      const error = await response.json();
-      toast.error(error);
+      const errorData = await response.json();
+      const errorMessage =
+        typeof errorData === "string"
+          ? errorData
+          : "Failed to resend invitation";
+      toast.error(errorMessage);
       return;
     }
 
@@ -191,8 +203,12 @@ export default function Billing() {
     );
 
     if (!response.ok) {
-      const error = await response.json();
-      toast.error(error);
+      const errorData = await response.json();
+      const errorMessage =
+        typeof errorData === "string"
+          ? errorData
+          : "Failed to revoke invitation";
+      toast.error(errorMessage);
       return;
     }
 
@@ -201,10 +217,74 @@ export default function Billing() {
       teamId: teamInfo?.currentTeam?.id,
     });
 
+    const memberToRestore = members?.find(
+      (member) => member.email === invitation.email,
+    );
+
+    if (memberToRestore) {
+      setInvitedMemberIds((prev) =>
+        prev.filter((id) => id !== memberToRestore.id),
+      );
+    }
+
     mutate(`/api/teams/${teamInfo?.currentTeam?.id}/invitations`);
 
     toast.success("Invitation revoked successfully!");
   };
+
+  const handleInviteToTeam = async (email: string, memberId: string) => {
+    setInvitingMemberId(memberId);
+    const response = await fetch(
+      `/api/teams/${teamInfo?.currentTeam?.id}/invite`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: email,
+        }),
+      },
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      const errorMessage =
+        typeof errorData === "string" ? errorData : "Failed to send invitation";
+      setInvitingMemberId("");
+      toast.error(errorMessage);
+      return;
+    }
+
+    analytics.capture("Team Member Invitation Sent", {
+      email: email,
+      teamId: teamInfo?.currentTeam?.id,
+    });
+
+    setInvitedMemberIds((prev) => [...prev, memberId]);
+
+    mutate(`/api/teams/${teamInfo?.currentTeam?.id}/invitations`);
+
+    toast.success("An invitation email has been sent!");
+    setInvitingMemberId("");
+  };
+
+  const getMemberStatus = (member: any) => {
+    if (team?.users.some((user) => user.userId === member.id)) {
+      return "team_member";
+    }
+    if (invitations?.some((invitation) => invitation.email === member.email)) {
+      return "invited";
+    }
+    if (invitedMemberIds.includes(member.id)) {
+      return "just_invited";
+    }
+    return "can_invite";
+  };
+
+  const tooltipContent = isFree
+    ? "Upgrade to see who is using Papermark from your domain and invite them to your team"
+    : "These users from your domain are already on Papermark, invite them to your team to start collaborating.";
 
   return (
     <AppLayout>
@@ -312,7 +392,7 @@ export default function Billing() {
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" className="h-8 w-8 p-0">
                           <span className="sr-only">Open menu</span>
-                          <MoreVertical className="h-4 w-4" />
+                          <MoreVerticalIcon className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
@@ -400,7 +480,7 @@ export default function Billing() {
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" className="h-8 w-8 p-0">
                           <span className="sr-only">Open menu</span>
-                          <MoreVertical className="h-4 w-4" />
+                          <MoreVerticalIcon className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
@@ -423,6 +503,146 @@ export default function Billing() {
                 </li>
               ))}
           </ul>
+
+          <div className="space-y-4 md:mt-8 lg:mt-12">
+            {members && members.length > 0 && (
+              <div className="flex items-center justify-between">
+                <h4 className="flex flex-row items-center gap-2 text-sm font-semibold text-foreground">
+                  {members.length} {members.length === 1 ? "person" : "people"}{" "}
+                  from {domain} {members.length === 1 ? "is" : "are"} already on
+                  Papermark{" "}
+                  <BadgeTooltip content={tooltipContent} key="internal">
+                    <BadgeInfoIcon className="h-4 w-4 cursor-help" />
+                  </BadgeTooltip>
+                </h4>
+                <div className="flex items-center gap-4">
+                  {userPlan === "free" ? (
+                    <UpgradePlanModal
+                      clickedPlan={PlanEnum.Pro}
+                      trigger={"people_section"}
+                    >
+                      <Button
+                        variant="default"
+                        size="sm"
+                        className="bg-primary text-primary-foreground hover:bg-primary/90"
+                      >
+                        Upgrade
+                      </Button>
+                    </UpgradePlanModal>
+                  ) : null}
+                </div>
+              </div>
+            )}
+
+            <div className="space-y-4">
+              {members &&
+                members.map((member) => {
+                  const status = getMemberStatus(member);
+                  return (
+                    <div
+                      key={member.id}
+                      className="flex items-center justify-between rounded-lg border p-4"
+                    >
+                      <div className="flex items-center gap-4">
+                        {isFree ? (
+                          <Avatar className="h-10 w-10 border border-border">
+                            <AvatarFallback className="text-lg text-secondary-foreground">
+                              ?
+                            </AvatarFallback>
+                          </Avatar>
+                        ) : (
+                          <Avatar className="h-10 w-10">
+                            <AvatarImage src={member?.image || ""} />
+                            <AvatarFallback className="text-lg font-bold capitalize">
+                              {member.name?.charAt(0) ||
+                                member.email?.charAt(0)}
+                            </AvatarFallback>
+                          </Avatar>
+                        )}
+                        <div>
+                          {isFree ? (
+                            <>
+                              <div className="mb-1 h-4 w-24 rounded-sm bg-secondary"></div>
+                              <div className="flex items-center">
+                                <div className="mr-1 h-3 w-12 rounded-sm bg-secondary"></div>
+                                <span className="text-xs text-muted-foreground">
+                                  @{domain}
+                                </span>
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              <p className="text-sm font-medium text-foreground">
+                                {member.name || member.email}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {member.email}
+                              </p>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                      {isFree ? (
+                        <UpgradePlanModal
+                          clickedPlan={PlanEnum.Pro}
+                          trigger={"add_org_member"}
+                        >
+                          <Button variant="default" size="sm">
+                            Upgrade to see
+                          </Button>
+                        </UpgradePlanModal>
+                      ) : status === "can_invite" ? (
+                        limits === null ||
+                        (limits &&
+                          limits.users! > numUsers + numInvitations) ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() =>
+                              handleInviteToTeam(member.email, member.id)
+                            }
+                            disabled={invitingMemberId === member.id}
+                            className="transition-all duration-200 hover:bg-primary hover:text-primary-foreground"
+                          >
+                            {invitingMemberId === member.id
+                              ? "Inviting..."
+                              : "Invite"}
+                          </Button>
+                        ) : (
+                          <AddSeatModal
+                            open={isAddSeatModalOpen}
+                            setOpen={setAddSeatModalOpen}
+                          >
+                            <Button variant="outline" size="sm">
+                              Add seat
+                            </Button>
+                          </AddSeatModal>
+                        )
+                      ) : status === "invited" || status === "just_invited" ? (
+                        <div className="flex items-center gap-4">
+                          <Badge variant="secondary">Invited</Badge>
+                          <ButtonTooltip content="Revoke invitation">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0"
+                              onClick={() =>
+                                revokeInvitation({ email: member.email })
+                              }
+                            >
+                              <span className="sr-only">Revoke invitation</span>
+                              <XIcon className="h-4 w-4" />
+                            </Button>
+                          </ButtonTooltip>
+                        </div>
+                      ) : (
+                        <Badge variant="secondary">Team member</Badge>
+                      )}
+                    </div>
+                  );
+                })}
+            </div>
+          </div>
         </div>
       </main>
     </AppLayout>

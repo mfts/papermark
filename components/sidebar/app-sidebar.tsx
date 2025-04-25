@@ -20,6 +20,10 @@ import {
   ServerIcon,
 } from "lucide-react";
 
+import { usePlan } from "@/lib/swr/use-billing";
+import useLimits from "@/lib/swr/use-limits";
+import { nFormatter } from "@/lib/utils";
+
 import { NavMain } from "@/components/sidebar/nav-main";
 import { NavUser } from "@/components/sidebar/nav-user";
 import { TeamSwitcher } from "@/components/sidebar/team-switcher";
@@ -32,13 +36,10 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 
-import { usePlan } from "@/lib/swr/use-billing";
-import useLimits from "@/lib/swr/use-limits";
-import { nFormatter } from "@/lib/utils";
-
 import ProAnnualBanner from "../billing/pro-annual-banner";
 import ProBanner from "../billing/pro-banner";
 import { Progress } from "../ui/progress";
+import { OrgMembers } from "./org-members";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const router = useRouter();
@@ -218,7 +219,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 />
               ) : null}
 
-              <div className="mb-2">
+              <div>
                 {linksLimit ? (
                   <UsageProgress
                     title="Links"
@@ -240,6 +241,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     Change plan to increase usage limits
                   </p>
                 ) : null}
+
+                <OrgMembers teamId={currentTeam?.id ?? ""} />
               </div>
             </div>
           </SidebarMenuItem>
