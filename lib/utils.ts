@@ -6,8 +6,10 @@ import { type ClassValue, clsx } from "clsx";
 import crypto from "crypto";
 import ms from "ms";
 import { customAlphabet } from "nanoid";
+import { NextRouter } from "next/router";
 import { ThreadMessage } from "openai/resources/beta/threads/messages/messages";
 import { rgb } from "pdf-lib";
+import { ParsedUrlQuery } from "querystring";
 import { toast } from "sonner";
 import { twMerge } from "tailwind-merge";
 
@@ -485,7 +487,6 @@ export async function generateEncrpytedPassword(
   if (!password) return "";
   // If the password is already encrypted, return it
   const textParts: string[] = password.split(":");
-  console.log("textparts in encryption", textParts);
   if (textParts.length === 2) {
     return password;
   }
@@ -544,7 +545,7 @@ export const trim = (u: unknown) => (typeof u === "string" ? u.trim() : u);
 
 export const getBreadcrumbPath = (path: string[]) => {
   const segments = path?.filter(Boolean);
-   if (!Array.isArray(path) || path.length === 0) {
+  if (!Array.isArray(path) || path.length === 0) {
     return [{ name: "Home", pathLink: "/documents" }];
   }
   let currentPath = "documents/tree";
@@ -553,10 +554,32 @@ export const getBreadcrumbPath = (path: string[]) => {
     { name: "Home", pathLink: "/documents" },
     ...segments.map((segment, index) => {
       currentPath += `/${slugify(segment)}`;
-      return { 
-        name: segment, 
-        pathLink: currentPath 
+      return {
+        name: segment,
+        pathLink: currentPath,
       };
-    })
+    }),
   ];
+};
+
+export const handleInvitationStatus = (
+  invitationStatus: 'accepted' | 'teamMember',
+  queryParams: ParsedUrlQuery,
+  router: NextRouter,
+) => {
+  switch (invitationStatus) {
+    case 'accepted':
+      toast.success("Welcome to the team! You've successfully joined.");
+      break;
+    case 'teamMember':
+      toast.error("You've already accepted this invitation!");
+      break;
+    default:
+      toast.error("Invalid invitation status");
+  }
+
+  delete queryParams["invitation"];
+  router.replace("/documents", undefined, {
+    shallow: true,
+  });
 };

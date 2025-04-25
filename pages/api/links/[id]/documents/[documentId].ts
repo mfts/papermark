@@ -100,8 +100,6 @@ export default async function handle(
         }),
     });
 
-    console.log("data documents", data.linkData.dataroom?.documents[0]);
-
     linkData = data.linkData;
     brand = data.brand;
 

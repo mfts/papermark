@@ -1,8 +1,9 @@
 import { useRouter } from "next/router";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { ConversationListItem } from "@/ee/features/conversations/components/conversation-list-item";
+import { ConversationsNotEnabledBanner } from "@/ee/features/conversations/components/conversations-not-enabled-banner";
 import { Loader2, MessageSquare, Search } from "lucide-react";
 import { toast } from "sonner";
 import useSWR from "swr";
@@ -58,6 +59,24 @@ export default function DataroomConversationsPage() {
   const [conversationToDelete, setConversationToDelete] = useState<
     string | null
   >(null);
+  const [localConversationsEnabled, setLocalConversationsEnabled] = useState<
+    boolean | undefined
+  >(undefined);
+  const [isBannerDismissed, setIsBannerDismissed] = useState(false);
+
+  // Initialize local state from dataroom and check banner dismissed state
+  useEffect(() => {
+    if (dataroom) {
+      setLocalConversationsEnabled(dataroom.conversationsEnabled);
+
+      // Check if banner has been dismissed
+      const isDismissed =
+        localStorage.getItem(
+          `dataroom-${dataroom.id}-conversations-banner-dismissed`,
+        ) === "true";
+      setIsBannerDismissed(isDismissed);
+    }
+  }, [dataroom]);
 
   // SWR hook for fetching conversation summaries
   const { data: conversations = [], isLoading: isLoadingConversations } =
@@ -68,7 +87,7 @@ export default function DataroomConversationsPage() {
       fetcher,
       {
         revalidateOnFocus: true,
-        dedupingInterval: 5000, // 5 seconds
+        dedupingInterval: 10000,
         keepPreviousData: true,
         onError: (err) => {
           console.error("Error fetching conversations:", err);
@@ -125,6 +144,11 @@ export default function DataroomConversationsPage() {
     router.push(`/datarooms/${dataroom?.id}/conversations/${conversationId}`);
   };
 
+  // Handle conversations being toggled
+  const handleConversationsToggled = (enabled: boolean) => {
+    setLocalConversationsEnabled(enabled);
+  };
+
   if (!dataroom) {
     return <div>Loading...</div>;
   }
@@ -134,6 +158,11 @@ export default function DataroomConversationsPage() {
     router.push(`/datarooms/${dataroom?.id}/documents`);
   }
 
+  const isConversationsEnabled =
+    localConversationsEnabled !== undefined
+      ? localConversationsEnabled
+      : dataroom.conversationsEnabled;
+
   return (
     <AppLayout>
       <div className="relative mx-2 my-4 space-y-8 overflow-hidden px-1 sm:mx-3 md:mx-5 md:mt-5 lg:mx-7 lg:mt-8 xl:mx-10">
@@ -141,6 +170,16 @@ export default function DataroomConversationsPage() {
           <DataroomHeader title={dataroom.name} description={dataroom.pId} />
           <DataroomNavigation dataroomId={dataroom.id} />
         </header>
+
+        {/* Show banner unless it's been dismissed */}
+        {!isBannerDismissed && (
+          <ConversationsNotEnabledBanner
+            dataroomId={dataroom.id}
+            teamId={teamId as string}
+            isConversationsEnabled={isConversationsEnabled}
+            onConversationsToggled={handleConversationsToggled}
+          />
+        )}
 
         <div className="h-[calc(100vh-16rem)] overflow-hidden rounded-md border">
           <div className="flex h-full flex-col md:flex-row">

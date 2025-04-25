@@ -189,6 +189,11 @@ export default async function handler(
               },
             },
           }),
+          ...(linkData.enableUpload && {
+            enableUpload: linkData.enableUpload,
+            isFileRequestOnly: linkData.isFileRequestOnly,
+            uploadFolderId: linkData.uploadFolderId,
+          }),
         },
         include: {
           customFields: true,
