@@ -71,7 +71,9 @@ export default function DashboardPage() {
     isLoading,
     error,
   } = useSWR<OverviewData>(
-    `/api/analytics?type=overview&interval=${interval}&teamId=${teamInfo?.currentTeam?.id}${interval === "custom" ? `&startDate=${format(customRange.start, "MM-dd-yyyy")}&endDate=${format(customRange.end, "MM-dd-yyyy")}` : ""}`,
+    teamInfo?.currentTeam?.id
+      ? `/api/analytics?type=overview&interval=${interval}&teamId=${teamInfo.currentTeam.id}${interval === "custom" ? `&startDate=${format(customRange.start, "MM-dd-yyyy")}&endDate=${format(customRange.end, "MM-dd-yyyy")}` : ""}`
+      : null,
     fetcher,
     {
       keepPreviousData: true,
