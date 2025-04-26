@@ -3,7 +3,6 @@ import { useRouter } from "next/router";
 
 import { useEffect, useState } from "react";
 
-import NotFound from "@/pages/404";
 import { Brand, DataroomBrand } from "@prisma/client";
 import Cookies from "js-cookie";
 import { useSession } from "next-auth/react";
@@ -22,6 +21,7 @@ import {
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import CustomMetaTag from "@/components/view/custom-metatag";
 import DataroomView from "@/components/view/dataroom/dataroom-view";
+import DocumentNotFound from "@/components/view/document-not-found";
 import DocumentView from "@/components/view/document-view";
 
 type DocumentLinkData = {
@@ -256,15 +256,11 @@ export default function ViewPage({
   }
 
   if (error) {
-    return (
-      <NotFound message="Sorry, we had trouble loading this link. Please try refreshing." />
-    );
+    return <DocumentNotFound />;
   }
 
   if (notionError) {
-    return (
-      <NotFound message="Sorry, we had trouble loading this link. Please try again in a moment." />
-    );
+    return <DocumentNotFound />;
   }
 
   const {
@@ -319,13 +315,19 @@ export default function ViewPage({
     // If the link is expired, show a 404 page
     if (expiresAt && new Date(expiresAt) < new Date()) {
       return (
-        <NotFound message="Sorry, the link you're looking for is expired." />
+        <DocumentNotFound
+          headline="This Link Has Expired"
+          message="This link has expired and the document is no longer accessible through this link."
+        />
       );
     }
 
     if (isArchived) {
       return (
-        <NotFound message="Sorry, the link you're looking for is archived." />
+        <DocumentNotFound
+          headline="This Document Has Been Archived"
+          message="This document has been archived and is no longer accessible through this link."
+        />
       );
     }
 
@@ -402,13 +404,19 @@ export default function ViewPage({
     // If the link is expired, show a 404 page
     if (expiresAt && new Date(expiresAt) < new Date()) {
       return (
-        <NotFound message="Sorry, the link you're looking for is expired." />
+        <DocumentNotFound
+          headline="This Link Has Expired"
+          message="This link has expired and the document is no longer accessible through this link."
+        />
       );
     }
 
     if (isArchived) {
       return (
-        <NotFound message="Sorry, the link you're looking for is archived." />
+        <DocumentNotFound
+          headline="This Document Has Been Archived"
+          message="This document has been archived and is no longer accessible through this link."
+        />
       );
     }
 

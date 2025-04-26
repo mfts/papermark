@@ -7,7 +7,7 @@ interface DocumentNotFoundProps {
 export default function DocumentNotFound({
   headline = "This Document Isn’t Available",
   message = "The link you followed may be broken, expired, or the document is no longer publicly accessible.",
-  actionText = "Reach out to the owner to grant access again",
+  actionText = "Contact the owner for access.",
 }: DocumentNotFoundProps) {
   return (
     <>
@@ -15,9 +15,8 @@ export default function DocumentNotFound({
         <main className="mx-auto flex w-full max-w-7xl flex-grow flex-col justify-center px-4 sm:px-6 lg:px-8">
           <div className="py-16">
             <div className="space-y-8 text-center">
-              <p className="text-sm font-semibold uppercase tracking-wide text-[#fb7a00]">
-                <span className="text-6xl">404</span>{" "}
-                <sub className="text-lg">error</sub>
+              <p className="text-sm font-semibold tracking-wide text-[#fb7a00]">
+                <span className="text-3xl">Something Went Wrong!</span>
               </p>
               <div>
                 <h1 className="mt-2 text-4xl font-extrabold tracking-tight text-slate-950 dark:text-gray-100 sm:text-5xl">
