@@ -1,20 +1,20 @@
 import { useEffect, useState } from "react";
 
-import { SettingsIcon, StampIcon } from "lucide-react";
+import { LinkPreset } from "@prisma/client";
+import { SettingsIcon } from "lucide-react";
 import { motion } from "motion/react";
+
+import { FADE_IN_ANIMATION_SETTINGS } from "@/lib/constants";
+import { WatermarkConfig } from "@/lib/types";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-import { FADE_IN_ANIMATION_SETTINGS } from "@/lib/constants";
-import { WatermarkConfig } from "@/lib/types";
-
 import { DEFAULT_LINK_TYPE } from ".";
 import LinkItem from "./link-item";
 import { LinkUpgradeOptions } from "./link-options";
 import WatermarkConfigSheet from "./watermark-panel";
-import { LinkPreset } from "@prisma/client";
 
 export default function WatermarkSection({
   data,
@@ -26,31 +26,33 @@ export default function WatermarkSection({
   data: DEFAULT_LINK_TYPE;
   setData: React.Dispatch<React.SetStateAction<DEFAULT_LINK_TYPE>>;
   isAllowed: boolean;
-    presets: LinkPreset | null;
   handleUpgradeStateChange: ({
     state,
     trigger,
     plan,
   }: LinkUpgradeOptions) => void;
+  presets: LinkPreset | null;
 }) {
   const { enableWatermark, watermarkConfig } = data;
   const [enabled, setEnabled] = useState<boolean>(false);
   const [isConfigOpen, setIsConfigOpen] = useState<boolean>(false);
 
   useEffect(() => {
-    if (isAllowed && presets?.watermarkConfig) {
+    setEnabled(enableWatermark);
+  }, [enableWatermark]);
+
+  useEffect(() => {
+    if (isAllowed && presets?.enableWatermark && presets?.watermarkConfig) {
       setEnabled(true);
       setData((prevData) => ({
         ...prevData,
         enableWatermark: true,
-        watermarkConfig: presets.watermarkConfig ? JSON.parse(presets.watermarkConfig as string) as WatermarkConfig : null,
+        watermarkConfig: presets.watermarkConfig
+          ? (JSON.parse(presets.watermarkConfig as string) as WatermarkConfig)
+          : null,
       }));
     }
   }, [presets, isAllowed]);
-
-  useEffect(() => {
-    setEnabled(enableWatermark);
-  }, [enableWatermark]);
 
   const handleWatermarkToggle = () => {
     const updatedWatermark = !enabled;

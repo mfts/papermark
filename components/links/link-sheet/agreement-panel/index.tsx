@@ -10,6 +10,13 @@ import { useTeam } from "@/context/team-context";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
+import {
+  DocumentData,
+  createAgreementDocument,
+} from "@/lib/documents/create-document";
+import { putFile } from "@/lib/files/put-file";
+import { getSupportedContentType } from "@/lib/utils/get-content-type";
+
 import DocumentUpload from "@/components/document-upload";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,13 +31,6 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 
-import {
-  DocumentData,
-  createAgreementDocument,
-} from "@/lib/documents/create-document";
-import { putFile } from "@/lib/files/put-file";
-import { getSupportedContentType } from "@/lib/utils/get-content-type";
-
 import LinkItem from "../link-item";
 
 export default function AgreementSheet({
@@ -40,11 +40,11 @@ export default function AgreementSheet({
   isOnlyView = false,
   onClose,
 }: {
-    defaultData?: { name: string; link: string; requireName: boolean } | null;
+  defaultData?: { name: string; link: string; requireName: boolean } | null;
   isOpen: boolean;
   setIsOpen: Dispatch<SetStateAction<boolean>>;
-    isOnlyView?: boolean;
-    onClose?: () => void;
+  isOnlyView?: boolean;
+  onClose?: () => void;
 }) {
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
@@ -188,12 +188,13 @@ export default function AgreementSheet({
     <Sheet open={isOpen} onOpenChange={handleClose}>
       <SheetContent className="flex h-full w-[85%] flex-col justify-between bg-background px-4 text-foreground sm:w-[500px] md:px-5">
         <SheetHeader className="text-start">
-          <SheetTitle>{isOnlyView ? "View Agreement" : "Create a new agreement"}</SheetTitle>
+          <SheetTitle>
+            {isOnlyView ? "View Agreement" : "Create a new agreement"}
+          </SheetTitle>
           <SheetDescription>
             {isOnlyView
               ? "View the details of this agreement."
-              : "An agreement is a special document that visitors must accept before accessing your link. You can create a new agreement here."
-            }
+              : "An agreement is a special document that visitors must accept before accessing your link. You can create a new agreement here."}
           </SheetDescription>
         </SheetHeader>
 
@@ -262,29 +263,33 @@ export default function AgreementSheet({
                   />
                 </div>
 
-                {!isOnlyView ? <div className="space-y-12">
-                  <div className="space-y-2 pb-6">
-                    <Label>Or upload an agreement</Label>
-                    <div className="grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
-                      <DocumentUpload
-                        currentFile={currentFile}
-                        setCurrentFile={setCurrentFile}
-                      />
+                {!isOnlyView ? (
+                  <div className="space-y-12">
+                    <div className="space-y-2 pb-6">
+                      <Label>Or upload an agreement</Label>
+                      <div className="grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
+                        <DocumentUpload
+                          currentFile={currentFile}
+                          setCurrentFile={setCurrentFile}
+                        />
+                      </div>
                     </div>
                   </div>
-                </div> : null}
+                ) : null}
               </div>
             </div>
-            <SheetFooter className={`flex-shrink-0 ${isOnlyView ? "mt-6" : ""}`}>
+            <SheetFooter
+              className={`flex-shrink-0 ${isOnlyView ? "mt-6" : ""}`}
+            >
               <div className="flex items-center">
                 {isOnlyView ? (
                   <Button type="button" onClick={() => handleClose(false)}>
                     Close
                   </Button>
                 ) : (
-                    <Button type="submit" loading={isLoading}>
-                      Create Agreement
-                    </Button>
+                  <Button type="submit" loading={isLoading}>
+                    Create Agreement
+                  </Button>
                 )}
               </div>
             </SheetFooter>

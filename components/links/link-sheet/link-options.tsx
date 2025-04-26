@@ -2,6 +2,7 @@ import { useState } from "react";
 
 import { PlanEnum } from "@/ee/stripe/constants";
 import { LinkAudienceType, LinkType } from "@prisma/client";
+import { LinkPreset } from "@prisma/client";
 
 import { usePlan } from "@/lib/swr/use-billing";
 import useLimits from "@/lib/swr/use-limits";
@@ -27,10 +28,6 @@ import QuestionSection from "./question-section";
 import ScreenshotProtectionSection from "./screenshot-protection-section";
 import UploadSection from "./upload-section";
 import WatermarkSection from "./watermark-section";
-import useSWRImmutable from "swr/immutable";
-import { LinkPreset } from "@prisma/client";
-import { fetcher } from "@/lib/utils";
-import { useTeam } from "@/context/team-context";
 
 export type LinkUpgradeOptions = {
   state: boolean;
@@ -44,12 +41,14 @@ export const LinkOptions = ({
   targetId,
   linkType,
   editLink,
+  currentPreset,
 }: {
   data: DEFAULT_LINK_TYPE;
   setData: React.Dispatch<React.SetStateAction<DEFAULT_LINK_TYPE>>;
   targetId?: string;
   linkType: LinkType;
   editLink?: boolean;
+  currentPreset: LinkPreset | null;
 }) => {
   const {
     isStarter,
@@ -59,12 +58,6 @@ export const LinkOptions = ({
     isDataroomsPlus,
     isTrial,
   } = usePlan();
-  const teamInfo = useTeam();
-  console.log('data?.id', data?.id)
-  const { data: presets } = useSWRImmutable<LinkPreset>(
-    `/api/teams/${teamInfo?.currentTeam?.id}/presets`,
-    fetcher,
-  );
   const { limits } = useLimits();
   const allowAdvancedLinkControls = limits
     ? limits?.advancedLinkControlsOnPro
@@ -86,7 +79,6 @@ export const LinkOptions = ({
       setUpgradePlan(plan as PlanEnum);
     }
   };
-  const presetsData = editLink ? null : presets!;
 
   return (
     <div>
@@ -106,7 +98,6 @@ export const LinkOptions = ({
       ) : null}
       <OGSection
         {...{ data, setData }}
-        presets={presetsData}
         isAllowed={
           isTrial ||
           (isPro && allowAdvancedLinkControls) ||
@@ -116,6 +107,7 @@ export const LinkOptions = ({
         }
         handleUpgradeStateChange={handleUpgradeStateChange}
         editLink={editLink ?? false}
+        presets={currentPreset}
       />
 
       <EmailAuthenticationSection
@@ -132,7 +124,6 @@ export const LinkOptions = ({
       {data.audienceType === LinkAudienceType.GENERAL ? (
         <AllowListSection
           {...{ data, setData }}
-          presets={presetsData}
           isAllowed={
             isTrial ||
             (isPro && allowAdvancedLinkControls) ||
@@ -141,6 +132,7 @@ export const LinkOptions = ({
             isDataroomsPlus
           }
           handleUpgradeStateChange={handleUpgradeStateChange}
+          presets={currentPreset}
         />
       ) : null}
       {data.audienceType === LinkAudienceType.GENERAL ? (
@@ -153,8 +145,8 @@ export const LinkOptions = ({
             isDatarooms ||
             isDataroomsPlus
           }
-          presets={presetsData}
           handleUpgradeStateChange={handleUpgradeStateChange}
+          presets={currentPreset}
         />
       ) : null}
       <PasswordSection {...{ data, setData }} />
@@ -174,8 +166,8 @@ export const LinkOptions = ({
         isAllowed={
           isTrial || isDatarooms || isDataroomsPlus || allowWatermarkOnBusiness
         }
-        presets={presetsData}
         handleUpgradeStateChange={handleUpgradeStateChange}
+        presets={currentPreset}
       />
       <AgreementSection
         {...{ data, setData }}
@@ -213,7 +205,6 @@ export const LinkOptions = ({
       ) : null}
       <CustomFieldsSection
         {...{ data, setData }}
-        presets={presetsData}
         isAllowed={isTrial || isBusiness || isDatarooms || isDataroomsPlus}
         handleUpgradeStateChange={handleUpgradeStateChange}
       />

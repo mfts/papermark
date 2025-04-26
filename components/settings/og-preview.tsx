@@ -3,18 +3,18 @@ import { Dispatch, SetStateAction, useMemo } from "react";
 import { ImageIcon } from "lucide-react";
 import ReactTextareaAutosize from "react-textarea-autosize";
 
+import { PresetDataSchema } from "@/lib/zod/schemas/presets";
+
 import { Facebook } from "../shared/icons/facebook";
 import LinkedIn from "../shared/icons/linkedin";
 import Twitter from "../shared/icons/twitter";
-import { PresetData } from "@/pages/settings/presets";
-
 
 export default function Preview({
   data,
   setData,
 }: {
-    data: PresetData;
-    setData: Dispatch<SetStateAction<PresetData>>;
+  data: Partial<PresetDataSchema>;
+  setData: Dispatch<SetStateAction<Partial<PresetDataSchema>>>;
 }) {
   const {
     metaTitle: title,
@@ -195,7 +195,7 @@ export default function Preview({
   );
 }
 
-const ImagePreview = ({ image }: { image: string | null }) => {
+const ImagePreview = ({ image }: { image: string | null | undefined }) => {
   const previewImage = useMemo(() => {
     if (image) {
       return (

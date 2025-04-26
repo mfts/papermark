@@ -1,16 +1,16 @@
 import { useEffect, useState } from "react";
 
+import { LinkPreset } from "@prisma/client";
 import { motion } from "motion/react";
-
-import { Textarea } from "@/components/ui/textarea";
 
 import { FADE_IN_ANIMATION_SETTINGS } from "@/lib/constants";
 import { sanitizeAllowDenyList } from "@/lib/utils";
 
+import { Textarea } from "@/components/ui/textarea";
+
 import { DEFAULT_LINK_TYPE } from ".";
 import LinkItem from "./link-item";
 import { LinkUpgradeOptions } from "./link-options";
-import { LinkPreset } from "@prisma/client";
 
 export default function AllowListSection({
   data,
@@ -27,7 +27,7 @@ export default function AllowListSection({
     trigger,
     plan,
   }: LinkUpgradeOptions) => void;
-    presets: LinkPreset | null;
+  presets: LinkPreset | null;
 }) {
   const { emailProtected, allowList } = data;
 
@@ -40,13 +40,6 @@ export default function AllowListSection({
   );
 
   useEffect(() => {
-    if (isAllowed && presets?.enableAllowList) {
-      setEnabled(true);
-      setAllowListInput(presets.allowList?.join("\n") || "");
-    }
-  }, [presets, isAllowed]);
-
-  useEffect(() => {
     // Update the allowList in the data state when their inputs change
     const newAllowList = sanitizeAllowDenyList(allowListInput);
     setEnabled((prevEnabled) => prevEnabled && emailProtected);
@@ -55,6 +48,13 @@ export default function AllowListSection({
       allowList: emailProtected && enabled ? newAllowList : [],
     }));
   }, [allowListInput, emailProtected, enabled, setData]);
+
+  useEffect(() => {
+    if (isAllowed && presets?.allowList && presets.allowList.length > 0) {
+      setEnabled(true);
+      setAllowListInput(presets.allowList.join("\n") || "");
+    }
+  }, [presets, isAllowed]);
 
   const handleEnableAllowList = () => {
     const updatedEnabled = !enabled;

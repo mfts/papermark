@@ -1,44 +1,44 @@
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
+import { LinkPreset } from "@prisma/client";
 import { SettingsIcon } from "lucide-react";
 import { motion } from "motion/react";
 
+import { FADE_IN_ANIMATION_SETTINGS } from "@/lib/constants";
+
 import { DEFAULT_LINK_TYPE } from "@/components/links/link-sheet";
 import { Button } from "@/components/ui/button";
-
-import { FADE_IN_ANIMATION_SETTINGS } from "@/lib/constants";
 
 import { CustomFieldData } from "./custom-fields-panel";
 import CustomFieldsPanel from "./custom-fields-panel";
 import LinkItem from "./link-item";
 import { LinkUpgradeOptions } from "./link-options";
-import { LinkPreset } from "@prisma/client";
 
 export default function CustomFieldsSection({
   data,
   setData,
   isAllowed,
   handleUpgradeStateChange,
-  presets,
+  // presets,
 }: {
   data: DEFAULT_LINK_TYPE;
   setData: React.Dispatch<React.SetStateAction<DEFAULT_LINK_TYPE>>;
   isAllowed: boolean;
   handleUpgradeStateChange: (options: LinkUpgradeOptions) => void;
-    presets: LinkPreset | null;
+  // presets: LinkPreset | null;
 }) {
   const [enabled, setEnabled] = useState<boolean>(false);
   const [isConfigOpen, setIsConfigOpen] = useState<boolean>(false);
 
-  useEffect(() => {
-    if (isAllowed && presets?.watermarkConfig) {
-      setEnabled(true);
-      setData((prevData) => ({
-        ...prevData,
-        customFields: presets.customFields ? JSON.parse(presets.customFields as string) as CustomFieldData[] : [],
-      }));
-    }
-  }, [presets, isAllowed]);
+  // useEffect(() => {
+  //   if (isAllowed && presets?.watermarkConfig) {
+  //     setEnabled(true);
+  //     setData((prevData) => ({
+  //       ...prevData,
+  //       customFields: presets.customFields ? JSON.parse(presets.customFields as string) as CustomFieldData[] : [],
+  //     }));
+  //   }
+  // }, [presets, isAllowed]);
 
   useEffect(() => {
     const hasCustomFields = data.customFields.length > 0;
@@ -49,33 +49,39 @@ export default function CustomFieldsSection({
 
   const handleCustomFieldsToggle = useCallback(() => {
     const updatedEnabled = !enabled;
-    setData(prevData => ({
+    setData((prevData) => ({
       ...prevData,
       customFields: updatedEnabled
         ? [
-          {
-            type: "SHORT_TEXT",
-            identifier: "",
-            label: "",
-            placeholder: "",
-            required: false,
-            disabled: false,
-            orderIndex: 0,
-          },
-        ]
+            {
+              type: "SHORT_TEXT",
+              identifier: "",
+              label: "",
+              placeholder: "",
+              required: false,
+              disabled: false,
+              orderIndex: 0,
+            },
+          ]
         : [],
     }));
     setEnabled(updatedEnabled);
   }, [enabled, setData]);
 
-  const handleConfigSave = useCallback((fields: CustomFieldData[]) => {
-    setData(prevData => ({
-      ...prevData,
-      customFields: fields,
-    }));
-  }, [setData]);
+  const handleConfigSave = useCallback(
+    (fields: CustomFieldData[]) => {
+      setData((prevData) => ({
+        ...prevData,
+        customFields: fields,
+      }));
+    },
+    [setData],
+  );
 
-  const memoizedFields = useMemo(() => data.customFields || [], [data.customFields]);
+  const memoizedFields = useMemo(
+    () => data.customFields || [],
+    [data.customFields],
+  );
 
   return (
     <div className="pb-5">
@@ -139,4 +145,4 @@ export default function CustomFieldsSection({
       />
     </div>
   );
-};
+}

@@ -5,13 +5,13 @@ import { Label } from "@radix-ui/react-label";
 import { Upload as ArrowUpTrayIcon, PlusIcon } from "lucide-react";
 import { motion } from "motion/react";
 
-import { Input } from "@/components/ui/input";
-import LoadingSpinner from "@/components/ui/loading-spinner";
-import { Textarea } from "@/components/ui/textarea";
-
 import { FADE_IN_ANIMATION_SETTINGS } from "@/lib/constants";
 import { cn, fetcher, validateImageDimensions } from "@/lib/utils";
 import { resizeImage } from "@/lib/utils/resize-image";
+
+import { Input } from "@/components/ui/input";
+import LoadingSpinner from "@/components/ui/loading-spinner";
+import { Textarea } from "@/components/ui/textarea";
 
 import { DEFAULT_LINK_TYPE } from ".";
 import LinkItem from "./link-item";
@@ -34,7 +34,7 @@ export default function OGSection({
     plan,
   }: LinkUpgradeOptions) => void;
   editLink: boolean;
-    presets: LinkPreset | null;
+  presets: LinkPreset | null;
 }) {
   const {
     enableCustomMetatag,
@@ -44,11 +44,6 @@ export default function OGSection({
     metaFavicon,
   } = data;
 
-  console.log(enableCustomMetatag,
-    metaTitle,
-    metaDescription,
-    metaImage,
-    metaFavicon, 'presets')
   const [enabled, setEnabled] = useState<boolean>(false);
   const [fileError, setFileError] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
@@ -80,33 +75,33 @@ export default function OGSection({
     setEnabled(enableCustomMetatag);
   }, [enableCustomMetatag]);
 
-  useEffect(() => {
-    if (
-      presets?.enableCustomMetaTag &&
-      !(metaTitle || metaDescription || metaImage || metaFavicon)
-    ) {
-      const preset = presets;
-      if (preset) {
-        setData((prev) => ({
-          ...prev,
-          metaFavicon: prev.metaFavicon || preset.metaFavicon,
-          metaImage: prev.metaImage || preset.metaImage,
-          metaTitle: prev.metaTitle || preset.metaTitle,
-          metaDescription: prev.metaDescription || preset.metaDescription,
-          enableCustomMetatag: !editLink && true,
-        }));
-      }
-    }
-  }, [
-    presets,
-    setData,
-    editLink,
-    metaFavicon,
-    enableCustomMetatag,
-    metaTitle,
-    metaDescription,
-    metaImage,
-  ]);
+  // useEffect(() => {
+  //   if (
+  //     presets?.enableCustomMetaTag &&
+  //     !(metaTitle || metaDescription || metaImage || metaFavicon)
+  //   ) {
+  //     const preset = presets;
+  //     if (preset) {
+  //       setData((prev) => ({
+  //         ...prev,
+  //         metaFavicon: prev.metaFavicon || preset.metaFavicon,
+  //         metaImage: prev.metaImage || preset.metaImage,
+  //         metaTitle: prev.metaTitle || preset.metaTitle,
+  //         metaDescription: prev.metaDescription || preset.metaDescription,
+  //         enableCustomMetatag: !editLink && true,
+  //       }));
+  //     }
+  //   }
+  // }, [
+  //   presets,
+  //   setData,
+  //   editLink,
+  //   metaFavicon,
+  //   enableCustomMetatag,
+  //   metaTitle,
+  //   metaDescription,
+  //   metaImage,
+  // ]);
 
   const handleCustomMetatag = async () => {
     const updatedCustomMetatag = !enabled;

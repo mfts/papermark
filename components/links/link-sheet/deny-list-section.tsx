@@ -1,16 +1,16 @@
 import { useEffect, useState } from "react";
 
+import { LinkPreset } from "@prisma/client";
 import { motion } from "motion/react";
-
-import { Textarea } from "@/components/ui/textarea";
 
 import { FADE_IN_ANIMATION_SETTINGS } from "@/lib/constants";
 import { sanitizeAllowDenyList } from "@/lib/utils";
 
+import { Textarea } from "@/components/ui/textarea";
+
 import { DEFAULT_LINK_TYPE } from ".";
 import LinkItem from "./link-item";
 import { LinkUpgradeOptions } from "./link-options";
-import { LinkPreset } from "@prisma/client";
 
 export default function DenyListSection({
   data,
@@ -21,14 +21,13 @@ export default function DenyListSection({
 }: {
   data: DEFAULT_LINK_TYPE;
   setData: React.Dispatch<React.SetStateAction<DEFAULT_LINK_TYPE>>;
-
   isAllowed: boolean;
   handleUpgradeStateChange: ({
     state,
     trigger,
     plan,
   }: LinkUpgradeOptions) => void;
-    presets: LinkPreset | null;
+  presets: LinkPreset | null;
 }) {
   const { emailProtected, denyList } = data;
   // Initialize enabled state based on whether denyList is not null and not empty
@@ -40,13 +39,6 @@ export default function DenyListSection({
   );
 
   useEffect(() => {
-    if (isAllowed && presets?.enableDenyList) {
-      setEnabled(true);
-      setDenyListInput(presets.denyList?.join("\n") || "");
-    }
-  }, [presets, isAllowed]);
-
-  useEffect(() => {
     // Update the denyList in the data state when their inputs change
     const newDenyList = sanitizeAllowDenyList(denyListInput);
     setEnabled((prevEnabled) => prevEnabled && emailProtected);
@@ -55,6 +47,13 @@ export default function DenyListSection({
       denyList: emailProtected && enabled ? newDenyList : [],
     }));
   }, [denyListInput, enabled, emailProtected, setData]);
+
+  useEffect(() => {
+    if (isAllowed && presets?.denyList && presets.denyList.length > 0) {
+      setEnabled(true);
+      setDenyListInput(presets.denyList?.join("\n") || "");
+    }
+  }, [presets, isAllowed]);
 
   const handleEnableDenyList = () => {
     const updatedEnabled = !enabled;
