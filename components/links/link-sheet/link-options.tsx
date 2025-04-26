@@ -2,6 +2,10 @@ import { useState } from "react";
 
 import { PlanEnum } from "@/ee/stripe/constants";
 import { LinkAudienceType, LinkType } from "@prisma/client";
+import { LinkPreset } from "@prisma/client";
+
+import { usePlan } from "@/lib/swr/use-billing";
+import useLimits from "@/lib/swr/use-limits";
 
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { DEFAULT_LINK_TYPE } from "@/components/links/link-sheet";
@@ -17,31 +21,34 @@ import OGSection from "@/components/links/link-sheet/og-section";
 import PasswordSection from "@/components/links/link-sheet/password-section";
 import { ProBannerSection } from "@/components/links/link-sheet/pro-banner-section";
 
-import { usePlan } from "@/lib/swr/use-billing";
-import useLimits from "@/lib/swr/use-limits";
-
 import AgreementSection from "./agreement-section";
+import ConversationSection from "./conversation-section";
 import CustomFieldsSection from "./custom-fields-section";
 import QuestionSection from "./question-section";
 import ScreenshotProtectionSection from "./screenshot-protection-section";
+import UploadSection from "./upload-section";
 import WatermarkSection from "./watermark-section";
 
 export type LinkUpgradeOptions = {
   state: boolean;
   trigger: string;
-  plan?: "Pro" | "Business" | "Data Rooms";
+  plan?: "Pro" | "Business" | "Data Rooms" | "Data Rooms Plus";
 };
 
 export const LinkOptions = ({
   data,
   setData,
+  targetId,
   linkType,
   editLink,
+  currentPreset = null,
 }: {
   data: DEFAULT_LINK_TYPE;
   setData: React.Dispatch<React.SetStateAction<DEFAULT_LINK_TYPE>>;
+  targetId?: string;
   linkType: LinkType;
   editLink?: boolean;
+  currentPreset?: LinkPreset | null;
 }) => {
   const {
     isStarter,
@@ -52,7 +59,6 @@ export const LinkOptions = ({
     isTrial,
   } = usePlan();
   const { limits } = useLimits();
-
   const allowAdvancedLinkControls = limits
     ? limits?.advancedLinkControlsOnPro
     : false;
@@ -80,6 +86,16 @@ export const LinkOptions = ({
       <AllowNotificationSection {...{ data, setData }} />
       <AllowDownloadSection {...{ data, setData }} />
       <ExpirationSection {...{ data, setData }} />
+      {limits?.dataroomUpload &&
+      linkType === LinkType.DATAROOM_LINK &&
+      targetId ? (
+        <UploadSection
+          {...{ data, setData }}
+          isAllowed={isTrial || isDatarooms || isDataroomsPlus}
+          handleUpgradeStateChange={handleUpgradeStateChange}
+          targetId={targetId}
+        />
+      ) : null}
       <OGSection
         {...{ data, setData }}
         isAllowed={
@@ -91,6 +107,7 @@ export const LinkOptions = ({
         }
         handleUpgradeStateChange={handleUpgradeStateChange}
         editLink={editLink ?? false}
+        presets={currentPreset}
       />
 
       <EmailAuthenticationSection
@@ -115,6 +132,7 @@ export const LinkOptions = ({
             isDataroomsPlus
           }
           handleUpgradeStateChange={handleUpgradeStateChange}
+          presets={currentPreset}
         />
       ) : null}
       {data.audienceType === LinkAudienceType.GENERAL ? (
@@ -128,6 +146,7 @@ export const LinkOptions = ({
             isDataroomsPlus
           }
           handleUpgradeStateChange={handleUpgradeStateChange}
+          presets={currentPreset}
         />
       ) : null}
       <PasswordSection {...{ data, setData }} />
@@ -148,6 +167,7 @@ export const LinkOptions = ({
           isTrial || isDatarooms || isDataroomsPlus || allowWatermarkOnBusiness
         }
         handleUpgradeStateChange={handleUpgradeStateChange}
+        presets={currentPreset}
       />
       <AgreementSection
         {...{ data, setData }}
@@ -156,6 +176,17 @@ export const LinkOptions = ({
         }
         handleUpgradeStateChange={handleUpgradeStateChange}
       />
+      {linkType === LinkType.DATAROOM_LINK &&
+      limits?.conversationsInDataroom ? (
+        <ConversationSection
+          {...{ data, setData }}
+          isAllowed={
+            isDataroomsPlus ||
+            ((isBusiness || isDatarooms) && limits?.conversationsInDataroom)
+          }
+          handleUpgradeStateChange={handleUpgradeStateChange}
+        />
+      ) : null}
       {linkType === LinkType.DOCUMENT_LINK ? (
         <>
           <FeedbackSection {...{ data, setData }} />

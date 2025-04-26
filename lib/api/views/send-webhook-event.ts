@@ -129,13 +129,18 @@ export async function sendLinkViewWebhook({
       documentId
         ? prisma.document.findUnique({
             where: { id: documentId, teamId },
-            select: { id: true, name: true, contentType: true },
+            select: {
+              id: true,
+              name: true,
+              contentType: true,
+              createdAt: true,
+            },
           })
         : null,
       dataroomId
         ? prisma.dataroom.findUnique({
             where: { id: dataroomId, teamId },
-            select: { id: true, name: true },
+            select: { id: true, name: true, createdAt: true },
           })
         : null,
     ]);
@@ -150,6 +155,7 @@ export async function sendLinkViewWebhook({
           name: document.name,
           contentType: document.contentType,
           teamId: teamId,
+          createdAt: document.createdAt.toISOString(),
         },
       }),
       ...(dataroom && {
@@ -157,6 +163,7 @@ export async function sendLinkViewWebhook({
           id: dataroom.id,
           name: dataroom.name,
           teamId: teamId,
+          createdAt: dataroom.createdAt.toISOString(),
         },
       }),
     };

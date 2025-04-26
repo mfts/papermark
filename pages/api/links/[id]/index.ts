@@ -101,13 +101,16 @@ export default async function handle(
       let linkData: any;
 
       if (linkType === "DOCUMENT_LINK") {
+        console.time("get-document-link-data");
         const data = await fetchDocumentLinkData({
           linkId: id,
           teamId: link.teamId!,
         });
         linkData = data.linkData;
         brand = data.brand;
+        console.timeEnd("get-document-link-data");
       } else if (linkType === "DATAROOM_LINK") {
+        console.time("get-dataroom-link-data");
         const data = await fetchDataroomLinkData({
           linkId: id,
           teamId: link.teamId!,
@@ -118,6 +121,7 @@ export default async function handle(
         });
         linkData = data.linkData;
         brand = data.brand;
+        console.timeEnd("get-dataroom-link-data");
       }
 
       const teamPlan = link.team?.plan || "free";
@@ -134,6 +138,7 @@ export default async function handle(
 
       return res.status(200).json({ linkType, link: returnLink, brand });
     } catch (error) {
+      console.error("Error fetching link data:", error);
       return res.status(500).json({
         message: "Internal Server Error",
         error: (error as Error).message,
@@ -319,6 +324,10 @@ export default async function handle(
           watermarkConfig: linkData.watermarkConfig || null,
           groupId: linkData.groupId || null,
           audienceType: linkData.audienceType || LinkAudienceType.GENERAL,
+          enableConversation: linkData.enableConversation || false,
+          enableUpload: linkData.enableUpload || false,
+          isFileRequestOnly: linkData.isFileRequestOnly || false,
+          uploadFolderId: linkData.uploadFolderId || null,
         },
         include: {
           views: {

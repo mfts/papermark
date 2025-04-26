@@ -1,10 +1,12 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
+import { Link } from "@prisma/client";
 import { getServerSession } from "next-auth/next";
 
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
+import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
+import { CustomUser, LinkWithViews } from "@/lib/types";
 import { decryptEncrpytedPassword, log } from "@/lib/utils";
 
 import { authOptions } from "../../../../auth/[...nextauth]";
@@ -44,10 +46,11 @@ export default async function handle(
         return res.status(401).end("Unauthorized");
       }
 
-      let links = await prisma.link.findMany({
+      const links = await prisma.link.findMany({
         where: {
           dataroomId,
           linkType: "DATAROOM_LINK",
+          teamId: teamId,
         },
         orderBy: {
           createdAt: "desc",
@@ -68,13 +71,25 @@ export default async function handle(
         },
       });
 
+      let extendedLinks: LinkWithViews[] = links as LinkWithViews[];
       // Decrypt the password for each link
-      if (links && links.length > 0) {
-        links = await Promise.all(
-          links.map(async (link) => {
+      if (extendedLinks && extendedLinks.length > 0) {
+        extendedLinks = await Promise.all(
+          extendedLinks.map(async (link) => {
             // Decrypt the password if it exists
             if (link.password !== null) {
               link.password = decryptEncrpytedPassword(link.password);
+            }
+            if (link.enableUpload && link.uploadFolderId !== null) {
+              const folder = await prisma.dataroomFolder.findUnique({
+                where: {
+                  id: link.uploadFolderId,
+                },
+                select: {
+                  name: true,
+                },
+              });
+              link.uploadFolderName = folder?.name;
             }
             const tags = await prisma.tag.findMany({
               where: {
@@ -100,7 +115,8 @@ export default async function handle(
         );
       }
 
-      return res.status(200).json(links);
+      // console.log("links", links);
+      return res.status(200).json(extendedLinks);
     } catch (error) {
       log({
         message: `Failed to get links for dataroom: _${dataroomId}_. \n\n ${error} \n\n*Metadata*: \`{teamId: ${teamId}, userId: ${userId}}\``,

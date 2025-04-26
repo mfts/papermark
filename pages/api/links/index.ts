@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import { LinkAudienceType } from "@prisma/client";
+import { waitUntil } from "@vercel/functions";
 import { getServerSession } from "next-auth/next";
 
 import { errorhandler } from "@/lib/errorHandler";
@@ -10,8 +11,14 @@ import {
   decryptEncrpytedPassword,
   generateEncrpytedPassword,
 } from "@/lib/utils";
+import { sendLinkCreatedWebhook } from "@/lib/webhook/triggers/link-created";
 
 import { authOptions } from "../auth/[...nextauth]";
+
+export const config = {
+  // in order to enable `waitUntil` function
+  supportsResponseStreaming: true,
+};
 
 export interface DomainObject {
   id: string;
@@ -169,6 +176,11 @@ export default async function handler(
               enableWatermark: linkData.enableWatermark,
               watermarkConfig: linkData.watermarkConfig,
             }),
+            ...(linkData.enableUpload && {
+              enableUpload: linkData.enableUpload,
+              isFileRequestOnly: linkData.isFileRequestOnly,
+              uploadFolderId: linkData.uploadFolderId,
+            }),
             showBanner: linkData.showBanner,
             ...(linkData.customFields && {
               customFields: {
@@ -187,6 +199,9 @@ export default async function handler(
                 },
               },
             }),
+          },
+          include: {
+            customFields: true,
           },
         });
 
@@ -221,6 +236,17 @@ export default async function handler(
       if (!linkWithView) {
         return res.status(404).json({ error: "Link not found" });
       }
+
+      waitUntil(
+        sendLinkCreatedWebhook({
+          teamId,
+          data: {
+            link_id: link.id,
+            document_id: link.documentId,
+            dataroom_id: link.dataroomId,
+          },
+        }),
+      );
 
       // Decrypt the password for the new link
       if (linkWithView.password !== null) {

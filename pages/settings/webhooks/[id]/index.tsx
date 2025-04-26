@@ -9,6 +9,8 @@ import { ArrowLeft, Check, Copy, WebhookIcon } from "lucide-react";
 import { toast } from "sonner";
 import useSWR from "swr";
 
+import { cn, fetcher } from "@/lib/utils";
+
 import AppLayout from "@/components/layouts/app";
 import { SettingsHeader } from "@/components/settings/settings-header";
 import { Button } from "@/components/ui/button";
@@ -18,8 +20,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { WebhookEventList } from "@/components/webhooks/webhook-events";
-
-import { cn, fetcher } from "@/lib/utils";
 
 import { documentEvents, linkEvents, teamEvents } from "../new";
 
@@ -200,7 +200,10 @@ export default function WebhookDetail() {
                                         ),
                                   }));
                                 }}
-                                disabled={true}
+                                disabled={
+                                  !isEditing ||
+                                  event.value !== "document.created"
+                                }
                               />
                               <Label htmlFor={event.id}>{event.label}</Label>
                             </div>
@@ -231,7 +234,9 @@ export default function WebhookDetail() {
                                         ),
                                   }));
                                 }}
-                                disabled={true}
+                                disabled={
+                                  !isEditing || event.value !== "link.created"
+                                }
                               />
                               <Label htmlFor={event.id}>{event.label}</Label>
                             </div>

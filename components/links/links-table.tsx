@@ -19,6 +19,11 @@ import {
 import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
 
+import { usePlan } from "@/lib/swr/use-billing";
+import useLimits from "@/lib/swr/use-limits";
+import { LinkWithViews, WatermarkConfig } from "@/lib/types";
+import { cn, copyToClipboard, fetcher, nFormatter, timeAgo } from "@/lib/utils";
+
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { Button } from "@/components/ui/button";
 import {
@@ -42,11 +47,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-
-import { usePlan } from "@/lib/swr/use-billing";
-import useLimits from "@/lib/swr/use-limits";
-import { LinkWithViews, WatermarkConfig } from "@/lib/types";
-import { cn, copyToClipboard, fetcher, nFormatter, timeAgo } from "@/lib/utils";
 
 import FileProcessStatusBar from "../documents/file-process-status-bar";
 import BarChart from "../shared/icons/bar-chart";
@@ -186,6 +186,11 @@ export default function LinksTable({
       groupId: link.groupId,
       customFields: link.customFields || [],
       tags: link.tags.map((tag) => tag.id) || [],
+      enableConversation: link.enableConversation ?? false,
+      enableUpload: link.enableUpload ?? false,
+      isFileRequestOnly: link.isFileRequestOnly ?? false,
+      uploadFolderId: link.uploadFolderId ?? null,
+      uploadFolderName: link.uploadFolderName ?? "Home",
     });
     //wait for dropdown to close before opening the link sheet
     setTimeout(() => {

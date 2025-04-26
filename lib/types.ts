@@ -29,8 +29,14 @@ export interface DocumentWithLinksAndLinkCountAndViewCount extends Document {
     links: number;
     views: number;
     versions: number;
+    datarooms: number;
   };
   links: Link[];
+  folder: {
+    name: string;
+    path: string;
+  };
+  folderList: string[];
 }
 
 export interface DocumentWithVersion extends Document {
@@ -39,6 +45,12 @@ export interface DocumentWithVersion extends Document {
     name: string;
     path: string;
   };
+  datarooms: {
+    dataroom: {
+      id: string;
+      name: string;
+    };
+  }[];
   hasPageLinks: boolean;
 }
 
@@ -50,6 +62,7 @@ export interface LinkWithViews extends Link {
   feedback: { id: true; data: { question: string; type: string } } | null;
   customFields: CustomField[];
   tags: TagProps[];
+  uploadFolderName: string | undefined;
 }
 
 export interface LinkWithDocument extends Link {
@@ -270,6 +283,11 @@ export type AnalyticsEvents =
       event: "Stripe Billing Portal Clicked";
       teamId: string;
       action?: string;
+    }
+  | {
+      event: "User Sign In Attempted";
+      email: string | undefined;
+      userId: string;
     };
 
 export interface Team {
@@ -277,6 +295,7 @@ export interface Team {
   name?: string;
   logo?: React.ElementType;
   plan?: string;
+  createdAt?: Date;
 }
 
 export interface TeamDetail {

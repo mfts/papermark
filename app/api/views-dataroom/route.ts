@@ -117,6 +117,7 @@ export async function POST(request: NextRequest) {
         groupId: true,
         audienceType: true,
         allowDownload: true,
+        enableConversation: true,
         teamId: true,
         team: {
           select: {
@@ -129,6 +130,7 @@ export async function POST(request: NextRequest) {
             label: true,
           },
         },
+        enableUpload: true,
       },
     });
 
@@ -494,7 +496,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    let viewer: { id: string; email: string } | null = null;
+    let viewer: { id: string; email: string; verified: boolean } | null = null;
     if (!isPreview) {
       if (!dataroomSession) {
         if (email) {
@@ -507,7 +509,7 @@ export async function POST(request: NextRequest) {
                 email: email,
               },
             },
-            select: { id: true, email: true },
+            select: { id: true, email: true, verified: true },
           });
           console.timeEnd("find-viewer");
 
@@ -519,7 +521,7 @@ export async function POST(request: NextRequest) {
                 verified: isEmailVerified,
                 teamId: link.teamId!,
               },
-              select: { id: true, email: true },
+              select: { id: true, email: true, verified: true },
             });
             console.timeEnd("create-viewer");
           }
@@ -528,9 +530,16 @@ export async function POST(request: NextRequest) {
         if (dataroomSession.viewerId) {
           viewer = await prisma.viewer.findUnique({
             where: { id: dataroomSession.viewerId, teamId: link.teamId! },
-            select: { id: true, email: true },
+            select: { id: true, email: true, verified: true },
           });
         }
+      }
+
+      if (viewer && !viewer.verified && isEmailVerified) {
+        await prisma.viewer.update({
+          where: { id: viewer.id },
+          data: { verified: isEmailVerified },
+        });
       }
     }
 
@@ -613,6 +622,9 @@ export async function POST(request: NextRequest) {
           pages: undefined,
           notionData: undefined,
           verificationToken: hashedVerificationToken,
+          viewerId: viewer?.id,
+          conversationsEnabled: link.enableConversation,
+          enableVisitorUpload: link.enableUpload,
         };
 
         const response = NextResponse.json(returnObject, { status: 200 });
@@ -896,6 +908,8 @@ export async function POST(request: NextRequest) {
             ? useAdvancedExcelViewer
             : undefined,
         canDownload: canDownload,
+        viewerId: viewer?.id,
+        conversationsEnabled: link.enableConversation,
       };
 
       const response = NextResponse.json(returnObject, { status: 200 });

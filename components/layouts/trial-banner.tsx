@@ -1,15 +1,16 @@
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 
+import { useTeam } from "@/context/team-context";
 import { PlanEnum } from "@/ee/stripe/constants";
 import Cookies from "js-cookie";
 import { usePlausible } from "next-plausible";
 
-import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
-import X from "@/components/shared/icons/x";
-
 import { usePlan } from "@/lib/swr/use-billing";
 import useDatarooms from "@/lib/swr/use-datarooms";
 import { daysLeft } from "@/lib/utils";
+
+import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
+import X from "@/components/shared/icons/x";
 
 export default function TrialBanner() {
   const { trial } = usePlan();
@@ -36,6 +37,7 @@ function TrialBannerComponent({
 }: {
   setShowTrialBanner: Dispatch<SetStateAction<boolean | null>>;
 }) {
+  const teamInfo = useTeam();
   const plausible = usePlausible();
 
   const handleHideBanner = () => {
@@ -62,13 +64,22 @@ function TrialBannerComponent({
         <div className="flex flex-col space-y-2">
           <div className="text-sm font-bold">
             Data Room trial:{" "}
-            {datarooms && daysLeft(new Date(datarooms[0].createdAt), 7)} days
-            left
+            {datarooms &&
+              daysLeft(
+                new Date(
+                  datarooms[0].createdAt ??
+                    teamInfo?.currentTeam?.createdAt ??
+                    new Date(),
+                ),
+                7,
+              )}{" "}
+            days left
           </div>
 
           <div className="text-sm">
-            You are on a data room trial, you have access to advanced link
-            permissions and data room.{" "}
+            You are on the <span className="font-bold">Data Rooms</span> plan
+            trial, you have access to advanced access controls, group
+            permissions, and data room.{" "}
             <UpgradePlanModal
               clickedPlan={PlanEnum.DataRooms}
               trigger={"trial_navbar"}
@@ -80,7 +91,7 @@ function TrialBannerComponent({
                 Upgrade to keep access
               </span>
             </UpgradePlanModal>
-            , get more data rooms and custom domains ✨
+            , unlock unlimited data rooms and custom domains ✨
           </div>
         </div>
       </nav>

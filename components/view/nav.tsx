@@ -1,17 +1,20 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 import { Brand, DataroomBrand } from "@prisma/client";
 import {
   ArrowUpRight,
   Download,
+  MessageCircle,
   Slash,
   ZoomInIcon,
   ZoomOutIcon,
 } from "lucide-react";
 import { toast } from "sonner";
+
+import { determineTextColor } from "@/lib/utils/determine-text-color";
 
 import {
   DropdownMenu,
@@ -29,8 +32,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-import { determineTextColor } from "@/lib/utils/determine-text-color";
-
 import PapermarkSparkle from "../shared/icons/papermark-sparkle";
 import {
   Breadcrumb,
@@ -41,51 +42,64 @@ import {
   BreadcrumbSeparator,
 } from "../ui/breadcrumb";
 import { Button } from "../ui/button";
-import { TDocumentData } from "./dataroom/dataroom-view";
+import { ConversationSidebar } from "./conversations/sidebar";
 import ReportForm from "./report-form";
 
+export type TNavData = {
+  linkId: string;
+  documentId: string;
+  allowDownload?: boolean;
+  brand?: Partial<Brand> | Partial<DataroomBrand> | null;
+  isDataroom?: boolean;
+  viewId?: string;
+  viewerId?: string;
+  isMobile?: boolean;
+  isPreview?: boolean;
+
+  dataroomId?: string;
+  conversationsEnabled?: boolean;
+  assistantEnabled?: boolean;
+};
+
 export default function Nav({
+  navData,
+  type,
   pageNumber,
   numPages,
-  allowDownload,
-  assistantEnabled,
-  brand,
-  viewId,
-  linkId,
-  type,
   embeddedLinks,
-  documentName,
-  isDataroom,
-  setDocumentData,
-  isMobile,
-  isPreview,
   hasWatermark,
-  documentId,
   handleZoomIn,
   handleZoomOut,
 }: {
+  navData: TNavData;
+  type?: "pdf" | "notion" | "sheet";
   pageNumber?: number;
   numPages?: number;
-  allowDownload?: boolean;
-  assistantEnabled?: boolean;
-  brand?: Partial<Brand> | Partial<DataroomBrand> | null;
   embeddedLinks?: string[];
-  viewId?: string;
-  linkId?: string;
-  type?: "pdf" | "notion" | "sheet";
-  documentName?: string;
-  isDataroom?: boolean;
-  setDocumentData?: React.Dispatch<React.SetStateAction<TDocumentData | null>>;
-  isMobile?: boolean;
-  isPreview?: boolean;
   hasWatermark?: boolean;
-  documentId?: string;
   handleZoomIn?: () => void;
   handleZoomOut?: () => void;
 }) {
   const router = useRouter();
   const asPath = router.asPath;
   const { previewToken, preview } = router.query;
+
+  const {
+    linkId,
+    allowDownload,
+    brand,
+    isDataroom,
+    viewId,
+    viewerId,
+    isMobile,
+    isPreview,
+    documentId,
+    dataroomId,
+    conversationsEnabled,
+    assistantEnabled,
+  } = navData;
+
+  const [showConversations, setShowConversations] = useState(false);
 
   // Extract the dataroom path from the URL
   // This regex captures everything before "/d/" in the path
@@ -107,32 +121,69 @@ export default function Nav({
         body: JSON.stringify({ linkId, viewId }),
       });
 
+      if (!response.ok) {
+        toast.error("Error downloading file");
+        return;
+      }
+
       if (hasWatermark) {
         const pdfBlob = await response.blob();
-        const blobUrl = URL.createObjectURL(pdfBlob);
+        const blobUrl = window.URL.createObjectURL(pdfBlob);
 
-        const a = document.createElement("a");
-        a.href = blobUrl;
-        a.download = "watermarked_document.pdf";
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
+        const link = document.createElement("a");
+        link.href = blobUrl;
+        link.rel = "noopener noreferrer";
+        link.download = "watermarked_document.pdf";
+        document.body.appendChild(link);
+        link.click();
 
-        // Clean up the Blob URL
-        URL.revokeObjectURL(blobUrl);
+        setTimeout(() => {
+          window.URL.revokeObjectURL(blobUrl);
+          document.body.removeChild(link);
+        }, 100);
       } else {
-        if (!response.ok) {
-          toast.error("Error downloading file");
-          return;
-        }
         const { downloadUrl } = await response.json();
 
-        window.open(downloadUrl, "_blank");
+        const link = document.createElement("a");
+        link.href = downloadUrl;
+        link.rel = "noopener noreferrer";
+        document.body.appendChild(link);
+        link.click();
+
+        setTimeout(() => {
+          document.body.removeChild(link);
+        }, 100);
       }
     } catch (error) {
       console.error("Error downloading file:", error);
     }
   };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Toggle conversations with 'c' key
+      if (
+        e.key === "c" &&
+        !e.metaKey &&
+        !e.ctrlKey &&
+        !e.altKey &&
+        isDataroom &&
+        conversationsEnabled &&
+        !showConversations // if conversations are already open, don't toggle them
+      ) {
+        e.preventDefault();
+        setShowConversations((prev) => !prev);
+      }
+
+      if (e.key === "Escape" && showConversations) {
+        e.preventDefault();
+        setShowConversations(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isDataroom, conversationsEnabled, showConversations]);
 
   return (
     <nav
@@ -156,7 +207,7 @@ export default function Nav({
                 />
               ) : (
                 <Link
-                  href={`https://www.papermark.com?utm_campaign=navbar&utm_medium=navbar&utm_source=papermark-${linkId}`}
+                  href={`https://www.papermark.com/home?utm_campaign=navbar&utm_medium=navbar&utm_source=papermark-${linkId}`}
                   target="_blank"
                   className="text-2xl font-bold tracking-tighter text-white"
                 >
@@ -164,7 +215,6 @@ export default function Nav({
                 </Link>
               )}
             </div>
-            <div id="view-breadcrump-portal"></div>
             {isDataroom ? (
               <Breadcrumb>
                 <BreadcrumbList>
@@ -179,24 +229,44 @@ export default function Nav({
                       Home
                     </BreadcrumbLink>
                   </BreadcrumbItem>
-                  {/* <BreadcrumbSeparator>
-                    <Slash />
-                  </BreadcrumbSeparator>
-                  <BreadcrumbItem>
-                    <BreadcrumbPage
-                      className="font-medium"
-                      style={{
-                        color: determineTextColor(brand?.brandColor),
-                      }}
-                    >
-                      {documentName ?? "Document"}
-                    </BreadcrumbPage>
-                  </BreadcrumbItem> */}
+                  {type === "notion" ? (
+                    <>
+                      <BreadcrumbSeparator>
+                        <Slash />
+                      </BreadcrumbSeparator>
+                      <div id="view-breadcrump-portal"></div>
+                    </>
+                  ) : null}
+                </BreadcrumbList>
+              </Breadcrumb>
+            ) : type === "notion" ? (
+              <Breadcrumb>
+                <BreadcrumbList>
+                  <div id="view-breadcrump-portal"></div>
                 </BreadcrumbList>
               </Breadcrumb>
             ) : null}
           </div>
           <div className="absolute inset-y-0 right-0 flex items-center space-x-2 pr-2 sm:static sm:inset-auto sm:ml-6 sm:space-x-4 sm:pr-0">
+            {/* Conversation toggle button for dataroom documents */}
+            {isDataroom && conversationsEnabled && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      onClick={() => setShowConversations(!showConversations)}
+                      className="size-8 bg-gray-900 text-white hover:bg-gray-900/80 sm:size-10"
+                      size="icon"
+                    >
+                      <MessageCircle className="h-5 w-5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    <p>Toggle conversations</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
             {embeddedLinks && embeddedLinks.length > 0 ? (
               <DropdownMenu>
                 <DropdownMenuTrigger>
@@ -321,6 +391,18 @@ export default function Nav({
           </div>
         </div>
       </div>
+      {isDataroom && conversationsEnabled && showConversations ? (
+        <ConversationSidebar
+          dataroomId={dataroomId}
+          documentId={documentId}
+          viewId={viewId || ""}
+          viewerId={viewerId}
+          linkId={linkId!}
+          isEnabled={true}
+          isOpen={showConversations}
+          onOpenChange={setShowConversations}
+        />
+      ) : null}
     </nav>
   );
 }
