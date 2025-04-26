@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
+import { Prisma } from "@prisma/client";
 import { getServerSession } from "next-auth";
 import { ZodError } from "zod";
 
@@ -27,7 +28,7 @@ export default async function handle(
     return res.status(401).end("Unauthorized");
   }
 
-  const { teamId } = req.query as { teamId: string };
+  const { teamId, id: presetId } = req.query as { teamId: string; id: string };
 
   try {
     const team = await prisma.team.findUnique({
@@ -53,41 +54,60 @@ export default async function handle(
   }
 
   if (req.method === "GET") {
-    // GET /api/teams/:teamId/presets
+    // GET /api/teams/:teamId/presets/:id
     try {
-      const presets = await prisma.linkPreset.findMany({
+      const preset = await prisma.linkPreset.findFirst({
         where: {
+          id: presetId,
           teamId: teamId,
-        },
-        orderBy: {
-          createdAt: "desc",
         },
       });
 
-      return res.status(200).json(presets);
+      if (!preset) {
+        return res.status(404).json({ message: "Preset not found" });
+      }
+
+      return res.status(200).json(preset);
     } catch (error) {
       errorhandler(error, res);
     }
-  } else if (req.method === "POST") {
-    // POST /api/teams/:teamId/presets
+  } else if (req.method === "PUT") {
+    // PUT /api/teams/:teamId/presets/:id
     try {
       // Validate request body with Zod schema
       const validatedData = presetDataSchema.parse(req.body);
 
-      // Create a new preset
-      const preset = await prisma.linkPreset.create({
-        data: {
-          ...validatedData,
-          teamId,
-          pId: newId("preset"),
-          watermarkConfig: validatedData.watermarkConfig
-            ? JSON.stringify(validatedData.watermarkConfig)
-            : undefined,
+      // Check if preset exists and belongs to the team
+      const existingPreset = await prisma.linkPreset.findUnique({
+        where: {
+          id: presetId,
+          teamId: teamId,
         },
       });
-      return res
-        .status(201)
-        .json({ message: "Preset created successfully", preset });
+
+      if (!existingPreset) {
+        return res.status(404).json({ message: "Preset not found" });
+      }
+
+      // Update the preset
+      const updatedPreset = await prisma.linkPreset.update({
+        where: {
+          id: presetId,
+        },
+        data: {
+          ...validatedData,
+          ...(!existingPreset.pId && { pId: newId("preset") }),
+          // Convert objects to JSON strings for storage
+          watermarkConfig: validatedData.watermarkConfig
+            ? JSON.stringify(validatedData.watermarkConfig)
+            : Prisma.JsonNull,
+        },
+      });
+
+      return res.status(200).json({
+        message: "Preset updated successfully",
+        preset: updatedPreset,
+      });
     } catch (error) {
       if (error instanceof ZodError) {
         return res.status(400).json({
@@ -97,9 +117,34 @@ export default async function handle(
       }
       errorhandler(error, res);
     }
+  } else if (req.method === "DELETE") {
+    // DELETE /api/teams/:teamId/presets/:id
+    try {
+      // Check if preset exists and belongs to the team
+      const existingPreset = await prisma.linkPreset.findFirst({
+        where: {
+          id: presetId,
+          teamId: teamId,
+        },
+      });
+
+      if (!existingPreset) {
+        return res.status(404).json({ message: "Preset not found" });
+      }
+
+      await prisma.linkPreset.delete({
+        where: {
+          id: presetId,
+        },
+      });
+
+      return res.status(204).end();
+    } catch (error) {
+      errorhandler(error, res);
+    }
   } else {
-    // We only allow GET and POST requests
-    res.setHeader("Allow", ["GET", "POST"]);
+    // We only allow GET, PUT, and DELETE requests
+    res.setHeader("Allow", ["GET", "PUT", "DELETE"]);
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 }

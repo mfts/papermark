@@ -2,6 +2,7 @@ import { useState } from "react";
 
 import { PlanEnum } from "@/ee/stripe/constants";
 import { LinkAudienceType, LinkType } from "@prisma/client";
+import { LinkPreset } from "@prisma/client";
 
 import { usePlan } from "@/lib/swr/use-billing";
 import useLimits from "@/lib/swr/use-limits";
@@ -40,12 +41,14 @@ export const LinkOptions = ({
   targetId,
   linkType,
   editLink,
+  currentPreset = null,
 }: {
   data: DEFAULT_LINK_TYPE;
   setData: React.Dispatch<React.SetStateAction<DEFAULT_LINK_TYPE>>;
   targetId?: string;
   linkType: LinkType;
   editLink?: boolean;
+  currentPreset?: LinkPreset | null;
 }) => {
   const {
     isStarter,
@@ -56,7 +59,6 @@ export const LinkOptions = ({
     isTrial,
   } = usePlan();
   const { limits } = useLimits();
-
   const allowAdvancedLinkControls = limits
     ? limits?.advancedLinkControlsOnPro
     : false;
@@ -105,6 +107,7 @@ export const LinkOptions = ({
         }
         handleUpgradeStateChange={handleUpgradeStateChange}
         editLink={editLink ?? false}
+        presets={currentPreset}
       />
 
       <EmailAuthenticationSection
@@ -129,6 +132,7 @@ export const LinkOptions = ({
             isDataroomsPlus
           }
           handleUpgradeStateChange={handleUpgradeStateChange}
+          presets={currentPreset}
         />
       ) : null}
       {data.audienceType === LinkAudienceType.GENERAL ? (
@@ -142,6 +146,7 @@ export const LinkOptions = ({
             isDataroomsPlus
           }
           handleUpgradeStateChange={handleUpgradeStateChange}
+          presets={currentPreset}
         />
       ) : null}
       <PasswordSection {...{ data, setData }} />
@@ -162,6 +167,7 @@ export const LinkOptions = ({
           isTrial || isDatarooms || isDataroomsPlus || allowWatermarkOnBusiness
         }
         handleUpgradeStateChange={handleUpgradeStateChange}
+        presets={currentPreset}
       />
       <AgreementSection
         {...{ data, setData }}

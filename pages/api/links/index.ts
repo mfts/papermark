@@ -195,6 +195,9 @@ export default async function handler(
             uploadFolderId: linkData.uploadFolderId,
           }),
         },
+        include: {
+          customFields: true,
+        },
       });
 
       const linkWithView = {
