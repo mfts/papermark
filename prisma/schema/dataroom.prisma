@@ -14,7 +14,7 @@ model Dataroom {
   brand        DataroomBrand?
 
   // conversation
-  conversationsEnabled Boolean      @default(false)
+  conversationsEnabled Boolean        @default(false)
   conversations        Conversation[]
 
   // upload external documents
@@ -36,7 +36,7 @@ model DataroomDocument {
   folder     DataroomFolder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
   orderIndex Int?
 
-  conversations     Conversation[]
+  conversations Conversation[]
 
   uploadedDocuments DocumentUpload[]
 
@@ -95,8 +95,8 @@ model ViewerGroup {
   teamId     String
   team       Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
 
-  views View[]
-  conversations  Conversation[]
+  views         View[]
+  conversations Conversation[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

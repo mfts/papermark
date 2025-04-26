@@ -8,7 +8,7 @@ export function useAgreements() {
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
 
-  const { data: agreements, error } = useSWR<Agreement[]>(
+  const { data: agreements, error } = useSWR<(Agreement & { _count: { links: number } })[]>(
     teamId && `/api/teams/${teamId}/agreements`,
     fetcher,
     {
@@ -17,7 +17,7 @@ export function useAgreements() {
   );
 
   return {
-    agreements,
+    agreements: agreements || [],
     loading: !agreements && !error,
     error,
   };
