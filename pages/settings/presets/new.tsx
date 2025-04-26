@@ -259,7 +259,7 @@ export default function NewPreset() {
                   <h2 className="text-lg font-medium">Preview</h2>
                 </div> */}
                 <div className="p-4">
-                  <Preview data={data} setData={setData} />
+                  <Preview data={data as any} setData={setData as any} />
                 </div>
               </div>
             </div>
