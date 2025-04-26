@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
 
-import { Dispatch, SetStateAction, use, useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { PlanEnum } from "@/ee/stripe/constants";
@@ -653,38 +653,6 @@ export default function LinkSheet({
                           />
                         </div>
 
-                        {/* Preset Selector for Group links - only show when creating a new link */}
-                        {!currentLink && presets && presets.length > 0 && (
-                          <div className="space-y-2">
-                            <div className="flex items-center justify-between">
-                              <Label htmlFor="preset">Link Preset</Label>
-                              <Button
-                                variant="link"
-                                size="sm"
-                                className="text-xs"
-                                onClick={() => router.push("/settings/presets")}
-                              >
-                                Manage Presets
-                              </Button>
-                            </div>
-                            <Select onValueChange={applyPreset}>
-                              <SelectTrigger className="w-full">
-                                <SelectValue placeholder="Select a preset" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {presets.map((preset) => (
-                                  <SelectItem key={preset.id} value={preset.id}>
-                                    {preset.name}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <p className="text-xs text-muted-foreground">
-                              Apply a preset to quickly configure link settings
-                            </p>
-                          </div>
-                        )}
-
                         <div className="space-y-2">
                           <DomainSection
                             {...{ data, setData, domains }}
@@ -692,6 +660,47 @@ export default function LinkSheet({
                             editLink={!!currentLink}
                           />
                         </div>
+
+                        {/* Preset Selector for Group links - only show when creating a new link */}
+                        {!currentLink &&
+                          isPresetsAllowed &&
+                          presets &&
+                          presets.length > 0 && (
+                            <div className="space-y-2">
+                              <div className="flex items-center justify-between">
+                                <Label htmlFor="preset">Link Preset</Label>
+                                <Button
+                                  variant="link"
+                                  size="sm"
+                                  className="text-xs"
+                                  onClick={() =>
+                                    router.push("/settings/presets")
+                                  }
+                                >
+                                  Manage Presets
+                                </Button>
+                              </div>
+                              <Select onValueChange={applyPreset}>
+                                <SelectTrigger className="w-full">
+                                  <SelectValue placeholder="Select a preset" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {presets.map((preset) => (
+                                    <SelectItem
+                                      key={preset.id}
+                                      value={preset.id}
+                                    >
+                                      {preset.name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <p className="text-xs text-muted-foreground">
+                                Apply a preset to quickly configure link
+                                settings
+                              </p>
+                            </div>
+                          )}
 
                         <div className="relative flex items-center">
                           <Separator className="absolute bg-muted-foreground" />
@@ -708,6 +717,7 @@ export default function LinkSheet({
                           targetId={targetId}
                           linkType={linkType}
                           editLink={!!currentLink}
+                          currentPreset={currentPreset}
                         />
                       </div>
                     </TabsContent>

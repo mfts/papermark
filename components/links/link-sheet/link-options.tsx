@@ -41,14 +41,14 @@ export const LinkOptions = ({
   targetId,
   linkType,
   editLink,
-  currentPreset,
+  currentPreset = null,
 }: {
   data: DEFAULT_LINK_TYPE;
   setData: React.Dispatch<React.SetStateAction<DEFAULT_LINK_TYPE>>;
   targetId?: string;
   linkType: LinkType;
   editLink?: boolean;
-  currentPreset: LinkPreset | null;
+  currentPreset?: LinkPreset | null;
 }) => {
   const {
     isStarter,
