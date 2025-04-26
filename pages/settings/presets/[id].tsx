@@ -275,7 +275,7 @@ export default function EditPreset() {
                 Edit Preset
               </h2>
               <p className="text-sm text-muted-foreground">
-                Modify this preset's settings
+                Modify this preset configuration
               </p>
             </div>
 
