@@ -54,9 +54,9 @@ export function SettingsHeader() {
             segment: "presets",
           },
           {
-            label: "Tag",
-            href: `/settings/tag`,
-            segment: "tag",
+            label: "Tags",
+            href: `/settings/tags`,
+            segment: "tags",
           },
           {
             label: "Billing",

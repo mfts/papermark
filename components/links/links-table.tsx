@@ -59,7 +59,7 @@ import LinkSheet, {
   DEFAULT_LINK_PROPS,
   type DEFAULT_LINK_TYPE,
 } from "./link-sheet";
-import { TagColumn } from "./link-sheet/tag/tagDetails";
+import { TagColumn } from "./link-sheet/tags/tag-details";
 import LinksVisitors from "./links-visitors";
 
 export default function LinksTable({

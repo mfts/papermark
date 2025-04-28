@@ -6,12 +6,12 @@ import { Tag } from "lucide-react";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
+import { useTags } from "@/lib/swr/use-tags";
+import { TagProps } from "@/lib/types";
+
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { MultiSelect } from "@/components/ui/multi-select-v2";
-
-import { useTags } from "@/lib/swr/use-tags";
-import { TagProps } from "@/lib/types";
 
 import { DEFAULT_LINK_TYPE } from "..";
 
@@ -75,7 +75,7 @@ export default function TagSection({
   };
 
   const createTag = async (tag: string) => {
-    const res = await fetch(`/api/teams/${teamId}/tag`, {
+    const res = await fetch(`/api/teams/${teamId}/tags`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -90,7 +90,7 @@ export default function TagSection({
 
     const newTag = await res.json();
     await mutate(
-      `/api/teams/${teamId}/tag?${new URLSearchParams({
+      `/api/teams/${teamId}/tags?${new URLSearchParams({
         sortBy: "createdAt",
         sortOrder: "desc",
         includeLinksCount: false,
@@ -110,14 +110,12 @@ export default function TagSection({
     <>
       <div className="flex justify-between">
         <Label htmlFor="link-domain">Tags</Label>
-        <Button
-          variant="link"
-          className="h-auto p-0 underline"
-          type="button"
-          onClick={() => router.push("/settings/tag")}
+        <a
+          href={`/settings/tags`}
+          className="text-xs text-muted-foreground hover:text-foreground"
         >
-          Create and Manage
-        </Button>
+          Manage
+        </a>
       </div>
       <div className="flex">
         <MultiSelect
@@ -127,9 +125,9 @@ export default function TagSection({
           setIsPopoverOpen={setIsPopoverOpen}
           isPopoverOpen={isPopoverOpen}
           onValueChange={handleValueChange}
-          placeholder="Select options"
+          placeholder="Select tags..."
           maxCount={3}
-          searchPlaceholder="Search or create tags..."
+          searchPlaceholder="Search or add tags..."
           onCreate={(search) => createTag(search)}
         />
       </div>

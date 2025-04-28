@@ -4,11 +4,11 @@ import { useRouter } from "next/router";
 
 import { PropsWithChildren, useMemo, useRef } from "react";
 
+import { LinkWithViews, TagColorProps, TagProps } from "@/lib/types";
+
 import { BadgeTooltip } from "@/components/ui/tooltip";
 
-import { LinkWithViews, TagProps } from "@/lib/types";
-
-import TagBadge from "./tagBadge";
+import TagBadge from "./tag-badge";
 
 function useOrganizedTags(tags: LinkWithViews["tags"]) {
   const searchParams = useSearchParams();
@@ -59,7 +59,7 @@ function TagsTooltip({
     <BadgeTooltip
       align="end"
       content={
-        <div className="flex flex-wrap gap-1.5 p-3">
+        <div className="flex flex-wrap gap-1.5 rounded-md p-1">
           {additionalTags.map((tag) => (
             <TagButton key={tag.id} tag={tag} />
           ))}
@@ -94,14 +94,18 @@ function TagButton({ tag, plus }: { tag: TagProps; plus?: number }) {
       params.delete("tagIds");
     }
 
-    router.push(`${pathname}?${params.toString()}`, undefined, {
-      shallow: true,
-    });
+    const paramString = params.toString();
+    router.push(
+      paramString ? `${pathname}?${paramString}` : `${pathname}`,
+      undefined,
+      { shallow: true },
+    );
   };
   return (
     <button onClick={handleClick}>
       <TagBadge
         {...tag}
+        color={tag.color as TagColorProps}
         withIcon
         plus={plus}
         isSelected={selectedTagIds.includes(tag.id)}

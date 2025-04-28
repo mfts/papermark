@@ -51,10 +51,11 @@ export function useTags({
     isValidating,
     error,
     isLoading,
+    mutate,
   } = useSWR<TagsWithTotalCount>(
     teamId &&
       enabled &&
-      `/api/teams/${teamId}/tag?${new URLSearchParams({
+      `/api/teams/${teamId}/tags?${new URLSearchParams({
         ...query,
         includeLinksCount,
       } as Record<string, any>).toString()}`,
@@ -71,5 +72,6 @@ export function useTags({
     isValidating,
     error,
     isLoading,
+    mutate,
   };
 }

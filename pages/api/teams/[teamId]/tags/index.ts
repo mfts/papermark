@@ -4,14 +4,14 @@ import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth";
 import { z } from "zod";
 
-import {
-  COLORS_LIST,
-  randomBadgeColor,
-} from "@/components/links/link-sheet/tag/tagBadge";
-
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
 import { CustomUser, tagColors } from "@/lib/types";
+
+import {
+  COLORS_LIST,
+  randomBadgeColor,
+} from "@/components/links/link-sheet/tags/tag-badge";
 
 export const config = {
   api: {
@@ -75,7 +75,7 @@ export const createTagBodySchema = z
       .string()
       .trim()
       .max(120)
-      .optional()
+      .nullish()
       .describe("The description of the tag to create."),
   })
   .partial()
@@ -124,7 +124,6 @@ export default async function handle(
   }
   if (req.method === "GET") {
     // GET /api/teams/:teamId/tag
-
     const { search, includeLinksCount, sortBy, sortOrder, pageSize, page } =
       searchParamsSchema.parse(req.query);
 
@@ -148,7 +147,7 @@ export default async function handle(
           ...(includeLinksCount && {
             _count: {
               select: {
-                taggedItems: true,
+                items: true,
               },
             },
           }),

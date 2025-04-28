@@ -45,7 +45,7 @@ import { ButtonTooltip } from "@/components/ui/tooltip";
 import { CustomFieldData } from "./custom-fields-panel";
 import DomainSection from "./domain-section";
 import { LinkOptions } from "./link-options";
-import TagSection from "./tag/tagSection";
+import TagSection from "./tags/tag-section";
 
 export const DEFAULT_LINK_PROPS = (
   linkType: LinkType,

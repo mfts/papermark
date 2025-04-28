@@ -4,21 +4,27 @@ import { useEffect, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import {
-  CircleHelpIcon,
+  InfoIcon,
   MoreHorizontalIcon,
   Settings2Icon,
   Tag,
+  TagIcon,
   TrashIcon,
 } from "lucide-react";
 import { toast } from "sonner";
-import { mutate } from "swr";
 import { z } from "zod";
 
+import { useTags } from "@/lib/swr/use-tags";
+import { TagColorProps, tagColors } from "@/lib/types";
+
 import AppLayout from "@/components/layouts/app";
-import { randomBadgeColor } from "@/components/links/link-sheet/tag/tagBadge";
+import {
+  COLORS_LIST,
+  randomBadgeColor,
+} from "@/components/links/link-sheet/tags/tag-badge";
 import { SearchBoxPersisted } from "@/components/search-box";
 import { SettingsHeader } from "@/components/settings/settings-header";
-import { AddTagsModal } from "@/components/tag/add-tag-Modal";
+import { AddTagsModal } from "@/components/tags/add-tag-modal";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -47,14 +53,6 @@ import {
 } from "@/components/ui/table";
 import { BadgeTooltip } from "@/components/ui/tooltip";
 
-import { useTags } from "@/lib/swr/use-tags";
-import {
-  TagColorProps,
-  TagProps,
-  TagsWithTotalCount,
-  tagColors,
-} from "@/lib/types";
-
 const schema = z.object({
   name: z
     .string()
@@ -66,7 +64,7 @@ const schema = z.object({
     .string()
     .trim()
     .max(120)
-    .optional()
+    .nullish()
     .describe("The description of the tag to create."),
   color: z.enum(tagColors, {
     required_error: "Please select a color for the tag",
@@ -106,6 +104,7 @@ export default function TagSetting() {
     tags: availableTags,
     loading: loadingTags,
     isValidating,
+    mutate: mutateTags,
   } = useTags({
     query: {
       sortBy: "createdAt",
@@ -119,31 +118,10 @@ export default function TagSetting() {
 
   const handleDeleteTag = async (tagId: string) => {
     toast.promise(
-      fetch(`/api/teams/${teamId}/tag/${tagId}`, {
+      fetch(`/api/teams/${teamId}/tags/${tagId}`, {
         method: "DELETE",
       }).then(() => {
-        mutate(
-          `/api/teams/${teamId}/tag?${new URLSearchParams({
-            sortBy: "createdAt",
-            sortOrder: "desc",
-            page: currentPage,
-            pageSize: 10,
-            ...(searchQuery ? { search: String(searchQuery) } : {}),
-            includeLinksCount: true,
-          } as Record<string, any>).toString()}`,
-          null,
-          {
-            populateCache: (_, tags: TagsWithTotalCount | undefined) => {
-              if (!tags) return { tags: [], totalCount: 0 };
-
-              return {
-                tags: tags.tags.filter((tag) => tag.id !== tagId),
-                totalCount: tags.totalCount > 0 ? tags.totalCount - 1 : 0,
-              };
-            },
-            revalidate: false,
-          },
-        );
+        mutateTags();
       }),
       {
         loading: "Deleting tag...",
@@ -163,6 +141,8 @@ export default function TagSetting() {
       color: tagForm.color,
     });
 
+    console.log(validation);
+
     if (!validation.success) {
       return toast.error(validation.error.errors[0].message);
     }
@@ -173,8 +153,8 @@ export default function TagSetting() {
     }));
 
     const url = tagForm.id
-      ? `/api/teams/${teamId}/tag/${tagForm.id}`
-      : `/api/teams/${teamId}/tag`;
+      ? `/api/teams/${teamId}/tags/${tagForm.id}`
+      : `/api/teams/${teamId}/tags`;
 
     const method = tagForm.id ? "PUT" : "POST";
 
@@ -200,35 +180,9 @@ export default function TagSetting() {
       }));
       return;
     }
-    const newTag = await response.json();
 
-    mutate(
-      `/api/teams/${teamId}/tag?${new URLSearchParams({
-        sortBy: "createdAt",
-        sortOrder: "desc",
-        page: currentPage,
-        pageSize: 10,
-        ...(searchQuery ? { search: String(searchQuery) } : {}),
-        includeLinksCount: true,
-      } as Record<string, any>).toString()}`,
-      (tags: TagsWithTotalCount | undefined) => {
-        if (!tags?.tags) return { tags: [newTag], totalCount: 1 };
+    mutateTags();
 
-        const updatedTags: TagProps[] = tagForm.id
-          ? tags.tags.map((tag: TagProps) =>
-              tag.id === tagForm.id ? newTag : tag,
-            )
-          : [newTag, ...tags.tags];
-
-        return {
-          tags: updatedTags,
-          totalCount: tagForm.id ? tags.totalCount : tags.totalCount + 1,
-        };
-      },
-      {
-        revalidate: false,
-      },
-    );
     setOpen(false);
     toast.success(
       tagForm.id ? "Tag updated successfully!" : "Tag created successfully!",
@@ -296,9 +250,9 @@ export default function TagSetting() {
                             <div className="flex items-center overflow-visible sm:space-x-3">
                               <div className="min-w-0 flex-1">
                                 <div className="flex items-center gap-2">
-                                  <Tag
+                                  <TagIcon
                                     size={24}
-                                    className={`rounded-sm border border-gray-200 dark:text-primary-foreground bg-${tag.color}-100 p-1`}
+                                    className={`rounded-sm border p-1 ${COLORS_LIST.find((c) => c.color === tag.color)?.css ?? ""}`}
                                   />
                                   <p>{tag.name}</p>
                                   {!!tag.description && (
@@ -306,7 +260,7 @@ export default function TagSetting() {
                                       content={tag.description}
                                       key="tag_tooltip"
                                     >
-                                      <CircleHelpIcon className="h-4 w-4 shrink-0 cursor-pointer text-muted-foreground hover:text-foreground" />
+                                      <InfoIcon className="h-4 w-4 shrink-0 cursor-pointer text-muted-foreground hover:text-foreground" />
                                     </BadgeTooltip>
                                   )}
                                 </div>
@@ -316,7 +270,7 @@ export default function TagSetting() {
                           {/* Link Count */}
                           <TableCell className="text-center text-sm text-muted-foreground sm:text-right">
                             <Button variant="outline" size="sm">
-                              {tag._count?.taggedItems || 0} links
+                              {tag._count?.items || 0} links
                             </Button>
                           </TableCell>
 
@@ -340,7 +294,7 @@ export default function TagSetting() {
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     setTagForm({
-                                      color: tag.color,
+                                      color: tag.color as TagColorProps,
                                       name: tag.name,
                                       description: tag.description,
                                       id: tag.id,

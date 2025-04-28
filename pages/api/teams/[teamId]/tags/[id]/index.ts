@@ -11,14 +11,6 @@ import { createTagBodySchema } from "..";
 
 const updateTagBodySchema = createTagBodySchema;
 
-export const config = {
-  api: {
-    bodyParser: {
-      sizeLimit: "4mb",
-    },
-  },
-};
-
 export default async function handle(
   req: NextApiRequest,
   res: NextApiResponse,
@@ -53,17 +45,17 @@ export default async function handle(
     errorhandler(error, res);
   }
   if (req.method === "PUT") {
-    // PUT /api/teams/:teamId/tag/[tagId]
+    // PUT /api/teams/:teamId/tags/[id]
 
-    const { teamId, tagId } = req.query as { teamId: string; tagId: string };
+    const { teamId, id } = req.query as { teamId: string; id: string };
     const {
       name,
       color,
       description = "",
     } = updateTagBodySchema.parse(req.body);
-    const tag = await prisma.tag.findFirst({
+    const tag = await prisma.tag.findUnique({
       where: {
-        id: tagId,
+        id: id,
         teamId: teamId,
       },
     });
@@ -74,7 +66,7 @@ export default async function handle(
     try {
       const response = await prisma.tag.update({
         where: {
-          id: tagId,
+          id: id,
         },
         data: {
           name,
@@ -88,14 +80,11 @@ export default async function handle(
       return res.status(500).json({ error: (error as Error).message });
     }
   } else if (req.method === "DELETE") {
-    // DELETE /api/teams/:teamId/tag/[tagId]
-    const { teamId, tagId } = req.query as { teamId: string; tagId: string };
+    // DELETE /api/teams/:teamId/tags/[id]
+    const { teamId, id } = req.query as { teamId: string; id: string };
     // First verify the tag belongs to the team
-    const tag = await prisma.tag.findFirst({
-      where: {
-        id: tagId,
-        teamId: teamId,
-      },
+    const tag = await prisma.tag.findUnique({
+      where: { id, teamId },
     });
 
     if (!tag) {
@@ -104,11 +93,9 @@ export default async function handle(
 
     // Then delete the tag
     await prisma.tag.delete({
-      where: {
-        id: tagId,
-      },
+      where: { id, teamId },
       include: {
-        taggedItems: true,
+        items: true,
       },
     });
     return res.status(204).end();
