@@ -50,7 +50,7 @@ export default async function handle(
       const link = await prisma.link.findUnique({
         where: { id, teamId },
         include: {
-          taggedItems: {
+          tags: {
             select: {
               tag: {
                 select: {
@@ -66,8 +66,8 @@ export default async function handle(
         return res.status(404).json({ error: "Link not found" });
       }
 
-      const { taggedItems, ...rest } = link;
-      const linkTags = taggedItems.map((t) => t.tag.id);
+      const { tags, ...rest } = link;
+      const linkTags = tags.map((t) => t.tag.id);
 
       const newLinkName = link.name
         ? link.name + " (Copy)"
@@ -87,10 +87,10 @@ export default async function handle(
         });
 
         if (linkTags?.length) {
-          await tx.taggedItem.createMany({
+          await tx.tagItem.createMany({
             data: linkTags.map((tagId: string) => ({
               tagId,
-              itemType: "LINK",
+              itemType: "LINK_TAG",
               linkId: createdLink.id,
               taggedBy: (session.user as CustomUser).id,
             })),

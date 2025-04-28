@@ -38,14 +38,14 @@ export default async function handle(
           _count: {
             select: { views: true },
           },
-          taggedItems: {
+          tags: {
             select: {
               tag: {
                 select: {
+                  id: true,
                   name: true,
                   description: true,
                   color: true,
-                  id: true,
                 },
               },
             },
@@ -56,14 +56,14 @@ export default async function handle(
         return res.status(404).json({ error: "Link not found" });
       }
 
-      const { taggedItems, ...rest } = updatedLink;
-      const tags = taggedItems.map((t) => t.tag);
+      const { tags, ...rest } = updatedLink;
+      const linkTags = tags.map((t) => t.tag);
 
       await fetch(
         `${process.env.NEXTAUTH_URL}/api/revalidate?secret=${process.env.REVALIDATE_TOKEN}&linkId=${id}&hasDomain=${updatedLink.domainId ? "true" : "false"}`,
       );
 
-      return res.status(200).json({ ...rest, tags });
+      return res.status(200).json({ ...rest, tags: linkTags });
     } catch (error) {
       errorhandler(error, res);
     }

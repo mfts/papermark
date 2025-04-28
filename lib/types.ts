@@ -380,8 +380,8 @@ export interface TagProps {
   id: string;
   name: string;
   description: string | null;
-  color: TagColorProps;
+  color: TagColorProps | string;
   _count?: {
-    taggedItems: number;
+    items: number;
   };
 }

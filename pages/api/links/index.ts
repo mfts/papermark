@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
-import { LinkAudienceType } from "@prisma/client";
+import { LinkAudienceType, Tag } from "@prisma/client";
 import { waitUntil } from "@vercel/functions";
 import { getServerSession } from "next-auth/next";
 
@@ -205,24 +205,25 @@ export default async function handler(
           },
         });
 
+        let tags: Partial<Tag>[] = [];
         if (linkData.tags?.length) {
-          await tx.taggedItem.createMany({
+          // create tag items
+          await tx.tagItem.createMany({
             data: linkData.tags.map((tagId: string) => ({
               tagId,
-              itemType: "LINK",
+              itemType: "LINK_TAG",
               linkId: link.id,
               taggedBy: userId,
             })),
             skipDuplicates: true,
           });
-        }
 
-        const tags = linkData.tags?.length
-          ? await tx.tag.findMany({
-              where: { id: { in: linkData.tags } },
-              select: { id: true, name: true, color: true, description: true },
-            })
-          : [];
+          // return tags
+          tags = await tx.tag.findMany({
+            where: { id: { in: linkData.tags } },
+            select: { id: true, name: true, color: true, description: true },
+          });
+        }
 
         return { ...link, tags };
       });
@@ -241,9 +242,9 @@ export default async function handler(
         sendLinkCreatedWebhook({
           teamId,
           data: {
-            link_id: link.id,
-            document_id: link.documentId,
-            dataroom_id: link.dataroomId,
+            link_id: linkWithView.id,
+            document_id: linkWithView.documentId,
+            dataroom_id: linkWithView.dataroomId,
           },
         }),
       );

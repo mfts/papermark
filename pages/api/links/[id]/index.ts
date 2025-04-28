@@ -342,19 +342,19 @@ export default async function handle(
       });
       if (linkData.tags?.length) {
         // Remove only tags that are not in the new list
-        await tx.taggedItem.deleteMany({
+        await tx.tagItem.deleteMany({
           where: {
             linkId: id,
-            itemType: "LINK",
+            itemType: "LINK_TAG",
             tagId: { notIn: linkData.tags },
           },
         });
 
         // Add new tags while avoiding duplicates
-        await tx.taggedItem.createMany({
+        await tx.tagItem.createMany({
           data: linkData.tags.map((tagId: string) => ({
             tagId,
-            itemType: "LINK",
+            itemType: "LINK_TAG",
             linkId: id,
             taggedBy: userId,
           })),
@@ -362,16 +362,17 @@ export default async function handle(
         });
       } else {
         // If all tags are removed, delete all tagged items for this link
-        await tx.taggedItem.deleteMany({
+        await tx.tagItem.deleteMany({
           where: {
             linkId: id,
-            itemType: "LINK",
+            itemType: "LINK_TAG",
           },
         });
       }
+
       const tags = await tx.tag.findMany({
         where: {
-          taggedItems: {
+          items: {
             some: { linkId: link.id },
           },
         },

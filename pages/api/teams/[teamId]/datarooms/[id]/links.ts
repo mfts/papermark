@@ -93,9 +93,10 @@ export default async function handle(
             }
             const tags = await prisma.tag.findMany({
               where: {
-                taggedItems: {
+                items: {
                   some: {
                     linkId: link.id,
+                    itemType: "LINK_TAG",
                   },
                 },
               },
@@ -109,7 +110,7 @@ export default async function handle(
 
             return {
               ...link,
-              ["tags"]: tags,
+              tags,
             };
           }),
         );
