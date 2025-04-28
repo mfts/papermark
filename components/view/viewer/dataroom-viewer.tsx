@@ -85,6 +85,9 @@ export default function DataroomViewer({
   accessControls,
   viewerId,
   viewData,
+  enableIndexFile,
+  isEmbedded,
+  viewerEmail,
 }: {
   brand: Partial<DataroomBrand>;
   viewId?: string;
@@ -97,6 +100,9 @@ export default function DataroomViewer({
   accessControls: ViewerGroupAccessControls[];
   viewerId?: string;
   viewData: DEFAULT_DATAROOM_VIEW_TYPE;
+  enableIndexFile?: boolean;
+  isEmbedded?: boolean;
+  viewerEmail?: string;
 }) {
   const { documents, folders } = dataroom as {
     documents: DataroomDocument[];
@@ -182,6 +188,9 @@ export default function DataroomViewer({
         dataroomId={dataroom?.id}
         viewerId={viewerId}
         conversationsEnabled={viewData.conversationsEnabled}
+        enableIndexFile={enableIndexFile}
+        isEmbedded={isEmbedded}
+        viewerEmail={viewerEmail}
       />
       <div
         style={{ height: "calc(100vh - 64px)" }}

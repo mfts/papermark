@@ -40,6 +40,7 @@ export default async function handle(
           enableScreenshotProtection: true,
           password: true,
           isArchived: true,
+          enableIndexFile: true,
           enableCustomMetatag: true,
           metaTitle: true,
           metaDescription: true,
@@ -158,6 +159,7 @@ export default async function handle(
       password,
       expiresAt,
       teamId,
+      enableIndexFile,
       ...linkDomainData
     } = req.body;
 
@@ -270,6 +272,7 @@ export default async function handle(
         domainId: domainObj?.id || null,
         domainSlug: domain || null,
         slug: slug || null,
+        enableIndexFile: enableIndexFile,
         enableNotification: linkData.enableNotification,
         enableFeedback: linkData.enableFeedback,
         enableScreenshotProtection: linkData.enableScreenshotProtection,
@@ -327,6 +330,12 @@ export default async function handle(
         uploadFolderId: linkData.uploadFolderId || null,
       },
       include: {
+        feedback: {
+          select: {
+            id: true,
+            data: true,
+          },
+        },
         views: {
           orderBy: {
             viewedAt: "desc",
@@ -401,6 +410,6 @@ export default async function handle(
   }
 
   // We only allow GET and PUT requests
-  res.setHeader("Allow", ["GET", "PUT"]);
+  res.setHeader("Allow", ["GET", "PUT", "DELETE"]);
   return res.status(405).end(`Method ${req.method} Not Allowed`);
 }

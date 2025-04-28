@@ -37,6 +37,7 @@ export default async function handler(
       password,
       expiresAt,
       teamId,
+      enableIndexFile,
       ...linkDomainData
     } = req.body;
 
@@ -148,6 +149,7 @@ export default async function handler(
           denyList: linkData.denyList,
           enableConversation: linkData.enableConversation,
           audienceType: linkData.audienceType,
+          enableIndexFile: enableIndexFile,
           groupId:
             linkData.audienceType === LinkAudienceType.GROUP
               ? linkData.groupId

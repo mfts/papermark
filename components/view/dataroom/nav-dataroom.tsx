@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+
+
 import React, { useEffect, useState } from "react";
 
 import { DataroomBrand } from "@prisma/client";
@@ -9,6 +11,7 @@ import { toast } from "sonner";
 import { timeAgo } from "@/lib/utils";
 
 import {
+  ButtonTooltip,
   Tooltip,
   TooltipContent,
   TooltipTrigger,
@@ -17,6 +20,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 
 import { Button } from "../../ui/button";
 import { ConversationSidebar } from "../conversations/sidebar";
+import IndexFileDialog from "./index-file-dialog";
 
 export default function DataroomNav({
   allowDownload,
@@ -28,6 +32,9 @@ export default function DataroomNav({
   dataroomId,
   viewerId,
   conversationsEnabled,
+  enableIndexFile,
+  isEmbedded,
+  viewerEmail,
 }: {
   allowDownload?: boolean;
   brand?: Partial<DataroomBrand>;
@@ -38,6 +45,9 @@ export default function DataroomNav({
   dataroomId?: string;
   viewerId?: string;
   conversationsEnabled?: boolean;
+  enableIndexFile?: boolean;
+  isEmbedded?: boolean;
+  viewerEmail?: string;
 }) {
   const [loading, setLoading] = useState<boolean>(false);
   const [showConversations, setShowConversations] = useState<boolean>(false);
@@ -165,17 +175,28 @@ export default function DataroomNav({
                 </Tooltip>
               </TooltipProvider>
             )}
-
+            {enableIndexFile && (
+              <IndexFileDialog
+                linkId={linkId!}
+                viewId={viewId!}
+                disabled={isPreview}
+                dataroomId={dataroomId!}
+                isEmbedded={isEmbedded}
+                viewerEmail={viewerEmail}
+                viewerId={viewerId}
+              />
+            )}
             {allowDownload ? (
-              <Button
-                onClick={downloadDataroom}
-                className="m-1 bg-gray-900 text-white hover:bg-gray-900/80"
-                size="icon"
-                title="Download Dataroom"
-                loading={loading}
-              >
-                <Download className="h-5 w-5" />
-              </Button>
+              <ButtonTooltip content="Download Dataroom">
+                <Button
+                  onClick={downloadDataroom}
+                  className="m-1 bg-gray-900 text-white hover:bg-gray-900/80"
+                  size="icon"
+                  loading={loading}
+                >
+                  <Download className="h-5 w-5" />
+                </Button>
+              </ButtonTooltip>
             ) : null}
           </div>
         </div>
@@ -218,4 +239,4 @@ export default function DataroomNav({
       ) : null}
     </nav>
   );
-}
+};
