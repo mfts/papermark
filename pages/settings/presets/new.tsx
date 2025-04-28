@@ -117,7 +117,7 @@ export default function NewPreset() {
           watermarkConfig: data.watermarkConfig,
           allowDownload: data.allowDownload,
           expiresAt: data.expiresAt,
-          expiresIn: data.expiresIn,
+          expiresIn: data.expiresIn || null,
         }),
       });
 
