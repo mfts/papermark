@@ -330,6 +330,12 @@ export default async function handle(
         uploadFolderId: linkData.uploadFolderId || null,
       },
       include: {
+        feedback: {
+          select: {
+            id: true,
+            data: true,
+          },
+        },
         views: {
           orderBy: {
             viewedAt: "desc",
