@@ -173,7 +173,7 @@ model Document {
   folder   Folder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
 
   datarooms   DataroomDocument[] // Datarooms associated with this document
-  taggedItems TaggedItem[]
+  tags TagItem[]
 
   // upload external documents
   uploadedDocument DocumentUpload[]
@@ -230,57 +230,6 @@ enum DocumentStorageType {
   S3_PATH
   VERCEL_BLOB
 }
-
-enum TaggableItemType {
-  LINK
-  DOCUMENT
-  DATAROOM
-}
-
-model Tag {
-  id          String       @id @default(uuid())
-  name        String
-  color       String
-  description String?
-  teamId      String
-  team        Team         @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-  createdBy   String?
-  taggedItems TaggedItem[]
-
-  @@unique([teamId, name])
-  @@index([teamId])
-  @@index([name])
-  @@index([id])
-}
-
-model TaggedItem {
-  id        String           @id @default(uuid())
-  tagId     String
-  tag       Tag              @relation(fields: [tagId], references: [id], onDelete: Cascade)
-  itemType  TaggableItemType
-  createdAt DateTime         @default(now())
-  taggedBy  String?
-
-  linkId String?
-  link   Link?   @relation(fields: [linkId], references: [id], onDelete: Cascade)
-
-  documentId String?
-  document   Document? @relation(fields: [documentId], references: [id])
-
-  dataroomId String?
-  dataroom   Dataroom? @relation(fields: [dataroomId], references: [id])
-
-  @@index([itemType, linkId])
-  @@index([itemType, documentId])
-  @@index([itemType, dataroomId])
-  @@index([tagId, linkId])
-  @@index([tagId, documentId])
-  @@index([tagId, dataroomId])
-}
-
-
 
 model Domain {
   id          String   @id @default(cuid())
@@ -628,4 +577,54 @@ model DocumentUpload {
   @@index([teamId])
   @@index([dataroomId])
   @@index([dataroomDocumentId])
+}
+
+enum TagType {
+  LINK_TAG
+  DOCUMENT_TAG
+  DATAROOM_TAG
+}
+
+model Tag {
+  id          String       @id @default(cuid())
+  name        String
+  color       String
+  description String?
+
+  teamId      String
+  team        Team         @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  
+  items       TagItem[]
+
+  createdBy   String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@unique([teamId, name])
+  @@index([teamId])
+  @@index([name])
+  @@index([id])
+}
+
+model TagItem {
+  id        String           @id @default(cuid())
+  tagId     String
+  tag       Tag              @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  itemType      TagType
+
+  // tag can be linked to a link, document or dataroom
+  linkId String?
+  link   Link?   @relation(fields: [linkId], references: [id], onDelete: Cascade)
+  documentId String?
+  document   Document? @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  dataroomId String?
+  dataroom   Dataroom? @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
+
+  taggedBy  String?
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  @@index([tagId, linkId])
+  @@index([tagId, documentId])
+  @@index([tagId, dataroomId])
 }
