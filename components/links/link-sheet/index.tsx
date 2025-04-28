@@ -45,6 +45,7 @@ import { ButtonTooltip } from "@/components/ui/tooltip";
 import { CustomFieldData } from "./custom-fields-panel";
 import DomainSection from "./domain-section";
 import { LinkOptions } from "./link-options";
+import TagSection from "./tags/tag-section";
 
 export const DEFAULT_LINK_PROPS = (
   linkType: LinkType,
@@ -81,6 +82,7 @@ export const DEFAULT_LINK_PROPS = (
   audienceType: groupId ? LinkAudienceType.GROUP : LinkAudienceType.GENERAL,
   groupId: groupId,
   customFields: [],
+  tags: [],
   enableConversation: false,
   enableUpload: false,
   isFileRequestOnly: false,
@@ -119,6 +121,7 @@ export type DEFAULT_LINK_TYPE = {
   audienceType: LinkAudienceType;
   groupId: string | null;
   customFields: CustomFieldData[];
+  tags: string[];
   enableConversation: boolean;
   enableUpload: boolean;
   isFileRequestOnly: boolean;
@@ -144,6 +147,7 @@ export default function LinkSheet({
     id: string;
     groupId?: string;
   };
+
   const { domains } = useDomains();
 
   const {
@@ -503,6 +507,13 @@ export default function LinkSheet({
                             editLink={!!currentLink}
                           />
                         </div>
+                        <div className="space-y-2">
+                          <TagSection
+                            {...{ data, setData }}
+                            editLink={!!currentLink}
+                            teamId={teamInfo?.currentTeam?.id as string}
+                          />
+                        </div>
 
                         {/* Preset Selector - only show when creating a new link */}
                         {!currentLink &&
@@ -654,6 +665,13 @@ export default function LinkSheet({
                             {...{ data, setData, domains }}
                             linkType={linkType}
                             editLink={!!currentLink}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <TagSection
+                            {...{ data, setData }}
+                            editLink={!!currentLink}
+                            teamId={teamInfo?.currentTeam?.id as string}
                           />
                         </div>
 

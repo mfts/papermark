@@ -61,6 +61,7 @@ export interface LinkWithViews extends Link {
   views: View[];
   feedback: { id: true; data: { question: string; type: string } } | null;
   customFields: CustomField[];
+  tags: TagProps[];
   uploadFolderName: string | undefined;
 }
 
@@ -356,3 +357,31 @@ export type BasePlan =
   | "datarooms"
   | "datarooms-plus"
   | "enterprise";
+
+export const tagColors = [
+  "red",
+  "yellow",
+  "green",
+  "blue",
+  "purple",
+  "pink",
+  "slate",
+  "fuchsia",
+] as const;
+
+export type TagColorProps = (typeof tagColors)[number];
+
+export interface TagsWithTotalCount {
+  tags: TagProps[];
+  totalCount: number;
+}
+
+export interface TagProps {
+  id: string;
+  name: string;
+  description: string | null;
+  color: TagColorProps | string;
+  _count?: {
+    items: number;
+  };
+}

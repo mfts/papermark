@@ -71,24 +71,49 @@ export default async function handle(
         },
       });
 
+      let extendedLinks: LinkWithViews[] = links as LinkWithViews[];
       // Decrypt the password for each link
-      const extendedLinks: LinkWithViews[] = links as LinkWithViews[];
+      if (extendedLinks && extendedLinks.length > 0) {
+        extendedLinks = await Promise.all(
+          extendedLinks.map(async (link) => {
+            // Decrypt the password if it exists
+            if (link.password !== null) {
+              link.password = decryptEncrpytedPassword(link.password);
+            }
+            if (link.enableUpload && link.uploadFolderId !== null) {
+              const folder = await prisma.dataroomFolder.findUnique({
+                where: {
+                  id: link.uploadFolderId,
+                },
+                select: {
+                  name: true,
+                },
+              });
+              link.uploadFolderName = folder?.name;
+            }
+            const tags = await prisma.tag.findMany({
+              where: {
+                items: {
+                  some: {
+                    linkId: link.id,
+                    itemType: "LINK_TAG",
+                  },
+                },
+              },
+              select: {
+                id: true,
+                name: true,
+                color: true,
+                description: true,
+              },
+            });
 
-      for (const link of extendedLinks) {
-        if (link.password !== null) {
-          link.password = decryptEncrpytedPassword(link.password);
-        }
-        if (link.enableUpload && link.uploadFolderId !== null) {
-          const folder = await prisma.dataroomFolder.findUnique({
-            where: {
-              id: link.uploadFolderId,
-            },
-            select: {
-              name: true,
-            },
-          });
-          link.uploadFolderName = folder?.name;
-        }
+            return {
+              ...link,
+              tags,
+            };
+          }),
+        );
       }
 
       // console.log("links", links);
