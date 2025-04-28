@@ -1,39 +1,28 @@
 import * as React from "react";
 
 import { type VariantProps, cva } from "class-variance-authority";
-import {
-  CheckIcon,
-  ChevronDownIcon,
-  CircleHelpIcon,
-  PlusIcon,
-  WandSparkles,
-  XCircle,
-  XIcon,
-} from "lucide-react";
+import { CheckIcon, PlusIcon, TagIcon, WandSparkles } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
+import { TagColorProps } from "@/lib/types";
+import { cn } from "@/lib/utils";
+
 import { Button } from "@/components/ui/button";
 import {
   Command,
-  CommandEmpty,
   CommandGroup,
   CommandInput,
   CommandItem,
   CommandList,
-  CommandSeparator,
 } from "@/components/ui/command";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Separator } from "@/components/ui/separator";
 
-import { cn } from "@/lib/utils";
-
+import TagBadge from "../links/link-sheet/tags/tag-badge";
 import { Icon } from "../shared/icons";
 import LoadingSpinner from "./loading-spinner";
-import { BadgeTooltip } from "./tooltip";
 
 /**
  * Variants for the multi-select component to handle different styles.
@@ -207,21 +196,21 @@ export const MultiSelect = React.forwardRef<
       setIsPopoverOpen((prev) => !prev);
     };
 
-    const clearExtraOptions = () => {
-      const newSelectedValues = value.slice(0, maxCount);
-      // setSelectedValues(newSelectedValues);
-      onValueChange(newSelectedValues);
-    };
+    // const clearExtraOptions = () => {
+    //   const newSelectedValues = value.slice(0, maxCount);
+    //   // setSelectedValues(newSelectedValues);
+    //   onValueChange(newSelectedValues);
+    // };
 
-    const toggleAll = () => {
-      if (value.length === options.length) {
-        handleClear();
-      } else {
-        const allValues = options.map((option) => option.value);
-        // setSelectedValues(allValues);
-        onValueChange(allValues);
-      }
-    };
+    // const toggleAll = () => {
+    //   if (value.length === options.length) {
+    //     handleClear();
+    //   } else {
+    //     const allValues = options.map((option) => option.value);
+    //     // setSelectedValues(allValues);
+    //     onValueChange(allValues);
+    //   }
+    // };
     // flex w-full rounded-none rounded-l-md border border-input bg-white text-foreground placeholder-muted-foreground focus:border-muted-foreground focus:outline-none focus:ring-inset focus:ring-muted-foreground dark:border-gray-500 dark:bg-gray-800 focus:dark:bg-transparent sm:text-sm
     return (
       <Popover
@@ -235,80 +224,43 @@ export const MultiSelect = React.forwardRef<
             {...props}
             onClick={handleTogglePopover}
             className={cn(
-              "flex h-auto w-full items-center justify-between rounded-md border border-input bg-inherit px-3 py-2 hover:bg-inherit focus:border-muted-foreground focus:outline-none focus:ring-1 focus:ring-inset focus:ring-muted-foreground dark:border-gray-500 dark:bg-gray-800 focus:dark:bg-transparent [&_svg]:pointer-events-auto",
+              "flex h-auto w-full items-center justify-between rounded-md border border-input bg-inherit px-3 py-1.5 hover:bg-inherit focus:border-muted-foreground focus:outline-none focus:ring-1 focus:ring-inset focus:ring-muted-foreground dark:border-gray-500 dark:bg-gray-800 focus:dark:bg-transparent [&_svg]:pointer-events-auto",
               className,
             )}
           >
+            <TagIcon className="!size-4 shrink-0 text-muted-foreground" />
             {loading ? (
               <div className="mx-auto flex w-full items-center justify-between">
                 <LoadingSpinner className="size-4 shrink-0" />
               </div>
             ) : value.length > 0 ? (
               <div className="flex w-full items-center justify-between">
-                <div className="flex flex-wrap items-center">
+                <div className="flex flex-wrap items-center gap-2">
                   {value.slice(0, maxCount).map((value) => {
                     const option = options.find((o) => o.value === value);
                     return (
-                      <Badge
+                      <TagBadge
                         key={value}
-                        className={cn(
-                          isAnimating ? "animate-bounce" : "",
-                          multiSelectVariants({ variant }),
-                        )}
-                        style={{ animationDuration: `${animation}s` }}
-                      >
-                        {option?.label}
-                        <XCircle
-                          className="ml-2 h-4 w-4 cursor-pointer"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            toggleOption(value);
-                          }}
-                        />
-                      </Badge>
+                        name={option?.label as string}
+                        color={option?.meta?.color as TagColorProps}
+                      />
                     );
                   })}
                   {value.length > maxCount && (
-                    <Badge
-                      className={cn(
-                        "border-foreground/1 bg-transparent text-foreground hover:bg-transparent",
-                        isAnimating ? "animate-bounce" : "",
-                        multiSelectVariants({ variant }),
-                      )}
+                    <span
+                      className="my-auto block whitespace-nowrap rounded-md border px-2 py-0.5 text-sm text-foreground"
                       style={{ animationDuration: `${animation}s` }}
                     >
                       {`+ ${value.length - maxCount} more`}
-                      <XCircle
-                        className="ml-2 h-4 w-4 cursor-pointer"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          clearExtraOptions();
-                        }}
-                      />
-                    </Badge>
+                    </span>
                   )}
-                </div>
-                <div className="flex items-center justify-between">
-                  <XIcon
-                    className="mx-2 h-4 cursor-pointer text-muted-foreground"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      handleClear();
-                    }}
-                  />
-                  <Separator
-                    orientation="vertical"
-                    className="flex h-full min-h-6"
-                  />
-                  <ChevronDownIcon className="ml-2 h-4 w-4 cursor-pointer text-muted-foreground opacity-50" />
                 </div>
               </div>
             ) : (
               <div className="mx-auto flex w-full items-center justify-between">
-                <span className="text-sm font-normal text-muted-foreground">
+                <span className="py-[3px] text-sm font-normal text-muted-foreground">
                   {placeholder}
                 </span>
-                <ChevronDownIcon className="h-4 w-4 cursor-pointer text-muted-foreground opacity-50" />
               </div>
             )}
           </Button>
@@ -323,33 +275,15 @@ export const MultiSelect = React.forwardRef<
               placeholder={searchPlaceholder}
               value={search}
               onValueChange={setSearch}
+              noIcon
+              wrapperClassName="px-0"
               className={cn(
-                "grow border-0 py-3 pl-4 pr-2 outline-none placeholder:text-neutral-400 focus:ring-0 sm:text-sm",
+                "grow border-0 py-3 outline-none placeholder:text-neutral-400 focus:ring-0 sm:text-sm",
                 inputClassName,
               )}
               onKeyDown={handleInputKeyDown}
             />
             <CommandList>
-              <CommandGroup>
-                <CommandItem
-                  key="all"
-                  onSelect={toggleAll}
-                  className="cursor-pointer"
-                >
-                  <div
-                    className={cn(
-                      "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
-                      value.length === options?.length
-                        ? "bg-primary text-primary-foreground"
-                        : "opacity-50 [&_svg]:invisible",
-                    )}
-                  >
-                    <CheckIcon className="h-4 w-4" />
-                  </div>
-                  <span>(Select All)</span>
-                </CommandItem>
-              </CommandGroup>
-              <CommandSeparator />
               <CommandGroup>
                 {loading ? (
                   <CommandItem className="justify-center">
@@ -363,7 +297,7 @@ export const MultiSelect = React.forwardRef<
                       <CommandItem
                         key={option.value}
                         onSelect={() => toggleOption(option.value)}
-                        className="cursor-pointer gap-2"
+                        className="cursor-pointer gap-2 py-2"
                         data-Value={option.value}
                       >
                         <div
@@ -382,11 +316,6 @@ export const MultiSelect = React.forwardRef<
                           <IconComponent className="h-5 w-4" />
                         ) : null}
                         <span>{option.label}</span>
-                        {option.meta?.description && (
-                          <BadgeTooltip content={option.meta?.description}>
-                            <CircleHelpIcon className="h-4 w-4 shrink-0 text-muted-foreground hover:text-foreground" />
-                          </BadgeTooltip>
-                        )}
                       </CommandItem>
                     );
                   })
@@ -397,61 +326,33 @@ export const MultiSelect = React.forwardRef<
                 )}
               </CommandGroup>
               {search.length > 0 && onCreate && (
-                <>
-                  <CommandSeparator />
-                  <CommandGroup>
-                    <CommandItem
-                      className={cn(
-                        "flex cursor-pointer items-center gap-2 whitespace-nowrap",
-                        optionClassName,
-                      )}
-                      onSelect={async () => {
-                        setIsCreating(true);
-                        const success = await onCreate?.(search);
-                        if (success) {
-                          setSearch("");
-                          setIsPopoverOpen(false);
-                        }
-                        setIsCreating(false);
-                      }}
-                    >
-                      {isCreating ? (
-                        <LoadingSpinner className="size-4 shrink-0" />
-                      ) : (
-                        <PlusIcon className="size-4 shrink-0" />
-                      )}
-                      <p className="grow truncate">
-                        {createLabel?.(search) || `Create "${search}"`}
-                      </p>
-                    </CommandItem>
-                  </CommandGroup>
-                </>
-              )}
-              <CommandSeparator />
-              <CommandGroup>
-                <div className="flex items-center justify-between">
-                  {value.length > 0 && (
-                    <>
-                      <CommandItem
-                        onSelect={handleClear}
-                        className="flex-1 cursor-pointer justify-center"
-                      >
-                        Clear
-                      </CommandItem>
-                      <Separator
-                        orientation="vertical"
-                        className="flex h-full min-h-6"
-                      />
-                    </>
-                  )}
+                <CommandGroup>
                   <CommandItem
-                    onSelect={() => setIsPopoverOpen(false)}
-                    className="max-w-full flex-1 cursor-pointer justify-center"
+                    className={cn(
+                      "flex cursor-pointer items-center gap-2 whitespace-nowrap",
+                      optionClassName,
+                    )}
+                    onSelect={async () => {
+                      setIsCreating(true);
+                      const success = await onCreate?.(search);
+                      if (success) {
+                        setSearch("");
+                        setIsPopoverOpen(false);
+                      }
+                      setIsCreating(false);
+                    }}
                   >
-                    Close
+                    {isCreating ? (
+                      <LoadingSpinner className="size-4 shrink-0" />
+                    ) : (
+                      <PlusIcon className="size-4 shrink-0" />
+                    )}
+                    <p className="grow truncate">
+                      {createLabel?.(search) || `Create "${search}"`}
+                    </p>
                   </CommandItem>
-                </div>
-              </CommandGroup>
+                </CommandGroup>
+              )}
             </CommandList>
           </Command>
         </PopoverContent>
