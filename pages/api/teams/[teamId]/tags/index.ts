@@ -13,14 +13,6 @@ import {
   randomBadgeColor,
 } from "@/components/links/link-sheet/tags/tag-badge";
 
-export const config = {
-  api: {
-    bodyParser: {
-      sizeLimit: "4mb",
-    },
-  },
-};
-
 export const searchParamsSchema = z.object({
   sortBy: z
     .enum(["name", "createdAt"])
