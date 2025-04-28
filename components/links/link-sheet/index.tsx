@@ -222,27 +222,38 @@ export default function LinkSheet({
     const preset = presets?.find((p) => p.id === presetId);
     if (!preset) return;
 
-    setData((prev) => ({
-      ...prev,
-      name: prev.name, // Keep existing name
-      domain: prev.domain, // Keep existing domain
-      slug: prev.slug, // Keep existing slug
+    setData((prev) => {
+      // Calculate expiresAt if expiresIn is provided
+      let expiresAt = prev.expiresAt;
+      if (preset.expiresIn) {
+        const newExpiresAt = new Date();
+        newExpiresAt.setSeconds(newExpiresAt.getSeconds() + preset.expiresIn);
+        expiresAt = newExpiresAt;
+      } else {
+        expiresAt = preset.expiresAt || prev.expiresAt;
+      }
 
-      // Apply preset values
-      emailProtected: preset.emailProtected ?? prev.emailProtected,
-      emailAuthenticated: preset.emailAuthenticated ?? prev.emailAuthenticated,
-      allowList: preset.allowList || prev.allowList,
-      denyList: preset.denyList || prev.denyList,
-      password: preset.password || prev.password,
-      enableCustomMetatag:
-        preset.enableCustomMetaTag ?? prev.enableCustomMetatag,
-      metaTitle: preset.metaTitle || prev.metaTitle,
-      metaDescription: preset.metaDescription || prev.metaDescription,
-      metaImage: preset.metaImage || prev.metaImage,
-      metaFavicon: preset.metaFavicon || prev.metaFavicon,
-      allowDownload: preset.allowDownload || prev.allowDownload,
-      expiresAt: preset.expiresAt || prev.expiresAt,
-    }));
+      return {
+        ...prev,
+        name: prev.name, // Keep existing name
+        domain: prev.domain, // Keep existing domain
+        slug: prev.slug, // Keep existing slug
+        emailProtected: preset.emailProtected ?? prev.emailProtected,
+        emailAuthenticated:
+          preset.emailAuthenticated ?? prev.emailAuthenticated,
+        allowList: preset.allowList || prev.allowList,
+        denyList: preset.denyList || prev.denyList,
+        password: preset.password || prev.password,
+        enableCustomMetatag:
+          preset.enableCustomMetaTag ?? prev.enableCustomMetatag,
+        metaTitle: preset.metaTitle || prev.metaTitle,
+        metaDescription: preset.metaDescription || prev.metaDescription,
+        metaImage: preset.metaImage || prev.metaImage,
+        metaFavicon: preset.metaFavicon || prev.metaFavicon,
+        allowDownload: preset.allowDownload || prev.allowDownload,
+        expiresAt,
+      };
+    });
 
     setCurrentPreset(preset);
   };

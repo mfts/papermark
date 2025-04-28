@@ -23,6 +23,7 @@ import DenyListSection from "@/components/links/link-sheet/deny-list-section";
 import EmailAuthenticationSection from "@/components/links/link-sheet/email-authentication-section";
 import EmailProtectionSection from "@/components/links/link-sheet/email-protection-section";
 import ExpirationSection from "@/components/links/link-sheet/expiration-section";
+import ExpirationInSection from "@/components/links/link-sheet/expirationIn-section";
 import { LinkUpgradeOptions } from "@/components/links/link-sheet/link-options";
 import OGSection from "@/components/links/link-sheet/og-section";
 import PasswordSection from "@/components/links/link-sheet/password-section";
@@ -40,11 +41,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 
-type PRESET_DATA = Partial<DEFAULT_LINK_TYPE> & {
+export type PRESET_DATA = Partial<DEFAULT_LINK_TYPE> & {
   name: string;
   enableAllowList?: boolean;
   enableDenyList?: boolean;
   expiresAt?: Date | null;
+  expiresIn?: number | null;
   pId?: string | null;
 };
 
@@ -66,7 +68,6 @@ export default function EditPreset() {
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [data, setData] = useState<PRESET_DATA | null>(null);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
 
   const {
@@ -109,6 +110,7 @@ export default function EditPreset() {
         id: null,
         name: preset.name,
         expiresAt: preset.expiresAt,
+        expiresIn: preset.expiresIn,
         password: preset.password,
         emailProtected: preset.emailProtected ?? true,
         emailAuthenticated: preset.emailAuthenticated ?? false,
@@ -132,6 +134,12 @@ export default function EditPreset() {
     if (!data) return;
 
     setIsLoading(true);
+
+    if (data.expiresAt && data.expiresAt < new Date()) {
+      toast.error("Expiration time must be in the future");
+      setIsLoading(false);
+      return;
+    }
 
     try {
       const response = await fetch(`/api/teams/${teamId}/presets/${id}`, {
@@ -158,6 +166,7 @@ export default function EditPreset() {
           watermarkConfig: data.watermarkConfig,
           allowDownload: data.allowDownload,
           expiresAt: data.expiresAt,
+          expiresIn: data.expiresIn,
           pId: data.pId,
         }),
       });
@@ -194,7 +203,6 @@ export default function EditPreset() {
       console.error(error);
     } finally {
       setIsDeleting(false);
-      setShowDeleteDialog(false);
     }
   };
 
@@ -362,6 +370,10 @@ export default function EditPreset() {
                   data={data as any}
                   setData={setData as any}
                 />
+                <ExpirationInSection
+                  data={data as any}
+                  setData={setData as any}
+                />
               </div>
 
               <div className="rounded-lg border p-6">
@@ -412,7 +424,7 @@ export default function EditPreset() {
               </div>
             </div>
 
-            <div className="sticky top-0 md:max-h-[95vh] md:overflow-auto">
+            <div className="sticky top-0 md:overflow-auto">
               <div className="rounded-lg border">
                 {/* <div className="sticky top-0 flex h-14 items-center justify-center border-b bg-white px-5 dark:bg-gray-900">
                   <h2 className="text-lg font-medium">Preview</h2>

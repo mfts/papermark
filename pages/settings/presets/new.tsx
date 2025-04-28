@@ -23,6 +23,7 @@ import DenyListSection from "@/components/links/link-sheet/deny-list-section";
 import EmailAuthenticationSection from "@/components/links/link-sheet/email-authentication-section";
 import EmailProtectionSection from "@/components/links/link-sheet/email-protection-section";
 import ExpirationSection from "@/components/links/link-sheet/expiration-section";
+import ExpirationInSection from "@/components/links/link-sheet/expirationIn-section";
 import { LinkUpgradeOptions } from "@/components/links/link-sheet/link-options";
 import OGSection from "@/components/links/link-sheet/og-section";
 import PasswordSection from "@/components/links/link-sheet/password-section";
@@ -40,7 +41,9 @@ export default function NewPreset() {
   const teamId = teamInfo?.currentTeam?.id;
 
   const [isLoading, setIsLoading] = useState(false);
-  const [data, setData] = useState<DEFAULT_LINK_TYPE>({
+  const [data, setData] = useState<
+    DEFAULT_LINK_TYPE & { expiresIn?: number | null }
+  >({
     ...DEFAULT_LINK_PROPS(LinkType.DOCUMENT_LINK),
     name: "",
   });
@@ -82,6 +85,11 @@ export default function NewPreset() {
       return;
     }
 
+    if (data.expiresAt && data.expiresAt < new Date()) {
+      toast.error("Expiration time must be in the future");
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -109,6 +117,7 @@ export default function NewPreset() {
           watermarkConfig: data.watermarkConfig,
           allowDownload: data.allowDownload,
           expiresAt: data.expiresAt,
+          expiresIn: data.expiresIn,
         }),
       });
 
@@ -203,6 +212,7 @@ export default function NewPreset() {
                 />
                 <AllowDownloadSection data={data} setData={setData} />
                 <ExpirationSection data={data} setData={setData} />
+                <ExpirationInSection data={data} setData={setData} />
               </div>
 
               <div className="rounded-lg border p-6">
@@ -253,7 +263,7 @@ export default function NewPreset() {
               </div>
             </div>
 
-            <div className="sticky top-0 md:max-h-[95vh] md:overflow-auto">
+            <div className="sticky top-0 md:overflow-auto">
               <div className="rounded-lg border">
                 {/* <div className="sticky top-0 flex h-14 items-center justify-center border-b bg-white px-5 dark:bg-gray-900">
                   <h2 className="text-lg font-medium">Preview</h2>
