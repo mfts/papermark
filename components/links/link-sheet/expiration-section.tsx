@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 
+
+
 import { motion } from "motion/react";
 
 import { FADE_IN_ANIMATION_SETTINGS } from "@/lib/constants";
-import { formatDate, getDateTimeLocal } from "@/lib/utils";
+import { WITH_CUSTOM_PRESET_OPTION, getDateTimeLocal } from "@/lib/utils";
 
 import { Input } from "@/components/ui/input";
 import {
@@ -16,21 +18,6 @@ import {
 
 import { DEFAULT_LINK_TYPE } from ".";
 import LinkItem from "./link-item";
-
-const PRESET_OPTIONS = [
-  { label: "in 1 hour", value: 3600 },
-  { label: "in 6 hours", value: 21600 },
-  { label: "in 12 hours", value: 43200 },
-  { label: "in 1 day", value: 86400 },
-  { label: "in 3 days", value: 259200 },
-  { label: "in 7 days", value: 604800 },
-  { label: "in 14 days", value: 1209600 },
-  { label: "in 1 month", value: 2592000 },
-  { label: "in 3 months", value: 7776000 },
-  { label: "in 6 months", value: 15552000 },
-  { label: "in 1 year", value: 31536000 },
-  { label: "Custom", value: "custom" },
-];
 
 export default function ExpirationSection({
   data,
@@ -59,8 +46,8 @@ export default function ExpirationSection({
         (expirationDate.getTime() - now.getTime()) / 1000,
       );
 
-      const matchingPreset = PRESET_OPTIONS.find(
-        (option) =>
+      const matchingPreset = WITH_CUSTOM_PRESET_OPTION.find(
+        (option: { value: number | string }) =>
           option.value !== "custom" &&
           Math.abs(parseInt(option.value.toString()) - diffInSeconds) < 60,
       );
@@ -192,7 +179,7 @@ export default function ExpirationSection({
                 <SelectValue placeholder="Select expiration time" />
               </SelectTrigger>
               <SelectContent>
-                {PRESET_OPTIONS.map((option) => (
+                {WITH_CUSTOM_PRESET_OPTION.map((option) => (
                   <SelectItem
                     key={option.value}
                     value={option.value.toString()}

@@ -6,6 +6,7 @@ import { PRESET_DATA } from "@/pages/settings/presets/[id]";
 import { motion } from "motion/react";
 
 import { FADE_IN_ANIMATION_SETTINGS } from "@/lib/constants";
+import { PRESET_OPTIONS } from "@/lib/utils";
 
 import {
   Select,
@@ -17,20 +18,6 @@ import {
 
 import { DEFAULT_LINK_TYPE } from ".";
 import LinkItem from "./link-item";
-
-const PRESET_OPTIONS = [
-  { label: "in 1 hour", value: 3600 },
-  { label: "in 6 hours", value: 21600 },
-  { label: "in 12 hours", value: 43200 },
-  { label: "in 1 day", value: 86400 },
-  { label: "in 3 days", value: 259200 },
-  { label: "in 7 days", value: 604800 },
-  { label: "in 14 days", value: 1209600 },
-  { label: "in 1 month", value: 2592000 },
-  { label: "in 3 months", value: 7776000 },
-  { label: "in 6 months", value: 15552000 },
-  { label: "in 1 year", value: 31536000 },
-];
 
 export const formatExpirationTime = (seconds: number) => {
   if (seconds < 60) {
@@ -74,7 +61,7 @@ export default function ExpirationInSection({
 
     if (data.expiresIn) {
       const matchingPreset = PRESET_OPTIONS.find(
-        (option) => option.value === data.expiresIn,
+        (option: { value: number }) => option.value === data.expiresIn,
       );
 
       if (matchingPreset) {
@@ -132,14 +119,16 @@ export default function ExpirationInSection({
                 <SelectValue placeholder="Select expiration time" />
               </SelectTrigger>
               <SelectContent>
-                {PRESET_OPTIONS.map((option) => (
-                  <SelectItem
-                    key={option.value}
-                    value={option.value.toString()}
-                  >
-                    {option.label}
-                  </SelectItem>
-                ))}
+                {PRESET_OPTIONS.map(
+                  (option: { value: number; label: string }) => (
+                    <SelectItem
+                      key={option.value}
+                      value={option.value.toString()}
+                    >
+                      {option.label}
+                    </SelectItem>
+                  ),
+                )}
               </SelectContent>
             </Select>
 

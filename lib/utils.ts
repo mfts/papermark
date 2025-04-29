@@ -583,3 +583,26 @@ export const handleInvitationStatus = (
     shallow: true,
   });
 };
+
+/**
+ * Preset options for the expiration time of a link.
+ * @type {Array<{ label: string, value: number }>}
+ */
+
+export const PRESET_OPTIONS: { label: string; value: number }[] = [
+  { label: "in 1 hour", value: 3600 },
+  { label: "in 6 hours", value: 21600 },
+  { label: "in 12 hours", value: 43200 },
+  { label: "in 1 day", value: 86400 },
+  { label: "in 3 days", value: 259200 },
+  { label: "in 7 days", value: 604800 },
+  { label: "in 14 days", value: 1209600 },
+  { label: "in 1 month", value: 2592000 },
+  { label: "in 3 months", value: 7776000 },
+  { label: "in 6 months", value: 15552000 },
+  { label: "in 1 year", value: 31536000 },
+];
+export const WITH_CUSTOM_PRESET_OPTION: { label: string; value: number | string }[] = [
+  ...PRESET_OPTIONS,
+  { label: "Custom", value: "custom" },
+];
