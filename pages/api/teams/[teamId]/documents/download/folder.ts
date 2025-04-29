@@ -112,13 +112,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             fileName: string,
             fileKey: string,
         ) => {
-            const relativePath = fullPath === rootFolder.path
-                ? ""
-                : fullPath.replace(rootFolder.path + "/", "");
+            let relativePath = "";
+            if (fullPath !== rootFolder.path) {
+                const pathRegex = new RegExp(`^${rootFolder.path}/(.*)$`);
+                const match = fullPath.match(pathRegex);
+                relativePath = match ? match[1] : "";
+            }
 
-            const pathParts = [slugify(rootFolder.name), ...relativePath.split("/").filter(Boolean)];
+            const pathParts = [slugify(rootFolder.name)];
+            if (relativePath) {
+                pathParts.push(...relativePath.split("/").filter(Boolean).map(part => slugify(part)));
+            }
             let currentPath = "";
-
             for (const part of pathParts) {
                 currentPath += "/" + part;
                 if (!folderStructure[currentPath]) {
@@ -137,7 +142,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         };
 
         for (const folder of allFolders) {
-            const rootFolder = rootFolders.find((root) => folder.path.startsWith(root.path));
+            const rootFolder = rootFolders.find((root) => {
+                if (folder.path === root.path) return true;
+                return folder.path.startsWith(root.path + "/");
+            });
             if (!rootFolder) continue;
 
             const docs = allDocuments.filter((doc) => doc.folderId === folder.id);
@@ -153,6 +161,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
                 const fileKey = version.originalFile ?? version.file;
                 addFileToStructure(folder.path, rootFolder, doc.name, fileKey);
+            }
+        }
+
+        for (const rootFolder of rootFolders) {
+            const rootPath = "/" + slugify(rootFolder.name);
+            if (!folderStructure[rootPath]) {
+                folderStructure[rootPath] = {
+                    name: slugify(rootFolder.name),
+                    path: rootPath,
+                    files: []
+                };
             }
         }
 
