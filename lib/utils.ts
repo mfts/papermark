@@ -606,3 +606,26 @@ export const WITH_CUSTOM_PRESET_OPTION: { label: string; value: number | string 
   ...PRESET_OPTIONS,
   { label: "Custom", value: "custom" },
 ];
+
+export const formatExpirationTime = (seconds: number) => {
+  if (seconds < 60) {
+    return "Less than a minute";
+  } else if (seconds < 3600) {
+    const minutes = Math.floor(seconds / 60);
+    return `${minutes} minute${minutes > 1 ? "s" : ""}`;
+  } else if (seconds < 86400) {
+    const hours = Math.floor(seconds / 3600);
+    return `${hours} hour${hours > 1 ? "s" : ""}`;
+  } else if (seconds < 2592000) {
+    // Less than a month
+    const days = Math.floor(seconds / 86400);
+    return `${days} day${days > 1 ? "s" : ""}`;
+  } else if (seconds < 31536000) {
+    // Less than a year
+    const months = Math.floor(seconds / 2592000);
+    return `${months} month${months > 1 ? "s" : ""}`;
+  } else {
+    const years = Math.floor(seconds / 31536000);
+    return `${years} year${years > 1 ? "s" : ""}`;
+  }
+};

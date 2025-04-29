@@ -6,7 +6,7 @@ import { PRESET_DATA } from "@/pages/settings/presets/[id]";
 import { motion } from "motion/react";
 
 import { FADE_IN_ANIMATION_SETTINGS } from "@/lib/constants";
-import { PRESET_OPTIONS } from "@/lib/utils";
+import { PRESET_OPTIONS, formatExpirationTime } from "@/lib/utils";
 
 import {
   Select,
@@ -19,29 +19,6 @@ import {
 import { DEFAULT_LINK_TYPE } from ".";
 import LinkItem from "./link-item";
 
-export const formatExpirationTime = (seconds: number) => {
-  if (seconds < 60) {
-    return "Less than a minute";
-  } else if (seconds < 3600) {
-    const minutes = Math.floor(seconds / 60);
-    return `${minutes} minute${minutes > 1 ? "s" : ""}`;
-  } else if (seconds < 86400) {
-    const hours = Math.floor(seconds / 3600);
-    return `${hours} hour${hours > 1 ? "s" : ""}`;
-  } else if (seconds < 2592000) {
-    // Less than a month
-    const days = Math.floor(seconds / 86400);
-    return `${days} day${days > 1 ? "s" : ""}`;
-  } else if (seconds < 31536000) {
-    // Less than a year
-    const months = Math.floor(seconds / 2592000);
-    return `${months} month${months > 1 ? "s" : ""}`;
-  } else {
-    const years = Math.floor(seconds / 31536000);
-    return `${years} year${years > 1 ? "s" : ""}`;
-  }
-};
-
 export default function ExpirationInSection({
   data,
   setData,
@@ -51,7 +28,6 @@ export default function ExpirationInSection({
     React.SetStateAction<DEFAULT_LINK_TYPE & { expiresIn?: number | null }>
   >;
 }) {
-  console.log("data data", data);
   const [enabled, setEnabled] = useState<boolean>(false);
   const [selectedPreset, setSelectedPreset] = useState<string>("");
   const [error, setError] = useState<string | null>(null);

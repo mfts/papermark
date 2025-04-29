@@ -1,6 +1,4 @@
-import { useEffect, useState } from "react";
-
-
+import { useCallback, useEffect, useState } from "react";
 
 import { motion } from "motion/react";
 
@@ -29,7 +27,6 @@ export default function ExpirationSection({
   >;
 }) {
   const { expiresAt } = data;
-  console.log("expiresAt", expiresAt);
   const [enabled, setEnabled] = useState<boolean>(false);
   const [selectedPreset, setSelectedPreset] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
@@ -105,7 +102,7 @@ export default function ExpirationSection({
     setError(null);
   };
 
-  const formatExpirationTime = (date: Date | string) => {
+  const formatExpirationTime = useCallback((date: Date | string) => {
     const now = new Date();
     const dateObj = typeof date === "string" ? new Date(date) : date;
     const diffInSeconds = Math.floor(
@@ -130,9 +127,9 @@ export default function ExpirationSection({
         return `${days} day${days > 1 ? "s" : ""} and ${remainingHours} hour${remainingHours > 1 ? "s" : ""}`;
       }
     }
-  };
+  }, []);
 
-  const formatNaturalExpiration = (date: Date | string) => {
+  const formatNaturalExpiration = useCallback((date: Date | string) => {
     const now = new Date();
     const dateObj = typeof date === "string" ? new Date(date) : date;
 
@@ -159,7 +156,7 @@ export default function ExpirationSection({
     }
 
     return `on ${formattedDate} at ${formattedTime}`;
-  };
+  }, []);
 
   return (
     <div className="pb-5">
