@@ -7,7 +7,6 @@ import {
   WITH_CUSTOM_PRESET_OPTION,
   formatExpirationTime,
   getDateTimeLocal,
-  parseDateTime,
 } from "@/lib/utils";
 
 import { Input } from "@/components/ui/input";
@@ -19,8 +18,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { SmartDateTimePicker } from "@/components/ui/smart-date-time-picker";
-
-
 
 import { DEFAULT_LINK_TYPE } from ".";
 import LinkItem from "./link-item";
@@ -41,17 +38,17 @@ export default function ExpirationSection({
   >;
 }) {
   const { expiresAt } = data;
+  console.log("expiresAt", expiresAt);
   const [enabled, setEnabled] = useState<boolean>(false);
   const [selectedPreset, setSelectedPreset] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
-  const [naturalInput, setNaturalInput] = useState<string>("");
   const [customDate, setCustomDate] = useState<Date | null>(null);
 
   // Initialize state based on existing expiration
   useEffect(() => {
-    setEnabled(!!expiresAt);
+    setEnabled(!!expiresAt && !data.expiresIn);
 
-    if (expiresAt) {
+    if (expiresAt && !data.expiresIn) {
       const now = new Date();
       const expirationDate =
         typeof expiresAt === "string" ? new Date(expiresAt) : expiresAt;
@@ -72,22 +69,27 @@ export default function ExpirationSection({
         setCustomDate(expirationDate);
       }
     }
-  }, [expiresAt]);
+  }, [expiresAt, data.expiresIn]);
 
   const handleEnableExpiration = () => {
     if (enabled) {
       setData({ ...data, expiresAt: null });
       setSelectedPreset("");
       setError(null);
-      setNaturalInput("");
       setCustomDate(null);
+      setEnabled(false);
     } else {
-      setData({ ...data, expiresAt: null, expiresIn: null });
-      setSelectedPreset("");
-      setError(null);
-      setCustomDate(null);
+      const defaultExpiration = new Date();
+      defaultExpiration.setDate(defaultExpiration.getDate() + 7); // Default to 7 days
+      setData({
+        ...data,
+        expiresIn: null,
+        expiresAt: defaultExpiration,
+      });
+      setSelectedPreset("86400"); // 1 day in seconds
+      setCustomDate(defaultExpiration);
+      setEnabled(true);
     }
-    setEnabled(!enabled);
   };
 
   const handlePresetChange = (value: string) => {
