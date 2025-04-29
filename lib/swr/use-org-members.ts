@@ -19,7 +19,7 @@ export function useOrgMembers(teamId: string) {
   const shouldFetch = email && isOrganizationEmail(email);
 
   const { data, error, mutate } = useSWR<OrgMembersResponse>(
-    shouldFetch ? `/api/teams/${teamId}/organization/members` : null,
+    shouldFetch && teamId ? `/api/teams/${teamId}/organization/members` : null,
     fetcher
   );
 
