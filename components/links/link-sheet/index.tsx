@@ -510,7 +510,6 @@ export default function LinkSheet({
                         <div className="space-y-2">
                           <TagSection
                             {...{ data, setData }}
-                            editLink={!!currentLink}
                             teamId={teamInfo?.currentTeam?.id as string}
                           />
                         </div>
@@ -523,14 +522,11 @@ export default function LinkSheet({
                             <div className="space-y-2">
                               <div className="flex items-center justify-between">
                                 <Label htmlFor="preset">Link Preset</Label>
-                                <Link href="/settings/presets">
-                                  <Button
-                                    variant="link"
-                                    size="sm"
-                                    className="text-xs"
-                                  >
-                                    Manage Presets
-                                  </Button>
+                                <Link
+                                  href="/settings/presets"
+                                  className="text-xs text-muted-foreground hover:text-foreground hover:underline"
+                                >
+                                  Manage Presets
                                 </Link>
                               </div>
                               <Select onValueChange={applyPreset}>
@@ -670,7 +666,6 @@ export default function LinkSheet({
                         <div className="space-y-2">
                           <TagSection
                             {...{ data, setData }}
-                            editLink={!!currentLink}
                             teamId={teamInfo?.currentTeam?.id as string}
                           />
                         </div>
@@ -682,17 +677,13 @@ export default function LinkSheet({
                           presets.length > 0 && (
                             <div className="space-y-2">
                               <div className="flex items-center justify-between">
-                                <Label htmlFor="preset">Link Preset</Label>
-                                <Button
-                                  variant="link"
-                                  size="sm"
-                                  className="text-xs"
-                                  onClick={() =>
-                                    router.push("/settings/presets")
-                                  }
+                                 <Label htmlFor="preset">Link Preset</Label>
+                                <Link
+                                  href="/settings/presets"
+                                  className="text-xs text-muted-foreground hover:text-foreground hover:underline"
                                 >
                                   Manage Presets
-                                </Button>
+                                </Link>
                               </div>
                               <Select onValueChange={applyPreset}>
                                 <SelectTrigger className="w-full">

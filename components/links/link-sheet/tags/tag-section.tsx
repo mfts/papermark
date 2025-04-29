@@ -1,15 +1,17 @@
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 import { Dispatch, SetStateAction, useMemo, useState } from "react";
 
+import { PlanEnum } from "@/ee/stripe/constants";
 import { Tag } from "lucide-react";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
+import { usePlan } from "@/lib/swr/use-billing";
 import { useTags } from "@/lib/swr/use-tags";
 import { TagProps } from "@/lib/types";
 
-import { Button } from "@/components/ui/button";
+import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { Label } from "@/components/ui/label";
 import { MultiSelect } from "@/components/ui/multi-select-v2";
 
@@ -32,25 +34,21 @@ function getTagOption(tag: TagProps) {
 export default function TagSection({
   data,
   setData,
-  editLink,
   teamId,
 }: {
   data: DEFAULT_LINK_TYPE;
   setData: Dispatch<SetStateAction<DEFAULT_LINK_TYPE>>;
-  editLink?: boolean;
   teamId: string;
 }) {
-  const router = useRouter();
-  // TODO
-  // const [searchQuery, setSearchQuery] = useState<string>("");
-  // const [currentPage, setCurrentPage] = useState(1);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [selectedValues, setSelectedValues] = useState<string[]>(
     data.tags || [],
   );
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const { isFree } = usePlan();
 
   const {
-    // tagCount,
+    tagCount,
     tags: availableTags,
     loading: loadingTags,
   } = useTags({
@@ -75,6 +73,12 @@ export default function TagSection({
   };
 
   const createTag = async (tag: string) => {
+    if (isFree && tagCount && tagCount >= 5) {
+      setShowUpgradeModal(true);
+      toast.error("You have reached the maximum number of tags.");
+      return false;
+    }
+
     const res = await fetch(`/api/teams/${teamId}/tags`, {
       method: "POST",
       headers: {
@@ -110,12 +114,12 @@ export default function TagSection({
     <>
       <div className="flex justify-between">
         <Label htmlFor="link-domain">Tags</Label>
-        <a
+        <Link
           href={`/settings/tags`}
-          className="text-xs text-muted-foreground hover:text-foreground"
+          className="text-xs text-muted-foreground hover:text-foreground hover:underline"
         >
-          Manage
-        </a>
+          Manage Tags
+        </Link>
       </div>
       <div className="flex">
         <MultiSelect
@@ -131,6 +135,14 @@ export default function TagSection({
           onCreate={(search) => createTag(search)}
         />
       </div>
+      {showUpgradeModal && (
+        <UpgradePlanModal
+          clickedPlan={PlanEnum.Pro}
+          trigger="create_tag"
+          open={showUpgradeModal}
+          setOpen={setShowUpgradeModal}
+        />
+      )}
     </>
   );
 }
