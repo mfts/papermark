@@ -20,6 +20,9 @@ model Dataroom {
   // upload external documents
   uploadedDocuments DocumentUpload[]
 
+  // tags
+  tags TagItem[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
