@@ -3,7 +3,11 @@ import { useCallback, useEffect, useState } from "react";
 import { motion } from "motion/react";
 
 import { FADE_IN_ANIMATION_SETTINGS } from "@/lib/constants";
-import { WITH_CUSTOM_PRESET_OPTION, getDateTimeLocal } from "@/lib/utils";
+import {
+  WITH_CUSTOM_PRESET_OPTION,
+  formatExpirationTime,
+  getDateTimeLocal,
+} from "@/lib/utils";
 
 import { Input } from "@/components/ui/input";
 import {
@@ -21,9 +25,15 @@ export default function ExpirationSection({
   data,
   setData,
 }: {
-  data: DEFAULT_LINK_TYPE & { expiresIn?: number | null };
+  data: DEFAULT_LINK_TYPE & {
+    expiresIn?: { value: number; type: "natural" | "normal" } | null;
+  };
   setData: React.Dispatch<
-    React.SetStateAction<DEFAULT_LINK_TYPE & { expiresIn?: number | null }>
+    React.SetStateAction<
+      DEFAULT_LINK_TYPE & {
+        expiresIn?: { value: number; type: "natural" | "normal" } | null;
+      }
+    >
   >;
 }) {
   const { expiresAt } = data;
@@ -102,31 +112,13 @@ export default function ExpirationSection({
     setError(null);
   };
 
-  const formatExpirationTime = useCallback((date: Date | string) => {
+  const expirationTime = useCallback((date: Date | string) => {
     const now = new Date();
     const dateObj = typeof date === "string" ? new Date(date) : date;
     const diffInSeconds = Math.floor(
       (dateObj.getTime() - now.getTime()) / 1000,
     );
-
-    if (diffInSeconds < 60) {
-      return "Less than a minute";
-    } else if (diffInSeconds < 3600) {
-      const minutes = Math.floor(diffInSeconds / 60);
-      return `${minutes} minute${minutes > 1 ? "s" : ""}`;
-    } else if (diffInSeconds < 86400) {
-      const hours = Math.floor(diffInSeconds / 3600);
-      return `${hours} hour${hours > 1 ? "s" : ""}`;
-    } else {
-      const days = Math.floor(diffInSeconds / 86400);
-      const remainingHours = Math.floor((diffInSeconds % 86400) / 3600);
-
-      if (remainingHours === 0) {
-        return `${days} day${days > 1 ? "s" : ""}`;
-      } else {
-        return `${days} day${days > 1 ? "s" : ""} and ${remainingHours} hour${remainingHours > 1 ? "s" : ""}`;
-      }
-    }
+    return formatExpirationTime(diffInSeconds);
   }, []);
 
   const formatNaturalExpiration = useCallback((date: Date | string) => {
@@ -191,7 +183,7 @@ export default function ExpirationSection({
               <div className="space-y-1 text-xs text-muted-foreground">
                 <div>
                   Link will expire {formatNaturalExpiration(expiresAt)} ( in{" "}
-                  {formatExpirationTime(expiresAt)})
+                  {expirationTime(expiresAt)})
                 </div>
               </div>
             )}

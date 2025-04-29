@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
 
+
+
 import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
@@ -11,11 +13,10 @@ import { CircleHelpIcon, CrownIcon, PlusIcon } from "lucide-react";
 import useSWR from "swr";
 
 import { usePlan } from "@/lib/swr/use-billing";
-import { fetcher } from "@/lib/utils";
+import { fetcher, formatExpirationTime } from "@/lib/utils";
 
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import AppLayout from "@/components/layouts/app";
-import { formatExpirationTime } from "@/components/links/link-sheet/expirationIn-section";
 import { SettingsHeader } from "@/components/settings/settings-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -150,7 +151,8 @@ export default function Presets() {
                       )}
                       {preset.expiresIn && (
                         <Badge variant="time">
-                          Expires in {formatExpirationTime(preset.expiresIn)}
+                          Expires in{" "}
+                          {formatExpirationTime((preset.expiresIn as { type: "natural" | "normal"; value: number }).value)}
                         </Badge>
                       )}
                     </div>

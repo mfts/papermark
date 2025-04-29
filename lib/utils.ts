@@ -12,6 +12,7 @@ import { rgb } from "pdf-lib";
 import { ParsedUrlQuery } from "querystring";
 import { toast } from "sonner";
 import { twMerge } from "tailwind-merge";
+import * as chrono from "chrono-node";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -211,6 +212,22 @@ export const getDateTimeLocal = (timestamp?: Date): string => {
     .split(":")
     .slice(0, 2)
     .join(":");
+};
+
+export const formatDateTime = (
+  datetime: Date | string,
+  options?: Intl.DateTimeFormatOptions,
+) => {
+  if (datetime.toString() === "Invalid Date") return "";
+  return new Date(datetime).toLocaleTimeString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "numeric",
+    hour12: true,
+    ...options,
+  });
 };
 
 export async function hashPassword(password: string): Promise<string> {
@@ -608,24 +625,69 @@ export const WITH_CUSTOM_PRESET_OPTION: { label: string; value: number | string 
 ];
 
 export const formatExpirationTime = (seconds: number) => {
-  if (seconds < 60) {
+  // Define constants for time units
+  const MINUTE = 60;
+  const HOUR = 3600;
+  const DAY = 86400;
+  const YEAR = 31536000;
+
+
+  seconds = Math.ceil(seconds / MINUTE) * MINUTE;
+
+  if (seconds < MINUTE) {
     return "Less than a minute";
-  } else if (seconds < 3600) {
-    const minutes = Math.floor(seconds / 60);
-    return `${minutes} minute${minutes > 1 ? "s" : ""}`;
-  } else if (seconds < 86400) {
-    const hours = Math.floor(seconds / 3600);
-    return `${hours} hour${hours > 1 ? "s" : ""}`;
-  } else if (seconds < 2592000) {
-    // Less than a month
-    const days = Math.floor(seconds / 86400);
-    return `${days} day${days > 1 ? "s" : ""}`;
-  } else if (seconds < 31536000) {
-    // Less than a year
-    const months = Math.floor(seconds / 2592000);
-    return `${months} month${months > 1 ? "s" : ""}`;
-  } else {
-    const years = Math.floor(seconds / 31536000);
-    return `${years} year${years > 1 ? "s" : ""}`;
   }
+
+  // Return exact unit match if possible
+  if (seconds % YEAR === 0) {
+    const years = seconds / YEAR;
+    return `${years} year${years !== 1 ? "s" : ""}`;
+  }
+
+  if (seconds % DAY === 0) {
+    const days = seconds / DAY;
+    return `${days} day${days !== 1 ? "s" : ""}`;
+  }
+
+  if (seconds % HOUR === 0 && seconds < DAY) {
+    const hours = seconds / HOUR;
+    return `${hours} hour${hours !== 1 ? "s" : ""}`;
+  }
+
+  if (seconds % MINUTE === 0 && seconds < HOUR) {
+    const minutes = seconds / MINUTE;
+    return `${minutes} minute${minutes !== 1 ? "s" : ""}`;
+  }
+
+  // Mixed unit fallbacks
+  if (seconds < HOUR) {
+    const minutes = Math.floor(seconds / MINUTE);
+    return `${minutes} minute${minutes !== 1 ? "s" : ""}`;
+  }
+
+  if (seconds < DAY) {
+    const hours = Math.floor(seconds / HOUR);
+    const minutes = Math.floor((seconds % HOUR) / MINUTE);
+    return `${hours} hour${hours !== 1 ? "s" : ""}` +
+      (minutes > 0 ? ` and ${minutes} minute${minutes !== 1 ? "s" : ""}` : "");
+  }
+
+  if (seconds < YEAR) {
+    const days = Math.floor(seconds / DAY);
+    const hours = Math.floor((seconds % DAY) / HOUR);
+    return `${days} day${days !== 1 ? "s" : ""}` +
+      (hours > 0 ? ` and ${hours} hour${hours !== 1 ? "s" : ""}` : "");
+  }
+
+  // Years + remaining days
+  const years = Math.floor(seconds / YEAR);
+  const days = Math.floor((seconds % YEAR) / DAY);
+  return `${years} year${years !== 1 ? "s" : ""}` +
+    (days > 0 ? ` and ${days} day${days !== 1 ? "s" : ""}` : "");
+};
+
+// from DUB.IO
+export const parseDateTime = (str: Date | string) => {
+  if (str instanceof Date) return str;
+  return chrono.parseDate(str);
 };

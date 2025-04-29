@@ -42,7 +42,9 @@ export default function NewPreset() {
 
   const [isLoading, setIsLoading] = useState(false);
   const [data, setData] = useState<
-    DEFAULT_LINK_TYPE & { expiresIn?: number | null }
+    DEFAULT_LINK_TYPE & {
+      expiresIn?: { value: number; type: "natural" | "normal" } | null;
+    }
   >({
     ...DEFAULT_LINK_PROPS(LinkType.DOCUMENT_LINK),
     name: "",

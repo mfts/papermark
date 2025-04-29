@@ -227,7 +227,10 @@ export default function LinkSheet({
       let expiresAt = prev.expiresAt;
       if (preset.expiresIn) {
         const newExpiresAt = new Date();
-        newExpiresAt.setSeconds(newExpiresAt.getSeconds() + preset.expiresIn);
+        newExpiresAt.setSeconds(
+          newExpiresAt.getSeconds() +
+            (preset.expiresIn as { value: number }).value,
+        );
         expiresAt = newExpiresAt;
       } else {
         expiresAt = preset.expiresAt || prev.expiresAt;
