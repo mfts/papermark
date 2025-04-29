@@ -57,6 +57,7 @@ const DocumentCreateSchema = BaseSchema.extend({
   name: z.string(),
   contentType: z.string(),
   dataroomId: z.string().optional(),
+  folderId: z.string().nullable().optional(),
   createLink: z.boolean().optional().default(false),
   link: LinkSchema.optional(),
 });
@@ -224,7 +225,8 @@ async function handleDocumentCreate(
   token: string,
   res: NextApiResponse,
 ) {
-  const { fileUrl, name, contentType, dataroomId, createLink, link } = data;
+  const { fileUrl, name, contentType, dataroomId, createLink, link, folderId } =
+    data;
 
   // Check if the content type is supported
   const supportedContentType = getSupportedContentType(contentType);
@@ -329,6 +331,27 @@ async function handleDocumentCreate(
 
   const document = await documentCreationResponse.json();
   let newLink: any;
+
+  // If the document is added to a folder, update the folderId
+  if (folderId) {
+    const folder = await prisma.folder.findUnique({
+      where: { id: folderId, teamId: teamId },
+      select: {
+        id: true,
+      },
+    });
+
+    if (!folder) {
+      return res.status(400).json({ error: "Invalid folder ID" });
+    }
+
+    await prisma.document.update({
+      where: { id: document.id, teamId: teamId },
+      data: {
+        folderId: folder.id,
+      },
+    });
+  }
 
   // If we need to customize the link, update it after creation
   if (createLink && document.links && document.links.length > 0 && link) {
