@@ -674,16 +674,43 @@ export const formatExpirationTime = (seconds: number) => {
 
   if (seconds < YEAR) {
     const days = Math.floor(seconds / DAY);
-    const hours = Math.floor((seconds % DAY) / HOUR);
-    return `${days} day${days !== 1 ? "s" : ""}` +
-      (hours > 0 ? ` and ${hours} hour${hours !== 1 ? "s" : ""}` : "");
+    const remainingSeconds = seconds % DAY;
+    const hours = Math.floor(remainingSeconds / HOUR);
+    const minutes = Math.floor((remainingSeconds % HOUR) / MINUTE);
+
+    let result = `${days} day${days !== 1 ? "s" : ""}`;
+
+    if (hours > 0 && minutes > 0) {
+      result += `, ${hours} hour${hours !== 1 ? "s" : ""} and ${minutes} minute${minutes !== 1 ? "s" : ""}`;
+    } else if (hours > 0) {
+      result += ` and ${hours} hour${hours !== 1 ? "s" : ""}`;
+    } else if (minutes > 0) {
+      result += ` and ${minutes} minute${minutes !== 1 ? "s" : ""}`;
+    }
+
+    return result;
   }
 
-  // Years + remaining days
+  // Years + remaining time
   const years = Math.floor(seconds / YEAR);
-  const days = Math.floor((seconds % YEAR) / DAY);
-  return `${years} year${years !== 1 ? "s" : ""}` +
-    (days > 0 ? ` and ${days} day${days !== 1 ? "s" : ""}` : "");
+  const remainingSeconds = seconds % YEAR;
+  const days = Math.floor(remainingSeconds / DAY);
+  const hours = Math.floor((remainingSeconds % DAY) / HOUR);
+  const minutes = Math.floor((remainingSeconds % HOUR) / MINUTE);
+
+  let result = `${years} year${years !== 1 ? "s" : ""}`;
+
+  if (days > 0) {
+    result += `, ${days} day${days !== 1 ? "s" : ""}`;
+  }
+  if (hours > 0) {
+    result += `, ${hours} hour${hours !== 1 ? "s" : ""}`;
+  }
+  if (minutes > 0) {
+    result += ` and ${minutes} minute${minutes !== 1 ? "s" : ""}`;
+  }
+
+  return result;
 };
 
 // from DUB.IO

@@ -55,7 +55,8 @@ export const presetDataSchema = z.object({
   expiresIn: z.object({
     value: z.number(),
     type: z.enum(["natural", "normal"]),
-  }),
+  })
+    .nullable(),
 });
 
 export type PresetDataSchema = z.infer<typeof presetDataSchema>;
