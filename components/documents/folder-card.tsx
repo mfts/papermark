@@ -6,6 +6,8 @@ import { TeamContextType } from "@/context/team-context";
 import {
   BetweenHorizontalStartIcon,
   DownloadIcon,
+  ClipboardCopyIcon,
+  CopyIcon,
   FolderIcon,
   FolderInputIcon,
   FolderPenIcon,
@@ -256,7 +258,7 @@ export default function FolderCard({
                 <MoreVertical className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" ref={dropdownRef}>
+            <DropdownMenuContent align="end" ref={dropdownRef} className="w-64">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
               <DropdownMenuItem
                 onClick={(e) => {
@@ -308,6 +310,21 @@ export default function FolderCard({
               >
                 <DownloadIcon className="mr-2 h-4 w-4" />
                 Download folder
+</DropdownMenuItem>
+                  <DropdownMenuItem
+                onClick={(e) => {
+                  navigator.clipboard.writeText(folder.id);
+                  toast.success("Folder ID copied to clipboard");
+                }}
+                className="group/folderid"
+              >
+                <CopyIcon className="mr-2 h-4 w-4" />
+                <span className="inline group-hover/folderid:hidden">
+                  Copy Folder ID
+                </span>
+                <span className="hidden group-hover/folderid:inline group-hover/folderid:cursor-copy">
+                  {folder.id}
+                </span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
 

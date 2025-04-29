@@ -73,6 +73,8 @@ model Link {
 
   customFields CustomField[]
 
+  tags TagItem[]
+
   @@unique([domainSlug, slug])
   @@index([documentId])
   @@index([teamId])

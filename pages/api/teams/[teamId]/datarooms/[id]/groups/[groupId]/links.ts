@@ -5,8 +5,7 @@ import { getServerSession } from "next-auth/next";
 
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
-import { getTeamWithUsersAndDocument } from "@/lib/team/helper";
-import { CustomUser } from "@/lib/types";
+import { CustomUser, LinkWithViews } from "@/lib/types";
 import { decryptEncrpytedPassword, log } from "@/lib/utils";
 
 export default async function handle(
@@ -50,7 +49,7 @@ export default async function handle(
         return res.status(403).end("Unauthorized to access this team");
       }
 
-      const links = await prisma.link.findMany({
+      let links = await prisma.link.findMany({
         where: {
           groupId: groupId,
           dataroomId: dataroomId,
@@ -76,14 +75,53 @@ export default async function handle(
         },
       });
 
-      // Decrypt the password for each link
-      links.forEach((link) => {
-        if (link.password !== null) {
-          link.password = decryptEncrpytedPassword(link.password);
-        }
-      });
+      let extendedLinks: LinkWithViews[] = links as LinkWithViews[];
+      if (extendedLinks && extendedLinks.length > 0) {
+        extendedLinks = await Promise.all(
+          extendedLinks.map(async (link) => {
+            // Decrypt the password if it exists
+            if (link.password !== null) {
+              link.password = decryptEncrpytedPassword(link.password);
+            }
+            // Get the upload folder name if it exists
+            if (link.enableUpload && link.uploadFolderId !== null) {
+              const folder = await prisma.dataroomFolder.findUnique({
+                where: {
+                  id: link.uploadFolderId,
+                },
+                select: {
+                  name: true,
+                },
+              });
+              link.uploadFolderName = folder?.name;
+            }
+            // Get the tags for the link
+            const tags = await prisma.tag.findMany({
+              where: {
+                items: {
+                  some: {
+                    linkId: link.id,
+                    itemType: "LINK_TAG",
+                  },
+                },
+              },
+              select: {
+                id: true,
+                name: true,
+                color: true,
+                description: true,
+              },
+            });
 
-      return res.status(200).json(links);
+            return {
+              ...link,
+              tags,
+            };
+          }),
+        );
+      }
+
+      return res.status(200).json(extendedLinks);
     } catch (error) {
       log({
         message: `Failed to get links for dataroom: _${dataroomId}_,group: _${groupId}_. \n\n ${error} \n\n*Metadata*: \`{teamId: ${teamId}, groupId: ${groupId}, userId: ${userId}}\``,

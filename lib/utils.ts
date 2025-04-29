@@ -1,3 +1,5 @@
+import { NextRouter } from "next/router";
+
 import slugify from "@sindresorhus/slugify";
 import { upload } from "@vercel/blob/client";
 import { Message } from "ai";
@@ -6,7 +8,6 @@ import { type ClassValue, clsx } from "clsx";
 import crypto from "crypto";
 import ms from "ms";
 import { customAlphabet } from "nanoid";
-import { NextRouter } from "next/router";
 import { ThreadMessage } from "openai/resources/beta/threads/messages/messages";
 import { rgb } from "pdf-lib";
 import { ParsedUrlQuery } from "querystring";
@@ -394,6 +395,10 @@ export function constructMetadata({
   };
 }
 
+export const isDataUrl = (str: string): boolean => {
+  return str?.startsWith("data:");
+};
+
 export const convertDataUrlToFile = ({
   dataUrl,
   filename = "logo.png",
@@ -420,6 +425,30 @@ export const convertDataUrlToFile = ({
         : filename;
 
   return new File([u8arr], filename, { type: mime });
+};
+
+export const convertDataUrlToBuffer = (
+  dataUrl: string,
+): { buffer: Buffer; mimeType: string; filename: string } => {
+  // Extract mime type
+  const match = dataUrl.match(/:(.*?);/);
+  const mimeType = match ? match[1] : "";
+
+  // Extract base64 data
+  const base64Data = dataUrl.split(",")[1];
+  const buffer = Buffer.from(base64Data, "base64");
+
+  // Determine filename based on mime type
+  const filename =
+    mimeType === "image/png"
+      ? "image.png"
+      : mimeType === "image/jpeg"
+        ? "image.jpg"
+        : mimeType === "image/x-icon" || mimeType === "image/vnd.microsoft.icon"
+          ? "favicon.ico"
+          : "image";
+
+  return { buffer, mimeType, filename };
 };
 
 export const validateImageDimensions = (
@@ -563,15 +592,15 @@ export const getBreadcrumbPath = (path: string[]) => {
 };
 
 export const handleInvitationStatus = (
-  invitationStatus: 'accepted' | 'teamMember',
+  invitationStatus: "accepted" | "teamMember",
   queryParams: ParsedUrlQuery,
   router: NextRouter,
 ) => {
   switch (invitationStatus) {
-    case 'accepted':
+    case "accepted":
       toast.success("Welcome to the team! You've successfully joined.");
       break;
-    case 'teamMember':
+    case "teamMember":
       toast.error("You've already accepted this invitation!");
       break;
     default:
