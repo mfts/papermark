@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { TeamContextType } from "@/context/team-context";
 import {
   BetweenHorizontalStartIcon,
+  DownloadIcon,
   FolderIcon,
   FolderInputIcon,
   FolderPenIcon,
@@ -62,6 +63,7 @@ export default function FolderCard({
   const [addDataroomOpen, setAddDataroomOpen] = useState<boolean>(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState<boolean>(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const folderPath =
     isDataroom && dataroomId
@@ -180,6 +182,55 @@ export default function FolderCard({
     }
     router.push(folderPath);
   };
+  
+  const handleDownloadFolder = async () => {
+    setIsLoading(true);
+    try {
+      toast.promise(
+        fetch(
+          `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}/download/folder`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              folderId: folder.id,
+            }),
+          },
+        ),
+        {
+          loading: `Downloading ${folder.name} folder...`,
+          success: async (response) => {
+            const { downloadUrl } = await response.json();
+
+            const link = document.createElement("a");
+            link.href = downloadUrl;
+            link.rel = "noopener noreferrer";
+            document.body.appendChild(link);
+            link.click();
+
+            setTimeout(() => {
+              document.body.removeChild(link);
+            }, 100);
+
+            return `Folder ${folder.name} downloaded successfully.`;
+          },
+          error: (error) => {
+            console.log(error);
+            return (
+              error.message ||
+              `An error occurred while downloading ${folder.name} folder.`
+            );
+          },
+        },
+      );
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <>
@@ -285,6 +336,17 @@ export default function FolderCard({
                 {isDataroom
                   ? "Copy folder to other dataroom"
                   : "Add folder to dataroom"}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleDownloadFolder();
+                }}
+                disabled={isLoading}
+              >
+                <DownloadIcon className="mr-2 h-4 w-4" />
+                Download folder
               </DropdownMenuItem>
               <DropdownMenuSeparator />
 
