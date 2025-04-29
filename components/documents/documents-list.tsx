@@ -17,6 +17,7 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 import {
+  DownloadIcon,
   FileIcon,
   FolderIcon,
   FolderInputIcon,
@@ -26,17 +27,21 @@ import {
 import { motion } from "motion/react";
 import { toast } from "sonner";
 
-import { Skeleton } from "@/components/ui/skeleton";
-import { UploadNotificationDrawer } from "@/components/upload-notification";
-import UploadZone from "@/components/upload-zone";
+
 
 import { moveDocumentToFolder } from "@/lib/documents/move-documents";
 import { moveFolderToFolder } from "@/lib/documents/move-folder";
+import { useFolderDownload } from "@/lib/hooks/use-download";
 import { DataroomFolderWithCount } from "@/lib/swr/use-dataroom";
 import { FolderWithCount } from "@/lib/swr/use-documents";
 import { DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
 import { useMediaQuery } from "@/lib/utils/use-media-query";
 
+import { Skeleton } from "@/components/ui/skeleton";
+import { UploadNotificationDrawer } from "@/components/upload-notification";
+import UploadZone from "@/components/upload-zone";
+
+import { DownloadFolderConfirmationModal } from "../datarooms/actions/download-folder-confirmation-modal";
 import { itemsMessage } from "../datarooms/folders/utils";
 import { Button } from "../ui/button";
 import { Portal } from "../ui/portal";
@@ -84,6 +89,8 @@ export function DocumentsList({
 
   const [draggedDocument, setDraggedDocument] =
     useState<DocumentWithLinksAndLinkCountAndViewCount | null>(null);
+  const [showDownloadConfirmation, setShowDownloadConfirmation] =
+    useState<boolean>(false);
 
   //forFolder
   const [draggedFolder, setDraggedFolder] = useState<
@@ -94,6 +101,18 @@ export function DocumentsList({
   const [isDragging, setIsDragging] = useState<boolean>(false);
 
   const totalSelectedItem = [...selectedDocuments, ...selectedFolder].length;
+
+  const onDownloadComplete = () => {
+    setShowDownloadConfirmation(false);
+    setSelectedFolder([]);
+  };
+  const { downloadFolders, isLoading } = useFolderDownload({
+    teamId: teamInfo?.currentTeam?.id,
+    dataroomId: undefined,
+    isDataroom: false,
+    onDownloadComplete,
+  });
+
   const { setShowDeleteItemsModal, DeleteItemsModal } =
     useDeleteDocumentsAndFoldersModal({
       documentIds: selectedDocuments,
@@ -323,6 +342,10 @@ export function DocumentsList({
     setSelectedFolder([]);
   };
 
+  const handleDownloadFolders = async () => {
+    downloadFolders(selectedFolder);
+  };
+
   const HeaderContent = memo(() => {
     if (selectedDocumentsLength > 0 || selectedFoldersLength > 0) {
       return (
@@ -359,6 +382,18 @@ export function DocumentsList({
               <FolderInputIcon className="h-5 w-5" />
             </Button>
           </ButtonTooltip>
+          {selectedFoldersLength > 0 && (
+            <ButtonTooltip content="Download">
+              <Button
+                onClick={() => setShowDownloadConfirmation(true)}
+                className="mx-1.5 my-1 size-8 rounded-full hover:bg-gray-200 hover:dark:bg-gray-700"
+                variant="ghost"
+                size="icon"
+              >
+                <DownloadIcon className="h-5 w-5" />
+              </Button>
+            </ButtonTooltip>
+          )}
           <ButtonTooltip content="Delete">
             <Button
               onClick={() => setShowDeleteItemsModal(true)}
@@ -662,6 +697,13 @@ export function DocumentsList({
               />
             ) : null}
             <DeleteItemsModal />
+            <DownloadFolderConfirmationModal
+              open={showDownloadConfirmation}
+              setOpen={setShowDownloadConfirmation}
+              selectedFoldersLength={selectedFoldersLength}
+              onDownload={handleDownloadFolders}
+              isLoading={isLoading}
+            />
           </>
         )}
       </UploadZone>

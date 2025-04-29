@@ -16,6 +16,11 @@ import {
 import { toast } from "sonner";
 import { mutate } from "swr";
 
+import { useFolderDownload } from "@/lib/hooks/use-download";
+import { DataroomFolderWithCount } from "@/lib/swr/use-dataroom";
+import { FolderWithCount } from "@/lib/swr/use-documents";
+import { timeAgo } from "@/lib/utils";
+
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -25,10 +30,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-import { DataroomFolderWithCount } from "@/lib/swr/use-dataroom";
-import { FolderWithCount } from "@/lib/swr/use-documents";
-import { timeAgo } from "@/lib/utils";
 
 import { MoveToDataroomFolderModal } from "../datarooms/move-dataroom-folder-modal";
 import { EditFolderModal } from "../folders/edit-folder-modal";
@@ -63,7 +64,12 @@ export default function FolderCard({
   const [addDataroomOpen, setAddDataroomOpen] = useState<boolean>(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState<boolean>(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+
+  const { downloadFolders, isLoading } = useFolderDownload({
+    teamId: teamInfo?.currentTeam?.id,
+    dataroomId: dataroomId,
+    isDataroom: isDataroom,
+  });
 
   const folderPath =
     isDataroom && dataroomId
@@ -182,54 +188,9 @@ export default function FolderCard({
     }
     router.push(folderPath);
   };
-  
-  const handleDownloadFolder = async () => {
-    setIsLoading(true);
-    try {
-      toast.promise(
-        fetch(
-          `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}/download/folder`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              folderId: folder.id,
-            }),
-          },
-        ),
-        {
-          loading: `Downloading ${folder.name} folder...`,
-          success: async (response) => {
-            const { downloadUrl } = await response.json();
 
-            const link = document.createElement("a");
-            link.href = downloadUrl;
-            link.rel = "noopener noreferrer";
-            document.body.appendChild(link);
-            link.click();
-
-            setTimeout(() => {
-              document.body.removeChild(link);
-            }, 100);
-
-            return `Folder ${folder.name} downloaded successfully.`;
-          },
-          error: (error) => {
-            console.log(error);
-            return (
-              error.message ||
-              `An error occurred while downloading ${folder.name} folder.`
-            );
-          },
-        },
-      );
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setIsLoading(false);
-    }
+  const handleDownloadFolder = async (ids: string[]) => {
+    downloadFolders(ids, folder.name);
   };
 
   return (
@@ -341,7 +302,7 @@ export default function FolderCard({
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  handleDownloadFolder();
+                  handleDownloadFolder([folder.id]);
                 }}
                 disabled={isLoading}
               >

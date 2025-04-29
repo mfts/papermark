@@ -1,22 +1,20 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import { InvocationType, InvokeCommand } from "@aws-sdk/client-lambda";
 import { getServerSession } from "next-auth";
 import { getLambdaClient } from "@/lib/files/aws-client";
+import { InvokeCommand, InvocationType } from "@aws-sdk/client-lambda";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 import slugify from "@sindresorhus/slugify";
 
-export const config = {
-    maxDuration: 180,
-};
+export const config = { maxDuration: 180 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     const session = await getServerSession(req, res, authOptions);
     if (!session) return res.status(401).end("Unauthorized");
 
-    const { teamId, id: dataroomId } = req.query as { teamId: string; id: string };
-
+    const { teamId } = req.query as { teamId: string };
+    // api/teams/[teamId]/documents/download/folder
     if (req.method !== "POST") {
         res.setHeader("Allow", ["POST"]);
         return res.status(405).end(`Method ${req.method} Not Allowed`);
@@ -43,10 +41,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         if (!team) return res.status(403).end("Unauthorized to access this team");
 
-        const rootFolders = await prisma.dataroomFolder.findMany({
+        const rootFolders = await prisma.folder.findMany({
             where: {
                 id: { in: folderIds },
-                dataroomId,
+                teamId,
             },
             select: { id: true, name: true, path: true },
         });
@@ -55,22 +53,28 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             return res.status(404).json({ error: "No valid folders found" });
         }
 
-        const subfolders = await prisma.dataroomFolder.findMany({
+        const subfolders = await prisma.folder.findMany({
             where: {
-                dataroomId,
+                teamId,
                 OR: rootFolders.map((f) => ({
-                    path: { startsWith: f.path + "/" },
+                    path: {
+                        startsWith: f.path + "/",
+                    },
                 })),
             },
-            select: { id: true, name: true, path: true },
+            select: {
+                id: true,
+                name: true,
+                path: true,
+            },
         });
 
         const allFolders = [...rootFolders, ...subfolders];
         const folderMap = new Map(allFolders.map((f) => [f.path, { name: f.name, id: f.id }]));
 
-        const allDocuments = await prisma.dataroomDocument.findMany({
+        const allDocuments = await prisma.document.findMany({
             where: {
-                dataroomId,
+                teamId,
                 folderId: {
                     in: allFolders.map((f) => f.id),
                 },
@@ -78,20 +82,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             select: {
                 id: true,
                 folderId: true,
-                document: {
+                name: true,
+                versions: {
+                    where: { isPrimary: true },
                     select: {
-                        name: true,
-                        versions: {
-                            where: { isPrimary: true },
-                            select: {
-                                type: true,
-                                file: true,
-                                storageType: true,
-                                originalFile: true,
-                            },
-                            take: 1,
-                        },
+                        type: true,
+                        file: true,
+                        originalFile: true,
+                        storageType: true,
                     },
+                    take: 1,
                 },
             },
         });
@@ -115,6 +115,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             const relativePath = fullPath === rootFolder.path
                 ? ""
                 : fullPath.replace(rootFolder.path + "/", "");
+
             const pathParts = [slugify(rootFolder.name), ...relativePath.split("/").filter(Boolean)];
             let currentPath = "";
 
@@ -147,31 +148,32 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             }
 
             for (const doc of docs) {
-                const version = doc.document.versions[0];
+                const version = doc.versions[0];
                 if (!version || version.type === "notion" || version.storageType === "VERCEL_BLOB") continue;
 
                 const fileKey = version.originalFile ?? version.file;
-                addFileToStructure(folder.path, rootFolder, doc.document.name, fileKey);
+                addFileToStructure(folder.path, rootFolder, doc.name, fileKey);
             }
         }
 
         const client = getLambdaClient();
-        const params = {
-            FunctionName: `bulk-download-zip-creator-${process.env.NODE_ENV === "development" ? "dev" : "prod"}`,
-            InvocationType: InvocationType.RequestResponse,
-            Payload: JSON.stringify({
-                sourceBucket: process.env.NEXT_PRIVATE_UPLOAD_BUCKET,
-                fileKeys,
-                folderStructure,
-            }),
+        const lambdaPayload = {
+            sourceBucket: process.env.NEXT_PRIVATE_UPLOAD_BUCKET,
+            fileKeys,
+            folderStructure,
         };
 
-        const command = new InvokeCommand(params);
-        const response = await client.send(command);
+        const command = new InvokeCommand({
+            FunctionName: `bulk-download-zip-creator-${process.env.NODE_ENV === "development" ? "dev" : "prod"}`,
+            InvocationType: InvocationType.RequestResponse,
+            Payload: JSON.stringify(lambdaPayload),
+        });
 
-        if (!response.Payload) throw new Error("Lambda returned empty payload");
+        const lambdaResponse = await client.send(command);
 
-        const parsed = JSON.parse(new TextDecoder().decode(response.Payload));
+        if (!lambdaResponse.Payload) throw new Error("Empty Lambda response");
+
+        const parsed = JSON.parse(new TextDecoder().decode(lambdaResponse.Payload));
         const { downloadUrl } = JSON.parse(parsed.body);
 
         res.status(200).json({ downloadUrl });
