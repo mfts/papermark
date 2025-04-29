@@ -7,6 +7,7 @@ import {
   WITH_CUSTOM_PRESET_OPTION,
   formatExpirationTime,
   getDateTimeLocal,
+  parseDateTime,
 } from "@/lib/utils";
 
 import { Input } from "@/components/ui/input";
@@ -17,6 +18,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { SmartDateTimePicker } from "@/components/ui/smart-date-time-picker";
+
+
 
 import { DEFAULT_LINK_TYPE } from ".";
 import LinkItem from "./link-item";
@@ -40,6 +44,8 @@ export default function ExpirationSection({
   const [enabled, setEnabled] = useState<boolean>(false);
   const [selectedPreset, setSelectedPreset] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
+  const [naturalInput, setNaturalInput] = useState<string>("");
+  const [customDate, setCustomDate] = useState<Date | null>(null);
 
   // Initialize state based on existing expiration
   useEffect(() => {
@@ -63,6 +69,7 @@ export default function ExpirationSection({
         setSelectedPreset(matchingPreset.value.toString());
       } else {
         setSelectedPreset("custom");
+        setCustomDate(expirationDate);
       }
     }
   }, [expiresAt]);
@@ -72,12 +79,13 @@ export default function ExpirationSection({
       setData({ ...data, expiresAt: null });
       setSelectedPreset("");
       setError(null);
+      setNaturalInput("");
+      setCustomDate(null);
     } else {
-      const defaultExpiresAt = new Date();
-      defaultExpiresAt.setDate(defaultExpiresAt.getDate() + 7);
-      setData({ ...data, expiresAt: defaultExpiresAt, expiresIn: null });
-      setSelectedPreset("604800");
+      setData({ ...data, expiresAt: null, expiresIn: null });
+      setSelectedPreset("");
       setError(null);
+      setCustomDate(null);
     }
     setEnabled(!enabled);
   };
@@ -94,20 +102,25 @@ export default function ExpirationSection({
       const newExpiresAt = new Date();
       newExpiresAt.setSeconds(newExpiresAt.getSeconds() + seconds);
       setData({ ...data, expiresAt: newExpiresAt });
+      setCustomDate(newExpiresAt);
     }
   };
 
-  const handleCustomDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedDate = new Date(e.target.value);
-    const now = new Date();
+  const handleCustomDateChange = (date: Date | null) => {
+    if (!date) {
+      setError("Please select a valid date");
+      return;
+    }
 
-    // Check if the selected date is in the past
-    if (selectedDate <= now) {
+    const now = new Date();
+    if (date <= now) {
+      setData({ ...data, expiresAt: new Date(now.getTime() + 86400) }); // 1 day
       setError("Expiration time must be in the future");
       return;
     }
 
-    setData({ ...data, expiresAt: selectedDate });
+    setData({ ...data, expiresAt: date });
+    setCustomDate(date);
     setSelectedPreset("custom");
     setError(null);
   };
@@ -162,22 +175,52 @@ export default function ExpirationSection({
 
       {enabled && (
         <motion.div className="mt-3 space-y-3" {...FADE_IN_ANIMATION_SETTINGS}>
-          <div className="flex flex-col space-y-2">
-            <Select value={selectedPreset} onValueChange={handlePresetChange}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select expiration time" />
-              </SelectTrigger>
-              <SelectContent>
-                {WITH_CUSTOM_PRESET_OPTION.map((option) => (
-                  <SelectItem
-                    key={option.value}
-                    value={option.value.toString()}
-                  >
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="flex flex-col space-y-4">
+            <div className="flex flex-col space-y-2">
+              <SmartDateTimePicker
+                value={customDate}
+                onChange={handleCustomDateChange}
+                placeholder='e.g. "in 2 days", "next Friday at 3pm", "December 25th at 9am"'
+                showCalendarIcon={false}
+              />
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-neutral-300" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-white px-2 text-neutral-500">Or</span>
+                </div>
+              </div>
+              <Select value={selectedPreset} onValueChange={handlePresetChange}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select from preset times" />
+                </SelectTrigger>
+                <SelectContent>
+                  {WITH_CUSTOM_PRESET_OPTION.map((option) => (
+                    <SelectItem
+                      key={option.value}
+                      value={option.value.toString()}
+                    >
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {selectedPreset === "custom" ? (
+                <Input
+                  type="datetime-local"
+                  id="expiresAt"
+                  name="expiresAt"
+                  min={getDateTimeLocal()}
+                  value={expiresAt ? getDateTimeLocal(expiresAt) : ""}
+                  step="60"
+                  onChange={(e) =>
+                    handleCustomDateChange(new Date(e.target.value))
+                  }
+                  className="focus:ring-inset"
+                />
+              ) : null}
+            </div>
 
             {expiresAt && (
               <div className="space-y-1 text-xs text-muted-foreground">
@@ -190,19 +233,6 @@ export default function ExpirationSection({
 
             {error && <div className="text-xs text-red-500">{error}</div>}
           </div>
-
-          {(selectedPreset === "custom" || !selectedPreset) && (
-            <Input
-              type="datetime-local"
-              id="expiresAt"
-              name="expiresAt"
-              min={getDateTimeLocal()}
-              value={expiresAt ? getDateTimeLocal(expiresAt) : ""}
-              step="60" // need to add step to prevent weird date bug (https://stackoverflow.com/q/19284193/10639526)
-              onChange={handleCustomDateChange}
-              className="focus:ring-inset"
-            />
-          )}
         </motion.div>
       )}
     </div>

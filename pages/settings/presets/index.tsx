@@ -146,7 +146,7 @@ export default function Presets() {
                       )}
                       {preset.expiresAt && (
                         <Badge variant="time">
-                          Expires {format(new Date(preset.expiresAt), "MMM d")}
+                          Expires {format(new Date(preset.expiresAt), "MMM d, HH:mm aa")}
                         </Badge>
                       )}
                       {preset.expiresIn && (
