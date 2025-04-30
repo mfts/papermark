@@ -46,7 +46,10 @@ export type PRESET_DATA = Partial<DEFAULT_LINK_TYPE> & {
   enableAllowList?: boolean;
   enableDenyList?: boolean;
   expiresAt?: Date | null;
-  expiresIn?: number | null;
+  expiresIn?: {
+    value: number;
+    type: "natural" | "normal";
+  } | null;
   pId?: string | null;
 };
 
@@ -110,7 +113,10 @@ export default function EditPreset() {
         id: null,
         name: preset.name,
         expiresAt: preset.expiresAt,
-        expiresIn: preset.expiresIn,
+        expiresIn: preset.expiresIn as {
+          value: number;
+          type: "natural" | "normal";
+        },
         password: preset.password,
         emailProtected: preset.emailProtected ?? true,
         emailAuthenticated: preset.emailAuthenticated ?? false,

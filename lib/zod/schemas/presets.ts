@@ -52,7 +52,11 @@ export const presetDataSchema = z.object({
   enablePassword: z.boolean(),
   password: z.string().nullable(),
   expiresAt: z.string().nullable(),
-  expiresIn: z.number().nullable(),
+  expiresIn: z.object({
+    value: z.number(),
+    type: z.enum(["natural", "normal"]),
+  })
+    .nullable(),
 });
 
 export type PresetDataSchema = z.infer<typeof presetDataSchema>;
