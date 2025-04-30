@@ -1,6 +1,4 @@
-import { useEffect, useState } from "react";
-
-
+import { useCallback, useEffect, useState } from "react";
 
 import { motion } from "motion/react";
 
@@ -39,12 +37,17 @@ export default function ExpirationInSection({
   const [error, setError] = useState<string | null>(null);
   const [customDate, setCustomDate] = useState<Date | null>(null);
 
+  const resetStates = useCallback(() => {
+    setSelectedPreset("");
+    setError(null);
+    setCustomDate(null);
+  }, []);
+
   // Initialize state based on existing expiresIn data
   useEffect(() => {
     if (!data.expiresIn) {
       setEnabled(false);
-      setSelectedPreset("");
-      setCustomDate(null);
+      resetStates();
       return;
     }
 
@@ -72,16 +75,14 @@ export default function ExpirationInSection({
     }
   }, [data.expiresIn]);
 
-  const handleEnableExpiration = () => {
+  const handleEnableExpiration = useCallback(() => {
     if (enabled) {
       setData({
         ...data,
         expiresIn: null,
         expiresAt: null,
       });
-      setSelectedPreset("");
-      setError(null);
-      setCustomDate(null);
+      resetStates();
     } else {
       // Enable with default 7 days expiration
       setData({
@@ -94,62 +95,66 @@ export default function ExpirationInSection({
       setCustomDate(null);
     }
     setEnabled(!enabled);
-  };
+  }, [enabled, data, resetStates]);
 
-  const handlePresetChange = (value: string) => {
-    const seconds = parseInt(value);
-    if (!isNaN(seconds)) {
+  const handlePresetChange = useCallback(
+    (value: string) => {
+      const seconds = parseInt(value);
+      if (!isNaN(seconds)) {
+        setData({
+          ...data,
+          expiresIn: { value: seconds, type: "normal" },
+          expiresAt: null,
+        });
+        setCustomDate(null);
+        setSelectedPreset(value);
+        setError(null);
+      }
+    },
+    [data],
+  );
+  resetStates;
+
+  const handleCustomDateChange = useCallback(
+    (date: Date | null) => {
+      if (!date) {
+        setData({
+          ...data,
+          expiresIn: null,
+          expiresAt: null,
+        });
+        resetStates();
+        return;
+      }
+
+      const now = new Date();
+      const diffMs = date.getTime() - now.getTime();
+      const diffSeconds = Math.ceil(diffMs / 1000);
+
+      if (diffSeconds <= 0) {
+        setError("Please enter a future duration");
+        return;
+      }
+
       setData({
         ...data,
-        expiresIn: { value: seconds, type: "normal" },
+        expiresIn: { value: diffSeconds, type: "natural" },
         expiresAt: null,
       });
-      setCustomDate(null);
-      setSelectedPreset(value);
-      setError(null);
-    }
-  };
-
-  const handleCustomDateChange = (date: Date | null) => {
-    if (!date) {
-      setData({
-        ...data,
-        expiresIn: null,
-        expiresAt: null,
-      });
-      setCustomDate(null);
-      setSelectedPreset("");
-      setError(null);
-      return;
-    }
-
-    const now = new Date();
-    const diffMs = date.getTime() - now.getTime();
-    const diffSeconds = Math.ceil(diffMs / 1000);
-
-    if (diffSeconds <= 0) {
-      setError("Please enter a future duration");
-      return;
-    }
-
-    setData({
-      ...data,
-      expiresIn: { value: diffSeconds, type: "natural" },
-      expiresAt: null,
-    });
-    setCustomDate(date);
-    setSelectedPreset("");
-    setError(null);
-  };
+      setCustomDate(date);
+      resetStates();
+    },
+    [data, resetStates],
+  );
 
   // Custom formatter to show only the duration
-  const formatValue = (date: Date | null) => {
+  const formatValue = useCallback((date: Date | null) => {
     if (!date) return "";
     const now = new Date();
     const diffMs = date.getTime() - now.getTime();
     const diffSeconds = Math.ceil(diffMs / 1000);
     return "in " + formatExpirationTime(diffSeconds);
-  };
+  }, []);
 
   return (
     <div className="pb-5">

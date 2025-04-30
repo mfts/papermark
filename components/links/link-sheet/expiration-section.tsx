@@ -38,13 +38,12 @@ export default function ExpirationSection({
   >;
 }) {
   const { expiresAt } = data;
-  console.log("expiresAt", expiresAt);
   const [enabled, setEnabled] = useState<boolean>(false);
   const [selectedPreset, setSelectedPreset] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
   const [customDate, setCustomDate] = useState<Date | null>(null);
+  const [dataWasJustEnabled, setDataWasJustEnabled] = useState<boolean>(false);
 
-  // Initialize state based on existing expiration
   useEffect(() => {
     setEnabled(!!expiresAt && !data.expiresIn);
 
@@ -64,12 +63,24 @@ export default function ExpirationSection({
 
       if (matchingPreset) {
         setSelectedPreset(matchingPreset.value.toString());
+        setCustomDate(null);
       } else {
-        setSelectedPreset("custom");
-        setCustomDate(expirationDate);
+        if (!dataWasJustEnabled) {
+          setSelectedPreset("custom");
+          setCustomDate(expirationDate);
+        } else {
+          setSelectedPreset("");
+          setCustomDate(null);
+        }
       }
     }
-  }, [expiresAt, data.expiresIn]);
+  }, [data, expiresAt, dataWasJustEnabled]);
+
+  useEffect(() => {
+    if (dataWasJustEnabled) {
+      setDataWasJustEnabled(false);
+    }
+  }, [dataWasJustEnabled]);
 
   const handleEnableExpiration = () => {
     if (enabled) {
@@ -78,6 +89,7 @@ export default function ExpirationSection({
       setError(null);
       setCustomDate(null);
       setEnabled(false);
+      setDataWasJustEnabled(false);
     } else {
       const defaultExpiration = new Date();
       defaultExpiration.setDate(defaultExpiration.getDate() + 7); // Default to 7 days
@@ -89,6 +101,7 @@ export default function ExpirationSection({
       setSelectedPreset("86400"); // 1 day in seconds
       setCustomDate(defaultExpiration);
       setEnabled(true);
+      setDataWasJustEnabled(true);
     }
   };
 
@@ -183,7 +196,6 @@ export default function ExpirationSection({
                 value={customDate}
                 onChange={handleCustomDateChange}
                 placeholder='e.g. "in 2 days", "next Friday at 3pm", "December 25th at 9am"'
-                showCalendarIcon={false}
               />
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">

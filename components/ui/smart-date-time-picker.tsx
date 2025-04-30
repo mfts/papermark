@@ -10,6 +10,7 @@ import {
 interface SmartDateTimePickerProps {
   value: Date | null | undefined;
   onChange: (date: Date | null) => void;
+  onComplete?: (date: Date | null) => void;
   label?: string;
   placeholder?: string;
   className?: string;
@@ -23,6 +24,7 @@ interface SmartDateTimePickerProps {
 export function SmartDateTimePicker({
   value,
   onChange,
+  onComplete,
   label,
   placeholder = 'E.g. "tomorrow at 5pm" or "in 2 hours"',
   className,
@@ -66,12 +68,14 @@ export function SmartDateTimePicker({
         const parsedDateTime = parseDateTime(e.target.value);
         if (parsedDateTime) {
           handleDateChange(parsedDateTime);
+          onComplete?.(parsedDateTime);
         }
       } else {
         handleDateChange(null);
+        onComplete?.(null);
       }
     },
-    [handleDateChange],
+    [handleDateChange, onComplete],
   );
 
   const handleKeyDown = useCallback(
@@ -81,10 +85,11 @@ export function SmartDateTimePicker({
         const parsedDateTime = parseDateTime(inputRef.current.value);
         if (parsedDateTime) {
           handleDateChange(parsedDateTime);
+          onComplete?.(parsedDateTime);
         }
       }
     },
-    [handleDateChange],
+    [handleDateChange, onComplete],
   );
 
   const handleCalendarChange = useCallback(
@@ -92,9 +97,10 @@ export function SmartDateTimePicker({
       const date = new Date(e.target.value);
       if (!isNaN(date.getTime())) {
         handleDateChange(date);
+        onComplete?.(date);
       }
     },
-    [handleDateChange],
+    [handleDateChange, onComplete],
   );
 
   // Handle autofocus
