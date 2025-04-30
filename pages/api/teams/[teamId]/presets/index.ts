@@ -83,6 +83,9 @@ export default async function handle(
           watermarkConfig: validatedData.watermarkConfig
             ? JSON.stringify(validatedData.watermarkConfig)
             : undefined,
+          expiresIn: validatedData.expiresIn
+            ? JSON.stringify(validatedData.expiresIn)
+            : undefined,
         },
       });
       return res

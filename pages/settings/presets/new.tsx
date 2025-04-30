@@ -27,6 +27,7 @@ import ExpirationInSection from "@/components/links/link-sheet/expirationIn-sect
 import { LinkUpgradeOptions } from "@/components/links/link-sheet/link-options";
 import OGSection from "@/components/links/link-sheet/og-section";
 import PasswordSection from "@/components/links/link-sheet/password-section";
+import ScreenshotProtectionSection from "@/components/links/link-sheet/screenshot-protection-section";
 import WatermarkSection from "@/components/links/link-sheet/watermark-section";
 import Preview from "@/components/settings/og-preview";
 import { SettingsHeader } from "@/components/settings/settings-header";
@@ -120,6 +121,7 @@ export default function NewPreset() {
           allowDownload: data.allowDownload,
           expiresAt: data.expiresAt,
           expiresIn: data.expiresIn || null,
+          enableScreenshotProtection: data.enableScreenshotProtection,
         }),
       });
 
@@ -213,6 +215,18 @@ export default function NewPreset() {
                   handleUpgradeStateChange={handleUpgradeStateChange}
                 />
                 <AllowDownloadSection data={data} setData={setData} />
+                <ScreenshotProtectionSection
+                  data={data}
+                  setData={setData}
+                  isAllowed={
+                    isTrial ||
+                    (isPro && allowAdvancedLinkControls) ||
+                    isBusiness ||
+                    isDatarooms ||
+                    isDataroomsPlus
+                  }
+                  handleUpgradeStateChange={handleUpgradeStateChange}
+                />
                 <ExpirationSection data={data} setData={setData} />
                 <ExpirationInSection data={data} setData={setData} />
               </div>

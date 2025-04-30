@@ -229,7 +229,7 @@ export default function LinkSheet({
         const newExpiresAt = new Date();
         newExpiresAt.setSeconds(
           newExpiresAt.getSeconds() +
-            (preset.expiresIn as { value: number }).value,
+            (JSON.parse(preset.expiresIn as string) as { value: number }).value,
         );
         expiresAt = newExpiresAt;
       } else {
@@ -255,6 +255,8 @@ export default function LinkSheet({
         metaFavicon: preset.metaFavicon || prev.metaFavicon,
         allowDownload: preset.allowDownload || prev.allowDownload,
         expiresAt,
+        enableScreenshotProtection:
+          preset.enableScreenshotProtection || prev.enableScreenshotProtection,
       };
     });
 
