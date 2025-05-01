@@ -1,6 +1,8 @@
 import { Metadata } from "next";
 import { redirect } from "next/navigation";
 
+
+
 import NotFound from "@/pages/404";
 import { VerificationToken } from "@prisma/client";
 import { waitUntil } from "@vercel/functions";
@@ -11,6 +13,7 @@ import { redis } from "@/lib/redis";
 import { sendEmail } from "@/lib/resend";
 import { CustomUser } from "@/lib/types";
 import { subscribe, unsubscribe } from "@/lib/unsend";
+import { isPublicEmailDomain } from "@/lib/utils/email-domains";
 
 import EmailUpdated from "@/components/emails/email-updated";
 
@@ -65,6 +68,17 @@ export default async function ConfirmEmailChangePage(props: PageProps) {
   );
 }
 
+const updateUserIsPublicEmail = async (
+  currentUserId: string,
+  newEmail: string,
+) => {
+  const isPublicEmail = await isPublicEmailDomain(newEmail);
+  await prisma.user.update({
+    where: { id: currentUserId },
+    data: { isPublicEmail },
+  });
+};
+
 const VerifyEmailChange = async ({ params: { token } }: PageProps) => {
   const tokenFound = await prisma.verificationToken.findUnique({
     where: {
@@ -104,7 +118,7 @@ const VerifyEmailChange = async ({ params: { token } }: PageProps) => {
       deleteRequest(tokenFound),
 
       subscribe(data.newEmail),
-
+      updateUserIsPublicEmail(currentUserId, data.newEmail),
       sendEmail({
         to: data.email,
         subject: "Your email address has been changed",

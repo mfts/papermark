@@ -49,13 +49,14 @@ model User {
   documents      Document[]
   teams          UserTeam[]
   domains        Domain[]
-  chats  Chat[]
+  chats          Chat[]
   contactId      String?
   plan           String         @default("free")
   stripeId       String?        @unique // Stripe subscription / customer ID
   subscriptionId String?        @unique // Stripe subscription ID
   startsAt       DateTime? // Stripe subscription start date
   endsAt         DateTime? // Stripe subscription end date
+  isPublicEmail  Boolean        @default(false) // Whether the user's email domain is from a public/free provider
 
   restrictedTokens RestrictedToken[]
 

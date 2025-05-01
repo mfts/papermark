@@ -19,9 +19,9 @@ export default async function handler(
     }
 
     const userEmail = session.user.email;
-
+    const isOrgEmail = await isOrganizationEmail(userEmail);
     // Only proceed if user has an organization email
-    if (!isOrganizationEmail(userEmail)) {
+    if (isOrgEmail) {
       return res.status(200).json({ members: [] });
     }
 

@@ -1,25 +1,19 @@
-// Common email providers that should be excluded from organization matching
-export const COMMON_EMAIL_DOMAINS = new Set([
-  'gmail.com',
-  'yahoo.com',
-  'hotmail.com',
-  'outlook.com',
-  'aol.com',
-  'icloud.com',
-  'protonmail.com',
-  'mail.com',
-  'zoho.com',
-  'yandex.com',
-  'gmx.com',
-  'live.com',
-  'msn.com',
-  'me.com',
-  'mac.com'
-]);
+import prisma from "@/lib/prisma";
 
-export const isOrganizationEmail = (email: string): boolean => {
-  const domain = email.split('@')[1];
-  return domain ? !COMMON_EMAIL_DOMAINS.has(domain.toLowerCase()) : false;
+export const isOrganizationEmail = async (email: string): Promise<boolean> => {
+  const user = await prisma.user.findUnique({
+    where: {
+      email: email
+    },
+    select: {
+      isPublicEmail: true
+    }
+  });
+  if (!user) {
+    return false;
+  }
+
+  return !!user?.isPublicEmail;
 };
 
 export const getEmailDomain = (email: string): string | null => {

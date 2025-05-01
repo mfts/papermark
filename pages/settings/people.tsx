@@ -54,7 +54,9 @@ export default function Billing() {
   const analytics = useAnalytics();
 
   const { invitations } = useInvitations();
-  const { members } = useOrgMembers(teamInfo?.currentTeam?.id ?? "");
+  const { members, isLoading: membersLoading } = useOrgMembers(
+    teamInfo?.currentTeam?.id ?? "",
+  );
   const domain = session?.user?.email
     ? getEmailDomain(session.user.email)
     : null;
@@ -534,14 +536,30 @@ export default function Billing() {
               </div>
             )}
 
-            <div className="space-y-4">
-              {members &&
-                members.map((member) => {
+            {membersLoading && (
+              <div className="flex items-center justify-between px-10 py-4">
+                <div className="flex items-center gap-12">
+                  <div className="space-y-2">
+                    <Skeleton className="h-6 w-36" />
+                    <Skeleton className="h-4 w-36" />
+                  </div>
+                  <Skeleton className="h-4 w-20" />
+                </div>
+                <div className="flex gap-12">
+                  <Skeleton className="h-6 w-14" />
+                  <Skeleton className="h-6 w-4" />
+                </div>
+              </div>
+            )}
+
+            {members ? (
+              <ul className="mt-6 divide-y rounded-lg border">
+                {members.map((member) => {
                   const status = getMemberStatus(member);
                   return (
-                    <div
+                    <li
+                      className="flex items-center justify-between gap-12 overflow-auto px-10 py-4"
                       key={member.id}
-                      className="flex items-center justify-between rounded-lg border p-4"
                     >
                       <div className="flex items-center gap-4">
                         {isFree ? (
@@ -582,16 +600,7 @@ export default function Billing() {
                           )}
                         </div>
                       </div>
-                      {isFree ? (
-                        <UpgradePlanModal
-                          clickedPlan={PlanEnum.Pro}
-                          trigger={"add_org_member"}
-                        >
-                          <Button variant="default" size="sm">
-                            Upgrade to see
-                          </Button>
-                        </UpgradePlanModal>
-                      ) : status === "can_invite" ? (
+                      {isFree ? null : status === "can_invite" ? (
                         limits === null ||
                         (limits &&
                           limits.users! > numUsers + numInvitations) ? (
@@ -638,10 +647,11 @@ export default function Billing() {
                       ) : (
                         <Badge variant="secondary">Team member</Badge>
                       )}
-                    </div>
+                    </li>
                   );
                 })}
-            </div>
+              </ul>
+            ) : null}
           </div>
         </div>
       </main>
