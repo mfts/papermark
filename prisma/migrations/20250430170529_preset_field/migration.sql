@@ -5,5 +5,6 @@
 
 */
 -- AlterTable
-ALTER TABLE "LinkPreset" DROP COLUMN "expiresIn",
+ALTER TABLE "LinkPreset" ADD COLUMN     "enableScreenshotProtection" BOOLEAN DEFAULT false,
+DROP COLUMN "expiresIn",
 ADD COLUMN     "expiresIn" JSONB;

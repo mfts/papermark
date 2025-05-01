@@ -101,6 +101,7 @@ model LinkPreset {
   enableDenyList     Boolean?  @default(false)
   denyList           String[]
   expiresIn          Json?  // how many days from link creation until it expires in seconds {value: 604800, type: "natural | normal"}
+  enableScreenshotProtection Boolean? @default(false)
   expiresAt          DateTime?
   enablePassword     Boolean?  @default(false)
   password           String?

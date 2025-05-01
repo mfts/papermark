@@ -57,6 +57,9 @@ export const presetDataSchema = z.object({
     type: z.enum(["natural", "normal"]),
   })
     .nullable(),
+
+  // Screenshot Protection
+  enableScreenshotProtection: z.boolean(),
 });
 
 export type PresetDataSchema = z.infer<typeof presetDataSchema>;

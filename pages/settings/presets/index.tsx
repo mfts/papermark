@@ -153,7 +153,14 @@ export default function Presets() {
                       {preset.expiresIn && (
                         <Badge variant="time">
                           Expires in{" "}
-                          {formatExpirationTime((preset.expiresIn as { type: "natural" | "normal"; value: number }).value)}
+                          {formatExpirationTime(
+                            preset.expiresIn
+                              ? (JSON.parse(preset.expiresIn as string) as {
+                                  type: "natural" | "normal";
+                                  value: number;
+                                }).value
+                              : 0,
+                          )}
                         </Badge>
                       )}
                     </div>

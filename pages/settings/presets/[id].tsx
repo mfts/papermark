@@ -1,6 +1,10 @@
 import { useRouter } from "next/router";
 
+
+
 import { FormEvent, useEffect, useState } from "react";
+
+
 
 import { useTeam } from "@/context/team-context";
 import { PlanEnum } from "@/ee/stripe/constants";
@@ -9,10 +13,14 @@ import { AlertCircle, ArrowLeft, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import useSWR from "swr";
 
+
+
 import { usePlan } from "@/lib/swr/use-billing";
 import useLimits from "@/lib/swr/use-limits";
 import { WatermarkConfig } from "@/lib/types";
 import { fetcher } from "@/lib/utils";
+
+
 
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import AppLayout from "@/components/layouts/app";
@@ -27,19 +35,19 @@ import ExpirationInSection from "@/components/links/link-sheet/expirationIn-sect
 import { LinkUpgradeOptions } from "@/components/links/link-sheet/link-options";
 import OGSection from "@/components/links/link-sheet/og-section";
 import PasswordSection from "@/components/links/link-sheet/password-section";
+import ScreenshotProtectionSection from "@/components/links/link-sheet/screenshot-protection-section";
 import WatermarkSection from "@/components/links/link-sheet/watermark-section";
 import Preview from "@/components/settings/og-preview";
 import { SettingsHeader } from "@/components/settings/settings-header";
-import {
-  Alert,
-  AlertClose,
-  AlertDescription,
-  AlertTitle,
-} from "@/components/ui/alert";
+import { Alert, AlertClose, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+
+
+
+
 
 export type PRESET_DATA = Partial<DEFAULT_LINK_TYPE> & {
   name: string;
@@ -109,14 +117,18 @@ export default function EditPreset() {
         ? (JSON.parse(preset.watermarkConfig as string) as WatermarkConfig)
         : null;
 
+      const expiresIn = preset.expiresIn
+        ? (JSON.parse(preset.expiresIn as string) as {
+            value: number;
+            type: "natural" | "normal";
+          })
+        : null;
+
       setData({
         id: null,
         name: preset.name,
         expiresAt: preset.expiresAt,
-        expiresIn: preset.expiresIn as {
-          value: number;
-          type: "natural" | "normal";
-        },
+        expiresIn: expiresIn,
         password: preset.password,
         emailProtected: preset.emailProtected ?? true,
         emailAuthenticated: preset.emailAuthenticated ?? false,
@@ -131,6 +143,7 @@ export default function EditPreset() {
         enableWatermark: preset.enableWatermark ?? false,
         watermarkConfig: watermarkConfig,
         pId: preset.pId,
+        enableScreenshotProtection: preset.enableScreenshotProtection ?? false,
       });
     }
   }, [preset]);
@@ -174,6 +187,7 @@ export default function EditPreset() {
           expiresAt: data.expiresAt,
           expiresIn: data.expiresIn,
           pId: data.pId,
+          enableScreenshotProtection: data.enableScreenshotProtection,
         }),
       });
 
@@ -371,6 +385,18 @@ export default function EditPreset() {
                 <AllowDownloadSection
                   data={data as any}
                   setData={setData as any}
+                />
+                <ScreenshotProtectionSection
+                  data={data as any}
+                  setData={setData as any}
+                  isAllowed={
+                    isTrial ||
+                    (isPro && allowAdvancedLinkControls) ||
+                    isBusiness ||
+                    isDatarooms ||
+                    isDataroomsPlus
+                  }
+                  handleUpgradeStateChange={handleUpgradeStateChange}
                 />
                 <ExpirationSection
                   data={data as any}
