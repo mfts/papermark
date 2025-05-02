@@ -95,7 +95,6 @@ export default function DataroomDocumentCard({
     event.stopPropagation();
     event.preventDefault();
 
-    console.log("isFirstClick", isFirstClick);
     if (isFirstClick) {
       handleRemoveDocument(documentId);
       setIsFirstClick(false);
@@ -128,10 +127,12 @@ export default function DataroomDocumentCard({
           null,
           {
             populateCache: (_, docs) => {
-              return docs.filter(
-                (doc: DocumentWithLinksAndLinkCountAndViewCount) =>
-                  doc.id !== documentId,
-              );
+              return docs
+                ? docs.filter(
+                    (doc: DocumentWithLinksAndLinkCountAndViewCount) =>
+                      doc.id !== documentId,
+                  )
+                : [];
             },
             revalidate: false,
           },

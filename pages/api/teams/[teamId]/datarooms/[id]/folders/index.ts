@@ -206,10 +206,6 @@ export default async function handle(
 
     const { name, path } = req.body as { name: string; path?: string };
 
-    const childFolderPath = path
-      ? "/" + path + "/" + slugify(name)
-      : "/" + slugify(name);
-
     const parentFolderPath = path ? "/" + path : "/";
 
     try {
@@ -243,9 +239,33 @@ export default async function handle(
         },
       });
 
+      // Duplicate name handling
+      let folderName = name;
+      let counter = 1;
+      let childFolderPath = path
+        ? "/" + path + "/" + slugify(folderName)
+        : "/" + slugify(folderName);
+
+      while (true) {
+        const existingFolder = await prisma.dataroomFolder.findUnique({
+          where: {
+            dataroomId_path: {
+              dataroomId: dataroomId,
+              path: childFolderPath,
+            },
+          },
+        });
+        if (!existingFolder) break;
+        folderName = `${name} (${counter})`;
+        childFolderPath = path
+          ? "/" + path + "/" + slugify(folderName)
+          : "/" + slugify(folderName);
+        counter++;
+      }
+
       const folder = await prisma.dataroomFolder.create({
         data: {
-          name: name,
+          name: folderName,
           path: childFolderPath,
           parentId: parentFolder?.id ?? null,
           dataroomId: dataroomId,
@@ -266,7 +286,7 @@ export default async function handle(
     }
   } else {
     // We only allow POST requests
-    res.setHeader("Allow", ["GET"]);
+    res.setHeader("Allow", ["GET", "POST"]);
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 }

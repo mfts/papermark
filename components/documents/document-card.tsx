@@ -141,10 +141,12 @@ export default function DocumentsCard({
       }).then(() => {
         mutate(`/api/teams/${teamInfo?.currentTeam?.id}${endpoint}`, null, {
           populateCache: (_, docs) => {
-            return docs.filter(
-              (doc: DocumentWithLinksAndLinkCountAndViewCount) =>
-                doc.id !== documentId,
-            );
+            return docs
+              ? docs.filter(
+                  (doc: DocumentWithLinksAndLinkCountAndViewCount) =>
+                    doc.id !== documentId,
+                )
+              : [];
           },
           revalidate: false,
         });

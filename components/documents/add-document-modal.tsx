@@ -5,10 +5,26 @@ import { FormEvent, useEffect, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { PlanEnum } from "@/ee/stripe/constants";
+import { InfoIcon } from "lucide-react";
 import { usePlausible } from "next-plausible";
 import { parsePageId } from "notion-utils";
 import { toast } from "sonner";
 import { mutate } from "swr";
+
+
+
+import { useAnalytics } from "@/lib/analytics";
+import {
+  DocumentData,
+  createDocument,
+  createNewDocumentVersion,
+} from "@/lib/documents/create-document";
+import { putFile } from "@/lib/files/put-file";
+import { usePlan } from "@/lib/swr/use-billing";
+import useLimits from "@/lib/swr/use-limits";
+import { getSupportedContentType } from "@/lib/utils/get-content-type";
+
+
 
 import DocumentUpload from "@/components/document-upload";
 import { Button } from "@/components/ui/button";
@@ -29,18 +45,10 @@ import {
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-import { useAnalytics } from "@/lib/analytics";
-import {
-  DocumentData,
-  createDocument,
-  createNewDocumentVersion,
-} from "@/lib/documents/create-document";
-import { putFile } from "@/lib/files/put-file";
-import { usePlan } from "@/lib/swr/use-billing";
-import useLimits from "@/lib/swr/use-limits";
-import { getSupportedContentType } from "@/lib/utils/get-content-type";
+
 
 import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
+import { BadgeTooltip } from "../ui/tooltip";
 
 export function AddDocumentModal({
   newVersion,
@@ -506,13 +514,47 @@ export function AddDocumentModal({
                         className="text-sm text-muted-foreground underline-offset-4 transition-all hover:text-gray-800 hover:underline hover:dark:text-muted-foreground/80"
                         onClick={(e) => {
                           e.stopPropagation();
-                          document
-                            .getElementById("upload-multi-files-zone")
-                            ?.click();
+                          const input = document.getElementById(
+                            "upload-multi-files-zone",
+                          );
+                          if (input) {
+                            input.removeAttribute("webkitdirectory");
+                            input.removeAttribute("directory");
+                            input.click();
+                          }
                           clearModelStates();
                         }}
                       >
                         Want to upload multiple files?
+                      </button>
+                    </div>
+                  ) : null}
+                  {!newVersion ? (
+                    <div className="flex justify-center">
+                      <button
+                        type="button"
+                        className="flex items-center gap-1 text-sm text-muted-foreground underline-offset-4 transition-all hover:text-gray-800 hover:underline hover:dark:text-muted-foreground/80"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const input = document.getElementById(
+                            "upload-multi-files-zone",
+                          );
+                          if (input) {
+                            input.setAttribute("webkitdirectory", "");
+                            input.setAttribute("directory", "");
+                            input.setAttribute("multiple", "");
+                            input.click();
+                          }
+                          clearModelStates();
+                        }}
+                      >
+                        Want to upload folder?{" "}
+                        <BadgeTooltip
+                          content="Folders must contain at least one file to be uploaded. Empty folders are skipped automatically."
+                          key="upload_folder_tooltip"
+                        >
+                          <InfoIcon className="h-4 w-4 shrink-0 cursor-pointer text-muted-foreground hover:text-foreground" />
+                        </BadgeTooltip>
                       </button>
                     </div>
                   ) : null}

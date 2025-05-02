@@ -4,6 +4,7 @@ import { useCallback, useMemo, useRef, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { DocumentStorageType } from "@prisma/client";
+import slugify from "@sindresorhus/slugify";
 import { useSession } from "next-auth/react";
 import { DropEvent, FileRejection, useDropzone } from "react-dropzone";
 import { toast } from "sonner";
@@ -601,14 +602,127 @@ export default function UploadZone({
         event.target instanceof HTMLInputElement &&
         event.target.files
       ) {
-        for (let i = 0; i < event.target.files.length; i++) {
-          const file: FileWithPaths = event.target.files[i];
-          file.path = file.name;
-          file.whereToUploadPath = folderPathName;
-          filesToBePassedToOnDrop.push(event.target.files[i]);
+        const filesArray = Array.from(event.target.files) as FileWithPaths[];
+
+        const uniqueFolderPaths = new Set<string>();
+        for (const file of filesArray) {
+          const relativePath = (file as any).webkitRelativePath;
+          if (relativePath && relativePath.includes("/")) {
+            const folders = relativePath.split("/").slice(0, -1);
+            const basePathParts = folderPathName
+              ? folderPathName.split("/")
+              : [];
+
+            for (let i = 1; i <= folders.length; i++) {
+              const subFolders = folders.slice(0, i);
+              const fullPath = [...basePathParts, ...subFolders]
+                .map((path: string) => slugify(path))
+                .join("/");
+              uniqueFolderPaths.add(fullPath);
+            }
+          }
+        }
+
+        const sortedFolderPaths = Array.from(uniqueFolderPaths).sort(
+          (a, b) => a.split("/").length - b.split("/").length,
+        );
+        let toastId: string | number | undefined = undefined;
+        if (sortedFolderPaths.length > 0) {
+          toastId = toast.loading(`Creating folders...`);
+        }
+
+        for (const folderPath of sortedFolderPaths) {
+          const folderName = folderPath.split("/").pop();
+          if (!folderName || folderName.trim() === "") {
+            setRejectedFiles((prev) => [
+              {
+                fileName: "(Unnamed Folder)",
+                message: "Folder name cannot be empty",
+              },
+              ...prev,
+            ]);
+            continue;
+          }
+          try {
+            const response = await fetch(
+              `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  name: folderName,
+                  path:
+                    folderPath.split("/").slice(0, -1).join("/") ||
+                    folderPathName,
+                }),
+              },
+            );
+
+            if (!response.ok) {
+              const { message } = await response.json();
+              setRejectedFiles((prev) => [
+                {
+                  fileName: folderName,
+                  message: message,
+                },
+                ...prev,
+              ]);
+            } else {
+              analytics.capture("Folder Added", { folderName });
+              mutate(
+                `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}?root=true`,
+              );
+              mutate(
+                `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}`,
+              );
+              folderPathName &&
+                mutate(
+                  `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${folderPathName}`,
+                );
+            }
+          } catch (error) {
+            setRejectedFiles((prev) => [
+              {
+                fileName: folderName,
+                message: "Failed to create the folder",
+              },
+              ...prev,
+            ]);
+            toastId && toast.dismiss(toastId);
+          } finally {
+            toastId && toast.dismiss(toastId);
+          }
+        }
+
+        for (const file of filesArray) {
+          const isIgnoredSystemFile = (file: FileWithPaths) =>
+            file.name === ".DS_Store" || file.name.startsWith("._");
+
+          if (isIgnoredSystemFile(file)) {
+            continue;
+          }
+
+          const relativePath = (file as any).webkitRelativePath;
+          file.path = relativePath || file.name;
+
+          if (relativePath) {
+            const parentFolders = relativePath.split("/").slice(0, -1);
+            const slugifiedPath = parentFolders.map(slugify).join("/");
+
+            file.whereToUploadPath = folderPathName
+              ? slugifiedPath
+                ? `${folderPathName}/${slugifiedPath}`
+                : folderPathName
+              : slugifiedPath;
+          } else {
+            file.whereToUploadPath = folderPathName;
+          }
+
+          filesToBePassedToOnDrop.push(file);
         }
       }
-
       return filesToBePassedToOnDrop;
     },
     [folderPathName, endpointTargetType, teamInfo],
