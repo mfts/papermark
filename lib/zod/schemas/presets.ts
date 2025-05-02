@@ -23,17 +23,17 @@ export const watermarkConfigSchema = z
   .nullable();
 
 export const presetDataSchema = z.object({
+  name: z.string(),
   // Social Media Card
   enableCustomMetaTag: z.boolean(),
-  name: z.string(),
   metaFavicon: z.string().nullable(),
   metaImage: z.string().nullable(),
   metaTitle: z.string().nullable(),
   metaDescription: z.string().nullable(),
 
   // // Custom Fields
-  // enableCustomFields: z.boolean(),
-  // customFields: z.array(customFieldDataSchema).nullable(),
+  enableCustomFields: z.boolean().optional(),
+  customFields: z.array(customFieldDataSchema).nullable().optional(),
 
   // Watermark
   enableWatermark: z.boolean(),
@@ -47,15 +47,19 @@ export const presetDataSchema = z.object({
 
   // Email Protection
   emailProtected: z.boolean(),
-  emailAuthenticated: z.boolean(),
+  emailAuthenticated: z.boolean().optional(),
+
+  // Additional Options
   allowDownload: z.boolean().optional(),
   enablePassword: z.boolean(),
   password: z.string().nullable(),
   expiresAt: z.string().nullable(),
   expiresIn: z.number().nullable().optional(),
+  enableScreenshotProtection: z.boolean().optional(),
 
-  // Screenshot Protection
-  enableScreenshotProtection: z.boolean(),
+  // Agreement
+  enableAgreement: z.boolean().optional(),
+  agreementId: z.string().nullable().optional(),
 });
 
 export type PresetDataSchema = z.infer<typeof presetDataSchema>;

@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
+import { Prisma } from "@prisma/client";
 import { getServerSession } from "next-auth";
 import { ZodError } from "zod";
 
@@ -82,6 +83,9 @@ export default async function handle(
           pId: newId("preset"),
           watermarkConfig: validatedData.watermarkConfig
             ? JSON.stringify(validatedData.watermarkConfig)
+            : Prisma.JsonNull,
+          customFields: validatedData.customFields
+            ? validatedData.customFields
             : Prisma.JsonNull,
         },
       });

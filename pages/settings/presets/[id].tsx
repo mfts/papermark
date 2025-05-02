@@ -1,10 +1,6 @@
 import { useRouter } from "next/router";
 
-
-
 import { FormEvent, useEffect, useState } from "react";
-
-
 
 import { useTeam } from "@/context/team-context";
 import { PlanEnum } from "@/ee/stripe/constants";
@@ -13,24 +9,22 @@ import { AlertCircle, ArrowLeft, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import useSWR from "swr";
 
-
-
 import { usePlan } from "@/lib/swr/use-billing";
 import useLimits from "@/lib/swr/use-limits";
 import { WatermarkConfig } from "@/lib/types";
 import { fetcher } from "@/lib/utils";
 
-
-
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import AppLayout from "@/components/layouts/app";
 import { DEFAULT_LINK_TYPE } from "@/components/links/link-sheet";
+import AgreementSection from "@/components/links/link-sheet/agreement-section";
 import AllowDownloadSection from "@/components/links/link-sheet/allow-download-section";
 import AllowListSection from "@/components/links/link-sheet/allow-list-section";
+import { CustomFieldData } from "@/components/links/link-sheet/custom-fields-panel";
+import CustomFieldsSection from "@/components/links/link-sheet/custom-fields-section";
 import DenyListSection from "@/components/links/link-sheet/deny-list-section";
 import EmailAuthenticationSection from "@/components/links/link-sheet/email-authentication-section";
 import EmailProtectionSection from "@/components/links/link-sheet/email-protection-section";
-import ExpirationSection from "@/components/links/link-sheet/expiration-section";
 import ExpirationInSection from "@/components/links/link-sheet/expirationIn-section";
 import { LinkUpgradeOptions } from "@/components/links/link-sheet/link-options";
 import OGSection from "@/components/links/link-sheet/og-section";
@@ -39,15 +33,16 @@ import ScreenshotProtectionSection from "@/components/links/link-sheet/screensho
 import WatermarkSection from "@/components/links/link-sheet/watermark-section";
 import Preview from "@/components/settings/og-preview";
 import { SettingsHeader } from "@/components/settings/settings-header";
-import { Alert, AlertClose, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
+  Alert,
+  AlertClose,
+  AlertDescription,
+  AlertTitle,
+} from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-
-
-
-
 
 export type PRESET_DATA = Partial<DEFAULT_LINK_TYPE> & {
   name: string;
@@ -56,6 +51,8 @@ export type PRESET_DATA = Partial<DEFAULT_LINK_TYPE> & {
   expiresAt?: Date | null;
   expiresIn?: number | null;
   pId?: string | null;
+  enableCustomFields?: boolean;
+  customFields?: CustomFieldData[];
 };
 
 export default function EditPreset() {
@@ -114,6 +111,9 @@ export default function EditPreset() {
         ? (JSON.parse(preset.watermarkConfig as string) as WatermarkConfig)
         : null;
 
+      const customFields = preset.customFields
+        ? (preset.customFields as CustomFieldData[])
+        : [];
 
       setData({
         id: null,
@@ -135,6 +135,10 @@ export default function EditPreset() {
         watermarkConfig: watermarkConfig,
         pId: preset.pId,
         enableScreenshotProtection: preset.enableScreenshotProtection ?? false,
+        enableAgreement: preset.enableAgreement ?? false,
+        agreementId: preset.agreementId,
+        enableCustomFields: customFields.length > 0,
+        customFields: customFields,
       });
     }
   }, [preset]);
@@ -179,6 +183,8 @@ export default function EditPreset() {
           expiresIn: data.expiresIn,
           pId: data.pId,
           enableScreenshotProtection: data.enableScreenshotProtection,
+          enableCustomFields: data.enableCustomFields,
+          customFields: data.customFields,
         }),
       });
 
@@ -377,18 +383,6 @@ export default function EditPreset() {
                   data={data as any}
                   setData={setData as any}
                 />
-                <ScreenshotProtectionSection
-                  data={data as any}
-                  setData={setData as any}
-                  isAllowed={
-                    isTrial ||
-                    (isPro && allowAdvancedLinkControls) ||
-                    isBusiness ||
-                    isDatarooms ||
-                    isDataroomsPlus
-                  }
-                  handleUpgradeStateChange={handleUpgradeStateChange}
-                />
 
                 <ExpirationInSection
                   data={data as any}
@@ -437,6 +431,37 @@ export default function EditPreset() {
                     isDatarooms ||
                     isDataroomsPlus ||
                     allowWatermarkOnBusiness
+                  }
+                  handleUpgradeStateChange={handleUpgradeStateChange}
+                  presets={null}
+                />
+                <ScreenshotProtectionSection
+                  data={data as any}
+                  setData={setData as any}
+                  isAllowed={
+                    isTrial ||
+                    (isPro && allowAdvancedLinkControls) ||
+                    isBusiness ||
+                    isDatarooms ||
+                    isDataroomsPlus
+                  }
+                  handleUpgradeStateChange={handleUpgradeStateChange}
+                />
+                <AgreementSection
+                  data={data as any}
+                  setData={setData as any}
+                  isAllowed={isTrial || isDatarooms || isDataroomsPlus}
+                  handleUpgradeStateChange={handleUpgradeStateChange}
+                />
+                <CustomFieldsSection
+                  data={data as any}
+                  setData={setData as any}
+                  isAllowed={
+                    isTrial ||
+                    (isPro && allowAdvancedLinkControls) ||
+                    isBusiness ||
+                    isDatarooms ||
+                    isDataroomsPlus
                   }
                   handleUpgradeStateChange={handleUpgradeStateChange}
                   presets={null}

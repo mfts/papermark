@@ -245,6 +245,8 @@ export default function LinkSheet({
         metaImage: preset.metaImage || prev.metaImage,
         metaFavicon: preset.metaFavicon || prev.metaFavicon,
         allowDownload: preset.allowDownload || prev.allowDownload,
+        enableAgreement: preset.enableAgreement || prev.enableAgreement,
+        agreementId: preset.agreementId || prev.agreementId,
         enableScreenshotProtection:
           preset.enableScreenshotProtection || prev.enableScreenshotProtection,
       };

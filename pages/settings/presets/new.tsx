@@ -17,8 +17,11 @@ import {
   DEFAULT_LINK_PROPS,
   DEFAULT_LINK_TYPE,
 } from "@/components/links/link-sheet";
+import AgreementSection from "@/components/links/link-sheet/agreement-section";
 import AllowDownloadSection from "@/components/links/link-sheet/allow-download-section";
 import AllowListSection from "@/components/links/link-sheet/allow-list-section";
+import { CustomFieldData } from "@/components/links/link-sheet/custom-fields-panel";
+import CustomFieldsSection from "@/components/links/link-sheet/custom-fields-section";
 import DenyListSection from "@/components/links/link-sheet/deny-list-section";
 import EmailAuthenticationSection from "@/components/links/link-sheet/email-authentication-section";
 import EmailProtectionSection from "@/components/links/link-sheet/email-protection-section";
@@ -122,6 +125,12 @@ export default function NewPreset() {
           expiresAt: data.expiresAt,
           expiresIn: data.expiresIn || null,
           enableScreenshotProtection: data.enableScreenshotProtection,
+          enableAgreement: data.enableAgreement,
+          agreementId: data.agreementId,
+          enableCustomFields: data.customFields
+            ? data.customFields.length > 0
+            : false,
+          customFields: data.customFields,
         }),
       });
 
@@ -215,18 +224,6 @@ export default function NewPreset() {
                   handleUpgradeStateChange={handleUpgradeStateChange}
                 />
                 <AllowDownloadSection data={data} setData={setData} />
-                <ScreenshotProtectionSection
-                  data={data}
-                  setData={setData}
-                  isAllowed={
-                    isTrial ||
-                    (isPro && allowAdvancedLinkControls) ||
-                    isBusiness ||
-                    isDatarooms ||
-                    isDataroomsPlus
-                  }
-                  handleUpgradeStateChange={handleUpgradeStateChange}
-                />
 
                 <ExpirationInSection data={data} setData={setData} />
               </div>
@@ -263,7 +260,9 @@ export default function NewPreset() {
               </div>
 
               <div className="rounded-lg border p-6">
-                <h3 className="mb-4 text-lg font-medium">Watermark</h3>
+                <h3 className="mb-4 text-lg font-medium">
+                  Additional Security
+                </h3>
                 <WatermarkSection
                   data={data}
                   setData={setData}
@@ -272,6 +271,37 @@ export default function NewPreset() {
                     isDatarooms ||
                     isDataroomsPlus ||
                     allowWatermarkOnBusiness
+                  }
+                  handleUpgradeStateChange={handleUpgradeStateChange}
+                  presets={null}
+                />
+                <ScreenshotProtectionSection
+                  data={data}
+                  setData={setData}
+                  isAllowed={
+                    isTrial ||
+                    (isPro && allowAdvancedLinkControls) ||
+                    isBusiness ||
+                    isDatarooms ||
+                    isDataroomsPlus
+                  }
+                  handleUpgradeStateChange={handleUpgradeStateChange}
+                />
+                <AgreementSection
+                  data={data}
+                  setData={setData}
+                  isAllowed={isTrial || isDatarooms || isDataroomsPlus}
+                  handleUpgradeStateChange={handleUpgradeStateChange}
+                />
+                <CustomFieldsSection
+                  data={data}
+                  setData={setData}
+                  isAllowed={
+                    isTrial ||
+                    (isPro && allowAdvancedLinkControls) ||
+                    isBusiness ||
+                    isDatarooms ||
+                    isDataroomsPlus
                   }
                   handleUpgradeStateChange={handleUpgradeStateChange}
                   presets={null}

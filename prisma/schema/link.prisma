@@ -100,15 +100,19 @@ model LinkPreset {
   allowList          String[]
   enableDenyList     Boolean?  @default(false)
   denyList           String[]
-  expiresIn          Json?  // how many days from link creation until it expires in seconds {value: 604800, type: "natural | normal"}
+  expiresIn          Int?  // how many days from link creation until it expires in seconds {value: 604800, type: "natural | normal"}
   enableScreenshotProtection Boolean? @default(false)
   expiresAt          DateTime?
   enablePassword     Boolean?  @default(false)
   password           String?
   enableWatermark    Boolean?  @default(false)
   watermarkConfig    Json? //{text: "Confidential", isTiled: false, color: "#000000", fontSize: 12, opacity: 0.5, rotation: 30, position: "top-right"}
-  // enableCustomFields Boolean? @default(false)
-  // customFields       Json? //[{type: "SHORT_TEXT", identifier: "name", label: "Name", required: true}]
+  
+  enableAgreement Boolean? @default(false)
+  agreementId     String?
+
+  enableCustomFields Boolean? @default(false)
+  customFields       Json? //[{type: "SHORT_TEXT", identifier: "name", label: "Name", required: true}]
 
   isDefault Boolean @default(false)
 

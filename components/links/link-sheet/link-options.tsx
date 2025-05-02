@@ -207,6 +207,7 @@ export const LinkOptions = ({
         {...{ data, setData }}
         isAllowed={isTrial || isBusiness || isDatarooms || isDataroomsPlus}
         handleUpgradeStateChange={handleUpgradeStateChange}
+        presets={currentPreset}
       />
       {linkType === LinkType.DOCUMENT_LINK ? (
         <ProBannerSection
