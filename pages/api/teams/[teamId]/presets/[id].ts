@@ -101,8 +101,6 @@ export default async function handle(
           watermarkConfig: validatedData.watermarkConfig
             ? JSON.stringify(validatedData.watermarkConfig)
             : Prisma.JsonNull,
-          expiresIn: validatedData.expiresIn
-            ? JSON.stringify(validatedData.expiresIn)
             : Prisma.JsonNull,
         },
       });

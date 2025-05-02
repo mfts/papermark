@@ -82,10 +82,7 @@ export default async function handle(
           pId: newId("preset"),
           watermarkConfig: validatedData.watermarkConfig
             ? JSON.stringify(validatedData.watermarkConfig)
-            : undefined,
-          expiresIn: validatedData.expiresIn
-            ? JSON.stringify(validatedData.expiresIn)
-            : undefined,
+            : Prisma.JsonNull,
         },
       });
       return res

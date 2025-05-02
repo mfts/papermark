@@ -54,10 +54,7 @@ export type PRESET_DATA = Partial<DEFAULT_LINK_TYPE> & {
   enableAllowList?: boolean;
   enableDenyList?: boolean;
   expiresAt?: Date | null;
-  expiresIn?: {
-    value: number;
-    type: "natural" | "normal";
-  } | null;
+  expiresIn?: number | null;
   pId?: string | null;
 };
 
@@ -117,18 +114,12 @@ export default function EditPreset() {
         ? (JSON.parse(preset.watermarkConfig as string) as WatermarkConfig)
         : null;
 
-      const expiresIn = preset.expiresIn
-        ? (JSON.parse(preset.expiresIn as string) as {
-            value: number;
-            type: "natural" | "normal";
-          })
-        : null;
 
       setData({
         id: null,
         name: preset.name,
         expiresAt: preset.expiresAt,
-        expiresIn: expiresIn,
+        expiresIn: preset.expiresIn,
         password: preset.password,
         emailProtected: preset.emailProtected ?? true,
         emailAuthenticated: preset.emailAuthenticated ?? false,
@@ -398,10 +389,7 @@ export default function EditPreset() {
                   }
                   handleUpgradeStateChange={handleUpgradeStateChange}
                 />
-                <ExpirationSection
-                  data={data as any}
-                  setData={setData as any}
-                />
+
                 <ExpirationInSection
                   data={data as any}
                   setData={setData as any}

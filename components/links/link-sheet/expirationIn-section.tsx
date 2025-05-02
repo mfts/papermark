@@ -3,15 +3,8 @@ import { useCallback, useEffect, useState } from "react";
 import { motion } from "motion/react";
 
 import { FADE_IN_ANIMATION_SETTINGS } from "@/lib/constants";
-import { PRESET_OPTIONS, formatExpirationTime } from "@/lib/utils";
+import { formatExpirationTime } from "@/lib/utils";
 
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { SmartDateTimePicker } from "@/components/ui/smart-date-time-picker";
 
 import { DEFAULT_LINK_TYPE } from ".";
@@ -22,23 +15,21 @@ export default function ExpirationInSection({
   setData,
 }: {
   data: DEFAULT_LINK_TYPE & {
-    expiresIn?: { value: number; type: "natural" | "normal" } | null;
+    expiresIn?: number | null;
   };
   setData: React.Dispatch<
     React.SetStateAction<
       DEFAULT_LINK_TYPE & {
-        expiresIn?: { value: number; type: "natural" | "normal" } | null;
+        expiresIn?: number | null;
       }
     >
   >;
 }) {
   const [enabled, setEnabled] = useState<boolean>(false);
-  const [selectedPreset, setSelectedPreset] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
   const [customDate, setCustomDate] = useState<Date | null>(null);
 
   const resetStates = useCallback(() => {
-    setSelectedPreset("");
     setError(null);
     setCustomDate(null);
   }, []);
@@ -53,24 +44,9 @@ export default function ExpirationInSection({
 
     setEnabled(true);
 
-    if (data.expiresIn.type === "normal") {
-      const matchingPreset = PRESET_OPTIONS.find(
-        (option) => option.value === data.expiresIn?.value,
-      );
-
-      if (matchingPreset) {
-        setSelectedPreset(matchingPreset.value.toString());
-        setCustomDate(null);
-      } else {
-        const futureDate = new Date();
-        futureDate.setSeconds(futureDate.getSeconds() + data.expiresIn.value);
-        setSelectedPreset("");
-        setCustomDate(futureDate);
-      }
-    } else if (data.expiresIn.type === "natural") {
+    if (data.expiresIn) {
       const futureDate = new Date();
-      futureDate.setSeconds(futureDate.getSeconds() + data.expiresIn.value);
-      setSelectedPreset("");
+      futureDate.setSeconds(futureDate.getSeconds() + data.expiresIn);
       setCustomDate(futureDate);
     }
   }, [data.expiresIn]);
@@ -80,50 +56,25 @@ export default function ExpirationInSection({
       setData({
         ...data,
         expiresIn: null,
-        expiresAt: null,
       });
       resetStates();
     } else {
       // Enable with default 7 days expiration
       setData({
         ...data,
-        expiresIn: { value: 604800, type: "normal" },
-        expiresAt: null,
+        expiresIn: 604800,
       });
-      setSelectedPreset("604800");
       setError(null);
       setCustomDate(null);
     }
     setEnabled(!enabled);
   }, [enabled, data, resetStates]);
 
-  const handlePresetChange = useCallback(
-    (value: string) => {
-      const seconds = parseInt(value);
-      if (!isNaN(seconds)) {
-        setData({
-          ...data,
-          expiresIn: { value: seconds, type: "normal" },
-          expiresAt: null,
-        });
-        setCustomDate(null);
-        setSelectedPreset(value);
-        setError(null);
-      }
-    },
-    [data],
-  );
   resetStates;
 
   const handleCustomDateChange = useCallback(
     (date: Date | null) => {
       if (!date) {
-        setData({
-          ...data,
-          expiresIn: null,
-          expiresAt: null,
-        });
-        resetStates();
         return;
       }
 
@@ -138,13 +89,12 @@ export default function ExpirationInSection({
 
       setData({
         ...data,
-        expiresIn: { value: diffSeconds, type: "natural" },
-        expiresAt: null,
+        expiresIn: diffSeconds,
       });
       setCustomDate(date);
-      resetStates();
+      setError(null);
     },
-    [data, resetStates],
+    [data, setData],
   );
 
   // Custom formatter to show only the duration
@@ -168,7 +118,7 @@ export default function ExpirationInSection({
 
       {enabled && (
         <motion.div className="mt-3 space-y-3" {...FADE_IN_ANIMATION_SETTINGS}>
-          <div className="flex flex-col space-y-4">
+          <div className="flex flex-col space-y-2">
             <SmartDateTimePicker
               value={customDate}
               onChange={handleCustomDateChange}
@@ -177,36 +127,11 @@ export default function ExpirationInSection({
               showCalendarIcon={false}
             />
 
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-neutral-300" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-white px-2 text-neutral-500">Or</span>
-              </div>
-            </div>
-
-            <Select value={selectedPreset} onValueChange={handlePresetChange}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select expiration time" />
-              </SelectTrigger>
-              <SelectContent>
-                {PRESET_OPTIONS.map((option) => (
-                  <SelectItem
-                    key={option.value}
-                    value={option.value.toString()}
-                  >
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
             {data.expiresIn && (
-              <div className="space-y-1 text-xs text-muted-foreground">
+              <div className="text-xs text-muted-foreground">
                 <div>
-                  Links will expire in{" "}
-                  {formatExpirationTime(data.expiresIn.value)} after creation
+                  Links will expire in {formatExpirationTime(data.expiresIn)}{" "}
+                  after creation
                 </div>
               </div>
             )}

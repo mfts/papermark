@@ -52,11 +52,7 @@ export const presetDataSchema = z.object({
   enablePassword: z.boolean(),
   password: z.string().nullable(),
   expiresAt: z.string().nullable(),
-  expiresIn: z.object({
-    value: z.number(),
-    type: z.enum(["natural", "normal"]),
-  })
-    .nullable(),
+  expiresIn: z.number().nullable().optional(),
 
   // Screenshot Protection
   enableScreenshotProtection: z.boolean(),

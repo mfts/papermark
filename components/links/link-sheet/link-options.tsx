@@ -85,7 +85,7 @@ export const LinkOptions = ({
       <EmailProtectionSection {...{ data, setData }} />
       <AllowNotificationSection {...{ data, setData }} />
       <AllowDownloadSection {...{ data, setData }} />
-      <ExpirationSection {...{ data, setData }} />
+      <ExpirationSection {...{ data, setData }} presets={currentPreset} />
       {limits?.dataroomUpload &&
       linkType === LinkType.DATAROOM_LINK &&
       targetId ? (

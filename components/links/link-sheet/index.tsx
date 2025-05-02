@@ -227,19 +227,6 @@ export default function LinkSheet({
     if (!preset) return;
 
     setData((prev) => {
-      // Calculate expiresAt if expiresIn is provided
-      let expiresAt = prev.expiresAt;
-      if (preset.expiresIn) {
-        const newExpiresAt = new Date();
-        newExpiresAt.setSeconds(
-          newExpiresAt.getSeconds() +
-            (JSON.parse(preset.expiresIn as string) as { value: number }).value,
-        );
-        expiresAt = newExpiresAt;
-      } else {
-        expiresAt = preset.expiresAt || prev.expiresAt;
-      }
-
       return {
         ...prev,
         name: prev.name, // Keep existing name
@@ -258,7 +245,6 @@ export default function LinkSheet({
         metaImage: preset.metaImage || prev.metaImage,
         metaFavicon: preset.metaFavicon || prev.metaFavicon,
         allowDownload: preset.allowDownload || prev.allowDownload,
-        expiresAt,
         enableScreenshotProtection:
           preset.enableScreenshotProtection || prev.enableScreenshotProtection,
       };

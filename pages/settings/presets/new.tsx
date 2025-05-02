@@ -22,7 +22,6 @@ import AllowListSection from "@/components/links/link-sheet/allow-list-section";
 import DenyListSection from "@/components/links/link-sheet/deny-list-section";
 import EmailAuthenticationSection from "@/components/links/link-sheet/email-authentication-section";
 import EmailProtectionSection from "@/components/links/link-sheet/email-protection-section";
-import ExpirationSection from "@/components/links/link-sheet/expiration-section";
 import ExpirationInSection from "@/components/links/link-sheet/expirationIn-section";
 import { LinkUpgradeOptions } from "@/components/links/link-sheet/link-options";
 import OGSection from "@/components/links/link-sheet/og-section";
@@ -44,7 +43,8 @@ export default function NewPreset() {
   const [isLoading, setIsLoading] = useState(false);
   const [data, setData] = useState<
     DEFAULT_LINK_TYPE & {
-      expiresIn?: { value: number; type: "natural" | "normal" } | null;
+      expiresIn?: number | null;
+      customFields?: CustomFieldData[];
     }
   >({
     ...DEFAULT_LINK_PROPS(LinkType.DOCUMENT_LINK),
@@ -227,7 +227,7 @@ export default function NewPreset() {
                   }
                   handleUpgradeStateChange={handleUpgradeStateChange}
                 />
-                <ExpirationSection data={data} setData={setData} />
+
                 <ExpirationInSection data={data} setData={setData} />
               </div>
 

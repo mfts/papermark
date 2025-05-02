@@ -143,6 +143,9 @@ export function SmartDateTimePicker({
           defaultValue={formatDisplayValue(value)}
           onBlur={handleInputBlur}
           onKeyDown={handleKeyDown}
+          onChange={(e) => {
+            inputRef.current!.value = e.target.value;
+          }}
           className="flex-1 border-none bg-transparent text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-0 sm:text-sm"
         />
         {showCalendarIcon && (
