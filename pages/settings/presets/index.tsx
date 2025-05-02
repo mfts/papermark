@@ -1,8 +1,6 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
 
-
-
 import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
@@ -105,64 +103,26 @@ export default function Presets() {
               )}
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-3">
               {presets.map((preset) => (
                 <Link
                   key={preset.id}
                   href={`/settings/presets/${preset.id}`}
-                  className="group relative flex flex-col rounded-xl border border-border bg-card p-5 transition-all hover:border-primary/50 hover:shadow-md dark:border-border dark:bg-card dark:hover:border-primary/50"
+                  className="rounded-xl border border-gray-200 bg-white p-4 transition-[filter] hover:bg-gray-50 dark:border-gray-400 dark:bg-secondary dark:hover:bg-gray-800 sm:p-5"
                 >
-                  <div className="flex flex-col space-y-4">
-                    <div className="flex items-start justify-between">
-                      <div className="space-y-1">
-                        <h3 className="font-semibold text-foreground group-hover:text-primary">
-                          {preset.name}
-                        </h3>
-                        <p className="text-sm text-muted-foreground">
-                          Created{" "}
-                          {format(new Date(preset.createdAt), "MMM d, yyyy")}
-                        </p>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold">{preset.name}</span>
                       </div>
-                      <div className="rounded-full bg-primary/10 p-2">
-                        <PlusIcon className="h-4 w-4 text-primary" />
+                      <div className="mt-1 flex items-center gap-4 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-1">
+                          <span>
+                            Created:{" "}
+                            {format(new Date(preset.createdAt), "MMM d, yyyy")}
+                          </span>
+                        </div>
                       </div>
-                    </div>
-
-                    <div className="flex flex-wrap gap-2">
-                      {preset.emailProtected && (
-                        <Badge variant="email">Email Protected</Badge>
-                      )}
-                      {preset.password && (
-                        <Badge variant="password">Password Protected</Badge>
-                      )}
-                      {preset.enableCustomMetaTag && (
-                        <Badge variant="preview">Custom Preview</Badge>
-                      )}
-                      {preset.allowDownload && (
-                        <Badge variant="download">Download Allowed</Badge>
-                      )}
-                      {preset.enableWatermark && (
-                        <Badge variant="watermark">Watermark</Badge>
-                      )}
-                      {preset.expiresAt && (
-                        <Badge variant="time">
-                          Expires at{" "}
-                          {format(new Date(preset.expiresAt), "MMM d, HH:mm aa")}
-                        </Badge>
-                      )}
-                      {preset.expiresIn && (
-                        <Badge variant="time">
-                          Expires in{" "}
-                          {formatExpirationTime(
-                            preset.expiresIn
-                              ? (JSON.parse(preset.expiresIn as string) as {
-                                  type: "natural" | "normal";
-                                  value: number;
-                                }).value
-                              : 0,
-                          )}
-                        </Badge>
-                      )}
                     </div>
                   </div>
                 </Link>
