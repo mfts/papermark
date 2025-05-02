@@ -144,11 +144,14 @@ export async function getYearInReviewStats(teamId: string) {
   };
 }
 
-const tb = new Tinybird({ token: process.env.TINYBIRD_TOKEN! });
+const tb = new Tinybird({
+  token: process.env.TINYBIRD_TOKEN!,
+  baseUrl: process.env.TINYBIRD_HOST || 'https://api.tinybird.co',
+});
 
 // tinybird pipe to get the total view duration for all documents in a team
 export const getTotalDuration = tb.buildPipe({
-  pipe: "get_total_team_duration__v1",
+  pipe: "get_total_team_duration",
   parameters: z.object({
     documentIds: z.string().describe("Comma separated documentIds"),
   }),
