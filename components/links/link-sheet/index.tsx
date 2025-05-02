@@ -226,27 +226,31 @@ export default function LinkSheet({
     const preset = presets?.find((p) => p.id === presetId);
     if (!preset) return;
 
-    setData((prev) => ({
-      ...prev,
-      name: prev.name, // Keep existing name
-      domain: prev.domain, // Keep existing domain
-      slug: prev.slug, // Keep existing slug
-
-      // Apply preset values
-      emailProtected: preset.emailProtected ?? prev.emailProtected,
-      emailAuthenticated: preset.emailAuthenticated ?? prev.emailAuthenticated,
-      allowList: preset.allowList || prev.allowList,
-      denyList: preset.denyList || prev.denyList,
-      password: preset.password || prev.password,
-      enableCustomMetatag:
-        preset.enableCustomMetaTag ?? prev.enableCustomMetatag,
-      metaTitle: preset.metaTitle || prev.metaTitle,
-      metaDescription: preset.metaDescription || prev.metaDescription,
-      metaImage: preset.metaImage || prev.metaImage,
-      metaFavicon: preset.metaFavicon || prev.metaFavicon,
-      allowDownload: preset.allowDownload || prev.allowDownload,
-      expiresAt: preset.expiresAt || prev.expiresAt,
-    }));
+    setData((prev) => {
+      return {
+        ...prev,
+        name: prev.name, // Keep existing name
+        domain: prev.domain, // Keep existing domain
+        slug: prev.slug, // Keep existing slug
+        emailProtected: preset.emailProtected ?? prev.emailProtected,
+        emailAuthenticated:
+          preset.emailAuthenticated ?? prev.emailAuthenticated,
+        allowList: preset.allowList || prev.allowList,
+        denyList: preset.denyList || prev.denyList,
+        password: preset.password || prev.password,
+        enableCustomMetatag:
+          preset.enableCustomMetaTag ?? prev.enableCustomMetatag,
+        metaTitle: preset.metaTitle || prev.metaTitle,
+        metaDescription: preset.metaDescription || prev.metaDescription,
+        metaImage: preset.metaImage || prev.metaImage,
+        metaFavicon: preset.metaFavicon || prev.metaFavicon,
+        allowDownload: preset.allowDownload || prev.allowDownload,
+        enableAgreement: preset.enableAgreement || prev.enableAgreement,
+        agreementId: preset.agreementId || prev.agreementId,
+        enableScreenshotProtection:
+          preset.enableScreenshotProtection || prev.enableScreenshotProtection,
+      };
+    });
 
     setCurrentPreset(preset);
   };

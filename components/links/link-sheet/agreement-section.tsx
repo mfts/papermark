@@ -1,6 +1,10 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 
+import { Agreement, LinkPreset } from "@prisma/client";
 import { motion } from "motion/react";
+
+import { FADE_IN_ANIMATION_SETTINGS } from "@/lib/constants";
+import { useAgreements } from "@/lib/swr/use-agreements";
 
 import {
   Select,
@@ -10,14 +14,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-import { FADE_IN_ANIMATION_SETTINGS } from "@/lib/constants";
-import { useAgreements } from "@/lib/swr/use-agreements";
-
 import { DEFAULT_LINK_TYPE } from ".";
 import AgreementSheet from "./agreement-panel";
 import LinkItem from "./link-item";
 import { LinkUpgradeOptions } from "./link-options";
-import { Agreement } from "@prisma/client";
 
 export default function AgreementSection({
   data,
@@ -40,7 +40,14 @@ export default function AgreementSection({
   const [isAgreementSheetVisible, setIsAgreementSheetVisible] =
     useState<boolean>(false);
 
-  const filteredAgreements = useMemo(() => agreements.filter((agreement: Agreement) => !agreement.deletedAt || agreement.id === agreementId), [agreements]);
+  const filteredAgreements = useMemo(
+    () =>
+      agreements.filter(
+        (agreement: Agreement) =>
+          !agreement.deletedAt || agreement.id === agreementId,
+      ),
+    [agreements],
+  );
 
   useEffect(() => {
     setEnabled(enableAgreement!);

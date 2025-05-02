@@ -13,6 +13,7 @@ import { rgb } from "pdf-lib";
 import { ParsedUrlQuery } from "querystring";
 import { toast } from "sonner";
 import { twMerge } from "tailwind-merge";
+import * as chrono from "chrono-node";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -212,6 +213,22 @@ export const getDateTimeLocal = (timestamp?: Date): string => {
     .split(":")
     .slice(0, 2)
     .join(":");
+};
+
+export const formatDateTime = (
+  datetime: Date | string,
+  options?: Intl.DateTimeFormatOptions,
+) => {
+  if (datetime.toString() === "Invalid Date") return "";
+  return new Date(datetime).toLocaleTimeString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "numeric",
+    hour12: true,
+    ...options,
+  });
 };
 
 export async function hashPassword(password: string): Promise<string> {
@@ -611,4 +628,122 @@ export const handleInvitationStatus = (
   router.replace("/documents", undefined, {
     shallow: true,
   });
+};
+
+/**
+ * Preset options for the expiration time of a link.
+ * @type {Array<{ label: string, value: number }>}
+ */
+
+export const PRESET_OPTIONS: { label: string; value: number }[] = [
+  { label: "in 1 hour", value: 3600 },
+  { label: "in 6 hours", value: 21600 },
+  { label: "in 12 hours", value: 43200 },
+  { label: "in 1 day", value: 86400 },
+  { label: "in 3 days", value: 259200 },
+  { label: "in 7 days", value: 604800 },
+  { label: "in 14 days", value: 1209600 },
+  { label: "in 1 month", value: 2592000 },
+  { label: "in 3 months", value: 7776000 },
+  { label: "in 6 months", value: 15552000 },
+  { label: "in 1 year", value: 31536000 },
+];
+export const WITH_CUSTOM_PRESET_OPTION: { label: string; value: number | string }[] = [
+  ...PRESET_OPTIONS,
+  { label: "Custom", value: "custom" },
+];
+
+export const formatExpirationTime = (seconds: number) => {
+  // Define constants for time units
+  const MINUTE = 60;
+  const HOUR = 3600;
+  const DAY = 86400;
+  const YEAR = 31536000;
+
+
+  seconds = Math.ceil(seconds / MINUTE) * MINUTE;
+
+  if (seconds < MINUTE) {
+    return "Less than a minute";
+  }
+
+  // Return exact unit match if possible
+  if (seconds % YEAR === 0) {
+    const years = seconds / YEAR;
+    return `${years} year${years !== 1 ? "s" : ""}`;
+  }
+
+  if (seconds % DAY === 0) {
+    const days = seconds / DAY;
+    return `${days} day${days !== 1 ? "s" : ""}`;
+  }
+
+  if (seconds % HOUR === 0 && seconds < DAY) {
+    const hours = seconds / HOUR;
+    return `${hours} hour${hours !== 1 ? "s" : ""}`;
+  }
+
+  if (seconds % MINUTE === 0 && seconds < HOUR) {
+    const minutes = seconds / MINUTE;
+    return `${minutes} minute${minutes !== 1 ? "s" : ""}`;
+  }
+
+  // Mixed unit fallbacks
+  if (seconds < HOUR) {
+    const minutes = Math.floor(seconds / MINUTE);
+    return `${minutes} minute${minutes !== 1 ? "s" : ""}`;
+  }
+
+  if (seconds < DAY) {
+    const hours = Math.floor(seconds / HOUR);
+    const minutes = Math.floor((seconds % HOUR) / MINUTE);
+    return `${hours} hour${hours !== 1 ? "s" : ""}` +
+      (minutes > 0 ? ` and ${minutes} minute${minutes !== 1 ? "s" : ""}` : "");
+  }
+
+  if (seconds < YEAR) {
+    const days = Math.floor(seconds / DAY);
+    const remainingSeconds = seconds % DAY;
+    const hours = Math.floor(remainingSeconds / HOUR);
+    const minutes = Math.floor((remainingSeconds % HOUR) / MINUTE);
+
+    let result = `${days} day${days !== 1 ? "s" : ""}`;
+
+    if (hours > 0 && minutes > 0) {
+      result += `, ${hours} hour${hours !== 1 ? "s" : ""} and ${minutes} minute${minutes !== 1 ? "s" : ""}`;
+    } else if (hours > 0) {
+      result += ` and ${hours} hour${hours !== 1 ? "s" : ""}`;
+    } else if (minutes > 0) {
+      result += ` and ${minutes} minute${minutes !== 1 ? "s" : ""}`;
+    }
+
+    return result;
+  }
+
+  // Years + remaining time
+  const years = Math.floor(seconds / YEAR);
+  const remainingSeconds = seconds % YEAR;
+  const days = Math.floor(remainingSeconds / DAY);
+  const hours = Math.floor((remainingSeconds % DAY) / HOUR);
+  const minutes = Math.floor((remainingSeconds % HOUR) / MINUTE);
+
+  let result = `${years} year${years !== 1 ? "s" : ""}`;
+
+  if (days > 0) {
+    result += `, ${days} day${days !== 1 ? "s" : ""}`;
+  }
+  if (hours > 0) {
+    result += `, ${hours} hour${hours !== 1 ? "s" : ""}`;
+  }
+  if (minutes > 0) {
+    result += ` and ${minutes} minute${minutes !== 1 ? "s" : ""}`;
+  }
+
+  return result;
+};
+
+// from DUB.IO
+export const parseDateTime = (str: Date | string) => {
+  if (str instanceof Date) return str;
+  return chrono.parseDate(str);
 };

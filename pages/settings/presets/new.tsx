@@ -17,15 +17,19 @@ import {
   DEFAULT_LINK_PROPS,
   DEFAULT_LINK_TYPE,
 } from "@/components/links/link-sheet";
+import AgreementSection from "@/components/links/link-sheet/agreement-section";
 import AllowDownloadSection from "@/components/links/link-sheet/allow-download-section";
 import AllowListSection from "@/components/links/link-sheet/allow-list-section";
+import { CustomFieldData } from "@/components/links/link-sheet/custom-fields-panel";
+import CustomFieldsSection from "@/components/links/link-sheet/custom-fields-section";
 import DenyListSection from "@/components/links/link-sheet/deny-list-section";
 import EmailAuthenticationSection from "@/components/links/link-sheet/email-authentication-section";
 import EmailProtectionSection from "@/components/links/link-sheet/email-protection-section";
-import ExpirationSection from "@/components/links/link-sheet/expiration-section";
+import ExpirationInSection from "@/components/links/link-sheet/expirationIn-section";
 import { LinkUpgradeOptions } from "@/components/links/link-sheet/link-options";
 import OGSection from "@/components/links/link-sheet/og-section";
 import PasswordSection from "@/components/links/link-sheet/password-section";
+import ScreenshotProtectionSection from "@/components/links/link-sheet/screenshot-protection-section";
 import WatermarkSection from "@/components/links/link-sheet/watermark-section";
 import Preview from "@/components/settings/og-preview";
 import { SettingsHeader } from "@/components/settings/settings-header";
@@ -40,7 +44,12 @@ export default function NewPreset() {
   const teamId = teamInfo?.currentTeam?.id;
 
   const [isLoading, setIsLoading] = useState(false);
-  const [data, setData] = useState<DEFAULT_LINK_TYPE>({
+  const [data, setData] = useState<
+    DEFAULT_LINK_TYPE & {
+      expiresIn?: number | null;
+      customFields?: CustomFieldData[];
+    }
+  >({
     ...DEFAULT_LINK_PROPS(LinkType.DOCUMENT_LINK),
     name: "",
   });
@@ -82,6 +91,11 @@ export default function NewPreset() {
       return;
     }
 
+    if (data.expiresAt && data.expiresAt < new Date()) {
+      toast.error("Expiration time must be in the future");
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -109,6 +123,14 @@ export default function NewPreset() {
           watermarkConfig: data.watermarkConfig,
           allowDownload: data.allowDownload,
           expiresAt: data.expiresAt,
+          expiresIn: data.expiresIn || null,
+          enableScreenshotProtection: data.enableScreenshotProtection,
+          enableAgreement: data.enableAgreement,
+          agreementId: data.agreementId,
+          enableCustomFields: data.customFields
+            ? data.customFields.length > 0
+            : false,
+          customFields: data.customFields,
         }),
       });
 
@@ -202,7 +224,8 @@ export default function NewPreset() {
                   handleUpgradeStateChange={handleUpgradeStateChange}
                 />
                 <AllowDownloadSection data={data} setData={setData} />
-                <ExpirationSection data={data} setData={setData} />
+
+                <ExpirationInSection data={data} setData={setData} />
               </div>
 
               <div className="rounded-lg border p-6">
@@ -237,7 +260,9 @@ export default function NewPreset() {
               </div>
 
               <div className="rounded-lg border p-6">
-                <h3 className="mb-4 text-lg font-medium">Watermark</h3>
+                <h3 className="mb-4 text-lg font-medium">
+                  Additional Security
+                </h3>
                 <WatermarkSection
                   data={data}
                   setData={setData}
@@ -250,10 +275,41 @@ export default function NewPreset() {
                   handleUpgradeStateChange={handleUpgradeStateChange}
                   presets={null}
                 />
+                <ScreenshotProtectionSection
+                  data={data}
+                  setData={setData}
+                  isAllowed={
+                    isTrial ||
+                    (isPro && allowAdvancedLinkControls) ||
+                    isBusiness ||
+                    isDatarooms ||
+                    isDataroomsPlus
+                  }
+                  handleUpgradeStateChange={handleUpgradeStateChange}
+                />
+                <AgreementSection
+                  data={data}
+                  setData={setData}
+                  isAllowed={isTrial || isDatarooms || isDataroomsPlus}
+                  handleUpgradeStateChange={handleUpgradeStateChange}
+                />
+                <CustomFieldsSection
+                  data={data}
+                  setData={setData}
+                  isAllowed={
+                    isTrial ||
+                    (isPro && allowAdvancedLinkControls) ||
+                    isBusiness ||
+                    isDatarooms ||
+                    isDataroomsPlus
+                  }
+                  handleUpgradeStateChange={handleUpgradeStateChange}
+                  presets={null}
+                />
               </div>
             </div>
 
-            <div className="sticky top-0 md:max-h-[95vh] md:overflow-auto">
+            <div className="sticky top-0 md:overflow-auto">
               <div className="rounded-lg border">
                 {/* <div className="sticky top-0 flex h-14 items-center justify-center border-b bg-white px-5 dark:bg-gray-900">
                   <h2 className="text-lg font-medium">Preview</h2>
