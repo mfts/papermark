@@ -17,15 +17,19 @@ import { fetcher } from "@/lib/utils";
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import AppLayout from "@/components/layouts/app";
 import { DEFAULT_LINK_TYPE } from "@/components/links/link-sheet";
+import AgreementSection from "@/components/links/link-sheet/agreement-section";
 import AllowDownloadSection from "@/components/links/link-sheet/allow-download-section";
 import AllowListSection from "@/components/links/link-sheet/allow-list-section";
+import { CustomFieldData } from "@/components/links/link-sheet/custom-fields-panel";
+import CustomFieldsSection from "@/components/links/link-sheet/custom-fields-section";
 import DenyListSection from "@/components/links/link-sheet/deny-list-section";
 import EmailAuthenticationSection from "@/components/links/link-sheet/email-authentication-section";
 import EmailProtectionSection from "@/components/links/link-sheet/email-protection-section";
-import ExpirationSection from "@/components/links/link-sheet/expiration-section";
+import ExpirationInSection from "@/components/links/link-sheet/expirationIn-section";
 import { LinkUpgradeOptions } from "@/components/links/link-sheet/link-options";
 import OGSection from "@/components/links/link-sheet/og-section";
 import PasswordSection from "@/components/links/link-sheet/password-section";
+import ScreenshotProtectionSection from "@/components/links/link-sheet/screenshot-protection-section";
 import WatermarkSection from "@/components/links/link-sheet/watermark-section";
 import Preview from "@/components/settings/og-preview";
 import { SettingsHeader } from "@/components/settings/settings-header";
@@ -40,12 +44,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 
-type PRESET_DATA = Partial<DEFAULT_LINK_TYPE> & {
+export type PRESET_DATA = Partial<DEFAULT_LINK_TYPE> & {
   name: string;
   enableAllowList?: boolean;
   enableDenyList?: boolean;
   expiresAt?: Date | null;
+  expiresIn?: number | null;
   pId?: string | null;
+  enableCustomFields?: boolean;
+  customFields?: CustomFieldData[];
 };
 
 export default function EditPreset() {
@@ -66,7 +73,6 @@ export default function EditPreset() {
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [data, setData] = useState<PRESET_DATA | null>(null);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
 
   const {
@@ -105,10 +111,15 @@ export default function EditPreset() {
         ? (JSON.parse(preset.watermarkConfig as string) as WatermarkConfig)
         : null;
 
+      const customFields = preset.customFields
+        ? (preset.customFields as CustomFieldData[])
+        : [];
+
       setData({
         id: null,
         name: preset.name,
         expiresAt: preset.expiresAt,
+        expiresIn: preset.expiresIn,
         password: preset.password,
         emailProtected: preset.emailProtected ?? true,
         emailAuthenticated: preset.emailAuthenticated ?? false,
@@ -123,6 +134,11 @@ export default function EditPreset() {
         enableWatermark: preset.enableWatermark ?? false,
         watermarkConfig: watermarkConfig,
         pId: preset.pId,
+        enableScreenshotProtection: preset.enableScreenshotProtection ?? false,
+        enableAgreement: preset.enableAgreement ?? false,
+        agreementId: preset.agreementId,
+        enableCustomFields: customFields.length > 0,
+        customFields: customFields,
       });
     }
   }, [preset]);
@@ -132,6 +148,12 @@ export default function EditPreset() {
     if (!data) return;
 
     setIsLoading(true);
+
+    if (data.expiresAt && data.expiresAt < new Date()) {
+      toast.error("Expiration time must be in the future");
+      setIsLoading(false);
+      return;
+    }
 
     try {
       const response = await fetch(`/api/teams/${teamId}/presets/${id}`, {
@@ -158,7 +180,11 @@ export default function EditPreset() {
           watermarkConfig: data.watermarkConfig,
           allowDownload: data.allowDownload,
           expiresAt: data.expiresAt,
+          expiresIn: data.expiresIn,
           pId: data.pId,
+          enableScreenshotProtection: data.enableScreenshotProtection,
+          enableCustomFields: data.enableCustomFields,
+          customFields: data.customFields,
         }),
       });
 
@@ -194,7 +220,6 @@ export default function EditPreset() {
       console.error(error);
     } finally {
       setIsDeleting(false);
-      setShowDeleteDialog(false);
     }
   };
 
@@ -358,7 +383,8 @@ export default function EditPreset() {
                   data={data as any}
                   setData={setData as any}
                 />
-                <ExpirationSection
+
+                <ExpirationInSection
                   data={data as any}
                   setData={setData as any}
                 />
@@ -409,10 +435,41 @@ export default function EditPreset() {
                   handleUpgradeStateChange={handleUpgradeStateChange}
                   presets={null}
                 />
+                <ScreenshotProtectionSection
+                  data={data as any}
+                  setData={setData as any}
+                  isAllowed={
+                    isTrial ||
+                    (isPro && allowAdvancedLinkControls) ||
+                    isBusiness ||
+                    isDatarooms ||
+                    isDataroomsPlus
+                  }
+                  handleUpgradeStateChange={handleUpgradeStateChange}
+                />
+                <AgreementSection
+                  data={data as any}
+                  setData={setData as any}
+                  isAllowed={isTrial || isDatarooms || isDataroomsPlus}
+                  handleUpgradeStateChange={handleUpgradeStateChange}
+                />
+                <CustomFieldsSection
+                  data={data as any}
+                  setData={setData as any}
+                  isAllowed={
+                    isTrial ||
+                    (isPro && allowAdvancedLinkControls) ||
+                    isBusiness ||
+                    isDatarooms ||
+                    isDataroomsPlus
+                  }
+                  handleUpgradeStateChange={handleUpgradeStateChange}
+                  presets={null}
+                />
               </div>
             </div>
 
-            <div className="sticky top-0 md:max-h-[95vh] md:overflow-auto">
+            <div className="sticky top-0 md:overflow-auto">
               <div className="rounded-lg border">
                 {/* <div className="sticky top-0 flex h-14 items-center justify-center border-b bg-white px-5 dark:bg-gray-900">
                   <h2 className="text-lg font-medium">Preview</h2>
