@@ -118,7 +118,7 @@ export default function TagSection({
           href={`/settings/tags`}
           className="text-xs text-muted-foreground hover:text-foreground hover:underline"
         >
-          Manage Tags
+          Manage
         </Link>
       </div>
       <div className="flex">

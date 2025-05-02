@@ -530,7 +530,7 @@ export default function LinkSheet({
                                   href="/settings/presets"
                                   className="text-xs text-muted-foreground hover:text-foreground hover:underline"
                                 >
-                                  Manage Presets
+                                  Manage
                                 </Link>
                               </div>
                               <Select onValueChange={applyPreset}>
@@ -681,12 +681,12 @@ export default function LinkSheet({
                           presets.length > 0 && (
                             <div className="space-y-2">
                               <div className="flex items-center justify-between">
-                                 <Label htmlFor="preset">Link Preset</Label>
+                                <Label htmlFor="preset">Link Preset</Label>
                                 <Link
                                   href="/settings/presets"
                                   className="text-xs text-muted-foreground hover:text-foreground hover:underline"
                                 >
-                                  Manage Presets
+                                  Manage
                                 </Link>
                               </div>
                               <Select onValueChange={applyPreset}>
