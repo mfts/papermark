@@ -96,7 +96,7 @@ export function AddTagsModal({
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader className="text-start">
-          <DialogTitle>{tagForm.id ? "Create Tag" : "Edit Tag"}</DialogTitle>
+          <DialogTitle>{tagForm.id ? "Edit Tag" : "Create Tag"}</DialogTitle>
           <DialogDescription>
             Organize your links with tags for easy categorization and search.
           </DialogDescription>
