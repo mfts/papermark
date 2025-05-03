@@ -7,6 +7,7 @@ import {
   Heading,
   Hr,
   Html,
+  Img,
   Preview,
   Section,
   Tailwind,
@@ -17,10 +18,12 @@ export default function OtpEmailVerification({
   email = "test@example.co",
   code = "123456",
   isDataroom = false,
+  logo,
 }: {
   email: string;
   code: string;
   isDataroom: boolean;
+  logo?: string;
 }) {
   return (
     <Html>
@@ -29,9 +32,21 @@ export default function OtpEmailVerification({
       <Tailwind>
         <Body className="mx-auto my-auto bg-white font-sans">
           <Container className="mx-auto my-10 w-[465px] p-5">
-            <Text className="mx-0 mb-8 mt-4 p-0 text-center text-2xl font-normal">
-              <span className="font-bold tracking-tighter">Papermark</span>
-            </Text>
+            <div className="mx-0 mb-8 mt-4 p-0 text-center">
+              {logo ? (
+                <Img
+                  src={logo}
+                  alt="Logo"
+                  width="120"
+                  height="36"
+                  className="mx-auto"
+                />
+              ) : (
+                <Text className="text-2xl font-normal">
+                  <span className="font-bold tracking-tighter">Papermark</span>
+                </Text>
+              )}
+            </div>
             <Heading className="mx-0 my-7 p-0 text-center text-xl font-semibold text-black">
               Please confirm your email address
             </Heading>

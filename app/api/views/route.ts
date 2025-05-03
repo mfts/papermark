@@ -249,7 +249,7 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      waitUntil(sendOtpVerificationEmail(email, otpCode));
+      waitUntil(sendOtpVerificationEmail(email, otpCode, false, link.teamId!));
       return NextResponse.json({
         type: "email-verification",
         message: "Verification email sent.",
