@@ -137,6 +137,7 @@ export interface LinkWithDataroom extends Link {
           hasPages: boolean;
           file: string;
           isVertical: boolean;
+          updatedAt: Date;
         }[];
       };
     }[];
