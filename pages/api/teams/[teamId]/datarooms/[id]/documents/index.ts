@@ -74,6 +74,7 @@ export default async function handle(
               versions: {
                 select: { id: true, hasPages: true },
               },
+              isExternalUpload: true,
               _count: {
                 select: {
                   views: { where: { dataroomId } },

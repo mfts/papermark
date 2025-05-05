@@ -130,6 +130,7 @@ export async function POST(request: NextRequest) {
             label: true,
           },
         },
+        enableUpload: true,
       },
     });
 
@@ -361,7 +362,7 @@ export async function POST(request: NextRequest) {
           },
         });
 
-        waitUntil(sendOtpVerificationEmail(email, otpCode, true));
+        waitUntil(sendOtpVerificationEmail(email, otpCode, true, link.teamId!));
         return NextResponse.json(
           {
             type: "email-verification",
@@ -623,6 +624,7 @@ export async function POST(request: NextRequest) {
           verificationToken: hashedVerificationToken,
           viewerId: viewer?.id,
           conversationsEnabled: link.enableConversation,
+          enableVisitorUpload: link.enableUpload,
         };
 
         const response = NextResponse.json(returnObject, { status: 200 });

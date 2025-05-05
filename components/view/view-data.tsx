@@ -38,6 +38,14 @@ export type TViewDocumentData = Document & {
   versions: DocumentVersion[];
 };
 
+const isDownloadAllowed = (
+  canDownload: boolean | undefined,
+  linkAllowDownload: boolean | undefined,
+): boolean => {
+  if (canDownload === false) return false;
+  return !!linkAllowDownload;
+};
+
 export default function ViewData({
   viewData,
   link,
@@ -49,6 +57,7 @@ export default function ViewData({
   useAdvancedExcelViewer,
   viewerEmail,
   dataroomId,
+  canDownload,
 }: {
   viewData: DEFAULT_DOCUMENT_VIEW_TYPE | DEFAULT_DATAROOM_DOCUMENT_VIEW_TYPE;
   link: LinkWithDocument | LinkWithDataroomDocument;
@@ -64,6 +73,7 @@ export default function ViewData({
   useAdvancedExcelViewer?: boolean;
   viewerEmail?: string;
   dataroomId?: string;
+  canDownload?: boolean;
 }) {
   const { isMobile } = useMediaQuery();
 
@@ -83,8 +93,10 @@ export default function ViewData({
         ? viewData.conversationsEnabled
         : false),
     assistantEnabled: document.assistantEnabled,
-    allowDownload: link.allowDownload ?? false,
+    allowDownload: isDownloadAllowed(canDownload, link.allowDownload ?? false),
   };
+
+  // Calculate allowDownload once for all components
 
   return notionData?.recordMap ? (
     <NotionPage

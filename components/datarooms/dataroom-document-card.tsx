@@ -218,6 +218,12 @@ export default function DataroomDocumentCard({
                     <p className="truncate">{`${dataroomDocument.document._count.versions} Versions`}</p>
                   </>
                 ) : null}
+                {dataroomDocument.document.isExternalUpload ? (
+                  <>
+                    <p>•</p>
+                    <p className="truncate">Added by external collaborator</p>
+                  </>
+                ) : null}
               </div>
             </div>
           </div>

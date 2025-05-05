@@ -29,12 +29,13 @@ export interface DocumentWithLinksAndLinkCountAndViewCount extends Document {
     links: number;
     views: number;
     versions: number;
+    datarooms: number;
   };
   links: Link[];
   folder: {
     name: string;
     path: string;
-  }
+  };
   folderList: string[];
 }
 
@@ -44,6 +45,12 @@ export interface DocumentWithVersion extends Document {
     name: string;
     path: string;
   };
+  datarooms: {
+    dataroom: {
+      id: string;
+      name: string;
+    };
+  }[];
   hasPageLinks: boolean;
 }
 
@@ -54,6 +61,8 @@ export interface LinkWithViews extends Link {
   views: View[];
   feedback: { id: true; data: { question: string; type: string } } | null;
   customFields: CustomField[];
+  tags: TagProps[];
+  uploadFolderName: string | undefined;
 }
 
 export interface LinkWithDocument extends Link {
@@ -274,6 +283,11 @@ export type AnalyticsEvents =
       event: "Stripe Billing Portal Clicked";
       teamId: string;
       action?: string;
+    }
+  | {
+      event: "User Sign In Attempted";
+      email: string | undefined;
+      userId: string;
     };
 
 export interface Team {
@@ -343,3 +357,31 @@ export type BasePlan =
   | "datarooms"
   | "datarooms-plus"
   | "enterprise";
+
+export const tagColors = [
+  "red",
+  "yellow",
+  "green",
+  "blue",
+  "purple",
+  "pink",
+  "slate",
+  "fuchsia",
+] as const;
+
+export type TagColorProps = (typeof tagColors)[number];
+
+export interface TagsWithTotalCount {
+  tags: TagProps[];
+  totalCount: number;
+}
+
+export interface TagProps {
+  id: string;
+  name: string;
+  description: string | null;
+  color: TagColorProps | string;
+  _count?: {
+    items: number;
+  };
+}

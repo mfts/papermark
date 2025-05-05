@@ -66,7 +66,12 @@ export default async function handle(
         },
         include: {
           _count: {
-            select: { links: true, views: true, versions: true },
+            select: {
+              links: true,
+              views: true,
+              versions: true,
+              datarooms: true,
+            },
           },
           links: {
             take: 1,

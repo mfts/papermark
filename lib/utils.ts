@@ -1,3 +1,5 @@
+import { NextRouter } from "next/router";
+
 import slugify from "@sindresorhus/slugify";
 import { upload } from "@vercel/blob/client";
 import { Message } from "ai";
@@ -8,8 +10,10 @@ import ms from "ms";
 import { customAlphabet } from "nanoid";
 import { ThreadMessage } from "openai/resources/beta/threads/messages/messages";
 import { rgb } from "pdf-lib";
+import { ParsedUrlQuery } from "querystring";
 import { toast } from "sonner";
 import { twMerge } from "tailwind-merge";
+import * as chrono from "chrono-node";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -211,6 +215,22 @@ export const getDateTimeLocal = (timestamp?: Date): string => {
     .join(":");
 };
 
+export const formatDateTime = (
+  datetime: Date | string,
+  options?: Intl.DateTimeFormatOptions,
+) => {
+  if (datetime.toString() === "Invalid Date") return "";
+  return new Date(datetime).toLocaleTimeString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "numeric",
+    hour12: true,
+    ...options,
+  });
+};
+
 export async function hashPassword(password: string): Promise<string> {
   const saltRounds = 10;
   const hashedPassword = await bcrypt.hash(password, saltRounds);
@@ -392,6 +412,10 @@ export function constructMetadata({
   };
 }
 
+export const isDataUrl = (str: string): boolean => {
+  return str?.startsWith("data:");
+};
+
 export const convertDataUrlToFile = ({
   dataUrl,
   filename = "logo.png",
@@ -418,6 +442,30 @@ export const convertDataUrlToFile = ({
         : filename;
 
   return new File([u8arr], filename, { type: mime });
+};
+
+export const convertDataUrlToBuffer = (
+  dataUrl: string,
+): { buffer: Buffer; mimeType: string; filename: string } => {
+  // Extract mime type
+  const match = dataUrl.match(/:(.*?);/);
+  const mimeType = match ? match[1] : "";
+
+  // Extract base64 data
+  const base64Data = dataUrl.split(",")[1];
+  const buffer = Buffer.from(base64Data, "base64");
+
+  // Determine filename based on mime type
+  const filename =
+    mimeType === "image/png"
+      ? "image.png"
+      : mimeType === "image/jpeg"
+        ? "image.jpg"
+        : mimeType === "image/x-icon" || mimeType === "image/vnd.microsoft.icon"
+          ? "favicon.ico"
+          : "image";
+
+  return { buffer, mimeType, filename };
 };
 
 export const validateImageDimensions = (
@@ -485,7 +533,6 @@ export async function generateEncrpytedPassword(
   if (!password) return "";
   // If the password is already encrypted, return it
   const textParts: string[] = password.split(":");
-  console.log("textparts in encryption", textParts);
   if (textParts.length === 2) {
     return password;
   }
@@ -544,7 +591,7 @@ export const trim = (u: unknown) => (typeof u === "string" ? u.trim() : u);
 
 export const getBreadcrumbPath = (path: string[]) => {
   const segments = path?.filter(Boolean);
-   if (!Array.isArray(path) || path.length === 0) {
+  if (!Array.isArray(path) || path.length === 0) {
     return [{ name: "Home", pathLink: "/documents" }];
   }
   let currentPath = "documents/tree";
@@ -553,10 +600,150 @@ export const getBreadcrumbPath = (path: string[]) => {
     { name: "Home", pathLink: "/documents" },
     ...segments.map((segment, index) => {
       currentPath += `/${slugify(segment)}`;
-      return { 
-        name: segment, 
-        pathLink: currentPath 
+      return {
+        name: segment,
+        pathLink: currentPath,
       };
-    })
+    }),
   ];
+};
+
+export const handleInvitationStatus = (
+  invitationStatus: "accepted" | "teamMember",
+  queryParams: ParsedUrlQuery,
+  router: NextRouter,
+) => {
+  switch (invitationStatus) {
+    case "accepted":
+      toast.success("Welcome to the team! You've successfully joined.");
+      break;
+    case "teamMember":
+      toast.error("You've already accepted this invitation!");
+      break;
+    default:
+      toast.error("Invalid invitation status");
+  }
+
+  delete queryParams["invitation"];
+  router.replace("/documents", undefined, {
+    shallow: true,
+  });
+};
+
+/**
+ * Preset options for the expiration time of a link.
+ * @type {Array<{ label: string, value: number }>}
+ */
+
+export const PRESET_OPTIONS: { label: string; value: number }[] = [
+  { label: "in 1 hour", value: 3600 },
+  { label: "in 6 hours", value: 21600 },
+  { label: "in 12 hours", value: 43200 },
+  { label: "in 1 day", value: 86400 },
+  { label: "in 3 days", value: 259200 },
+  { label: "in 7 days", value: 604800 },
+  { label: "in 14 days", value: 1209600 },
+  { label: "in 1 month", value: 2592000 },
+  { label: "in 3 months", value: 7776000 },
+  { label: "in 6 months", value: 15552000 },
+  { label: "in 1 year", value: 31536000 },
+];
+export const WITH_CUSTOM_PRESET_OPTION: { label: string; value: number | string }[] = [
+  ...PRESET_OPTIONS,
+  { label: "Custom", value: "custom" },
+];
+
+export const formatExpirationTime = (seconds: number) => {
+  // Define constants for time units
+  const MINUTE = 60;
+  const HOUR = 3600;
+  const DAY = 86400;
+  const YEAR = 31536000;
+
+
+  seconds = Math.ceil(seconds / MINUTE) * MINUTE;
+
+  if (seconds < MINUTE) {
+    return "Less than a minute";
+  }
+
+  // Return exact unit match if possible
+  if (seconds % YEAR === 0) {
+    const years = seconds / YEAR;
+    return `${years} year${years !== 1 ? "s" : ""}`;
+  }
+
+  if (seconds % DAY === 0) {
+    const days = seconds / DAY;
+    return `${days} day${days !== 1 ? "s" : ""}`;
+  }
+
+  if (seconds % HOUR === 0 && seconds < DAY) {
+    const hours = seconds / HOUR;
+    return `${hours} hour${hours !== 1 ? "s" : ""}`;
+  }
+
+  if (seconds % MINUTE === 0 && seconds < HOUR) {
+    const minutes = seconds / MINUTE;
+    return `${minutes} minute${minutes !== 1 ? "s" : ""}`;
+  }
+
+  // Mixed unit fallbacks
+  if (seconds < HOUR) {
+    const minutes = Math.floor(seconds / MINUTE);
+    return `${minutes} minute${minutes !== 1 ? "s" : ""}`;
+  }
+
+  if (seconds < DAY) {
+    const hours = Math.floor(seconds / HOUR);
+    const minutes = Math.floor((seconds % HOUR) / MINUTE);
+    return `${hours} hour${hours !== 1 ? "s" : ""}` +
+      (minutes > 0 ? ` and ${minutes} minute${minutes !== 1 ? "s" : ""}` : "");
+  }
+
+  if (seconds < YEAR) {
+    const days = Math.floor(seconds / DAY);
+    const remainingSeconds = seconds % DAY;
+    const hours = Math.floor(remainingSeconds / HOUR);
+    const minutes = Math.floor((remainingSeconds % HOUR) / MINUTE);
+
+    let result = `${days} day${days !== 1 ? "s" : ""}`;
+
+    if (hours > 0 && minutes > 0) {
+      result += `, ${hours} hour${hours !== 1 ? "s" : ""} and ${minutes} minute${minutes !== 1 ? "s" : ""}`;
+    } else if (hours > 0) {
+      result += ` and ${hours} hour${hours !== 1 ? "s" : ""}`;
+    } else if (minutes > 0) {
+      result += ` and ${minutes} minute${minutes !== 1 ? "s" : ""}`;
+    }
+
+    return result;
+  }
+
+  // Years + remaining time
+  const years = Math.floor(seconds / YEAR);
+  const remainingSeconds = seconds % YEAR;
+  const days = Math.floor(remainingSeconds / DAY);
+  const hours = Math.floor((remainingSeconds % DAY) / HOUR);
+  const minutes = Math.floor((remainingSeconds % HOUR) / MINUTE);
+
+  let result = `${years} year${years !== 1 ? "s" : ""}`;
+
+  if (days > 0) {
+    result += `, ${days} day${days !== 1 ? "s" : ""}`;
+  }
+  if (hours > 0) {
+    result += `, ${hours} hour${hours !== 1 ? "s" : ""}`;
+  }
+  if (minutes > 0) {
+    result += ` and ${minutes} minute${minutes !== 1 ? "s" : ""}`;
+  }
+
+  return result;
+};
+
+// from DUB.IO
+export const parseDateTime = (str: Date | string) => {
+  if (str instanceof Date) return str;
+  return chrono.parseDate(str);
 };

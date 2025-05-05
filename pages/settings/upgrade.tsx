@@ -9,6 +9,10 @@ import { Feature, PlanEnum, getPlanFeatures } from "@/ee/stripe/constants";
 import { PLANS } from "@/ee/stripe/utils";
 import { CheckIcon, Users2Icon } from "lucide-react";
 
+import { useAnalytics } from "@/lib/analytics";
+import { usePlan } from "@/lib/swr/use-billing";
+import { capitalize } from "@/lib/utils";
+
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -17,10 +21,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-
-import { useAnalytics } from "@/lib/analytics";
-import { usePlan } from "@/lib/swr/use-billing";
-import { capitalize } from "@/lib/utils";
 
 // Feature rendering component
 const FeatureItem = ({
@@ -119,8 +119,8 @@ export default function UpgradePage() {
                 planOption === PlanEnum.Business
                   ? "border-[#fb7a00]"
                   : planOption === PlanEnum.DataRoomsPlus
-                    ? "border-gray-900"
-                    : "border-gray-200"
+                    ? "border-gray-900 dark:border-gray-200"
+                    : "border-gray-400"
               } bg-white p-6 shadow-sm dark:bg-gray-900`}
             >
               <div className="mb-4 border-b border-gray-200 pb-2">
@@ -132,7 +132,7 @@ export default function UpgradePage() {
                   <span
                     className={`absolute -top-3 right-4 rounded px-2 py-1 text-xs text-white ${
                       planOption === PlanEnum.DataRoomsPlus
-                        ? "bg-gray-900"
+                        ? "bg-gray-900 dark:bg-gray-100 dark:text-black"
                         : "bg-[#fb7a00]"
                     }`}
                   >
