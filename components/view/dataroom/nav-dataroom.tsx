@@ -6,7 +6,7 @@ import { DataroomBrand } from "@prisma/client";
 import { Download, MessagesSquareIcon } from "lucide-react";
 import { toast } from "sonner";
 
-import { timeAgo } from "@/lib/utils";
+import { formatDate } from "@/lib/utils";
 
 import {
   Tooltip,
@@ -198,7 +198,7 @@ export default function DataroomNav({
                 className="text-sm"
                 dateTime={new Date(dataroom.lastUpdatedAt).toISOString()}
               >
-                {`Last updated ${timeAgo(dataroom.lastUpdatedAt)}`}
+                {`Last updated ${formatDate(dataroom.lastUpdatedAt)}`}
               </time>
             </div>
           </div>

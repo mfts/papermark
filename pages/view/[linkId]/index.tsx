@@ -155,7 +155,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
       // iterate the link.documents and extract type and file and rest of the props
       let documents = [];
       for (const document of link.dataroom.documents) {
-        const { file, ...versionWithoutTypeAndFile } =
+        const { file, updatedAt, ...versionWithoutTypeAndFile } =
           document.document.versions[0];
 
         const newDocument = {
@@ -163,13 +163,26 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
           dataroomDocumentId: document.id,
           folderId: document.folderId,
           orderIndex: document.orderIndex,
-          versions: [versionWithoutTypeAndFile],
+          versions: [
+            {
+              ...versionWithoutTypeAndFile,
+              updatedAt:
+                document.updatedAt > updatedAt ? document.updatedAt : updatedAt, // use the latest updatedAt
+            },
+          ],
         };
 
         documents.push(newDocument);
       }
 
       const { teamId } = link.dataroom;
+
+      const lastUpdatedAt = link.dataroom.documents.reduce((max, doc) => {
+        return Math.max(
+          max,
+          new Date(doc.document.versions[0].updatedAt).getTime(),
+        );
+      }, 0);
 
       return {
         props: {
@@ -180,7 +193,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
               dataroom: {
                 ...link.dataroom,
                 documents,
-                lastUpdatedAt: null, // TODO: fix this to get the actual lastUpdatedAt
+                lastUpdatedAt: lastUpdatedAt,
               },
             },
             brand,

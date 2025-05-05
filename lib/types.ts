@@ -126,6 +126,7 @@ export interface LinkWithDataroom extends Link {
     documents: {
       id: string;
       folderId: string | null;
+      updatedAt: Date;
       orderIndex: number | null;
       document: {
         id: string;
