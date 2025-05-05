@@ -58,6 +58,7 @@ export async function fetchDataroomLinkData({
                   name: true,
                   advancedExcelEnabled: true,
                   downloadOnly: true,
+                  approvedStatus: true,
                   versions: {
                     where: { isPrimary: true },
                     select: {

@@ -20,6 +20,7 @@ type ProcessDocumentParams = {
   folderPathName?: string;
   createLink?: boolean;
   isExternalUpload?: boolean;
+  requireAdminApproval: boolean;
 };
 
 export const processDocument = async ({
@@ -30,6 +31,7 @@ export const processDocument = async ({
   folderPathName,
   createLink = false,
   isExternalUpload = false,
+  requireAdminApproval = true,
 }: ProcessDocumentParams) => {
   const {
     name,
@@ -108,6 +110,8 @@ export const processDocument = async ({
       },
       folderId: folder?.id ?? null,
       isExternalUpload,
+      requireApproval: isExternalUpload && requireAdminApproval,
+      approvedStatus: isExternalUpload && requireAdminApproval ? "PENDING" : undefined,
     },
     include: {
       links: true,

@@ -2,12 +2,15 @@ import { useRouter } from "next/router";
 
 import React from "react";
 
-import { Download, MoreVerticalIcon } from "lucide-react";
+import { DocumentApprovalStatus } from "@prisma/client";
+import { Download, Lock, MoreVerticalIcon } from "lucide-react";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
 
+import { cn } from "@/lib/utils";
 import { fileIcon } from "@/lib/utils/get-file-icon";
 
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -26,6 +29,7 @@ type DRDocument = {
   downloadOnly: boolean;
   versions: DocumentVersion[];
   canDownload: boolean;
+  approvedStatus?: DocumentApprovalStatus;
 };
 
 type DocumentsCardProps = {
@@ -45,6 +49,7 @@ export default function DocumentCard({
 }: DocumentsCardProps) {
   const { theme, systemTheme } = useTheme();
   const canDownload = document.canDownload && allowDownload;
+  const isPending = document.approvedStatus === "PENDING";
 
   const isLight =
     theme === "light" || (theme === "system" && systemTheme === "light");
@@ -57,6 +62,14 @@ export default function DocumentCard({
 
   const handleDocumentClick = (e: React.MouseEvent) => {
     e.preventDefault();
+
+    if (isPending) {
+      toast.error(
+        "This document is pending approval and cannot be viewed yet.",
+      );
+      return;
+    }
+
     // Open in new tab
     if (domain && slug) {
       window.open(`/${slug}/d/${document.dataroomDocumentId}`, "_blank");
@@ -155,12 +168,19 @@ export default function DocumentCard({
 
   return (
     <>
-      <li className="group/row relative flex items-center justify-between rounded-lg border-0 p-3 ring-1 ring-gray-200 transition-all hover:bg-secondary hover:ring-gray-300 dark:bg-secondary dark:ring-gray-700 hover:dark:ring-gray-500 sm:p-4">
+      <li
+        className={cn(
+          "group/row relative flex items-center justify-between rounded-lg border-0 p-3 ring-1 transition-all sm:p-4",
+          isPending
+            ? "bg-background/50 ring-gray-200 backdrop-blur-sm dark:ring-gray-700"
+            : "ring-gray-200 hover:bg-secondary hover:ring-gray-300 dark:bg-secondary dark:ring-gray-700 hover:dark:ring-gray-500",
+        )}
+      >
         <div className="z-0 flex min-w-0 shrink items-center space-x-2 sm:space-x-4">
           <div className="mx-0.5 flex w-8 items-center justify-center text-center sm:mx-1">
             {fileIcon({
               fileType: document.versions[0].type ?? "",
-              className: "h-8 w-8",
+              className: cn("h-8 w-8", isPending && "opacity-50"),
               isLight,
             })}
           </div>
@@ -170,16 +190,26 @@ export default function DocumentCard({
               <h2 className="min-w-0 max-w-[300px] truncate text-sm font-semibold leading-6 text-foreground sm:max-w-lg">
                 <button
                   onClick={handleDocumentClick}
-                  className="w-full truncate"
+                  className={cn(
+                    "w-full truncate",
+                    isPending && "cursor-not-allowed opacity-50",
+                  )}
+                  disabled={isPending}
                 >
                   <span>{document.name}</span>
                   <span className="absolute inset-0" />
                 </button>
               </h2>
+              {isPending && (
+                <Badge variant="default" className="ml-2 backdrop-blur-sm">
+                  <Lock className="mr-1 h-3 w-3" />
+                  Pending Approval
+                </Badge>
+              )}
             </div>
           </div>
         </div>
-        {canDownload && (
+        {canDownload && !isPending && (
           <div className="z-10">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

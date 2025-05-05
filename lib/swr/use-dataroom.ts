@@ -3,7 +3,7 @@ import { useRouter } from "next/router";
 import { useMemo } from "react";
 
 import { useTeam } from "@/context/team-context";
-import { Dataroom, DataroomDocument, DataroomFolder } from "@prisma/client";
+import { Dataroom, DataroomDocument, DataroomFolder, DocumentApprovalStatus } from "@prisma/client";
 import useSWR from "swr";
 
 import { LinkWithViews } from "@/lib/types";
@@ -268,6 +268,8 @@ export type DataroomFolderDocument = DataroomDocument & {
     type: string;
     versions?: { id: string; hasPages: boolean }[];
     isExternalUpload?: boolean;
+    requireApproval?: boolean;
+    approvedStatus?: DocumentApprovalStatus;
     _count: {
       views: number;
       versions: number;

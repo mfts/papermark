@@ -119,6 +119,7 @@ export async function POST(request: NextRequest) {
         allowDownload: true,
         enableConversation: true,
         teamId: true,
+        requireAdminApproval: true,
         team: {
           select: {
             plan: true,
@@ -625,6 +626,7 @@ export async function POST(request: NextRequest) {
           viewerId: viewer?.id,
           conversationsEnabled: link.enableConversation,
           enableVisitorUpload: link.enableUpload,
+          requireAdminApproval: link.requireAdminApproval,
         };
 
         const response = NextResponse.json(returnObject, { status: 200 });
@@ -910,6 +912,7 @@ export async function POST(request: NextRequest) {
         canDownload: canDownload,
         viewerId: viewer?.id,
         conversationsEnabled: link.enableConversation,
+        requireAdminApproval: link.requireAdminApproval,
       };
 
       const response = NextResponse.json(returnObject, { status: 200 });
