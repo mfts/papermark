@@ -6,6 +6,7 @@ import { Download, MoreVerticalIcon } from "lucide-react";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
 
+import { timeAgo } from "@/lib/utils";
 import { fileIcon } from "@/lib/utils/get-file-icon";
 
 import { Button } from "@/components/ui/button";
@@ -176,6 +177,11 @@ export default function DocumentCard({
                   <span className="absolute inset-0" />
                 </button>
               </h2>
+            </div>
+            <div className="mt-1 flex items-center space-x-1 text-xs leading-5 text-muted-foreground">
+              <p className="truncate">
+                Updated {timeAgo(document.versions[0].updatedAt)}
+              </p>
             </div>
           </div>
         </div>

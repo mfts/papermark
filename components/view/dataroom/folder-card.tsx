@@ -1,6 +1,8 @@
 import { DataroomFolder } from "@prisma/client";
 import { FolderIcon } from "lucide-react";
 
+import { timeAgo } from "@/lib/utils";
+
 type FolderCardProps = {
   folder: DataroomFolder;
   dataroomId: string;
@@ -29,6 +31,9 @@ export default function FolderCard({
                 <span className="absolute inset-0" />
               </div>
             </h2>
+          </div>
+          <div className="mt-1 flex items-center space-x-1 text-xs leading-5 text-muted-foreground">
+            <p className="truncate">Updated {timeAgo(folder.updatedAt)}</p>
           </div>
         </div>
       </div>
