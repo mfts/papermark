@@ -5,13 +5,15 @@ import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
+import { PlanEnum } from "@/ee/stripe/constants";
 import { ArrowLeft, Check } from "lucide-react";
 import { toast } from "sonner";
-import useSWR from "swr";
+import { z } from "zod";
 
 import { newId } from "@/lib/id-helper";
-import { fetcher } from "@/lib/utils";
+import { usePlan } from "@/lib/swr/use-billing";
 
+import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import AppLayout from "@/components/layouts/app";
 import { SettingsHeader } from "@/components/settings/settings-header";
 import Copy from "@/components/shared/icons/copy";
@@ -60,9 +62,19 @@ export const linkEvents: WebhookEvent[] = [
   { id: "link-downloaded", label: "Link Downloaded", value: "link.downloaded" },
 ];
 
+const formSchema = z.object({
+  name: z
+    .string()
+    .min(3, "Please provide a webhook name with at least 3 characters."),
+  url: z.string().url("Please enter a valid URL."),
+  secret: z.string(),
+  triggers: z.array(z.string()),
+});
+
 export default function NewWebhook() {
   const router = useRouter();
   const teamInfo = useTeam();
+  const { isFree, isPro } = usePlan();
   const teamId = teamInfo?.currentTeam?.id;
 
   const [isLoading, setIsLoading] = useState(false);
@@ -79,23 +91,24 @@ export default function NewWebhook() {
     setFormData((prev) => ({ ...prev, secret: generatedSecret }));
   }, []);
 
-  // Feature flag check
-  const { data: features } = useSWR<{ webhooks: boolean }>(
-    teamId ? `/api/feature-flags?teamId=${teamId}` : null,
-    fetcher,
-  );
-
-  // Redirect if feature is not enabled
-  useEffect(() => {
-    if (features && !features.webhooks) {
-      router.push("/settings/general");
-      toast.error("This feature is not available for your team");
-    }
-  }, [features, router]);
-
   const createWebhook = async () => {
+    if (isFree || isPro) {
+      toast.error("This feature is not available on your plan");
+      return;
+    }
+
     try {
       setIsLoading(true);
+      const result = formSchema.safeParse(formData);
+      if (!result.success) {
+        const errors = result.error.flatten().fieldErrors;
+        Object.values(errors).forEach((errorMessages) => {
+          if (errorMessages) {
+            toast.error(errorMessages[0]);
+          }
+        });
+        return;
+      }
       const response = await fetch(`/api/teams/${teamId}/webhooks`, {
         method: "POST",
         headers: {
@@ -136,6 +149,7 @@ export default function NewWebhook() {
           <form
             onSubmit={(e) => {
               e.preventDefault();
+              e.stopPropagation();
               createWebhook();
             }}
             className="space-y-8"
@@ -152,7 +166,6 @@ export default function NewWebhook() {
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, name: e.target.value }))
                 }
-                required
                 data-1p-ignore
                 autoComplete="off"
                 autoFocus
@@ -286,7 +299,6 @@ export default function NewWebhook() {
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, url: e.target.value }))
                 }
-                required
               />
             </div>
 
@@ -326,9 +338,21 @@ export default function NewWebhook() {
             </div>
 
             <div className="flex space-x-4">
-              <Button type="submit" disabled={isLoading}>
-                {isLoading ? "Creating..." : "Create Webhook"}
-              </Button>
+              {isFree || isPro ? (
+                <UpgradePlanModal
+                  key="create-webhook"
+                  clickedPlan={PlanEnum.Business}
+                  trigger="create_webhook"
+                >
+                  <Button type="submit" disabled={isLoading}>
+                    Create Webhook
+                  </Button>
+                </UpgradePlanModal>
+              ) : (
+                <Button type="submit" disabled={isLoading}>
+                  {isLoading ? "Creating..." : "Create Webhook"}
+                </Button>
+              )}
               <Button
                 type="button"
                 variant="outline"
