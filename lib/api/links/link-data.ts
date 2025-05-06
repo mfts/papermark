@@ -282,3 +282,21 @@ export async function fetchDocumentLinkData({
 
   return { linkData, brand };
 }
+
+export async function fetchUploadDocumentsCount({
+  dataroomId,
+  viewerId,
+  teamId,
+}: {
+  dataroomId: string;
+  viewerId: string;
+  teamId: string;
+}): Promise<number> {
+  return await prisma.documentUpload.count({
+    where: {
+      teamId,
+      dataroomId,
+      viewerId,
+    },
+  });
+}
