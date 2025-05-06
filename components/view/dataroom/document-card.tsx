@@ -7,7 +7,9 @@ import { Download, Lock, MoreVerticalIcon } from "lucide-react";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
 
+
 import { cn } from "@/lib/utils";
+import { timeAgo } from "@/lib/utils";
 import { fileIcon } from "@/lib/utils/get-file-icon";
 
 import { Badge } from "@/components/ui/badge";
@@ -206,6 +208,11 @@ export default function DocumentCard({
                   Pending Approval
                 </Badge>
               )}
+            </div>
+            <div className="mt-1 flex items-center space-x-1 text-xs leading-5 text-muted-foreground">
+              <p className="truncate">
+                Updated {timeAgo(document.versions[0].updatedAt)}
+              </p>
             </div>
           </div>
         </div>

@@ -17,6 +17,7 @@ interface DataroomDocumentWithVersion {
   id: string;
   folderId: string | null;
   orderIndex: number | null;
+  updatedAt: Date;
   createdAt: Date;
   document: {
     id: string;
@@ -147,7 +148,10 @@ export async function generateDataroomIndex(
       name: doc.document.name,
       type: "File",
       path: "/",
-      lastUpdated: latestVersion?.updatedAt || new Date(),
+      lastUpdated:
+        doc.updatedAt > latestVersion?.updatedAt
+          ? doc.updatedAt
+          : latestVersion?.updatedAt || new Date(),
       createdAt: doc.createdAt,
       pages: latestVersion?.numPages ?? 0,
       size: formatBytes(latestVersion?.fileSize ?? 0),

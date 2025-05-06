@@ -68,6 +68,7 @@ export async function fetchDataroomLinkData({
                       hasPages: true,
                       file: true,
                       isVertical: true,
+                      updatedAt: true,
                     },
                     take: 1,
                   },
