@@ -94,22 +94,36 @@ const NavItem: React.FC<Props["navigation"][0]> = ({
         },
       )}
     >
-      <Link
-        href={href}
-        className={cn(
-          "text-content-subtle hover:bg-background-subtle -mx-3 flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium hover:bg-muted hover:text-primary",
-          {
-            "text-primary": active,
-          },
-        )}
-      >
-        {label}
-        {tag ? (
-          <div className="text-content-subtle rounded border bg-background px-1 py-0.5 font-mono text-xs">
-            {tag}
+      {limited ? (
+        <UpgradePlanModal
+          key={label}
+          clickedPlan={PlanEnum.DataRoomsPlus}
+          trigger={label}
+          highlightItem={["qa"]}
+        >
+          <div className="text-content-subtle hover:bg-background-subtle -mx-3 flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium hover:bg-muted hover:text-primary">
+            {label}
+            <CrownIcon className="h-4 w-4 text-muted-foreground" />
           </div>
-        ) : null}
-      </Link>
+        </UpgradePlanModal>
+      ) : (
+        <Link
+          href={href}
+          className={cn(
+            "text-content-subtle hover:bg-background-subtle -mx-3 flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium hover:bg-muted hover:text-primary",
+            {
+              "text-primary": active,
+            },
+          )}
+        >
+          {label}
+          {tag ? (
+            <div className="text-content-subtle rounded border bg-background px-1 py-0.5 font-mono text-xs">
+              {tag}
+            </div>
+          ) : null}
+        </Link>
+      )}
     </li>
   );
 };
