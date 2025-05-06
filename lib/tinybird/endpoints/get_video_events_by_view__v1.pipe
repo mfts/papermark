@@ -1,5 +1,3 @@
-VERSION 1
-
 DESCRIPTION >
     Get all video events for a specific view 
 
@@ -21,4 +19,5 @@ SQL >
     AND view_id = {{String(view_id, required=True)}}
     ORDER BY timestamp ASC
 
+TYPE endpoint
 
