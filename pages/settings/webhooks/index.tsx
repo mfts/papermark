@@ -1,8 +1,7 @@
 import Link from "next/link";
-import { useRouter } from "next/router";
 
 import { useTeam } from "@/context/team-context";
-import { CircleHelpIcon, CrownIcon, WebhookIcon } from "lucide-react";
+import { CircleHelpIcon, WebhookIcon } from "lucide-react";
 import useSWR from "swr";
 
 import { usePlan } from "@/lib/swr/use-billing";
@@ -22,7 +21,6 @@ interface Webhook {
 }
 
 export default function WebhookSettings() {
-  const router = useRouter();
   const teamInfo = useTeam();
   const { isFree, isPro } = usePlan();
   const teamId = teamInfo?.currentTeam?.id;
