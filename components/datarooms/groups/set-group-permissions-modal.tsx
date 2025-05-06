@@ -152,7 +152,7 @@ export function SetGroupPermissionsModal({
     }));
   };
 
-  if (isAutoOpen && !viewerGroups) {
+  if (isAutoOpen && !viewerGroups && !viewerGroupsLoading) {
     onComplete?.();
     setOpen(false);
   }
@@ -161,7 +161,7 @@ export function SetGroupPermissionsModal({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader className="w-[90%]">
-          <DialogTitle>Set Group Permissions for "{fileName}"</DialogTitle>
+          <DialogTitle>Set Group Permissions for &quot;{fileName}&quot;</DialogTitle>
           <DialogDescription>
             Update which groups can view and download this document.
           </DialogDescription>
