@@ -29,7 +29,7 @@ export const DataroomNavigation = ({ dataroomId }: { dataroomId?: string }) => {
           label: "Q&A Conversations",
           href: `/datarooms/${dataroomId}/conversations`,
           segment: "conversations",
-          disabled: !limits?.conversationsInDataroom,
+          limited: !limits?.conversationsInDataroom,
         },
         {
           label: "Branding",

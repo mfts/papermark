@@ -5,6 +5,8 @@ import Link from "next/link";
 import { PlanEnum } from "@/ee/stripe/constants";
 import { ChevronRight, CrownIcon, type LucideIcon } from "lucide-react";
 
+import { cn } from "@/lib/utils";
+
 import {
   Collapsible,
   CollapsibleContent,
@@ -21,8 +23,6 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
-
-import { cn } from "@/lib/utils";
 
 import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
 
