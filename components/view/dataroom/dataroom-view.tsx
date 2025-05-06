@@ -42,6 +42,7 @@ export type DEFAULT_DATAROOM_VIEW_TYPE = {
   conversationsEnabled?: boolean;
   enableVisitorUpload?: boolean;
   requireAdminApproval: boolean;
+  uploadDocumentsCount?: number;
 };
 
 export default function DataroomView({
@@ -142,6 +143,7 @@ export default function DataroomView({
           conversationsEnabled,
           enableVisitorUpload,
           requireAdminApproval,
+          uploadDocumentsCount,
         } = fetchData as DEFAULT_DATAROOM_VIEW_TYPE;
 
         analytics.identify(
@@ -175,6 +177,7 @@ export default function DataroomView({
           conversationsEnabled,
           enableVisitorUpload,
           requireAdminApproval,
+          uploadDocumentsCount,
         });
         setSubmitted(true);
         setVerificationRequested(false);

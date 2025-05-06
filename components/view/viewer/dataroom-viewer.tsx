@@ -313,6 +313,7 @@ export default function DataroomViewer({
                       viewerId={viewerId}
                       folderId={folderId ?? undefined}
                       onUploadSuccess={handleUploadSuccess}
+                      documentCount={viewData.uploadDocumentsCount}
                     />
                   )}
                 </div>
