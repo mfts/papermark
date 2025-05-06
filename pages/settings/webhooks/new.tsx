@@ -8,12 +8,10 @@ import { useTeam } from "@/context/team-context";
 import { PlanEnum } from "@/ee/stripe/constants";
 import { ArrowLeft, Check } from "lucide-react";
 import { toast } from "sonner";
-import useSWR from "swr";
 import { z } from "zod";
 
 import { newId } from "@/lib/id-helper";
 import { usePlan } from "@/lib/swr/use-billing";
-import { fetcher } from "@/lib/utils";
 
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import AppLayout from "@/components/layouts/app";
@@ -93,20 +91,6 @@ export default function NewWebhook() {
     setFormData((prev) => ({ ...prev, secret: generatedSecret }));
   }, []);
 
-  // Feature flag check
-  // const { data: features } = useSWR<{ webhooks: boolean }>(
-  //   teamId ? `/api/feature-flags?teamId=${teamId}` : null,
-  //   fetcher,
-  // );
-
-  // Redirect if feature is not enabled
-  // useEffect(() => {
-  //   if (features && !features.webhooks) {
-  //     router.push("/settings/general");
-  //     toast.error("This feature is not available on your plan");
-  //   }
-  // }, [features, router]);
-
   const createWebhook = async () => {
     if (isFree || isPro) {
       toast.error("This feature is not available on your plan");
@@ -162,7 +146,14 @@ export default function NewWebhook() {
         </Button>
 
         <div className="w-full max-w-3xl">
-          <form onSubmit={createWebhook} className="space-y-8">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              createWebhook();
+            }}
+            className="space-y-8"
+          >
             <div className="space-y-2">
               <Label htmlFor="name">Name</Label>
               <p className="text-sm text-muted-foreground">

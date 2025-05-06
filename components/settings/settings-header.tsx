@@ -10,7 +10,6 @@ export function SettingsHeader() {
   const { data: features } = useSWR<{
     tokens: boolean;
     incomingWebhooks: boolean;
-    webhooks: boolean;
   }>(
     teamInfo?.currentTeam?.id
       ? `/api/feature-flags?teamId=${teamInfo.currentTeam.id}`
@@ -62,7 +61,6 @@ export function SettingsHeader() {
             label: "Webhooks",
             href: `/settings/webhooks`,
             segment: "webhooks",
-            disabled: !features?.webhooks,
           },
           {
             label: "Tokens",
