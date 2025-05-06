@@ -27,7 +27,6 @@ import {
 
 // Feature rendering component
 const FeatureItem = ({ feature }: { feature: Feature }) => {
-  console.log("feature is highlighted", feature.isHighlighted);
   const baseClasses = `flex items-center ${feature.isHighlighted ? "bg-orange-50 -mx-6 px-6 py-2 -my-1 font-bold rounded-md dark:bg-orange-900/20" : ""}`;
 
   if (feature.isUsers) {
