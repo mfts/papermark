@@ -81,7 +81,15 @@ export default function UploadZone({
   setUploads,
   setRejectedFiles,
   dataroomId,
+  onUploadSuccess,
 }: {
+  onUploadSuccess?: (
+    files: {
+      fileName: string;
+      documentId: string;
+      dataroomDocumentId: string;
+    }[],
+  ) => void;
   children: React.ReactNode;
   onUploadStart: (
     uploads: { fileName: string; progress: number; documentId?: string }[],
@@ -162,7 +170,7 @@ export default function UploadZone({
   );
 
   const onDrop = useCallback(
-    (acceptedFiles: FileWithPaths[]) => {
+    async (acceptedFiles: FileWithPaths[]) => {
       if (!canAddDocuments && acceptedFiles.length > remainingDocuments) {
         toast.error("You have reached the maximum number of documents.");
         return;
@@ -325,10 +333,10 @@ export default function UploadZone({
           );
 
         const document = await response.json();
-
+        let dataroomResponse;
         if (dataroomId) {
           try {
-            const response = await fetch(
+            dataroomResponse = await fetch(
               `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}/documents`,
               {
                 method: "POST",
@@ -342,8 +350,8 @@ export default function UploadZone({
               },
             );
 
-            if (!response.ok) {
-              const { message } = await response.json();
+            if (!dataroomResponse?.ok) {
+              const { message } = await dataroomResponse.json();
               console.error(
                 "An error occurred while adding document to the dataroom: ",
                 message,
@@ -384,8 +392,11 @@ export default function UploadZone({
             teamPlan: plan,
           },
         });
-
-        return document;
+        const dataroomDocumentId = dataroomResponse?.ok
+          ? (await dataroomResponse.json()).id
+          : null;
+        console.log("dataroomDocumentId", dataroomDocumentId);
+        return { ...document, dataroomDocumentId: dataroomDocumentId };
       });
 
       const documents = Promise.all(uploadPromises).finally(() => {
@@ -402,6 +413,13 @@ export default function UploadZone({
             `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${folderPathName}`,
           );
       });
+      const uploadedDocuments = await documents;
+      const dataroomDocuments = uploadedDocuments.map((document) => ({
+        documentId: document.id,
+        dataroomDocumentId: document.dataroomDocumentId,
+        fileName: document.name,
+      }));
+      onUploadSuccess?.(dataroomDocuments);
     },
     [
       onUploadStart,
