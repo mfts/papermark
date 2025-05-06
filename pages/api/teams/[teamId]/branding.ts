@@ -5,6 +5,7 @@ import { getServerSession } from "next-auth";
 
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
+import { redis } from "@/lib/redis";
 import { CustomUser } from "@/lib/types";
 
 import { authOptions } from "../../auth/[...nextauth]";
@@ -74,6 +75,11 @@ export default async function handle(
       },
     });
 
+    // Cache the logo URL in Redis if logo exists
+    if (logo) {
+      await redis.set(`brand:logo:${teamId}`, logo);
+    }
+
     return res.status(200).json(brand);
   } else if (req.method === "PUT") {
     // PUT /api/teams/:teamId/branding
@@ -93,6 +99,14 @@ export default async function handle(
         accentColor,
       },
     });
+
+    // Update logo in Redis cache
+    if (logo) {
+      await redis.set(`brand:logo:${teamId}`, logo);
+    } else {
+      // If logo is null or undefined, delete the cache
+      await redis.del(`brand:logo:${teamId}`);
+    }
 
     return res.status(200).json(brand);
   } else if (req.method === "DELETE") {
@@ -115,6 +129,9 @@ export default async function handle(
         id: brand?.id,
       },
     });
+
+    // Remove logo from Redis cache
+    await redis.del(`brand:logo:${teamId}`);
 
     return res.status(204).end();
   } else {
