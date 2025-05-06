@@ -10,6 +10,13 @@ import { useTeam } from "@/context/team-context";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
+import {
+  DocumentData,
+  createAgreementDocument,
+} from "@/lib/documents/create-document";
+import { putFile } from "@/lib/files/put-file";
+import { getSupportedContentType } from "@/lib/utils/get-content-type";
+
 import DocumentUpload from "@/components/document-upload";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,33 +31,55 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 
-import {
-  DocumentData,
-  createAgreementDocument,
-} from "@/lib/documents/create-document";
-import { putFile } from "@/lib/files/put-file";
-import { getSupportedContentType } from "@/lib/utils/get-content-type";
-
 import LinkItem from "../link-item";
 
 export default function AgreementSheet({
+  defaultData,
   isOpen,
   setIsOpen,
+  isOnlyView = false,
+  onClose,
 }: {
+  defaultData?: { name: string; link: string; requireName: boolean } | null;
   isOpen: boolean;
   setIsOpen: Dispatch<SetStateAction<boolean>>;
+  isOnlyView?: boolean;
+  onClose?: () => void;
 }) {
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
   const [data, setData] = useState({ name: "", link: "", requireName: true });
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [currentFile, setCurrentFile] = useState<File | null>(null);
-  const [currentLink, setCurrentLink] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (defaultData) {
+      setData({
+        name: defaultData?.name || "",
+        link: defaultData?.link || "",
+        requireName: defaultData?.requireName || true,
+      });
+    }
+  }, [defaultData]);
+
+  const handleClose = (open: boolean) => {
+    setIsOpen(open);
+    setData({ name: "", link: "", requireName: true });
+    setCurrentFile(null);
+    setIsLoading(false);
+    if (onClose) {
+      onClose();
+    }
+  };
 
   const handleBrowserUpload = async () => {
     // event.preventDefault();
     // event.stopPropagation();
-
+    if (isOnlyView) {
+      handleClose(false);
+      toast.error("Cannot upload file in view mode!");
+      return;
+    }
     // Check if the file is chosen
     if (!currentFile) {
       toast.error("Please select a file to upload.");
@@ -98,7 +127,7 @@ export default function AgreementSheet({
         const linkId = document.links[0].id;
         setData((prevData) => ({
           ...prevData,
-          link: "https://www.papermark.io/view/" + linkId,
+          link: "https://www.papermark.com/view/" + linkId,
         }));
       }
     } catch (error) {
@@ -112,6 +141,11 @@ export default function AgreementSheet({
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     e.stopPropagation();
+    if (isOnlyView) {
+      handleClose(false);
+      toast.error("Agreement cannot be created in view mode");
+      return;
+    }
 
     setIsLoading(true);
 
@@ -151,13 +185,16 @@ export default function AgreementSheet({
   }, [currentFile]);
 
   return (
-    <Sheet open={isOpen} onOpenChange={setIsOpen}>
+    <Sheet open={isOpen} onOpenChange={handleClose}>
       <SheetContent className="flex h-full w-[85%] flex-col justify-between bg-background px-4 text-foreground sm:w-[500px] md:px-5">
         <SheetHeader className="text-start">
-          <SheetTitle>Create a new agreement</SheetTitle>
+          <SheetTitle>
+            {isOnlyView ? "View Agreement" : "Create a new agreement"}
+          </SheetTitle>
           <SheetDescription>
-            An agreement is a special document that visitors must accept before
-            accessing your link. You can create a new agreement here.
+            {isOnlyView
+              ? "View the details of this agreement."
+              : "An agreement is a special document that visitors must accept before accessing your link. You can create a new agreement here."}
           </SheetDescription>
         </SheetHeader>
 
@@ -182,6 +219,7 @@ export default function AgreementSheet({
                       name: e.target.value,
                     })
                   }
+                  disabled={isOnlyView}
                 />
               </div>
 
@@ -192,6 +230,7 @@ export default function AgreementSheet({
                   action={() =>
                     setData({ ...data, requireName: !data.requireName })
                   }
+                  isAllowed={!isOnlyView}
                 />
               </div>
 
@@ -207,7 +246,7 @@ export default function AgreementSheet({
                     required
                     autoComplete="off"
                     data-1p-ignore
-                    placeholder="https://www.papermark.io/nda"
+                    placeholder="https://www.papermark.com/nda"
                     value={data.link || ""}
                     onChange={(e) =>
                       setData({
@@ -220,28 +259,38 @@ export default function AgreementSheet({
                         "Please enter a valid URL starting with https://",
                       )
                     }
+                    disabled={isOnlyView}
                   />
                 </div>
 
-                <div className="space-y-12">
-                  <div className="space-y-2 pb-6">
-                    <Label>Or upload an agreement</Label>
-                    <div className="grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
-                      <DocumentUpload
-                        currentFile={currentFile}
-                        setCurrentFile={setCurrentFile}
-                      />
+                {!isOnlyView ? (
+                  <div className="space-y-12">
+                    <div className="space-y-2 pb-6">
+                      <Label>Or upload an agreement</Label>
+                      <div className="grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
+                        <DocumentUpload
+                          currentFile={currentFile}
+                          setCurrentFile={setCurrentFile}
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
+                ) : null}
               </div>
             </div>
-
-            <SheetFooter className="flex-shrink-0">
+            <SheetFooter
+              className={`flex-shrink-0 ${isOnlyView ? "mt-6" : ""}`}
+            >
               <div className="flex items-center">
-                <Button type="submit" loading={isLoading}>
-                  Create Agreement
-                </Button>
+                {isOnlyView ? (
+                  <Button type="button" onClick={() => handleClose(false)}>
+                    Close
+                  </Button>
+                ) : (
+                  <Button type="submit" loading={isLoading}>
+                    Create Agreement
+                  </Button>
+                )}
               </div>
             </SheetFooter>
           </form>

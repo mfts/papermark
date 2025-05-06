@@ -17,8 +17,14 @@ const nextConfig = {
     return [
       {
         source: "/",
-        destination: "/documents",
+        destination: "/dashboard",
         permanent: false,
+        has: [
+          {
+            type: "host",
+            value: process.env.NEXT_PUBLIC_APP_BASE_HOST,
+          },
+        ],
       },
       {
         source: "/view/cm2xiaxzo000d147xszm9q72o",
@@ -169,6 +175,8 @@ function prepareRemotePatterns() {
     // papermark img
     { protocol: "https", hostname: "www.papermark.io" },
     { protocol: "https", hostname: "app.papermark.io" },
+    { protocol: "https", hostname: "www.papermark.com" },
+    { protocol: "https", hostname: "app.papermark.com" },
     // useragent img
     { protocol: "https", hostname: "faisalman.github.io" },
     // special document pages

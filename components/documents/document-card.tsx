@@ -4,17 +4,33 @@ import { useRouter } from "next/router";
 import { useEffect, useRef, useState } from "react";
 
 import { TeamContextType } from "@/context/team-context";
+import { PlanEnum } from "@/ee/stripe/constants";
 import {
   BetweenHorizontalStartIcon,
+  ChevronRight,
+  FileIcon,
+  FolderIcon,
   FolderInputIcon,
   Layers2Icon,
   MoreVertical,
+  ServerIcon,
   TrashIcon,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
+import useDatarooms from "@/lib/swr/use-datarooms";
+import useLimits from "@/lib/swr/use-limits";
+import { DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
+import { cn, getBreadcrumbPath, nFormatter, timeAgo } from "@/lib/utils";
+import { fileIcon } from "@/lib/utils/get-file-icon";
+import { useCopyToClipboard } from "@/lib/utils/use-copy-to-clipboard";
+
+import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
+import { DataroomTrialModal } from "@/components/datarooms/dataroom-trial-modal";
+import { AddToDataroomModal } from "@/components/documents/add-document-to-dataroom-modal";
+import { MoveToFolderModal } from "@/components/documents/move-folder-modal";
 import BarChart from "@/components/shared/icons/bar-chart";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,18 +41,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-import useDatarooms from "@/lib/swr/use-datarooms";
-import useLimits from "@/lib/swr/use-limits";
-import { DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
-import { cn, nFormatter, timeAgo } from "@/lib/utils";
-import { fileIcon } from "@/lib/utils/get-file-icon";
-import { useCopyToClipboard } from "@/lib/utils/use-copy-to-clipboard";
-
-import { PlanEnum, UpgradePlanModal } from "../billing/upgrade-plan-modal";
-import { DataroomTrialModal } from "../datarooms/dataroom-trial-modal";
-import { AddToDataroomModal } from "./add-document-to-dataroom-modal";
-import { MoveToFolderModal } from "./move-folder-modal";
+import { BadgeTooltip } from "@/components/ui/tooltip";
 
 type DocumentsCardProps = {
   document: DocumentWithLinksAndLinkCountAndViewCount;
@@ -53,6 +58,9 @@ export default function DocumentsCard({
   isHovered,
 }: DocumentsCardProps) {
   const router = useRouter();
+  const queryParams = router.query;
+  const searchQuery = queryParams["search"];
+  const sortQuery = queryParams["sort"];
   const { theme, systemTheme } = useTheme();
   const isLight =
     theme === "light" || (theme === "system" && systemTheme === "light");
@@ -193,7 +201,7 @@ export default function DocumentsCard({
     <>
       <div
         className={cn(
-          "group/row relative flex items-center justify-between rounded-lg border-0 bg-white p-3 ring-1 ring-gray-200 transition-all hover:bg-secondary hover:ring-gray-300 dark:bg-secondary dark:ring-gray-700 hover:dark:ring-gray-500 sm:p-4",
+          "group/row relative flex items-center justify-between gap-x-2 rounded-lg border-0 bg-white p-3 ring-1 ring-gray-200 transition-all hover:bg-secondary hover:ring-gray-300 dark:bg-secondary dark:ring-gray-700 hover:dark:ring-gray-500 sm:p-4",
           isHovered && "bg-secondary ring-gray-300 dark:ring-gray-500",
         )}
       >
@@ -221,21 +229,16 @@ export default function DocumentsCard({
                   <span className="absolute inset-0" />
                 </Link>
               </h2>
-              {/* <div className="ml-2 flex">
-                <button
-                  className="group z-10 rounded-md bg-gray-200 p-1 transition-all duration-75 hover:scale-105 hover:bg-emerald-100 active:scale-95 dark:bg-gray-700 hover:dark:bg-emerald-200"
-                  onClick={() =>
-                    handleCopyToClipboard(prismaDocument.links[0].id)
-                  }
-                  title="Copy to clipboard"
-                >
-                  {isCopied ? (
-                    <Check className="size-3 text-muted-foreground group-hover:text-emerald-700" />
-                  ) : (
-                    <Copy className="size-3 text-muted-foreground group-hover:text-emerald-700" />
-                  )}
-                </button>
-              </div> */}
+              {prismaDocument._count.datarooms > 0 && (
+                <div className="z-20">
+                  <BadgeTooltip
+                    content={`In ${prismaDocument._count.datarooms} dataroom${prismaDocument._count.datarooms > 1 ? "s" : ""}`}
+                    key="dataroom"
+                  >
+                    <ServerIcon className="ml-2 h-4 w-4 text-[#fb7a00] hover:text-[#fb7a00]/90" />
+                  </BadgeTooltip>
+                </div>
+              )}
             </div>
             <div className="mt-1 flex items-center space-x-1 text-xs leading-5 text-muted-foreground">
               <p className="truncate">{timeAgo(prismaDocument.createdAt)}</p>
@@ -251,6 +254,37 @@ export default function DocumentsCard({
                 </>
               ) : null}
             </div>
+            {searchQuery || sortQuery ? (
+              <div className="relative z-10 mt-1 flex flex-wrap items-center space-x-1 text-xs leading-5 text-muted-foreground">
+                {getBreadcrumbPath(prismaDocument.folderList).map(
+                  (segment, index) => (
+                    <p
+                      className="inset-2 flex items-center gap-x-1 truncate"
+                      key={segment.pathLink}
+                    >
+                      {index !== 0 && <ChevronRight className="h-3 w-3" />}
+                      <FolderIcon className="h-3 w-3" />
+                      <Link
+                        href={segment.pathLink}
+                        className="relative z-10 hover:underline"
+                      >
+                        {segment.name}
+                      </Link>
+                    </p>
+                  ),
+                )}
+                <p className="inset-2 flex items-center gap-x-1 truncate">
+                  <ChevronRight className="h-3 w-3" />
+                  <FileIcon className="h-3 w-3" />
+                  <Link
+                    href={`/documents/${prismaDocument.id}`}
+                    className="relative z-10 hover:underline"
+                  >
+                    {prismaDocument.name}
+                  </Link>
+                </p>
+              </div>
+            ) : null}
           </div>
         </div>
 
@@ -322,7 +356,8 @@ export default function DocumentsCard({
           open={moveFolderOpen}
           setOpen={setMoveFolderOpen}
           documentIds={[prismaDocument.id]}
-          documentName={prismaDocument.name}
+          itemName={prismaDocument.name}
+          folderParentId={prismaDocument.folderId!}
         />
       ) : null}
 

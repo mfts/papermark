@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
+import { addDays } from "date-fns";
 import { getServerSession } from "next-auth";
 import { z } from "zod";
 
@@ -10,14 +11,17 @@ import {
   getTotalViewerDuration,
   getViewPageDuration,
 } from "@/lib/tinybird/pipes";
+import { CustomUser } from "@/lib/types";
 import { durationFormat } from "@/lib/utils";
 
 import { authOptions } from "../auth/[...nextauth]";
 
 const analyticsQuerySchema = z.object({
-  interval: z.enum(["24h", "7d", "30d"]),
+  interval: z.enum(["24h", "7d", "30d", "custom"]),
   type: z.enum(["overview", "links", "documents", "visitors", "views"]),
   teamId: z.string(),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
 });
 
 const INTERVALS = {
@@ -48,11 +52,47 @@ export default async function handler(
         .json({ error: `Invalid body: ${result.error.message}` });
     }
 
-    const { interval, type, teamId } = result.data;
+    const {
+      interval,
+      type,
+      teamId,
+      startDate: startStr,
+      endDate: endStr,
+    } = result.data;
+
+    const team = await prisma.team.findUnique({
+      where: {
+        id: teamId,
+        users: {
+          some: {
+            userId: (session.user as CustomUser).id,
+          },
+        },
+      },
+    });
+
+    if (!team) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    // Check if free plan user is trying to access data beyond 30 days
+    if (interval === "custom" && team.plan.includes("free")) {
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      thirtyDaysAgo.setHours(0, 0, 0, 0);
+
+      // For custom range, check the provided start date
+      if (startStr && new Date(startStr) < thirtyDaysAgo) {
+        return res.status(401).json({
+          error: "Free plan users can only access data from the last 30 days",
+        });
+      }
+    }
 
     // get the start date for the interval
     const now = new Date();
     let startDate: Date;
+    let endDate: Date = now;
 
     switch (interval) {
       case "24h":
@@ -73,15 +113,38 @@ export default async function handler(
         startDate.setDate(startDate.getDate() - 29);
         startDate.setHours(0, 0, 0, 0);
         break;
+      case "custom":
+        startDate = new Date(startStr || addDays(new Date(), -6));
+        startDate.setHours(0, 0, 0, 0);
+        endDate = new Date(endStr || now);
+
+        if (startDate > endDate) {
+          return res
+            .status(400)
+            .json({ error: "The 'From' date must be before the 'To' date." });
+        }
+        break;
+      default:
+        startDate = new Date(now);
+        startDate.setDate(startDate.getDate() - 6);
     }
 
-    // create the interval filter for the query
-    const intervalFilter = {
-      gte: startDate,
-    };
+    // Create the interval filter for the query
+    const intervalFilter: any = { gte: startDate, lte: endDate };
 
-    console.log("startDate", startDate);
-    console.log("intervalFilter", intervalFilter);
+    let since: number;
+
+    if (interval === "custom") {
+      const startTimestamp = startStr ? new Date(startStr).getTime() : NaN;
+
+      if (isNaN(startTimestamp)) {
+        since = Date.now();
+      } else {
+        since = startTimestamp;
+      }
+    } else {
+      since = Date.now() - INTERVALS[interval];
+    }
 
     switch (type) {
       case "overview": {
@@ -117,7 +180,22 @@ export default async function handler(
                 GROUP BY DATE_TRUNC('hour', "viewedAt")
                 ORDER BY date ASC
               `
-            : prisma.$queryRaw`
+            : interval === "custom"
+              ? prisma.$queryRaw`
+                SELECT 
+                  DATE_TRUNC('day', "viewedAt") as date,
+                  COUNT(*) as views
+                FROM "View"
+                WHERE 
+                  "teamId" = ${teamId}
+                  AND "viewedAt" >= ${startDate}
+                  AND "viewedAt" <= ${endDate}
+                  AND "isArchived" = false
+                  AND "viewType" = 'DOCUMENT_VIEW'
+                GROUP BY DATE_TRUNC('day', "viewedAt")
+                ORDER BY date ASC
+              `
+              : prisma.$queryRaw`
                 SELECT 
                   DATE_TRUNC('day', "viewedAt") as date,
                   COUNT(*) as views
@@ -227,12 +305,14 @@ export default async function handler(
 
             if (link.documentId) {
               try {
-                const since = Date.now() - INTERVALS[interval];
                 const durationData = await getTotalLinkDuration({
                   linkId: link.id,
                   documentId: link.documentId,
                   excludedViewIds: "", // Include all views
                   since,
+                  until: endStr
+                    ? new Date(endStr).getTime()
+                    : new Date().getTime(),
                 });
 
                 if (durationData.data && durationData.data[0]) {
@@ -314,14 +394,15 @@ export default async function handler(
         const transformedDocuments = await Promise.all(
           documents.map(async (doc) => {
             let avgDuration = "0s";
-
             try {
-              const since = Date.now() - INTERVALS[interval];
               const durationData = await getTotalDocumentDuration({
                 documentId: doc.id,
                 excludedLinkIds: "", // Include all links
                 excludedViewIds: "", // Include all views
                 since,
+                until: endStr
+                  ? new Date(endStr).getTime()
+                  : new Date().getTime(),
               });
 
               if (durationData.data && durationData.data[0]) {
@@ -381,13 +462,14 @@ export default async function handler(
             );
 
             let totalDuration = 0;
-
             try {
-              const since = Date.now() - INTERVALS[interval];
               const viewIds = viewer.views.map((view) => view.id).join(",");
               const durationData = await getTotalViewerDuration({
                 viewIds,
                 since,
+                until: endStr
+                  ? new Date(endStr).getTime()
+                  : new Date().getTime(),
               });
 
               if (durationData.data && durationData.data[0]) {
@@ -457,11 +539,13 @@ export default async function handler(
 
             if (view.document?.id) {
               try {
-                const since = Date.now() - INTERVALS[interval];
                 const pageData = await getViewPageDuration({
                   documentId: view.document.id,
                   viewId: view.id,
                   since,
+                  until: endStr
+                    ? new Date(endStr).getTime()
+                    : new Date().getTime(),
                 });
 
                 if (pageData.data && pageData.data.length > 0) {

@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 
 import { TDocumentData } from "../dataroom/dataroom-view";
-import Nav from "../nav";
+import Nav, { TNavData } from "../nav";
 
 const trackPageView = async (data: {
   linkId: string;
@@ -34,33 +34,20 @@ const trackPageView = async (data: {
 };
 
 export default function DownloadOnlyViewer({
-  file,
-  linkId,
-  documentId,
-  viewId,
-  allowDownload,
   versionNumber,
-  brand,
   documentName,
-  isPreview,
-  dataroomId,
-  setDocumentData,
+  navData,
 }: {
-  file: string;
-  linkId: string;
-  documentId: string;
-  viewId?: string;
-  allowDownload: boolean;
   versionNumber: number;
-  brand?: Partial<Brand> | Partial<DataroomBrand> | null;
   documentName?: string;
-  isPreview?: boolean;
-  dataroomId?: string;
-  setDocumentData?: React.Dispatch<React.SetStateAction<TDocumentData | null>>;
+  navData: TNavData;
 }) {
   const router = useRouter();
   const startTimeRef = useRef(Date.now());
   const visibilityRef = useRef<boolean>(true);
+
+  const { linkId, documentId, viewId, isPreview, allowDownload, dataroomId } =
+    navData;
 
   useEffect(() => {
     // Remove token and email query parameters on component mount
@@ -163,19 +150,7 @@ export default function DownloadOnlyViewer({
 
   return (
     <>
-      <Nav
-        pageNumber={1}
-        numPages={1}
-        allowDownload={allowDownload}
-        brand={brand}
-        viewId={viewId}
-        linkId={linkId}
-        documentId={documentId}
-        documentName={documentName}
-        isPreview={isPreview}
-        isDataroom={dataroomId ? true : false}
-        setDocumentData={setDocumentData}
-      />
+      <Nav pageNumber={1} numPages={1} navData={navData} />
       <div
         style={{ height: "calc(100dvh - 64px)" }}
         className="relative flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900"

@@ -4,9 +4,11 @@ import { useEffect, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { format } from "date-fns";
-import { CircleHelpIcon } from "lucide-react";
+import { CircleHelpIcon, CopyIcon } from "lucide-react";
 import { toast } from "sonner";
 import useSWR from "swr";
+
+import { copyToClipboard, fetcher } from "@/lib/utils";
 
 import AppLayout from "@/components/layouts/app";
 import { SettingsHeader } from "@/components/settings/settings-header";
@@ -14,8 +16,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { BadgeTooltip } from "@/components/ui/tooltip";
-
-import { fetcher } from "@/lib/utils";
 
 interface Token {
   id: string;
@@ -69,7 +69,8 @@ export default function TokenSettings() {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to generate token");
+        const error = await response.json();
+        throw new Error(error.error);
       }
 
       const data = await response.json();
@@ -79,7 +80,8 @@ export default function TokenSettings() {
       // After successful token generation, refresh the tokens list
       mutate();
     } catch (error) {
-      toast.error("Failed to generate token");
+      console.error(error);
+      toast.error((error as Error).message || "Failed to generate token");
     } finally {
       setIsLoading(false);
     }
@@ -96,7 +98,8 @@ export default function TokenSettings() {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to delete token");
+        const error = await response.json();
+        throw new Error(error.error);
       }
 
       // Refresh the tokens list
@@ -104,7 +107,7 @@ export default function TokenSettings() {
       toast.success("Token revoked successfully");
     } catch (error) {
       console.error(error);
-      toast.error("Failed to revoke token");
+      toast.error((error as Error).message || "Failed to revoke token");
     }
   };
 
@@ -117,7 +120,9 @@ export default function TokenSettings() {
           <div className="flex flex-col items-center justify-between gap-4 space-y-3 border-b border-gray-200 p-5 sm:flex-row sm:space-y-0 sm:p-10">
             <div className="flex max-w-screen-sm flex-col space-y-3">
               <div className="flex items-center gap-2">
-                <h2 className="text-xl font-medium">API Tokens</h2>
+                <h2 className="text-xl font-medium text-gray-900">
+                  API Tokens
+                </h2>
                 <BadgeTooltip content="Use these tokens to authenticate your API requests">
                   <CircleHelpIcon className="h-4 w-4 text-gray-500" />
                 </BadgeTooltip>
@@ -132,20 +137,35 @@ export default function TokenSettings() {
           <div className="p-5 sm:p-10">
             <div className="flex flex-col space-y-4">
               <div>
-                <Label htmlFor="token-name">Token Name</Label>
+                <Label htmlFor="token-name" className="text-gray-900">
+                  Token Name
+                </Label>
                 <Input
                   id="token-name"
                   placeholder="Enter a name for your token"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
+                  className="text-gray-900 dark:bg-white"
                 />
               </div>
 
               {token && (
-                <div className="rounded-lg bg-gray-50 p-4">
-                  <Label>
-                    Your API Token (copy it now, it won&apos;t be shown again)
-                  </Label>
+                <div className="rounded-lg bg-gray-50 p-4 text-gray-900">
+                  <div className="flex items-center gap-2">
+                    <Label>
+                      Your API Token (copy it now, it won&apos;t be shown again)
+                    </Label>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6"
+                      onClick={() =>
+                        copyToClipboard(`${token}`, "Token copied to clipboard")
+                      }
+                    >
+                      <CopyIcon />
+                    </Button>
+                  </div>
                   <code className="mt-2 block break-all rounded bg-gray-100 p-2 font-mono text-sm">
                     {token}
                   </code>
@@ -155,14 +175,16 @@ export default function TokenSettings() {
               <Button
                 onClick={generateToken}
                 disabled={!name || isLoading}
-                className="w-fit"
+                className="w-fit bg-gray-900 text-gray-50 hover:bg-gray-900/90"
               >
                 {isLoading ? "Generating..." : "Generate Token"}
               </Button>
 
               {/* Tokens List */}
               <div className="mt-8">
-                <h3 className="mb-4 text-lg font-medium">Existing Tokens</h3>
+                <h3 className="mb-4 text-lg font-medium text-gray-900">
+                  Existing Tokens
+                </h3>
                 <div className="rounded-lg border border-gray-200">
                   {tokens?.length === 0 ? (
                     <div className="p-4 text-center text-sm text-gray-500">
@@ -176,7 +198,9 @@ export default function TokenSettings() {
                           className="flex items-center justify-between p-4"
                         >
                           <div className="space-y-1">
-                            <p className="font-medium">{token.name}</p>
+                            <p className="font-medium text-gray-900">
+                              {token.name}
+                            </p>
                             <div className="flex items-center space-x-2 text-sm text-gray-500">
                               <span className="font-mono">
                                 {token.partialKey}

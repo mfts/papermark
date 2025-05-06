@@ -1,9 +1,7 @@
+import { PlanEnum } from "@/ee/stripe/constants";
 import { CrownIcon } from "lucide-react";
 
-import {
-  PlanEnum,
-  UpgradePlanModal,
-} from "@/components/billing/upgrade-plan-modal";
+import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { Button } from "@/components/ui/button";
 import UAIcon from "@/components/user-agent-icon";
 

@@ -5,15 +5,17 @@ import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
+import { PlanEnum } from "@/ee/stripe/constants";
 import { ArrowLeft, Check } from "lucide-react";
 import { toast } from "sonner";
 import useSWR from "swr";
 import { z } from "zod";
 
-import {
-  PlanEnum,
-  UpgradePlanModal,
-} from "@/components/billing/upgrade-plan-modal";
+import { newId } from "@/lib/id-helper";
+import { usePlan } from "@/lib/swr/use-billing";
+import { fetcher } from "@/lib/utils";
+
+import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import AppLayout from "@/components/layouts/app";
 import { SettingsHeader } from "@/components/settings/settings-header";
 import Copy from "@/components/shared/icons/copy";
@@ -22,10 +24,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
-import { newId } from "@/lib/id-helper";
-import { usePlan } from "@/lib/swr/use-billing";
-import { fetcher } from "@/lib/utils";
 
 interface WebhookEvent {
   id: string;
@@ -78,7 +76,7 @@ const formSchema = z.object({
 export default function NewWebhook() {
   const router = useRouter();
   const teamInfo = useTeam();
-  const { plan } = usePlan();
+  const { isFree, isPro } = usePlan();
   const teamId = teamInfo?.currentTeam?.id;
 
   const [isLoading, setIsLoading] = useState(false);
@@ -96,20 +94,25 @@ export default function NewWebhook() {
   }, []);
 
   // Feature flag check
-  const { data: features } = useSWR<{ webhooks: boolean }>(
-    teamId ? `/api/feature-flags?teamId=${teamId}` : null,
-    fetcher,
-  );
+  // const { data: features } = useSWR<{ webhooks: boolean }>(
+  //   teamId ? `/api/feature-flags?teamId=${teamId}` : null,
+  //   fetcher,
+  // );
 
   // Redirect if feature is not enabled
-  useEffect(() => {
-    if (features && !features.webhooks) {
-      router.push("/settings/general");
-      toast.error("This feature is not available for your team");
-    }
-  }, [features, router]);
+  // useEffect(() => {
+  //   if (features && !features.webhooks) {
+  //     router.push("/settings/general");
+  //     toast.error("This feature is not available on your plan");
+  //   }
+  // }, [features, router]);
 
   const createWebhook = async () => {
+    if (isFree || isPro) {
+      toast.error("This feature is not available on your plan");
+      return;
+    }
+
     try {
       setIsLoading(true);
       const result = formSchema.safeParse(formData);
@@ -159,13 +162,7 @@ export default function NewWebhook() {
         </Button>
 
         <div className="w-full max-w-3xl">
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (plan !== "free") createWebhook();
-            }}
-            className="space-y-8"
-          >
+          <form onSubmit={createWebhook} className="space-y-8">
             <div className="space-y-2">
               <Label htmlFor="name">Name</Label>
               <p className="text-sm text-muted-foreground">
@@ -210,7 +207,7 @@ export default function NewWebhook() {
                                 checked={formData.triggers.includes(
                                   event.value,
                                 )}
-                                disabled={true}
+                                disabled={event.value !== "document.created"}
                                 onCheckedChange={(checked) => {
                                   setFormData((prev) => ({
                                     ...prev,
@@ -241,7 +238,7 @@ export default function NewWebhook() {
                                 checked={formData.triggers.includes(
                                   event.value,
                                 )}
-                                disabled={true}
+                                disabled={event.value !== "link.created"}
                                 onCheckedChange={(checked) => {
                                   setFormData((prev) => ({
                                     ...prev,
@@ -350,7 +347,7 @@ export default function NewWebhook() {
             </div>
 
             <div className="flex space-x-4">
-              {plan === "free" ? (
+              {isFree || isPro ? (
                 <UpgradePlanModal
                   key="create-webhook"
                   clickedPlan={PlanEnum.Business}

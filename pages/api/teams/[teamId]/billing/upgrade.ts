@@ -1,12 +1,12 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
+import { stripeInstance } from "@/ee/stripe";
+import { getPlanFromPriceId, isOldAccount } from "@/ee/stripe/utils";
 import { waitUntil } from "@vercel/functions";
 import { getServerSession } from "next-auth/next";
 
 import { identifyUser, trackAnalytics } from "@/lib/analytics";
 import prisma from "@/lib/prisma";
-import { stripeInstance } from "@/lib/stripe";
-import { getPlanFromPriceId, isOldAccount } from "@/lib/stripe/utils";
 import { CustomUser } from "@/lib/types";
 
 import { authOptions } from "../../../auth/[...nextauth]";

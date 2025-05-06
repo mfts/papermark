@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 
+import { LinkPreset } from "@prisma/client";
 import { motion } from "motion/react";
-
-import { Textarea } from "@/components/ui/textarea";
 
 import { FADE_IN_ANIMATION_SETTINGS } from "@/lib/constants";
 import { sanitizeAllowDenyList } from "@/lib/utils";
+
+import { Textarea } from "@/components/ui/textarea";
 
 import { DEFAULT_LINK_TYPE } from ".";
 import LinkItem from "./link-item";
@@ -16,16 +17,17 @@ export default function DenyListSection({
   setData,
   isAllowed,
   handleUpgradeStateChange,
+  presets,
 }: {
   data: DEFAULT_LINK_TYPE;
   setData: React.Dispatch<React.SetStateAction<DEFAULT_LINK_TYPE>>;
-
   isAllowed: boolean;
   handleUpgradeStateChange: ({
     state,
     trigger,
     plan,
   }: LinkUpgradeOptions) => void;
+  presets: LinkPreset | null;
 }) {
   const { emailProtected, denyList } = data;
   // Initialize enabled state based on whether denyList is not null and not empty
@@ -45,6 +47,13 @@ export default function DenyListSection({
       denyList: emailProtected && enabled ? newDenyList : [],
     }));
   }, [denyListInput, enabled, emailProtected, setData]);
+
+  useEffect(() => {
+    if (isAllowed && presets?.denyList && presets.denyList.length > 0) {
+      setEnabled(true);
+      setDenyListInput(presets.denyList?.join("\n") || "");
+    }
+  }, [presets, isAllowed]);
 
   const handleEnableDenyList = () => {
     const updatedEnabled = !enabled;
@@ -78,7 +87,7 @@ export default function DenyListSection({
           title="Block specified viewers"
           tooltipContent="Prevent certain users from accessing the content. Enter blocked emails or domains."
           enabled={enabled}
-          link="https://www.papermark.io/help/article/block-list"
+          link="https://www.papermark.com/help/article/block-list"
           action={handleEnableDenyList}
           isAllowed={isAllowed}
           requiredPlan="business"
@@ -99,7 +108,9 @@ export default function DenyListSection({
             <Textarea
               className="focus:ring-inset"
               rows={5}
-              placeholder="Enter blocked emails/domains, one per line, e.g.                                      marc@papermark.io                                                                                   @example.org"
+              placeholder={`Enter blocked emails/domains, one per line, e.g.
+marc@papermark.io
+@example.org`}
               value={denyListInput}
               onChange={handleDenyListChange}
             />

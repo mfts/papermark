@@ -1,19 +1,17 @@
 import { ChangeEvent, useCallback, useEffect, useState } from "react";
 
-import { useTeam } from "@/context/team-context";
 import { LinkPreset } from "@prisma/client";
 import { Label } from "@radix-ui/react-label";
 import { Upload as ArrowUpTrayIcon, PlusIcon } from "lucide-react";
 import { motion } from "motion/react";
-import useSWRImmutable from "swr/immutable";
-
-import { Input } from "@/components/ui/input";
-import LoadingSpinner from "@/components/ui/loading-spinner";
-import { Textarea } from "@/components/ui/textarea";
 
 import { FADE_IN_ANIMATION_SETTINGS } from "@/lib/constants";
 import { cn, fetcher, validateImageDimensions } from "@/lib/utils";
 import { resizeImage } from "@/lib/utils/resize-image";
+
+import { Input } from "@/components/ui/input";
+import LoadingSpinner from "@/components/ui/loading-spinner";
+import { Textarea } from "@/components/ui/textarea";
 
 import { DEFAULT_LINK_TYPE } from ".";
 import LinkItem from "./link-item";
@@ -25,6 +23,7 @@ export default function OGSection({
   isAllowed,
   handleUpgradeStateChange,
   editLink,
+  presets,
 }: {
   data: DEFAULT_LINK_TYPE;
   setData: React.Dispatch<React.SetStateAction<DEFAULT_LINK_TYPE>>;
@@ -35,6 +34,7 @@ export default function OGSection({
     plan,
   }: LinkUpgradeOptions) => void;
   editLink: boolean;
+  presets: LinkPreset | null;
 }) {
   const {
     enableCustomMetatag,
@@ -43,11 +43,6 @@ export default function OGSection({
     metaImage,
     metaFavicon,
   } = data;
-  const teamInfo = useTeam();
-  const { data: presets } = useSWRImmutable<LinkPreset>(
-    `/api/teams/${teamInfo?.currentTeam?.id}/presets`,
-    fetcher,
-  );
 
   const [enabled, setEnabled] = useState<boolean>(false);
   const [fileError, setFileError] = useState<string | null>(null);
@@ -80,33 +75,33 @@ export default function OGSection({
     setEnabled(enableCustomMetatag);
   }, [enableCustomMetatag]);
 
-  useEffect(() => {
-    if (
-      presets &&
-      !(metaTitle || metaDescription || metaImage || metaFavicon)
-    ) {
-      const preset = presets;
-      if (preset) {
-        setData((prev) => ({
-          ...prev,
-          metaFavicon: prev.metaFavicon || preset.metaFavicon,
-          metaImage: prev.metaImage || preset.metaImage,
-          metaTitle: prev.metaTitle || preset.metaTitle,
-          metaDescription: prev.metaDescription || preset.metaDescription,
-          enableCustomMetatag: !editLink && true,
-        }));
-      }
-    }
-  }, [
-    presets,
-    setData,
-    editLink,
-    metaFavicon,
-    enableCustomMetatag,
-    metaTitle,
-    metaDescription,
-    metaImage,
-  ]);
+  // useEffect(() => {
+  //   if (
+  //     presets?.enableCustomMetaTag &&
+  //     !(metaTitle || metaDescription || metaImage || metaFavicon)
+  //   ) {
+  //     const preset = presets;
+  //     if (preset) {
+  //       setData((prev) => ({
+  //         ...prev,
+  //         metaFavicon: prev.metaFavicon || preset.metaFavicon,
+  //         metaImage: prev.metaImage || preset.metaImage,
+  //         metaTitle: prev.metaTitle || preset.metaTitle,
+  //         metaDescription: prev.metaDescription || preset.metaDescription,
+  //         enableCustomMetatag: !editLink && true,
+  //       }));
+  //     }
+  //   }
+  // }, [
+  //   presets,
+  //   setData,
+  //   editLink,
+  //   metaFavicon,
+  //   enableCustomMetatag,
+  //   metaTitle,
+  //   metaDescription,
+  //   metaImage,
+  // ]);
 
   const handleCustomMetatag = async () => {
     const updatedCustomMetatag = !enabled;
@@ -171,7 +166,7 @@ export default function OGSection({
       <LinkItem
         tooltipContent="Customize how your content appears when shared on social media."
         title="Custom social media cards"
-        link="https://www.papermark.io/help/article/change-social-media-cards"
+        link="https://www.papermark.com/help/article/change-social-media-cards"
         enabled={enableCustomMetatag}
         action={handleCustomMetatag}
         isAllowed={isAllowed}

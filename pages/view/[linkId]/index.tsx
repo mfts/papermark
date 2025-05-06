@@ -10,11 +10,6 @@ import { useSession } from "next-auth/react";
 import { ExtendedRecordMap } from "notion-types";
 import { parsePageId } from "notion-utils";
 
-import LoadingSpinner from "@/components/ui/loading-spinner";
-import CustomMetaTag from "@/components/view/custom-metatag";
-import DataroomView from "@/components/view/dataroom/dataroom-view";
-import DocumentView from "@/components/view/document-view";
-
 import notion from "@/lib/notion";
 import { addSignedUrls } from "@/lib/notion/utils";
 import {
@@ -23,6 +18,11 @@ import {
   LinkWithDocument,
   NotionTheme,
 } from "@/lib/types";
+
+import LoadingSpinner from "@/components/ui/loading-spinner";
+import CustomMetaTag from "@/components/view/custom-metatag";
+import DataroomView from "@/components/view/dataroom/dataroom-view";
+import DocumentView from "@/components/view/document-view";
 
 type DocumentLinkData = {
   linkType: "DOCUMENT_LINK";
@@ -65,6 +65,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
     if (!res.ok) {
       throw new Error(`Failed to fetch: ${res.status}`);
     }
+
     const { linkType, link, brand } = (await res.json()) as
       | DocumentLinkData
       | DataroomLinkData;
@@ -85,18 +86,24 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
         link.document.versions[0];
 
       if (type === "notion") {
-        theme = new URL(file).searchParams.get("mode");
-        const notionPageId = parsePageId(file, { uuid: false });
-        if (!notionPageId) {
+        try {
+          theme = new URL(file).searchParams.get("mode");
+          const notionPageId = parsePageId(file, { uuid: false });
+          if (!notionPageId) {
+            return { notFound: true };
+          }
+
+          pageId = notionPageId;
+          recordMap = await notion.getPage(pageId, { signFileUrls: false });
+          await addSignedUrls({ recordMap });
+        } catch (notionError) {
+          console.error("Notion API error:", notionError);
+          // Return a temporary error page instead of 404
           return {
-            notFound: true,
+            props: { notionError: true },
+            revalidate: 30,
           };
         }
-
-        pageId = notionPageId;
-        recordMap = await notion.getPage(pageId, { signFileUrls: false });
-        // TODO: separately sign the file urls until PR merged and published; ref: https://github.com/NotionX/react-notion-x/issues/580#issuecomment-2542823817
-        await addSignedUrls({ recordMap });
       }
 
       const { team, teamId, advancedExcelEnabled, ...linkDocument } =
@@ -112,6 +119,8 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
               document: {
                 ...linkDocument,
                 versions: [versionWithoutTypeAndFile],
+                // TODO: remove this once the assistant feature is re-enabled
+                assistantEnabled: false,
               },
             },
             brand,
@@ -127,7 +136,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
             metaDescription: link.metaDescription,
             metaImage: link.metaImage,
             metaFavicon: link.metaFavicon ?? "/favicon.ico",
-            metaUrl: `https://www.papermark.io/view/${linkId}`,
+            metaUrl: `https://www.papermark.com/view/${linkId}`,
           },
           showPoweredByBanner: link.showBanner || teamPlan === "free",
           showAccountCreationSlide: link.showBanner || teamPlan === "free",
@@ -146,7 +155,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
       // iterate the link.documents and extract type and file and rest of the props
       let documents = [];
       for (const document of link.dataroom.documents) {
-        const { file, ...versionWithoutTypeAndFile } =
+        const { file, updatedAt, ...versionWithoutTypeAndFile } =
           document.document.versions[0];
 
         const newDocument = {
@@ -154,13 +163,26 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
           dataroomDocumentId: document.id,
           folderId: document.folderId,
           orderIndex: document.orderIndex,
-          versions: [versionWithoutTypeAndFile],
+          versions: [
+            {
+              ...versionWithoutTypeAndFile,
+              updatedAt:
+                document.updatedAt > updatedAt ? document.updatedAt : updatedAt, // use the latest updatedAt
+            },
+          ],
         };
 
         documents.push(newDocument);
       }
 
       const { teamId } = link.dataroom;
+
+      const lastUpdatedAt = link.dataroom.documents.reduce((max, doc) => {
+        return Math.max(
+          max,
+          new Date(doc.document.versions[0].updatedAt).getTime(),
+        );
+      }, 0);
 
       return {
         props: {
@@ -171,7 +193,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
               dataroom: {
                 ...link.dataroom,
                 documents,
-                lastUpdatedAt: null, // TODO: fix this to get the actual lastUpdatedAt
+                lastUpdatedAt: lastUpdatedAt,
               },
             },
             brand,
@@ -182,21 +204,22 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
             metaDescription: link.metaDescription,
             metaImage: link.metaImage,
             metaFavicon: link.metaFavicon ?? "/favicon.ico",
-            metaUrl: `https://www.papermark.io/view/${linkId}`,
+            metaUrl: `https://www.papermark.com/view/${linkId}`,
           },
           showPoweredByBanner: false,
           showAccountCreationSlide: false,
           useAdvancedExcelViewer: false, // INFO: this is managed in the API route
           useCustomAccessForm:
             teamId === "cm0154tiv0000lr2t6nr5c6kp" ||
-            teamId === "clup33by90000oewh4rfvp2eg",
+            teamId === "clup33by90000oewh4rfvp2eg" ||
+            teamId === "cm76hfyvy0002q623hmen99pf",
         },
         revalidate: 10,
       };
     }
   } catch (error) {
     console.error("Fetching error:", error);
-    return { notFound: true };
+    return { props: { error: true }, revalidate: 30 };
   }
 };
 
@@ -215,7 +238,9 @@ export default function ViewPage({
   showAccountCreationSlide,
   useAdvancedExcelViewer,
   useCustomAccessForm,
-}: ViewPageProps) {
+  error,
+  notionError,
+}: ViewPageProps & { error?: boolean; notionError?: boolean }) {
   const router = useRouter();
   const { data: session, status } = useSession();
   const [storedToken, setStoredToken] = useState<string | undefined>(undefined);
@@ -240,6 +265,18 @@ export default function ViewPage({
       <div className="flex h-screen items-center justify-center bg-black">
         <LoadingSpinner className="h-20 w-20" />
       </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <NotFound message="Sorry, we had trouble loading this link. Please try refreshing." />
+    );
+  }
+
+  if (notionError) {
+    return (
+      <NotFound message="Sorry, we had trouble loading this link. Please try again in a moment." />
     );
   }
 

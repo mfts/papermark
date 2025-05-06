@@ -1,26 +1,40 @@
 import Link from "next/link";
 
+import { useState } from "react";
+
 import { useTeam } from "@/context/team-context";
+import { Check, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { mutate } from "swr";
+
+import { usePlan } from "@/lib/swr/use-billing";
+import { useDataroom } from "@/lib/swr/use-dataroom";
 
 import { DataroomHeader } from "@/components/datarooms/dataroom-header";
 import { DataroomNavigation } from "@/components/datarooms/dataroom-navigation";
 import DeleteDataroom from "@/components/datarooms/settings/delete-dataroooom";
 import DuplicateDataroom from "@/components/datarooms/settings/duplicate-dataroom";
 import AppLayout from "@/components/layouts/app";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Form } from "@/components/ui/form";
-
-import { usePlan } from "@/lib/swr/use-billing";
-import { useDataroom } from "@/lib/swr/use-dataroom";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export default function Settings() {
   const { dataroom } = useDataroom();
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
+  const [isCopied, setIsCopied] = useState(false);
 
-  const { plan } = usePlan();
-  const isDataroomsPlan = plan === "datarooms";
+  const { isBusiness, isDatarooms, isDataroomsPlus } = usePlan();
 
   if (!dataroom) {
     return <div>Loading...</div>;
@@ -58,10 +72,10 @@ export default function Settings() {
               description="This is the name of your data room on Papermark."
               inputAttrs={{
                 name: "name",
-                defaultValue: dataroom.name,
                 placeholder: "My Dataroom",
                 maxLength: 32,
               }}
+              defaultValue={dataroom.name}
               helpText="Max 32 characters"
               handleSubmit={(updateData) =>
                 fetch(`/api/teams/${teamId}/datarooms/${dataroom.id}`, {
@@ -69,7 +83,7 @@ export default function Settings() {
                   headers: {
                     "Content-Type": "application/json",
                   },
-                  body: JSON.stringify({ name: updateData.name.trim() }),
+                  body: JSON.stringify(updateData),
                 }).then(async (res) => {
                   if (res.status === 200) {
                     await Promise.all([
@@ -85,7 +99,51 @@ export default function Settings() {
               }
             />
             <DuplicateDataroom dataroomId={dataroom.id} teamId={teamId} />
-            {isDataroomsPlan ? (
+            <Card className="bg-transparent">
+              <CardHeader>
+                <CardTitle>Dataroom ID</CardTitle>
+                <CardDescription>
+                  Unique ID of your dataroom on Papermark.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center space-x-2">
+                  <div className="relative w-full max-w-md">
+                    <Input
+                      value={dataroom.id}
+                      className="pr-10 font-mono"
+                      readOnly
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                      onClick={() => {
+                        navigator.clipboard.writeText(dataroom.id);
+                        toast.success("Dataroom ID copied to clipboard");
+                        setIsCopied(true);
+                        setTimeout(() => setIsCopied(false), 2000);
+                      }}
+                    >
+                      {isCopied ? (
+                        <Check className="h-4 w-4" />
+                      ) : (
+                        <Copy className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+              <CardFooter className="flex items-center justify-between rounded-b-lg border-t bg-muted px-6 py-6">
+                <p className="text-sm text-muted-foreground transition-colors">
+                  Used to identify your dataroom when interacting with the
+                  Papermark API.
+                </p>
+              </CardFooter>
+            </Card>
+
+            {isBusiness || isDatarooms || isDataroomsPlus ? (
               <DeleteDataroom
                 dataroomId={dataroom.id}
                 dataroomName={dataroom.name}

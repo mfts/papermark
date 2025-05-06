@@ -49,29 +49,41 @@ export default async function handle(
         return res.status(403).end("Unauthorized to access this team");
       }
 
-      const documentViews = await prisma.view.findMany({
-        where: {
-          dataroomViewId: viewId,
-          dataroomId: dataroomId,
-          viewType: "DOCUMENT_VIEW",
-        },
-        orderBy: {
-          viewedAt: "asc",
-        },
-        select: {
-          id: true,
-          viewedAt: true,
-          downloadedAt: true,
-          document: {
-            select: {
-              id: true,
-              name: true,
+      const [documentViews, uploadedDocumentViews] = await Promise.all([
+        prisma.view.findMany({
+          where: {
+            dataroomViewId: viewId,
+            dataroomId: dataroomId,
+            viewType: "DOCUMENT_VIEW",
+          },
+          orderBy: {
+            viewedAt: "asc",
+          },
+          select: {
+            id: true,
+            viewedAt: true,
+            downloadedAt: true,
+            document: {
+              select: {
+                id: true,
+                name: true,
+              },
             },
           },
-        },
-      });
+        }),
+        prisma.documentUpload.findMany({
+          where: {
+            viewId: viewId,
+          },
+          select: {
+            uploadedAt: true,
+            documentId: true,
+            originalFilename: true,
+          },
+        }),
+      ]);
 
-      return res.status(200).json(documentViews);
+      return res.status(200).json({ documentViews, uploadedDocumentViews });
     } catch (error) {
       errorhandler(error, res);
     }

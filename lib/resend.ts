@@ -13,22 +13,26 @@ export const sendEmail = async ({
   to,
   subject,
   react,
+  from,
   marketing,
   system,
   verify,
   test,
   cc,
+  replyTo,
   scheduledAt,
   unsubscribeUrl,
 }: {
   to: string;
   subject: string;
   react: ReactElement<any, string | JSXElementConstructor<any>>;
+  from?: string;
   marketing?: boolean;
   system?: boolean;
   verify?: boolean;
   test?: boolean;
   cc?: string | string[];
+  replyTo?: string;
   scheduledAt?: string;
   unsubscribeUrl?: string;
 }) => {
@@ -39,20 +43,24 @@ export const sendEmail = async ({
 
   const plainText = await render(react, { plainText: true });
 
+  const fromAddress =
+    from ??
+    (marketing
+      ? "Marc from Papermark <marc@ship.papermark.io>"
+      : system
+        ? "Papermark <system@papermark.io>"
+        : verify
+          ? "Papermark <system@verify.papermark.io>"
+          : !!scheduledAt
+            ? "Marc Seitz <marc@papermark.io>"
+            : "Marc from Papermark <marc@papermark.io>");
+
   try {
     const { data, error } = await resend.emails.send({
-      from: marketing
-        ? "Marc from Papermark <marc@ship.papermark.io>"
-        : system
-          ? "Papermark <system@papermark.io>"
-          : verify
-            ? "Papermark <system@verify.papermark.io>"
-            : !!scheduledAt
-              ? "Marc Seitz <marc@papermark.io>"
-              : "Marc from Papermark <marc@papermark.io>",
+      from: fromAddress,
       to: test ? "delivered@resend.dev" : to,
       cc: cc,
-      replyTo: marketing ? "marc@papermark.io" : undefined,
+      replyTo: marketing ? "marc@papermark.io" : replyTo,
       subject,
       react,
       scheduledAt,

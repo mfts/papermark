@@ -1,17 +1,25 @@
+import Link from "next/link";
 import { useRouter } from "next/router";
 
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
-import { LinkAudienceType, LinkType } from "@prisma/client";
+import { PlanEnum } from "@/ee/stripe/constants";
+import { LinkAudienceType, LinkPreset, LinkType } from "@prisma/client";
 import { RefreshCwIcon } from "lucide-react";
 import { toast } from "sonner";
 import { mutate } from "swr";
+import useSWR from "swr";
 
-import {
-  PlanEnum,
-  UpgradePlanModal,
-} from "@/components/billing/upgrade-plan-modal";
+import { useAnalytics } from "@/lib/analytics";
+import { usePlan } from "@/lib/swr/use-billing";
+import useDataroomGroups from "@/lib/swr/use-dataroom-groups";
+import { useDomains } from "@/lib/swr/use-domains";
+import useLimits from "@/lib/swr/use-limits";
+import { LinkWithViews, WatermarkConfig } from "@/lib/types";
+import { convertDataUrlToFile, fetcher, uploadImage } from "@/lib/utils";
+
+import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -34,18 +42,16 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ButtonTooltip } from "@/components/ui/tooltip";
 
-import { useAnalytics } from "@/lib/analytics";
-import { usePlan } from "@/lib/swr/use-billing";
-import useDataroomGroups from "@/lib/swr/use-dataroom-groups";
-import { useDomains } from "@/lib/swr/use-domains";
-import { LinkWithViews, WatermarkConfig } from "@/lib/types";
-import { convertDataUrlToFile, uploadImage } from "@/lib/utils";
-
 import { CustomFieldData } from "./custom-fields-panel";
 import DomainSection from "./domain-section";
 import { LinkOptions } from "./link-options";
+import TagSection from "./tags/tag-section";
 
-export const DEFAULT_LINK_PROPS = (linkType: LinkType) => ({
+export const DEFAULT_LINK_PROPS = (
+  linkType: LinkType,
+  groupId: string | null = null,
+  showBanner: boolean = true,
+) => ({
   id: null,
   name: null,
   domain: null,
@@ -70,12 +76,18 @@ export const DEFAULT_LINK_PROPS = (linkType: LinkType) => ({
   questionType: null,
   enableAgreement: false,
   agreementId: null,
-  showBanner: linkType === LinkType.DOCUMENT_LINK ? true : false,
+  showBanner: linkType === LinkType.DOCUMENT_LINK ? showBanner : false,
   enableWatermark: false,
   watermarkConfig: null,
-  audienceType: LinkAudienceType.GENERAL,
-  groupId: null,
+  audienceType: groupId ? LinkAudienceType.GROUP : LinkAudienceType.GENERAL,
+  groupId: groupId,
   customFields: [],
+  tags: [],
+  enableConversation: false,
+  enableUpload: false,
+  isFileRequestOnly: false,
+  uploadFolderId: null,
+  uploadFolderName: "Home",
 });
 
 export type DEFAULT_LINK_TYPE = {
@@ -109,6 +121,12 @@ export type DEFAULT_LINK_TYPE = {
   audienceType: LinkAudienceType;
   groupId: string | null;
   customFields: CustomFieldData[];
+  tags: string[];
+  enableConversation: boolean;
+  enableUpload: boolean;
+  isFileRequestOnly: boolean;
+  uploadFolderId: string | null;
+  uploadFolderName: string;
 };
 
 export default function LinkSheet({
@@ -124,30 +142,54 @@ export default function LinkSheet({
   currentLink?: DEFAULT_LINK_TYPE;
   existingLinks?: LinkWithViews[];
 }) {
+  const router = useRouter();
+  const { id: targetId, groupId } = router.query as {
+    id: string;
+    groupId?: string;
+  };
+
   const { domains } = useDomains();
+
   const {
     viewerGroups,
     loading: isLoadingGroups,
     mutate: mutateGroups,
   } = useDataroomGroups();
   const teamInfo = useTeam();
-  const { plan, trial } = usePlan();
+  const { isFree, isPro, isBusiness, isDatarooms, isDataroomsPlus, isTrial } =
+    usePlan();
+  const { limits } = useLimits();
   const analytics = useAnalytics();
   const [data, setData] = useState<DEFAULT_LINK_TYPE>(
-    DEFAULT_LINK_PROPS(linkType),
+    DEFAULT_LINK_PROPS(linkType, groupId, !isDatarooms),
   );
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [currentPreset, setCurrentPreset] = useState<LinkPreset | null>(null);
 
-  const router = useRouter();
-  const targetId = router.query.id as string;
+  const isPresetsAllowed =
+    (isPro && limits?.advancedLinkControlsOnPro) ||
+    isBusiness ||
+    isDatarooms ||
+    isDataroomsPlus;
+
+  // Presets
+  const { data: presets } = useSWR<LinkPreset[]>(
+    teamInfo?.currentTeam?.id
+      ? `/api/teams/${teamInfo.currentTeam.id}/presets`
+      : null,
+    fetcher,
+    {
+      dedupingInterval: 10000,
+    },
+  );
 
   useEffect(() => {
-    setData(currentLink || DEFAULT_LINK_PROPS(linkType));
+    setData(currentLink || DEFAULT_LINK_PROPS(linkType, groupId, !isDatarooms));
   }, [currentLink]);
 
   const handlePreviewLink = async (link: LinkWithViews) => {
-    if (link.domainId && plan === "free") {
+    if (link.domainId && isFree) {
       toast.error("You need to upgrade to preview this link");
       return;
     }
@@ -169,7 +211,48 @@ export default function LinkSheet({
     const { previewToken } = await response.json();
     const previewLink = `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${link.id}?previewToken=${previewToken}`;
     setIsLoading(false);
-    window.open(previewLink, "_blank");
+    const linkElement = document.createElement("a");
+    linkElement.href = previewLink;
+    linkElement.target = "_blank";
+    document.body.appendChild(linkElement);
+    linkElement.click();
+
+    setTimeout(() => {
+      document.body.removeChild(linkElement);
+    }, 100);
+  };
+
+  const applyPreset = (presetId: string) => {
+    const preset = presets?.find((p) => p.id === presetId);
+    if (!preset) return;
+
+    setData((prev) => {
+      return {
+        ...prev,
+        name: prev.name, // Keep existing name
+        domain: prev.domain, // Keep existing domain
+        slug: prev.slug, // Keep existing slug
+        emailProtected: preset.emailProtected ?? prev.emailProtected,
+        emailAuthenticated:
+          preset.emailAuthenticated ?? prev.emailAuthenticated,
+        allowList: preset.allowList || prev.allowList,
+        denyList: preset.denyList || prev.denyList,
+        password: preset.password || prev.password,
+        enableCustomMetatag:
+          preset.enableCustomMetaTag ?? prev.enableCustomMetatag,
+        metaTitle: preset.metaTitle || prev.metaTitle,
+        metaDescription: preset.metaDescription || prev.metaDescription,
+        metaImage: preset.metaImage || prev.metaImage,
+        metaFavicon: preset.metaFavicon || prev.metaFavicon,
+        allowDownload: preset.allowDownload || prev.allowDownload,
+        enableAgreement: preset.enableAgreement || prev.enableAgreement,
+        agreementId: preset.agreementId || prev.agreementId,
+        enableScreenshotProtection:
+          preset.enableScreenshotProtection || prev.enableScreenshotProtection,
+      };
+    });
+
+    setCurrentPreset(preset);
   };
 
   const handleSubmit = async (event: any, shouldPreview: boolean = false) => {
@@ -251,9 +334,64 @@ export default function LinkSheet({
         ),
         false,
       );
+
+      // Handle group changes
+      if (!!groupId && returnedLink.audienceType === LinkAudienceType.GROUP) {
+        // If we're viewing a group page
+        if (currentLink.groupId !== returnedLink.groupId) {
+          // If the link's group has changed
+          if (currentLink.groupId === groupId) {
+            // If the link was in the current group but is now in a different group
+            // Remove it from the current group's view
+            const groupLinks =
+              existingLinks?.filter(
+                (link) =>
+                  link.id !== currentLink.id && link.groupId === groupId,
+              ) || [];
+
+            mutate(
+              `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
+                targetId,
+              )}/groups/${groupId}/links`,
+              groupLinks,
+              false,
+            );
+          } else if (returnedLink.groupId === groupId) {
+            // If the link was in a different group but is now in the current group
+            // Add it to the current group's view
+            const groupLinks =
+              existingLinks?.filter((link) => link.groupId === groupId) || [];
+
+            mutate(
+              `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
+                targetId,
+              )}/groups/${groupId}/links`,
+              [returnedLink, ...groupLinks],
+              false,
+            );
+          }
+        } else if (returnedLink.groupId === groupId) {
+          // If the link's group hasn't changed and it's in the current group
+          // Update it in the current group's view
+          const groupLinks =
+            existingLinks?.filter((link) => link.groupId === groupId) || [];
+
+          mutate(
+            `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
+              targetId,
+            )}/groups/${groupId}/links`,
+            groupLinks.map((link) =>
+              link.id === currentLink.id ? returnedLink : link,
+            ),
+            false,
+          );
+        }
+      }
+
       toast.success("Link updated successfully");
     } else {
       setIsOpen(false);
+
       // Add the new link to the list of links
       mutate(
         `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
@@ -262,6 +400,23 @@ export default function LinkSheet({
         [returnedLink, ...(existingLinks || [])],
         false,
       );
+
+      // Also update the group-specific links cache if this is a group link
+      if (
+        !!groupId &&
+        returnedLink.audienceType === LinkAudienceType.GROUP &&
+        returnedLink.groupId === groupId
+      ) {
+        const groupLinks =
+          existingLinks?.filter((link) => link.groupId === groupId) || [];
+        mutate(
+          `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${encodeURIComponent(
+            targetId,
+          )}/groups/${groupId}/links`,
+          [returnedLink, ...groupLinks],
+          false,
+        );
+      }
 
       analytics.capture("Link Added", {
         linkId: returnedLink.id,
@@ -273,7 +428,7 @@ export default function LinkSheet({
       toast.success("Link created successfully");
     }
 
-    setData(DEFAULT_LINK_PROPS(linkType));
+    setData(DEFAULT_LINK_PROPS(linkType, groupId));
     setIsSaving(false);
 
     if (shouldPreview) {
@@ -314,7 +469,7 @@ export default function LinkSheet({
                         <TabsTrigger value={LinkAudienceType.GENERAL}>
                           General
                         </TabsTrigger>
-                        {plan === "datarooms" || trial ? (
+                        {isDatarooms || isDataroomsPlus || isTrial ? (
                           <TabsTrigger value={LinkAudienceType.GROUP}>
                             Group
                           </TabsTrigger>
@@ -336,7 +491,6 @@ export default function LinkSheet({
                       <div className="space-y-6 pb-10 pt-2">
                         <div className="space-y-2">
                           <Label htmlFor="link-name">Link Name</Label>
-
                           <Input
                             type="text"
                             name="link-name"
@@ -353,11 +507,53 @@ export default function LinkSheet({
                         <div className="space-y-2">
                           <DomainSection
                             {...{ data, setData, domains }}
-                            plan={plan}
                             linkType={linkType}
                             editLink={!!currentLink}
                           />
                         </div>
+                        <div className="space-y-2">
+                          <TagSection
+                            {...{ data, setData }}
+                            teamId={teamInfo?.currentTeam?.id as string}
+                          />
+                        </div>
+
+                        {/* Preset Selector - only show when creating a new link */}
+                        {!currentLink &&
+                          isPresetsAllowed &&
+                          presets &&
+                          presets.length > 0 && (
+                            <div className="space-y-2">
+                              <div className="flex items-center justify-between">
+                                <Label htmlFor="preset">Link Preset</Label>
+                                <Link
+                                  href="/settings/presets"
+                                  className="text-xs text-muted-foreground hover:text-foreground hover:underline"
+                                >
+                                  Manage
+                                </Link>
+                              </div>
+                              <Select onValueChange={applyPreset}>
+                                <SelectTrigger className="w-full">
+                                  <SelectValue placeholder="Select a preset" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {presets.map((preset) => (
+                                    <SelectItem
+                                      key={preset.id}
+                                      value={preset.id}
+                                    >
+                                      {preset.name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <p className="text-xs text-muted-foreground">
+                                Apply a preset to quickly configure link
+                                settings
+                              </p>
+                            </div>
+                          )}
 
                         <div className="relative flex items-center">
                           <Separator className="absolute bg-muted-foreground" />
@@ -371,8 +567,10 @@ export default function LinkSheet({
                         <LinkOptions
                           data={data}
                           setData={setData}
+                          targetId={targetId}
                           linkType={linkType}
                           editLink={!!currentLink}
+                          currentPreset={currentPreset}
                         />
                       </div>
                     </TabsContent>
@@ -465,11 +663,53 @@ export default function LinkSheet({
                         <div className="space-y-2">
                           <DomainSection
                             {...{ data, setData, domains }}
-                            plan={plan}
                             linkType={linkType}
                             editLink={!!currentLink}
                           />
                         </div>
+                        <div className="space-y-2">
+                          <TagSection
+                            {...{ data, setData }}
+                            teamId={teamInfo?.currentTeam?.id as string}
+                          />
+                        </div>
+
+                        {/* Preset Selector for Group links - only show when creating a new link */}
+                        {!currentLink &&
+                          isPresetsAllowed &&
+                          presets &&
+                          presets.length > 0 && (
+                            <div className="space-y-2">
+                              <div className="flex items-center justify-between">
+                                <Label htmlFor="preset">Link Preset</Label>
+                                <Link
+                                  href="/settings/presets"
+                                  className="text-xs text-muted-foreground hover:text-foreground hover:underline"
+                                >
+                                  Manage
+                                </Link>
+                              </div>
+                              <Select onValueChange={applyPreset}>
+                                <SelectTrigger className="w-full">
+                                  <SelectValue placeholder="Select a preset" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {presets.map((preset) => (
+                                    <SelectItem
+                                      key={preset.id}
+                                      value={preset.id}
+                                    >
+                                      {preset.name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <p className="text-xs text-muted-foreground">
+                                Apply a preset to quickly configure link
+                                settings
+                              </p>
+                            </div>
+                          )}
 
                         <div className="relative flex items-center">
                           <Separator className="absolute bg-muted-foreground" />
@@ -483,8 +723,10 @@ export default function LinkSheet({
                         <LinkOptions
                           data={data}
                           setData={setData}
+                          targetId={targetId}
                           linkType={linkType}
                           editLink={!!currentLink}
+                          currentPreset={currentPreset}
                         />
                       </div>
                     </TabsContent>

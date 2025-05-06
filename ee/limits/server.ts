@@ -5,6 +5,7 @@ import prisma from "@/lib/prisma";
 import {
   BUSINESS_PLAN_LIMITS,
   DATAROOMS_PLAN_LIMITS,
+  DATAROOMS_PLUS_PLAN_LIMITS,
   FREE_PLAN_LIMITS,
   PRO_PLAN_LIMITS,
   TPlanLimits,
@@ -21,30 +22,34 @@ const planLimitsMap: Record<string, TPlanLimits> = {
   pro: PRO_PLAN_LIMITS,
   business: BUSINESS_PLAN_LIMITS,
   datarooms: DATAROOMS_PLAN_LIMITS,
+  "datarooms-plus": DATAROOMS_PLUS_PLAN_LIMITS,
 };
 
-const configSchema = z.object({
-  datarooms: z.number(),
+export const configSchema = z.object({
+  datarooms: z.number().optional(),
   links: z
     .preprocess((v) => (v === null ? Infinity : Number(v)), z.number())
     .optional()
-    .default(10),
+    .default(50),
   documents: z
     .preprocess((v) => (v === null ? Infinity : Number(v)), z.number())
     .optional()
-    .default(10),
-  users: z.number(),
-  domains: z.number(),
-  customDomainOnPro: z.boolean(),
-  customDomainInDataroom: z.boolean(),
+    .default(50),
+  users: z.number().optional(),
+  domains: z.number().optional(),
+  customDomainOnPro: z.boolean().optional(),
+  customDomainInDataroom: z.boolean().optional(),
   advancedLinkControlsOnPro: z.boolean().nullish(),
   watermarkOnBusiness: z.boolean().nullish(),
+  conversationsInDataroom: z.boolean().nullish(),
   fileSizeLimits: z
     .object({
       video: z.number().optional(), // in MB
       document: z.number().optional(), // in MB
       image: z.number().optional(), // in MB
       excel: z.number().optional(), // in MB
+      maxFiles: z.number().optional(), // in amount of files
+      maxPages: z.number().optional(), // in amount of pages
     })
     .optional(),
 });
@@ -71,15 +76,9 @@ export async function getLimits({
       _count: {
         select: {
           documents: true,
-        },
-      },
-      documents: {
-        select: {
-          _count: {
-            select: {
-              links: true,
-            },
-          },
+          links: true,
+          users: true,
+          invitations: true,
         },
       },
     },
@@ -90,10 +89,8 @@ export async function getLimits({
   }
 
   const documentCount = team._count.documents;
-  const linkCount = team.documents.reduce(
-    (sum, doc) => sum + doc._count.links,
-    0,
-  );
+  const linkCount = team._count.links;
+  const userCount = team._count.users + team._count.invitations;
 
   // parse the limits json with zod and return the limits
   // {datarooms: 1, users: 1, domains: 1, customDomainOnPro: boolean, customDomainInDataroom: boolean}
@@ -101,20 +98,25 @@ export async function getLimits({
   try {
     let parsedData = configSchema.parse(team.limits);
 
+    const basePlan = getBasePlan(team.plan);
+    const defaultLimits = planLimitsMap[basePlan];
+
     // Adjust limits based on the plan if they're at the default value
     if (isFreePlan(team.plan)) {
       return {
+        ...defaultLimits,
         ...parsedData,
-        usage: { documents: documentCount, links: linkCount },
+        usage: { documents: documentCount, links: linkCount, users: userCount },
       };
     } else {
       return {
+        ...defaultLimits,
         ...parsedData,
         // if account is paid, but link and document limits are not set, then set them to Infinity
-        links: parsedData.links === 10 ? Infinity : parsedData.links,
+        links: parsedData.links === 50 ? Infinity : parsedData.links,
         documents:
-          parsedData.documents === 10 ? Infinity : parsedData.documents,
-        usage: { documents: documentCount, links: linkCount },
+          parsedData.documents === 50 ? Infinity : parsedData.documents,
+        usage: { documents: documentCount, links: linkCount, users: userCount },
       };
     }
   } catch (error) {
@@ -124,7 +126,8 @@ export async function getLimits({
 
     return {
       ...defaultLimits,
-      usage: { documents: documentCount, links: linkCount },
+      conversationsInDataroom: false,
+      usage: { documents: documentCount, links: linkCount, users: userCount },
     };
   }
 }

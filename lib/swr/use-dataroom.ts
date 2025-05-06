@@ -267,6 +267,7 @@ export type DataroomFolderDocument = DataroomDocument & {
     name: string;
     type: string;
     versions?: { id: string; hasPages: boolean }[];
+    isExternalUpload?: boolean;
     _count: {
       views: number;
       versions: number;
@@ -324,14 +325,20 @@ export function useDataroomViewers({ dataroomId }: { dataroomId: string }) {
   };
 }
 
-export function useDataroomVisits({ dataroomId }: { dataroomId: string }) {
+export function useDataroomVisits({
+  dataroomId,
+  groupId,
+}: {
+  dataroomId: string;
+  groupId?: string;
+}) {
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
 
   const { data: views, error } = useSWR<any[]>(
     teamId &&
       dataroomId &&
-      `/api/teams/${teamId}/datarooms/${dataroomId}/views`,
+      `/api/teams/${teamId}/datarooms/${dataroomId}${groupId ? `/groups/${groupId}` : ""}/views`,
     fetcher,
     {
       dedupingInterval: 10000,
@@ -355,6 +362,12 @@ type DataroomDocumentViewHistory = {
   };
 };
 
+type DataroomDocumentUploadViewHistory = {
+  uploadedAt: string;
+  documentId: string;
+  originalFilename: string;
+};
+
 export function useDataroomVisitHistory({
   viewId,
   dataroomId,
@@ -365,7 +378,10 @@ export function useDataroomVisitHistory({
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
 
-  const { data: documentViews, error } = useSWR<DataroomDocumentViewHistory[]>(
+  const { data, error } = useSWR<{
+    documentViews: DataroomDocumentViewHistory[];
+    uploadedDocumentViews: DataroomDocumentUploadViewHistory[];
+  }>(
     teamId &&
       dataroomId &&
       `/api/teams/${teamId}/datarooms/${dataroomId}/views/${viewId}/history`,
@@ -376,8 +392,9 @@ export function useDataroomVisitHistory({
   );
 
   return {
-    documentViews,
-    loading: !error && !documentViews,
+    documentViews: data?.documentViews,
+    uploadedDocumentViews: data?.uploadedDocumentViews,
+    loading: !error && !data,
     error,
   };
 }

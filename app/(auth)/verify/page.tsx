@@ -1,10 +1,45 @@
+import { Metadata } from "next";
 import Link from "next/link";
 
 import NotFound from "@/pages/404";
 
+import { generateChecksum } from "@/lib/utils/generate-checksum";
+
 import { Button } from "@/components/ui/button";
 
-import { generateChecksum } from "@/lib/utils/generate-checksum";
+const data = {
+  description: "Verify login to Papermark",
+  title: "Verify | Papermark",
+  url: "/verify",
+};
+
+export const metadata: Metadata = {
+  metadataBase: new URL("https://www.papermark.com"),
+  title: data.title,
+  description: data.description,
+  openGraph: {
+    title: data.title,
+    description: data.description,
+    url: data.url,
+    siteName: "Papermark",
+    images: [
+      {
+        url: "/_static/meta-image.png",
+        width: 800,
+        height: 600,
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: data.title,
+    description: data.description,
+    creator: "@papermarkio",
+    images: ["/_static/meta-image.png"],
+  },
+};
 
 export default function VerifyPage({
   searchParams,
@@ -65,17 +100,17 @@ export default function VerifyPage({
             By clicking continue, you acknowledge that you have read and agree
             to Papermark&apos;s{" "}
             <a
-              href="https://www.papermark.io/terms"
+              href={`${process.env.NEXT_PUBLIC_MARKETING_URL}/terms`}
               target="_blank"
-              className="underline"
+              className="underline hover:text-gray-900"
             >
               Terms of Service
             </a>{" "}
             and{" "}
             <a
-              href="https://www.papermark.io/privacy"
+              href={`${process.env.NEXT_PUBLIC_MARKETING_URL}/privacy`}
               target="_blank"
-              className="underline"
+              className="underline hover:text-gray-900"
             >
               Privacy Policy
             </a>

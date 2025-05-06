@@ -1,3 +1,5 @@
+import { useRouter } from "next/router";
+
 import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
@@ -39,6 +41,7 @@ export function AddFolderToDataroomModal({
   folderName?: string;
   dataroomId?: string;
 }) {
+  const router = useRouter();
   const [selectedDataroom, setSelectedDataroom] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -79,7 +82,19 @@ export function AddFolderToDataroomModal({
       dataroomId &&
         mutate(`/api/teams/${teamId}/datarooms/${dataroomId}/folders`);
 
-      toast.success("Folder added to dataroom successfully!");
+      const dataroomName = datarooms?.find(
+        (d) => d.id === selectedDataroom,
+      )?.name;
+
+      toast.success(`Folder added successfully!`, {
+        description: `${folderName?.trim()} → ${dataroomName}`,
+        action: {
+          label: "Open Dataroom",
+          onClick: () =>
+            router.push(`/datarooms/${selectedDataroom}/documents`),
+        },
+        duration: 10000,
+      });
     } catch (error) {
       console.error("Error adding folder to dataroom", error);
       toast.error("Failed to add folder to dataroom. Try again.");

@@ -15,6 +15,11 @@ import { useTheme } from "next-themes";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
+import { type DataroomFolderDocument } from "@/lib/swr/use-dataroom";
+import { type DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
+import { cn, nFormatter, timeAgo } from "@/lib/utils";
+import { fileIcon } from "@/lib/utils/get-file-icon";
+
 import BarChart from "@/components/shared/icons/bar-chart";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,11 +30,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-import { type DataroomFolderDocument } from "@/lib/swr/use-dataroom";
-import { type DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
-import { cn, nFormatter, timeAgo } from "@/lib/utils";
-import { fileIcon } from "@/lib/utils/get-file-icon";
 
 import { AddToDataroomModal } from "../documents/add-document-to-dataroom-modal";
 import FileProcessStatusBar from "../documents/file-process-status-bar";
@@ -214,6 +214,12 @@ export default function DataroomDocumentCard({
                     <p className="truncate">{`${dataroomDocument.document._count.versions} Versions`}</p>
                   </>
                 ) : null}
+                {dataroomDocument.document.isExternalUpload ? (
+                  <>
+                    <p>•</p>
+                    <p className="truncate">Added by external collaborator</p>
+                  </>
+                ) : null}
               </div>
             </div>
           </div>
@@ -318,7 +324,8 @@ export default function DataroomDocumentCard({
           setOpen={setMoveFolderOpen}
           dataroomId={dataroomDocument.dataroomId}
           documentIds={[dataroomDocument.id]}
-          documentName={dataroomDocument.document.name}
+          itemName={dataroomDocument.document.name}
+          folderIds={[]}
         />
       ) : null}
     </>

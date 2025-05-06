@@ -72,20 +72,6 @@ interface FileWithPaths extends File {
   whereToUploadPath?: string;
 }
 
-// const fileSizeLimits: { [key: string]: number } = {
-//   "application/vnd.ms-excel": 40, // 40 MB
-//   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": 40, // 40 MB
-//   "application/vnd.oasis.opendocument.spreadsheet": 40, // 40 MB
-//   "image/png": 100, // 100 MB
-//   "image/jpeg": 100, // 100 MB
-//   "image/jpg": 100, // 100 MB
-//   "video/mp4": 500, // 500 MB
-//   "video/quicktime": 500, // 500 MB
-//   "video/x-msvideo": 500, // 500 MB
-//   "video/webm": 500, // 500 MB
-//   "video/ogg": 500, // 500 MB
-// };
-
 export default function UploadZone({
   children,
   onUploadStart,
@@ -118,14 +104,10 @@ export default function UploadZone({
   dataroomId?: string;
 }) {
   const analytics = useAnalytics();
-  const { plan, trial } = usePlan();
+  const { plan, isFree, isTrial } = usePlan();
   const router = useRouter();
   const teamInfo = useTeam();
   const { data: session } = useSession();
-  const isFreePlan = plan === "free";
-  const isTrial = !!trial;
-  // const maxSize = isFreePlan && !isTrial ? 30 : 350;
-  const maxNumPages = isFreePlan && !isTrial ? 100 : 500;
   const { limits, canAddDocuments } = useLimits();
   const remainingDocuments = limits?.documents
     ? limits?.documents - limits?.usage?.documents
@@ -139,14 +121,14 @@ export default function UploadZone({
     () =>
       getFileSizeLimits({
         limits,
-        isFreePlan,
+        isFree,
         isTrial,
       }),
-    [limits, isFreePlan, isTrial],
+    [limits, isFree, isTrial],
   );
 
   const acceptableDropZoneFileTypes =
-    isFreePlan && !isTrial
+    isFree && !isTrial
       ? acceptableDropZoneMimeTypesWhenIsFreePlanAndNotTrail
       : allAcceptableDropZoneMimeTypes;
 
@@ -165,14 +147,14 @@ export default function UploadZone({
         } else if (errors.find(({ code }) => code === "file-invalid-type")) {
           const isSupported = SUPPORTED_DOCUMENT_MIME_TYPES.includes(file.type);
           message = `File type not supported ${
-            isFreePlan && !isTrial && isSupported ? `on free plan` : ""
+            isFree && !isTrial && isSupported ? `on free plan` : ""
           }`;
         }
         return { fileName: file.name, message };
       });
       onUploadRejected(rejected);
     },
-    [onUploadRejected, fileSizeLimits, isFreePlan, isTrial],
+    [onUploadRejected, fileSizeLimits, isFree, isTrial],
   );
 
   const onDrop = useCallback(
@@ -195,7 +177,7 @@ export default function UploadZone({
             acc.invalid.push({
               fileName: file.name,
               message: `File size too big (max. ${fileSizeLimitMB} MB)${
-                isFreePlan && !isTrial
+                isFree && !isTrial
                   ? ". Upgrade to a paid plan to increase the limit"
                   : ""
               }`,
@@ -240,7 +222,7 @@ export default function UploadZone({
           const buffer = await file.arrayBuffer();
           numPages = await getPagesCount(buffer);
 
-          if (numPages > maxNumPages) {
+          if (numPages > fileSizeLimits.maxPages) {
             setUploads((prev) =>
               prev.filter((upload) => upload.fileName !== file.name),
             );
@@ -248,7 +230,7 @@ export default function UploadZone({
             return setRejectedFiles((prev) => [
               {
                 fileName: file.name,
-                message: `File has too many pages (max. ${maxNumPages})`,
+                message: `File has too many pages (max. ${fileSizeLimits.maxPages})`,
               },
               ...prev,
             ]);
@@ -333,6 +315,7 @@ export default function UploadZone({
 
         // add the new document to the list
         mutate(`/api/teams/${teamInfo?.currentTeam?.id}/documents`);
+
         fileUploadPathName &&
           mutate(
             `/api/teams/${teamInfo?.currentTeam?.id}/folders/documents/${fileUploadPathName}`,
@@ -422,7 +405,7 @@ export default function UploadZone({
       onUploadProgress,
       endpointTargetType,
       fileSizeLimits,
-      isFreePlan,
+      isFree,
       isTrial,
     ],
   );
@@ -430,7 +413,7 @@ export default function UploadZone({
   const getFilesFromEvent = useCallback(
     async (event: DropEvent) => {
       // This callback also run when event.type =`dragenter`. We only need to compute files when the event.type is `drop`.
-      if (event.type !== "drop" && event.type !== "change") {
+      if ("type" in event && event.type !== "drop" && event.type !== "change") {
         return [];
       }
 
@@ -613,6 +596,7 @@ export default function UploadZone({
           filesToBePassedToOnDrop.push(...fileResult),
         );
       } else if (
+        "target" in event &&
         event.target &&
         event.target instanceof HTMLInputElement &&
         event.target.files
@@ -634,7 +618,7 @@ export default function UploadZone({
     accept: acceptableDropZoneFileTypes,
     multiple: true,
     // maxSize: maxSize * 1024 * 1024, // 30 MB
-    maxFiles: 150,
+    maxFiles: fileSizeLimits.maxFiles ?? 150,
     onDrop,
     onDropRejected,
     getFilesFromEvent,
@@ -671,7 +655,7 @@ export default function UploadZone({
                   Drop your file(s) here
                 </span>
                 <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                  {isFreePlan && !isTrial
+                  {isFree && !isTrial
                     ? `Only *.pdf, *.xls, *.xlsx, *.csv, *.ods, *.png, *.jpeg, *.jpg`
                     : `Only *.pdf, *.pptx, *.docx, *.xlsx, *.xls, *.csv, *.ods, *.ppt, *.odp, *.doc, *.odt, *.dwg, *.dxf, *.png, *.jpg, *.jpeg, *.mp4, *.mov, *.avi, *.webm, *.ogg`}
                 </p>

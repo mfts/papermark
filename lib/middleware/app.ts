@@ -5,6 +5,7 @@ import { getToken } from "next-auth/jwt";
 export default async function AppMiddleware(req: NextRequest) {
   const url = req.nextUrl;
   const path = url.pathname;
+  const isInvited = url.searchParams.has("invitation");
   const token = (await getToken({
     req,
     secret: process.env.NEXTAUTH_SECRET,
@@ -20,7 +21,10 @@ export default async function AppMiddleware(req: NextRequest) {
     const loginUrl = new URL(`/login`, req.url);
     // Append "next" parameter only if not navigating to the root
     if (path !== "/") {
-      loginUrl.searchParams.set("next", encodeURIComponent(path));
+      const nextPath =
+        path === "/auth/confirm-email-change" ? `${path}${url.search}` : path;
+
+      loginUrl.searchParams.set("next", encodeURIComponent(nextPath));
     }
     return NextResponse.redirect(loginUrl);
   }
@@ -30,14 +34,15 @@ export default async function AppMiddleware(req: NextRequest) {
     token?.email &&
     token?.user?.createdAt &&
     new Date(token?.user?.createdAt).getTime() > Date.now() - 10000 &&
-    path !== "/welcome"
+    path !== "/welcome" &&
+    !isInvited
   ) {
     return NextResponse.redirect(new URL("/welcome", req.url));
   }
 
-  // AUTHENTICATED if the path is /login, redirect to "/documents"
+  // AUTHENTICATED if the path is /login, redirect to "/dashboard"
   if (token?.email && path === "/login") {
-    const nextPath = url.searchParams.get("next") || "/documents"; // Default redirection to "/documents" if no next parameter
+    const nextPath = url.searchParams.get("next") || "/dashboard"; // Default redirection to "/dashboard" if no next parameter
     return NextResponse.redirect(
       new URL(decodeURIComponent(nextPath), req.url),
     );
