@@ -8,6 +8,7 @@ import { TeamContextType } from "@/context/team-context";
 import {
   ArchiveXIcon,
   BetweenHorizontalStartIcon,
+  CheckIcon,
   FolderInputIcon,
   MoreVertical,
 } from "lucide-react";
@@ -18,6 +19,7 @@ import { mutate } from "swr";
 import { type DataroomFolderDocument } from "@/lib/swr/use-dataroom";
 import { type DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
 import { cn, nFormatter, timeAgo } from "@/lib/utils";
+import { approveDocument } from "@/lib/utils/document-utils";
 import { fileIcon } from "@/lib/utils/get-file-icon";
 
 import BarChart from "@/components/shared/icons/bar-chart";
@@ -33,6 +35,7 @@ import {
 
 import { AddToDataroomModal } from "../documents/add-document-to-dataroom-modal";
 import FileProcessStatusBar from "../documents/file-process-status-bar";
+import { Badge } from "../ui/badge";
 import { MoveToDataroomFolderModal } from "./move-dataroom-folder-modal";
 
 type DocumentsCardProps = {
@@ -169,6 +172,15 @@ export default function DataroomDocumentCard({
     router.push(`/documents/${dataroomDocument.document.id}`);
   };
 
+  const handleApproveDocument = async (documentId: string) => {
+    await approveDocument({
+      documentId,
+      teamInfo,
+      currentFolderPath,
+      dataroomId,
+    });
+  };
+
   return (
     <>
       <div
@@ -202,6 +214,12 @@ export default function DataroomDocumentCard({
               <div className="flex items-center">
                 <h2 className="min-w-0 max-w-[150px] truncate text-sm font-semibold leading-6 text-foreground sm:max-w-md">
                   {dataroomDocument.document.name}
+                  {dataroomDocument.document.requireApproval &&
+                    dataroomDocument.document.approvedStatus === "PENDING" && (
+                      <Badge variant="default" className="ml-2">
+                        Need approval
+                      </Badge>
+                    )}
                 </h2>
               </div>
               <div className="mt-1 flex items-center space-x-1 text-xs leading-5 text-muted-foreground">
@@ -220,6 +238,13 @@ export default function DataroomDocumentCard({
                     <p className="truncate">Added by external collaborator</p>
                   </>
                 ) : null}
+                {/* {dataroomDocument.document.requireApproval &&
+                dataroomDocument.document.approvedStatus === "PENDING" ? (
+                  <>
+                    <p>•</p>
+                    <p className="truncate">Requires admin approval</p>
+                  </>
+                ) : null} */}
               </div>
             </div>
           </div>
@@ -270,6 +295,18 @@ export default function DataroomDocumentCard({
                   <BetweenHorizontalStartIcon className="mr-2 h-4 w-4" />
                   Copy to other dataroom
                 </DropdownMenuItem>
+                {dataroomDocument.document.requireApproval &&
+                dataroomDocument.document.approvedStatus === "PENDING" ? (
+                  <DropdownMenuItem
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleApproveDocument(dataroomDocument.document.id);
+                    }}
+                  >
+                    <CheckIcon className="mr-2 h-4 w-4" />
+                    Approve document
+                  </DropdownMenuItem>
+                ) : null}
                 <DropdownMenuSeparator />
 
                 <DropdownMenuItem

@@ -191,6 +191,7 @@ export default function LinksTable({
       isFileRequestOnly: link.isFileRequestOnly ?? false,
       uploadFolderId: link.uploadFolderId ?? null,
       uploadFolderName: link.uploadFolderName ?? "Home",
+      requireAdminApproval: !!link.requireAdminApproval,
     });
     //wait for dropdown to close before opening the link sheet
     setTimeout(() => {

@@ -86,6 +86,7 @@ export const DEFAULT_LINK_PROPS = (
   enableConversation: false,
   enableUpload: false,
   isFileRequestOnly: false,
+  requireAdminApproval: true, // default to true
   uploadFolderId: null,
   uploadFolderName: "Home",
 });
@@ -125,6 +126,7 @@ export type DEFAULT_LINK_TYPE = {
   enableConversation: boolean;
   enableUpload: boolean;
   isFileRequestOnly: boolean;
+  requireAdminApproval: boolean;
   uploadFolderId: string | null;
   uploadFolderName: string;
 };

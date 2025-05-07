@@ -1,19 +1,23 @@
 import { useState } from "react";
 
+import { Document } from "@prisma/client";
 import { toast } from "sonner";
 
 import { DocumentData } from "@/lib/documents/create-document";
 
 import ViewerUploadZone from "@/components/viewer-upload-zone";
+import { DocumentVersion } from "./view/viewer/dataroom-viewer";
 
 export function ViewerUploadComponent({
   viewerData,
   teamId,
   folderId,
+  onSuccess,
 }: {
   viewerData: { id: string; linkId: string; dataroomId?: string };
   teamId: string;
   folderId?: string;
+  onSuccess: (document: Document & { versions: DocumentVersion[] }) => void;
 }) {
   const [uploads, setUploads] = useState<
     { fileName: string; progress: number }[]
@@ -55,6 +59,9 @@ export function ViewerUploadComponent({
         const errorData = await response.json();
         throw new Error(errorData.message || "Failed to process upload");
       }
+      const document = await response.json();
+
+      onSuccess(document);
 
       // Optional: You might want to update UI or fetch updated document list
     } catch (error) {

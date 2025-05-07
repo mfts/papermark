@@ -64,6 +64,7 @@ model Link {
   // upload
   enableUpload      Boolean? @default(false) // Optional give user a option to enable the upload document function
   isFileRequestOnly Boolean? @default(false) // Optional give user a option to enable the file request only
+  requireAdminApproval Boolean? @default(true) // Optional give user a option to require admin approval for uploaded files
   uploadFolderId    String? // This can be nullable, indicating upload to root folder, either document folder or dataroom folder
 
   uploadedDocuments DocumentUpload[]
