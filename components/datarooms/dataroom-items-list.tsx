@@ -428,7 +428,7 @@ export function DataroomItemsList({
 
       return (
         <div className="mb-2 flex items-center gap-x-1 rounded-3xl bg-gray-100 text-sm text-foreground dark:bg-gray-800">
-          <div className="ml-4 flex h-8 w-8 items-center justify-center rounded-full hover:bg-gray-200 hover:dark:bg-gray-700">
+          <div className="ml-5 flex h-8 w-8 items-center justify-center rounded-full hover:bg-gray-200 hover:dark:bg-gray-700">
             <ButtonTooltip
               content={isAllSelected ? "Deselect all" : "Select all"}
             >
