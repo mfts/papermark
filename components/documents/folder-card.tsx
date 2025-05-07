@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { TeamContextType } from "@/context/team-context";
 import {
   BetweenHorizontalStartIcon,
+  DownloadIcon,
   ClipboardCopyIcon,
   CopyIcon,
   FolderIcon,
@@ -17,6 +18,7 @@ import {
 import { toast } from "sonner";
 import { mutate } from "swr";
 
+import { useFolderDownload } from "@/lib/hooks/use-download";
 import { DataroomFolderWithCount } from "@/lib/swr/use-dataroom";
 import { FolderWithCount } from "@/lib/swr/use-documents";
 import { timeAgo } from "@/lib/utils";
@@ -64,6 +66,12 @@ export default function FolderCard({
   const [addDataroomOpen, setAddDataroomOpen] = useState<boolean>(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState<boolean>(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
+
+  const { downloadFolders, isLoading } = useFolderDownload({
+    teamId: teamInfo?.currentTeam?.id,
+    dataroomId: dataroomId,
+    isDataroom: isDataroom,
+  });
 
   const folderPath =
     isDataroom && dataroomId
@@ -183,6 +191,10 @@ export default function FolderCard({
     router.push(folderPath);
   };
 
+  const handleDownloadFolder = async (ids: string[]) => {
+    downloadFolders(ids, folder.name);
+  };
+
   return (
     <>
       <div
@@ -292,6 +304,15 @@ export default function FolderCard({
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
+                  handleDownloadFolder([folder.id]);
+                }}
+                disabled={isLoading}
+              >
+                <DownloadIcon className="mr-2 h-4 w-4" />
+                Download folder
+</DropdownMenuItem>
+                  <DropdownMenuItem
+                onClick={(e) => {
                   navigator.clipboard.writeText(folder.id);
                   toast.success("Folder ID copied to clipboard");
                 }}

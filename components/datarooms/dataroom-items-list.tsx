@@ -17,6 +17,7 @@ import {
 } from "@dnd-kit/core";
 import {
   ArchiveXIcon,
+  DownloadIcon,
   FileIcon,
   FolderIcon,
   FolderInputIcon,
@@ -25,25 +26,26 @@ import {
 import { motion } from "motion/react";
 import { toast } from "sonner";
 
-import { EmptyDocuments } from "@/components/documents/empty-document";
-import FolderCard from "@/components/documents/folder-card";
-import { UploadNotificationDrawer } from "@/components/upload-notification";
-import UploadZone from "@/components/upload-zone";
-
 import { moveDataroomDocumentToFolder } from "@/lib/documents/move-dataroom-documents";
 import { moveDataroomFolderToFolder } from "@/lib/documents/move-dataroom-folders";
+import { useFolderDownload } from "@/lib/hooks/use-download";
 import {
   DataroomFolderDocument,
   DataroomFolderWithCount,
 } from "@/lib/swr/use-dataroom";
-import { FolderWithCount } from "@/lib/swr/use-documents";
 import { useMediaQuery } from "@/lib/utils/use-media-query";
+
+import { EmptyDocuments } from "@/components/documents/empty-document";
+import FolderCard from "@/components/documents/folder-card";
+import { UploadNotificationDrawer } from "@/components/upload-notification";
+import UploadZone from "@/components/upload-zone";
 
 import { DraggableItem } from "../documents/drag-and-drop/draggable-item";
 import { DroppableFolder } from "../documents/drag-and-drop/droppable-folder";
 import { Button } from "../ui/button";
 import { Portal } from "../ui/portal";
 import { ButtonTooltip } from "../ui/tooltip";
+import { DownloadFolderConfirmationModal } from "./actions/download-folder-confirmation-modal";
 import { useRemoveDataroomItemsModal } from "./actions/remove-document-modal";
 import DataroomDocumentCard from "./dataroom-document-card";
 import { itemsMessage } from "./folders/utils";
@@ -79,13 +81,14 @@ export function DataroomItemsList({
 
   const [showDrawer, setShowDrawer] = useState(false);
   const [moveFolderOpen, setMoveFolderOpen] = useState<boolean>(false);
+  const [showDownloadConfirmation, setShowDownloadConfirmation] =
+    useState<boolean>(false);
 
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   // forDoc
   const [selectedDocuments, setSelectedDocuments] = useState<string[]>([]);
   const [draggedDocument, setDraggedDocument] =
     useState<FolderOrDocument | null>(null);
-
   // forFolder
   const [selectedFolders, setSelectedFolders] = useState<string[]>([]);
   const [draggedFolder, setDraggedFolder] = useState<FolderOrDocument | null>(
@@ -95,6 +98,17 @@ export function DataroomItemsList({
   const [isOverFolder, setIsOverFolder] = useState<boolean>(false);
   const [isDragging, setIsDragging] = useState<boolean>(false);
 
+  const onDownloadComplete = () => {
+    setShowDownloadConfirmation(false);
+    setSelectedFolders([]);
+  };
+
+  const { downloadFolders, isLoading } = useFolderDownload({
+    teamId: teamInfo?.currentTeam?.id,
+    dataroomId,
+    isDataroom: !!dataroomId,
+    onDownloadComplete,
+  });
   const handleCloseDrawer = () => {
     setShowDrawer(false);
   };
@@ -404,6 +418,10 @@ export function DataroomItemsList({
     setSelectedFolders([]);
   };
 
+  const handleDownloadFolders = async () => {
+    downloadFolders(selectedFolders);
+  };
+
   const HeaderContent = memo(() => {
     if (selectedDocumentsLength > 0 || selectedFoldersLength > 0) {
       return (
@@ -440,6 +458,18 @@ export function DataroomItemsList({
               <FolderInputIcon className="h-5 w-5" />
             </Button>
           </ButtonTooltip>
+          {selectedFoldersLength > 0 && (
+            <ButtonTooltip content="Download">
+              <Button
+                onClick={() => setShowDownloadConfirmation(true)}
+                className="mx-1.5 my-1 size-8 rounded-full hover:bg-gray-200 hover:dark:bg-gray-700"
+                variant="ghost"
+                size="icon"
+              >
+                <DownloadIcon className="h-5 w-5" />
+              </Button>
+            </ButtonTooltip>
+          )}
           <ButtonTooltip content="Remove">
             <Button
               onClick={() => setShowRemoveDataroomItemModal(true)}
@@ -591,6 +621,13 @@ export function DataroomItemsList({
               />
             ) : null}
             <RemoveDataroomItemModal />
+            <DownloadFolderConfirmationModal
+              open={showDownloadConfirmation}
+              setOpen={setShowDownloadConfirmation}
+              selectedFoldersLength={selectedFoldersLength}
+              onDownload={handleDownloadFolders}
+              isLoading={isLoading}
+            />
           </>
         )}
       </UploadZone>
