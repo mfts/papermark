@@ -48,6 +48,7 @@ import { useRemoveDataroomItemsModal } from "./actions/remove-document-modal";
 import DataroomDocumentCard from "./dataroom-document-card";
 import { itemsMessage } from "./folders/utils";
 import { MoveToDataroomFolderModal } from "./move-dataroom-folder-modal";
+import { Checkbox } from "../ui/checkbox";
 
 type FolderOrDocument =
   | (DataroomFolderWithCount & { itemType: "folder" })
@@ -406,8 +407,40 @@ export function DataroomItemsList({
 
   const HeaderContent = memo(() => {
     if (selectedDocumentsLength > 0 || selectedFoldersLength > 0) {
+      const totalItems = folderCount + documentCount;
+      const isAllSelected =
+        totalItems === selectedDocumentsLength + selectedFoldersLength;
+
+      const handleSelectAll = () => {
+        if (isAllSelected) {
+          resetSelection();
+        } else {
+          const allDocumentIds = mixedItems
+            .filter((item) => item.itemType === "document")
+            .map((doc) => doc.id);
+          const allFolderIds = mixedItems
+            .filter((item) => item.itemType === "folder")
+            .map((folder) => folder.id);
+          setSelectedDocuments(allDocumentIds);
+          setSelectedFolders(allFolderIds);
+        }
+      };
+
       return (
         <div className="mb-2 flex items-center gap-x-1 rounded-3xl bg-gray-100 text-sm text-foreground dark:bg-gray-800">
+          <div className="ml-4 flex h-8 w-8 items-center justify-center rounded-full hover:bg-gray-200 hover:dark:bg-gray-700">
+            <ButtonTooltip
+              content={isAllSelected ? "Deselect all" : "Select all"}
+            >
+              <Checkbox
+                id="select-all"
+                checked={isAllSelected}
+                onCheckedChange={handleSelectAll}
+                className="h-5 w-5"
+                aria-label={isAllSelected ? "Deselect all" : "Select all"}
+              />
+            </ButtonTooltip>
+          </div>
           <ButtonTooltip content="Clear selection">
             <Button
               onClick={resetSelection}
