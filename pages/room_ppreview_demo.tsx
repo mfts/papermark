@@ -125,6 +125,9 @@ export default function ViewPage() {
                   }}
                   dataroomId="1"
                   setFolderId={() => {}}
+                  isPreview={false}
+                  linkId="1"
+                  allowDownload={false}
                 />
 
                 <FolderCard
@@ -140,6 +143,9 @@ export default function ViewPage() {
                   }}
                   dataroomId="1"
                   setFolderId={() => {}}
+                  isPreview={false}
+                  linkId="1"
+                  allowDownload={false}
                 />
 
                 <DocumentCard
