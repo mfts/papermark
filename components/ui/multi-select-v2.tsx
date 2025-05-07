@@ -19,6 +19,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 import TagBadge from "../links/link-sheet/tags/tag-badge";
 import { Icon } from "../shared/icons";
@@ -216,7 +217,7 @@ export const MultiSelect = React.forwardRef<
       <Popover
         open={isPopoverOpen}
         onOpenChange={setIsPopoverOpen}
-        modal={modalPopover}
+        modal={true}
       >
         <PopoverTrigger asChild>
           <Button
@@ -248,7 +249,7 @@ export const MultiSelect = React.forwardRef<
                   })}
                   {value.length > maxCount && (
                     <span
-                      className="my-auto block whitespace-nowrap rounded-md border px-2 py-0.5 text-sm text-foreground"
+                      className="my-auto block whitespace-nowrap rounded-md border px-2 py-0.5 text-sm text-foreground dark:border-gray-500"
                       style={{ animationDuration: `${animation}s` }}
                     >
                       {`+ ${value.length - maxCount} more`}
@@ -283,77 +284,79 @@ export const MultiSelect = React.forwardRef<
               )}
               onKeyDown={handleInputKeyDown}
             />
-            <CommandList>
-              <CommandGroup>
-                {loading ? (
-                  <CommandItem className="justify-center">
-                    <LoadingSpinner className="size-4 shrink-0" />
-                  </CommandItem>
-                ) : options.length > 0 ? (
-                  options.map((option) => {
-                    const isSelected = value.includes(option.value);
-                    const IconComponent = option.icon;
-                    return (
-                      <CommandItem
-                        key={option.value}
-                        onSelect={() => toggleOption(option.value)}
-                        className="cursor-pointer gap-2 py-2"
-                        data-Value={option.value}
-                      >
-                        <div
-                          className={cn(
-                            "flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
-                            isSelected
-                              ? "bg-primary text-primary-foreground"
-                              : "opacity-50 [&_svg]:invisible",
-                          )}
-                        >
-                          <CheckIcon className="h-4 w-4" />
-                        </div>
-                        {IconComponent && isReactNode(IconComponent) ? (
-                          IconComponent
-                        ) : typeof IconComponent === "function" ? (
-                          <IconComponent className="h-5 w-4" />
-                        ) : null}
-                        <span>{option.label}</span>
-                      </CommandItem>
-                    );
-                  })
-                ) : (
-                  <CommandItem className="justify-center">
-                    <span>No tags available</span>
-                  </CommandItem>
-                )}
-              </CommandGroup>
-              {search.length > 0 && onCreate && (
+            <ScrollArea className="h-[300px]">
+              <CommandList>
                 <CommandGroup>
-                  <CommandItem
-                    className={cn(
-                      "flex cursor-pointer items-center gap-2 whitespace-nowrap",
-                      optionClassName,
-                    )}
-                    onSelect={async () => {
-                      setIsCreating(true);
-                      const success = await onCreate?.(search);
-                      if (success) {
-                        setSearch("");
-                        setIsPopoverOpen(false);
-                      }
-                      setIsCreating(false);
-                    }}
-                  >
-                    {isCreating ? (
+                  {loading ? (
+                    <CommandItem className="justify-center">
                       <LoadingSpinner className="size-4 shrink-0" />
-                    ) : (
-                      <PlusIcon className="size-4 shrink-0" />
-                    )}
-                    <p className="grow truncate">
-                      {createLabel?.(search) || `Create "${search}"`}
-                    </p>
-                  </CommandItem>
+                    </CommandItem>
+                  ) : options.length > 0 ? (
+                    options.map((option) => {
+                      const isSelected = value.includes(option.value);
+                      const IconComponent = option.icon;
+                      return (
+                        <CommandItem
+                          key={option.value}
+                          onSelect={() => toggleOption(option.value)}
+                          className="cursor-pointer gap-2 py-2"
+                          data-Value={option.value}
+                        >
+                          <div
+                            className={cn(
+                              "flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
+                              isSelected
+                                ? "bg-primary text-primary-foreground"
+                                : "opacity-50 [&_svg]:invisible",
+                            )}
+                          >
+                            <CheckIcon className="h-4 w-4" />
+                          </div>
+                          {IconComponent && isReactNode(IconComponent) ? (
+                            IconComponent
+                          ) : typeof IconComponent === "function" ? (
+                            <IconComponent className="h-5 w-4" />
+                          ) : null}
+                          <span>{option.label}</span>
+                        </CommandItem>
+                      );
+                    })
+                  ) : (
+                    <CommandItem className="justify-center">
+                      <span>No tags available</span>
+                    </CommandItem>
+                  )}
                 </CommandGroup>
-              )}
-            </CommandList>
+                {search.length > 0 && onCreate && (
+                  <CommandGroup>
+                    <CommandItem
+                      className={cn(
+                        "flex cursor-pointer items-center gap-2 whitespace-nowrap",
+                        optionClassName,
+                      )}
+                      onSelect={async () => {
+                        setIsCreating(true);
+                        const success = await onCreate?.(search);
+                        if (success) {
+                          setSearch("");
+                          setIsPopoverOpen(false);
+                        }
+                        setIsCreating(false);
+                      }}
+                    >
+                      {isCreating ? (
+                        <LoadingSpinner className="size-4 shrink-0" />
+                      ) : (
+                        <PlusIcon className="size-4 shrink-0" />
+                      )}
+                      <p className="grow truncate">
+                        {createLabel?.(search) || `Create "${search}"`}
+                      </p>
+                    </CommandItem>
+                  </CommandGroup>
+                )}
+              </CommandList>
+            </ScrollArea>
           </Command>
         </PopoverContent>
         {animation > 0 && value.length > 0 && (
