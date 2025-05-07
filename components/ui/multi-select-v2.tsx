@@ -217,7 +217,7 @@ export const MultiSelect = React.forwardRef<
       <Popover
         open={isPopoverOpen}
         onOpenChange={setIsPopoverOpen}
-        modal={true}
+        modal
       >
         <PopoverTrigger asChild>
           <Button
@@ -284,7 +284,7 @@ export const MultiSelect = React.forwardRef<
               )}
               onKeyDown={handleInputKeyDown}
             />
-            <ScrollArea className="h-[300px]">
+            <ScrollArea>
               <CommandList>
                 <CommandGroup>
                   {loading ? (
