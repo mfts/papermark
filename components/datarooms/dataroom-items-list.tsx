@@ -25,11 +25,6 @@ import {
 import { motion } from "motion/react";
 import { toast } from "sonner";
 
-import { EmptyDocuments } from "@/components/documents/empty-document";
-import FolderCard from "@/components/documents/folder-card";
-import { UploadNotificationDrawer } from "@/components/upload-notification";
-import UploadZone from "@/components/upload-zone";
-
 import { moveDataroomDocumentToFolder } from "@/lib/documents/move-dataroom-documents";
 import { moveDataroomFolderToFolder } from "@/lib/documents/move-dataroom-folders";
 import {
@@ -38,6 +33,14 @@ import {
 } from "@/lib/swr/use-dataroom";
 import { FolderWithCount } from "@/lib/swr/use-documents";
 import { useMediaQuery } from "@/lib/utils/use-media-query";
+
+import { EmptyDocuments } from "@/components/documents/empty-document";
+import FolderCard from "@/components/documents/folder-card";
+import { UploadNotificationDrawer } from "@/components/upload-notification";
+import UploadZone, {
+  RejectedFile,
+  UploadState,
+} from "@/components/upload-zone";
 
 import { DraggableItem } from "../documents/drag-and-drop/draggable-item";
 import { DroppableFolder } from "../documents/drag-and-drop/droppable-folder";
@@ -70,12 +73,8 @@ export function DataroomItemsList({
 }) {
   const { isMobile } = useMediaQuery();
 
-  const [uploads, setUploads] = useState<
-    { fileName: string; progress: number; documentId?: string }[]
-  >([]);
-  const [rejectedFiles, setRejectedFiles] = useState<
-    { fileName: string; message: string }[]
-  >([]);
+  const [uploads, setUploads] = useState<UploadState[]>([]);
+  const [rejectedFiles, setRejectedFiles] = useState<RejectedFile[]>([]);
 
   const [showDrawer, setShowDrawer] = useState(false);
   const [moveFolderOpen, setMoveFolderOpen] = useState<boolean>(false);
@@ -482,18 +481,27 @@ export function DataroomItemsList({
       <UploadZone
         folderPathName={folderPathName?.join("/")}
         onUploadStart={(newUploads) => {
-          setUploads(newUploads);
+          setUploads((prevUploads) => [...prevUploads, ...newUploads]);
           setShowDrawer(true);
         }}
         onUploadProgress={(index, progress, documentId) => {
-          setUploads((prevUploads) =>
-            prevUploads.map((upload, i) =>
-              i === index ? { ...upload, progress, documentId } : upload,
-            ),
-          );
+          setUploads((prevUploads) => {
+            const recentBatchStartIndex = prevUploads.length - index - 1;
+            if (
+              recentBatchStartIndex < 0 ||
+              recentBatchStartIndex >= prevUploads.length
+            ) {
+              return prevUploads;
+            }
+            return prevUploads.map((upload, i) =>
+              i === recentBatchStartIndex
+                ? { ...upload, progress, documentId }
+                : upload,
+            );
+          });
         }}
         onUploadRejected={(rejected) => {
-          setRejectedFiles(rejected);
+          setRejectedFiles((prevRejected) => [...prevRejected, ...rejected]);
           setShowDrawer(true);
         }}
         setUploads={setUploads}
