@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, memo } from "react";
+import { memo, useEffect, useState } from "react";
 
 import { Trash2 } from "lucide-react";
 
