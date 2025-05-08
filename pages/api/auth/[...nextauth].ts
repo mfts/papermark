@@ -14,6 +14,7 @@ import prisma from "@/lib/prisma";
 import { CreateUserEmailProps, CustomUser } from "@/lib/types";
 import { subscribe } from "@/lib/unsend";
 import { generateChecksum } from "@/lib/utils/generate-checksum";
+import { isPublicEmailDomain } from "@/lib/utils/email-domains";
 
 const VERCEL_DEPLOYMENT = !!process.env.VERCEL_URL;
 
@@ -169,6 +170,15 @@ export const authOptions: NextAuthOptions = {
 
       if (message.user.email) {
         await subscribe(message.user.email);
+        const isPublicEmail = await isPublicEmailDomain(message.user.email);
+        await prisma.user.update({
+          where: {
+            id: message.user.id,
+          },
+          data: {
+            isPublicEmail: isPublicEmail,
+          },
+        });
       }
     },
     async signIn(message) {

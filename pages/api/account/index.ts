@@ -8,7 +8,6 @@ import { z } from "zod";
 import { hashToken } from "@/lib/api/auth/token";
 import { sendEmailChangeVerificationRequestEmail } from "@/lib/emails/send-mail-verification";
 import { errorhandler } from "@/lib/errorHandler";
-import { newId } from "@/lib/id-helper";
 import prisma from "@/lib/prisma";
 import { ratelimit, redis } from "@/lib/redis";
 import { CustomUser } from "@/lib/types";
