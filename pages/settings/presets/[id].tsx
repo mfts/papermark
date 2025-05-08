@@ -20,6 +20,7 @@ import { DEFAULT_LINK_TYPE } from "@/components/links/link-sheet";
 import AgreementSection from "@/components/links/link-sheet/agreement-section";
 import AllowDownloadSection from "@/components/links/link-sheet/allow-download-section";
 import AllowListSection from "@/components/links/link-sheet/allow-list-section";
+import AllowNotificationSection from "@/components/links/link-sheet/allow-notification-section";
 import { CustomFieldData } from "@/components/links/link-sheet/custom-fields-panel";
 import CustomFieldsSection from "@/components/links/link-sheet/custom-fields-section";
 import DenyListSection from "@/components/links/link-sheet/deny-list-section";
@@ -76,7 +77,6 @@ export default function EditPreset() {
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
 
   const {
-    isStarter,
     isPro,
     isBusiness,
     isDatarooms,
@@ -139,6 +139,7 @@ export default function EditPreset() {
         agreementId: preset.agreementId,
         enableCustomFields: customFields.length > 0,
         customFields: customFields,
+        enableNotification: preset.enableNotification ?? true,
       });
     }
   }, [preset]);
@@ -185,6 +186,7 @@ export default function EditPreset() {
           enableScreenshotProtection: data.enableScreenshotProtection,
           enableCustomFields: data.enableCustomFields,
           customFields: data.customFields,
+          enableNotification: data.enableNotification,
         }),
       });
 
@@ -377,6 +379,11 @@ export default function EditPreset() {
                     isDataroomsPlus
                   }
                   handleUpgradeStateChange={handleUpgradeStateChange}
+                />
+                
+                <AllowNotificationSection
+                  data={data as any}
+                  setData={setData as any}
                 />
 
                 <AllowDownloadSection

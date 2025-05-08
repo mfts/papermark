@@ -1,5 +1,7 @@
 import { useRouter } from "next/router";
 
+
+
 import { FormEvent, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
@@ -20,6 +22,7 @@ import {
 import AgreementSection from "@/components/links/link-sheet/agreement-section";
 import AllowDownloadSection from "@/components/links/link-sheet/allow-download-section";
 import AllowListSection from "@/components/links/link-sheet/allow-list-section";
+import AllowNotificationSection from "@/components/links/link-sheet/allow-notification-section";
 import { CustomFieldData } from "@/components/links/link-sheet/custom-fields-panel";
 import CustomFieldsSection from "@/components/links/link-sheet/custom-fields-section";
 import DenyListSection from "@/components/links/link-sheet/deny-list-section";
@@ -55,7 +58,6 @@ export default function NewPreset() {
   });
 
   const {
-    isStarter,
     isPro,
     isBusiness,
     isDatarooms,
@@ -131,6 +133,7 @@ export default function NewPreset() {
             ? data.customFields.length > 0
             : false,
           customFields: data.customFields,
+          enableNotification: data.enableNotification,
         }),
       });
 
@@ -223,8 +226,8 @@ export default function NewPreset() {
                   }
                   handleUpgradeStateChange={handleUpgradeStateChange}
                 />
+                <AllowNotificationSection data={data} setData={setData} />
                 <AllowDownloadSection data={data} setData={setData} />
-
                 <ExpirationInSection data={data} setData={setData} />
               </div>
 

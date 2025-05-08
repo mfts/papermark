@@ -93,6 +93,7 @@ model LinkPreset {
   metaImage           String? // This will be the meta image of the link 
   metaFavicon         String? // This will be the meta favicon of the link
 
+  enableNotification         Boolean?   @default(true)
   emailProtected     Boolean?  @default(true)
   emailAuthenticated Boolean?  @default(false)
   allowDownload      Boolean?  @default(false)
