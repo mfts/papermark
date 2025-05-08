@@ -298,6 +298,7 @@ export interface Team {
   logo?: React.ElementType;
   plan?: string;
   createdAt?: Date;
+  enableExcelAdvancedMode?: boolean;
 }
 
 export interface TeamDetail {

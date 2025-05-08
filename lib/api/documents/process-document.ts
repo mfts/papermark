@@ -11,6 +11,7 @@ import { getExtension } from "@/lib/utils";
 import { conversionQueue } from "@/lib/utils/trigger-utils";
 import { sendDocumentCreatedWebhook } from "@/lib/webhook/triggers/document-created";
 import { sendLinkCreatedWebhook } from "@/lib/webhook/triggers/link-created";
+import { copyFileToBucketServer } from "@/lib/files/copy-file-to-bucket-server";
 
 type ProcessDocumentParams = {
   documentData: DocumentData;
@@ -39,6 +40,7 @@ export const processDocument = async ({
     supportedFileType,
     fileSize,
     numPages,
+    enableExcelAdvancedMode,
   } = documentData;
 
   // Get passed type property or alternatively, the file extension and save it as the type
@@ -85,6 +87,7 @@ export const processDocument = async ({
       storageType,
       ownerId: userId,
       teamId: teamId,
+      advancedExcelEnabled: enableExcelAdvancedMode,
       downloadOnly: isDownloadOnly,
       ...(createLink && {
         links: {
@@ -196,6 +199,28 @@ export const processDocument = async ({
         queue: conversionQueue(teamPlan),
         concurrencyKey: teamId,
       },
+    );
+  }
+
+  if (type === "sheet" && enableExcelAdvancedMode) {
+    await copyFileToBucketServer({
+      filePath: document.versions[0].file,
+      storageType: document.versions[0].storageType,
+    });
+
+    await Promise.all([
+      prisma.document.update({
+        where: { id: document.id },
+        data: { advancedExcelEnabled: true },
+      }),
+      prisma.documentVersion.update({
+        where: { id: document.versions[0].id },
+        data: { numPages: 1 },
+      }),
+    ]);
+
+    await fetch(
+      `${process.env.NEXTAUTH_URL}/api/revalidate?secret=${process.env.REVALIDATE_TOKEN}&documentId=${document.id}`,
     );
   }
 
