@@ -237,7 +237,9 @@ export default function LinksTable({
 
   const interval = router.query.interval || "7d";
   const { data: links, isLoading } = useSWR<Link[]>(
-    `/api/analytics?type=links&interval=${interval}&teamId=${teamInfo?.currentTeam?.id}${interval === "custom" ? `&startDate=${format(startDate, "MM-dd-yyyy")}&endDate=${format(endDate, "MM-dd-yyyy")}` : ""}`,
+    teamInfo?.currentTeam?.id
+      ? `/api/analytics?type=links&interval=${interval}&teamId=${teamInfo.currentTeam.id}${interval === "custom" ? `&startDate=${format(startDate, "MM-dd-yyyy")}&endDate=${format(endDate, "MM-dd-yyyy")}` : ""}`
+      : null,
     fetcher,
     {
       keepPreviousData: true,
