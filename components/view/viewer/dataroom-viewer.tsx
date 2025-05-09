@@ -42,6 +42,7 @@ export type DocumentVersion = {
   versionNumber: number;
   hasPages: boolean;
   isVertical: boolean;
+  updatedAt: Date;
 };
 
 type DataroomDocument = {
@@ -190,7 +191,7 @@ export default function DataroomViewer({
         <div className="relative mx-auto flex h-full w-full items-start justify-center">
           {/* Tree view */}
           <div className="hidden h-full w-1/4 space-y-8 overflow-auto px-3 pb-4 pt-4 md:flex md:px-6 md:pt-6 lg:px-8 lg:pt-9 xl:px-14">
-            <ScrollArea showScrollbar>
+            <ScrollArea showScrollbar className="w-full">
               <ViewFolderTree
                 folders={folders}
                 documents={documents}
