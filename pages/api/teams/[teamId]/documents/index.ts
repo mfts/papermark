@@ -278,6 +278,8 @@ export default async function handle(
           supportedFileType: fileType,
           contentType,
           fileSize,
+          enableExcelAdvancedMode:
+            fileType === "sheet" && team.enableExcelAdvancedMode,
         },
         teamId,
         userId,
