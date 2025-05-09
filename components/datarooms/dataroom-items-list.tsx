@@ -31,6 +31,7 @@ import {
   DataroomFolderDocument,
   DataroomFolderWithCount,
 } from "@/lib/swr/use-dataroom";
+import useDataroomGroups from "@/lib/swr/use-dataroom-groups";
 import { FolderWithCount } from "@/lib/swr/use-documents";
 import { useMediaQuery } from "@/lib/utils/use-media-query";
 
@@ -69,6 +70,7 @@ export function DataroomItemsList({
   folderCount: number;
   documentCount: number;
 }) {
+  const { viewerGroups } = useDataroomGroups();
   const { isMobile } = useMediaQuery();
   const [showGroupPermissions, setShowGroupPermissions] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<
@@ -492,8 +494,11 @@ export function DataroomItemsList({
       dataroomDocumentId: string;
     }[],
   ) => {
-    setUploadedFiles(files);
-    setShowGroupPermissions(true);
+    if (viewerGroups && viewerGroups.length > 0) {
+      setUploadedFiles(files);
+      setShowGroupPermissions(true);
+    }
+    return;
   };
 
   return (

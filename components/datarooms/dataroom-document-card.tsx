@@ -281,7 +281,7 @@ export default function DataroomDocumentCard({
                   }}
                 >
                   <FileSlidersIcon className="mr-2 h-4 w-4" />
-                  Set Permission
+                  Set Group Permissions
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
 
@@ -346,11 +346,13 @@ export default function DataroomDocumentCard({
           open={groupPermissionOpen}
           setOpen={setGroupPermissionOpen}
           dataroomId={dataroomId}
-          uploadedFiles={[{
-            documentId: dataroomDocument.id,
-            dataroomDocumentId: dataroomDocument.id,
-            fileName: dataroomDocument.document.name,
-          }]}
+          uploadedFiles={[
+            {
+              documentId: dataroomDocument.id,
+              dataroomDocumentId: dataroomDocument.id,
+              fileName: dataroomDocument.document.name,
+            },
+          ]}
         />
       ) : null}
     </>

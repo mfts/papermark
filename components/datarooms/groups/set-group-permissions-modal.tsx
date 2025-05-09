@@ -57,7 +57,6 @@ export function SetGroupPermissionsModal({
     fileName: string;
   }[];
 }) {
-  console.log("uploadedFiles", uploadedFiles);
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
   const [selectedFile, setSelectedFile] = useState<{
@@ -78,11 +77,6 @@ export function SetGroupPermissionsModal({
       selectedFile?.dataroomDocumentId || uploadedFiles[0]?.dataroomDocumentId
     );
   }, [selectedFile, uploadedFiles]);
-
-  console.log("currentDocumentId", {
-    currentDocumentId,
-    currentDataroomDocumentId,
-  });
 
   const {
     viewerGroups,
@@ -429,13 +423,13 @@ export function SetGroupPermissionsModal({
                             </TableCell>
                           </TableRow>
                         ))
-                      ) : !viewerGroupsLoading && viewerGroups?.length === 0 ?(
+                      ) : !viewerGroupsLoading && viewerGroups?.length === 0 ? (
                         <TableRow>
                           <TableCell colSpan={3} className="w-full text-center">
                             No groups found
                           </TableCell>
                         </TableRow>
-                      ): null}
+                      ) : null}
                     </TableBody>
                   </Table>
                 </div>

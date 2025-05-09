@@ -5,7 +5,6 @@ import { FormEvent, useEffect, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { PlanEnum } from "@/ee/stripe/constants";
-import { usePlausible } from "next-plausible";
 import { parsePageId } from "notion-utils";
 import { toast } from "sonner";
 import { mutate } from "swr";
@@ -65,7 +64,6 @@ export function AddDocumentModal({
   setAddDocumentModalOpen?: (isOpen: boolean) => void;
 }) {
   const router = useRouter();
-  const plausible = usePlausible();
   const analytics = useAnalytics();
   const [uploading, setUploading] = useState<boolean>(false);
   const [isOpen, setIsOpen] = useState<boolean | undefined>(undefined);
@@ -81,9 +79,7 @@ export function AddDocumentModal({
   >([]);
   const teamInfo = useTeam();
   const { canAddDocuments } = useLimits();
-  const { plan, trial } = usePlan();
-  const isFreePlan = plan === "free";
-  const isTrial = !!trial;
+  const { plan, isFree, isTrial } = usePlan();
 
   const teamId = teamInfo?.currentTeam?.id as string;
 
@@ -229,18 +225,22 @@ export function AddDocumentModal({
 
           if (dataroomResponse?.ok) {
             const dataroomDocument =
-              (await dataroomResponse.json()) as DataroomDocument;
-            setUploadedFiles([
-              {
-                documentId: document.id,
-                dataroomDocumentId: dataroomDocument.id,
-                fileName: document.name,
-              },
-            ]);
-            setShowGroupPermissions(true);
+              (await dataroomResponse.json()) as DataroomDocument & {
+                dataroom: { _count: { viewerGroups: number } };
+              };
+
+            if (dataroomDocument.dataroom._count.viewerGroups > 0) {
+              setShowGroupPermissions(true);
+              setUploadedFiles([
+                {
+                  documentId: document.id,
+                  dataroomDocumentId: dataroomDocument.id,
+                  fileName: document.name,
+                },
+              ]);
+            }
           }
 
-          plausible("documentUploaded");
           analytics.capture("Document Added", {
             documentId: document.id,
             name: document.name,
@@ -261,8 +261,6 @@ export function AddDocumentModal({
         if (!newVersion) {
           toast.success("Document uploaded. Redirecting to document page...");
 
-          // track the event
-          plausible("documentUploaded");
           analytics.capture("Document Added", {
             documentId: document.id,
             name: document.name,
@@ -279,8 +277,6 @@ export function AddDocumentModal({
           // redirect to the document page
           router.push("/documents/" + document.id);
         } else {
-          // track the event
-          plausible("documentVersionUploaded");
           analytics.capture("Document Added", {
             documentId: document.id,
             name: document.name,
@@ -378,19 +374,22 @@ export function AddDocumentModal({
 
           if (dataroomResponse?.ok) {
             const dataroomDocument =
-              (await dataroomResponse.json()) as DataroomDocument;
-            setShowGroupPermissions(true);
-            setUploadedFiles([
-              {
-                documentId: document.id,
-                dataroomDocumentId: dataroomDocument.id,
-                fileName: document.name,
-              },
-            ]);
+              (await dataroomResponse.json()) as DataroomDocument & {
+                dataroom: { _count: { viewerGroups: number } };
+              };
+
+            if (dataroomDocument.dataroom._count.viewerGroups > 0) {
+              setShowGroupPermissions(true);
+              setUploadedFiles([
+                {
+                  documentId: document.id,
+                  dataroomDocumentId: dataroomDocument.id,
+                  fileName: document.name,
+                },
+              ]);
+            }
           }
 
-          plausible("documentUploaded");
-          plausible("notionDocumentUploaded");
           analytics.capture("Document Added", {
             documentId: document.id,
             name: document.name,
@@ -413,9 +412,6 @@ export function AddDocumentModal({
             "Notion Page processed. Redirecting to document page...",
           );
 
-          // track the event
-          plausible("documentUploaded");
-          plausible("notionDocumentUploaded");
           analytics.capture("Document Added", {
             documentId: document.id,
             name: document.name,
@@ -511,7 +507,7 @@ export function AddDocumentModal({
                     ) : (
                       <span>
                         After you upload the document, create a shareable link.{" "}
-                        {isFreePlan && !isTrial ? (
+                        {isFree && !isTrial ? (
                           <>
                             Upload larger files and more{" "}
                             <Link
