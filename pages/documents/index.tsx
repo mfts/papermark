@@ -8,8 +8,8 @@ import { handleInvitationStatus } from "@/lib/utils";
 
 import { AddDocumentModal } from "@/components/documents/add-document-modal";
 import { DocumentsList } from "@/components/documents/documents-list";
-import { DocumentsPagination } from "@/components/documents/documents-pagination";
 import SortButton from "@/components/documents/filters/sort-button";
+import { Pagination } from "@/components/documents/pagination";
 import { AddFolderModal } from "@/components/folders/add-folder-modal";
 import AppLayout from "@/components/layouts/app";
 import { SearchBoxPersisted } from "@/components/search-box";
@@ -106,14 +106,15 @@ export default function Documents() {
         />
 
         {isFiltered && pagination && (
-          <DocumentsPagination
+          <Pagination
             currentPage={currentPage}
             pageSize={pageSize}
-            totalDocuments={pagination.total}
-            totalShownDocuments={documents.length}
+            totalItems={pagination.total}
+            totalShownItems={documents.length}
             totalPages={pagination.pages}
             onPageChange={updatePagination}
             onPageSizeChange={(size) => updatePagination(undefined, size)}
+            itemName="documents"
           />
         )}
       </div>
