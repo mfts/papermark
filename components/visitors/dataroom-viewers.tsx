@@ -182,7 +182,7 @@ export default function DataroomViewersTable({
                               </TableRow>
 
                               {view.downloadedAt ? (
-                                <TableRow key={view.id + 1}>
+                                <TableRow key={view.id + Date.now()}>
                                   <TableCell>
                                     <div className="flex items-center gap-x-4 overflow-visible">
                                       <DownloadCloudIcon className="h-5 w-5 text-cyan-500 hover:text-cyan-600" />
