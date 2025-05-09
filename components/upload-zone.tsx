@@ -392,7 +392,7 @@ export default function UploadZone({
         const dataroomDocumentId = dataroomResponse?.ok
           ? (await dataroomResponse.json()).id
           : null;
-        console.log("dataroomDocumentId", dataroomDocumentId);
+
         return { ...document, dataroomDocumentId: dataroomDocumentId };
       });
 
