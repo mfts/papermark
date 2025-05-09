@@ -17,6 +17,7 @@ import { z } from "zod";
 import { useTags } from "@/lib/swr/use-tags";
 import { TagColorProps, tagColors } from "@/lib/types";
 
+import { Pagination } from "@/components/documents/pagination";
 import AppLayout from "@/components/layouts/app";
 import {
   COLORS_LIST,
@@ -34,14 +35,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -82,6 +75,7 @@ export default function TagSetting() {
   const teamInfo = useTeam();
   const router = useRouter();
   const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const queryParams = router.query;
   const searchQuery = queryParams["search"];
   const teamId = teamInfo?.currentTeam?.id;
@@ -110,7 +104,7 @@ export default function TagSetting() {
       sortBy: "createdAt",
       sortOrder: "desc",
       page: currentPage,
-      pageSize: 10,
+      pageSize: pageSize,
       ...(searchQuery ? { search: String(searchQuery) } : {}),
     },
     includeLinksCount: true,
@@ -343,65 +337,21 @@ export default function TagSetting() {
             </Table>
           </div>
           {/* Pagination Controls */}
-          <div className="mt-2 flex w-full items-center">
-            <div className="w-full text-sm">
-              {!loadingTags ? (
-                <>
-                  Showing{" "}
-                  <strong className="font-semibold">
-                    {tagCount && tagCount > 10
-                      ? availableTags?.length
-                      : tagCount}
-                  </strong>{" "}
-                  of <strong>{tagCount}</strong> tags
-                </>
-              ) : (
-                "Getting Data from the server..."
-              )}
-            </div>
-            <Pagination className="justify-end">
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationPrevious
-                    onClick={() => setCurrentPage(currentPage - 1)}
-                    disabled={currentPage === 1}
-                    className="cursor-pointer"
-                  />
-                </PaginationItem>
-                {currentPage !== 1 ? (
-                  <PaginationItem className="cursor-pointer">
-                    <PaginationLink onClick={() => setCurrentPage(1)}>
-                      {1}
-                    </PaginationLink>
-                  </PaginationItem>
-                ) : null}
-
-                <PaginationItem>
-                  <PaginationLink isActive>{currentPage}</PaginationLink>
-                </PaginationItem>
-
-                {tagCount && currentPage !== Math.ceil(tagCount / 10) ? (
-                  <PaginationItem>
-                    <PaginationLink
-                      className="cursor-pointer"
-                      onClick={() => setCurrentPage(Math.ceil(tagCount / 10))}
-                    >
-                      {Math.ceil(tagCount / 10)}
-                    </PaginationLink>
-                  </PaginationItem>
-                ) : null}
-                <PaginationItem>
-                  <PaginationNext
-                    className="cursor-pointer"
-                    onClick={() => setCurrentPage(currentPage + 1)}
-                    disabled={
-                      tagCount ? currentPage === Math.ceil(tagCount / 10) : true
-                    }
-                  />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
-          </div>
+          {tagCount !== undefined && (
+            <Pagination
+              currentPage={currentPage}
+              pageSize={pageSize}
+              totalItems={tagCount}
+              totalShownItems={availableTags?.length || 0}
+              totalPages={Math.ceil(tagCount / pageSize)}
+              onPageChange={setCurrentPage}
+              onPageSizeChange={(size: number) => {
+                setPageSize(size);
+                setCurrentPage(1);
+              }}
+              itemName="tags"
+            />
+          )}
         </div>
       </main>
     </AppLayout>
