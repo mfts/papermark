@@ -72,11 +72,13 @@ export function AddDocumentModal({
   const [currentFile, setCurrentFile] = useState<File | null>(null);
   const [notionLink, setNotionLink] = useState<string | null>(null);
   const [showGroupPermissions, setShowGroupPermissions] = useState(false);
-  const [addedDocumentId, setAddedDocumentId] = useState<string | null>(null);
-  const [addedDataroomDocumentId, setAddedDataroomDocumentId] = useState<
-    string | null
-  >(null);
-  const [fileName, setFileName] = useState<string | null>(null);
+  const [uploadedFiles, setUploadedFiles] = useState<
+    {
+      documentId: string;
+      dataroomDocumentId: string;
+      fileName: string;
+    }[]
+  >([]);
   const teamInfo = useTeam();
   const { canAddDocuments } = useLimits();
   const { plan, trial } = usePlan();
@@ -228,10 +230,14 @@ export function AddDocumentModal({
           if (dataroomResponse?.ok) {
             const dataroomDocument =
               (await dataroomResponse.json()) as DataroomDocument;
-            setAddedDocumentId(document.id);
-            setAddedDataroomDocumentId(dataroomDocument.id);
+            setUploadedFiles([
+              {
+                documentId: document.id,
+                dataroomDocumentId: dataroomDocument.id,
+                fileName: document.name,
+              },
+            ]);
             setShowGroupPermissions(true);
-            setFileName(document.name);
           }
 
           plausible("documentUploaded");
@@ -373,10 +379,14 @@ export function AddDocumentModal({
           if (dataroomResponse?.ok) {
             const dataroomDocument =
               (await dataroomResponse.json()) as DataroomDocument;
-            setAddedDocumentId(document.id);
-            setAddedDataroomDocumentId(dataroomDocument.id);
             setShowGroupPermissions(true);
-            setFileName(document.name);
+            setUploadedFiles([
+              {
+                documentId: document.id,
+                dataroomDocumentId: dataroomDocument.id,
+                fileName: document.name,
+              },
+            ]);
           }
 
           plausible("documentUploaded");
@@ -618,24 +628,20 @@ export function AddDocumentModal({
         </DialogContent>
       </Dialog>
 
-      {showGroupPermissions &&
-        addedDocumentId &&
-        addedDataroomDocumentId &&
-        dataroomId && (
-          <SetGroupPermissionsModal
-            fileName={fileName || ""}
-            open={showGroupPermissions}
-            setOpen={setShowGroupPermissions}
-            dataroomId={dataroomId}
-            documentId={addedDocumentId}
-            dataroomDocumentId={addedDataroomDocumentId}
-            onComplete={() => {
-              setShowGroupPermissions(false);
-              setAddDocumentModalOpen?.(false);
-            }}
-            isAutoOpen
-          />
-        )}
+      {showGroupPermissions && dataroomId && (
+        <SetGroupPermissionsModal
+          open={showGroupPermissions}
+          setOpen={setShowGroupPermissions}
+          dataroomId={dataroomId}
+          uploadedFiles={uploadedFiles}
+          onComplete={() => {
+            setShowGroupPermissions(false);
+            setAddDocumentModalOpen?.(false);
+            setUploadedFiles([]);
+          }}
+          isAutoOpen
+        />
+      )}
     </>
   );
 }

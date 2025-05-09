@@ -25,11 +25,6 @@ import {
 import { motion } from "motion/react";
 import { toast } from "sonner";
 
-import { EmptyDocuments } from "@/components/documents/empty-document";
-import FolderCard from "@/components/documents/folder-card";
-import { UploadNotificationDrawer } from "@/components/upload-notification";
-import UploadZone from "@/components/upload-zone";
-
 import { moveDataroomDocumentToFolder } from "@/lib/documents/move-dataroom-documents";
 import { moveDataroomFolderToFolder } from "@/lib/documents/move-dataroom-folders";
 import {
@@ -39,6 +34,11 @@ import {
 import { FolderWithCount } from "@/lib/swr/use-documents";
 import { useMediaQuery } from "@/lib/utils/use-media-query";
 
+import { EmptyDocuments } from "@/components/documents/empty-document";
+import FolderCard from "@/components/documents/folder-card";
+import { UploadNotificationDrawer } from "@/components/upload-notification";
+import UploadZone from "@/components/upload-zone";
+
 import { DraggableItem } from "../documents/drag-and-drop/draggable-item";
 import { DroppableFolder } from "../documents/drag-and-drop/droppable-folder";
 import { Button } from "../ui/button";
@@ -47,6 +47,7 @@ import { ButtonTooltip } from "../ui/tooltip";
 import { useRemoveDataroomItemsModal } from "./actions/remove-document-modal";
 import DataroomDocumentCard from "./dataroom-document-card";
 import { itemsMessage } from "./folders/utils";
+import { SetGroupPermissionsModal } from "./groups/set-group-permissions-modal";
 import { MoveToDataroomFolderModal } from "./move-dataroom-folder-modal";
 
 type FolderOrDocument =
@@ -69,7 +70,14 @@ export function DataroomItemsList({
   documentCount: number;
 }) {
   const { isMobile } = useMediaQuery();
-
+  const [showGroupPermissions, setShowGroupPermissions] = useState(false);
+  const [uploadedFiles, setUploadedFiles] = useState<
+    {
+      documentId: string;
+      dataroomDocumentId: string;
+      fileName: string;
+    }[]
+  >([]);
   const [uploads, setUploads] = useState<
     { fileName: string; progress: number; documentId?: string }[]
   >([]);
@@ -477,6 +485,17 @@ export function DataroomItemsList({
   });
   HeaderContent.displayName = "HeaderContent";
 
+  const handleUploadSuccess = (
+    files: {
+      fileName: string;
+      documentId: string;
+      dataroomDocumentId: string;
+    }[],
+  ) => {
+    setUploadedFiles(files);
+    setShowGroupPermissions(true);
+  };
+
   return (
     <>
       <UploadZone
@@ -492,6 +511,7 @@ export function DataroomItemsList({
             ),
           );
         }}
+        onUploadSuccess={handleUploadSuccess}
         onUploadRejected={(rejected) => {
           setRejectedFiles(rejected);
           setShowDrawer(true);
@@ -605,6 +625,20 @@ export function DataroomItemsList({
           setRejectedFiles={setRejectedFiles}
         />
       ) : null}
+
+      {showGroupPermissions && dataroomId && (
+        <SetGroupPermissionsModal
+          open={showGroupPermissions}
+          setOpen={setShowGroupPermissions}
+          dataroomId={dataroomId}
+          uploadedFiles={uploadedFiles}
+          onComplete={() => {
+            setShowGroupPermissions(false);
+            setUploadedFiles([]);
+          }}
+          isAutoOpen
+        />
+      )}
     </>
   );
 }

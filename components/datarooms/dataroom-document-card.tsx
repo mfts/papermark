@@ -343,12 +343,14 @@ export default function DataroomDocumentCard({
       ) : null}
       {groupPermissionOpen ? (
         <SetGroupPermissionsModal
-          fileName={dataroomDocument.document.name}
           open={groupPermissionOpen}
           setOpen={setGroupPermissionOpen}
           dataroomId={dataroomId}
-          documentId={dataroomDocument.id}
-          dataroomDocumentId={dataroomDocument.id}
+          uploadedFiles={[{
+            documentId: dataroomDocument.id,
+            dataroomDocumentId: dataroomDocument.id,
+            fileName: dataroomDocument.document.name,
+          }]}
         />
       ) : null}
     </>
