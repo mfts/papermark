@@ -7,7 +7,8 @@ export type BetaFeatures =
   | "embedding"
   | "webhooks"
   | "conversations"
-  | "dataroomUpload";
+  | "dataroomUpload"
+  | "inDocumentLinks";
 type BetaFeaturesRecord = Record<BetaFeatures, string[]>;
 
 export const getFeatureFlags = async ({ teamId }: { teamId?: string }) => {
@@ -19,6 +20,7 @@ export const getFeatureFlags = async ({ teamId }: { teamId?: string }) => {
     webhooks: false,
     conversations: false,
     dataroomUpload: false,
+    inDocumentLinks: false,
   };
 
   // Return all features as true if edge config is not available

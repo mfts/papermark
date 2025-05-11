@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
-import { LinkAudienceType } from "@prisma/client";
+import { LinkAudienceType, Tag } from "@prisma/client";
 import { waitUntil } from "@vercel/functions";
 import { getServerSession } from "next-auth/next";
 
@@ -19,6 +19,11 @@ export const config = {
   // in order to enable `waitUntil` function
   supportsResponseStreaming: true,
 };
+
+export interface DomainObject {
+  id: string;
+  slug: string;
+}
 
 export default async function handler(
   req: NextApiRequest,
@@ -74,7 +79,7 @@ export default async function handler(
         slug = null;
       }
 
-      let domainObj;
+      let domainObj: DomainObject | null;
 
       if (domain && slug) {
         domainObj = await prisma.domain.findUnique({
@@ -119,91 +124,114 @@ export default async function handler(
       }
 
       // Fetch the link and its related document from the database
-      const link = await prisma.link.create({
-        data: {
-          documentId: documentLink ? targetId : null,
-          dataroomId: dataroomLink ? targetId : null,
-          linkType,
-          teamId,
-          password: hashedPassword,
-          name: linkData.name || null,
-          emailProtected:
-            linkData.audienceType === LinkAudienceType.GROUP
-              ? true
-              : linkData.emailProtected,
-          emailAuthenticated: linkData.emailAuthenticated,
-          expiresAt: exat,
-          allowDownload: linkData.allowDownload,
-          domainId: domainObj?.id || null,
-          domainSlug: domain || null,
-          slug: slug || null,
-          enableNotification: linkData.enableNotification,
-          enableFeedback: linkData.enableFeedback,
-          enableScreenshotProtection: linkData.enableScreenshotProtection,
-          enableCustomMetatag: linkData.enableCustomMetatag,
-          metaTitle: linkData.metaTitle || null,
-          metaDescription: linkData.metaDescription || null,
-          metaImage: linkData.metaImage || null,
-          metaFavicon: linkData.metaFavicon || null,
-          allowList: linkData.allowList,
-          denyList: linkData.denyList,
-          enableConversation: linkData.enableConversation,
-          audienceType: linkData.audienceType,
-          enableIndexFile: enableIndexFile,
-          groupId:
-            linkData.audienceType === LinkAudienceType.GROUP
-              ? linkData.groupId
-              : null,
-          ...(linkData.enableQuestion && {
-            enableQuestion: linkData.enableQuestion,
-            feedback: {
-              create: {
-                data: {
-                  question: linkData.questionText,
-                  type: linkData.questionType,
+      const updatedLink = await prisma.$transaction(async (tx) => {
+        const link = await tx.link.create({
+          data: {
+            documentId: documentLink ? targetId : null,
+            dataroomId: dataroomLink ? targetId : null,
+            linkType,
+            teamId,
+            password: hashedPassword,
+            name: linkData.name || null,
+            emailProtected:
+              linkData.audienceType === LinkAudienceType.GROUP
+                ? true
+                : linkData.emailProtected,
+            emailAuthenticated: linkData.emailAuthenticated,
+            expiresAt: exat,
+            allowDownload: linkData.allowDownload,
+            domainId: domainObj?.id || null,
+            domainSlug: domain || null,
+            slug: slug || null,
+            enableIndexFile: enableIndexFile,
+            enableNotification: linkData.enableNotification,
+            enableFeedback: linkData.enableFeedback,
+            enableScreenshotProtection: linkData.enableScreenshotProtection,
+            enableCustomMetatag: linkData.enableCustomMetatag,
+            metaTitle: linkData.metaTitle || null,
+            metaDescription: linkData.metaDescription || null,
+            metaImage: linkData.metaImage || null,
+            metaFavicon: linkData.metaFavicon || null,
+            allowList: linkData.allowList,
+            denyList: linkData.denyList,
+            audienceType: linkData.audienceType,
+            groupId:
+              linkData.audienceType === LinkAudienceType.GROUP
+                ? linkData.groupId
+                : null,
+            ...(linkData.enableQuestion && {
+              enableQuestion: linkData.enableQuestion,
+              feedback: {
+                create: {
+                  data: {
+                    question: linkData.questionText,
+                    type: linkData.questionType,
+                  },
                 },
               },
-            },
-          }),
-          ...(linkData.enableAgreement && {
-            enableAgreement: linkData.enableAgreement,
-            agreementId: linkData.agreementId,
-          }),
-          ...(linkData.enableWatermark && {
-            enableWatermark: linkData.enableWatermark,
-            watermarkConfig: linkData.watermarkConfig,
-          }),
-          showBanner: linkData.showBanner,
-          ...(linkData.customFields && {
-            customFields: {
-              createMany: {
-                data: linkData.customFields.map(
-                  (field: any, index: number) => ({
-                    type: field.type,
-                    identifier: field.identifier,
-                    label: field.label,
-                    placeholder: field.placeholder,
-                    required: field.required,
-                    disabled: field.disabled,
-                    orderIndex: index,
-                  }),
-                ),
+            }),
+            ...(linkData.enableAgreement && {
+              enableAgreement: linkData.enableAgreement,
+              agreementId: linkData.agreementId,
+            }),
+            ...(linkData.enableWatermark && {
+              enableWatermark: linkData.enableWatermark,
+              watermarkConfig: linkData.watermarkConfig,
+            }),
+            ...(linkData.enableUpload && {
+              enableUpload: linkData.enableUpload,
+              isFileRequestOnly: linkData.isFileRequestOnly,
+              uploadFolderId: linkData.uploadFolderId,
+            }),
+            showBanner: linkData.showBanner,
+            ...(linkData.customFields && {
+              customFields: {
+                createMany: {
+                  data: linkData.customFields.map(
+                    (field: any, index: number) => ({
+                      type: field.type,
+                      identifier: field.identifier,
+                      label: field.label,
+                      placeholder: field.placeholder,
+                      required: field.required,
+                      disabled: field.disabled,
+                      orderIndex: index,
+                    }),
+                  ),
+                },
               },
-            },
-          }),
-          ...(linkData.enableUpload && {
-            enableUpload: linkData.enableUpload,
-            isFileRequestOnly: linkData.isFileRequestOnly,
-            uploadFolderId: linkData.uploadFolderId,
-          }),
-        },
-        include: {
-          customFields: true,
-        },
+            }),
+          },
+          include: {
+            customFields: true,
+          },
+        });
+
+        let tags: Partial<Tag>[] = [];
+        if (linkData.tags?.length) {
+          // create tag items
+          await tx.tagItem.createMany({
+            data: linkData.tags.map((tagId: string) => ({
+              tagId,
+              itemType: "LINK_TAG",
+              linkId: link.id,
+              taggedBy: userId,
+            })),
+            skipDuplicates: true,
+          });
+
+          // return tags
+          tags = await tx.tag.findMany({
+            where: { id: { in: linkData.tags } },
+            select: { id: true, name: true, color: true, description: true },
+          });
+        }
+
+        return { ...link, tags };
       });
 
       const linkWithView = {
-        ...link,
+        ...updatedLink,
         _count: { views: 0 },
         views: [],
       };
@@ -216,9 +244,9 @@ export default async function handler(
         sendLinkCreatedWebhook({
           teamId,
           data: {
-            link_id: link.id,
-            document_id: link.documentId,
-            dataroom_id: link.dataroomId,
+            link_id: linkWithView.id,
+            document_id: linkWithView.documentId,
+            dataroom_id: linkWithView.dataroomId,
           },
         }),
       );

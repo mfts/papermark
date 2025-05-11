@@ -1,14 +1,12 @@
 import Link from "next/link";
 
-
-
 import React, { useEffect, useState } from "react";
 
 import { DataroomBrand } from "@prisma/client";
-import { Download, MessagesSquareIcon } from "lucide-react";
+import { BadgeInfoIcon, Download, MessagesSquareIcon } from "lucide-react";
 import { toast } from "sonner";
 
-import { timeAgo } from "@/lib/utils";
+import { formatDate } from "@/lib/utils";
 
 import {
   ButtonTooltip,
@@ -35,6 +33,7 @@ export default function DataroomNav({
   enableIndexFile,
   isEmbedded,
   viewerEmail,
+  isTeamMember,
 }: {
   allowDownload?: boolean;
   brand?: Partial<DataroomBrand>;
@@ -48,6 +47,7 @@ export default function DataroomNav({
   enableIndexFile?: boolean;
   isEmbedded?: boolean;
   viewerEmail?: string;
+  isTeamMember?: boolean;
 }) {
   const [loading, setLoading] = useState<boolean>(false);
   const [showConversations, setShowConversations] = useState<boolean>(false);
@@ -157,8 +157,28 @@ export default function DataroomNav({
             </div>
           </div>
           <div className="absolute inset-y-0 right-0 flex items-center space-x-4 pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
+            {isTeamMember ? (
+              <TooltipProvider delayDuration={100}>
+                <Tooltip defaultOpen>
+                  <TooltipTrigger asChild>
+                    <Button
+                      className="size-8 bg-gray-900 text-white hover:bg-gray-900/80 sm:size-10"
+                      size="icon"
+                    >
+                      <BadgeInfoIcon className="h-5 w-5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="max-w-xs text-wrap text-center">
+                      Skipped verification because you are a team member; no
+                      analytics will be collected
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            ) : null}
             {conversationsEnabled && (
-              <TooltipProvider>
+              <TooltipProvider delayDuration={100}>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
@@ -219,7 +239,7 @@ export default function DataroomNav({
                 className="text-sm"
                 dateTime={new Date(dataroom.lastUpdatedAt).toISOString()}
               >
-                {`Last updated ${timeAgo(dataroom.lastUpdatedAt)}`}
+                {`Last updated ${formatDate(dataroom.lastUpdatedAt)}`}
               </time>
             </div>
           </div>
@@ -239,4 +259,4 @@ export default function DataroomNav({
       ) : null}
     </nav>
   );
-};
+}

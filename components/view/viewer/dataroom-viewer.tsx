@@ -34,7 +34,9 @@ import { DocumentUploadModal } from "../dataroom/document-upload-modal";
 import FolderCard from "../dataroom/folder-card";
 import DataroomNav from "../dataroom/nav-dataroom";
 
-type FolderOrDocument = DataroomFolder | DataroomDocument;
+type FolderOrDocument =
+  | (DataroomFolder & { allowDownload: boolean })
+  | DataroomDocument;
 
 export type DocumentVersion = {
   id: string;
@@ -42,6 +44,7 @@ export type DocumentVersion = {
   versionNumber: number;
   hasPages: boolean;
   isVertical: boolean;
+  updatedAt: Date;
 };
 
 type DataroomDocument = {
@@ -132,7 +135,28 @@ export default function DataroomViewer({
     const mixedItems: FolderOrDocument[] = [
       ...(folders || [])
         .filter((folder) => folder.parentId === folderId)
-        .map((folder) => ({ ...folder, itemType: "folder" })),
+        .map((folder) => {
+          const folderDocuments = documents.filter(
+            (doc) => doc.folderId === folder.id,
+          );
+          const allDocumentsCanDownload =
+            folderDocuments.length > 0 &&
+            folderDocuments.every((doc) => {
+              const accessControl = accessControls.find(
+                (access) => access.itemId === doc.dataroomDocumentId,
+              );
+              return (
+                (accessControl?.canDownload ?? true) &&
+                doc.versions[0].type !== "notion"
+              );
+            });
+
+          return {
+            ...folder,
+            itemType: "folder",
+            allowDownload: allowDownload && allDocumentsCanDownload,
+          };
+        }),
       ...(documents || [])
         .filter((doc) => doc.folderId === folderId)
         .map((doc) => {
@@ -150,10 +174,14 @@ export default function DataroomViewer({
         }),
     ];
     return mixedItems.sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
-  }, [folders, documents, folderId, accessControls]);
+  }, [folders, documents, folderId, accessControls, allowDownload]);
 
   const renderItem = (item: FolderOrDocument) => {
     if ("versions" in item) {
+      const isProcessing =
+        ["docs", "slides", "pdf"].includes(item.versions[0].type) &&
+        !item.versions[0].hasPages;
+
       return (
         <DocumentCard
           key={item.id}
@@ -162,6 +190,7 @@ export default function DataroomViewer({
           viewId={viewId}
           isPreview={!!isPreview}
           allowDownload={allowDownload && item.canDownload}
+          isProcessing={isProcessing}
         />
       );
     }
@@ -172,6 +201,10 @@ export default function DataroomViewer({
         folder={item}
         dataroomId={dataroom?.id}
         setFolderId={setFolderId}
+        isPreview={!!isPreview}
+        linkId={linkId}
+        viewId={viewId}
+        allowDownload={item.allowDownload}
       />
     );
   };
@@ -191,6 +224,7 @@ export default function DataroomViewer({
         enableIndexFile={enableIndexFile}
         isEmbedded={isEmbedded}
         viewerEmail={viewerEmail}
+        isTeamMember={viewData.isTeamMember}
       />
       <div
         style={{ height: "calc(100vh - 64px)" }}
@@ -199,7 +233,7 @@ export default function DataroomViewer({
         <div className="relative mx-auto flex h-full w-full items-start justify-center">
           {/* Tree view */}
           <div className="hidden h-full w-1/4 space-y-8 overflow-auto px-3 pb-4 pt-4 md:flex md:px-6 md:pt-6 lg:px-8 lg:pt-9 xl:px-14">
-            <ScrollArea showScrollbar>
+            <ScrollArea showScrollbar className="w-full">
               <ViewFolderTree
                 folders={folders}
                 documents={documents}

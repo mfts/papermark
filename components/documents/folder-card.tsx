@@ -5,6 +5,8 @@ import { useEffect, useRef, useState } from "react";
 import { TeamContextType } from "@/context/team-context";
 import {
   BetweenHorizontalStartIcon,
+  ClipboardCopyIcon,
+  CopyIcon,
   FolderIcon,
   FolderInputIcon,
   FolderPenIcon,
@@ -15,6 +17,10 @@ import {
 import { toast } from "sonner";
 import { mutate } from "swr";
 
+import { DataroomFolderWithCount } from "@/lib/swr/use-dataroom";
+import { FolderWithCount } from "@/lib/swr/use-documents";
+import { timeAgo } from "@/lib/utils";
+
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -24,10 +30,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-import { DataroomFolderWithCount } from "@/lib/swr/use-dataroom";
-import { FolderWithCount } from "@/lib/swr/use-documents";
-import { timeAgo } from "@/lib/utils";
 
 import { MoveToDataroomFolderModal } from "../datarooms/move-dataroom-folder-modal";
 import { EditFolderModal } from "../folders/edit-folder-modal";
@@ -244,7 +246,7 @@ export default function FolderCard({
                 <MoreVertical className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" ref={dropdownRef}>
+            <DropdownMenuContent align="end" ref={dropdownRef} className="w-64">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
               <DropdownMenuItem
                 onClick={(e) => {
@@ -285,6 +287,23 @@ export default function FolderCard({
                 {isDataroom
                   ? "Copy folder to other dataroom"
                   : "Add folder to dataroom"}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  navigator.clipboard.writeText(folder.id);
+                  toast.success("Folder ID copied to clipboard");
+                }}
+                className="group/folderid"
+              >
+                <CopyIcon className="mr-2 h-4 w-4" />
+                <span className="inline group-hover/folderid:hidden">
+                  Copy Folder ID
+                </span>
+                <span className="hidden group-hover/folderid:inline group-hover/folderid:cursor-copy">
+                  {folder.id}
+                </span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
 

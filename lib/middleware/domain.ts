@@ -14,6 +14,18 @@ export default async function DomainMiddleware(req: NextRequest) {
       );
     }
 
+    if (host === "fund.tradeair.in") {
+      return NextResponse.redirect(
+        new URL("https://tradeair.in/sv-fm-inbound", req.url),
+      );
+    }
+
+    if (host === "docs.pashupaticapital.com") {
+      return NextResponse.redirect(
+        new URL("https://www.pashupaticapital.com/", req.url),
+      );
+    }
+
     return NextResponse.redirect(
       new URL("https://www.papermark.com/home", req.url),
     );

@@ -6,6 +6,8 @@ import { Download, MoreVerticalIcon } from "lucide-react";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
 
+import { timeAgo } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { fileIcon } from "@/lib/utils/get-file-icon";
 
 import { Button } from "@/components/ui/button";
@@ -34,6 +36,7 @@ type DocumentsCardProps = {
   viewId?: string;
   isPreview: boolean;
   allowDownload: boolean;
+  isProcessing?: boolean;
 };
 
 export default function DocumentCard({
@@ -42,6 +45,7 @@ export default function DocumentCard({
   viewId,
   isPreview,
   allowDownload,
+  isProcessing = false,
 }: DocumentsCardProps) {
   const { theme, systemTheme } = useTheme();
   const canDownload = document.canDownload && allowDownload;
@@ -56,6 +60,14 @@ export default function DocumentCard({
   };
 
   const handleDocumentClick = (e: React.MouseEvent) => {
+    if (isProcessing) {
+      e.preventDefault();
+      toast.error(
+        "Document is still processing. Please wait a moment and try again.",
+      );
+      return;
+    }
+
     e.preventDefault();
     // Open in new tab
     if (domain && slug) {
@@ -155,7 +167,12 @@ export default function DocumentCard({
 
   return (
     <>
-      <li className="group/row relative flex items-center justify-between rounded-lg border-0 p-3 ring-1 ring-gray-200 transition-all hover:bg-secondary hover:ring-gray-300 dark:bg-secondary dark:ring-gray-700 hover:dark:ring-gray-500 sm:p-4">
+      <li
+        className={cn(
+          "group/row relative flex items-center justify-between rounded-lg border-0 p-3 ring-1 ring-gray-200 transition-all hover:bg-secondary hover:ring-gray-300 dark:bg-secondary dark:ring-gray-700 hover:dark:ring-gray-500 sm:p-4",
+          isProcessing && "cursor-not-allowed opacity-60",
+        )}
+      >
         <div className="z-0 flex min-w-0 shrink items-center space-x-2 sm:space-x-4">
           <div className="mx-0.5 flex w-8 items-center justify-center text-center sm:mx-1">
             {fileIcon({
@@ -171,15 +188,26 @@ export default function DocumentCard({
                 <button
                   onClick={handleDocumentClick}
                   className="w-full truncate"
+                  disabled={isProcessing}
                 >
                   <span>{document.name}</span>
+                  {isProcessing && (
+                    <span className="ml-2 text-xs text-muted-foreground">
+                      (Processing...)
+                    </span>
+                  )}
                   <span className="absolute inset-0" />
                 </button>
               </h2>
             </div>
+            <div className="mt-1 flex items-center space-x-1 text-xs leading-5 text-muted-foreground">
+              <p className="truncate">
+                Updated {timeAgo(document.versions[0].updatedAt)}
+              </p>
+            </div>
           </div>
         </div>
-        {canDownload && (
+        {canDownload && !isProcessing && (
           <div className="z-10">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
