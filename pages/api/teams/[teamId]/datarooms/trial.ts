@@ -35,14 +35,14 @@ export default async function handle(
     const email = (session.user as CustomUser).email;
 
     const { teamId } = req.query as { teamId: string };
-    const { name, fullName, companyName, industry, companySize, phoneNumber } =
+    const { name, fullName, companyName, useCase, companySize, tools } =
       req.body as {
         name: string;
         fullName: string;
         companyName: string;
-        industry: string;
+        useCase: string;
         companySize: string;
-        phoneNumber: string;
+        tools: string;
       };
 
     try {
@@ -77,7 +77,7 @@ export default async function handle(
       }
 
       await log({
-        message: `Dataroom Trial: ${teamId} \n\nEmail: ${email} \nName: ${fullName} \nCompany Name: ${companyName} \nIndustry: ${industry} \nCompany Size: ${companySize} \nPhone Number: ${phoneNumber}`,
+        message: `Dataroom Trial: ${teamId} \n\nEmail: ${email} \nName: ${fullName} \nCompany Name: ${companyName} \nUse Case: ${useCase} \nCompany Size: ${companySize} \nTools: ${tools}`,
         type: "trial",
         mention: true,
       });

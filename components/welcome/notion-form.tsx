@@ -343,6 +343,11 @@ export default function NotionForm() {
                     <Button loading={isLoading} onClick={handleSubmit}>
                       Share document link
                     </Button>
+                    </div>
+                    <div className="text-center text-xs text-muted-foreground">
+              <span>You can change coinfigurations later</span>
+        
+         
                   </div>
                 </div>
               </main>

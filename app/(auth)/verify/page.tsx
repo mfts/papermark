@@ -6,6 +6,7 @@ import NotFound from "@/pages/404";
 import { generateChecksum } from "@/lib/utils/generate-checksum";
 
 import { Button } from "@/components/ui/button";
+import { LogoCloud } from "@/components/shared/logo-cloud";
 
 const data = {
   description: "Verify login to Papermark",
@@ -71,38 +72,43 @@ export default function VerifyPage({
   return (
     <div className="flex h-screen w-full flex-wrap">
       {/* Left part */}
-      <div className="flex w-full justify-center bg-white md:w-1/2 lg:w-2/5">
+      <div className="flex w-full justify-center bg-gray-50 md:w-1/2 lg:w-1/2">
         <div
           className="absolute inset-x-0 top-10 -z-10 flex transform-gpu justify-center overflow-hidden blur-3xl"
           aria-hidden="true"
         ></div>
-        <div className="z-10 mx-5 mt-[calc(20vh)] h-fit w-full max-w-md overflow-hidden rounded-lg sm:mx-0">
-          <div className="flex flex-col items-center justify-center space-y-3 px-4 py-6 pt-8 text-center sm:px-16">
+        <div className="z-10 mx-5 mt-[calc(1vh)] sm:mt-[calc(2vh)] md:mt-[calc(3vh)] h-fit w-full max-w-md overflow-hidden rounded-lg sm:mx-0">
+          <div className="flex flex-col items-left space-y-3 px-4 py-6 pt-8 sm:px-12">
+            <img
+              src="/_static/papermark-logo.svg"
+              alt="Papermark Logo"
+              className="h-7 w-auto mb-36 sm:mb-32 md:mb-48s -mt-8 self-start"
+            />
             <Link href="/">
-              <span className="text-balance text-2xl font-semibold text-gray-800">
-                Welcome to Papermark
+              <span className="text-balance text-3xl font-semibold text-gray-900">
+                Verify your login
               </span>
             </Link>
             <h3 className="text-balance text-sm text-gray-800">
               Share documents. Not attachments.
             </h3>
           </div>
-          <div className="flex flex-col gap-4 px-4 pt-8 sm:px-16">
+          <div className="flex flex-col gap-4 px-4 pt-8 sm:px-12">
             <div className="relative">
               <Link href={verification_url}>
                 <Button className="focus:shadow-outline w-full transform rounded bg-gray-800 px-4 py-2 text-white transition-colors duration-300 ease-in-out hover:bg-gray-900 focus:outline-none">
-                  Verify login
+                  Verify email
                 </Button>
               </Link>
             </div>
           </div>
-          <p className="mt-10 w-full max-w-md px-4 text-xs text-muted-foreground sm:px-16">
+          <p className="mt-10 w-full max-w-md px-4 text-xs text-muted-foreground sm:px-12">
             By clicking continue, you acknowledge that you have read and agree
             to Papermark&apos;s{" "}
             <a
               href={`${process.env.NEXT_PUBLIC_MARKETING_URL}/terms`}
               target="_blank"
-              className="underline hover:text-gray-900"
+              className="underline"
             >
               Terms of Service
             </a>{" "}
@@ -110,7 +116,7 @@ export default function VerifyPage({
             <a
               href={`${process.env.NEXT_PUBLIC_MARKETING_URL}/privacy`}
               target="_blank"
-              className="underline hover:text-gray-900"
+              className="underline"
             >
               Privacy Policy
             </a>
@@ -118,39 +124,43 @@ export default function VerifyPage({
           </p>
         </div>
       </div>
-      <div className="hidden w-full justify-center bg-gray-800 md:flex md:w-1/2 lg:w-3/5">
-        <div className="flex w-full max-w-5xl px-4 py-20 md:px-8">
+      <div className="hidden w-full justify-center bg-black md:flex md:w-1/2 lg:w-1/2 relative overflow-hidden">
+        <div className="flex w-full h-full relative min-h-[700px] p-0 m-0">
           <div
-            className="mx-auto flex w-full max-w-5xl justify-center rounded-3xl bg-gray-800 px-4 py-20 md:px-8"
+            className="flex w-full h-full flex-col justify-between relative"
             id="features"
           >
-            <div className="flex flex-col items-center">
+            {/* Testimonial top 2/3 */}
+            <div className="flex flex-col items-center justify-center w-full" style={{height: '66.6666%'}}>
               {/* Image container */}
-              <div className="mb-4 h-64 w-64">
+              <div className="mb-4 h-64 w-80">
                 <img
                   className="h-full w-full rounded-2xl object-cover shadow-2xl"
-                  src="/_static/testimonials/jaski.jpeg"
-                  alt="Jaski"
+                  src="/_static/testimonials/backtrace.jpeg"
+                  alt="Alonso"
                 />
               </div>
               {/* Text content */}
               <div className="max-w-xl text-center">
-                <blockquote className="text-l text-balance leading-8 text-gray-100 sm:text-xl sm:leading-9">
+                <blockquote className="text-balance font-normal leading-8 text-white sm:text-xl sm:leading-9">
                   <p>
-                    True builders listen to their users and build what they
-                    need. Thanks Papermark team for solving a big pain point.
-                    DocSend monopoly will end soon!
+                    &quot;We raised our €30M Fund with Papermark Data Rooms. Love the customization, security and ease of use.&quot;
                   </p>
                 </blockquote>
                 <figcaption className="mt-4">
-                  <div className="text-balance font-semibold text-white">
-                    Jaski
+                  <div className="text-balance font-normal text-white">
+                    Michael Münnix
                   </div>
-                  <div className="text-balance text-gray-400">
-                    Founder, Townhall Network
+                  <div className="text-balance text-gray-400 font-light">
+                    Partner, Backtrace Capital
                   </div>
                 </figcaption>
               </div>
+            </div>
+            {/* White block with logos bottom 1/3, full width/height */}
+            <div className="absolute left-0 bottom-0 w-full flex flex-col items-center justify-center bg-white" style={{height: '33.3333%'}}>
+              <div className="max-w-xl mb-4 text-center text-balance font-semibold text-gray-900">Trusted by teams at</div>
+              <LogoCloud />
             </div>
           </div>
         </div>

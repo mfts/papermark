@@ -35,8 +35,8 @@ export default function Dataroom() {
         <p className="text-2xl font-bold tracking-tighter text-foreground">
           Papermark
         </p>
-        <h1 className="font-display max-w-md text-3xl font-semibold transition-colors sm:text-4xl">
-          Data rooms are here!
+        <h1 className="font-display max-w-xl text-3xl font-semibold transition-colors sm:text-4xl">
+        Get started with data rooms!
         </h1>
       </motion.div>
       <motion.div
@@ -78,7 +78,7 @@ export default function Dataroom() {
           Get a data room trial
         </Button>
         <span className="text-xs text-muted-foreground">
-          Data rooms are available on our `Business` and `Data Rooms` plan.{" "}
+          Data rooms are available on our `Business` and `Data Rooms` plans.{" "}
           <br />
           You receive a 7-day trial.
         </span>

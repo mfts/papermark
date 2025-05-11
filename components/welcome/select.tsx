@@ -117,7 +117,7 @@ export default function Next() {
             })
           }
         > */}
-        You can start by sharing documents and create a data room later.
+        {/* You can start by sharing documents and create a data room later. */}
         {/* </button> */}
       </motion.div>
     </motion.div>
