@@ -218,7 +218,14 @@ export default function DataroomTrial() {
           </div>
           <div className="space-y-1">
             <Label className="opacity-80">Use Case*</Label>
-            <Select onValueChange={(value) => setUseCase(value)}>
+            <Select
+              onValueChange={(value) => {
+                setUseCase(value);
+                if (value !== "other") {
+                  setCustomUseCase("");
+                }
+              }}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select your use case" />
               </SelectTrigger>
