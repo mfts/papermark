@@ -82,7 +82,7 @@ export default function VerifyPage({
             <img
               src="/_static/papermark-logo.svg"
               alt="Papermark Logo"
-              className="h-7 w-auto mb-36 sm:mb-32 md:mb-48s -mt-8 self-start"
+              className="h-7 w-auto mb-36 sm:mb-32 md:mb-48 -mt-8 self-start"
             />
             <Link href="/">
               <span className="text-balance text-3xl font-semibold text-gray-900">
