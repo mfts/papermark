@@ -32,25 +32,25 @@ import {
   DataroomFolderWithCount,
 } from "@/lib/swr/use-dataroom";
 import useDataroomGroups from "@/lib/swr/use-dataroom-groups";
-import { FolderWithCount } from "@/lib/swr/use-documents";
 import { useMediaQuery } from "@/lib/utils/use-media-query";
 
+import { useRemoveDataroomItemsModal } from "@/components/datarooms/actions/remove-document-modal";
+import DataroomDocumentCard from "@/components/datarooms/dataroom-document-card";
+import { useDeleteFolderModal } from "@/components/documents/actions/delete-folder-modal";
+import { DraggableItem } from "@/components/documents/drag-and-drop/draggable-item";
+import { DroppableFolder } from "@/components/documents/drag-and-drop/droppable-folder";
 import { EmptyDocuments } from "@/components/documents/empty-document";
 import FolderCard from "@/components/documents/folder-card";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Portal } from "@/components/ui/portal";
+import { ButtonTooltip } from "@/components/ui/tooltip";
 import { UploadNotificationDrawer } from "@/components/upload-notification";
 import UploadZone, {
   RejectedFile,
   UploadState,
 } from "@/components/upload-zone";
 
-import { DraggableItem } from "../documents/drag-and-drop/draggable-item";
-import { DroppableFolder } from "../documents/drag-and-drop/droppable-folder";
-import { Button } from "../ui/button";
-import { Checkbox } from "../ui/checkbox";
-import { Portal } from "../ui/portal";
-import { ButtonTooltip } from "../ui/tooltip";
-import { useRemoveDataroomItemsModal } from "./actions/remove-document-modal";
-import DataroomDocumentCard from "./dataroom-document-card";
 import { itemsMessage } from "./folders/utils";
 import { SetGroupPermissionsModal } from "./groups/set-group-permissions-modal";
 import { MoveToDataroomFolderModal } from "./move-dataroom-folder-modal";
@@ -105,6 +105,24 @@ export function DataroomItemsList({
   const [parentFolderId, setParentFolderId] = useState<string>("");
   const [isOverFolder, setIsOverFolder] = useState<boolean>(false);
   const [isDragging, setIsDragging] = useState<boolean>(false);
+
+  const { setDeleteModalOpen, setFolderToDelete, DeleteFolderModal } =
+    useDeleteFolderModal(teamInfo, true, dataroomId);
+
+  const handleDeleteFolder = useCallback(
+    (folderId: string) => {
+      const folderToDelete = mixedItems.find(
+        (f) => f.id === folderId && f.itemType === "folder",
+      );
+      if (folderToDelete && folderToDelete.itemType === "folder") {
+        const { itemType, ...folder } = folderToDelete;
+        setFolderToDelete(folder);
+        setDeleteModalOpen(true);
+        setSelectedFolders((prev) => prev.filter((id) => id !== folderId));
+      }
+    },
+    [mixedItems, setFolderToDelete, setDeleteModalOpen, setSelectedFolders],
+  );
 
   const handleCloseDrawer = () => {
     setShowDrawer(false);
@@ -346,6 +364,7 @@ export function DataroomItemsList({
               teamInfo={teamInfo}
               isDataroom={!!dataroomId}
               dataroomId={dataroomId}
+              onDelete={handleDeleteFolder}
             />
           ) : (
             <DataroomDocumentCard
@@ -385,6 +404,7 @@ export function DataroomItemsList({
                 dataroomId={dataroomId}
                 isSelected={selectedFolders.includes(item.id)}
                 isDragging={isDragging && selectedFolders.includes(item.id)}
+                onDelete={handleDeleteFolder}
               />
             </DraggableItem>
           </DroppableFolder>
@@ -622,6 +642,7 @@ export function DataroomItemsList({
                         teamInfo={teamInfo}
                         isDataroom={!!dataroomId}
                         dataroomId={dataroomId}
+                        onDelete={handleDeleteFolder}
                       />
                     ) : null}
                     {selectedDocumentsLength + selectedFoldersLength > 1 ? (
@@ -686,6 +707,7 @@ export function DataroomItemsList({
           isAutoOpen
         />
       )}
+      <DeleteFolderModal />
     </>
   );
 }
