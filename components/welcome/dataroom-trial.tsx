@@ -9,6 +9,9 @@ import { motion } from "motion/react";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
+import { useAnalytics } from "@/lib/analytics";
+import { STAGGER_CHILD_VARIANTS } from "@/lib/constants";
+
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { PhoneInput } from "@/components/ui/phone-input";
@@ -19,9 +22,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-import { useAnalytics } from "@/lib/analytics";
-import { STAGGER_CHILD_VARIANTS } from "@/lib/constants";
 
 import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
 import { Input } from "../ui/input";
@@ -63,7 +63,7 @@ export default function DataroomTrial() {
             name: "Dataroom #1",
             fullName: name,
             companyName,
-            useCase,
+            useCase: useCase === "other" ? customUseCase.trim() : useCase,
             companySize,
             tools,
           }),
@@ -85,7 +85,7 @@ export default function DataroomTrial() {
 
       analytics.capture("Dataroom Trial Created", {
         dataroomName: "Dataroom #1",
-        useCase,
+        useCase: useCase === "other" ? customUseCase.trim() : useCase,
         companySize,
         dataroomId,
       });
@@ -195,7 +195,7 @@ export default function DataroomTrial() {
               </SelectContent>
             </Select>
           </div> */}
-            <div className="space-y-1">
+          <div className="space-y-1">
             <Label className="opacity-80">Company Size*</Label>
             <Select onValueChange={(value) => setCompanySize(value)}>
               <SelectTrigger>
@@ -230,11 +230,19 @@ export default function DataroomTrial() {
                 <SelectValue placeholder="Select your use case" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="m&a">Mergers and Acquisitions</SelectItem>
-                <SelectItem value="startup-fundraising">Startup Fundraising</SelectItem>
-                <SelectItem value="fund-management">Fund management & Fundraising</SelectItem>
+                <SelectItem value="mergers-and-acquisitions">
+                  Mergers and Acquisitions
+                </SelectItem>
+                <SelectItem value="startup-fundraising">
+                  Startup Fundraising
+                </SelectItem>
+                <SelectItem value="fund-management">
+                  Fund management & Fundraising
+                </SelectItem>
                 <SelectItem value="sales">Sales</SelectItem>
-                <SelectItem value="project-management">Project management</SelectItem>
+                <SelectItem value="project-management">
+                  Project management
+                </SelectItem>
                 <SelectItem value="operations">Operations</SelectItem>
 
                 <SelectItem value="other">Other</SelectItem>
@@ -243,14 +251,14 @@ export default function DataroomTrial() {
             {useCase === "other" && (
               <input
                 type="text"
-                className="mt-2 w-full rounded border border-gray-300 px-3 py-2 text-sm "
+                className="mt-2 w-full rounded border border-gray-300 px-3 py-2 text-sm"
                 placeholder="Please specify your use case"
                 value={customUseCase}
                 onChange={(e) => setCustomUseCase(e.target.value)}
               />
             )}
           </div>
-        
+
           <div className="space-y-1">
             <Label htmlFor="tools" className="opacity-80">
               Tools*

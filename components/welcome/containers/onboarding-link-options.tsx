@@ -9,9 +9,12 @@ import useLimits from "@/lib/swr/use-limits";
 
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { DEFAULT_LINK_TYPE } from "@/components/links/link-sheet";
+import AgreementSection from "@/components/links/link-sheet/agreement-section";
 import AllowDownloadSection from "@/components/links/link-sheet/allow-download-section";
 import AllowListSection from "@/components/links/link-sheet/allow-list-section";
 import AllowNotificationSection from "@/components/links/link-sheet/allow-notification-section";
+import ConversationSection from "@/components/links/link-sheet/conversation-section";
+import CustomFieldsSection from "@/components/links/link-sheet/custom-fields-section";
 import DenyListSection from "@/components/links/link-sheet/deny-list-section";
 import EmailAuthenticationSection from "@/components/links/link-sheet/email-authentication-section";
 import EmailProtectionSection from "@/components/links/link-sheet/email-protection-section";
@@ -20,10 +23,6 @@ import FeedbackSection from "@/components/links/link-sheet/feedback-section";
 import OGSection from "@/components/links/link-sheet/og-section";
 import PasswordSection from "@/components/links/link-sheet/password-section";
 import { ProBannerSection } from "@/components/links/link-sheet/pro-banner-section";
-
-import AgreementSection from "@/components/links/link-sheet/agreement-section";
-import ConversationSection from "@/components/links/link-sheet/conversation-section";
-import CustomFieldsSection from "@/components/links/link-sheet/custom-fields-section";
 import QuestionSection from "@/components/links/link-sheet/question-section";
 import ScreenshotProtectionSection from "@/components/links/link-sheet/screenshot-protection-section";
 import UploadSection from "@/components/links/link-sheet/upload-section";
@@ -68,7 +67,8 @@ export const OnboardingLinkOptions = ({
   const [openUpgradeModal, setOpenUpgradeModal] = useState<boolean>(false);
   const [trigger, setTrigger] = useState<string>("");
   const [upgradePlan, setUpgradePlan] = useState<PlanEnum>(PlanEnum.Business);
-  const [showAdvancedSettings, setShowAdvancedSettings] = useState<boolean>(false);
+  const [showAdvancedSettings, setShowAdvancedSettings] =
+    useState<boolean>(false);
 
   const handleUpgradeStateChange = ({
     state,
@@ -92,15 +92,19 @@ export const OnboardingLinkOptions = ({
       <PasswordSection {...{ data, setData }} />
       {/* Advanced toggle for documents only */}
       {linkType === LinkType.DOCUMENT_LINK && (
-        <div className="mt-2 mb-4">
+        <div className="mb-4 mt-2">
           <button
             type="button"
-            className="flex w-full items-center justify-between text-sm text-muted-foreground hover:text-foreground transition-colors group"
+            className="group flex w-full items-center justify-between text-sm text-muted-foreground transition-colors hover:text-foreground"
             onClick={() => setShowAdvancedSettings((v) => !v)}
             aria-expanded={showAdvancedSettings}
           >
-            <span className="font-semibold text-sm text-gray-900">Advanced settings</span>
-            <span className={`transition-transform ${showAdvancedSettings ? 'rotate-180' : ''}`}>
+            <span className="text-sm font-semibold text-gray-900">
+              Advanced settings
+            </span>
+            <span
+              className={`transition-transform ${showAdvancedSettings ? "rotate-180" : ""}`}
+            >
               <ChevronDown className="h-4 w-4" />
             </span>
           </button>
@@ -262,4 +266,4 @@ export const OnboardingLinkOptions = ({
       />
     </div>
   );
-}; 
+};
