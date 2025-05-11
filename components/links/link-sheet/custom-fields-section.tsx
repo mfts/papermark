@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { LinkPreset } from "@prisma/client";
+import { LinkPreset, Prisma } from "@prisma/client";
 import { SettingsIcon } from "lucide-react";
 import { motion } from "motion/react";
 
@@ -19,26 +19,16 @@ export default function CustomFieldsSection({
   setData,
   isAllowed,
   handleUpgradeStateChange,
-  // presets,
+  presets,
 }: {
   data: DEFAULT_LINK_TYPE;
   setData: React.Dispatch<React.SetStateAction<DEFAULT_LINK_TYPE>>;
   isAllowed: boolean;
   handleUpgradeStateChange: (options: LinkUpgradeOptions) => void;
-  // presets: LinkPreset | null;
+  presets: LinkPreset | null;
 }) {
   const [enabled, setEnabled] = useState<boolean>(false);
   const [isConfigOpen, setIsConfigOpen] = useState<boolean>(false);
-
-  // useEffect(() => {
-  //   if (isAllowed && presets?.watermarkConfig) {
-  //     setEnabled(true);
-  //     setData((prevData) => ({
-  //       ...prevData,
-  //       customFields: presets.customFields ? JSON.parse(presets.customFields as string) as CustomFieldData[] : [],
-  //     }));
-  //   }
-  // }, [presets, isAllowed]);
 
   useEffect(() => {
     const hasCustomFields = data.customFields.length > 0;
@@ -46,6 +36,19 @@ export default function CustomFieldsSection({
       setEnabled(hasCustomFields);
     }
   }, [data.customFields, enabled]);
+
+  useEffect(() => {
+    if (isAllowed && presets?.enableCustomFields && presets?.customFields) {
+      console.log("presets", presets.customFields);
+      setEnabled(true);
+      setData((prevData) => ({
+        ...prevData,
+        customFields: presets.customFields
+          ? (presets.customFields as CustomFieldData[])
+          : [],
+      }));
+    }
+  }, [presets, isAllowed]);
 
   const handleCustomFieldsToggle = useCallback(() => {
     const updatedEnabled = !enabled;

@@ -362,7 +362,7 @@ export async function POST(request: NextRequest) {
           },
         });
 
-        waitUntil(sendOtpVerificationEmail(email, otpCode, true));
+        waitUntil(sendOtpVerificationEmail(email, otpCode, true, link.teamId!));
         return NextResponse.json(
           {
             type: "email-verification",

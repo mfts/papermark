@@ -85,7 +85,7 @@ export const LinkOptions = ({
       <EmailProtectionSection {...{ data, setData }} />
       <AllowNotificationSection {...{ data, setData }} />
       <AllowDownloadSection {...{ data, setData }} />
-      <ExpirationSection {...{ data, setData }} />
+      <ExpirationSection {...{ data, setData }} presets={currentPreset} />
       {limits?.dataroomUpload &&
       linkType === LinkType.DATAROOM_LINK &&
       targetId ? (
@@ -207,6 +207,7 @@ export const LinkOptions = ({
         {...{ data, setData }}
         isAllowed={isTrial || isBusiness || isDatarooms || isDataroomsPlus}
         handleUpgradeStateChange={handleUpgradeStateChange}
+        presets={currentPreset}
       />
       {linkType === LinkType.DOCUMENT_LINK ? (
         <ProBannerSection

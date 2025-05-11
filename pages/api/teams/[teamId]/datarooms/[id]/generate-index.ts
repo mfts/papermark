@@ -151,6 +151,7 @@ export default async function handle(
           id: doc.id,
           folderId: doc.folderId,
           orderIndex: doc.orderIndex,
+          updatedAt: doc.updatedAt,
           createdAt: doc.createdAt,
           document: {
             id: doc.document.id,

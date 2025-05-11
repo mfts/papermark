@@ -156,6 +156,7 @@ export default function ViewPage() {
                         versionNumber: 1,
                         hasPages: true,
                         isVertical: true,
+                        updatedAt: new Date(),
                       },
                     ],
                   }}

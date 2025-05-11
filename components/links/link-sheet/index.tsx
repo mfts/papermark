@@ -45,6 +45,7 @@ import { ButtonTooltip } from "@/components/ui/tooltip";
 import { CustomFieldData } from "./custom-fields-panel";
 import DomainSection from "./domain-section";
 import { LinkOptions } from "./link-options";
+import TagSection from "./tags/tag-section";
 
 export const DEFAULT_LINK_PROPS = (
   linkType: LinkType,
@@ -81,6 +82,7 @@ export const DEFAULT_LINK_PROPS = (
   audienceType: groupId ? LinkAudienceType.GROUP : LinkAudienceType.GENERAL,
   groupId: groupId,
   customFields: [],
+  tags: [],
   enableConversation: false,
   enableUpload: false,
   isFileRequestOnly: false,
@@ -119,6 +121,7 @@ export type DEFAULT_LINK_TYPE = {
   audienceType: LinkAudienceType;
   groupId: string | null;
   customFields: CustomFieldData[];
+  tags: string[];
   enableConversation: boolean;
   enableUpload: boolean;
   isFileRequestOnly: boolean;
@@ -144,6 +147,7 @@ export default function LinkSheet({
     id: string;
     groupId?: string;
   };
+
   const { domains } = useDomains();
 
   const {
@@ -222,27 +226,31 @@ export default function LinkSheet({
     const preset = presets?.find((p) => p.id === presetId);
     if (!preset) return;
 
-    setData((prev) => ({
-      ...prev,
-      name: prev.name, // Keep existing name
-      domain: prev.domain, // Keep existing domain
-      slug: prev.slug, // Keep existing slug
-
-      // Apply preset values
-      emailProtected: preset.emailProtected ?? prev.emailProtected,
-      emailAuthenticated: preset.emailAuthenticated ?? prev.emailAuthenticated,
-      allowList: preset.allowList || prev.allowList,
-      denyList: preset.denyList || prev.denyList,
-      password: preset.password || prev.password,
-      enableCustomMetatag:
-        preset.enableCustomMetaTag ?? prev.enableCustomMetatag,
-      metaTitle: preset.metaTitle || prev.metaTitle,
-      metaDescription: preset.metaDescription || prev.metaDescription,
-      metaImage: preset.metaImage || prev.metaImage,
-      metaFavicon: preset.metaFavicon || prev.metaFavicon,
-      allowDownload: preset.allowDownload || prev.allowDownload,
-      expiresAt: preset.expiresAt || prev.expiresAt,
-    }));
+    setData((prev) => {
+      return {
+        ...prev,
+        name: prev.name, // Keep existing name
+        domain: prev.domain, // Keep existing domain
+        slug: prev.slug, // Keep existing slug
+        emailProtected: preset.emailProtected ?? prev.emailProtected,
+        emailAuthenticated:
+          preset.emailAuthenticated ?? prev.emailAuthenticated,
+        allowList: preset.allowList || prev.allowList,
+        denyList: preset.denyList || prev.denyList,
+        password: preset.password || prev.password,
+        enableCustomMetatag:
+          preset.enableCustomMetaTag ?? prev.enableCustomMetatag,
+        metaTitle: preset.metaTitle || prev.metaTitle,
+        metaDescription: preset.metaDescription || prev.metaDescription,
+        metaImage: preset.metaImage || prev.metaImage,
+        metaFavicon: preset.metaFavicon || prev.metaFavicon,
+        allowDownload: preset.allowDownload || prev.allowDownload,
+        enableAgreement: preset.enableAgreement || prev.enableAgreement,
+        agreementId: preset.agreementId || prev.agreementId,
+        enableScreenshotProtection:
+          preset.enableScreenshotProtection || prev.enableScreenshotProtection,
+      };
+    });
 
     setCurrentPreset(preset);
   };
@@ -503,6 +511,12 @@ export default function LinkSheet({
                             editLink={!!currentLink}
                           />
                         </div>
+                        <div className="space-y-2">
+                          <TagSection
+                            {...{ data, setData }}
+                            teamId={teamInfo?.currentTeam?.id as string}
+                          />
+                        </div>
 
                         {/* Preset Selector - only show when creating a new link */}
                         {!currentLink &&
@@ -512,14 +526,11 @@ export default function LinkSheet({
                             <div className="space-y-2">
                               <div className="flex items-center justify-between">
                                 <Label htmlFor="preset">Link Preset</Label>
-                                <Link href="/settings/presets">
-                                  <Button
-                                    variant="link"
-                                    size="sm"
-                                    className="text-xs"
-                                  >
-                                    Manage Presets
-                                  </Button>
+                                <Link
+                                  href="/settings/presets"
+                                  className="text-xs text-muted-foreground hover:text-foreground hover:underline"
+                                >
+                                  Manage
                                 </Link>
                               </div>
                               <Select onValueChange={applyPreset}>
@@ -656,6 +667,12 @@ export default function LinkSheet({
                             editLink={!!currentLink}
                           />
                         </div>
+                        <div className="space-y-2">
+                          <TagSection
+                            {...{ data, setData }}
+                            teamId={teamInfo?.currentTeam?.id as string}
+                          />
+                        </div>
 
                         {/* Preset Selector for Group links - only show when creating a new link */}
                         {!currentLink &&
@@ -665,16 +682,12 @@ export default function LinkSheet({
                             <div className="space-y-2">
                               <div className="flex items-center justify-between">
                                 <Label htmlFor="preset">Link Preset</Label>
-                                <Button
-                                  variant="link"
-                                  size="sm"
-                                  className="text-xs"
-                                  onClick={() =>
-                                    router.push("/settings/presets")
-                                  }
+                                <Link
+                                  href="/settings/presets"
+                                  className="text-xs text-muted-foreground hover:text-foreground hover:underline"
                                 >
-                                  Manage Presets
-                                </Button>
+                                  Manage
+                                </Link>
                               </div>
                               <Select onValueChange={applyPreset}>
                                 <SelectTrigger className="w-full">

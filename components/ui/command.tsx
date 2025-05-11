@@ -2,11 +2,11 @@ import * as React from "react";
 
 import { type DialogProps } from "@radix-ui/react-dialog";
 import { Command as CommandPrimitive } from "cmdk";
-import { Search } from "lucide-react";
-
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { LucideIcon, Search } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 const Command = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive>,
@@ -39,10 +39,16 @@ const CommandDialog = ({ children, ...props }: CommandDialogProps) => {
 
 const CommandInput = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive.Input>,
-  React.ComponentPropsWithoutRef<typeof CommandPrimitive.Input>
->(({ className, ...props }, ref) => (
-  <div className="flex items-center border-b px-3" cmdk-input-wrapper="">
-    <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+  React.ComponentPropsWithoutRef<typeof CommandPrimitive.Input> & {
+    wrapperClassName?: string;
+    noIcon?: boolean;
+  }
+>(({ className, wrapperClassName, noIcon, ...props }, ref) => (
+  <div
+    className={cn("flex items-center border-b px-3", wrapperClassName)}
+    cmdk-input-wrapper=""
+  >
+    {!noIcon && <Search className="h-4 w-4 shrink-0 opacity-50" />}
     <CommandPrimitive.Input
       ref={ref}
       className={cn(
@@ -118,7 +124,7 @@ const CommandItem = React.forwardRef<
     ref={ref}
     className={cn(
       // NOTE: removed these classNames because it broke the UI "data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
-      "relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none aria-selected:bg-accent aria-selected:text-accent-foreground ",
+      "relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none aria-selected:bg-accent aria-selected:text-accent-foreground",
       className,
     )}
     {...props}

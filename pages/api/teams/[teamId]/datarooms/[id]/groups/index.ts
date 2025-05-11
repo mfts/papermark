@@ -7,13 +7,14 @@ import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 import { log } from "@/lib/utils";
+import { ItemType } from "@prisma/client";
 
 export default async function handle(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
   if (req.method === "GET") {
-    // GET /api/teams/:teamId/datarooms/:id/groups
+    // GET /api/teams/:teamId/datarooms/:id/groups?documentId=:documentId
     const session = await getServerSession(req, res, authOptions);
     if (!session) {
       return res.status(401).end("Unauthorized");
@@ -23,6 +24,7 @@ export default async function handle(
       teamId: string;
       id: string;
     };
+    const documentId = req.query?.documentId as string;
     const userId = (session.user as CustomUser).id;
 
     try {
@@ -58,6 +60,21 @@ export default async function handle(
               createdAt: "desc",
             },
             include: {
+              ...(documentId ? {
+                accessControls: {
+                  where: {
+                    itemId: documentId,
+                    itemType: ItemType.DATAROOM_DOCUMENT,
+                  },
+                  select: {
+                    id: true,
+                    canView: true,
+                    canDownload: true,
+                    itemId: true,
+                  },
+                },
+              }
+                : {}),
               _count: {
                 select: {
                   members: true,

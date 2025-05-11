@@ -1,5 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
+import { LinkPreset } from "@prisma/client";
+import { put } from "@vercel/blob";
 import { waitUntil } from "@vercel/functions";
 import { z } from "zod";
 
@@ -9,7 +11,12 @@ import { putFileServer } from "@/lib/files/put-file-server";
 import { extractTeamId, isValidWebhookId } from "@/lib/incoming-webhooks";
 import prisma from "@/lib/prisma";
 import { ratelimit } from "@/lib/redis";
-import { generateEncrpytedPassword } from "@/lib/utils";
+import {
+  convertDataUrlToBuffer,
+  generateEncrpytedPassword,
+  isDataUrl,
+  uploadImage,
+} from "@/lib/utils";
 import { getSupportedContentType } from "@/lib/utils/get-content-type";
 import { sendLinkCreatedWebhook } from "@/lib/webhook/triggers/link-created";
 
@@ -35,6 +42,8 @@ const LinkSchema = z.object({
   audienceType: z.enum(["GENERAL", "GROUP", "TEAM"]).optional(),
   groupId: z.string().optional(),
   allowList: z.array(z.string()).optional(),
+  denyList: z.array(z.string()).optional(),
+  presetId: z.string().optional(),
 });
 
 // Define validation schemas for different resource types
@@ -48,6 +57,7 @@ const DocumentCreateSchema = BaseSchema.extend({
   name: z.string(),
   contentType: z.string(),
   dataroomId: z.string().optional(),
+  folderId: z.string().nullable().optional(),
   createLink: z.boolean().optional().default(false),
   link: LinkSchema.optional(),
 });
@@ -215,7 +225,8 @@ async function handleDocumentCreate(
   token: string,
   res: NextApiResponse,
 ) {
-  const { fileUrl, name, contentType, dataroomId, createLink, link } = data;
+  const { fileUrl, name, contentType, dataroomId, createLink, link, folderId } =
+    data;
 
   // Check if the content type is supported
   const supportedContentType = getSupportedContentType(contentType);
@@ -321,16 +332,87 @@ async function handleDocumentCreate(
   const document = await documentCreationResponse.json();
   let newLink: any;
 
+  // If the document is added to a folder, update the folderId
+  if (folderId) {
+    const folder = await prisma.folder.findUnique({
+      where: { id: folderId, teamId: teamId },
+      select: {
+        id: true,
+      },
+    });
+
+    if (!folder) {
+      return res.status(400).json({ error: "Invalid folder ID" });
+    }
+
+    await prisma.document.update({
+      where: { id: document.id, teamId: teamId },
+      data: {
+        folderId: folder.id,
+      },
+    });
+  }
+
   // If we need to customize the link, update it after creation
   if (createLink && document.links && document.links.length > 0 && link) {
     const linkId = document.links[0].id;
 
+    // If preset is provided, validate it
+    let preset: LinkPreset | null = null;
+    let metaImage: string | null = null;
+    let metaFavicon: string | null = null;
+    if (link?.presetId) {
+      preset = await prisma.linkPreset.findUnique({
+        where: { pId: link.presetId, teamId: teamId },
+      });
+
+      if (!preset) {
+        return res.status(400).json({
+          error: "Link preset not found or not associated with this team",
+        });
+      }
+
+      // Handle image files for custom meta tag (if enabled)
+      if (preset.enableCustomMetaTag) {
+        // Process meta image if present
+        if (preset.metaImage && isDataUrl(preset.metaImage)) {
+          const { buffer, mimeType, filename } = convertDataUrlToBuffer(
+            preset.metaImage,
+          );
+          const blob = await put(filename, buffer, {
+            access: "public",
+            addRandomSuffix: true,
+          });
+          metaImage = blob.url;
+        }
+
+        // Process favicon if present
+        if (preset.metaFavicon && isDataUrl(preset.metaFavicon)) {
+          const { buffer, mimeType, filename } = convertDataUrlToBuffer(
+            preset.metaFavicon,
+          );
+          const blob = await put(filename, buffer, {
+            access: "public",
+            addRandomSuffix: true,
+          });
+          metaFavicon = blob.url;
+        }
+      }
+    }
+
     // Process fields for link update
     const hashedPassword = link.password
       ? await generateEncrpytedPassword(link.password)
-      : null;
+      : preset?.password
+        ? preset.password
+        : null;
 
-    const expiresAtDate = link.expiresAt ? new Date(link.expiresAt) : null;
+    const expiresAtDate = link.expiresAt
+      ? new Date(link.expiresAt)
+      : preset?.expiresAt
+        ? new Date(preset.expiresAt)
+        : null;
+
     const isGroupAudience = link.audienceType === "GROUP";
 
     let domainId = null;
@@ -355,15 +437,24 @@ async function handleDocumentCreate(
         domainId: domainId,
         domainSlug: link.domain || null,
         slug: link.slug || null,
-        emailProtected: link.emailProtected,
-        emailAuthenticated: link.emailAuthenticated,
-        allowDownload: link.allowDownload,
+        emailProtected: link.emailProtected || preset?.emailProtected || false,
+        emailAuthenticated:
+          link.emailAuthenticated || preset?.emailAuthenticated || false,
+        allowDownload: link.allowDownload || preset?.allowDownload,
         enableNotification: link.enableNotification,
         enableFeedback: link.enableFeedback,
         enableScreenshotProtection: link.enableScreenshotProtection,
         audienceType: link.audienceType,
         groupId: isGroupAudience ? link.groupId : null,
-        allowList: link.allowList,
+        allowList: link.allowList || preset?.allowList,
+        denyList: link.denyList || preset?.denyList,
+        ...(preset?.enableCustomMetaTag && {
+          enableCustomMetatag: preset?.enableCustomMetaTag,
+          metaTitle: preset?.metaTitle,
+          metaDescription: preset?.metaDescription,
+          metaImage: metaImage,
+          metaFavicon: metaFavicon,
+        }),
       },
     });
 
@@ -480,14 +571,63 @@ async function handleLinkCreate(
     }
   }
 
+  // If preset is provided, validate it
+  let preset: LinkPreset | null = null;
+  let metaImage: string | null = null;
+  let metaFavicon: string | null = null;
+  if (link.presetId) {
+    preset = await prisma.linkPreset.findUnique({
+      where: { pId: link.presetId, teamId: teamId },
+    });
+
+    if (!preset) {
+      return res.status(400).json({
+        error: "Link preset not found or not associated with this team",
+      });
+    }
+
+    // 4. Handle image files for custom meta tag (if enabled)
+    if (preset.enableCustomMetaTag) {
+      // Process meta image if present
+      if (preset.metaImage && isDataUrl(preset.metaImage)) {
+        const { buffer, mimeType, filename } = convertDataUrlToBuffer(
+          preset.metaImage,
+        );
+        const blob = await put(filename, buffer, {
+          access: "public",
+          addRandomSuffix: true,
+        });
+        metaImage = blob.url;
+      }
+
+      // Process favicon if present
+      if (preset.metaFavicon && isDataUrl(preset.metaFavicon)) {
+        const { buffer, mimeType, filename } = convertDataUrlToBuffer(
+          preset.metaFavicon,
+        );
+        const blob = await put(filename, buffer, {
+          access: "public",
+          addRandomSuffix: true,
+        });
+        metaFavicon = blob.url;
+      }
+    }
+  }
+
   // Create the link
   try {
     // Hash password if provided
     const hashedPassword = link.password
       ? await generateEncrpytedPassword(link.password)
-      : null;
+      : preset?.password
+        ? preset.password
+        : null;
 
-    const expiresAtDate = link.expiresAt ? new Date(link.expiresAt) : null;
+    const expiresAtDate = link.expiresAt
+      ? new Date(link.expiresAt)
+      : preset?.expiresAt
+        ? new Date(preset.expiresAt)
+        : null;
 
     const isGroupAudience = link.audienceType === "GROUP";
 
@@ -503,15 +643,24 @@ async function handleLinkCreate(
         domainSlug: link.domain || null,
         slug: link.slug || null,
         expiresAt: expiresAtDate,
-        emailProtected: link.emailProtected,
-        emailAuthenticated: link.emailAuthenticated,
-        allowDownload: link.allowDownload,
+        emailProtected: link.emailProtected || preset?.emailProtected || false,
+        emailAuthenticated:
+          link.emailAuthenticated || preset?.emailAuthenticated || false,
+        allowDownload: link.allowDownload || preset?.allowDownload,
         enableNotification: link.enableNotification,
         enableFeedback: link.enableFeedback,
         enableScreenshotProtection: link.enableScreenshotProtection,
         audienceType: link.audienceType,
         groupId: isGroupAudience ? link.groupId : null,
-        allowList: link.allowList,
+        allowList: link.allowList || preset?.allowList,
+        denyList: link.denyList || preset?.denyList,
+        ...(preset?.enableCustomMetaTag && {
+          enableCustomMetatag: preset?.enableCustomMetaTag,
+          metaTitle: preset?.metaTitle,
+          metaDescription: preset?.metaDescription,
+          metaImage: metaImage,
+          metaFavicon: metaFavicon,
+        }),
       },
     });
 
@@ -589,6 +738,49 @@ async function handleDataroomCreate(
     }
   }
 
+  // If preset is provided, validate it
+  let preset: LinkPreset | null = null;
+  let metaImage: string | null = null;
+  let metaFavicon: string | null = null;
+  if (createLink && link?.presetId) {
+    preset = await prisma.linkPreset.findUnique({
+      where: { pId: link.presetId, teamId: teamId },
+    });
+
+    if (!preset) {
+      return res.status(400).json({
+        error: "Link preset not found or not associated with this team",
+      });
+    }
+
+    // Handle image files for custom meta tag (if enabled)
+    if (preset.enableCustomMetaTag) {
+      // Process meta image if present
+      if (preset.metaImage && isDataUrl(preset.metaImage)) {
+        const { buffer, mimeType, filename } = convertDataUrlToBuffer(
+          preset.metaImage,
+        );
+        const blob = await put(filename, buffer, {
+          access: "public",
+          addRandomSuffix: true,
+        });
+        metaImage = blob.url;
+      }
+
+      // Process favicon if present
+      if (preset.metaFavicon && isDataUrl(preset.metaFavicon)) {
+        const { buffer, mimeType, filename } = convertDataUrlToBuffer(
+          preset.metaFavicon,
+        );
+        const blob = await put(filename, buffer, {
+          access: "public",
+          addRandomSuffix: true,
+        });
+        metaFavicon = blob.url;
+      }
+    }
+  }
+
   // Create the dataroom
   try {
     // Create dataroom with link if requested
@@ -602,8 +794,14 @@ async function handleDataroomCreate(
       const isGroupAudience = link.audienceType === "GROUP";
       const hashedPassword = link.password
         ? await generateEncrpytedPassword(link.password)
-        : null;
-      const expiresAtDate = link.expiresAt ? new Date(link.expiresAt) : null;
+        : preset?.password
+          ? preset?.password
+          : null;
+      const expiresAtDate = link.expiresAt
+        ? new Date(link.expiresAt)
+        : preset?.expiresAt
+          ? new Date(preset?.expiresAt)
+          : null;
 
       createData.links = {
         create: {
@@ -615,15 +813,25 @@ async function handleDataroomCreate(
           slug: link.slug || null,
           password: hashedPassword,
           expiresAt: expiresAtDate,
-          emailProtected: link.emailProtected,
-          emailAuthenticated: link.emailAuthenticated,
-          allowDownload: link.allowDownload,
+          emailProtected:
+            link.emailProtected || preset?.emailProtected || false,
+          emailAuthenticated:
+            link.emailAuthenticated || preset?.emailAuthenticated || false,
+          allowDownload: link.allowDownload || preset?.allowDownload,
           enableNotification: link.enableNotification,
           enableFeedback: link.enableFeedback,
           enableScreenshotProtection: link.enableScreenshotProtection,
           audienceType: link.audienceType,
           groupId: isGroupAudience ? link.groupId : null,
-          allowList: link.allowList,
+          allowList: link.allowList || preset?.allowList,
+          denyList: link.denyList || preset?.denyList,
+          ...(preset?.enableCustomMetaTag && {
+            enableCustomMetatag: preset?.enableCustomMetaTag,
+            metaTitle: preset?.metaTitle,
+            metaDescription: preset?.metaDescription,
+            metaImage: metaImage,
+            metaFavicon: metaFavicon,
+          }),
         },
       };
     }
