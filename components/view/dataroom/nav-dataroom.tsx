@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { formatDate } from "@/lib/utils";
 
 import {
+  ButtonTooltip,
   Tooltip,
   TooltipContent,
   TooltipTrigger,
@@ -187,17 +188,17 @@ export default function DataroomNav({
                 </Tooltip>
               </TooltipProvider>
             )}
-
             {allowDownload ? (
-              <Button
-                onClick={downloadDataroom}
-                className="m-1 bg-gray-900 text-white hover:bg-gray-900/80"
-                size="icon"
-                title="Download Dataroom"
-                loading={loading}
-              >
-                <Download className="h-5 w-5" />
-              </Button>
+              <ButtonTooltip content="Download Dataroom">
+                <Button
+                  onClick={downloadDataroom}
+                  className="m-1 bg-gray-900 text-white hover:bg-gray-900/80"
+                  size="icon"
+                  loading={loading}
+                >
+                  <Download className="h-5 w-5" />
+                </Button>
+              </ButtonTooltip>
             ) : null}
           </div>
         </div>
