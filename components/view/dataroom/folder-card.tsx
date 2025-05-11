@@ -58,7 +58,7 @@ export default function FolderCard({
         }),
       }),
       {
-        loading: "Downloading dataroom document...",
+        loading: "Downloading dataroom folder...",
         success: async (response) => {
           if (!response.ok) {
             throw new Error("Failed to fetch download URL");
@@ -76,10 +76,10 @@ export default function FolderCard({
             document.body.removeChild(link);
           }, 100);
 
-          return `Folder ${folder.name} downloaded successfully.`;
+          return `${folder.name} downloaded successfully.`;
         },
         error: (error) => {
-          console.error("Error downloading file:", error);
+          console.error("Error downloading folder:", error);
           return error.message || "An error occurred while downloading file.";
         },
       },
