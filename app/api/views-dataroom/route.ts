@@ -159,8 +159,14 @@ export async function POST(request: NextRequest) {
         );
       }
 
+      const sessionUserId = (session.user as CustomUser).id;
       const teamMembership = await prisma.userTeam.findUnique({
-        where: { userId_teamId: { userId: userId, teamId: link.teamId! } },
+        where: {
+          userId_teamId: {
+            userId: sessionUserId,
+            teamId: link.teamId!,
+          },
+        },
       });
       if (teamMembership) {
         isTeamMember = true;
