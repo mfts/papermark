@@ -181,6 +181,7 @@ export default function DashboardPage() {
                 count: overview?.counts.views,
               },
             ]}
+            className="z-10"
           />
 
           <div className="grid grid-cols-1">
