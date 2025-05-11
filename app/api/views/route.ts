@@ -9,6 +9,7 @@ import { hashToken } from "@/lib/api/auth/token";
 import { verifyPreviewSession } from "@/lib/auth/preview-auth";
 import { PreviewSession } from "@/lib/auth/preview-auth";
 import { sendOtpVerificationEmail } from "@/lib/emails/send-email-otp-verification";
+import { getFeatureFlags } from "@/lib/featureFlags";
 import { getFile } from "@/lib/files/get-file";
 import { newId } from "@/lib/id-helper";
 import prisma from "@/lib/prisma";
@@ -487,6 +488,12 @@ export async function POST(request: NextRequest) {
       let sheetData;
       // let documentPagesPromise, documentVersionPromise;
       if (hasPages) {
+        const featureFlags = await getFeatureFlags({
+          teamId: link.teamId!,
+        });
+        const inDocumentLinks =
+          !link.team?.plan.includes("free") || featureFlags.inDocumentLinks;
+
         // get pages from document version
         console.time("get-pages");
         documentPages = await prisma.documentPage.findMany({
@@ -496,8 +503,8 @@ export async function POST(request: NextRequest) {
             file: true,
             storageType: true,
             pageNumber: true,
-            embeddedLinks: !link.team?.plan.includes("free"),
-            pageLinks: !link.team?.plan.includes("free"),
+            embeddedLinks: inDocumentLinks,
+            pageLinks: inDocumentLinks,
             metadata: true,
           },
         });
