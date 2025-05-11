@@ -175,7 +175,9 @@ export default function DocumentsTable({
 
   const interval = router.query.interval || "24h";
   const { data: documents, isLoading } = useSWR<Document[]>(
-    `/api/analytics?type=documents&interval=${interval}&teamId=${teamInfo?.currentTeam?.id}${interval === "custom" ? `&startDate=${format(startDate, "MM-dd-yyyy")}&endDate=${format(endDate, "MM-dd-yyyy")}` : ""}`,
+    teamInfo?.currentTeam?.id
+      ? `/api/analytics?type=documents&interval=${interval}&teamId=${teamInfo.currentTeam.id}${interval === "custom" ? `&startDate=${format(startDate, "MM-dd-yyyy")}&endDate=${format(endDate, "MM-dd-yyyy")}` : ""}`
+      : null,
     fetcher,
     {
       keepPreviousData: true,
@@ -249,7 +251,7 @@ export default function DocumentsTable({
       <div className="flex justify-end">
         <UpgradeOrExportButton />
       </div>
-      <div className="rounded-xl border">
+      <div className="rounded-xl border overflow-x-auto">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
