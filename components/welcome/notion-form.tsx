@@ -345,9 +345,7 @@ export default function NotionForm() {
                     </Button>
                     </div>
                     <div className="text-center text-xs text-muted-foreground">
-              <span>You can change coinfigurations later</span>
-        
-         
+              <span>You can change configurations later</span>
                   </div>
                 </div>
               </main>
