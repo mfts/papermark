@@ -23,6 +23,9 @@ model Dataroom {
   // tags
   tags TagItem[]
 
+  // notification settings
+  notifyOnNewDocument Boolean @default(true)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

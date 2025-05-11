@@ -64,7 +64,6 @@ export default async function handle(
       teamId: string;
       id: string;
     };
-    const { name } = req.body as { name: string };
 
     const userId = (session.user as CustomUser).id;
 
@@ -85,12 +84,21 @@ export default async function handle(
         return res.status(401).end("Unauthorized");
       }
 
+      const { name, notifyOnNewDocument } = req.body as {
+        name?: string;
+        notifyOnNewDocument?: boolean;
+      };
+
       const dataroom = await prisma.dataroom.update({
         where: {
           id: dataroomId,
-          teamId,
         },
-        data: { name: name },
+        data: {
+          ...(name && { name }),
+          ...(typeof notifyOnNewDocument === "boolean" && {
+            notifyOnNewDocument,
+          }),
+        },
       });
 
       return res.status(200).json(dataroom);
@@ -152,7 +160,7 @@ export default async function handle(
       errorhandler(error, res);
     }
   } else {
-    // We only allow GET requests
+    // We only allow GET, and PATCH requests
     res.setHeader("Allow", ["GET", "PATCH"]);
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
