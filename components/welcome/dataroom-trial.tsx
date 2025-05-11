@@ -9,6 +9,9 @@ import { motion } from "motion/react";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
+import { useAnalytics } from "@/lib/analytics";
+import { STAGGER_CHILD_VARIANTS } from "@/lib/constants";
+
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { PhoneInput } from "@/components/ui/phone-input";
@@ -20,9 +23,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-import { useAnalytics } from "@/lib/analytics";
-import { STAGGER_CHILD_VARIANTS } from "@/lib/constants";
-
 import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
 import { Input } from "../ui/input";
 
@@ -31,18 +31,20 @@ export default function DataroomTrial() {
   const analytics = useAnalytics();
   const router = useRouter();
 
-  const [industry, setIndustry] = useState<string>("");
+  const [useCase, setUseCase] = useState<string>("");
+  const [customUseCase, setCustomUseCase] = useState<string>("");
   const [companySize, setCompanySize] = useState<string>("");
   const [name, setName] = useState<string>("");
   const [companyName, setCompanyName] = useState<string>("");
-  const [phoneNumber, setPhoneNumber] = useState<E164Number | null>(null);
+  const [tools, setTools] = useState<string>("");
+
   const [loading, setLoading] = useState<boolean>(false);
 
   const handleSubmit = async (event: any) => {
     event.preventDefault();
     event.stopPropagation();
 
-    if (!name || !companyName || !industry || !companySize || !phoneNumber) {
+    if (!name || !companyName || !useCase || !companySize || !tools) {
       toast.error("Please fill out all fields.");
       return;
     }
@@ -61,9 +63,9 @@ export default function DataroomTrial() {
             name: "Dataroom #1",
             fullName: name,
             companyName,
-            industry,
+            useCase: useCase === "other" ? customUseCase.trim() : useCase,
             companySize,
-            phoneNumber,
+            tools,
           }),
         },
       );
@@ -83,7 +85,7 @@ export default function DataroomTrial() {
 
       analytics.capture("Dataroom Trial Created", {
         dataroomName: "Dataroom #1",
-        industry,
+        useCase: useCase === "other" ? customUseCase.trim() : useCase,
         companySize,
         dataroomId,
       });
@@ -127,7 +129,7 @@ export default function DataroomTrial() {
           Papermark
         </p>
         <h1 className="font-display max-w-lg text-3xl font-semibold transition-colors sm:text-4xl">
-          Try data rooms for 7 days!
+          Start a 7-day free trial!
         </h1>
       </motion.div>
       <motion.div
@@ -137,7 +139,7 @@ export default function DataroomTrial() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1">
             <Label htmlFor="name" className="opacity-80">
-              Your Full Name
+              Your Full Name*
             </Label>
             <Input
               id="name"
@@ -151,7 +153,7 @@ export default function DataroomTrial() {
           </div>
           <div className="space-y-1">
             <Label htmlFor="company-name" className="opacity-80">
-              Company Name
+              Company Name*
             </Label>
             <Input
               id="company-name"
@@ -163,7 +165,7 @@ export default function DataroomTrial() {
               onChange={(e) => setCompanyName(e.target.value)}
             />
           </div>
-          <div className="space-y-1">
+          {/* <div className="space-y-1">
             <Label className="opacity-80">Industry</Label>
             <Select onValueChange={(value) => setIndustry(value)}>
               <SelectTrigger>
@@ -192,9 +194,9 @@ export default function DataroomTrial() {
                 <SelectItem value="other">Other</SelectItem>
               </SelectContent>
             </Select>
-          </div>
+          </div> */}
           <div className="space-y-1">
-            <Label className="opacity-80">Company Size</Label>
+            <Label className="opacity-80">Company Size*</Label>
             <Select onValueChange={(value) => setCompanySize(value)}>
               <SelectTrigger>
                 <SelectValue placeholder="Select a company size" />
@@ -215,24 +217,82 @@ export default function DataroomTrial() {
             </Select>
           </div>
           <div className="space-y-1">
+            <Label className="opacity-80">Use Case*</Label>
+            <Select
+              onValueChange={(value) => {
+                setUseCase(value);
+                if (value !== "other") {
+                  setCustomUseCase("");
+                }
+              }}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select your use case" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="mergers-and-acquisitions">
+                  Mergers and Acquisitions
+                </SelectItem>
+                <SelectItem value="startup-fundraising">
+                  Startup Fundraising
+                </SelectItem>
+                <SelectItem value="fund-management">
+                  Fund management & Fundraising
+                </SelectItem>
+                <SelectItem value="sales">Sales</SelectItem>
+                <SelectItem value="project-management">
+                  Project management
+                </SelectItem>
+                <SelectItem value="operations">Operations</SelectItem>
+
+                <SelectItem value="other">Other</SelectItem>
+              </SelectContent>
+            </Select>
+            {useCase === "other" && (
+              <input
+                type="text"
+                className="mt-2 w-full rounded border border-gray-300 px-3 py-2 text-sm"
+                placeholder="Please specify your use case"
+                value={customUseCase}
+                onChange={(e) => setCustomUseCase(e.target.value)}
+              />
+            )}
+          </div>
+
+          <div className="space-y-1">
+            <Label htmlFor="tools" className="opacity-80">
+              Tools*
+            </Label>
+            <Input
+              id="tools"
+              type="text"
+              autoComplete="off"
+              data-1p-ignore
+              placeholder="Current software you are using for data rooms"
+              className="mb-4 mt-1 w-full"
+              onChange={(e) => setTools(e.target.value)}
+            />
+          </div>
+          {/* <div className="space-y-1">
             <Label className="opacity-80">Phone Number</Label>
             <PhoneInput
               placeholder="+1 123 456 7890"
               onChange={(value) => setPhoneNumber(value)}
               defaultCountry="US"
             />
-          </div>
+          </div> */}
 
           <div className="space-y-4 text-center">
             <Button
               type="submit"
               className="h-9 w-full"
               disabled={
-                !phoneNumber ||
+                !tools ||
                 !companySize ||
-                !industry ||
+                !useCase ||
                 !name ||
-                !companyName
+                !companyName ||
+                (useCase === "other" && !customUseCase.trim())
               }
               loading={loading}
             >

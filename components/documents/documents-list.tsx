@@ -48,6 +48,7 @@ import UploadZone, {
 
 import { itemsMessage } from "../datarooms/folders/utils";
 import { Button } from "../ui/button";
+import { Checkbox } from "../ui/checkbox";
 import { Portal } from "../ui/portal";
 import { ButtonTooltip } from "../ui/tooltip";
 import { useDeleteDocumentsAndFoldersModal } from "./actions/delete-documents-modal";
@@ -330,8 +331,36 @@ export function DocumentsList({
 
   const HeaderContent = memo(() => {
     if (selectedDocumentsLength > 0 || selectedFoldersLength > 0) {
+      const totalItems = (documents?.length || 0) + (folders?.length || 0);
+      const isAllSelected = totalItems === totalSelectedItem;
+
+      const handleSelectAll = () => {
+        if (isAllSelected) {
+          setSelectedDocuments([]);
+          setSelectedFolder([]);
+        } else {
+          const allDocumentIds = documents?.map((doc) => doc.id) || [];
+          const allFolderIds = folders?.map((folder) => folder.id) || [];
+          setSelectedDocuments(allDocumentIds);
+          setSelectedFolder(allFolderIds);
+        }
+      };
+
       return (
         <div className="mb-2 flex items-center gap-x-1 rounded-3xl bg-gray-100 text-sm text-foreground dark:bg-gray-800">
+          <div className="ml-5 flex h-8 w-8 items-center justify-center rounded-full hover:bg-gray-200 hover:dark:bg-gray-700">
+            <ButtonTooltip
+              content={isAllSelected ? "Deselect all" : "Select all"}
+            >
+              <Checkbox
+                id="select-all"
+                checked={isAllSelected}
+                onCheckedChange={handleSelectAll}
+                className="h-5 w-5"
+                aria-label={isAllSelected ? "Deselect all" : "Select all"}
+              />
+            </ButtonTooltip>
+          </div>
           <ButtonTooltip content="Clear selection">
             <Button
               onClick={resetSelection}
