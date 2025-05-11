@@ -1,8 +1,6 @@
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/router";
 
-
-
 import { useMemo, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
@@ -555,6 +553,12 @@ export default function LinksTable({
                                 >
                                   <Settings2Icon className="mr-2 h-4 w-4" />
                                   Edit Link
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => handlePreviewLink(link)}
+                                >
+                                  <EyeIcon className="mr-2 h-4 w-4" />
+                                  Preview Link
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   disabled={!canAddLinks}
