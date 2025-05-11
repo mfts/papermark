@@ -1,6 +1,6 @@
 import { useRouter } from "next/router";
 
-import { type FormEvent, use, useState } from "react";
+import { type FormEvent, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { LinkType } from "@prisma/client";
@@ -8,6 +8,14 @@ import { motion } from "motion/react";
 import { usePlausible } from "next-plausible";
 import { parsePageId } from "notion-utils";
 import { toast } from "sonner";
+
+import { useAnalytics } from "@/lib/analytics";
+import { STAGGER_CHILD_VARIANTS } from "@/lib/constants";
+import {
+  convertDataUrlToFile,
+  copyToClipboard,
+  uploadImage,
+} from "@/lib/utils";
 
 import {
   DEFAULT_LINK_PROPS,
@@ -22,14 +30,6 @@ import {
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-
-import { useAnalytics } from "@/lib/analytics";
-import { STAGGER_CHILD_VARIANTS } from "@/lib/constants";
-import {
-  convertDataUrlToFile,
-  copyToClipboard,
-  uploadImage,
-} from "@/lib/utils";
 
 import Skeleton from "../Skeleton";
 
@@ -343,11 +343,9 @@ export default function NotionForm() {
                     <Button loading={isLoading} onClick={handleSubmit}>
                       Share document link
                     </Button>
-                    </div>
-                    <div className="text-center text-xs text-muted-foreground">
-              <span>You can change coinfigurations later</span>
-        
-         
+                  </div>
+                  <div className="text-center text-xs text-muted-foreground">
+                    <span>You can change configurations later</span>
                   </div>
                 </div>
               </main>

@@ -23,6 +23,9 @@ import {
 import { toast } from "sonner";
 import { useDebounce } from "use-debounce";
 
+import { useDataroomFoldersTree } from "@/lib/swr/use-dataroom";
+import { cn } from "@/lib/utils";
+
 import CloudDownloadOff from "@/components/shared/icons/cloud-download-off";
 import { Button } from "@/components/ui/button";
 import {
@@ -34,9 +37,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-
-import { useDataroomFoldersTree } from "@/lib/swr/use-dataroom";
-import { cn } from "@/lib/utils";
 
 // Update the FileOrFolder type to include permissions
 type FileOrFolder = {
@@ -453,11 +453,13 @@ export default function ExpandableTable({
 
         // Ensure all parent folders are viewable if the item is being set to viewable
         // and downloadable if the item is being set to downloadable
-        if (updatedPermissions.view) {
+        if (updatedPermissions.view || updatedPermissions.download) {
           parents.forEach((parent) => {
             changes[parent.id] = {
-              view: true, // Always enable view for parent folders
-              download: parent.permissions.download, // Maintain existing download permission
+              view: true, // Always enable view for parent folders if child is viewable
+              download: updatedPermissions.download
+                ? true
+                : parent.permissions.download, // Always enable download for parent folders if child is downloadable
               itemType: parent.itemType,
             };
           });

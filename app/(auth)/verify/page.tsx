@@ -5,8 +5,8 @@ import NotFound from "@/pages/404";
 
 import { generateChecksum } from "@/lib/utils/generate-checksum";
 
-import { Button } from "@/components/ui/button";
 import { LogoCloud } from "@/components/shared/logo-cloud";
+import { Button } from "@/components/ui/button";
 
 const data = {
   description: "Verify login to Papermark",
@@ -77,12 +77,12 @@ export default function VerifyPage({
           className="absolute inset-x-0 top-10 -z-10 flex transform-gpu justify-center overflow-hidden blur-3xl"
           aria-hidden="true"
         ></div>
-        <div className="z-10 mx-5 mt-[calc(1vh)] sm:mt-[calc(2vh)] md:mt-[calc(3vh)] h-fit w-full max-w-md overflow-hidden rounded-lg sm:mx-0">
-          <div className="flex flex-col items-left space-y-3 px-4 py-6 pt-8 sm:px-12">
+        <div className="z-10 mx-5 mt-[calc(1vh)] h-fit w-full max-w-md overflow-hidden rounded-lg sm:mx-0 sm:mt-[calc(2vh)] md:mt-[calc(3vh)]">
+          <div className="items-left flex flex-col space-y-3 px-4 py-6 pt-8 sm:px-12">
             <img
               src="/_static/papermark-logo.svg"
               alt="Papermark Logo"
-              className="h-7 w-auto mb-36 sm:mb-32 md:mb-48s -mt-8 self-start"
+              className="-mt-8 mb-36 h-7 w-auto self-start sm:mb-32 md:mb-48"
             />
             <Link href="/">
               <span className="text-balance text-3xl font-semibold text-gray-900">
@@ -124,42 +124,51 @@ export default function VerifyPage({
           </p>
         </div>
       </div>
-      <div className="hidden w-full justify-center bg-black md:flex md:w-1/2 lg:w-1/2 relative overflow-hidden">
-        <div className="flex w-full h-full relative min-h-[700px] p-0 m-0">
+      <div className="relative hidden w-full justify-center overflow-hidden bg-black md:flex md:w-1/2 lg:w-1/2">
+        <div className="relative m-0 flex h-full min-h-[700px] w-full p-0">
           <div
-            className="flex w-full h-full flex-col justify-between relative"
+            className="relative flex h-full w-full flex-col justify-between"
             id="features"
           >
             {/* Testimonial top 2/3 */}
-            <div className="flex flex-col items-center justify-center w-full" style={{height: '66.6666%'}}>
+            <div
+              className="flex w-full flex-col items-center justify-center"
+              style={{ height: "66.6666%" }}
+            >
               {/* Image container */}
               <div className="mb-4 h-64 w-80">
                 <img
                   className="h-full w-full rounded-2xl object-cover shadow-2xl"
                   src="/_static/testimonials/backtrace.jpeg"
-                  alt="Alonso"
+                  alt="Backtrace Capital"
                 />
               </div>
               {/* Text content */}
               <div className="max-w-xl text-center">
                 <blockquote className="text-balance font-normal leading-8 text-white sm:text-xl sm:leading-9">
                   <p>
-                    &quot;We raised our €30M Fund with Papermark Data Rooms. Love the customization, security and ease of use.&quot;
+                    &quot;We raised our €30M Fund with Papermark Data Rooms.
+                    Love the customization, security and ease of use.&quot;
                   </p>
                 </blockquote>
                 <figcaption className="mt-4">
                   <div className="text-balance font-normal text-white">
                     Michael Münnix
                   </div>
-                  <div className="text-balance text-gray-400 font-light">
+                  <div className="text-balance font-light text-gray-400">
                     Partner, Backtrace Capital
                   </div>
                 </figcaption>
               </div>
             </div>
             {/* White block with logos bottom 1/3, full width/height */}
-            <div className="absolute left-0 bottom-0 w-full flex flex-col items-center justify-center bg-white" style={{height: '33.3333%'}}>
-              <div className="max-w-xl mb-4 text-center text-balance font-semibold text-gray-900">Trusted by teams at</div>
+            <div
+              className="absolute bottom-0 left-0 flex w-full flex-col items-center justify-center bg-white"
+              style={{ height: "33.3333%" }}
+            >
+              <div className="mb-4 max-w-xl text-balance text-center font-semibold text-gray-900">
+                Trusted by teams at
+              </div>
               <LogoCloud />
             </div>
           </div>

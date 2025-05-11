@@ -7,19 +7,19 @@ import { LinkType } from "@prisma/client";
 import { motion } from "motion/react";
 import { toast } from "sonner";
 
-import { DEFAULT_LINK_TYPE } from "@/components/links/link-sheet";
-import { OnboardingLinkOptions } from "@/components/welcome/containers/onboarding-link-options";
-import { OnboardingDataroomLinkOptions } from "@/components/welcome/containers/onboarding-dataroom-link-options";
-import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-
 import { STAGGER_CHILD_VARIANTS } from "@/lib/constants";
 import {
   convertDataUrlToFile,
   copyToClipboard,
   uploadImage,
 } from "@/lib/utils";
+
+import { DEFAULT_LINK_TYPE } from "@/components/links/link-sheet";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { OnboardingDataroomLinkOptions } from "@/components/welcome/containers/onboarding-dataroom-link-options";
+import { OnboardingLinkOptions } from "@/components/welcome/containers/onboarding-link-options";
 
 export function LinkOptionContainer({
   currentLinkId,
@@ -37,7 +37,6 @@ export function LinkOptionContainer({
   const router = useRouter();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [showLinkSettings, setShowLinkSettings] = useState<boolean>(true);
-  const [showAdvancedSettings, setShowAdvancedSettings] = useState<boolean>(false);
 
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
@@ -120,8 +119,8 @@ export function LinkOptionContainer({
       >
         <h1
           className={
-            `font-display text-3xl font-semibold text-foreground transition-colors sm:text-4xl mx-auto text-center ` +
-            (showLinkSettings ? 'whitespace-nowrap' : 'max-w-md')
+            `font-display mx-auto text-center text-3xl font-semibold text-foreground transition-colors sm:text-4xl ` +
+            (showLinkSettings ? "whitespace-nowrap" : "max-w-md")
           }
         >
           {showLinkSettings

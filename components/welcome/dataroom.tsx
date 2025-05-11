@@ -1,11 +1,9 @@
 import { useRouter } from "next/router";
 
-import { File as DocumentIcon, ServerIcon } from "lucide-react";
 import { motion } from "motion/react";
 
 import { STAGGER_CHILD_VARIANTS } from "@/lib/constants";
 
-import { DataroomTrialModal } from "../datarooms/dataroom-trial-modal";
 import { Button } from "../ui/button";
 
 export default function Dataroom() {
@@ -36,7 +34,7 @@ export default function Dataroom() {
           Papermark
         </p>
         <h1 className="font-display max-w-xl text-3xl font-semibold transition-colors sm:text-4xl">
-        Get started with data rooms!
+          Get started with data rooms!
         </h1>
       </motion.div>
       <motion.div

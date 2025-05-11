@@ -3,9 +3,9 @@ import { useRouter } from "next/router";
 import { FileChartPieIcon, FileIcon, PresentationIcon } from "lucide-react";
 import { motion } from "motion/react";
 
-import NotionIcon from "@/components/shared/icons/files/notion";
-
 import { STAGGER_CHILD_VARIANTS } from "@/lib/constants";
+
+import NotionIcon from "@/components/shared/icons/files/notion";
 
 export default function Next() {
   const router = useRouter();
