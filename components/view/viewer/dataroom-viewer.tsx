@@ -215,6 +215,7 @@ export default function DataroomViewer({
         dataroomId={dataroom?.id}
         viewerId={viewerId}
         conversationsEnabled={viewData.conversationsEnabled}
+        isTeamMember={viewData.isTeamMember}
       />
       <div
         style={{ height: "calc(100vh - 64px)" }}
