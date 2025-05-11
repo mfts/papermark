@@ -25,19 +25,20 @@ import {
 import { motion } from "motion/react";
 import { toast } from "sonner";
 
-import { EmptyDocuments } from "@/components/documents/empty-document";
-import FolderCard from "@/components/documents/folder-card";
-import { UploadNotificationDrawer } from "@/components/upload-notification";
-import UploadZone from "@/components/upload-zone";
-
 import { moveDataroomDocumentToFolder } from "@/lib/documents/move-dataroom-documents";
 import { moveDataroomFolderToFolder } from "@/lib/documents/move-dataroom-folders";
 import {
   DataroomFolderDocument,
   DataroomFolderWithCount,
 } from "@/lib/swr/use-dataroom";
+import useDataroomGroups from "@/lib/swr/use-dataroom-groups";
 import { FolderWithCount } from "@/lib/swr/use-documents";
 import { useMediaQuery } from "@/lib/utils/use-media-query";
+
+import { EmptyDocuments } from "@/components/documents/empty-document";
+import FolderCard from "@/components/documents/folder-card";
+import { UploadNotificationDrawer } from "@/components/upload-notification";
+import UploadZone from "@/components/upload-zone";
 
 import { DraggableItem } from "../documents/drag-and-drop/draggable-item";
 import { DroppableFolder } from "../documents/drag-and-drop/droppable-folder";
@@ -47,7 +48,9 @@ import { ButtonTooltip } from "../ui/tooltip";
 import { useRemoveDataroomItemsModal } from "./actions/remove-document-modal";
 import DataroomDocumentCard from "./dataroom-document-card";
 import { itemsMessage } from "./folders/utils";
+import { SetGroupPermissionsModal } from "./groups/set-group-permissions-modal";
 import { MoveToDataroomFolderModal } from "./move-dataroom-folder-modal";
+import { Checkbox } from "../ui/checkbox";
 
 type FolderOrDocument =
   | (DataroomFolderWithCount & { itemType: "folder" })
@@ -68,8 +71,16 @@ export function DataroomItemsList({
   folderCount: number;
   documentCount: number;
 }) {
+  const { viewerGroups } = useDataroomGroups();
   const { isMobile } = useMediaQuery();
-
+  const [showGroupPermissions, setShowGroupPermissions] = useState(false);
+  const [uploadedFiles, setUploadedFiles] = useState<
+    {
+      documentId: string;
+      dataroomDocumentId: string;
+      fileName: string;
+    }[]
+  >([]);
   const [uploads, setUploads] = useState<
     { fileName: string; progress: number; documentId?: string }[]
   >([]);
@@ -406,8 +417,40 @@ export function DataroomItemsList({
 
   const HeaderContent = memo(() => {
     if (selectedDocumentsLength > 0 || selectedFoldersLength > 0) {
+      const totalItems = folderCount + documentCount;
+      const isAllSelected =
+        totalItems === selectedDocumentsLength + selectedFoldersLength;
+
+      const handleSelectAll = () => {
+        if (isAllSelected) {
+          resetSelection();
+        } else {
+          const allDocumentIds = mixedItems
+            .filter((item) => item.itemType === "document")
+            .map((doc) => doc.id);
+          const allFolderIds = mixedItems
+            .filter((item) => item.itemType === "folder")
+            .map((folder) => folder.id);
+          setSelectedDocuments(allDocumentIds);
+          setSelectedFolders(allFolderIds);
+        }
+      };
+
       return (
         <div className="mb-2 flex items-center gap-x-1 rounded-3xl bg-gray-100 text-sm text-foreground dark:bg-gray-800">
+          <div className="ml-5 flex h-8 w-8 items-center justify-center rounded-full hover:bg-gray-200 hover:dark:bg-gray-700">
+            <ButtonTooltip
+              content={isAllSelected ? "Deselect all" : "Select all"}
+            >
+              <Checkbox
+                id="select-all"
+                checked={isAllSelected}
+                onCheckedChange={handleSelectAll}
+                className="h-5 w-5"
+                aria-label={isAllSelected ? "Deselect all" : "Select all"}
+              />
+            </ButtonTooltip>
+          </div>
           <ButtonTooltip content="Clear selection">
             <Button
               onClick={resetSelection}
@@ -477,6 +520,20 @@ export function DataroomItemsList({
   });
   HeaderContent.displayName = "HeaderContent";
 
+  const handleUploadSuccess = (
+    files: {
+      fileName: string;
+      documentId: string;
+      dataroomDocumentId: string;
+    }[],
+  ) => {
+    if (viewerGroups && viewerGroups.length > 0) {
+      setUploadedFiles(files);
+      setShowGroupPermissions(true);
+    }
+    return;
+  };
+
   return (
     <>
       <UploadZone
@@ -492,6 +549,7 @@ export function DataroomItemsList({
             ),
           );
         }}
+        onUploadSuccess={handleUploadSuccess}
         onUploadRejected={(rejected) => {
           setRejectedFiles(rejected);
           setShowDrawer(true);
@@ -605,6 +663,20 @@ export function DataroomItemsList({
           setRejectedFiles={setRejectedFiles}
         />
       ) : null}
+
+      {showGroupPermissions && dataroomId && (
+        <SetGroupPermissionsModal
+          open={showGroupPermissions}
+          setOpen={setShowGroupPermissions}
+          dataroomId={dataroomId}
+          uploadedFiles={uploadedFiles}
+          onComplete={() => {
+            setShowGroupPermissions(false);
+            setUploadedFiles([]);
+          }}
+          isAutoOpen
+        />
+      )}
     </>
   );
 }

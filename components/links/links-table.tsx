@@ -1,6 +1,8 @@
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/router";
 
+
+
 import { useMemo, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
@@ -16,6 +18,7 @@ import {
   LinkIcon,
   Settings2Icon,
 } from "lucide-react";
+import { useQueryState } from "nuqs";
 import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
 
@@ -73,11 +76,13 @@ export default function LinksTable({
   primaryVersion?: DocumentVersion;
   mutateDocument?: () => void;
 }) {
-  const searchParams = useSearchParams();
-  const selectedTagIds = useMemo(
-    () => searchParams?.get("tagIds")?.split(",")?.filter(Boolean) ?? [],
-    [searchParams],
-  );
+  const [tags, _] = useQueryState<string[]>("tags", {
+    parse: (value: string) => value.split(",").filter(Boolean),
+    serialize: (value: string[]) => value.join(","),
+  });
+
+  const selectedTagNames = useMemo(() => tags ?? [], [tags]);
+
   const now = Date.now();
   const router = useRouter();
   const { isFree } = usePlan();
@@ -117,10 +122,10 @@ export default function LinksTable({
   processedLinks = useMemo(() => {
     if (!links?.length) return [];
     return processedLinks.filter((link) => {
-      if (selectedTagIds.length === 0) return true;
-      return link.tags.some((tag) => selectedTagIds.includes(tag.id));
+      if (selectedTagNames.length === 0) return true;
+      return link.tags.some((tag) => selectedTagNames.includes(tag.name));
     });
-  }, [links, processedLinks, selectedTagIds]);
+  }, [links, processedLinks, selectedTagNames]);
 
   const { canAddLinks } = useLimits();
   const { data: features } = useSWR<{

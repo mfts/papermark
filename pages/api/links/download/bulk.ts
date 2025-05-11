@@ -161,24 +161,6 @@ export default async function handle(
         ]),
       );
 
-      // Helper function to add a file to the structure
-      // const addFileToStructure = (
-      //   path: string,
-      //   fileName: string,
-      //   fileKey: string,
-      // ) => {
-      //   const folderInfo = folderMap.get(path) || { name: "Root", id: null };
-      //   if (!folderStructure[path]) {
-      //     folderStructure[path] = {
-      //       name: folderInfo.name,
-      //       path: path,
-      //       files: [],
-      //     };
-      //   }
-      //   folderStructure[path].files.push({ name: fileName, key: fileKey });
-      //   fileKeys.push(fileKey);
-      // };
-
       const addFileToStructure = (
         path: string,
         fileName: string,
@@ -251,6 +233,10 @@ export default async function handle(
           addFileToStructure(folder.path, "", "");
         }
       });
+
+      if (fileKeys.length === 0) {
+        return res.status(404).json({ error: "No files to download" });
+      }
 
       const client = getLambdaClient();
 

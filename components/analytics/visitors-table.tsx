@@ -299,7 +299,7 @@ export default function VisitorsTable({
       <div className="flex justify-end">
         <UpgradeOrExportButton />
       </div>
-      <div className="rounded-xl border">
+      <div className="rounded-xl border overflow-x-auto">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
