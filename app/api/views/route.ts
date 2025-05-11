@@ -657,7 +657,7 @@ export async function POST(request: NextRequest) {
               : LOCALHOST_IP
             : undefined,
         verificationToken: hashedVerificationToken ?? undefined,
-        isTeamMember: isTeamMember ? true : undefined,
+        ...(isTeamMember && { isTeamMember: true }),
       };
 
       return NextResponse.json(returnObject);

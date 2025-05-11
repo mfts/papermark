@@ -651,7 +651,7 @@ export async function POST(request: NextRequest) {
           viewerId: viewer?.id,
           conversationsEnabled: link.enableConversation,
           enableVisitorUpload: link.enableUpload,
-          isTeamMember: isTeamMember ? true : undefined,
+          ...(isTeamMember && { isTeamMember: true }),
         };
 
         const response = NextResponse.json(returnObject, { status: 200 });
@@ -937,7 +937,7 @@ export async function POST(request: NextRequest) {
         canDownload: canDownload,
         viewerId: viewer?.id,
         conversationsEnabled: link.enableConversation,
-        isTeamMember: isTeamMember ? true : undefined,
+        ...(isTeamMember && { isTeamMember: true }),
       };
 
       const response = NextResponse.json(returnObject, { status: 200 });
