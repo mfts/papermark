@@ -37,7 +37,6 @@ export function LinkOptionContainer({
   const router = useRouter();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [showLinkSettings, setShowLinkSettings] = useState<boolean>(true);
-  const [showAdvancedSettings, setShowAdvancedSettings] = useState<boolean>(false);
 
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
