@@ -1,7 +1,7 @@
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/router";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { PlanEnum } from "@/ee/stripe/constants";
@@ -61,6 +61,7 @@ import LinkSheet, {
 } from "./link-sheet";
 import { TagColumn } from "./link-sheet/tags/tag-details";
 import LinksVisitors from "./links-visitors";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 export default function LinksTable({
   targetType,
@@ -142,6 +143,8 @@ export default function LinksTable({
     id: string;
     name: string;
   } | null>(null);
+  const [popoverOpen, setPopoverOpen] = useState<string | null>(null);
+  const hoverTimeout = useRef<NodeJS.Timeout | null>(null);
 
   const handleCopyToClipboard = (linkString: string) => {
     copyToClipboard(`${linkString}`, "Link copied to clipboard.");
@@ -461,9 +464,9 @@ export default function LinksTable({
                                         : `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${link.id}`,
                                     )
                                   }
-                                  title="Copy to clipboard"
+                                  title="Copy & Share"
                                 >
-                                  Copy to Clipboard
+                                  Copy & Share
                                 </button>
                               )}
                             </div>
@@ -478,18 +481,68 @@ export default function LinksTable({
                                 <EyeIcon className="h-5 w-5 text-gray-400 group-hover:text-gray-500" />
                               </Button>
                             </ButtonTooltip>
-                            <ButtonTooltip content="Edit link">
-                              <Button
-                                variant="link"
-                                size="icon"
-                                className="group h-7 w-8"
-                                onClick={() => handleEditLink(link)}
-                                title="Edit link"
+                            <Popover open={popoverOpen === link.id} onOpenChange={() => {}}>
+                              <PopoverTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  className="flex items-center gap-1 h-7 py-0.5"
+                                  onClick={() => handleEditLink(link)}
+                                  title="Edit link"
+                                  onMouseDown={e => e.preventDefault()}
+                                  onMouseEnter={() => {
+                                    hoverTimeout.current = setTimeout(() => setPopoverOpen(link.id), 250);
+                                  }}
+                                  onMouseLeave={() => {
+                                    if (hoverTimeout.current) clearTimeout(hoverTimeout.current);
+                                    setPopoverOpen(null);
+                                  }}
+                                >
+                                  <Settings2Icon className="h-3 w-3 text-gray-400 hover:text-gray-500" />
+                                  <span className="font-semibold text-xs whitespace-nowrap  text-gray-400 hover:text-gray-500">Edit link</span>
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent
+                                side="bottom"
+                                align="start"
+                                className="w-56 p-0"
+                                onMouseEnter={() => {
+                                  if (hoverTimeout.current) clearTimeout(hoverTimeout.current);
+                                  setPopoverOpen(link.id);
+                                }}
+                                onMouseLeave={() => {
+                                  if (hoverTimeout.current) clearTimeout(hoverTimeout.current);
+                                  setPopoverOpen(null);
+                                }}
                               >
-                                <span className="sr-only">Edit link</span>
-                                <Settings2Icon className="h-5 w-5 text-gray-400 group-hover:text-gray-500" />
-                              </Button>
-                            </ButtonTooltip>
+                                <div className="p-3">
+                                  <div className="font-semibold mb-2 text-sm">Active Link Settings</div>
+                                  <ul className="space-y-1 text-sm">
+                                    {link.emailProtected && (
+                                      <li className="flex items-center gap-2 text-gray-900">
+                                        <span className="inline-block w-2 h-2 rounded-full bg-green-400" />
+                                        Require email to view
+                                      </li>
+                                    )}
+                                    {link.enableNotification && (
+                                      <li className="flex items-center gap-2 text-gray-900">
+                                        <span className="inline-block w-2 h-2 rounded-full bg-green-400" />
+                                        Receive email notification
+                                      </li>
+                                    )}
+                                    {link.enableConversation && (
+                                      <li className="flex items-center gap-2 text-gray-900">
+                                        <span className="inline-block w-2 h-2 rounded-full bg-green-400" />
+                                        Show visitor statistics
+                                      </li>
+                                    )}
+                                    {/* Add more settings as needed */}
+                                    {!(link.emailProtected || link.enableNotification || link.enableConversation) && (
+                                      <li className="text-gray-400">No active settings</li>
+                                    )}
+                                  </ul>
+                                </div>
+                              </PopoverContent>
+                            </Popover>
                           </TableCell>
                           {hasAnyTags ? (
                             <TableCell className="w-[250px] 2xl:w-auto">

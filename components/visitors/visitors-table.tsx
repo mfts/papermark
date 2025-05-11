@@ -149,7 +149,7 @@ export default function VisitorsTable({
                 <TableRow>
                   <TableCell colSpan={5}>
                     <div className="flex h-40 w-full items-center justify-center">
-                      <p>No Data Available</p>
+                      <p>No visits yet. Share link first</p>
                     </div>
                   </TableCell>
                 </TableRow>

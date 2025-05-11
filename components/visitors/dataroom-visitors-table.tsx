@@ -2,6 +2,7 @@ import { useTeam } from "@/context/team-context";
 import {
   BadgeCheckIcon,
   BadgeInfoIcon,
+  Download,
   DownloadCloudIcon,
   FileBadgeIcon,
   MailOpenIcon,
@@ -82,11 +83,14 @@ export default function DataroomVisitorsTable({
     }
   };
 
+
+
   return (
     <div className="w-full">
       <div className="mb-2 flex items-center justify-between md:mb-4">
         <h2>All visitors</h2>
-        <Button size="sm" onClick={() => exportVisitCounts(dataroomId)}>
+        <Button variant="outline" size="sm" onClick={() => exportVisitCounts(dataroomId)}>
+          <Download className="!size-4" />
           Export visits
         </Button>
       </div>
@@ -106,7 +110,7 @@ export default function DataroomVisitorsTable({
               <TableRow>
                 <TableCell colSpan={5}>
                   <div className="flex h-40 w-full items-center justify-center">
-                    <p>No Data Available</p>
+                    <p>No visits yet. Share link first.</p>
                   </div>
                 </TableCell>
               </TableRow>
