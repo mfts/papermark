@@ -98,7 +98,11 @@ export const LinkOptions = ({
         />
       ) : null}
       {linkType === LinkType.DATAROOM_LINK ? (
-        <IndexFileSection {...{ data, setData }} />
+        <IndexFileSection
+          {...{ data, setData }}
+          isAllowed={isDataroomsPlus}
+          handleUpgradeStateChange={handleUpgradeStateChange}
+        />
       ) : null}
       <OGSection
         {...{ data, setData }}

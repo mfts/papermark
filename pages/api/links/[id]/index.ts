@@ -160,7 +160,6 @@ export default async function handle(
       password,
       expiresAt,
       teamId,
-      enableIndexFile,
       ...linkDomainData
     } = req.body;
 
@@ -273,7 +272,7 @@ export default async function handle(
           domainId: domainObj?.id || null,
           domainSlug: domain || null,
           slug: slug || null,
-          enableIndexFile: linkData.enableIndexFile,
+          enableIndexFile: linkData.enableIndexFile || false,
           enableNotification: linkData.enableNotification,
           enableFeedback: linkData.enableFeedback,
           enableScreenshotProtection: linkData.enableScreenshotProtection,

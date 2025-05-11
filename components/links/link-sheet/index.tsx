@@ -251,6 +251,7 @@ export default function LinkSheet({
         agreementId: preset.agreementId || prev.agreementId,
         enableScreenshotProtection:
           preset.enableScreenshotProtection || prev.enableScreenshotProtection,
+        enableIndexFile: preset.enableIndexFile || prev.enableIndexFile,
       };
     });
 
