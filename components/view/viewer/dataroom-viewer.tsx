@@ -1,4 +1,4 @@
-import { memo, useMemo } from "react";
+import { useMemo } from "react";
 import React from "react";
 
 import {
@@ -7,12 +7,11 @@ import {
   ViewerGroupAccessControls,
 } from "@prisma/client";
 import * as SheetPrimitive from "@radix-ui/react-dialog";
-import { AlertCircle, PanelLeftIcon, RefreshCw, XIcon } from "lucide-react";
+import { PanelLeftIcon, XIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
 import { ViewFolderTree } from "@/components/datarooms/folders";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -76,34 +75,6 @@ const getParentFolders = (
 
   return breadcrumbFolders;
 };
-
-const ProcessingBanner = memo(() => {
-  return (
-    <Alert className="mt-2">
-      <AlertCircle className="h-4 w-4" />
-      <AlertTitle>Processing Documents</AlertTitle>
-      <AlertDescription className="flex items-center justify-between">
-        <span>
-          Some documents are still processing. Please wait a moment and refresh
-          the page to see updates.
-        </span>
-        <button
-          onClick={() => window.location.reload()}
-          className={cn(
-            "ml-4 flex items-center space-x-1 rounded-md px-2 py-1 text-xs transition-colors",
-            "bg-black text-white hover:bg-gray-800",
-            "dark:bg-white dark:text-black dark:hover:bg-gray-200",
-          )}
-        >
-          <RefreshCw className="h-3 w-3" />
-          <span>Refresh</span>
-        </button>
-      </AlertDescription>
-    </Alert>
-  );
-});
-
-ProcessingBanner.displayName = "ProcessingBanner";
 
 export default function DataroomViewer({
   brand,
@@ -198,14 +169,6 @@ export default function DataroomViewer({
     ];
     return mixedItems.sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
   }, [folders, documents, folderId, accessControls, allowDownload]);
-
-  const hasProcessingDocuments = useMemo(() => {
-    return documents?.some(
-      (doc) =>
-        ["docs", "slides", "pdf"].includes(doc.versions[0].type) &&
-        !doc.versions[0].hasPages,
-    );
-  }, [documents]);
 
   const renderItem = (item: FolderOrDocument) => {
     if ("versions" in item) {
@@ -354,7 +317,6 @@ export default function DataroomViewer({
                   )}
                 </div>
               </div>
-              {hasProcessingDocuments && <ProcessingBanner />}
               <ul role="list" className="-mx-4 space-y-4 overflow-auto p-4">
                 {mixedItems.map(renderItem)}
               </ul>
