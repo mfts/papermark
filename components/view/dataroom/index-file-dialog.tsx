@@ -21,18 +21,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Separator } from "@/components/ui/separator";
-import { ButtonTooltip } from "@/components/ui/tooltip";
 
 interface IndexFileDialogProps {
   linkId: string;
   viewId: string;
   disabled?: boolean;
   dataroomId: string;
-  isEmbedded?: boolean;
   viewerEmail?: string;
   viewerId?: string;
-  verifiedEmail?: string;
 }
 
 export default function IndexFileDialog({
@@ -40,10 +36,8 @@ export default function IndexFileDialog({
   viewId,
   disabled = false,
   dataroomId,
-  isEmbedded,
   viewerEmail,
   viewerId,
-  verifiedEmail,
 }: IndexFileDialogProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedFormat, setSelectedFormat] =
@@ -69,6 +63,8 @@ export default function IndexFileDialog({
           linkId,
           format: selectedFormat,
           dataroomId,
+          viewId,
+          viewerId,
         }),
       });
 
@@ -77,13 +73,12 @@ export default function IndexFileDialog({
         throw new Error(errorData.error || "Failed to generate index");
       }
       analytics.identify(viewerEmail);
-      analytics.capture("Index File Downloaded By Viewer", {
+      analytics.capture("Generated Index File by visitor", {
         linkId: linkId,
         dataroomId: dataroomId,
         linkType: "dataroom",
         viewerId: viewerId,
         viewerEmail: viewerEmail,
-        isEmbedded,
         format: selectedFormat,
         viewId: viewId,
       });
@@ -123,19 +118,12 @@ export default function IndexFileDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <ButtonTooltip content="Generate Index File">
-        <DialogTrigger asChild>
-          <Button
-            className="m-1 bg-gray-900 text-white hover:bg-gray-900/80"
-            size="icon"
-            loading={isLoading}
-            disabled={disabled}
-            type="button"
-          >
-            <FileSlidersIcon className="h-5 w-5" />
-          </Button>
-        </DialogTrigger>
-      </ButtonTooltip>
+      <DialogTrigger asChild>
+        <Button variant="outline" size="sm" disabled={disabled}>
+          <FileSlidersIcon />
+          Generate Index File
+        </Button>
+      </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Generate Dataroom Index File</DialogTitle>

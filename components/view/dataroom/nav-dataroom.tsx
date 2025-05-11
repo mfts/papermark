@@ -18,7 +18,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 
 import { Button } from "../../ui/button";
 import { ConversationSidebar } from "../conversations/sidebar";
-import IndexFileDialog from "./index-file-dialog";
 
 export default function DataroomNav({
   allowDownload,
@@ -30,9 +29,6 @@ export default function DataroomNav({
   dataroomId,
   viewerId,
   conversationsEnabled,
-  enableIndexFile,
-  isEmbedded,
-  viewerEmail,
   isTeamMember,
 }: {
   allowDownload?: boolean;
@@ -44,9 +40,6 @@ export default function DataroomNav({
   dataroomId?: string;
   viewerId?: string;
   conversationsEnabled?: boolean;
-  enableIndexFile?: boolean;
-  isEmbedded?: boolean;
-  viewerEmail?: string;
   isTeamMember?: boolean;
 }) {
   const [loading, setLoading] = useState<boolean>(false);
@@ -194,17 +187,6 @@ export default function DataroomNav({
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-            )}
-            {enableIndexFile && (
-              <IndexFileDialog
-                linkId={linkId!}
-                viewId={viewId!}
-                disabled={isPreview}
-                dataroomId={dataroomId!}
-                isEmbedded={isEmbedded}
-                viewerEmail={viewerEmail}
-                viewerId={viewerId}
-              />
             )}
             {allowDownload ? (
               <ButtonTooltip content="Download Dataroom">
