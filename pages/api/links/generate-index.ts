@@ -1,12 +1,10 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { ItemType } from "@prisma/client";
-import { getServerSession } from "next-auth/next";
 
 import { generateDataroomIndex } from "@/lib/dataroom/index-generator";
 import prisma from "@/lib/prisma";
-import { CustomUser, LinkWithDataroom } from "@/lib/types";
+import { LinkWithDataroom } from "@/lib/types";
 import { IndexFileFormat } from "@/lib/types/index-file";
 
 export default async function handle(
