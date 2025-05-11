@@ -172,6 +172,10 @@ export default function DataroomViewer({
 
   const renderItem = (item: FolderOrDocument) => {
     if ("versions" in item) {
+      const isProcessing =
+        ["docs", "slides", "pdf"].includes(item.versions[0].type) &&
+        !item.versions[0].hasPages;
+
       return (
         <DocumentCard
           key={item.id}
@@ -180,6 +184,7 @@ export default function DataroomViewer({
           viewId={viewId}
           isPreview={!!isPreview}
           allowDownload={allowDownload && item.canDownload}
+          isProcessing={isProcessing}
         />
       );
     }
