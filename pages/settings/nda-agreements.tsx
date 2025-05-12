@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
 import { BadgeTooltip } from "@/components/ui/tooltip";
 
 export default function NdaAgreements() {
-  const { agreements } = useAgreements();
+  const { agreements, loading, error } = useAgreements();
   const teamInfo = useTeam();
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const { isBusiness, isDatarooms, isDataroomsPlus } = usePlan();
@@ -74,7 +74,26 @@ export default function NdaAgreements() {
               )}
             </ul>
           </div>
-          {activeAgreements.length !== 0 ? (
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="spinner" />
+              <span className="ml-2 text-sm text-gray-500">
+                Loading agreements...
+              </span>
+            </div>
+          ) : error ? (
+            <div className="flex flex-col items-center justify-center space-y-4 py-12">
+              <p className="text-center text-sm text-red-500">
+                Failed to load agreements
+              </p>
+              <Button
+                variant="outline"
+                onClick={() => window.location.reload()}
+              >
+                Try again
+              </Button>
+            </div>
+          ) : activeAgreements.length !== 0 ? (
             <div>
               <ul>
                 {activeAgreements.map((agreement) => (
