@@ -24,6 +24,7 @@ import { ProBannerSection } from "@/components/links/link-sheet/pro-banner-secti
 import AgreementSection from "./agreement-section";
 import ConversationSection from "./conversation-section";
 import CustomFieldsSection from "./custom-fields-section";
+import IndexFileSection from "./index-file-section";
 import QuestionSection from "./question-section";
 import ScreenshotProtectionSection from "./screenshot-protection-section";
 import UploadSection from "./upload-section";
@@ -94,6 +95,13 @@ export const LinkOptions = ({
           isAllowed={isTrial || isDatarooms || isDataroomsPlus}
           handleUpgradeStateChange={handleUpgradeStateChange}
           targetId={targetId}
+        />
+      ) : null}
+      {linkType === LinkType.DATAROOM_LINK ? (
+        <IndexFileSection
+          {...{ data, setData }}
+          isAllowed={isDataroomsPlus}
+          handleUpgradeStateChange={handleUpgradeStateChange}
         />
       ) : null}
       <OGSection

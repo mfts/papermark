@@ -94,6 +94,7 @@ export default function ViewData({
         : false),
     assistantEnabled: document.assistantEnabled,
     allowDownload: isDownloadAllowed(canDownload, link.allowDownload ?? false),
+    isTeamMember: viewData.isTeamMember,
   };
 
   // Calculate allowDownload once for all components

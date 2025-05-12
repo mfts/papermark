@@ -38,11 +38,15 @@ import { useMediaQuery } from "@/lib/utils/use-media-query";
 import { EmptyDocuments } from "@/components/documents/empty-document";
 import FolderCard from "@/components/documents/folder-card";
 import { UploadNotificationDrawer } from "@/components/upload-notification";
-import UploadZone from "@/components/upload-zone";
+import UploadZone, {
+  RejectedFile,
+  UploadState,
+} from "@/components/upload-zone";
 
 import { DraggableItem } from "../documents/drag-and-drop/draggable-item";
 import { DroppableFolder } from "../documents/drag-and-drop/droppable-folder";
 import { Button } from "../ui/button";
+import { Checkbox } from "../ui/checkbox";
 import { Portal } from "../ui/portal";
 import { ButtonTooltip } from "../ui/tooltip";
 import { useRemoveDataroomItemsModal } from "./actions/remove-document-modal";
@@ -50,7 +54,6 @@ import DataroomDocumentCard from "./dataroom-document-card";
 import { itemsMessage } from "./folders/utils";
 import { SetGroupPermissionsModal } from "./groups/set-group-permissions-modal";
 import { MoveToDataroomFolderModal } from "./move-dataroom-folder-modal";
-import { Checkbox } from "../ui/checkbox";
 
 type FolderOrDocument =
   | (DataroomFolderWithCount & { itemType: "folder" })
@@ -73,6 +76,9 @@ export function DataroomItemsList({
 }) {
   const { viewerGroups } = useDataroomGroups();
   const { isMobile } = useMediaQuery();
+
+  const [uploads, setUploads] = useState<UploadState[]>([]);
+  const [rejectedFiles, setRejectedFiles] = useState<RejectedFile[]>([]);
   const [showGroupPermissions, setShowGroupPermissions] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<
     {
@@ -80,12 +86,6 @@ export function DataroomItemsList({
       dataroomDocumentId: string;
       fileName: string;
     }[]
-  >([]);
-  const [uploads, setUploads] = useState<
-    { fileName: string; progress: number; documentId?: string }[]
-  >([]);
-  const [rejectedFiles, setRejectedFiles] = useState<
-    { fileName: string; message: string }[]
   >([]);
 
   const [showDrawer, setShowDrawer] = useState(false);
@@ -539,19 +539,28 @@ export function DataroomItemsList({
       <UploadZone
         folderPathName={folderPathName?.join("/")}
         onUploadStart={(newUploads) => {
-          setUploads(newUploads);
+          setUploads((prevUploads) => [...prevUploads, ...newUploads]);
           setShowDrawer(true);
         }}
         onUploadProgress={(index, progress, documentId) => {
-          setUploads((prevUploads) =>
-            prevUploads.map((upload, i) =>
-              i === index ? { ...upload, progress, documentId } : upload,
-            ),
-          );
+          setUploads((prevUploads) => {
+            const recentBatchStartIndex = prevUploads.length - index - 1;
+            if (
+              recentBatchStartIndex < 0 ||
+              recentBatchStartIndex >= prevUploads.length
+            ) {
+              return prevUploads;
+            }
+            return prevUploads.map((upload, i) =>
+              i === recentBatchStartIndex
+                ? { ...upload, progress, documentId }
+                : upload,
+            );
+          });
         }}
         onUploadSuccess={handleUploadSuccess}
         onUploadRejected={(rejected) => {
-          setRejectedFiles(rejected);
+          setRejectedFiles((prevRejected) => [...prevRejected, ...rejected]);
           setShowDrawer(true);
         }}
         setUploads={setUploads}

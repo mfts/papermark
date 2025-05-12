@@ -72,17 +72,26 @@ interface FileWithPaths extends File {
   whereToUploadPath?: string;
 }
 
-export default function UploadZone({
-  children,
-  onUploadStart,
-  onUploadProgress,
-  onUploadRejected,
-  folderPathName,
-  setUploads,
-  setRejectedFiles,
-  dataroomId,
-  onUploadSuccess,
-}: {
+export interface UploadState {
+  fileName: string;
+  progress: number;
+  documentId?: string;
+  uploadId: string;
+}
+
+export interface RejectedFile {
+  fileName: string;
+  message: string;
+}
+
+interface UploadZoneProps extends React.PropsWithChildren {
+  onUploadStart: (uploads: UploadState[]) => void;
+  onUploadProgress: (
+    index: number,
+    progress: number,
+    documentId?: string,
+  ) => void;
+  onUploadRejected: (rejected: RejectedFile[]) => void;
   onUploadSuccess?: (
     files: {
       fileName: string;
@@ -90,27 +99,23 @@ export default function UploadZone({
       dataroomDocumentId: string;
     }[],
   ) => void;
-  children: React.ReactNode;
-  onUploadStart: (
-    uploads: { fileName: string; progress: number; documentId?: string }[],
-  ) => void;
-  onUploadProgress: (
-    index: number,
-    progress: number,
-    documentId?: string,
-  ) => void;
-  onUploadRejected: (rejected: { fileName: string; message: string }[]) => void;
-  setUploads: React.Dispatch<
-    React.SetStateAction<
-      { fileName: string; progress: number; documentId?: string }[]
-    >
-  >;
-  setRejectedFiles: React.Dispatch<
-    React.SetStateAction<{ fileName: string; message: string }[]>
-  >;
+  setUploads: React.Dispatch<React.SetStateAction<UploadState[]>>;
+  setRejectedFiles: React.Dispatch<React.SetStateAction<RejectedFile[]>>;
   folderPathName?: string;
   dataroomId?: string;
-}) {
+}
+
+export default function UploadZone({
+  children,
+  onUploadStart,
+  onUploadProgress,
+  onUploadRejected,
+  onUploadSuccess,
+  folderPathName,
+  setUploads,
+  setRejectedFiles,
+  dataroomId,
+}: UploadZoneProps) {
   const analytics = useAnalytics();
   const { plan, isFree, isTrial } = usePlan();
   const router = useRouter();
@@ -215,6 +220,7 @@ export default function UploadZone({
       const newUploads = validatedFiles.valid.map((file) => ({
         fileName: file.name,
         progress: 0,
+        uploadId: crypto.randomUUID(),
       }));
 
       onUploadStart(newUploads);
@@ -248,22 +254,28 @@ export default function UploadZone({
         const { complete } = await resumableUpload({
           file, // File
           onProgress: (bytesUploaded, bytesTotal) => {
-            uploadProgress.current[index] = (bytesUploaded / bytesTotal) * 100;
-            onUploadProgress(
-              index,
-              Math.min(Math.round(uploadProgress.current[index]), 99),
+            const progress = Math.min(
+              Math.round((bytesUploaded / bytesTotal) * 100),
+              99,
+            );
+            setUploads((prevUploads) =>
+              prevUploads.map((upload) =>
+                upload.uploadId === newUploads[index].uploadId
+                  ? { ...upload, progress }
+                  : upload,
+              ),
             );
 
             const _progress = uploadProgress.current.reduce(
               (acc, progress) => acc + progress,
               0,
             );
-
-            setProgress(Math.round(_progress / acceptedFiles.length));
           },
           onError: (error) => {
             setUploads((prev) =>
-              prev.filter((upload) => upload.fileName !== file.name),
+              prev.filter(
+                (upload) => upload.uploadId !== newUploads[index].uploadId,
+              ),
             );
 
             setRejectedFiles((prev) => [
@@ -372,7 +384,13 @@ export default function UploadZone({
         }
 
         // update progress to 100%
-        onUploadProgress(index, 100, document.id);
+        setUploads((prevUploads) =>
+          prevUploads.map((upload) =>
+            upload.uploadId === newUploads[index].uploadId
+              ? { ...upload, progress: 100, documentId: document.id }
+              : upload,
+          ),
+        );
 
         analytics.capture("Document Added", {
           documentId: document.id,
