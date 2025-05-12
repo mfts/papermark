@@ -1,8 +1,19 @@
+import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { FileTextIcon, MoreVertical, TrashIcon } from "lucide-react";
 import { toast } from "sonner";
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -29,6 +40,7 @@ export default function AgreementCard({
   onDelete,
 }: AgreementCardProps) {
   const teamInfo = useTeam();
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const handleDelete = async () => {
     toast.promise(
@@ -52,36 +64,66 @@ export default function AgreementCard({
   };
 
   return (
-    <div className="flex items-center justify-between rounded-lg border p-4">
-      <div className="flex items-center space-x-4">
-        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
-          <FileTextIcon className="h-5 w-5" />
+    <>
+      <div className="flex items-center justify-between rounded-lg border p-4">
+        <div className="flex items-center space-x-4">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
+            <FileTextIcon className="h-5 w-5" />
+          </div>
+          <div>
+            <h3 className="font-medium">{agreement.name}</h3>
+            <p className="text-sm text-muted-foreground">
+              Last updated {new Date(agreement.updatedAt).toLocaleDateString()}
+            </p>
+          </div>
         </div>
-        <div>
-          <h3 className="font-medium">{agreement.name}</h3>
-          <p className="text-sm text-muted-foreground">
-            Last updated {new Date(agreement.updatedAt).toLocaleDateString()}
-          </p>
-        </div>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="h-8 w-8 p-0">
+              <span className="sr-only">Open menu</span>
+              <MoreVertical className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem
+              className="text-destructive focus:bg-destructive focus:text-destructive-foreground"
+              onClick={() => setShowDeleteDialog(true)}
+            >
+              <TrashIcon className="mr-2 h-4 w-4" />
+              Delete agreement
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="h-8 w-8 p-0">
-            <span className="sr-only">Open menu</span>
-            <MoreVertical className="h-4 w-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem
-            className="text-destructive focus:bg-destructive focus:text-destructive-foreground"
-            onClick={handleDelete}
-          >
-            <TrashIcon className="mr-2 h-4 w-4" />
-            Delete agreement
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </div>
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete the NDA agreement "{agreement.name}".
+              This action cannot be undone.
+              <br />
+              <br />
+              <span className="font-medium">
+                Note: If this agreement is still referenced in any documents or
+                dataroom links, it will remain available there until those
+                references are removed.
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-destructive text-destructive-foreground"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
