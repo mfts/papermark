@@ -10,6 +10,8 @@ import {
 import { toast } from "sonner";
 import { mutate } from "swr";
 
+import { useDataroomGroup } from "@/lib/swr/use-dataroom-groups";
+
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -30,8 +32,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { VisitorAvatar } from "@/components/visitors/visitor-avatar";
-
-import { useDataroomGroup } from "@/lib/swr/use-dataroom-groups";
 
 import { AddGroupMemberModal } from "./add-member-modal";
 
@@ -194,7 +194,7 @@ export default function GroupMemberTable({
               <TableRow>
                 <TableCell colSpan={2}>
                   <div className="flex h-40 w-full items-center justify-center">
-                    <p>No Data Available</p>
+                    <p>No visits yet. Try sharing a link.</p>
                   </div>
                 </TableCell>
               </TableRow>

@@ -20,6 +20,10 @@ import {
 import { toast } from "sonner";
 import { mutate } from "swr";
 
+import { usePlan } from "@/lib/swr/use-billing";
+import { useDocumentVisits } from "@/lib/swr/use-document";
+import { durationFormat, timeAgo } from "@/lib/utils";
+
 import ChevronDown from "@/components/shared/icons/chevron-down";
 import {
   Collapsible,
@@ -37,10 +41,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { BadgeTooltip } from "@/components/ui/tooltip";
-
-import { usePlan } from "@/lib/swr/use-billing";
-import { useDocumentVisits } from "@/lib/swr/use-document";
-import { durationFormat, timeAgo } from "@/lib/utils";
 
 import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
 import { Pagination } from "../documents/pagination";
@@ -150,7 +150,7 @@ export default function VisitorsTable({
                 <TableRow>
                   <TableCell colSpan={5}>
                     <div className="flex h-40 w-full items-center justify-center">
-                      <p>No Data Available</p>
+                      <p>No visits yet. Try sharing a link.</p>
                     </div>
                   </TableCell>
                 </TableRow>
