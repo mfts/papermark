@@ -58,6 +58,11 @@ export function SettingsHeader() {
             segment: "tags",
           },
           {
+            label: "NDA Agreements",
+            href: `/settings/nda-agreements`,
+            segment: "nda-agreements",
+          },
+          {
             label: "Webhooks",
             href: `/settings/webhooks`,
             segment: "webhooks",
