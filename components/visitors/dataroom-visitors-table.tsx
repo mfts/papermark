@@ -2,11 +2,15 @@ import { useTeam } from "@/context/team-context";
 import {
   BadgeCheckIcon,
   BadgeInfoIcon,
+  Download,
   DownloadCloudIcon,
   FileBadgeIcon,
   MailOpenIcon,
 } from "lucide-react";
 import { toast } from "sonner";
+
+import { useDataroomVisits } from "@/lib/swr/use-dataroom";
+import { timeAgo } from "@/lib/utils";
 
 import ChevronDown from "@/components/shared/icons/chevron-down";
 import { Button } from "@/components/ui/button";
@@ -25,9 +29,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { BadgeTooltip } from "@/components/ui/tooltip";
-
-import { useDataroomVisits } from "@/lib/swr/use-dataroom";
-import { timeAgo } from "@/lib/utils";
 
 import DataroomVisitorCustomFields from "./dataroom-visitor-custom-fields";
 import { DataroomVisitorUserAgent } from "./dataroom-visitor-useragent";
@@ -86,7 +87,12 @@ export default function DataroomVisitorsTable({
     <div className="w-full">
       <div className="mb-2 flex items-center justify-between md:mb-4">
         <h2>All visitors</h2>
-        <Button size="sm" onClick={() => exportVisitCounts(dataroomId)}>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => exportVisitCounts(dataroomId)}
+        >
+          <Download className="!size-4" />
           Export visits
         </Button>
       </div>
@@ -106,7 +112,7 @@ export default function DataroomVisitorsTable({
               <TableRow>
                 <TableCell colSpan={5}>
                   <div className="flex h-40 w-full items-center justify-center">
-                    <p>No Data Available</p>
+                    <p>No visits yet. Try sharing a link.</p>
                   </div>
                 </TableCell>
               </TableRow>

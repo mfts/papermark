@@ -9,9 +9,12 @@ import useLimits from "@/lib/swr/use-limits";
 
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { DEFAULT_LINK_TYPE } from "@/components/links/link-sheet";
+import AgreementSection from "@/components/links/link-sheet/agreement-section";
 import AllowDownloadSection from "@/components/links/link-sheet/allow-download-section";
 import AllowListSection from "@/components/links/link-sheet/allow-list-section";
 import AllowNotificationSection from "@/components/links/link-sheet/allow-notification-section";
+import ConversationSection from "@/components/links/link-sheet/conversation-section";
+import CustomFieldsSection from "@/components/links/link-sheet/custom-fields-section";
 import DenyListSection from "@/components/links/link-sheet/deny-list-section";
 import EmailAuthenticationSection from "@/components/links/link-sheet/email-authentication-section";
 import EmailProtectionSection from "@/components/links/link-sheet/email-protection-section";
@@ -20,15 +23,11 @@ import FeedbackSection from "@/components/links/link-sheet/feedback-section";
 import OGSection from "@/components/links/link-sheet/og-section";
 import PasswordSection from "@/components/links/link-sheet/password-section";
 import { ProBannerSection } from "@/components/links/link-sheet/pro-banner-section";
-
-import AgreementSection from "./agreement-section";
-import ConversationSection from "./conversation-section";
-import CustomFieldsSection from "./custom-fields-section";
-import IndexFileSection from "./index-file-section";
-import QuestionSection from "./question-section";
-import ScreenshotProtectionSection from "./screenshot-protection-section";
-import UploadSection from "./upload-section";
-import WatermarkSection from "./watermark-section";
+import QuestionSection from "@/components/links/link-sheet/question-section";
+import ScreenshotProtectionSection from "@/components/links/link-sheet/screenshot-protection-section";
+import UploadSection from "@/components/links/link-sheet/upload-section";
+import WatermarkSection from "@/components/links/link-sheet/watermark-section";
+import ChevronDown from "@/components/shared/icons/chevron-down";
 
 export type LinkUpgradeOptions = {
   state: boolean;
@@ -36,7 +35,7 @@ export type LinkUpgradeOptions = {
   plan?: "Pro" | "Business" | "Data Rooms" | "Data Rooms Plus";
 };
 
-export const LinkOptions = ({
+export const OnboardingLinkOptions = ({
   data,
   setData,
   targetId,
@@ -68,6 +67,8 @@ export const LinkOptions = ({
   const [openUpgradeModal, setOpenUpgradeModal] = useState<boolean>(false);
   const [trigger, setTrigger] = useState<string>("");
   const [upgradePlan, setUpgradePlan] = useState<PlanEnum>(PlanEnum.Business);
+  const [showAdvancedSettings, setShowAdvancedSettings] =
+    useState<boolean>(false);
 
   const handleUpgradeStateChange = ({
     state,
@@ -81,12 +82,40 @@ export const LinkOptions = ({
     }
   };
 
-  return (
-    <div>
+  // Basic settings that are always shown
+  const basicSettings = (
+    <>
       <EmailProtectionSection {...{ data, setData }} />
       <AllowNotificationSection {...{ data, setData }} />
       <AllowDownloadSection {...{ data, setData }} />
       <ExpirationSection {...{ data, setData }} presets={currentPreset} />
+      <PasswordSection {...{ data, setData }} />
+      {/* Advanced toggle for documents only */}
+      {linkType === LinkType.DOCUMENT_LINK && (
+        <div className="mb-4 mt-2">
+          <button
+            type="button"
+            className="group flex w-full items-center justify-between text-sm text-muted-foreground transition-colors hover:text-foreground"
+            onClick={() => setShowAdvancedSettings((v) => !v)}
+            aria-expanded={showAdvancedSettings}
+          >
+            <span className="text-sm font-semibold text-gray-900">
+              Advanced settings
+            </span>
+            <span
+              className={`transition-transform ${showAdvancedSettings ? "rotate-180" : ""}`}
+            >
+              <ChevronDown className="h-4 w-4" />
+            </span>
+          </button>
+        </div>
+      )}
+    </>
+  );
+
+  // Advanced settings that are shown only when showAdvancedSettings is true
+  const advancedSettings = (
+    <>
       {limits?.dataroomUpload &&
       linkType === LinkType.DATAROOM_LINK &&
       targetId ? (
@@ -95,13 +124,6 @@ export const LinkOptions = ({
           isAllowed={isTrial || isDatarooms || isDataroomsPlus}
           handleUpgradeStateChange={handleUpgradeStateChange}
           targetId={targetId}
-        />
-      ) : null}
-      {linkType === LinkType.DATAROOM_LINK ? (
-        <IndexFileSection
-          {...{ data, setData }}
-          isAllowed={isDataroomsPlus}
-          handleUpgradeStateChange={handleUpgradeStateChange}
         />
       ) : null}
       <OGSection
@@ -117,7 +139,6 @@ export const LinkOptions = ({
         editLink={editLink ?? false}
         presets={currentPreset}
       />
-
       <EmailAuthenticationSection
         {...{ data, setData }}
         isAllowed={
@@ -157,7 +178,6 @@ export const LinkOptions = ({
           presets={currentPreset}
         />
       ) : null}
-      <PasswordSection {...{ data, setData }} />
       <ScreenshotProtectionSection
         {...{ data, setData }}
         isAllowed={
@@ -231,6 +251,13 @@ export const LinkOptions = ({
           handleUpgradeStateChange={handleUpgradeStateChange}
         />
       ) : null}
+    </>
+  );
+
+  return (
+    <div>
+      {basicSettings}
+      {showAdvancedSettings && advancedSettings}
       <UpgradePlanModal
         clickedPlan={upgradePlan}
         open={openUpgradeModal}
