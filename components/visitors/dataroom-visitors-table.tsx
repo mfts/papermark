@@ -245,7 +245,7 @@ export default function DataroomVisitorsTable({
                         </TableRow>
 
                         {view.downloadedAt ? (
-                          <TableRow key={view.id + Date.now()}>
+                          <TableRow key={`download-item-${view.id}`}>
                             <TableCell>
                               <div className="flex items-center gap-x-4 overflow-visible">
                                 <DownloadCloudIcon className="h-5 w-5 text-cyan-500 hover:text-cyan-600" />
