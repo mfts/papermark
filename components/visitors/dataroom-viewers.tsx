@@ -6,6 +6,9 @@ import {
   SendIcon,
 } from "lucide-react";
 
+import { useDataroomViewers } from "@/lib/swr/use-dataroom";
+import { timeAgo } from "@/lib/utils";
+
 import ChevronDown from "@/components/shared/icons/chevron-down";
 import {
   Collapsible,
@@ -22,9 +25,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { BadgeTooltip } from "@/components/ui/tooltip";
-
-import { useDataroomViewers } from "@/lib/swr/use-dataroom";
-import { timeAgo } from "@/lib/utils";
 
 import DataroomVisitHistory from "./dataroom-visitors-history";
 import { VisitorAvatar } from "./visitor-avatar";
@@ -80,7 +80,7 @@ export default function DataroomViewersTable({
                                     {viewer.verified && (
                                       <BadgeTooltip
                                         content="Verified visitor"
-                                        key="verified"
+                                        key={`verified-${viewer.id}`}
                                       >
                                         <BadgeCheckIcon className="h-4 w-4 text-emerald-500 hover:text-emerald-600" />
                                       </BadgeTooltip>
@@ -88,7 +88,7 @@ export default function DataroomViewersTable({
                                     {viewer.internal && (
                                       <BadgeTooltip
                                         content="Internal visitor"
-                                        key="internal"
+                                        key={`internal-${viewer.id}`}
                                       >
                                         <BadgeInfoIcon className="h-4 w-4 text-blue-500 hover:text-blue-600" />
                                       </BadgeTooltip>
@@ -96,7 +96,7 @@ export default function DataroomViewersTable({
                                     {viewer.invitedAt && (
                                       <BadgeTooltip
                                         content={`Invited ${timeAgo(viewer.invitedAt)}`}
-                                        key="invited"
+                                        key={`invited-${viewer.id}`}
                                       >
                                         <SendIcon className="h-4 w-4 text-sky-500 hover:text-sky-600" />
                                       </BadgeTooltip>
@@ -182,7 +182,7 @@ export default function DataroomViewersTable({
                               </TableRow>
 
                               {view.downloadedAt ? (
-                                <TableRow key={view.id + 1}>
+                                <TableRow key={`download-${view.id}`}>
                                   <TableCell>
                                     <div className="flex items-center gap-x-4 overflow-visible">
                                       <DownloadCloudIcon className="h-5 w-5 text-cyan-500 hover:text-cyan-600" />
