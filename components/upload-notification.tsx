@@ -9,6 +9,17 @@ import {
 } from "@/components/ui/drawer";
 
 import { Gauge } from "./ui/gauge";
+import { RejectedFile, UploadState } from "./upload-zone";
+
+interface UploadNotificationDrawerProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  uploads: UploadState[];
+  setUploads: (uploads: UploadState[]) => void;
+  rejectedFiles: RejectedFile[];
+  setRejectedFiles: (rejected: RejectedFile[]) => void;
+  handleCloseDrawer: () => void;
+}
 
 export function UploadNotificationDrawer({
   open,
@@ -18,17 +29,7 @@ export function UploadNotificationDrawer({
   rejectedFiles,
   setRejectedFiles,
   handleCloseDrawer,
-}: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  uploads: { fileName: string; progress: number; documentId?: string }[];
-  setUploads: (
-    uploads: { fileName: string; progress: number; documentId?: string }[],
-  ) => void;
-  rejectedFiles: { fileName: string; message: string }[];
-  setRejectedFiles: (rejected: { fileName: string; message: string }[]) => void;
-  handleCloseDrawer: () => void;
-}) {
+}: UploadNotificationDrawerProps) {
   const uploadCount = uploads.length;
   const failedCount = rejectedFiles.length;
 
@@ -107,4 +108,4 @@ export function UploadNotificationDrawer({
       </Drawer>
     </div>
   );
-}
+};

@@ -126,6 +126,7 @@ export interface LinkWithDataroom extends Link {
     documents: {
       id: string;
       folderId: string | null;
+      updatedAt: Date;
       orderIndex: number | null;
       document: {
         id: string;
@@ -137,6 +138,7 @@ export interface LinkWithDataroom extends Link {
           hasPages: boolean;
           file: string;
           isVertical: boolean;
+          updatedAt: Date;
         }[];
       };
     }[];
@@ -149,6 +151,7 @@ export interface LinkWithDataroom extends Link {
   };
   agreement: Agreement | null;
   customFields: CustomField[];
+  enableIndexFile: boolean;
 }
 
 export interface Geo {

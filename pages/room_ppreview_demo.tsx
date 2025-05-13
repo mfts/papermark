@@ -4,6 +4,8 @@ import { ViewFolderTree } from "@/components/datarooms/folders";
 import DocumentCard from "@/components/view/dataroom/document-card";
 import FolderCard from "@/components/view/dataroom/folder-card";
 
+const DEFAULT_BANNER_IMAGE = "/_static/papermark-banner.png";
+
 export default function ViewPage() {
   const router = useRouter();
   const { brandLogo, brandColor, brandBanner } = router.query as {
@@ -40,23 +42,23 @@ export default function ViewPage() {
             </div>
           </div>
         </div>
-        {brandBanner && (
-          <div className="relative h-[30vh]">
-            <img
-              className="h-[30vh] w-full object-cover"
-              src={brandBanner}
-              alt="Banner"
-              width={1920}
-              height={320}
-            />
-            <div className="absolute bottom-5 w-fit rounded-r-md bg-white/30 backdrop-blur-md">
-              <div className="px-5 py-2 sm:px-10">
-                <div className="text-3xl">Example Data Room</div>
-                <time className="text-sm">Last updated 2 hours ago</time>
-              </div>
+
+        {/* Banner section */}
+        <div className="relative h-[30vh]">
+          <img
+            className="h-[30vh] w-full object-cover"
+            src={brandBanner || DEFAULT_BANNER_IMAGE}
+            alt="Banner"
+            width={1920}
+            height={320}
+          />
+          <div className="absolute bottom-5 w-fit rounded-r-md bg-white/30 backdrop-blur-md">
+            <div className="px-5 py-2 sm:px-10">
+              <div className="text-3xl">Example Data Room</div>
+              <time className="text-sm">Last updated 2 hours ago</time>
             </div>
           </div>
-        )}
+        </div>
       </nav>
 
       {/* Body */}
@@ -125,6 +127,9 @@ export default function ViewPage() {
                   }}
                   dataroomId="1"
                   setFolderId={() => {}}
+                  isPreview={false}
+                  linkId="1"
+                  allowDownload={false}
                 />
 
                 <FolderCard
@@ -140,6 +145,9 @@ export default function ViewPage() {
                   }}
                   dataroomId="1"
                   setFolderId={() => {}}
+                  isPreview={false}
+                  linkId="1"
+                  allowDownload={false}
                 />
 
                 <DocumentCard
@@ -156,6 +164,7 @@ export default function ViewPage() {
                         versionNumber: 1,
                         hasPages: true,
                         isVertical: true,
+                        updatedAt: new Date(),
                       },
                     ],
                   }}

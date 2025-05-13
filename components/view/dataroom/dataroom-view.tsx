@@ -41,6 +41,7 @@ export type DEFAULT_DATAROOM_VIEW_TYPE = {
   viewerId?: string;
   conversationsEnabled?: boolean;
   enableVisitorUpload?: boolean;
+  isTeamMember?: boolean;
 };
 
 export default function DataroomView({
@@ -138,6 +139,7 @@ export default function DataroomView({
           viewerId,
           conversationsEnabled,
           enableVisitorUpload,
+          isTeamMember,
         } = fetchData as DEFAULT_DATAROOM_VIEW_TYPE;
 
         analytics.identify(
@@ -150,6 +152,7 @@ export default function DataroomView({
           viewerId: viewerId,
           viewerEmail: viewerEmail ?? data.email ?? verifiedEmail ?? userEmail,
           isEmbedded,
+          isTeamMember,
         });
 
         // set the verification token to the cookie
@@ -170,6 +173,7 @@ export default function DataroomView({
           viewerId,
           conversationsEnabled,
           enableVisitorUpload,
+          isTeamMember,
         });
         setSubmitted(true);
         setVerificationRequested(false);
@@ -202,12 +206,12 @@ export default function DataroomView({
   // If link is not submitted and does not have email / password protection, show the access form
   useEffect(() => {
     if (!didMount.current) {
-      if ((!submitted && !isProtected) || token || preview) {
+      if ((!submitted && !isProtected) || token || preview || previewToken) {
         handleSubmission();
         didMount.current = true;
       }
     }
-  }, [submitted, isProtected, token, preview]);
+  }, [submitted, isProtected, token, preview, previewToken]);
 
   // Components to render when email is submitted but verification is pending
   if (verificationRequested) {
@@ -266,10 +270,13 @@ export default function DataroomView({
           linkId={link.id}
           dataroom={dataroom}
           allowDownload={link.allowDownload!}
+          enableIndexFile={link.enableIndexFile}
           folderId={folderId}
           setFolderId={setFolderId}
           viewerId={viewData.viewerId}
           viewData={viewData}
+          isEmbedded={isEmbedded}
+          viewerEmail={viewData.viewerEmail ?? data.email ?? verifiedEmail ?? userEmail ?? undefined}
         />
       </div>
     );
