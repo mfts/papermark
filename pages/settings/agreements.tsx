@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { PlanEnum } from "@/ee/stripe/constants";
@@ -44,10 +44,11 @@ export default function NdaAgreements() {
           <div className="mb-4 flex items-center justify-between md:mb-8 lg:mb-12">
             <div className="space-y-1">
               <h3 className="text-2xl font-semibold tracking-tight text-foreground">
-                NDA Agreements
+                Agreements
               </h3>
               <p className="flx-row flex items-center gap-2 text-sm text-muted-foreground">
-                Manage your NDA agreements for document sharing and data rooms.
+                Manage your one-click agreements for document sharing and data
+                rooms.
                 <BadgeTooltip
                   content="How to require NDA agreement before viewing documents?"
                   key="nda-help"
@@ -62,7 +63,7 @@ export default function NdaAgreements() {
               {isBusiness || isDatarooms || isDataroomsPlus ? (
                 <Button variant="outline" onClick={() => setIsOpen(true)}>
                   <FileTextIcon className="h-4 w-4" />
-                  Create NDA agreement
+                  Create agreement
                 </Button>
               ) : (
                 <Button
@@ -96,7 +97,7 @@ export default function NdaAgreements() {
           ) : activeAgreements.length !== 0 ? (
             <div>
               <ul>
-                {activeAgreements.map((agreement) => (
+                {[...activeAgreements].reverse().map((agreement) => (
                   <li key={agreement.id} className="mt-4">
                     <AgreementCard
                       agreement={agreement}

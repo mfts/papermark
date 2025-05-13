@@ -159,7 +159,7 @@ export default function DataroomVisitorsTable({
                                     {view.agreementResponse && (
                                       <BadgeTooltip
                                         content={`Agreed to ${view.agreementResponse.agreement.name}`}
-                                        key={`nda-agreement-${view.id}`}
+                                        key={`agreement-${view.id}`}
                                       >
                                         <FileBadgeIcon className="h-4 w-4 text-emerald-500 hover:text-emerald-600" />
                                       </BadgeTooltip>

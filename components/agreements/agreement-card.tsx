@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { FileTextIcon, MoreVertical, TrashIcon } from "lucide-react";
 import { toast } from "sonner";
+
+import { AgreementWithLinksCount } from "@/lib/swr/use-agreements";
 
 import {
   AlertDialog,
@@ -31,7 +33,7 @@ interface Agreement {
 }
 
 interface AgreementCardProps {
-  agreement: Agreement;
+  agreement: AgreementWithLinksCount;
   onDelete: (id: string) => void;
 }
 
@@ -78,23 +80,28 @@ export default function AgreementCard({
           </div>
         </div>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreVertical className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem
-              className="text-destructive focus:bg-destructive focus:text-destructive-foreground"
-              onClick={() => setShowDeleteDialog(true)}
-            >
-              <TrashIcon className="mr-2 h-4 w-4" />
-              Delete agreement
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div className="flex items-center gap-x-2">
+          <div className="text-sm text-muted-foreground">
+            {agreement._count?.links || 0} links
+          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Open menu</span>
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem
+                className="text-destructive focus:bg-destructive focus:text-destructive-foreground"
+                onClick={() => setShowDeleteDialog(true)}
+              >
+                <TrashIcon className="mr-2 h-4 w-4" />
+                Delete agreement
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
 
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
