@@ -109,8 +109,8 @@ export default function AgreementCard({
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete the NDA agreement "{agreement.name}".
-              This action cannot be undone.
+              This will permanently delete the agreement &quot;
+              {agreement.name}&quot;. This action cannot be undone.
               <br />
               <br />
               <span className="font-medium">
