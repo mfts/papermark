@@ -105,9 +105,9 @@ export default async function handle(
     const { teamId } = req.query as { teamId: string };
     const { name, path } = req.body as { name: string; path: string };
 
-    const childFolderPath = path
-      ? "/" + path + "/" + slugify(name)
-      : "/" + slugify(name);
+    // const childFolderPath = path
+    //   ? "/" + path + "/" + slugify(name)
+    //   : "/" + slugify(name);
 
     const parentFolderPath = path ? "/" + path : "/";
 
@@ -142,9 +142,35 @@ export default async function handle(
         },
       });
 
+      let folderName = name;
+      let counter = 1;
+
+      let childFolderPath = path
+        ? "/" + path + "/" + slugify(folderName)
+        : "/" + slugify(folderName);
+
+      while (true) {
+        const existingFolder = await prisma.folder.findUnique({
+          where: {
+            teamId_path: {
+              teamId: teamId,
+              path: childFolderPath,
+            },
+          },
+        });
+
+        if (!existingFolder) break;
+
+        folderName = `${name} (${counter})`;
+        childFolderPath = path
+          ? "/" + path + "/" + slugify(folderName)
+          : "/" + slugify(folderName);
+        counter++;
+      }
+
       const folder = await prisma.folder.create({
         data: {
-          name: name,
+          name: folderName,
           path: childFolderPath,
           parentId: parentFolder?.id ?? null,
           teamId: teamId,
