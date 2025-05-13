@@ -1,13 +1,17 @@
 import { useTeam } from "@/context/team-context";
+import { BadgeCheckIcon } from "lucide-react";
 import { toast } from "sonner";
 import useSWR from "swr";
 
+import { usePlan } from "@/lib/swr/use-billing";
 import { fetcher } from "@/lib/utils";
 
+import PlanBadge from "@/components/billing/plan-badge";
 import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -24,6 +28,17 @@ export default function NotificationSettings({
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
 
+  const { data: dataroomData, mutate: mutateDataroom } = useSWR<{
+    id: string;
+    name: string;
+    pId: string;
+    enableChangeNotifications: boolean;
+  }>(
+    dataroomId ? `/api/teams/${teamId}/datarooms/${dataroomId}` : null,
+    fetcher,
+  );
+
+  const { isDataroomsPlus } = usePlan();
   const { data: features } = useSWR<{ roomChangeNotifications: boolean }>(
     teamInfo?.currentTeam?.id
       ? `/api/feature-flags?teamId=${teamInfo.currentTeam.id}`
@@ -31,18 +46,13 @@ export default function NotificationSettings({
     fetcher,
   );
 
-  const { data: dataroomData, mutate: mutateDataroom } = useSWR<{
-    id: string;
-    name: string;
-    pId: string;
-    notifyOnNewDocument: boolean;
-  }>(
-    dataroomId ? `/api/teams/${teamId}/datarooms/${dataroomId}` : null,
-    fetcher,
-  );
-
   const handleNotificationToggle = async (checked: boolean) => {
     if (!dataroomId || !teamId) return;
+
+    if (!isDataroomsPlus && !features?.roomChangeNotifications) {
+      toast.error("This feature is not available in your plan");
+      return;
+    }
 
     toast.promise(
       fetch(`/api/teams/${teamId}/datarooms/${dataroomId}`, {
@@ -51,7 +61,7 @@ export default function NotificationSettings({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          notifyOnNewDocument: checked,
+          enableChangeNotifications: checked,
         }),
       }).then(async (res) => {
         if (!res.ok) {
@@ -67,34 +77,40 @@ export default function NotificationSettings({
     );
   };
 
-  if (!features?.roomChangeNotifications) {
-    return null;
-  }
-
   return (
-    <Card>
+    <Card className="bg-transparent">
       <CardHeader>
-        <CardTitle>Notifications</CardTitle>
+        <CardTitle>
+          Notifications{" "}
+          {!isDataroomsPlus && !features?.roomChangeNotifications ? (
+            <PlanBadge plan="datarooms-plus" />
+          ) : null}
+        </CardTitle>
         <CardDescription>
-          Configure notification settings for this dataroom.
+          {!dataroomData?.enableChangeNotifications ? "Enable" : "Disable"}{" "}
+          change notification for this dataroom.
         </CardDescription>
       </CardHeader>
-      <CardContent>
-        <div className="flex items-center space-x-4">
-          <Switch
-            id="notify-on-new-document"
-            checked={dataroomData?.notifyOnNewDocument ?? true}
-            onCheckedChange={handleNotificationToggle}
-          />
-          <Label htmlFor="notify-on-new-document">
-            Notify verified visitors when new documents are added
-          </Label>
-        </div>
-        <p className="mt-2 text-sm text-muted-foreground">
-          When enabled, verified visitors will receive an email notification
-          when new documents are added to this dataroom.
-        </p>
+      <CardContent className="flex items-center justify-between">
+        <Label htmlFor="notification-toggle">
+          Notify visitors when new documents are added
+        </Label>
+        <Switch
+          id="notification-toggle"
+          checked={dataroomData?.enableChangeNotifications ?? false}
+          onCheckedChange={handleNotificationToggle}
+        />
       </CardContent>
+      <CardFooter className="flex items-center justify-between rounded-b-lg border-t bg-muted px-6 py-6">
+        <p className="text-sm text-muted-foreground transition-colors">
+          When enabled,{" "}
+          <span className="inline-flex items-center gap-x-1 font-bold">
+            verified visitors <BadgeCheckIcon className="h-4 w-4 font-normal" />
+          </span>{" "}
+          will automatically receive an email notification when new documents
+          are added to this dataroom.
+        </p>
+      </CardFooter>
     </Card>
   );
 }

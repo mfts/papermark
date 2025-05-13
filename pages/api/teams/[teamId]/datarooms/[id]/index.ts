@@ -4,6 +4,7 @@ import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth/next";
 
 import { errorhandler } from "@/lib/errorHandler";
+import { getFeatureFlags } from "@/lib/featureFlags";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 
@@ -78,15 +79,28 @@ export default async function handle(
             },
           },
         },
+        select: {
+          id: true,
+          plan: true,
+        },
       });
 
       if (!team) {
         return res.status(401).end("Unauthorized");
       }
 
-      const { name, notifyOnNewDocument } = req.body as {
+      const featureFlags = await getFeatureFlags({ teamId: team.id });
+      const isDataroomsPlus = team.plan.includes("datarooms-plus");
+
+      if (!isDataroomsPlus && !featureFlags.roomChangeNotifications) {
+        return res.status(403).json({
+          message: "This feature is not available in your plan",
+        });
+      }
+
+      const { name, enableChangeNotifications } = req.body as {
         name?: string;
-        notifyOnNewDocument?: boolean;
+        enableChangeNotifications?: boolean;
       };
 
       const dataroom = await prisma.dataroom.update({
@@ -95,8 +109,8 @@ export default async function handle(
         },
         data: {
           ...(name && { name }),
-          ...(typeof notifyOnNewDocument === "boolean" && {
-            notifyOnNewDocument,
+          ...(typeof enableChangeNotifications === "boolean" && {
+            enableChangeNotifications,
           }),
         },
       });
