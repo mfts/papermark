@@ -33,6 +33,10 @@ import {
 import { toast } from "sonner";
 import useSWR from "swr";
 
+import { usePlan } from "@/lib/swr/use-billing";
+import { cn, durationFormat, fetcher, timeAgo } from "@/lib/utils";
+import { downloadCSV } from "@/lib/utils/csv";
+
 import { Button } from "@/components/ui/button";
 import {
   Collapsible,
@@ -56,10 +60,6 @@ import VisitorClicks from "@/components/visitors/visitor-clicks";
 import VisitorCustomFields from "@/components/visitors/visitor-custom-fields";
 import VisitorUserAgent from "@/components/visitors/visitor-useragent";
 import VisitorVideoChart from "@/components/visitors/visitor-video-chart";
-
-import { usePlan } from "@/lib/swr/use-billing";
-import { cn, durationFormat, fetcher, timeAgo } from "@/lib/utils";
-import { downloadCSV } from "@/lib/utils/csv";
 
 import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
 
@@ -109,7 +109,7 @@ const columns: ColumnDef<View>[] = [
                   {row.original.agreementResponse && (
                     <BadgeTooltip
                       content={`Agreed to ${row.original.agreementResponse.agreement.name}`}
-                      key="nda-agreement"
+                      key="agreement"
                     >
                       <FileBadgeIcon className="h-4 w-4 text-emerald-500 hover:text-emerald-600" />
                     </BadgeTooltip>
@@ -371,7 +371,7 @@ export default function ViewsTable({
       <div className="flex justify-end">
         <UpgradeOrExportButton />
       </div>
-      <div className="rounded-xl border overflow-x-auto">
+      <div className="overflow-x-auto rounded-xl border">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
