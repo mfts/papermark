@@ -35,8 +35,7 @@ import { FolderWithCount } from "@/lib/swr/use-documents";
 import { DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
 import { useMediaQuery } from "@/lib/utils/use-media-query";
 
-
-
+import { SelectionDropdown } from "@/components/documents/selection-dropdown";
 import { Skeleton } from "@/components/ui/skeleton";
 import { UploadNotificationDrawer } from "@/components/upload-notification";
 import UploadZone, {
@@ -324,42 +323,50 @@ export function DocumentsList({
     setShowDrawer(false);
   };
 
-  const resetSelection = () => {
+  const resetSelection = useCallback(() => {
     setSelectedDocuments([]);
     setSelectedFolder([]);
-  };
+  }, []);
+
+  const handleSelectOnlyFiles = useCallback(() => {
+    setSelectedDocuments(documents?.map((doc) => doc.id) || []);
+    setSelectedFolder([]);
+  }, [documents]);
+
+  const handleSelectOnlyFolders = useCallback(() => {
+    setSelectedDocuments([]);
+    setSelectedFolder(folders?.map((folder) => folder.id) || []);
+  }, [folders]);
+
+  const handleSelectAll = useCallback(() => {
+    const totalItems = (documents?.length || 0) + (folders?.length || 0);
+    const isAllSelected = totalItems === totalSelectedItem;
+
+    if (isAllSelected) {
+      resetSelection();
+    } else {
+      const allDocumentIds = documents?.map((doc) => doc.id) || [];
+      const allFolderIds = folders?.map((folder) => folder.id) || [];
+      setSelectedDocuments(allDocumentIds);
+      setSelectedFolder(allFolderIds);
+    }
+  }, [documents, folders, totalSelectedItem, resetSelection]);
 
   const HeaderContent = memo(() => {
+    const totalItems = (documents?.length || 0) + (folders?.length || 0);
+    const isAllSelected = totalItems === totalSelectedItem;
+
     if (selectedDocumentsLength > 0 || selectedFoldersLength > 0) {
-      const totalItems = (documents?.length || 0) + (folders?.length || 0);
-      const isAllSelected = totalItems === totalSelectedItem;
-
-      const handleSelectAll = () => {
-        if (isAllSelected) {
-          setSelectedDocuments([]);
-          setSelectedFolder([]);
-        } else {
-          const allDocumentIds = documents?.map((doc) => doc.id) || [];
-          const allFolderIds = folders?.map((folder) => folder.id) || [];
-          setSelectedDocuments(allDocumentIds);
-          setSelectedFolder(allFolderIds);
-        }
-      };
-
       return (
         <div className="mb-2 flex items-center gap-x-1 rounded-3xl bg-gray-100 text-sm text-foreground dark:bg-gray-800">
-          <div className="ml-5 flex h-8 w-8 items-center justify-center rounded-full hover:bg-gray-200 hover:dark:bg-gray-700">
-            <ButtonTooltip
-              content={isAllSelected ? "Deselect all" : "Select all"}
-            >
-              <Checkbox
-                id="select-all"
-                checked={isAllSelected}
-                onCheckedChange={handleSelectAll}
-                className="h-5 w-5"
-                aria-label={isAllSelected ? "Deselect all" : "Select all"}
-              />
-            </ButtonTooltip>
+          <div className="ml-5 flex h-8 w-14 items-center justify-center rounded-md transition-colors hover:bg-gray-200 hover:dark:bg-gray-700">
+            <SelectionDropdown
+              isAllSelected={isAllSelected}
+              onSelectAll={handleSelectAll}
+              onSelectOnlyFiles={handleSelectOnlyFiles}
+              onSelectOnlyFolders={handleSelectOnlyFolders}
+              onSelectNone={resetSelection}
+            />
           </div>
           <ButtonTooltip content="Clear selection">
             <Button
@@ -407,7 +414,19 @@ export function DocumentsList({
       );
     } else {
       return (
-        <div className="mb-2 flex items-center gap-x-2 pt-5">
+        <div className="mb-2 flex items-center gap-x-2">
+          {(documents && documents.length > 0) ||
+          (folders && folders.length > 0) ? (
+            <div className="ml-5 flex h-8 w-14 items-center justify-center rounded-md transition-colors hover:bg-gray-200 hover:dark:bg-gray-700">
+              <SelectionDropdown
+                isAllSelected={false}
+                onSelectAll={handleSelectAll}
+                onSelectOnlyFiles={handleSelectOnlyFiles}
+                onSelectOnlyFolders={handleSelectOnlyFolders}
+                onSelectNone={resetSelection}
+              />
+            </div>
+          ) : null}
           {folders && folders.length > 0 && (
             <p className="flex items-center gap-x-1 text-sm text-gray-400">
               <FolderIcon className="h-5 w-5" />
