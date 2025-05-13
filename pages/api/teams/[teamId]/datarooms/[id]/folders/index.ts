@@ -246,12 +246,13 @@ export default async function handle(
       // Duplicate name handling
       let folderName = name;
       let counter = 1;
+      const MAX_RETRIES = 50;
 
       let childFolderPath = path
         ? "/" + path + "/" + slugify(folderName)
         : "/" + slugify(folderName);
 
-      while (true) {
+      while (counter <= MAX_RETRIES) {
         const existingFolder = await prisma.dataroomFolder.findUnique({
           where: {
             dataroomId_path: {
@@ -266,6 +267,13 @@ export default async function handle(
           ? "/" + path + "/" + slugify(folderName)
           : "/" + slugify(folderName);
         counter++;
+      }
+
+      if (counter > MAX_RETRIES) {
+        return res.status(400).json({
+          error: "Failed to create folder",
+          message: "Too many folders with similar names",
+        });
       }
 
       const folder = await prisma.dataroomFolder.create({
