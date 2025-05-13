@@ -151,6 +151,7 @@ export interface LinkWithDataroom extends Link {
   };
   agreement: Agreement | null;
   customFields: CustomField[];
+  enableIndexFile: boolean;
 }
 
 export interface Geo {

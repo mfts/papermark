@@ -270,10 +270,13 @@ export default function DataroomView({
           linkId={link.id}
           dataroom={dataroom}
           allowDownload={link.allowDownload!}
+          enableIndexFile={link.enableIndexFile}
           folderId={folderId}
           setFolderId={setFolderId}
           viewerId={viewData.viewerId}
           viewData={viewData}
+          isEmbedded={isEmbedded}
+          viewerEmail={viewData.viewerEmail ?? data.email ?? verifiedEmail ?? userEmail ?? undefined}
         />
       </div>
     );
