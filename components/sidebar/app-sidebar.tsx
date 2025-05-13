@@ -39,6 +39,7 @@ import {
 import ProAnnualBanner from "../billing/pro-annual-banner";
 import ProBanner from "../billing/pro-banner";
 import { Progress } from "../ui/progress";
+import { OrgMembers } from "./org-members";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const router = useRouter();
@@ -223,7 +224,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 />
               ) : null}
 
-              <div className="mb-2">
+              <div>
                 {linksLimit ? (
                   <UsageProgress
                     title="Links"
@@ -245,6 +246,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     Change plan to increase usage limits
                   </p>
                 ) : null}
+
+                <OrgMembers teamId={currentTeam?.id ?? ""} />
               </div>
             </div>
           </SidebarMenuItem>
