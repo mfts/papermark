@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { FileTextIcon, MoreVertical, TrashIcon } from "lucide-react";
@@ -23,14 +23,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-interface Agreement {
-  id: string;
-  name: string;
-  content: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
 
 interface AgreementCardProps {
   agreement: AgreementWithLinksCount;
@@ -82,7 +74,8 @@ export default function AgreementCard({
 
         <div className="flex items-center gap-x-2">
           <div className="text-sm text-muted-foreground">
-            {agreement._count?.links || 0} links
+            {agreement._count?.links || 0}{" "}
+            {agreement._count?.links === 1 ? "link" : "links"}
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
