@@ -237,7 +237,12 @@ function DeleteItemsModal({
           </div>
         </div>
 
-        <Button variant="destructive" loading={deleting} disabled={!isValid}>
+        <Button
+          variant="destructive"
+          type="submit"
+          loading={deleting}
+          disabled={!isValid}
+        >
           Confirm delete
           {documentIds.length > 0 &&
             ` ${documentIds.length} document${documentIds.length > 1 ? "s" : ""}`}
