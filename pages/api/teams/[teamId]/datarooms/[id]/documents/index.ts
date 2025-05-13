@@ -154,6 +154,7 @@ export default async function handle(
         include: {
           dataroom: {
             select: {
+              enableChangeNotifications: true,
               links: {
                 select: { id: true },
                 orderBy: { createdAt: "desc" },
@@ -165,10 +166,8 @@ export default async function handle(
         },
       });
 
-      // Check if the team has the change notification feature flag enabled
-      const featureFlags = await getFeatureFlags({ teamId });
-
-      if (featureFlags.roomChangeNotifications) {
+      // Check if the team has the dataroom change notification enabled
+      if (document.dataroom.enableChangeNotifications) {
         // Get all delayed and queued runs for this dataroom
         const allRuns = await runs.list({
           taskIdentifier: ["send-dataroom-change-notification"],
