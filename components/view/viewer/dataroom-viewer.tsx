@@ -32,6 +32,7 @@ import { DEFAULT_DATAROOM_VIEW_TYPE } from "../dataroom/dataroom-view";
 import DocumentCard from "../dataroom/document-card";
 import { DocumentUploadModal } from "../dataroom/document-upload-modal";
 import FolderCard from "../dataroom/folder-card";
+import IndexFileDialog from "../dataroom/index-file-dialog";
 import DataroomNav from "../dataroom/nav-dataroom";
 
 type FolderOrDocument =
@@ -88,6 +89,9 @@ export default function DataroomViewer({
   accessControls,
   viewerId,
   viewData,
+  enableIndexFile,
+  isEmbedded,
+  viewerEmail,
 }: {
   brand: Partial<DataroomBrand>;
   viewId?: string;
@@ -100,6 +104,9 @@ export default function DataroomViewer({
   accessControls: ViewerGroupAccessControls[];
   viewerId?: string;
   viewData: DEFAULT_DATAROOM_VIEW_TYPE;
+  enableIndexFile?: boolean;
+  isEmbedded?: boolean;
+  viewerEmail?: string;
 }) {
   const { documents, folders } = dataroom as {
     documents: DataroomDocument[];
@@ -308,14 +315,26 @@ export default function DataroomViewer({
                     </BreadcrumbList>
                   </Breadcrumb>
 
-                  {viewData?.enableVisitorUpload && viewerId && (
-                    <DocumentUploadModal
-                      linkId={linkId}
-                      dataroomId={dataroom?.id}
-                      viewerId={viewerId}
-                      folderId={folderId ?? undefined}
-                    />
-                  )}
+                  <div className="flex items-center gap-x-2">
+                    {enableIndexFile && viewId && viewerId && (
+                      <IndexFileDialog
+                        linkId={linkId}
+                        viewId={viewId}
+                        dataroomId={dataroom?.id}
+                        viewerId={viewerId}
+                        viewerEmail={viewerEmail}
+                      />
+                    )}
+
+                    {viewData?.enableVisitorUpload && viewerId && (
+                      <DocumentUploadModal
+                        linkId={linkId}
+                        dataroomId={dataroom?.id}
+                        viewerId={viewerId}
+                        folderId={folderId ?? undefined}
+                      />
+                    )}
+                  </div>
                 </div>
               </div>
               <ul role="list" className="-mx-4 space-y-4 overflow-auto p-4">

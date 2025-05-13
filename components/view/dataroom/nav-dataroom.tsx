@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { formatDate } from "@/lib/utils";
 
 import {
+  ButtonTooltip,
   Tooltip,
   TooltipContent,
   TooltipTrigger,
@@ -17,6 +18,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 
 import { Button } from "../../ui/button";
 import { ConversationSidebar } from "../conversations/sidebar";
+
+const DEFAULT_BANNER_IMAGE = "/_static/papermark-banner.png";
 
 export default function DataroomNav({
   allowDownload,
@@ -133,9 +136,6 @@ export default function DataroomNav({
                   className="h-16 w-36 object-contain"
                   src={brand.logo}
                   alt="Logo"
-                  // fill
-                  // quality={100}
-                  // priority
                 />
               ) : (
                 <Link
@@ -187,45 +187,43 @@ export default function DataroomNav({
                 </Tooltip>
               </TooltipProvider>
             )}
-
             {allowDownload ? (
-              <Button
-                onClick={downloadDataroom}
-                className="m-1 bg-gray-900 text-white hover:bg-gray-900/80"
-                size="icon"
-                title="Download Dataroom"
-                loading={loading}
-              >
-                <Download className="h-5 w-5" />
-              </Button>
+              <ButtonTooltip content="Download Dataroom">
+                <Button
+                  onClick={downloadDataroom}
+                  className="m-1 bg-gray-900 text-white hover:bg-gray-900/80"
+                  size="icon"
+                  loading={loading}
+                >
+                  <Download className="h-5 w-5" />
+                </Button>
+              </ButtonTooltip>
             ) : null}
           </div>
         </div>
       </div>
-      {brand && brand.banner ? (
-        <div className="relative h-[30vh]">
-          <img
-            className="h-[30vh] w-full object-cover"
-            src={brand.banner}
-            alt="Banner"
-            width={1920}
-            height={320}
-            // quality={100}
-            // priority
-          />
-          <div className="absolute bottom-5 w-fit rounded-r-md bg-white/30 backdrop-blur-md">
-            <div className="px-5 py-2 sm:px-10">
-              <div className="text-3xl">{dataroom.name}</div>
-              <time
-                className="text-sm"
-                dateTime={new Date(dataroom.lastUpdatedAt).toISOString()}
-              >
-                {`Last updated ${formatDate(dataroom.lastUpdatedAt)}`}
-              </time>
-            </div>
+
+      {/* Banner section */}
+      <div className="relative h-[30vh]">
+        <img
+          className="h-[30vh] w-full object-cover"
+          src={brand?.banner || DEFAULT_BANNER_IMAGE}
+          alt="Banner"
+          width={1920}
+          height={320}
+        />
+        <div className="absolute bottom-5 w-fit rounded-r-md bg-white/30 backdrop-blur-md">
+          <div className="px-5 py-2 sm:px-10">
+            <div className="text-3xl">{dataroom.name}</div>
+            <time
+              className="text-sm"
+              dateTime={new Date(dataroom.lastUpdatedAt).toISOString()}
+            >
+              {`Last updated ${formatDate(dataroom.lastUpdatedAt)}`}
+            </time>
           </div>
         </div>
-      ) : null}
+      </div>
 
       {conversationsEnabled && showConversations ? (
         <ConversationSidebar
