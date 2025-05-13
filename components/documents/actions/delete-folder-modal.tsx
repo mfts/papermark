@@ -69,7 +69,7 @@ export function useDeleteFolderModal(
         folderName={folderToDelete.name}
         documents={folderToDelete._count.documents}
         childFolders={folderToDelete._count.childFolders}
-        isDataroom={false}
+        isDataroom={isDataroom}
         handleButtonClick={(event, folderId) => {
           event.stopPropagation();
           event.preventDefault();
