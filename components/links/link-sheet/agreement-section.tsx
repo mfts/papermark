@@ -46,7 +46,7 @@ export default function AgreementSection({
         (agreement: Agreement) =>
           !agreement.deletedAt || agreement.id === agreementId,
       ),
-    [agreements],
+    [agreements, agreementId],
   );
 
   useEffect(() => {
