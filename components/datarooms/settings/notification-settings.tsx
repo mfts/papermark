@@ -27,6 +27,7 @@ export default function NotificationSettings({
 }: NotificationSettingsProps) {
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
+  const { isDataroomsPlus } = usePlan();
 
   const { data: dataroomData, mutate: mutateDataroom } = useSWR<{
     id: string;
@@ -38,7 +39,6 @@ export default function NotificationSettings({
     fetcher,
   );
 
-  const { isDataroomsPlus } = usePlan();
   const { data: features } = useSWR<{ roomChangeNotifications: boolean }>(
     teamInfo?.currentTeam?.id
       ? `/api/feature-flags?teamId=${teamInfo.currentTeam.id}`
