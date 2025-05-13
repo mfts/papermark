@@ -58,6 +58,11 @@ export function SettingsHeader() {
             segment: "tags",
           },
           {
+            label: "Agreements",
+            href: `/settings/agreements`,
+            segment: "agreements",
+          },
+          {
             label: "Webhooks",
             href: `/settings/webhooks`,
             segment: "webhooks",
