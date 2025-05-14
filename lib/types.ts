@@ -50,6 +50,11 @@ export interface DocumentWithVersion extends Document {
       id: string;
       name: string;
     };
+    folder: {
+      id: string;
+      name: string;
+      path: string;
+    };
   }[];
   hasPageLinks: boolean;
 }

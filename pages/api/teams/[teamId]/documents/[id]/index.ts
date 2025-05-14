@@ -52,6 +52,13 @@ export default async function handle(
                     name: true,
                   },
                 },
+                folder: {
+                  select: {
+                    id: true,
+                    name: true,
+                    path: true,
+                  },
+                },
               },
             },
           },
