@@ -147,11 +147,39 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    let isEmailVerified: boolean = false;
+    let hashedVerificationToken: string | null = null;
+    // Check if the user is part of the team and therefore skip verification steps
+    let isTeamMember: boolean = false;
+    let isPreview: boolean = false;
+    if (userId && previewToken) {
+      const session = await getServerSession(authOptions);
+      if (!session) {
+        return NextResponse.json(
+          { message: "You need to be logged in to preview the link." },
+          { status: 401 },
+        );
+      }
+
+      const sessionUserId = (session.user as CustomUser).id;
+      const teamMembership = await prisma.userTeam.findUnique({
+        where: {
+          userId_teamId: {
+            userId: sessionUserId,
+            teamId: link.teamId!,
+          },
+        },
+      });
+      if (teamMembership) {
+        isTeamMember = true;
+        isPreview = true;
+        isEmailVerified = true;
+      }
+    }
+
     // Check if there's a valid preview session
     let previewSession: PreviewSession | null = null;
-    let isPreview: boolean = false;
-
-    if (previewToken) {
+    if (!isPreview && previewToken) {
       const session = await getServerSession(authOptions);
       if (!session) {
         return NextResponse.json(
@@ -187,8 +215,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    let isEmailVerified: boolean = false;
-    let hashedVerificationToken: string | null = null;
     // If there is no session, then we need to check if the link is protected and enforce the checks
     if (!dataroomSession && !isPreview) {
       // Check if email is required for visiting the link
@@ -635,6 +661,7 @@ export async function POST(request: NextRequest) {
           enableVisitorUpload: link.enableUpload,
           requireAdminApproval: link.requireAdminApproval,
           uploadDocumentsCount, // number of documents uploaded to the dataroom by visitors
+          ...(isTeamMember && { isTeamMember: true }),
         };
 
         const response = NextResponse.json(returnObject, { status: 200 });
@@ -921,6 +948,7 @@ export async function POST(request: NextRequest) {
         viewerId: viewer?.id,
         conversationsEnabled: link.enableConversation,
         requireAdminApproval: link.requireAdminApproval,
+        ...(isTeamMember && { isTeamMember: true }),
       };
 
       const response = NextResponse.json(returnObject, { status: 200 });

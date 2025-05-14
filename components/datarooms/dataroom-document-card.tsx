@@ -9,6 +9,7 @@ import {
   ArchiveXIcon,
   BetweenHorizontalStartIcon,
   CheckIcon,
+  FileSlidersIcon,
   FolderInputIcon,
   MoreVertical,
 } from "lucide-react";
@@ -36,6 +37,7 @@ import {
 import { AddToDataroomModal } from "../documents/add-document-to-dataroom-modal";
 import FileProcessStatusBar from "../documents/file-process-status-bar";
 import { Badge } from "../ui/badge";
+import { SetGroupPermissionsModal } from "./groups/set-group-permissions-modal";
 import { MoveToDataroomFolderModal } from "./move-dataroom-folder-modal";
 
 type DocumentsCardProps = {
@@ -54,6 +56,8 @@ export default function DataroomDocumentCard({
   isSelected,
   isHovered,
 }: DocumentsCardProps) {
+  const [groupPermissionOpen, setGroupPermissionOpen] =
+    useState<boolean>(false);
   const { theme, systemTheme } = useTheme();
   const isLight =
     theme === "light" || (theme === "system" && systemTheme === "light");
@@ -307,6 +311,15 @@ export default function DataroomDocumentCard({
                     Approve document
                   </DropdownMenuItem>
                 ) : null}
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setGroupPermissionOpen(true);
+                  }}
+                >
+                  <FileSlidersIcon className="mr-2 h-4 w-4" />
+                  Set Group Permissions
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
 
                 <DropdownMenuItem
@@ -363,6 +376,20 @@ export default function DataroomDocumentCard({
           documentIds={[dataroomDocument.id]}
           itemName={dataroomDocument.document.name}
           folderIds={[]}
+        />
+      ) : null}
+      {groupPermissionOpen ? (
+        <SetGroupPermissionsModal
+          open={groupPermissionOpen}
+          setOpen={setGroupPermissionOpen}
+          dataroomId={dataroomId}
+          uploadedFiles={[
+            {
+              documentId: dataroomDocument.id,
+              dataroomDocumentId: dataroomDocument.id,
+              fileName: dataroomDocument.document.name,
+            },
+          ]}
         />
       ) : null}
     </>

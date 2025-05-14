@@ -10,7 +10,6 @@ export function SettingsHeader() {
   const { data: features } = useSWR<{
     tokens: boolean;
     incomingWebhooks: boolean;
-    webhooks: boolean;
   }>(
     teamInfo?.currentTeam?.id
       ? `/api/feature-flags?teamId=${teamInfo.currentTeam.id}`
@@ -59,9 +58,14 @@ export function SettingsHeader() {
             segment: "tags",
           },
           {
-            label: "Billing",
-            href: `/settings/billing`,
-            segment: "billing",
+            label: "Agreements",
+            href: `/settings/agreements`,
+            segment: "agreements",
+          },
+          {
+            label: "Webhooks",
+            href: `/settings/webhooks`,
+            segment: "webhooks",
           },
           {
             label: "Tokens",
@@ -70,16 +74,15 @@ export function SettingsHeader() {
             disabled: !features?.tokens,
           },
           {
-            label: "Webhooks",
-            href: `/settings/webhooks`,
-            segment: "webhooks",
-            disabled: !features?.webhooks,
-          },
-          {
             label: "Incoming Webhooks",
             href: `/settings/incoming-webhooks`,
             segment: "incoming-webhooks",
             disabled: !features?.incomingWebhooks,
+          },
+          {
+            label: "Billing",
+            href: `/settings/billing`,
+            segment: "billing",
           },
         ]}
       />

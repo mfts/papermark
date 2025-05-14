@@ -34,9 +34,12 @@ import { DEFAULT_DATAROOM_VIEW_TYPE } from "../dataroom/dataroom-view";
 import DocumentCard from "../dataroom/document-card";
 import { DocumentUploadModal } from "../dataroom/document-upload-modal";
 import FolderCard from "../dataroom/folder-card";
+import IndexFileDialog from "../dataroom/index-file-dialog";
 import DataroomNav from "../dataroom/nav-dataroom";
 
-type FolderOrDocument = DataroomFolder | DataroomDocument;
+type FolderOrDocument =
+  | (DataroomFolder & { allowDownload: boolean })
+  | DataroomDocument;
 
 export type DocumentVersion = {
   id: string;
@@ -89,6 +92,9 @@ export default function DataroomViewer({
   accessControls,
   viewerId,
   viewData,
+  enableIndexFile,
+  isEmbedded,
+  viewerEmail,
 }: {
   brand: Partial<DataroomBrand>;
   viewId?: string;
@@ -101,6 +107,9 @@ export default function DataroomViewer({
   accessControls: ViewerGroupAccessControls[];
   viewerId?: string;
   viewData: DEFAULT_DATAROOM_VIEW_TYPE;
+  enableIndexFile?: boolean;
+  isEmbedded?: boolean;
+  viewerEmail?: string;
 }) {
   const { documents: initialDocuments, folders } = dataroom as {
     documents: DataroomDocument[];
@@ -133,7 +142,28 @@ export default function DataroomViewer({
     const mixedItems: FolderOrDocument[] = [
       ...(folders || [])
         .filter((folder) => folder.parentId === folderId)
-        .map((folder) => ({ ...folder, itemType: "folder" })),
+        .map((folder) => {
+          const folderDocuments = documents.filter(
+            (doc) => doc.folderId === folder.id,
+          );
+          const allDocumentsCanDownload =
+            folderDocuments.length > 0 &&
+            folderDocuments.every((doc) => {
+              const accessControl = accessControls.find(
+                (access) => access.itemId === doc.dataroomDocumentId,
+              );
+              return (
+                (accessControl?.canDownload ?? true) &&
+                doc.versions[0].type !== "notion"
+              );
+            });
+
+          return {
+            ...folder,
+            itemType: "folder",
+            allowDownload: allowDownload && allDocumentsCanDownload,
+          };
+        }),
       ...(documents || [])
         .filter((doc) => doc.folderId === folderId)
         .map((doc) => {
@@ -151,10 +181,14 @@ export default function DataroomViewer({
         }),
     ];
     return mixedItems.sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
-  }, [folders, documents, folderId, accessControls]);
+  }, [folders, documents, folderId, accessControls, allowDownload]);
 
   const renderItem = (item: FolderOrDocument) => {
     if ("versions" in item) {
+      const isProcessing =
+        ["docs", "slides", "pdf"].includes(item.versions[0].type) &&
+        !item.versions[0].hasPages;
+
       return (
         <DocumentCard
           key={item.id}
@@ -163,6 +197,7 @@ export default function DataroomViewer({
           viewId={viewId}
           isPreview={!!isPreview}
           allowDownload={allowDownload && item.canDownload}
+          isProcessing={isProcessing}
         />
       );
     }
@@ -173,6 +208,10 @@ export default function DataroomViewer({
         folder={item}
         dataroomId={dataroom?.id}
         setFolderId={setFolderId}
+        isPreview={!!isPreview}
+        linkId={linkId}
+        viewId={viewId}
+        allowDownload={item.allowDownload}
       />
     );
   };
@@ -215,6 +254,7 @@ export default function DataroomViewer({
         dataroomId={dataroom?.id}
         viewerId={viewerId}
         conversationsEnabled={viewData.conversationsEnabled}
+        isTeamMember={viewData.isTeamMember}
       />
       <div
         style={{ height: "calc(100vh - 64px)" }}
@@ -306,8 +346,18 @@ export default function DataroomViewer({
                       ))}
                     </BreadcrumbList>
                   </Breadcrumb>
+                  <div className="flex items-center gap-x-2">
+                    {enableIndexFile && viewId && viewerId && (
+                      <IndexFileDialog
+                        linkId={linkId}
+                        viewId={viewId}
+                        dataroomId={dataroom?.id}
+                        viewerId={viewerId}
+                        viewerEmail={viewerEmail}
+                      />
+                    )}
 
-                  {viewData?.enableVisitorUpload && viewerId && (
+                    {viewData?.enableVisitorUpload && viewerId && (
                     <DocumentUploadModal
                       linkId={linkId}
                       dataroomId={dataroom?.id}
@@ -317,6 +367,7 @@ export default function DataroomViewer({
                       documentCount={viewData.uploadDocumentsCount}
                     />
                   )}
+                  </div>
                 </div>
               </div>
               <ul role="list" className="-mx-4 space-y-4 overflow-auto p-4">

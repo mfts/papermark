@@ -1,6 +1,10 @@
 import { useRouter } from "next/router";
 
+
+
 import { useCallback, useMemo, useRef, useState } from "react";
+
+
 
 import { useTeam } from "@/context/team-context";
 import { DocumentStorageType } from "@prisma/client";
@@ -9,20 +13,24 @@ import { DropEvent, FileRejection, useDropzone } from "react-dropzone";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
+
+
 import { useAnalytics } from "@/lib/analytics";
 import { SUPPORTED_DOCUMENT_MIME_TYPES } from "@/lib/constants";
 import { DocumentData, createDocument } from "@/lib/documents/create-document";
 import { resumableUpload } from "@/lib/files/tus-upload";
+import { createFolderInBoth, createFolderInMainDocs, isSystemFile } from "@/lib/folders/create-folder";
 import { usePlan } from "@/lib/swr/use-billing";
 import useLimits from "@/lib/swr/use-limits";
 import { CustomUser } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { getSupportedContentType } from "@/lib/utils/get-content-type";
-import {
-  getFileSizeLimit,
-  getFileSizeLimits,
-} from "@/lib/utils/get-file-size-limits";
+import { getFileSizeLimit, getFileSizeLimits } from "@/lib/utils/get-file-size-limits";
 import { getPagesCount } from "@/lib/utils/get-page-number-count";
+
+
+
+
 
 // Originally these mime values were directly used in the dropzone hook.
 // There was a solid reason to take them out of the scope, primarily to solve a browser compatibility issue to determine the file type when user dropped a folder.
@@ -72,37 +80,50 @@ interface FileWithPaths extends File {
   whereToUploadPath?: string;
 }
 
-export default function UploadZone({
-  children,
-  onUploadStart,
-  onUploadProgress,
-  onUploadRejected,
-  folderPathName,
-  setUploads,
-  setRejectedFiles,
-  dataroomId,
-}: {
-  children: React.ReactNode;
-  onUploadStart: (
-    uploads: { fileName: string; progress: number; documentId?: string }[],
-  ) => void;
+export interface UploadState {
+  fileName: string;
+  progress: number;
+  documentId?: string;
+  uploadId: string;
+}
+
+export interface RejectedFile {
+  fileName: string;
+  message: string;
+}
+
+interface UploadZoneProps extends React.PropsWithChildren {
+  onUploadStart: (uploads: UploadState[]) => void;
   onUploadProgress: (
     index: number,
     progress: number,
     documentId?: string,
   ) => void;
-  onUploadRejected: (rejected: { fileName: string; message: string }[]) => void;
-  setUploads: React.Dispatch<
-    React.SetStateAction<
-      { fileName: string; progress: number; documentId?: string }[]
-    >
-  >;
-  setRejectedFiles: React.Dispatch<
-    React.SetStateAction<{ fileName: string; message: string }[]>
-  >;
+  onUploadRejected: (rejected: RejectedFile[]) => void;
+  onUploadSuccess?: (
+    files: {
+      fileName: string;
+      documentId: string;
+      dataroomDocumentId: string;
+    }[],
+  ) => void;
+  setUploads: React.Dispatch<React.SetStateAction<UploadState[]>>;
+  setRejectedFiles: React.Dispatch<React.SetStateAction<RejectedFile[]>>;
   folderPathName?: string;
   dataroomId?: string;
-}) {
+}
+
+export default function UploadZone({
+  children,
+  onUploadStart,
+  onUploadProgress,
+  onUploadRejected,
+  onUploadSuccess,
+  folderPathName,
+  setUploads,
+  setRejectedFiles,
+  dataroomId,
+}: UploadZoneProps) {
   const analytics = useAnalytics();
   const { plan, isFree, isTrial } = usePlan();
   const router = useRouter();
@@ -158,7 +179,7 @@ export default function UploadZone({
   );
 
   const onDrop = useCallback(
-    (acceptedFiles: FileWithPaths[]) => {
+    async (acceptedFiles: FileWithPaths[]) => {
       if (!canAddDocuments && acceptedFiles.length > remainingDocuments) {
         toast.error("You have reached the maximum number of documents.");
         return;
@@ -207,6 +228,7 @@ export default function UploadZone({
       const newUploads = validatedFiles.valid.map((file) => ({
         fileName: file.name,
         progress: 0,
+        uploadId: crypto.randomUUID(),
       }));
 
       onUploadStart(newUploads);
@@ -240,22 +262,28 @@ export default function UploadZone({
         const { complete } = await resumableUpload({
           file, // File
           onProgress: (bytesUploaded, bytesTotal) => {
-            uploadProgress.current[index] = (bytesUploaded / bytesTotal) * 100;
-            onUploadProgress(
-              index,
-              Math.min(Math.round(uploadProgress.current[index]), 99),
+            const progress = Math.min(
+              Math.round((bytesUploaded / bytesTotal) * 100),
+              99,
+            );
+            setUploads((prevUploads) =>
+              prevUploads.map((upload) =>
+                upload.uploadId === newUploads[index].uploadId
+                  ? { ...upload, progress }
+                  : upload,
+              ),
             );
 
             const _progress = uploadProgress.current.reduce(
               (acc, progress) => acc + progress,
               0,
             );
-
-            setProgress(Math.round(_progress / acceptedFiles.length));
           },
           onError: (error) => {
             setUploads((prev) =>
-              prev.filter((upload) => upload.fileName !== file.name),
+              prev.filter(
+                (upload) => upload.uploadId !== newUploads[index].uploadId,
+              ),
             );
 
             setRejectedFiles((prev) => [
@@ -322,10 +350,10 @@ export default function UploadZone({
           );
 
         const document = await response.json();
-
+        let dataroomResponse;
         if (dataroomId) {
           try {
-            const response = await fetch(
+            dataroomResponse = await fetch(
               `/api/teams/${teamInfo?.currentTeam?.id}/datarooms/${dataroomId}/documents`,
               {
                 method: "POST",
@@ -339,8 +367,8 @@ export default function UploadZone({
               },
             );
 
-            if (!response.ok) {
-              const { message } = await response.json();
+            if (!dataroomResponse?.ok) {
+              const { message } = await dataroomResponse.json();
               console.error(
                 "An error occurred while adding document to the dataroom: ",
                 message,
@@ -364,7 +392,13 @@ export default function UploadZone({
         }
 
         // update progress to 100%
-        onUploadProgress(index, 100, document.id);
+        setUploads((prevUploads) =>
+          prevUploads.map((upload) =>
+            upload.uploadId === newUploads[index].uploadId
+              ? { ...upload, progress: 100, documentId: document.id }
+              : upload,
+          ),
+        );
 
         analytics.capture("Document Added", {
           documentId: document.id,
@@ -381,8 +415,11 @@ export default function UploadZone({
             teamPlan: plan,
           },
         });
+        const dataroomDocumentId = dataroomResponse?.ok
+          ? (await dataroomResponse.json()).id
+          : null;
 
-        return document;
+        return { ...document, dataroomDocumentId: dataroomDocumentId };
       });
 
       const documents = Promise.all(uploadPromises).finally(() => {
@@ -399,6 +436,13 @@ export default function UploadZone({
             `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}/${folderPathName}`,
           );
       });
+      const uploadedDocuments = await documents;
+      const dataroomDocuments = uploadedDocuments.map((document) => ({
+        documentId: document.id,
+        dataroomDocumentId: document.dataroomDocumentId,
+        fileName: document.name,
+      }));
+      onUploadSuccess?.(dataroomDocuments);
     },
     [
       onUploadStart,
@@ -433,6 +477,10 @@ export default function UploadZone({
 
         let files: FileWithPaths[] = [];
 
+        if (isSystemFile(entry.name)) {
+          return files;
+        }
+
         if (entry.isDirectory) {
           /**
            * Let's create the folder.
@@ -463,55 +511,17 @@ export default function UploadZone({
               throw new Error("No team found");
             }
 
-            const response = await fetch(
-              `/api/teams/${teamInfo.currentTeam.id}/${endpointTargetType}`,
-              {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                  name: entry.name, // as folderName
-                  path: parentPathOfThisEntry ?? folderPathName,
-                }),
-              },
-            );
-
-            if (!response.ok) {
-              const { message } = await response.json();
-              setRejectedFiles((prev) => [
-                {
-                  fileName: entry.name,
-                  message: message,
-                },
-                ...prev,
-              ]);
-            } else {
-              let {
-                parentFolderPath: parentFolderPath,
-                path: slugifiedPathNameOfThisEntryAfterFolderCreation,
-              } = await response.json();
-
-              if (
-                slugifiedPathNameOfThisEntryAfterFolderCreation?.startsWith("/")
-              ) {
-                // Reason "/" is removed because our `createDocument` API needs `path` to not start with "/"
-                slugifiedPathNameOfThisEntryAfterFolderCreation =
-                  slugifiedPathNameOfThisEntryAfterFolderCreation.slice(1);
-              }
+            // Create folder in main documents if not in dataroom
+            if (!dataroomId) {
+              // Create folder in main documents only
+              const { path: folderPath } = await createFolderInMainDocs({
+                teamId: teamInfo.currentTeam.id,
+                name: entry.name,
+                path: parentPathOfThisEntry ?? folderPathName,
+              });
 
               analytics.capture("Folder Added", { folderName: entry.name });
-              mutate(
-                `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}?root=true`,
-              );
-              mutate(
-                `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}`,
-              );
-              mutate(
-                `/api/teams/${teamInfo?.currentTeam?.id}/${endpointTargetType}${parentFolderPath}`,
-              );
 
-              // Now we are sure that folder is created at the backend and we can continue to traverse its child folders/files.
               const dirReader = (
                 entry as FileSystemDirectoryEntry
               ).createReader();
@@ -519,16 +529,57 @@ export default function UploadZone({
                 (resolve) => dirReader.readEntries(resolve),
               );
 
-              for (const subEntry of subEntries) {
+              const filteredSubEntries = subEntries.filter(
+                (subEntry) => !isSystemFile(subEntry.name),
+              );
+              for (const subEntry of filteredSubEntries) {
                 files.push(
                   ...(await traverseFolder(
                     subEntry,
-                    slugifiedPathNameOfThisEntryAfterFolderCreation,
+                    folderPath.startsWith("/")
+                      ? folderPath.slice(1)
+                      : folderPath,
+                  )),
+                );
+              }
+            } else {
+              // Create folder in both dataroom and main documents
+              const { dataroomPath } = await createFolderInBoth({
+                teamId: teamInfo.currentTeam.id,
+                dataroomId,
+                name: entry.name,
+                path: parentPathOfThisEntry ?? folderPathName,
+                setRejectedFiles,
+                analytics,
+              });
+
+              const dirReader = (
+                entry as FileSystemDirectoryEntry
+              ).createReader();
+              const subEntries = await new Promise<FileSystemEntry[]>(
+                (resolve) => dirReader.readEntries(resolve),
+              );
+
+              const filteredSubEntries = subEntries.filter(
+                (subEntry) => !isSystemFile(subEntry.name),
+              );
+
+              for (const subEntry of filteredSubEntries) {
+                files.push(
+                  ...(await traverseFolder(
+                    subEntry,
+                    dataroomPath.startsWith("/")
+                      ? dataroomPath.slice(1)
+                      : dataroomPath,
                   )),
                 );
               }
             }
           } catch (error) {
+            console.error(
+              "An error occurred while creating the folder: ",
+              error,
+            );
             setRejectedFiles((prev) => [
               {
                 fileName: entry.name,
@@ -538,6 +589,10 @@ export default function UploadZone({
             ]);
           }
         } else if (entry.isFile) {
+          if (isSystemFile(entry.name)) {
+            return files;
+          }
+
           let file = await new Promise<FileWithPaths>((resolve) =>
             (entry as FileSystemFileEntry).file(resolve),
           );

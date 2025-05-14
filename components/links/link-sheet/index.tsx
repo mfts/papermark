@@ -89,6 +89,7 @@ export const DEFAULT_LINK_PROPS = (
   requireAdminApproval: true, // default to true
   uploadFolderId: null,
   uploadFolderName: "Home",
+  enableIndexFile: false,
 });
 
 export type DEFAULT_LINK_TYPE = {
@@ -129,6 +130,7 @@ export type DEFAULT_LINK_TYPE = {
   requireAdminApproval: boolean;
   uploadFolderId: string | null;
   uploadFolderName: string;
+  enableIndexFile: boolean;
 };
 
 export default function LinkSheet({

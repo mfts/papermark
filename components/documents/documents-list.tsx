@@ -26,10 +26,6 @@ import {
 import { motion } from "motion/react";
 import { toast } from "sonner";
 
-import { Skeleton } from "@/components/ui/skeleton";
-import { UploadNotificationDrawer } from "@/components/upload-notification";
-import UploadZone from "@/components/upload-zone";
-
 import { moveDocumentToFolder } from "@/lib/documents/move-documents";
 import { moveFolderToFolder } from "@/lib/documents/move-folder";
 import { DataroomFolderWithCount } from "@/lib/swr/use-dataroom";
@@ -37,17 +33,37 @@ import { FolderWithCount } from "@/lib/swr/use-documents";
 import { DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
 import { useMediaQuery } from "@/lib/utils/use-media-query";
 
+import { Skeleton } from "@/components/ui/skeleton";
+import { UploadNotificationDrawer } from "@/components/upload-notification";
+import UploadZone, {
+  RejectedFile,
+  UploadState,
+} from "@/components/upload-zone";
+
 import { itemsMessage } from "../datarooms/folders/utils";
 import { Button } from "../ui/button";
+import { Checkbox } from "../ui/checkbox";
 import { Portal } from "../ui/portal";
 import { ButtonTooltip } from "../ui/tooltip";
 import { useDeleteDocumentsAndFoldersModal } from "./actions/delete-documents-modal";
+import { useDeleteFolderModal } from "./actions/delete-folder-modal";
 import DocumentCard from "./document-card";
 import { DraggableItem } from "./drag-and-drop/draggable-item";
 import { DroppableFolder } from "./drag-and-drop/droppable-folder";
 import { EmptyDocuments } from "./empty-document";
 import FolderCard from "./folder-card";
 import { MoveToFolderModal, TSelectedFolder } from "./move-folder-modal";
+
+export type Upload = {
+  fileName: string;
+  progress: number;
+  documentId?: string;
+};
+
+export type File = {
+  fileName: string;
+  message: string;
+};
 
 export function DocumentsList({
   folders,
@@ -66,22 +82,13 @@ export function DocumentsList({
 }) {
   const { isMobile } = useMediaQuery();
 
-  const [uploads, setUploads] = useState<
-    { fileName: string; progress: number; documentId?: string }[]
-  >([]);
-  const [rejectedFiles, setRejectedFiles] = useState<
-    { fileName: string; message: string }[]
-  >([]);
+  const [uploads, setUploads] = useState<UploadState[]>([]);
+  const [rejectedFiles, setRejectedFiles] = useState<RejectedFile[]>([]);
+  const [selectedDocuments, setSelectedDocuments] = useState<string[]>([]);
+  const [selectedFolders, setSelectedFolders] = useState<string[]>([]);
 
   const [showDrawer, setShowDrawer] = useState<boolean>(false);
-  const [moveFolderOpen, setMoveFolderOpen] = useState<boolean>(false);
-
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
-  const [selectedDocuments, setSelectedDocuments] = useState<string[]>([]);
-  //forFolder
-  const [selectedFolder, setSelectedFolder] = useState<string[]>([]);
-  const [parentFolderId, setParentFolderId] = useState<string>("");
-
   const [draggedDocument, setDraggedDocument] =
     useState<DocumentWithLinksAndLinkCountAndViewCount | null>(null);
 
@@ -89,18 +96,35 @@ export function DocumentsList({
   const [draggedFolder, setDraggedFolder] = useState<
     FolderWithCount | DataroomFolderWithCount | null
   >(null);
-
-  const [isOverFolder, setIsOverFolder] = useState<boolean>(false);
   const [isDragging, setIsDragging] = useState<boolean>(false);
+  const [isOverFolder, setIsOverFolder] = useState<boolean>(false);
+  const [parentFolderId, setParentFolderId] = useState<string>("");
+  const [moveFolderOpen, setMoveFolderOpen] = useState<boolean>(false);
 
-  const totalSelectedItem = [...selectedDocuments, ...selectedFolder].length;
+  const { setDeleteModalOpen, setFolderToDelete, DeleteFolderModal } =
+    useDeleteFolderModal(teamInfo);
+
+  const handleDeleteFolder = useCallback(
+    (folderId: string) => {
+      const folderToDelete = folders?.find((f) => f.id === folderId);
+      if (folderToDelete) {
+        setFolderToDelete(folderToDelete);
+        setDeleteModalOpen(true);
+        setSelectedFolders((prev) => prev.filter((id) => id !== folderId));
+      }
+    },
+    [folders, setFolderToDelete, setDeleteModalOpen, setSelectedFolders],
+  );
+
   const { setShowDeleteItemsModal, DeleteItemsModal } =
     useDeleteDocumentsAndFoldersModal({
       documentIds: selectedDocuments,
-      setSelectedDocuments: setSelectedDocuments,
-      folderIds: selectedFolder,
-      setSelectedFolder,
+      setSelectedDocuments,
+      folderIds: selectedFolders,
+      setSelectedFolder: setSelectedFolders,
     });
+
+  const totalSelectedItem = [...selectedDocuments, ...selectedFolders].length;
 
   const sensors = useSensors(
     useSensor(MouseSensor),
@@ -118,14 +142,14 @@ export function DocumentsList({
   );
 
   const selectedFoldersLength = useMemo(
-    () => selectedFolder && selectedFolder.length,
-    [selectedFolder],
+    () => selectedFolders && selectedFolders.length,
+    [selectedFolders],
   );
 
   const handleSelect = useCallback(
     (id: string, type: "document" | "folder") => {
       if (type === "folder") {
-        setSelectedFolder((prev) =>
+        setSelectedFolders((prev) =>
           prev.includes(id)
             ? prev.filter((docId) => docId !== id)
             : [...prev, id],
@@ -197,12 +221,12 @@ export function DocumentsList({
           itemId,
           folders,
           setDraggedFolder,
-          selectedFolder,
-          setSelectedFolder,
+          selectedFolders,
+          setSelectedFolders,
         );
       }
     },
-    [handleDragForType, documents, folders, selectedDocuments, selectedFolder],
+    [handleDragForType, documents, folders, selectedDocuments, selectedFolders],
   );
 
   const handleDragOver = (event: DragOverEvent) => {
@@ -274,7 +298,7 @@ export function DocumentsList({
     if (!over) return;
     const activeId = active.id;
     const overId = over.id;
-    if (selectedFolder.includes(overId.toString())) {
+    if (selectedFolders.includes(overId.toString())) {
       return toast.error(
         "Can not move folder and documents into selected folders",
       );
@@ -290,7 +314,7 @@ export function DocumentsList({
     const documentsToMove =
       selectedDocumentsLength > 0 ? selectedDocuments : [];
     // Move the folder(s) to the new folder
-    const foldersToMove = selectedFoldersLength > 0 ? selectedFolder : [];
+    const foldersToMove = selectedFoldersLength > 0 ? selectedFolders : [];
 
     toast.promise(
       moveDocumentsAndFolders({
@@ -310,7 +334,7 @@ export function DocumentsList({
     );
 
     setSelectedDocuments([]);
-    setSelectedFolder([]);
+    setSelectedFolders([]);
     setIsOverFolder(false);
   };
 
@@ -320,13 +344,41 @@ export function DocumentsList({
 
   const resetSelection = () => {
     setSelectedDocuments([]);
-    setSelectedFolder([]);
+    setSelectedFolders([]);
   };
 
   const HeaderContent = memo(() => {
     if (selectedDocumentsLength > 0 || selectedFoldersLength > 0) {
+      const totalItems = (documents?.length || 0) + (folders?.length || 0);
+      const isAllSelected = totalItems === totalSelectedItem;
+
+      const handleSelectAll = () => {
+        if (isAllSelected) {
+          setSelectedDocuments([]);
+          setSelectedFolders([]);
+        } else {
+          const allDocumentIds = documents?.map((doc) => doc.id) || [];
+          const allFolderIds = folders?.map((folder) => folder.id) || [];
+          setSelectedDocuments(allDocumentIds);
+          setSelectedFolders(allFolderIds);
+        }
+      };
+
       return (
         <div className="mb-2 flex items-center gap-x-1 rounded-3xl bg-gray-100 text-sm text-foreground dark:bg-gray-800">
+          <div className="ml-5 flex h-8 w-8 items-center justify-center rounded-full hover:bg-gray-200 hover:dark:bg-gray-700">
+            <ButtonTooltip
+              content={isAllSelected ? "Deselect all" : "Select all"}
+            >
+              <Checkbox
+                id="select-all"
+                checked={isAllSelected}
+                onCheckedChange={handleSelectAll}
+                className="h-5 w-5"
+                aria-label={isAllSelected ? "Deselect all" : "Select all"}
+              />
+            </ButtonTooltip>
+          </div>
           <ButtonTooltip content="Clear selection">
             <Button
               onClick={resetSelection}
@@ -401,18 +453,27 @@ export function DocumentsList({
       <UploadZone
         folderPathName={folderPathName?.join("/")}
         onUploadStart={(newUploads) => {
-          setUploads(newUploads);
+          setUploads((prevUploads) => [...prevUploads, ...newUploads]);
           setShowDrawer(true);
         }}
         onUploadProgress={(index, progress, documentId) => {
-          setUploads((prevUploads) =>
-            prevUploads.map((upload, i) =>
-              i === index ? { ...upload, progress, documentId } : upload,
-            ),
-          );
+          setUploads((prevUploads) => {
+            const recentBatchStartIndex = prevUploads.length - index - 1;
+            if (
+              recentBatchStartIndex < 0 ||
+              recentBatchStartIndex >= prevUploads.length
+            ) {
+              return prevUploads;
+            }
+            return prevUploads.map((upload, i) =>
+              i === recentBatchStartIndex
+                ? { ...upload, progress, documentId }
+                : upload,
+            );
+          });
         }}
         onUploadRejected={(rejected) => {
-          setRejectedFiles(rejected);
+          setRejectedFiles((prevRejected) => [...prevRejected, ...rejected]);
           setShowDrawer(true);
         }}
         setUploads={setUploads}
@@ -429,6 +490,11 @@ export function DocumentsList({
                         key={folder.id}
                         folder={folder}
                         teamInfo={teamInfo}
+                        isSelected={selectedFolders.includes(folder.id)}
+                        isDragging={
+                          isDragging && selectedFolders.includes(folder.id)
+                        }
+                        onDelete={handleDeleteFolder}
                       />
                     );
                   })
@@ -516,13 +582,13 @@ export function DocumentsList({
                           <DroppableFolder
                             key={folder.id}
                             id={folder.id}
-                            disabledFolder={selectedFolder}
+                            disabledFolder={selectedFolders}
                             path={folder.path}
                           >
                             <DraggableItem
                               key={folder.id}
                               id={folder.id}
-                              isSelected={selectedFolder.includes(folder.id)}
+                              isSelected={selectedFolders.includes(folder.id)}
                               onSelect={(id, type) => {
                                 handleSelect(id, type);
                               }}
@@ -533,11 +599,12 @@ export function DocumentsList({
                                 key={folder.id}
                                 folder={folder}
                                 teamInfo={teamInfo}
-                                isSelected={selectedFolder.includes(folder.id)}
+                                isSelected={selectedFolders.includes(folder.id)}
                                 isDragging={
                                   isDragging &&
-                                  selectedFolder.includes(folder.id)
+                                  selectedFolders.includes(folder.id)
                                 }
+                                onDelete={handleDeleteFolder}
                               />
                             </DraggableItem>
                           </DroppableFolder>
@@ -626,6 +693,7 @@ export function DocumentsList({
                         <FolderCard
                           folder={draggedFolder}
                           teamInfo={teamInfo}
+                          onDelete={handleDeleteFolder}
                         />
                       ) : null}
                       {totalSelectedItem > 1 ? (
@@ -656,12 +724,11 @@ export function DocumentsList({
                 setOpen={setMoveFolderOpen}
                 setSelectedDocuments={setSelectedDocuments}
                 documentIds={selectedDocuments}
-                folderIds={selectedFolder}
+                folderIds={selectedFolders}
                 folderParentId={parentFolderId}
-                setSelectedFoldersId={setSelectedFolder}
+                setSelectedFoldersId={setSelectedFolders}
               />
             ) : null}
-            <DeleteItemsModal />
           </>
         )}
       </UploadZone>
@@ -676,6 +743,8 @@ export function DocumentsList({
           setRejectedFiles={setRejectedFiles}
         />
       ) : null}
+      <DeleteFolderModal />
+      <DeleteItemsModal />
     </>
   );
-};
+}

@@ -1,7 +1,6 @@
-import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/router";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { PlanEnum } from "@/ee/stripe/constants";
@@ -16,6 +15,7 @@ import {
   LinkIcon,
   Settings2Icon,
 } from "lucide-react";
+import { useQueryState } from "nuqs";
 import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
 
@@ -23,6 +23,7 @@ import { usePlan } from "@/lib/swr/use-billing";
 import useLimits from "@/lib/swr/use-limits";
 import { LinkWithViews, WatermarkConfig } from "@/lib/types";
 import { cn, copyToClipboard, fetcher, nFormatter, timeAgo } from "@/lib/utils";
+import { useMediaQuery } from "@/lib/utils/use-media-query";
 
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { Button } from "@/components/ui/button";
@@ -40,6 +41,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
   Table,
   TableBody,
   TableCell,
@@ -55,6 +61,9 @@ import MoreHorizontal from "../shared/icons/more-horizontal";
 import { Badge } from "../ui/badge";
 import { ButtonTooltip } from "../ui/tooltip";
 import EmbedCodeModal from "./embed-code-modal";
+import LinkActiveControls, {
+  countActiveSettings,
+} from "./link-active-controls";
 import LinkSheet, {
   DEFAULT_LINK_PROPS,
   type DEFAULT_LINK_TYPE,
@@ -73,11 +82,13 @@ export default function LinksTable({
   primaryVersion?: DocumentVersion;
   mutateDocument?: () => void;
 }) {
-  const searchParams = useSearchParams();
-  const selectedTagIds = useMemo(
-    () => searchParams?.get("tagIds")?.split(",")?.filter(Boolean) ?? [],
-    [searchParams],
-  );
+  const [tags, _] = useQueryState<string[]>("tags", {
+    parse: (value: string) => value.split(",").filter(Boolean),
+    serialize: (value: string[]) => value.join(","),
+  });
+
+  const selectedTagNames = useMemo(() => tags ?? [], [tags]);
+
   const now = Date.now();
   const router = useRouter();
   const { isFree } = usePlan();
@@ -85,6 +96,8 @@ export default function LinksTable({
   const { groupId } = router.query as {
     groupId?: string;
   };
+
+  const { isMobile } = useMediaQuery();
 
   let processedLinks = useMemo(() => {
     if (!links?.length) return [];
@@ -117,10 +130,10 @@ export default function LinksTable({
   processedLinks = useMemo(() => {
     if (!links?.length) return [];
     return processedLinks.filter((link) => {
-      if (selectedTagIds.length === 0) return true;
-      return link.tags.some((tag) => selectedTagIds.includes(tag.id));
+      if (selectedTagNames.length === 0) return true;
+      return link.tags.some((tag) => selectedTagNames.includes(tag.name));
     });
-  }, [links, processedLinks, selectedTagIds]);
+  }, [links, processedLinks, selectedTagNames]);
 
   const { canAddLinks } = useLimits();
   const { data: features } = useSWR<{
@@ -142,6 +155,8 @@ export default function LinksTable({
     id: string;
     name: string;
   } | null>(null);
+  const [popoverOpen, setPopoverOpen] = useState<string | null>(null);
+  const hoverTimeout = useRef<NodeJS.Timeout | null>(null);
 
   const handleCopyToClipboard = (linkString: string) => {
     copyToClipboard(`${linkString}`, "Link copied to clipboard.");
@@ -192,6 +207,7 @@ export default function LinksTable({
       uploadFolderId: link.uploadFolderId ?? null,
       uploadFolderName: link.uploadFolderName ?? "Home",
       requireAdminApproval: !!link.requireAdminApproval,
+      enableIndexFile: link.enableIndexFile ?? false,
     });
     //wait for dropdown to close before opening the link sheet
     setTimeout(() => {
@@ -381,7 +397,13 @@ export default function LinksTable({
                   .map((link) => (
                     <Collapsible key={link.id} asChild>
                       <>
-                        <TableRow key={link.id} className="group/row">
+                        <TableRow
+                          key={link.id}
+                          className={cn(
+                            "group/row",
+                            popoverOpen === link.id && "bg-gray-100",
+                          )}
+                        >
                           <TableCell className="w-[250px] truncate font-medium">
                             <div className="flex items-center gap-x-2">
                               {link.groupId ? (
@@ -420,6 +442,8 @@ export default function LinksTable({
                                 link.domainId && isFree
                                   ? "bg-destructive hover:bg-red-700 hover:dark:bg-red-200"
                                   : "bg-secondary hover:bg-emerald-700 hover:dark:bg-emerald-200",
+                                popoverOpen === link.id &&
+                                  "ring-1 ring-gray-400 dark:ring-gray-100",
                               )}
                             >
                               {/* Progress bar */}
@@ -462,9 +486,9 @@ export default function LinksTable({
                                         : `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${link.id}`,
                                     )
                                   }
-                                  title="Copy to clipboard"
+                                  title="Copy & Share"
                                 >
-                                  Copy to Clipboard
+                                  Copy & Share
                                 </button>
                               )}
                             </div>
@@ -476,21 +500,97 @@ export default function LinksTable({
                                 onClick={() => handlePreviewLink(link)}
                               >
                                 <span className="sr-only">Preview link</span>
-                                <EyeIcon className="h-5 w-5 text-gray-400 group-hover:text-gray-500" />
+                                <EyeIcon className="text-gray-400 group-hover:text-gray-500" />
                               </Button>
                             </ButtonTooltip>
-                            <ButtonTooltip content="Edit link">
-                              <Button
-                                variant="link"
-                                size="icon"
-                                className="group h-7 w-8"
-                                onClick={() => handleEditLink(link)}
-                                title="Edit link"
+                            {isMobile ? (
+                              <ButtonTooltip content="Edit link">
+                                <Button
+                                  variant={"link"}
+                                  size={"icon"}
+                                  className="group h-7 w-8"
+                                  onClick={() => handleEditLink(link)}
+                                >
+                                  <span className="sr-only">Edit link</span>
+                                  <Settings2Icon className="text-gray-400 group-hover:text-gray-500" />
+                                </Button>
+                              </ButtonTooltip>
+                            ) : (
+                              <Popover
+                                open={popoverOpen === link.id}
+                                onOpenChange={() => {}}
                               >
-                                <span className="sr-only">Edit link</span>
-                                <Settings2Icon className="h-5 w-5 text-gray-400 group-hover:text-gray-500" />
-                              </Button>
-                            </ButtonTooltip>
+                                <PopoverTrigger asChild>
+                                  <Button
+                                    variant="link"
+                                    className={cn(
+                                      "h-7 font-normal hover:no-underline focus-visible:ring-0 focus-visible:ring-offset-0",
+                                      popoverOpen === link.id
+                                        ? "text-foreground"
+                                        : "text-muted-foreground hover:text-foreground",
+                                    )}
+                                    size="sm"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      handleEditLink(link);
+                                    }}
+                                    onMouseDown={(e) => e.preventDefault()}
+                                    onMouseEnter={() => {
+                                      hoverTimeout.current = setTimeout(
+                                        () => setPopoverOpen(link.id),
+                                        250,
+                                      );
+                                    }}
+                                    onMouseLeave={() => {
+                                      if (hoverTimeout.current)
+                                        clearTimeout(hoverTimeout.current);
+
+                                      // Add delay before closing to prevent flickering
+                                      hoverTimeout.current = setTimeout(
+                                        () => setPopoverOpen(null),
+                                        100,
+                                      );
+                                    }}
+                                  >
+                                    <Settings2Icon strokeWidth={1.75} />
+                                    <span className="whitespace-nowrap">
+                                      {countActiveSettings(link)}{" "}
+                                      {countActiveSettings(link) === 1
+                                        ? "control"
+                                        : "controls"}
+                                    </span>
+                                  </Button>
+                                </PopoverTrigger>
+                                <PopoverContent
+                                  side="top"
+                                  align="start"
+                                  className="w-56 p-0"
+                                  onMouseEnter={() => {
+                                    if (hoverTimeout.current)
+                                      clearTimeout(hoverTimeout.current);
+                                    setPopoverOpen(link.id);
+                                  }}
+                                  onMouseLeave={() => {
+                                    if (hoverTimeout.current)
+                                      clearTimeout(hoverTimeout.current);
+
+                                    // Add delay before closing to prevent flickering
+                                    hoverTimeout.current = setTimeout(
+                                      () => setPopoverOpen(null),
+                                      100,
+                                    );
+                                  }}
+                                >
+                                  <LinkActiveControls
+                                    link={link}
+                                    onEditClick={(e) => {
+                                      e.preventDefault();
+                                      handleEditLink(link);
+                                    }}
+                                  />
+                                </PopoverContent>
+                              </Popover>
+                            )}
                           </TableCell>
                           {hasAnyTags ? (
                             <TableCell className="w-[250px] 2xl:w-auto">
@@ -551,6 +651,12 @@ export default function LinksTable({
                                 >
                                   <Settings2Icon className="mr-2 h-4 w-4" />
                                   Edit Link
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => handlePreviewLink(link)}
+                                >
+                                  <EyeIcon className="mr-2 h-4 w-4" />
+                                  Preview Link
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   disabled={!canAddLinks}

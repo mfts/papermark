@@ -10,6 +10,7 @@ import { toast } from "sonner";
 
 import { cn } from "@/lib/utils";
 import { timeAgo } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { fileIcon } from "@/lib/utils/get-file-icon";
 
 import { Badge } from "@/components/ui/badge";
@@ -40,6 +41,7 @@ type DocumentsCardProps = {
   viewId?: string;
   isPreview: boolean;
   allowDownload: boolean;
+  isProcessing?: boolean;
 };
 
 export default function DocumentCard({
@@ -48,6 +50,7 @@ export default function DocumentCard({
   viewId,
   isPreview,
   allowDownload,
+  isProcessing = false,
 }: DocumentsCardProps) {
   const { theme, systemTheme } = useTheme();
   const canDownload = document.canDownload && allowDownload;
@@ -63,6 +66,14 @@ export default function DocumentCard({
   };
 
   const handleDocumentClick = (e: React.MouseEvent) => {
+    if (isProcessing) {
+      e.preventDefault();
+      toast.error(
+        "Document is still processing. Please wait a moment and try again.",
+      );
+      return;
+    }
+
     e.preventDefault();
 
     if (isPending) {
@@ -176,6 +187,7 @@ export default function DocumentCard({
           isPending
             ? "bg-background/50 ring-gray-200 backdrop-blur-sm dark:ring-gray-700"
             : "ring-gray-200 hover:bg-secondary hover:ring-gray-300 dark:bg-secondary dark:ring-gray-700 hover:dark:ring-gray-500",
+          isProcessing && "cursor-not-allowed opacity-60",
         )}
       >
         <div className="z-0 flex min-w-0 shrink items-center space-x-2 sm:space-x-4">
@@ -196,9 +208,14 @@ export default function DocumentCard({
                     "w-full truncate",
                     isPending && "cursor-not-allowed opacity-50",
                   )}
-                  disabled={isPending}
+                  disabled={isPending || isProcessing}
                 >
                   <span>{document.name}</span>
+                  {isProcessing && (
+                    <span className="ml-2 text-xs text-muted-foreground">
+                      (Processing...)
+                    </span>
+                  )}
                   <span className="absolute inset-0" />
                 </button>
               </h2>
@@ -216,7 +233,7 @@ export default function DocumentCard({
             </div>
           </div>
         </div>
-        {canDownload && !isPending && (
+        {canDownload && !isProcessing && !isPending && (
           <div className="z-10">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
