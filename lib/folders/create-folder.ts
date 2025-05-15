@@ -107,7 +107,6 @@ export async function createFolderInBoth({
       path: parentPath
     });
 
-    console.log("mainDocsResponse", dataroomResponse.path, mainDocsResponse.path);
     // Track analytics
     analytics.capture("Folder Added in dataroom", {
       folderName: name,
