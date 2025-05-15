@@ -49,7 +49,8 @@ export const createDocument = async ({
   );
 
   if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
+    const error = await response.json();
+    throw new Error(error);
   }
 
   return response;

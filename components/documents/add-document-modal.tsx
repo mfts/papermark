@@ -363,71 +363,73 @@ export function AddDocumentModal({
         },
       );
 
-      if (response) {
-        const document = await response.json();
+      if (!response.ok) {
+        const { error } = await response.json();
+        toast.error(error);
+        return;
+      }
 
-        if (isDataroom && dataroomId) {
-          const dataroomResponse = await addDocumentToDataroom({
-            documentId: document.id,
-            folderPathName: currentFolderPath?.join("/"),
-          });
+      const document = await response.json();
 
-          if (dataroomResponse?.ok) {
-            const dataroomDocument =
-              (await dataroomResponse.json()) as DataroomDocument & {
-                dataroom: { _count: { viewerGroups: number } };
-              };
+      if (isDataroom && dataroomId) {
+        const dataroomResponse = await addDocumentToDataroom({
+          documentId: document.id,
+          folderPathName: currentFolderPath?.join("/"),
+        });
 
-            if (dataroomDocument.dataroom._count.viewerGroups > 0) {
-              setShowGroupPermissions(true);
-              setUploadedFiles([
-                {
-                  documentId: document.id,
-                  dataroomDocumentId: dataroomDocument.id,
-                  fileName: document.name,
-                },
-              ]);
-            }
+        if (dataroomResponse?.ok) {
+          const dataroomDocument =
+            (await dataroomResponse.json()) as DataroomDocument & {
+              dataroom: { _count: { viewerGroups: number } };
+            };
+
+          if (dataroomDocument.dataroom._count.viewerGroups > 0) {
+            setShowGroupPermissions(true);
+            setUploadedFiles([
+              {
+                documentId: document.id,
+                dataroomDocumentId: dataroomDocument.id,
+                fileName: document.name,
+              },
+            ]);
           }
-
-          analytics.capture("Document Added", {
-            documentId: document.id,
-            name: document.name,
-            numPages: document.numPages,
-            path: router.asPath,
-            type: "notion",
-            teamId: teamId,
-            dataroomId: dataroomId,
-            $set: {
-              teamId: teamId,
-              teamPlan: plan,
-            },
-          });
-
-          return;
         }
 
-        if (!newVersion) {
-          toast.success(
-            "Notion Page processed. Redirecting to document page...",
-          );
-
-          analytics.capture("Document Added", {
-            documentId: document.id,
-            name: document.name,
-            fileSize: null,
-            path: router.asPath,
-            type: "notion",
+        analytics.capture("Document Added", {
+          documentId: document.id,
+          name: document.name,
+          numPages: document.numPages,
+          path: router.asPath,
+          type: "notion",
+          teamId: teamId,
+          dataroomId: dataroomId,
+          $set: {
             teamId: teamId,
-            $set: {
-              teamId: teamId,
-              teamPlan: plan,
-            },
-          });
+            teamPlan: plan,
+          },
+        });
 
-          // redirect to the document page
-          router.push("/documents/" + document.id);
-        }
+        return;
+      }
+
+      if (!newVersion) {
+        toast.success("Notion Page processed. Redirecting to document page...");
+
+        analytics.capture("Document Added", {
+          documentId: document.id,
+          name: document.name,
+          fileSize: null,
+          path: router.asPath,
+          type: "notion",
+          teamId: teamId,
+          $set: {
+            teamId: teamId,
+            teamPlan: plan,
+          },
+        });
+
+        // redirect to the document page
+        router.push("/documents/" + document.id);
       }
     } catch (error) {
       setUploading(false);
