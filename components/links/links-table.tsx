@@ -1,5 +1,7 @@
 import { useRouter } from "next/router";
 
+
+
 import { useMemo, useRef, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
@@ -24,6 +26,8 @@ import useLimits from "@/lib/swr/use-limits";
 import { LinkWithViews, WatermarkConfig } from "@/lib/types";
 import { cn, copyToClipboard, fetcher, nFormatter, timeAgo } from "@/lib/utils";
 import { useMediaQuery } from "@/lib/utils/use-media-query";
+
+
 
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { Button } from "@/components/ui/button";
@@ -54,12 +58,15 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
+
+
 import FileProcessStatusBar from "../documents/file-process-status-bar";
 import BarChart from "../shared/icons/bar-chart";
 import ChevronDown from "../shared/icons/chevron-down";
 import MoreHorizontal from "../shared/icons/more-horizontal";
 import { Badge } from "../ui/badge";
 import { ButtonTooltip } from "../ui/tooltip";
+import PreviewButton from "./Preview";
 import EmbedCodeModal from "./embed-code-modal";
 import LinkActiveControls, {
   countActiveSettings,
@@ -70,6 +77,14 @@ import LinkSheet, {
 } from "./link-sheet";
 import { TagColumn } from "./link-sheet/tags/tag-details";
 import LinksVisitors from "./links-visitors";
+
+const isDocumentProcessing = (version?: DocumentVersion) => {
+  if (!version) return false;
+  return (
+    !version.hasPages &&
+    ["pdf", "slides", "docs", "cad"].includes(version.type!)
+  );
+};
 
 export default function LinksTable({
   targetType,
@@ -217,6 +232,13 @@ export default function LinksTable({
   const handlePreviewLink = async (link: LinkWithViews) => {
     if (link.domainId && isFree) {
       toast.error("You need to upgrade to preview this link");
+      return;
+    }
+
+    if (isDocumentProcessing(primaryVersion)) {
+      toast.error(
+        "Document is still processing. Please wait a moment and try again.",
+      );
       return;
     }
 
@@ -446,11 +468,8 @@ export default function LinksTable({
                               )}
                             >
                               {/* Progress bar */}
-                              {primaryVersion &&
-                                !primaryVersion.hasPages &&
-                                ["pdf", "slides", "docs", "cad"].includes(
-                                  primaryVersion.type!,
-                                ) && (
+                              {isDocumentProcessing(primaryVersion) &&
+                                primaryVersion && (
                                   <FileProcessStatusBar
                                     documentVersionId={primaryVersion.id}
                                     className="absolute bottom-0 left-0 right-0 top-0 z-20 flex h-full items-center gap-x-8"
@@ -491,17 +510,13 @@ export default function LinksTable({
                                 </button>
                               )}
                             </div>
-                            <ButtonTooltip content="Preview link">
-                              <Button
-                                variant={"link"}
-                                size={"icon"}
-                                className="group h-7 w-8"
-                                onClick={() => handlePreviewLink(link)}
-                              >
-                                <span className="sr-only">Preview link</span>
-                                <EyeIcon className="text-gray-400 group-hover:text-gray-500" />
-                              </Button>
-                            </ButtonTooltip>
+                            <PreviewButton
+                              link={link}
+                              isProcessing={isDocumentProcessing(
+                                primaryVersion,
+                              )}
+                              onPreview={handlePreviewLink}
+                            />
                             {isMobile ? (
                               <ButtonTooltip content="Edit link">
                                 <Button
