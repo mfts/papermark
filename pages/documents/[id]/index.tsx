@@ -34,10 +34,6 @@ export default function DocumentPage() {
 
   const [isLinkSheetOpen, setIsLinkSheetOpen] = useState<boolean>(false);
 
-  if (error && error.status === 404) {
-    return <ErrorPage statusCode={404} />;
-  }
-
   if (error && error.status === 400) {
     return <ErrorPage statusCode={400} />;
   }
