@@ -41,7 +41,12 @@ export function useDocument() {
   };
 }
 
-export function useDocumentLinks() {
+export function useDocumentLinks(
+  page: number = 1,
+  limit: number = 10,
+  search?: string,
+  tags?: string[]
+) {
   const router = useRouter();
   const teamInfo = useTeam();
 
@@ -49,12 +54,26 @@ export function useDocumentLinks() {
     id: string;
   };
 
-  const { data: links, error } = useSWR<LinkWithViews[]>(
+  const searchParams = new URLSearchParams();
+  searchParams.set("page", page.toString());
+  searchParams.set("limit", limit.toString());
+  if (search) searchParams.set("search", search);
+  if (tags?.length) searchParams.set("tags", tags.join(","));
+
+  const { data, error, isValidating } = useSWR<{
+    links: LinkWithViews[];
+    pagination: {
+      total: number;
+      pages: number;
+      page: number;
+      limit: number;
+    };
+  }>(
     teamInfo?.currentTeam?.id &&
       id &&
       `/api/teams/${teamInfo?.currentTeam?.id}/documents/${encodeURIComponent(
         id,
-      )}/links`,
+    )}/links?${searchParams.toString()}`,
     fetcher,
     {
       dedupingInterval: 10000,
@@ -62,8 +81,10 @@ export function useDocumentLinks() {
   );
 
   return {
-    links,
-    loading: !error && !links,
+    links: data?.links,
+    pagination: data?.pagination,
+    loading: !error && !data,
+    isValidating,
     error,
   };
 }
