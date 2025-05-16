@@ -286,26 +286,30 @@ export default function DocumentHeader({
   };
 
   const enableAdvancedExcel = async (document: Document) => {
-    try {
-      const response = await fetch(
-        `/api/teams/${teamId}/documents/${document.id}/advanced-mode`,
-        { method: "POST", headers: { "Content-Type": "application/json" } },
-      );
-      if (!response.ok) {
-        const { message } = await response.json();
-        toast.error(message);
-      } else {
+    toast.promise(
+      fetch(`/api/teams/${teamId}/documents/${document.id}/advanced-mode`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      }).then(async (response) => {
+        if (!response.ok) {
+          const { message } = await response.json();
+          throw new Error(message);
+        }
         const { message } = await response.json();
         plausible("advancedExcelEnabled", {
           props: { documentId: document.id },
         }); // track the event
+        mutate(`/api/teams/${teamId}/documents/${document.id}`);
         handleCloseAlert("enable-advanced-excel-alert");
-        toast.success(message);
-      }
-    } catch (error) {
-      console.error("Error:", error);
-      toast.error("An error occurred. Please try again.");
-    }
+        return message;
+      }),
+      {
+        loading: "Enabling advanced Excel mode...",
+        success: (message) => message,
+        error: (error) =>
+          error.message || "Failed to enable advanced Excel mode",
+      },
+    );
   };
 
   // export method to fetch the visits data and convert to csv.
